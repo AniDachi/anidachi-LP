@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime for Beginners (2026) — Starter-Friendly Picks",
+  title: "Best Anime for Beginners (2026) — 16 Starter-Friendly Picks",
   description:
-    "12 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
+    "16 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
   alternates: { canonical: "/guides/best-anime-to-watch-for-beginners" },
   openGraph: {
     title: "Best Anime for Beginners (2026) — Starter-Friendly Picks",
@@ -82,18 +82,18 @@ export default function BestAnimeForBeginnersPage() {
           url: "/guides/best-anime-to-watch-for-beginners",
         },
       ]}
-      title="12 Best Anime to Watch for Beginners in 2026"
+      title="16 Best Anime to Watch for Beginners in 2026"
       description="Starter-friendly anime picks for first-time viewers and mixed watch groups."
       url="/guides/best-anime-to-watch-for-beginners"
       datePublished="2026-05-01"
-      dateModified="2026-05-01"
+      dateModified="2026-05-05"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        12 Best Anime to Watch for Beginners in 2026
+        16 Best Anime to Watch for Beginners in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -166,6 +166,31 @@ export default function BestAnimeForBeginnersPage() {
           friends already love Marvel stories, this is the smoothest bridge into
           weekly shonen pacing without needing filler guides on day one.
         </li>
+        <li>
+          <strong>
+            <Link
+              href="/watch/kaiju-no-8-with-friends"
+              className="text-purple-600 hover:underline"
+            >
+              Kaiju No. 8
+            </Link>
+          </strong>{" "}
+          — Kaiju cleanup crews, clearance exams, and a monster twist on a familiar
+          shonen ladder — readable stakes from episode one for action fans.
+        </li>
+        <li>
+          <strong>
+            <Link
+              href="/watch/lycoris-recoil-with-friends"
+              className="text-purple-600 hover:underline"
+            >
+              Lycoris Recoil
+            </Link>
+          </strong>{" "}
+          — A tight one-cour season that alternates café banter with clean action
+          beats, so newcomers see modern TV pacing without committing to hundreds
+          of episodes.
+        </li>
       </ul>
 
       <h2
@@ -223,6 +248,16 @@ export default function BestAnimeForBeginnersPage() {
           Music-driven episodes give beginners a culturally current snapshot of
           modern slice-of-life anime.
         </li>
+        <li>
+          <strong>
+            <Link href="/watch/mashle-with-friends" className="text-purple-600 hover:underline">
+              Mashle: Magic and Muscles
+            </Link>
+          </strong>{" "}
+          — Zero-to-hero wizard school comedy carried by deadpan physical gags.
+          Jokes land even if viewers skip lore deep-dives, which keeps mixed-skill
+          parties laughing.
+        </li>
       </ul>
 
       <h2
@@ -268,6 +303,18 @@ export default function BestAnimeForBeginnersPage() {
           — A supernatural thriller that behaves like a prestige miniseries.
           Debates about morality spark instantly, which is gold for watch-party
           energy even when someone has never touched anime before.
+        </li>
+        <li>
+          <strong>
+            <Link
+              href="/watch/samurai-champloo-with-friends"
+              className="text-purple-600 hover:underline"
+            >
+              Samurai Champloo
+            </Link>
+          </strong>{" "}
+          — Twenty-six stylish episodes you can tackle in a month of watch-nights.
+          Standalone chapters still give the room a shared mystery to chase.
         </li>
       </ul>
 

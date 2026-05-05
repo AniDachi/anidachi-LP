@@ -65,6 +65,16 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "ranking-of-kings": 40834,
   "dragon-ball-z": 813,
   "my-dress-up-darling": 48736,
+  gintama: 918,
+  "yu-yu-hakusho": 392,
+  "samurai-champloo": 205,
+  inuyasha: 249,
+  "kaiju-no-8": 52588,
+  "eighty-six": 41457,
+  "lycoris-recoil": 50709,
+  mashle: 52211,
+  "wind-breaker": 54900,
+  "great-teacher-onizuka": 245,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {

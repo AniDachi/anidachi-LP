@@ -72,7 +72,7 @@ export default function WatchAnimeTogetherPage() {
       description="Everything you need to watch anime with friends online."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-04-27"
+      dateModified="2026-05-05"
       faq={faq}
       headings={tocHeadings}
     >
@@ -216,6 +216,16 @@ export default function WatchAnimeTogetherPage() {
         <li><Link href="/watch/ranking-of-kings-with-friends" className="hover:underline">Ranking of Kings</Link></li>
         <li><Link href="/watch/dragon-ball-z-with-friends" className="hover:underline">Dragon Ball Z</Link></li>
         <li><Link href="/watch/my-dress-up-darling-with-friends" className="hover:underline">My Dress-Up Darling</Link></li>
+        <li><Link href="/watch/eighty-six-with-friends" className="hover:underline">86: Eighty Six</Link></li>
+        <li><Link href="/watch/gintama-with-friends" className="hover:underline">Gintama</Link></li>
+        <li><Link href="/watch/great-teacher-onizuka-with-friends" className="hover:underline">Great Teacher Onizuka</Link></li>
+        <li><Link href="/watch/inuyasha-with-friends" className="hover:underline">Inuyasha</Link></li>
+        <li><Link href="/watch/kaiju-no-8-with-friends" className="hover:underline">Kaiju No. 8</Link></li>
+        <li><Link href="/watch/lycoris-recoil-with-friends" className="hover:underline">Lycoris Recoil</Link></li>
+        <li><Link href="/watch/mashle-with-friends" className="hover:underline">Mashle: Magic and Muscles</Link></li>
+        <li><Link href="/watch/samurai-champloo-with-friends" className="hover:underline">Samurai Champloo</Link></li>
+        <li><Link href="/watch/wind-breaker-with-friends" className="hover:underline">Wind Breaker</Link></li>
+        <li><Link href="/watch/yu-yu-hakusho-with-friends" className="hover:underline">Yu Yu Hakusho</Link></li>
       </ul>
 
       <h2

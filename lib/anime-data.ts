@@ -619,4 +619,104 @@ export const animeList: AnimeEntry[] = [
     genres: ["Romance", "Comedy", "Slice of Life"],
     related: ["kaguya-sama", "toradora", "bocchi-the-rock"],
   },
+  {
+    slug: "gintama",
+    title: "Gintama",
+    japaneseTitle: "Gintama",
+    synopsis:
+      "In an alternate Edo occupied by aliens, odd-job freelancer Gintoki Sakata drags his crew through parody-heavy crises that swing from toilet humor to genuinely brutal arcs. The tonal whiplash rewards a watchroom that loves riffing on tropes—then suddenly locking in for a serious sword fight.",
+    episodes: "367+ episodes across multiple cours (2006–2018)",
+    genres: ["Action", "Comedy", "Sci-Fi"],
+    related: ["cowboy-bebop", "naruto", "konosuba"],
+  },
+  {
+    slug: "yu-yu-hakusho",
+    title: "Yu Yu Hakusho",
+    japaneseTitle: "Yū Yū Hakusho",
+    synopsis:
+      "Teen delinquent Yusuke Urameshi dies saving a child, earns a second shot as Spirit Detective, and dives into tournaments and demon politics with Kuwabara, Kurama, and Hiei. Classic arc-style plotting makes it easy to sync episode batches or debate power rankings between fights.",
+    episodes: "112 episodes",
+    genres: ["Action", "Supernatural", "Adventure"],
+    related: ["hunter-x-hunter", "naruto", "dragon-ball-z"],
+  },
+  {
+    slug: "samurai-champloo",
+    title: "Samurai Champloo",
+    japaneseTitle: "Samurai Chanpurū",
+    synopsis:
+      "Fuu hires two swordsmen who can't stand each other—wild Mugen and disciplined Jin—for a road trip across Edo-era Japan scored like a beat tape. Hip-hop rhythm and episodic detours give your group plenty of style points to react to without losing the central mystery of the sunflower samurai.",
+    episodes: "26 episodes",
+    genres: ["Action", "Adventure", "Historical"],
+    related: ["cowboy-bebop", "dororo", "vinland-saga"],
+  },
+  {
+    slug: "inuyasha",
+    title: "Inuyasha",
+    japaneseTitle: "Inuyasha",
+    synopsis:
+      "Modern-day Kagome falls into Japan's feudal past and teams up with the dog-eared half-demon Inuyasha to recover shattered Jewel shards before demons hoard them. Long arcs and monster-of-the-week pockets mean async buddies can catch up anytime while marathoners trade theories about the next twist.",
+    episodes: "167 episodes + Inuyasha: The Final Act",
+    genres: ["Action", "Adventure", "Fantasy"],
+    related: ["frieren-beyond-journeys-end", "demon-slayer", "bleach"],
+  },
+  {
+    slug: "kaiju-no-8",
+    title: "Kaiju No. 8",
+    japaneseTitle: "Kaijuu 8-gou",
+    synopsis:
+      "Kafka Hibino cleans up after kaiju battles until he gains the ability to transform into one himself—and still dreams of joining the elite Defense Force. Giant-monster brawls and paperwork-aged jokes alternate fast enough that watchrooms can cheer every punch-up together.",
+    episodes: "12+ episodes (Season 1)",
+    genres: ["Action", "Sci-Fi", "Supernatural"],
+    related: ["my-hero-academia", "chainsaw-man", "solo-leveling"],
+  },
+  {
+    slug: "eighty-six",
+    title: "86: Eighty Six",
+    japaneseTitle: "Eighty Six",
+    synopsis:
+      "On a wartorn continent, silver-haired pilots labeled \"86\" fight drones from exile while handlers far from the front pretend it's clean. Morally heavy sorties and stunning action blocks land hardest when you debrief with friends between missions.",
+    episodes: "23 episodes across 2 cours (Parts 1 & 2)",
+    genres: ["Action", "Drama", "Sci-Fi"],
+    related: ["code-geass", "attack-on-titan", "vinland-saga"],
+  },
+  {
+    slug: "lycoris-recoil",
+    title: "Lycoris Recoil",
+    japaneseTitle: "Rikorisu Rikoiru",
+    synopsis:
+      "Covert teen agents Chisato and Takina balance café shifts with ultra-clean gun battles around Tokyo. Buddy energy, café downtime, and slick choreography make every outing easy to queue for a casual co-watch night.",
+    episodes: "13 episodes",
+    genres: ["Action", "Sci-Fi", "Slice of Life"],
+    related: ["spy-x-family", "chainsaw-man", "tokyo-revengers"],
+  },
+  {
+    slug: "mashle",
+    title: "Mashle: Magic and Muscles",
+    japaneseTitle: "Mashle",
+    synopsis:
+      "In a wizard society, Mash Burnedead has zero spells—just absurd strength—and enrolls in magic school anyway to protect his adoptive father. Deadpan gags and tournament absurdism invite everyone in the room to yell at the screen whenever Mash curls instead of casting.",
+    episodes: "12+ episodes across multiple seasons",
+    genres: ["Action", "Comedy", "Fantasy"],
+    related: ["my-hero-academia", "black-clover", "konosuba"],
+  },
+  {
+    slug: "wind-breaker",
+    title: "Wind Breaker",
+    japaneseTitle: "Wind Breaker",
+    synopsis:
+      "Haruka Sakura joins Furin High expecting turf-war chaos but finds a crew that channels street fights into defending their town. Fast punches and found-family bonding suit viewers who like syncing hype fights then rewinding the best combinations.",
+    episodes: "13+ episodes",
+    genres: ["Action", "School", "Drama"],
+    related: ["tokyo-revengers", "blue-lock", "haikyuu"],
+  },
+  {
+    slug: "great-teacher-onizuka",
+    title: "Great Teacher Onizuka",
+    japaneseTitle: "Great Teacher Onizuka",
+    synopsis:
+      "Former gang legend Eikichi Onizuka becomes a teacher mostly for lazy reasons—and ends up confronting bullying, pressure, and hypocrisy with reckless heart. Older-school humor aside, his big speeches still pause the chat so everyone can argue whether he'd survive a modern classroom.",
+    episodes: "43 episodes",
+    genres: ["Comedy", "Drama", "School"],
+    related: ["classroom-of-the-elite", "kaguya-sama", "food-wars-shokugeki-no-soma"],
+  },
 ];

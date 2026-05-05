@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch with Friends (2026) — Top Picks for Group Watching",
+  title: "Best Anime to Watch with Friends (2026) — 25+ Top Picks for Group Watching",
   description:
-    "Curated list of the best anime to watch with friends. Sorted by genre — action, comedy, thriller, and more. Great for watch parties and group sessions.",
+    "Curated list of the best anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
 };
 
@@ -67,18 +67,18 @@ export default function BestAnimeWithFriendsPage() {
         { name: "Guides", url: "/watch-anime-together" },
         { name: "Best Anime with Friends", url: "/guides/best-anime-to-watch-with-friends" },
       ]}
-      title="15 Best Anime to Watch with Friends in 2026"
+      title="25+ Best Anime to Watch with Friends in 2026"
       description="Top anime picks for group watching sessions."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-04-24"
+      dateModified="2026-05-05"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        15 Best Anime to Watch with Friends in 2026
+        25+ Best Anime to Watch with Friends in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -101,6 +101,11 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/jujutsu-kaisen-with-friends" className="text-purple-600 hover:underline">Jujutsu Kaisen</Link></strong> — Brutal fights and unpredictable plot turns. Incredible group-watch energy.</li>
         <li><strong><Link href="/watch/demon-slayer-with-friends" className="text-purple-600 hover:underline">Demon Slayer</Link></strong> — Stunning animation that&apos;s even better when you can react together.</li>
         <li><strong><Link href="/watch/chainsaw-man-with-friends" className="text-purple-600 hover:underline">Chainsaw Man</Link></strong> — Wild, unpredictable, and endlessly meme-able.</li>
+        <li><strong><Link href="/watch/kaiju-no-8-with-friends" className="text-purple-600 hover:underline">Kaiju No. 8</Link></strong> — Kaiju brawls and underdog enlistment drama; every clearing round is a shared cheer moment.</li>
+        <li><strong><Link href="/watch/eighty-six-with-friends" className="text-purple-600 hover:underline">86: Eighty Six</Link></strong> — Sorties and moral fallout hit harder when you debrief as a squad after each mission.</li>
+        <li><strong><Link href="/watch/lycoris-recoil-with-friends" className="text-purple-600 hover:underline">Lycoris Recoil</Link></strong> — Café banter flips into set-piece gun ballet built for synchronized gasps.</li>
+        <li><strong><Link href="/watch/wind-breaker-with-friends" className="text-purple-600 hover:underline">Wind Breaker</Link></strong> — Street-tier brawls and found-family hype reward loud living-room reactions.</li>
+        <li><strong><Link href="/watch/yu-yu-hakusho-with-friends" className="text-purple-600 hover:underline">Yu Yu Hakusho</Link></strong> — Tournament arcs and spirit-gun payoffs that still make groups yell at the same beats.</li>
       </ul>
 
       <h2
@@ -114,6 +119,9 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/konosuba-with-friends" className="text-purple-600 hover:underline">KonoSuba</Link></strong> — Non-stop comedy that&apos;s funnier with a group.</li>
         <li><strong><Link href="/watch/one-punch-man-with-friends" className="text-purple-600 hover:underline">One Punch Man</Link></strong> — Satire and spectacle that everyone can enjoy.</li>
         <li><strong><Link href="/watch/mob-psycho-100-with-friends" className="text-purple-600 hover:underline">Mob Psycho 100</Link></strong> — Funny, wholesome, and visually stunning.</li>
+        <li><strong><Link href="/watch/gintama-with-friends" className="text-purple-600 hover:underline">Gintama</Link></strong> — Sketches, spoofs, and sudden serious arcs that turn your chat into a writers&apos; room.</li>
+        <li><strong><Link href="/watch/mashle-with-friends" className="text-purple-600 hover:underline">Mashle: Magic and Muscles</Link></strong> — Absurd gym-bro wizard school gags; perfect when you want memes between spells.</li>
+        <li><strong><Link href="/watch/great-teacher-onizuka-with-friends" className="text-purple-600 hover:underline">Great Teacher Onizuka</Link></strong> — Rowdy classroom comedy with speeches worth pausing to quote.</li>
       </ul>
 
       <h2
@@ -127,6 +135,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/steins-gate-with-friends" className="text-purple-600 hover:underline">Steins;Gate</Link></strong> — Time travel puzzles that beg for group discussion.</li>
         <li><strong><Link href="/watch/made-in-abyss-with-friends" className="text-purple-600 hover:underline">Made in Abyss</Link></strong> — Beautiful and haunting. Lots to unpack together.</li>
         <li><strong><Link href="/watch/frieren-beyond-journeys-end-with-friends" className="text-purple-600 hover:underline">Frieren</Link></strong> — Slow, emotional, and deeply rewarding. Perfect for thoughtful groups.</li>
+        <li><strong><Link href="/watch/samurai-champloo-with-friends" className="text-purple-600 hover:underline">Samurai Champloo</Link></strong> — Episodic road-trip mysteries plus a long-burn sunflower thread for theory threads.</li>
       </ul>
 
       <h2
@@ -139,6 +148,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/one-piece-with-friends" className="text-purple-600 hover:underline">One Piece</Link></strong> — The ultimate long-form group watch. Use AniDachi&apos;s async watchrooms so everyone goes at their own pace.</li>
         <li><strong><Link href="/watch/naruto-with-friends" className="text-purple-600 hover:underline">Naruto</Link></strong> — 720 episodes of ninja action. Better with friends to skip filler together.</li>
         <li><strong><Link href="/watch/hunter-x-hunter-with-friends" className="text-purple-600 hover:underline">Hunter x Hunter</Link></strong> — Each arc is a different genre. Always something new to discuss.</li>
+        <li><strong><Link href="/watch/inuyasha-with-friends" className="text-purple-600 hover:underline">Inuyasha</Link></strong> — Feudal fairy-tale quests across 160+ TV episodes; async threads keep shard-hunt discussions readable.</li>
       </ul>
 
       <h2
