@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime for Beginners (2026) — 16 Starter-Friendly Picks",
+  title: "Best Anime for Beginners (2026) — 21 Starter-Friendly Picks",
   description:
-    "16 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
+    "21 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
   alternates: { canonical: "/guides/best-anime-to-watch-for-beginners" },
   openGraph: {
     title: "Best Anime for Beginners (2026) — Starter-Friendly Picks",
@@ -82,18 +82,18 @@ export default function BestAnimeForBeginnersPage() {
           url: "/guides/best-anime-to-watch-for-beginners",
         },
       ]}
-      title="16 Best Anime to Watch for Beginners in 2026"
+      title="21 Best Anime to Watch for Beginners in 2026"
       description="Starter-friendly anime picks for first-time viewers and mixed watch groups."
       url="/guides/best-anime-to-watch-for-beginners"
       datePublished="2026-05-01"
-      dateModified="2026-05-05"
+      dateModified="2026-05-06"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        16 Best Anime to Watch for Beginners in 2026
+        21 Best Anime to Watch for Beginners in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -191,6 +191,22 @@ export default function BestAnimeForBeginnersPage() {
           beats, so newcomers see modern TV pacing without committing to hundreds
           of episodes.
         </li>
+        <li>
+          <strong>
+            <Link href="/watch/hyouka-with-friends" className="text-purple-600 hover:underline">
+              Hyouka
+            </Link>
+          </strong>{" "}
+          — Low-stakes school mysteries with gorgeous direction; each episode solves one puzzle so newcomers never feel lost.
+        </li>
+        <li>
+          <strong>
+            <Link href="/watch/noragami-with-friends" className="text-purple-600 hover:underline">
+              Noragami
+            </Link>
+          </strong>{" "}
+          — Five-yen spirit gigs and quick urban battles introduce shinto-flavored fantasy without a lecture upfront.
+        </li>
       </ul>
 
       <h2
@@ -258,6 +274,14 @@ export default function BestAnimeForBeginnersPage() {
           Jokes land even if viewers skip lore deep-dives, which keeps mixed-skill
           parties laughing.
         </li>
+        <li>
+          <strong>
+            <Link href="/watch/angel-beats-with-friends" className="text-purple-600 hover:underline">
+              Angel Beats!
+            </Link>
+          </strong>{" "}
+          — Short seasonal run with sketch comedy, concert interludes, and emotional cliffhangers newcomers can ride in one sitting block.
+        </li>
       </ul>
 
       <h2
@@ -315,6 +339,25 @@ export default function BestAnimeForBeginnersPage() {
           </strong>{" "}
           — Twenty-six stylish episodes you can tackle in a month of watch-nights.
           Standalone chapters still give the room a shared mystery to chase.
+        </li>
+        <li>
+          <strong>
+            <Link href="/watch/trigun-with-friends" className="text-purple-600 hover:underline">
+              Trigun
+            </Link>
+          </strong>{" "}
+          — Twenty-six episodes of desert sci-fi with a pacifist gunslinger; the episodic bounty structure eases new viewers in before the tone deepens.
+        </li>
+        <li>
+          <strong>
+            <Link
+              href="/watch/march-comes-in-like-a-lion-with-friends"
+              className="text-purple-600 hover:underline"
+            >
+              March Comes in Like a Lion
+            </Link>
+          </strong>{" "}
+          — Shogi slice-of-life with gentle pacing and a warm host family; great when your group wants feelings-first anime instead of lore dumps.
         </li>
       </ul>
 

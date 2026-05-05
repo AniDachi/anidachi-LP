@@ -72,7 +72,7 @@ export default function WatchAnimeTogetherPage() {
       description="Everything you need to watch anime with friends online."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-05-05"
+      dateModified="2026-05-06"
       faq={faq}
       headings={tocHeadings}
     >
@@ -226,6 +226,16 @@ export default function WatchAnimeTogetherPage() {
         <li><Link href="/watch/samurai-champloo-with-friends" className="hover:underline">Samurai Champloo</Link></li>
         <li><Link href="/watch/wind-breaker-with-friends" className="hover:underline">Wind Breaker</Link></li>
         <li><Link href="/watch/yu-yu-hakusho-with-friends" className="hover:underline">Yu Yu Hakusho</Link></li>
+        <li><Link href="/watch/psycho-pass-with-friends" className="hover:underline">Psycho-Pass</Link></li>
+        <li><Link href="/watch/monster-with-friends" className="hover:underline">Monster</Link></li>
+        <li><Link href="/watch/hyouka-with-friends" className="hover:underline">Hyouka</Link></li>
+        <li><Link href="/watch/march-comes-in-like-a-lion-with-friends" className="hover:underline">March Comes in Like a Lion</Link></li>
+        <li><Link href="/watch/noragami-with-friends" className="hover:underline">Noragami</Link></li>
+        <li><Link href="/watch/akame-ga-kill-with-friends" className="hover:underline">Akame ga Kill!</Link></li>
+        <li><Link href="/watch/kill-la-kill-with-friends" className="hover:underline">Kill la Kill</Link></li>
+        <li><Link href="/watch/angel-beats-with-friends" className="hover:underline">Angel Beats!</Link></li>
+        <li><Link href="/watch/fairy-tail-with-friends" className="hover:underline">Fairy Tail</Link></li>
+        <li><Link href="/watch/trigun-with-friends" className="hover:underline">Trigun</Link></li>
       </ul>
 
       <h2

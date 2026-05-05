@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch with Friends (2026) — 25+ Top Picks for Group Watching",
+  title: "Best Anime to Watch with Friends (2026) — 35+ Top Picks for Group Watching",
   description:
     "Curated list of the best anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
@@ -67,18 +67,18 @@ export default function BestAnimeWithFriendsPage() {
         { name: "Guides", url: "/watch-anime-together" },
         { name: "Best Anime with Friends", url: "/guides/best-anime-to-watch-with-friends" },
       ]}
-      title="25+ Best Anime to Watch with Friends in 2026"
+      title="35+ Best Anime to Watch with Friends in 2026"
       description="Top anime picks for group watching sessions."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-05-05"
+      dateModified="2026-05-06"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        25+ Best Anime to Watch with Friends in 2026
+        35+ Best Anime to Watch with Friends in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -106,6 +106,11 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/lycoris-recoil-with-friends" className="text-purple-600 hover:underline">Lycoris Recoil</Link></strong> — Café banter flips into set-piece gun ballet built for synchronized gasps.</li>
         <li><strong><Link href="/watch/wind-breaker-with-friends" className="text-purple-600 hover:underline">Wind Breaker</Link></strong> — Street-tier brawls and found-family hype reward loud living-room reactions.</li>
         <li><strong><Link href="/watch/yu-yu-hakusho-with-friends" className="text-purple-600 hover:underline">Yu Yu Hakusho</Link></strong> — Tournament arcs and spirit-gun payoffs that still make groups yell at the same beats.</li>
+        <li><strong><Link href="/watch/psycho-pass-with-friends" className="text-purple-600 hover:underline">Psycho-Pass</Link></strong> — Sibyl-era thrillers where each case invites a morality argument in chat.</li>
+        <li><strong><Link href="/watch/noragami-with-friends" className="text-purple-600 hover:underline">Noragami</Link></strong> — Five-yen odd jobs escalate into god-tier brawls with banter baked in.</li>
+        <li><strong><Link href="/watch/akame-ga-kill-with-friends" className="text-purple-600 hover:underline">Akame ga Kill!</Link></strong> — Night Raid vs. the Empire: sudden deaths and Imperial Arms flexes keep reactions loud.</li>
+        <li><strong><Link href="/watch/kill-la-kill-with-friends" className="text-purple-600 hover:underline">Kill la Kill</Link></strong> — Uniform-powered absurdism engineered for synchronized yelling.</li>
+        <li><strong><Link href="/watch/trigun-with-friends" className="text-purple-600 hover:underline">Trigun</Link></strong> — Desert standoffs flip from slapstick to sober; your room will debate Vash together.</li>
       </ul>
 
       <h2
@@ -122,6 +127,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/gintama-with-friends" className="text-purple-600 hover:underline">Gintama</Link></strong> — Sketches, spoofs, and sudden serious arcs that turn your chat into a writers&apos; room.</li>
         <li><strong><Link href="/watch/mashle-with-friends" className="text-purple-600 hover:underline">Mashle: Magic and Muscles</Link></strong> — Absurd gym-bro wizard school gags; perfect when you want memes between spells.</li>
         <li><strong><Link href="/watch/great-teacher-onizuka-with-friends" className="text-purple-600 hover:underline">Great Teacher Onizuka</Link></strong> — Rowdy classroom comedy with speeches worth pausing to quote.</li>
+        <li><strong><Link href="/watch/angel-beats-with-friends" className="text-purple-600 hover:underline">Angel Beats!</Link></strong> — Afterlife homework, concerts, and twist reveals in a tight cour—group waterworks optional.</li>
       </ul>
 
       <h2
@@ -136,6 +142,9 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/made-in-abyss-with-friends" className="text-purple-600 hover:underline">Made in Abyss</Link></strong> — Beautiful and haunting. Lots to unpack together.</li>
         <li><strong><Link href="/watch/frieren-beyond-journeys-end-with-friends" className="text-purple-600 hover:underline">Frieren</Link></strong> — Slow, emotional, and deeply rewarding. Perfect for thoughtful groups.</li>
         <li><strong><Link href="/watch/samurai-champloo-with-friends" className="text-purple-600 hover:underline">Samurai Champloo</Link></strong> — Episodic road-trip mysteries plus a long-burn sunflower thread for theory threads.</li>
+        <li><strong><Link href="/watch/monster-with-friends" className="text-purple-600 hover:underline">Monster</Link></strong> — Patient psychological noir; ideal when your crew treats episodes like case files.</li>
+        <li><strong><Link href="/watch/hyouka-with-friends" className="text-purple-600 hover:underline">Hyouka</Link></strong> — Micro-school mysteries worth freeze-framing for clues together.</li>
+        <li><strong><Link href="/watch/march-comes-in-like-a-lion-with-friends" className="text-purple-600 hover:underline">March Comes in Like a Lion</Link></strong> — Shogi silences and found-family warmth that fuel long post-episode threads.</li>
       </ul>
 
       <h2
@@ -149,6 +158,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/naruto-with-friends" className="text-purple-600 hover:underline">Naruto</Link></strong> — 720 episodes of ninja action. Better with friends to skip filler together.</li>
         <li><strong><Link href="/watch/hunter-x-hunter-with-friends" className="text-purple-600 hover:underline">Hunter x Hunter</Link></strong> — Each arc is a different genre. Always something new to discuss.</li>
         <li><strong><Link href="/watch/inuyasha-with-friends" className="text-purple-600 hover:underline">Inuyasha</Link></strong> — Feudal fairy-tale quests across 160+ TV episodes; async threads keep shard-hunt discussions readable.</li>
+        <li><strong><Link href="/watch/fairy-tail-with-friends" className="text-purple-600 hover:underline">Fairy Tail</Link></strong> — Guild-sized cast and endlessly extending saga—async watchrooms keep arcs tagged per friend.</li>
       </ul>
 
       <h2

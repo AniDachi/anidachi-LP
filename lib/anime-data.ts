@@ -719,4 +719,104 @@ export const animeList: AnimeEntry[] = [
     genres: ["Comedy", "Drama", "School"],
     related: ["classroom-of-the-elite", "kaguya-sama", "food-wars-shokugeki-no-soma"],
   },
+  {
+    slug: "psycho-pass",
+    title: "Psycho-Pass",
+    japaneseTitle: "Psycho-Pass",
+    synopsis:
+      "In a near-future Japan, the Sibyl System quantifies every citizen's crime potential before it happens. Inspectors and Enforcers chase latent criminals in cases that escalate from procedural tension to full systemic moral collapse—ideal for a watchroom that loves debating justice between episodes.",
+    episodes: "22 episodes (Season 1) + sequels and films",
+    genres: ["Sci-Fi", "Thriller", "Psychological"],
+    related: ["death-note", "steins-gate", "tokyo-ghoul"],
+  },
+  {
+    slug: "monster",
+    title: "Monster",
+    japaneseTitle: "Monster",
+    synopsis:
+      "Brilliant surgeon Dr. Kenzo Tenma saves a boy instead of a politician—and years later learns that act may have nurtured a manipulative killer. Slow-burn psychological noir rewards patient groups who treat each arc like a weekly true-crime debrief.",
+    episodes: "74 episodes",
+    genres: ["Thriller", "Psychological", "Mystery"],
+    related: ["death-note", "erased", "parasyte"],
+  },
+  {
+    slug: "hyouka",
+    title: "Hyouka",
+    japaneseTitle: "Hyouka",
+    synopsis:
+      "Energy-saving high schooler Hotaro Oreki gets roped into his school's Classic Lit Club and solves small mysteries with Chitanda, Satoshi, and Mayaka. Low-stakes puzzles and gorgeous Kyoto Animation direction make every reveal a shared 'wait, rewind that clue' moment.",
+    episodes: "22 episodes + OVA",
+    genres: ["Mystery", "School", "Slice of Life"],
+    related: ["classroom-of-the-elite", "steins-gate", "kaguya-sama"],
+  },
+  {
+    slug: "march-comes-in-like-a-lion",
+    title: "March Comes in Like a Lion",
+    japaneseTitle: "3-gatsu no Lion",
+    synopsis:
+      "Teenage shogi prodigy Rei Kiriyama lives alone in Tokyo while wrestling grief, rivalry, and the found family of the Kawamoto sisters. Quiet shogi matches hit as hard as any fight scene when your group is invested in every breath between moves.",
+    episodes: "44 episodes across 2 seasons",
+    genres: ["Drama", "Slice of Life", "Sports"],
+    related: ["violet-evergarden", "frieren-beyond-journeys-end", "toradora"],
+  },
+  {
+    slug: "noragami",
+    title: "Noragami",
+    japaneseTitle: "Noragami",
+    synopsis:
+      "Stray god Yato takes five-yen jobs chasing lost spirits while ducking rival deities and patching his bond with weapon-spirit Yukine and mortal Hiyori. Snappy urban fantasy fights and banter-heavy downtime suit co-watchers who quote deity nicknames by episode three.",
+    episodes: "25+ episodes across 2 seasons + OAD",
+    genres: ["Action", "Supernatural", "Comedy"],
+    related: ["bleach", "jujutsu-kaisen", "spy-x-family"],
+  },
+  {
+    slug: "akame-ga-kill",
+    title: "Akame ga Kill!",
+    japaneseTitle: "Akame ga Kill!",
+    synopsis:
+      "Country boy Tatsumi joins assassins Night Raid against a corrupt empire—and learns heroism is messier than the pamphlets. Sudden turns and over-the-top Imperial Arms duels keep Discord threads loud when nobody agrees who's safe until the credits roll.",
+    episodes: "24 episodes",
+    genres: ["Action", "Fantasy", "Dark Fantasy"],
+    related: ["demon-slayer", "chainsaw-man", "tokyo-ghoul"],
+  },
+  {
+    slug: "kill-la-kill",
+    title: "Kill la Kill",
+    japaneseTitle: "Kill la Kill",
+    synopsis:
+      "Transfer student Ryuko Matoi storms Honnou Academy hunting her father's killer with a sentient sailor-uniform that feeds on embarrassment and rage. Visual maximalism and monologue pacing are built for group shout-alongs and frame-by-frame memes.",
+    episodes: "24 episodes + OVA",
+    genres: ["Action", "Comedy", "School"],
+    related: ["gurren-lagann", "my-hero-academia", "jojos-bizarre-adventure"],
+  },
+  {
+    slug: "angel-beats",
+    title: "Angel Beats!",
+    japaneseTitle: "Angel Beats!",
+    synopsis:
+      "Teens trapped in a surreal afterlife high school form the SSS to rebel against 'Angel'—then skirmishes keep colliding with concert interludes and sucker-punch backstories. Short enough to marathon in a weekend, emotional enough that someone always pretends they aren't tearing up.",
+    episodes: "13 episodes + OVA",
+    genres: ["Action", "Comedy", "Drama"],
+    related: ["toradora", "oshi-no-ko", "spy-x-family"],
+  },
+  {
+    slug: "fairy-tail",
+    title: "Fairy Tail",
+    japaneseTitle: "Fairy Tail",
+    synopsis:
+      "Celestial wizard Lucy joins the rowdy Fairy Tail guild alongside fire dragon slayer Natsu and a bench of mages who treat every job like a festival. Arc-based shonen comfort food—perfect for async rooms where half the crew yells guild catchphrases out of sync.",
+    episodes: "328+ episodes across multiple seasons",
+    genres: ["Action", "Adventure", "Fantasy"],
+    related: ["one-piece", "naruto", "black-clover"],
+  },
+  {
+    slug: "trigun",
+    title: "Trigun",
+    japaneseTitle: "Trigun",
+    synopsis:
+      "Gunman Vash the Stampede leaves insurance agents and bounty hunters scrambling across a desert planet while a goofy pacifist facade hides a heavier past. Episode-of-the-week western vibes with a late-series gut punch—your party will argue about dubs, donuts, and moral pacifism at once.",
+    episodes: "26 episodes",
+    genres: ["Action", "Sci-Fi", "Adventure"],
+    related: ["cowboy-bebop", "samurai-champloo", "dorohedoro"],
+  },
 ];

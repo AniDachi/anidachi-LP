@@ -75,6 +75,16 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   mashle: 52211,
   "wind-breaker": 54900,
   "great-teacher-onizuka": 245,
+  "psycho-pass": 13601,
+  monster: 19,
+  hyouka: 12189,
+  "march-comes-in-like-a-lion": 31646,
+  noragami: 20507,
+  "akame-ga-kill": 22199,
+  "kill-la-kill": 18679,
+  "angel-beats": 6547,
+  "fairy-tail": 6702,
+  trigun: 6,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {
