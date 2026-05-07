@@ -1,26 +1,48 @@
-import * as amplitude from "@amplitude/analytics-browser";
+"use client";
 
-let initialized = false;
+import * as amplitude from "@amplitude/unified";
 
-function ensureInit(): boolean {
+import type { UnifiedOptions } from "@amplitude/unified";
+
+/** Matches Amplitude Unified setup: analytics autocapture + full Session Replay sampling. */
+const UNIFIED_OPTIONS = {
+  analytics: { autocapture: true },
+  sessionReplay: { sampleRate: 1 },
+} as const satisfies UnifiedOptions;
+
+let initPromise: Promise<void> | null = null;
+
+function startInit(): void {
+  if (typeof window === "undefined") return;
   const apiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
-  if (!apiKey || typeof window === "undefined") return false;
-  if (!initialized) {
-    initialized = true;
-    amplitude.init(apiKey);
+  if (!apiKey) return;
+  if (initPromise === null) {
+    initPromise = amplitude.initAll(apiKey, UNIFIED_OPTIONS);
   }
+}
+
+/**
+ * Initialize Amplitude Unified once (analytics + session replay). Safe to call multiple times.
+ * Only runs in the browser when `NEXT_PUBLIC_AMPLITUDE_API_KEY` is set.
+ */
+export function initAmplitudeClient(): void {
+  startInit();
+}
+
+async function ensureReady(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  const apiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
+  if (!apiKey) return false;
+  startInit();
+  if (!initPromise) return false;
+  await initPromise;
   return true;
 }
 
-/** Start Amplitude on mount (e.g. from a client layout helper) so sessions begin early. */
-export function initAmplitudeClient(): void {
-  ensureInit();
-}
-
-export function trackAmplitudeEvent(
+export async function trackAmplitudeEvent(
   eventName: string,
   eventProperties?: Record<string, unknown>
-): void {
-  if (!ensureInit()) return;
-  amplitude.track(eventName, eventProperties);
+): Promise<void> {
+  if (!(await ensureReady())) return;
+  amplitude.track(eventName, eventProperties as Record<string, unknown>);
 }
