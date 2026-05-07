@@ -13,5 +13,8 @@ export function trackEvent(
 ) {
   if (typeof window !== "undefined" && typeof window.gtag === "function") {
     window.gtag("event", action, params);
+    void import("@/lib/amplitude").then((m) =>
+      m.trackAmplitudeEvent(action, params)
+    );
   }
 }

@@ -11,6 +11,7 @@
     "crm": "tsx scripts/crm/cli.ts"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.39.2",
     "@radix-ui/react-slot": "^1.2.3",
     "@vercel/blob": "^2.3.0",
     "class-variance-authority": "^0.7.1",

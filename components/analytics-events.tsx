@@ -5,6 +5,8 @@ import { trackEvent } from "@/lib/gtag";
 
 export function AnalyticsEvents() {
   useEffect(() => {
+    void import("@/lib/amplitude").then((m) => m.initAmplitudeClient());
+
     let fired50 = false;
     let fired90 = false;
 
