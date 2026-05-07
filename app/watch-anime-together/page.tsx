@@ -72,7 +72,7 @@ export default function WatchAnimeTogetherPage() {
       description="Everything you need to watch anime with friends online."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-05-06"
+      dateModified="2026-05-07"
       faq={faq}
       headings={tocHeadings}
     >
@@ -236,6 +236,16 @@ export default function WatchAnimeTogetherPage() {
         <li><Link href="/watch/angel-beats-with-friends" className="hover:underline">Angel Beats!</Link></li>
         <li><Link href="/watch/fairy-tail-with-friends" className="hover:underline">Fairy Tail</Link></li>
         <li><Link href="/watch/trigun-with-friends" className="hover:underline">Trigun</Link></li>
+        <li><Link href="/watch/cyberpunk-edgerunners-with-friends" className="hover:underline">Cyberpunk: Edgerunners</Link></li>
+        <li><Link href="/watch/horimiya-with-friends" className="hover:underline">Horimiya</Link></li>
+        <li><Link href="/watch/assassination-classroom-with-friends" className="hover:underline">Assassination Classroom</Link></li>
+        <li><Link href="/watch/beastars-with-friends" className="hover:underline">Beastars</Link></li>
+        <li><Link href="/watch/your-lie-in-april-with-friends" className="hover:underline">Your Lie in April</Link></li>
+        <li><Link href="/watch/golden-kamuy-with-friends" className="hover:underline">Golden Kamuy</Link></li>
+        <li><Link href="/watch/great-pretender-with-friends" className="hover:underline">Great Pretender</Link></li>
+        <li><Link href="/watch/zom-100-bucket-list-of-the-dead-with-friends" className="hover:underline">Zom 100</Link></li>
+        <li><Link href="/watch/darling-in-the-franxx-with-friends" className="hover:underline">Darling in the Franxx</Link></li>
+        <li><Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="hover:underline">The Disastrous Life of Saiki K.</Link></li>
       </ul>
 
       <h2

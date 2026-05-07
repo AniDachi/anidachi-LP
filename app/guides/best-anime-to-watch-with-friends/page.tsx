@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch with Friends (2026) — 35+ Top Picks for Group Watching",
+  title: "Best Anime to Watch with Friends (2026) — 45+ Top Picks for Group Watching",
   description:
-    "Curated list of the best anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
+    "Curated list of 45+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
 };
 
@@ -67,18 +67,18 @@ export default function BestAnimeWithFriendsPage() {
         { name: "Guides", url: "/watch-anime-together" },
         { name: "Best Anime with Friends", url: "/guides/best-anime-to-watch-with-friends" },
       ]}
-      title="35+ Best Anime to Watch with Friends in 2026"
+      title="45+ Best Anime to Watch with Friends in 2026"
       description="Top anime picks for group watching sessions."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-05-06"
+      dateModified="2026-05-07"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        35+ Best Anime to Watch with Friends in 2026
+        45+ Best Anime to Watch with Friends in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -111,6 +111,9 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/akame-ga-kill-with-friends" className="text-purple-600 hover:underline">Akame ga Kill!</Link></strong> — Night Raid vs. the Empire: sudden deaths and Imperial Arms flexes keep reactions loud.</li>
         <li><strong><Link href="/watch/kill-la-kill-with-friends" className="text-purple-600 hover:underline">Kill la Kill</Link></strong> — Uniform-powered absurdism engineered for synchronized yelling.</li>
         <li><strong><Link href="/watch/trigun-with-friends" className="text-purple-600 hover:underline">Trigun</Link></strong> — Desert standoffs flip from slapstick to sober; your room will debate Vash together.</li>
+        <li><strong><Link href="/watch/cyberpunk-edgerunners-with-friends" className="text-purple-600 hover:underline">Cyberpunk: Edgerunners</Link></strong> — Ten episodes of Night City adrenaline; every cliff lands like a shared scream emoji.</li>
+        <li><strong><Link href="/watch/darling-in-the-franxx-with-friends" className="text-purple-600 hover:underline">Darling in the Franxx</Link></strong> — Mecha melodrama built for synchronized yelling before your group argues lore.</li>
+        <li><strong><Link href="/watch/great-pretender-with-friends" className="text-purple-600 hover:underline">Great Pretender</Link></strong> — Globe-hopping cons with rug-pull reveals tailored for pause-and-debate rooms.</li>
       </ul>
 
       <h2
@@ -128,6 +131,10 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/mashle-with-friends" className="text-purple-600 hover:underline">Mashle: Magic and Muscles</Link></strong> — Absurd gym-bro wizard school gags; perfect when you want memes between spells.</li>
         <li><strong><Link href="/watch/great-teacher-onizuka-with-friends" className="text-purple-600 hover:underline">Great Teacher Onizuka</Link></strong> — Rowdy classroom comedy with speeches worth pausing to quote.</li>
         <li><strong><Link href="/watch/angel-beats-with-friends" className="text-purple-600 hover:underline">Angel Beats!</Link></strong> — Afterlife homework, concerts, and twist reveals in a tight cour—group waterworks optional.</li>
+        <li><strong><Link href="/watch/horimiya-with-friends" className="text-purple-600 hover:underline">Horimiya</Link></strong> — Fluffy school romance vignettes that turn every pause into a collective “they’re so cute.”</li>
+        <li><strong><Link href="/watch/assassination-classroom-with-friends" className="text-purple-600 hover:underline">Assassination Classroom</Link></strong> — Classroom chaos swings between assassination exams and heartfelt speeches—perfect meme cadence.</li>
+        <li><strong><Link href="/watch/zom-100-bucket-list-of-the-dead-with-friends" className="text-purple-600 hover:underline">Zom 100</Link></strong> — Zombie apocalypse bucket-list comedy with neon bounce and scream-laugh pacing.</li>
+        <li><strong><Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="text-purple-600 hover:underline">The Disastrous Life of Saiki K.</Link></strong> — Rapid-fire psychic gags engineered for rooms that talk over episodes anyway.</li>
       </ul>
 
       <h2
@@ -145,6 +152,9 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/monster-with-friends" className="text-purple-600 hover:underline">Monster</Link></strong> — Patient psychological noir; ideal when your crew treats episodes like case files.</li>
         <li><strong><Link href="/watch/hyouka-with-friends" className="text-purple-600 hover:underline">Hyouka</Link></strong> — Micro-school mysteries worth freeze-framing for clues together.</li>
         <li><strong><Link href="/watch/march-comes-in-like-a-lion-with-friends" className="text-purple-600 hover:underline">March Comes in Like a Lion</Link></strong> — Shogi silences and found-family warmth that fuel long post-episode threads.</li>
+        <li><strong><Link href="/watch/beastars-with-friends" className="text-purple-600 hover:underline">Beastars</Link></strong> — Anthropomorphic noir where every arc sparks morality threads worth pinning.</li>
+        <li><strong><Link href="/watch/your-lie-in-april-with-friends" className="text-purple-600 hover:underline">Your Lie in April</Link></strong> — Concert-driven drama that turns muted VC moments into shared tissues.</li>
+        <li><strong><Link href="/watch/golden-kamuy-with-friends" className="text-purple-600 hover:underline">Golden Kamuy</Link></strong> — Tattoo treasure hunts across Hokkaido built for wiki-tab debates mid-marathon.</li>
       </ul>
 
       <h2

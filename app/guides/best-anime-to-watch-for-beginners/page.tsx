@@ -3,19 +3,19 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime for Beginners (2026) — 21 Starter-Friendly Picks",
+  title: "Best Anime for Beginners (2026) — 26 Starter-Friendly Picks",
   description:
-    "21 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
+    "26 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
   alternates: { canonical: "/guides/best-anime-to-watch-for-beginners" },
   openGraph: {
-    title: "Best Anime for Beginners (2026) — Starter-Friendly Picks",
+    title: "Best Anime for Beginners (2026) — 26 Starter-Friendly Picks",
     description:
       "Starter anime picks for first-time viewers and mixed-experience watch groups.",
     url: "/guides/best-anime-to-watch-for-beginners",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Anime for Beginners (2026) — Starter-Friendly Picks",
+    title: "Best Anime for Beginners (2026) — 26 Starter-Friendly Picks",
     description:
       "Easy-entry anime for your first watch party or solo binge — curated for 2026.",
   },
@@ -82,18 +82,18 @@ export default function BestAnimeForBeginnersPage() {
           url: "/guides/best-anime-to-watch-for-beginners",
         },
       ]}
-      title="21 Best Anime to Watch for Beginners in 2026"
+      title="26 Best Anime to Watch for Beginners in 2026"
       description="Starter-friendly anime picks for first-time viewers and mixed watch groups."
       url="/guides/best-anime-to-watch-for-beginners"
       datePublished="2026-05-01"
-      dateModified="2026-05-06"
+      dateModified="2026-05-07"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        21 Best Anime to Watch for Beginners in 2026
+        26 Best Anime to Watch for Beginners in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -207,6 +207,22 @@ export default function BestAnimeForBeginnersPage() {
           </strong>{" "}
           — Five-yen spirit gigs and quick urban battles introduce shinto-flavored fantasy without a lecture upfront.
         </li>
+        <li>
+          <strong>
+            <Link href="/watch/horimiya-with-friends" className="text-purple-600 hover:underline">
+              Horimiya
+            </Link>
+          </strong>{" "}
+          — Two classmates discover each other outside school stereotypes; cozy arcs resolve quickly so newcomers never feel lost.
+        </li>
+        <li>
+          <strong>
+            <Link href="/watch/assassination-classroom-with-friends" className="text-purple-600 hover:underline">
+              Assassination Classroom
+            </Link>
+          </strong>{" "}
+          — High-concept hook on day one (super-powered teacher, wild class) with episodic missions that stay easy to follow.
+        </li>
       </ul>
 
       <h2
@@ -281,6 +297,22 @@ export default function BestAnimeForBeginnersPage() {
             </Link>
           </strong>{" "}
           — Short seasonal run with sketch comedy, concert interludes, and emotional cliffhangers newcomers can ride in one sitting block.
+        </li>
+        <li>
+          <strong>
+            <Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="text-purple-600 hover:underline">
+              The Disastrous Life of Saiki K.
+            </Link>
+          </strong>{" "}
+          — Sketches reset every few minutes; jokes land even if someone joins mid-episode, which keeps mixed groups laughing.
+        </li>
+        <li>
+          <strong>
+            <Link href="/watch/zom-100-bucket-list-of-the-dead-with-friends" className="text-purple-600 hover:underline">
+              Zom 100
+            </Link>
+          </strong>{" "}
+          — Zombie outbreak comedy with colorful pacing—thrills stay approachable because Akira narrates his bucket list like a travel vlog.
         </li>
       </ul>
 
@@ -358,6 +390,14 @@ export default function BestAnimeForBeginnersPage() {
             </Link>
           </strong>{" "}
           — Shogi slice-of-life with gentle pacing and a warm host family; great when your group wants feelings-first anime instead of lore dumps.
+        </li>
+        <li>
+          <strong>
+            <Link href="/watch/your-lie-in-april-with-friends" className="text-purple-600 hover:underline">
+              Your Lie in April
+            </Link>
+          </strong>{" "}
+          — Music-school drama with readable episode arcs; performances carry emotion even if viewers skip classical trivia deep dives.
         </li>
       </ul>
 

@@ -819,4 +819,108 @@ export const animeList: AnimeEntry[] = [
     genres: ["Action", "Sci-Fi", "Adventure"],
     related: ["cowboy-bebop", "samurai-champloo", "dorohedoro"],
   },
+  {
+    slug: "cyberpunk-edgerunners",
+    title: "Cyberpunk: Edgerunners",
+    japaneseTitle: "Cyberpunk: Edgerunners",
+    synopsis:
+      "Street kid David Martinez claws into Night City's chrome-soaked underworld after implant tech pushes him toward cyberpsychosis. Short, binge-perfect pacing lands brutal twists ideal for synchronized rewinds—and spoiler-heavy debates once credits roll.",
+    episodes: "10 episodes",
+    genres: ["Action", "Sci-Fi", "Thriller"],
+    related: ["chainsaw-man", "neon-genesis-evangelion", "cowboy-bebop"],
+  },
+  {
+    slug: "horimiya",
+    title: "Horimiya",
+    japaneseTitle: "Horimiya",
+    synopsis:
+      "Popular Izumi Miyamura and honors student Kyoko Hori collide outside school personas—and quietly rearrange each other's worlds in cozy vignettes. Low stakes on paper, huge serotonin payoff episode-to-episode for groups shipping slow-burn fluff.",
+    episodes: "26 episodes (Season 1) + OVAs",
+    genres: ["Romance", "Comedy", "School"],
+    related: ["kaguya-sama", "toradora", "spy-x-family"],
+  },
+  {
+    slug: "assassination-classroom",
+    title: "Assassination Classroom",
+    japaneseTitle: "Ansatsu Kyoshitsu",
+    synopsis:
+      "Earth-threatening octopus teacher Korosensei offers Class 3-E one shot at bounty-grade assassination mid-finals—all while genuinely leveling them up as students. Whiplash tone swings give chat endless meme fodder between morale arcs.",
+    episodes: "47 episodes across 2 seasons",
+    genres: ["Action", "Comedy", "School"],
+    related: ["my-hero-academia", "mob-psycho-100", "spy-x-family"],
+  },
+  {
+    slug: "beastars",
+    title: "Beastars",
+    japaneseTitle: "Beastars",
+    synopsis:
+      "Anthropomorphic carnivores and herbivores attend Cherryton Academy where instincts clash against etiquette—and suspicious murders fray dorm gossip. Stylish noir framing sparks discourse-heavy watch threads whenever morality arcs escalate.",
+    episodes: "36 episodes across 2 seasons",
+    genres: ["Drama", "Psychological", "School"],
+    related: ["parasyte", "tokyo-ghoul", "chainsaw-man"],
+  },
+  {
+    slug: "your-lie-in-april",
+    title: "Your Lie in April",
+    japaneseTitle: "Shigatsu wa Kimi no Uso",
+    synopsis:
+      "Prodigy pianist Kōsei Arima freezes until spirited violinist Kaori Miyazono drags him back toward stage lights and adolescent confession beats. Concert cliffhangers and tear ducts collide—prime territory for synchronized mute-unmute etiquette.",
+    episodes: "22 episodes",
+    genres: ["Drama", "Music", "Romance"],
+    related: [
+      "violet-evergarden",
+      "march-comes-in-like-a-lion",
+      "frieren-beyond-journeys-end",
+    ],
+  },
+  {
+    slug: "golden-kamuy",
+    title: "Golden Kamuy",
+    japaneseTitle: "Golden Kamuy",
+    synopsis:
+      "Russo-Japanese War vet Saichi Sugimoto teams with Ainu huntress Asirpa chasing tattooed convicts across Hokkaido's wilderness for buried gold. Survival tactics, culinary tangents, and gang warfare fuel marathon-length Discord debates.",
+    episodes: "49 episodes across 4 seasons",
+    genres: ["Action", "Adventure", "Historical"],
+    related: ["vinland-saga", "dororo", "samurai-champloo"],
+  },
+  {
+    slug: "great-pretender",
+    title: "Great Pretender",
+    japaneseTitle: "Great Pretender",
+    synopsis:
+      "Con artist Makoto Edamura stumbles into Laurent Thierry's globe-trotting crew mounting elaborate scams against worse villains. Candy-colored art direction hides vicious narrative rug-pulls—perfect when your room loves freeze-framing bait-and-switch reveals.",
+    episodes: "23 episodes across multiple cours",
+    genres: ["Action", "Adventure", "Mystery"],
+    related: ["cowboy-bebop", "psycho-pass", "steins-gate"],
+  },
+  {
+    slug: "zom-100-bucket-list-of-the-dead",
+    title: "Zom 100: Bucket List of the Dead",
+    japaneseTitle: "Zom 100: Zombie ni Naru Made ni Shitai 100 no Koto",
+    synopsis:
+      "Office burnout Akira rediscovers joy after zombies overrun Tokyo—by ticking off a ludicrous bucket list between sprinting undead set pieces. Bright palette vs body horror keeps adrenaline comedy spikes flowing through async reaction stacks.",
+    episodes: "12 episodes (Season 1)",
+    genres: ["Action", "Comedy", "Horror"],
+    related: ["chainsaw-man", "konosuba", "solo-leveling"],
+  },
+  {
+    slug: "darling-in-the-franxx",
+    title: "Darling in the Franxx",
+    japaneseTitle: "Darling in the Franxx",
+    synopsis:
+      "Children pilot biomechanical Franxx mechs from Plantation fortresses while grappling identity erasure and volatile partnerships zero-two famous enough to meme on sight. Melodrama plus kaiju brawls guarantee rotating Hot Takes every reunion.",
+    episodes: "24 episodes",
+    genres: ["Action", "Mecha", "Romance"],
+    related: ["neon-genesis-evangelion", "gurren-lagann", "code-geass"],
+  },
+  {
+    slug: "the-disastrous-life-of-saiki-k",
+    title: "The Disastrous Life of Saiki K.",
+    japaneseTitle: "Saiki Kusuo no Psi Nan",
+    synopsis:
+      "Psychic high schooler Saiki Kusuo wants solitude yet classmates chaotic enough to weaponize telepathy keep sabotaging him. Five-minute gag bursts reward distracted rooms catching jokes asynchronous-style between pings.",
+    episodes: "120 short-format episodes across multiple seasons",
+    genres: ["Comedy", "School", "Supernatural"],
+    related: ["kaguya-sama", "konosuba", "mob-psycho-100"],
+  },
 ];

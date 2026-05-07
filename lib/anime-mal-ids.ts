@@ -85,6 +85,16 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "angel-beats": 6547,
   "fairy-tail": 6702,
   trigun: 6,
+  "cyberpunk-edgerunners": 51318,
+  horimiya: 42897,
+  "assassination-classroom": 30654,
+  beastars: 39195,
+  "your-lie-in-april": 23273,
+  "golden-kamuy": 36028,
+  "great-pretender": 40052,
+  "zom-100-bucket-list-of-the-dead": 53835,
+  "darling-in-the-franxx": 35849,
+  "the-disastrous-life-of-saiki-k": 27831,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {
