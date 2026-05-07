@@ -4,9 +4,16 @@ import * as amplitude from "@amplitude/unified";
 
 import type { UnifiedOptions } from "@amplitude/unified";
 
-/** Matches Amplitude Unified setup: analytics autocapture + full Session Replay sampling. */
+/**
+ * Aligns with Amplitude Session Replay setup (Browser / CDN snippet):
+ * fetchRemoteConfig + autocapture off + replay sampleRate 1.
+ * NPM `@amplitude/unified` + `initAll` is equivalent to loader + init + sessionReplay.plugin.
+ */
 const UNIFIED_OPTIONS = {
-  analytics: { autocapture: true },
+  analytics: {
+    fetchRemoteConfig: true,
+    autocapture: false,
+  },
   sessionReplay: { sampleRate: 1 },
 } as const satisfies UnifiedOptions;
 
