@@ -96,6 +96,11 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "delicious-in-dungeon": 52701,
   "darling-in-the-franxx": 35849,
   "the-disastrous-life-of-saiki-k": 27831,
+  "odd-taxi": 46102,
+  "k-on": 5680,
+  "a-silent-voice": 28851,
+  "your-name": 32281,
+  "slam-dunk": 170,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {

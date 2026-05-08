@@ -5,6 +5,7 @@ import { NavBar } from "@/components/nav-bar";
 import { AnalyticsEvents } from "@/components/analytics-events";
 import { OrganizationJsonLd } from "@/components/json-ld";
 import { GA_MEASUREMENT_ID } from "@/lib/gtag";
+import { getResolvedSiteOrigin } from "@/lib/site-url";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,9 +25,7 @@ export const metadata: Metadata = {
   },
   description:
     "AniDachi lets you watch anime together with friends. Create watchrooms, sync Crunchyroll playback, chat in real-time, and track your anime journey — even asynchronously.",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://anidachi.app"
-  ),
+  metadataBase: new URL(getResolvedSiteOrigin()),
   alternates: { canonical: "/" },
   openGraph: {
     title: "AniDachi – Watch Anime Together | Sync Crunchyroll with Friends",

@@ -136,6 +136,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/zom-100-bucket-list-of-the-dead-with-friends" className="text-purple-600 hover:underline">Zom 100</Link></strong> — Zombie apocalypse bucket-list comedy with neon bounce and scream-laugh pacing.</li>
         <li><strong><Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="text-purple-600 hover:underline">The Disastrous Life of Saiki K.</Link></strong> — Rapid-fire psychic gags engineered for rooms that talk over episodes anyway.</li>
         <li><strong><Link href="/watch/delicious-in-dungeon-with-friends" className="text-purple-600 hover:underline">Delicious in Dungeon</Link></strong> — Monster-cooking tabletop logic with cozy party banter; perfect when your crew wants memeable meals between fights.</li>
+        <li><strong><Link href="/watch/k-on-with-friends" className="text-purple-600 hover:underline">K-On!</Link></strong> — Cozy club-room comedy with music breaks; perfect when you want light jokes and shared comfort vibes.</li>
       </ul>
 
       <h2
@@ -155,6 +156,9 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/march-comes-in-like-a-lion-with-friends" className="text-purple-600 hover:underline">March Comes in Like a Lion</Link></strong> — Shogi silences and found-family warmth that fuel long post-episode threads.</li>
         <li><strong><Link href="/watch/beastars-with-friends" className="text-purple-600 hover:underline">Beastars</Link></strong> — Anthropomorphic noir where every arc sparks morality threads worth pinning.</li>
         <li><strong><Link href="/watch/your-lie-in-april-with-friends" className="text-purple-600 hover:underline">Your Lie in April</Link></strong> — Concert-driven drama that turns muted VC moments into shared tissues.</li>
+        <li><strong><Link href="/watch/odd-taxi-with-friends" className="text-purple-600 hover:underline">ODDTAXI</Link></strong> — A tight mystery where every conversation matters; your group will want to re-check clues together.</li>
+        <li><strong><Link href="/watch/a-silent-voice-with-friends" className="text-purple-600 hover:underline">A Silent Voice</Link></strong> — A one-night movie that sparks real debriefs about guilt, empathy, and second chances.</li>
+        <li><strong><Link href="/watch/your-name-with-friends" className="text-purple-600 hover:underline">Your Name.</Link></strong> — Twist-forward romance and time-bending mystery that’s best when everyone reacts at once.</li>
         <li><strong><Link href="/watch/golden-kamuy-with-friends" className="text-purple-600 hover:underline">Golden Kamuy</Link></strong> — Tattoo treasure hunts across Hokkaido built for wiki-tab debates mid-marathon.</li>
       </ul>
 
@@ -170,6 +174,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/hunter-x-hunter-with-friends" className="text-purple-600 hover:underline">Hunter x Hunter</Link></strong> — Each arc is a different genre. Always something new to discuss.</li>
         <li><strong><Link href="/watch/inuyasha-with-friends" className="text-purple-600 hover:underline">Inuyasha</Link></strong> — Feudal fairy-tale quests across 160+ TV episodes; async threads keep shard-hunt discussions readable.</li>
         <li><strong><Link href="/watch/fairy-tail-with-friends" className="text-purple-600 hover:underline">Fairy Tail</Link></strong> — Guild-sized cast and endlessly extending saga—async watchrooms keep arcs tagged per friend.</li>
+        <li><strong><Link href="/watch/slam-dunk-with-friends" className="text-purple-600 hover:underline">Slam Dunk</Link></strong> — Classic basketball training arcs and rivalry games; perfect for long, hype weekend marathons.</li>
       </ul>
 
       <h2

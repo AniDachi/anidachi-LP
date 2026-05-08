@@ -1,171 +1,59 @@
 import type { MetadataRoute } from "next";
+import fs from "node:fs";
+import path from "node:path";
 import { animeList } from "@/lib/anime-data";
+import {
+  discoverStaticSitemapUrlPaths,
+  staticPathsToSitemapEntries,
+} from "@/lib/sitemap-discovery";
+import {
+  getResolvedSiteOrigin,
+  isRobotsIndexingDisabled,
+} from "@/lib/site-url";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://anidachi.app";
+/** Per sitemaps.org; split with `generateSitemaps` before exceeding this. */
+const SITEMAP_URL_SOFT_LIMIT = 50_000;
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticRoutes: MetadataRoute.Sitemap = [
-    { url: `${SITE_URL}/`, changeFrequency: "weekly", priority: 1 },
-    { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
-    {
-      url: `${SITE_URL}/watch-crunchyroll-together`,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${SITE_URL}/watch-anime-together`,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${SITE_URL}/anime-watch-party-toolkit`,
-      changeFrequency: "weekly",
-      priority: 0.9,
-      lastModified: new Date("2026-05-08"),
-    },
-    {
-      url: `${SITE_URL}/watch-party-starter`,
-      changeFrequency: "weekly",
-      priority: 0.88,
-      lastModified: new Date("2026-05-08"),
-    },
-    {
-      url: `${SITE_URL}/resources/group-watch-onboarding`,
-      changeFrequency: "monthly",
-      priority: 0.72,
-      lastModified: new Date("2026-05-08"),
-    },
-    {
-      url: `${SITE_URL}/guides/how-to-watch-crunchyroll-with-friends`,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/guides/how-to-watch-anime-with-friends-online`,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/guides/how-to-watch-anime-with-friends-on-discord`,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/guides/how-to-watch-anime-long-distance`,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/guides/how-to-fix-watch-party-audio-delay`,
-      changeFrequency: "monthly",
-      priority: 0.78,
-      lastModified: new Date("2026-05-08"),
-    },
-    {
-      url: `${SITE_URL}/guides/how-to-watch-anime-with-friends-in-different-time-zones`,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/guides/how-to-watch-anime-without-spoilers`,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/guides/how-to-create-an-anime-watch-party`,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/guides/first-anime-watch-party-checklist`,
-      changeFrequency: "monthly",
-      priority: 0.78,
-      lastModified: new Date("2026-05-08"),
-    },
-    {
-      url: `${SITE_URL}/guides/how-to-watch-anime-with-a-group`,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/guides/crunchyroll-watch-party-chrome-extension`,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/compare/anidachi-vs-teleparty`,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${SITE_URL}/compare/anidachi-vs-discord-screen-share`,
-      changeFrequency: "monthly",
-      priority: 0.7,
-      lastModified: new Date("2026-05-08"),
-    },
-    {
-      url: `${SITE_URL}/guides/anime-watch-party-ideas`,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${SITE_URL}/guides/best-anime-to-watch-as-a-couple`,
-      changeFrequency: "monthly",
-      priority: 0.71,
-      lastModified: new Date("2026-05-08"),
-    },
-    {
-      url: `${SITE_URL}/guides/best-anime-to-watch-with-friends`,
-      changeFrequency: "monthly",
-      priority: 0.7,
-      lastModified: new Date("2026-05-08"),
-    },
-    {
-      url: `${SITE_URL}/guides/best-anime-to-watch-for-beginners`,
-      changeFrequency: "monthly",
-      priority: 0.7,
-      lastModified: new Date("2026-05-08"),
-    },
-    {
-      url: `${SITE_URL}/guides/asynchronous-vs-live-watch-party`,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${SITE_URL}/glossary/watchroom`,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${SITE_URL}/glossary/asynchronous-watching`,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${SITE_URL}/glossary/anime-simulcast`,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${SITE_URL}/glossary/crunchyroll-mega-fan`,
-      changeFrequency: "monthly",
-      priority: 0.52,
-      lastModified: new Date("2026-05-08"),
-    },
-    {
-      url: `${SITE_URL}/glossary/dub-vs-sub-watch-party`,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-  ];
+  if (isRobotsIndexingDisabled()) {
+    return [];
+  }
 
-  const animeRoutes: MetadataRoute.Sitemap = animeList.map((anime) => ({
-    url: `${SITE_URL}/watch/${anime.slug}-with-friends`,
-    changeFrequency: "monthly" as const,
-    priority: 0.6,
-    lastModified: new Date("2026-05-08"),
-  }));
+  const siteUrl = getResolvedSiteOrigin();
+  const staticPaths = discoverStaticSitemapUrlPaths();
+  const staticRoutes = staticPathsToSitemapEntries(siteUrl, staticPaths);
 
-  return [...staticRoutes, ...animeRoutes];
+  let watchLastModified: Date | undefined;
+  try {
+    watchLastModified = fs.statSync(
+      path.join(process.cwd(), "app/watch/[slug]/page.tsx")
+    ).mtime;
+  } catch {
+    watchLastModified = undefined;
+  }
+
+  const animeRoutes: MetadataRoute.Sitemap = animeList.map((anime) => {
+    const entry: MetadataRoute.Sitemap[number] = {
+      url: `${siteUrl}/watch/${anime.slug}-with-friends`,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    };
+    if (watchLastModified) entry.lastModified = watchLastModified;
+    return entry;
+  });
+
+  const combined = [...staticRoutes, ...animeRoutes].sort((a, b) =>
+    a.url.localeCompare(b.url)
+  );
+
+  if (
+    process.env.NODE_ENV === "development" &&
+    combined.length > SITEMAP_URL_SOFT_LIMIT
+  ) {
+    console.warn(
+      `[sitemap] URL count (${combined.length}) exceeds ${SITEMAP_URL_SOFT_LIMIT}; implement Next.js generateSitemaps before shipping.`
+    );
+  }
+
+  return combined;
 }

@@ -247,6 +247,11 @@ export default function WatchAnimeTogetherPage() {
         <li><Link href="/watch/darling-in-the-franxx-with-friends" className="hover:underline">Darling in the Franxx</Link></li>
         <li><Link href="/watch/delicious-in-dungeon-with-friends" className="hover:underline">Delicious in Dungeon</Link></li>
         <li><Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="hover:underline">The Disastrous Life of Saiki K.</Link></li>
+        <li><Link href="/watch/odd-taxi-with-friends" className="hover:underline">ODDTAXI</Link></li>
+        <li><Link href="/watch/k-on-with-friends" className="hover:underline">K-On!</Link></li>
+        <li><Link href="/watch/a-silent-voice-with-friends" className="hover:underline">A Silent Voice</Link></li>
+        <li><Link href="/watch/your-name-with-friends" className="hover:underline">Your Name.</Link></li>
+        <li><Link href="/watch/slam-dunk-with-friends" className="hover:underline">Slam Dunk</Link></li>
       </ul>
 
       <h2

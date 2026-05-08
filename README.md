@@ -66,6 +66,8 @@ Every page includes:
 
 See `.env.example` for all variables. Key ones:
 
-- `NEXT_PUBLIC_SITE_URL` — canonical domain (production: `https://anidachi.app`)
+- `NEXT_PUBLIC_SITE_URL` — canonical origin for metadata, sitemap, robots, JSON-LD (production: `https://anidachi.app`; on Vercel previews, `VERCEL_URL` is used when this is unset)
+- `NEXT_PUBLIC_ROBOTS_NOINDEX` / `VERCEL_ENV` — see `.env.example`; preview hosts avoid indexing via `lib/site-url.ts`
+- Optional: `NEXT_PUBLIC_DISALLOW_AI_TRAINING_BOTS` — opt-in AI crawler blocks in `app/robots.ts`
 - `KREATLI_CRM_PASSWORD` / `KREATLI_CRM_SESSION_SECRET` — internal tools
 - Stripe and Google API keys for payments and CRM

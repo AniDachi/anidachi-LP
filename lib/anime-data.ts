@@ -933,4 +933,54 @@ export const animeList: AnimeEntry[] = [
     genres: ["Comedy", "School", "Supernatural"],
     related: ["kaguya-sama", "konosuba", "mob-psycho-100"],
   },
+  {
+    slug: "odd-taxi",
+    title: "ODDTAXI",
+    japaneseTitle: "Odd Taxi",
+    synopsis:
+      "Walled-off taxi driver Odokawa seems ordinary until small conversations connect to missing girls, yakuza money, and a widening web of secrets. Every episode drops a new clue that your watchroom will want to pause and piece together.",
+    episodes: "13 episodes",
+    genres: ["Mystery", "Thriller", "Drama"],
+    related: ["erased", "monster", "great-pretender"],
+  },
+  {
+    slug: "k-on",
+    title: "K-On!",
+    japaneseTitle: "K-On!",
+    synopsis:
+      "A group of high school girls form a light music club, turning practice into equal parts jam sessions, snacks, and friendship rituals. It’s cozy, funny, and easy to watch in short bursts — perfect for low-stress group nights.",
+    episodes: "41 episodes across 2 seasons + movie",
+    genres: ["Comedy", "Music", "Slice of Life"],
+    related: ["bocchi-the-rock", "your-lie-in-april", "horimiya"],
+  },
+  {
+    slug: "a-silent-voice",
+    title: "A Silent Voice",
+    japaneseTitle: "Koe no Katachi",
+    synopsis:
+      "A former bully tries to make amends with a deaf girl he hurt in elementary school, but guilt and anxiety make every step messy. It’s a powerful single-sitting watch that sparks real conversations after the credits.",
+    episodes: "Movie",
+    genres: ["Drama", "Romance", "Slice of Life"],
+    related: ["violet-evergarden", "your-lie-in-april", "toradora"],
+  },
+  {
+    slug: "your-name",
+    title: "Your Name.",
+    japaneseTitle: "Kimi no Na wa.",
+    synopsis:
+      "Two teens begin swapping bodies across distance and time, building a bond through notes, habits, and shared confusion. When the mystery deepens, the movie becomes a twisty, emotional sprint that’s great to react to together.",
+    episodes: "Movie",
+    genres: ["Romance", "Drama", "Supernatural"],
+    related: ["a-silent-voice", "your-lie-in-april", "toradora"],
+  },
+  {
+    slug: "slam-dunk",
+    title: "Slam Dunk",
+    japaneseTitle: "Slam Dunk",
+    synopsis:
+      "Delinquent Hanamichi Sakuragi joins the Shohoku basketball team for a crush — then finds a competitive obsession he didn’t know he had. Classic training arcs, rival matchups, and momentum swings make it ideal for long, hype marathons.",
+    episodes: "101 episodes",
+    genres: ["Sports", "Comedy", "Drama"],
+    related: ["haikyuu", "blue-lock", "march-comes-in-like-a-lion"],
+  },
 ];

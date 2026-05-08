@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { getResolvedSiteOrigin } from "@/lib/site-url";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://anidachi.app";
+const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch as a Couple (2026) — 16 Date-Night Friendly Picks",
+  title: "Best Anime to Watch as a Couple (2026) — 18 Date-Night Friendly Picks",
   description:
     "Romcoms, earnest dramas, and cozy adventures that spark conversation—each with a dedicated AniDachi watch page on Crunchyroll.",
   alternates: { canonical: "/guides/best-anime-to-watch-as-a-couple" },
@@ -76,7 +77,7 @@ export default function BestAnimeToWatchAsACouplePage() {
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        16 best anime to watch as a couple in 2026
+        18 best anime to watch as a couple in 2026
       </h1>
       <p className="text-xl text-gray-700 leading-relaxed mb-10">
         <strong>
@@ -138,6 +139,22 @@ export default function BestAnimeToWatchAsACouplePage() {
         Earnest dramas
       </h2>
       <ul className="space-y-4 text-gray-700 mb-10">
+        <li>
+          <strong>
+            <Link href="/watch/your-name-with-friends" className="text-purple-600 hover:underline">
+              Your Name.
+            </Link>
+          </strong>{" "}
+          — A twisty, emotional movie that becomes a perfect “wait, rewind that” shared watch night.
+        </li>
+        <li>
+          <strong>
+            <Link href="/watch/a-silent-voice-with-friends" className="text-purple-600 hover:underline">
+              A Silent Voice
+            </Link>
+          </strong>{" "}
+          — A single-sitting drama that invites real conversation and a gentle decompression after the credits.
+        </li>
         <li>
           <strong>
             <Link href="/watch/your-lie-in-april-with-friends" className="text-purple-600 hover:underline">
@@ -256,7 +273,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
       </ul>
       <p className="text-sm text-gray-600 mb-6">
-        Heads-up: sixteen titles are listed across the three buckets above—perfect
+        Heads-up: eighteen titles are listed across the three buckets above—perfect
         for rotating weekend themes.
       </p>
 

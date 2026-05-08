@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 interface JsonLdProps {
   data: Record<string, unknown> | Record<string, unknown>[];
@@ -15,16 +16,15 @@ export function JsonLd({ data }: JsonLdProps) {
   );
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://anidachi.app";
-
 export function OrganizationJsonLd() {
+  const siteUrl = getResolvedSiteOrigin();
   const data = [
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       name: "AniDachi",
-      url: SITE_URL,
-      logo: `${SITE_URL}/Anidachi_logo.png`,
+      url: siteUrl,
+      logo: `${siteUrl}/Anidachi_logo.png`,
       sameAs: [],
       contactPoint: {
         "@type": "ContactPoint",
@@ -36,12 +36,12 @@ export function OrganizationJsonLd() {
       "@context": "https://schema.org",
       "@type": "WebSite",
       name: "AniDachi",
-      url: SITE_URL,
+      url: siteUrl,
       potentialAction: {
         "@type": "SearchAction",
         target: {
           "@type": "EntryPoint",
-          urlTemplate: `${SITE_URL}/watch/{search_term_string}-with-friends`,
+          urlTemplate: `${siteUrl}/watch/{search_term_string}-with-friends`,
         },
         "query-input": "required name=search_term_string",
       },
@@ -51,6 +51,7 @@ export function OrganizationJsonLd() {
 }
 
 export function SoftwareApplicationJsonLd() {
+  const siteUrl = getResolvedSiteOrigin();
   const data = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -59,7 +60,7 @@ export function SoftwareApplicationJsonLd() {
     operatingSystem: "Chrome, Web",
     description:
       "Watch anime together with friends. Create watchrooms, sync Crunchyroll playback, chat in real-time, and track your anime journey.",
-    url: SITE_URL,
+    url: siteUrl,
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "USD",
@@ -74,7 +75,7 @@ export function SoftwareApplicationJsonLd() {
           priceCurrency: "USD",
           priceValidUntil: "2027-12-31",
           availability: "https://schema.org/InStock",
-          url: `${SITE_URL}/#pricing`,
+          url: `${siteUrl}/#pricing`,
         },
       ],
     },
@@ -131,6 +132,7 @@ export function BreadcrumbJsonLd({
 }: {
   items: { name: string; url: string }[];
 }) {
+  const siteUrl = getResolvedSiteOrigin();
   const data = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -138,7 +140,7 @@ export function BreadcrumbJsonLd({
       "@type": "ListItem",
       position: i + 1,
       name: item.name,
-      item: item.url.startsWith("http") ? item.url : `${SITE_URL}${item.url}`,
+      item: item.url.startsWith("http") ? item.url : `${siteUrl}${item.url}`,
     })),
   };
   return <JsonLd data={data} />;
@@ -160,6 +162,7 @@ export function ArticleJsonLd({
   /** Absolute URLs preferred (e.g. MAL CDN poster). Helps Article/carousel eligibility in Search. */
   image?: string | string[];
 }) {
+  const siteUrl = getResolvedSiteOrigin();
   const images =
     image == null
       ? undefined
@@ -172,19 +175,19 @@ export function ArticleJsonLd({
     "@type": "Article",
     headline: title,
     description,
-    url: url.startsWith("http") ? url : `${SITE_URL}${url}`,
+    url: url.startsWith("http") ? url : `${siteUrl}${url}`,
     datePublished,
     dateModified,
     ...(images?.length ? { image: images } : {}),
     author: {
       "@type": "Organization",
       name: "AniDachi",
-      url: SITE_URL,
+      url: siteUrl,
     },
     publisher: {
       "@type": "Organization",
       name: "AniDachi",
-      logo: { "@type": "ImageObject", url: `${SITE_URL}/Anidachi_logo.png` },
+      logo: { "@type": "ImageObject", url: `${siteUrl}/Anidachi_logo.png` },
     },
   };
   return <JsonLd data={data} />;
@@ -198,6 +201,7 @@ export function ItemListJsonLd({
   name: string;
   items: { name: string; url: string; position: number }[];
 }) {
+  const siteUrl = getResolvedSiteOrigin();
   const data = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -207,7 +211,7 @@ export function ItemListJsonLd({
       "@type": "ListItem",
       position: it.position,
       name: it.name,
-      item: it.url.startsWith("http") ? it.url : `${SITE_URL}${it.url}`,
+      item: it.url.startsWith("http") ? it.url : `${siteUrl}${it.url}`,
     })),
   };
   return <JsonLd data={data} />;
