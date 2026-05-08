@@ -10,14 +10,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Star, Zap, Shield, Clock } from "lucide-react";
+import { Check, Star, Zap, Shield } from "lucide-react";
 import {
   inferPageTemplateFromPath,
   trackConversion,
 } from "@/lib/conversion-events";
 
 const CRUNCHYROLL_SUBSCRIBER_PRICE_ID =
+  process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER ??
   "price_1RlnY7AGc1Bd58Cjo5BJckhN";
+
+const ANIME_JUNKIE_PRICE_ID =
+  process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANIME_JUNKIE ?? "";
 
 export function Pricing() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -253,24 +257,18 @@ export function Pricing() {
             </CardContent>
           </Card>
 
-          <Card className="relative order-2 border border-dashed border-gray-300 bg-gray-50/80 transition-all duration-300 px-6 py-8 md:opacity-90 md:scale-[0.98]">
-            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2">
-              <Badge className="bg-amber-100 text-amber-800 px-6 py-2 text-sm font-semibold">
-                <Clock className="w-3 h-3 mr-1" aria-hidden="true" />
-                Coming later
-              </Badge>
-            </div>
-
+          <Card className="relative order-2 border border-gray-200 bg-white transition-all duration-300 px-6 py-8 md:opacity-95 md:scale-[0.99] hover:shadow-lg">
             <CardHeader className="text-center pt-6 pb-4">
               <CardTitle className="text-2xl font-bold text-gray-700 mb-2">
                 Anime Junkie
               </CardTitle>
               <div className="flex items-baseline justify-center mb-2">
-                <span className="text-5xl font-bold text-gray-400">$38</span>
-                <span className="text-gray-400 ml-1 text-lg">/month</span>
+                <span className="text-5xl font-bold text-gray-900">$38</span>
+                <span className="text-gray-600 ml-1 text-lg">/month</span>
               </div>
               <CardDescription className="text-gray-500 text-base">
-                Planned all-in-one streaming + social (not for checkout yet)
+                For serious groups: advanced room controls + founder support.
+                Everyone still uses their own Crunchyroll login.
               </CardDescription>
             </CardHeader>
 
@@ -278,45 +276,33 @@ export function Pricing() {
               <ul className="space-y-2 mb-4">
                 {[
                   "Everything in Crunchyroll Subscriber",
-                  "Built-in anime streaming (planned)",
-                  "Premium anime library access (planned)",
-                  "HD/4K streaming quality (planned)",
-                  "Offline viewing (planned)",
-                  "Early access to new features",
+                  "Invite-only rooms (private links + approval)",
+                  "Host & moderator controls (kick/ban, lock playback, room rules)",
+                  "Room personalization (name, cover, pinned notes)",
+                  "Founder badge + early feature drops",
+                  "Fast-track support (same-day replies)",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <Check
-                      className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
-                        feature.includes("(planned)")
-                          ? "text-gray-300"
-                          : "text-green-500"
-                      }`}
+                      className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5"
                       aria-hidden="true"
                     />
-                    <span
-                      className={`text-sm ${
-                        feature.includes("(planned)")
-                          ? "text-gray-400"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      {feature}
-                    </span>
+                    <span className="text-gray-700 text-sm">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               <div className="pt-4">
                 <Button
-                  className="w-full py-4 text-lg font-semibold bg-gray-200 text-gray-500 cursor-not-allowed"
-                  disabled
-                  tabIndex={-1}
+                  className="w-full py-4 text-lg font-semibold bg-gray-900 hover:bg-gray-950 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60"
+                  onClick={() => handleSubscribe(ANIME_JUNKIE_PRICE_ID)}
+                  disabled={isSubmitting || !ANIME_JUNKIE_PRICE_ID}
                 >
-                  Not available for purchase yet
+                  {isSubmitting ? "Redirecting to Stripe…" : "Start Anime Junkie"}
                 </Button>
                 <p className="text-xs text-gray-500 text-center mt-2">
-                  This tier is a preview — use Crunchyroll Subscriber to
-                  complete checkout today
+                  Secure Stripe checkout &bull; Cancel anytime &bull; Early-access
+                  refunds available
                 </p>
               </div>
             </CardContent>

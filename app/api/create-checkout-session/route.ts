@@ -1,13 +1,30 @@
 import { type NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const secretKey =
+  process.env.NODE_ENV === "development" && process.env.STRIPE_SECRET_KEY_TEST
+    ? process.env.STRIPE_SECRET_KEY_TEST
+    : process.env.STRIPE_SECRET_KEY;
+
+const stripe = new Stripe(secretKey!, {
   apiVersion: "2025-06-30.basil",
 });
 
 export async function POST(request: NextRequest) {
   try {
     const { priceId } = await request.json();
+
+    const allowedPriceIds = [
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER,
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANIME_JUNKIE,
+    ].filter(Boolean);
+
+    if (allowedPriceIds.length > 0 && !allowedPriceIds.includes(priceId)) {
+      return NextResponse.json(
+        { error: "Invalid price" },
+        { status: 400 }
+      );
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
