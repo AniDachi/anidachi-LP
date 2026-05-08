@@ -72,7 +72,7 @@ export default function WatchAnimeTogetherPage() {
       description="Everything you need to watch anime with friends online."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-05-07"
+      dateModified="2026-05-08"
       faq={faq}
       headings={tocHeadings}
     >
@@ -245,6 +245,7 @@ export default function WatchAnimeTogetherPage() {
         <li><Link href="/watch/great-pretender-with-friends" className="hover:underline">Great Pretender</Link></li>
         <li><Link href="/watch/zom-100-bucket-list-of-the-dead-with-friends" className="hover:underline">Zom 100</Link></li>
         <li><Link href="/watch/darling-in-the-franxx-with-friends" className="hover:underline">Darling in the Franxx</Link></li>
+        <li><Link href="/watch/delicious-in-dungeon-with-friends" className="hover:underline">Delicious in Dungeon</Link></li>
         <li><Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="hover:underline">The Disastrous Life of Saiki K.</Link></li>
       </ul>
 

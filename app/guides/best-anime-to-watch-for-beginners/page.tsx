@@ -3,19 +3,19 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime for Beginners (2026) — 26 Starter-Friendly Picks",
+  title: "Best Anime for Beginners (2026) — 27 Starter-Friendly Picks",
   description:
-    "26 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
+    "27 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
   alternates: { canonical: "/guides/best-anime-to-watch-for-beginners" },
   openGraph: {
-    title: "Best Anime for Beginners (2026) — 26 Starter-Friendly Picks",
+    title: "Best Anime for Beginners (2026) — 27 Starter-Friendly Picks",
     description:
       "Starter anime picks for first-time viewers and mixed-experience watch groups.",
     url: "/guides/best-anime-to-watch-for-beginners",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Anime for Beginners (2026) — 26 Starter-Friendly Picks",
+    title: "Best Anime for Beginners (2026) — 27 Starter-Friendly Picks",
     description:
       "Easy-entry anime for your first watch party or solo binge — curated for 2026.",
   },
@@ -82,18 +82,18 @@ export default function BestAnimeForBeginnersPage() {
           url: "/guides/best-anime-to-watch-for-beginners",
         },
       ]}
-      title="26 Best Anime to Watch for Beginners in 2026"
+      title="27 Best Anime to Watch for Beginners in 2026"
       description="Starter-friendly anime picks for first-time viewers and mixed watch groups."
       url="/guides/best-anime-to-watch-for-beginners"
       datePublished="2026-05-01"
-      dateModified="2026-05-07"
+      dateModified="2026-05-08"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        26 Best Anime to Watch for Beginners in 2026
+        27 Best Anime to Watch for Beginners in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -190,6 +190,19 @@ export default function BestAnimeForBeginnersPage() {
           — A tight one-cour season that alternates café banter with clean action
           beats, so newcomers see modern TV pacing without committing to hundreds
           of episodes.
+        </li>
+        <li>
+          <strong>
+            <Link
+              href="/watch/delicious-in-dungeon-with-friends"
+              className="text-purple-600 hover:underline"
+            >
+              Delicious in Dungeon
+            </Link>
+          </strong>{" "}
+          — A fantasy quest where cooking monsters is part of party survival. Familiar
+          tabletop logic, gentle humor, and approachable pacing make it an easy
+          binge when your group wants food jokes between fights.
         </li>
         <li>
           <strong>

@@ -19,6 +19,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${SITE_URL}/anime-watch-party-toolkit`,
+      changeFrequency: "weekly",
+      priority: 0.9,
+      lastModified: new Date("2026-05-08"),
+    },
+    {
+      url: `${SITE_URL}/watch-party-starter`,
+      changeFrequency: "weekly",
+      priority: 0.88,
+      lastModified: new Date("2026-05-08"),
+    },
+    {
+      url: `${SITE_URL}/resources/group-watch-onboarding`,
+      changeFrequency: "monthly",
+      priority: 0.72,
+      lastModified: new Date("2026-05-08"),
+    },
+    {
       url: `${SITE_URL}/guides/how-to-watch-crunchyroll-with-friends`,
       changeFrequency: "monthly",
       priority: 0.8,
@@ -39,6 +57,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${SITE_URL}/guides/how-to-fix-watch-party-audio-delay`,
+      changeFrequency: "monthly",
+      priority: 0.78,
+      lastModified: new Date("2026-05-08"),
+    },
+    {
       url: `${SITE_URL}/guides/how-to-watch-anime-with-friends-in-different-time-zones`,
       changeFrequency: "monthly",
       priority: 0.8,
@@ -52,6 +76,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE_URL}/guides/how-to-create-an-anime-watch-party`,
       changeFrequency: "monthly",
       priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/guides/first-anime-watch-party-checklist`,
+      changeFrequency: "monthly",
+      priority: 0.78,
+      lastModified: new Date("2026-05-08"),
     },
     {
       url: `${SITE_URL}/guides/how-to-watch-anime-with-a-group`,
@@ -69,19 +99,33 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${SITE_URL}/compare/anidachi-vs-discord-screen-share`,
+      changeFrequency: "monthly",
+      priority: 0.7,
+      lastModified: new Date("2026-05-08"),
+    },
+    {
       url: `${SITE_URL}/guides/anime-watch-party-ideas`,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
+      url: `${SITE_URL}/guides/best-anime-to-watch-as-a-couple`,
+      changeFrequency: "monthly",
+      priority: 0.71,
+      lastModified: new Date("2026-05-08"),
+    },
+    {
       url: `${SITE_URL}/guides/best-anime-to-watch-with-friends`,
       changeFrequency: "monthly",
       priority: 0.7,
+      lastModified: new Date("2026-05-08"),
     },
     {
       url: `${SITE_URL}/guides/best-anime-to-watch-for-beginners`,
       changeFrequency: "monthly",
       priority: 0.7,
+      lastModified: new Date("2026-05-08"),
     },
     {
       url: `${SITE_URL}/guides/asynchronous-vs-live-watch-party`,
@@ -104,6 +148,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
     },
     {
+      url: `${SITE_URL}/glossary/crunchyroll-mega-fan`,
+      changeFrequency: "monthly",
+      priority: 0.52,
+      lastModified: new Date("2026-05-08"),
+    },
+    {
       url: `${SITE_URL}/glossary/dub-vs-sub-watch-party`,
       changeFrequency: "monthly",
       priority: 0.5,
@@ -114,6 +164,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${SITE_URL}/watch/${anime.slug}-with-friends`,
     changeFrequency: "monthly" as const,
     priority: 0.6,
+    lastModified: new Date("2026-05-08"),
   }));
 
   return [...staticRoutes, ...animeRoutes];

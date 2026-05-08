@@ -904,6 +904,16 @@ export const animeList: AnimeEntry[] = [
     related: ["chainsaw-man", "konosuba", "solo-leveling"],
   },
   {
+    slug: "delicious-in-dungeon",
+    title: "Delicious in Dungeon",
+    japaneseTitle: "Dungeon Meshi",
+    synopsis:
+      "When an adventuring party runs out of supplies deep in a dungeon, their pragmatic fighter turns monsters into gourmet meals. RPG logistics meet cozy cooking comedy—ideal for groups that want shared gasps, recipe banter, and debate over whether you would eat that boss drop.",
+    episodes: "24+ episodes (TV)",
+    genres: ["Adventure", "Comedy", "Fantasy"],
+    related: ["made-in-abyss", "konosuba", "that-time-i-got-reincarnated-as-a-slime"],
+  },
+  {
     slug: "darling-in-the-franxx",
     title: "Darling in the Franxx",
     japaneseTitle: "Darling in the Franxx",

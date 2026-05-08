@@ -112,10 +112,50 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/guides/first-anime-watch-party-checklist"
+                  className="hover:text-white transition-colors"
+                >
+                  First Watch Party Checklist
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/guides/how-to-watch-anime-with-a-group"
                   className="hover:text-white transition-colors"
                 >
                   Watch Anime With a Group
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/watch-party-starter"
+                  className="hover:text-white transition-colors"
+                >
+                  Watch Party Starter
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/anime-watch-party-toolkit"
+                  className="hover:text-white transition-colors"
+                >
+                  Watch Party Toolkit
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/compare/anidachi-vs-discord-screen-share"
+                  className="hover:text-white transition-colors"
+                >
+                  AniDachi vs Discord
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/guides/best-anime-to-watch-as-a-couple"
+                  className="hover:text-white transition-colors"
+                >
+                  Anime for Couples
                 </Link>
               </li>
               <li>

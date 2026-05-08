@@ -93,6 +93,7 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "golden-kamuy": 36028,
   "great-pretender": 40052,
   "zom-100-bucket-list-of-the-dead": 53835,
+  "delicious-in-dungeon": 52701,
   "darling-in-the-franxx": 35849,
   "the-disastrous-life-of-saiki-k": 27831,
 } as const;

@@ -6,6 +6,22 @@ export interface GuideLinkItem {
 
 export const guideLinks: GuideLinkItem[] = [
   {
+    href: "/guides/how-to-fix-watch-party-audio-delay",
+    label: "How to Fix Watch Party Audio Delay",
+    tags: [
+      "template-c",
+      "how-to-core",
+      "discord",
+      "pillar-watch-anime",
+      "pillar-watch-crunchyroll",
+    ],
+  },
+  {
+    href: "/anime-watch-party-toolkit",
+    label: "Anime Watch Party Toolkit",
+    tags: ["how-to-core", "pillar-watch-anime", "pillar-watch-crunchyroll"],
+  },
+  {
     href: "/guides/how-to-watch-anime-with-friends-online",
     label: "How to Watch Anime With Friends Online",
     tags: ["template-c", "how-to-core", "online", "pillar-watch-anime"],
@@ -40,6 +56,17 @@ export const guideLinks: GuideLinkItem[] = [
     href: "/guides/how-to-create-an-anime-watch-party",
     label: "How to Create an Anime Watch Party",
     tags: ["template-c", "how-to-core", "watch-party", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/first-anime-watch-party-checklist",
+    label: "First Anime Watch Party Checklist",
+    tags: [
+      "template-c",
+      "how-to-core",
+      "watch-party",
+      "pillar-watch-anime",
+      "pillar-watch-crunchyroll",
+    ],
   },
   {
     href: "/guides/how-to-watch-anime-with-a-group",
@@ -81,6 +108,11 @@ export const guideLinks: GuideLinkItem[] = [
   {
     href: "/guides/best-anime-to-watch-with-friends",
     label: "Best Anime to Watch with Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-anime-to-watch-as-a-couple",
+    label: "Best Anime to Watch as a Couple",
     tags: ["template-d", "listicle", "pillar-watch-anime"],
   },
   {
