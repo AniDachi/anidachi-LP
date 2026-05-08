@@ -16,12 +16,7 @@ import {
   trackConversion,
 } from "@/lib/conversion-events";
 
-const CRUNCHYROLL_SUBSCRIBER_PRICE_ID =
-  process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER ??
-  "price_1RlnY7AGc1Bd58Cjo5BJckhN";
-
-const ANIME_JUNKIE_PRICE_ID =
-  process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANIME_JUNKIE ?? "";
+type CheckoutTier = "crunchyroll_subscriber" | "anime_junkie";
 
 export function Pricing() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -68,7 +63,7 @@ export function Pricing() {
     return () => ob.disconnect();
   }, []);
 
-  const handleSubscribe = async (priceId: string) => {
+  const handleSubscribe = async (tier: CheckoutTier) => {
     setCheckoutError(null);
     const pagePath =
       typeof window !== "undefined" ? window.location.pathname : "/";
@@ -78,7 +73,7 @@ export function Pricing() {
       page_path: pagePath,
       page_template: pageTemplate,
       placement: "pricing_subscribe",
-      price_id: priceId,
+      plan_tier: tier,
     });
 
     setIsSubmitting(true);
@@ -86,7 +81,7 @@ export function Pricing() {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ tier }),
       });
 
       const data = (await response.json()) as { url?: string; error?: string };
@@ -98,7 +93,7 @@ export function Pricing() {
           page_path: pagePath,
           page_template: pageTemplate,
           placement: "pricing_subscribe",
-          price_id: priceId,
+          plan_tier: tier,
           error_step: "api_response",
           status: response.status,
           message,
@@ -112,7 +107,7 @@ export function Pricing() {
           page_path: pagePath,
           page_template: pageTemplate,
           placement: "pricing_subscribe",
-          price_id: priceId,
+          plan_tier: tier,
           error_step: "missing_checkout_url",
         });
         setCheckoutError(
@@ -125,7 +120,7 @@ export function Pricing() {
         page_path: pagePath,
         page_template: pageTemplate,
         placement: "pricing_subscribe",
-        price_id: priceId,
+        plan_tier: tier,
       });
 
       window.location.href = data.url;
@@ -138,7 +133,7 @@ export function Pricing() {
           typeof window !== "undefined" ? window.location.pathname : "/"
         ),
         placement: "pricing_subscribe",
-        price_id: priceId,
+        plan_tier: tier,
         error_step: "client_exception",
         message,
       });
@@ -242,9 +237,7 @@ export function Pricing() {
               <div className="pt-4">
                 <Button
                   className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60"
-                  onClick={() =>
-                    handleSubscribe(CRUNCHYROLL_SUBSCRIBER_PRICE_ID)
-                  }
+                  onClick={() => handleSubscribe("crunchyroll_subscriber")}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Redirecting to Stripe…" : "Start paid plan"}
@@ -295,8 +288,8 @@ export function Pricing() {
               <div className="pt-4">
                 <Button
                   className="w-full py-4 text-lg font-semibold bg-gray-900 hover:bg-gray-950 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60"
-                  onClick={() => handleSubscribe(ANIME_JUNKIE_PRICE_ID)}
-                  disabled={isSubmitting || !ANIME_JUNKIE_PRICE_ID}
+                  onClick={() => handleSubscribe("anime_junkie")}
+                  disabled={isSubmitting}
                 >
                   {isSubmitting ? "Redirecting to Stripe…" : "Start Anime Junkie"}
                 </Button>

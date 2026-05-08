@@ -10,18 +10,65 @@ const stripe = new Stripe(secretKey!, {
   apiVersion: "2025-06-30.basil",
 });
 
+/** Known live defaults; test/dev should override via STRIPE_* or NEXT_PUBLIC_* env. */
+const LEGACY_LIVE_CRUNCHYROLL_PRICE_ID = "price_1RlnY7AGc1Bd58Cjo5BJckhN";
+const LEGACY_LIVE_ANIME_JUNKIE_PRICE_ID = "price_1TUg5cAGc1Bd58Cj9nk3fAUJ";
+
+export type CheckoutTier = "crunchyroll_subscriber" | "anime_junkie";
+
+function resolvePriceIdForTier(tier: CheckoutTier): string | null {
+  if (tier === "crunchyroll_subscriber") {
+    return (
+      process.env.STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER ??
+      process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER ??
+      LEGACY_LIVE_CRUNCHYROLL_PRICE_ID
+    );
+  }
+  return (
+    process.env.STRIPE_PRICE_ID_ANIME_JUNKIE ??
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANIME_JUNKIE ??
+    LEGACY_LIVE_ANIME_JUNKIE_PRICE_ID
+  );
+}
+
+function legacyAllowedPriceIds(): string[] {
+  return [
+    process.env.STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER,
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER,
+    LEGACY_LIVE_CRUNCHYROLL_PRICE_ID,
+    process.env.STRIPE_PRICE_ID_ANIME_JUNKIE,
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANIME_JUNKIE,
+    LEGACY_LIVE_ANIME_JUNKIE_PRICE_ID,
+  ].filter((id): id is string => Boolean(id));
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { priceId } = await request.json();
+    const body = (await request.json()) as {
+      tier?: CheckoutTier;
+      priceId?: string;
+    };
 
-    const allowedPriceIds = [
-      process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER,
-      process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANIME_JUNKIE,
-    ].filter(Boolean);
+    let priceId: string | undefined;
 
-    if (allowedPriceIds.length > 0 && !allowedPriceIds.includes(priceId)) {
+    if (body.tier === "crunchyroll_subscriber" || body.tier === "anime_junkie") {
+      const resolved = resolvePriceIdForTier(body.tier);
+      if (!resolved) {
+        return NextResponse.json(
+          { error: "This plan is not configured for checkout yet." },
+          { status: 400 }
+        );
+      }
+      priceId = resolved;
+    } else if (typeof body.priceId === "string" && body.priceId.length > 0) {
+      priceId = body.priceId;
+      const allowed = legacyAllowedPriceIds();
+      if (allowed.length > 0 && !allowed.includes(priceId)) {
+        return NextResponse.json({ error: "Invalid price" }, { status: 400 });
+      }
+    } else {
       return NextResponse.json(
-        { error: "Invalid price" },
+        { error: "Missing plan (expected tier)" },
         { status: 400 }
       );
     }
@@ -45,9 +92,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error("Error creating checkout session:", error);
-    return NextResponse.json(
-      { error: "Error creating checkout session" },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Stripe.errors.StripeInvalidRequestError
+        ? error.message
+        : "Error creating checkout session";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
