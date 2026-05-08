@@ -125,17 +125,17 @@ Whenever you add one or more entries to `animeList`, you **must** wire internal 
 
 When in doubt, mirror structure and metadata density of these:
 
-| Template           | Reference                                                                 |
-| ------------------ | ------------------------------------------------------------------------- |
-| Pillar             | `app/watch-anime-together/page.tsx`, `app/anime-watch-party-toolkit/page.tsx` |
-| Guide + HowTo      | `app/guides/how-to-watch-anime-long-distance/page.tsx`                     |
+| Template                                        | Reference                                                                                                                   |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Pillar                                          | `app/watch-anime-together/page.tsx`, `app/anime-watch-party-toolkit/page.tsx`                                               |
+| Guide + HowTo                                   | `app/guides/how-to-watch-anime-long-distance/page.tsx`                                                                      |
 | Guide + checklist (conversion-heavy, non-HowTo) | `app/guides/first-anime-watch-party-checklist/page.tsx` (HowTo JSON-LD gold-standard remains the long-distance guide above) |
-| Listicle           | `app/guides/best-anime-to-watch-as-a-couple/page.tsx`                       |
-| Compare            | `app/compare/anidachi-vs-teleparty/page.tsx`, `app/compare/anidachi-vs-discord-screen-share/page.tsx` |
-| Glossary           | `app/glossary/watchroom/page.tsx`                                          |
-| Programmatic watch | `app/watch/[slug]/page.tsx`                                               |
-| `home` (`conversionTemplate` on non-`/` URL) | `app/watch-party-starter/page.tsx`                         |
-| `default`          | `app/resources/group-watch-onboarding/page.tsx`                            |
+| Listicle                                        | `app/guides/best-anime-to-watch-as-a-couple/page.tsx`                                                                       |
+| Compare                                         | `app/compare/anidachi-vs-teleparty/page.tsx`, `app/compare/anidachi-vs-discord-screen-share/page.tsx`                       |
+| Glossary                                        | `app/glossary/watchroom/page.tsx`                                                                                           |
+| Programmatic watch                              | `app/watch/[slug]/page.tsx`                                                                                                 |
+| `home` (`conversionTemplate` on non-`/` URL)    | `app/watch-party-starter/page.tsx`                                                                                          |
+| `default`                                       | `app/resources/group-watch-onboarding/page.tsx`                                                                             |
 
 ## When invoked
 

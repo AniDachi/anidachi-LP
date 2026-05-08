@@ -58,6 +58,7 @@ The site uses a hub-and-spoke content model:
 - **Glossary:** AEO-optimized definitions in `/glossary/`
 
 Every page includes:
+
 - Per-route `Metadata` (title, description, canonical, OG, Twitter)
 - JSON-LD structured data (FAQPage, Article, BreadcrumbList, etc.)
 - Internal links to 3+ sibling pages

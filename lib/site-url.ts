@@ -33,7 +33,7 @@ export function getResolvedSiteOrigin(): string {
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) {
     return normalizeToOrigin(
-      vercel.startsWith("http") ? vercel : `https://${vercel}`
+      vercel.startsWith("http") ? vercel : `https://${vercel}`,
     );
   }
 
