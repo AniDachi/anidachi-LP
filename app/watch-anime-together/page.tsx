@@ -72,7 +72,7 @@ export default function WatchAnimeTogetherPage() {
       description="Everything you need to watch anime with friends online."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-05-08"
+      dateModified="2026-05-09"
       faq={faq}
       headings={tocHeadings}
     >
@@ -252,6 +252,16 @@ export default function WatchAnimeTogetherPage() {
         <li><Link href="/watch/a-silent-voice-with-friends" className="hover:underline">A Silent Voice</Link></li>
         <li><Link href="/watch/your-name-with-friends" className="hover:underline">Your Name.</Link></li>
         <li><Link href="/watch/slam-dunk-with-friends" className="hover:underline">Slam Dunk</Link></li>
+        <li><Link href="/watch/kuroko-no-basket-with-friends" className="hover:underline">Kuroko&apos;s Basketball</Link></li>
+        <li><Link href="/watch/hajime-no-ippo-with-friends" className="hover:underline">Hajime no Ippo</Link></li>
+        <li><Link href="/watch/kakegurui-with-friends" className="hover:underline">Kakegurui</Link></li>
+        <li><Link href="/watch/nichijou-with-friends" className="hover:underline">Nichijou</Link></li>
+        <li><Link href="/watch/the-eminence-in-shadow-with-friends" className="hover:underline">The Eminence in Shadow</Link></li>
+        <li><Link href="/watch/rascal-does-not-dream-of-bunny-girl-senpai-with-friends" className="hover:underline">Bunny Girl Senpai</Link></li>
+        <li><Link href="/watch/spirited-away-with-friends" className="hover:underline">Spirited Away</Link></li>
+        <li><Link href="/watch/howls-moving-castle-with-friends" className="hover:underline">Howl&apos;s Moving Castle</Link></li>
+        <li><Link href="/watch/princess-mononoke-with-friends" className="hover:underline">Princess Mononoke</Link></li>
+        <li><Link href="/watch/perfect-blue-with-friends" className="hover:underline">Perfect Blue</Link></li>
       </ul>
 
       <h2

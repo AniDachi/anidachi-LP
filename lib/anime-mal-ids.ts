@@ -101,6 +101,16 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "a-silent-voice": 28851,
   "your-name": 32281,
   "slam-dunk": 170,
+  "kuroko-no-basket": 11771,
+  "hajime-no-ippo": 263,
+  kakegurui: 34933,
+  nichijou: 10165,
+  "the-eminence-in-shadow": 48316,
+  "rascal-does-not-dream-of-bunny-girl-senpai": 37450,
+  "spirited-away": 199,
+  "howls-moving-castle": 431,
+  "princess-mononoke": 164,
+  "perfect-blue": 437,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {

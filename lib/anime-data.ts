@@ -127,7 +127,11 @@ export const animeList: AnimeEntry[] = [
       "Maomao, a pharmacist's daughter sold into servitude at the imperial court, uses her medical knowledge to solve mysteries and uncover palace intrigues.",
     episodes: "24+ episodes",
     genres: ["Mystery", "Historical", "Drama"],
-    related: ["spy-x-family", "frieren-beyond-journeys-end", "violet-evergarden"],
+    related: [
+      "spy-x-family",
+      "frieren-beyond-journeys-end",
+      "violet-evergarden",
+    ],
   },
   {
     slug: "bleach",
@@ -187,7 +191,11 @@ export const animeList: AnimeEntry[] = [
       "Gon Freecss becomes a Hunter to find his absent father, navigating a world of complex power systems, moral ambiguity, and unforgettable arcs.",
     episodes: "148 episodes (2011 version)",
     genres: ["Action", "Adventure", "Fantasy"],
-    related: ["fullmetal-alchemist-brotherhood", "yu-yu-hakusho", "jujutsu-kaisen"],
+    related: [
+      "fullmetal-alchemist-brotherhood",
+      "yu-yu-hakusho",
+      "jujutsu-kaisen",
+    ],
   },
   {
     slug: "death-note",
@@ -247,7 +255,11 @@ export const animeList: AnimeEntry[] = [
       "A former child soldier learns to write letters for others and discovers the meaning of love. Breathtaking visuals and deeply emotional storytelling.",
     episodes: "13 episodes + 2 movies",
     genres: ["Drama", "Fantasy", "Slice of Life"],
-    related: ["frieren-beyond-journeys-end", "the-apothecary-diaries", "a-silent-voice"],
+    related: [
+      "frieren-beyond-journeys-end",
+      "the-apothecary-diaries",
+      "a-silent-voice",
+    ],
   },
   {
     slug: "made-in-abyss",
@@ -257,7 +269,11 @@ export const animeList: AnimeEntry[] = [
       "Riko descends into a massive, mysterious chasm with her robot companion Reg to find her mother. Beautiful yet brutal, the Abyss hides wonders and horrors in equal measure.",
     episodes: "25+ episodes across 2 seasons",
     genres: ["Adventure", "Fantasy", "Sci-Fi"],
-    related: ["frieren-beyond-journeys-end", "hunter-x-hunter", "the-promised-neverland"],
+    related: [
+      "frieren-beyond-journeys-end",
+      "hunter-x-hunter",
+      "the-promised-neverland",
+    ],
   },
   {
     slug: "code-geass",
@@ -427,7 +443,11 @@ export const animeList: AnimeEntry[] = [
       "After all of humanity is petrified for thousands of years, genius scientist Senku revives and sets out to rebuild civilization from scratch using science.",
     episodes: "47+ episodes across 3 seasons",
     genres: ["Adventure", "Sci-Fi", "Comedy"],
-    related: ["fullmetal-alchemist-brotherhood", "my-hero-academia", "fire-force"],
+    related: [
+      "fullmetal-alchemist-brotherhood",
+      "my-hero-academia",
+      "fire-force",
+    ],
   },
   {
     slug: "dororo",
@@ -515,7 +535,8 @@ export const animeList: AnimeEntry[] = [
     japaneseTitle: "JoJo no Kimyou na Bouken (TV)",
     synopsis:
       "The Joestar bloodline inherits bizarre psychic powers—and deadly rivals—across generations. From Victorian intrigue to globe-trotting showdowns, each arc remixes genre with unforgettable poses, fights, and cliffhangers built for live reactions.",
-    episodes: "Season 1 (Phantom Blood / Battle Tendency): 26 episodes; franchise continues across multiple cours",
+    episodes:
+      "Season 1 (Phantom Blood / Battle Tendency): 26 episodes; franchise continues across multiple cours",
     genres: ["Action", "Adventure", "Supernatural"],
     related: ["demon-slayer", "jujutsu-kaisen", "hunter-x-hunter"],
   },
@@ -527,7 +548,11 @@ export const animeList: AnimeEntry[] = [
       "Simon and Kamina drill upward from an underground village toward the surface—and keep escalating against impossible odds. Pure-hearted hype, giant robots, and speeches that reward shouting back at the screen with friends.",
     episodes: "27 episodes",
     genres: ["Action", "Mecha", "Sci-Fi"],
-    related: ["neon-genesis-evangelion", "fullmetal-alchemist-brotherhood", "attack-on-titan"],
+    related: [
+      "neon-genesis-evangelion",
+      "fullmetal-alchemist-brotherhood",
+      "attack-on-titan",
+    ],
   },
   {
     slug: "the-promised-neverland",
@@ -557,7 +582,11 @@ export const animeList: AnimeEntry[] = [
       "Shut-in gamer siblings Shiro and Sora are summoned to Disboard, where every conflict is settled by games. Rule-bending gambits and candy-colored chaos pair well with group commentary.",
     episodes: "12 episodes + movie",
     genres: ["Adventure", "Comedy", "Fantasy"],
-    related: ["sword-art-online", "konosuba", "that-time-i-got-reincarnated-as-a-slime"],
+    related: [
+      "sword-art-online",
+      "konosuba",
+      "that-time-i-got-reincarnated-as-a-slime",
+    ],
   },
   {
     slug: "food-wars-shokugeki-no-soma",
@@ -597,7 +626,11 @@ export const animeList: AnimeEntry[] = [
       "Deaf prince Bojji aims to become king despite ridicule from court and kingdoms. Fairy-tale framing hides muscular storytelling—perfect for rooms that cheer underdog arcs together.",
     episodes: "23 episodes (Season 1)",
     genres: ["Adventure", "Fantasy", "Drama"],
-    related: ["made-in-abyss", "violet-evergarden", "frieren-beyond-journeys-end"],
+    related: [
+      "made-in-abyss",
+      "violet-evergarden",
+      "frieren-beyond-journeys-end",
+    ],
   },
   {
     slug: "dragon-ball-z",
@@ -674,7 +707,7 @@ export const animeList: AnimeEntry[] = [
     title: "86: Eighty Six",
     japaneseTitle: "Eighty Six",
     synopsis:
-      "On a wartorn continent, silver-haired pilots labeled \"86\" fight drones from exile while handlers far from the front pretend it's clean. Morally heavy sorties and stunning action blocks land hardest when you debrief with friends between missions.",
+      'On a wartorn continent, silver-haired pilots labeled "86" fight drones from exile while handlers far from the front pretend it\'s clean. Morally heavy sorties and stunning action blocks land hardest when you debrief with friends between missions.',
     episodes: "23 episodes across 2 cours (Parts 1 & 2)",
     genres: ["Action", "Drama", "Sci-Fi"],
     related: ["code-geass", "attack-on-titan", "vinland-saga"],
@@ -717,7 +750,11 @@ export const animeList: AnimeEntry[] = [
       "Former gang legend Eikichi Onizuka becomes a teacher mostly for lazy reasons—and ends up confronting bullying, pressure, and hypocrisy with reckless heart. Older-school humor aside, his big speeches still pause the chat so everyone can argue whether he'd survive a modern classroom.",
     episodes: "43 episodes",
     genres: ["Comedy", "Drama", "School"],
-    related: ["classroom-of-the-elite", "kaguya-sama", "food-wars-shokugeki-no-soma"],
+    related: [
+      "classroom-of-the-elite",
+      "kaguya-sama",
+      "food-wars-shokugeki-no-soma",
+    ],
   },
   {
     slug: "psycho-pass",
@@ -911,7 +948,11 @@ export const animeList: AnimeEntry[] = [
       "When an adventuring party runs out of supplies deep in a dungeon, their pragmatic fighter turns monsters into gourmet meals. RPG logistics meet cozy cooking comedy—ideal for groups that want shared gasps, recipe banter, and debate over whether you would eat that boss drop.",
     episodes: "24+ episodes (TV)",
     genres: ["Adventure", "Comedy", "Fantasy"],
-    related: ["made-in-abyss", "konosuba", "that-time-i-got-reincarnated-as-a-slime"],
+    related: [
+      "made-in-abyss",
+      "konosuba",
+      "that-time-i-got-reincarnated-as-a-slime",
+    ],
   },
   {
     slug: "darling-in-the-franxx",
@@ -982,5 +1023,105 @@ export const animeList: AnimeEntry[] = [
     episodes: "101 episodes",
     genres: ["Sports", "Comedy", "Drama"],
     related: ["haikyuu", "blue-lock", "march-comes-in-like-a-lion"],
+  },
+  {
+    slug: "kuroko-no-basket",
+    title: "Kuroko's Basketball",
+    japaneseTitle: "Kuroko no Basket",
+    synopsis:
+      "The Generation of Miracles shattered middle-school basketball—now one of their former teammates, the \"invisible\" passer Kuroko, teams up with prodigy Kagami to take down every ex-rival. Fast runs, clutch comebacks, and constant power-matchups make it easy for a group to pick sides and argue MVP moments after each game.",
+    episodes: "75 episodes across 3 seasons + movie",
+    genres: ["Sports", "Drama", "School"],
+    related: ["haikyuu", "blue-lock", "slam-dunk"],
+  },
+  {
+    slug: "hajime-no-ippo",
+    title: "Hajime no Ippo",
+    japaneseTitle: "Hajime no Ippo",
+    synopsis:
+      "Bullied student Ippo discovers boxing and turns raw grit into technique under coach Kamogawa. Training arcs, round-by-round tension, and sudden momentum shifts land perfectly in a watchroom—everyone gets a favorite punch, rival, and \"that was a 10-count\" debate.",
+    episodes: "120+ episodes across multiple seasons + OVAs",
+    genres: ["Sports", "Action", "Drama"],
+    related: ["slam-dunk", "haikyuu", "blue-lock"],
+  },
+  {
+    slug: "kakegurui",
+    title: "Kakegurui",
+    japaneseTitle: "Kakegurui",
+    synopsis:
+      "At a private academy where gambling decides social rank, transfer student Yumeko Jabami treats high-stakes games like a thrill sport. Every episode is a new mind game with reveals that beg for pause-and-predict—ideal for group nights where everyone tries to call the bluff first.",
+    episodes: "24 episodes across 2 seasons",
+    genres: ["Psychological", "Thriller", "Drama"],
+    related: ["death-note", "classroom-of-the-elite", "monster"],
+  },
+  {
+    slug: "nichijou",
+    title: "Nichijou: My Ordinary Life",
+    japaneseTitle: "Nichijou",
+    synopsis:
+      "School life becomes absurd: a talking cat, a child scientist, a robot girl, and everyday moments that escalate into slapstick set pieces. It’s built for short co-watch bursts—people can drop in, timestamp the funniest 3 seconds, and still feel in on the joke.",
+    episodes: "26 episodes",
+    genres: ["Comedy", "Slice of Life", "School"],
+    related: ["the-disastrous-life-of-saiki-k", "konosuba", "bocchi-the-rock"],
+  },
+  {
+    slug: "the-eminence-in-shadow",
+    title: "The Eminence in Shadow",
+    japaneseTitle: "Kage no Jitsuryokusha ni Naritakute!",
+    synopsis:
+      "A boy reincarnates into a fantasy world and role-plays as a secret mastermind—except his made-up lore keeps becoming real. The mix of deadpan comedy, sudden action spikes, and \"wait, that actually mattered\" twists gives watch parties endless reaction beats without demanding perfect schedules.",
+    episodes: "32+ episodes across 2 seasons",
+    genres: ["Action", "Comedy", "Isekai"],
+    related: ["overlord", "konosuba", "mushoku-tensei"],
+  },
+  {
+    slug: "rascal-does-not-dream-of-bunny-girl-senpai",
+    title: "Rascal Does Not Dream of Bunny Girl Senpai",
+    japaneseTitle: "Seishun Buta Yarou wa Bunny Girl Senpai no Yume wo Minai",
+    synopsis:
+      "Sarcastic teen Sakuta helps classmates affected by strange supernatural \"Adolescence Syndrome\"—starting with actress Mai, who becomes invisible to the world. It’s dialogue-driven and twisty enough that friends will want to debrief theories right after each episode, especially when the rules change mid-arc.",
+    episodes: "13 episodes + movies",
+    genres: ["Drama", "Romance", "Supernatural"],
+    related: ["your-name", "toradora", "steins-gate"],
+  },
+  {
+    slug: "spirited-away",
+    title: "Spirited Away",
+    japaneseTitle: "Sen to Chihiro no Kamikakushi",
+    synopsis:
+      "Chihiro stumbles into a bathhouse for spirits and has to work to save her parents and find her way home. It’s a perfect single-session group watch: every scene is packed with details, and the ending always triggers \"wait—did you notice that?\" rewinds and post-credits conversation.",
+    episodes: "Movie",
+    genres: ["Fantasy", "Adventure", "Drama"],
+    related: ["howls-moving-castle", "princess-mononoke", "your-name"],
+  },
+  {
+    slug: "howls-moving-castle",
+    title: "Howl's Moving Castle",
+    japaneseTitle: "Howl no Ugoku Shiro",
+    synopsis:
+      "Sophie is cursed into an old body and finds refuge in wizard Howl's walking castle, where bargains, war, and self-image collide. It’s romantic, strange, and visually dense—great for friends who like pausing to interpret symbolism and debate character choices scene-by-scene.",
+    episodes: "Movie",
+    genres: ["Fantasy", "Romance", "Adventure"],
+    related: ["spirited-away", "princess-mononoke", "a-silent-voice"],
+  },
+  {
+    slug: "princess-mononoke",
+    title: "Princess Mononoke",
+    japaneseTitle: "Mononoke Hime",
+    synopsis:
+      "Ashitaka gets pulled into a brutal conflict between industry and the gods of the forest, where no side is purely right. It’s the kind of film that turns into a group debate immediately—pause-worthy moral choices, stunning action, and an ending that hits differently depending on who you empathize with.",
+    episodes: "Movie",
+    genres: ["Action", "Adventure", "Fantasy"],
+    related: ["spirited-away", "howls-moving-castle", "vinland-saga"],
+  },
+  {
+    slug: "perfect-blue",
+    title: "Perfect Blue",
+    japaneseTitle: "Pafekuto Buruu",
+    synopsis:
+      "Pop idol Mima leaves music for acting and spirals into paranoia as reality and performance start to blur. It’s intense and best watched with clear spoiler boundaries—ideal for a small group that wants to compare notes after each sequence and unpack what was real once the credits roll.",
+    episodes: "Movie",
+    genres: ["Thriller", "Psychological", "Mystery"],
+    related: ["monster", "psycho-pass", "death-note"],
   },
 ];

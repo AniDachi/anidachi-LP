@@ -1,6 +1,6 @@
 ## Background and Motivation
 
-We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Friends”) to expand SEO coverage and internal linking.
+We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Friends”) to expand SEO coverage and internal linking, with a focus on **higher conversion to paid subscription checkout** (via the homepage `/#pricing` → pricing/checkout flow).
 
 ## Key Challenges and Analysis
 
@@ -13,17 +13,33 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 
 ## High-level Task Breakdown
 
-1. Add 5 new anime entries to `lib/anime-data.ts`.
-   - Success criteria: `animeList` includes 5 new, unique slugs; each has `title`, `synopsis`, `episodes`, `genres`, and `related` slugs that exist.
-2. Add internal backlinks to the new watch pages from the appropriate hub/listicle pages.
-   - Success criteria: new watch pages appear in “Watch Anime Together” hub and at least one relevant listicle page; links use `/watch/{slug}-with-friends`.
-3. Validate build.
+### Batch: Create 10 new programmatic watch pages (conversion = start subscription)
+
+1. Add 10 new `AnimeEntry` items to `lib/anime-data.ts` (slugs listed below).
+   - Success criteria: `animeList` includes 10 new, unique slugs; each has `title`, `synopsis`, `episodes`, `genres`, and `related` slugs that exist in `animeList`.
+2. Add MAL IDs for the 10 new slugs to `lib/anime-mal-ids.ts`.
+   - Success criteria: `getMalIdForSlug(slug)` returns a number for each new slug; watch pages can fetch posters/scores via Jikan.
+3. Add required hub/listicle backlinks for every new watch page.
+   - Success criteria:
+     - Each new slug is linked from `app/watch-anime-together/page.tsx` (“Popular Anime to Watch Together” grid).
+     - Each new slug is linked from `app/guides/best-anime-to-watch-with-friends/page.tsx` (exactly one best-fit section per title; no duplicate `/watch/...` links on the page).
+     - Bump `dateModified` on any touched hub/listicle pages (ISO date, honest).
+4. Validate build.
    - Success criteria: `npm run build` succeeds.
 
 ## Project Status Board
 
+### Completed (previous batch)
+
 - [x] Add 5 anime entries to `lib/anime-data.ts`
 - [x] Add hub/listicle backlinks for the 5 new watch pages
+- [x] Run `npm run build`
+
+### Next batch (10 new watch pages)
+
+- [x] Add 10 anime entries to `lib/anime-data.ts`
+- [x] Add MAL IDs for the 10 slugs to `lib/anime-mal-ids.ts`
+- [x] Add hub/listicle backlinks (`watch-anime-together`, `best-anime-to-watch-with-friends`) + bump `dateModified`
 - [x] Run `npm run build`
 
 ## Current Status / Progress Tracking
@@ -38,9 +54,42 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 - Build check: `npm run build` ✅
 - Next: manual spot-check a couple pages in the browser (e.g. `/watch/odd-taxi-with-friends`).
 
+- Added 10 new watch slugs to `animeList` and wired hub/listicle backlinks:
+  - `kuroko-no-basket`
+  - `hajime-no-ippo`
+  - `kakegurui`
+  - `nichijou`
+  - `the-eminence-in-shadow`
+  - `rascal-does-not-dream-of-bunny-girl-senpai`
+  - `spirited-away`
+  - `howls-moving-castle`
+  - `princess-mononoke`
+  - `perfect-blue`
+- Added MAL ID mappings for the 10 new slugs in `lib/anime-mal-ids.ts`.
+- Hub/listicle updates:
+  - `app/watch-anime-together/page.tsx` (`dateModified` → `2026-05-09`)
+  - `app/guides/best-anime-to-watch-with-friends/page.tsx` (`dateModified` → `2026-05-09`, updated count to `56+`)
+- Build check: `npm run build` ✅
+- Spot-check: `GET /watch/nichijou-with-friends` and `GET /watch/princess-mononoke-with-friends` returned `200` on local prod server; canonical emitted as `https://anidachi.app/watch/nichijou-with-friends`.
+
 ## Executor's Feedback or Assistance Requests
 
-- None yet.
+- None.
+
+### Proposed next 10 `/watch/[slug]-with-friends` pages
+
+Goal: expand high-intent “watch {anime} with friends” landers for titles with strong brand demand + group-watch energy, optimized to convert into the paid subscription checkout (primary CTA remains `/#pricing` on watch pages per existing template).
+
+1. `kuroko-no-basket`
+2. `hajime-no-ippo`
+3. `kakegurui`
+4. `nichijou`
+5. `the-eminence-in-shadow`
+6. `rascal-does-not-dream-of-bunny-girl-senpai`
+7. `spirited-away`
+8. `howls-moving-castle`
+9. `princess-mononoke`
+10. `perfect-blue`
 
 ## Lessons
 

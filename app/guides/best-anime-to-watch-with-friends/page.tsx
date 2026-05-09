@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch with Friends (2026) — 46+ Top Picks for Group Watching",
+  title: "Best Anime to Watch with Friends (2026) — 56+ Top Picks for Group Watching",
   description:
-    "Curated list of 46+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
+    "Curated list of 56+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
 };
 
@@ -67,18 +67,18 @@ export default function BestAnimeWithFriendsPage() {
         { name: "Guides", url: "/watch-anime-together" },
         { name: "Best Anime with Friends", url: "/guides/best-anime-to-watch-with-friends" },
       ]}
-      title="46+ Best Anime to Watch with Friends in 2026"
+      title="56+ Best Anime to Watch with Friends in 2026"
       description="Top anime picks for group watching sessions."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-05-08"
+      dateModified="2026-05-09"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        46+ Best Anime to Watch with Friends in 2026
+        56+ Best Anime to Watch with Friends in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -114,6 +114,10 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/cyberpunk-edgerunners-with-friends" className="text-purple-600 hover:underline">Cyberpunk: Edgerunners</Link></strong> — Ten episodes of Night City adrenaline; every cliff lands like a shared scream emoji.</li>
         <li><strong><Link href="/watch/darling-in-the-franxx-with-friends" className="text-purple-600 hover:underline">Darling in the Franxx</Link></strong> — Mecha melodrama built for synchronized yelling before your group argues lore.</li>
         <li><strong><Link href="/watch/great-pretender-with-friends" className="text-purple-600 hover:underline">Great Pretender</Link></strong> — Globe-hopping cons with rug-pull reveals tailored for pause-and-debate rooms.</li>
+        <li><strong><Link href="/watch/kuroko-no-basket-with-friends" className="text-purple-600 hover:underline">Kuroko&apos;s Basketball</Link></strong> — Miracle-tier matchups and comeback runs make every quarter a shared “no way” moment.</li>
+        <li><strong><Link href="/watch/spirited-away-with-friends" className="text-purple-600 hover:underline">Spirited Away</Link></strong> — A one-night movie packed with details; everyone notices something different on the first watch.</li>
+        <li><strong><Link href="/watch/howls-moving-castle-with-friends" className="text-purple-600 hover:underline">Howl&apos;s Moving Castle</Link></strong> — Romantic fantasy with pause-worthy visuals and character choices that spark immediate debate.</li>
+        <li><strong><Link href="/watch/princess-mononoke-with-friends" className="text-purple-600 hover:underline">Princess Mononoke</Link></strong> — Big set pieces plus morally gray sides—perfect for a group that loves arguing who’s “right.”</li>
       </ul>
 
       <h2
@@ -137,6 +141,8 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="text-purple-600 hover:underline">The Disastrous Life of Saiki K.</Link></strong> — Rapid-fire psychic gags engineered for rooms that talk over episodes anyway.</li>
         <li><strong><Link href="/watch/delicious-in-dungeon-with-friends" className="text-purple-600 hover:underline">Delicious in Dungeon</Link></strong> — Monster-cooking tabletop logic with cozy party banter; perfect when your crew wants memeable meals between fights.</li>
         <li><strong><Link href="/watch/k-on-with-friends" className="text-purple-600 hover:underline">K-On!</Link></strong> — Cozy club-room comedy with music breaks; perfect when you want light jokes and shared comfort vibes.</li>
+        <li><strong><Link href="/watch/nichijou-with-friends" className="text-purple-600 hover:underline">Nichijou</Link></strong> — Pure absurd escalation; ideal for quick co-watch bursts and replaying the funniest 3 seconds.</li>
+        <li><strong><Link href="/watch/the-eminence-in-shadow-with-friends" className="text-purple-600 hover:underline">The Eminence in Shadow</Link></strong> — Deadpan roleplay collides with real stakes; every “accidental prophecy” is group-reactor fuel.</li>
       </ul>
 
       <h2
@@ -160,6 +166,9 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/a-silent-voice-with-friends" className="text-purple-600 hover:underline">A Silent Voice</Link></strong> — A one-night movie that sparks real debriefs about guilt, empathy, and second chances.</li>
         <li><strong><Link href="/watch/your-name-with-friends" className="text-purple-600 hover:underline">Your Name.</Link></strong> — Twist-forward romance and time-bending mystery that’s best when everyone reacts at once.</li>
         <li><strong><Link href="/watch/golden-kamuy-with-friends" className="text-purple-600 hover:underline">Golden Kamuy</Link></strong> — Tattoo treasure hunts across Hokkaido built for wiki-tab debates mid-marathon.</li>
+        <li><strong><Link href="/watch/kakegurui-with-friends" className="text-purple-600 hover:underline">Kakegurui</Link></strong> — High-stakes mind games where your room will try to predict the twist before the reveal.</li>
+        <li><strong><Link href="/watch/rascal-does-not-dream-of-bunny-girl-senpai-with-friends" className="text-purple-600 hover:underline">Bunny Girl Senpai</Link></strong> — Arc-by-arc rule changes invite post-episode “okay, what just happened?” threads.</li>
+        <li><strong><Link href="/watch/perfect-blue-with-friends" className="text-purple-600 hover:underline">Perfect Blue</Link></strong> — A psychological thriller that demands a debrief: what was real, what was performance, and when did it flip?</li>
       </ul>
 
       <h2
@@ -175,6 +184,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/inuyasha-with-friends" className="text-purple-600 hover:underline">Inuyasha</Link></strong> — Feudal fairy-tale quests across 160+ TV episodes; async threads keep shard-hunt discussions readable.</li>
         <li><strong><Link href="/watch/fairy-tail-with-friends" className="text-purple-600 hover:underline">Fairy Tail</Link></strong> — Guild-sized cast and endlessly extending saga—async watchrooms keep arcs tagged per friend.</li>
         <li><strong><Link href="/watch/slam-dunk-with-friends" className="text-purple-600 hover:underline">Slam Dunk</Link></strong> — Classic basketball training arcs and rivalry games; perfect for long, hype weekend marathons.</li>
+        <li><strong><Link href="/watch/hajime-no-ippo-with-friends" className="text-purple-600 hover:underline">Hajime no Ippo</Link></strong> — Training + fight-night arcs stack endlessly; async pacing keeps everyone aligned between rounds.</li>
       </ul>
 
       <h2
