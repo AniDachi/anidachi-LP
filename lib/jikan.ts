@@ -40,11 +40,36 @@ export interface JikanRecommendation {
 }
 
 async function jikanGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${JIKAN}${path}`, fetchOptions);
-  if (!res.ok) {
-    throw new Error(`Jikan ${res.status} ${res.statusText}: ${path}`);
+  const url = `${JIKAN}${path}`;
+  let attempt = 0;
+  // Jikan rate-limits fairly aggressively; one small retry improves poster reliability.
+  // Keep this conservative to avoid hammering the API.
+  const maxAttempts = 2;
+  while (attempt < maxAttempts) {
+    attempt += 1;
+    const res = await fetch(url, fetchOptions);
+    if (res.ok) return res.json() as Promise<T>;
+
+    const retryable =
+      res.status === 429 ||
+      res.status === 500 ||
+      res.status === 502 ||
+      res.status === 503 ||
+      res.status === 504;
+
+    if (!retryable || attempt >= maxAttempts) {
+      throw new Error(`Jikan ${res.status} ${res.statusText}: ${path}`);
+    }
+
+    const retryAfter = res.headers.get("retry-after");
+    const retryAfterMs =
+      retryAfter && /^\d+$/.test(retryAfter)
+        ? Math.min(parseInt(retryAfter, 10) * 1000, 1500)
+        : 800;
+    await new Promise((r) => setTimeout(r, retryAfterMs));
   }
-  return res.json() as Promise<T>;
+
+  throw new Error(`Jikan request failed unexpectedly: ${path}`);
 }
 
 /** Top anime by MAL members (useful for content seeding). */
