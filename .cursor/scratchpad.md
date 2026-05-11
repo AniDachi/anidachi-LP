@@ -106,3 +106,32 @@ Goal: expand high-intent “watch {anime} with friends” landers for titles wit
 ## Lessons
 
 - If terminal output indicates vulnerabilities, run `npm audit` before continuing.
+
+---
+
+## Homepage CRO Rework (Execution Summary)
+
+### Project Status Board
+
+- [x] Milestone 1: Home client orchestrator + survey state wiring
+- [x] Milestone 2: Hero mini-survey UI + analytics events
+- [x] Milestone 3: Pricing recommendation UI + message-matched CTA labels
+- [x] Milestone 4: Proof proxies section + trust badges near pricing CTAs
+- [x] Milestone 5: FAQ defaults expanded (top 3)
+- [x] Milestone 6: `npm run build` passes
+
+### Current Status / Progress Tracking
+
+- Homepage now uses a client orchestrator (`components/home/home-client.tsx`) that persists survey state in localStorage and scrolls to pricing on CTA.
+- Hero mini-survey is live (`components/hero.tsx`) and fires `survey_answered` (via `trackEvent`) plus a `cta_click` conversion event with recommendation context.
+- Pricing supports recommendation props and highlights the recommended tier (`components/pricing.tsx`). Trust indicators are shown adjacent to payment CTAs.
+- “See It In Action” section now appears directly under the hero (`components/home/home-client.tsx` → `ChromeExtensionDemo` moved up).
+- Removed the 3-card trust strip (“Secure checkout / No account sharing / Founding member perks”) from the homepage (`components/home/home-client.tsx`).
+- FAQ supports default-open items; homepage opens 3 key questions by default (`components/faq-section.tsx`).
+- Build check: `npm run build` ✅ (2026-05-11)
+
+### Executor's Feedback or Assistance Requests
+
+- Please refresh the homepage (`/`) and confirm:
+  - “See It In Action” is immediately below the hero.
+  - The trust-card section is gone (no 3 cards under “See It In Action”).

@@ -2,6 +2,9 @@
   "plugins": {
     "amplitude": {
       "enabled": true
+    },
+    "stripe": {
+      "enabled": true
     }
   }
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { NavPricingLink } from "@/components/nav-pricing-link";
+import { NavPricingButton } from "@/components/nav-pricing-button";
 
 export function NavBar() {
   return (
@@ -49,6 +50,9 @@ export function NavBar() {
             >
               Contact
             </a>
+          </li>
+          <li className="hidden sm:block">
+            <NavPricingButton />
           </li>
         </ul>
       </div>

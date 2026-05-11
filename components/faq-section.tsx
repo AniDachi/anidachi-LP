@@ -11,9 +11,11 @@ export interface FAQItem {
 export function FAQSection({
   title = "Frequently Asked Questions",
   questions,
+  defaultOpenIndexes = [],
 }: {
   title?: string;
   questions: FAQItem[];
+  defaultOpenIndexes?: number[];
 }) {
   return (
     <section id="faq" className="py-24 bg-white">
@@ -23,7 +25,12 @@ export function FAQSection({
         </h2>
         <div className="space-y-4">
           {questions.map((q, i) => (
-            <FAQAccordion key={i} question={q.question} answer={q.answer} />
+            <FAQAccordion
+              key={i}
+              question={q.question}
+              answer={q.answer}
+              defaultOpen={defaultOpenIndexes.includes(i)}
+            />
           ))}
         </div>
       </div>
@@ -31,8 +38,12 @@ export function FAQSection({
   );
 }
 
-function FAQAccordion({ question, answer }: FAQItem) {
-  const [open, setOpen] = useState(false);
+function FAQAccordion({
+  question,
+  answer,
+  defaultOpen = false,
+}: FAQItem & { defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
 
   return (
     <div className="border border-gray-200 rounded-lg">

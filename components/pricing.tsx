@@ -10,15 +10,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Star, Zap, Shield } from "lucide-react";
+import { Check, Star, Zap, Shield, Lock, CreditCard } from "lucide-react";
 import {
   inferPageTemplateFromPath,
   trackConversion,
 } from "@/lib/conversion-events";
+import type { CheckoutTier, HomeSurveyAnswers } from "@/lib/home-survey";
 
-type CheckoutTier = "crunchyroll_subscriber" | "anime_junkie";
-
-export function Pricing() {
+export function Pricing({
+  survey,
+  recommendedTier,
+  getCtaLabelForTier,
+}: {
+  survey?: HomeSurveyAnswers;
+  recommendedTier?: CheckoutTier;
+  getCtaLabelForTier?: (tier: CheckoutTier) => string;
+} = {}) {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -74,6 +81,9 @@ export function Pricing() {
       page_template: pageTemplate,
       placement: "pricing_subscribe",
       plan_tier: tier,
+      recommended_tier: recommendedTier ?? "unset",
+      segment: survey?.segment ?? "unset",
+      priority: survey?.priority ?? "unset",
     });
 
     setIsSubmitting(true);
@@ -158,7 +168,7 @@ export function Pricing() {
             Early Access Pricing
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-            Start with the plan that matches today
+            Simple pricing. Cancel anytime.
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
             Start paid checkout in one click. You&apos;ll see the full line items
@@ -188,11 +198,19 @@ export function Pricing() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12 items-stretch">
-          <Card className="relative order-1 border-2 border-purple-500 shadow-xl md:scale-105 bg-gradient-to-br from-purple-50 to-white transition-all duration-300 hover:shadow-2xl px-6 py-8 z-10">
+          <Card
+            className={`relative order-1 border-2 shadow-xl md:scale-105 bg-gradient-to-br from-purple-50 to-white transition-all duration-300 hover:shadow-2xl px-6 py-8 z-10 ${
+              recommendedTier === "crunchyroll_subscriber"
+                ? "border-purple-600 ring-4 ring-purple-100"
+                : "border-purple-500"
+            }`}
+          >
             <div className="absolute -top-5 left-1/2 transform -translate-x-1/2">
               <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 text-sm font-semibold">
                 <Star className="w-3 h-3 mr-1" aria-hidden="true" />
-                Most Popular
+                {recommendedTier === "crunchyroll_subscriber"
+                  ? "Recommended"
+                  : "Most Popular"}
               </Badge>
             </div>
 
@@ -240,8 +258,21 @@ export function Pricing() {
                   onClick={() => handleSubscribe("crunchyroll_subscriber")}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Redirecting to Stripe…" : "Start paid plan"}
+                  {isSubmitting
+                    ? "Redirecting to Stripe…"
+                    : (getCtaLabelForTier?.("crunchyroll_subscriber") ??
+                      "Start paid plan")}
                 </Button>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-gray-600">
+                  <div className="flex items-center gap-1.5">
+                    <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                    Secured by Stripe
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
+                    Card checkout
+                  </div>
+                </div>
                 <p className="text-xs text-gray-500 text-center mt-2">
                   Refundable in early access &bull; Cancel anytime &bull; No
                   hidden fees
@@ -250,7 +281,13 @@ export function Pricing() {
             </CardContent>
           </Card>
 
-          <Card className="relative order-2 border border-gray-200 bg-white transition-all duration-300 px-6 py-8 md:opacity-95 md:scale-[0.99] hover:shadow-lg">
+          <Card
+            className={`relative order-2 border bg-white transition-all duration-300 px-6 py-8 md:opacity-95 md:scale-[0.99] hover:shadow-lg ${
+              recommendedTier === "anime_junkie"
+                ? "border-gray-900 ring-4 ring-gray-200"
+                : "border-gray-200"
+            }`}
+          >
             <CardHeader className="text-center pt-6 pb-4">
               <CardTitle className="text-2xl font-bold text-gray-700 mb-2">
                 Anime Junkie
@@ -291,8 +328,21 @@ export function Pricing() {
                   onClick={() => handleSubscribe("anime_junkie")}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Redirecting to Stripe…" : "Start Anime Junkie"}
+                  {isSubmitting
+                    ? "Redirecting to Stripe…"
+                    : (getCtaLabelForTier?.("anime_junkie") ??
+                      "Start Anime Junkie")}
                 </Button>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-gray-600">
+                  <div className="flex items-center gap-1.5">
+                    <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                    Secured by Stripe
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
+                    Card checkout
+                  </div>
+                </div>
                 <p className="text-xs text-gray-500 text-center mt-2">
                   Secure Stripe checkout &bull; Cancel anytime &bull; Early-access
                   refunds available
