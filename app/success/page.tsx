@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,8 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, Rocket, Mail, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { CheckCircle, Rocket, Mail } from "lucide-react";
+import { DiscordContact } from "@/components/discord-contact";
+import { DiscordCredentialsForm } from "@/components/discord-credentials-form";
 
 export const metadata: Metadata = {
   title: "Welcome to AniDachi – Subscription Confirmed",
@@ -17,7 +17,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function SuccessPage() {
+export default async function SuccessPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ session_id?: string }>;
+}) {
+  const sp = await searchParams;
+  const sessionId =
+    typeof sp?.session_id === "string" ? sp.session_id : undefined;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
       <Card className="max-w-2xl w-full">
@@ -90,19 +98,12 @@ export default function SuccessPage() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Button asChild className="h-12 bg-purple-600 hover:bg-purple-700">
-              <Link href="/">
-                Explore AniDachi
-                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="h-12 bg-transparent">
-              <a href="mailto:goshan.tolochko@gmail.com">
-                Contact Us
-              </a>
-            </Button>
-          </div>
+          <DiscordContact
+            username=".profun"
+            profileUrl="https://discordapp.com/users/321011381409415169"
+          />
+
+          <DiscordCredentialsForm sessionId={sessionId} />
         </CardContent>
       </Card>
     </div>

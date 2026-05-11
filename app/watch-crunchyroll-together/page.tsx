@@ -220,8 +220,21 @@ export default function WatchCrunchyrollTogetherPage() {
           </li>
         ))}
         <li>
+          <Link
+            href="/compare/anidachi-vs-crunchyroll-party"
+            className="hover:underline"
+          >
+            AniDachi vs Crunchyroll Party
+          </Link>
+        </li>
+        <li>
           <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
             AniDachi vs Teleparty: Which Is Better?
+          </Link>
+        </li>
+        <li>
+          <Link href="/compare/anidachi-vs-watch2gether" className="hover:underline">
+            AniDachi vs Watch2Gether
           </Link>
         </li>
         <li>

@@ -47,7 +47,17 @@ export const animeList: AnimeEntry[] = [
       "Yuji Itadori joins Tokyo Jujutsu High to fight cursed spirits after swallowing a powerful cursed object. Dark sorcery, brutal fights, and complex characters define this modern shonen hit.",
     episodes: "47+ episodes across 2 seasons",
     genres: ["Action", "Supernatural", "Dark Fantasy"],
-    related: ["chainsaw-man", "demon-slayer", "attack-on-titan"],
+    related: ["jujutsu-kaisen-0", "chainsaw-man", "demon-slayer", "attack-on-titan"],
+  },
+  {
+    slug: "jujutsu-kaisen-0",
+    title: "Jujutsu Kaisen 0",
+    japaneseTitle: "Jujutsu Kaisen 0",
+    synopsis:
+      "Yuta Okkotsu enrolls at Jujutsu High to break a dangerous curse tied to his childhood friend. A high-stakes prequel packed with cursed energy battles and character backstory.",
+    episodes: "Movie",
+    genres: ["Action", "Supernatural", "Dark Fantasy"],
+    related: ["jujutsu-kaisen", "chainsaw-man", "demon-slayer"],
   },
   {
     slug: "chainsaw-man",
@@ -616,7 +626,17 @@ export const animeList: AnimeEntry[] = [
       "Ryuji and Taiga strike a pact to help each other confess to their crushes—until feelings blur. Sharp comedy and emotional payoffs land hardest when watched with friends who argue ships.",
     episodes: "25 episodes",
     genres: ["Comedy", "Romance", "Slice of Life"],
-    related: ["kaguya-sama", "spy-x-family", "bocchi-the-rock"],
+    related: ["kaguya-sama", "fruits-basket", "spy-x-family", "bocchi-the-rock"],
+  },
+  {
+    slug: "fruits-basket",
+    title: "Fruits Basket (2019)",
+    japaneseTitle: "Furūtsu Basuketto",
+    synopsis:
+      "Orphaned high schooler Tohru Honda becomes entangled with the Soma family, who hide a supernatural curse. A heartfelt blend of comedy, romance, and healing character arcs.",
+    episodes: "63 episodes across 3 seasons",
+    genres: ["Drama", "Romance", "Slice of Life"],
+    related: ["toradora", "horimiya", "your-lie-in-april"],
   },
   {
     slug: "ranking-of-kings",
@@ -874,7 +894,7 @@ export const animeList: AnimeEntry[] = [
       "Popular Izumi Miyamura and honors student Kyoko Hori collide outside school personas—and quietly rearrange each other's worlds in cozy vignettes. Low stakes on paper, huge serotonin payoff episode-to-episode for groups shipping slow-burn fluff.",
     episodes: "26 episodes (Season 1) + OVAs",
     genres: ["Romance", "Comedy", "School"],
-    related: ["kaguya-sama", "toradora", "spy-x-family"],
+    related: ["kaguya-sama", "toradora", "fruits-basket", "spy-x-family"],
   },
   {
     slug: "assassination-classroom",
@@ -908,6 +928,7 @@ export const animeList: AnimeEntry[] = [
       "violet-evergarden",
       "march-comes-in-like-a-lion",
       "frieren-beyond-journeys-end",
+      "fruits-basket",
     ],
   },
   {

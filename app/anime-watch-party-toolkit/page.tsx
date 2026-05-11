@@ -150,6 +150,14 @@ export default function AnimeWatchPartyToolkitPage() {
       </h2>
       <ul className="space-y-2 text-purple-600 mb-8">
         <li>
+          <Link
+            href="/compare/anidachi-vs-crunchyroll-party"
+            className="hover:underline"
+          >
+            AniDachi vs Crunchyroll Party
+          </Link>
+        </li>
+        <li>
           <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
             AniDachi vs Teleparty
           </Link>
@@ -160,6 +168,39 @@ export default function AnimeWatchPartyToolkitPage() {
             className="hover:underline"
           >
             AniDachi vs Discord screen share
+          </Link>
+        </li>
+        <li>
+          <Link href="/compare/anidachi-vs-watch2gether" className="hover:underline">
+            AniDachi vs Watch2Gether
+          </Link>
+        </li>
+        <li>
+          <Link href="/compare/anidachi-vs-roll-together" className="hover:underline">
+            AniDachi vs Roll Together
+          </Link>
+        </li>
+        <li>
+          <Link href="/compare/anidachi-vs-syncplay" className="hover:underline">
+            AniDachi vs Syncplay
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/compare/anidachi-vs-anime-watch-parties-extension"
+            className="hover:underline"
+          >
+            AniDachi vs Anime Watch Parties extension
+          </Link>
+        </li>
+        <li>
+          <Link href="/compare/anidachi-vs-kast" className="hover:underline">
+            AniDachi vs Kast
+          </Link>
+        </li>
+        <li>
+          <Link href="/compare/anidachi-vs-scener" className="hover:underline">
+            AniDachi vs Scener
           </Link>
         </li>
       </ul>

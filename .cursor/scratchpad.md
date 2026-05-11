@@ -72,9 +72,21 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 - Build check: `npm run build` ✅
 - Spot-check: `GET /watch/nichijou-with-friends` and `GET /watch/princess-mononoke-with-friends` returned `200` on local prod server; canonical emitted as `https://anidachi.app/watch/nichijou-with-friends`.
 
+### Post-payment success page (Discord contact)
+
+- Added a Discord contact block to the Stripe Checkout success page (`/success`) so subscribers can reach out via Discord in addition to email.
+- Removed the bottom action buttons from `/success`.
+- Added an optional Discord username field on `/success` that saves to Stripe Customer metadata (key: `anidachi_discord_contact`) using the `session_id` from the success URL.
+- Build check: `npm run build` ✅
+
 ## Executor's Feedback or Assistance Requests
 
-- None.
+- Please manually load `/success` in your browser and confirm:
+  - The “Contact via Discord” box is visible.
+  - “Copy username” copies `.profun`.
+  - “Open Discord profile” opens your Discord profile in a new tab/window.
+  - The two buttons shown previously (Explore AniDachi / Contact Us) are gone.
+  - The Discord username field appears; when arriving from Stripe (has `?session_id=...`), clicking Save shows “Saved”.
 
 ### Proposed next 10 `/watch/[slug]-with-friends` pages
 
