@@ -12,10 +12,12 @@ import { Users, MessageSquare, History, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { trackConversion } from "@/lib/conversion-events";
+import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
 export function MainAppFeatures() {
   const bottomCtaFired = useRef(false);
   const bottomCtaRef = useRef<HTMLDivElement>(null);
+  const { openSurvey } = usePlanSurvey();
 
   useEffect(() => {
     const el = bottomCtaRef.current;
@@ -171,16 +173,21 @@ export function MainAppFeatures() {
           >
             <Link
               href="#pricing"
-              onClick={() =>
+              onClick={(e) => {
+                e.preventDefault();
                 trackConversion("cta_click", {
                   page_path: "/",
                   page_template: "home",
                   placement: "home_features",
                   cta_variant: "home_features_pricing",
-                })
-              }
+                });
+                openSurvey({
+                  placement: "home_features",
+                  ctaVariant: "home_features_pricing",
+                });
+              }}
             >
-              Start paid plan
+              Help me pick a plan
               <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
             </Link>
           </Button>

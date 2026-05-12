@@ -109,6 +109,95 @@ Goal: expand high-intent “watch {anime} with friends” landers for titles wit
 
 ---
 
+## Sitewide CTA → Plan-Picker Survey (Planner Notes)
+
+### What you asked for
+
+Analyze all CTAs across the site that currently send users to “plans/pricing” (primarily `/#pricing`) and make them **open the same plan-picking survey modal** that exists in the homepage hero (“Help me pick a plan”), instead of navigating to pricing.
+
+### What exists today (relevant CTA surfaces found)
+
+- **Hero survey modal** (already correct behavior): `components/hero.tsx`
+  - Primary hero CTA opens the survey modal (no navigation).
+- **Sitewide CTAs that currently navigate to pricing** (need to change):
+  - Nav “Pricing” link: `components/nav-pricing-link.tsx` → `href="/#pricing"`
+  - Nav “Pick a Plan” button: `components/nav-pricing-button.tsx` → `href="/#pricing"`
+  - Home features bottom CTA: `components/main-app-features.tsx` → `href="#pricing"`
+  - Footer “Pricing” link: `components/footer.tsx` → `href="/#pricing"`
+  - SEO page checkout CTA blocks: `components/primary-checkout-cta.tsx` → `href="/#pricing"`
+    - Rendered on SEO templates via `components/seo-page-layout.tsx` (above-fold + bottom).
+- **Pricing section** (`components/pricing.tsx`) does **not** navigate; it starts Stripe checkout directly. Not part of the “redirect to plans” issue.
+
+### Key challenges and analysis
+
+- The survey modal currently lives *inside* `components/hero.tsx`, so other pages/components cannot open it without:
+  - prop-drilling an `openSurvey()` function everywhere, or
+  - a global event bus, or
+  - a dedicated React context/provider mounted in `app/layout.tsx`.
+- Because the user selected **sitewide**, we need the survey modal to be available on guides/compare/watch pages too (not just `/`).
+- Some CTAs are in server components (`components/footer.tsx`) today, so adding `onClick` logic requires either:
+  - switching `Footer` to a client component, or
+  - extracting the “Pricing” link into a small client component.
+
+### High-level Task Breakdown (implementation plan)
+
+1. **Extract the hero survey modal into a reusable sitewide component**
+   - Create `components/plan-survey/plan-survey-modal.tsx` (client) containing:
+     - modal UI + steps logic (currently in `components/hero.tsx`)
+     - checkout start logic (`fetch("/api/create-checkout-session")` and redirect)
+     - analytics events (`survey_opened`, `survey_step_viewed`, `survey_completed`, `survey_closed`)
+   - Success criteria:
+     - Modal renders identically to current hero survey.
+     - Modal can open on any route (not just `/`).
+
+2. **Add a sitewide provider/hook to open the modal from any CTA**
+   - Create `components/plan-survey/plan-survey-provider.tsx` (client) that:
+     - holds `survey` state + localStorage persistence (reuse `LS_KEY` + validation from `components/home/home-client.tsx`)
+     - computes `recommendedTier` using `recommendedTierForSurvey(survey)` from `lib/home-survey.ts`
+     - exposes `openSurvey({ placement, cta_variant })` and `closeSurvey()`
+   - Mount provider once in `app/layout.tsx` so it’s globally available.
+   - Success criteria:
+     - Any component can call `openSurvey(...)` and the modal opens.
+     - Survey answers persist across navigations (and refresh) the same way they do on `/`.
+
+3. **Wire the homepage hero CTA to the provider (no duplicate modal)**
+   - Update `components/hero.tsx`:
+     - remove internal `showSurvey` state + modal rendering
+     - replace “Help me pick a plan” `onClick` with `openSurvey({ placement: "hero", cta_variant: "hero_survey_recommended_plan" })`
+   - Success criteria:
+     - Hero CTA still opens the survey with step = 1.
+     - No duplicate modals or state divergence.
+
+4. **Convert all pricing-navigation CTAs to open the survey instead**
+   - Update these CTA components to prevent navigation and open the survey modal:
+     - `components/nav-pricing-link.tsx`
+     - `components/nav-pricing-button.tsx`
+     - `components/main-app-features.tsx` (bottom CTA currently `href="#pricing"`)
+     - `components/primary-checkout-cta.tsx` (sitewide SEO CTA blocks)
+     - `components/footer.tsx` (Pricing link)
+       - Preferred approach: extract a tiny client component `components/footer-pricing-cta.tsx` and use it in `Footer` so the rest of the footer can stay server-rendered if desired.
+   - Keep existing `trackConversion("cta_click", ...)` payloads, but change the action to “open survey”.
+   - Success criteria:
+     - Clicking any of these no longer changes the URL / scrolls to `#pricing`; it opens the survey modal instead.
+     - Existing `cta_click` analytics still fire with the same `cta_variant` and `placement` values.
+
+5. **Build validation**
+   - Run `npm run build`.
+   - Success criteria: build passes.
+
+### Manual test checklist (post-implementation)
+
+- From `/`:
+  - Nav “Pricing” and nav “Pick a Plan” open the survey.
+  - “Start paid plan” in features section opens the survey.
+  - Footer “Pricing” opens the survey.
+  - Hero “Help me pick a plan” opens the same survey (no regression).
+- From a guide page (any `/guides/*`):
+  - `PrimaryCheckoutCta` opens the survey.
+  - Survey checkout still redirects to Stripe successfully.
+
+---
+
 ## Homepage CRO Rework (Execution Summary)
 
 ### Project Status Board

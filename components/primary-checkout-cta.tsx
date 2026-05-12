@@ -9,42 +9,43 @@ import {
   type PageTemplateId,
   ctaCopyVariantForTemplate,
 } from "@/lib/conversion-events";
+import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
 const COPY = {
   default: {
-    title: "Start your AniDachi paid plan",
+    title: "We’ll help you pick the right plan",
     body: "$8/mo (early access) · Billed by Stripe. Full refund if you change your mind — no hidden fees.",
-    button: "Start paid plan",
+    button: "Help me pick a plan",
   },
   guide: {
-    title: "Ready to run this setup with AniDachi?",
+    title: "Not sure which plan fits?",
     body: "Same Crunchyroll account you already use. Checkout takes under a minute; cancel or refund on your terms.",
-    button: "Start paid plan",
+    button: "Help me pick a plan",
   },
   compare: {
-    title: "See pricing and start checkout",
+    title: "Pick a plan in under a minute",
     body: "Compare plans on the home page, then start a secure Stripe checkout when you are ready.",
-    button: "Start paid plan",
+    button: "Help me pick a plan",
   },
   anime: {
-    title: "Create a watchroom with a paid AniDachi plan",
+    title: "We’ll help you pick a plan for your watchroom",
     body: "Unlimited watchrooms, sync, and chat on Crunchyroll. Each viewer still needs their own Crunchyroll access.",
-    button: "Start paid plan",
+    button: "Help me pick a plan",
   },
   listicle: {
-    title: "Turn these shows into a shared watchroom",
+    title: "Pick a plan for your group",
     body: "Lock in early-access pricing, then open any title on Crunchyroll in an AniDachi room.",
-    button: "Start paid plan",
+    button: "Help me pick a plan",
   },
   glossary: {
-    title: "Try AniDachi with a clear refund path",
+    title: "Pick a plan with a clear refund path",
     body: "Early-access pricing with Stripe — cancel or refund if it is not a fit.",
-    button: "Start paid plan",
+    button: "Help me pick a plan",
   },
   pillar: {
-    title: "Start a paid AniDachi plan",
+    title: "We’ll help you pick a plan",
     body: "Founding-member pricing on Stripe. Refund if you are not happy — we built this for long-running anime groups.",
-    button: "Start paid plan",
+    button: "Help me pick a plan",
   },
 } as const;
 
@@ -76,6 +77,7 @@ export function PrimaryCheckoutCta({
   ctaVariant = "primary_checkout",
   trustMicrocopyClassName = "text-sm text-gray-500 mt-4 max-w-md mx-auto flex items-start justify-center gap-2",
 }: PrimaryCheckoutCtaProps) {
+  const { openSurvey } = usePlanSurvey();
   const rootRef = useRef<HTMLDivElement>(null);
   const impressionFired = useRef(false);
   const key = variantProp ?? ctaCopyVariantForTemplate(pageTemplate);
@@ -131,14 +133,16 @@ export function PrimaryCheckoutCta({
       >
         <Link
           href="/#pricing"
-          onClick={() =>
+          onClick={(e) => {
+            e.preventDefault();
             trackConversion("cta_click", {
               page_path: pagePath,
               page_template: pageTemplate,
               placement,
               cta_variant: ctaVariant,
-            })
-          }
+            });
+            openSurvey({ placement, ctaVariant });
+          }}
         >
           {copy.button}
           <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />

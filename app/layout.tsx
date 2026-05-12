@@ -4,6 +4,7 @@ import Script from "next/script";
 import { NavBar } from "@/components/nav-bar";
 import { AnalyticsEvents } from "@/components/analytics-events";
 import { OrganizationJsonLd } from "@/components/json-ld";
+import { PlanSurveyProvider } from "@/components/plan-survey/plan-survey-provider";
 import { GA_MEASUREMENT_ID } from "@/lib/gtag";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import "./globals.css";
@@ -76,10 +77,12 @@ export default function RootLayout({
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
-        <NavBar />
-        {children}
-        <OrganizationJsonLd />
-        <AnalyticsEvents />
+        <PlanSurveyProvider>
+          <NavBar />
+          {children}
+          <OrganizationJsonLd />
+          <AnalyticsEvents />
+        </PlanSurveyProvider>
       </body>
     </html>
   );

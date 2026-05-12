@@ -6,8 +6,10 @@ import {
   inferPageTemplateFromPath,
   trackConversion,
 } from "@/lib/conversion-events";
+import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
 export function NavPricingButton() {
+  const { openSurvey } = usePlanSurvey();
   return (
     <Button
       size="sm"
@@ -16,7 +18,8 @@ export function NavPricingButton() {
     >
       <Link
         href="/#pricing"
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
           if (typeof window === "undefined") return;
           const path = window.location.pathname;
           trackConversion("cta_click", {
@@ -25,11 +28,11 @@ export function NavPricingButton() {
             placement: "nav",
             cta_variant: "nav_pricing_button",
           });
+          openSurvey({ placement: "nav", ctaVariant: "nav_pricing_button" });
         }}
       >
-        See my plan
+        Help me pick a plan
       </Link>
     </Button>
   );
 }
-

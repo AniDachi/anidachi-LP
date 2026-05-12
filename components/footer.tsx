@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { FooterPricingCta } from "@/components/footer-pricing-cta";
 
 export function Footer() {
   return (
@@ -57,12 +58,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/#pricing"
-                  className="hover:text-white transition-colors"
-                >
-                  Pricing
-                </Link>
+                <FooterPricingCta className="hover:text-white transition-colors" />
               </li>
               <li>
                 <Link

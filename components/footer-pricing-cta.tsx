@@ -1,18 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import {
-  inferPageTemplateFromPath,
-  trackConversion,
-} from "@/lib/conversion-events";
+import { inferPageTemplateFromPath, trackConversion } from "@/lib/conversion-events";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
-export function NavPricingLink() {
+export function FooterPricingCta({ className = "" }: { className?: string }) {
   const { openSurvey } = usePlanSurvey();
+
   return (
     <Link
       href="/#pricing"
-      className="text-purple-100 hover:text-white transition-colors"
+      className={className}
       onClick={(e) => {
         e.preventDefault();
         if (typeof window === "undefined") return;
@@ -20,13 +18,14 @@ export function NavPricingLink() {
         trackConversion("cta_click", {
           page_path: path,
           page_template: inferPageTemplateFromPath(path),
-          placement: "nav",
-          cta_variant: "nav_pricing",
+          placement: "footer",
+          cta_variant: "footer_pricing",
         });
-        openSurvey({ placement: "nav", ctaVariant: "nav_pricing" });
+        openSurvey({ placement: "footer", ctaVariant: "footer_pricing" });
       }}
     >
       Pick a plan
     </Link>
   );
 }
+

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { NavPricingLink } from "@/components/nav-pricing-link";
 import { NavPricingButton } from "@/components/nav-pricing-button";
 
 export function NavBar() {
@@ -31,9 +30,6 @@ export function NavBar() {
             >
               How It Works
             </Link>
-          </li>
-          <li>
-            <NavPricingLink />
           </li>
           <li>
             <Link
