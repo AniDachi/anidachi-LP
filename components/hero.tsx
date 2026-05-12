@@ -2,12 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Chrome,
-  MessageCircle,
-  Play,
-  Users,
-} from "lucide-react";
+import { Chrome, MessageCircle, Play, Users } from "lucide-react";
 import { trackEvent } from "@/lib/gtag";
 import { trackConversion } from "@/lib/conversion-events";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
