@@ -72,7 +72,7 @@ export default function WatchAnimeTogetherPage() {
       description="Everything you need to watch anime with friends online."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-05-09"
+      dateModified="2026-05-12"
       faq={faq}
       headings={tocHeadings}
     >
@@ -262,6 +262,16 @@ export default function WatchAnimeTogetherPage() {
         <li><Link href="/watch/howls-moving-castle-with-friends" className="hover:underline">Howl&apos;s Moving Castle</Link></li>
         <li><Link href="/watch/princess-mononoke-with-friends" className="hover:underline">Princess Mononoke</Link></li>
         <li><Link href="/watch/perfect-blue-with-friends" className="hover:underline">Perfect Blue</Link></li>
+        <li><Link href="/watch/initial-d-with-friends" className="hover:underline">Initial D</Link></li>
+        <li><Link href="/watch/soul-eater-with-friends" className="hover:underline">Soul Eater</Link></li>
+        <li><Link href="/watch/bungo-stray-dogs-with-friends" className="hover:underline">Bungo Stray Dogs</Link></li>
+        <li><Link href="/watch/fate-zero-with-friends" className="hover:underline">Fate/Zero</Link></li>
+        <li><Link href="/watch/hellsing-ultimate-with-friends" className="hover:underline">Hellsing Ultimate</Link></li>
+        <li><Link href="/watch/yuri-on-ice-with-friends" className="hover:underline">Yuri!!! on Ice</Link></li>
+        <li><Link href="/watch/land-of-the-lustrous-with-friends" className="hover:underline">Land of the Lustrous</Link></li>
+        <li><Link href="/watch/re-creators-with-friends" className="hover:underline">Re:Creators</Link></li>
+        <li><Link href="/watch/kabaneri-of-the-iron-fortress-with-friends" className="hover:underline">Kabaneri of the Iron Fortress</Link></li>
+        <li><Link href="/watch/barakamon-with-friends" className="hover:underline">Barakamon</Link></li>
       </ul>
 
       <h2

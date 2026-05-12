@@ -1145,4 +1145,104 @@ export const animeList: AnimeEntry[] = [
     genres: ["Thriller", "Psychological", "Mystery"],
     related: ["monster", "psycho-pass", "death-note"],
   },
+  {
+    slug: "initial-d",
+    title: "Initial D: First Stage",
+    japaneseTitle: "Inisharu Dī",
+    synopsis:
+      "Takumi Fujiwara delivers tofu on mountain roads so often he masters drifting without trying. Underground street races, eurobeat drops, and one-upmanship cliffhangers make every touge duel a living-room rally—your friends will pick teams before the downhill even starts.",
+    episodes: "26 episodes (First Stage) + multiple sequels",
+    genres: ["Sports", "Action", "Drama"],
+    related: ["slam-dunk", "kuroko-no-basket", "haikyuu"],
+  },
+  {
+    slug: "soul-eater",
+    title: "Soul Eater",
+    japaneseTitle: "Sōru Ītā",
+    synopsis:
+      "Students at the Death Weapon Meister Academy hunt witches and collect souls to forge living weapons. Stylish battles, comic relief, and escalating threats keep chat loud—perfect when your crew wants hype fights without a thousand-episode commitment.",
+    episodes: "51 episodes",
+    genres: ["Action", "Supernatural", "Comedy"],
+    related: ["fire-force", "jujutsu-kaisen", "fullmetal-alchemist-brotherhood"],
+  },
+  {
+    slug: "bungo-stray-dogs",
+    title: "Bungo Stray Dogs",
+    japaneseTitle: "Bungō Sutorei Doggusu",
+    synopsis:
+      "Detectives with powers named after literary figures take on port mafia schemes and reality-bending cases. Quippy banter, inventive ability matchups, and lore deep enough to wiki mid-episode make it a strong co-watch for groups that love character-led mysteries.",
+    episodes: "50+ episodes across multiple seasons",
+    genres: ["Action", "Mystery", "Supernatural"],
+    related: ["noragami", "monster", "jojos-bizarre-adventure"],
+  },
+  {
+    slug: "fate-zero",
+    title: "Fate/Zero",
+    japaneseTitle: "Feito/Zero",
+    synopsis:
+      "Seven mages summon legendary heroes to fight for the Holy Grail in a brutal battle royale. Tactical standoffs, tragic backstories, and cinematic set pieces land best with a crew that wants to pause and argue strategy between servants.",
+    episodes: "25 episodes + recap specials",
+    genres: ["Action", "Fantasy", "Tragedy"],
+    related: ["code-geass", "attack-on-titan", "demon-slayer"],
+  },
+  {
+    slug: "hellsing-ultimate",
+    title: "Hellsing Ultimate",
+    japaneseTitle: "Herushingu",
+    synopsis:
+      "The Hellsing Organization unleashes Alucard and his human allies against vampires and Nazi freak experiments. Ultra-violent OVAs with dark humor—ideal for small groups okay with gore who want synchronized winces and meme-tier one-liners.",
+    episodes: "10 OVAs",
+    genres: ["Action", "Horror", "Supernatural"],
+    related: ["chainsaw-man", "jojos-bizarre-adventure", "parasyte"],
+  },
+  {
+    slug: "yuri-on-ice",
+    title: "Yuri!!! on Ice",
+    japaneseTitle: "Yuri!!! on Ice",
+    synopsis:
+      "Figure skater Yuri Katsuki hits a slump until champion Victor Nikiforov crashes into his life as coach and chaos agent. Competition nails, character studies, and music-driven routines make every program a shared cheer moment—even viewers new to skating get hooked.",
+    episodes: "12 episodes",
+    genres: ["Sports", "Drama", "Romance"],
+    related: ["haikyuu", "slam-dunk", "blue-lock"],
+  },
+  {
+    slug: "land-of-the-lustrous",
+    title: "Land of the Lustrous",
+    japaneseTitle: "Hōseki no Kuni",
+    synopsis:
+      "Gem people fight lunar invaders in a world of uncanny beauty and loss. CGI craft, philosophical stakes, and sudden turns reward watch parties who like theorizing about what humanity even means here.",
+    episodes: "12 episodes (Season 1)",
+    genres: ["Action", "Fantasy", "Drama"],
+    related: ["made-in-abyss", "neon-genesis-evangelion", "sword-art-online"],
+  },
+  {
+    slug: "re-creators",
+    title: "Re:Creators",
+    japaneseTitle: "Re:Kurieitāzu",
+    synopsis:
+      "Fictional characters spill into Tokyo and debate who owns their stories. Meta fights, long monologues, and crossover brawls spark immediate post-episode threads—bring the group that loves rules lawyering and creator ethics.",
+    episodes: "22 episodes",
+    genres: ["Action", "Fantasy", "Drama"],
+    related: ["steins-gate", "sword-art-online", "overlord"],
+  },
+  {
+    slug: "kabaneri-of-the-iron-fortress",
+    title: "Kabaneri of the Iron Fortress",
+    japaneseTitle: "Kōtetsujō no Kabaneri",
+    synopsis:
+      "Steam trains and armored survivors carve a path through kabane hordes in an industrial revolution apocalypse. Paced like a blockbuster miniseries with cliffhangers every episode—your room will sync screams on every tunnel breach.",
+    episodes: "12 episodes + compilation films",
+    genres: ["Action", "Horror", "Steampunk"],
+    related: ["attack-on-titan", "chainsaw-man", "tokyo-ghoul"],
+  },
+  {
+    slug: "barakamon",
+    title: "Barakamon",
+    japaneseTitle: "Barakamon",
+    synopsis:
+      "Hot-headed calligrapher Seishuu Handa is sent to a remote island where kids and elders dismantle his ego with kindness. Gentle comedy and heartfelt vignettes make it a low-stress group watch—everyone can drop in between episodes and still feel included.",
+    episodes: "12 episodes",
+    genres: ["Comedy", "Slice of Life", "Drama"],
+    related: ["k-on", "nichijou", "march-comes-in-like-a-lion"],
+  },
 ];

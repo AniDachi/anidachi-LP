@@ -42,6 +42,13 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 - [x] Add hub/listicle backlinks (`watch-anime-together`, `best-anime-to-watch-with-friends`) + bump `dateModified`
 - [x] Run `npm run build`
 
+### Additional batch (10 more watch pages — 2026-05-12)
+
+- [x] Add 10 anime entries to `lib/anime-data.ts`
+- [x] Add MAL IDs for the 10 slugs to `lib/anime-mal-ids.ts`
+- [x] Add hub/listicle backlinks + bump `dateModified` → `2026-05-12`
+- [x] Run `npm run build` ✅ (2026-05-12)
+
 ## Current Status / Progress Tracking
 
 - Added 5 new watch slugs to `animeList` and wired hub/listicle backlinks:
@@ -72,6 +79,20 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 - Build check: `npm run build` ✅
 - Spot-check: `GET /watch/nichijou-with-friends` and `GET /watch/princess-mononoke-with-friends` returned `200` on local prod server; canonical emitted as `https://anidachi.app/watch/nichijou-with-friends`.
 
+- **Additional 10 (2026-05-12):** new slugs:
+  - `initial-d`
+  - `soul-eater`
+  - `bungo-stray-dogs`
+  - `fate-zero`
+  - `hellsing-ultimate`
+  - `yuri-on-ice`
+  - `land-of-the-lustrous`
+  - `re-creators`
+  - `kabaneri-of-the-iron-fortress`
+  - `barakamon`
+- Hub/listicle: `watch-anime-together` + `best-anime-to-watch-with-friends` list bumped to **66+** picks; `dateModified` set to `2026-05-12`.
+- Build: `npm run build` ✅; prerender output includes `/watch/soul-eater-with-friends` verified via `.next` prerender manifest (local `curl` to dev server was `404` when dev not running — use `npm start` or dev server for live HTTP checks).
+
 ### Post-payment success page (Discord contact)
 
 - Added a Discord contact block to the Stripe Checkout success page (`/success`) so subscribers can reach out via Discord in addition to email.
@@ -80,6 +101,8 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 - Build check: `npm run build` ✅
 
 ## Executor's Feedback or Assistance Requests
+
+- **Planner / user:** Please manually spot-check at least 2 of the new watch URLs (e.g. `/watch/soul-eater-with-friends`, `/watch/initial-d-with-friends`) in the browser with `npm run dev` or `npm start` running; confirm `200`, layout, and canonical. Executor validated via `npm run build` + prerender manifest.
 
 - Please manually load `/success` in your browser and confirm:
   - The “Contact via Discord” box is visible.
@@ -102,6 +125,19 @@ Goal: expand high-intent “watch {anime} with friends” landers for titles wit
 8. `howls-moving-castle`
 9. `princess-mononoke`
 10. `perfect-blue`
+
+### Additional batch slugs (implemented 2026-05-12)
+
+1. `initial-d`
+2. `soul-eater`
+3. `bungo-stray-dogs`
+4. `fate-zero`
+5. `hellsing-ultimate`
+6. `yuri-on-ice`
+7. `land-of-the-lustrous`
+8. `re-creators`
+9. `kabaneri-of-the-iron-fortress`
+10. `barakamon`
 
 ## Lessons
 

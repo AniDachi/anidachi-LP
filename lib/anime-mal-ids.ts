@@ -113,6 +113,16 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "howls-moving-castle": 431,
   "princess-mononoke": 164,
   "perfect-blue": 437,
+  "initial-d": 185,
+  "soul-eater": 3588,
+  "bungo-stray-dogs": 32867,
+  "fate-zero": 11741,
+  "hellsing-ultimate": 777,
+  "yuri-on-ice": 32995,
+  "land-of-the-lustrous": 34822,
+  "re-creators": 34561,
+  "kabaneri-of-the-iron-fortress": 28623,
+  barakamon: 20213,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {
