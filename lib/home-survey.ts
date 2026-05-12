@@ -18,11 +18,14 @@ export type HomeSurveyDiscovery =
 
 export type HomeSurveyTiming = "today" | "this_week" | "just_researching";
 
+export type HomeSurveyGroupSize = "2_3" | "4_8" | "9_plus";
+
 export type HomeSurveyAnswers = {
   segment: HomeSurveySegment;
   priority?: HomeSurveyPriority;
   discovery?: HomeSurveyDiscovery;
   timing?: HomeSurveyTiming;
+  group_size?: HomeSurveyGroupSize;
 };
 
 export type CheckoutTier = "crunchyroll_subscriber" | "anime_junkie";
@@ -35,6 +38,7 @@ export function recommendedTierForSurvey(a: HomeSurveyAnswers): CheckoutTier {
   // If someone explicitly wants host controls, they self-identify into the higher tier.
   if (a.priority === "host_controls") return "anime_junkie";
   if (a.segment === "Community_mod") return "anime_junkie";
+  if (a.group_size === "9_plus") return "anime_junkie";
   return "crunchyroll_subscriber";
 }
 

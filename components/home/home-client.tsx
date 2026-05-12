@@ -19,7 +19,7 @@ import {
 } from "@/lib/home-survey";
 import { trackEvent } from "@/lib/gtag";
 
-const LS_KEY = "anidachi_home_survey_v1";
+const LS_KEY = "anidachi_home_survey_v2";
 
 function safeParseSurvey(raw: string | null): HomeSurveyAnswers | null {
   if (!raw) return null;
@@ -40,6 +40,7 @@ function safeParseSurvey(raw: string | null): HomeSurveyAnswers | null {
       priority: anyV.priority,
       discovery: anyV.discovery,
       timing: anyV.timing,
+      group_size: anyV.group_size,
     };
   } catch {
     return null;
@@ -77,14 +78,6 @@ export function HomeClient() {
     },
     []
   );
-
-  const onPrimaryCtaClick = useCallback(() => {
-    // Keep the scroll behavior fully client-side; anchors are fine but we want
-    // consistent behavior even if the link is rendered as a button.
-    if (typeof document === "undefined") return;
-    const el = document.getElementById("pricing");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
 
   return (
     <main

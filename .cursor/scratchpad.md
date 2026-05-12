@@ -135,3 +135,108 @@ Goal: expand high-intent “watch {anime} with friends” landers for titles wit
 - Please refresh the homepage (`/`) and confirm:
   - “See It In Action” is immediately below the hero.
   - The trust-card section is gone (no 3 cards under “See It In Action”).
+
+---
+
+## Survey → Subscription Conversion (Planner Notes)
+
+### What exists today (baseline)
+
+- Survey lives in the hero modal: `components/hero.tsx`
+  - Step 1: segment (`Friend_group_host` / `Long_distance_watch` / `Community_mod`)
+  - Step 2: priority (`sync_and_no_spoilers` / `chat_and_reactions` / `async_progress` / `host_controls`)
+  - Step 3: discovery (`google_search` / `reddit` / `discord` / `friend` / `other`)
+  - Step 4: timing (optional) (`today` / `this_week` / `just_researching`)
+  - Step 5: “Recommended for you” + 2 plan cards that can start Stripe checkout immediately
+- Recommendation logic: `lib/home-survey.ts`
+  - Only elevates to `anime_junkie` when `priority === "host_controls"` OR `segment === "Community_mod"`.
+- Persistence: localStorage (`components/home/home-client.tsx`).
+- Tracking:
+  - `survey_answered` fired per answer
+  - `checkout_session_started` / `checkout_redirect_success` / `checkout_error` from both hero and pricing.
+
+### Converting mechanism goals (subscription purchase)
+
+The survey should do more than “collect answers” — it should:
+- Increase confidence (“this plan is right for me”)
+- Reduce perceived risk (refund/cancel/security)
+- Increase urgency at the right moments (esp. `timing === "today"`)
+- Make the recommended path feel obvious (and everything else secondary)
+- Capture value even when not ready to buy (esp. `just_researching`)
+
+### High-impact survey improvements (ideas)
+
+- **Make the recommendation feel earned (diagnosis → prescription)**
+  - After Q2 (priority), show a 1-line “We’ll optimize for: ___” preview so the user sees progress toward a result.
+  - In step 5, show 2–3 “Because you said X…” bullets mapping answers → features on the plan (reduces “random recommendation” feeling).
+
+- **Reduce friction + increase momentum**
+  - Allow skipping “How did you find us?” entirely OR move it after checkout begins (it’s not value to the buyer).
+  - Convert step 4 (timing) to an inline micro-question on the recommendation screen (“Want to use this today?”) so it doesn’t block the payoff.
+
+- **Personalize the CTA copy everywhere**
+  - Step 5 buttons currently say “Start checkout”.
+  - Replace with the existing message-matched CTA helper in `lib/home-survey.ts` (`pricingCtaLabelForTier`) so the button reads like the user’s intent (“Start hosting watchrooms”, etc.).
+
+- **Stronger risk reducers at the exact decision point**
+  - Add 2–3 micro-trust lines *directly under the Step 5 CTA button* (not only on pricing):
+    - “Secure Stripe checkout”
+    - “Cancel & refund anytime in early access”
+    - “No account sharing — everyone uses their own Crunchyroll”
+
+- **Better “just researching” path (salvage non-buyers)**
+  - If `timing === "just_researching"`, show a secondary conversion:
+    - “Email me this plan + setup steps” (collect email) OR “Join Discord for updates + onboarding help”.
+  - Keep primary CTA visible, but don’t force immediate buy; this should increase eventual purchases without lowering current ones.
+
+- **Add one purchase-intent question that improves targeting**
+  - New Q (early): “How many people will be in your watchroom most of the time?” (2–3 / 4–8 / 9+)
+  - Use it to:
+    - Make `Community_mod` + larger groups feel clearly “Anime Junkie” (higher-ticket justification)
+    - Provide tailored copy (“Best for 6–10 friends”)
+
+- **Make the recommended plan visually dominant**
+  - On step 5, render recommended tier as the first card (or full-width), with the non-recommended option collapsed under “Compare the other plan”.
+  - The page already has a dedicated `Pricing` section; step 5 can be more “decision-focused” and less like a full pricing table.
+
+- **Urgency that matches timing (no fake countdowns)**
+  - If `timing === "today"`, add: “You can be in a room in ~2 minutes.”
+  - If `this_week`, add: “Set it up once, reuse for every episode.”
+
+- **Instrument funnel drop-off by step**
+  - Add events for `survey_opened`, `survey_step_viewed`, `survey_completed`, `survey_closed` with `step` + current answers to identify where users bail.
+  - Use these to decide whether discovery/timing questions should be removed or moved.
+
+### High-level Task Breakdown (next implementation batch)
+
+1. Update survey content + flow in `components/hero.tsx`.
+   - Success criteria: fewer blocking steps before showing recommendation; step 5 recommendation copy explicitly references answers; recommended CTA is primary and visually dominant.
+2. Use message-matched CTA labels for step 5 purchase buttons via `pricingCtaLabelForTier`.
+   - Success criteria: Step 5 CTA text changes based on survey answers (same behavior as pricing section).
+3. Add “just researching” salvage path (email capture or Discord join) without harming direct checkout.
+   - Success criteria: when `timing === "just_researching"`, a secondary conversion appears; primary checkout is still possible.
+4. Add step-level funnel analytics events.
+   - Success criteria: events emitted for open/close/step viewed/completed; payload includes `recommended_tier` and answered fields.
+5. Validate build.
+   - Success criteria: `npm run build` passes.
+
+### Current Status / Progress Tracking (2026-05-12)
+
+- Updated survey flow in `components/hero.tsx` to reduce friction:
+  - Step 1: segment
+  - Step 2: priority
+  - Step 3: group size (optional; skip allowed)
+  - Step 4: recommendation + timing/discovery (both optional; do not gate checkout)
+- Added a “We’ll optimize for…” preview after priority (shown at the start of step 3).
+- Recommendation CTAs now use `pricingCtaLabelForTier(...)` (message-matched CTA copy).
+- Added decision-point micro trust copy directly under step-4 checkout buttons.
+- Added “just researching” salvage path in step 4 (Discord contact + email plan + Discord setup guide link).
+- Added step-level funnel analytics events: `survey_opened`, `survey_step_viewed`, `survey_completed`, `survey_closed`.
+- Bumped localStorage key to `anidachi_home_survey_v2` in `components/home/home-client.tsx` to safely roll out the new survey schema (`group_size`).
+
+### Executor's Feedback or Assistance Requests
+
+- Please refresh `/` and try the hero survey to confirm:
+  - You reach the recommendation in 2–3 clicks (group size can be skipped).
+  - Step-4 checkout buttons show intent-matched labels (not “Start checkout”).
+  - Selecting “Just researching” shows the salvage CTAs.
