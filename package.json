@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "crm": "tsx scripts/crm/cli.ts"
+    "crm": "tsx scripts/crm/cli.ts",
+    "stripe:webhook:subscription": "tsx scripts/stripe/register-subscription-webhook.ts"
   },
   "dependencies": {
     "@amplitude/unified": "^1.1.1",

@@ -49,6 +49,13 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 - [x] Add hub/listicle backlinks + bump `dateModified` → `2026-05-12`
 - [x] Run `npm run build` ✅ (2026-05-12)
 
+### Additional batch (10 more watch pages — 2026-05-14)
+
+- [x] Add 10 anime entries to `lib/anime-data.ts`
+- [x] Add MAL IDs for the 10 slugs to `lib/anime-mal-ids.ts`
+- [x] Add hub/listicle backlinks + bump `dateModified` → `2026-05-14`
+- [x] Run `npm run build` ✅ (2026-05-14)
+
 ## Current Status / Progress Tracking
 
 - Added 5 new watch slugs to `animeList` and wired hub/listicle backlinks:
@@ -92,6 +99,19 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
   - `barakamon`
 - Hub/listicle: `watch-anime-together` + `best-anime-to-watch-with-friends` list bumped to **66+** picks; `dateModified` set to `2026-05-12`.
 - Build: `npm run build` ✅; prerender output includes `/watch/soul-eater-with-friends` verified via `.next` prerender manifest (local `curl` to dev server was `404` when dev not running — use `npm start` or dev server for live HTTP checks).
+
+- **Additional 10 (2026-05-14):** new slugs:
+  - `goblin-slayer`
+  - `rising-of-the-shield-hero`
+  - `clannad`
+  - `serial-experiments-lain` (also resolves `neon-genesis-evangelion` → `related` reference that was previously dangling)
+  - `ergo-proxy`
+  - `black-lagoon`
+  - `durarara`
+  - `baccano`
+  - `log-horizon`
+  - `paranoia-agent`
+- Hub/listicle: list bumped to **76+** picks; `dateModified` → `2026-05-14` on hub + guide.
 
 ### Post-payment success page (Discord contact)
 
@@ -138,6 +158,19 @@ Goal: expand high-intent “watch {anime} with friends” landers for titles wit
 8. `re-creators`
 9. `kabaneri-of-the-iron-fortress`
 10. `barakamon`
+
+### Additional batch slugs (implemented 2026-05-14)
+
+1. `goblin-slayer`
+2. `rising-of-the-shield-hero`
+3. `clannad`
+4. `serial-experiments-lain`
+5. `ergo-proxy`
+6. `black-lagoon`
+7. `durarara`
+8. `baccano`
+9. `log-horizon`
+10. `paranoia-agent`
 
 ## Lessons
 

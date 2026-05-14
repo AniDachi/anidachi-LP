@@ -123,6 +123,16 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "re-creators": 34561,
   "kabaneri-of-the-iron-fortress": 28623,
   barakamon: 20213,
+  "goblin-slayer": 37349,
+  "rising-of-the-shield-hero": 35790,
+  clannad: 2167,
+  "serial-experiments-lain": 339,
+  "ergo-proxy": 790,
+  "black-lagoon": 889,
+  durarara: 6746,
+  baccano: 2251,
+  "log-horizon": 17265,
+  "paranoia-agent": 323,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {

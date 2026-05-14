@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch with Friends (2026) — 66+ Top Picks for Group Watching",
+  title: "Best Anime to Watch with Friends (2026) — 76+ Top Picks for Group Watching",
   description:
-    "Curated list of 66+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
+    "Curated list of 76+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
 };
 
@@ -67,18 +67,18 @@ export default function BestAnimeWithFriendsPage() {
         { name: "Guides", url: "/watch-anime-together" },
         { name: "Best Anime with Friends", url: "/guides/best-anime-to-watch-with-friends" },
       ]}
-      title="66+ Best Anime to Watch with Friends in 2026"
+      title="76+ Best Anime to Watch with Friends in 2026"
       description="Top anime picks for group watching sessions."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-05-12"
+      dateModified="2026-05-14"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        66+ Best Anime to Watch with Friends in 2026
+        76+ Best Anime to Watch with Friends in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -123,6 +123,9 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/fate-zero-with-friends" className="text-purple-600 hover:underline">Fate/Zero</Link></strong> — Grail War spectacle and tragic payoffs—pause if your room loves debating servant matchups.</li>
         <li><strong><Link href="/watch/hellsing-ultimate-with-friends" className="text-purple-600 hover:underline">Hellsing Ultimate</Link></strong> — OVAs dialed to eleven; best for crews who want gory spectacle and meme Alucard moments.</li>
         <li><strong><Link href="/watch/kabaneri-of-the-iron-fortress-with-friends" className="text-purple-600 hover:underline">Kabaneri of the Iron Fortress</Link></strong> — Steam-train survival horror with Attack on Titan energy; every tunnel breach is a group scream.</li>
+        <li><strong><Link href="/watch/goblin-slayer-with-friends" className="text-purple-600 hover:underline">Goblin Slayer</Link></strong> — Tactical party raids and brutal stakes; your room will react in unison, then argue about risk vs. reward.</li>
+        <li><strong><Link href="/watch/black-lagoon-with-friends" className="text-purple-600 hover:underline">Black Lagoon</Link></strong> — Mercenary boat chaos and barroom philosophy; every firefight is a shared adrenaline spike.</li>
+        <li><strong><Link href="/watch/rising-of-the-shield-hero-with-friends" className="text-purple-600 hover:underline">The Rising of the Shield Hero</Link></strong> — Betrayal-first isekai hooks that force instant “what would you do?” debates in chat.</li>
       </ul>
 
       <h2
@@ -150,6 +153,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/the-eminence-in-shadow-with-friends" className="text-purple-600 hover:underline">The Eminence in Shadow</Link></strong> — Deadpan roleplay collides with real stakes; every “accidental prophecy” is group-reactor fuel.</li>
         <li><strong><Link href="/watch/yuri-on-ice-with-friends" className="text-purple-600 hover:underline">Yuri!!! on Ice</Link></strong> — Programs land like finales; even skating newcomers cheer the choreography beat-for-beat.</li>
         <li><strong><Link href="/watch/barakamon-with-friends" className="text-purple-600 hover:underline">Barakamon</Link></strong> — Island kids roast a city calligrapher with love; cozy comedy that keeps the room smiling between vignettes.</li>
+        <li><strong><Link href="/watch/clannad-with-friends" className="text-purple-600 hover:underline">Clannad</Link></strong> — Club-room mischief and heartfelt arcs; the kind of show where your group quotes the dumbest gags and the sweetest lines in the same night.</li>
       </ul>
 
       <h2
@@ -179,6 +183,12 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/bungo-stray-dogs-with-friends" className="text-purple-600 hover:underline">Bungo Stray Dogs</Link></strong> — Ability-driven cases with literary flavor; perfect when your crew ships headcanons between raids.</li>
         <li><strong><Link href="/watch/land-of-the-lustrous-with-friends" className="text-purple-600 hover:underline">Land of the Lustrous</Link></strong> — Gems vs. moon invaders with existential bite; every episode spawns theory threads in chat.</li>
         <li><strong><Link href="/watch/re-creators-with-friends" className="text-purple-600 hover:underline">Re:Creators</Link></strong> — Meta brawls about fiction vs. author intent; made for pause-and-argue watchrooms.</li>
+        <li><strong><Link href="/watch/serial-experiments-lain-with-friends" className="text-purple-600 hover:underline">Serial Experiments Lain</Link></strong> — The Wired vs. reality rabbit hole; every episode ends with someone saying “pause—I need to explain my theory.”</li>
+        <li><strong><Link href="/watch/ergo-proxy-with-friends" className="text-purple-600 hover:underline">Ergo Proxy</Link></strong> — Dome-city noir with philosophy on loop; ideal when your crew treats episodes like case files.</li>
+        <li><strong><Link href="/watch/durarara-with-friends" className="text-purple-600 hover:underline">Durarara!!</Link></strong> — Ikebukuro rumor mill meets supernatural ensemble casts; everyone picks a favorite thread to follow.</li>
+        <li><strong><Link href="/watch/baccano-with-friends" className="text-purple-600 hover:underline">Baccano!</Link></strong> — Timelines crash on purpose; your group will want a whiteboard to stitch immortals, trains, and mob deals together.</li>
+        <li><strong><Link href="/watch/log-horizon-with-friends" className="text-purple-600 hover:underline">Log Horizon</Link></strong> — MMO society-building and politics; perfect for friends who pause to argue guild economics mid-arc.</li>
+        <li><strong><Link href="/watch/paranoia-agent-with-friends" className="text-purple-600 hover:underline">Paranoia Agent</Link></strong> — Satoshi Kon anthology dread; each episode invites “how does this connect?” threads before the finale lands.</li>
       </ul>
 
       <h2

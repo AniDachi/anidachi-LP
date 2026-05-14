@@ -1245,4 +1245,104 @@ export const animeList: AnimeEntry[] = [
     genres: ["Comedy", "Slice of Life", "Drama"],
     related: ["k-on", "nichijou", "march-comes-in-like-a-lion"],
   },
+  {
+    slug: "goblin-slayer",
+    title: "Goblin Slayer",
+    japaneseTitle: "Goburin Sureiyā",
+    synopsis:
+      "A silver-ranked adventurer known only as Goblin Slayer dedicates his life to exterminating goblins after a childhood trauma. Dark fantasy with tactical party fights—watch parties tend to yell at the screen during raids, then debrief about tone and stakes between episodes.",
+    episodes: "12+ episodes across multiple seasons",
+    genres: ["Action", "Dark Fantasy", "Adventure"],
+    related: ["berserk", "attack-on-titan", "chainsaw-man"],
+  },
+  {
+    slug: "rising-of-the-shield-hero",
+    title: "The Rising of the Shield Hero",
+    japaneseTitle: "Tate no Yūsha no Nariagari",
+    synopsis:
+      "Naofumi is summoned as the Shield Hero, betrayed on day one, and forced to claw back trust in a kingdom that scapegoats him. Isekai with sharp early hooks—your group will pause to argue party builds, justice, and who deserves a redemption arc.",
+    episodes: "50+ episodes across multiple seasons",
+    genres: ["Action", "Fantasy", "Isekai"],
+    related: ["re-zero", "konosuba", "mushoku-tensei"],
+  },
+  {
+    slug: "clannad",
+    title: "Clannad",
+    japaneseTitle: "Kuranado",
+    synopsis:
+      "Delinquent Tomoya drifts through school until he meets Nagisa and gets pulled into the drama club’s odd projects. Season one is packed with goofy club antics and heartwarming arcs—ideal when your friends want shared laughs before the story deepens.",
+    episodes: "47 episodes (Clannad + After Story)",
+    genres: ["Drama", "Romance", "Slice of Life"],
+    related: ["toradora", "your-lie-in-april", "violet-evergarden"],
+  },
+  {
+    slug: "serial-experiments-lain",
+    title: "Serial Experiments Lain",
+    japaneseTitle: "Shiriaru Eksuperimentsu Rein",
+    synopsis:
+      "Quiet Lain Iwakura tumbles down the Wired as reality, identity, and technology blur into something uncanny. Dense and symbolic—best with a small crew that loves pausing to trade theories about what each glitch actually meant.",
+    episodes: "13 episodes",
+    genres: ["Psychological", "Sci-Fi", "Mystery"],
+    related: ["neon-genesis-evangelion", "steins-gate", "ergo-proxy"],
+  },
+  {
+    slug: "ergo-proxy",
+    title: "Ergo Proxy",
+    japaneseTitle: "Erugo Purokushī",
+    synopsis:
+      "In domed cities after ecological collapse, investigator Re-l Mayer hunts AutoReivs infected with the Cogito virus—and uncovers truths about humanity’s proxies. Slow-burn noir sci-fi made for post-episode wiki dives and “wait, that was foreshadowed” rewatches.",
+    episodes: "23 episodes",
+    genres: ["Psychological", "Sci-Fi", "Mystery"],
+    related: ["serial-experiments-lain", "psycho-pass", "monster"],
+  },
+  {
+    slug: "black-lagoon",
+    title: "Black Lagoon",
+    japaneseTitle: "Burakku Ragūn",
+    synopsis:
+      "Salaryman Rock gets kidnapped by mercenary pirates in Southeast Asia and chooses the criminal life over his old corporate cage. Gunfights, bar banter, and moral gray zones—every shootout is a shared adrenaline hit, then a debate about who’s actually worse.",
+    episodes: "24 episodes across 2 seasons + OVAs",
+    genres: ["Action", "Crime", "Seinen"],
+    related: ["cowboy-bebop", "jojos-bizarre-adventure", "great-pretender"],
+  },
+  {
+    slug: "durarara",
+    title: "Durarara!!",
+    japaneseTitle: "Dyurarara!!",
+    synopsis:
+      "Ikebukuro rumors spiral into gang politics, headless riders, and supernatural oddballs whose stories interlock. Nonlinear ensemble energy means your chat can pick favorite POVs and still reunite for the big convergence episodes.",
+    episodes: "60+ episodes across multiple cours",
+    genres: ["Action", "Supernatural", "Mystery"],
+    related: ["baccano", "tokyo-revengers", "bungo-stray-dogs"],
+  },
+  {
+    slug: "baccano",
+    title: "Baccano!",
+    japaneseTitle: "Bakkāno!",
+    synopsis:
+      "Immortals, mobsters, and a train heist collide across multiple timelines in Prohibition-era America and beyond. The narrative jumps on purpose—watch parties love reconstructing the timeline together like a puzzle between episodes.",
+    episodes: "16 episodes",
+    genres: ["Action", "Supernatural", "Mystery"],
+    related: ["black-lagoon", "durarara", "great-pretender"],
+  },
+  {
+    slug: "log-horizon",
+    title: "Log Horizon",
+    japaneseTitle: "Rogu Horaizun",
+    synopsis:
+      "Thousands of players are trapped in the MMORPG Elder Tale; strategist Shiroe tries to rebuild society with politics and economics, not just sword skills. Rules-lawyer friends will thrive—expect long debates about guild systems right after each arc.",
+    episodes: "62+ episodes across multiple seasons",
+    genres: ["Fantasy", "Adventure", "Isekai"],
+    related: ["sword-art-online", "overlord", "konosuba"],
+  },
+  {
+    slug: "paranoia-agent",
+    title: "Paranoia Agent",
+    japaneseTitle: "Mōsō Dairinin",
+    synopsis:
+      "Tokyo residents are attacked by a boy on rollerblades wielding a golden bat—each victim’s stress spirals into surreal episodes. Anthology-style Satoshi Kon mind games: perfect for groups who compare notes on how every story connects to the next.",
+    episodes: "13 episodes",
+    genres: ["Psychological", "Mystery", "Supernatural"],
+    related: ["monster", "odd-taxi", "perfect-blue"],
+  },
 ];

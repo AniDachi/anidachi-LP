@@ -72,7 +72,7 @@ export default function WatchAnimeTogetherPage() {
       description="Everything you need to watch anime with friends online."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-05-12"
+      dateModified="2026-05-14"
       faq={faq}
       headings={tocHeadings}
     >
@@ -272,6 +272,16 @@ export default function WatchAnimeTogetherPage() {
         <li><Link href="/watch/re-creators-with-friends" className="hover:underline">Re:Creators</Link></li>
         <li><Link href="/watch/kabaneri-of-the-iron-fortress-with-friends" className="hover:underline">Kabaneri of the Iron Fortress</Link></li>
         <li><Link href="/watch/barakamon-with-friends" className="hover:underline">Barakamon</Link></li>
+        <li><Link href="/watch/goblin-slayer-with-friends" className="hover:underline">Goblin Slayer</Link></li>
+        <li><Link href="/watch/rising-of-the-shield-hero-with-friends" className="hover:underline">The Rising of the Shield Hero</Link></li>
+        <li><Link href="/watch/clannad-with-friends" className="hover:underline">Clannad</Link></li>
+        <li><Link href="/watch/serial-experiments-lain-with-friends" className="hover:underline">Serial Experiments Lain</Link></li>
+        <li><Link href="/watch/ergo-proxy-with-friends" className="hover:underline">Ergo Proxy</Link></li>
+        <li><Link href="/watch/black-lagoon-with-friends" className="hover:underline">Black Lagoon</Link></li>
+        <li><Link href="/watch/durarara-with-friends" className="hover:underline">Durarara!!</Link></li>
+        <li><Link href="/watch/baccano-with-friends" className="hover:underline">Baccano!</Link></li>
+        <li><Link href="/watch/log-horizon-with-friends" className="hover:underline">Log Horizon</Link></li>
+        <li><Link href="/watch/paranoia-agent-with-friends" className="hover:underline">Paranoia Agent</Link></li>
       </ul>
 
       <h2
