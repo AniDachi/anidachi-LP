@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
     redirectEnv || `${origin}/api/auth/instagram/callback`;
   const state = crypto.randomUUID();
 
+  const switchAccount =
+    request.nextUrl.searchParams.get("switch_account") === "1";
+
   const params = new URLSearchParams({
     client_id: appId,
     redirect_uri: callbackUrl,
@@ -39,6 +42,10 @@ export async function GET(request: NextRequest) {
     state,
     response_type: "code",
   });
+
+  if (switchAccount) {
+    params.set("force_reauth", "true");
+  }
 
   // Business Login for Instagram uses the instagram.com OAuth endpoint.
   const url = `https://www.instagram.com/oauth/authorize?${params.toString()}`;

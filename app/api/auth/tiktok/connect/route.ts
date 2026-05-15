@@ -25,6 +25,9 @@ export async function GET(request: NextRequest) {
   const state = crypto.randomUUID();
   const csrfToken = crypto.randomUUID();
 
+  const switchAccount =
+    request.nextUrl.searchParams.get("switch_account") === "1";
+
   const params = new URLSearchParams({
     client_key: clientKey,
     redirect_uri: redirectUri,
@@ -32,6 +35,10 @@ export async function GET(request: NextRequest) {
     state,
     response_type: "code",
   });
+
+  if (switchAccount) {
+    params.set("disable_auto_auth", "1");
+  }
 
   const url = `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
   const isSecure = request.nextUrl.origin.startsWith("https://");

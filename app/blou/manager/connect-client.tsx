@@ -66,7 +66,16 @@ export function ConnectClient() {
   const [connectingTt, setConnectingTt] = useState(false);
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const urlError = searchParams.get("error");
+
+  useEffect(() => {
+    if (searchParams.get("connected") === "1") {
+      setSuccessMessage("Instagram account connected.");
+    } else if (searchParams.get("tiktok_connected") === "1") {
+      setSuccessMessage("TikTok account connected.");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     Promise.all([
@@ -81,11 +90,15 @@ export function ConnectClient() {
     ]).finally(() => setLoading(false));
   }, []);
 
-  const handleConnectIg = async () => {
+  const startIgConnect = async (switchAccount: boolean) => {
     setConnectingIg(true);
     setError(null);
+    setSuccessMessage(null);
+    const connectUrl = switchAccount
+      ? "/api/auth/instagram/connect?switch_account=1"
+      : "/api/auth/instagram/connect";
     try {
-      const res = await fetch("/api/auth/instagram/connect");
+      const res = await fetch(connectUrl);
       const data = await res.json();
       if (data.url) { window.location.href = data.url; return; }
       setError(data.error || "Could not get OAuth URL");
@@ -93,11 +106,15 @@ export function ConnectClient() {
     finally { setConnectingIg(false); }
   };
 
-  const handleConnectTt = async () => {
+  const startTtConnect = async (switchAccount: boolean) => {
     setConnectingTt(true);
     setError(null);
+    setSuccessMessage(null);
+    const connectUrl = switchAccount
+      ? "/api/auth/tiktok/connect?switch_account=1"
+      : "/api/auth/tiktok/connect";
     try {
-      const res = await fetch("/api/auth/tiktok/connect");
+      const res = await fetch(connectUrl);
       const data = await res.json();
       if (data.url) { window.location.href = data.url; return; }
       setError(data.error || "Could not get OAuth URL");
@@ -157,6 +174,12 @@ export function ConnectClient() {
 
   return (
     <div className="max-w-md mx-auto space-y-6">
+      {successMessage && (
+        <p className="text-sm text-teal-800 bg-teal-50 p-3 rounded-lg border border-teal-100">
+          {successMessage}
+        </p>
+      )}
+
       {(urlError || error) && (
         <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
           {error ?? (urlError ? (ERROR_MESSAGES[urlError] ?? urlError.replace(/_/g, " ")) : "Connection failed.")}
@@ -200,17 +223,35 @@ export function ConnectClient() {
             </div>
           )}
           {canAddIg && (
-            <Button
-              className="w-full bg-teal-600 hover:bg-teal-700"
-              onClick={handleConnectIg}
-              disabled={connectingIg}
-            >
-              {connectingIg ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Connecting&hellip;</>
-              ) : (
-                <><Instagram className="h-4 w-4" /> {igAccounts.length === 0 ? "Connect Instagram" : "Connect Another"}</>
+            <>
+              <Button
+                className="w-full bg-teal-600 hover:bg-teal-700"
+                onClick={() => startIgConnect(false)}
+                disabled={connectingIg}
+              >
+                {connectingIg ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Connecting&hellip;</>
+                ) : (
+                  <><Instagram className="h-4 w-4" /> {igAccounts.length === 0 ? "Connect Instagram" : "Connect Another"}</>
+                )}
+              </Button>
+              {igAccounts.length > 0 && (
+                <p className="text-xs text-stone-500">
+                  Uses the Instagram account you&apos;re already signed into in this browser — no need to log out.
+                  Already connected accounts here stay linked.
+                </p>
               )}
-            </Button>
+              {igAccounts.length > 0 && (
+                <button
+                  type="button"
+                  className="text-xs text-teal-700 underline underline-offset-2 hover:text-teal-800 disabled:opacity-50"
+                  onClick={() => startIgConnect(true)}
+                  disabled={connectingIg}
+                >
+                  Sign in with a different Instagram account
+                </button>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -263,17 +304,35 @@ export function ConnectClient() {
             </div>
           )}
           {canAddTt && (
-            <Button
-              className="w-full bg-teal-600 hover:bg-teal-700"
-              onClick={handleConnectTt}
-              disabled={connectingTt}
-            >
-              {connectingTt ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Connecting&hellip;</>
-              ) : (
-                <><Music2 className="h-4 w-4" /> {ttAccounts.length === 0 ? "Connect TikTok" : "Connect Another"}</>
+            <>
+              <Button
+                className="w-full bg-teal-600 hover:bg-teal-700"
+                onClick={() => startTtConnect(false)}
+                disabled={connectingTt}
+              >
+                {connectingTt ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Connecting&hellip;</>
+                ) : (
+                  <><Music2 className="h-4 w-4" /> {ttAccounts.length === 0 ? "Connect TikTok" : "Connect Another"}</>
+                )}
+              </Button>
+              {ttAccounts.length > 0 && (
+                <p className="text-xs text-stone-500">
+                  Uses the TikTok account you&apos;re already signed into in this browser — no need to log out.
+                  Already connected accounts here stay linked.
+                </p>
               )}
-            </Button>
+              {ttAccounts.length > 0 && (
+                <button
+                  type="button"
+                  className="text-xs text-teal-700 underline underline-offset-2 hover:text-teal-800 disabled:opacity-50"
+                  onClick={() => startTtConnect(true)}
+                  disabled={connectingTt}
+                >
+                  Sign in with a different TikTok account
+                </button>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
