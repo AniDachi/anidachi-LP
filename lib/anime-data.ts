@@ -1345,4 +1345,104 @@ export const animeList: AnimeEntry[] = [
     genres: ["Psychological", "Mystery", "Supernatural"],
     related: ["monster", "odd-taxi", "perfect-blue"],
   },
+  {
+    slug: "danmachi",
+    title: "Is It Wrong to Try to Pick Up Girls in a Dungeon?",
+    japaneseTitle: "DanMachi",
+    synopsis:
+      "Bell Cranel joins the Familia of goddess Hestia and dives into a monster-filled dungeon to grow stronger—and maybe impress Ais Wallenstein. Clear-floor boss fights and power spikes make every expedition a shared cheer-or-groan moment in chat.",
+    episodes: "50+ episodes across multiple seasons",
+    genres: ["Action", "Fantasy", "Adventure"],
+    related: ["sword-art-online", "overlord", "log-horizon"],
+  },
+  {
+    slug: "anohana",
+    title: "Anohana: The Flower We Saw That Day",
+    japaneseTitle: "Ano Hi Mita Hana no Namae wo Bokutachi wa Mada Shiranai",
+    synopsis:
+      "Jinta and his estranged friends are haunted by the ghost of Menma, who wants a wish granted before she can move on. Bittersweet summer drama that turns every quiet scene into a group debrief about guilt, growing up, and what you should have said.",
+    episodes: "11 episodes + movie",
+    genres: ["Drama", "Supernatural", "Slice of Life"],
+    related: ["your-lie-in-april", "clannad", "a-silent-voice"],
+  },
+  {
+    slug: "plastic-memories",
+    title: "Plastic Memories",
+    japaneseTitle: "Purasutikku Memorīzu",
+    synopsis:
+      "In a world where androids have limited lifespans, Tsukasa joins a terminal-care unit and falls for giftia Isla. The countdown to goodbye makes every episode a shared emotional checkpoint—your room will pause to argue about ethics and timing.",
+    episodes: "13 episodes",
+    genres: ["Drama", "Romance", "Sci-Fi"],
+    related: ["steins-gate", "violet-evergarden", "your-name"],
+  },
+  {
+    slug: "planetes",
+    title: "Planetes",
+    japaneseTitle: "Puranetesu",
+    synopsis:
+      "Space debris collectors on a near-future Earth orbit deal with junk, politics, and human ambition. Hard sci-fi grounded in procedure—ideal for watch parties that love pausing to unpack how orbital mechanics and corporate pressure collide.",
+    episodes: "26 episodes",
+    genres: ["Sci-Fi", "Drama", "Slice of Life"],
+    related: ["cowboy-bebop", "psycho-pass", "ergo-proxy"],
+  },
+  {
+    slug: "claymore",
+    title: "Claymore",
+    japaneseTitle: "Kureimoa",
+    synopsis:
+      "Half-human warriors hunt shape-shifting yoma across a medieval land, trading humanity for power. Gritty battles and tragic reveals land hard—your group will sync-gasp at awakenings, then debate who crossed the line first.",
+    episodes: "26 episodes",
+    genres: ["Action", "Dark Fantasy", "Horror"],
+    related: ["berserk", "attack-on-titan", "vinland-saga"],
+  },
+  {
+    slug: "quintessential-quintuplets",
+    title: "The Quintessential Quintuplets",
+    japaneseTitle: "Gotōbun no Hanayome",
+    synopsis:
+      "Tutor Futaro has to help five identical sisters pass exams—and somehow tell them apart. Romantic comedy chaos with cliffhanger endings; every episode sparks ship wars and \"who was that silhouette?\" theories in chat.",
+    episodes: "48+ episodes across 2 seasons + movie",
+    genres: ["Romance", "Comedy", "School"],
+    related: ["kaguya-sama", "horimiya", "toradora"],
+  },
+  {
+    slug: "keep-your-hands-off-eizouken",
+    title: "Keep Your Hands Off Eizouken!",
+    japaneseTitle: "Eizōken ni wa Te o Dasu na!",
+    synopsis:
+      "Three high-school girls form an anime club and turn wild ideas into storyboards and sets. Creative energy and absurd imagination make it perfect for groups that shout ideas at the screen and compare their own fan projects.",
+    episodes: "12 episodes",
+    genres: ["Comedy", "Slice of Life", "School"],
+    related: ["bocchi-the-rock", "k-on", "nichijou"],
+  },
+  {
+    slug: "kingdom",
+    title: "Kingdom",
+    japaneseTitle: "Kingudamu",
+    synopsis:
+      "Orphan Xin fights to become a great general and unite China during the Warring States period. Massive battles and long political arcs reward async watchrooms—your crew can tag chapters and argue strategy between sieges.",
+    episodes: "100+ episodes across multiple seasons",
+    genres: ["Action", "Historical", "Drama"],
+    related: ["vinland-saga", "attack-on-titan", "golden-kamuy"],
+  },
+  {
+    slug: "spice-and-wolf",
+    title: "Spice and Wolf",
+    japaneseTitle: "Ōkami to Kōshinryō",
+    synopsis:
+      "Merchant Kraft Lawrence partners with wolf deity Holo on a journey of trade, banter, and medieval economics. Dialogue-heavy episodes invite pause-and-predict deals—great when your friends love arguing who got the better bargain.",
+    episodes: "25 episodes (Season 1) + sequels",
+    genres: ["Adventure", "Romance", "Fantasy"],
+    related: ["frieren-beyond-journeys-end", "mushoku-tensei", "log-horizon"],
+  },
+  {
+    slug: "the-devil-is-a-part-timer",
+    title: "The Devil Is a Part-Timer!",
+    japaneseTitle: "Hataraku Maō-sama!",
+    synopsis:
+      "Demon king Sadao Maou is stranded on Earth and takes a job at MgRonald's to conquer through fast food. Fish-out-of-water comedy with sudden serious beats—your room will meme every shift before the plot flips.",
+    episodes: "50+ episodes across multiple seasons",
+    genres: ["Comedy", "Fantasy", "Supernatural"],
+    related: ["konosuba", "overlord", "the-eminence-in-shadow"],
+  },
 ];

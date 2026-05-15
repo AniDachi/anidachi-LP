@@ -133,6 +133,16 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   baccano: 2251,
   "log-horizon": 17265,
   "paranoia-agent": 323,
+  danmachi: 21403,
+  anohana: 9989,
+  "plastic-memories": 27775,
+  planetes: 329,
+  claymore: 477,
+  "quintessential-quintuplets": 38101,
+  "keep-your-hands-off-eizouken": 39792,
+  kingdom: 1735,
+  "spice-and-wolf": 457,
+  "the-devil-is-a-part-timer": 15809,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {

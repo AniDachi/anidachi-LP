@@ -72,7 +72,7 @@ export default function WatchAnimeTogetherPage() {
       description="Everything you need to watch anime with friends online."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-05-14"
+      dateModified="2026-05-15"
       faq={faq}
       headings={tocHeadings}
     >
@@ -282,6 +282,16 @@ export default function WatchAnimeTogetherPage() {
         <li><Link href="/watch/baccano-with-friends" className="hover:underline">Baccano!</Link></li>
         <li><Link href="/watch/log-horizon-with-friends" className="hover:underline">Log Horizon</Link></li>
         <li><Link href="/watch/paranoia-agent-with-friends" className="hover:underline">Paranoia Agent</Link></li>
+        <li><Link href="/watch/danmachi-with-friends" className="hover:underline">DanMachi</Link></li>
+        <li><Link href="/watch/anohana-with-friends" className="hover:underline">Anohana</Link></li>
+        <li><Link href="/watch/plastic-memories-with-friends" className="hover:underline">Plastic Memories</Link></li>
+        <li><Link href="/watch/planetes-with-friends" className="hover:underline">Planetes</Link></li>
+        <li><Link href="/watch/claymore-with-friends" className="hover:underline">Claymore</Link></li>
+        <li><Link href="/watch/quintessential-quintuplets-with-friends" className="hover:underline">The Quintessential Quintuplets</Link></li>
+        <li><Link href="/watch/keep-your-hands-off-eizouken-with-friends" className="hover:underline">Keep Your Hands Off Eizouken!</Link></li>
+        <li><Link href="/watch/kingdom-with-friends" className="hover:underline">Kingdom</Link></li>
+        <li><Link href="/watch/spice-and-wolf-with-friends" className="hover:underline">Spice and Wolf</Link></li>
+        <li><Link href="/watch/the-devil-is-a-part-timer-with-friends" className="hover:underline">The Devil Is a Part-Timer!</Link></li>
       </ul>
 
       <h2

@@ -56,6 +56,13 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 - [x] Add hub/listicle backlinks + bump `dateModified` → `2026-05-14`
 - [x] Run `npm run build` ✅ (2026-05-14)
 
+### Additional batch (10 more watch pages — 2026-05-15)
+
+- [x] Add 10 anime entries to `lib/anime-data.ts`
+- [x] Add MAL IDs for the 10 slugs to `lib/anime-mal-ids.ts`
+- [x] Add hub/listicle backlinks + bump `dateModified` → `2026-05-15` (list **86+**)
+- [x] Run `npm run build` ✅ (2026-05-15)
+
 ## Current Status / Progress Tracking
 
 - Added 5 new watch slugs to `animeList` and wired hub/listicle backlinks:
@@ -112,6 +119,8 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
   - `log-horizon`
   - `paranoia-agent`
 - Hub/listicle: list bumped to **76+** picks; `dateModified` → `2026-05-14` on hub + guide.
+
+- **Additional 10 (2026-05-15):** `danmachi`, `anohana`, `plastic-memories`, `planetes`, `claymore`, `quintessential-quintuplets`, `keep-your-hands-off-eizouken`, `kingdom`, `spice-and-wolf`, `the-devil-is-a-part-timer` — also resolves dangling `related` refs (claymore, quintuplets, eizouken, kingdom). List **86+**; `dateModified` → `2026-05-15`. Build ✅.
 
 ### Post-payment success page (Discord contact)
 
