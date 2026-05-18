@@ -3,19 +3,19 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime for Beginners (2026) — 27 Starter-Friendly Picks",
+  title: "Best Anime for Beginners (2026) — 29 Starter-Friendly Picks",
   description:
-    "27 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
+    "29 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
   alternates: { canonical: "/guides/best-anime-to-watch-for-beginners" },
   openGraph: {
-    title: "Best Anime for Beginners (2026) — 27 Starter-Friendly Picks",
+    title: "Best Anime for Beginners (2026) — 29 Starter-Friendly Picks",
     description:
       "Starter anime picks for first-time viewers and mixed-experience watch groups.",
     url: "/guides/best-anime-to-watch-for-beginners",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Anime for Beginners (2026) — 27 Starter-Friendly Picks",
+    title: "Best Anime for Beginners (2026) — 29 Starter-Friendly Picks",
     description:
       "Easy-entry anime for your first watch party or solo binge — curated for 2026.",
   },
@@ -82,18 +82,18 @@ export default function BestAnimeForBeginnersPage() {
           url: "/guides/best-anime-to-watch-for-beginners",
         },
       ]}
-      title="27 Best Anime to Watch for Beginners in 2026"
+      title="29 Best Anime to Watch for Beginners in 2026"
       description="Starter-friendly anime picks for first-time viewers and mixed watch groups."
       url="/guides/best-anime-to-watch-for-beginners"
       datePublished="2026-05-01"
-      dateModified="2026-05-08"
+      dateModified="2026-05-18"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        27 Best Anime to Watch for Beginners in 2026
+        29 Best Anime to Watch for Beginners in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -285,6 +285,16 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
+            <Link href="/watch/rent-a-girlfriend-with-friends" className="text-purple-600 hover:underline">
+              Rent-a-Girlfriend
+            </Link>
+          </strong>{" "}
+          — Sitcom-style cringe and ship drama without fantasy lore dumps. The
+          rental-girlfriend premise explains itself in episode one, so newcomers
+          can jump in for a loud group watch.
+        </li>
+        <li>
+          <strong>
             <Link href="/watch/bocchi-the-rock-with-friends" className="text-purple-600 hover:underline">
               Bocchi the Rock!
             </Link>
@@ -444,6 +454,16 @@ export default function BestAnimeForBeginnersPage() {
           — Aggressive soccer ego battles with kinetic animation. It skews edgier
           than Haikyu but still teaches positions quickly — great when your group
           wants sports adrenaline without fantasy lore.
+        </li>
+        <li>
+          <strong>
+            <Link href="/watch/sk8-the-infinity-with-friends" className="text-purple-600 hover:underline">
+              SK8 the Infinity
+            </Link>
+          </strong>{" "}
+          — Underground skate rivalries with clear stakes and twelve tight
+          episodes. No prior skating knowledge required — the drama and
+          choreography carry first-time viewers.
         </li>
       </ul>
 

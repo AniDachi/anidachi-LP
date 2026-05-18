@@ -144,6 +144,16 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "spice-and-wolf": 457,
   "the-devil-is-a-part-timer": 15809,
   "sakamoto-days": 58939,
+  "seven-deadly-sins": 23755,
+  "blue-period": 46369,
+  "rent-a-girlfriend": 40839,
+  "world-trigger": 20729,
+  "call-of-the-night": 48376,
+  "summertime-render": 47194,
+  "sk8-the-infinity": 40729,
+  "toilet-bound-hanako-kun": 39534,
+  "black-butler": 4898,
+  "magi-the-labyrinth-of-magic": 14513,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {

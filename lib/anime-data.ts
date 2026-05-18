@@ -1468,4 +1468,104 @@ export const animeList: AnimeEntry[] = [
     genres: ["Action", "Comedy", "Slice of Life"],
     related: ["spy-x-family", "one-punch-man", "assassination-classroom"],
   },
+  {
+    slug: "seven-deadly-sins",
+    title: "The Seven Deadly Sins",
+    japaneseTitle: "Nanatsu no Taizai",
+    synopsis:
+      "Meliodas and the disbanded Knights of the Seven Deadly Sins reunite to save the kingdom of Liones from holy knights and demonic conspiracies. Power spikes, tournament brawls, and found-family banter make every arc a shared hype session—your chat will argue power levels after each holy knight falls.",
+    episodes: "100+ episodes across multiple seasons + movies",
+    genres: ["Action", "Fantasy", "Adventure"],
+    related: ["black-clover", "fairy-tail", "fire-force"],
+  },
+  {
+    slug: "blue-period",
+    title: "Blue Period",
+    japaneseTitle: "Blue Period",
+    synopsis:
+      "High-schooler Yatora Yaguchi discovers oil painting and throws himself into Tokyo art-school exams. Competition, self-doubt, and breakthrough canvases land as group-debrief material—pause when someone in your watchroom recognizes their own creative panic in a still life.",
+    episodes: "12 episodes",
+    genres: ["Drama", "Slice of Life", "School"],
+    related: ["bocchi-the-rock", "march-comes-in-like-a-lion", "your-lie-in-april"],
+  },
+  {
+    slug: "rent-a-girlfriend",
+    title: "Rent-a-Girlfriend",
+    japaneseTitle: "Kanojo, Okarishimasu",
+    synopsis:
+      "College student Kazuya rents girlfriend Chizuru Mizuhara through an app—and keeps digging a deeper hole of lies as his friend group grows. Cringe comedy, ship wars, and cliffhanger season endings fuel instant polls in chat; everyone picks a side before the next rental date.",
+    episodes: "48+ episodes across multiple seasons",
+    genres: ["Romance", "Comedy", "Drama"],
+    related: ["kaguya-sama", "horimiya", "quintessential-quintuplets"],
+  },
+  {
+    slug: "world-trigger",
+    title: "World Trigger",
+    japaneseTitle: "Wārudo Toriggā",
+    synopsis:
+      "When interdimensional gates spill monsters into Mikado City, the Border agency trains teens to fight with Trion-powered weapons. Tactical squad battles and rank-up exams reward groups who love debating formations—every away mission is a shared cheer-or-groan moment.",
+    episodes: "100+ episodes across multiple seasons",
+    genres: ["Action", "Sci-Fi", "School"],
+    related: ["my-hero-academia", "kaiju-no-8", "black-clover"],
+  },
+  {
+    slug: "call-of-the-night",
+    title: "Call of the Night",
+    japaneseTitle: "Yofukashi no Uta",
+    synopsis:
+      "Insomniac Ko Yamori wanders Tokyo at night and meets vampire Nazuna Nanakusa, who offers sleepless freedom and a taste of the undead life. Moody city walks, music-driven vibes, and slow-burn romance make it ideal for late-night watchrooms that debrief every rooftop scene.",
+    episodes: "25+ episodes across 2 seasons",
+    genres: ["Romance", "Supernatural", "Drama"],
+    related: ["horimiya", "rascal-does-not-dream-of-bunny-girl-senpai", "tokyo-ghoul"],
+  },
+  {
+    slug: "summertime-render",
+    title: "Summertime Render",
+    japaneseTitle: "Summertime Render",
+    synopsis:
+      "Shinpei returns to his island hometown for a funeral and gets trapped in a loop of murder, shadows, and secrets tied to his childhood friend Ushio. Mystery-thriller pacing with a new reveal almost every episode—your group will pause to compare timelines and call the killer before the next reset.",
+    episodes: "25 episodes",
+    genres: ["Mystery", "Thriller", "Supernatural"],
+    related: ["erased", "steins-gate", "the-promised-neverland"],
+  },
+  {
+    slug: "sk8-the-infinity",
+    title: "SK8 the Infinity",
+    japaneseTitle: "SK∞",
+    synopsis:
+      "Reki Kyan and transfer student Langa Hasegawa dive into underground skate battles on Okinawa's \"S\" circuit. Rivalries, found-family energy, and over-the-top race choreography make every heat a living-room cheer moment—even viewers who do not skate get hooked on the drama.",
+    episodes: "12 episodes",
+    genres: ["Sports", "Action", "Drama"],
+    related: ["haikyuu", "blue-lock", "yuri-on-ice"],
+  },
+  {
+    slug: "toilet-bound-hanako-kun",
+    title: "Toilet-Bound Hanako-kun",
+    japaneseTitle: "Jibaku Shōnen Hanako-kun",
+    synopsis:
+      "Nene Yashiro summons school ghost Hanako-kun and gets pulled into supernatural errands across Kamome Academy's seven mysteries. Comedy, creepiness, and sudden emotional gut-punches alternate fast—perfect when your group wants memeable gags and lore drops in the same cour.",
+    episodes: "24+ episodes across multiple seasons",
+    genres: ["Supernatural", "Comedy", "School"],
+    related: ["noragami", "mob-psycho-100", "assassination-classroom"],
+  },
+  {
+    slug: "black-butler",
+    title: "Black Butler",
+    japaneseTitle: "Kuroshitsuji",
+    synopsis:
+      "Young Earl Ciel Phantomhive trades his soul for demon butler Sebastian Michaelis to hunt the killers who destroyed his family. Gothic mystery, dark humor, and impeccably staged set pieces reward watch parties that love pausing to decode each contract and carnival arc.",
+    episodes: "60+ episodes across multiple seasons + OVAs",
+    genres: ["Mystery", "Supernatural", "Dark Fantasy"],
+    related: ["bungo-stray-dogs", "death-note", "monster"],
+  },
+  {
+    slug: "magi-the-labyrinth-of-magic",
+    title: "Magi: The Labyrinth of Magic",
+    japaneseTitle: "Magi",
+    synopsis:
+      "Aladdin, Alibaba, and Morgiana explore djinn-filled dungeons and kingdoms shaped by fate in a world inspired by Arabian Nights. Adventure politics, massive battles, and party-growth milestones stack across long arcs—async watchrooms can tag dungeon floors while marathoners debate who deserves the next metal vessel.",
+    episodes: "75+ episodes across 2 series + spin-offs",
+    genres: ["Action", "Fantasy", "Adventure"],
+    related: ["hunter-x-hunter", "fairy-tail", "black-clover"],
+  },
 ];

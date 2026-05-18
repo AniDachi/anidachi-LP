@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch with Friends (2026) — 87+ Top Picks for Group Watching",
+  title: "Best Anime to Watch with Friends (2026) — 97+ Top Picks for Group Watching",
   description:
-    "Curated list of 87+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
+    "Curated list of 97+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
 };
 
@@ -67,7 +67,7 @@ export default function BestAnimeWithFriendsPage() {
         { name: "Guides", url: "/watch-anime-together" },
         { name: "Best Anime with Friends", url: "/guides/best-anime-to-watch-with-friends" },
       ]}
-      title="87+ Best Anime to Watch with Friends in 2026"
+      title="97+ Best Anime to Watch with Friends in 2026"
       description="Top anime picks for group watching sessions."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
@@ -78,7 +78,7 @@ export default function BestAnimeWithFriendsPage() {
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        87+ Best Anime to Watch with Friends in 2026
+        97+ Best Anime to Watch with Friends in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -128,6 +128,9 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/rising-of-the-shield-hero-with-friends" className="text-purple-600 hover:underline">The Rising of the Shield Hero</Link></strong> — Betrayal-first isekai hooks that force instant “what would you do?” debates in chat.</li>
         <li><strong><Link href="/watch/danmachi-with-friends" className="text-purple-600 hover:underline">DanMachi</Link></strong> — Dungeon boss clears and power spikes; every floor run is a shared cheer-or-groan moment.</li>
         <li><strong><Link href="/watch/claymore-with-friends" className="text-purple-600 hover:underline">Claymore</Link></strong> — Yoma hunts and awakening shocks; your room will sync-gasp, then argue who crossed the line first.</li>
+        <li><strong><Link href="/watch/seven-deadly-sins-with-friends" className="text-purple-600 hover:underline">The Seven Deadly Sins</Link></strong> — Holy-knight brawls and power-level spikes; every tournament arc is a shared hype thread.</li>
+        <li><strong><Link href="/watch/world-trigger-with-friends" className="text-purple-600 hover:underline">World Trigger</Link></strong> — Squad tactics and rank-up exams; your chat will debate formations after every away mission.</li>
+        <li><strong><Link href="/watch/sk8-the-infinity-with-friends" className="text-purple-600 hover:underline">SK8 the Infinity</Link></strong> — Underground skate duels on Okinawa; every heat is a living-room cheer moment.</li>
       </ul>
 
       <h2
@@ -160,6 +163,8 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/quintessential-quintuplets-with-friends" className="text-purple-600 hover:underline">The Quintessential Quintuplets</Link></strong> — Five sisters, one tutor, endless ship wars; cliffhangers beg for instant chat polls.</li>
         <li><strong><Link href="/watch/the-devil-is-a-part-timer-with-friends" className="text-purple-600 hover:underline">The Devil Is a Part-Timer!</Link></strong> — Demon king on a fast-food shift; fish-out-of-water gags that turn serious when you least expect it.</li>
         <li><strong><Link href="/watch/keep-your-hands-off-eizouken-with-friends" className="text-purple-600 hover:underline">Keep Your Hands Off Eizouken!</Link></strong> — Anime-club imagination runs wild; perfect when your crew shouts storyboard ideas at the screen.</li>
+        <li><strong><Link href="/watch/rent-a-girlfriend-with-friends" className="text-purple-600 hover:underline">Rent-a-Girlfriend</Link></strong> — Cringe comedy and ship wars; cliffhangers beg for instant chat polls.</li>
+        <li><strong><Link href="/watch/toilet-bound-hanako-kun-with-friends" className="text-purple-600 hover:underline">Toilet-Bound Hanako-kun</Link></strong> — School mysteries with memeable gags and sudden emotional gut-punches.</li>
       </ul>
 
       <h2
@@ -199,6 +204,10 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/plastic-memories-with-friends" className="text-purple-600 hover:underline">Plastic Memories</Link></strong> — Giftia lifespans and goodbye countdowns; every episode is a shared emotional checkpoint.</li>
         <li><strong><Link href="/watch/anohana-with-friends" className="text-purple-600 hover:underline">Anohana</Link></strong> — Summer ghosts and unfinished goodbyes; bittersweet scenes that turn chat into a debrief about growing up.</li>
         <li><strong><Link href="/watch/spice-and-wolf-with-friends" className="text-purple-600 hover:underline">Spice and Wolf</Link></strong> — Merchant banter and medieval economics; your room will argue who got the better bargain after every deal.</li>
+        <li><strong><Link href="/watch/summertime-render-with-friends" className="text-purple-600 hover:underline">Summertime Render</Link></strong> — Island murder loops and shadow conspiracies; your group will pause to compare timelines every episode.</li>
+        <li><strong><Link href="/watch/blue-period-with-friends" className="text-purple-600 hover:underline">Blue Period</Link></strong> — Art-school pressure and breakthrough canvases; perfect for debriefs about creative panic.</li>
+        <li><strong><Link href="/watch/black-butler-with-friends" className="text-purple-600 hover:underline">Black Butler</Link></strong> — Gothic contracts and carnival arcs; pause to decode each mystery together.</li>
+        <li><strong><Link href="/watch/call-of-the-night-with-friends" className="text-purple-600 hover:underline">Call of the Night</Link></strong> — Insomnia, vampires, and moody Tokyo nights built for late-watchroom theory threads.</li>
       </ul>
 
       <h2
@@ -216,6 +225,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/slam-dunk-with-friends" className="text-purple-600 hover:underline">Slam Dunk</Link></strong> — Classic basketball training arcs and rivalry games; perfect for long, hype weekend marathons.</li>
         <li><strong><Link href="/watch/hajime-no-ippo-with-friends" className="text-purple-600 hover:underline">Hajime no Ippo</Link></strong> — Training + fight-night arcs stack endlessly; async pacing keeps everyone aligned between rounds.</li>
         <li><strong><Link href="/watch/kingdom-with-friends" className="text-purple-600 hover:underline">Kingdom</Link></strong> — Warring States sieges and generals-in-the-making; async watchrooms keep strategy debates readable across arcs.</li>
+        <li><strong><Link href="/watch/magi-the-labyrinth-of-magic-with-friends" className="text-purple-600 hover:underline">Magi: The Labyrinth of Magic</Link></strong> — Dungeon crawls and kingdom politics across long arcs; async tags keep floor clears readable.</li>
       </ul>
 
       <h2
