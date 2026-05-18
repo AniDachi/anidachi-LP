@@ -194,6 +194,63 @@ export function ArticleJsonLd({
 }
 
 
+interface MediaSchemaProps {
+  type: "TVSeries" | "Movie";
+  name: string;
+  alternateName?: string;
+  description: string;
+  genres: string[];
+  numberOfEpisodes?: number | null;
+  image?: string | null;
+  ratingValue?: number | null;
+  ratingCount?: number | null;
+  url: string;
+}
+
+function MediaJsonLd({
+  type,
+  name,
+  alternateName,
+  description,
+  genres,
+  numberOfEpisodes,
+  image,
+  ratingValue,
+  ratingCount,
+  url,
+}: MediaSchemaProps) {
+  const siteUrl = getResolvedSiteOrigin();
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": type,
+    name,
+    description,
+    url: url.startsWith("http") ? url : `${siteUrl}${url}`,
+    genre: genres,
+  };
+  if (alternateName) data.alternateName = alternateName;
+  if (numberOfEpisodes != null && numberOfEpisodes > 0) data.numberOfEpisodes = numberOfEpisodes;
+  if (image) data.image = image;
+  if (ratingValue != null && ratingValue > 0 && ratingCount != null && ratingCount > 0) {
+    data.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: Math.round(ratingValue * 10) / 10,
+      ratingCount,
+      bestRating: 10,
+      worstRating: 1,
+    };
+  }
+  return <JsonLd data={data} />;
+}
+
+export function TvSeriesJsonLd(props: Omit<MediaSchemaProps, "type">) {
+  return <MediaJsonLd type="TVSeries" {...props} />;
+}
+
+export function MovieJsonLd(props: Omit<MediaSchemaProps, "type">) {
+  return <MediaJsonLd type="Movie" {...props} />;
+}
+
 export function ItemListJsonLd({
   name,
   items,

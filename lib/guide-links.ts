@@ -120,6 +120,11 @@ export const guideLinks: GuideLinkItem[] = [
     label: "Best Anime to Watch for Beginners",
     tags: ["template-d", "listicle", "pillar-watch-anime"],
   },
+  {
+    href: "/guides/best-isekai-anime-to-watch-with-friends",
+    label: "Best Isekai Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
 ];
 
 export function getGuideLinks({

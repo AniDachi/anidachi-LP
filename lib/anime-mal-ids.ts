@@ -143,6 +143,7 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   kingdom: 1735,
   "spice-and-wolf": 457,
   "the-devil-is-a-part-timer": 15809,
+  "sakamoto-days": 58939,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {

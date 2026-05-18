@@ -32,18 +32,44 @@ export default function sitemap(): MetadataRoute.Sitemap {
     watchLastModified = undefined;
   }
 
+  const TOP_ANIME_SLUGS = new Set([
+    "attack-on-titan",
+    "one-piece",
+    "demon-slayer",
+    "jujutsu-kaisen",
+    "death-note",
+    "naruto",
+    "fullmetal-alchemist-brotherhood",
+    "my-hero-academia",
+    "dragon-ball-super",
+    "hunter-x-hunter",
+  ]);
+
   const animeRoutes: MetadataRoute.Sitemap = animeList.map((anime) => {
     const entry: MetadataRoute.Sitemap[number] = {
       url: `${siteUrl}/watch/${anime.slug}-with-friends`,
       changeFrequency: "monthly",
-      priority: 0.6,
+      priority: TOP_ANIME_SLUGS.has(anime.slug) ? 0.8 : 0.6,
     };
     if (watchLastModified) entry.lastModified = watchLastModified;
     return entry;
   });
 
-  const combined = [...staticRoutes, ...animeRoutes].sort((a, b) =>
-    a.url.localeCompare(b.url)
+  const genreHubRoutes: MetadataRoute.Sitemap = [
+    "/watch-action-anime-with-friends",
+    "/watch-romance-anime-with-friends",
+    "/watch-comedy-anime-with-friends",
+    "/watch-sports-anime-with-friends",
+    "/watch-mystery-anime-with-friends",
+  ].map((urlPath) => ({
+    url: `${siteUrl}${urlPath}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.85,
+    ...(watchLastModified ? { lastModified: watchLastModified } : {}),
+  }));
+
+  const combined = [...staticRoutes, ...animeRoutes, ...genreHubRoutes].sort(
+    (a, b) => a.url.localeCompare(b.url)
   );
 
   if (

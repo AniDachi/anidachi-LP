@@ -8,6 +8,19 @@ export interface AnimeEntry {
   related: string[];
 }
 
+/** Returns true for feature-length movies (episodes field is exactly "Movie"). */
+export function isMovieEntry(anime: AnimeEntry): boolean {
+  return anime.episodes.trim().toLowerCase() === "movie";
+}
+
+/** Filters the full anime list to entries that include the given genre (case-insensitive substring match). */
+export function getAnimeByGenre(genre: string): AnimeEntry[] {
+  const lower = genre.toLowerCase();
+  return animeList.filter((a) =>
+    a.genres.some((g) => g.toLowerCase().includes(lower))
+  );
+}
+
 export const animeList: AnimeEntry[] = [
   {
     slug: "attack-on-titan",
@@ -1444,5 +1457,15 @@ export const animeList: AnimeEntry[] = [
     episodes: "50+ episodes across multiple seasons",
     genres: ["Comedy", "Fantasy", "Supernatural"],
     related: ["konosuba", "overlord", "the-eminence-in-shadow"],
+  },
+  {
+    slug: "sakamoto-days",
+    title: "Sakamoto Days",
+    japaneseTitle: "Sakamoto Days",
+    synopsis:
+      "Legendary hitman Taro Sakamoto retires for family life, but the assassin world will not leave him alone. His convenience-store crew, oddball neighbors, and former rivals turn every ordinary day into over-the-top action comedy—perfect when your group wants fight choreography and running gags in the same episode.",
+    episodes: "24+ episodes (Season 1)",
+    genres: ["Action", "Comedy", "Slice of Life"],
+    related: ["spy-x-family", "one-punch-man", "assassination-classroom"],
   },
 ];

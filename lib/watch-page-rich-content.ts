@@ -1,4 +1,5 @@
 import type { AnimeEntry } from "@/lib/anime-data";
+import { isMovieEntry } from "@/lib/anime-data";
 
 function genreSet(genres: string[]): Set<string> {
   return new Set(genres.map((g) => g.toLowerCase()));
@@ -158,54 +159,139 @@ export function buildWatchHowToSteps(anime: AnimeEntry): {
 }
 
 /**
- * Curated hub links for ItemList JSON-LD — same list is rendered in the page body
- * (pillar → glossary → guides cluster per SEO agent internal-linking rules).
+ * Curated hub links for ItemList JSON-LD.
+ * Accepts optional anime genres to append relevant genre-hub links (up to 2).
  */
-export function watchPageResourceItemList(): {
-  name: string;
-  url: string;
-  position: number;
-}[] {
+export function watchPageResourceItemList(
+  genres: string[] = []
+): { name: string; url: string; position: number }[] {
+  const base = [
+    { name: "Watch Anime Together — complete guide", url: "/watch-anime-together", position: 1 },
+    { name: "Watch Crunchyroll Together — pillar hub", url: "/watch-crunchyroll-together", position: 2 },
+    { name: "Anime watch party toolkit", url: "/anime-watch-party-toolkit", position: 3 },
+    { name: "How to watch Crunchyroll with friends", url: "/guides/how-to-watch-crunchyroll-with-friends", position: 4 },
+    { name: "What is a watchroom? (glossary)", url: "/glossary/watchroom", position: 5 },
+    { name: "Asynchronous watching (glossary)", url: "/glossary/asynchronous-watching", position: 6 },
+    { name: "How to watch anime without spoilers", url: "/guides/how-to-watch-anime-without-spoilers", position: 7 },
+    { name: "First anime watch party checklist", url: "/guides/first-anime-watch-party-checklist", position: 8 },
+  ];
+
+  const gs = genreSet(genres);
+  const genreHubs: { name: string; url: string }[] = [];
+  if (has(gs, "action")) genreHubs.push({ name: "Watch action anime with friends — genre hub", url: "/watch-action-anime-with-friends" });
+  if (has(gs, "romance")) genreHubs.push({ name: "Watch romance anime with friends — genre hub", url: "/watch-romance-anime-with-friends" });
+  if (has(gs, "comedy")) genreHubs.push({ name: "Watch comedy anime with friends — genre hub", url: "/watch-comedy-anime-with-friends" });
+  if (has(gs, "sports")) genreHubs.push({ name: "Watch sports anime with friends — genre hub", url: "/watch-sports-anime-with-friends" });
+  if (has(gs, "mystery", "psychological")) genreHubs.push({ name: "Watch mystery anime with friends — genre hub", url: "/watch-mystery-anime-with-friends" });
+
+  const extra = genreHubs.slice(0, 2).map((h, i) => ({ ...h, position: base.length + i + 1 }));
+  return [...base, ...extra];
+}
+
+type EpisodeClass = "movie" | "long" | "standard";
+
+function classifyEpisodes(anime: AnimeEntry, episodesDisplay: string): EpisodeClass {
+  if (isMovieEntry(anime)) return "movie";
+  const blob = `${episodesDisplay} ${anime.episodes}`;
+  const isLong =
+    /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(blob) ||
+    /one-piece|naruto|hunter-x-hunter|fairy-tail|case-closed|detective-conan|gintama|inuyasha|bleach/i.test(anime.slug);
+  return isLong ? "long" : "standard";
+}
+
+/**
+ * Builds per-anime differentiated FAQ questions.
+ * 4 universal questions + 3 slots that vary by mediaType, episode count, and genre.
+ * Reduces near-duplicate content risk across the 139 programmatic watch pages.
+ */
+export function buildWatchPageFaq(
+  anime: AnimeEntry,
+  episodesDisplay: string
+): { question: string; answer: string }[] {
+  const gs = genreSet(anime.genres);
+  const epClass = classifyEpisodes(anime, episodesDisplay);
+
+  // Slot A: episode format / opening question
+  let slotA: { question: string; answer: string };
+  if (epClass === "movie") {
+    slotA = {
+      question: `Can we watch ${anime.title} together in one sitting?`,
+      answer: `Yes — ${anime.title} is a feature-length film, making it perfect for a single group movie night. Install AniDachi, open the film on Crunchyroll, create a watchroom, and share the invite link before you press play. No need to coordinate a multi-session schedule.`,
+    };
+  } else if (epClass === "long") {
+    slotA = {
+      question: `How do we pace watching ${anime.title} as a group without it taking forever?`,
+      answer: `With ${episodesDisplay}, treat ${anime.title} like a long-running club: set a weekly episode budget (e.g. one cour block per month), name a rotating host who posts the watchroom link, and celebrate major arc finales as milestones. AniDachi's async mode means nobody needs to sprint — late viewers catch up behind spoiler-safe episode markers and rejoin the group for the next arc.`,
+    };
+  } else {
+    slotA = {
+      question: `How many episodes of ${anime.title} should we watch per session?`,
+      answer: `Two to three episodes per session works well for ${anime.title} — enough for a satisfying story beat without a four-hour commitment. A four-episode double feature on weekends still finishes in under two hours. AniDachi's async mode means stragglers can catch up before the next session without the whole group waiting.`,
+    };
+  }
+
+  // Slot B: async/schedule — genre-aware
+  let slotB: { question: string; answer: string };
+  if (has(gs, "sports")) {
+    slotB = {
+      question: `What is the best way to watch ${anime.title} match episodes as a group?`,
+      answer: `Match-block episodes make natural session boundaries for ${anime.title}. Schedule watch nights around tournament arcs, pin each team's bracket in the watchroom, and use AniDachi's async mode when someone misses a round — they can catch up before the next bracket and rejoin without spoilers.`,
+    };
+  } else if (has(gs, "mystery", "psychological", "thriller")) {
+    slotB = {
+      question: `Can we share theories about ${anime.title} without accidentally spoiling each other?`,
+      answer: `Yes — AniDachi's episode-scoped chat keeps theory threads tied to the episode where the clue appeared. Pin a "free speculation" thread for wild guesses and a "confirmed facts" thread for what the show has actually revealed, so newcomers can read one without stumbling on the other.`,
+    };
+  } else if (has(gs, "romance", "drama")) {
+    slotB = {
+      question: `How do we manage emotional spoilers and shipping debates in ${anime.title}?`,
+      answer: `Set a simple rule in your AniDachi watchroom: episode-number-tag any message that references a scene ("Ep 8 reaction:…") so late viewers know exactly when to mute a thread. Shipping debate channels work best as a pinned space separate from the main episode feed.`,
+    };
+  } else {
+    slotB = {
+      question: `Can I watch ${anime.title} with friends asynchronously?`,
+      answer: `Yes. AniDachi watchrooms for ${anime.title} work whether everyone is online at the same time or on completely different schedules. Mark episodes as watched, leave reactions, and read friends' notes when you catch up — no shared calendar block required.`,
+    };
+  }
+
+  // Slot C: spoiler management — episode-count-aware
+  let slotC: { question: string; answer: string };
+  if (epClass === "movie") {
+    slotC = {
+      question: `How do we avoid ${anime.title} spoilers before our group movie night?`,
+      answer: `Set your watchroom to "movie night pending" and ask everyone to mute reactions and stay off review aggregators until after the credits roll together. Even a runtime or ending-tone spoiler can change expectations for a first-time group watch.`,
+    };
+  } else if (epClass === "long") {
+    slotC = {
+      question: `How do we track who has seen which arc in ${anime.title}?`,
+      answer: `Pin a shared progress note in your AniDachi watchroom showing the last "safe" arc everyone has cleared. Name chat threads by arc title rather than episode number to make it easy for members re-joining after a break to find where they left off without reading ahead.`,
+    };
+  } else {
+    slotC = {
+      question: `How do we avoid spoilers when someone falls behind on ${anime.title}?`,
+      answer: `Rename threads or room notes with the latest safe episode number, pin "no spoilers past Ep X" at the top, and encourage screenshot reactions instead of plot summaries until the slowest viewer catches up.`,
+    };
+  }
+
   return [
+    slotA,
+    slotB,
     {
-      name: "Watch Anime Together — complete guide",
-      url: "/watch-anime-together",
-      position: 1,
+      question: `Does ${anime.title} have a watch party feature on Crunchyroll?`,
+      answer: `Crunchyroll does not offer a first-party "watch with friends" room. You can still watch together by installing AniDachi, playing ${anime.title} in your own Crunchyroll tab, and joining the same AniDachi watchroom for synced playback and group chat — live or async.`,
     },
     {
-      name: "Watch Crunchyroll Together — pillar hub",
-      url: "/watch-crunchyroll-together",
-      position: 2,
+      question: `Do all my friends need Crunchyroll to watch ${anime.title} together?`,
+      answer: `Yes — each person needs their own active Crunchyroll subscription to stream the video. AniDachi adds the watchroom, chat, and progress sync on top; it does not replace Crunchyroll's catalog or access control.`,
     },
     {
-      name: "Anime watch party toolkit",
-      url: "/anime-watch-party-toolkit",
-      position: 3,
+      question: `Is AniDachi free for ${anime.title} watch parties?`,
+      answer: `AniDachi is a paid Chrome extension during early access — pricing and checkout are on the AniDachi homepage. You still need individual Crunchyroll access for ${anime.title}; AniDachi provides the watchroom, sync, and chat layer on top of each person's stream.`,
     },
     {
-      name: "How to watch Crunchyroll with friends",
-      url: "/guides/how-to-watch-crunchyroll-with-friends",
-      position: 4,
+      question: `Can we host a ${anime.title} watch night if we live in different countries?`,
+      answer: `You can use the same watchroom flow as long as each person can stream ${anime.title} legally in their region. Rights and episode availability may differ by territory — if someone is geo-blocked on a specific arc, pause the group plan until everyone can access the same episode legally, then resume with clear episode labels in chat.`,
     },
-    {
-      name: "What is a watchroom? (glossary)",
-      url: "/glossary/watchroom",
-      position: 5,
-    },
-    {
-      name: "Asynchronous watching (glossary)",
-      url: "/glossary/asynchronous-watching",
-      position: 6,
-    },
-    {
-      name: "How to watch anime without spoilers",
-      url: "/guides/how-to-watch-anime-without-spoilers",
-      position: 7,
-    },
-    {
-      name: "First anime watch party checklist",
-      url: "/guides/first-anime-watch-party-checklist",
-      position: 8,
-    },
+    slotC,
   ];
 }

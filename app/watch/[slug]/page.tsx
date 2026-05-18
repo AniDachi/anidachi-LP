@@ -1,8 +1,10 @@
+import fs from "node:fs";
+import path from "node:path";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { animeList, type AnimeEntry } from "@/lib/anime-data";
+import { animeList, isMovieEntry, type AnimeEntry } from "@/lib/anime-data";
 import { getMalIdForSlug } from "@/lib/anime-mal-ids";
 import {
   fetchJikanForWatchPage,
@@ -14,10 +16,11 @@ import {
   posterUrlFromJikan,
   resolveRelatedFromJikan,
 } from "@/lib/jikan-for-watch-page";
-import { HowToJsonLd } from "@/components/json-ld";
+import { HowToJsonLd, TvSeriesJsonLd, MovieJsonLd } from "@/components/json-ld";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import {
   buildWatchHowToSteps,
+  buildWatchPageFaq,
   buildWatchPageMetaDescription,
   extraWhyWatchParagraphs,
   genreDiscussionTips,
@@ -32,6 +35,34 @@ interface Props {
 function getAnimeBySlug(rawSlug: string): AnimeEntry | undefined {
   const slug = rawSlug.replace(/-with-friends$/, "");
   return animeList.find((a) => a.slug === slug);
+}
+
+function getPageLastModified(): string {
+  try {
+    const mtime = fs.statSync(
+      path.join(process.cwd(), "app/watch/[slug]/page.tsx")
+    ).mtime;
+    return mtime.toISOString().split("T")[0];
+  } catch {
+    return "2026-05-18";
+  }
+}
+
+function buildTitleTag(anime: AnimeEntry, episodesDisplay: string): string {
+  if (isMovieEntry(anime)) {
+    return `Watch ${anime.title} with Friends — Group Movie Night`;
+  }
+  const isLong =
+    /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
+      `${episodesDisplay} ${anime.episodes}`
+    ) ||
+    /one-piece|naruto|hunter-x-hunter|fairy-tail|gintama|inuyasha|bleach/i.test(
+      anime.slug
+    );
+  if (isLong) {
+    return `Watch ${anime.title} with Friends — Group Marathon, No Spoilers`;
+  }
+  return `Watch ${anime.title} with Friends — AniDachi Watchroom`;
 }
 
 export async function generateStaticParams() {
@@ -49,11 +80,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const jikanBundle =
     malId != null ? await fetchJikanForWatchPage(malId) : null;
   const posterUrl = posterUrlFromJikan(jikanBundle?.jikanAnime ?? null);
+  const episodesDisplay = formatEpisodesForUi(
+    jikanBundle?.jikanAnime ?? null,
+    anime.episodes
+  );
 
   const metaDescription = buildWatchPageMetaDescription(anime);
+  const titleTag = buildTitleTag(anime, episodesDisplay);
 
   return {
-    title: `Watch ${anime.title} with Friends — Create a Watchroom`,
+    title: titleTag,
     description: metaDescription,
     alternates: { canonical: `/watch/${rawSlug}` },
     openGraph: {
@@ -104,12 +140,12 @@ function buildToc(
     },
     {
       id: "why-async",
-      label: `Why ${anime.title} works in a group`,
+      label: `Is ${anime.title} good to watch with a group?`,
       level: 2,
     },
     { id: "pacing", label: "Pacing for your crew", level: 2 },
     { id: "discussion-tips", label: "Discussion tips", level: 2 },
-    { id: "spoilers", label: "Spoiler boundaries", level: 2 },
+    { id: "spoilers", label: "How to avoid spoilers", level: 2 },
     {
       id: "crunchyroll-note",
       label: "Accounts and regional catalog",
@@ -158,38 +194,10 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
 
   const metaDescription = buildWatchPageMetaDescription(anime);
   const howToSteps = buildWatchHowToSteps(anime);
-  const resourceItemList = watchPageResourceItemList();
-
-  const faq = [
-    {
-      question: `Does ${anime.title} have a watch party feature on Crunchyroll?`,
-      answer: `Crunchyroll does not offer a first-party, built-in "watch with friends" room like some other services. You can still watch with friends by using a third-party tool: install AniDachi, play ${anime.title} in your own Crunchyroll tab, and join the same AniDachi watchroom for synced playback and group chat (live or async).`,
-    },
-    {
-      question: `Can I watch ${anime.title} with friends asynchronously?`,
-      answer: `Yes. AniDachi watchrooms for ${anime.title} work when everyone is online at the same time and when you are on different schedules. Mark episodes, leave reactions, and catch up on others' messages without a shared calendar block.`,
-    },
-    {
-      question: `Do all my friends need Crunchyroll to watch ${anime.title} together?`,
-      answer: `Yes—each person who watches needs their own active Crunchyroll subscription to stream the video. AniDachi adds the room, chat, and progress sync; it is not a replacement for Crunchyroll's catalog.`,
-    },
-    {
-      question: `Is AniDachi free for ${anime.title} watch parties?`,
-      answer: `AniDachi is a paid Chrome extension during early access—pricing and checkout live on the AniDachi homepage. You still need individual Crunchyroll access for ${anime.title}; AniDachi provides the watchroom, sync, and chat layer on top of each person's stream.`,
-    },
-    {
-      question: `Can we host a ${anime.title} night if we live in different countries?`,
-      answer: `You can use the same watchroom flow as long as each person can stream ${anime.title} legally in their region. Rights and episode availability may differ by territory. If one friend is geo-blocked for a specific arc, pause the group or pick a different title until everyone can access the same episode legally—then resume with clear episode labels in chat.`,
-    },
-    {
-      question: `What if our schedules never align for ${anime.title}?`,
-      answer: `Lean on asynchronous watching: post reactions behind episode markers, mute notifications until you finish the installment, and skim friends' notes before starting the next episode. Reserve rare live sessions for finales or fights everyone wants to hype together.`,
-    },
-    {
-      question: `How do we avoid spoilers when someone falls behind on ${anime.title}?`,
-      answer: `Rename threads or room notes with the latest safe episode number, pin "no spoilers past Ep X" at the top, and encourage screenshot reactions instead of plot summaries until stragglers catch up.`,
-    },
-  ];
+  const resourceItemList = watchPageResourceItemList(anime.genres);
+  const faq = buildWatchPageFaq(anime, episodesDisplay);
+  const dateModified = getPageLastModified();
+  const isMovie = isMovieEntry(anime);
 
   const genreBits = (jikan?.genres?.length
     ? jikanGenresText(jikan, anime.genres)
@@ -200,6 +208,12 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
     .join(" and ")
     .toLowerCase();
 
+  // Derive genres list for TVSeries/Movie schema — prefer Jikan genres
+  const schemaGenres =
+    jikan?.genres?.length
+      ? jikan.genres.map((g) => g.name).filter(Boolean)
+      : anime.genres;
+
   return (
     <>
       <HowToJsonLd
@@ -207,6 +221,30 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         description={`Use AniDachi watchrooms to sync ${anime.title}, chat with your group, and catch up asynchronously without losing episode context.`}
         steps={howToSteps}
       />
+      {isMovie ? (
+        <MovieJsonLd
+          name={anime.title}
+          alternateName={anime.japaneseTitle}
+          description={anime.synopsis}
+          genres={schemaGenres}
+          image={posterUrl}
+          ratingValue={jikan?.score}
+          ratingCount={jikan?.members}
+          url={`/watch/${rawSlug}`}
+        />
+      ) : (
+        <TvSeriesJsonLd
+          name={anime.title}
+          alternateName={anime.japaneseTitle}
+          description={anime.synopsis}
+          genres={schemaGenres}
+          numberOfEpisodes={jikan?.episodes}
+          image={posterUrl}
+          ratingValue={jikan?.score}
+          ratingCount={jikan?.members}
+          url={`/watch/${rawSlug}`}
+        />
+      )}
       <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
@@ -218,30 +256,36 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       url={`/watch/${rawSlug}`}
       articleImage={posterUrl ?? undefined}
       datePublished="2026-04-23"
-      dateModified="2026-05-08"
+      dateModified={dateModified}
       faq={faq}
       headings={buildToc(relatedAnime.length > 0, anime)}
       itemList={resourceItemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-        Watch {anime.title} with Friends — AniDachi Watchrooms
+      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+        Watch {anime.title} with Friends
       </h1>
+
+      <p className="text-xs text-gray-400 mb-6">
+        Last updated: {new Date(dateModified).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+      </p>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
-          {(() => {
-            const s = anime.synopsis.trim();
-            const first = s.split(/(?<=[.!?])\s+/)[0] ?? s;
-            return (
-              <>
-                {first}
-                {/[!?.]$/.test(first) ? "" : "."} Watching {anime.title} in an
-                AniDachi watchroom lets your group react on the big twists and
-                cliffhangers together—live or on your own schedule.
-              </>
-            );
-          })()}
+          {isMovie
+            ? `To watch ${anime.title} with friends on Crunchyroll, install AniDachi and create a movie-night watchroom — everyone streams together in sync and shares reactions without needing to screen-share.`
+            : (() => {
+                const isLong =
+                  /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
+                    `${episodesDisplay} ${anime.episodes}`
+                  ) ||
+                  /one-piece|naruto|hunter-x-hunter|fairy-tail|gintama|inuyasha|bleach/i.test(
+                    anime.slug
+                  );
+                return isLong
+                  ? `To watch ${anime.title} with friends without the group falling apart across ${episodesDisplay}, set up an AniDachi watchroom — sync live when everyone's free, or let members catch up on their own schedule behind spoiler-safe episode markers.`
+                  : `To watch ${anime.title} with friends on Crunchyroll, install AniDachi and create a watchroom — your group syncs live or catches up on their own schedule without losing spoiler safety or episode context.`;
+              })()}
         </strong>
       </p>
 
@@ -260,6 +304,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
                 className="w-full rounded-lg shadow-md object-cover aspect-[2/3]"
                 sizes="(max-width: 768px) 55vw, 220px"
                 decoding="async"
+                priority
               />
               <figcaption className="text-gray-500 text-xs mt-2 text-center md:text-left">
                 Poster via MyAnimeList / Jikan
@@ -267,7 +312,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
             </figure>
           ) : null}
           <div className="min-w-0 flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4" id="series-overview-heading">
               What is {anime.title}?
             </h2>
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -278,7 +323,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
                 </div>
               )}
               <div>
-                <span className="text-gray-500">Episodes</span>
+                <span className="text-gray-500">{isMovie ? "Format" : "Episodes"}</span>
                 <p className="font-medium text-gray-900">{episodesDisplay}</p>
               </div>
               {statusLine && (
@@ -324,7 +369,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         id="setup"
         className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
       >
-        How to Watch {anime.title} Together
+        How to Watch {anime.title} Together — Step by Step
       </h2>
       <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-4">
         {howToSteps.map((step, i) => (
@@ -340,7 +385,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
           Check AniDachi pricing
         </Link>{" "}
         on the homepage, install the extension, then create your watchroom from the
-        episode your group agreed on—everyone still streams with their own Crunchyroll
+        episode your group agreed on — everyone still streams with their own Crunchyroll
         login.
       </p>
 
@@ -348,12 +393,12 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         id="watch-formats"
         className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
       >
-        Live, async, and hybrid watch nights for {anime.title}
+        Live, Async, and Hybrid Watch Nights for {anime.title}
       </h2>
       <p className="text-gray-700 leading-relaxed mb-4">
         <strong>Live premiere energy.</strong> Pick a recurring window (Sunday
         evenings, post-work Tuesdays) and count down in voice chat before you
-        hit play. Best when everyone shares at least one overlapping hour—great
+        hit play. Best when everyone shares at least one overlapping hour — great
         for seasonal drops or finale episodes you want to experience unmuted.
       </p>
       <p className="text-gray-700 leading-relaxed mb-4">
@@ -365,7 +410,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       <p className="text-gray-700 leading-relaxed mb-8">
         <strong>Hybrid Discord workflow.</strong> Keep Discord or SMS for voice,
         but let each person render {anime.title} locally so bitrate stays crisp.
-        Use AniDachi for the shared timeline—otherwise one streamer&apos;s upload
+        Use AniDachi for the shared timeline — otherwise one streamer&apos;s upload
         becomes the bottleneck for everyone else.
       </p>
 
@@ -373,13 +418,12 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         id="why-async"
         className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
       >
-        Why {anime.title} works in a group watchroom
+        Is {anime.title} Good to Watch With a Group?
       </h2>
       <p className="text-gray-700 leading-relaxed mb-4">
-        With {episodesDisplay} to work through, {anime.title} rewards a
-        watchroom that respects real life. The {genreBits} mix means
-        cliffhangers and emotional swings show up often enough that async chat
-        stays lively—no one has to sit through a four-hour call to stay in sync.
+        {isMovie
+          ? `${anime.title} is an excellent group watch — a self-contained story that fits a single evening and gives everyone the same shared experience to talk about right after the credits. The ${genreBits} tone makes it easy to react together to key moments without needing to coordinate across multiple sessions.`
+          : `With ${episodesDisplay} to work through, ${anime.title} rewards a watchroom that respects real life. The ${genreBits} mix means cliffhangers and emotional swings show up often enough that async chat stays lively — no one has to sit through a four-hour call to stay in sync.`}
       </p>
       {extraWhyWatchParagraphs(anime).map((para, i) => (
         <p key={i} className="text-gray-700 leading-relaxed mb-4">
@@ -391,32 +435,34 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         id="pacing"
         className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
       >
-        Pacing {anime.title} with a busy friend group
+        Pacing {anime.title} with a Busy Friend Group
       </h2>
       <p className="text-gray-700 leading-relaxed mb-4">
         {pacingLeadParagraph(anime, episodesDisplay)}
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
-        <li>
-          Pick a default cadence—one episode on weeknights, two on Fridays—and
-          pin it above your invite links so newcomers know what &quot;on
-          schedule&quot; means.
-        </li>
-        <li>
-          For ongoing simulcasts, align on whether you watch day-of or weekend-only
-          so nobody accidentally reads finale chatter early.
-        </li>
-        <li>
-          When life happens, leave voice notes or short text reactions instead of
-          skipping entire arcs; the watchroom preserves where each person stopped.
-        </li>
-      </ul>
+      {!isMovie && (
+        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+          <li>
+            Pick a default cadence — one episode on weeknights, two on Fridays — and
+            pin it above your invite links so newcomers know what &quot;on
+            schedule&quot; means.
+          </li>
+          <li>
+            For ongoing simulcasts, align on whether you watch day-of or weekend-only
+            so nobody accidentally reads finale chatter early.
+          </li>
+          <li>
+            When life happens, leave voice notes or short text reactions instead of
+            skipping entire arcs; the watchroom preserves where each person stopped.
+          </li>
+        </ul>
+      )}
 
       <h2
         id="discussion-tips"
         className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
       >
-        {anime.title} discussion tips
+        {anime.title} Discussion Tips
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-4">
         <li>Agree on sub vs. dub for the room so reactions line up with audio.</li>
@@ -426,7 +472,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         </li>
         <li>
           Drop short reaction notes right after the cold open and before the
-          credits—those are the beats people replay.
+          credits — those are the beats people replay.
         </li>
         <li>
           Save big lore debates for after the eyecatch to avoid late joins getting
@@ -441,7 +487,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         id="spoilers"
         className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
       >
-        Spoiler boundaries that keep {anime.title} nights fun
+        How Do You Avoid Spoilers Watching {anime.title} With Friends?
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
         <li>
@@ -453,24 +499,26 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
           so accidental feeds stay safe.
         </li>
         <li>
-          If someone binges ahead, they summarize feelings—not plot beats—until the
+          If someone binges ahead, they summarize feelings — not plot beats — until the
           slowest viewer catches up.
         </li>
-        <li>
-          During filler or recap installments, agree whether the room skips
-          together or splinters temporarily so momentum stays high.
-        </li>
+        {!isMovie && (
+          <li>
+            During filler or recap installments, agree whether the room skips
+            together or splinters temporarily so momentum stays high.
+          </li>
+        )}
       </ul>
 
       <h2
         id="crunchyroll-note"
         className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
       >
-        Accounts, dub/sub choices, and regional catalog
+        Accounts, Dub/Sub Choices, and Regional Catalog
       </h2>
       <p className="text-gray-700 leading-relaxed mb-8">
         Each viewer streams {anime.title} through their own Crunchyroll session.
-        Dub and subtitle tracks can vary by region and license window—double-check
+        Dub and subtitle tracks can vary by region and license window — double-check
         that everyone sees the same audio option before you hype a shared line
         reading. If an episode is unavailable in someone&apos;s territory, pause the
         shared watch plan until you either align on a legal alternative or wait for
@@ -482,12 +530,12 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         id="more-guides"
         className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
       >
-        Pillars, glossary, and guides
+        Pillars, Glossary, and Guides
       </h2>
       <p className="text-gray-600 text-sm mb-4">
         Same ordered list is emitted as{" "}
         <strong className="text-gray-700">ItemList</strong> structured data for
-        crawlers—start at the pillars, then skim glossary terms if your crew is new
+        crawlers — start at the pillars, then skim glossary terms if your crew is new
         to watchrooms or async pacing.
       </p>
       <ul className="space-y-2 text-purple-600 mb-8">
@@ -506,7 +554,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
             id="related-anime"
             className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
           >
-            Related anime
+            Related Anime to Watch With Friends
           </h2>
           <p className="text-sm text-gray-600 mb-3">{relatedSourceLabel}</p>
           <ul className="space-y-2 text-purple-600 mb-8">

@@ -3,9 +3,9 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch with Friends (2026) — 86+ Top Picks for Group Watching",
+  title: "Best Anime to Watch with Friends (2026) — 87+ Top Picks for Group Watching",
   description:
-    "Curated list of 86+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
+    "Curated list of 87+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
 };
 
@@ -67,18 +67,18 @@ export default function BestAnimeWithFriendsPage() {
         { name: "Guides", url: "/watch-anime-together" },
         { name: "Best Anime with Friends", url: "/guides/best-anime-to-watch-with-friends" },
       ]}
-      title="86+ Best Anime to Watch with Friends in 2026"
+      title="87+ Best Anime to Watch with Friends in 2026"
       description="Top anime picks for group watching sessions."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-05-15"
+      dateModified="2026-05-18"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        86+ Best Anime to Watch with Friends in 2026
+        87+ Best Anime to Watch with Friends in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -138,6 +138,7 @@ export default function BestAnimeWithFriendsPage() {
       </h2>
       <ul className="space-y-3 text-gray-700 mb-8">
         <li><strong><Link href="/watch/spy-x-family-with-friends" className="text-purple-600 hover:underline">Spy x Family</Link></strong> — Heartwarming and hilarious. Works for anime fans and newcomers alike.</li>
+        <li><strong><Link href="/watch/sakamoto-days-with-friends" className="text-purple-600 hover:underline">Sakamoto Days</Link></strong> — Retired legend runs a store while assassins crash his quiet life; absurd fights and deadpan gags land harder with a full room.</li>
         <li><strong><Link href="/watch/konosuba-with-friends" className="text-purple-600 hover:underline">KonoSuba</Link></strong> — Non-stop comedy that&apos;s funnier with a group.</li>
         <li><strong><Link href="/watch/one-punch-man-with-friends" className="text-purple-600 hover:underline">One Punch Man</Link></strong> — Satire and spectacle that everyone can enjoy.</li>
         <li><strong><Link href="/watch/mob-psycho-100-with-friends" className="text-purple-600 hover:underline">Mob Psycho 100</Link></strong> — Funny, wholesome, and visually stunning.</li>
