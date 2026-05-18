@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
+import { genreHubItemList } from "@/lib/genre-hub-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
@@ -43,6 +44,7 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
   { id: "pillars", label: "Big-picture guides", level: 2 },
+  { id: "genre-hubs", label: "Browse by genre", level: 2 },
   { id: "playbooks", label: "Playbooks & checklists", level: 2 },
   { id: "compare", label: "Compare approaches", level: 2 },
   { id: "glossary", label: "Glossary quick links", level: 2 },
@@ -80,10 +82,10 @@ export default function AnimeWatchPartyToolkitPage() {
       description="Structured starting point for Crunchyroll group watching with AniDachi."
       url="/anime-watch-party-toolkit"
       datePublished="2026-05-08"
-      dateModified="2026-05-08"
+      dateModified="2026-05-18"
       faq={faq}
       headings={tocHeadings}
-      itemList={toolkitItemList}
+      itemList={[...toolkitItemList, ...genreHubItemList(toolkitItemList.length + 1)]}
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
@@ -112,6 +114,48 @@ export default function AnimeWatchPartyToolkitPage() {
         <li>
           <Link href="/watch-crunchyroll-together" className="hover:underline">
             Watch Crunchyroll Together hub
+          </Link>
+        </li>
+      </ul>
+
+      <h2
+        id="genre-hubs"
+        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+      >
+        Browse anime by genre
+      </h2>
+      <p className="text-gray-700 leading-relaxed mb-4">
+        Genre hubs group the best Crunchyroll titles for group watchrooms — each links to a dedicated watch page with setup steps and spoiler tips.
+      </p>
+      <ul className="space-y-2 text-purple-600 mb-8">
+        <li>
+          <Link href="/watch-action-anime-with-friends" className="hover:underline">
+            Watch action anime with friends
+          </Link>
+        </li>
+        <li>
+          <Link href="/watch-romance-anime-with-friends" className="hover:underline">
+            Watch romance anime with friends
+          </Link>
+        </li>
+        <li>
+          <Link href="/watch-comedy-anime-with-friends" className="hover:underline">
+            Watch comedy anime with friends
+          </Link>
+        </li>
+        <li>
+          <Link href="/watch-sports-anime-with-friends" className="hover:underline">
+            Watch sports anime with friends
+          </Link>
+        </li>
+        <li>
+          <Link href="/watch-mystery-anime-with-friends" className="hover:underline">
+            Watch mystery anime with friends
+          </Link>
+        </li>
+        <li>
+          <Link href="/guides/best-isekai-anime-to-watch-with-friends" className="hover:underline">
+            Best isekai anime to watch with friends
           </Link>
         </li>
       </ul>

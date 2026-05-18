@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Chrome, Shield } from "lucide-react";
+import { ArrowRight, Shield } from "lucide-react";
 import {
   trackConversion,
   type PageTemplateId,
@@ -66,8 +66,6 @@ export interface PrimaryCheckoutCtaProps {
   className?: string;
   ctaVariant?: string;
   trustMicrocopyClassName?: string;
-  /** Show secondary "Add to Chrome — Free" link below the primary CTA (watch/genre pages). */
-  showInstallCta?: boolean;
 }
 
 export function PrimaryCheckoutCta({
@@ -78,7 +76,6 @@ export function PrimaryCheckoutCta({
   className = "",
   ctaVariant = "primary_checkout",
   trustMicrocopyClassName = "text-sm text-gray-500 mt-4 max-w-md mx-auto flex items-start justify-center gap-2",
-  showInstallCta = false,
 }: PrimaryCheckoutCtaProps) {
   const { openSurvey } = usePlanSurvey();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -151,28 +148,6 @@ export function PrimaryCheckoutCta({
           <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
         </Link>
       </Button>
-      {showInstallCta && (
-        <p className="mt-3 text-sm text-gray-500">
-          or{" "}
-          <Link
-            href="https://chromewebstore.google.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-purple-600 hover:underline font-medium"
-            onClick={() =>
-              trackConversion("cta_click", {
-                page_path: pagePath,
-                page_template: pageTemplate,
-                placement,
-                cta_variant: "chrome_install",
-              })
-            }
-          >
-            <Chrome className="h-3.5 w-3.5" aria-hidden="true" />
-            Add to Chrome — Free
-          </Link>
-        </p>
-      )}
       <p className={trustMicrocopyClassName}>
         <Shield
           className="h-4 w-4 flex-shrink-0 text-green-600 mt-0.5"

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { animeList } from "@/lib/anime-data";
+import { genreHubItemList } from "@/lib/genre-hub-links";
 
 export const metadata: Metadata = {
   title: "Watch Anime Together Online — The Complete Guide (2026)",
@@ -52,7 +53,8 @@ const tocHeadings: TocHeading[] = [
   { id: "method-discord", label: "Discord", level: 3 },
   { id: "method-in-person", label: "In-person", level: 3 },
   { id: "live-vs-async", label: "Live vs async", level: 2 },
-  { id: "popular-anime", label: "Popular picks", level: 2 },
+  { id: "genre-hubs", label: "Browse by genre", level: 2 },
+  { id: "popular-anime", label: "All anime watch guides", level: 2 },
   { id: "all-guides", label: "All guides", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
 ];
@@ -73,9 +75,11 @@ export default function WatchAnimeTogetherPage() {
       description="Everything you need to watch anime with friends online."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-05-15"
+      dateModified="2026-05-18"
       faq={faq}
       headings={tocHeadings}
+      itemList={genreHubItemList(1)}
+      aboveFoldCta
     >
       <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
         Watch Anime Together Online
@@ -88,7 +92,7 @@ export default function WatchAnimeTogetherPage() {
           and lets you watch asynchronously.
         </strong>{" "}
         Whether your friends are across the room or across the world, shared
-        anime         experiences are better than watching alone. This guide covers
+        anime experiences are better than watching alone. This guide covers
         every method, tool, and tip.
       </p>
 
@@ -188,21 +192,32 @@ export default function WatchAnimeTogetherPage() {
       </p>
 
       <h2
+        id="genre-hubs"
+        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+      >
+        Browse Anime by Genre
+      </h2>
+      <p className="text-gray-700 leading-relaxed mb-4">
+        Genre hubs group the best titles for group watchrooms — each links to a dedicated watch page with setup steps, spoiler tips, and pacing advice:
+      </p>
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-purple-600 mb-4">
+        <li><Link href="/watch-action-anime-with-friends" className="hover:underline font-medium">Action anime with friends →</Link></li>
+        <li><Link href="/watch-romance-anime-with-friends" className="hover:underline font-medium">Romance anime with friends →</Link></li>
+        <li><Link href="/watch-comedy-anime-with-friends" className="hover:underline font-medium">Comedy anime with friends →</Link></li>
+        <li><Link href="/watch-sports-anime-with-friends" className="hover:underline font-medium">Sports anime with friends →</Link></li>
+        <li><Link href="/watch-mystery-anime-with-friends" className="hover:underline font-medium">Mystery &amp; psychological anime →</Link></li>
+        <li><Link href="/guides/best-isekai-anime-to-watch-with-friends" className="hover:underline font-medium">Best isekai anime to watch with friends →</Link></li>
+      </ul>
+
+      <h2
         id="popular-anime"
         className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
       >
-        All Anime Watch Guides
+        All Anime Watch Guides ({animeList.length} titles)
       </h2>
       <p className="text-gray-700 leading-relaxed mb-4">
-        Browse by genre or scroll the full list — each page has step-by-step setup, spoiler tips, and pacing advice for that specific show:
+        Every title below has its own watchroom guide — step-by-step setup, genre-specific FAQs, and Crunchyroll watch-party tips:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-4 text-sm">
-        <li><Link href="/watch-action-anime-with-friends" className="hover:underline font-medium">Action anime →</Link></li>
-        <li><Link href="/watch-romance-anime-with-friends" className="hover:underline font-medium">Romance anime →</Link></li>
-        <li><Link href="/watch-comedy-anime-with-friends" className="hover:underline font-medium">Comedy anime →</Link></li>
-        <li><Link href="/watch-sports-anime-with-friends" className="hover:underline font-medium">Sports anime →</Link></li>
-        <li><Link href="/watch-mystery-anime-with-friends" className="hover:underline font-medium">Mystery &amp; Psychological →</Link></li>
-      </ul>
       <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
         {animeList.map((anime) => (
           <li key={anime.slug}>

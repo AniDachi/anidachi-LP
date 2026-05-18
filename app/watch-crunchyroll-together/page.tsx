@@ -242,6 +242,16 @@ export default function WatchCrunchyrollTogetherPage() {
             Asynchronous vs Live Watch Parties: Which Is Right for You?
           </Link>
         </li>
+        <li>
+          <Link href="/watch-anime-together#genre-hubs" className="hover:underline">
+            Browse anime by genre (action, romance, comedy, sports, mystery)
+          </Link>
+        </li>
+        <li>
+          <Link href="/guides/best-isekai-anime-to-watch-with-friends" className="hover:underline">
+            Best isekai anime to watch with friends
+          </Link>
+        </li>
       </ul>
     </SeoPageLayout>
   );

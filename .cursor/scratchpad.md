@@ -401,6 +401,15 @@ The survey should do more than “collect answers” — it should:
 - Added step-level funnel analytics events: `survey_opened`, `survey_step_viewed`, `survey_completed`, `survey_closed`.
 - Bumped localStorage key to `anidachi_home_survey_v2` in `components/home/home-client.tsx` to safely roll out the new survey schema (`group_size`).
 
+### Site-wide SEO/AEO plan alignment (2026-05-18)
+
+- [x] Removed `showInstallCta` / Chrome install CTA (extension not live yet)
+- [x] Sitemap: genre hub priority 0.85 via `lib/sitemap-discovery.ts` (removed duplicate block in `app/sitemap.ts`)
+- [x] `lib/genre-hub-links.ts` + cross-links on hub, toolkit, listicles, footer, Crunchyroll pillar
+- [x] `watch-anime-together`: typo fix, genre section, `dateModified` 2026-05-18, `itemList` + `aboveFoldCta`
+- [x] `npm run build` ✅
+- [ ] Optional: VideoObject/trailer schema (plan tier 3); genre hub OG/Twitter images
+
 ### Executor's Feedback or Assistance Requests
 
 - Please refresh `/` and try the hero survey to confirm:

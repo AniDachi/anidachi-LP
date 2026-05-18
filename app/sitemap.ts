@@ -55,21 +55,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return entry;
   });
 
-  const genreHubRoutes: MetadataRoute.Sitemap = [
-    "/watch-action-anime-with-friends",
-    "/watch-romance-anime-with-friends",
-    "/watch-comedy-anime-with-friends",
-    "/watch-sports-anime-with-friends",
-    "/watch-mystery-anime-with-friends",
-  ].map((urlPath) => ({
-    url: `${siteUrl}${urlPath}`,
-    changeFrequency: "monthly" as const,
-    priority: 0.85,
-    ...(watchLastModified ? { lastModified: watchLastModified } : {}),
-  }));
-
-  const combined = [...staticRoutes, ...animeRoutes, ...genreHubRoutes].sort(
-    (a, b) => a.url.localeCompare(b.url)
+  const combined = [...staticRoutes, ...animeRoutes].sort((a, b) =>
+    a.url.localeCompare(b.url)
   );
 
   if (

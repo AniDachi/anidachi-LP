@@ -172,6 +172,22 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/guides/best-isekai-anime-to-watch-with-friends"
+                  className="hover:text-white transition-colors"
+                >
+                  Best Isekai with Friends
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/watch-anime-together#genre-hubs"
+                  className="hover:text-white transition-colors"
+                >
+                  Browse Anime by Genre
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/guides/best-anime-to-watch-for-beginners"
                   className="hover:text-white transition-colors"
                 >

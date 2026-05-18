@@ -76,12 +76,22 @@ function inferSitemapMeta(urlPath: string): {
   if (urlPath === "/watch-party-starter") {
     return { changeFrequency: "weekly", priority: 0.88 };
   }
+  if (
+    urlPath === "/watch-action-anime-with-friends" ||
+    urlPath === "/watch-romance-anime-with-friends" ||
+    urlPath === "/watch-comedy-anime-with-friends" ||
+    urlPath === "/watch-sports-anime-with-friends" ||
+    urlPath === "/watch-mystery-anime-with-friends"
+  ) {
+    return { changeFrequency: "monthly", priority: 0.85 };
+  }
   if (urlPath.startsWith("/compare/")) {
     return { changeFrequency: "monthly", priority: 0.7 };
   }
   if (urlPath.startsWith("/guides/")) {
     if (
       urlPath.includes("best-anime-to-watch") ||
+      urlPath.includes("best-isekai-anime-to-watch") ||
       urlPath.includes("first-anime-watch-party-checklist")
     ) {
       return { changeFrequency: "monthly", priority: 0.71 };

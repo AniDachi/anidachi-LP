@@ -324,6 +324,16 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
             How to watch anime without spoilers
           </Link>
         </li>
+        <li>
+          <Link href="/watch-action-anime-with-friends" className="hover:underline">
+            Watch action anime with friends — genre hub
+          </Link>
+        </li>
+        <li>
+          <Link href="/watch-comedy-anime-with-friends" className="hover:underline">
+            Watch comedy anime with friends — genre hub
+          </Link>
+        </li>
       </ul>
     </SeoPageLayout>
   );
