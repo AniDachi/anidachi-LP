@@ -179,7 +179,7 @@ Common endpoints:
 - `GET /v4/anime/{id}/recommendations`
 - `GET /v4/anime/{id}/episodes`
 
-Respect Jikan’s rate limit (~3 rps); for bulk builds, serialize requests or pre-seed `lib/anime-data.ts` and enrich later.
+Respect Jikan’s rate limit (~3 rps). Before production builds, run **`npm run cache:jikan`** (also runs automatically via `npm run build`) to refresh **`lib/anime-jikan-cache.json`**. Watch pages use that file when live Jikan fails during static generation.
 
 ---
 

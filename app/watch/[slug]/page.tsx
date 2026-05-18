@@ -13,7 +13,7 @@ import {
   formatScoreLine,
   jikanGenresText,
   jikanStatusLine,
-  posterUrlFromJikan,
+  resolvePosterUrl,
   resolveRelatedFromJikan,
 } from "@/lib/jikan-for-watch-page";
 import { HowToJsonLd, TvSeriesJsonLd, MovieJsonLd } from "@/components/json-ld";
@@ -78,8 +78,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const malId = getMalIdForSlug(anime.slug);
   const jikanBundle =
-    malId != null ? await fetchJikanForWatchPage(malId) : null;
-  const posterUrl = posterUrlFromJikan(jikanBundle?.jikanAnime ?? null);
+    malId != null ? await fetchJikanForWatchPage(malId, anime.slug) : null;
+  const posterUrl = resolvePosterUrl(
+    anime.slug,
+    jikanBundle?.jikanAnime ?? null
+  );
   const episodesDisplay = formatEpisodesForUi(
     jikanBundle?.jikanAnime ?? null,
     anime.episodes
@@ -170,7 +173,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
   if (!anime) notFound();
 
   const malId = getMalIdForSlug(anime.slug);
-  const jikanBundle = malId != null ? await fetchJikanForWatchPage(malId) : null;
+  const jikanBundle =
+    malId != null ? await fetchJikanForWatchPage(malId, anime.slug) : null;
   const jikan = jikanBundle?.jikanAnime ?? null;
   const fromJikan = resolveRelatedFromJikan(jikanBundle?.recs, anime.slug);
   const relatedAnime =
@@ -190,7 +194,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
   const membersLine = formatMembersLine(jikan);
   const statusLine = jikanStatusLine(jikan);
   const genresDisplay = jikanGenresText(jikan, anime.genres);
-  const posterUrl = posterUrlFromJikan(jikan);
+  const posterUrl = resolvePosterUrl(anime.slug, jikan);
 
   const metaDescription = buildWatchPageMetaDescription(anime);
   const howToSteps = buildWatchHowToSteps(anime);

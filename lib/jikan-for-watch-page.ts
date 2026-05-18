@@ -5,18 +5,26 @@ import {
   type JikanAnime,
   type JikanRecommendation,
 } from "@/lib/jikan";
+import {
+  getCachedJikanEntry,
+  jikanAnimeFromCache,
+} from "@/lib/anime-jikan-cache";
 import { animeList, type AnimeEntry } from "@/lib/anime-data";
 import { getSlugByMalIdMap } from "@/lib/anime-mal-ids";
 
 /** Cached for the RSC so metadata + page body can share one Jikan round-trip per slug. */
 export const fetchJikanForWatchPage = cache(
-  async (malId: number) => {
-    let jikanAnime: Awaited<ReturnType<typeof getAnimeById>> | null = null;
+  async (malId: number, slug: string) => {
+    let jikanAnime: JikanAnime | null = null;
     try {
       jikanAnime = await getAnimeById(malId);
     } catch {
-      return null;
+      const cached = getCachedJikanEntry(slug);
+      if (cached) jikanAnime = jikanAnimeFromCache(cached);
     }
+
+    if (!jikanAnime) return null;
+
     let recs: Awaited<ReturnType<typeof getAnimeRecommendations>> = [];
     try {
       recs = await getAnimeRecommendations(malId);
@@ -52,6 +60,16 @@ export function posterUrlFromJikan(j: JikanAnime | null): string | null {
   const fallback = j.images?.jpg?.image_url?.trim();
   const url = large || fallback;
   return url || null;
+}
+
+/** Poster from live/cached Jikan, then prebuild snapshot (`npm run cache:jikan`). */
+export function resolvePosterUrl(
+  slug: string,
+  j: JikanAnime | null
+): string | null {
+  const fromJikan = posterUrlFromJikan(j);
+  if (fromJikan) return fromJikan;
+  return getCachedJikanEntry(slug)?.posterUrl ?? null;
 }
 
 export function formatEpisodesForUi(

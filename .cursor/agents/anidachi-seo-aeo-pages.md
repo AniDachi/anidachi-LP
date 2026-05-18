@@ -52,7 +52,7 @@ When adding or substantially editing a marketing route:
 ## Programmatic anime pages (`/watch/[slug]`)
 
 - Slugs in URLs end with `-with-friends`; strip that suffix when resolving entries from `lib/anime-data.ts`.
-- To add titles: extend `animeList` in `lib/anime-data.ts` (and `lib/anime-mal-ids.ts` in lockstep for Jikan). Touch `lib/jikan-for-watch-page.ts` only if resolver behavior must change.
+- To add titles: extend `animeList` in `lib/anime-data.ts` (and `lib/anime-mal-ids.ts` in lockstep for Jikan). Run **`npm run cache:jikan`** (or full **`npm run build`**) so **`lib/anime-jikan-cache.json`** includes the new slug’s poster/metadata fallback. Touch `lib/jikan-for-watch-page.ts` only if resolver behavior must change.
 - Keep `generateStaticParams` consistent with `animeList`; ensure build still generates all static paths.
 
 ### Programmatic quality guardrails
