@@ -63,6 +63,26 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 - [x] Add hub/listicle backlinks + bump `dateModified` → `2026-05-15` (list **86+**)
 - [x] Run `npm run build` ✅ (2026-05-15)
 
+### Additional batch (10 more watch pages — 2026-05-19)
+
+New slugs (high-traffic + Crunchyroll group-watch intent):
+- `oregairu` (My Teen Romantic Comedy SNAFU) — MAL 14813
+- `ouran-high-school-host-club` — MAL 179
+- `the-melancholy-of-haruhi-suzumiya` — MAL 904
+- `another` — MAL 11111
+- `charlotte` — MAL 28999
+- `nisekoi` — MAL 20785
+- `akira` — MAL 47 (Movie)
+- `highschool-dxd` — MAL 11617
+- `cardcaptor-sakura` — MAL 232
+- `date-a-live` — MAL 15583
+
+- [x] Add 10 anime entries to `lib/anime-data.ts`
+- [x] Add MAL IDs for the 10 slugs to `lib/anime-mal-ids.ts`
+- [x] Jikan cache updated: 10 new slugs cached, 0 failures
+- [x] Hub backlinks: `watch-anime-together` `dateModified` → `2026-05-19`; `best-anime-to-watch-with-friends` count → **107+**, `dateModified` → `2026-05-19`
+- [x] Run `npm run build` ✅ (2026-05-19) — 160 titles, 227 static pages generated
+
 ## Current Status / Progress Tracking
 
 - Added 5 new watch slugs to `animeList` and wired hub/listicle backlinks:

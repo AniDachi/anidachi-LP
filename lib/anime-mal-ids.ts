@@ -154,6 +154,16 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "toilet-bound-hanako-kun": 39534,
   "black-butler": 4898,
   "magi-the-labyrinth-of-magic": 14513,
+  oregairu: 14813,
+  "ouran-high-school-host-club": 179,
+  "the-melancholy-of-haruhi-suzumiya": 904,
+  another: 11111,
+  charlotte: 28999,
+  nisekoi: 20785,
+  akira: 47,
+  "highschool-dxd": 11617,
+  "cardcaptor-sakura": 232,
+  "date-a-live": 15583,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {

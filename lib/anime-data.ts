@@ -1568,4 +1568,104 @@ export const animeList: AnimeEntry[] = [
     genres: ["Action", "Fantasy", "Adventure"],
     related: ["hunter-x-hunter", "fairy-tail", "black-clover"],
   },
+  {
+    slug: "oregairu",
+    title: "My Teen Romantic Comedy SNAFU",
+    japaneseTitle: "Yahari Ore no Seishun Love Comedy wa Machigatteiru.",
+    synopsis:
+      "Loner Hachiman Hikigaya gets forced into the school Service Club with ice-queen Yukino and sunny Yui—and each problem they solve peels back another layer of teenage self-deception. Every character arc is a theory puzzle: watchrooms split immediately over who Hachiman should end up with, and the debates only intensify when Season 3 refuses to give easy answers.",
+    episodes: "38 episodes across 3 seasons",
+    genres: ["Comedy", "Romance", "School"],
+    related: ["kaguya-sama", "toradora", "horimiya"],
+  },
+  {
+    slug: "ouran-high-school-host-club",
+    title: "Ouran High School Host Club",
+    japaneseTitle: "Ouran Koukou Host Club",
+    synopsis:
+      "Scholarship student Haruhi accidentally breaks an expensive vase and must repay the debt by joining the Host Club, whose six eccentric members sell fantasies to wealthy girls. Gender-flipping comedy, rapid-fire character archetypes, and surprisingly tender arcs make it a perennial group-watch pick—everyone in the room picks a favorite host before episode four.",
+    episodes: "26 episodes",
+    genres: ["Comedy", "Romance", "School"],
+    related: ["kaguya-sama", "fruits-basket", "the-disastrous-life-of-saiki-k"],
+  },
+  {
+    slug: "the-melancholy-of-haruhi-suzumiya",
+    title: "The Melancholy of Haruhi Suzumiya",
+    japaneseTitle: "Suzumiya Haruhi no Yuuutsu",
+    synopsis:
+      "Kyon joins the SOS Brigade led by unpredictable Haruhi, who may be unconsciously reshaping reality—alongside a time traveler, an alien, and an esper who dare not reveal themselves. Mix of cult comedy, sci-fi mystery, and the legendary Endless Eight experiment that turns your watchroom into a philosophy seminar about time, free will, and fandom itself.",
+    episodes: "28 episodes (Seasons 1 & 2) + movie",
+    genres: ["Comedy", "Sci-Fi", "Supernatural"],
+    related: ["the-disastrous-life-of-saiki-k", "no-game-no-life", "re-zero"],
+  },
+  {
+    slug: "another",
+    title: "Another",
+    japaneseTitle: "Another",
+    synopsis:
+      "Transfer student Kouichi Sakakibara arrives at Class 3-3 and notices everyone ignores a quiet girl named Mei Misaki—soon students begin dying in elaborate accidents tied to a decades-old curse. Tense atmosphere and a whodunit structure make every episode a group pause-and-predict session as the body count rises and fingers point in new directions.",
+    episodes: "12 episodes",
+    genres: ["Horror", "Mystery", "Supernatural"],
+    related: ["erased", "the-promised-neverland", "tokyo-ghoul"],
+  },
+  {
+    slug: "charlotte",
+    title: "Charlotte",
+    japaneseTitle: "Charlotte",
+    synopsis:
+      "Teenager Yuu Otosaka can briefly hijack other people's bodies and uses it to cheat his way to an elite school—until a student council of ability users forces him to join their hunt. Pa Works drama with Key-style emotional gut-punches: mid-season twists and a final arc that rewards groups who pieced together foreshadowing together.",
+    episodes: "13 episodes",
+    genres: ["Drama", "School", "Supernatural"],
+    related: ["angel-beats", "clannad", "your-lie-in-april"],
+  },
+  {
+    slug: "nisekoi",
+    title: "Nisekoi",
+    japaneseTitle: "Nisekoi",
+    synopsis:
+      "Yakuza heir Raku Ichijou is forced into a fake relationship with Chitoge Kirisaki to prevent a gang war, while secretly searching for the girl who holds the key to his childhood locket promise. Multiple love interests, running key-and-locket mystery, and rom-com misunderstandings are precision-engineered for ship-war debates in chat every episode.",
+    episodes: "32 episodes across 2 seasons",
+    genres: ["Comedy", "Romance", "School"],
+    related: ["kaguya-sama", "quintessential-quintuplets", "horimiya"],
+  },
+  {
+    slug: "akira",
+    title: "Akira",
+    japaneseTitle: "Akira",
+    synopsis:
+      "In a dystopian Neo-Tokyo, biker gang leader Kaneda chases his childhood friend Tetsuo after a government experiment unlocks catastrophic psychic powers. A landmark sci-fi film whose dense imagery and political subtext reward multiple group viewings—every frame invites a pause, and the ending always sparks a room-wide debate about power, memory, and rebirth.",
+    episodes: "Movie",
+    genres: ["Action", "Sci-Fi", "Psychological"],
+    related: ["neon-genesis-evangelion", "cowboy-bebop", "cyberpunk-edgerunners"],
+  },
+  {
+    slug: "highschool-dxd",
+    title: "High School DxD",
+    japaneseTitle: "High School DxD",
+    synopsis:
+      "Issei Hyodo is killed on his first date and revived as a devil by the crimson-haired Rias Gremory. He joins the Occult Research Club and levels up through Rating Game battles against fallen angels and enemy devils across a universe of sacred gears, demon factions, and over-the-top power reveals—perfect for groups who want hype fights, endless power-scale debates, and the most chaotic club cast on Crunchyroll.",
+    episodes: "48+ episodes across multiple seasons",
+    genres: ["Action", "Comedy", "Fantasy"],
+    related: ["danmachi", "fairy-tail", "overlord"],
+  },
+  {
+    slug: "cardcaptor-sakura",
+    title: "Cardcaptor Sakura",
+    japaneseTitle: "Kādokyaputā Sakura",
+    synopsis:
+      "Fourth-grader Sakura Kinomoto accidentally releases a deck of magical Clow Cards and must recapture each one before disaster strikes, assisted by guardian Keroberos and her best friend Tomoyo. Episodic captures escalate into a heartfelt coming-of-age arc that's as rewatchable as it is beloved—perfect for nostalgic marathons or introducing the magical-girl genre to a group for the first time.",
+    episodes: "70 episodes + 2 movies",
+    genres: ["Adventure", "Fantasy", "Magic"],
+    related: ["spirited-away", "frieren-beyond-journeys-end", "howls-moving-castle"],
+  },
+  {
+    slug: "date-a-live",
+    title: "Date A Live",
+    japaneseTitle: "Dēto A Raibu",
+    synopsis:
+      "Shido Itsuka discovers that 'Spirits'—beings whose appearance triggers catastrophic spacequakes—can be neutralized by making them fall in love with him. Each Spirit arc is a genre-bending mini-route with different personality archetypes and escalating stakes; groups quickly split into factions over who is best girl, then argue about the lore between season finales.",
+    episodes: "48+ episodes across multiple seasons",
+    genres: ["Action", "Romantic Comedy", "Sci-Fi"],
+    related: ["sword-art-online", "re-zero", "that-time-i-got-reincarnated-as-a-slime"],
+  },
 ];

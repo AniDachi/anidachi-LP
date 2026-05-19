@@ -75,7 +75,7 @@ export default function WatchAnimeTogetherPage() {
       description="Everything you need to watch anime with friends online."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-05-18"
+      dateModified="2026-05-19"
       faq={faq}
       headings={tocHeadings}
       itemList={genreHubItemList(1)}

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-18T12:54:05.311Z",
+  "generatedAt": "2026-05-19T08:18:34.317Z",
   "entries": {
     "a-silent-voice": {
       "mal_id": 28851,
@@ -2038,6 +2038,148 @@
       "genres": [
         "Action",
         "Sci-Fi"
+      ]
+    },
+    "akira": {
+      "mal_id": 47,
+      "posterUrl": "https://myanimelist.net/images/anime/1408/114012l.jpg",
+      "episodes": 1,
+      "airing": false,
+      "score": 8.16,
+      "members": 956585,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Horror",
+        "Sci-Fi"
+      ]
+    },
+    "another": {
+      "mal_id": 11111,
+      "posterUrl": "https://myanimelist.net/images/anime/4/75509l.jpg",
+      "episodes": 12,
+      "airing": false,
+      "score": 7.46,
+      "members": 1786559,
+      "status": "Finished Airing",
+      "genres": [
+        "Horror",
+        "Mystery"
+      ]
+    },
+    "cardcaptor-sakura": {
+      "mal_id": 232,
+      "posterUrl": "https://myanimelist.net/images/anime/8/60781l.jpg",
+      "episodes": 70,
+      "airing": false,
+      "score": 8.19,
+      "members": 486730,
+      "status": "Finished Airing",
+      "genres": [
+        "Adventure",
+        "Comedy",
+        "Drama",
+        "Romance"
+      ]
+    },
+    "charlotte": {
+      "mal_id": 28999,
+      "posterUrl": "https://myanimelist.net/images/anime/1826/147276l.jpg",
+      "episodes": 13,
+      "airing": false,
+      "score": 7.76,
+      "members": 1766536,
+      "status": "Finished Airing",
+      "genres": [
+        "Drama"
+      ]
+    },
+    "date-a-live": {
+      "mal_id": 15583,
+      "posterUrl": "https://myanimelist.net/images/anime/13/44844l.jpg",
+      "episodes": 12,
+      "airing": false,
+      "score": 7.14,
+      "members": 1118420,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Fantasy",
+        "Romance",
+        "Sci-Fi"
+      ]
+    },
+    "highschool-dxd": {
+      "mal_id": 11617,
+      "posterUrl": "https://myanimelist.net/images/anime/1331/111940l.jpg",
+      "episodes": 12,
+      "airing": false,
+      "score": 7.32,
+      "members": 1539010,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Comedy",
+        "Romance",
+        "Supernatural",
+        "Ecchi"
+      ]
+    },
+    "nisekoi": {
+      "mal_id": 20785,
+      "posterUrl": "https://myanimelist.net/images/anime/11/61039l.jpg",
+      "episodes": 26,
+      "airing": false,
+      "score": 7.36,
+      "members": 1150872,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Fantasy",
+        "Romance",
+        "Sci-Fi"
+      ]
+    },
+    "oregairu": {
+      "mal_id": 14813,
+      "posterUrl": "https://myanimelist.net/images/anime/1786/120117l.jpg",
+      "episodes": 13,
+      "airing": false,
+      "score": 8,
+      "members": 1570555,
+      "status": "Finished Airing",
+      "genres": [
+        "Comedy",
+        "Romance"
+      ]
+    },
+    "ouran-high-school-host-club": {
+      "mal_id": 179,
+      "posterUrl": "https://myanimelist.net/images/anime/2/3132l.jpg",
+      "episodes": 1,
+      "airing": false,
+      "score": 6.62,
+      "members": 6117,
+      "status": "Finished Airing",
+      "genres": [
+        "Comedy",
+        "Fantasy",
+        "Romance"
+      ]
+    },
+    "the-melancholy-of-haruhi-suzumiya": {
+      "mal_id": 904,
+      "posterUrl": "https://myanimelist.net/images/anime/1035/93674l.jpg",
+      "episodes": 1,
+      "airing": false,
+      "score": 5.77,
+      "members": 135984,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
       ]
     }
   }
