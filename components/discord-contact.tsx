@@ -53,11 +53,12 @@ export function DiscordContact({
     >
       <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
         <MessageCircle className="h-4 w-4" aria-hidden="true" />
-        Contact via Discord
+        DM the AniDachi Founder
       </h4>
       <p className="mb-3">
-        DM me on Discord:{" "}
+        Message{" "}
         <span className="font-mono text-gray-900 select-all">{username}</span>
+        {" "}directly on Discord
       </p>
 
       <div className="flex flex-col sm:flex-row gap-2">
@@ -85,7 +86,7 @@ export function DiscordContact({
           className="bg-purple-600 hover:bg-purple-700 text-white"
         >
           <a href={discordAppUrl} target="_blank" rel="noreferrer">
-            DM me on Discord
+            DM on Discord
           </a>
         </Button>
       </div>

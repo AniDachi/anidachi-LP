@@ -38,6 +38,7 @@ function safeParseSurvey(raw: string | null): HomeSurveyAnswers | null {
       discovery: anyV.discovery,
       timing: anyV.timing,
       group_size: anyV.group_size,
+      current_solution: anyV.current_solution,
     };
   } catch {
     return null;
