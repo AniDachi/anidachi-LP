@@ -1,4 +1,8 @@
 import { DiscordContact } from "@/components/discord-contact";
+import {
+  FOUNDER_DISCORD_PROFILE_URL,
+  FOUNDER_DISCORD_USERNAME,
+} from "@/lib/founder-discord";
 
 export interface PrePurchaseDiscordWalkthroughProps {
   username?: string;
@@ -11,8 +15,8 @@ export interface PrePurchaseDiscordWalkthroughProps {
  * Used on the plan survey recommendation step (not on /success).
  */
 export function PrePurchaseDiscordWalkthrough({
-  username = ".profun",
-  profileUrl,
+  username = FOUNDER_DISCORD_USERNAME,
+  profileUrl = FOUNDER_DISCORD_PROFILE_URL,
   className = "",
 }: PrePurchaseDiscordWalkthroughProps) {
   return (

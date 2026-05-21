@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Copy, MessageCircle } from "lucide-react";
+import { FOUNDER_DISCORD_PROFILE_URL } from "@/lib/founder-discord";
 
 export interface DiscordContactProps {
   username: string;
@@ -18,11 +19,8 @@ export function DiscordContact({
   const [copied, setCopied] = useState(false);
 
   const discordAppUrl = useMemo(() => {
-    // Prefer a direct profile link when available.
     if (profileUrl && profileUrl.length > 0) return profileUrl;
-
-    // Otherwise, the most reliable action is opening Discord.
-    return "https://discord.com/channels/@me";
+    return FOUNDER_DISCORD_PROFILE_URL;
   }, [profileUrl]);
 
   const copyUsername = useCallback(async () => {

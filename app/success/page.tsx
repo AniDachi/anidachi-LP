@@ -9,6 +9,10 @@ import {
 import { CheckCircle, Rocket, Mail } from "lucide-react";
 import { DiscordContact } from "@/components/discord-contact";
 import { DiscordCredentialsForm } from "@/components/discord-credentials-form";
+import {
+  FOUNDER_DISCORD_PROFILE_URL,
+  FOUNDER_DISCORD_USERNAME,
+} from "@/lib/founder-discord";
 
 export const metadata: Metadata = {
   title: "Welcome to AniDachi – Subscription Confirmed",
@@ -99,8 +103,8 @@ export default async function SuccessPage({
           </div>
 
           <DiscordContact
-            username=".profun"
-            profileUrl="https://discordapp.com/users/321011381409415169"
+            username={FOUNDER_DISCORD_USERNAME}
+            profileUrl={FOUNDER_DISCORD_PROFILE_URL}
           />
 
           <DiscordCredentialsForm sessionId={sessionId} />
