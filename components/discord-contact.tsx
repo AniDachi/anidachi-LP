@@ -1,27 +1,28 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Copy, MessageCircle } from "lucide-react";
-import { FOUNDER_DISCORD_PROFILE_URL } from "@/lib/founder-discord";
+import {
+  FOUNDER_DISCORD_PROFILE_URL,
+  FOUNDER_DISCORD_USERNAME,
+} from "@/lib/founder-discord";
 
 export interface DiscordContactProps {
-  username: string;
+  username?: string;
   profileUrl?: string;
   className?: string;
 }
 
+/** Shared founder Discord card (post-purchase /success and pre-purchase survey). */
 export function DiscordContact({
-  username,
-  profileUrl,
+  username = FOUNDER_DISCORD_USERNAME,
+  profileUrl = FOUNDER_DISCORD_PROFILE_URL,
   className = "",
 }: DiscordContactProps) {
   const [copied, setCopied] = useState(false);
 
-  const discordAppUrl = useMemo(() => {
-    if (profileUrl && profileUrl.length > 0) return profileUrl;
-    return FOUNDER_DISCORD_PROFILE_URL;
-  }, [profileUrl]);
+  const discordAppUrl = profileUrl;
 
   const copyUsername = useCallback(async () => {
     try {

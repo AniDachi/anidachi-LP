@@ -4,6 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PrePurchaseDiscordWalkthrough } from "@/components/pre-purchase-discord-walkthrough";
 import {
+  FOUNDER_DISCORD_PROFILE_URL,
+  FOUNDER_DISCORD_USERNAME,
+} from "@/lib/founder-discord";
+import {
   Check,
   CreditCard,
   Lock,
@@ -701,7 +705,11 @@ export function PlanSurveyModal({
                 </div>
               </div>
 
-              <PrePurchaseDiscordWalkthrough className="mt-5" />
+              <PrePurchaseDiscordWalkthrough
+                className="mt-5"
+                username={FOUNDER_DISCORD_USERNAME}
+                profileUrl={FOUNDER_DISCORD_PROFILE_URL}
+              />
 
               {/* Objection handler — appears after 10 seconds on this step */}
               {objectionVisible && !selectedObjection && (
