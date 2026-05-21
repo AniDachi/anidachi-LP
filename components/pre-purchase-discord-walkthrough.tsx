@@ -1,12 +1,8 @@
 import { DiscordContact } from "@/components/discord-contact";
-import {
-  FOUNDER_DISCORD_PROFILE_URL,
-  FOUNDER_DISCORD_USERNAME,
-} from "@/lib/founder-discord";
+import { FOUNDER_DISCORD_USERNAME } from "@/lib/founder-discord";
 
 export interface PrePurchaseDiscordWalkthroughProps {
   username?: string;
-  profileUrl?: string;
   className?: string;
 }
 
@@ -16,7 +12,6 @@ export interface PrePurchaseDiscordWalkthroughProps {
  */
 export function PrePurchaseDiscordWalkthrough({
   username = FOUNDER_DISCORD_USERNAME,
-  profileUrl = FOUNDER_DISCORD_PROFILE_URL,
   className = "",
 }: PrePurchaseDiscordWalkthroughProps) {
   return (
@@ -28,11 +23,7 @@ export function PrePurchaseDiscordWalkthrough({
         Message the founder on Discord and we&apos;ll set up a live demo for your group — no
         commitment needed.
       </p>
-      <DiscordContact
-        username={username}
-        profileUrl={profileUrl}
-        className="border border-purple-200 bg-white"
-      />
+      <DiscordContact username={username} className="border border-purple-200 bg-white" />
     </div>
   );
 }

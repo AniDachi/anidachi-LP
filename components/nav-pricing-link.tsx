@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   inferPageTemplateFromPath,
   trackConversion,
@@ -14,11 +13,10 @@ export function NavPricingLink({
 }) {
   const { openSurvey } = usePlanSurvey();
   return (
-    <Link
-      href="/#pricing"
+    <button
+      type="button"
       className={className}
-      onClick={(e) => {
-        e.preventDefault();
+      onClick={() => {
         if (typeof window === "undefined") return;
         const path = window.location.pathname;
         trackConversion("cta_click", {
@@ -31,6 +29,6 @@ export function NavPricingLink({
       }}
     >
       Pick a plan
-    </Link>
+    </button>
   );
 }

@@ -6,7 +6,8 @@ import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { NavPricingButton } from "@/components/nav-pricing-button";
 import { NavPricingLink } from "@/components/nav-pricing-link";
-import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
+import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/#how-it-works", label: "How It Works" },
@@ -20,7 +21,11 @@ function isExternalNavLink(href: string) {
 
 export function NavBarClient() {
   const [menuOpen, setMenuOpen] = useState(false);
-  useBodyScrollLock(menuOpen);
+  const { isOpen: surveyOpen } = usePlanSurvey();
+
+  useEffect(() => {
+    if (surveyOpen) setMenuOpen(false);
+  }, [surveyOpen]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -34,7 +39,10 @@ export function NavBarClient() {
   return (
     <nav
       aria-label="Main navigation"
-      className="sticky top-0 z-50 flex min-h-14 w-full items-center border-b border-white/10 bg-purple-900/80 backdrop-blur-md"
+      className={cn(
+        "top-0 z-[90] flex min-h-14 w-full items-center border-b border-white/10 bg-purple-900/95 backdrop-blur-md",
+        surveyOpen ? "fixed left-0 right-0" : "sticky",
+      )}
     >
       <div className="container mx-auto flex w-full items-center justify-between gap-2 px-4 py-3">
         <Link
@@ -122,13 +130,13 @@ export function NavBarClient() {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            className="fixed inset-0 z-[45] bg-black/50 md:hidden touch-none"
             aria-label="Close menu"
             onClick={() => setMenuOpen(false)}
           />
           <div
             id="mobile-nav-menu"
-            className="fixed inset-x-0 top-14 z-50 border-b border-white/10 bg-purple-900/98 px-4 py-4 shadow-lg md:hidden"
+            className="fixed inset-x-0 top-14 z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem))] overflow-y-auto overscroll-contain border-b border-white/10 bg-purple-900/98 px-4 py-4 shadow-lg md:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile navigation menu"
@@ -164,7 +172,7 @@ export function NavBarClient() {
                   FAQ
                 </Link>
               </li>
-              <li className="pt-2">
+              <li className="pt-2" onClick={() => setMenuOpen(false)}>
                 <NavPricingButton />
               </li>
             </ul>

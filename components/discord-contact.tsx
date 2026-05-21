@@ -2,27 +2,21 @@
 
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Copy, MessageCircle } from "lucide-react";
-import {
-  FOUNDER_DISCORD_PROFILE_URL,
-  FOUNDER_DISCORD_USERNAME,
-} from "@/lib/founder-discord";
+import { Check, Copy } from "lucide-react";
+import { DiscordIcon } from "@/components/discord-icon";
+import { FOUNDER_DISCORD_USERNAME } from "@/lib/founder-discord";
 
 export interface DiscordContactProps {
   username?: string;
-  profileUrl?: string;
   className?: string;
 }
 
 /** Shared founder Discord card (post-purchase /success and pre-purchase survey). */
 export function DiscordContact({
   username = FOUNDER_DISCORD_USERNAME,
-  profileUrl = FOUNDER_DISCORD_PROFILE_URL,
   className = "",
 }: DiscordContactProps) {
   const [copied, setCopied] = useState(false);
-
-  const discordAppUrl = profileUrl;
 
   const copyUsername = useCallback(async () => {
     try {
@@ -51,44 +45,36 @@ export function DiscordContact({
       className={`bg-gray-50 rounded-lg p-4 text-sm text-gray-600 ${className}`.trim()}
     >
       <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
-        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+        <DiscordIcon className="h-5 w-5 shrink-0 text-[#5865F2]" />
         DM the AniDachi Founder
       </h4>
-      <p className="mb-3">
-        Message{" "}
-        <span className="font-mono text-gray-900 select-all">{username}</span>
-        {" "}directly on Discord
+      <p className="mb-3 flex flex-wrap items-center gap-1.5">
+        <span>Message</span>
+        <span className="inline-flex items-center gap-1.5 rounded-md border border-[#5865F2]/25 bg-[#5865F2]/5 px-2 py-0.5 font-mono text-gray-900 select-all">
+          <DiscordIcon className="h-4 w-4 shrink-0 text-[#5865F2]" />
+          {username}
+        </span>
+        <span>on Discord</span>
       </p>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          className="bg-transparent"
-          onClick={copyUsername}
-        >
-          {copied ? (
-            <>
-              <Check className="mr-2 h-4 w-4" aria-hidden="true" />
-              Copied
-            </>
-          ) : (
-            <>
-              <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
-              Copy username
-            </>
-          )}
-        </Button>
-
-        <Button
-          asChild
-          className="bg-purple-600 hover:bg-purple-700 text-white"
-        >
-          <a href={discordAppUrl} target="_blank" rel="noreferrer">
-            DM on Discord
-          </a>
-        </Button>
-      </div>
+      <Button
+        type="button"
+        variant="outline"
+        className="bg-transparent"
+        onClick={copyUsername}
+      >
+        {copied ? (
+          <>
+            <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+            Copied
+          </>
+        ) : (
+          <>
+            <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+            Copy username
+          </>
+        )}
+      </Button>
     </div>
   );
 }

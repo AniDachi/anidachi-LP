@@ -3,10 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PrePurchaseDiscordWalkthrough } from "@/components/pre-purchase-discord-walkthrough";
-import {
-  FOUNDER_DISCORD_PROFILE_URL,
-  FOUNDER_DISCORD_USERNAME,
-} from "@/lib/founder-discord";
+import { FOUNDER_DISCORD_USERNAME } from "@/lib/founder-discord";
 import {
   Check,
   CreditCard,
@@ -338,21 +335,22 @@ export function PlanSurveyModal({
   const upgradeText = currentSolutionUpgradeText(survey.current_solution);
 
   return (
-    <div
-      ref={dialogRef}
-      className="fixed inset-0 z-[80] flex items-center justify-center overflow-hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))] overscroll-none"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="plan-survey-title"
-    >
+    <>
       <button
         type="button"
         aria-label="Close survey"
-        className="absolute inset-0 bg-black/60"
+        className="fixed inset-0 z-[75] bg-black/60"
         onClick={() => closeSurvey("backdrop")}
       />
 
-      <div className="relative flex max-h-[min(90dvh,calc(100vh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-white/95 to-white/90 text-gray-900 shadow-2xl backdrop-blur-xl">
+      <div
+        ref={dialogRef}
+        className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden p-4 pt-20 pb-[max(1rem,env(safe-area-inset-bottom))] overscroll-none pointer-events-none sm:pt-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="plan-survey-title"
+      >
+      <div className="pointer-events-auto relative flex max-h-[min(90dvh,calc(100vh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-white/95 to-white/90 text-gray-900 shadow-2xl backdrop-blur-xl">
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200/70 px-6 py-4">
           <div className="flex items-center gap-2">
@@ -382,7 +380,10 @@ export function PlanSurveyModal({
           />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5"
+          data-scroll-lock-scrollable
+        >
           {checkoutError && (
             <div
               className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
@@ -735,7 +736,6 @@ export function PlanSurveyModal({
               <PrePurchaseDiscordWalkthrough
                 className="mt-5"
                 username={FOUNDER_DISCORD_USERNAME}
-                profileUrl={FOUNDER_DISCORD_PROFILE_URL}
               />
 
               {/* Objection handler — appears after 10 seconds on this step */}
@@ -817,6 +817,7 @@ export function PlanSurveyModal({
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

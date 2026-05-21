@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   inferPageTemplateFromPath,
@@ -12,27 +11,22 @@ export function NavPricingButton() {
   const { openSurvey } = usePlanSurvey();
   return (
     <Button
+      type="button"
       size="sm"
       className="bg-white text-purple-800 hover:bg-purple-50 font-semibold"
-      asChild
+      onClick={() => {
+        if (typeof window === "undefined") return;
+        const path = window.location.pathname;
+        trackConversion("cta_click", {
+          page_path: path,
+          page_template: inferPageTemplateFromPath(path),
+          placement: "nav",
+          cta_variant: "nav_pricing_button",
+        });
+        openSurvey({ placement: "nav", ctaVariant: "nav_pricing_button" });
+      }}
     >
-      <Link
-        href="/#pricing"
-        onClick={(e) => {
-          e.preventDefault();
-          if (typeof window === "undefined") return;
-          const path = window.location.pathname;
-          trackConversion("cta_click", {
-            page_path: path,
-            page_template: inferPageTemplateFromPath(path),
-            placement: "nav",
-            cta_variant: "nav_pricing_button",
-          });
-          openSurvey({ placement: "nav", ctaVariant: "nav_pricing_button" });
-        }}
-      >
-        Help me pick a plan
-      </Link>
+      Help me pick a plan
     </Button>
   );
 }
