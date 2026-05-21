@@ -54,6 +54,7 @@ type PlanSurveyContextValue = {
   survey: HomeSurveyAnswers;
   setSurvey: (next: HomeSurveyAnswers) => void;
   recommendedTier: CheckoutTier;
+  isOpen: boolean;
   openSurvey: (args: OpenSurveyArgs) => void;
   closeSurvey: (reason: "backdrop" | "close_button" | "not_now") => void;
   onSurveyAnswered: (payload: { question_id: string; answer_id: string }) => void;
@@ -111,11 +112,12 @@ export function PlanSurveyProvider({ children }: { children: React.ReactNode }) 
       survey,
       setSurvey,
       recommendedTier,
+      isOpen,
       openSurvey,
       closeSurvey,
       onSurveyAnswered,
     }),
-    [closeSurvey, onSurveyAnswered, openSurvey, recommendedTier, survey],
+    [closeSurvey, isOpen, onSurveyAnswered, openSurvey, recommendedTier, survey],
   );
 
   return (

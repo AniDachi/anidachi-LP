@@ -7,12 +7,16 @@ import {
 } from "@/lib/conversion-events";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
-export function NavPricingLink() {
+export function NavPricingLink({
+  className = "text-purple-100 hover:text-white transition-colors",
+}: {
+  className?: string;
+}) {
   const { openSurvey } = usePlanSurvey();
   return (
     <Link
       href="/#pricing"
-      className="text-purple-100 hover:text-white transition-colors"
+      className={className}
       onClick={(e) => {
         e.preventDefault();
         if (typeof window === "undefined") return;

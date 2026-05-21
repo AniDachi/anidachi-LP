@@ -10,6 +10,8 @@ import {
 } from "@/components/json-ld";
 import { TableOfContents, type TocHeading } from "@/components/table-of-contents";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
+import { SeoBelowTitleCta } from "@/components/seo-below-title-cta";
+import { StickyMobileCheckoutBar } from "@/components/sticky-mobile-checkout-bar";
 import type { PageTemplateId } from "@/lib/conversion-events";
 import { inferPageTemplateFromPath } from "@/lib/conversion-events";
 
@@ -56,15 +58,13 @@ export function SeoPageLayout({
 
   const articleBody = (
     <>
-      {aboveFoldCta && (
-        <PrimaryCheckoutCta
-          pagePath={url}
-          pageTemplate={pageTemplate}
-          placement="content_above_fold"
-          className="!mt-0 mb-10"
-        />
+      {aboveFoldCta ? (
+        <SeoBelowTitleCta pagePath={url} pageTemplate={pageTemplate}>
+          {children}
+        </SeoBelowTitleCta>
+      ) : (
+        children
       )}
-      {children}
       {midContentSlot}
       <div className="mt-12">
         <PrimaryCheckoutCta
@@ -126,6 +126,9 @@ export function SeoPageLayout({
         {faq && faq.length > 0 && <FAQSection questions={faq} />}
       </main>
       <Footer />
+      {aboveFoldCta && (
+        <StickyMobileCheckoutBar pagePath={url} pageTemplate={pageTemplate} />
+      )}
 
       <BreadcrumbJsonLd items={breadcrumbs} />
       <ArticleJsonLd

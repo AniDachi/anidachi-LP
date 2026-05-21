@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 export const metadata: Metadata = {
   title: "Best Anime to Watch with Friends (2026) — 107+ Top Picks for Group Watching",
@@ -173,6 +174,13 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/the-melancholy-of-haruhi-suzumiya-with-friends" className="text-purple-600 hover:underline">The Melancholy of Haruhi Suzumiya</Link></strong> — Cult comedy that hides a sci-fi mystery; the Endless Eight alone turns your watchroom into a philosophy seminar about time and fandom.</li>
         <li><strong><Link href="/watch/nisekoi-with-friends" className="text-purple-600 hover:underline">Nisekoi</Link></strong> — Fake-dating yakuza comedy with a running locket mystery; precision-engineered ship-war debates in chat every episode.</li>
       </ul>
+
+      <PrimaryCheckoutCta
+        pagePath="/guides/best-anime-to-watch-with-friends"
+        pageTemplate="listicle"
+        placement="content_mid"
+        className="my-10"
+      />
 
       <h2
         id="discussion"

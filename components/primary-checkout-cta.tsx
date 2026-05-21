@@ -62,7 +62,8 @@ export interface PrimaryCheckoutCtaProps {
     | "content_mid"
     | "hero"
     | "home_features"
-    | "nav";
+    | "nav"
+    | string;
   className?: string;
   ctaVariant?: string;
   trustMicrocopyClassName?: string;

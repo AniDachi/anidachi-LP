@@ -58,6 +58,8 @@ export function PlanSurveyModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const completedEventFired = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Email capture state (step 5)
   const [emailInput, setEmailInput] = useState("");
@@ -71,6 +73,18 @@ export function PlanSurveyModal({
   const objectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useBodyScrollLock(isOpen);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    closeButtonRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onRequestClose("close_button");
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onRequestClose]);
 
   // Progress bar: step / TOTAL_STEPS, capped at 100% on the recommendation step
   const progressPct = step === 7 ? 100 : Math.round((step / TOTAL_STEPS) * 100);
@@ -325,7 +339,8 @@ export function PlanSurveyModal({
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center overflow-hidden p-4 overscroll-none"
+      ref={dialogRef}
+      className="fixed inset-0 z-[80] flex items-center justify-center overflow-hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))] overscroll-none"
       role="dialog"
       aria-modal="true"
       aria-labelledby="plan-survey-title"
@@ -347,13 +362,15 @@ export function PlanSurveyModal({
             </p>
           </div>
           <Button
+            ref={closeButtonRef}
             type="button"
             variant="ghost"
-            className="text-gray-700 hover:bg-gray-100"
+            className="min-h-11 min-w-11 text-gray-700 hover:bg-gray-100"
+            aria-label="Close survey"
             onClick={() => closeSurvey("close_button")}
           >
-            <X className="h-4 w-4" aria-hidden="true" />
-            Close
+            <X className="h-5 w-5" aria-hidden="true" />
+            <span className="sr-only">Close</span>
           </Button>
         </div>
 
@@ -534,7 +551,9 @@ export function PlanSurveyModal({
                     onChange={(e) => setEmailInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") submitEmail(); }}
                     placeholder="Your email address"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                    autoComplete="email"
+                    inputMode="email"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
                   />
                   {emailError && (
                     <p className="text-xs text-red-600">{emailError}</p>
@@ -739,7 +758,7 @@ export function PlanSurveyModal({
                       <button
                         key={o.id}
                         type="button"
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-xs text-gray-700 hover:border-purple-200 hover:bg-purple-50 transition-colors"
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-3 text-left text-sm text-gray-700 hover:border-purple-200 hover:bg-purple-50 transition-colors min-h-11"
                         onClick={() => setSelectedObjection(o.id)}
                       >
                         {o.label}

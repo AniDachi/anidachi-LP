@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
@@ -104,54 +105,34 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       >
         Feature comparison
       </h2>
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-gray-200">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="border border-gray-200 px-4 py-2 text-left">Feature</th>
-              <th className="border border-gray-200 px-4 py-2 text-left text-purple-700">
-                AniDachi
-              </th>
-              <th className="border border-gray-200 px-4 py-2 text-left">
-                Crunchyroll Party
-              </th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-700">
-            <tr>
-              <td className="border border-gray-200 px-4 py-2">Live sync</td>
-              <td className="border border-gray-200 px-4 py-2">Yes</td>
-              <td className="border border-gray-200 px-4 py-2">Yes</td>
-            </tr>
-            <tr className="bg-gray-50">
-              <td className="border border-gray-200 px-4 py-2">Asynchronous catch-up</td>
-              <td className="border border-gray-200 px-4 py-2 font-medium text-green-700">
-                Yes
-              </td>
-              <td className="border border-gray-200 px-4 py-2">No</td>
-            </tr>
-            <tr>
-              <td className="border border-gray-200 px-4 py-2">Auto anime detection</td>
-              <td className="border border-gray-200 px-4 py-2 font-medium text-green-700">
-                Yes
-              </td>
-              <td className="border border-gray-200 px-4 py-2">No / manual</td>
-            </tr>
-            <tr className="bg-gray-50">
-              <td className="border border-gray-200 px-4 py-2">Per-person progress</td>
-              <td className="border border-gray-200 px-4 py-2 font-medium text-green-700">
-                Yes
-              </td>
-              <td className="border border-gray-200 px-4 py-2">No</td>
-            </tr>
-            <tr>
-              <td className="border border-gray-200 px-4 py-2">Pricing</td>
-              <td className="border border-gray-200 px-4 py-2">$8/mo (early access)</td>
-              <td className="border border-gray-200 px-4 py-2">Free</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ResponsiveCompareTable
+        columns={[
+          { id: "anidachi", label: "AniDachi", highlight: true },
+          { id: "crunchyrollParty", label: "Crunchyroll Party" },
+        ]}
+        rows={[
+          { feature: "Live sync", values: { anidachi: "yes", crunchyrollParty: "yes" } },
+          {
+            feature: "Asynchronous catch-up",
+            values: { anidachi: "yes", crunchyrollParty: "no" },
+          },
+          {
+            feature: "Auto anime detection",
+            values: { anidachi: "yes", crunchyrollParty: "No / manual" },
+          },
+          {
+            feature: "Per-person progress",
+            values: { anidachi: "yes", crunchyrollParty: "no" },
+          },
+          {
+            feature: "Pricing",
+            values: {
+              anidachi: "$8/mo (early access)",
+              crunchyrollParty: "Free",
+            },
+          },
+        ]}
+      />
 
       <h2
         id="when-crunchyroll-party"

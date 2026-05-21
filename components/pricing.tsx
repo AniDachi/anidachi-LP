@@ -16,6 +16,7 @@ import {
   trackConversion,
 } from "@/lib/conversion-events";
 import type { CheckoutTier, HomeSurveyAnswers } from "@/lib/home-survey";
+import { PricingSurveyLink } from "@/components/pricing-survey-link";
 
 export function Pricing({
   survey,
@@ -263,7 +264,7 @@ export function Pricing({
                     : (getCtaLabelForTier?.("crunchyroll_subscriber") ??
                       "Start paid plan")}
                 </Button>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-gray-600">
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
                   <div className="flex items-center gap-1.5">
                     <Lock className="h-3.5 w-3.5" aria-hidden="true" />
                     Secured by Stripe
@@ -333,7 +334,7 @@ export function Pricing({
                     : (getCtaLabelForTier?.("anime_junkie") ??
                       "Start Anime Junkie")}
                 </Button>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-gray-600">
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
                   <div className="flex items-center gap-1.5">
                     <Lock className="h-3.5 w-3.5" aria-hidden="true" />
                     Secured by Stripe
@@ -351,6 +352,10 @@ export function Pricing({
             </CardContent>
           </Card>
         </div>
+
+        <p className="text-center mt-8">
+          <PricingSurveyLink />
+        </p>
       </div>
     </section>
   );

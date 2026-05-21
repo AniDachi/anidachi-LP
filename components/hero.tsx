@@ -21,10 +21,10 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 text-white">
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-20 h-20 bg-purple-400/20 rounded-full blur-xl animate-pulse" />
-        <div className="absolute top-40 right-20 w-32 h-32 bg-blue-400/20 rounded-full blur-xl animate-pulse delay-1000" />
-        <div className="absolute bottom-20 left-1/3 w-24 h-24 bg-purple-300/20 rounded-full blur-xl animate-pulse delay-500" />
+      <div className="absolute inset-0 motion-reduce:hidden">
+        <div className="absolute top-20 left-10 w-20 h-20 bg-purple-400/20 rounded-full blur-lg md:blur-xl motion-reduce:animate-none animate-pulse" />
+        <div className="absolute top-40 right-20 w-32 h-32 bg-blue-400/20 rounded-full blur-lg md:blur-xl motion-reduce:animate-none animate-pulse delay-1000" />
+        <div className="absolute bottom-20 left-1/3 w-24 h-24 bg-purple-300/20 rounded-full blur-lg md:blur-xl motion-reduce:animate-none animate-pulse delay-500" />
       </div>
 
       <div className="absolute inset-0 bg-black/20" />
@@ -41,8 +41,8 @@ export function Hero() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Button
-              size="lg"
-              className="bg-white text-purple-700 hover:bg-purple-50 px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+              size="touch"
+              className="bg-white text-purple-700 hover:bg-purple-50 w-full sm:w-auto px-8 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 md:hover:scale-105"
               onClick={() => {
                 trackConversion("cta_click", {
                   page_path: "/",

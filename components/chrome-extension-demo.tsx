@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,185 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
+function ExtensionPanel({
+  step,
+  showExtension,
+  animeDetected,
+  setAnimeDetected,
+  watchroomCreated,
+  episodesWatched,
+  className = "",
+}: {
+  step: number;
+  showExtension: boolean;
+  animeDetected: boolean;
+  setAnimeDetected: (v: boolean) => void;
+  watchroomCreated: boolean;
+  episodesWatched: number;
+  className?: string;
+}) {
+  return (
+    <Card
+      className={`w-full max-w-sm bg-white/95 backdrop-blur-sm shadow-xl border-0 p-4 sm:p-6 md:w-80 ${className}`.trim()}
+    >
+      <CardHeader className="p-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mb-2">
+              <Chrome className="w-4 h-4 text-purple-600" />
+            </div>
+            <CardTitle className="text-sm font-semibold text-gray-900 mb-2">
+              AniDachi Extension
+            </CardTitle>
+          </div>
+          {step >= 1 && animeDetected && (
+            <Badge className="bg-green-100 text-green-800 text-xs">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
+              Detected
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="p-0 pt-4">
+        {step === 0 && (
+          <div className="space-y-3">
+            <div className="text-center">
+              <p className="text-sm text-gray-600 mb-3">
+                Sign in to start watching together
+              </p>
+              <Button className="w-full bg-purple-600 hover:bg-purple-700 min-h-11">
+                <Users className="w-4 h-4 mr-2" />
+                Login to AniDachi
+              </Button>
+            </div>
+          </div>
+        )}
+        {step >= 1 && !animeDetected && (
+          <Button
+            className="w-full bg-blue-600 hover:bg-blue-700 min-h-11"
+            onClick={() => setAnimeDetected(true)}
+          >
+            <Search className="w-4 h-4 mr-2" />
+            Detect Anime
+          </Button>
+        )}
+        {animeDetected && (
+          <div className="p-3 bg-purple-50 rounded-lg">
+            <div className="flex items-center space-x-2 mb-2">
+              <Check className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-medium text-gray-900">
+                Anime Detected
+              </span>
+            </div>
+            <p className="text-xs text-gray-600">Attack on Titan S4E16</p>
+          </div>
+        )}
+        {step >= 2 && animeDetected && (
+          <Button
+            className={`w-full min-h-11 transition-all duration-500 ${
+              watchroomCreated
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-purple-600 hover:bg-purple-700"
+            }`}
+          >
+            {watchroomCreated ? (
+              <>
+                <Check className="w-4 h-4 mr-2" />
+                Watchroom Created!
+              </>
+            ) : (
+              <>
+                <Users className="w-4 h-4 mr-2" />
+                Create Watchroom
+              </>
+            )}
+          </Button>
+        )}
+        {step >= 3 && watchroomCreated && (
+          <div className="space-y-2 mt-3">
+            <h4 className="text-sm font-medium text-gray-900">
+              Mark Episodes Watched
+            </h4>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {[
+                "S4E14 - Savagery",
+                "S4E15 - Sole Salvation",
+                "S4E16 - Above and Below",
+                "S4E17 - Judgment",
+              ].map((episode, index) => (
+                <div
+                  key={episode}
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs"
+                >
+                  <span>{episode}</span>
+                  <Button
+                    size="sm"
+                    variant={index <= episodesWatched ? "default" : "outline"}
+                    className="min-h-9 px-3"
+                  >
+                    {index <= episodesWatched ? (
+                      <Check className="w-3 h-3" />
+                    ) : (
+                      "Mark"
+                    )}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {step >= 4 && (
+          <div className="space-y-3 mt-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-900">
+                Watchroom Chat
+              </span>
+              <Badge variant="secondary" className="text-xs">
+                3 online
+              </Badge>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3 max-h-32 overflow-y-auto space-y-2">
+              <div className="text-xs">
+                <span className="font-medium text-purple-600">Alex:</span>
+                <span className="ml-1">This episode is insane! 🤯</span>
+              </div>
+              <div className="text-xs">
+                <span className="font-medium text-blue-600">Sarah:</span>
+                <span className="ml-1">
+                  I can&apos;t believe what just happened
+                </span>
+              </div>
+              <div className="text-xs">
+                <span className="font-medium text-green-600">You:</span>
+                <span className="ml-1">❤️ Best episode so far!</span>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 min-h-10 text-xs bg-transparent"
+              >
+                😱 React
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 min-h-10 text-xs bg-transparent"
+              >
+                💬 Chat
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ChromeExtensionDemo() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [isDemoVisible, setIsDemoVisible] = useState(false);
   const [step, setStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showExtension, setShowExtension] = useState(false);
@@ -42,6 +220,22 @@ export function ChromeExtensionDemo() {
   ];
 
   useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setIsDemoVisible(true);
+      return;
+    }
+    const ob = new IntersectionObserver(
+      ([entry]) => setIsDemoVisible(entry.isIntersecting),
+      { threshold: 0.15 }
+    );
+    ob.observe(el);
+    return () => ob.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isDemoVisible) return;
+
     const timer = setTimeout(() => {
       if (step < steps.length - 1) {
         setStep(step + 1);
@@ -100,10 +294,22 @@ export function ChromeExtensionDemo() {
     }, 2000); // Changed from 4000ms to 2000ms
 
     return () => clearTimeout(timer);
-  }, [step, steps.length]);
+  }, [step, steps.length, isDemoVisible]);
+
+  const extensionPanelProps = {
+    step,
+    showExtension,
+    animeDetected,
+    setAnimeDetected,
+    watchroomCreated,
+    episodesWatched,
+  };
 
   return (
-    <section className="py-24 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="py-24 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden"
+    >
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -117,8 +323,8 @@ export function ChromeExtensionDemo() {
 
         <div className="max-w-6xl mx-auto">
           {/* Progress Steps */}
-          <div className="flex justify-center mb-12">
-            <div className="flex items-center space-x-4 bg-gray-800/50 rounded-full px-6 py-3">
+          <div className="flex justify-center mb-12 overflow-x-auto max-w-full px-2">
+            <div className="flex items-center space-x-2 sm:space-x-4 bg-gray-800/50 rounded-full px-4 sm:px-6 py-3 shrink-0">
               {steps.map((stepName, index) => (
                 <div key={index} className="flex items-center">
                   <div
@@ -163,7 +369,7 @@ export function ChromeExtensionDemo() {
                   className="w-full h-full object-cover opacity-80"
                   width={1920}
                   height={1080}
-                  priority
+                  sizes="(max-width: 768px) 100vw, 896px"
                 />
 
                 {/* Video Controls */}
@@ -210,196 +416,15 @@ export function ChromeExtensionDemo() {
                 </div>
               </div>
 
-              {/* Chrome Extension Overlay */}
+              {/* Chrome Extension Overlay — desktop only */}
               <div
-                className={`absolute top-4 right-4 transition-all duration-700 transform ${
+                className={`hidden md:block absolute top-4 right-4 transition-all duration-700 transform ${
                   showExtension
                     ? "translate-x-0 opacity-100"
                     : "translate-x-full opacity-0"
                 }`}
               >
-                <Card className="w-80 bg-white/95 backdrop-blur-sm shadow-xl border-0 p-6">
-                  <CardHeader className="p-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mb-2">
-                          <Chrome className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <CardTitle className="text-sm font-semibold text-gray-900 mb-2">
-                          AniDachi Extension
-                        </CardTitle>
-                      </div>
-                      {step >= 1 && animeDetected && (
-                        <Badge className="bg-green-100 text-green-800 text-xs">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
-                          Detected
-                        </Badge>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0 pt-4">
-                    {/* Login Interface - Step 0 */}
-                    {step === 0 && (
-                      <div className="space-y-3">
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600 mb-3">
-                            Sign in to start watching together
-                          </p>
-                          <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                            <Users className="w-4 h-4 mr-2" />
-                            Login to AniDachi
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Detect Anime Button - Step 1 */}
-                    {step >= 1 && !animeDetected && (
-                      <Button
-                        className="w-full bg-blue-600 hover:bg-blue-700"
-                        onClick={() => setAnimeDetected(true)}
-                      >
-                        <Search className="w-4 h-4 mr-2" />
-                        Detect Anime
-                      </Button>
-                    )}
-
-                    {/* Anime Detection Result - Step 1+ */}
-                    {animeDetected && (
-                      <div className="p-3 bg-purple-50 rounded-lg">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Check className="w-4 h-4 text-green-600" />
-                          <span className="text-sm font-medium text-gray-900">
-                            Anime Detected
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-600">
-                          Attack on Titan S4E16
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Create Watchroom - Step 2 */}
-                    {step >= 2 && animeDetected && (
-                      <Button
-                        className={`w-full transition-all duration-500 ${
-                          watchroomCreated
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-purple-600 hover:bg-purple-700"
-                        }`}
-                      >
-                        {watchroomCreated ? (
-                          <>
-                            <Check className="w-4 h-4 mr-2" />
-                            Watchroom Created!
-                          </>
-                        ) : (
-                          <>
-                            <Users className="w-4 h-4 mr-2" />
-                            Create Watchroom
-                          </>
-                        )}
-                      </Button>
-                    )}
-
-                    {/* Episode List - Step 3 */}
-                    {step >= 3 && watchroomCreated && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium text-gray-900">
-                          Mark Episodes Watched
-                        </h4>
-                        <div className="space-y-1 max-h-32 overflow-y-auto">
-                          {[
-                            "S4E14 - Savagery",
-                            "S4E15 - Sole Salvation",
-                            "S4E16 - Above and Below",
-                            "S4E17 - Judgment",
-                          ].map((episode, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs"
-                            >
-                              <span>{episode}</span>
-                              <Button
-                                size="sm"
-                                variant={
-                                  index <= episodesWatched
-                                    ? "default"
-                                    : "outline"
-                                }
-                                className="h-6 px-2"
-                              >
-                                {index <= episodesWatched ? (
-                                  <Check className="w-3 h-3" />
-                                ) : (
-                                  "Mark"
-                                )}
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Chat Interface - Step 4 */}
-                    {step >= 4 && (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900">
-                            Watchroom Chat
-                          </span>
-                          <Badge variant="secondary" className="text-xs">
-                            3 online
-                          </Badge>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-lg p-3 max-h-32 overflow-y-auto space-y-2">
-                          <div className="text-xs">
-                            <span className="font-medium text-purple-600">
-                              Alex:
-                            </span>
-                            <span className="ml-1">
-                              This episode is insane! 🤯
-                            </span>
-                          </div>
-                          <div className="text-xs">
-                            <span className="font-medium text-blue-600">
-                              Sarah:
-                            </span>
-                            <span className="ml-1">
-                              I can&apos;t believe what just happened
-                            </span>
-                          </div>
-                          <div className="text-xs">
-                            <span className="font-medium text-green-600">
-                              You:
-                            </span>
-                            <span className="ml-1">
-                              ❤️ Best episode so far!
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 h-8 text-xs bg-transparent"
-                          >
-                            😱 React
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 h-8 text-xs bg-transparent"
-                          >
-                            💬 Chat
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                <ExtensionPanel {...extensionPanelProps} />
               </div>
 
               {/* Sync Notification */}
@@ -412,9 +437,20 @@ export function ChromeExtensionDemo() {
               )}
             </div>
 
+            {/* Extension panel — stacked below video on mobile */}
+            <div
+              className={`md:hidden border-t border-gray-200 bg-gray-50 px-4 py-4 transition-all duration-700 ${
+                showExtension
+                  ? "opacity-100 max-h-[800px]"
+                  : "opacity-0 max-h-0 overflow-hidden py-0"
+              }`}
+            >
+              <ExtensionPanel {...extensionPanelProps} className="mx-auto" />
+            </div>
+
             {/* Step Description */}
-            <div className="bg-gray-50 px-6 py-4 border-t">
-              <div className="flex items-center justify-between">
+            <div className="bg-gray-50 px-4 sm:px-6 py-4 border-t">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h4 className="font-semibold text-gray-900">
                     Step {step + 1}: {steps[step]}
@@ -432,7 +468,7 @@ export function ChromeExtensionDemo() {
                       "User opens chat, leaves reactions, and reads messages from friends in the watchroom"}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="flex items-center gap-2 sm:block sm:text-right">
                   <div className="text-2xl font-bold text-purple-600">
                     {step + 1}
                   </div>

@@ -6,30 +6,34 @@ export function useBodyScrollLock(locked: boolean) {
     if (!locked || typeof document === "undefined") return;
 
     const scrollY = window.scrollY;
-    const { style } = document.body;
+    const { style: bodyStyle } = document.body;
+    const { style: htmlStyle } = document.documentElement;
     const prev = {
-      position: style.position,
-      top: style.top,
-      left: style.left,
-      right: style.right,
-      width: style.width,
-      overflow: style.overflow,
+      bodyPosition: bodyStyle.position,
+      bodyTop: bodyStyle.top,
+      bodyLeft: bodyStyle.left,
+      bodyRight: bodyStyle.right,
+      bodyWidth: bodyStyle.width,
+      bodyOverflow: bodyStyle.overflow,
+      htmlOverflow: htmlStyle.overflow,
     };
 
-    style.position = "fixed";
-    style.top = `-${scrollY}px`;
-    style.left = "0";
-    style.right = "0";
-    style.width = "100%";
-    style.overflow = "hidden";
+    bodyStyle.position = "fixed";
+    bodyStyle.top = `-${scrollY}px`;
+    bodyStyle.left = "0";
+    bodyStyle.right = "0";
+    bodyStyle.width = "100%";
+    bodyStyle.overflow = "hidden";
+    htmlStyle.overflow = "hidden";
 
     return () => {
-      style.position = prev.position;
-      style.top = prev.top;
-      style.left = prev.left;
-      style.right = prev.right;
-      style.width = prev.width;
-      style.overflow = prev.overflow;
+      bodyStyle.position = prev.bodyPosition;
+      bodyStyle.top = prev.bodyTop;
+      bodyStyle.left = prev.bodyLeft;
+      bodyStyle.right = prev.bodyRight;
+      bodyStyle.width = prev.bodyWidth;
+      bodyStyle.overflow = prev.bodyOverflow;
+      htmlStyle.overflow = prev.htmlOverflow;
       window.scrollTo(0, scrollY);
     };
   }, [locked]);

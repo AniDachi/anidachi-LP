@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
 
 export const metadata: Metadata = {
@@ -95,27 +96,40 @@ export default function AniDachiVsTelepartyPage() {
       >
         Feature comparison
       </h2>
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-gray-200">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="border border-gray-200 px-4 py-2 text-left">Feature</th>
-              <th className="border border-gray-200 px-4 py-2 text-left text-purple-700">AniDachi</th>
-              <th className="border border-gray-200 px-4 py-2 text-left">Teleparty</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-700">
-            <tr><td className="border border-gray-200 px-4 py-2">Crunchyroll support</td><td className="border border-gray-200 px-4 py-2">Yes</td><td className="border border-gray-200 px-4 py-2">Yes</td></tr>
-            <tr className="bg-gray-50"><td className="border border-gray-200 px-4 py-2">Netflix / Disney+ / HBO</td><td className="border border-gray-200 px-4 py-2">No (Crunchyroll only)</td><td className="border border-gray-200 px-4 py-2">Yes</td></tr>
-            <tr><td className="border border-gray-200 px-4 py-2">Asynchronous watching</td><td className="border border-gray-200 px-4 py-2 font-medium text-green-700">Yes</td><td className="border border-gray-200 px-4 py-2">No</td></tr>
-            <tr className="bg-gray-50"><td className="border border-gray-200 px-4 py-2">Auto anime detection</td><td className="border border-gray-200 px-4 py-2 font-medium text-green-700">Yes</td><td className="border border-gray-200 px-4 py-2">No</td></tr>
-            <tr><td className="border border-gray-200 px-4 py-2">Per-user progress tracking</td><td className="border border-gray-200 px-4 py-2 font-medium text-green-700">Yes</td><td className="border border-gray-200 px-4 py-2">No</td></tr>
-            <tr className="bg-gray-50"><td className="border border-gray-200 px-4 py-2">Real-time chat</td><td className="border border-gray-200 px-4 py-2">Yes</td><td className="border border-gray-200 px-4 py-2">Yes</td></tr>
-            <tr><td className="border border-gray-200 px-4 py-2">Video/audio chat</td><td className="border border-gray-200 px-4 py-2">No</td><td className="border border-gray-200 px-4 py-2">Premium only</td></tr>
-            <tr className="bg-gray-50"><td className="border border-gray-200 px-4 py-2">Free tier</td><td className="border border-gray-200 px-4 py-2">No ($8/mo)</td><td className="border border-gray-200 px-4 py-2">Yes (basic)</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <ResponsiveCompareTable
+        columns={[
+          { id: "anidachi", label: "AniDachi", highlight: true },
+          { id: "teleparty", label: "Teleparty" },
+        ]}
+        rows={[
+          { feature: "Crunchyroll support", values: { anidachi: "yes", teleparty: "yes" } },
+          {
+            feature: "Netflix / Disney+ / HBO",
+            values: { anidachi: "No (Crunchyroll only)", teleparty: "yes" },
+          },
+          {
+            feature: "Asynchronous watching",
+            values: { anidachi: "yes", teleparty: "no" },
+          },
+          {
+            feature: "Auto anime detection",
+            values: { anidachi: "yes", teleparty: "no" },
+          },
+          {
+            feature: "Per-user progress tracking",
+            values: { anidachi: "yes", teleparty: "no" },
+          },
+          { feature: "Real-time chat", values: { anidachi: "yes", teleparty: "yes" } },
+          {
+            feature: "Video/audio chat",
+            values: { anidachi: "no", teleparty: "Premium only" },
+          },
+          {
+            feature: "Free tier",
+            values: { anidachi: "No ($8/mo)", teleparty: "Yes (basic)" },
+          },
+        ]}
+      />
 
       <h2
         id="when-anidachi"
