@@ -23,6 +23,7 @@ import {
   pricingCtaLabelForTier,
 } from "@/lib/home-survey";
 import type { CheckoutTier, HomeSurveyAnswers } from "@/lib/home-survey";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 
 export type PlanSurveyOpenContext = {
   placement: string;
@@ -68,6 +69,8 @@ export function PlanSurveyModal({
   const [objectionVisible, setObjectionVisible] = useState(false);
   const [selectedObjection, setSelectedObjection] = useState<string | null>(null);
   const objectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useBodyScrollLock(isOpen);
 
   // Progress bar: step / TOTAL_STEPS, capped at 100% on the recommendation step
   const progressPct = step === 7 ? 100 : Math.round((step / TOTAL_STEPS) * 100);
@@ -321,7 +324,12 @@ export function PlanSurveyModal({
   const upgradeText = currentSolutionUpgradeText(survey.current_solution);
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center overflow-hidden p-4 overscroll-none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="plan-survey-title"
+    >
       <button
         type="button"
         aria-label="Close survey"
@@ -329,12 +337,12 @@ export function PlanSurveyModal({
         onClick={() => closeSurvey("backdrop")}
       />
 
-      <div className="relative w-full max-w-2xl rounded-2xl border border-white/15 bg-gradient-to-br from-white/95 to-white/90 text-gray-900 shadow-2xl backdrop-blur-xl">
+      <div className="relative flex max-h-[min(90dvh,calc(100vh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-white/95 to-white/90 text-gray-900 shadow-2xl backdrop-blur-xl">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 border-b border-gray-200/70 px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200/70 px-6 py-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-700" aria-hidden="true" />
-            <p className="text-sm font-semibold">
+            <p id="plan-survey-title" className="text-sm font-semibold">
               {step === 7 ? "Your plan is ready" : `Find your plan (${step}/6)`}
             </p>
           </div>
@@ -350,14 +358,14 @@ export function PlanSurveyModal({
         </div>
 
         {/* Progress bar */}
-        <div className="h-1 w-full bg-gray-100 rounded-none overflow-hidden">
+        <div className="h-1 w-full shrink-0 overflow-hidden rounded-none bg-gray-100">
           <div
             className="h-full bg-purple-600 transition-all duration-300 ease-out"
             style={{ width: `${progressPct}%` }}
           />
         </div>
 
-        <div className="px-6 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
           {checkoutError && (
             <div
               className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
