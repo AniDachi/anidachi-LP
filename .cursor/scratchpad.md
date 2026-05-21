@@ -430,9 +430,17 @@ The survey should do more than “collect answers” — it should:
 - [x] `npm run build` ✅
 - [ ] Optional: VideoObject/trailer schema (plan tier 3); genre hub OG/Twitter images
 
+### Survey email → CRM (2026-05-21)
+
+- [x] `lib/kreatli-crm/survey-lead.ts` — upsert survey emails + answers into `contacts.json` / Vercel Blob
+- [x] `/api/subscribe-interest` calls `upsertSurveyLead` before Gmail alert (CRM failure does not block modal)
+- [x] `npm run build` ✅
+
+**Segments:** `survey_lead`, plus `segment:…`, `priority:…`, etc. **Notes:** full survey snapshot + timestamp. Re-submits append notes and merge segments.
+
+**View leads:** `/kreatli-email-crm` (filter by `survey_lead` segment).
+
 ### Executor's Feedback or Assistance Requests
 
-- Please refresh `/` and try the hero survey to confirm:
-  - You reach the recommendation in 2–3 clicks (group size can be skipped).
-  - Step-4 checkout buttons show intent-matched labels (not “Start checkout”).
-  - Selecting “Just researching” shows the salvage CTAs.
+- Please submit a test email in the hero survey and confirm the contact appears at `/kreatli-email-crm` with segment `survey_lead`.
+- Production needs `BLOB_READ_WRITE_TOKEN` set (same as Gmail tokens) for CRM writes on Vercel.

@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getGmailRedirectUri, isGmailConfigured, sendPlaintextEmail } from "@/lib/kreatli-crm/gmail";
 import { readGmailTokens } from "@/lib/kreatli-crm/gmail-tokens";
+import { upsertSurveyLead } from "@/lib/kreatli-crm/survey-lead";
 import type { HomeSurveyAnswers } from "@/lib/home-survey";
 
 function serverOrigin(): string {
@@ -47,6 +48,17 @@ export async function POST(request: NextRequest) {
   }
 
   console.info("[subscribe-interest] New lead:", email, survey);
+
+  try {
+    const crmResult = await upsertSurveyLead(email, survey);
+    if (crmResult.saved) {
+      console.info("[subscribe-interest] Saved to CRM:", email);
+    } else {
+      console.warn("[subscribe-interest] CRM save skipped:", crmResult.reason, email);
+    }
+  } catch (e) {
+    console.error("[subscribe-interest] Failed to save to CRM:", email, e);
+  }
 
   const toRaw = process.env.SUBSCRIPTION_NOTIFY_EMAILS;
   if (!toRaw?.trim() || !isGmailConfigured()) {
