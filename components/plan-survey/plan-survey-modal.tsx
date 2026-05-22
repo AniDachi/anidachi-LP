@@ -27,12 +27,12 @@ export type PlanSurveyOpenContext = {
   cta_variant: string;
 };
 
-// Steps 1-4 are the core questions present on every path.
-// Steps 5-6 are low-intent-only (email capture + current solution).
-// Step 7 is the recommendation / checkout.
+// Steps 1-6 are required questions. Step 7 is the recommendation / checkout.
 type SurveyStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 const TOTAL_STEPS = 6; // denominator for the progress bar (max questions)
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function PlanSurveyModal({
   isOpen,
@@ -86,16 +86,24 @@ export function PlanSurveyModal({
   // Progress bar: step / TOTAL_STEPS, capped at 100% on the recommendation step
   const progressPct = step === 7 ? 100 : Math.round((step / TOTAL_STEPS) * 100);
 
-  // Recommendation is ready once the 4 core questions are answered.
-  // discovery and current_solution are optional enrichment signals.
+  // Recommendation requires every survey step, including email capture.
   const surveyReadyForRecommendation = useMemo(() => {
     return (
       Boolean(survey.segment) &&
       Boolean(survey.priority) &&
       Boolean(survey.group_size) &&
-      Boolean(survey.timing)
+      Boolean(survey.timing) &&
+      Boolean(survey.current_solution) &&
+      emailSubmitted
     );
-  }, [survey.group_size, survey.priority, survey.segment, survey.timing]);
+  }, [
+    emailSubmitted,
+    survey.current_solution,
+    survey.group_size,
+    survey.priority,
+    survey.segment,
+    survey.timing,
+  ]);
 
   // Reset all local state when the modal opens
   useEffect(() => {
@@ -309,8 +317,13 @@ export function PlanSurveyModal({
   };
 
   const submitEmail = async () => {
-    if (!emailInput.trim()) {
-      setStep(6);
+    const trimmed = emailInput.trim();
+    if (!trimmed) {
+      setEmailError("Email is required to continue.");
+      return;
+    }
+    if (!EMAIL_RE.test(trimmed)) {
+      setEmailError("Enter a valid email address.");
       return;
     }
     setEmailError(null);
@@ -319,12 +332,12 @@ export function PlanSurveyModal({
       await fetch("/api/subscribe-interest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailInput.trim(), survey }),
+        body: JSON.stringify({ email: trimmed, survey }),
       });
       setEmailSubmitted(true);
       setTimeout(() => setStep(6), 1200);
     } catch {
-      setEmailError("Could not save — tap Skip to continue.");
+      setEmailError("Could not save — please try again.");
     } finally {
       setEmailSubmitting(false);
     }
@@ -530,7 +543,7 @@ export function PlanSurveyModal({
             </div>
           )}
 
-          {/* Step 5 — Email capture (low-intent path only) */}
+          {/* Step 5 — Email capture */}
           {step === 5 && (
             <div>
               <p className="text-sm font-medium text-gray-900 mb-1">
@@ -540,9 +553,18 @@ export function PlanSurveyModal({
                 We&apos;ll send it to your inbox so you can come back to it when you&apos;re ready.
               </p>
               {emailSubmitted ? (
-                <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-                  <Check className="h-4 w-4 text-green-600 shrink-0" aria-hidden="true" />
-                  Got it — we&apos;ll send your plan recommendation shortly.
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                    <Check className="h-4 w-4 text-green-600 shrink-0" aria-hidden="true" />
+                    Got it — we&apos;ll send your plan recommendation shortly.
+                  </div>
+                  <Button
+                    type="button"
+                    className="bg-purple-700 hover:bg-purple-800 text-white font-semibold"
+                    onClick={() => setStep(6)}
+                  >
+                    Continue
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -554,6 +576,8 @@ export function PlanSurveyModal({
                     placeholder="Your email address"
                     autoComplete="email"
                     inputMode="email"
+                    required
+                    aria-required="true"
                     className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
                   />
                   {emailError && (
@@ -568,14 +592,6 @@ export function PlanSurveyModal({
                     >
                       {emailSubmitting ? "Saving…" : "Send my recommendation"}
                     </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="text-gray-500"
-                      onClick={() => setStep(6)}
-                    >
-                      Skip →
-                    </Button>
                   </div>
                 </div>
               )}
@@ -585,7 +601,7 @@ export function PlanSurveyModal({
             </div>
           )}
 
-          {/* Step 6 — What are you using today? (low-intent path only) */}
+          {/* Step 6 — What are you using today? */}
           {step === 6 && (
             <div>
               <p className="text-sm font-medium text-gray-900 mb-1">What are you using today?</p>
@@ -618,16 +634,8 @@ export function PlanSurveyModal({
                   </Button>
                 ))}
               </div>
-              <div className="mt-4 flex items-center justify-between">
+              <div className="mt-4">
                 <Button type="button" variant="ghost" onClick={() => setStep(5)}>Back</Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-gray-500"
-                  onClick={() => setStep(7)}
-                >
-                  Skip →
-                </Button>
               </div>
             </div>
           )}
