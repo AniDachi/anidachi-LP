@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import type { HomeSurveyAnswers } from "@/lib/home-survey";
+import { SURVEY_LEAD_SEGMENT } from "./survey-lead-shared";
 import { readContacts, writeContacts } from "./store";
 import type { Contact } from "./types";
 import { isValidEmail, normalizeEmail } from "./validation";
@@ -9,12 +10,13 @@ function mergeSegments(a: string[], b: string[]): string[] {
 }
 
 function buildSurveySegments(survey: Partial<HomeSurveyAnswers>): string[] {
-  const segments = ["survey_lead"];
+  const segments = [SURVEY_LEAD_SEGMENT];
   if (survey.segment) segments.push(`segment:${survey.segment}`);
   if (survey.priority) segments.push(`priority:${survey.priority}`);
   if (survey.timing) segments.push(`timing:${survey.timing}`);
   if (survey.group_size) segments.push(`group_size:${survey.group_size}`);
-  if (survey.current_solution) segments.push(`current_solution:${survey.current_solution}`);
+  if (survey.current_solution)
+    segments.push(`current_solution:${survey.current_solution}`);
   if (survey.discovery) segments.push(`discovery:${survey.discovery}`);
   return segments;
 }

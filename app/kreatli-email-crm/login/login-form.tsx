@@ -38,11 +38,18 @@ export function LoginForm() {
       className="mx-auto max-w-sm space-y-4 rounded-xl border border-purple-200/80 bg-white/90 p-8 shadow-lg backdrop-blur"
     >
       <div>
-        <h1 className="text-xl font-semibold text-purple-950">Kreatli Email CRM</h1>
-        <p className="mt-1 text-sm text-purple-800/80">Enter the access password to continue.</p>
+        <h1 className="text-xl font-semibold text-purple-950">
+          Kreatli Email CRM
+        </h1>
+        <p className="mt-1 text-sm text-purple-800/80">
+          Enter the access password to continue.
+        </p>
       </div>
       <div>
-        <label htmlFor="password" className="mb-1 block text-sm font-medium text-purple-900">
+        <label
+          htmlFor="password"
+          className="mb-1 block text-sm font-medium text-purple-900"
+        >
           Password
         </label>
         <input
@@ -61,7 +68,11 @@ export function LoginForm() {
           {error}
         </p>
       ) : null}
-      <Button type="submit" className="w-full bg-purple-700 hover:bg-purple-800" disabled={pending}>
+      <Button
+        type="submit"
+        className="w-full bg-purple-700 hover:bg-purple-800"
+        disabled={pending}
+      >
         {pending ? "Signing in…" : "Sign in"}
       </Button>
     </form>

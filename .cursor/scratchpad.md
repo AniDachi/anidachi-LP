@@ -66,6 +66,7 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 ### Additional batch (10 more watch pages — 2026-05-19)
 
 New slugs (high-traffic + Crunchyroll group-watch intent):
+
 - `oregairu` (My Teen Romantic Comedy SNAFU) — MAL 14813
 - `ouran-high-school-host-club` — MAL 179
 - `the-melancholy-of-haruhi-suzumiya` — MAL 904
@@ -228,7 +229,7 @@ Analyze all CTAs across the site that currently send users to “plans/pricing�
 
 ### Key challenges and analysis
 
-- The survey modal currently lives *inside* `components/hero.tsx`, so other pages/components cannot open it without:
+- The survey modal currently lives _inside_ `components/hero.tsx`, so other pages/components cannot open it without:
   - prop-drilling an `openSurvey()` function everywhere, or
   - a global event bus, or
   - a dedicated React context/provider mounted in `app/layout.tsx`.
@@ -345,6 +346,7 @@ Analyze all CTAs across the site that currently send users to “plans/pricing�
 ### Converting mechanism goals (subscription purchase)
 
 The survey should do more than “collect answers” — it should:
+
 - Increase confidence (“this plan is right for me”)
 - Reduce perceived risk (refund/cancel/security)
 - Increase urgency at the right moments (esp. `timing === "today"`)
@@ -354,7 +356,7 @@ The survey should do more than “collect answers” — it should:
 ### High-impact survey improvements (ideas)
 
 - **Make the recommendation feel earned (diagnosis → prescription)**
-  - After Q2 (priority), show a 1-line “We’ll optimize for: ___” preview so the user sees progress toward a result.
+  - After Q2 (priority), show a 1-line “We’ll optimize for: \_\_\_” preview so the user sees progress toward a result.
   - In step 5, show 2–3 “Because you said X…” bullets mapping answers → features on the plan (reduces “random recommendation” feeling).
 
 - **Reduce friction + increase momentum**
@@ -366,7 +368,7 @@ The survey should do more than “collect answers” — it should:
   - Replace with the existing message-matched CTA helper in `lib/home-survey.ts` (`pricingCtaLabelForTier`) so the button reads like the user’s intent (“Start hosting watchrooms”, etc.).
 
 - **Stronger risk reducers at the exact decision point**
-  - Add 2–3 micro-trust lines *directly under the Step 5 CTA button* (not only on pricing):
+  - Add 2–3 micro-trust lines _directly under the Step 5 CTA button_ (not only on pricing):
     - “Secure Stripe checkout”
     - “Cancel & refund anytime in early access”
     - “No account sharing — everyone uses their own Crunchyroll”
@@ -438,7 +440,10 @@ The survey should do more than “collect answers” — it should:
 
 **Segments:** `survey_lead`, plus `segment:…`, `priority:…`, etc. **Notes:** full survey snapshot + timestamp. Re-submits append notes and merge segments.
 
-**View leads:** `/kreatli-email-crm` (filter by `survey_lead` segment).
+**View leads:** `/kreatli-email-crm` → **Survey leads** tab (contacts with `survey_lead` segment; outreach tab excludes them).
+
+- [x] CRM tabs: **Contacts** vs **Survey leads** in `crm-client.tsx`
+- [x] Survey tab shows parsed survey answers + follow-up actions (Gmail, status, notes)
 
 ### Executor's Feedback or Assistance Requests
 
