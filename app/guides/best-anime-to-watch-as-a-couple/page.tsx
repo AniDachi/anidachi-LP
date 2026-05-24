@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch as a Couple (2026) — 18 Date-Night Friendly Picks",
+  title: "Best Anime to Watch as a Couple (2026) — 20 Date-Night Friendly Picks",
   description:
     "Romcoms, earnest dramas, and cozy adventures that spark conversation—each with a dedicated AniDachi watch page on Crunchyroll.",
   alternates: { canonical: "/guides/best-anime-to-watch-as-a-couple" },
@@ -69,7 +69,7 @@ export default function BestAnimeToWatchAsACouplePage() {
       description="Date-night anime with approachable arcs for partnered viewing."
       url="/guides/best-anime-to-watch-as-a-couple"
       datePublished="2026-05-08"
-      dateModified="2026-05-08"
+      dateModified="2026-05-24"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -77,7 +77,7 @@ export default function BestAnimeToWatchAsACouplePage() {
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        18 best anime to watch as a couple in 2026
+        20 best anime to watch as a couple in 2026
       </h1>
       <p className="text-xl text-gray-700 leading-relaxed mb-10">
         <strong>
@@ -130,6 +130,14 @@ export default function BestAnimeToWatchAsACouplePage() {
           — Cosplay passion meets mutual respect; great if you like craft talk
           between episodes.
         </li>
+        <li>
+          <strong>
+            <Link href="/watch/kimi-ni-todoke-with-friends" className="text-purple-600 hover:underline">
+              Kimi ni Todoke
+            </Link>
+          </strong>{" "}
+          — The classic slow-burn: misunderstood Sawako slowly opens up to the world through Kazehaya&apos;s kindness; every small breakthrough earns a shared cheer.
+        </li>
       </ul>
 
       <h2
@@ -180,6 +188,14 @@ export default function BestAnimeToWatchAsACouplePage() {
             </Link>
           </strong>{" "}
           — Shogi quietude and healing found-family arcs reward patient viewing.
+        </li>
+        <li>
+          <strong>
+            <Link href="/watch/nana-with-friends" className="text-purple-600 hover:underline">
+              Nana
+            </Link>
+          </strong>{" "}
+          — Two women chasing opposite dreams in Tokyo; deeply honest about love, ambition, and the cost of both — perfect for couples who want something to unpack together.
         </li>
       </ul>
 

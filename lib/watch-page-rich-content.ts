@@ -108,7 +108,7 @@ export function pacingLeadParagraph(
   const long =
     /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
       epBlob
-    ) || /one-piece|naruto|hunter-x-hunter|fairy-tail|case-closed|detective-conan|gintama|inuyasha|bleach/i.test(anime.slug);
+    ) || /one-piece|naruto|boruto|hunter-x-hunter|fairy-tail|case-closed|detective-conan|gintama|inuyasha|bleach/i.test(anime.slug);
 
   if (long) {
     return `With ${episodesDisplay} in play, treat ${anime.title} like a season-long club: set a weekly episode budget (for example one cour block), name a rotating host who posts the watchroom link, and celebrate milestones instead of sprinting to the finale in one weekend unless everyone explicitly opts in.`;
@@ -239,7 +239,7 @@ function classifyEpisodes(anime: AnimeEntry, episodesDisplay: string): EpisodeCl
   const blob = `${episodesDisplay} ${anime.episodes}`;
   const isLong =
     /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(blob) ||
-    /one-piece|naruto|hunter-x-hunter|fairy-tail|case-closed|detective-conan|gintama|inuyasha|bleach/i.test(anime.slug);
+    /one-piece|naruto|boruto|hunter-x-hunter|fairy-tail|case-closed|detective-conan|gintama|inuyasha|bleach/i.test(anime.slug);
   return isLong ? "long" : "standard";
 }
 

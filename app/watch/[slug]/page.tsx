@@ -281,18 +281,18 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           {isMovie
-            ? `To watch ${anime.title} with friends on Crunchyroll, install AniDachi and create a movie-night watchroom — everyone streams together in sync and shares reactions without needing to screen-share.`
+            ? `Yes — you can watch ${anime.title} with friends as a group movie night using AniDachi's watchroom on Crunchyroll. Set up a shared watch party in under 2 minutes: no screen-share, no spoiler risk, everyone streams in sync. Works for 2–10 people across different time zones, all on their own Crunchyroll account.`
             : (() => {
                 const isLong =
                   /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(
                     `${episodesDisplay} ${anime.episodes}`
                   ) ||
-                  /one-piece|naruto|hunter-x-hunter|fairy-tail|gintama|inuyasha|bleach/i.test(
+                  /one-piece|naruto|boruto|hunter-x-hunter|fairy-tail|gintama|inuyasha|bleach/i.test(
                     anime.slug
                   );
                 return isLong
-                  ? `To watch ${anime.title} with friends without the group falling apart across ${episodesDisplay}, set up an AniDachi watchroom — sync live when everyone's free, or let members catch up on their own schedule behind spoiler-safe episode markers.`
-                  : `To watch ${anime.title} with friends on Crunchyroll, install AniDachi and create a watchroom — your group syncs live or catches up on their own schedule without losing spoiler safety or episode context.`;
+                  ? `Yes — you can watch ${anime.title} with friends using AniDachi's watchroom on Crunchyroll. AniDachi's async mode lets members catch up at their own pace without spoilers, so your watch party doesn't stall when someone falls behind across ${episodesDisplay}. Works for 2–10 people on different schedules, all on Crunchyroll.`
+                  : `Yes — you can watch ${anime.title} with friends using AniDachi's watchroom on Crunchyroll. Sync playback in real time or use async catch-up so your watch party keeps moving even when schedules differ. Works for 2–10 people across different time zones, all on Crunchyroll.`;
               })()}
         </strong>
       </p>

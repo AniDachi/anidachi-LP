@@ -135,6 +135,10 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/another-with-friends" className="text-purple-600 hover:underline">Another</Link></strong> — Horror mystery where students die in elaborate accidents; every episode is a pause-and-predict session as the body count climbs.</li>
         <li><strong><Link href="/watch/akira-with-friends" className="text-purple-600 hover:underline">Akira</Link></strong> — Landmark sci-fi film dense with imagery and subtext; every frame invites a pause and the ending always sparks a room-wide debate.</li>
         <li><strong><Link href="/watch/charlotte-with-friends" className="text-purple-600 hover:underline">Charlotte</Link></strong> — Ability-user drama with mid-season twists and a final arc that rewards groups who pieced together the foreshadowing together.</li>
+        <li><strong><Link href="/watch/fullmetal-alchemist-with-friends" className="text-purple-600 hover:underline">Fullmetal Alchemist (2003)</Link></strong> — Equivalent exchange and heart-ripping sacrifices land harder together; the 2003-vs-Brotherhood debate ignites the moment the story diverges from the manga.</li>
+        <li><strong><Link href="/watch/fate-stay-night-unlimited-blade-works-with-friends" className="text-purple-600 hover:underline">Fate/stay night: UBW</Link></strong> — Servant matchup debates and Noble Phantasm reveals made for synchronized gasps; argue optimal tactics for every Grail War round.</li>
+        <li><strong><Link href="/watch/gundam-iron-blooded-orphans-with-friends" className="text-purple-600 hover:underline">Gundam: Iron-Blooded Orphans</Link></strong> — Tekkadan&apos;s battles against Earth&apos;s power brokers need group processing — especially the finale, which will pause the room for a long time.</li>
+        <li><strong><Link href="/watch/trigun-stampede-with-friends" className="text-purple-600 hover:underline">Trigun Stampede</Link></strong> — Vash&apos;s tragic pacifism and Plant lore across 12 CG episodes; the midseason reveal demands immediate debrief.</li>
       </ul>
 
       <h2
@@ -223,6 +227,10 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/blue-period-with-friends" className="text-purple-600 hover:underline">Blue Period</Link></strong> — Art-school pressure and breakthrough canvases; perfect for debriefs about creative panic.</li>
         <li><strong><Link href="/watch/black-butler-with-friends" className="text-purple-600 hover:underline">Black Butler</Link></strong> — Gothic contracts and carnival arcs; pause to decode each mystery together.</li>
         <li><strong><Link href="/watch/call-of-the-night-with-friends" className="text-purple-600 hover:underline">Call of the Night</Link></strong> — Insomnia, vampires, and moody Tokyo nights built for late-watchroom theory threads.</li>
+        <li><strong><Link href="/watch/puella-magi-madoka-magica-with-friends" className="text-purple-600 hover:underline">Puella Magi Madoka★Magica</Link></strong> — 12 episodes that reframe everything from episode one; pause-and-predict threads run the whole week after each revelation.</li>
+        <li><strong><Link href="/watch/ghost-in-the-shell-stand-alone-complex-with-friends" className="text-purple-600 hover:underline">Ghost in the Shell: SAC</Link></strong> — Section 9&apos;s cyber cases and the Laughing Man thread reward systematic note-keeping; every episode ends with a philosophy debate about identity and consciousness.</li>
+        <li><strong><Link href="/watch/nana-with-friends" className="text-purple-600 hover:underline">Nana</Link></strong> — Two women named Nana, one apartment, opposite dreams — the most emotionally honest anime about adult friendship; debrief sessions run longer than episodes.</li>
+        <li><strong><Link href="/watch/kimi-ni-todoke-with-friends" className="text-purple-600 hover:underline">Kimi ni Todoke</Link></strong> — A warmhearted slow-burn that earns every breakthrough; groups who love unpacking misunderstandings and cheering characters on will talk through every episode.</li>
       </ul>
 
       <h2
@@ -245,6 +253,8 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/highschool-dxd-with-friends" className="text-purple-600 hover:underline">High School DxD</Link></strong> — Devil factions and Rating Game brawls across multiple seasons; one of Crunchyroll&apos;s most-watched series and perfect for power-scale debates between arcs.</li>
         <li><strong><Link href="/watch/cardcaptor-sakura-with-friends" className="text-purple-600 hover:underline">Cardcaptor Sakura</Link></strong> — Seventy episodes of magical-card captures escalating into a heartfelt arc; the definitive nostalgic marathon for groups introducing magical girl anime for the first time.</li>
         <li><strong><Link href="/watch/date-a-live-with-friends" className="text-purple-600 hover:underline">Date A Live</Link></strong> — Spirit arcs with genre-shifting vibes across multiple seasons; groups split into best-girl factions fast and stay loud through every season finale.</li>
+        <li><strong><Link href="/watch/detective-conan-with-friends" className="text-purple-600 hover:underline">Detective Conan</Link></strong> — 1000+ standalone mysteries wrapped around a slow-burning Black Organization arc; run it in weekly case-club sessions and mark the plot-thread episodes for debrief.</li>
+        <li><strong><Link href="/watch/dragon-ball-with-friends" className="text-purple-600 hover:underline">Dragon Ball</Link></strong> — The original 153-episode adventure that started everything; a classic nostalgic marathon before your group moves on to DBZ and Dragon Ball Super.</li>
       </ul>
 
       <h2

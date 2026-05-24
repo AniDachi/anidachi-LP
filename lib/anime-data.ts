@@ -174,7 +174,7 @@ export const animeList: AnimeEntry[] = [
       "Goku and friends face new universal threats, unlocking god-level power in tournaments that shake the multiverse. The legendary franchise continues.",
     episodes: "131 episodes + movies",
     genres: ["Action", "Martial Arts", "Comedy"],
-    related: ["one-piece", "naruto", "my-hero-academia"],
+    related: ["dragon-ball", "dragon-ball-z", "naruto"],
   },
   {
     slug: "one-punch-man",
@@ -204,7 +204,7 @@ export const animeList: AnimeEntry[] = [
       "Brothers Edward and Alphonse Elric use alchemy to search for the Philosopher's Stone after a failed attempt to resurrect their mother. A masterpiece of storytelling.",
     episodes: "64 episodes",
     genres: ["Action", "Adventure", "Drama"],
-    related: ["hunter-x-hunter", "steins-gate", "code-geass"],
+    related: ["fullmetal-alchemist", "hunter-x-hunter", "code-geass"],
   },
   {
     slug: "hunter-x-hunter",
@@ -683,7 +683,7 @@ export const animeList: AnimeEntry[] = [
       "Goku and the Z Fighters defend Earth from aliens, androids, and world-ending villains. Transformation reveals, beam struggles, and tournament hype are engraved in anime history—ideal for synchronized hype or async catch-up threads.",
     episodes: "291 episodes",
     genres: ["Action", "Adventure", "Sci-Fi"],
-    related: ["dragon-ball-super", "naruto", "one-piece"],
+    related: ["dragon-ball", "dragon-ball-super", "naruto"],
   },
   {
     slug: "my-dress-up-darling",
@@ -897,7 +897,7 @@ export const animeList: AnimeEntry[] = [
       "Gunman Vash the Stampede leaves insurance agents and bounty hunters scrambling across a desert planet while a goofy pacifist facade hides a heavier past. Episode-of-the-week western vibes with a late-series gut punch—your party will argue about dubs, donuts, and moral pacifism at once.",
     episodes: "26 episodes",
     genres: ["Action", "Sci-Fi", "Adventure"],
-    related: ["cowboy-bebop", "samurai-champloo", "dorohedoro"],
+    related: ["trigun-stampede", "cowboy-bebop", "samurai-champloo"],
   },
   {
     slug: "cyberpunk-edgerunners",
@@ -1206,7 +1206,7 @@ export const animeList: AnimeEntry[] = [
       "Seven mages summon legendary heroes to fight for the Holy Grail in a brutal battle royale. Tactical standoffs, tragic backstories, and cinematic set pieces land best with a crew that wants to pause and argue strategy between servants.",
     episodes: "25 episodes + recap specials",
     genres: ["Action", "Fantasy", "Tragedy"],
-    related: ["code-geass", "attack-on-titan", "demon-slayer"],
+    related: ["fate-stay-night-unlimited-blade-works", "code-geass", "attack-on-titan"],
   },
   {
     slug: "hellsing-ultimate",
@@ -1677,5 +1677,105 @@ export const animeList: AnimeEntry[] = [
     episodes: "48+ episodes across multiple seasons",
     genres: ["Action", "Romantic Comedy", "Sci-Fi"],
     related: ["sword-art-online", "re-zero", "that-time-i-got-reincarnated-as-a-slime"],
+  },
+  {
+    slug: "detective-conan",
+    title: "Detective Conan",
+    japaneseTitle: "Meitantei Conan",
+    synopsis:
+      "High school detective Shinichi Kudo is poisoned and shrunk into a child's body by a criminal syndicate. Living as 'Conan Edogawa,' he solves case after case while hunting the Black Organization responsible — and searching for a way back. An evergreen mystery marathon with hundreds of standalone episodes and a slow-burning central conspiracy that rewards dedicated group watchers.",
+    episodes: "1000+ episodes (ongoing)",
+    genres: ["Mystery", "Action", "Comedy"],
+    related: ["psycho-pass", "monster", "odd-taxi"],
+  },
+  {
+    slug: "dragon-ball",
+    title: "Dragon Ball",
+    japaneseTitle: "Doragon Bōru",
+    synopsis:
+      "Young Goku, a boy with a monkey tail and impossible strength, sets off to collect the seven Dragon Balls — each granting a single wish to whoever gathers them all. His globe-trotting adventure through martial arts tournaments, desert bandits, and shape-shifting enemies laid the foundation for one of the most iconic franchises in anime history. A legendary starting point before Dragon Ball Z.",
+    episodes: "153 episodes",
+    genres: ["Action", "Adventure", "Comedy", "Martial Arts"],
+    related: ["dragon-ball-z", "dragon-ball-super", "naruto"],
+  },
+  {
+    slug: "fate-stay-night-unlimited-blade-works",
+    title: "Fate/stay night: Unlimited Blade Works",
+    japaneseTitle: "Fate/stay night [Unlimited Blade Works]",
+    synopsis:
+      "Shirou Emiya is dragged into the Holy Grail War — a deadly battle among mages summoning legendary heroic spirits. Paired with Rin Tohsaka and the servant Archer, Shirou fights to survive and uncover the true cost of his hero ideal. The 2014 ufotable adaptation is the most accessible entry point into the Fate franchise and a visual showcase built for group reaction moments.",
+    episodes: "25 episodes + prologue",
+    genres: ["Action", "Fantasy", "Supernatural"],
+    related: ["fate-zero", "demon-slayer", "code-geass"],
+  },
+  {
+    slug: "fullmetal-alchemist",
+    title: "Fullmetal Alchemist (2003)",
+    japaneseTitle: "Hagane no Renkinjutsushi",
+    synopsis:
+      "Brothers Edward and Alphonse Elric pay a terrible price attempting to resurrect their mother through forbidden alchemy. The 2003 original adaptation diverges sharply from the manga after the midpoint, delivering a darker, more philosophical ending — and a different answer to the question Brotherhood poses. Groups who have seen Brotherhood will find endless debate fuel; newcomers experience a wholly original story.",
+    episodes: "51 episodes",
+    genres: ["Action", "Adventure", "Drama", "Fantasy"],
+    related: ["fullmetal-alchemist-brotherhood", "soul-eater", "code-geass"],
+  },
+  {
+    slug: "ghost-in-the-shell-stand-alone-complex",
+    title: "Ghost in the Shell: Stand Alone Complex",
+    japaneseTitle: "Koukaku Kidoutai: Stand Alone Complex",
+    synopsis:
+      "Major Motoko Kusanagi leads Public Security Section 9 — an elite counter-cyber-terrorism unit — in a future Japan where cybernetic enhancement is routine. The team tracks the Laughing Man, a hacker who erased himself from every camera and digital memory in the country. Dense with philosophy about consciousness, identity, and what makes a self — perfect for groups who want to pause and argue every episode.",
+    episodes: "26 episodes + 2 seasons",
+    genres: ["Sci-Fi", "Action", "Psychological"],
+    related: ["psycho-pass", "ergo-proxy", "serial-experiments-lain"],
+  },
+  {
+    slug: "gundam-iron-blooded-orphans",
+    title: "Mobile Suit Gundam: Iron-Blooded Orphans",
+    japaneseTitle: "Kidou Senshi Gundam: Tekketsu no Orphans",
+    synopsis:
+      "On Mars, a company of child soldiers called Tekkadan rises from exploitation to become a mercenary force piloting the ancient Gundam Barbatos. Led by orphans Mikazuki and Orga, they fight Earth's powerful corporations for independence in a grounded, brutal take on the Gundam franchise — with no power-ups, no clean victories, and a finale that demands group processing.",
+    episodes: "50 episodes across 2 seasons",
+    genres: ["Mecha", "Action", "Drama"],
+    related: ["eighty-six", "vinland-saga", "code-geass"],
+  },
+  {
+    slug: "kimi-ni-todoke",
+    title: "Kimi ni Todoke: From Me to You",
+    japaneseTitle: "Kimi ni Todoke",
+    synopsis:
+      "Sawako Kuronuma is nicknamed 'Sadako' after the horror film character she resembles — and her classmates avoid her because of it. When the most popular boy in school, Shota Kazehaya, starts genuinely talking to her, her world slowly opens. One of the most warmhearted slow-burn romance anime ever made, built for groups who love cheering characters on across small, earned moments.",
+    episodes: "25 episodes across 2 seasons",
+    genres: ["Romance", "Drama", "School"],
+    related: ["toradora", "horimiya", "fruits-basket"],
+  },
+  {
+    slug: "nana",
+    title: "Nana",
+    japaneseTitle: "NANA",
+    synopsis:
+      "Two young women named Nana share a Tokyo apartment by chance: one chases rock stardom, the other follows love across the city. Their wildly different dreams and personalities forge a bond tested by ambition, heartbreak, and the music industry — one of the most emotionally honest anime about adult friendship and the cost of chasing what you want.",
+    episodes: "47 episodes",
+    genres: ["Romance", "Drama", "Music"],
+    related: ["your-lie-in-april", "clannad", "violet-evergarden"],
+  },
+  {
+    slug: "puella-magi-madoka-magica",
+    title: "Puella Magi Madoka★Magica",
+    japaneseTitle: "Mahou Shoujo Madoka★Magica",
+    synopsis:
+      "Middle schooler Madoka Kaname is offered the chance to become a magical girl and have any wish granted — by a small creature named Kyubey. What begins as a pastel magical adventure quickly reveals itself as a psychological horror about contracts, grief, and what it costs to change the world. Best experienced with a group that hasn't seen any spoilers.",
+    episodes: "12 episodes",
+    genres: ["Psychological", "Dark Fantasy", "Magical Girl"],
+    related: ["angel-beats", "another", "violet-evergarden"],
+  },
+  {
+    slug: "trigun-stampede",
+    title: "Trigun Stampede",
+    japaneseTitle: "TRIGUN STAMPEDE",
+    synopsis:
+      "Vash the Stampede carries a $$60 billion bounty on his head — yet this legendary outlaw refuses to kill. The 2023 CG remake reimagines the iconic story with expanded lore on Vash's origin, his brother Knives, and the Plants that keep their desert planet alive. A visually striking reentry into the Trigun universe that rewards groups who debate pacifism, trauma, and sacrifice.",
+    episodes: "12 episodes",
+    genres: ["Action", "Sci-Fi", "Adventure"],
+    related: ["trigun", "cowboy-bebop", "black-lagoon"],
   },
 ];

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T08:57:15.866Z",
+  "generatedAt": "2026-05-24T13:06:02.243Z",
   "entries": {
     "a-silent-voice": {
       "mal_id": 28851,
@@ -2194,6 +2194,133 @@
         "Action",
         "Adventure",
         "Fantasy"
+      ]
+    },
+    "detective-conan": {
+      "mal_id": 235,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/7/75199l.jpg",
+      "episodes": null,
+      "airing": true,
+      "score": 8.19,
+      "members": 378884,
+      "status": "Currently Airing",
+      "genres": [
+        "Adventure",
+        "Comedy",
+        "Mystery"
+      ]
+    },
+    "dragon-ball": {
+      "mal_id": 223,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1887/92364l.jpg",
+      "episodes": 153,
+      "airing": false,
+      "score": 7.98,
+      "members": 1142213,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ]
+    },
+    "fate-stay-night-unlimited-blade-works": {
+      "mal_id": 22297,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/12/67333l.jpg",
+      "episodes": 12,
+      "airing": false,
+      "score": 8.18,
+      "members": 1177530,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Fantasy"
+      ]
+    },
+    "fullmetal-alchemist": {
+      "mal_id": 25,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/6/75536l.jpg",
+      "episodes": 24,
+      "airing": false,
+      "score": 7.37,
+      "members": 152214,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Sci-Fi",
+        "Ecchi"
+      ]
+    },
+    "ghost-in-the-shell-stand-alone-complex": {
+      "mal_id": 467,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/11/50857l.jpg",
+      "episodes": 26,
+      "airing": false,
+      "score": 8.43,
+      "members": 425591,
+      "status": "Finished Airing",
+      "genres": [
+        "Award Winning",
+        "Mystery",
+        "Sci-Fi"
+      ]
+    },
+    "gundam-iron-blooded-orphans": {
+      "mal_id": 31592,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1627/140267l.jpg",
+      "episodes": 47,
+      "airing": false,
+      "score": 7.83,
+      "members": 166156,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ]
+    },
+    "kimi-ni-todoke": {
+      "mal_id": 6045,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1502/124384l.jpg",
+      "episodes": 25,
+      "airing": false,
+      "score": 8.01,
+      "members": 1075164,
+      "status": "Finished Airing",
+      "genres": [
+        "Drama",
+        "Romance"
+      ]
+    },
+    "nana": {
+      "mal_id": 877,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/2/11232l.jpg",
+      "episodes": 47,
+      "airing": false,
+      "score": 8.58,
+      "members": 784579,
+      "status": "Finished Airing",
+      "genres": [
+        "Drama",
+        "Romance"
+      ]
+    },
+    "puella-magi-madoka-magica": {
+      "mal_id": 9756,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/11/55225l.jpg",
+      "episodes": 12,
+      "airing": false,
+      "score": 8.39,
+      "members": 1413108,
+      "status": "Finished Airing",
+      "genres": [
+        "Award Winning",
+        "Drama",
+        "Suspense"
       ]
     }
   }
