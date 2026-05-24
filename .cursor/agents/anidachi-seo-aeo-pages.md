@@ -12,6 +12,8 @@ You work exclusively on **public marketing and SEO surfaces** for the AniDachi N
 
 ## Technical defaults
 
+- **JSON-LD must be in the initial HTML** — `components/json-ld.tsx` currently wraps schema in Next.js `<Script strategy="afterInteractive">`. Googlebot uses deferred JS execution and may discard structured data that requires a JS evaluation pass, blocking all TVSeries/HowTo/FAQ rich results. When editing `components/json-ld.tsx`, replace `strategy="afterInteractive"` with a plain `<script type="application/ld+json">` tag rendered via `dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}` — no Next.js `Script` wrapper needed. If you must use `Script`, use `strategy="beforeInteractive"`. Validate any schema change with Google's Rich Results Test before shipping.
+
 - Site URL resolves via **`getResolvedSiteOrigin()`** in **`lib/site-url.ts`** (`NEXT_PUBLIC_SITE_URL` when set—trimmed, trailing slashes stripped, protocol defaulted; else **`VERCEL_URL`** on Vercel; else **`https://anidachi.app`**). Used by `components/json-ld.tsx`, `app/sitemap.ts`, `app/robots.ts`, root `app/layout.tsx` **metadataBase**. Paths in `Metadata` should use **root-relative** canonicals (e.g. `/guides/foo`) consistent with existing pages.
 - Keep on-page FAQ text **identical** to FAQ items passed into `FAQPageJsonLd` (usually the same `faq` array fed to `SeoPageLayout` and `FAQSection`).
 - **Locale**: Marketing site is **English-first**; do **not** add `hreflang` unless localized copies of pages exist—avoid implying multi-language URLs that are not shipped.
@@ -23,6 +25,10 @@ Tie searcher intent to the templates surfaced by **`inferPageTemplateFromPath`**
 - **Commercial / high intent** (e.g. “watch Crunchyroll with friends”, “anime watch party extension”, product vs competitor): prioritize **pillars** (`/watch-anime-together`, `/watch-crunchyroll-together`, `/anime-watch-party-toolkit`), **compare** URLs, and “how-to” guides where the reader is deciding what to use. Lead with **clear above-the-fold value** and path to install/signup/pricing (“what it is → why AniDachi → primary action”). Use **`aboveFoldCta`** where it matches sibling pages with similar intent (see gold-standard pillar below).
 - **Informational / AEO** (long-distance watching, time zones, spoilers, party ideas): optimize for **snippet-shaped H2/H3** and FAQs. Opening answer line: **one tight paragraph**, then optional bullets or deeper detail—helps featured snippets and answer engines without burying the lead.
 - **Programmatic / title intent** (`/watch/[slug]-with-friends`): searcher pairs **a specific anime title** with **watching together**. Differentiation must come from **non-generic copy** (group fit, pacing, honest availability notes)—not template filler alone. See **Programmatic quality guardrails** below.
+- **Programmatic watch pages carry mixed intent** — the H1 targets "watch X with friends" (social/group intent) but the same page also receives "app to watch X together", "X watch party chrome extension", and "best way to watch X with friends online". Capture these variants without keyword-stuffing by:
+  1. Using both "watchroom" and "watch party" in the first 100 words of the answer-first paragraph and HowTo intro.
+  2. Including the phrase "Chrome extension" once in the HowTo steps copy as a product description ("AniDachi's Chrome extension syncs playback…"), not as an install CTA.
+  3. Ensuring the title tag uses "AniDachi Watchroom" (standard), "Watch Party" (long-run), or "Group Movie Night" (movie) — these noun phrases match the commercial modifier queries. Do not change the existing `buildTitleTag` patterns; confirm they cover all three slots.
 
 ## New or updated URL checklist
 
@@ -38,6 +44,12 @@ When adding or substantially editing a marketing route:
    - Optional `faq`, `headings` (TOC — use `type TocHeading` and match `id`s to in-content anchors), `itemList`, `articleImage`, `aboveFoldCta`, `midContentSlot`.
    - **`conversionTemplate`**: Only if `inferPageTemplateFromPath` in `lib/conversion-events.ts` would mis-classify the path—or when intentionally matching **home CTA/copy** on a non-`/` route (see `/watch-party-starter`). Defaults: `/` → `home`; `/watch/*-with-friends` → `anime`; `/guides/best-anime-to-watch-*` → `listicle`; other `/guides/*` → `guide`; `/compare/*` → `compare`; `/glossary/*` → `glossary`; `/watch-anime-together`, `/watch-crunchyroll-together`, **`/anime-watch-party-toolkit`** → `pillar`; else `default`. **Pre-ship**: any **new route pattern** must verify template mapping—or set `conversionTemplate` explicitly so analytics and CTA copy stay correct.
 3. **Structured data**: Reuse exports from `components/json-ld.tsx`. Layout already emits `BreadcrumbJsonLd`, `ArticleJsonLd`, optional `FAQPageJsonLd`, optional `ItemListJsonLd`. For step-by-step guides, add **`HowToJsonLd`** in the page (see gold-standard guide below) with steps aligned to visible content. **Programmatic `/watch/[slug]`** pages also ship **`HowToJsonLd`** (watchroom setup), **`TvSeriesJsonLd`** or **`MovieJsonLd`** (from Jikan: score, members, episodes, genres, poster—use **`isMovieEntry(anime)`** to pick type), plus **`ItemListJsonLd`** via `SeoPageLayout` **`itemList`** (curated hub list—see **Watch template** below); keep HowTo steps and visible `<ol>` in lockstep. **Genre hub pages** ship `FAQPageJsonLd`, `ArticleJsonLd`, `BreadcrumbJsonLd`, and dynamic `ItemListJsonLd` listing all titles in that genre via **`getAnimeByGenre`**.
+
+   **Schema completeness requirements for TVSeries/Movie JSON-LD** (in `components/json-ld.tsx`):
+   - **`sameAs`**: Always populate with the MAL URL (`https://myanimelist.net/anime/{malId}`) when a `malId` is available in `lib/anime-mal-ids.ts`. This improves Knowledge Graph entity resolution and connects the page to Google's understanding of the title.
+   - **`inLanguage`**: Set to `"ja"` for Japanese-origin anime. Where a dub is available and confirmed, also include `subtitleLanguage: "en"` — this signals subtitle availability to search engines handling language-qualified queries.
+   - **`isPartOf`**: For titles that belong to a named franchise (e.g. Fate series, Dragon Ball universe, Monogatari series), use `isPartOf` pointing to the franchise root URL on MAL or a canonical franchise page if one exists on the site. This builds franchise-level entity connections.
+   - **Genre hub `ItemListJsonLd`**: Items should use `ListItem` → `url` pairs (full canonical URL) rather than raw title strings, so search engines can crawl the listed entities as distinct URLs.
 4. **Sitemap**: **`app/sitemap.ts`** builds **`/sitemap.xml`** using **`lib/sitemap-discovery.ts`**: **static** URLs are **auto-discovered** from every `app/**/page.tsx` (and `page.ts`) at deploy/runtime—**no manual list** for new marketing routes. Excluded trees: **`blou`**, **`kreatli-email-crm`**, **`api`**; excluded paths (e.g. **`/success`** when `noindex`): **`EXCLUDED_URL_PATHS`**. Adjust **`inferSitemapMeta`** / exclusions in **`lib/sitemap-discovery.ts`** when a route needs different **`priority`** / **`changeFrequency`**. Static entries use **`lastModified`** = that route file’s **mtime**. **Programmatic `/watch/`** URLs come from **`animeList.map`** with **priority tiers**: top-10 slugs (`attack-on-titan`, `one-piece`, `demon-slayer`, `jujutsu-kaisen`, `death-note`, `naruto`, `fullmetal-alchemist-brotherhood`, `my-hero-academia`, `dragon-ball-super`, `hunter-x-hunter`) → **0.8**; others → **0.6**; **`lastModified`** uses **`app/watch/[slug]/page.tsx`** mtime. **Genre hub URLs** are appended explicitly in **`app/sitemap.ts`** at **priority 0.85**. Keep **`dateModified`** on `SeoPageLayout` honest when content or watch SEO changes substantively; watch pages derive **`dateModified`** from template file mtime via **`getPageLastModified()`** and show a visible **“Last updated: …”** line under the H1.
 5. **Internal links**: Link pillars ↔ spokes ↔ glossary where intent overlaps; update `components/footer.tsx` / `components/nav-bar.tsx` when a new hub deserves persistent discovery (mirror existing column structure). See **Internal linking and topic clusters** below.
 6. **Robots and crawl scope**: New **authenticated or non-marketing** routes under `app/` must be evaluated for **`app/robots.ts`** `disallow` rules and **sitemap** inclusion using the same pattern as Blou/CRM—do not expose internal tools to acquisition crawls. Internal trees belong in **`EXCLUDED_TOP_LEVEL`** in **`lib/sitemap-discovery.ts`** and **`disallow`** in **`app/robots.ts`**. Preview / staging: **`VERCEL_ENV`** not `production` or **`NEXT_PUBLIC_ROBOTS_NOINDEX=true`** yields **`Disallow: /`** and an **empty sitemap** via **`lib/site-url.ts`**.
@@ -48,6 +60,9 @@ When adding or substantially editing a marketing route:
 - **Pricing and schema stay in lockstep**: `SoftwareApplication` / offer fields in `components/json-ld.tsx` and any visible pricing on `app/page.tsx` (e.g. `#pricing`) must match. If an SEO task surfaces drift, treat alignment as **in scope** for the same change set or flag it before shipping.
 - **`dateModified` honesty**: Bump `dateModified` (and sitemap `lastModified` when used) when **content, links, or metadata meaningfully change**—including required hub backlink updates for new anime. Avoid “freshness theater” (repeated no-op date bumps without real edits).
 - **External proof**: Chrome Web Store reviews, press, or relationship disclaimers are allowed only when **verifiable** and accurate. **No fabricated social proof** or implied official partnerships that are not true.
+- **Usage social proof**: If the product has a verifiable watchroom count, install count, or user count that appears publicly on `app/page.tsx` or the Chrome Web Store listing, surface it in the **first 200 words** of commercial-intent pages (pillars, compare pages, genre hubs). Cite only numbers that are live and accurate — do not fabricate figures or use placeholder text like "thousands of users" without a source.
+- **Group watch opinions must be grounded**: Copy in `extraWhyWatchParagraphs`, `pacingLeadParagraph`, and `genreDiscussionTips` must cite a **title-specific observable property** — episode length, cliffhanger density, arc structure, dub availability, pacing rhythm — rather than generic praise. If you cannot cite something specific from the synopsis or genres, derive one (e.g. "24-minute episodes make a 2-episode session fit a lunch break"). Never write filler like "this show is great for groups" without a concrete reason tied to the title.
+- **FAQ answer specificity**: Every FAQ answer must contain at least one specific detail — an episode range, a genre-specific tip, a named AniDachi feature, or a specific Crunchyroll behavior. Answers that say only "yes, AniDachi supports this" fail the E-E-A-T bar and will not rank for PAA boxes.
 
 ## Programmatic anime pages (`/watch/[slug]`)
 
@@ -56,6 +71,19 @@ When adding or substantially editing a marketing route:
 - Keep `generateStaticParams` consistent with `animeList`; ensure build still generates all static paths.
 
 ### Programmatic quality guardrails
+
+- **Meta description formula — `buildWatchPageMetaDescription(anime)` must encode 4 distinct signals**, not just title + genre. Near-identical descriptions across 161 pages cause Google to soft-canonicalize the cluster; only the "best" copy gets ranked. The 4 signals:
+  1. **Group suitability angle**: long-run (500+ episodes) → "spoiler-safe marathon"; movie → "group movie night"; romance → "couple-friendly watch party"; sports → "watch club"; default → "binge or weekly club".
+  2. **Episode/format signal**: mention episode count or format when it matches common query modifiers — "87-ep", "2-cour", "film", "4 seasons" — so the snippet captures queries like "how long is X" alongside "watch X with friends".
+  3. **Availability honesty**: use "on Crunchyroll", "subbed on Crunchyroll", or "subbed + dubbed on Crunchyroll" — whichever is accurate for the title.
+  4. **Action phrase**: rotate among "Host a watchroom", "Set up a group session", "Start a watch party", "Run a watch club" — vary by genre/format to avoid sitewide repetition.
+
+  Target output examples (not template strings — each must read naturally):
+  - *Attack on Titan*: `Host a spoiler-safe Attack on Titan marathon with friends — 87 episodes, action · dark fantasy, AniDachi watchrooms on Crunchyroll.`
+  - *Your Name* (movie): `Watch Your Name as a group movie night — set up an AniDachi watchroom in seconds, no spoiler risk, romance · drama.`
+  - *Haikyuu!!* (sports): `Run a Haikyuu watch club with friends — 85 episodes, sports · coming-of-age, sync or async via AniDachi on Crunchyroll.`
+
+  When editing `buildWatchPageMetaDescription()` in `lib/watch-page-rich-content.ts`, the output string should differ meaningfully between any two titles of the same genre — if two outputs are identical except for the title, the formula is not differentiated enough.
 
 - Each watch URL should include **distinct, useful sections** beyond boilerplate: e.g. why the title works for groups, pacing or episode rhythm, **truthful** notes about availability or regional catalog variance—without trademark overreach or false claims.
 - **Link out** to relevant guides (beginners, marathon, spoilers, Crunchyroll how-tos) where intent fits; same **no spam** standard as footer/nav (one or few high-value contextual links beats lists everywhere).
@@ -122,8 +150,28 @@ Whenever you add one or more entries to `animeList`, you **must** wire internal 
 
 ## AEO (answer engines)
 
-- Draft FAQs in **People Also Ask** style where natural (“Does … work with Crunchyroll?”, “Is … free?”). Keep **terminology consistent** with the page H1/H2 entities (e.g. “watchroom”, “Crunchyroll”) so summaries stay coherent.
-- **De-dupe across the site**: If two pages would use the **same question**, either **differentiate the answer angle** by page intent or **handle it once** on the canonical page and link from the other—avoid copy-paste FAQ stacks that compete with each other.
+### Opening answer format (featured snippet capture)
+
+For programmatic watch pages, the **answer-first paragraph must follow this exact 3-sentence structure** to maximize featured snippet and answer-engine capture:
+
+- **Sentence 1 — direct answer**: `"Yes, you can watch {title} with friends using AniDachi's watchroom on Crunchyroll."` — directly matches the "how to watch X with friends" query. Must appear **before** the synopsis block.
+- **Sentence 2 — mechanism by media type**: movie → `"Set up a shared movie night in under 2 minutes, no spoiler risk."` / long-run (500+ eps) → `"AniDachi's async mode lets members catch up at their own pace without spoilers."` / standard → `"Sync playback in real time or use async catch-up for different schedules."` — captures the "watch X together app" variant.
+- **Sentence 3 — group/availability qualifier**: `"Works for 2–10 people across different time zones, all on Crunchyroll."` — captures "watch X with friends online" and "long-distance" variants.
+
+This 3-sentence structure maps to the Google featured snippet shape: **direct answer → mechanism → qualifier**. Do **not** bury the direct answer after a synopsis paragraph — it must be the `<strong>` opening before `#series-overview`.
+
+### FAQ strategy
+
+- Draft FAQs in **People Also Ask** style where natural ("Does … work with Crunchyroll?", "Is … free?"). Keep **terminology consistent** with the page H1/H2 entities so AI summaries stay coherent.
+
+- **Deduplicate boilerplate questions at the site level**: questions like "Is AniDachi free?", "Do all friends need Crunchyroll?", "Does {title} have a native watch party feature?" are identical across all 161 watch pages — they compete for the same PAA slot and only the canonical copy gets credited. Move product/pricing FAQs to their canonical page (`/anime-watch-party-toolkit`, `/#pricing`, or `/guides/how-to-watch-crunchyroll-with-friends`) and link from watch pages instead. The watch-page FAQ should focus entirely on **title-specific questions**.
+
+- Each watch page FAQ must include **at least 3 title-specific questions** answerable from data already in `AnimeEntry`:
+  1. **Watch party fit**: `"Is {title} good to watch with a group?"` — lead with group chemistry, episode pacing, or genre mood (this question captures the PAA box most frequently shown for anime titles; put it **first** in the array).
+  2. **Episode budgeting**: `"How many episodes should we watch per session for {title}?"` — use the `episodes` field and pacing classification (long-run / movie / standard) to give a specific recommendation, not a generic "watch at your own pace".
+  3. **Spoiler/pace question** — varies by type: movie → `"Is {title} safe to watch out of order?"` / long-run → `"How do we avoid spoilers watching {title} with members at different progress points?"` / standard → `"Should we binge {title} or watch weekly with friends?"`.
+
+- **De-dupe across the site**: If two pages would use the **same question**, either **differentiate the answer angle** by page intent or **handle it once** on the canonical page and link from the other — avoid copy-paste FAQ stacks that compete with each other.
 
 ## Internal linking and topic clusters
 
@@ -131,6 +179,9 @@ Whenever you add one or more entries to `animeList`, you **must** wire internal 
 - Use **`itemList` + `ItemListJsonLd`** via `SeoPageLayout` on hub/list pages when a curated list improves UX **and** clarifies hierarchy (e.g. ordered “start here” resources).
 - **Anchor text**: Prefer descriptive phrases (“Crunchyroll watch party guide”, “long-distance anime watching”) over “click here” or long naked URLs.
 - New or reshaped guides that **pillars or toolkits** should surface belong in **`lib/guide-links.ts`**: add entries with the correct **`tags`** (e.g. `pillar-watch-anime`, `how-to-core`, `watch-party`) so **`getGuideLinks(...)`** filters stay truthful; then grep **`getGuideLinks`** / related imports on pillar and toolkit pages so “related guides” blocks stay consistent.
+- **Genre cluster reinforcement**: The `related` slugs in `AnimeEntry` should drive **contextual in-body links** — not just the sidebar resource list. In `genreDiscussionTips` or the closing section of a watch page, add a sentence like: "If your group enjoys {title}, also try a watchroom for [{related-title}](/watch/{related-slug}-with-friends)." Limit to 1–2 related links per page and keep anchor text descriptive. This creates crawlable genre clusters (e.g. all shonen action titles linking to each other) that signal topical authority.
+- **Franchise clustering**: Titles that share a named franchise (e.g. all Fate entries, all Dragon Ball titles, all Monogatari series entries) must cross-link to each other in the Series Overview section with a brief navigational note: "Part of the [Fate universe] — start with Fate/Zero if your group is new." Detect franchise membership by checking for common title-root overlap in `animeList` slugs and titles. When a new season is added, **bidirectional links are required** — the new entry links to the prior season and the prior season's page is updated to link forward.
+- **Seasonal anchor pattern**: When a sequel/season is added to `animeList`, update the existing season's watch page to add a forward-link to the new entry ("Season 2 is now available — [continue your group watch here]"). The current spec only requires hub backlinks; season-to-season continuity links are also required to avoid orphaned sequel pages.
 
 ## Voice and claims
 
@@ -170,3 +221,4 @@ When in doubt, mirror structure and metadata density of these:
 6. **Spot-check before done**: Canonical matches rendered path; FAQ body text ↔ `FAQPageJsonLd` source array; no accidental `noindex` on marketing routes; `conversionTemplate` correct for new URL shapes.
 7. **Measurement mindset**: Note the primary **query bucket** the page targets; after launch expect **impressions before clicks** in Search Console for new URLs.
 8. **Do not** ship **doorway** patterns—many near-duplicate pages (geo/device variants) without distinct product value—unless the user and product explicitly require separate value props per page.
+9. **Search Console and indexation monitoring**: After shipping any batch of 5+ new anime entries, or after substantially editing programmatic copy across many watch pages, include a note in your summary: *"Submit the updated sitemap to Google Search Console if not already auto-submitted via Vercel integration (`/sitemap.xml`)."* For large batches (10+ new pages), note that indexation of programmatic pages at this scale may take 4–8 weeks. The early warning signal is Search Console Coverage → **Discovered (not indexed)** — pages Google sees via sitemap or internal links but hasn’t crawled. If this count grows relative to the number of new pages added, it indicates insufficient page uniqueness or too-shallow internal link depth. Recommend the user check this report 4 weeks after any large batch.

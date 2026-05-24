@@ -38,6 +38,7 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "tower-of-god": 40223,
   "kaguya-sama": 39996,
   "bocchi-the-rock": 57524,
+  "boruto": 34566,
   "oshi-no-ko": 52034,
   "sword-art-online": 11757,
   "tokyo-ghoul": 22319,

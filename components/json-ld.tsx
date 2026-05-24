@@ -1,17 +1,17 @@
-import Script from "next/script";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 interface JsonLdProps {
   data: Record<string, unknown> | Record<string, unknown>[];
 }
 
+// Plain <script> tag ensures JSON-LD is in the initial HTML payload.
+// Next.js <Script strategy="afterInteractive"> defers execution and Googlebot
+// may discard structured data before it evaluates — blocking all rich results.
 export function JsonLd({ data }: JsonLdProps) {
   return (
-    <Script
-      id={`json-ld-${JSON.stringify(data).slice(0, 32)}`}
+    <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-      strategy="afterInteractive"
     />
   );
 }
@@ -205,6 +205,10 @@ interface MediaSchemaProps {
   ratingValue?: number | null;
   ratingCount?: number | null;
   url: string;
+  /** MAL URL for sameAs — improves Knowledge Graph entity resolution. */
+  sameAs?: string | null;
+  /** Language of the original work — "ja" for Japanese-origin anime. */
+  inLanguage?: string | null;
 }
 
 function MediaJsonLd({
@@ -218,6 +222,8 @@ function MediaJsonLd({
   ratingValue,
   ratingCount,
   url,
+  sameAs,
+  inLanguage,
 }: MediaSchemaProps) {
   const siteUrl = getResolvedSiteOrigin();
   const data: Record<string, unknown> = {
@@ -231,6 +237,8 @@ function MediaJsonLd({
   if (alternateName) data.alternateName = alternateName;
   if (numberOfEpisodes != null && numberOfEpisodes > 0) data.numberOfEpisodes = numberOfEpisodes;
   if (image) data.image = image;
+  if (sameAs) data.sameAs = sameAs;
+  if (inLanguage) data.inLanguage = inLanguage;
   if (ratingValue != null && ratingValue > 0 && ratingCount != null && ratingCount > 0) {
     data.aggregateRating = {
       "@type": "AggregateRating",

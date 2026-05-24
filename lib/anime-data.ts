@@ -130,7 +130,7 @@ export const animeList: AnimeEntry[] = [
       "Naruto Uzumaki, a young ninja shunned by his village, works tirelessly to become Hokage and earn everyone's respect. An epic saga of friendship, rivalry, and ninja warfare.",
     episodes: "720 episodes (Naruto + Shippuden)",
     genres: ["Action", "Adventure", "Martial Arts"],
-    related: ["one-piece", "dragon-ball-super", "bleach"],
+    related: ["boruto", "one-piece", "dragon-ball-super"],
   },
   {
     slug: "spy-x-family",
@@ -377,6 +377,16 @@ export const animeList: AnimeEntry[] = [
     episodes: "12 episodes",
     genres: ["Comedy", "Music", "Slice of Life"],
     related: ["kaguya-sama", "k-on", "keep-your-hands-off-eizouken"],
+  },
+  {
+    slug: "boruto",
+    title: "Boruto: Naruto Next Generations",
+    japaneseTitle: "BORUTO: ナルト ネクスト ジェネレーションズ",
+    synopsis:
+      "Boruto Uzumaki, son of Hokage Naruto, forges his own ninja path alongside friends Sarada Uchiha and the enigmatic Mitsuki. The next generation faces a rising threat from the criminal organisation Kara and the ancient Ōtsutsuki clan, testing bonds forged under the shadow of their legendary parents.",
+    episodes: "293 episodes",
+    genres: ["Action", "Adventure", "Ninja"],
+    related: ["naruto", "black-clover", "my-hero-academia"],
   },
   {
     slug: "oshi-no-ko",

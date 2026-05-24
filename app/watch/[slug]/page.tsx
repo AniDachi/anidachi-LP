@@ -235,6 +235,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
           ratingValue={jikan?.score}
           ratingCount={jikan?.members}
           url={`/watch/${rawSlug}`}
+          sameAs={malId != null ? `https://myanimelist.net/anime/${malId}` : null}
+          inLanguage="ja"
         />
       ) : (
         <TvSeriesJsonLd
@@ -247,6 +249,8 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
           ratingValue={jikan?.score}
           ratingCount={jikan?.members}
           url={`/watch/${rawSlug}`}
+          sameAs={malId != null ? `https://myanimelist.net/anime/${malId}` : null}
+          inLanguage="ja"
         />
       )}
       <SeoPageLayout

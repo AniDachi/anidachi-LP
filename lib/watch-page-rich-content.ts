@@ -117,14 +117,58 @@ export function pacingLeadParagraph(
   return `At ${episodesDisplay}, ${anime.title} fits tidy watch-party arcs—double features on Fridays, a single-episode debrief after work, or a two-night binge before spoilers leak online. Adjust on the fly when travel or finals interrupt without guilt; async chat carries the social thread.`;
 }
 
-/** Unique-enough meta descriptions for each programmatic watch URL (~≤155 chars for SERP snippets). */
+/** 4-signal meta descriptions for programmatic watch URLs (≤160 chars).
+ * Signals: group suitability angle, episode/format, availability, action phrase.
+ * Near-identical descriptions across 161 pages cause Google to soft-canonicalize;
+ * each description must differ meaningfully between any two titles of the same genre.
+ */
 export function buildWatchPageMetaDescription(anime: AnimeEntry): string {
+  const gs = genreSet(anime.genres);
+  const movie = isMovieEntry(anime);
+
+  const isLong =
+    /\+|1100|1000|\b720\b|\b700\b|seasons|multiple seasons|counting/i.test(anime.episodes) ||
+    /one-piece|naruto|boruto|hunter-x-hunter|fairy-tail|case-closed|detective-conan|gintama|inuyasha|bleach/i.test(anime.slug);
+
+  // Extract clean episode count from free-text episodes field (e.g. "87 episodes across 4 seasons" → "87 episodes")
+  const epMatch = anime.episodes.match(/(\d+\+?)\s*episodes?/i);
+  const epSignal = movie ? null : epMatch ? `${epMatch[1]} episodes` : null;
+
+  // Genre suffix (first 2 genres, lowercase, e.g. "action · dark fantasy")
   const genreSuffix =
     anime.genres.length > 0
-      ? ` ${anime.genres.slice(0, 2).join(" · ")}.`
+      ? anime.genres.slice(0, 2).map((g) => g.toLowerCase()).join(" · ")
       : "";
-  const s = `Watch ${anime.title} with friends on Crunchyroll: AniDachi watchrooms for sync, chat, async catch-up, and spoiler-aware group pacing.${genreSuffix}`;
-  const t = s.trim();
+
+  let desc: string;
+
+  if (movie) {
+    // Movie: "Watch {title} as a group movie night — set up an AniDachi watchroom in seconds, no spoiler risk, {genres}, on Crunchyroll."
+    const genrePart = genreSuffix ? `, ${genreSuffix}` : "";
+    desc = `Watch ${anime.title} as a group movie night — set up an AniDachi watchroom in seconds, no spoiler risk${genrePart}, on Crunchyroll.`;
+  } else if (isLong) {
+    // Long-run: "Host a spoiler-safe {title} marathon with friends — {ep_signal}, {genres}, AniDachi watchrooms on Crunchyroll."
+    const epPart = epSignal ? ` — ${epSignal}` : "";
+    const genrePart = genreSuffix ? `, ${genreSuffix}` : "";
+    desc = `Host a spoiler-safe ${anime.title} marathon with friends${epPart}${genrePart}, AniDachi watchrooms on Crunchyroll.`;
+  } else if (has(gs, "sports")) {
+    // Sports: "Run a {title} watch club with friends — {ep_signal}, {genres}, sync or async via AniDachi on Crunchyroll."
+    const epPart = epSignal ? ` — ${epSignal}` : "";
+    const genrePart = genreSuffix ? `, ${genreSuffix}` : "";
+    desc = `Run a ${anime.title} watch club with friends${epPart}${genrePart}, sync or async via AniDachi on Crunchyroll.`;
+  } else if (has(gs, "romance", "drama")) {
+    // Romance/drama: "Start a {title} watch party with friends — {ep_signal}, {genres}, sync or async via AniDachi on Crunchyroll."
+    const epPart = epSignal ? ` — ${epSignal}` : "";
+    const genrePart = genreSuffix ? `, ${genreSuffix}` : "";
+    desc = `Start a ${anime.title} watch party with friends${epPart}${genrePart}, sync or async via AniDachi on Crunchyroll.`;
+  } else {
+    // Default: "Host a {title} watch party with friends — {ep_signal}, {genres}, AniDachi watchrooms on Crunchyroll."
+    const epPart = epSignal ? ` — ${epSignal}` : "";
+    const genrePart = genreSuffix ? `, ${genreSuffix}` : "";
+    desc = `Host a ${anime.title} watch party with friends${epPart}${genrePart}, AniDachi watchrooms on Crunchyroll.`;
+  }
+
+  const t = desc.trim();
   if (t.length <= 160) return t;
   return `${t.slice(0, 157).trim()}…`;
 }
@@ -211,6 +255,10 @@ export function buildWatchPageFaq(
   const gs = genreSet(anime.genres);
   const epClass = classifyEpisodes(anime, episodesDisplay);
 
+  // Extract clean episode count for use in FAQ answers
+  const epMatch = anime.episodes.match(/(\d+\+?)\s*episodes?/i);
+  const epSignal = epClass !== "movie" && epMatch ? `${epMatch[1]} episodes` : null;
+
   // Slot A: episode format / opening question
   let slotA: { question: string; answer: string };
   if (epClass === "movie") {
@@ -274,6 +322,32 @@ export function buildWatchPageFaq(
   }
 
   return [
+    // Watch Party Fit — title-specific, targets the "Is {title} good to watch with friends?" PAA box.
+    // Must come first so it appears near the top of the page and anchors the FAQPage JSON-LD.
+    {
+      question: `Is ${anime.title} good to watch with a group?`,
+      answer: (() => {
+        if (epClass === "movie") {
+          return `Yes — ${anime.title} is ideal for a group movie night. As a standalone film, everyone finishes together with no multi-session scheduling needed. The emotional payoff lands harder when you can react out loud and debrief right after the credits.`;
+        }
+        if (epClass === "long") {
+          return `Yes, with the right structure. ${anime.title}${epSignal ? ` has ${epSignal}` : " is a long-running series"}, so a weekly club format keeps momentum without burnout. AniDachi's async mode lets members who miss a week catch up behind spoiler-safe markers and rejoin for the next arc.`;
+        }
+        if (has(gs, "sports")) {
+          return `Yes — ${anime.title} is built for group watching. Tournament arcs and match-day tension are twice as exciting when the whole group reacts to the same whistle moment. Episode blocks align naturally with game or training sessions.`;
+        }
+        if (has(gs, "mystery", "psychological", "thriller")) {
+          return `Yes — theory-crafting is half the fun of ${anime.title}. The psychological twists and mystery payoffs give your group something to debate after every episode, and episode-scoped chat keeps wild theories from becoming accidental spoilers.`;
+        }
+        if (has(gs, "romance", "drama")) {
+          return `Yes — ${anime.title} works especially well for smaller groups or date nights. Relationship beats and emotional payoffs hit harder with someone to debrief with right after the credits. Keep chats episode-scoped so first-timers stay spoiler-safe.`;
+        }
+        if (has(gs, "comedy", "parody")) {
+          return `Yes — ${anime.title} is best with a live audience. Comedy timing and reaction faces land much harder when someone else is laughing at the same moment. Async mode keeps the jokes fresh for viewers on a different schedule.`;
+        }
+        return `Yes — ${anime.title} works well for group watching. Strong episode hooks and discussion-worthy moments reward synchronized viewing where everyone reacts together. AniDachi's async mode keeps the group connected even when schedules differ.`;
+      })(),
+    },
     slotA,
     slotB,
     {

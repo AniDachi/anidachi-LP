@@ -72,7 +72,7 @@ export default function BestAnimeWithFriendsPage() {
       description="Top anime picks for group watching sessions."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-05-19"
+      dateModified="2026-05-24"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -234,6 +234,7 @@ export default function BestAnimeWithFriendsPage() {
       <ul className="space-y-3 text-gray-700 mb-8">
         <li><strong><Link href="/watch/one-piece-with-friends" className="text-purple-600 hover:underline">One Piece</Link></strong> — The ultimate long-form group watch. Use AniDachi&apos;s async watchrooms so everyone goes at their own pace.</li>
         <li><strong><Link href="/watch/naruto-with-friends" className="text-purple-600 hover:underline">Naruto</Link></strong> — 720 episodes of ninja action. Better with friends to skip filler together.</li>
+        <li><strong><Link href="/watch/boruto-with-friends" className="text-purple-600 hover:underline">Boruto: Naruto Next Generations</Link></strong> — 293 episodes continuing the Naruto saga. Async mode keeps next-gen spoilers from reaching friends still working through Shippuden.</li>
         <li><strong><Link href="/watch/hunter-x-hunter-with-friends" className="text-purple-600 hover:underline">Hunter x Hunter</Link></strong> — Each arc is a different genre. Always something new to discuss.</li>
         <li><strong><Link href="/watch/inuyasha-with-friends" className="text-purple-600 hover:underline">Inuyasha</Link></strong> — Feudal fairy-tale quests across 160+ TV episodes; async threads keep shard-hunt discussions readable.</li>
         <li><strong><Link href="/watch/fairy-tail-with-friends" className="text-purple-600 hover:underline">Fairy Tail</Link></strong> — Guild-sized cast and endlessly extending saga—async watchrooms keep arcs tagged per friend.</li>
