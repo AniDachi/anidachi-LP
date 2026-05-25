@@ -23,6 +23,8 @@ if not SRC.exists():
 OUT = ROOT / "public" / "Anidachi_logo.png"
 APP_ICON = ROOT / "app" / "icon.png"
 APP_APPLE = ROOT / "app" / "apple-icon.png"
+APP_FAVICON = ROOT / "app" / "favicon.ico"
+PUBLIC_FAVICON = ROOT / "public" / "favicon.ico"
 
 
 def bg_like(rgb: tuple[int, int, int], tol: int = 45) -> bool:
@@ -72,9 +74,21 @@ def main() -> None:
     out = out.resize((512, 512), Image.Resampling.LANCZOS)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     out.save(OUT, optimize=True)
-    APP_ICON.write_bytes(OUT.read_bytes())
-    APP_APPLE.write_bytes(OUT.read_bytes())
+
+    out.resize((32, 32), Image.Resampling.LANCZOS).save(APP_ICON, optimize=True)
+    out.resize((180, 180), Image.Resampling.LANCZOS).save(APP_APPLE, optimize=True)
+    ico_sizes = [(16, 16), (32, 32), (48, 48)]
+    ico_images = [out.resize(s, Image.Resampling.LANCZOS) for s in ico_sizes]
+    ico_images[0].save(
+        APP_FAVICON,
+        format="ICO",
+        sizes=[(im.width, im.height) for im in ico_images],
+        append_images=ico_images[1:],
+    )
+    PUBLIC_FAVICON.write_bytes(APP_FAVICON.read_bytes())
+
     print(f"Wrote {OUT} ({out.mode} {out.size})")
+    print(f"Wrote tab icons: {APP_ICON.name}, {APP_FAVICON.name}, {APP_APPLE.name}")
 
 
 if __name__ == "__main__":
