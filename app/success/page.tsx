@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CheckCircle, Rocket, Mail } from "lucide-react";
+import { AnidachiLogo } from "@/components/anidachi-logo";
 import { DiscordContact } from "@/components/discord-contact";
 import { DiscordCredentialsForm } from "@/components/discord-credentials-form";
 
@@ -30,8 +31,11 @@ export default async function SuccessPage({
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
       <Card className="max-w-2xl w-full">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="h-8 w-8 text-green-600" aria-hidden="true" />
+          <div className="relative mx-auto mb-4 flex h-20 w-20 items-center justify-center">
+            <AnidachiLogo size={64} className="ring-2 ring-purple-100" priority />
+            <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
+              <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
+            </span>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
             You&apos;re In — Welcome to AniDachi!

@@ -1,16 +1,24 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const alt = "AniDachi – Watch Anime Together";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OgImage() {
+export default async function OgImage() {
+  const logoBuffer = await readFile(
+    join(process.cwd(), "public", "Anidachi_logo.png"),
+  );
+  const logoSrc = `data:image/png;base64,${logoBuffer.toString("base64")}`;
+
   return new ImageResponse(
     (
       <div
         style={{
-          background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)",
+          background:
+            "linear-gradient(135deg, #dc2626 0%, #ea580c 45%, #f97316 100%)",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -22,6 +30,13 @@ export default function OgImage() {
           padding: "60px",
         }}
       >
+        <img
+          src={logoSrc}
+          width={140}
+          height={140}
+          alt=""
+          style={{ borderRadius: "50%", marginBottom: 28 }}
+        />
         <div
           style={{
             fontSize: 72,
@@ -62,6 +77,6 @@ export default function OgImage() {
         </div>
       </div>
     ),
-    { ...size }
+    { ...size },
   );
 }

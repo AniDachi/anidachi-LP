@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { Menu, X, LogOut, ChevronDown } from "lucide-react";
 import { NavPricingButton } from "@/components/nav-pricing-button";
 import { NavPricingLink } from "@/components/nav-pricing-link";
@@ -176,20 +177,12 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
       )}
     >
       <div className="container mx-auto flex w-full items-center justify-between gap-2 px-4 py-3">
-        <Link
-          href="/"
-          className="flex min-h-11 items-center gap-2 font-semibold text-white transition-opacity hover:opacity-90"
-        >
-          <Image
-            src="/Anidachi_logo.webp"
-            alt="AniDachi logo"
-            width={28}
-            height={28}
-            sizes="28px"
-            className="object-contain"
-          />
-          AniDachi
-        </Link>
+        <AnidachiLogoLink
+          size={28}
+          wordmarkClassName="text-white"
+          className="min-h-11"
+          priority
+        />
 
         {/* Desktop inline nav */}
         <ul className="hidden items-center gap-4 text-sm md:flex md:gap-6">

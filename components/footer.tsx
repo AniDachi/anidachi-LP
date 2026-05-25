@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { FooterPricingCta } from "@/components/footer-pricing-cta";
 
 export function Footer() {
@@ -8,20 +8,11 @@ export function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           <div className="col-span-2 lg:col-span-2">
-            <Link href="/" className="flex items-center space-x-2 mb-4">
-              <Image
-                src="/Anidachi_logo.webp"
-                alt="AniDachi logo"
-                width={40}
-                height={40}
-                sizes="40px"
-                quality={85}
-                className="object-contain"
-              />
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                AniDachi
-              </h3>
-            </Link>
+            <AnidachiLogoLink
+              size={40}
+              wordmarkClassName="text-2xl font-bold text-white"
+              className="mb-4"
+            />
             <p className="text-gray-400 mb-4 max-w-md text-sm leading-relaxed">
               AniDachi (アニ友) means &quot;anime friend.&quot; We built the
               ultimate platform for watching anime together — create watchrooms,

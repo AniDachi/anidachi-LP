@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Footer } from "@/components/footer";
-
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
@@ -214,7 +212,6 @@ export default function PrivacyPage() {
           </div>
         </article>
       </main>
-      <Footer />
     </>
   );
 }

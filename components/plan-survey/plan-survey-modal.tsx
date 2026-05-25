@@ -4,12 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PrePurchaseDiscordWalkthrough } from "@/components/pre-purchase-discord-walkthrough";
 import { FOUNDER_DISCORD_USERNAME } from "@/lib/founder-discord";
+import { AnidachiLogo } from "@/components/anidachi-logo";
 import {
   Check,
   CreditCard,
   Lock,
   ShieldCheck,
-  Sparkles,
   X,
 } from "lucide-react";
 import { trackEvent } from "@/lib/gtag";
@@ -367,7 +367,7 @@ export function PlanSurveyModal({
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200/70 px-6 py-4">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-700" aria-hidden="true" />
+            <AnidachiLogo size={24} aria-hidden />
             <p id="plan-survey-title" className="text-sm font-semibold">
               {step === 7 ? "Your plan is ready" : `Find your plan (${step}/6)`}
             </p>

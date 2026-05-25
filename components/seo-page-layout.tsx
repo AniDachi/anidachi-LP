@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Footer } from "@/components/footer";
 import { FAQSection, type FAQItem } from "@/components/faq-section";
 import {
   BreadcrumbJsonLd,
@@ -125,7 +124,6 @@ export function SeoPageLayout({
 
         {faq && faq.length > 0 && <FAQSection questions={faq} />}
       </main>
-      <Footer />
       {aboveFoldCta && (
         <StickyMobileCheckoutBar pagePath={url} pageTemplate={pageTemplate} />
       )}

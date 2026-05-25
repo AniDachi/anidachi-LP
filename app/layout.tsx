@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/nav-bar";
 import { AnalyticsEvents } from "@/components/analytics-events";
 import { OrganizationJsonLd } from "@/components/json-ld";
@@ -80,6 +81,7 @@ export default function RootLayout({
         <PlanSurveyProvider>
           <NavBar />
           {children}
+          <Footer />
           <OrganizationJsonLd />
           <AnalyticsEvents />
         </PlanSurveyProvider>

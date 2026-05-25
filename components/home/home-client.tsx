@@ -8,7 +8,6 @@ import { ChromeExtensionDemo } from "@/components/chrome-extension-demo";
 import { ChromeExtensionFeatures } from "@/components/chrome-extension-features";
 import { CompareTable } from "@/components/compare-table";
 import { FAQSection } from "@/components/faq-section";
-import { Footer } from "@/components/footer";
 import { homeFAQ } from "@/lib/home-faq";
 import { pricingCtaLabelForTier } from "@/lib/home-survey";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
@@ -33,7 +32,6 @@ export function HomeClient() {
         getCtaLabelForTier={(tier) => pricingCtaLabelForTier({ tier, survey })}
       />
       <FAQSection questions={homeFAQ} defaultOpenIndexes={[2, 3, 7]} />
-      <Footer />
     </main>
   );
 }

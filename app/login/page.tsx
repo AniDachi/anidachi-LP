@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { AnidachiLogo } from "@/components/anidachi-logo";
 import { getSession } from "@/lib/anidachi-auth/session";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +36,9 @@ export default async function LoginPage({ searchParams }: Props) {
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-violet-950 via-slate-900 to-slate-950 px-4">
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 text-center">
+          <div className="mb-4 flex justify-center">
+            <AnidachiLogo size={56} className="ring-2 ring-white/15" priority />
+          </div>
           <span className="text-3xl font-bold tracking-tight text-white">
             AniDachi
           </span>

@@ -1,518 +1,652 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Play,
-  Pause,
-  Users,
-  Share2,
-  Chrome,
-  Check,
-  Volume2,
-  Settings,
-  Maximize,
-  Search,
-} from "lucide-react";
+import { X, Mic } from "lucide-react";
 import Image from "next/image";
+import { AnidachiLogo } from "@/components/anidachi-logo";
 
-function ExtensionPanel({
-  step,
-  showExtension,
-  animeDetected,
-  setAnimeDetected,
-  watchroomCreated,
-  episodesWatched,
-  className = "",
+const YT_VIDEO_ID = "M_OauHnAFc8";
+const YT_EMBED_SRC = `https://www.youtube-nocookie.com/embed/${YT_VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${YT_VIDEO_ID}&controls=0&modestbranding=1&rel=0&iv_load_policy=3`;
+
+const EMOJI_LIST = ["🤣", "😭", "😮", "🔥", "❤️", "💀"];
+
+const STEP_LABELS = [
+  "Bubble",
+  "Open panel",
+  "Create room",
+  "Friends join",
+  "Reactions",
+  "Sync",
+];
+
+type Participant = {
+  id: string;
+  displayName: string;
+  initials: string;
+  role: "host" | "guest";
+  cameraEnabled: boolean;
+  avatarUrl?: string;
+};
+
+type ReactionPop = {
+  id: string;
+  emoji: string;
+  right: number;
+};
+
+const FRIENDS: Participant[] = [
+  {
+    id: "1",
+    displayName: "You",
+    initials: "YO",
+    role: "host",
+    cameraEnabled: true,
+    avatarUrl: "/demo/avatars/host.jpg",
+  },
+  {
+    id: "2",
+    displayName: "Natsuki",
+    initials: "NA",
+    role: "guest",
+    cameraEnabled: false,
+    avatarUrl: "/demo/avatars/natsuki.jpg",
+  },
+  {
+    id: "3",
+    displayName: "Haruto",
+    initials: "HA",
+    role: "guest",
+    cameraEnabled: true,
+    avatarUrl: "/demo/avatars/haruto.jpg",
+  },
+];
+
+function TopBubble({
+  connected,
+  count,
+  onClick,
 }: {
-  step: number;
-  showExtension: boolean;
-  animeDetected: boolean;
-  setAnimeDetected: (v: boolean) => void;
-  watchroomCreated: boolean;
-  episodesWatched: number;
-  className?: string;
+  connected: boolean;
+  count: number;
+  onClick: () => void;
 }) {
   return (
-    <Card
-      className={`w-full max-w-sm bg-white/95 backdrop-blur-sm shadow-xl border-0 p-4 sm:p-6 md:w-80 ${className}`.trim()}
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1.5 h-[30px] px-2 rounded-full cursor-pointer border border-white/[0.16] bg-[rgba(10,10,18,0.38)] backdrop-blur-lg shadow-[0_10px_30px_rgba(0,0,0,0.24)] pointer-events-auto transition-transform active:scale-95"
     >
-      <CardHeader className="p-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mb-2">
-              <Chrome className="w-4 h-4 text-purple-600" />
-            </div>
-            <CardTitle className="text-sm font-semibold text-gray-900 mb-2">
-              AniDachi Extension
-            </CardTitle>
+      <AnidachiLogo size={20} alt="" className="w-5 h-5 shrink-0" aria-hidden />
+      <span
+        className={`w-1.5 h-1.5 rounded-full transition-colors duration-700 ${
+          connected ? "bg-[#7dd3a7]" : "bg-[#9ca3af]"
+        }`}
+      />
+      <span className="text-[12px] font-semibold text-white/90 leading-none">{count}</span>
+    </button>
+  );
+}
+
+function ParticipantAvatar({
+  p,
+  size = 44,
+  className = "",
+}: {
+  p: Participant;
+  size?: number;
+  className?: string;
+}) {
+  const src = p.cameraEnabled ? p.avatarUrl : undefined;
+  if (src) {
+    return (
+      <Image
+        src={src}
+        alt={p.displayName}
+        width={size}
+        height={size}
+        className={`object-cover w-full h-full ${className}`}
+        sizes={`${size}px`}
+      />
+    );
+  }
+  return (
+    <div
+      className={`w-full h-full grid place-items-center font-extrabold text-white/90 bg-[rgba(15,15,28,0.7)] ${className}`}
+      style={{ fontSize: size <= 28 ? 10 : 13 }}
+    >
+      {p.initials}
+    </div>
+  );
+}
+
+function CamBubble({ p, active }: { p: Participant; active: boolean }) {
+  const live = p.cameraEnabled && p.avatarUrl;
+  return (
+    <div
+      className={`
+        relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden
+        border border-white/20 bg-[rgba(15,15,28,0.54)]
+        shadow-[0_10px_28px_rgba(0,0,0,0.3)]
+        animate-[cam-enter_0.2s_ease-out]
+        transition-all duration-200
+        ${active ? "opacity-100 scale-[1.08]" : "opacity-60"}
+      `}
+      title={p.displayName}
+    >
+      <div className={`w-full h-full ${live ? "animate-[cam-live_3s_ease-in-out_infinite]" : ""}`}>
+        <ParticipantAvatar p={p} />
+      </div>
+      {p.cameraEnabled && (
+        <span className="absolute right-[3px] bottom-[3px] w-2 h-2 rounded-full bg-[#7dd3a7] border-2 border-[rgba(10,10,18,0.9)] z-10" />
+      )}
+    </div>
+  );
+}
+
+function ReactionPop({ reaction }: { reaction: ReactionPop }) {
+  return (
+    <div
+      className="absolute bottom-24 pointer-events-none animate-[anidachi-pop_2.6s_ease_forwards]"
+      style={{ right: reaction.right }}
+    >
+      <span className="text-2xl" style={{ textShadow: "0 3px 14px rgba(0,0,0,0.7)" }}>
+        {reaction.emoji}
+      </span>
+    </div>
+  );
+}
+
+function MiniPanel({
+  open,
+  roomActive,
+  connected,
+  participants,
+  onClose,
+  onCreateRoom,
+  onCopyInvite,
+  onSyncNow,
+  onReact,
+  copied,
+  ghostCam,
+  setGhostCam,
+  reactionsEnabled,
+  setReactionsEnabled,
+  overlay,
+  setOverlay,
+}: {
+  open: boolean;
+  roomActive: boolean;
+  connected: boolean;
+  participants: Participant[];
+  onClose: () => void;
+  onCreateRoom: () => void;
+  onCopyInvite: () => void;
+  onSyncNow: () => void;
+  onReact: (emoji: string) => void;
+  copied: boolean;
+  ghostCam: boolean;
+  setGhostCam: (v: boolean) => void;
+  reactionsEnabled: boolean;
+  setReactionsEnabled: (v: boolean) => void;
+  overlay: boolean;
+  setOverlay: (v: boolean) => void;
+}) {
+  const subtitle = roomActive
+    ? `YouTube · ${connected ? "connected" : "connecting"}`
+    : "Create a local watch room";
+
+  const panelStyle: React.CSSProperties = {
+    background: "rgba(10,10,18,0.72)",
+    backdropFilter: "blur(24px)",
+    WebkitBackdropFilter: "blur(24px)",
+    border: "1px solid rgba(255,255,255,0.14)",
+    boxShadow: "0 18px 56px rgba(0,0,0,0.34)",
+    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+    color: "rgba(255,255,255,0.92)",
+  };
+
+  const btnBase =
+    "inline-flex items-center gap-1.5 h-[30px] px-2.5 rounded-full text-[11px] font-semibold cursor-pointer border border-white/[0.14] bg-white/[0.08] text-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:bg-white/[0.14]";
+  const btnPrimary =
+    "inline-flex items-center gap-1.5 h-[30px] px-2.5 rounded-full text-[11px] font-semibold cursor-pointer border-0 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:opacity-90";
+  const sectionLabel =
+    "mt-3.5 mb-2 text-[11px] font-bold tracking-widest uppercase text-white/50 block";
+
+  return (
+    <div
+      className={`
+        absolute top-12 right-2.5 z-20
+        w-[min(320px,calc(100%-20px))] md:w-[min(360px,calc(100%-24px))] max-h-[calc(100%-58px)] overflow-auto
+        rounded-2xl p-3.5 pointer-events-auto
+        origin-top-right transition-all duration-150
+        ${open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}
+      `}
+      style={panelStyle}
+      aria-hidden={!open}
+    >
+      <div className="flex justify-between items-start gap-3 mb-3.5">
+        <div className="flex items-start gap-2 min-w-0">
+          <AnidachiLogo size={28} alt="" className="mt-0.5 shrink-0" aria-hidden />
+          <div className="min-w-0">
+            <h2 className="m-0 text-base font-bold leading-tight">Anidachi</h2>
+            <div className="mt-1 text-[12px] text-white/60">{subtitle}</div>
           </div>
-          {step >= 1 && animeDetected && (
-            <Badge className="bg-green-100 text-green-800 text-xs">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
-              Detected
-            </Badge>
-          )}
         </div>
-      </CardHeader>
-      <CardContent className="p-0 pt-4">
-        {step === 0 && (
-          <div className="space-y-3">
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-3">
-                Sign in to start watching together
-              </p>
-              <Button className="w-full bg-purple-600 hover:bg-purple-700 min-h-11">
-                <Users className="w-4 h-4 mr-2" />
-                Login to AniDachi
-              </Button>
-            </div>
-          </div>
-        )}
-        {step >= 1 && !animeDetected && (
-          <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 min-h-11"
-            onClick={() => setAnimeDetected(true)}
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-[30px] h-[30px] rounded-full border border-white/[0.14] bg-white/[0.08] flex items-center justify-center cursor-pointer text-white/70 hover:text-white/90 transition-colors shrink-0"
+        >
+          <X size={14} />
+        </button>
+      </div>
+
+      <div className="flex gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={onCreateRoom}
+          className={btnPrimary}
+          style={{ background: "linear-gradient(135deg,#7c3aed,#2563eb)" }}
+        >
+          {roomActive ? "New room" : "Create room"}
+        </button>
+        <button type="button" onClick={onCopyInvite} disabled={!roomActive} className={btnBase}>
+          {copied ? "Copied!" : "Copy invite"}
+        </button>
+        <button type="button" onClick={onSyncNow} disabled={!roomActive} className={btnBase}>
+          Sync now
+        </button>
+      </div>
+
+      <span className={sectionLabel}>Reactions</span>
+      <div className="flex gap-2 flex-wrap">
+        {EMOJI_LIST.map((emoji) => (
+          <button
+            key={emoji}
+            type="button"
+            onClick={() => onReact(emoji)}
+            disabled={!roomActive}
+            className="w-[30px] h-[30px] rounded-full border border-white/[0.14] bg-white/[0.08] flex items-center justify-center cursor-pointer text-base disabled:opacity-50 hover:bg-white/[0.18] transition-colors"
           >
-            <Search className="w-4 h-4 mr-2" />
-            Detect Anime
-          </Button>
-        )}
-        {animeDetected && (
-          <div className="p-3 bg-purple-50 rounded-lg">
-            <div className="flex items-center space-x-2 mb-2">
-              <Check className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-medium text-gray-900">
-                Anime Detected
+            {emoji}
+          </button>
+        ))}
+        <button type="button" disabled={!roomActive} className={`${btnBase} gap-1`}>
+          <Mic size={12} />
+          Voice
+        </button>
+      </div>
+
+      <span className={sectionLabel}>Participants</span>
+      <div>
+        {(participants.length ? participants : [FRIENDS[0]]).map((p) => (
+          <div
+            key={p.id}
+            className="flex items-center justify-between gap-2.5 py-2 border-t border-white/[0.08]"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-[26px] h-[26px] rounded-full overflow-hidden flex-shrink-0 border border-white/10">
+                <ParticipantAvatar p={p} size={26} />
+              </span>
+              <span className="text-[13px] font-semibold truncate">{p.displayName}</span>
+            </div>
+            <span className="text-[11px] text-white/52 flex-shrink-0">
+              {p.role}
+              {p.cameraEnabled ? " · cam" : ""}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <span className={sectionLabel}>Settings</span>
+      <div className="flex flex-col gap-2">
+        {(
+          [
+            { label: "Ghost Cam", value: ghostCam, set: setGhostCam },
+            { label: "Reactions", value: reactionsEnabled, set: setReactionsEnabled },
+            {
+              label: "Overlay",
+              value: overlay,
+              set: setOverlay,
+              onLabel: "Visible",
+              offLabel: "Hidden",
+            },
+          ] as Array<{
+            label: string;
+            value: boolean;
+            set: (v: boolean) => void;
+            onLabel?: string;
+            offLabel?: string;
+          }>
+        ).map(({ label, value, set, onLabel = "On", offLabel = "Off" }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => set(!value)}
+            className="flex items-center justify-between gap-2.5 w-full px-2.5 py-[9px] rounded-xl border border-white/10 bg-white/[0.06] cursor-pointer hover:bg-white/[0.10] transition-colors"
+          >
+            <span className="text-[13px] font-semibold">{label}</span>
+            <span className="text-[12px] text-white/58">{value ? onLabel : offLabel}</span>
+          </button>
+        ))}
+      </div>
+
+      <p className="mt-3 text-[11px] leading-[1.35] text-white/48">
+        Ghost Cam publishes camera only. Microphone is used only for push-to-talk reactions.
+      </p>
+    </div>
+  );
+}
+
+function StepIndicator({ current }: { current: number }) {
+  return (
+    <div className="flex items-center justify-center gap-1 mb-8">
+      {STEP_LABELS.map((label, i) => {
+        const active = i === current;
+        const done = i < current;
+        return (
+          <div key={label} className="flex items-center gap-1">
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className={`w-2 h-2 rounded-full transition-all duration-500 ${
+                  active ? "bg-purple-400 scale-125" : done ? "bg-purple-600" : "bg-gray-600"
+                }`}
+              />
+              <span
+                className={`text-[9px] font-semibold tracking-wide uppercase transition-colors duration-500 leading-none ${
+                  active ? "text-purple-300" : done ? "text-purple-500" : "text-gray-600"
+                }`}
+              >
+                {label}
               </span>
             </div>
-            <p className="text-xs text-gray-600">Attack on Titan S4E16</p>
-          </div>
-        )}
-        {step >= 2 && animeDetected && (
-          <Button
-            className={`w-full min-h-11 transition-all duration-500 ${
-              watchroomCreated
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-purple-600 hover:bg-purple-700"
-            }`}
-          >
-            {watchroomCreated ? (
-              <>
-                <Check className="w-4 h-4 mr-2" />
-                Watchroom Created!
-              </>
-            ) : (
-              <>
-                <Users className="w-4 h-4 mr-2" />
-                Create Watchroom
-              </>
+            {i < STEP_LABELS.length - 1 && (
+              <div
+                className={`w-6 h-px mb-3 transition-colors duration-500 ${
+                  done ? "bg-purple-600" : "bg-gray-700"
+                }`}
+              />
             )}
-          </Button>
-        )}
-        {step >= 3 && watchroomCreated && (
-          <div className="space-y-2 mt-3">
-            <h4 className="text-sm font-medium text-gray-900">
-              Mark Episodes Watched
-            </h4>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
-              {[
-                "S4E14 - Savagery",
-                "S4E15 - Sole Salvation",
-                "S4E16 - Above and Below",
-                "S4E17 - Judgment",
-              ].map((episode, index) => (
-                <div
-                  key={episode}
-                  className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs"
-                >
-                  <span>{episode}</span>
-                  <Button
-                    size="sm"
-                    variant={index <= episodesWatched ? "default" : "outline"}
-                    className="min-h-9 px-3"
-                  >
-                    {index <= episodesWatched ? (
-                      <Check className="w-3 h-3" />
-                    ) : (
-                      "Mark"
-                    )}
-                  </Button>
-                </div>
-              ))}
-            </div>
           </div>
-        )}
-        {step >= 4 && (
-          <div className="space-y-3 mt-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-900">
-                Watchroom Chat
-              </span>
-              <Badge variant="secondary" className="text-xs">
-                3 online
-              </Badge>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-3 max-h-32 overflow-y-auto space-y-2">
-              <div className="text-xs">
-                <span className="font-medium text-purple-600">Alex:</span>
-                <span className="ml-1">This episode is insane! 🤯</span>
-              </div>
-              <div className="text-xs">
-                <span className="font-medium text-blue-600">Sarah:</span>
-                <span className="ml-1">
-                  I can&apos;t believe what just happened
-                </span>
-              </div>
-              <div className="text-xs">
-                <span className="font-medium text-green-600">You:</span>
-                <span className="ml-1">❤️ Best episode so far!</span>
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 min-h-10 text-xs bg-transparent"
-              >
-                😱 React
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 min-h-10 text-xs bg-transparent"
-              >
-                💬 Chat
-              </Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        );
+      })}
+    </div>
   );
 }
 
 export function ChromeExtensionDemo() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [isDemoVisible, setIsDemoVisible] = useState(false);
-  const [step, setStep] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showExtension, setShowExtension] = useState(false);
-  const [watchroomCreated, setWatchroomCreated] = useState(false);
-  const [friendsJoined, setFriendsJoined] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showDetectButton, setShowDetectButton] = useState(false);
-  const [animeDetected, setAnimeDetected] = useState(false);
-  const [showEpisodeList, setShowEpisodeList] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  const [episodesWatched, setEpisodesWatched] = useState(0);
-  const [showNewMessagesPopup, setShowNewMessagesPopup] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const schedule = (fn: () => void, delay: number) => {
+    const id = setTimeout(() => {
+      timers.current.delete(id);
+      fn();
+    }, delay);
+    timers.current.add(id);
+    return id;
+  };
 
-  const steps = [
-    "User logs into the app",
-    "Clicks 'Detect Anime' button",
-    "Creates a watchroom",
-    "Marks episodes as watched",
-    "Interacts with chat and reactions",
-  ];
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [roomActive, setRoomActive] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [reactions, setReactions] = useState<ReactionPop[]>([]);
+  const [copied, setCopied] = useState(false);
+  const [showCatchUp, setShowCatchUp] = useState(false);
+  const [ghostCam, setGhostCam] = useState(true);
+  const [reactionsEnabled, setReactionsEnabled] = useState(true);
+  const [overlayVisible, setOverlayVisible] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     const el = sectionRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") {
-      setIsDemoVisible(true);
+    if (!el) {
+      setVisible(true);
       return;
     }
-    const ob = new IntersectionObserver(
-      ([entry]) => setIsDemoVisible(entry.isIntersecting),
-      { threshold: 0.15 }
-    );
+    const ob = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), {
+      threshold: 0.15,
+    });
     ob.observe(el);
     return () => ob.disconnect();
   }, []);
 
   useEffect(() => {
-    if (!isDemoVisible) return;
+    if (!visible) return;
 
-    const timer = setTimeout(() => {
-      if (step < steps.length - 1) {
-        setStep(step + 1);
+    const seq: Array<() => void> = [
+      () => {
+        setCurrentStep(1);
+        setPanelOpen(true);
+      },
+      () => {
+        setCurrentStep(2);
+        setRoomActive(true);
+        schedule(() => setConnected(true), 700);
+      },
+      () => {
+        setCurrentStep(3);
+        setParticipants([FRIENDS[0], FRIENDS[1]]);
+      },
+      () => {
+        setParticipants([
+          FRIENDS[0],
+          { ...FRIENDS[1], cameraEnabled: true },
+          FRIENDS[2],
+        ]);
+      },
+      () => {
+        setCurrentStep(4);
+        const r1: ReactionPop = { id: crypto.randomUUID(), emoji: "🔥", right: 56 };
+        setReactions((prev) => [...prev, r1]);
+        schedule(() => setReactions((prev) => prev.filter((x) => x.id !== r1.id)), 2800);
+        schedule(() => {
+          const r2: ReactionPop = { id: crypto.randomUUID(), emoji: "😭", right: 110 };
+          setReactions((prev) => [...prev, r2]);
+          schedule(() => setReactions((prev) => prev.filter((x) => x.id !== r2.id)), 2800);
+        }, 600);
+      },
+      () => {
+        setCurrentStep(5);
+        setShowCatchUp(true);
+      },
+      () => {
+        setCurrentStep(0);
+        setShowCatchUp(false);
+        setPanelOpen(false);
+        setRoomActive(false);
+        setConnected(false);
+        setParticipants([]);
+        setCopied(false);
+      },
+    ];
 
-        // Trigger specific animations based on step
-        switch (step) {
-          case 0:
-            setTimeout(() => {
-              setShowExtension(true);
-            }, 500); // Reduced from 1000ms
-            setTimeout(() => {
-              setIsLoggedIn(true);
-            }, 1500); // Reduced from 3000ms
-            break;
-          case 1:
-            setTimeout(() => {
-              setShowDetectButton(true);
-              setAnimeDetected(true);
-            }, 800); // Reduced from 1500ms
-            break;
-          case 2:
-            setTimeout(() => setWatchroomCreated(true), 800); // Reduced from 1500ms
-            break;
-          case 3:
-            setTimeout(() => {
-              setShowEpisodeList(true);
-              setEpisodesWatched(1);
-            }, 500); // Reduced from 1000ms
-            setTimeout(() => setEpisodesWatched(2), 1000); // Reduced from 2000ms
-            break;
-          case 4:
-            setTimeout(() => {
-              setShowChat(true);
-              setIsPlaying(true);
-            }, 500); // Reduced from 1000ms
-            setTimeout(() => setShowNewMessagesPopup(true), 1000); // Reduced from 2000ms
-            break;
-        }
-      } else {
-        // Reset animation after completion
-        setTimeout(() => {
-          setStep(0);
-          setShowExtension(false);
-          setWatchroomCreated(false);
-          setIsLoggedIn(false);
-          setShowDetectButton(false);
-          setAnimeDetected(false);
-          setShowEpisodeList(false);
-          setShowChat(false);
-          setShowNewMessagesPopup(false);
-          setEpisodesWatched(0);
-          setFriendsJoined(0);
-          setIsPlaying(false);
-        }, 1500); // Reduced from 3000ms
-      }
-    }, 2000); // Changed from 4000ms to 2000ms
+    const delays = [800, 2000, 2000, 1800, 2000, 2000, 2500];
 
-    return () => clearTimeout(timer);
-  }, [step, steps.length, isDemoVisible]);
+    function runStep(i: number) {
+      schedule(() => {
+        seq[i]?.();
+        if (i + 1 < seq.length) runStep(i + 1);
+        else schedule(() => runStep(0), 1200);
+      }, delays[i]);
+    }
 
-  const extensionPanelProps = {
-    step,
-    showExtension,
-    animeDetected,
-    setAnimeDetected,
-    watchroomCreated,
-    episodesWatched,
+    runStep(0);
+
+    return () => {
+      timers.current.forEach(clearTimeout);
+      timers.current.clear();
+    };
+  }, [visible]);
+
+  const handleCopyInvite = () => {
+    setCopied(true);
+    schedule(() => setCopied(false), 1800);
   };
+
+  const fireReaction = (emoji: string) => {
+    const r: ReactionPop = { id: crypto.randomUUID(), emoji, right: 56 };
+    setReactions((prev) => [...prev, r]);
+    schedule(() => setReactions((prev) => prev.filter((x) => x.id !== r.id)), 2800);
+  };
+
+  const participantCount = participants.length || 1;
+
+  let caption =
+    'The Anidachi bubble sits in the top-right corner of any video player.';
+  if (showCatchUp)
+    caption = "If playback drifts, a banner appears. One tap brings everyone back in sync.";
+  else if (participants.length >= 3)
+    caption = "Haruto joined too. Tap any emoji to fire a live reaction over the video.";
+  else if (participants.length === 2)
+    caption = "Natsuki joined. Camera bubbles appear in the corner for each participant.";
+  else if (roomActive)
+    caption = "Room created! Copy the invite link and share it with friends.";
+  else if (panelOpen)
+    caption = "Tap the bubble to open the panel. Hit Create room to start a session.";
 
   return (
     <section
       ref={sectionRef}
       className="py-24 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden"
     >
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            See It In Action
-          </h2>
+      <style>{`
+        @keyframes anidachi-pop {
+          0%   { opacity:0; transform: translate3d(-4px,10px,0) scale(0.82); }
+          16%  { opacity:1; transform: translate3d(0,0,0) scale(1); }
+          78%  { opacity:1; }
+          100% { opacity:0; transform: translate3d(10px,-42px,0) scale(0.92); }
+        }
+        @keyframes cam-enter {
+          0%   { opacity:0; transform: translateY(8px) scale(0.8); }
+          100% { opacity:1; transform: translateY(0) scale(1); }
+        }
+        @keyframes cam-live {
+          0%, 100% { transform: scale(1); }
+          50%      { transform: scale(1.04); }
+        }
+      `}</style>
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1600px]">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">See It In Action</h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Watch how seamlessly our Chrome extension integrates with
-            Crunchyroll to create shared viewing experiences
+            The Anidachi button lives directly on the video. One click to open, one more to create
+            a room — then paste the link in Discord and you&apos;re watching together.
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto">
-          {/* Progress Steps */}
-          <div className="flex justify-center mb-12 overflow-x-auto max-w-full px-2">
-            <div className="flex items-center space-x-2 sm:space-x-4 bg-gray-800/50 rounded-full px-4 sm:px-6 py-3 shrink-0">
-              {steps.map((stepName, index) => (
-                <div key={index} className="flex items-center">
-                  <div
-                    className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                      index <= step ? "bg-purple-500" : "bg-gray-600"
-                    }`}
+        <div className="max-w-7xl mx-auto w-full">
+          <StepIndicator current={currentStep} />
+
+          <div className="w-[90%] max-w-full mx-auto rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+            <div className="relative aspect-video bg-black">
+              <iframe
+                src={YT_EMBED_SRC}
+                title="Anidachi demo background video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                className="absolute inset-0 h-full w-full border-0 pointer-events-none"
+              />
+
+              <div className="absolute inset-0 z-10 pointer-events-none">
+                <div className="absolute top-2.5 right-2.5 pointer-events-auto">
+                  <TopBubble
+                    connected={connected}
+                    count={participantCount}
+                    onClick={() => setPanelOpen((o) => !o)}
                   />
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`w-8 h-0.5 mx-2 transition-all duration-500 ${
-                        index < step ? "bg-purple-500" : "bg-gray-600"
-                      }`}
-                    />
-                  )}
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Mock Browser Window */}
-          <div className="bg-gray-100 rounded-lg overflow-hidden shadow-2xl">
-            {/* Browser Header */}
-            <div className="bg-gray-200 px-4 py-3 flex items-center space-x-2">
-              <div className="flex space-x-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              </div>
-              <div className="flex-1 bg-white rounded px-3 py-1 mx-4 text-sm text-gray-600">
-                https://crunchyroll.com/watch/attack-on-titan
-              </div>
-              <Chrome className="w-5 h-5 text-gray-600" />
-            </div>
-
-            {/* Mock Crunchyroll Interface */}
-            <div className="relative bg-black aspect-video">
-              {/* Video Player */}
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-900/20 to-red-900/20">
-                <Image
-                  src="/AOT.jpg"
-                  alt="Attack on Titan anime episode playing on Crunchyroll with AniDachi extension overlay"
-                  className="w-full h-full object-cover opacity-80"
-                  width={1920}
-                  height={1080}
-                  sizes="(max-width: 768px) 100vw, 896px"
+                <MiniPanel
+                  open={panelOpen}
+                  roomActive={roomActive}
+                  connected={connected}
+                  participants={participants}
+                  onClose={() => setPanelOpen(false)}
+                  onCreateRoom={() => {
+                    setRoomActive(true);
+                    schedule(() => setConnected(true), 700);
+                  }}
+                  onCopyInvite={handleCopyInvite}
+                  onSyncNow={() => {}}
+                  onReact={fireReaction}
+                  copied={copied}
+                  ghostCam={ghostCam}
+                  setGhostCam={setGhostCam}
+                  reactionsEnabled={reactionsEnabled}
+                  setReactionsEnabled={setReactionsEnabled}
+                  overlay={overlayVisible}
+                  setOverlay={setOverlayVisible}
                 />
 
-                {/* Video Controls */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                  <div className="flex items-center justify-between text-white">
-                    <div className="flex items-center space-x-4">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className={`text-white hover:bg-white/20 transition-all duration-300 ${
-                          isPlaying ? "scale-110" : ""
-                        }`}
-                        onClick={() => setIsPlaying(!isPlaying)}
-                      >
-                        {isPlaying ? (
-                          <Pause className="w-5 h-5" />
-                        ) : (
-                          <Play className="w-5 h-5" />
-                        )}
-                      </Button>
-                      <span className="text-sm">12:34 / 24:16</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Volume2 className="w-4 h-4" />
-                      <Settings className="w-4 h-4" />
-                      <Maximize className="w-4 h-4" />
-                    </div>
+                {overlayVisible && participants.length > 0 && (
+                  <div className="absolute right-3 bottom-3 flex flex-row-reverse items-end gap-2 pointer-events-auto">
+                    {participants.map((p, i) => (
+                      <CamBubble key={p.id} p={p} active={i === 0} />
+                    ))}
                   </div>
-                  <div className="w-full bg-gray-600 rounded-full h-1 mt-2">
-                    <div
-                      className={`bg-orange-500 h-1 rounded-full transition-all duration-1000 ${
-                        isPlaying ? "w-1/2" : "w-5/12"
-                      }`}
-                    ></div>
-                  </div>
-                </div>
+                )}
 
-                {/* Episode Info */}
-                <div className="absolute top-4 left-4 text-white">
-                  <h3 className="text-xl font-bold">Attack on Titan</h3>
-                  <p className="text-sm opacity-80">
-                    Season 4, Episode 16 - &quot;Above and Below&quot;
-                  </p>
-                </div>
+                {reactionsEnabled &&
+                  reactions.map((r) => <ReactionPop key={r.id} reaction={r} />)}
+
+                {showCatchUp && (
+                  <div
+                    className="absolute left-1/2 -translate-x-1/2 bottom-12 flex items-center gap-2.5 px-3 min-h-9 rounded-full pointer-events-auto text-[13px] font-semibold z-20"
+                    style={{
+                      background: "rgba(26,18,8,0.62)",
+                      border: "1px solid rgba(251,191,36,0.34)",
+                      backdropFilter: "blur(18px)",
+                      color: "rgba(255,255,255,0.92)",
+                    }}
+                  >
+                    <span>3.2s out of sync</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowCatchUp(false)}
+                      className="inline-flex items-center h-[26px] px-2.5 rounded-full text-[11px] font-bold cursor-pointer border-0 text-white"
+                      style={{ background: "linear-gradient(135deg,#7c3aed,#2563eb)" }}
+                    >
+                      Catch up
+                    </button>
+                  </div>
+                )}
               </div>
-
-              {/* Chrome Extension Overlay — desktop only */}
-              <div
-                className={`hidden md:block absolute top-4 right-4 transition-all duration-700 transform ${
-                  showExtension
-                    ? "translate-x-0 opacity-100"
-                    : "translate-x-full opacity-0"
-                }`}
-              >
-                <ExtensionPanel {...extensionPanelProps} />
-              </div>
-
-              {/* Sync Notification */}
-              {isPlaying && (
-                <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 animate-bounce">
-                  <div className="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-                    🎬 Synced with {friendsJoined} friends
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Extension panel — stacked below video on mobile */}
-            <div
-              className={`md:hidden border-t border-gray-200 bg-gray-50 px-4 py-4 transition-all duration-700 ${
-                showExtension
-                  ? "opacity-100 max-h-[800px]"
-                  : "opacity-0 max-h-0 overflow-hidden py-0"
-              }`}
-            >
-              <ExtensionPanel {...extensionPanelProps} className="mx-auto" />
-            </div>
-
-            {/* Step Description */}
-            <div className="bg-gray-50 px-4 sm:px-6 py-4 border-t">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h4 className="font-semibold text-gray-900">
-                    Step {step + 1}: {steps[step]}
-                  </h4>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {step === 0 &&
-                      "User logs into the main app through the extension while browsing Crunchyroll"}
-                    {step === 1 &&
-                      "User manually clicks the 'Detect Anime' button to scan the current page"}
-                    {step === 2 &&
-                      "After successful detection, user clicks 'Create a Watchroom' to start a session"}
-                    {step === 3 &&
-                      "User enters the watchroom and marks episodes as 'watched' to track progress"}
-                    {step === 4 &&
-                      "User opens chat, leaves reactions, and reads messages from friends in the watchroom"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 sm:block sm:text-right">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {step + 1}
-                  </div>
-                  <div className="text-xs text-gray-500">of {steps.length}</div>
-                </div>
-              </div>
+            <div className="bg-gray-900/80 px-5 py-4 border-t border-white/10">
+              <p className="text-sm text-gray-300 text-center min-h-[1.25rem]">{caption}</p>
             </div>
           </div>
 
-          {/* Feature Highlights */}
           <div className="grid md:grid-cols-3 gap-6 mt-12">
-            <Card className="bg-gray-800/50 border-gray-700 text-white p-6">
-              <CardContent className="p-0 text-center">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <Chrome className="w-6 h-6 text-purple-600" />
-                </div>
-                <h3 className="font-semibold mb-2">Automatic Detection</h3>
-                <p className="text-sm text-gray-300">
-                  Instantly recognizes anime content without manual input
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-gray-800/50 border-gray-700 text-white p-6">
-              <CardContent className="p-0 text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-                <h3 className="font-semibold mb-2">One-Click Setup</h3>
-                <p className="text-sm text-gray-300">
-                  Create watchrooms instantly with a single click
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-gray-800/50 border-gray-700 text-white p-6">
-              <CardContent className="p-0 text-center">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                  <Share2 className="w-6 h-6 text-green-600" />
-                </div>
-                <h3 className="font-semibold mb-2">Perfect Sync</h3>
-                <p className="text-sm text-gray-300">
-                  Stay perfectly synchronized with all your friends
-                </p>
-              </CardContent>
-            </Card>
+            {[
+              {
+                emoji: "🎯",
+                title: "Works on any video",
+                desc: "YouTube, Crunchyroll, or any HTML5 player — the overlay attaches automatically.",
+              },
+              {
+                emoji: "🔗",
+                title: "Share with one link",
+                desc: "Rooms live in the URL hash. Copy the invite link and your friend lands right in the session.",
+              },
+              {
+                emoji: "🎙️",
+                title: "Push-to-talk reactions",
+                desc: "Hold V to speak a reaction. Your voice is transcribed and floats up over the video.",
+              },
+            ].map(({ emoji, title, desc }) => (
+              <div
+                key={title}
+                className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 text-center"
+              >
+                <div className="text-3xl mb-3">{emoji}</div>
+                <h3 className="font-semibold mb-2">{title}</h3>
+                <p className="text-sm text-gray-300">{desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

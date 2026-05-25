@@ -6,6 +6,7 @@ import {
   getUserById,
   getRoomMemberCount,
 } from "@/lib/anidachi-auth/db";
+import { AnidachiLogo } from "@/components/anidachi-logo";
 import { ExtensionCheck } from "./extension-check";
 
 export const dynamic = "force-dynamic";
@@ -39,6 +40,9 @@ export default async function RoomPage({ params }: Props) {
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-violet-950 via-slate-900 to-slate-950 px-4">
       <div className="mx-auto w-full max-w-md">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-sm">
+          <div className="mb-6 flex justify-center">
+            <AnidachiLogo size={48} className="ring-2 ring-white/10" />
+          </div>
           <div className="mb-1 flex items-center gap-2">
             <span
               className={`inline-block h-2 w-2 rounded-full ${
