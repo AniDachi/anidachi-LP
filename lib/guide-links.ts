@@ -125,6 +125,31 @@ export const guideLinks: GuideLinkItem[] = [
     label: "Best Isekai Anime to Watch With Friends",
     tags: ["template-d", "listicle", "pillar-watch-anime"],
   },
+  {
+    href: "/guides/best-anime-movies-to-watch-with-friends",
+    label: "Best Anime Movies to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime", "pillar-watch-crunchyroll"],
+  },
+  {
+    href: "/guides/best-psychological-anime-to-watch-with-friends",
+    label: "Best Psychological Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-horror-anime-to-watch-with-friends",
+    label: "Best Horror Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-short-anime-to-watch-with-friends",
+    label: "Best Short Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-slice-of-life-anime-to-watch-with-friends",
+    label: "Best Slice of Life Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
 ];
 
 export function getGuideLinks({

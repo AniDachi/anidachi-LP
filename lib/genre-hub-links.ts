@@ -1,4 +1,4 @@
-/** Mid-funnel genre hub routes — keep in sync with `app/sitemap.ts` priority list. */
+/** Mid-funnel genre hub routes — keep in sync with `lib/sitemap-discovery.ts` priority list. */
 export const GENRE_HUB_LINKS = [
   {
     href: "/watch-action-anime-with-friends",
@@ -19,6 +19,26 @@ export const GENRE_HUB_LINKS = [
   {
     href: "/watch-mystery-anime-with-friends",
     label: "Watch mystery anime with friends",
+  },
+  {
+    href: "/watch-isekai-anime-with-friends",
+    label: "Watch isekai anime with friends",
+  },
+  {
+    href: "/watch-psychological-anime-with-friends",
+    label: "Watch psychological anime with friends",
+  },
+  {
+    href: "/watch-horror-anime-with-friends",
+    label: "Watch horror anime with friends",
+  },
+  {
+    href: "/watch-slice-of-life-anime-with-friends",
+    label: "Watch slice of life anime with friends",
+  },
+  {
+    href: "/watch-mecha-anime-with-friends",
+    label: "Watch mecha anime with friends",
   },
 ] as const;
 

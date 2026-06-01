@@ -81,7 +81,12 @@ function inferSitemapMeta(urlPath: string): {
     urlPath === "/watch-romance-anime-with-friends" ||
     urlPath === "/watch-comedy-anime-with-friends" ||
     urlPath === "/watch-sports-anime-with-friends" ||
-    urlPath === "/watch-mystery-anime-with-friends"
+    urlPath === "/watch-mystery-anime-with-friends" ||
+    urlPath === "/watch-isekai-anime-with-friends" ||
+    urlPath === "/watch-psychological-anime-with-friends" ||
+    urlPath === "/watch-horror-anime-with-friends" ||
+    urlPath === "/watch-slice-of-life-anime-with-friends" ||
+    urlPath === "/watch-mecha-anime-with-friends"
   ) {
     return { changeFrequency: "monthly", priority: 0.85 };
   }
