@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildDiscordAuthUrl } from "@/lib/anidachi-auth/oauth/discord";
+import { sanitizeAuthReturnTo } from "@/lib/anidachi-auth/return-to";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const returnTo = request.nextUrl.searchParams.get("returnTo") ?? "";
-  const safeReturnTo = returnTo.startsWith("/room/") ? returnTo : "";
+  const safeReturnTo = sanitizeAuthReturnTo(returnTo);
 
   const state = Buffer.from(
     JSON.stringify({ provider: "discord", returnTo: safeReturnTo })

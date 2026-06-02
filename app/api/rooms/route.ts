@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { createRoom, countActiveRoomsForHost } from "@/lib/anidachi-auth/db";
+import { createRoom, countActiveRoomsForHost, getUserById } from "@/lib/anidachi-auth/db";
+import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
+import { signRoomToken } from "@/lib/anidachi-auth/jwt";
 
 export const dynamic = "force-dynamic";
 
@@ -12,13 +14,24 @@ const ROOM_LIMITS: Record<string, number> = {
 };
 
 export async function POST(request: NextRequest) {
-  const session = await getSession();
+  const cookieSession = await getSession();
+  const extensionSession = cookieSession
+    ? null
+    : await getExtensionSessionFromAuthorization(request.headers.get("authorization"));
+  const session = cookieSession ?? (extensionSession
+    ? {
+        userId: extensionSession.sub,
+        email: extensionSession.email,
+        plan: extensionSession.plan,
+      }
+    : null);
+
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const limit = ROOM_LIMITS[session.plan] ?? 1;
-  if (isFinite(limit)) {
+  if (Number.isFinite(limit)) {
     const activeCount = await countActiveRoomsForHost(session.userId);
     if (activeCount >= limit) {
       return NextResponse.json(
@@ -46,10 +59,19 @@ export async function POST(request: NextRequest) {
     showId,
     episodeId,
   });
+  const user = await getUserById(session.userId);
+  const roomToken = await signRoomToken({
+    sub: session.userId,
+    roomId: room.room_id,
+    role: "host",
+    displayName: user?.display_name ?? session.email,
+    avatarUrl: user?.avatar_url ?? null,
+  });
 
   const origin = request.nextUrl.origin;
   return NextResponse.json({
     roomId: room.room_id,
+    roomToken,
     shareableLink: `${origin}/room/${room.room_id}`,
   });
 }

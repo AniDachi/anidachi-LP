@@ -47,14 +47,23 @@ export type RoomTokenPayload = {
   sub: string; // userId
   roomId: string;
   role: "host" | "member";
+  displayName?: string;
+  avatarUrl?: string | null;
 };
 
 export async function signRoomToken(
   payload: RoomTokenPayload
 ): Promise<string> {
-  return new SignJWT({ roomId: payload.roomId, role: payload.role })
+  return new SignJWT({
+    roomId: payload.roomId,
+    role: payload.role,
+    displayName: payload.displayName,
+    avatarUrl: payload.avatarUrl ?? null,
+    typ: "room",
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
+    .setAudience("anidachi-worker")
     .setIssuedAt()
     .setExpirationTime("30m")
     .sign(getJwtSecret());
@@ -64,12 +73,27 @@ export async function verifyRoomToken(
   token: string
 ): Promise<RoomTokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, getJwtSecret());
+    const { payload } = await jwtVerify(token, getJwtSecret(), {
+      audience: "anidachi-worker",
+    });
+    if (payload.typ !== "room") return null;
     if (!payload.sub || !payload.roomId || !payload.role) return null;
+    if (payload.role !== "host" && payload.role !== "member") return null;
+    if (payload.displayName !== undefined && typeof payload.displayName !== "string") return null;
+    if (
+      payload.avatarUrl !== null &&
+      payload.avatarUrl !== undefined &&
+      typeof payload.avatarUrl !== "string"
+    ) {
+      return null;
+    }
+
     return {
       sub: payload.sub,
       roomId: payload.roomId as string,
-      role: payload.role as "host" | "member",
+      role: payload.role,
+      displayName: payload.displayName,
+      avatarUrl: payload.avatarUrl ?? null,
     };
   } catch {
     return null;

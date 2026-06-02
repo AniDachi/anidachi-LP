@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { upsertUser } from "./db";
 import { issueTokenPair } from "./tokens";
 import { setAuthCookies } from "./session";
+import { sanitizeAuthReturnTo } from "./return-to";
 
 type OAuthProfile = {
   providerId: string;
@@ -84,10 +85,8 @@ export async function handleOAuthCallback({
     return NextResponse.redirect(`${origin}/login?error=token_error`);
   }
 
-  const redirectTo =
-    statePayload.returnTo && statePayload.returnTo.startsWith("/room/")
-      ? `${origin}${statePayload.returnTo}`
-      : `${origin}/`;
+  const safeReturnTo = sanitizeAuthReturnTo(statePayload.returnTo);
+  const redirectTo = safeReturnTo ? `${origin}${safeReturnTo}` : `${origin}/`;
 
   const response = NextResponse.redirect(redirectTo);
   // Clear the state cookie

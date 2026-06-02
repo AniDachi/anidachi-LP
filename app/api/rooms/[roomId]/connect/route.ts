@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { getRoomById, isRoomMember } from "@/lib/anidachi-auth/db";
+import { getRoomById, getUserById, isRoomMember } from "@/lib/anidachi-auth/db";
+import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
 
 export const dynamic = "force-dynamic";
@@ -10,10 +11,21 @@ export const dynamic = "force-dynamic";
  * Role is determined by whether the caller is the room host or a member.
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ roomId: string }> }
 ) {
-  const session = await getSession();
+  const cookieSession = await getSession();
+  const extensionSession = cookieSession
+    ? null
+    : await getExtensionSessionFromAuthorization(request.headers.get("authorization"));
+  const session = cookieSession ?? (extensionSession
+    ? {
+        userId: extensionSession.sub,
+        email: extensionSession.email,
+        plan: extensionSession.plan,
+      }
+    : null);
+
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -36,10 +48,13 @@ export async function POST(
   }
 
   const role = isHost ? "host" : "member";
+  const user = await getUserById(session.userId);
   const roomToken = await signRoomToken({
     sub: session.userId,
     roomId,
     role,
+    displayName: user?.display_name ?? session.email,
+    avatarUrl: user?.avatar_url ?? null,
   });
 
   return NextResponse.json({ roomToken });
