@@ -7,11 +7,32 @@ import { signRoomToken } from "@/lib/anidachi-auth/jwt";
 export const dynamic = "force-dynamic";
 
 // Plan room limits: watcher gets 1 active room, nakama/junkie get unlimited
+const ENFORCE_ROOM_LIMITS = process.env.ANIDACHI_ENFORCE_ROOM_LIMITS === "true";
 const ROOM_LIMITS: Record<string, number> = {
   watcher: 1,
   nakama: Infinity,
   junkie: Infinity,
 };
+
+function cleanString(value: unknown, maxLength: number): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const cleaned = value.trim();
+  if (!cleaned) return undefined;
+  return cleaned.slice(0, maxLength);
+}
+
+function cleanHttpUrl(value: unknown): string | undefined {
+  const raw = cleanString(value, 2000);
+  if (!raw) return undefined;
+
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return undefined;
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+}
 
 export async function POST(request: NextRequest) {
   const cookieSession = await getSession();
@@ -31,7 +52,7 @@ export async function POST(request: NextRequest) {
   }
 
   const limit = ROOM_LIMITS[session.plan] ?? 1;
-  if (Number.isFinite(limit)) {
+  if (ENFORCE_ROOM_LIMITS && Number.isFinite(limit)) {
     const activeCount = await countActiveRoomsForHost(session.userId);
     if (activeCount >= limit) {
       return NextResponse.json(
@@ -46,10 +67,16 @@ export async function POST(request: NextRequest) {
 
   let showId: string | undefined;
   let episodeId: string | undefined;
+  let sourceUrl: string | undefined;
+  let videoFingerprint: string | undefined;
+  let title: string | undefined;
   try {
     const body = await request.json();
-    showId = body.showId;
-    episodeId = body.episodeId;
+    showId = cleanString(body.showId, 200);
+    episodeId = cleanString(body.episodeId, 200);
+    sourceUrl = cleanHttpUrl(body.sourceUrl);
+    videoFingerprint = cleanString(body.videoFingerprint, 400);
+    title = cleanString(body.title, 300);
   } catch {
     // body is optional
   }
@@ -58,6 +85,9 @@ export async function POST(request: NextRequest) {
     hostUserId: session.userId,
     showId,
     episodeId,
+    sourceUrl,
+    videoFingerprint,
+    title,
   });
   const user = await getUserById(session.userId);
   const roomToken = await signRoomToken({

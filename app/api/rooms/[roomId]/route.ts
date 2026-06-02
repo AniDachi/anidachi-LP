@@ -34,6 +34,9 @@ export async function GET(
     status: room.status,
     showId: room.show_id,
     episodeId: room.episode_id,
+    sourceUrl: room.source_url,
+    videoFingerprint: room.video_fingerprint,
+    title: room.title,
     hostDisplayName: host?.display_name ?? "Unknown",
     memberCount,
   });

@@ -36,6 +36,9 @@ export type RoomRow = {
   host_user_id: string;
   show_id: string | null;
   episode_id: string | null;
+  source_url: string | null;
+  video_fingerprint: string | null;
+  title: string | null;
   status: "lobby" | "live" | "ended";
   created_at: string;
 };
@@ -158,6 +161,9 @@ export async function createRoom(params: {
   hostUserId: string;
   showId?: string;
   episodeId?: string;
+  sourceUrl?: string;
+  videoFingerprint?: string;
+  title?: string;
 }): Promise<RoomRow> {
   const { data, error } = await db()
     .from("rooms")
@@ -165,6 +171,9 @@ export async function createRoom(params: {
       host_user_id: params.hostUserId,
       show_id: params.showId ?? null,
       episode_id: params.episodeId ?? null,
+      source_url: params.sourceUrl ?? null,
+      video_fingerprint: params.videoFingerprint ?? null,
+      title: params.title ?? null,
     })
     .select()
     .single();

@@ -35,6 +35,8 @@ export default async function RoomPage({ params }: Props) {
     getUserById(room.host_user_id),
     getRoomMemberCount(roomId),
   ]);
+  const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
+  const roomSubtitle = room.episode_id ?? (room.source_url ? "Ready to open in your video tab" : null);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-violet-950 via-slate-900 to-slate-950 px-4">
@@ -54,12 +56,10 @@ export default async function RoomPage({ params }: Props) {
             </span>
           </div>
 
-          <h1 className="mt-3 text-2xl font-bold text-white">
-            {room.show_id ?? "Anime Watchroom"}
-          </h1>
+          <h1 className="mt-3 text-2xl font-bold text-white">{roomTitle}</h1>
 
-          {room.episode_id && (
-            <p className="mt-1 text-sm text-slate-400">{room.episode_id}</p>
+          {roomSubtitle && (
+            <p className="mt-1 text-sm text-slate-400">{roomSubtitle}</p>
           )}
 
           <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-400">
