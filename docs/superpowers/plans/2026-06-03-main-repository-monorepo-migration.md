@@ -2133,6 +2133,20 @@ Expected:
 Production extension artifact is built from main.
 ```
 
+Observed:
+
+```txt
+Production-targeted preflight build passed on codex/monorepo-migration:
+WXT_WEB_HTTP_BASE=https://www.anidachi.app,
+WXT_API_HTTP_BASE=https://anidachi-api-production.vladislav-gul7.workers.dev,
+WXT_API_WS_BASE=wss://anidachi-api-production.vladislav-gul7.workers.dev.
+
+The generated bundle contains production bases and build id
+bac086f-production-preflight-20260603234938. This is not the official production
+release artifact; the final production extension must still be rebuilt from main
+after merge.
+```
+
 - [ ] **Step 14.6: Production smoke test**
 
 Manual:
