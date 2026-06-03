@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make `George-Kreatli/anidachi-LP` the single source-of-truth repository for Anidachi, with a clean monorepo layout, staging/production environments, safe CI/CD, and a development workflow that supports two people working without breaking the live product.
+**Goal:** Make `AniDachi/anidachi-LP` the single source-of-truth repository for Anidachi, with a clean monorepo layout, staging/production environments, safe CI/CD, and a development workflow that supports two people working without breaking the live product.
 
 **Architecture:** Convert the current website repository into a pnpm/Turborepo monorepo. The existing website moves into `apps/web`, the current extension/Worker/demo/protocol code moves into sibling workspace packages, and generated extension folders stay out of git. Production deploys only from protected `main`; staging deploys from `staging`; feature branches use PR preview deployments.
 
@@ -12,7 +12,7 @@
 
 ## Current Status
 
-- [x] Target GitHub repo is `George-Kreatli/anidachi-LP`.
+- [x] Target GitHub repo is `AniDachi/anidachi-LP`.
 - [x] Target GitHub repo has been transferred to `AniDachi/anidachi-LP`; old GitHub URL redirects to the organization repo.
 - [x] Target repo default branch is `main`.
 - [x] Target repo current inspected commit is `bd5f6ab5781e9a8dd74af43c207c4c5876ec8c70`.
@@ -32,6 +32,7 @@
 - [x] GitHub branch protection and required checks are confirmed for `main` and `staging`.
 - [x] Staging environment exists as a protected integration branch with staging Worker/API settings.
 - [x] Fast staging web URL is protected Vercel preview alias `https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app`.
+- [x] Team environment/reference doc exists at `docs/development-environments.md`.
 - [ ] Public custom staging domain is intentionally not attached until protected access is designed.
 
 ## Non-Negotiable Rules
@@ -47,7 +48,7 @@
 ## Target Repository Layout
 
 ```txt
-George-Kreatli/anidachi-LP/
+AniDachi/anidachi-LP/
   apps/
     web/          # Next.js site, auth, rooms, Stripe, SEO, Supabase migrations
     extension/    # WXT Chrome extension
@@ -165,7 +166,7 @@ Exception:
 Observed:
 
 ```txt
-repo: George-Kreatli/anidachi-LP
+repo: AniDachi/anidachi-LP
 default branch: main
 current inspected commit: bd5f6ab5781e9a8dd74af43c207c4c5876ec8c70
 current package manager: npm
@@ -199,7 +200,7 @@ Run:
 
 ```bash
 cd /Users/vladyslavhulyi
-git clone git@github.com:George-Kreatli/anidachi-LP.git anidachi-LP-monorepo
+git clone git@github.com:AniDachi/anidachi-LP.git anidachi-LP-monorepo
 cd /Users/vladyslavhulyi/anidachi-LP-monorepo
 git switch main
 git pull --ff-only
@@ -2101,15 +2102,15 @@ After production migration, do not continue product development in /Users/vladys
 Expected:
 
 ```txt
-All new branches start from George-Kreatli/anidachi-LP.
+All new branches start from AniDachi/anidachi-LP.
 ```
 
-- [ ] **Step 15.2: Update docs to point at new source of truth**
+- [x] **Step 15.2: Update docs to point at new source of truth**
 
 Update docs with:
 
 ```txt
-Primary repo: George-Kreatli/anidachi-LP
+Primary repo: AniDachi/anidachi-LP
 Website app: apps/web
 Extension app: apps/extension
 Worker app: apps/api
@@ -2122,7 +2123,14 @@ Expected:
 New contributors do not accidentally use the old repo.
 ```
 
-- [ ] **Step 15.3: Fix `apps/web/README.md` commands**
+Observed:
+
+```txt
+`docs/development-environments.md` documents the source-of-truth repo, staging/production URLs, extension build targets, OAuth redirects, and release checklist.
+Root `README.md` links to `docs/development-environments.md`.
+```
+
+- [x] **Step 15.3: Fix `apps/web/README.md` commands**
 
 Replace npm commands with:
 
@@ -2136,6 +2144,12 @@ Expected:
 
 ```txt
 Website README matches monorepo reality.
+```
+
+Observed:
+
+```txt
+`apps/web/README.md` exists and uses pnpm workspace commands from the monorepo root.
 ```
 
 - [ ] **Step 15.4: Create first normal feature branch from staging**
@@ -2177,14 +2191,14 @@ Future work starts from the new workflow.
   - Mitigation: root `.gitignore` excludes generated extension folders and artifacts.
 
 - [ ] **Risk: Old repo keeps receiving changes.**
-  - Mitigation: mark `/Users/vladyslavhulyi/anidachi` as legacy after migration and move all active work to `George-Kreatli/anidachi-LP`.
+  - Mitigation: mark `/Users/vladyslavhulyi/anidachi` as legacy after migration and move all active work to `AniDachi/anidachi-LP`.
 
 - [ ] **Risk: Internal CRM/social tools pollute Anidachi product scope.**
   - Mitigation: keep them inside `apps/web` for migration safety first; decide later whether to remove or isolate them in a separate app/package.
 
 ## Definition Of Done
 
-- [ ] `George-Kreatli/anidachi-LP` contains `apps/web`, `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol`.
+- [ ] `AniDachi/anidachi-LP` contains `apps/web`, `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol`.
 - [ ] Repo uses `pnpm@11.2.2` and Turborepo.
 - [ ] `npm/package-lock.json` is removed from root.
 - [ ] Website builds from `apps/web`.

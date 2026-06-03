@@ -89,3 +89,7 @@ See `apps/web/.env.example` for website variables. Key ones:
 - After testing staging, open a release PR from `staging` into `main`.
 - Do not commit generated extension folders.
 - Build extension artifacts through CI or `pnpm build:extension:public`.
+
+See **[docs/development-environments.md](docs/development-environments.md)** for
+the full staging/production model, current protected staging URL, extension build
+targets, OAuth redirects, and release checklist.
