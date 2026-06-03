@@ -2,8 +2,10 @@
 
 AniDachi (アニ友 = "anime friend") is a platform for watching anime together with friends. This repository is the source of truth for the website, Chrome extension, room API, shared protocol, SEO content hub, and internal tools.
 
-For the current operational state of branches, release channels, endpoints, and
-known fragile areas, start with **[docs/current-development-state.md](docs/current-development-state.md)**.
+For how the project is organized and how development should move, start with
+**[docs/project-operating-manual.md](docs/project-operating-manual.md)**.
+For current endpoints, branch protection, and known fragile areas, use
+**[docs/current-development-state.md](docs/current-development-state.md)**.
 
 ## Stack
 
