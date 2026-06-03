@@ -2038,6 +2038,17 @@ Expected:
 Wrong-environment builds are easy to detect.
 ```
 
+Observed:
+
+```txt
+Partially verified by artifact inspection: artifacts/anidachi-extension-staging-65bead8.zip
+contains the staging WEB/API/WS bases and build id:
+65bead8-staging-20260603214317.
+
+Manual UI confirmation is still needed inside the extension debug area, especially ICE
+path log visibility after a P2P connection. P2P reliability itself remains deferred.
+```
+
 ---
 
 ## Task 14: Production Release
@@ -2248,23 +2259,29 @@ Future work starts from the new workflow.
 
 ## Known Migration Risks And Mitigations
 
-- [ ] **Risk: Website build fails because Stripe is instantiated at import time.**
+- [x] **Risk: Website build fails because Stripe is instantiated at import time.**
   - Mitigation: move Stripe client creation inside the route handler before Vercel migration.
+  - Observed: Stripe API routes create the client from request-time helpers, and the web build/check pass.
 
-- [ ] **Risk: `@/*` alias breaks after moving website into `apps/web`.**
+- [x] **Risk: `@/*` alias breaks after moving website into `apps/web`.**
   - Mitigation: keep `apps/web/tsconfig.json` alias pointing to `./*` and run `pnpm --filter @anidachi/web check`.
+  - Observed: `apps/web/tsconfig.json` maps `@/*` to `./*`, and `pnpm --filter @anidachi/web check` passes.
 
-- [ ] **Risk: Vercel cannot access shared `packages/*` from `apps/web`.**
+- [x] **Risk: Vercel cannot access shared `packages/*` from `apps/web`.**
   - Mitigation: enable "Include source files outside of the Root Directory" or avoid web imports from packages until Vercel is configured.
+  - Observed: current `apps/web` does not runtime-import `packages/*`, and Vercel preview deployment passes.
 
-- [ ] **Risk: OAuth works in production but fails in staging.**
+- [x] **Risk: OAuth works in production but fails in staging.**
   - Mitigation: add staging redirect URLs before staging tests.
+  - Observed: Google/Discord OAuth redirects for the protected staging preview were added and manually confirmed.
 
 - [ ] **Risk: Website room token is rejected by Worker.**
   - Mitigation: ensure `ANIDACHI_JWT_SECRET` matches between Vercel and Cloudflare for the same environment.
+  - Observed: staging room creation and Worker connection are functionally confirmed; production alignment remains pending until production smoke.
 
-- [ ] **Risk: Generated extension output gets committed.**
+- [x] **Risk: Generated extension output gets committed.**
   - Mitigation: root `.gitignore` excludes generated extension folders and artifacts.
+  - Observed: `.gitignore` excludes generated extension folders/zips/artifacts, and `git ls-files` shows no generated extension outputs.
 
 - [ ] **Risk: Old repo keeps receiving changes.**
   - Mitigation: mark `/Users/vladyslavhulyi/anidachi` as legacy after migration and move all active work to `AniDachi/anidachi-LP`.
@@ -2274,19 +2291,19 @@ Future work starts from the new workflow.
 
 ## Definition Of Done
 
-- [ ] `AniDachi/anidachi-LP` contains `apps/web`, `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol`.
-- [ ] Repo uses `pnpm@11.2.2` and Turborepo.
-- [ ] `npm/package-lock.json` is removed from root.
-- [ ] Website builds from `apps/web`.
+- [x] `AniDachi/anidachi-LP` contains `apps/web`, `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol`.
+- [x] Repo uses `pnpm@11.2.2` and Turborepo.
+- [x] `npm/package-lock.json` is removed from root.
+- [x] Website builds from `apps/web`.
 - [ ] Vercel production deploys from `main`.
 - [ ] Vercel staging deploys from `staging`.
-- [ ] Cloudflare Worker deploys to `staging` and `production` environments.
+- [x] Cloudflare Worker deploys to `staging` and `production` environments.
 - [ ] Supabase variables work in both staging and production.
 - [ ] Google/Discord auth works in both staging and production.
-- [ ] Extension staging build points at staging web/API.
+- [x] Extension staging build points at staging web/API.
 - [ ] Extension production build points at production web/API.
-- [ ] CI runs on PRs to `staging` and `main`.
-- [ ] `main` is protected from direct unreviewed pushes.
+- [x] CI runs on PRs to `staging` and `main`.
+- [x] `main` is protected from direct unreviewed pushes.
 - [ ] Staging acceptance test passes on two devices.
 - [ ] Production smoke test passes after merge.
 - [ ] Old local repo is no longer used for active product development.
