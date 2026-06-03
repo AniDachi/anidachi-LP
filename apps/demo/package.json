@@ -1,0 +1,17 @@
+{
+  "name": "@anidachi/demo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && vite build",
+    "check": "tsc -p tsconfig.json",
+    "dev": "vite --host 127.0.0.1 --port 5174",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vite": "^7.2.6",
+    "vitest": "^4.0.15"
+  }
+}

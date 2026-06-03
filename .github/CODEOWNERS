@@ -1,0 +1,14 @@
+# Default owners
+* @George-Kreatli @vladyslavgul-stack
+
+# Product runtime
+/apps/extension/ @vladyslavgul-stack
+/apps/api/ @vladyslavgul-stack
+/packages/protocol/ @vladyslavgul-stack
+
+# Website/marketing
+/apps/web/ @George-Kreatli @vladyslavgul-stack
+
+# Deploy and infrastructure
+/.github/ @George-Kreatli @vladyslavgul-stack
+/infra/ @vladyslavgul-stack
