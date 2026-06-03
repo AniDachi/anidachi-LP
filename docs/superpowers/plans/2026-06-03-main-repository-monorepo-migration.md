@@ -27,7 +27,7 @@
 - [x] Migration branch `codex/monorepo-migration` converts the target repo into a monorepo.
 - [x] `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol` are inside the migration branch.
 - [x] Vercel is configured with `apps/web` as Root Directory.
-- [ ] Vercel Git integration still needs to be reconnected from the old `George-Kreatli/anidachi-LP` metadata to `AniDachi/anidachi-LP`.
+- [x] Vercel Git integration is connected to `AniDachi/anidachi-LP`.
 - [x] Cloudflare Worker staging/production environments are configured and deployed.
 - [x] GitHub branch protection and required checks are confirmed for `main` and `staging`.
 - [x] Staging environment exists as a protected integration branch with staging Worker/API settings.
@@ -86,7 +86,7 @@ George-Kreatli/anidachi-LP/
 ```txt
 local       developer machine
 preview     per pull request / feature branch
-staging     branch: staging, domain: staging.anidachi.app
+staging     branch: staging, protected Vercel preview URL for fast internal testing
 production  branch: main, domain: www.anidachi.app / anidachi.app
 ```
 
@@ -96,7 +96,7 @@ Rules:
 - `staging` is a persistent integration branch for testing with another PC/friend before production.
 - Feature branches target `staging` first.
 - Production release happens by PR from `staging` into `main`.
-- Website staging uses Vercel Preview/custom environment.
+- Website staging uses a protected Vercel preview URL for the fast internal test loop.
 - Worker staging uses Wrangler `--env staging`.
 - Worker production uses Wrangler `--env production`.
 - Extension has separate staging and production builds with different `WXT_*` bases.
@@ -981,7 +981,7 @@ Production auth, room creation, Stripe, and Supabase access continue working.
 Staging env must include:
 
 ```txt
-NEXT_PUBLIC_SITE_URL=https://staging.anidachi.app
+NEXT_PUBLIC_SITE_URL=<protected-vercel-preview-url>
 NEXT_PUBLIC_ROBOTS_NOINDEX=true
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -1255,8 +1255,8 @@ https://www.anidachi.app/api/auth/callback/discord
 Staging:
 
 ```txt
-https://staging.anidachi.app/api/auth/callback/google
-https://staging.anidachi.app/api/auth/callback/discord
+<protected-vercel-preview-url>/api/auth/callback/google
+<protected-vercel-preview-url>/api/auth/callback/discord
 ```
 
 Expected:
@@ -1271,7 +1271,7 @@ Expected website route:
 
 ```txt
 https://www.anidachi.app/extension/connect
-https://staging.anidachi.app/extension/connect
+<protected-vercel-preview-url>/extension/connect
 ```
 
 Expected extension behavior:
@@ -1285,7 +1285,7 @@ chrome.identity.launchWebAuthFlow opens website auth and receives one-time code.
 Manual:
 
 ```txt
-Open staging.anidachi.app.
+Open the protected Vercel preview URL.
 Sign in with Google.
 Open /api/me in same browser.
 Confirm user JSON is returned.
@@ -1542,7 +1542,7 @@ Set environment variables:
 
 ```txt
 staging:
-  WXT_WEB_HTTP_BASE=https://staging.anidachi.app
+  WXT_WEB_HTTP_BASE=<protected-vercel-preview-url>
   WXT_API_HTTP_BASE=https://anidachi-api-staging.<account-subdomain>.workers.dev
   WXT_API_WS_BASE=wss://anidachi-api-staging.<account-subdomain>.workers.dev
 
@@ -1763,13 +1763,13 @@ Observed:
 Remote branch `staging` exists at the migration branch tip and CI passes.
 ```
 
-- [ ] **Step 12.4: Configure Vercel staging domain**
+- [x] **Step 12.4: Configure protected Vercel preview staging**
 
-In Vercel:
+Fast staging approach:
 
 ```txt
-Domain: staging.anidachi.app
-Branch: staging
+Domain: none
+Web URL: protected Vercel preview/deployment URL
 Environment variables: staging values
 Robots noindex: enabled through env
 ```
@@ -1777,14 +1777,15 @@ Robots noindex: enabled through env
 Expected:
 
 ```txt
-staging.anidachi.app serves the monorepo web app without indexing.
+Protected Vercel preview serves the monorepo web app without indexing.
 ```
 
 Observed:
 
 ```txt
-Not attached yet by design. Vercel Standard Protection protects preview/deployment URLs but not custom domains on the current plan/settings. Cloudflare account does not currently contain the `anidachi.app` zone, so Cloudflare Access cannot be applied to `staging.anidachi.app` yet. Use protected Vercel preview/branch URLs for staging until a secure custom-domain access model is added.
-Vercel Git integration also still needs access to the new `AniDachi/anidachi-LP` organization repository. `vercel git connect git@github.com:AniDachi/anidachi-LP.git --non-interactive` currently fails until the Vercel GitHub App is installed or granted access for the org repo.
+Using protected Vercel preview URL for fast internal staging.
+Do not attach `staging.anidachi.app` yet. Vercel Standard Protection protects preview/deployment URLs but not custom domains on the current plan/settings. Cloudflare account does not currently contain the `anidachi.app` zone, so Cloudflare Access cannot be applied to `staging.anidachi.app` yet.
+Vercel Git integration is connected to `AniDachi/anidachi-LP`.
 ```
 
 - [x] **Step 12.5: Deploy staging Worker**
@@ -1815,7 +1816,7 @@ Run:
 
 ```bash
 cd /Users/vladyslavhulyi/anidachi-LP-monorepo
-WXT_WEB_HTTP_BASE=https://staging.anidachi.app \
+WXT_WEB_HTTP_BASE=<protected-vercel-preview-url> \
 WXT_API_HTTP_BASE=https://anidachi-api-staging.<account-subdomain>.workers.dev \
 WXT_API_WS_BASE=wss://anidachi-api-staging.<account-subdomain>.workers.dev \
 pnpm --filter @anidachi/extension build
@@ -1846,7 +1847,7 @@ GitHub Actions `Build Extension` completed successfully on branch `staging` and 
 Manual:
 
 ```txt
-Open https://staging.anidachi.app.
+Open the protected Vercel preview URL.
 Confirm homepage loads.
 Confirm noindex behavior.
 Sign in with Google.
