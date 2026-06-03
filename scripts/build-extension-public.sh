@@ -5,16 +5,23 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PUBLIC_DIR="$ROOT_DIR/anidachi-extension-public"
 EXPERIMENT_DIR="$ROOT_DIR/anidachi-extension-experiment"
 
-: "${WXT_API_HTTP_BASE:=https://anidachi-api.vladislav-gul7.workers.dev}"
-: "${WXT_API_WS_BASE:=wss://anidachi-api.vladislav-gul7.workers.dev}"
-: "${WXT_BUILD_ID:=$(git rev-parse --short HEAD 2>/dev/null || echo local)-$(date +%Y%m%d%H%M%S)}"
+: "${WXT_EXTENSION_CHANNEL:=production}"
+: "${WXT_EXTENSION_VERSION:=0.1.0}"
+: "${WXT_WEB_HTTP_BASE:=https://www.anidachi.app}"
+: "${WXT_API_HTTP_BASE:=https://anidachi-api-production.vladislav-gul7.workers.dev}"
+: "${WXT_API_WS_BASE:=wss://anidachi-api-production.vladislav-gul7.workers.dev}"
+: "${WXT_BUILD_ID:=$(git rev-parse --short HEAD 2>/dev/null || echo local)-production-$(date +%Y%m%d%H%M%S)}"
 
+export WXT_EXTENSION_CHANNEL
+export WXT_EXTENSION_VERSION
+export WXT_WEB_HTTP_BASE
 export WXT_API_HTTP_BASE
 export WXT_API_WS_BASE
 export WXT_BUILD_ID
 
 cd "$ROOT_DIR"
 
+pnpm build:extension:icons
 pnpm --filter @anidachi/extension build
 
 mkdir -p "$PUBLIC_DIR" "$EXPERIMENT_DIR"

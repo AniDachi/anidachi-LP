@@ -24,8 +24,32 @@ interface MountedOverlay {
   dispose(): void;
 }
 
+const LOCAL_CONTENT_SCRIPT_MATCHES = [
+  "http://127.0.0.1/*",
+  "http://localhost/*",
+  "http://*/*",
+  "https://*/*",
+  "file:///*",
+];
+
+const STORE_CONTENT_SCRIPT_MATCHES = [
+  "https://youtube.com/*",
+  "https://*.youtube.com/*",
+  "https://youtu.be/*",
+  "https://*.youtu.be/*",
+  "https://*.youtube-nocookie.com/*",
+  "https://crunchyroll.com/*",
+  "https://*.crunchyroll.com/*",
+];
+
+const CONTENT_SCRIPT_MATCHES =
+  import.meta.env.WXT_EXTENSION_CHANNEL === "staging" ||
+  import.meta.env.WXT_EXTENSION_CHANNEL === "production"
+    ? STORE_CONTENT_SCRIPT_MATCHES
+    : LOCAL_CONTENT_SCRIPT_MATCHES;
+
 export default defineContentScript({
-  matches: ["http://127.0.0.1/*", "http://localhost/*", "http://*/*", "https://*/*", "file:///*"],
+  matches: CONTENT_SCRIPT_MATCHES,
   allFrames: true,
   runAt: "document_start",
   main() {

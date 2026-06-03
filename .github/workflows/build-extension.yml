@@ -10,6 +10,7 @@ on:
       - "apps/extension/**"
       - "packages/protocol/**"
       - "scripts/build-extension-public.sh"
+      - "scripts/build-extension-staging.sh"
       - "pnpm-lock.yaml"
       - ".github/workflows/build-extension.yml"
 
@@ -43,13 +44,21 @@ jobs:
 
       - name: Build extension
         env:
+          WXT_EXTENSION_CHANNEL: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+          WXT_EXTENSION_VERSION: ${{ vars.WXT_EXTENSION_VERSION || '0.1.0' }}
           WXT_WEB_HTTP_BASE: ${{ vars.WXT_WEB_HTTP_BASE }}
           WXT_API_HTTP_BASE: ${{ vars.WXT_API_HTTP_BASE }}
           WXT_API_WS_BASE: ${{ vars.WXT_API_WS_BASE }}
+          WXT_BUILD_ID: ${{ github.sha }}-${{ github.ref_name }}-${{ github.run_number }}
         run: pnpm --filter @anidachi/extension build
+
+      - name: Package extension zip
+        run: |
+          cd apps/extension/.output/chrome-mv3
+          zip -qr "$GITHUB_WORKSPACE/anidachi-extension-${GITHUB_REF_NAME}.zip" .
 
       - name: Upload extension artifact
         uses: actions/upload-artifact@v4
         with:
           name: anidachi-extension-${{ github.ref_name }}
-          path: apps/extension/.output/chrome-mv3
+          path: anidachi-extension-${{ github.ref_name }}.zip
