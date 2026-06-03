@@ -993,9 +993,12 @@ SUPABASE_SERVICE_ROLE_KEY, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET,
 ANIDACHI_GOOGLE_CLIENT_ID, ANIDACHI_GOOGLE_CLIENT_SECRET, NEXT_PUBLIC_SITE_URL,
 and STRIPE_SECRET_KEY.
 
+ANIDACHI_ENFORCE_ROOM_LIMITS was added to Vercel Production with value true, and a
+branch-scoped Preview override was added for codex/monorepo-migration with value false.
+
 Vercel sensitive env values are write-only in this CLI context, so values were not
-printed or committed. `ANIDACHI_ENFORCE_ROOM_LIMITS` and `STRIPE_WEBHOOK_SECRET` were
-not visible in `vercel env ls` and must be confirmed before production release.
+printed or committed. `STRIPE_WEBHOOK_SECRET` is not visible in `vercel env ls` and
+must be provided from Stripe before billing/webhook production release.
 ```
 
 - [x] **Step 6.5: Configure staging env vars**
