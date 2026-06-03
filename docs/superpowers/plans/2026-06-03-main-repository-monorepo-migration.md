@@ -25,7 +25,7 @@
 - [x] Existing product architecture plan exists at `/Users/vladyslavhulyi/anidachi/docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`.
 - [ ] `George-Kreatli/anidachi-LP` is not yet a monorepo.
 - [ ] `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol` are not yet inside `George-Kreatli/anidachi-LP`.
-- [ ] Vercel is not yet configured with `apps/web` as Root Directory.
+- [x] Vercel is configured with `apps/web` as Root Directory.
 - [ ] Cloudflare Worker staging/production environments are not yet configured in the target repo.
 - [ ] GitHub branch protection and required checks are not yet confirmed.
 - [ ] Staging domain/environment is not yet confirmed.
@@ -882,7 +882,7 @@ Ignore rules are committed before generated builds are created.
 - Modify: `/Users/vladyslavhulyi/anidachi-LP-monorepo/apps/web/.env.example`
 - Optional create: `/Users/vladyslavhulyi/anidachi-LP-monorepo/apps/web/vercel.json`
 
-- [ ] **Step 6.1: Set Vercel Root Directory**
+- [x] **Step 6.1: Set Vercel Root Directory**
 
 In Vercel project settings:
 
@@ -896,7 +896,15 @@ Expected:
 Vercel builds the moved website from apps/web.
 ```
 
-- [ ] **Step 6.2: Enable access to shared packages**
+Observed:
+
+```txt
+Vercel project: georges-projects-8c4bc43a/v0-anime-app-landing-page
+Root Directory: apps/web
+Preview smoke deploy: READY
+```
+
+- [x] **Step 6.2: Enable access to shared packages**
 
 If `apps/web` imports from `packages/*`, enable in Vercel:
 
@@ -910,20 +918,34 @@ Expected:
 Vercel can build apps/web with workspace dependencies.
 ```
 
-- [ ] **Step 6.3: Update Vercel install/build commands**
+Observed:
 
-Recommended settings:
+```txt
+apps/web currently does not import packages/*, so no extra outside-root package access was required for the web deploy.
+Vercel still detected the monorepo root and installed all 6 pnpm workspace projects during the preview smoke deploy.
+```
+
+- [x] **Step 6.3: Update Vercel install/build commands**
+
+Actual settings:
 
 ```txt
 Install Command: corepack enable && corepack prepare pnpm@11.2.2 --activate && pnpm install --frozen-lockfile
-Build Command: pnpm --filter @anidachi/web build
-Output Directory: apps/web/.next
+Build Command: pnpm build
+Output Directory: Next.js default
 ```
 
 Expected:
 
 ```txt
 Vercel uses pnpm, not npm.
+```
+
+Observed:
+
+```txt
+Manual preview deploy succeeded:
+https://v0-anime-app-landing-page-do64xrhff-georges-projects-8c4bc43a.vercel.app
 ```
 
 - [ ] **Step 6.4: Configure production env vars**

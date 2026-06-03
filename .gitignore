@@ -57,3 +57,4 @@ package-lock.json
 apps/web/crm-data/contacts.json
 apps/web/crm-data/touches.jsonl
 apps/web/crm-data/gmail-tokens.json
+.vercel
