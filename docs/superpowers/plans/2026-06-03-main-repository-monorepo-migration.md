@@ -1642,7 +1642,7 @@ No direct untested production pushes.
 Observed:
 
 ```txt
-`main` requires PR review, one approval, up-to-date `check-and-test`, conversation resolution, and blocks force pushes/deletions.
+`main` requires PR review, one approval, up-to-date `check-and-test`, conversation resolution, admin enforcement, and blocks force pushes/deletions.
 ```
 
 - [x] **Step 11.3: Protect `staging`**
@@ -1666,7 +1666,7 @@ Staging remains stable enough for friend/PC testing.
 Observed:
 
 ```txt
-`staging` requires PR review, one approval, up-to-date `check-and-test`, conversation resolution, and blocks force pushes/deletions.
+`staging` requires PR review, one approval, up-to-date `check-and-test`, conversation resolution, admin enforcement, and blocks force pushes/deletions.
 ```
 
 - [x] **Step 11.4: Document team workflow**
@@ -1806,9 +1806,10 @@ Observed:
 
 ```txt
 https://anidachi-api-staging.vladislav-gul7.workers.dev responds, including /ice-servers with Cloudflare TURN configured.
+GitHub Actions `Deploy API` completed successfully on branch `staging`.
 ```
 
-- [ ] **Step 12.6: Build staging extension**
+- [x] **Step 12.6: Build staging extension**
 
 Run:
 
@@ -1824,6 +1825,12 @@ Expected:
 
 ```txt
 apps/extension/.output/chrome-mv3 contains staging extension build.
+```
+
+Observed:
+
+```txt
+GitHub Actions `Build Extension` completed successfully on branch `staging` and uploaded the `anidachi-extension-staging` artifact.
 ```
 
 ---
