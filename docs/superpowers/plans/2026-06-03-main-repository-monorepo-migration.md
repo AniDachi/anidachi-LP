@@ -1641,7 +1641,7 @@ Repository workflow is documented.
 - Modify: Cloudflare Worker deployment
 - Build: extension staging artifact
 
-- [ ] **Step 12.1: Push migration branch**
+- [x] **Step 12.1: Push migration branch**
 
 Run:
 
@@ -1655,7 +1655,7 @@ Expected:
 Migration branch exists on GitHub.
 ```
 
-- [ ] **Step 12.2: Open PR into `main` as draft**
+- [x] **Step 12.2: Open PR into `main` as draft**
 
 Expected:
 
