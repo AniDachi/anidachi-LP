@@ -93,3 +93,6 @@ See `apps/web/.env.example` for website variables. Key ones:
 See **[docs/development-environments.md](docs/development-environments.md)** for
 the full staging/production model, current protected staging URL, extension build
 targets, OAuth redirects, and release checklist.
+
+For a complete developer or AI-agent handoff, read
+**[docs/developer-handoff.md](docs/developer-handoff.md)**.
