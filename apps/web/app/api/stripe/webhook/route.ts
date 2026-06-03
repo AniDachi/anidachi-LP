@@ -3,14 +3,18 @@ import Stripe from "stripe";
 
 import { sendSubscriptionAlertEmail } from "@/lib/send-subscription-alert-email";
 
-const secretKey =
-  process.env.NODE_ENV === "development" && process.env.STRIPE_SECRET_KEY_TEST
+function getStripeSecretKey(): string | undefined {
+  return process.env.NODE_ENV === "development" && process.env.STRIPE_SECRET_KEY_TEST
     ? process.env.STRIPE_SECRET_KEY_TEST
     : process.env.STRIPE_SECRET_KEY;
+}
 
-const stripe = new Stripe(secretKey!, {
-  apiVersion: "2025-08-27.basil",
-});
+function createStripeClient(): Stripe | null {
+  const secretKey = getStripeSecretKey();
+  return secretKey
+    ? new Stripe(secretKey, { apiVersion: "2025-08-27.basil" })
+    : null;
+}
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -18,6 +22,12 @@ export async function POST(request: NextRequest) {
   if (!webhookSecret) {
     console.error("[stripe/webhook] STRIPE_WEBHOOK_SECRET is not set");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  }
+
+  const stripe = createStripeClient();
+  if (!stripe) {
+    console.error("[stripe/webhook] STRIPE_SECRET_KEY is not set");
+    return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
   }
 
   const signature = request.headers.get("stripe-signature");

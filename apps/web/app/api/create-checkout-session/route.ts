@@ -1,14 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const secretKey =
-  process.env.NODE_ENV === "development" && process.env.STRIPE_SECRET_KEY_TEST
+function getStripeSecretKey(): string | undefined {
+  return process.env.NODE_ENV === "development" && process.env.STRIPE_SECRET_KEY_TEST
     ? process.env.STRIPE_SECRET_KEY_TEST
     : process.env.STRIPE_SECRET_KEY;
+}
 
-const stripe = new Stripe(secretKey!, {
-  apiVersion: "2025-08-27.basil",
-});
+function createStripeClient(): Stripe | null {
+  const secretKey = getStripeSecretKey();
+  return secretKey
+    ? new Stripe(secretKey, { apiVersion: "2025-08-27.basil" })
+    : null;
+}
 
 /** Known live defaults; test/dev should override via STRIPE_* or NEXT_PUBLIC_* env. */
 const LEGACY_LIVE_CRUNCHYROLL_PRICE_ID = "price_1RlnY7AGc1Bd58Cjo5BJckhN";
@@ -44,6 +48,14 @@ function legacyAllowedPriceIds(): string[] {
 
 export async function POST(request: NextRequest) {
   try {
+    const stripe = createStripeClient();
+    if (!stripe) {
+      return NextResponse.json(
+        { error: "Stripe checkout is not configured" },
+        { status: 500 }
+      );
+    }
+
     const body = (await request.json()) as {
       tier?: CheckoutTier;
       priceId?: string;

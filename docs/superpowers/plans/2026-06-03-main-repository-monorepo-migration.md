@@ -977,7 +977,7 @@ Expected:
 Staging can test real auth/rooms without indexing and without blocking due to plan limits.
 ```
 
-- [ ] **Step 6.6: Fix import-time Stripe build risk**
+- [x] **Step 6.6: Fix import-time Stripe build risk**
 
 If `pnpm --filter @anidachi/web build` fails without Stripe env, move Stripe client creation inside route handlers in:
 
@@ -991,7 +991,7 @@ Expected:
 Build does not instantiate Stripe at module import unless the endpoint is called.
 ```
 
-- [ ] **Step 6.7: Verify website build locally**
+- [x] **Step 6.7: Verify website build locally**
 
 Run:
 
