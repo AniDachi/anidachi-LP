@@ -40,22 +40,54 @@ Production is public and must stay stable. Real users should only use the produc
 
 ### Staging Website
 
-Current fast staging uses a protected Vercel preview alias:
+Current fast staging uses the stable Vercel branch preview alias:
 
 ```txt
 https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
 ```
 
-This URL is protected by Vercel deployment protection and returns HTTP 401 until the
-viewer authenticates with Vercel. It also sends `x-robots-tag: noindex`.
+This URL is protected by the app-level staging password gate, not by Vercel
+Authentication. The gate returns HTTP 401 with the `Anidachi staging` password page
+until the viewer enters the shared staging password. A successful login sets the
+`anidachi_staging_access` HttpOnly cookie for roughly 30 days, so the same browser is
+remembered.
+
+The current password itself is intentionally not stored in git. Vercel stores only the
+SHA-256 hash and the cookie signing secret as branch-scoped Preview environment
+variables:
+
+```txt
+ANIDACHI_STAGING_GATE_ENABLED=true
+ANIDACHI_STAGING_GATE_PASSWORD_SHA256=<sha256 hex>
+ANIDACHI_STAGING_GATE_COOKIE_SECRET=<random secret>
+ANIDACHI_STAGING_GATE_COOKIE_MAX_AGE_SECONDS=2592000
+```
+
+These variables are scoped to Preview for `codex/monorepo-migration`. The middleware is
+also hard-disabled when `VERCEL_ENV=production`, so the staging gate cannot appear on
+`www.anidachi.app` even if the variables are accidentally added to Production.
+
+The gate intentionally bypasses:
+
+- `/api/extension/auth/*`, because the extension auth exchange happens before the
+  extension has a bearer token.
+- API requests with `Authorization: Bearer ...`, because the real API route should
+  validate the Anidachi token.
+- Static assets and `OPTIONS`.
+
+Unauthenticated API requests without a bearer token return JSON 401:
+
+```json
+{ "error": "Staging access required" }
+```
 
 Do not attach `staging.anidachi.app` yet. On the current Vercel setup, deployment
-protection does not protect custom domains. A public staging custom domain should only
-be added after one of these is true:
+protection/custom-domain behavior is easy to misconfigure. A public staging custom
+domain should only be added after one of these is true:
 
 - `anidachi.app` DNS is managed in Cloudflare and Cloudflare Access protects staging;
 - Vercel deployment protection covers the custom staging domain;
-- the app has explicit staging auth middleware.
+- the app-level staging auth middleware is confirmed to run on that custom domain.
 
 ## API Environments
 
@@ -150,7 +182,7 @@ Run this before marking the migration PR ready for review.
 
 ```txt
 1. Open the protected Vercel preview URL.
-2. Authenticate through Vercel protection.
+2. Enter the shared Anidachi staging password.
 3. Sign in with Google or Discord.
 4. Open /api/me and confirm user JSON is returned.
 5. Sign out and confirm /api/me returns 401.
@@ -171,6 +203,12 @@ Run this before marking the migration PR ready for review.
     API: https://anidachi-api-staging.vladislav-gul7.workers.dev
     WS:  wss://anidachi-api-staging.vladislav-gul7.workers.dev
 ```
+
+If the browser profile has never opened staging before, the extension sign-in flow may
+show the password page first. Enter the staging password once, then continue Google or
+Discord sign-in. Existing staging extension zips that point at the stable branch preview
+alias still work with the password gate because the gate lives in the website middleware,
+not in the extension bundle.
 
 ## Production Release Checklist
 
