@@ -174,6 +174,7 @@ These are intentionally not treated as solved:
 
 ## Documentation Map
 
+- Project operating manual: `docs/project-operating-manual.md`
 - Current operational state: `docs/current-development-state.md`
 - Overall architecture notes: `docs/architecture.md`
 - Extension release channels: `docs/extension-release-channels.md`
