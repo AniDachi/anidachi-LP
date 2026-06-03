@@ -2007,7 +2007,7 @@ This should not block the monorepo migration PR unless it regresses room creatio
 auth, invite, or basic realtime room connection.
 ```
 
-- [ ] **Step 13.4: Playback sync smoke test**
+- [x] **Step 13.4: Playback sync smoke test**
 
 Manual:
 
@@ -2026,6 +2026,13 @@ Expected:
 
 ```txt
 Realtime room and playback sync still work after monorepo migration.
+```
+
+Observed:
+
+```txt
+Manual confirmation completed on 2026-06-04. User confirmed staging playback sync is OK
+after testing the staging extension on the protected staging stack.
 ```
 
 - [x] **Step 13.5: Debug export check**
