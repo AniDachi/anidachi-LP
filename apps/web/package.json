@@ -1,16 +1,18 @@
 {
-  "name": "anidachi",
+  "name": "@anidachi/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 3003",
     "dev:clean": "rm -rf .next && next dev --turbopack -p 3003",
     "cache:jikan": "tsx scripts/cache-jikan-posters.ts",
-    "build": "npm run cache:jikan && next build",
+    "build": "pnpm cache:jikan && next build",
     "start": "next start",
     "lint": "next lint",
     "crm": "tsx scripts/crm/cli.ts",
-    "stripe:webhook:subscription": "tsx scripts/stripe/register-subscription-webhook.ts"
+    "stripe:webhook:subscription": "tsx scripts/stripe/register-subscription-webhook.ts",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@amplitude/unified": "^1.1.1",
