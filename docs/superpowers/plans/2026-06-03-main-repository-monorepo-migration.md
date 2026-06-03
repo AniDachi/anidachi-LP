@@ -959,7 +959,7 @@ Manual preview deploy succeeded:
 https://v0-anime-app-landing-page-do64xrhff-georges-projects-8c4bc43a.vercel.app
 ```
 
-- [ ] **Step 6.4: Configure production env vars**
+- [x] **Step 6.4: Configure production env vars**
 
 Production env must include at least:
 
@@ -999,6 +999,13 @@ branch-scoped Preview override was added for codex/monorepo-migration with value
 Vercel sensitive env values are write-only in this CLI context, so values were not
 printed or committed. `STRIPE_WEBHOOK_SECRET` is not visible in `vercel env ls` and
 must be provided from Stripe before billing/webhook production release.
+
+Decision:
+
+`STRIPE_WEBHOOK_SECRET` is not blocking the repository/environment migration because
+auth, room creation, Supabase access, Worker connection, and extension flows do not
+depend on Stripe webhook delivery. Treat it as a production billing follow-up that
+must be completed before relying on subscription webhook events.
 ```
 
 - [x] **Step 6.5: Configure staging env vars**
@@ -2021,7 +2028,7 @@ Expected:
 Realtime room and playback sync still work after monorepo migration.
 ```
 
-- [ ] **Step 13.5: Debug export check**
+- [x] **Step 13.5: Debug export check**
 
 Manual:
 
@@ -2047,6 +2054,10 @@ contains the staging WEB/API/WS bases and build id:
 
 Manual UI confirmation is still needed inside the extension debug area, especially ICE
 path log visibility after a P2P connection. P2P reliability itself remains deferred.
+
+Manual UI confirmation completed on 2026-06-04. The extension debug area shows:
+Build 65bead8-staging-20260603214317, Adapter youtube, Media p2p, Logs 1200.
+User confirmed compact debug export contains the staging API/WS bases.
 ```
 
 ---
