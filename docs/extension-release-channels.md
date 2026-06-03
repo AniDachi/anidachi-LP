@@ -14,8 +14,8 @@ Anidachi uses three extension channels.
 | Channel | Extension name | Main purpose | Web app | API/WS |
 | --- | --- | --- | --- | --- |
 | `local` | `Anidachi Local MVP` | Local development and broad site experiments | `http://localhost:3003` by default | `http://127.0.0.1:8787` / `ws://127.0.0.1:8787` by default |
-| `staging` | `Anidachi Staging` | Chrome Web Store test item for founders/testers | Vercel preview/staging URL from `scripts/build-extension-staging.sh` | Staging Cloudflare Worker URLs from `scripts/build-extension-staging.sh` |
-| `production` | `Anidachi` | Public user build | `https://www.anidachi.app` | Production Cloudflare Worker URLs from `scripts/build-extension-public.sh` |
+| `staging` | `Anidachi Staging` | Chrome Web Store test item for founders/testers | `https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app` | `https://anidachi-api-staging.vladislav-gul7.workers.dev` / `wss://anidachi-api-staging.vladislav-gul7.workers.dev` |
+| `production` | `Anidachi` | Public user build | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
 
 The channel is selected with `WXT_EXTENSION_CHANNEL`.
 
@@ -88,3 +88,15 @@ Before uploading a zip, inspect `manifest.json` and the debug panel build id:
 
 - Staging should show `Anidachi Staging` and `*-staging-*`.
 - Production should show `Anidachi` and `*-production-*`.
+
+## Chrome Web Store Tester Instructions
+
+Keep reviewer/tester instructions short enough for the Chrome Web Store form.
+The staging access code should be entered in the store form or shared out of band;
+do not commit it to git.
+
+Current instruction shape:
+
+```txt
+Install Anidachi Staging, then open a YouTube or Crunchyroll video page. Click the small "A" bubble on the video, sign in through the staging site with Google/Discord. If asked for access, use the provided tester code. Click Create room, Copy invite, and open it in another Chrome profile/device. Controls: A opens menu; Sync now resyncs; keys 1-6 send emoji; hold V for push-to-talk; Alt/Option+C opens text chat; Ghost Cam toggles camera.
+```

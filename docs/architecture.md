@@ -99,29 +99,29 @@ Keyword to emoji mapping:
 смотри -> 👀
 ```
 
-## Public Test Environment
+## Runtime Environments
 
-Current public Worker:
-
-```txt
-https://anidachi-api.vladislav-gul7.workers.dev
-wss://anidachi-api.vladislav-gul7.workers.dev
-```
-
-Current LiveKit Cloud URL:
+Staging:
 
 ```txt
-wss://anidachi-1vnsspf7.livekit.cloud
+Web: https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
+API: https://anidachi-api-staging.vladislav-gul7.workers.dev
+WS:  wss://anidachi-api-staging.vladislav-gul7.workers.dev
 ```
 
-LiveKit API credentials are Cloudflare Worker secrets and must not be committed:
+Production:
 
 ```txt
-LIVEKIT_API_KEY
-LIVEKIT_API_SECRET
+Web: https://www.anidachi.app
+API: https://anidachi-api-production.vladislav-gul7.workers.dev
+WS:  wss://anidachi-api-production.vladislav-gul7.workers.dev
 ```
 
-Important: the LiveKit secret was shared during manual setup. Rotate it after external testing if this repo or chat history may be exposed.
+Current media transport is WebRTC P2P with Cloudflare TURN fallback. Old LiveKit
+notes are historical only; do not add new LiveKit credentials to the extension.
+
+The short operational source of truth for current URLs and release state is
+`docs/current-development-state.md`.
 
 ## Local Development
 
@@ -182,39 +182,36 @@ pnpm --filter @anidachi/web dev
 
 For auth-only local testing, configure `apps/web/.env.local` with Supabase, OAuth, and `ANIDACHI_JWT_SECRET`. The same JWT secret must be set for the Worker.
 
-## Public Friend Test Build
+## Store Builds
 
-The public build points the extension at the deployed Worker:
+Build the staging Chrome Web Store artifact:
 
 ```bash
-WXT_API_HTTP_BASE=https://anidachi-api.vladislav-gul7.workers.dev \
-WXT_API_WS_BASE=wss://anidachi-api.vladislav-gul7.workers.dev \
-WXT_WEB_HTTP_BASE=https://anidachi.app \
-pnpm --filter @anidachi/extension build
+pnpm build:extension:staging
 ```
 
-Package the extension:
+Build the production Chrome Web Store artifact:
 
 ```bash
 pnpm build:extension:public
 ```
 
-This updates both the installed unpacked extension folder and the zip for friends:
+Current generated output folders:
 
 ```txt
-/Users/vladyslavhulyi/anidachi/anidachi-extension-public
-/Users/vladyslavhulyi/anidachi/anidachi-extension-public.zip
+/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging
+/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging.zip
+/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-public
+/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-public.zip
 ```
 
-Current manually loaded experiment folders:
+Legacy manually loaded experiment folders may still exist for old local testing,
+but they are not the canonical build output:
 
 ```txt
 Mac: /Users/vladyslavhulyi/anidachi/anidachi-extension-experiment
 PC:  C:\Users\vladi\OneDrive\Desktop\anidachi-extension-experiment
 ```
-
-When testing new Crunchyroll work, keep both folders updated, then reload the
-extension from `chrome://extensions` and refresh the Crunchyroll tab.
 
 Install manually in Chrome:
 
@@ -243,14 +240,12 @@ LIVEKIT_URL = "wss://anidachi-1vnsspf7.livekit.cloud"
 Secrets are set with Wrangler:
 
 ```bash
-cd /Users/vladyslavhulyi/anidachi/apps/api
+cd /Users/vladyslavhulyi/anidachi-LP-monorepo/apps/api
 pnpm exec wrangler login
-pnpm exec wrangler secret put LIVEKIT_API_KEY
-pnpm exec wrangler secret put LIVEKIT_API_SECRET
-pnpm exec wrangler secret put ANIDACHI_JWT_SECRET
-pnpm exec wrangler secret put CLOUDFLARE_TURN_KEY_ID
-pnpm exec wrangler secret put CLOUDFLARE_TURN_KEY_API_TOKEN
-pnpm exec wrangler deploy
+pnpm exec wrangler secret put ANIDACHI_JWT_SECRET --env staging
+pnpm exec wrangler secret put CLOUDFLARE_TURN_KEY_ID --env staging
+pnpm exec wrangler secret put CLOUDFLARE_TURN_KEY_API_TOKEN --env staging
+pnpm exec wrangler deploy --env staging
 ```
 
 Cloudflare Realtime TURN notes:
@@ -265,33 +260,14 @@ Cloudflare Realtime TURN notes:
 Verify API:
 
 ```bash
-node -e 'fetch("https://anidachi-api.vladislav-gul7.workers.dev/").then(r=>r.text().then(t=>console.log(r.status,t)))'
-```
-
-Verify LiveKit token endpoint without printing the token:
-
-```bash
-node - <<'NODE'
-const response = await fetch('https://anidachi-api.vladislav-gul7.workers.dev/livekit/token', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ roomId: 'smoke', identity: 'smoke-user', name: 'Smoke User' })
-});
-const payload = await response.json();
-console.log({
-  status: response.status,
-  serverUrl: payload.serverUrl,
-  hasToken: Boolean(payload.token),
-  tokenLength: payload.token?.length ?? 0
-});
-NODE
+node -e 'fetch("https://anidachi-api-staging.vladislav-gul7.workers.dev/").then(r=>r.text().then(t=>console.log(r.status,t)))'
 ```
 
 Verify ICE server endpoint without printing TURN credentials:
 
 ```bash
 node - <<'NODE'
-const response = await fetch('https://anidachi-api.vladislav-gul7.workers.dev/ice-servers');
+const response = await fetch('https://anidachi-api-staging.vladislav-gul7.workers.dev/ice-servers');
 const payload = await response.json();
 console.log({
   status: response.status,

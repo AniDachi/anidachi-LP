@@ -1666,7 +1666,7 @@ Staging remains stable enough for friend/PC testing.
 Observed:
 
 ```txt
-`staging` requires PR review, one approval, up-to-date `check-and-test`, conversation resolution, and blocks force pushes/deletions.
+`staging` requires `check-and-test`, does not require approvals, does not require the branch to be up to date, does not require conversation resolution, and blocks force pushes/deletions.
 ```
 
 - [x] **Step 11.4: Document team workflow**
