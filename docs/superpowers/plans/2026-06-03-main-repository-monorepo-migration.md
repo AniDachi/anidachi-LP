@@ -1103,6 +1103,14 @@ Expected:
 Staging Worker can verify room tokens and issue ICE servers.
 ```
 
+Observed:
+
+```txt
+ANIDACHI_JWT_SECRET is set on anidachi-api-staging.
+CLOUDFLARE_TURN_KEY_ID and CLOUDFLARE_TURN_KEY_API_TOKEN are pending because the current Wrangler OAuth token cannot access the Calls/TURN REST API.
+Without TURN credentials, /ice-servers returns Cloudflare STUN fallback only.
+```
+
 - [ ] **Step 7.3: Set Cloudflare production secrets**
 
 Run:
@@ -1120,7 +1128,7 @@ Expected:
 Production Worker can verify room tokens and issue ICE servers.
 ```
 
-- [ ] **Step 7.4: Deploy staging Worker**
+- [x] **Step 7.4: Deploy staging Worker**
 
 Run:
 
@@ -1137,7 +1145,7 @@ Expected:
 anidachi-api-staging deploy succeeds.
 ```
 
-- [ ] **Step 7.5: Smoke test staging Worker**
+- [x] **Step 7.5: Smoke test staging Worker**
 
 Run:
 
@@ -1151,6 +1159,15 @@ Expected:
 ```txt
 Root endpoint returns service ok.
 ICE endpoint returns STUN/TURN servers.
+```
+
+Observed:
+
+```txt
+URL: https://anidachi-api-staging.vladislav-gul7.workers.dev
+Root endpoint: {"ok":true,"service":"anidachi-api"}
+ICE endpoint: provider fallback, configured false, Cloudflare STUN servers returned.
+TURN is pending until Cloudflare TURN key/API token secrets are added.
 ```
 
 ---
@@ -1180,7 +1197,7 @@ Expected:
 20260602_room_invite_source.sql
 ```
 
-- [ ] **Step 8.2: Confirm Supabase variables in Vercel**
+- [x] **Step 8.2: Confirm Supabase variables in Vercel**
 
 Required in both staging and production:
 
@@ -1194,6 +1211,12 @@ Expected:
 
 ```txt
 Website API routes can read/write auth, rooms, room_members, devices, and extension_auth_codes.
+```
+
+Observed:
+
+```txt
+Vercel env ls shows NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY in Preview and Production.
 ```
 
 - [ ] **Step 8.3: Confirm JWT secret alignment**
