@@ -1014,7 +1014,7 @@ Next build succeeds from monorepo.
 - Modify: `/Users/vladyslavhulyi/anidachi-LP-monorepo/apps/api/wrangler.toml`
 - Modify: GitHub Actions secrets/environments
 
-- [ ] **Step 7.1: Add Wrangler staging and production envs**
+- [x] **Step 7.1: Add Wrangler staging and production envs**
 
 Modify `/Users/vladyslavhulyi/anidachi-LP-monorepo/apps/api/wrangler.toml`:
 
