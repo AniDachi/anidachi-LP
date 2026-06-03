@@ -21,6 +21,7 @@ export WXT_BUILD_ID
 
 cd "$ROOT_DIR"
 
+pnpm build:extension:icons
 pnpm --filter @anidachi/extension build
 
 mkdir -p "$PUBLIC_DIR" "$EXPERIMENT_DIR"

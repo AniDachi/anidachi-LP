@@ -5,6 +5,7 @@
   "packageManager": "pnpm@11.2.2",
   "scripts": {
     "build": "turbo build",
+    "build:extension:icons": "node scripts/generate-extension-icons.mjs",
     "build:extension:public": "bash scripts/build-extension-public.sh",
     "build:extension:staging": "bash scripts/build-extension-staging.sh",
     "check": "turbo check",
