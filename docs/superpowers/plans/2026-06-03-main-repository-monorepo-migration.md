@@ -773,7 +773,7 @@ Docs and supporting scripts are committed separately from source import.
 - Modify: `/Users/vladyslavhulyi/anidachi-LP-monorepo/.gitignore`
 - Modify: `/Users/vladyslavhulyi/anidachi-LP-monorepo/scripts/build-extension-public.sh`
 
-- [ ] **Step 5.1: Expand root `.gitignore`**
+- [x] **Step 5.1: Expand root `.gitignore`**
 
 Ensure `/Users/vladyslavhulyi/anidachi-LP-monorepo/.gitignore` includes:
 
@@ -828,7 +828,7 @@ Expected:
 Generated output and local debug data do not appear in git status.
 ```
 
-- [ ] **Step 5.2: Make public extension folder a generated output**
+- [x] **Step 5.2: Make public extension folder a generated output**
 
 Rule:
 
@@ -842,7 +842,7 @@ Expected:
 The team never edits generated extension folders manually.
 ```
 
-- [ ] **Step 5.3: Verify clean ignore behavior**
+- [x] **Step 5.3: Verify clean ignore behavior**
 
 Run:
 
@@ -857,7 +857,7 @@ Ignored build outputs appear under ignored files only.
 No accidental secrets or generated extension folders are staged.
 ```
 
-- [ ] **Step 5.4: Commit ignore rules**
+- [x] **Step 5.4: Commit ignore rules**
 
 Run:
 
