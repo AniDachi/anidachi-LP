@@ -36,7 +36,7 @@ async function main() {
       ? required("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY)
       : required("STRIPE_SECRET_KEY_TEST", process.env.STRIPE_SECRET_KEY_TEST);
 
-  const stripe = new Stripe(key, { apiVersion: "2025-06-30.basil" });
+  const stripe = new Stripe(key, { apiVersion: "2025-08-27.basil" });
 
   const existing = await stripe.webhookEndpoints.list({ limit: 100 });
   const duplicate = existing.data.find((e) => e.url === webhookUrl);
@@ -52,7 +52,7 @@ async function main() {
     url: webhookUrl,
     enabled_events: [EVENT],
     description: "AniDachi: new subscription alert (checkout.session.completed)",
-    api_version: "2025-06-30.basil",
+    api_version: "2025-08-27.basil",
   });
 
   process.stdout.write(

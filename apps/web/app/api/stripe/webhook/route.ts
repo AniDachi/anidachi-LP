@@ -9,7 +9,7 @@ const secretKey =
     : process.env.STRIPE_SECRET_KEY;
 
 const stripe = new Stripe(secretKey!, {
-  apiVersion: "2025-06-30.basil",
+  apiVersion: "2025-08-27.basil",
 });
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

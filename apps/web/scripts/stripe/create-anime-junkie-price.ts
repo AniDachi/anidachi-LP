@@ -53,7 +53,7 @@ async function main() {
       ? required("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY)
       : required("STRIPE_SECRET_KEY_TEST", process.env.STRIPE_SECRET_KEY_TEST);
 
-  const stripe = new Stripe(key, { apiVersion: "2025-06-30.basil" });
+  const stripe = new Stripe(key, { apiVersion: "2025-08-27.basil" });
   const price = await ensurePrice(stripe);
 
   process.stdout.write(
@@ -65,4 +65,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

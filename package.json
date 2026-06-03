@@ -1,0 +1,24 @@
+{
+  "name": "anidachi",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.2.2",
+  "scripts": {
+    "build": "turbo build",
+    "build:extension:public": "bash scripts/build-extension-public.sh",
+    "check": "turbo check",
+    "dev:api": "pnpm --filter @anidachi/api dev",
+    "dev:demo": "pnpm --filter @anidachi/demo dev",
+    "dev:extension": "pnpm --filter @anidachi/extension dev",
+    "dev:web": "pnpm --filter @anidachi/web dev",
+    "format": "biome format .",
+    "lint": "biome lint .",
+    "test": "turbo test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.15",
+    "turbo": "^2.9.14",
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.15"
+  }
+}

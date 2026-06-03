@@ -7,7 +7,7 @@ const secretKey =
     : process.env.STRIPE_SECRET_KEY;
 
 const stripe = new Stripe(secretKey!, {
-  apiVersion: "2025-06-30.basil",
+  apiVersion: "2025-08-27.basil",
 });
 
 /** Known live defaults; test/dev should override via STRIPE_* or NEXT_PUBLIC_* env. */
