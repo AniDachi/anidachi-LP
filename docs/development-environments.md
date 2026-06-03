@@ -162,11 +162,11 @@ not removed or edited.
 These are not blocked:
 
 - Vercel preview builds.
-- Vercel deployment protection and noindex headers.
+- App-level staging password gate and noindex headers.
 - Cloudflare Worker health.
 - Cloudflare `/ice-servers`.
 - Extension typecheck/tests/build.
-- Static website rendering after Vercel authentication.
+- Static website rendering after entering the staging password.
 
 These are ready for manual staging acceptance:
 
