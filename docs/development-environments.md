@@ -12,7 +12,7 @@ Legacy local repo: /Users/vladyslavhulyi/anidachi
 ```
 
 Use the primary repo for new product work. The legacy local repo should only be used as
-historical reference until the production migration is complete.
+historical reference.
 
 ## Branch Model
 
