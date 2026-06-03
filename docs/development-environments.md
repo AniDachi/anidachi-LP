@@ -136,7 +136,7 @@ These are not blocked:
 - Extension typecheck/tests/build.
 - Static website rendering after Vercel authentication.
 
-These are blocked until OAuth redirects are added:
+These are ready for manual staging acceptance:
 
 - Google/Discord sign-in on staging.
 - `/api/me` authenticated staging smoke test.
@@ -146,7 +146,7 @@ These are blocked until OAuth redirects are added:
 
 ## Staging Acceptance Checklist
 
-Run this after OAuth redirects are added.
+Run this before marking the migration PR ready for review.
 
 ```txt
 1. Open the protected Vercel preview URL.
@@ -155,6 +155,7 @@ Run this after OAuth redirects are added.
 4. Open /api/me and confirm user JSON is returned.
 5. Sign out and confirm /api/me returns 401.
 6. Load the latest anidachi-extension-staging artifact.
+   Local zip for this checkpoint: artifacts/anidachi-extension-staging-65bead8.zip
 7. Sign in through the extension.
 8. Open YouTube or Crunchyroll.
 9. Create a room.
@@ -165,7 +166,10 @@ Run this after OAuth redirects are added.
 14. Hold V and confirm push-to-talk audio works both directions.
 15. Confirm play, pause, and seek sync.
 16. Confirm reactions/chat render.
-17. Confirm debug info shows staging web/API bases.
+17. Confirm debug info shows these staging bases:
+    WEB: https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
+    API: https://anidachi-api-staging.vladislav-gul7.workers.dev
+    WS:  wss://anidachi-api-staging.vladislav-gul7.workers.dev
 ```
 
 ## Production Release Checklist
@@ -183,4 +187,3 @@ Only run after staging acceptance passes.
 8. Smoke test production extension room creation and join.
 9. Tag the migration release.
 ```
-

@@ -34,6 +34,8 @@
 - [x] Fast staging web URL is protected Vercel preview alias `https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app`.
 - [x] Team environment/reference doc exists at `docs/development-environments.md`.
 - [x] Google/Discord OAuth redirects for the protected staging preview were added and manually confirmed.
+- [x] PR #2 checks are green after the staging OAuth status update: CI, Vercel, and Vercel Preview Comments.
+- [x] Local staging extension zip was built for manual acceptance testing at `artifacts/anidachi-extension-staging-65bead8.zip`.
 - [ ] Public custom staging domain is intentionally not attached until protected access is designed.
 
 ## Non-Negotiable Rules
@@ -1867,6 +1869,7 @@ Observed:
 ```txt
 GitHub Actions `Build Extension` completed successfully on branch `staging` and uploaded the `anidachi-extension-staging` artifact.
 After WXT_WEB_HTTP_BASE was updated, GitHub Actions `Build Extension` was rerun successfully on branch `staging`.
+Local staging zip was also built from commit 65bead8 at artifacts/anidachi-extension-staging-65bead8.zip.
 ```
 
 ---
