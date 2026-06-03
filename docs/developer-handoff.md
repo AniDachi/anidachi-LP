@@ -5,6 +5,48 @@ Anidachi codebase. It explains what the product is, how the repository is organi
 how environments are separated, how development should be done, and which boundaries
 must not be crossed.
 
+## Freshness And Ownership
+
+This is a living handoff document, not an immutable specification.
+
+Last reviewed:
+
+```txt
+2026-06-04, immediately after the monorepo migration release.
+```
+
+Use it to understand the current architecture and development workflow, but verify
+fast-moving operational details before acting on them.
+
+The most likely things to change over time are:
+
+- staging URLs;
+- Vercel project settings;
+- Cloudflare Worker URLs or environment names;
+- extension artifact names and build IDs;
+- OAuth redirect URLs;
+- Supabase staging/production separation;
+- Stripe webhook/payment configuration;
+- P2P media implementation details;
+- manual QA checklists.
+
+Canonical sources by topic:
+
+```txt
+Repository/workflow:       README.md and docs/development-environments.md
+Runtime architecture:      docs/architecture.md and packages/protocol
+P2P/media experiments:     docs/experimental-features.md and apps/extension/src
+Website/auth/rooms:        apps/web and apps/web/supabase/migrations
+Worker/live rooms:         apps/api and packages/protocol
+Historical release state:  docs/releases/*
+Actual deployed state:     GitHub, Vercel, Cloudflare, Supabase dashboards/CLI
+```
+
+If this document conflicts with code, the current code wins. If it conflicts with
+deployment dashboards, the live dashboards win. Update this document in the same PR
+whenever a change modifies architecture, environments, release workflow, security
+assumptions, or manual QA steps.
+
 For exact environment URLs and release checklists, also read:
 
 - `README.md`
