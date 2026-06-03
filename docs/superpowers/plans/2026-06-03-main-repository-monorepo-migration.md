@@ -1528,7 +1528,7 @@ Deployment automation is tracked in git.
 - Create: `/Users/vladyslavhulyi/anidachi-LP-monorepo/.github/CODEOWNERS`
 - Modify: `/Users/vladyslavhulyi/anidachi-LP-monorepo/README.md`
 
-- [ ] **Step 11.1: Add CODEOWNERS**
+- [x] **Step 11.1: Add CODEOWNERS**
 
 Create `/Users/vladyslavhulyi/anidachi-LP-monorepo/.github/CODEOWNERS`:
 
@@ -1593,7 +1593,7 @@ Expected:
 Staging remains stable enough for friend/PC testing.
 ```
 
-- [ ] **Step 11.4: Document team workflow**
+- [x] **Step 11.4: Document team workflow**
 
 Add to `/Users/vladyslavhulyi/anidachi-LP-monorepo/README.md`:
 
@@ -1615,7 +1615,7 @@ Expected:
 Both collaborators follow the same branch/deploy model.
 ```
 
-- [ ] **Step 11.5: Commit workflow docs**
+- [x] **Step 11.5: Commit workflow docs**
 
 Run:
 
