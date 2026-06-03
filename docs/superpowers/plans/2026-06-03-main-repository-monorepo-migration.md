@@ -13,6 +13,7 @@
 ## Current Status
 
 - [x] Target GitHub repo is `George-Kreatli/anidachi-LP`.
+- [x] Target GitHub repo has been transferred to `AniDachi/anidachi-LP`; old GitHub URL redirects to the organization repo.
 - [x] Target repo default branch is `main`.
 - [x] Target repo current inspected commit is `bd5f6ab5781e9a8dd74af43c207c4c5876ec8c70`.
 - [x] Target repo is currently a Next.js App Router app at repository root.
@@ -23,12 +24,14 @@
 - [x] Current local working product checkpoint exists on `main` with tag `v0.1.0-working-mvp`.
 - [x] Full auth/product work exists in `/Users/vladyslavhulyi/anidachi/.worktrees/auth-integration` on branch `codex/auth-integration`.
 - [x] Existing product architecture plan exists at `/Users/vladyslavhulyi/anidachi/docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`.
-- [ ] `George-Kreatli/anidachi-LP` is not yet a monorepo.
-- [ ] `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol` are not yet inside `George-Kreatli/anidachi-LP`.
+- [x] Migration branch `codex/monorepo-migration` converts the target repo into a monorepo.
+- [x] `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol` are inside the migration branch.
 - [x] Vercel is configured with `apps/web` as Root Directory.
-- [ ] Cloudflare Worker staging/production environments are not yet configured in the target repo.
-- [ ] GitHub branch protection and required checks are not yet confirmed.
-- [ ] Staging domain/environment is not yet confirmed.
+- [ ] Vercel Git integration still needs to be reconnected from the old `George-Kreatli/anidachi-LP` metadata to `AniDachi/anidachi-LP`.
+- [x] Cloudflare Worker staging/production environments are configured and deployed.
+- [x] GitHub branch protection and required checks are confirmed for `main` and `staging`.
+- [x] Staging environment exists as a protected integration branch with staging Worker/API settings.
+- [ ] Public custom staging domain is intentionally not attached until protected access is designed.
 
 ## Non-Negotiable Rules
 
@@ -1086,7 +1089,7 @@ Expected:
 Worker can deploy independently to staging and production.
 ```
 
-- [ ] **Step 7.2: Set Cloudflare staging secrets**
+- [x] **Step 7.2: Set Cloudflare staging secrets**
 
 Run:
 
@@ -1107,11 +1110,11 @@ Observed:
 
 ```txt
 ANIDACHI_JWT_SECRET is set on anidachi-api-staging.
-CLOUDFLARE_TURN_KEY_ID and CLOUDFLARE_TURN_KEY_API_TOKEN are pending because the current Wrangler OAuth token cannot access the Calls/TURN REST API.
-Without TURN credentials, /ice-servers returns Cloudflare STUN fallback only.
+CLOUDFLARE_TURN_KEY_ID and CLOUDFLARE_TURN_KEY_API_TOKEN are set on anidachi-api-staging.
+Staging /ice-servers returns Cloudflare STUN plus TURN/TURNS servers with provider cloudflare and configured true.
 ```
 
-- [ ] **Step 7.3: Set Cloudflare production secrets**
+- [x] **Step 7.3: Set Cloudflare production secrets**
 
 Run:
 
@@ -1126,6 +1129,14 @@ Expected:
 
 ```txt
 Production Worker can verify room tokens and issue ICE servers.
+```
+
+Observed:
+
+```txt
+ANIDACHI_JWT_SECRET is set on anidachi-api-production.
+CLOUDFLARE_TURN_KEY_ID and CLOUDFLARE_TURN_KEY_API_TOKEN are set on anidachi-api-production.
+Production /ice-servers returns Cloudflare STUN plus TURN/TURNS servers with provider cloudflare and configured true.
 ```
 
 - [x] **Step 7.4: Deploy staging Worker**
@@ -1166,8 +1177,7 @@ Observed:
 ```txt
 URL: https://anidachi-api-staging.vladislav-gul7.workers.dev
 Root endpoint: {"ok":true,"service":"anidachi-api"}
-ICE endpoint: provider fallback, configured false, Cloudflare STUN servers returned.
-TURN is pending until Cloudflare TURN key/API token secrets are added.
+ICE endpoint: provider cloudflare, configured true, Cloudflare STUN plus TURN/TURNS servers returned.
 ```
 
 ---
@@ -1519,7 +1529,7 @@ Expected:
 Every staging/main extension change produces a downloadable artifact.
 ```
 
-- [ ] **Step 10.3: Configure GitHub environments**
+- [x] **Step 10.3: Configure GitHub environments**
 
 Create GitHub environments:
 
@@ -1551,9 +1561,10 @@ Extension builds point to the correct environment.
 Observed:
 
 ```txt
-Blocked by permissions: current GitHub access is WRITE, not admin.
-GitHub API returned 403 "Must have admin rights to Repository" when creating the staging environment.
-Existing environments are Preview and Production; staging still needs to be created by a repository admin.
+Repository is now under `AniDachi/anidachi-LP` and current access is ADMIN.
+GitHub environments `staging` and `production` exist.
+GitHub environment variables are set for extension staging and production builds.
+Repository secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` are set for Worker deployment.
 ```
 
 - [x] **Step 10.4: Commit deploy workflows**
@@ -1608,7 +1619,7 @@ Expected:
 PR review ownership is explicit.
 ```
 
-- [ ] **Step 11.2: Protect `main`**
+- [x] **Step 11.2: Protect `main`**
 
 GitHub branch protection for `main`:
 
@@ -1628,7 +1639,13 @@ Expected:
 No direct untested production pushes.
 ```
 
-- [ ] **Step 11.3: Protect `staging`**
+Observed:
+
+```txt
+`main` requires PR review, one approval, up-to-date `check-and-test`, conversation resolution, and blocks force pushes/deletions.
+```
+
+- [x] **Step 11.3: Protect `staging`**
 
 GitHub branch protection for `staging`:
 
@@ -1644,6 +1661,12 @@ Expected:
 
 ```txt
 Staging remains stable enough for friend/PC testing.
+```
+
+Observed:
+
+```txt
+`staging` requires PR review, one approval, up-to-date `check-and-test`, conversation resolution, and blocks force pushes/deletions.
 ```
 
 - [x] **Step 11.4: Document team workflow**
@@ -1719,7 +1742,7 @@ Head: codex/monorepo-migration
 Status: draft until CI and local verification pass
 ```
 
-- [ ] **Step 12.3: Create staging branch after migration PR is reviewed**
+- [x] **Step 12.3: Create staging branch after migration PR is reviewed**
 
 Run after migration PR approval or from the migration branch if agreed:
 
@@ -1732,6 +1755,12 @@ Expected:
 
 ```txt
 staging branch exists and can deploy staging.
+```
+
+Observed:
+
+```txt
+Remote branch `staging` exists at the migration branch tip and CI passes.
 ```
 
 - [ ] **Step 12.4: Configure Vercel staging domain**
@@ -1751,7 +1780,14 @@ Expected:
 staging.anidachi.app serves the monorepo web app without indexing.
 ```
 
-- [ ] **Step 12.5: Deploy staging Worker**
+Observed:
+
+```txt
+Not attached yet by design. Vercel Standard Protection protects preview/deployment URLs but not custom domains on the current plan/settings. Cloudflare account does not currently contain the `anidachi.app` zone, so Cloudflare Access cannot be applied to `staging.anidachi.app` yet. Use protected Vercel preview/branch URLs for staging until a secure custom-domain access model is added.
+Vercel Git integration also still needs access to the new `AniDachi/anidachi-LP` organization repository. `vercel git connect git@github.com:AniDachi/anidachi-LP.git --non-interactive` currently fails until the Vercel GitHub App is installed or granted access for the org repo.
+```
+
+- [x] **Step 12.5: Deploy staging Worker**
 
 Run:
 
@@ -1764,6 +1800,12 @@ Expected:
 
 ```txt
 Staging Worker URL responds.
+```
+
+Observed:
+
+```txt
+https://anidachi-api-staging.vladislav-gul7.workers.dev responds, including /ice-servers with Cloudflare TURN configured.
 ```
 
 - [ ] **Step 12.6: Build staging extension**
