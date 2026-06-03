@@ -1142,7 +1142,7 @@ ICE endpoint returns STUN/TURN servers.
 - Modify: Vercel env settings
 - Modify: Cloudflare Worker secrets
 
-- [ ] **Step 8.1: Confirm migrations are present**
+- [x] **Step 8.1: Confirm migrations are present**
 
 Run:
 
@@ -1252,7 +1252,7 @@ Staging auth works before extension testing.
 
 - Create: `/Users/vladyslavhulyi/anidachi-LP-monorepo/.github/workflows/ci.yml`
 
-- [ ] **Step 9.1: Add CI workflow**
+- [x] **Step 9.1: Add CI workflow**
 
 Create `/Users/vladyslavhulyi/anidachi-LP-monorepo/.github/workflows/ci.yml`:
 
@@ -1306,7 +1306,7 @@ Expected:
 Every PR to staging/main runs typecheck and tests.
 ```
 
-- [ ] **Step 9.2: Run CI commands locally before push**
+- [x] **Step 9.2: Run CI commands locally before push**
 
 Run:
 
@@ -1322,7 +1322,7 @@ Expected:
 Local CI commands pass before opening PR.
 ```
 
-- [ ] **Step 9.3: Commit CI**
+- [x] **Step 9.3: Commit CI**
 
 Run:
 
