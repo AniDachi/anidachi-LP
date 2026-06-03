@@ -1,0 +1,81 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {
+  buildStagingAccessCookieValue,
+  canBypassStagingGate,
+  getStagingAccessConfig,
+  isValidStagingAccessCookie,
+  passwordMatchesStagingGate,
+  sanitizeStagingAccessNextPath,
+  sha256Hex,
+} from "./staging-access";
+
+test("staging gate is disabled unless explicitly enabled", async () => {
+  assert.deepEqual(await getStagingAccessConfig({ VERCEL_ENV: "preview" }), {
+    enabled: false,
+  });
+});
+
+test("staging gate is disabled on production even when env is configured", async () => {
+  const passwordHash = await sha256Hex("secret");
+  assert.deepEqual(
+    await getStagingAccessConfig({
+      ANIDACHI_STAGING_GATE_ENABLED: "true",
+      ANIDACHI_STAGING_GATE_PASSWORD_SHA256: passwordHash,
+      VERCEL_ENV: "production",
+    }),
+    { enabled: false },
+  );
+});
+
+test("staging gate accepts hashed password config and remembers with signed cookie", async () => {
+  const passwordHash = await sha256Hex("stage-password");
+  const config = await getStagingAccessConfig({
+    ANIDACHI_STAGING_GATE_ENABLED: "true",
+    ANIDACHI_STAGING_GATE_PASSWORD_SHA256: passwordHash,
+    ANIDACHI_STAGING_GATE_COOKIE_SECRET: "cookie-secret",
+    VERCEL_ENV: "preview",
+  });
+
+  assert.equal(config.enabled, true);
+  if (!config.enabled) throw new Error("expected enabled config");
+
+  assert.equal(await passwordMatchesStagingGate("stage-password", config), true);
+  assert.equal(await passwordMatchesStagingGate("wrong", config), false);
+
+  const cookie = await buildStagingAccessCookieValue(config);
+  assert.equal(await isValidStagingAccessCookie(cookie, config), true);
+  assert.equal(await isValidStagingAccessCookie("v1.invalid", config), false);
+});
+
+test("staging gate bypasses extension token endpoints and bearer API calls", () => {
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/extension/auth/exchange",
+      method: "POST",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/rooms",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/rooms",
+      method: "POST",
+    }),
+    false,
+  );
+});
+
+test("staging gate sanitizes redirect targets", () => {
+  assert.equal(sanitizeStagingAccessNextPath("/room/abc"), "/room/abc");
+  assert.equal(sanitizeStagingAccessNextPath("https://evil.example"), "/");
+  assert.equal(sanitizeStagingAccessNextPath("//evil.example"), "/");
+  assert.equal(sanitizeStagingAccessNextPath("/__anidachi/staging-access"), "/");
+});

@@ -25,6 +25,7 @@ anidachi-extension-experiment/
 anidachi-extension-public.zip
 anidachi-extension-experiment.zip
 anidachi-extension-*.zip
+artifacts/
 *.crx
 *.pem
 
