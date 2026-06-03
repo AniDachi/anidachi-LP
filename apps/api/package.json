@@ -1,0 +1,23 @@
+{
+  "name": "@anidachi/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json",
+    "dev": "wrangler dev --local --port 8787",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anidachi/protocol": "workspace:*",
+    "hono": "^4.12.22",
+    "jose": "^6.2.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260523.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.15",
+    "wrangler": "^4.94.0"
+  }
+}

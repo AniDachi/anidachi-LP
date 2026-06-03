@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anidachi Local Video Demo</title>
+  </head>
+  <body>
+    <main class="demo-shell">
+      <section class="video-stage">
+        <video
+          id="demo-video"
+          controls
+          playsinline
+          preload="metadata"
+          src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+        >
+          <track kind="captions" src="/captions.vtt" srclang="en" label="No dialogue" default />
+        </video>
+      </section>
+      <section class="demo-copy">
+        <h1>Anidachi Local Demo</h1>
+        <p>
+          Load the extension, create a room from the floating Anidachi bubble, copy the invite,
+          and open it in a second tab or Chrome profile.
+        </p>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
