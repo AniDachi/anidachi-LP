@@ -31,6 +31,7 @@
 - [x] Cloudflare Worker staging/production environments are configured and deployed.
 - [x] GitHub branch protection and required checks are confirmed for `main` and `staging`.
 - [x] Staging environment exists as a protected integration branch with staging Worker/API settings.
+- [x] Fast staging web URL is protected Vercel preview alias `https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app`.
 - [ ] Public custom staging domain is intentionally not attached until protected access is designed.
 
 ## Non-Negotiable Rules
@@ -976,12 +977,12 @@ Expected:
 Production auth, room creation, Stripe, and Supabase access continue working.
 ```
 
-- [ ] **Step 6.5: Configure staging env vars**
+- [x] **Step 6.5: Configure staging env vars**
 
 Staging env must include:
 
 ```txt
-NEXT_PUBLIC_SITE_URL=<protected-vercel-preview-url>
+NEXT_PUBLIC_SITE_URL=https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
 NEXT_PUBLIC_ROBOTS_NOINDEX=true
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -994,6 +995,14 @@ ANIDACHI_GOOGLE_CLIENT_SECRET
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
 ANIDACHI_ENFORCE_ROOM_LIMITS=false
+```
+
+Observed:
+
+```txt
+Vercel branch-scoped Preview env for `codex/monorepo-migration` has NEXT_PUBLIC_SITE_URL set to the protected preview alias.
+Vercel branch-scoped Preview env for `codex/monorepo-migration` has NEXT_PUBLIC_ROBOTS_NOINDEX=true.
+GitHub environment `staging` has WXT_WEB_HTTP_BASE set to the protected preview alias.
 ```
 
 Expected:
@@ -1255,8 +1264,8 @@ https://www.anidachi.app/api/auth/callback/discord
 Staging:
 
 ```txt
-<protected-vercel-preview-url>/api/auth/callback/google
-<protected-vercel-preview-url>/api/auth/callback/discord
+https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app/api/auth/callback/google
+https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app/api/auth/callback/discord
 ```
 
 Expected:
@@ -1265,19 +1274,27 @@ Expected:
 Login works on staging and production.
 ```
 
-- [ ] **Step 8.5: Confirm extension auth redirect**
+- [x] **Step 8.5: Confirm extension auth redirect**
 
 Expected website route:
 
 ```txt
 https://www.anidachi.app/extension/connect
-<protected-vercel-preview-url>/extension/connect
+https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app/extension/connect
 ```
 
 Expected extension behavior:
 
 ```txt
 chrome.identity.launchWebAuthFlow opens website auth and receives one-time code.
+```
+
+Observed:
+
+```txt
+Extension staging build uses WXT_WEB_HTTP_BASE=https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app.
+The website route is present at /extension/connect.
+Full login smoke still depends on adding the preview callback URLs to Google/Discord.
 ```
 
 - [ ] **Step 8.6: Staging login smoke test**
@@ -1542,7 +1559,7 @@ Set environment variables:
 
 ```txt
 staging:
-  WXT_WEB_HTTP_BASE=<protected-vercel-preview-url>
+  WXT_WEB_HTTP_BASE=https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
   WXT_API_HTTP_BASE=https://anidachi-api-staging.<account-subdomain>.workers.dev
   WXT_API_WS_BASE=wss://anidachi-api-staging.<account-subdomain>.workers.dev
 
@@ -1769,7 +1786,7 @@ Fast staging approach:
 
 ```txt
 Domain: none
-Web URL: protected Vercel preview/deployment URL
+Web URL: https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
 Environment variables: staging values
 Robots noindex: enabled through env
 ```
@@ -1786,6 +1803,7 @@ Observed:
 Using protected Vercel preview URL for fast internal staging.
 Do not attach `staging.anidachi.app` yet. Vercel Standard Protection protects preview/deployment URLs but not custom domains on the current plan/settings. Cloudflare account does not currently contain the `anidachi.app` zone, so Cloudflare Access cannot be applied to `staging.anidachi.app` yet.
 Vercel Git integration is connected to `AniDachi/anidachi-LP`.
+Protected preview alias returns HTTP 401 with Vercel SSO and x-robots-tag noindex before authentication.
 ```
 
 - [x] **Step 12.5: Deploy staging Worker**
@@ -1816,7 +1834,7 @@ Run:
 
 ```bash
 cd /Users/vladyslavhulyi/anidachi-LP-monorepo
-WXT_WEB_HTTP_BASE=<protected-vercel-preview-url> \
+WXT_WEB_HTTP_BASE=https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app \
 WXT_API_HTTP_BASE=https://anidachi-api-staging.<account-subdomain>.workers.dev \
 WXT_API_WS_BASE=wss://anidachi-api-staging.<account-subdomain>.workers.dev \
 pnpm --filter @anidachi/extension build
@@ -1832,6 +1850,7 @@ Observed:
 
 ```txt
 GitHub Actions `Build Extension` completed successfully on branch `staging` and uploaded the `anidachi-extension-staging` artifact.
+After WXT_WEB_HTTP_BASE was updated, GitHub Actions `Build Extension` was rerun successfully on branch `staging`.
 ```
 
 ---
