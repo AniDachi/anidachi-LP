@@ -1346,7 +1346,7 @@ GitHub Actions workflow is committed.
 - Create: `/Users/vladyslavhulyi/anidachi-LP-monorepo/.github/workflows/deploy-api.yml`
 - Create: `/Users/vladyslavhulyi/anidachi-LP-monorepo/.github/workflows/build-extension.yml`
 
-- [ ] **Step 10.1: Add Cloudflare API deploy workflow**
+- [x] **Step 10.1: Add Cloudflare API deploy workflow**
 
 Create `/Users/vladyslavhulyi/anidachi-LP-monorepo/.github/workflows/deploy-api.yml`:
 
@@ -1407,7 +1407,7 @@ Pushing staging deploys staging Worker.
 Pushing main deploys production Worker after environment rules.
 ```
 
-- [ ] **Step 10.2: Add extension artifact workflow**
+- [x] **Step 10.2: Add extension artifact workflow**
 
 Create `/Users/vladyslavhulyi/anidachi-LP-monorepo/.github/workflows/build-extension.yml`:
 
@@ -1503,7 +1503,7 @@ Expected:
 Extension builds point to the correct environment.
 ```
 
-- [ ] **Step 10.4: Commit deploy workflows**
+- [x] **Step 10.4: Commit deploy workflows**
 
 Run:
 

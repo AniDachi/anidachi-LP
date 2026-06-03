@@ -1,0 +1,54 @@
+name: Build Extension
+
+on:
+  push:
+    branches:
+      - staging
+      - main
+    paths:
+      - "apps/extension/**"
+      - "packages/protocol/**"
+      - "scripts/build-extension-public.sh"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/build-extension.yml"
+
+jobs:
+  build-extension:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.2.2 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check extension
+        run: pnpm --filter @anidachi/extension check
+
+      - name: Test extension
+        run: pnpm --filter @anidachi/extension test
+
+      - name: Build extension
+        env:
+          WXT_WEB_HTTP_BASE: ${{ vars.WXT_WEB_HTTP_BASE }}
+          WXT_API_HTTP_BASE: ${{ vars.WXT_API_HTTP_BASE }}
+          WXT_API_WS_BASE: ${{ vars.WXT_API_WS_BASE }}
+        run: pnpm --filter @anidachi/extension build
+
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anidachi-extension-${{ github.ref_name }}
+          path: apps/extension/.output/chrome-mv3
