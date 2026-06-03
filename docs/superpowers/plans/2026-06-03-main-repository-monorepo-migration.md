@@ -1548,6 +1548,14 @@ Expected:
 Extension builds point to the correct environment.
 ```
 
+Observed:
+
+```txt
+Blocked by permissions: current GitHub access is WRITE, not admin.
+GitHub API returned 403 "Must have admin rights to Repository" when creating the staging environment.
+Existing environments are Preview and Production; staging still needs to be created by a repository admin.
+```
+
 - [x] **Step 10.4: Commit deploy workflows**
 
 Run:
