@@ -1,0 +1,175 @@
+name: Promote Site Staging to Main
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - staging
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: promote-site-staging-to-main
+  cancel-in-progress: true
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout staging
+        uses: actions/checkout@v4
+        with:
+          ref: staging
+          fetch-depth: 0
+
+      - name: Classify staging diff
+        id: classify
+        run: |
+          set -euo pipefail
+
+          git fetch origin main staging
+          git diff --name-only origin/main origin/staging > /tmp/anidachi-staging-main-files.txt
+
+          if [[ ! -s /tmp/anidachi-staging-main-files.txt ]]; then
+            echo "should_promote=false" >> "$GITHUB_OUTPUT"
+            echo "No diff between main and staging." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          is_blocked_path() {
+            case "$1" in
+              .github/*) return 0 ;;
+              apps/api/*) return 0 ;;
+              apps/extension/*) return 0 ;;
+              packages/*) return 0 ;;
+              scripts/*) return 0 ;;
+              infra/*) return 0 ;;
+              package.json|pnpm-lock.yaml|pnpm-workspace.yaml|turbo.json|tsconfig.base.json|biome.json) return 0 ;;
+              apps/web/middleware.ts) return 0 ;;
+              apps/web/app/api/*) return 0 ;;
+              apps/web/app/login/*) return 0 ;;
+              apps/web/app/extension/*) return 0 ;;
+              apps/web/app/room/*) return 0 ;;
+              apps/web/app/success/*) return 0 ;;
+              apps/web/app/blou/*) return 0 ;;
+              apps/web/app/kreatli-email-crm/*) return 0 ;;
+              apps/web/lib/anidachi-auth/*) return 0 ;;
+              apps/web/lib/kreatli-crm/*) return 0 ;;
+              apps/web/lib/instagram/*) return 0 ;;
+              apps/web/lib/tiktok/*) return 0 ;;
+              apps/web/lib/blou-access.ts) return 0 ;;
+              apps/web/lib/*auth*) return 0 ;;
+              apps/web/lib/*session*) return 0 ;;
+              apps/web/lib/*stripe*) return 0 ;;
+            esac
+            return 1
+          }
+
+          is_allowed_site_path() {
+            case "$1" in
+              README.md) return 0 ;;
+              docs/*) return 0 ;;
+              apps/web/app/*) return 0 ;;
+              apps/web/components/*) return 0 ;;
+              apps/web/lib/*) return 0 ;;
+              apps/web/docs/*) return 0 ;;
+              apps/web/public/*) return 0 ;;
+              apps/web/assets/*) return 0 ;;
+            esac
+            return 1
+          }
+
+          blocked=0
+          : > /tmp/anidachi-promotion-blocked.txt
+          while IFS= read -r file; do
+            if is_blocked_path "$file"; then
+              echo "$file" >> /tmp/anidachi-promotion-blocked.txt
+              blocked=1
+              continue
+            fi
+
+            if ! is_allowed_site_path "$file"; then
+              echo "$file" >> /tmp/anidachi-promotion-blocked.txt
+              blocked=1
+            fi
+          done < /tmp/anidachi-staging-main-files.txt
+
+          {
+            echo "## staging -> main diff"
+            sed 's/^/- `/' /tmp/anidachi-staging-main-files.txt | sed 's/$/`/'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$blocked" -ne 0 ]]; then
+            echo "should_promote=false" >> "$GITHUB_OUTPUT"
+            {
+              echo ""
+              echo "## Auto-promotion skipped"
+              echo "The diff contains files outside the safe site/docs allowlist:"
+              sed 's/^/- `/' /tmp/anidachi-promotion-blocked.txt | sed 's/$/`/'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "should_promote=true" >> "$GITHUB_OUTPUT"
+          {
+            echo ""
+            echo "## Auto-promotion allowed"
+            echo "All changed files are within the safe site/docs allowlist."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create or update promotion PR
+        if: steps.classify.outputs.should_promote == 'true'
+        id: promotion_pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          pr_url="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --head staging \
+            --state open \
+            --json url \
+            --jq '.[0].url // ""')"
+
+          body_file="$(mktemp)"
+          {
+            echo "Automated promotion from \`staging\` to \`main\`."
+            echo ""
+            echo "This PR was created because the full \`main..staging\` diff only contains safe site/docs paths."
+            echo ""
+            echo "Changed files:"
+            sed 's/^/- `/' /tmp/anidachi-staging-main-files.txt | sed 's/$/`/'
+          } > "$body_file"
+
+          if [[ -z "$pr_url" ]]; then
+            pr_url="$(gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --base main \
+              --head staging \
+              --title "Promote site-only staging changes to main" \
+              --body-file "$body_file")"
+          else
+            gh pr edit "$pr_url" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Promote site-only staging changes to main" \
+              --body-file "$body_file"
+          fi
+
+          echo "url=$pr_url" >> "$GITHUB_OUTPUT"
+          echo "Promotion PR: $pr_url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enable auto-merge
+        if: steps.classify.outputs.should_promote == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh pr merge "${{ steps.promotion_pr.outputs.url }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --auto \
+            --merge

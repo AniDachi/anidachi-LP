@@ -48,7 +48,7 @@ test("staging gate accepts hashed password config and remembers with signed cook
   assert.equal(await isValidStagingAccessCookie("v1.invalid", config), false);
 });
 
-test("staging gate bypasses extension token endpoints and bearer API calls", () => {
+test("staging gate bypasses extension token endpoints and allowed bearer API calls", () => {
   assert.equal(
     canBypassStagingGate({
       pathname: "/api/extension/auth/exchange",
@@ -66,8 +66,40 @@ test("staging gate bypasses extension token endpoints and bearer API calls", () 
   );
   assert.equal(
     canBypassStagingGate({
+      pathname: "/api/me",
+      method: "GET",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/rooms/room_123",
+      method: "GET",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/rooms/room_123/connect",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
       pathname: "/api/rooms",
       method: "POST",
+    }),
+    false,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/openclaw/health",
+      method: "GET",
+      authorization: "Bearer token",
     }),
     false,
   );

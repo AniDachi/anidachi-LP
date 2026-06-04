@@ -8,6 +8,7 @@
     "build:extension:icons": "node scripts/generate-extension-icons.mjs",
     "build:extension:public": "bash scripts/build-extension-public.sh",
     "build:extension:staging": "bash scripts/build-extension-staging.sh",
+    "build:extension:staging:broad": "WXT_BROAD_HOST_PERMISSIONS=true bash scripts/build-extension-staging.sh",
     "check": "turbo check",
     "dev:api": "pnpm --filter @anidachi/api dev",
     "dev:demo": "pnpm --filter @anidachi/demo dev",
@@ -15,7 +16,10 @@
     "dev:web": "pnpm --filter @anidachi/web dev",
     "format": "biome format .",
     "lint": "biome lint .",
-    "test": "turbo test"
+    "smoke:worker:staging": "WORKER_HTTP_BASE=https://anidachi-api-staging.vladislav-gul7.workers.dev WORKER_EXPECTED_ENV=staging node scripts/smoke-worker.mjs",
+    "test": "turbo test",
+    "validate:extension:production": "node scripts/validate-extension-artifact.mjs --channel production --dir anidachi-extension-public",
+    "validate:extension:staging": "node scripts/validate-extension-artifact.mjs --channel staging --dir anidachi-extension-staging"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",

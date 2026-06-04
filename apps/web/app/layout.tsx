@@ -7,7 +7,10 @@ import { AnalyticsEvents } from "@/components/analytics-events";
 import { OrganizationJsonLd } from "@/components/json-ld";
 import { PlanSurveyProvider } from "@/components/plan-survey/plan-survey-provider";
 import { GA_MEASUREMENT_ID } from "@/lib/gtag";
-import { getResolvedSiteOrigin } from "@/lib/site-url";
+import {
+  getResolvedSiteOrigin,
+  isRobotsIndexingDisabled,
+} from "@/lib/site-url";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,6 +22,8 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+const shouldNoindex = isRobotsIndexingDisabled();
 
 export const metadata: Metadata = {
   title: {
@@ -42,7 +47,10 @@ export const metadata: Metadata = {
     description:
       "Create watchrooms, sync Crunchyroll playback with friends, and chat in real-time.",
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: !shouldNoindex,
+    follow: !shouldNoindex,
+  },
 };
 
 export default function RootLayout({

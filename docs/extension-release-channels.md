@@ -14,10 +14,25 @@ Anidachi uses three extension channels.
 | Channel | Extension name | Main purpose | Web app | API/WS |
 | --- | --- | --- | --- | --- |
 | `local` | `Anidachi Local MVP` | Local development and broad site experiments | `http://localhost:3003` by default | `http://127.0.0.1:8787` / `ws://127.0.0.1:8787` by default |
-| `staging` | `Anidachi Staging` | Chrome Web Store test item for founders/testers | `https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app` | `https://anidachi-api-staging.vladislav-gul7.workers.dev` / `wss://anidachi-api-staging.vladislav-gul7.workers.dev` |
+| `staging` | `Anidachi Staging` | Chrome Web Store test item for founders/testers | `https://staging.anidachi.app` | `https://anidachi-api-staging.vladislav-gul7.workers.dev` / `wss://anidachi-api-staging.vladislav-gul7.workers.dev` |
 | `production` | `Anidachi` | Public user build | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
 
 The channel is selected with `WXT_EXTENSION_CHANNEL`.
+
+Channel sources:
+
+- `local`: WXT dev or unpacked local build; broad permissions are allowed for
+  development experiments; web defaults to localhost.
+- `staging`: artifact from the `staging` branch; narrow permissions only;
+  private/trusted tester Chrome Web Store listing; web is
+  `https://staging.anidachi.app`.
+- `production`: artifact from the `main` branch; narrow permissions only; public
+  Chrome Web Store listing; web is `https://www.anidachi.app`.
+
+The staging web URL is internal tester infrastructure. It may appear in staging
+extension builds, OAuth callback allowlists, and internal docs, but it must stay
+password-gated, noindex, excluded from sitemap output, and absent from production
+SEO/marketing pages.
 
 ## Store Permissions
 
@@ -30,8 +45,7 @@ watch surfaces and Anidachi infrastructure:
 - YouTube
 - YouTube embeds / `youtube-nocookie`
 - Crunchyroll
-- Anidachi web app
-- the configured Vercel preview host for the channel
+- the channel web app host
 - the configured Cloudflare Workers API host for the channel
 
 Do not ship `http://*/*`, `https://*/*`, or `file:///*` in store builds unless the
@@ -44,6 +58,7 @@ Generate the staging Chrome Web Store artifact:
 
 ```bash
 pnpm build:extension:staging
+pnpm validate:extension:staging
 ```
 
 Outputs:
@@ -56,6 +71,7 @@ Generate the production extension artifact:
 
 ```bash
 pnpm build:extension:public
+pnpm validate:extension:production
 ```
 
 Outputs:
@@ -66,6 +82,14 @@ Outputs:
 - `anidachi-extension-experiment.zip`
 
 The build scripts regenerate extension PNG icons before building.
+
+Use broad staging permissions only for local development experiments:
+
+```bash
+pnpm build:extension:staging:broad
+```
+
+Do not upload the broad staging build to Chrome Web Store.
 
 ## Promotion Flow
 
@@ -88,6 +112,20 @@ Before uploading a zip, inspect `manifest.json` and the debug panel build id:
 
 - Staging should show `Anidachi Staging` and `*-staging-*`.
 - Production should show `Anidachi` and `*-production-*`.
+
+Pre-upload checklist:
+
+- `manifest.name` matches the channel.
+- `manifest.version` is higher than the previous Chrome Web Store upload for
+  that listing.
+- `manifest.version_name` contains the current git SHA, channel name, and CI run
+  number or build timestamp.
+- `host_permissions` does not contain `http://*/*`, `https://*/*`, `file:///*`,
+  or `<all_urls>`.
+- `content_scripts.matches` does not contain broad patterns.
+- Web/API hosts match the channel.
+- Icons exist at 16, 32, 48, and 128 px.
+- The zip root contains `manifest.json` at the top level.
 
 ## Chrome Web Store Tester Instructions
 

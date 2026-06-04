@@ -13,6 +13,13 @@ on:
       - main
       - staging
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check-and-test:
     runs-on: ubuntu-latest
@@ -39,3 +46,7 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Check Worker bundle
+        working-directory: apps/api
+        run: pnpm exec wrangler deploy --env staging --dry-run --outdir /tmp/anidachi-worker-dry-run

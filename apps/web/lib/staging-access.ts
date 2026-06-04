@@ -96,6 +96,16 @@ export function isStaticAssetPath(pathname: string): boolean {
   );
 }
 
+function canBearerBypassStagingGate(pathname: string, method: string): boolean {
+  if (pathname === "/api/me" && method === "GET") return true;
+  if (pathname === "/api/rooms" && method === "POST") return true;
+  if (/^\/api\/rooms\/[^/]+$/.test(pathname) && method === "GET") return true;
+  if (/^\/api\/rooms\/[^/]+\/connect$/.test(pathname) && method === "POST") {
+    return true;
+  }
+  return false;
+}
+
 export function canBypassStagingGate(params: {
   pathname: string;
   method: string;
@@ -105,7 +115,10 @@ export function canBypassStagingGate(params: {
   if (isStaticAssetPath(params.pathname)) return true;
   if (params.pathname === STAGING_ACCESS_PATH) return true;
   if (params.pathname.startsWith("/api/extension/auth/")) return true;
-  return params.authorization?.startsWith("Bearer ") === true;
+  return (
+    params.authorization?.startsWith("Bearer ") === true &&
+    canBearerBypassStagingGate(params.pathname, params.method)
+  );
 }
 
 export function sanitizeStagingAccessNextPath(value: unknown): string {

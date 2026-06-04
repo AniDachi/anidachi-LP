@@ -16,29 +16,28 @@ Canonical GitHub repository:
 AniDachi/anidachi-LP
 ```
 
-Canonical local repository:
+Local clone placeholder used in docs:
 
 ```txt
-/Users/vladyslavhulyi/anidachi-LP-monorepo
+<repo>
 ```
 
-The older local project folder is legacy context only:
-
-```txt
-/Users/vladyslavhulyi/anidachi
-```
-
-Do not continue new product development from the legacy folder unless it is being
-used only to inspect old state.
+`<repo>` means the folder where a developer cloned `AniDachi/anidachi-LP` on
+their own machine. Do not assume any specific absolute path. Older pre-monorepo
+local folders are legacy context only and should not be used for new product
+development.
 
 ## Branches And Protection
 
 `staging` is the fast integration branch for tester builds.
 
 - Required status check: `check-and-test`
+- Additional non-required release workflow: `build-extension`
+- Additional non-required deploy workflow: `deploy-api`
 - Required approvals: `0`
 - Strict up-to-date branch requirement: off
 - Conversation resolution requirement: off
+- CODEOWNERS review requirement: off; CODEOWNERS is advisory on this branch
 - Force pushes: blocked
 - Branch deletion: blocked
 - Admin enforcement: on
@@ -46,10 +45,14 @@ used only to inspect old state.
 `main` is the production branch.
 
 - Required status check: `check-and-test`
-- Required approvals: `1`
+- Additional non-required release workflow: `build-extension`
+- Additional non-required deploy workflow: `deploy-api`
+- Required approvals: `0`
 - Dismiss stale approvals: on
 - Strict up-to-date branch requirement: on
 - Conversation resolution requirement: on
+- CODEOWNERS review requirement: off; CODEOWNERS is advisory on this branch
+- Repository auto-merge: enabled
 - Force pushes: blocked
 - Branch deletion: blocked
 - Admin enforcement: on
@@ -59,6 +62,17 @@ Normal flow:
 ```txt
 feature branch -> PR -> staging -> tester build -> PR/promotion -> main -> public build
 ```
+
+Site-only auto-promotion:
+
+- Pushes to `staging` run `Promote Site Staging to Main`.
+- The workflow compares the full `main..staging` diff.
+- If the diff contains only safe site/docs paths, it creates or updates a PR
+  from `staging` to `main` and enables auto-merge.
+- If the diff includes extension, API, workflow, package, auth, room, checkout,
+  or other sensitive paths, promotion is skipped and must be handled manually.
+- Workflow changes under `.github/**` are intentionally never auto-promoted; the
+  auto-promotion workflow itself must be installed in `main` manually once.
 
 ## Runtime Environments
 
@@ -73,10 +87,15 @@ WS:  ws://127.0.0.1:8787
 Staging:
 
 ```txt
-Web: https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
+Web: https://staging.anidachi.app
 API: https://anidachi-api-staging.vladislav-gul7.workers.dev
 WS:  wss://anidachi-api-staging.vladislav-gul7.workers.dev
 ```
+
+`staging.anidachi.app` is an internal tester surface. It must stay
+password-gated, noindex, excluded from the sitemap, and absent from production
+SEO/marketing pages. It may appear in internal env vars, OAuth callback
+allowlists, staging extension builds, and internal docs.
 
 Production:
 
@@ -88,6 +107,18 @@ WS:  wss://anidachi-api-production.vladislav-gul7.workers.dev
 
 The custom Cloudflare Worker domain should eventually hide the account subdomain,
 but the current Worker URLs above are the active endpoints.
+
+Worker release guardrails:
+
+- `deploy-api` validates the release ref and may run only from `staging` or
+  `main`.
+- Worker deploys run a Wrangler dry-run before the real deploy.
+- Staging Worker smoke can be run with `pnpm smoke:worker:staging`.
+- Staging and production Worker names must stay distinct.
+
+Normal deploy path is PR merge. Manual workflow dispatch is for retries or
+emergencies only; release workflows must not be manually dispatched from feature
+branches.
 
 ## Extension Channels
 
@@ -117,10 +148,15 @@ Build commands:
 
 ```bash
 pnpm build:extension:staging
+pnpm build:extension:staging:broad
 pnpm build:extension:public
+pnpm validate:extension:staging
+pnpm validate:extension:production
 ```
 
-The same source code produces both store builds. The channel-specific behavior is
+The default staging build is store-safe and uses narrow permissions. The broad
+staging build is an explicit local-only command for development experiments. The
+same source code produces both store builds. The channel-specific behavior is
 selected through build environment variables in the build scripts.
 
 ## Current Staging Store Artifact
@@ -128,8 +164,8 @@ selected through build environment variables in the build scripts.
 The latest staging artifact was generated from commit `6be6f82`:
 
 ```txt
-/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging.zip
-/Users/vladyslavhulyi/anidachi-LP-monorepo/artifacts/anidachi-extension-staging-6be6f82.zip
+<repo>/anidachi-extension-staging.zip
+<repo>/artifacts/anidachi-extension-staging-6be6f82.zip
 ```
 
 Manifest checks:
@@ -175,6 +211,8 @@ These are intentionally not treated as solved:
 ## Documentation Map
 
 - Project operating manual: `docs/project-operating-manual.md`
+- Project architecture and development workflow:
+  `docs/project-architecture-and-development.md`
 - Current operational state: `docs/current-development-state.md`
 - Overall architecture notes: `docs/architecture.md`
 - Extension release channels: `docs/extension-release-channels.md`

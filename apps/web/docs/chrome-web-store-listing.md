@@ -49,6 +49,21 @@ AniDachi (アニ友) means "anime friend" in Japanese. Built by anime fans, for 
 
 Website: https://anidachi.app
 
+## Privacy And Permissions Notes
+
+Use these notes to keep the Chrome Web Store privacy form aligned with the
+extension behavior:
+
+- Extension-scoped auth tokens are stored in `chrome.storage.local`.
+- Source URL and video metadata are sent to Anidachi when creating a room.
+- Chat, reactions, and playback sync events are sent through the Anidachi room
+  server for the active watchroom.
+- Ghost Cam, mic, and camera features use WebRTC between room participants only
+  when the user enables them.
+- Clipboard permission is used to copy invite links.
+- Service-role keys, OAuth secrets, JWT secrets, Stripe secrets, and TURN secrets
+  are not shipped in the extension.
+
 ## Category
 
 Entertainment

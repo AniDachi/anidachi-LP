@@ -145,6 +145,12 @@ function isApiPath(pathname: string): boolean {
   return pathname.startsWith("/api/");
 }
 
+function withStagingNoindexHeaders(response: NextResponse): NextResponse {
+  response.headers.set("Cache-Control", "no-store");
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const config = await getStagingAccessConfig();
   if (!config.enabled) return NextResponse.next();
@@ -199,12 +205,12 @@ export async function middleware(request: NextRequest) {
       authorization: request.headers.get("authorization"),
     })
   ) {
-    return NextResponse.next();
+    return withStagingNoindexHeaders(NextResponse.next());
   }
 
   const cookieValue = request.cookies.get(STAGING_ACCESS_COOKIE)?.value;
   if (await isValidStagingAccessCookie(cookieValue, config)) {
-    return NextResponse.next();
+    return withStagingNoindexHeaders(NextResponse.next());
   }
 
   if (isApiPath(pathname)) {
