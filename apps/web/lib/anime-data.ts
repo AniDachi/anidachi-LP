@@ -1778,4 +1778,54 @@ export const animeList: AnimeEntry[] = [
     genres: ["Action", "Sci-Fi", "Adventure"],
     related: ["trigun", "cowboy-bebop", "black-lagoon"],
   },
+  {
+    slug: "sailor-moon",
+    title: "Sailor Moon",
+    japaneseTitle: "Bishoujo Senshi Sailor Moon",
+    synopsis:
+      "Middle schooler Usagi Tsukino discovers she is Sailor Moon — champion of love and justice — when a talking cat gives her the power to transform and fight the forces of the Dark Kingdom. Joined by her fellow Sailor Guardians, she searches for the Silver Crystal while navigating school and friendship. A genre-defining magical-girl classic that works for nostalgic group rewatches, first-time anime clubs, and anyone curious about the series that shaped the genre.",
+    episodes: "200 episodes across 5 seasons",
+    genres: ["Magical Girl", "Romance", "Action"],
+    related: ["cardcaptor-sakura", "puella-magi-madoka-magica", "k-on"],
+  },
+  {
+    slug: "weathering-with-you",
+    title: "Weathering with You",
+    japaneseTitle: "Tenki no Ko",
+    synopsis:
+      "Runaway teen Hodaka arrives in a rain-soaked Tokyo and meets Hina, a girl who can stop rain with a single prayer. Together they launch a 'sunshine girl' service — until the power reveals a cost that may alter the climate forever. Makoto Shinkai's visually breathtaking follow-up to Your Name is packed with emotional payoffs and debatable choices that are best processed with company the moment the credits roll.",
+    episodes: "Movie",
+    genres: ["Romance", "Drama", "Fantasy"],
+    related: ["your-name", "suzume", "a-silent-voice"],
+  },
+  {
+    slug: "suzume",
+    title: "Suzume",
+    japaneseTitle: "Suzume no Tojimari",
+    synopsis:
+      "17-year-old Suzume follows a stranger into an abandoned town and accidentally opens a supernatural door that begins unleashing disasters across Japan. She races to seal the doors before catastrophe spreads — uncovering her own buried past along the way. Makoto Shinkai's emotionally charged road-trip adventure is the ideal third film for groups working through his catalogue, and its exploration of grief and home prompts conversations that linger long after the final scene.",
+    episodes: "Movie",
+    genres: ["Adventure", "Drama", "Fantasy"],
+    related: ["your-name", "weathering-with-you", "a-silent-voice"],
+  },
+  {
+    slug: "my-neighbor-totoro",
+    title: "My Neighbor Totoro",
+    japaneseTitle: "Tonari no Totoro",
+    synopsis:
+      "Sisters Satsuki and Mei move to the countryside with their father while their mother recovers in hospital, and discover the surrounding forest is home to Totoro — a gentle giant spirit visible only to children. Studio Ghibli's most beloved film is warm, wordlessly moving, and universally accessible. The rare title that works for every age and every group, including friends and family who have never watched anime before.",
+    episodes: "Movie",
+    genres: ["Fantasy", "Slice of Life", "Family"],
+    related: ["spirited-away", "howls-moving-castle", "princess-mononoke"],
+  },
+  {
+    slug: "pokemon",
+    title: "Pokémon",
+    japaneseTitle: "Pocket Monsters",
+    synopsis:
+      "10-year-old Ash Ketchum sets out from Pallet Town with his reluctant Pikachu to become the world's greatest Pokémon Trainer, challenging Gym Leaders, foiling Team Rocket, and competing in the Indigo League. The original 1997 series that launched one of the most beloved franchises in history — nostalgic, accessible to all ages, and perfect for groups who grew up watching it and want to revisit Ash's journey together or introduce it to someone new.",
+    episodes: "276 episodes (original series)",
+    genres: ["Adventure", "Slice of Life", "Family"],
+    related: ["digimon", "cardcaptor-sakura", "sailor-moon"],
+  },
 ];

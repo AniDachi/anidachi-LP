@@ -5,7 +5,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 export const metadata: Metadata = {
   title: "Best Anime for Beginners (2026) — 29 Starter-Friendly Picks",
   description:
-    "29 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
+    "30 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
   alternates: { canonical: "/guides/best-anime-to-watch-for-beginners" },
   openGraph: {
     title: "Best Anime for Beginners (2026) — 29 Starter-Friendly Picks",
@@ -86,7 +86,7 @@ export default function BestAnimeForBeginnersPage() {
       description="Starter-friendly anime picks for first-time viewers and mixed watch groups."
       url="/guides/best-anime-to-watch-for-beginners"
       datePublished="2026-05-01"
-      dateModified="2026-05-18"
+      dateModified="2026-06-04"
       faq={faq}
       headings={headings}
       itemList={itemList}
@@ -421,6 +421,17 @@ export default function BestAnimeForBeginnersPage() {
             </Link>
           </strong>{" "}
           — Music-school drama with readable episode arcs; performances carry emotion even if viewers skip classical trivia deep dives.
+        </li>
+        <li>
+          <strong>
+            <Link
+              href="/watch/my-neighbor-totoro-with-friends"
+              className="text-purple-600 hover:underline"
+            >
+              My Neighbor Totoro
+            </Link>
+          </strong>{" "}
+          — Studio Ghibli&apos;s warmest film at 86 minutes; zero prior anime knowledge required and universally loved across every age group, making it the safest first-watch pick for a mixed group that includes non-anime viewers.
         </li>
       </ul>
 
