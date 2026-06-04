@@ -70,11 +70,14 @@ const extensionDescription =
       : "Ambient watch-party overlay for local Anidachi MVP testing.";
 const extensionVersion = process.env.WXT_EXTENSION_VERSION ?? "0.1.0";
 const buildId = process.env.WXT_BUILD_ID?.trim();
+const useBroadHostPermissions =
+  extensionChannel === "local" ||
+  (extensionChannel === "staging" && process.env.WXT_BROAD_HOST_PERMISSIONS === "true");
 const webHostPermission = getHttpHostPermission(process.env.WXT_WEB_HTTP_BASE);
 const apiHttpHostPermission = getHttpHostPermission(process.env.WXT_API_HTTP_BASE);
 const apiWsHostPermission = getHttpHostPermission(process.env.WXT_API_WS_BASE);
 const hostPermissions =
-  extensionChannel === "local"
+  useBroadHostPermissions
     ? LOCAL_HOST_PERMISSIONS
     : unique([
         ...STORE_VIDEO_HOST_PERMISSIONS,
