@@ -27,6 +27,7 @@ anidachi-extension-staging/
 anidachi-extension-public.zip
 anidachi-extension-experiment.zip
 anidachi-extension-*.zip
+artifacts/
 *.crx
 *.pem
 
@@ -56,7 +57,6 @@ package-lock.json
 
 # local private runtime data
 .data/
-apps/web/crm-data/contacts.json
-apps/web/crm-data/touches.jsonl
-apps/web/crm-data/gmail-tokens.json
+crm-data/
+apps/web/crm-data/
 .vercel

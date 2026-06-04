@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T14:41:09.903Z",
+  "generatedAt": "2026-06-04T12:33:49.888Z",
   "entries": {
     "a-silent-voice": {
       "mal_id": 28851,
@@ -2321,6 +2321,76 @@
         "Award Winning",
         "Drama",
         "Suspense"
+      ]
+    },
+    "my-neighbor-totoro": {
+      "mal_id": 523,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1110/147278l.jpg",
+      "episodes": 1,
+      "airing": false,
+      "score": 8.25,
+      "members": 1167088,
+      "status": "Finished Airing",
+      "genres": [
+        "Adventure",
+        "Award Winning",
+        "Supernatural"
+      ]
+    },
+    "pokemon": {
+      "mal_id": 527,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1787/140239l.jpg",
+      "episodes": 276,
+      "airing": false,
+      "score": 7.42,
+      "members": 683309,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Adventure",
+        "Comedy",
+        "Fantasy"
+      ]
+    },
+    "sailor-moon": {
+      "mal_id": 530,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1440/92258l.jpg",
+      "episodes": 46,
+      "airing": false,
+      "score": 7.75,
+      "members": 415858,
+      "status": "Finished Airing",
+      "genres": [
+        "Romance"
+      ]
+    },
+    "suzume": {
+      "mal_id": 50265,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1441/122795l.jpg",
+      "episodes": 12,
+      "airing": false,
+      "score": 8.41,
+      "members": 1899922,
+      "status": "Finished Airing",
+      "genres": [
+        "Action",
+        "Award Winning",
+        "Comedy"
+      ]
+    },
+    "weathering-with-you": {
+      "mal_id": 38826,
+      "posterUrl": "https://cdn.myanimelist.net/images/anime/1880/101146l.jpg",
+      "episodes": 1,
+      "airing": false,
+      "score": 8.27,
+      "members": 1134455,
+      "status": "Finished Airing",
+      "genres": [
+        "Award Winning",
+        "Drama",
+        "Romance",
+        "Supernatural"
       ]
     }
   }
