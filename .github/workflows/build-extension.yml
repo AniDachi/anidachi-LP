@@ -10,15 +10,32 @@ on:
       - "apps/extension/**"
       - "packages/protocol/**"
       - "scripts/build-extension-public.sh"
+      - "scripts/build-extension-staging.sh"
       - "pnpm-lock.yaml"
       - ".github/workflows/build-extension.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-extension:
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    env:
+      EXTENSION_CHANNEL: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
 
     steps:
+      - name: Validate release ref
+        run: |
+          if [[ "$GITHUB_REF_NAME" != "staging" && "$GITHUB_REF_NAME" != "main" ]]; then
+            echo "This workflow may only run from staging or main. Current ref: $GITHUB_REF_NAME"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -41,15 +58,36 @@ jobs:
       - name: Test extension
         run: pnpm --filter @anidachi/extension test
 
-      - name: Build extension
+      - name: Validate extension env
         env:
           WXT_WEB_HTTP_BASE: ${{ vars.WXT_WEB_HTTP_BASE }}
           WXT_API_HTTP_BASE: ${{ vars.WXT_API_HTTP_BASE }}
           WXT_API_WS_BASE: ${{ vars.WXT_API_WS_BASE }}
+        run: |
+          test -n "${WXT_WEB_HTTP_BASE}"
+          test -n "${WXT_API_HTTP_BASE}"
+          test -n "${WXT_API_WS_BASE}"
+
+      - name: Build extension
+        env:
+          WXT_EXTENSION_CHANNEL: ${{ env.EXTENSION_CHANNEL }}
+          WXT_EXTENSION_VERSION: ${{ vars.WXT_EXTENSION_VERSION || '0.1.0' }}
+          WXT_WEB_HTTP_BASE: ${{ vars.WXT_WEB_HTTP_BASE }}
+          WXT_API_HTTP_BASE: ${{ vars.WXT_API_HTTP_BASE }}
+          WXT_API_WS_BASE: ${{ vars.WXT_API_WS_BASE }}
+          WXT_BUILD_ID: ${{ github.sha }}-${{ env.EXTENSION_CHANNEL }}-${{ github.run_number }}
         run: pnpm --filter @anidachi/extension build
+
+      - name: Validate extension artifact
+        run: node scripts/validate-extension-artifact.mjs --channel "$EXTENSION_CHANNEL" --dir apps/extension/.output/chrome-mv3
+
+      - name: Package extension zip
+        run: |
+          cd apps/extension/.output/chrome-mv3
+          zip -qr "$GITHUB_WORKSPACE/anidachi-extension-${EXTENSION_CHANNEL}.zip" .
 
       - name: Upload extension artifact
         uses: actions/upload-artifact@v4
         with:
-          name: anidachi-extension-${{ github.ref_name }}
-          path: apps/extension/.output/chrome-mv3
+          name: anidachi-extension-${{ env.EXTENSION_CHANNEL }}
+          path: anidachi-extension-${{ env.EXTENSION_CHANNEL }}.zip

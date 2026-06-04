@@ -18,10 +18,12 @@ dist/
 .wxt/
 .output/
 coverage/
+artifacts/
 
 # extension generated artifacts
 anidachi-extension-public/
 anidachi-extension-experiment/
+anidachi-extension-staging/
 anidachi-extension-public.zip
 anidachi-extension-experiment.zip
 anidachi-extension-*.zip

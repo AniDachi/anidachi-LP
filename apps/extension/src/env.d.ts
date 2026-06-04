@@ -2,6 +2,8 @@ interface ImportMetaEnv {
   readonly WXT_API_HTTP_BASE?: string;
   readonly WXT_API_WS_BASE?: string;
   readonly WXT_BUILD_ID?: string;
+  readonly WXT_BROAD_HOST_PERMISSIONS?: string;
+  readonly WXT_EXTENSION_CHANNEL?: string;
   readonly WXT_EXPERIMENT_HOLD_FIRE_SUPER_REACTION?: string;
   readonly WXT_MEDIA_TRANSPORT?: string;
   readonly WXT_WEB_HTTP_BASE?: string;

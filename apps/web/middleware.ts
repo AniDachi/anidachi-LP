@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import {
   STAGING_ACCESS_COOKIE,
   STAGING_ACCESS_PATH,
@@ -123,7 +123,7 @@ function renderStagingAccessPage(params: {
   </body>
 </html>`,
     {
-      status: params.status ?? 401,
+      status: params.status ?? 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store",
@@ -143,6 +143,12 @@ function escapeHtml(value: string): string {
 
 function isApiPath(pathname: string): boolean {
   return pathname.startsWith("/api/");
+}
+
+function withStagingNoindexHeaders(response: NextResponse): NextResponse {
+  response.headers.set("Cache-Control", "no-store");
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
 }
 
 export async function middleware(request: NextRequest) {
@@ -190,7 +196,6 @@ export async function middleware(request: NextRequest) {
     return renderStagingAccessPage({
       nextPath: redirectPath,
       invalid: true,
-      status: 401,
     });
   }
 
@@ -201,12 +206,12 @@ export async function middleware(request: NextRequest) {
       authorization: request.headers.get("authorization"),
     })
   ) {
-    return NextResponse.next();
+    return withStagingNoindexHeaders(NextResponse.next());
   }
 
   const cookieValue = request.cookies.get(STAGING_ACCESS_COOKIE)?.value;
   if (await isValidStagingAccessCookie(cookieValue, config)) {
-    return NextResponse.next();
+    return withStagingNoindexHeaders(NextResponse.next());
   }
 
   if (isApiPath(pathname)) {

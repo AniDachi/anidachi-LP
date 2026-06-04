@@ -12,12 +12,28 @@ on:
       - "pnpm-lock.yaml"
       - ".github/workflows/deploy-api.yml"
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    env:
+      DEPLOY_ENV: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
 
     steps:
+      - name: Validate release ref
+        run: |
+          if [[ "$GITHUB_REF_NAME" != "staging" && "$GITHUB_REF_NAME" != "main" ]]; then
+            echo "This workflow may only run from staging or main. Current ref: $GITHUB_REF_NAME"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -40,9 +56,13 @@ jobs:
       - name: Test API
         run: pnpm --filter @anidachi/api test
 
+      - name: Dry-run Worker deploy
+        working-directory: apps/api
+        run: pnpm exec wrangler deploy --env "$DEPLOY_ENV" --dry-run --outdir /tmp/anidachi-worker-dry-run
+
       - name: Deploy Worker
         working-directory: apps/api
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm exec wrangler deploy --env ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+        run: pnpm exec wrangler deploy --env "$DEPLOY_ENV"
