@@ -4,7 +4,7 @@ Date: 2026-05-25
 
 ## Live CDP Research: Navigation and Player Lifecycle
 
-Date: 2026-05-26
+Date: 2026-05-26 test
 
 This section is based on a live Chrome/CDP pass against authenticated Crunchyroll pages:
 
@@ -64,14 +64,14 @@ create the active player and may navigate to a later "continue watching" episode
 Clicking `[data-testid="next-episode-button"]` on an active player uses SPA navigation. In the live
 test from `GPWUKE590` to `G8WUNEWJE`, the sequence was:
 
-| Time from click | Event |
-| --- | --- |
-| 16 ms | `history.replaceState` changes URL to the next `/watch/...` |
-| 715 ms | old video emits `emptied`, `currentTime` becomes `0`, Katamari state `stopped` |
-| 1079 ms | `loadstart`, new `blob:` `currentSrc`, Katamari state `mediaLoading` |
-| 1494 ms | `loadedmetadata`, duration available |
-| 1930 ms | `canplay` |
-| 1935 ms | `play` / `playing`, Katamari state `playing` |
+| Time from click | Event                                                                          |
+| --------------- | ------------------------------------------------------------------------------ |
+| 16 ms           | `history.replaceState` changes URL to the next `/watch/...`                    |
+| 715 ms          | old video emits `emptied`, `currentTime` becomes `0`, Katamari state `stopped` |
+| 1079 ms         | `loadstart`, new `blob:` `currentSrc`, Katamari state `mediaLoading`           |
+| 1494 ms         | `loadedmetadata`, duration available                                           |
+| 1930 ms         | `canplay`                                                                      |
+| 1935 ms         | `play` / `playing`, Katamari state `playing`                                   |
 
 Important implications:
 
