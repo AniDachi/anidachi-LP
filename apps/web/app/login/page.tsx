@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { getSession } from "@/lib/anidachi-auth/session";
+import { sanitizeAuthReturnTo } from "@/lib/anidachi-auth/return-to";
 
 export const dynamic = "force-dynamic";
 
@@ -27,8 +28,8 @@ export default async function LoginPage({ searchParams }: Props) {
   if (session) redirect("/");
 
   const { next, error } = await searchParams;
-  const safeNext =
-    next && next.startsWith("/room/") ? encodeURIComponent(next) : "";
+  const sanitizedNext = sanitizeAuthReturnTo(next);
+  const safeNext = sanitizedNext ? encodeURIComponent(sanitizedNext) : "";
 
   const errorMessage = error ? (ERROR_MESSAGES[error] ?? "An error occurred. Please try again.") : null;
 

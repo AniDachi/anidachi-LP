@@ -12,6 +12,7 @@ SHORT_SHA="$(git -C "$ROOT_DIR" rev-parse --short HEAD 2>/dev/null || echo local
 : "${WXT_API_HTTP_BASE:=https://anidachi-api-staging.vladislav-gul7.workers.dev}"
 : "${WXT_API_WS_BASE:=wss://anidachi-api-staging.vladislav-gul7.workers.dev}"
 : "${WXT_BUILD_ID:=${SHORT_SHA}-staging-$(date +%Y%m%d%H%M%S)}"
+: "${WXT_BROAD_HOST_PERMISSIONS:=true}"
 
 export WXT_EXTENSION_CHANNEL
 export WXT_EXTENSION_VERSION
@@ -19,6 +20,7 @@ export WXT_WEB_HTTP_BASE
 export WXT_API_HTTP_BASE
 export WXT_API_WS_BASE
 export WXT_BUILD_ID
+export WXT_BROAD_HOST_PERMISSIONS
 
 cd "$ROOT_DIR"
 

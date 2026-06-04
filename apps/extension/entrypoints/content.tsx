@@ -42,9 +42,13 @@ const STORE_CONTENT_SCRIPT_MATCHES = [
   "https://*.crunchyroll.com/*",
 ];
 
+const USE_STORE_CONTENT_SCRIPT_MATCHES =
+  import.meta.env.WXT_EXTENSION_CHANNEL === "production" ||
+  (import.meta.env.WXT_EXTENSION_CHANNEL === "staging" &&
+    import.meta.env.WXT_BROAD_HOST_PERMISSIONS !== "true");
+
 const CONTENT_SCRIPT_MATCHES =
-  import.meta.env.WXT_EXTENSION_CHANNEL === "staging" ||
-  import.meta.env.WXT_EXTENSION_CHANNEL === "production"
+  USE_STORE_CONTENT_SCRIPT_MATCHES
     ? STORE_CONTENT_SCRIPT_MATCHES
     : LOCAL_CONTENT_SCRIPT_MATCHES;
 
