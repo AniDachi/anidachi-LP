@@ -165,6 +165,7 @@ export async function middleware(request: NextRequest) {
       nextPath: sanitizeStagingAccessNextPath(
         request.nextUrl.searchParams.get("next"),
       ),
+      status: 200,
     });
   }
 
@@ -195,6 +196,7 @@ export async function middleware(request: NextRequest) {
     return renderStagingAccessPage({
       nextPath: redirectPath,
       invalid: true,
+      status: 401,
     });
   }
 

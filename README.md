@@ -136,3 +136,7 @@ branch.
 
 Historical plans under `docs/superpowers/plans/` may contain old URLs and old
 decisions. Use `docs/current-development-state.md` for active endpoints.
+
+See **[docs/development-environments.md](docs/development-environments.md)** for
+the full staging/production model, current protected staging URL, extension build
+targets, OAuth redirects, and release checklist.

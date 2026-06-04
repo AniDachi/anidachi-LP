@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make `George-Kreatli/anidachi-LP` the single source-of-truth repository for Anidachi, with a clean monorepo layout, staging/production environments, safe CI/CD, and a development workflow that supports two people working without breaking the live product.
+**Goal:** Make `AniDachi/anidachi-LP` the single source-of-truth repository for Anidachi, with a clean monorepo layout, staging/production environments, safe CI/CD, and a development workflow that supports two people working without breaking the live product.
 
 **Architecture:** Convert the current website repository into a pnpm/Turborepo monorepo. The existing website moves into `apps/web`, the current extension/Worker/demo/protocol code moves into sibling workspace packages, and generated extension folders stay out of git. Production deploys only from protected `main`; staging deploys from `staging`; feature branches use PR preview deployments.
 
@@ -12,7 +12,7 @@
 
 ## Current Status
 
-- [x] Target GitHub repo is `George-Kreatli/anidachi-LP`.
+- [x] Target GitHub repo is `AniDachi/anidachi-LP`.
 - [x] Target GitHub repo has been transferred to `AniDachi/anidachi-LP`; old GitHub URL redirects to the organization repo.
 - [x] Target repo default branch is `main`.
 - [x] Target repo current inspected commit is `bd5f6ab5781e9a8dd74af43c207c4c5876ec8c70`.
@@ -27,10 +27,18 @@
 - [x] Migration branch `codex/monorepo-migration` converts the target repo into a monorepo.
 - [x] `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol` are inside the migration branch.
 - [x] Vercel is configured with `apps/web` as Root Directory.
-- [ ] Vercel Git integration still needs to be reconnected from the old `George-Kreatli/anidachi-LP` metadata to `AniDachi/anidachi-LP`.
+- [x] Vercel Git integration is connected to `AniDachi/anidachi-LP`.
 - [x] Cloudflare Worker staging/production environments are configured and deployed.
 - [x] GitHub branch protection and required checks are confirmed for `main` and `staging`.
 - [x] Staging environment exists as a protected integration branch with staging Worker/API settings.
+- [x] Fast staging web URL is the protected Vercel preview alias `https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app`.
+- [x] Team environment/reference doc exists at `docs/development-environments.md`.
+- [x] Google/Discord OAuth redirects for the protected staging preview were added and manually confirmed.
+- [x] PR #2 checks are green after the staging OAuth status update: CI, Vercel, and Vercel Preview Comments.
+- [x] Local staging extension zip was built for manual acceptance testing at `artifacts/anidachi-extension-staging-65bead8.zip`.
+- [x] App-level staging password gate replaced Vercel Authentication for the protected preview alias.
+- [x] User installed the staging zip and confirmed room creation works on the protected staging stack.
+- [ ] P2P media stability remains a known follow-up outside the monorepo migration scope.
 - [ ] Public custom staging domain is intentionally not attached until protected access is designed.
 
 ## Non-Negotiable Rules
@@ -46,7 +54,7 @@
 ## Target Repository Layout
 
 ```txt
-George-Kreatli/anidachi-LP/
+AniDachi/anidachi-LP/
   apps/
     web/          # Next.js site, auth, rooms, Stripe, SEO, Supabase migrations
     extension/    # WXT Chrome extension
@@ -86,7 +94,7 @@ George-Kreatli/anidachi-LP/
 ```txt
 local       developer machine
 preview     per pull request / feature branch
-staging     branch: staging, domain: staging.anidachi.app
+staging     branch: staging, protected Vercel preview URL for fast internal testing
 production  branch: main, domain: www.anidachi.app / anidachi.app
 ```
 
@@ -96,7 +104,7 @@ Rules:
 - `staging` is a persistent integration branch for testing with another PC/friend before production.
 - Feature branches target `staging` first.
 - Production release happens by PR from `staging` into `main`.
-- Website staging uses Vercel Preview/custom environment.
+- Website staging uses a protected Vercel preview URL for the fast internal test loop.
 - Worker staging uses Wrangler `--env staging`.
 - Worker production uses Wrangler `--env production`.
 - Extension has separate staging and production builds with different `WXT_*` bases.
@@ -164,7 +172,7 @@ Exception:
 Observed:
 
 ```txt
-repo: George-Kreatli/anidachi-LP
+repo: AniDachi/anidachi-LP
 default branch: main
 current inspected commit: bd5f6ab5781e9a8dd74af43c207c4c5876ec8c70
 current package manager: npm
@@ -198,7 +206,7 @@ Run:
 
 ```bash
 cd /Users/vladyslavhulyi
-git clone git@github.com:George-Kreatli/anidachi-LP.git anidachi-LP-monorepo
+git clone git@github.com:AniDachi/anidachi-LP.git anidachi-LP-monorepo
 cd /Users/vladyslavhulyi/anidachi-LP-monorepo
 git switch main
 git pull --ff-only
@@ -951,7 +959,7 @@ Manual preview deploy succeeded:
 https://v0-anime-app-landing-page-do64xrhff-georges-projects-8c4bc43a.vercel.app
 ```
 
-- [ ] **Step 6.4: Configure production env vars**
+- [x] **Step 6.4: Configure production env vars**
 
 Production env must include at least:
 
@@ -976,12 +984,36 @@ Expected:
 Production auth, room creation, Stripe, and Supabase access continue working.
 ```
 
-- [ ] **Step 6.5: Configure staging env vars**
+Observed:
+
+```txt
+Vercel metadata shows the required Anidachi/Supabase/OAuth production variables exist:
+ANIDACHI_JWT_SECRET, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+SUPABASE_SERVICE_ROLE_KEY, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET,
+ANIDACHI_GOOGLE_CLIENT_ID, ANIDACHI_GOOGLE_CLIENT_SECRET, NEXT_PUBLIC_SITE_URL,
+and STRIPE_SECRET_KEY.
+
+ANIDACHI_ENFORCE_ROOM_LIMITS was added to Vercel Production with value true, and a
+branch-scoped Preview override was added for codex/monorepo-migration with value false.
+
+Vercel sensitive env values are write-only in this CLI context, so values were not
+printed or committed. `STRIPE_WEBHOOK_SECRET` is not visible in `vercel env ls` and
+must be provided from Stripe before billing/webhook production release.
+
+Decision:
+
+`STRIPE_WEBHOOK_SECRET` is not blocking the repository/environment migration because
+auth, room creation, Supabase access, Worker connection, and extension flows do not
+depend on Stripe webhook delivery. Treat it as a production billing follow-up that
+must be completed before relying on subscription webhook events.
+```
+
+- [x] **Step 6.5: Configure staging env vars**
 
 Staging env must include:
 
 ```txt
-NEXT_PUBLIC_SITE_URL=https://staging.anidachi.app
+NEXT_PUBLIC_SITE_URL=https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
 NEXT_PUBLIC_ROBOTS_NOINDEX=true
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -994,6 +1026,14 @@ ANIDACHI_GOOGLE_CLIENT_SECRET
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
 ANIDACHI_ENFORCE_ROOM_LIMITS=false
+```
+
+Observed:
+
+```txt
+Vercel branch-scoped Preview env for `codex/monorepo-migration` has NEXT_PUBLIC_SITE_URL set to the protected preview alias.
+Vercel branch-scoped Preview env for `codex/monorepo-migration` has NEXT_PUBLIC_ROBOTS_NOINDEX=true.
+GitHub environment `staging` has WXT_WEB_HTTP_BASE set to the protected preview alias.
 ```
 
 Expected:
@@ -1243,7 +1283,21 @@ Expected:
 Room tokens generated by website are accepted by Worker.
 ```
 
-- [ ] **Step 8.4: Add OAuth redirect URLs**
+Observed:
+
+```txt
+Staging alignment is functionally confirmed: user installed
+artifacts/anidachi-extension-staging-65bead8.zip, created a room through the protected
+staging website API, and the extension connected to the staging Worker.
+
+Production Vercel and Cloudflare both have ANIDACHI_JWT_SECRET configured by name.
+Production Worker responds and /ice-servers is configured. Direct value comparison is
+not possible through Vercel/Cloudflare CLI because these secrets are write-only. Final
+production JWT alignment must be confirmed during Step 14.6 by creating a production
+room and connecting the production extension to the production Worker.
+```
+
+- [x] **Step 8.4: Add OAuth redirect URLs**
 
 Production:
 
@@ -1255,8 +1309,8 @@ https://www.anidachi.app/api/auth/callback/discord
 Staging:
 
 ```txt
-https://staging.anidachi.app/api/auth/callback/google
-https://staging.anidachi.app/api/auth/callback/discord
+https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app/api/auth/callback/google
+https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app/api/auth/callback/discord
 ```
 
 Expected:
@@ -1265,13 +1319,21 @@ Expected:
 Login works on staging and production.
 ```
 
-- [ ] **Step 8.5: Confirm extension auth redirect**
+Observed:
+
+```txt
+Google staging OAuth no longer returns redirect_uri_mismatch.
+Discord staging OAuth was confirmed manually through the browser.
+User confirmed staging OAuth login works.
+```
+
+- [x] **Step 8.5: Confirm extension auth redirect**
 
 Expected website route:
 
 ```txt
 https://www.anidachi.app/extension/connect
-https://staging.anidachi.app/extension/connect
+https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app/extension/connect
 ```
 
 Expected extension behavior:
@@ -1280,12 +1342,20 @@ Expected extension behavior:
 chrome.identity.launchWebAuthFlow opens website auth and receives one-time code.
 ```
 
-- [ ] **Step 8.6: Staging login smoke test**
+Observed:
+
+```txt
+Extension staging build uses WXT_WEB_HTTP_BASE=https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app.
+The website route is present at /extension/connect.
+Full login smoke still depends on adding the preview callback URLs to Google/Discord.
+```
+
+- [x] **Step 8.6: Staging login smoke test**
 
 Manual:
 
 ```txt
-Open staging.anidachi.app.
+Open the protected Vercel preview URL.
 Sign in with Google.
 Open /api/me in same browser.
 Confirm user JSON is returned.
@@ -1297,6 +1367,12 @@ Expected:
 
 ```txt
 Staging auth works before extension testing.
+```
+
+Observed:
+
+```txt
+User confirmed protected staging login works after OAuth redirects were added.
 ```
 
 ---
@@ -1542,7 +1618,7 @@ Set environment variables:
 
 ```txt
 staging:
-  WXT_WEB_HTTP_BASE=https://staging.anidachi.app
+  WXT_WEB_HTTP_BASE=https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
   WXT_API_HTTP_BASE=https://anidachi-api-staging.<account-subdomain>.workers.dev
   WXT_API_WS_BASE=wss://anidachi-api-staging.<account-subdomain>.workers.dev
 
@@ -1642,7 +1718,7 @@ No direct untested production pushes.
 Observed:
 
 ```txt
-`main` requires PR review, one approval, up-to-date `check-and-test`, conversation resolution, and blocks force pushes/deletions.
+`main` requires PR review, one approval, up-to-date `check-and-test`, conversation resolution, admin enforcement, and blocks force pushes/deletions.
 ```
 
 - [x] **Step 11.3: Protect `staging`**
@@ -1763,13 +1839,13 @@ Observed:
 Remote branch `staging` exists at the migration branch tip and CI passes.
 ```
 
-- [ ] **Step 12.4: Configure Vercel staging domain**
+- [x] **Step 12.4: Configure protected Vercel preview staging**
 
-In Vercel:
+Fast staging approach:
 
 ```txt
-Domain: staging.anidachi.app
-Branch: staging
+Domain: none
+Web URL: https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
 Environment variables: staging values
 Robots noindex: enabled through env
 ```
@@ -1777,14 +1853,16 @@ Robots noindex: enabled through env
 Expected:
 
 ```txt
-staging.anidachi.app serves the monorepo web app without indexing.
+Protected Vercel preview serves the monorepo web app without indexing.
 ```
 
 Observed:
 
 ```txt
-Not attached yet by design. Vercel Standard Protection protects preview/deployment URLs but not custom domains on the current plan/settings. Cloudflare account does not currently contain the `anidachi.app` zone, so Cloudflare Access cannot be applied to `staging.anidachi.app` yet. Use protected Vercel preview/branch URLs for staging until a secure custom-domain access model is added.
-Vercel Git integration also still needs access to the new `AniDachi/anidachi-LP` organization repository. `vercel git connect git@github.com:AniDachi/anidachi-LP.git --non-interactive` currently fails until the Vercel GitHub App is installed or granted access for the org repo.
+Using protected Vercel preview URL for fast internal staging.
+Do not attach `staging.anidachi.app` yet. Vercel Standard Protection protects preview/deployment URLs but not custom domains on the current plan/settings. Cloudflare account does not currently contain the `anidachi.app` zone, so Cloudflare Access cannot be applied to `staging.anidachi.app` yet.
+Vercel Git integration is connected to `AniDachi/anidachi-LP`.
+Protected preview alias returns HTTP 401 with Vercel SSO and x-robots-tag noindex before authentication.
 ```
 
 - [x] **Step 12.5: Deploy staging Worker**
@@ -1806,15 +1884,16 @@ Observed:
 
 ```txt
 https://anidachi-api-staging.vladislav-gul7.workers.dev responds, including /ice-servers with Cloudflare TURN configured.
+GitHub Actions `Deploy API` completed successfully on branch `staging`.
 ```
 
-- [ ] **Step 12.6: Build staging extension**
+- [x] **Step 12.6: Build staging extension**
 
 Run:
 
 ```bash
 cd /Users/vladyslavhulyi/anidachi-LP-monorepo
-WXT_WEB_HTTP_BASE=https://staging.anidachi.app \
+WXT_WEB_HTTP_BASE=https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app \
 WXT_API_HTTP_BASE=https://anidachi-api-staging.<account-subdomain>.workers.dev \
 WXT_API_WS_BASE=wss://anidachi-api-staging.<account-subdomain>.workers.dev \
 pnpm --filter @anidachi/extension build
@@ -1826,6 +1905,14 @@ Expected:
 apps/extension/.output/chrome-mv3 contains staging extension build.
 ```
 
+Observed:
+
+```txt
+GitHub Actions `Build Extension` completed successfully on branch `staging` and uploaded the `anidachi-extension-staging` artifact.
+After WXT_WEB_HTTP_BASE was updated, GitHub Actions `Build Extension` was rerun successfully on branch `staging`.
+Local staging zip was also built from commit 65bead8 at artifacts/anidachi-extension-staging-65bead8.zip.
+```
+
 ---
 
 ## Task 13: Staging Acceptance Test
@@ -1834,12 +1921,12 @@ apps/extension/.output/chrome-mv3 contains staging extension build.
 
 - Test only; no source changes unless bugs are found
 
-- [ ] **Step 13.1: Website smoke test**
+- [x] **Step 13.1: Website smoke test**
 
 Manual:
 
 ```txt
-Open https://staging.anidachi.app.
+Open the protected Vercel preview URL.
 Confirm homepage loads.
 Confirm noindex behavior.
 Sign in with Google.
@@ -1854,7 +1941,14 @@ Expected:
 Website auth works on staging.
 ```
 
-- [ ] **Step 13.2: Room creation smoke test**
+Observed:
+
+```txt
+Protected staging preview is reachable after the app-level staging password gate,
+OAuth login works, and user confirmed the staging auth flow.
+```
+
+- [x] **Step 13.2: Room creation smoke test**
 
 Manual:
 
@@ -1877,6 +1971,14 @@ Viewer joins through website invite page.
 Extension receives room token and connects to Worker.
 ```
 
+Observed:
+
+```txt
+User installed artifacts/anidachi-extension-staging-65bead8.zip, created a staging
+room successfully, and confirmed the flow works as far as the current MVP allows.
+Existing P2P issues are known and intentionally tracked outside this migration plan.
+```
+
 - [ ] **Step 13.3: P2P media smoke test**
 
 Manual:
@@ -1896,7 +1998,16 @@ Expected:
 P2P video/audio works in both directions after reload.
 ```
 
-- [ ] **Step 13.4: Playback sync smoke test**
+Observed:
+
+```txt
+Deferred. P2P media reliability is an existing product issue and will be handled as a
+separate stabilization task after the repository/environment migration is closed.
+This should not block the monorepo migration PR unless it regresses room creation,
+auth, invite, or basic realtime room connection.
+```
+
+- [x] **Step 13.4: Playback sync smoke test**
 
 Manual:
 
@@ -1917,7 +2028,14 @@ Expected:
 Realtime room and playback sync still work after monorepo migration.
 ```
 
-- [ ] **Step 13.5: Debug export check**
+Observed:
+
+```txt
+Manual confirmation completed on 2026-06-04. User confirmed staging playback sync is OK
+after testing the staging extension on the protected staging stack.
+```
+
+- [x] **Step 13.5: Debug export check**
 
 Manual:
 
@@ -1932,6 +2050,21 @@ Expected:
 
 ```txt
 Wrong-environment builds are easy to detect.
+```
+
+Observed:
+
+```txt
+Partially verified by artifact inspection: artifacts/anidachi-extension-staging-65bead8.zip
+contains the staging WEB/API/WS bases and build id:
+65bead8-staging-20260603214317.
+
+Manual UI confirmation is still needed inside the extension debug area, especially ICE
+path log visibility after a P2P connection. P2P reliability itself remains deferred.
+
+Manual UI confirmation completed on 2026-06-04. The extension debug area shows:
+Build 65bead8-staging-20260603214317, Adapter youtube, Media p2p, Logs 1200.
+User confirmed compact debug export contains the staging API/WS bases.
 ```
 
 ---
@@ -2018,6 +2151,20 @@ Expected:
 Production extension artifact is built from main.
 ```
 
+Observed:
+
+```txt
+Production-targeted preflight build passed on codex/monorepo-migration:
+WXT_WEB_HTTP_BASE=https://www.anidachi.app,
+WXT_API_HTTP_BASE=https://anidachi-api-production.vladislav-gul7.workers.dev,
+WXT_API_WS_BASE=wss://anidachi-api-production.vladislav-gul7.workers.dev.
+
+The generated bundle contains production bases and build id
+bac086f-production-preflight-20260603234938. This is not the official production
+release artifact; the final production extension must still be rebuilt from main
+after merge.
+```
+
 - [ ] **Step 14.6: Production smoke test**
 
 Manual:
@@ -2074,15 +2221,15 @@ After production migration, do not continue product development in /Users/vladys
 Expected:
 
 ```txt
-All new branches start from George-Kreatli/anidachi-LP.
+All new branches start from AniDachi/anidachi-LP.
 ```
 
-- [ ] **Step 15.2: Update docs to point at new source of truth**
+- [x] **Step 15.2: Update docs to point at new source of truth**
 
 Update docs with:
 
 ```txt
-Primary repo: George-Kreatli/anidachi-LP
+Primary repo: AniDachi/anidachi-LP
 Website app: apps/web
 Extension app: apps/extension
 Worker app: apps/api
@@ -2095,7 +2242,14 @@ Expected:
 New contributors do not accidentally use the old repo.
 ```
 
-- [ ] **Step 15.3: Fix `apps/web/README.md` commands**
+Observed:
+
+```txt
+`docs/development-environments.md` documents the source-of-truth repo, staging/production URLs, extension build targets, OAuth redirects, and release checklist.
+Root `README.md` links to `docs/development-environments.md`.
+```
+
+- [x] **Step 15.3: Fix `apps/web/README.md` commands**
 
 Replace npm commands with:
 
@@ -2109,6 +2263,12 @@ Expected:
 
 ```txt
 Website README matches monorepo reality.
+```
+
+Observed:
+
+```txt
+`apps/web/README.md` exists and uses pnpm workspace commands from the monorepo root.
 ```
 
 - [ ] **Step 15.4: Create first normal feature branch from staging**
@@ -2131,45 +2291,51 @@ Future work starts from the new workflow.
 
 ## Known Migration Risks And Mitigations
 
-- [ ] **Risk: Website build fails because Stripe is instantiated at import time.**
+- [x] **Risk: Website build fails because Stripe is instantiated at import time.**
   - Mitigation: move Stripe client creation inside the route handler before Vercel migration.
+  - Observed: Stripe API routes create the client from request-time helpers, and the web build/check pass.
 
-- [ ] **Risk: `@/*` alias breaks after moving website into `apps/web`.**
+- [x] **Risk: `@/*` alias breaks after moving website into `apps/web`.**
   - Mitigation: keep `apps/web/tsconfig.json` alias pointing to `./*` and run `pnpm --filter @anidachi/web check`.
+  - Observed: `apps/web/tsconfig.json` maps `@/*` to `./*`, and `pnpm --filter @anidachi/web check` passes.
 
-- [ ] **Risk: Vercel cannot access shared `packages/*` from `apps/web`.**
+- [x] **Risk: Vercel cannot access shared `packages/*` from `apps/web`.**
   - Mitigation: enable "Include source files outside of the Root Directory" or avoid web imports from packages until Vercel is configured.
+  - Observed: current `apps/web` does not runtime-import `packages/*`, and Vercel preview deployment passes.
 
-- [ ] **Risk: OAuth works in production but fails in staging.**
+- [x] **Risk: OAuth works in production but fails in staging.**
   - Mitigation: add staging redirect URLs before staging tests.
+  - Observed: Google/Discord OAuth redirects for the protected staging preview were added and manually confirmed.
 
 - [ ] **Risk: Website room token is rejected by Worker.**
   - Mitigation: ensure `ANIDACHI_JWT_SECRET` matches between Vercel and Cloudflare for the same environment.
+  - Observed: staging room creation and Worker connection are functionally confirmed; production alignment remains pending until production smoke.
 
-- [ ] **Risk: Generated extension output gets committed.**
+- [x] **Risk: Generated extension output gets committed.**
   - Mitigation: root `.gitignore` excludes generated extension folders and artifacts.
+  - Observed: `.gitignore` excludes generated extension folders/zips/artifacts, and `git ls-files` shows no generated extension outputs.
 
 - [ ] **Risk: Old repo keeps receiving changes.**
-  - Mitigation: mark `/Users/vladyslavhulyi/anidachi` as legacy after migration and move all active work to `George-Kreatli/anidachi-LP`.
+  - Mitigation: mark `/Users/vladyslavhulyi/anidachi` as legacy after migration and move all active work to `AniDachi/anidachi-LP`.
 
 - [ ] **Risk: Internal CRM/social tools pollute Anidachi product scope.**
   - Mitigation: keep them inside `apps/web` for migration safety first; decide later whether to remove or isolate them in a separate app/package.
 
 ## Definition Of Done
 
-- [ ] `George-Kreatli/anidachi-LP` contains `apps/web`, `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol`.
-- [ ] Repo uses `pnpm@11.2.2` and Turborepo.
-- [ ] `npm/package-lock.json` is removed from root.
-- [ ] Website builds from `apps/web`.
+- [x] `AniDachi/anidachi-LP` contains `apps/web`, `apps/extension`, `apps/api`, `apps/demo`, and `packages/protocol`.
+- [x] Repo uses `pnpm@11.2.2` and Turborepo.
+- [x] `npm/package-lock.json` is removed from root.
+- [x] Website builds from `apps/web`.
 - [ ] Vercel production deploys from `main`.
 - [ ] Vercel staging deploys from `staging`.
-- [ ] Cloudflare Worker deploys to `staging` and `production` environments.
+- [x] Cloudflare Worker deploys to `staging` and `production` environments.
 - [ ] Supabase variables work in both staging and production.
 - [ ] Google/Discord auth works in both staging and production.
-- [ ] Extension staging build points at staging web/API.
+- [x] Extension staging build points at staging web/API.
 - [ ] Extension production build points at production web/API.
-- [ ] CI runs on PRs to `staging` and `main`.
-- [ ] `main` is protected from direct unreviewed pushes.
+- [x] CI runs on PRs to `staging` and `main`.
+- [x] `main` is protected from direct unreviewed pushes.
 - [ ] Staging acceptance test passes on two devices.
 - [ ] Production smoke test passes after merge.
 - [ ] Old local repo is no longer used for active product development.
