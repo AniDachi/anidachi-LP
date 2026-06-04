@@ -2,7 +2,7 @@ import Stripe from "stripe";
 
 const EVENT = "checkout.session.completed" as const;
 const PATH = "/api/stripe/webhook";
-const DEFAULT_LIVE_URL = `https://anidachi.app${PATH}`;
+const DEFAULT_LIVE_URL = `https://www.anidachi.app${PATH}`;
 
 function required(name: string, value: string | undefined): string {
   if (!value) throw new Error(`Missing env var: ${name}`);
