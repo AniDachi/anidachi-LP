@@ -1,6 +1,10 @@
 # Anidachi Architecture and Stack Notes
 
-This document records the current local/public MVP architecture, stack decisions, deployment steps, and product/engineering constraints for Anidachi.
+This document records the current architecture, stack decisions, deployment
+steps, and product/engineering constraints for Anidachi.
+
+In command examples, `<repo>` means the folder where a developer cloned
+`AniDachi/anidachi-LP` on their own machine.
 
 ## Product Shape
 
@@ -28,7 +32,7 @@ apps/
 packages/
   protocol/     Shared Zod protocol, types, sync math
 infra/
-  livekit/      Local LiveKit Docker compose wrapper
+  livekit/      Historical local LiveKit helper, not the default media path
 docs/
   architecture.md
   experimental-features.md
@@ -43,7 +47,7 @@ docs/
 - React
 - TypeScript
 - Shadow DOM content script overlay
-- `livekit-client` for Ghost Cam
+- WebRTC P2P media controller for Ghost Cam and push-to-talk audio
 - `lucide-react` icons
 - Vitest + happy-dom for tests
 
@@ -67,19 +71,21 @@ Room creation is auth-only for the commercial product:
 - the Worker accepts WebSocket joins only with a valid `roomToken`;
 - the Worker derives participant id/name/avatar/role from the room token and does not trust client-provided identity fields.
 
-### Ghost Cam
+### Ghost Cam And Audio
 
-- Local development: self-hosted LiveKit via Docker
-- Public friend testing: LiveKit Cloud
+Ghost Cam and push-to-talk audio currently use WebRTC P2P with Cloudflare TURN
+fallback. LiveKit remains as historical/experimental fallback code, not the
+default commercial media path.
 
-Ghost Cam publishes camera video only:
+Ghost Cam publishes camera video:
 
-- no microphone track;
 - low resolution;
 - low fps;
 - rendered as circular transparent bubbles.
 
-Microphone is used only by browser speech recognition for push-to-talk voice reactions, not by LiveKit.
+Push-to-talk captures microphone audio only while the user holds the configured
+key. The extension displays a small microphone indicator on the speaking
+participant.
 
 ### Voice Input
 
@@ -104,10 +110,14 @@ Keyword to emoji mapping:
 Staging:
 
 ```txt
-Web: https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
+Web: https://staging.anidachi.app
 API: https://anidachi-api-staging.vladislav-gul7.workers.dev
 WS:  wss://anidachi-api-staging.vladislav-gul7.workers.dev
 ```
+
+`staging.anidachi.app` is internal tester infrastructure. It must be gated,
+noindex, excluded from sitemap output, and kept out of production SEO/marketing
+surfaces.
 
 Production:
 
@@ -131,12 +141,6 @@ Install dependencies:
 corepack enable
 corepack prepare pnpm@11.2.2 --activate
 pnpm install
-```
-
-Start local LiveKit:
-
-```bash
-docker compose -f infra/livekit/docker-compose.yml up
 ```
 
 Start local API:
@@ -170,8 +174,8 @@ Local defaults:
 API_HTTP_BASE=http://127.0.0.1:8787
 API_WS_BASE=ws://127.0.0.1:8787
 WEB_HTTP_BASE=http://localhost:3003
-LiveKit=ws://localhost:7880
 Demo=http://127.0.0.1:5174
+Media transport=P2P by default
 ```
 
 Start local website:
@@ -199,18 +203,18 @@ pnpm build:extension:public
 Current generated output folders:
 
 ```txt
-/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging
-/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging.zip
-/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-public
-/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-public.zip
+<repo>/anidachi-extension-staging
+<repo>/anidachi-extension-staging.zip
+<repo>/anidachi-extension-public
+<repo>/anidachi-extension-public.zip
 ```
 
 Legacy manually loaded experiment folders may still exist for old local testing,
 but they are not the canonical build output:
 
 ```txt
-Mac: /Users/vladyslavhulyi/anidachi/anidachi-extension-experiment
-PC:  C:\Users\vladi\OneDrive\Desktop\anidachi-extension-experiment
+anidachi-extension-experiment/
+anidachi-extension-experiment.zip
 ```
 
 Install manually in Chrome:
@@ -230,7 +234,8 @@ The Worker config lives at:
 apps/api/wrangler.toml
 ```
 
-It contains only public/non-secret config:
+It contains public/non-secret config. Any LiveKit URL in this file is legacy
+fallback configuration and is not the default media path:
 
 ```toml
 [vars]
@@ -240,7 +245,7 @@ LIVEKIT_URL = "wss://anidachi-1vnsspf7.livekit.cloud"
 Secrets are set with Wrangler:
 
 ```bash
-cd /Users/vladyslavhulyi/anidachi-LP-monorepo/apps/api
+cd <repo>/apps/api
 pnpm exec wrangler login
 pnpm exec wrangler secret put ANIDACHI_JWT_SECRET --env staging
 pnpm exec wrangler secret put CLOUDFLARE_TURN_KEY_ID --env staging
@@ -426,13 +431,15 @@ Plain `1-6` intentionally override YouTube number seek behavior because the curr
 
 ## Known Constraints
 
-- Extension uses broad host permissions for local/prototype speed.
-- This is not Chrome Store-ready.
-- No auth, DB, friend graph, dashboard, billing, or persistent history yet.
-- No microphone track is published to LiveKit.
-- Speech recognition may use Chrome/browser speech services.
+- The local development extension may use broader permissions for adapter
+  experiments; staging and production store builds must stay narrowly scoped.
+- Auth, Supabase-backed room records, Stripe wiring, and extension auth exchange
+  exist, but friends and durable social watch progress are still future work.
+- P2P media is still an experimental area and needs more reconnect/asymmetric
+  join hardening before it should be treated as fully solved.
+- Push-to-talk microphone audio is sent through the current media transport.
+- Dictation/voice reactions may use Chrome/browser speech services.
 - Netflix/DRM sites need site-specific adapters and may not permit overlay behavior reliably.
-- Local LiveKit over LAN can work, but public friend testing should use LiveKit Cloud.
 
 ## Verification Commands
 
@@ -467,13 +474,16 @@ pnpm check
 apps/extension/entrypoints/content.tsx    Overlay mounting and fullscreen relocation
 apps/extension/src/overlay-app.tsx        Main overlay UI and room interaction
 apps/extension/src/video-adapter.ts       Generic, YouTube, and Crunchyroll video adapters
-apps/extension/src/ghost-cam.ts           LiveKit Ghost Cam integration
+apps/extension/src/ghost-cam.ts           Ghost Cam transport selection and UI state
+apps/extension/src/p2p-media.ts           P2P camera/audio controller
+apps/extension/src/p2p-ice.ts             ICE server loading and prioritization
 apps/extension/src/hotkeys.ts             Hotkey routing
 apps/extension/src/media-ducking.ts       Generic HTML5 video ducking
 apps/extension/src/voice.ts               Speech recognition and keyword mapping
 apps/extension/src/room-client.ts         WebSocket room client
 apps/api/src/index.ts                     Worker routes and Durable Object
 apps/api/src/room-state.ts                Room state and host assignment
-apps/api/src/livekit-token.ts             LiveKit token generation
+apps/api/src/ice-servers.ts               Cloudflare TURN credential generation
+apps/api/src/livekit-token.ts             Historical LiveKit token generation
 packages/protocol/src                     Shared room protocol and sync math
 ```

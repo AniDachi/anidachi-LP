@@ -15,21 +15,26 @@ Canonical GitHub repository:
 AniDachi/anidachi-LP
 ```
 
-Canonical local working copy:
+Local working copies may live anywhere. In this documentation, `<repo>` means
+the folder where a developer has cloned `AniDachi/anidachi-LP` on their own
+machine.
 
 ```txt
-/Users/vladyslavhulyi/anidachi-LP-monorepo
+<repo>
 ```
 
-Legacy local folder:
+Example local clone locations:
 
 ```txt
-/Users/vladyslavhulyi/anidachi
+~/Projects/anidachi-LP
+C:\Projects\anidachi-LP
+/workspace/anidachi-LP
 ```
 
-The legacy folder can be inspected for history, but new product work should not
-be done there. If code exists only in the legacy folder, migrate it into the
-canonical monorepo before continuing.
+Older pre-monorepo local folders may exist on individual machines. Treat them as
+legacy context only. New product work belongs in the canonical repository above.
+If useful code exists only in an old local folder, migrate it into this monorepo
+before continuing.
 
 Generated extension folders and zips are build artifacts. Do not edit them as
 source and do not commit them:
@@ -159,7 +164,7 @@ WS:  ws://127.0.0.1:8787
 Staging:
 
 ```txt
-Web: https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
+Web: https://staging.anidachi.app
 API: https://anidachi-api-staging.vladislav-gul7.workers.dev
 WS:  wss://anidachi-api-staging.vladislav-gul7.workers.dev
 ```
@@ -174,6 +179,11 @@ WS:  wss://anidachi-api-production.vladislav-gul7.workers.dev
 
 Staging and production must never accidentally share runtime endpoints. Before
 uploading an extension zip, inspect `manifest.json` and the extension debug panel.
+
+`staging.anidachi.app` is an internal tester surface. It must be password-gated,
+noindex, excluded from the sitemap, and never used in production SEO/marketing
+pages. It may appear in internal env vars, OAuth callback allowlists, staging
+extension builds, and internal docs.
 
 Deployment ownership:
 
@@ -332,13 +342,20 @@ Build commands:
 
 ```bash
 pnpm build:extension:staging
+pnpm validate:extension:staging
+pnpm build:extension:staging:broad
 pnpm build:extension:public
+pnpm validate:extension:production
 ```
 
 Staging does not become production by changing users in place. The code is
 promoted. The extension listings stay separate. A tested commit from `staging` is
 merged/promoted to `main`, then the production extension is built and uploaded to
 the production Chrome Web Store listing.
+
+`pnpm build:extension:staging` is the store-safe tester build and must use narrow
+permissions. `pnpm build:extension:staging:broad` is local-only for development
+experiments and must not be uploaded to Chrome Web Store.
 
 ## Development Flow
 
@@ -354,23 +371,113 @@ Normal feature flow:
 8. Build and upload `Anidachi Staging` if testers need the change.
 9. Test in the staging extension and staging web/API environment.
 10. When accepted, open a release PR from `staging` into `main`.
-11. `main` requires review and stricter checks.
+11. `main` keeps stricter checks but does not require approval.
 12. After merge to `main`, deploy/build production artifacts.
 
 Branch protection:
 
 - `staging`: requires `check-and-test`, no approval required, faster iteration.
-- `main`: requires `check-and-test`, one approval, up-to-date branch, and
+- `main`: requires `check-and-test`, no approval, up-to-date branch, and
   conversation resolution.
+- Repository auto-merge is enabled, so eligible PRs can merge after required
+  checks pass.
+
+Site-only auto-promotion:
+
+- Website page/content work should still merge into `staging` first so it can be
+  verified on `staging.anidachi.app` and by the staging extension.
+- After a push to `staging`, `Promote Site Staging to Main` compares the full
+  `main..staging` diff.
+- If the diff contains only safe site/docs paths, it creates or updates the
+  `staging -> main` PR and enables auto-merge.
+- If extension, API, workflow, package, auth, room, checkout, or other sensitive
+  files are present in the diff, auto-promotion is skipped.
+- Workflow changes under `.github/**` are intentionally never auto-promoted; the
+  auto-promotion workflow itself must be installed in `main` manually once.
+
+Normal deploy path is PR merge. Manual release workflow dispatch is only for
+retries or emergencies, and release workflows must run from `staging` or `main`.
+Do not use manual dispatch from a feature branch as an alternate release path.
 
 Never push risky changes directly to `main`. Never mix unrelated P2P, billing,
 auth, UI, and migration changes in one large PR unless the change cannot be split.
+
+Plain-language version:
+
+```txt
+feature branch = your safe workspace for one task
+staging        = shared testing branch for founders/testers
+main           = production branch for the public product
+```
+
+For example, a website improvement starts from `staging`, moves into a feature
+branch, gets checked and reviewed through a PR, then lands in `staging` for
+testing. Only after it is accepted does the same code move to `main`.
+
+An extension feature follows the same path, but testers receive it through the
+separate `Anidachi Staging` Chrome Web Store listing before it is promoted to the
+public `Anidachi` listing.
+
+## Everyday Development Loop
+
+Start each feature from current `staging`:
+
+```bash
+git fetch origin
+git switch staging
+git pull --ff-only origin staging
+git switch -c codex/task-name
+pnpm install --frozen-lockfile
+pnpm check
+pnpm test
+```
+
+Run checks for the surface you touched.
+
+Web/auth/SEO change:
+
+```bash
+pnpm --filter @anidachi/web check
+pnpm --filter @anidachi/web test
+pnpm --filter @anidachi/web build
+```
+
+Extension change:
+
+```bash
+pnpm --filter @anidachi/extension check
+pnpm --filter @anidachi/extension test
+pnpm build:extension:staging
+pnpm validate:extension:staging
+```
+
+Protocol/API change:
+
+```bash
+pnpm --filter @anidachi/protocol test
+pnpm --filter @anidachi/api check
+pnpm --filter @anidachi/api test
+cd apps/api
+pnpm exec wrangler deploy --env staging --dry-run --outdir /tmp/anidachi-worker-dry-run
+```
+
+Promotion:
+
+1. Merge the feature PR into `staging`.
+2. Confirm Vercel staging is Ready.
+3. Run staging smoke when web/auth/staging-gate behavior changed.
+4. Build/upload `Anidachi Staging` if testers need extension changes.
+5. Test on at least one clean browser profile or new PC when auth changes.
+6. Open PR from `staging` into `main`.
+7. Merge only after checks; request review when the change is risky.
+8. Build/upload production extension only from `main`.
 
 ## Local Commands
 
 Install dependencies:
 
 ```bash
+cd <repo>
 corepack enable
 corepack prepare pnpm@11.2.2 --activate
 pnpm install
@@ -396,7 +503,9 @@ Build extension artifacts:
 
 ```bash
 pnpm build:extension:staging
+pnpm validate:extension:staging
 pnpm build:extension:public
+pnpm validate:extension:production
 ```
 
 Deploy Workers:
@@ -415,6 +524,8 @@ Before uploading staging extension:
 - `pnpm check` passes;
 - `pnpm test` passes;
 - `pnpm build:extension:staging` succeeds;
+- `pnpm validate:extension:staging` succeeds;
+- staging smoke passes after deploy if auth/web behavior changed;
 - manifest name is `Anidachi Staging`;
 - debug build id contains `staging`;
 - host permissions are not broad;
@@ -423,8 +534,9 @@ Before uploading staging extension:
 Before uploading production extension:
 
 - code has gone through staging;
-- production PR has been reviewed and merged into `main`;
+- production PR checks have passed and the PR has been merged into `main`;
 - `pnpm build:extension:public` succeeds;
+- `pnpm validate:extension:production` succeeds;
 - manifest name is `Anidachi`;
 - debug build id contains `production`;
 - host permissions are not broad;
@@ -434,7 +546,7 @@ Before uploading production extension:
 
 Do not:
 
-- develop new features in `/Users/vladyslavhulyi/anidachi`;
+- develop new features in old pre-monorepo folders;
 - commit generated extension folders or zips;
 - put secrets in the extension, docs, or git;
 - make staging point to production API by accident;
@@ -446,12 +558,12 @@ Do not:
 - treat P2P stability as fully solved until reconnect/asymmetric-join issues are
   hardened and tested.
 
-## AI Or Developer Startup Checklist
+## Development Startup Checklist
 
 Before making changes:
 
-1. Confirm the working directory is
-   `/Users/vladyslavhulyi/anidachi-LP-monorepo`.
+1. Confirm the working directory is your local clone of `AniDachi/anidachi-LP`
+   (`<repo>` in this documentation).
 2. Check the current branch and git state.
 3. Read `docs/current-development-state.md` for current endpoints and known
    fragile areas.
@@ -470,21 +582,27 @@ editing. Do not guess production values from old plans.
 
 ## Documents To Read First
 
-For a new developer or AI agent, read in this order:
+Historical plans under `docs/superpowers/plans/` may contain old URLs and old
+decisions. Use `docs/current-development-state.md` for active endpoints and
+release state.
+
+Read in this order before changing the project:
 
 1. `README.md` for repo basics and commands.
-2. `docs/project-operating-manual.md` for how the project is organized and how
+2. `docs/project-architecture-and-development.md` for the system architecture
+   and development workflow.
+3. `docs/project-operating-manual.md` for how the project is organized and how
    development should move.
-3. `docs/current-development-state.md` for current endpoints, branch protection,
+4. `docs/current-development-state.md` for current endpoints, branch protection,
    build artifacts, and known fragile areas.
-4. `docs/extension-release-channels.md` for staging/public extension builds.
-5. `docs/site-extension-integration-notes.md` for auth, website, extension, and
+5. `docs/extension-release-channels.md` for staging/public extension builds.
+6. `docs/site-extension-integration-notes.md` for auth, website, extension, and
    database integration details.
-6. `docs/experimental-features.md` for P2P and experimental feature status.
-7. `docs/architecture.md` for broader architecture notes.
-8. `docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`
+7. `docs/experimental-features.md` for P2P and experimental feature status.
+8. `docs/architecture.md` for broader architecture notes.
+9. `docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`
    for the longer future plan around rooms, P2P, and watch progress.
-9. `docs/superpowers/plans/2026-06-03-main-repository-monorepo-migration.md`
+10. `docs/superpowers/plans/2026-06-03-main-repository-monorepo-migration.md`
    only as migration history. It may include old paths and historical decisions.
 
 When documents conflict, prefer:

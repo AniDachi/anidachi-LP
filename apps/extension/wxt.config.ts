@@ -76,13 +76,16 @@ const useBroadHostPermissions =
 const webHostPermission = getHttpHostPermission(process.env.WXT_WEB_HTTP_BASE);
 const apiHttpHostPermission = getHttpHostPermission(process.env.WXT_API_HTTP_BASE);
 const apiWsHostPermission = getHttpHostPermission(process.env.WXT_API_WS_BASE);
+const channelWebHostPermissions =
+  extensionChannel === "production"
+    ? ["https://www.anidachi.app/*", webHostPermission]
+    : [webHostPermission];
 const hostPermissions =
   useBroadHostPermissions
     ? LOCAL_HOST_PERMISSIONS
     : unique([
         ...STORE_VIDEO_HOST_PERMISSIONS,
-        "https://www.anidachi.app/*",
-        webHostPermission,
+        ...channelWebHostPermissions,
         apiHttpHostPermission,
         apiWsHostPermission,
       ]);

@@ -8,11 +8,11 @@ SHORT_SHA="$(git -C "$ROOT_DIR" rev-parse --short HEAD 2>/dev/null || echo local
 
 : "${WXT_EXTENSION_CHANNEL:=staging}"
 : "${WXT_EXTENSION_VERSION:=0.1.0}"
-: "${WXT_WEB_HTTP_BASE:=https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app}"
+: "${WXT_WEB_HTTP_BASE:=https://staging.anidachi.app}"
 : "${WXT_API_HTTP_BASE:=https://anidachi-api-staging.vladislav-gul7.workers.dev}"
 : "${WXT_API_WS_BASE:=wss://anidachi-api-staging.vladislav-gul7.workers.dev}"
 : "${WXT_BUILD_ID:=${SHORT_SHA}-staging-$(date +%Y%m%d%H%M%S)}"
-: "${WXT_BROAD_HOST_PERMISSIONS:=true}"
+: "${WXT_BROAD_HOST_PERMISSIONS:=false}"
 
 export WXT_EXTENSION_CHANNEL
 export WXT_EXTENSION_VERSION

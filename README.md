@@ -6,6 +6,8 @@ For how the project is organized and how development should move, start with
 **[docs/project-operating-manual.md](docs/project-operating-manual.md)**.
 For current endpoints, branch protection, and known fragile areas, use
 **[docs/current-development-state.md](docs/current-development-state.md)**.
+For the complete architecture and development workflow, use
+**[docs/project-architecture-and-development.md](docs/project-architecture-and-development.md)**.
 
 ## Stack
 
@@ -21,7 +23,11 @@ For current endpoints, branch protection, and known fragile areas, use
 
 ## Local Development
 
+In commands, `<repo>` means the folder where you cloned `AniDachi/anidachi-LP`
+on your own machine.
+
 ```bash
+cd <repo>
 corepack enable
 corepack prepare pnpm@11.2.2 --activate
 pnpm install
@@ -39,7 +45,10 @@ pnpm dev:extension
 pnpm dev:api
 pnpm dev:demo
 pnpm build:extension:staging
+pnpm validate:extension:staging
 pnpm build:extension:public
+pnpm validate:extension:production
+pnpm smoke:worker:staging
 ```
 
 ## Project Structure
@@ -95,3 +104,35 @@ See `apps/web/.env.example` for website variables. Key ones:
 - After testing staging, open a release PR from `staging` into `main`.
 - Do not commit generated extension folders.
 - Build extension artifacts through CI or `pnpm build:extension:public`.
+
+Feature startup:
+
+```bash
+git fetch origin
+git switch staging
+git pull --ff-only origin staging
+git switch -c codex/task-name
+pnpm install --frozen-lockfile
+pnpm check
+pnpm test
+```
+
+Run targeted checks for the surface you touched:
+
+```txt
+web/auth/SEO: pnpm --filter @anidachi/web check && pnpm --filter @anidachi/web test
+extension:    pnpm --filter @anidachi/extension check && pnpm --filter @anidachi/extension test && pnpm build:extension:staging && pnpm validate:extension:staging
+api/protocol: pnpm --filter @anidachi/api check && pnpm --filter @anidachi/api test && pnpm smoke:worker:staging
+```
+
+`staging.anidachi.app` is an internal tester surface. It must stay
+password-gated, noindex, excluded from sitemap, and absent from production
+SEO/marketing pages. It may appear in internal env vars, OAuth callback
+allowlists, staging extension builds, and internal docs.
+
+Normal deploy path is PR merge. Manual release workflow dispatch is for
+retries/emergencies only and must run from `staging` or `main`, never a feature
+branch.
+
+Historical plans under `docs/superpowers/plans/` may contain old URLs and old
+decisions. Use `docs/current-development-state.md` for active endpoints.
