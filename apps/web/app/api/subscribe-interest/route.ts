@@ -3,14 +3,7 @@ import { getGmailRedirectUri, isGmailConfigured, sendPlaintextEmail } from "@/li
 import { readGmailTokens } from "@/lib/kreatli-crm/gmail-tokens";
 import { upsertSurveyLead } from "@/lib/kreatli-crm/survey-lead";
 import type { HomeSurveyAnswers } from "@/lib/home-survey";
-
-function serverOrigin(): string {
-  const site = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  if (site) return site;
-  const v = process.env.VERCEL_URL?.trim().replace(/\/$/, "");
-  if (v) return `https://${v}`;
-  return "https://anidachi.app";
-}
+import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 function buildInterestEmail(
   email: string,
@@ -78,7 +71,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const redirectUri = getGmailRedirectUri(serverOrigin());
+  const redirectUri = getGmailRedirectUri(getResolvedSiteOrigin());
   const { subject, body: emailBody } = buildInterestEmail(email, survey);
 
   for (const address of to) {

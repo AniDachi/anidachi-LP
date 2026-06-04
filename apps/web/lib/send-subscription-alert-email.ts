@@ -1,5 +1,6 @@
 import { getGmailRedirectUri, isGmailConfigured, sendPlaintextEmail } from "@/lib/kreatli-crm/gmail";
 import { readGmailTokens } from "@/lib/kreatli-crm/gmail-tokens";
+import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 export type SubscriptionAlertPayload = {
   sessionId: string;
@@ -12,11 +13,7 @@ export type SubscriptionAlertPayload = {
 
 /** Public site origin for OAuth redirect URI when `GOOGLE_GMAIL_REDIRECT_URI` is unset. */
 function serverOriginForGmailCallback(): string {
-  const site = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  if (site) return site;
-  const v = process.env.VERCEL_URL?.trim().replace(/\/$/, "");
-  if (v) return `https://${v}`;
-  return "https://anidachi.app";
+  return getResolvedSiteOrigin();
 }
 
 function buildAlertText(payload: SubscriptionAlertPayload): { subject: string; body: string } {
