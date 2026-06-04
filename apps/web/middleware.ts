@@ -196,7 +196,6 @@ export async function middleware(request: NextRequest) {
     return renderStagingAccessPage({
       nextPath: redirectPath,
       invalid: true,
-      status: 401,
     });
   }
 
