@@ -175,6 +175,11 @@ export const MAL_ID_BY_SLUG: Record<string, number> = {
   "highschool-dxd": 11617,
   "cardcaptor-sakura": 232,
   "date-a-live": 15583,
+  "sailor-moon": 530,
+  "weathering-with-you": 38826,
+  suzume: 50265,
+  "my-neighbor-totoro": 523,
+  pokemon: 527,
 } as const;
 
 export function getMalIdForSlug(slug: string): number | undefined {

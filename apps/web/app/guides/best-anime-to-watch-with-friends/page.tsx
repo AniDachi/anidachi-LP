@@ -4,9 +4,9 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch with Friends (2026) — 107+ Top Picks for Group Watching",
+  title: "Best Anime to Watch with Friends (2026) — 115+ Top Picks for Group Watching",
   description:
-    "Curated list of 107+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
+    "Curated list of 115+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
 };
 
@@ -68,18 +68,18 @@ export default function BestAnimeWithFriendsPage() {
         { name: "Guides", url: "/watch-anime-together" },
         { name: "Best Anime with Friends", url: "/guides/best-anime-to-watch-with-friends" },
       ]}
-      title="107+ Best Anime to Watch with Friends in 2026"
+      title="115+ Best Anime to Watch with Friends in 2026"
       description="Top anime picks for group watching sessions."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-05-24"
+      dateModified="2026-06-04"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        107+ Best Anime to Watch with Friends in 2026
+        115+ Best Anime to Watch with Friends in 2026
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -139,6 +139,8 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/fate-stay-night-unlimited-blade-works-with-friends" className="text-purple-600 hover:underline">Fate/stay night: UBW</Link></strong> — Servant matchup debates and Noble Phantasm reveals made for synchronized gasps; argue optimal tactics for every Grail War round.</li>
         <li><strong><Link href="/watch/gundam-iron-blooded-orphans-with-friends" className="text-purple-600 hover:underline">Gundam: Iron-Blooded Orphans</Link></strong> — Tekkadan&apos;s battles against Earth&apos;s power brokers need group processing — especially the finale, which will pause the room for a long time.</li>
         <li><strong><Link href="/watch/trigun-stampede-with-friends" className="text-purple-600 hover:underline">Trigun Stampede</Link></strong> — Vash&apos;s tragic pacifism and Plant lore across 12 CG episodes; the midseason reveal demands immediate debrief.</li>
+        <li><strong><Link href="/watch/weathering-with-you-with-friends" className="text-purple-600 hover:underline">Weathering with You</Link></strong> — Makoto Shinkai&apos;s divisive follow-up to Your Name; the ending choice sparks immediate group debate about whether it was right.</li>
+        <li><strong><Link href="/watch/suzume-with-friends" className="text-purple-600 hover:underline">Suzume</Link></strong> — Emotional road-trip adventure with grief at its core; groups finish Suzume wanting to immediately compare notes on what each person took from the third act.</li>
       </ul>
 
       <h2
@@ -177,6 +179,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/ouran-high-school-host-club-with-friends" className="text-purple-600 hover:underline">Ouran High School Host Club</Link></strong> — Six eccentric hosts, one scholarship student, and rapid-fire archetypes engineered to split your room into factions before episode four.</li>
         <li><strong><Link href="/watch/the-melancholy-of-haruhi-suzumiya-with-friends" className="text-purple-600 hover:underline">The Melancholy of Haruhi Suzumiya</Link></strong> — Cult comedy that hides a sci-fi mystery; the Endless Eight alone turns your watchroom into a philosophy seminar about time and fandom.</li>
         <li><strong><Link href="/watch/nisekoi-with-friends" className="text-purple-600 hover:underline">Nisekoi</Link></strong> — Fake-dating yakuza comedy with a running locket mystery; precision-engineered ship-war debates in chat every episode.</li>
+        <li><strong><Link href="/watch/my-neighbor-totoro-with-friends" className="text-purple-600 hover:underline">My Neighbor Totoro</Link></strong> — Studio Ghibli&apos;s warmest film; universally accessible for every age and the best one-evening pick when your group includes people who have never seen anime before.</li>
       </ul>
 
       <PrimaryCheckoutCta
@@ -255,6 +258,8 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/date-a-live-with-friends" className="text-purple-600 hover:underline">Date A Live</Link></strong> — Spirit arcs with genre-shifting vibes across multiple seasons; groups split into best-girl factions fast and stay loud through every season finale.</li>
         <li><strong><Link href="/watch/detective-conan-with-friends" className="text-purple-600 hover:underline">Detective Conan</Link></strong> — 1000+ standalone mysteries wrapped around a slow-burning Black Organization arc; run it in weekly case-club sessions and mark the plot-thread episodes for debrief.</li>
         <li><strong><Link href="/watch/dragon-ball-with-friends" className="text-purple-600 hover:underline">Dragon Ball</Link></strong> — The original 153-episode adventure that started everything; a classic nostalgic marathon before your group moves on to DBZ and Dragon Ball Super.</li>
+        <li><strong><Link href="/watch/sailor-moon-with-friends" className="text-purple-600 hover:underline">Sailor Moon</Link></strong> — 200 episodes across 5 seasons of the genre-defining magical-girl classic; the definitive nostalgic marathon for groups who grew up in the 90s or want to introduce the series that shaped the entire genre.</li>
+        <li><strong><Link href="/watch/pokemon-with-friends" className="text-purple-600 hover:underline">Pokémon</Link></strong> — 276 episodes of Ash&apos;s original journey from Pallet Town to the Indigo League; the ideal nostalgic marathon for groups revisiting their childhood or introducing the franchise to someone new.</li>
       </ul>
 
       <h2
@@ -279,6 +284,9 @@ export default function BestAnimeWithFriendsPage() {
         </li>
         <li><Link href="/guides/anime-watch-party-ideas" className="hover:underline">Anime Watch Party Ideas</Link></li>
         <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll Together</Link></li>
+        <li><Link href="/guides/best-shonen-anime-to-watch-with-friends" className="hover:underline">Best Shonen Anime to Watch With Friends</Link></li>
+        <li><Link href="/guides/best-classic-anime-to-watch-with-friends" className="hover:underline">Best Classic Anime to Watch With Friends</Link></li>
+        <li><Link href="/guides/best-anime-to-binge-with-friends-this-weekend" className="hover:underline">Best Anime to Binge With Friends This Weekend</Link></li>
       </ul>
     </SeoPageLayout>
   );

@@ -63,6 +63,33 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 - [x] Add hub/listicle backlinks + bump `dateModified` → `2026-05-15` (list **86+**)
 - [x] Run `npm run build` ✅ (2026-05-15)
 
+### SEO batch — 10 high-leverage pages (2026-06-04)
+
+**5 new watch pages** (high-traffic titles not previously in `animeList`):
+- `sailor-moon` — MAL 530 — iconic magical-girl classic, nostalgic marathons
+- `weathering-with-you` — MAL 38826 — Shinkai film, debate-worthy ending
+- `suzume` — MAL 50265 — Shinkai film, grief + road-trip
+- `my-neighbor-totoro` — MAL 523 — Ghibli classic, universal beginner entry
+- `pokemon` — MAL 527 — most recognized anime franchise, nostalgic marathon
+
+**3 new listicle guides** (new keyword buckets):
+- `app/guides/best-shonen-anime-to-watch-with-friends/page.tsx` — covers action, sports, long-run shonen
+- `app/guides/best-classic-anime-to-watch-with-friends/page.tsx` — 90s–2000s TV series + Ghibli/Shinkai classics
+- `app/guides/best-anime-to-binge-with-friends-this-weekend/page.tsx` — complete/arc-complete series by length
+
+**2 new glossary entries** (topical authority + AEO):
+- `app/glossary/anime-filler/page.tsx` — definition, filler percentages per series, skip guide
+- `app/glossary/ova-meaning/page.tsx` — OVA vs TV, OVA types, watch order for groups
+
+**Hub/listicle wiring:**
+- `best-anime-to-watch-with-friends` updated to **115+**, `dateModified` → `2026-06-04`
+- `watch-anime-together` `dateModified` → `2026-06-04`
+- `best-anime-to-watch-for-beginners` +1 entry (My Neighbor Totoro), **30**, `dateModified` → `2026-06-04`
+
+**Stripe fix (bonus):** Moved module-level `new Stripe(...)` into lazy `getStripe()` helpers in 3 API routes to fix `npm run build` failure when `STRIPE_SECRET_KEY` is absent locally.
+
+- [x] Build ✅ — 176 watch pages generated (2026-06-04)
+
 ### Additional batch (10 more watch pages — 2026-05-19)
 
 New slugs (high-traffic + Crunchyroll group-watch intent):
