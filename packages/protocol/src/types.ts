@@ -95,6 +95,10 @@ const P2PSignalEnvelopeSchema = RoomScopedSchema.extend({
 
 export const ClientEventSchema = z.discriminatedUnion("type", [
   RoomScopedSchema.extend({
+    type: z.literal("PING"),
+    sentAt: z.number().int().nonnegative(),
+  }),
+  RoomScopedSchema.extend({
     type: z.literal("JOIN"),
     participant: ParticipantSchema,
     videoFingerprint: z.string().min(1),
@@ -135,6 +139,11 @@ export const ClientEventSchema = z.discriminatedUnion("type", [
 ]);
 
 export const ServerEventSchema = z.discriminatedUnion("type", [
+  RoomScopedSchema.extend({
+    type: z.literal("PONG"),
+    sentAt: z.number().int().nonnegative(),
+    serverTime: z.number().int().nonnegative(),
+  }),
   RoomScopedSchema.extend({
     type: z.literal("ROOM_SNAPSHOT"),
     participants: z.array(ParticipantSchema),

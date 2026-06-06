@@ -124,6 +124,15 @@ export function playbackStateDebugSnapshot(state: PlaybackState): Record<string,
 
 export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record<string, unknown> {
   switch (event.type) {
+    case "PING":
+      return { type: event.type, roomId: event.roomId, sentAt: event.sentAt };
+    case "PONG":
+      return {
+        type: event.type,
+        roomId: event.roomId,
+        sentAt: event.sentAt,
+        serverTime: event.serverTime,
+      };
     case "JOIN":
       return {
         type: event.type,

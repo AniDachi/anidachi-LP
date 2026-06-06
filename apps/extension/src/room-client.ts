@@ -35,6 +35,8 @@ export interface CreateRoomInput {
 }
 
 const ROOM_HTTP_MESSAGE_TYPE = "ANIDACHI_ROOM_HTTP";
+const ROOM_KEEPALIVE_INTERVAL_MS = 20_000;
+const ROOM_KEEPALIVE_TIMEOUT_MS = 45_000;
 
 export type RoomHttpCommand = "create-room" | "connect-room";
 
@@ -256,7 +258,9 @@ export async function connectWebsiteRoom(
 
 export class RoomClient {
   private currentSenderConnectionId = createRoomConnectionId();
+  private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
   private pendingEvents: ClientEvent[] = [];
+  private pongTimeout: ReturnType<typeof setTimeout> | null = null;
   private ws: WebSocket | null = null;
 
   get senderConnectionId(): string {
@@ -301,6 +305,7 @@ export class RoomClient {
       }
       this.send(joinEvent);
       this.flushPendingEvents();
+      this.startKeepalive(ws, options.roomId);
     });
 
     ws.addEventListener("message", (message) => {
@@ -310,6 +315,11 @@ export class RoomClient {
 
       try {
         const event = ServerEventSchema.parse(JSON.parse(String(message.data)));
+        if (event.type === "PONG") {
+          this.clearPongTimeout();
+          return;
+        }
+
         logDebug("room.recv", event.type, roomEventDebugSnapshot(event));
         options.onEvent(event);
       } catch (error) {
@@ -331,6 +341,7 @@ export class RoomClient {
         reason: event.reason,
         wasClean: event.wasClean,
       });
+      this.stopKeepalive();
       options.onStatus("closed");
     });
     ws.addEventListener("error", () => {
@@ -339,6 +350,7 @@ export class RoomClient {
       }
 
       logDebug("room.ws", "error");
+      this.stopKeepalive();
       options.onStatus("error");
     });
   }
@@ -367,10 +379,61 @@ export class RoomClient {
   }
 
   close(): void {
+    this.stopKeepalive();
     const ws = this.ws;
     this.ws = null;
     ws?.close();
     this.pendingEvents = [];
+  }
+
+  private startKeepalive(ws: WebSocket, roomId: string): void {
+    this.stopKeepalive();
+    logDebug("room.ws", "keepalive started", { roomId });
+    this.keepaliveInterval = setInterval(() => {
+      this.sendPing(ws, roomId);
+    }, ROOM_KEEPALIVE_INTERVAL_MS);
+    this.sendPing(ws, roomId);
+  }
+
+  private stopKeepalive(): void {
+    if (this.keepaliveInterval !== null) {
+      clearInterval(this.keepaliveInterval);
+      this.keepaliveInterval = null;
+    }
+    this.clearPongTimeout();
+  }
+
+  private clearPongTimeout(): void {
+    if (this.pongTimeout !== null) {
+      clearTimeout(this.pongTimeout);
+      this.pongTimeout = null;
+    }
+  }
+
+  private sendPing(ws: WebSocket, roomId: string): void {
+    if (this.ws !== ws || ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    const event: ClientEvent = {
+      type: "PING",
+      roomId,
+      sentAt: Date.now(),
+    };
+    ws.send(JSON.stringify(ClientEventSchema.parse(event)));
+
+    if (this.pongTimeout !== null) {
+      return;
+    }
+
+    this.pongTimeout = setTimeout(() => {
+      if (this.ws !== ws || ws.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      logDebug("room.ws", "pong timeout; closing socket for reconnect", { roomId });
+      ws.close(4001, "Anidachi keepalive timeout");
+    }, ROOM_KEEPALIVE_TIMEOUT_MS);
   }
 
   private flushPendingEvents(): void {

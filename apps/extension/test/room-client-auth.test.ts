@@ -210,4 +210,172 @@ describe("authenticated room client", () => {
 
     expect(statuses).toEqual(["connecting", "connecting", "connected"]);
   });
+
+  it("keeps room websocket connections alive with ping and pong", () => {
+    vi.useFakeTimers();
+
+    const sockets: FakeWebSocket[] = [];
+    class FakeWebSocket {
+      static CONNECTING = 0;
+      static OPEN = 1;
+      static CLOSING = 2;
+      static CLOSED = 3;
+
+      readonly listeners = new Map<string, Array<(event: unknown) => void>>();
+      readonly sent: string[] = [];
+      readyState = FakeWebSocket.CONNECTING;
+      url: string;
+
+      constructor(url: string) {
+        this.url = url;
+        sockets.push(this);
+      }
+
+      addEventListener(type: string, listener: (event: unknown) => void): void {
+        this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+      }
+
+      close(code = 1000, reason = "client close"): void {
+        this.readyState = FakeWebSocket.CLOSED;
+        this.dispatch("close", { code, reason, wasClean: code === 1000 });
+      }
+
+      send(data: string): void {
+        this.sent.push(data);
+      }
+
+      open(): void {
+        this.readyState = FakeWebSocket.OPEN;
+        this.dispatch("open", {});
+      }
+
+      message(data: unknown): void {
+        this.dispatch("message", { data: JSON.stringify(data) });
+      }
+
+      dispatch(type: string, event: unknown): void {
+        for (const listener of this.listeners.get(type) ?? []) {
+          listener(event);
+        }
+      }
+    }
+
+    vi.stubGlobal("WebSocket", FakeWebSocket);
+    const onEvent = vi.fn();
+    const client = new RoomClient();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: {
+        id: "user-1",
+        displayName: "User",
+        role: "host",
+        cameraEnabled: false,
+        syncStatus: "unknown",
+        lastSeenAt: 0,
+      },
+      videoFingerprint: "video-1",
+      onEvent,
+      onStatus: vi.fn(),
+    });
+
+    sockets[0]?.open();
+    const firstPing = JSON.parse(sockets[0]?.sent[1] ?? "{}") as { type?: string; sentAt?: number };
+
+    expect(JSON.parse(sockets[0]?.sent[0] ?? "{}")).toMatchObject({ type: "JOIN" });
+    expect(firstPing.type).toBe("PING");
+
+    sockets[0]?.message({
+      type: "PONG",
+      roomId: "room-1",
+      sentAt: firstPing.sentAt,
+      serverTime: Number(firstPing.sentAt) + 1,
+    });
+    vi.advanceTimersByTime(20_000);
+
+    expect(onEvent).not.toHaveBeenCalled();
+    expect(JSON.parse(sockets[0]?.sent.at(-1) ?? "{}")).toMatchObject({ type: "PING" });
+
+    client.close();
+    vi.useRealTimers();
+  });
+
+  it("closes stale room websocket connections when pong is missing", () => {
+    vi.useFakeTimers();
+
+    const sockets: FakeWebSocket[] = [];
+    class FakeWebSocket {
+      static CONNECTING = 0;
+      static OPEN = 1;
+      static CLOSING = 2;
+      static CLOSED = 3;
+
+      readonly listeners = new Map<string, Array<(event: unknown) => void>>();
+      readyState = FakeWebSocket.CONNECTING;
+      closeCode: number | null = null;
+      closeReason: string | null = null;
+      url: string;
+
+      constructor(url: string) {
+        this.url = url;
+        sockets.push(this);
+      }
+
+      addEventListener(type: string, listener: (event: unknown) => void): void {
+        this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+      }
+
+      close(code = 1000, reason = "client close"): void {
+        this.readyState = FakeWebSocket.CLOSED;
+        this.closeCode = code;
+        this.closeReason = reason;
+        this.dispatch("close", { code, reason, wasClean: code === 1000 });
+      }
+
+      send(): void {
+        return undefined;
+      }
+
+      open(): void {
+        this.readyState = FakeWebSocket.OPEN;
+        this.dispatch("open", {});
+      }
+
+      dispatch(type: string, event: unknown): void {
+        for (const listener of this.listeners.get(type) ?? []) {
+          listener(event);
+        }
+      }
+    }
+
+    vi.stubGlobal("WebSocket", FakeWebSocket);
+    const statuses: string[] = [];
+    const client = new RoomClient();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: {
+        id: "user-1",
+        displayName: "User",
+        role: "host",
+        cameraEnabled: false,
+        syncStatus: "unknown",
+        lastSeenAt: 0,
+      },
+      videoFingerprint: "video-1",
+      onEvent: vi.fn(),
+      onStatus: (status) => statuses.push(status),
+    });
+
+    sockets[0]?.open();
+    vi.advanceTimersByTime(45_000);
+
+    expect(sockets[0]?.closeCode).toBe(4001);
+    expect(sockets[0]?.closeReason).toBe("Anidachi keepalive timeout");
+    expect(statuses).toEqual(["connecting", "connected", "closed"]);
+
+    vi.useRealTimers();
+  });
 });
