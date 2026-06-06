@@ -1,6 +1,7 @@
 import { storage } from "wxt/utils/storage";
 
-const AUTH_TOKENS_KEY = "local:authTokens";
+export const AUTH_TOKENS_STORAGE_KEY = "authTokens";
+export const AUTH_TOKENS_KEY = `local:${AUTH_TOKENS_STORAGE_KEY}` as const;
 
 export type AuthenticatedUserPlan = "watcher" | "nakama" | "junkie";
 

@@ -9,6 +9,7 @@ const P2P_RENEGOTIATE_REQUEST_COOLDOWN_MS = 1_000;
 const P2P_ICE_RESTART_COOLDOWN_MS = 8_000;
 const P2P_ICE_RESTART_REQUEST_COOLDOWN_MS = 3_000;
 const P2P_DISCONNECTED_RESTART_DELAY_MS = 3_500;
+const P2P_AUDIO_TRANSCEIVER_DIRECTION: RTCRtpTransceiverDirection = "sendrecv";
 
 const DEFAULT_STUN_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
@@ -45,6 +46,16 @@ const P2P_AUDIO_CONSTRAINTS: MediaStreamConstraints = {
   },
   video: false,
 };
+
+export function getP2PAudioTransceiverDirection(): RTCRtpTransceiverDirection {
+  return P2P_AUDIO_TRANSCEIVER_DIRECTION;
+}
+
+export function p2pAudioTrackSwapNeedsNegotiation(
+  currentDirection: RTCRtpTransceiverDirection | null,
+): boolean {
+  return currentDirection !== P2P_AUDIO_TRANSCEIVER_DIRECTION;
+}
 
 interface P2PPeer {
   audioTransceiver: RTCRtpTransceiver | null;
@@ -326,8 +337,9 @@ export class P2PMediaController {
       });
 
       for (const peer of this.peers.values()) {
-        const changed = await this.syncPeerMedia(peer);
-        if (changed || !this.shouldInitiateOffers(peer)) {
+        const needsMediaOffer = this.peerNeedsMediaOffer(peer);
+        const negotiationNeeded = await this.syncPeerMedia(peer);
+        if (needsMediaOffer || negotiationNeeded) {
           this.queueNegotiation(peer, "voice-start");
         }
         this.sendSignal(peer.remoteUserId, { kind: "voice-start" });
@@ -365,9 +377,8 @@ export class P2PMediaController {
     for (const peer of this.peers.values()) {
       if (peer.audioTransceiver) {
         await peer.audioTransceiver.sender.replaceTrack(null).catch(() => undefined);
-        peer.audioTransceiver.direction = "recvonly";
+        peer.audioTransceiver.direction = P2P_AUDIO_TRANSCEIVER_DIRECTION;
       }
-      this.queueNegotiation(peer, "voice-stop");
       this.sendSignal(peer.remoteUserId, { kind: "voice-stop" });
     }
 
@@ -848,6 +859,7 @@ export class P2PMediaController {
     }
 
     this.refreshPeerTransceivers(peer);
+    let negotiationNeeded = false;
     if (!peer.videoTransceiver || !peer.audioTransceiver) {
       if (!this.shouldInitiateOffers(peer)) {
         logDebug("p2p.media", "waiting for remote offer before sender sync", {
@@ -860,7 +872,7 @@ export class P2PMediaController {
         return false;
       }
 
-      this.ensureOffererTransceivers(peer);
+      negotiationNeeded = this.ensureOffererTransceivers(peer);
     }
 
     const videoTransceiver = peer.videoTransceiver;
@@ -869,30 +881,26 @@ export class P2PMediaController {
       return false;
     }
 
-    let changed = false;
     const nextVideoDirection = this.localVideoTrack ? "sendrecv" : "recvonly";
-    if (
-      videoTransceiver.sender.track !== this.localVideoTrack ||
-      videoTransceiver.direction !== nextVideoDirection
-    ) {
+    if (videoTransceiver.sender.track !== this.localVideoTrack) {
       await videoTransceiver.sender.replaceTrack(this.localVideoTrack);
+    }
+    if (videoTransceiver.direction !== nextVideoDirection) {
       videoTransceiver.direction = nextVideoDirection;
-      changed = true;
+      negotiationNeeded = true;
     }
     await configureSender(videoTransceiver.sender, P2P_VIDEO_BITRATE_BPS, 12);
 
-    const nextAudioDirection = this.localAudioTrack ? "sendrecv" : "recvonly";
-    if (
-      audioTransceiver.sender.track !== this.localAudioTrack ||
-      audioTransceiver.direction !== nextAudioDirection
-    ) {
+    if (audioTransceiver.sender.track !== this.localAudioTrack) {
       await audioTransceiver.sender.replaceTrack(this.localAudioTrack);
-      audioTransceiver.direction = nextAudioDirection;
-      changed = true;
+    }
+    if (audioTransceiver.direction !== P2P_AUDIO_TRANSCEIVER_DIRECTION) {
+      audioTransceiver.direction = P2P_AUDIO_TRANSCEIVER_DIRECTION;
+      negotiationNeeded = true;
     }
     await configureSender(audioTransceiver.sender, P2P_AUDIO_BITRATE_BPS);
 
-    if (changed) {
+    if (negotiationNeeded) {
       logDebug("p2p.media", "synced senders", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: peer.remoteUserId,
@@ -904,7 +912,7 @@ export class P2PMediaController {
       });
     }
 
-    return changed;
+    return negotiationNeeded;
   }
 
   private refreshPeerTransceivers(peer: P2PPeer): void {
@@ -912,9 +920,14 @@ export class P2PMediaController {
     peer.videoTransceiver = findMediaTransceiver(peer.pc, "video", peer.videoTransceiver);
   }
 
-  private ensureOffererTransceivers(peer: P2PPeer): void {
+  private ensureOffererTransceivers(peer: P2PPeer): boolean {
+    let created = false;
+
     if (!peer.audioTransceiver) {
-      peer.audioTransceiver = peer.pc.addTransceiver("audio", { direction: "recvonly" });
+      peer.audioTransceiver = peer.pc.addTransceiver("audio", {
+        direction: P2P_AUDIO_TRANSCEIVER_DIRECTION,
+      });
+      created = true;
       logDebug("p2p.media", "created offerer audio transceiver", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: peer.remoteUserId,
@@ -924,12 +937,24 @@ export class P2PMediaController {
 
     if (!peer.videoTransceiver) {
       peer.videoTransceiver = peer.pc.addTransceiver("video", { direction: "recvonly" });
+      created = true;
       logDebug("p2p.media", "created offerer video transceiver", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: peer.remoteUserId,
         transceivers: summarizeTransceivers(peer.pc),
       });
     }
+
+    return created;
+  }
+
+  private peerNeedsMediaOffer(peer: P2PPeer): boolean {
+    this.refreshPeerTransceivers(peer);
+    return (
+      !peer.videoTransceiver ||
+      !peer.audioTransceiver ||
+      p2pAudioTrackSwapNeedsNegotiation(peer.audioTransceiver.direction)
+    );
   }
 
   private queueNegotiation(peer: P2PPeer, _reason: string): void {
