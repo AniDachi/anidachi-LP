@@ -7,7 +7,12 @@ import {
   isAuthMessage,
   parseExtensionAuthRedirect,
 } from "../src/auth-client";
-import { normalizeAuthenticatedUser, normalizeExtensionAuthTokens } from "../src/auth-tokens";
+import {
+  AUTH_TOKENS_KEY,
+  AUTH_TOKENS_STORAGE_KEY,
+  normalizeAuthenticatedUser,
+  normalizeExtensionAuthTokens,
+} from "../src/auth-tokens";
 
 describe("extension auth client", () => {
   it("builds the website extension connect URL", () => {
@@ -65,6 +70,11 @@ describe("extension auth client", () => {
     expect(isAuthMessage(createAuthMessage("sign-in"))).toBe(true);
     expect(isAuthMessage({ type: "ANIDACHI_AUTH", command: "unknown" })).toBe(false);
     expect(isAuthMessage({ command: "sign-in" })).toBe(false);
+  });
+
+  it("keeps the WXT auth key and raw storage key aligned", () => {
+    expect(AUTH_TOKENS_STORAGE_KEY).toBe("authTokens");
+    expect(AUTH_TOKENS_KEY).toBe("local:authTokens");
   });
 
   it("normalizes valid token responses", () => {

@@ -73,6 +73,7 @@ import {
   signOutAndClearParticipant,
   type CurrentParticipantResult,
 } from "./user-identity";
+import { AUTH_TOKENS_KEY } from "./auth-tokens";
 import {
   getRemotePlayReadyTimeoutMs,
   isMediaSettling,
@@ -1852,6 +1853,31 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   useEffect(() => {
     applyParticipantIdentityRef.current = applyParticipantIdentity;
   }, [applyParticipantIdentity]);
+
+  useEffect(() => {
+    let sequence = 0;
+    let disposed = false;
+
+    const refreshIdentityFromStorage = (reason: string) => {
+      const currentSequence = ++sequence;
+      void createCurrentParticipant().then((result) => {
+        if (disposed || currentSequence !== sequence) {
+          return;
+        }
+
+        applyParticipantIdentityRef.current(result, reason, true);
+        setIdentityLoaded(true);
+      });
+    };
+
+    const unwatch = storage.watch(AUTH_TOKENS_KEY, () => {
+      refreshIdentityFromStorage("auth-storage");
+    });
+    return () => {
+      disposed = true;
+      unwatch();
+    };
+  }, []);
 
   const createAndConnectRoom = useCallback(
     async (reason: string) => {
