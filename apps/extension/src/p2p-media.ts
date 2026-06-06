@@ -51,6 +51,7 @@ interface P2PPeer {
   disconnectedRestartTimerId: number | null;
   ignoreOffer: boolean;
   isSettingRemoteAnswerPending: boolean;
+  iceRestartCount: number;
   lastIceRestartAt: number;
   lastIceRestartRequestAt: number;
   lastRenegotiationRequestAt: number;
@@ -517,6 +518,7 @@ export class P2PMediaController {
       Array.from(this.peers.values()).map(async (peer) => ({
         remoteUserId: peer.remoteUserId,
         connectionState: peer.pc.connectionState,
+        iceRestartCount: peer.iceRestartCount,
         iceConnectionState: peer.pc.iceConnectionState,
         signalingState: peer.pc.signalingState,
         stats: summarizeStats(await peer.pc.getStats()),
@@ -524,6 +526,43 @@ export class P2PMediaController {
     );
 
     return { peers };
+  }
+
+  notifyPageLeaving(reason: string): void {
+    if (this.disposed || !this.peers.size) {
+      return;
+    }
+
+    logDebug("p2p.lifecycle", "send bye before page leave", {
+      localParticipantId: this.localParticipant.id,
+      peerCount: this.peers.size,
+      reason,
+    });
+    for (const peer of this.peers.values()) {
+      this.sendSignal(peer.remoteUserId, { kind: "bye" });
+    }
+  }
+
+  recoverDisconnectedPeers(reason: string): void {
+    if (this.disposed || !this.peers.size) {
+      return;
+    }
+
+    logDebug("p2p.lifecycle", "recover disconnected peers", {
+      localParticipantId: this.localParticipant.id,
+      peerCount: this.peers.size,
+      reason,
+    });
+    for (const peer of this.peers.values()) {
+      if (
+        peer.pc.connectionState === "disconnected" ||
+        peer.pc.connectionState === "failed" ||
+        peer.pc.iceConnectionState === "disconnected" ||
+        peer.pc.iceConnectionState === "failed"
+      ) {
+        void this.restartPeerIce(peer, reason);
+      }
+    }
   }
 
   disconnect(): void {
@@ -572,6 +611,7 @@ export class P2PMediaController {
       disconnectedRestartTimerId: null,
       ignoreOffer: false,
       isSettingRemoteAnswerPending: false,
+      iceRestartCount: 0,
       lastIceRestartAt: 0,
       lastIceRestartRequestAt: 0,
       lastRenegotiationRequestAt: 0,
@@ -581,7 +621,7 @@ export class P2PMediaController {
       needsNegotiation: false,
       pendingIceCandidates: [],
       pc,
-      polite: this.localParticipant.id.localeCompare(remoteUserId) > 0,
+      polite: isPoliteP2PPeer(this.localParticipant.id, remoteUserId),
       remoteUserId,
       videoTransceiver: null,
     };
@@ -1158,11 +1198,13 @@ export class P2PMediaController {
     }
 
     peer.lastIceRestartAt = now;
+    peer.iceRestartCount += 1;
     this.clearPeerDisconnectTimer(peer);
     await this.refreshPeerIceServers(peer, reason);
     logDebug("p2p.ice", "restart", {
       localParticipantId: this.localParticipant.id,
       remoteUserId: peer.remoteUserId,
+      iceRestartCount: peer.iceRestartCount,
       reason,
     });
     peer.pc.restartIce();
@@ -1281,7 +1323,7 @@ export class P2PMediaController {
   }
 
   private shouldInitiateOffers(peer: P2PPeer): boolean {
-    return !peer.polite;
+    return shouldInitiateP2POffers(this.localParticipant.id, peer.remoteUserId);
   }
 
   private async logSelectedCandidatePair(peer: P2PPeer): Promise<void> {
@@ -1322,6 +1364,18 @@ export function getDefaultP2PIceServers(): RTCIceServer[] {
 
 export function getDirectP2PStunServers(): RTCIceServer[] {
   return DEFAULT_STUN_SERVERS;
+}
+
+export function isPoliteP2PPeer(localUserId: string, remoteUserId: string): boolean {
+  if (localUserId === remoteUserId) {
+    return false;
+  }
+
+  return localUserId > remoteUserId;
+}
+
+export function shouldInitiateP2POffers(localUserId: string, remoteUserId: string): boolean {
+  return localUserId !== remoteUserId && !isPoliteP2PPeer(localUserId, remoteUserId);
 }
 
 function parseIceServers(value: string | undefined): RTCIceServer[] {

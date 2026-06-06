@@ -571,6 +571,37 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     }
   }, [incomingP2PSignals]);
 
+  useEffect(() => {
+    if (!shouldConnect) {
+      return;
+    }
+
+    const handlePageHide = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        return;
+      }
+
+      controllerRef.current?.notifyPageLeaving("pagehide");
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        controllerRef.current?.recoverDisconnectedPeers("visibilitychange");
+      }
+    };
+    const handleOnline = () => {
+      controllerRef.current?.recoverDisconnectedPeers("online");
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("online", handleOnline);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("online", handleOnline);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [shouldConnect]);
+
   const startVoiceTalk = useCallback(async () => {
     await controllerRef.current?.startVoiceTalk();
   }, []);

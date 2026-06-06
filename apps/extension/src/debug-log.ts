@@ -26,7 +26,7 @@ export function logDebug(scope: string, message: string, data?: unknown): void {
     elapsedMs: Math.round(performance.now() - STARTED_AT),
     scope,
     message,
-    ...(data === undefined ? {} : { data: sanitizeDebugData(data) }),
+    ...(data === undefined ? {} : { data: sanitizeDebugData(data, scope) }),
   };
 
   entries.push(entry);
@@ -327,16 +327,54 @@ function shouldPrintDebugToConsole(): boolean {
   }
 }
 
-function sanitizeDebugData(value: unknown): unknown {
+const P2P_IDENTIFIER_FIELDS = new Set([
+  "localParticipantId",
+  "participantId",
+  "remoteUserId",
+  "fromUserId",
+  "toUserId",
+]);
+
+const P2P_IDENTIFIER_ARRAY_FIELDS = new Set([
+  "activeSpeakerIds",
+  "existingPeerIds",
+  "remoteIds",
+]);
+
+function sanitizeDebugData(value: unknown, scope: string): unknown {
+  const sanitizeP2P = scope.startsWith("p2p.");
   return JSON.parse(
     JSON.stringify(value, (_key, item) => {
+      if (sanitizeP2P && P2P_IDENTIFIER_FIELDS.has(_key) && typeof item === "string") {
+        return hashDebugId(item);
+      }
+
+      if (sanitizeP2P && P2P_IDENTIFIER_ARRAY_FIELDS.has(_key) && Array.isArray(item)) {
+        return item.map((value) => (typeof value === "string" ? hashDebugId(value) : value));
+      }
+
+      if (sanitizeP2P && _key === "address" && item !== undefined && item !== null) {
+        return "<redacted>";
+      }
+
       if (typeof item === "string") {
-        return redactUrl(item);
+        const redactedUrl = redactUrl(item);
+        return sanitizeP2P ? redactNetworkAddress(redactedUrl) : redactedUrl;
       }
 
       return item;
     }),
   );
+}
+
+function hashDebugId(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+
+  return `id_${(hash >>> 0).toString(36)}`;
 }
 
 function isUsefulCompactEntry(entry: DebugEntry): boolean {
@@ -373,6 +411,10 @@ function compactDebugData(value: unknown): unknown {
     "fromUserId",
     "toUserId",
     "remoteUserId",
+    "clientSignalId",
+    "senderConnectionId",
+    "serverSeq",
+    "signalKind",
     "adapterId",
     "fingerprint",
     "kind",
@@ -387,7 +429,12 @@ function compactDebugData(value: unknown): unknown {
     "remoteCandidateType",
     "protocol",
     "localProtocol",
+    "localRelayProtocol",
     "remoteProtocol",
+    "remoteRelayProtocol",
+    "direct",
+    "usedTurn",
+    "iceRestartCount",
     "queued",
     "peerCount",
     "remoteIds",
@@ -558,4 +605,11 @@ function redactUrl(value: string): string {
   } catch {
     return value;
   }
+}
+
+function redactNetworkAddress(value: string): string {
+  return value
+    .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, "<redacted-ip>")
+    .replace(/\b(?:[a-f0-9]{1,4}:){2,}[a-f0-9:]{1,4}\b/gi, "<redacted-ip>")
+    .replace(/\b[a-z0-9-]+\.local\b/gi, "<redacted-local>");
 }

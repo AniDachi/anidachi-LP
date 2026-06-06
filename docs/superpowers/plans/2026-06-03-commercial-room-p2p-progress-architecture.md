@@ -764,7 +764,16 @@ Expected:
 - stale signals from a previous source switch do not disturb the active peer connection;
 - asymmetric join timing is handled without manually recreating the room.
 
-- [ ] **Step 6.6: Keep and test the perfect negotiation model**
+- [x] **Step 6.6: Keep and test the perfect negotiation model**
+
+Progress 2026-06-07:
+
+- Perfect negotiation role selection is now in testable helpers:
+  `isPoliteP2PPeer()` and `shouldInitiateP2POffers()`.
+- The lower deterministic participant id remains the offer initiator; the higher deterministic
+  participant id remains the polite peer.
+- Same-id input is explicitly non-initiating as a safety guard.
+- Covered by `apps/extension/test/p2p-media.test.ts`.
 
 Current good behavior to preserve:
 
@@ -817,21 +826,25 @@ Expected:
 - TURN credential TTL handling remains covered;
 - production fallback tests prove OpenRelay is opt-in only.
 
-- [ ] **Step 6.8: Add privacy-safe P2P diagnostics**
+- [x] **Step 6.8: Add privacy-safe P2P diagnostics**
 
 Progress 2026-06-07:
 
 - `clientSignalId`, `senderConnectionId`, and `serverSeq` are now included in compact room debug
   snapshots.
-- Remaining work: normalize/hash P2P user identifiers consistently across all `p2p.*` logs.
+- All `p2p.*` debug entries now hash participant/user id fields before storage or console output.
+- `p2p.*` debug entries now redact ICE candidate IP addresses, `.local` hostnames, and
+  `icecandidateerror.address`.
+- ICE restart count is now tracked per peer and included in stats/restart diagnostics.
+- Covered by `apps/extension/test/debug-log.test.ts`.
 
 Log fields:
 
 ```ts
 {
   roomId: string;
-  localUserIdHash: string;
-  remoteUserIdHash: string;
+  localParticipantId: string; // deterministic hash, not raw user id
+  remoteUserId: string; // deterministic hash, not raw user id
   senderConnectionId: string;
   serverSeq?: number;
   signalKind?: "offer" | "answer" | "ice" | "renegotiate" | "restart-ice" | "bye";
@@ -852,14 +865,19 @@ Rules:
 - Debug export may include event summaries, sequence numbers, and candidate types.
 - Logs must answer: signaling lost, TURN missing, TURN selected, autoplay blocked, track missing, or stale signal dropped.
 
-- [ ] **Step 6.9: Add room and browser lifecycle recovery hooks**
+- [x] **Step 6.9: Add room and browser lifecycle recovery hooks**
 
 Progress 2026-06-07:
 
 - `online` and `visibilitychange:visible` now reconnect the room WebSocket when the room is
   closed/error and the room token is still available.
 - P2P now starts only when the WebSocket is connected and a fresh `ROOM_SNAPSHOT` has arrived.
-- Remaining work: pagehide/beforeunload `bye` handling and manual sleep/wake verification.
+- P2P now uses `visibilitychange:visible` and `online` to request ICE restart only for peers that
+  are already `disconnected` or `failed`.
+- P2P now sends best-effort `bye` on non-persisted `pagehide`.
+- `beforeunload` is intentionally not used as the primary hook because it is less reliable and can
+  hurt browser back/forward cache behavior; manual sleep/wake and cross-device verification remain
+  in Step 6.12.
 
 Expected:
 
@@ -872,8 +890,8 @@ online:
 - reconnect room socket if needed;
 - refresh ICE servers before restart.
 
-pagehide/beforeunload:
-- send bye when possible;
+pagehide:
+- send bye when possible on non-persisted pagehide;
 - do not persist media data.
 ```
 
