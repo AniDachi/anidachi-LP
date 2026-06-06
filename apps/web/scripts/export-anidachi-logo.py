@@ -14,11 +14,8 @@ SRC = (
     / "assets"
     / "ChatGPT_Image_May_25__2026__09_38_05_PM-1d17330b-3f1b-4ebf-b999-7768802af02f.png"
 )
-# Fallback when run from repo root (Cursor assets path)
 if not SRC.exists():
-    SRC = Path(
-        "/Users/macgeorge/.cursor/projects/Users-macgeorge-Downloads-VibeProjects-anidachi-LP-anidachi/assets/ChatGPT_Image_May_25__2026__09_38_05_PM-1d17330b-3f1b-4ebf-b999-7768802af02f.png"
-    )
+    SRC = ROOT / "public" / "Anidachi_logo.png"
 
 OUT = ROOT / "public" / "Anidachi_logo.png"
 APP_ICON = ROOT / "app" / "icon.png"

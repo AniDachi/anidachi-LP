@@ -2,6 +2,11 @@
 
 Research date: 2026-06-02
 
+Status: historical infrastructure research. The current default media direction
+is WebRTC P2P with Cloudflare TURN fallback. Do not treat this file as the active
+media implementation plan unless the team explicitly decides to bring LiveKit
+back as an SFU layer.
+
 ## Core Decision
 
 LiveKit should not be the source of truth for Anidachi rooms.
