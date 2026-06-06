@@ -37,4 +37,36 @@ describe("debug log", () => {
 
     expect(info).toHaveBeenCalledWith("[Anidachi Debug]", "test.scope", "captured message", "");
   });
+
+  it("hashes P2P participant identifiers and redacts ICE addresses", () => {
+    clearDebugLog();
+
+    logDebug("p2p.ice", "candidate error", {
+      localParticipantId: "user-local",
+      remoteUserId: "user-remote",
+      remoteIds: ["user-remote", "user-third"],
+      address: "192.168.1.20",
+      candidate:
+        "candidate:842163049 1 udp 1677729535 192.168.1.20 56143 typ srflx raddr 10.0.0.2 rport 56143",
+    });
+
+    const entry = getDebugEntries().find((item) => item.scope === "p2p.ice");
+    expect(entry?.data).toEqual(
+      expect.objectContaining({
+        localParticipantId: expect.stringMatching(/^id_[a-z0-9]+$/),
+        remoteUserId: expect.stringMatching(/^id_[a-z0-9]+$/),
+        remoteIds: [
+          expect.stringMatching(/^id_[a-z0-9]+$/),
+          expect.stringMatching(/^id_[a-z0-9]+$/),
+        ],
+        address: "<redacted>",
+        candidate:
+          "candidate:842163049 1 udp 1677729535 <redacted-ip> 56143 typ srflx raddr <redacted-ip> rport 56143",
+      }),
+    );
+    expect(JSON.stringify(entry?.data)).not.toContain("user-local");
+    expect(JSON.stringify(entry?.data)).not.toContain("user-remote");
+    expect(JSON.stringify(entry?.data)).not.toContain("192.168.1.20");
+    expect(JSON.stringify(entry?.data)).not.toContain("10.0.0.2");
+  });
 });

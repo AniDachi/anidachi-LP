@@ -51,6 +51,7 @@ interface P2PPeer {
   disconnectedRestartTimerId: number | null;
   ignoreOffer: boolean;
   isSettingRemoteAnswerPending: boolean;
+  iceRestartCount: number;
   lastIceRestartAt: number;
   lastIceRestartRequestAt: number;
   lastRenegotiationRequestAt: number;
@@ -73,6 +74,7 @@ interface P2PMediaControllerOptions {
   onVideosChange: (videos: GhostVideo[]) => void;
   onVoiceMessageChange: (message: string | null) => void;
   onVoiceStatusChange: (status: LiveVoiceStatus) => void;
+  refreshIceServers?: () => Promise<RTCIceServer[]>;
   sendSignal: (toUserId: string, signal: P2PSignal) => void;
 }
 
@@ -84,13 +86,14 @@ type IceCandidateStatsSnapshot = RTCStats & {
 };
 
 export class P2PMediaController {
-  private readonly iceServers: RTCIceServer[];
+  private iceServers: RTCIceServer[];
   private readonly localParticipant: Participant;
   private readonly onActiveSpeakerIdsChange: (ids: string[]) => void;
   private readonly onCameraStatus: (enabled: boolean) => void;
   private readonly onVideosChange: (videos: GhostVideo[]) => void;
   private readonly onVoiceMessageChange: (message: string | null) => void;
   private readonly onVoiceStatusChange: (status: LiveVoiceStatus) => void;
+  private readonly refreshIceServers?: () => Promise<RTCIceServer[]>;
   private readonly sendSignal: (toUserId: string, signal: P2PSignal) => void;
   private readonly peers = new Map<string, P2PPeer>();
   private readonly videosByParticipant = new Map<string, GhostVideo>();
@@ -115,6 +118,7 @@ export class P2PMediaController {
     this.onVideosChange = options.onVideosChange;
     this.onVoiceMessageChange = options.onVoiceMessageChange;
     this.onVoiceStatusChange = options.onVoiceStatusChange;
+    this.refreshIceServers = options.refreshIceServers;
     this.sendSignal = options.sendSignal;
     logDebug("p2p.controller", "created", {
       localParticipantId: options.localParticipant.id,
@@ -410,7 +414,7 @@ export class P2PMediaController {
 
     if (signal.kind === "restart-ice") {
       if (this.shouldInitiateOffers(peer)) {
-        this.restartPeerIce(peer, "remote-request");
+        void this.restartPeerIce(peer, "remote-request");
       } else {
         logDebug("p2p.ice", "ignored restart request on answerer side", {
           localParticipantId: this.localParticipant.id,
@@ -514,6 +518,7 @@ export class P2PMediaController {
       Array.from(this.peers.values()).map(async (peer) => ({
         remoteUserId: peer.remoteUserId,
         connectionState: peer.pc.connectionState,
+        iceRestartCount: peer.iceRestartCount,
         iceConnectionState: peer.pc.iceConnectionState,
         signalingState: peer.pc.signalingState,
         stats: summarizeStats(await peer.pc.getStats()),
@@ -521,6 +526,43 @@ export class P2PMediaController {
     );
 
     return { peers };
+  }
+
+  notifyPageLeaving(reason: string): void {
+    if (this.disposed || !this.peers.size) {
+      return;
+    }
+
+    logDebug("p2p.lifecycle", "send bye before page leave", {
+      localParticipantId: this.localParticipant.id,
+      peerCount: this.peers.size,
+      reason,
+    });
+    for (const peer of this.peers.values()) {
+      this.sendSignal(peer.remoteUserId, { kind: "bye" });
+    }
+  }
+
+  recoverDisconnectedPeers(reason: string): void {
+    if (this.disposed || !this.peers.size) {
+      return;
+    }
+
+    logDebug("p2p.lifecycle", "recover disconnected peers", {
+      localParticipantId: this.localParticipant.id,
+      peerCount: this.peers.size,
+      reason,
+    });
+    for (const peer of this.peers.values()) {
+      if (
+        peer.pc.connectionState === "disconnected" ||
+        peer.pc.connectionState === "failed" ||
+        peer.pc.iceConnectionState === "disconnected" ||
+        peer.pc.iceConnectionState === "failed"
+      ) {
+        void this.restartPeerIce(peer, reason);
+      }
+    }
   }
 
   disconnect(): void {
@@ -569,6 +611,7 @@ export class P2PMediaController {
       disconnectedRestartTimerId: null,
       ignoreOffer: false,
       isSettingRemoteAnswerPending: false,
+      iceRestartCount: 0,
       lastIceRestartAt: 0,
       lastIceRestartRequestAt: 0,
       lastRenegotiationRequestAt: 0,
@@ -578,7 +621,7 @@ export class P2PMediaController {
       needsNegotiation: false,
       pendingIceCandidates: [],
       pc,
-      polite: this.localParticipant.id.localeCompare(remoteUserId) > 0,
+      polite: isPoliteP2PPeer(this.localParticipant.id, remoteUserId),
       remoteUserId,
       videoTransceiver: null,
     };
@@ -654,7 +697,7 @@ export class P2PMediaController {
       }
 
       if (pc.iceConnectionState === "failed") {
-        this.restartPeerIce(peer, "ice-failed");
+        void this.restartPeerIce(peer, "ice-failed");
       }
     });
 
@@ -683,7 +726,7 @@ export class P2PMediaController {
       }
 
       if (pc.connectionState === "failed") {
-        this.restartPeerIce(peer, "connection-failed");
+        void this.restartPeerIce(peer, "connection-failed");
       }
     });
 
@@ -1135,7 +1178,7 @@ export class P2PMediaController {
     }
   }
 
-  private restartPeerIce(peer: P2PPeer, reason: string): void {
+  private async restartPeerIce(peer: P2PPeer, reason: string): Promise<void> {
     if (
       this.disposed ||
       this.peers.get(peer.remoteUserId) !== peer ||
@@ -1155,14 +1198,46 @@ export class P2PMediaController {
     }
 
     peer.lastIceRestartAt = now;
+    peer.iceRestartCount += 1;
     this.clearPeerDisconnectTimer(peer);
+    await this.refreshPeerIceServers(peer, reason);
     logDebug("p2p.ice", "restart", {
       localParticipantId: this.localParticipant.id,
       remoteUserId: peer.remoteUserId,
+      iceRestartCount: peer.iceRestartCount,
       reason,
     });
     peer.pc.restartIce();
     this.queueNegotiation(peer, reason);
+  }
+
+  private async refreshPeerIceServers(peer: P2PPeer, reason: string): Promise<void> {
+    if (!this.refreshIceServers) {
+      return;
+    }
+
+    try {
+      const iceServers = await this.refreshIceServers();
+      if (!iceServers.length || this.disposed || this.peers.get(peer.remoteUserId) !== peer) {
+        return;
+      }
+
+      this.iceServers = iceServers;
+      peer.pc.setConfiguration(createP2PRtcConfiguration(iceServers));
+      logDebug("p2p.ice-config", "refreshed before restart", {
+        localParticipantId: this.localParticipant.id,
+        remoteUserId: peer.remoteUserId,
+        reason,
+        iceServers: summarizeIceServers(iceServers),
+      });
+    } catch (error) {
+      logDebug("p2p.ice-config", "refresh before restart failed", {
+        localParticipantId: this.localParticipant.id,
+        remoteUserId: peer.remoteUserId,
+        reason,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   private schedulePeerIceRestart(peer: P2PPeer, reason: string, delayMs: number): void {
@@ -1187,7 +1262,7 @@ export class P2PMediaController {
         peer.pc.iceConnectionState === "disconnected" ||
         peer.pc.iceConnectionState === "failed"
       ) {
-        this.restartPeerIce(peer, reason);
+        void this.restartPeerIce(peer, reason);
       }
     }, delayMs);
   }
@@ -1248,7 +1323,7 @@ export class P2PMediaController {
   }
 
   private shouldInitiateOffers(peer: P2PPeer): boolean {
-    return !peer.polite;
+    return shouldInitiateP2POffers(this.localParticipant.id, peer.remoteUserId);
   }
 
   private async logSelectedCandidatePair(peer: P2PPeer): Promise<void> {
@@ -1281,7 +1356,7 @@ export function getDefaultP2PIceServers(): RTCIceServer[] {
     return configured;
   }
 
-  const enableOpenRelay = import.meta.env.WXT_P2P_ENABLE_OPEN_RELAY_TURN !== "false";
+  const enableOpenRelay = import.meta.env.WXT_P2P_ENABLE_OPEN_RELAY_TURN === "true";
   return enableOpenRelay
     ? [...DEFAULT_STUN_SERVERS, ...OPEN_RELAY_TURN_SERVERS]
     : DEFAULT_STUN_SERVERS;
@@ -1289,6 +1364,18 @@ export function getDefaultP2PIceServers(): RTCIceServer[] {
 
 export function getDirectP2PStunServers(): RTCIceServer[] {
   return DEFAULT_STUN_SERVERS;
+}
+
+export function isPoliteP2PPeer(localUserId: string, remoteUserId: string): boolean {
+  if (localUserId === remoteUserId) {
+    return false;
+  }
+
+  return localUserId > remoteUserId;
+}
+
+export function shouldInitiateP2POffers(localUserId: string, remoteUserId: string): boolean {
+  return localUserId !== remoteUserId && !isPoliteP2PPeer(localUserId, remoteUserId);
 }
 
 function parseIceServers(value: string | undefined): RTCIceServer[] {

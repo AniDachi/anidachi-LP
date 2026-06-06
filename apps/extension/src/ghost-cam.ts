@@ -14,7 +14,7 @@ import type {
   LiveVoiceStatus,
   MediaTransportName,
 } from "./media-types";
-import { loadP2PIceServers } from "./p2p-ice";
+import { loadP2PIceServers, refreshP2PIceServers } from "./p2p-ice";
 import { P2PMediaController } from "./p2p-media";
 
 export type { GhostVideo, LiveVoiceStatus } from "./media-types";
@@ -510,6 +510,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         onVideosChange: setVideos,
         onVoiceMessageChange: setVoiceMessage,
         onVoiceStatusChange: setVoiceStatus,
+        refreshIceServers: refreshP2PIceServers,
         sendSignal: sendP2PSignal,
       });
 
@@ -569,6 +570,37 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
       void controller.handleSignal(item.fromUserId, item.signal);
     }
   }, [incomingP2PSignals]);
+
+  useEffect(() => {
+    if (!shouldConnect) {
+      return;
+    }
+
+    const handlePageHide = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        return;
+      }
+
+      controllerRef.current?.notifyPageLeaving("pagehide");
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        controllerRef.current?.recoverDisconnectedPeers("visibilitychange");
+      }
+    };
+    const handleOnline = () => {
+      controllerRef.current?.recoverDisconnectedPeers("online");
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("online", handleOnline);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("online", handleOnline);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [shouldConnect]);
 
   const startVoiceTalk = useCallback(async () => {
     await controllerRef.current?.startVoiceTalk();

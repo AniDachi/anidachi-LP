@@ -15,6 +15,7 @@ export interface RoomClientOptions {
   roomToken: string;
   participant: Participant;
   videoFingerprint: string;
+  lastSeenP2PServerSeq?: number;
   onEvent: (event: ServerEvent) => void;
   onStatus: (status: RoomConnectionStatus) => void;
 }
@@ -254,15 +255,22 @@ export async function connectWebsiteRoom(
 }
 
 export class RoomClient {
+  private currentSenderConnectionId = createRoomConnectionId();
   private pendingEvents: ClientEvent[] = [];
   private ws: WebSocket | null = null;
 
+  get senderConnectionId(): string {
+    return this.currentSenderConnectionId;
+  }
+
   connect(options: RoomClientOptions): void {
     this.close();
+    this.currentSenderConnectionId = createRoomConnectionId();
     this.pendingEvents = [];
     options.onStatus("connecting");
     logDebug("room.ws", "connecting", {
       apiWsBase: API_WS_BASE,
+      senderConnectionId: this.currentSenderConnectionId,
       roomId: options.roomId,
       participantId: options.participant.id,
       videoFingerprint: options.videoFingerprint,
@@ -275,14 +283,19 @@ export class RoomClient {
       logDebug("room.ws", "open", {
         roomId: options.roomId,
         participantId: options.participant.id,
+        senderConnectionId: this.currentSenderConnectionId,
       });
       options.onStatus("connected");
-      this.send({
+      const joinEvent: ClientEvent = {
         type: "JOIN",
         roomId: options.roomId,
         participant: options.participant,
         videoFingerprint: options.videoFingerprint,
-      });
+      };
+      if (options.lastSeenP2PServerSeq !== undefined) {
+        joinEvent.lastSeenP2PServerSeq = options.lastSeenP2PServerSeq;
+      }
+      this.send(joinEvent);
       this.flushPendingEvents();
     });
 
@@ -350,4 +363,8 @@ export class RoomClient {
       this.send(event);
     }
   }
+}
+
+function createRoomConnectionId(): string {
+  return `connection-${crypto.randomUUID()}`;
 }
