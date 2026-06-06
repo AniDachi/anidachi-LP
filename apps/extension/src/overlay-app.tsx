@@ -91,6 +91,7 @@ import {
   RoomClient,
   type RoomConnectionStatus,
 } from "./room-client";
+import { getRoomReconnectDelayMs } from "./room-reconnect";
 import { overlayStyles } from "./styles";
 import { runCrunchyrollMainCommand, type PlayerEvent, type VideoAdapter } from "./video-adapter";
 import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
@@ -247,6 +248,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const handledP2PSignalIdsRef = useRef(new Set<string>());
   const lastSeenP2PServerSeqRef = useRef(0);
   const p2pSignalSequenceRef = useRef(0);
+  const roomReconnectAttemptRef = useRef(0);
+  const roomReconnectInFlightRef = useRef(false);
+  const roomReconnectSuppressedRef = useRef(false);
+  const roomReconnectTimerRef = useRef<number | null>(null);
   const messageComposerFormRef = useRef<HTMLFormElement | null>(null);
   const messageComposerInputRef = useRef<HTMLInputElement | null>(null);
   const messageComposerShieldRef = useRef<HTMLDivElement | null>(null);
@@ -532,6 +537,13 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       });
       statusRef.current = nextStatus;
       setStatus(nextStatus);
+      if (nextStatus === "connected") {
+        roomReconnectAttemptRef.current = 0;
+        if (roomReconnectTimerRef.current !== null) {
+          window.clearTimeout(roomReconnectTimerRef.current);
+          roomReconnectTimerRef.current = null;
+        }
+      }
     },
     [adapter],
   );
@@ -1685,6 +1697,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const connectToRoomAsParticipant = useCallback(
     (nextRoomId: string, activeParticipant: Participant, nextRoomToken: string) => {
+      roomReconnectSuppressedRef.current = false;
+      if (roomReconnectTimerRef.current !== null) {
+        window.clearTimeout(roomReconnectTimerRef.current);
+        roomReconnectTimerRef.current = null;
+      }
+
       const sameRoomReconnect = roomIdRef.current === nextRoomId;
       if (!sameRoomReconnect) {
         handledP2PSignalIdsRef.current.clear();
@@ -1717,46 +1735,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     [adapter, setRoomStatus],
   );
 
-  useEffect(() => {
-    function reconnectCurrentRoom(reason: string): void {
-      const activeRoomId = roomIdRef.current;
-      const activeParticipant = participantRef.current;
-      const activeRoomToken = roomTokenRef.current;
-      if (!activeRoomId || !activeParticipant || !activeRoomToken) {
-        return;
-      }
-
-      if (statusRef.current === "connected" || statusRef.current === "connecting") {
-        return;
-      }
-
-      logDebug("overlay.room", "lifecycle reconnect requested", {
-        reason,
-        roomId: activeRoomId,
-        status: statusRef.current,
-        lastSeenP2PServerSeq: lastSeenP2PServerSeqRef.current,
-      });
-      connectToRoomAsParticipant(activeRoomId, activeParticipant, activeRoomToken);
-    }
-
-    function handleOnline(): void {
-      reconnectCurrentRoom("online");
-    }
-
-    function handleVisibilityChange(): void {
-      if (document.visibilityState === "visible") {
-        reconnectCurrentRoom("visible");
-      }
-    }
-
-    window.addEventListener("online", handleOnline);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [connectToRoomAsParticipant]);
-
   const connectToExistingWebsiteRoom = useCallback(
     async (nextRoomId: string, reason: string) => {
       const refreshed = await refreshRoomActionIdentity(`join:${reason}`);
@@ -1786,6 +1764,126 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     [connectToRoomAsParticipant, refreshRoomActionIdentity],
   );
 
+  const clearRoomReconnectTimer = useCallback(() => {
+    if (roomReconnectTimerRef.current === null) {
+      return;
+    }
+
+    window.clearTimeout(roomReconnectTimerRef.current);
+    roomReconnectTimerRef.current = null;
+  }, []);
+
+  const scheduleRoomReconnect = useCallback(
+    (reason: string) => {
+      if (roomReconnectSuppressedRef.current || roomReconnectTimerRef.current !== null) {
+        return;
+      }
+
+      const activeRoomId = roomIdRef.current;
+      if (
+        !activeRoomId ||
+        !participantRef.current ||
+        !authAccessTokenRef.current ||
+        statusRef.current === "connected" ||
+        statusRef.current === "connecting"
+      ) {
+        return;
+      }
+
+      const attempt = Math.min(roomReconnectAttemptRef.current + 1, 8);
+      roomReconnectAttemptRef.current = attempt;
+      const delayMs = getRoomReconnectDelayMs(attempt);
+      logDebug("overlay.room", "auto reconnect scheduled", {
+        attempt,
+        delayMs,
+        reason,
+        roomId: activeRoomId,
+        status: statusRef.current,
+      });
+
+      roomReconnectTimerRef.current = window.setTimeout(() => {
+        roomReconnectTimerRef.current = null;
+
+        if (roomReconnectInFlightRef.current) {
+          scheduleRoomReconnect(`${reason}:busy`);
+          return;
+        }
+
+        const reconnectRoomId = roomIdRef.current;
+        if (
+          roomReconnectSuppressedRef.current ||
+          !reconnectRoomId ||
+          statusRef.current === "connected" ||
+          statusRef.current === "connecting"
+        ) {
+          return;
+        }
+
+        roomReconnectInFlightRef.current = true;
+        logDebug("overlay.room", "auto reconnect start", {
+          attempt,
+          reason,
+          roomId: reconnectRoomId,
+          lastSeenP2PServerSeq: lastSeenP2PServerSeqRef.current,
+        });
+
+        void connectToExistingWebsiteRoom(reconnectRoomId, `auto:${reason}`)
+          .then(() => {
+            roomReconnectAttemptRef.current = 0;
+          })
+          .catch((error) => {
+            const message = error instanceof Error ? error.message : "Room reconnect failed";
+            logDebug("overlay.room", "auto reconnect failed", {
+              attempt,
+              message,
+              reason,
+              roomId: reconnectRoomId,
+            });
+            if (!roomReconnectSuppressedRef.current) {
+              setAuthMessage("Connection lost. Reconnecting...");
+              scheduleRoomReconnect(`${reason}:retry`);
+            }
+          })
+          .finally(() => {
+            roomReconnectInFlightRef.current = false;
+          });
+      }, delayMs);
+    },
+    [connectToExistingWebsiteRoom],
+  );
+
+  useEffect(() => {
+    if (status === "closed" || status === "error") {
+      scheduleRoomReconnect(status);
+    }
+  }, [scheduleRoomReconnect, status]);
+
+  useEffect(() => {
+    function handleOnline(): void {
+      scheduleRoomReconnect("online");
+    }
+
+    function handleVisibilityChange(): void {
+      if (document.visibilityState === "visible") {
+        scheduleRoomReconnect("visible");
+      }
+    }
+
+    window.addEventListener("online", handleOnline);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [scheduleRoomReconnect]);
+
+  useEffect(() => {
+    return () => {
+      roomReconnectSuppressedRef.current = true;
+      clearRoomReconnectTimer();
+    };
+  }, [clearRoomReconnectTimer]);
+
   const applyParticipantIdentity = useCallback(
     (result: CurrentParticipantResult, reason: string, reconnectActiveRoom: boolean) => {
       const activeRoomId = roomIdRef.current;
@@ -1796,7 +1894,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       setAuthAccessToken(result.tokens?.accessToken ?? null);
       setExtensionContextInvalidated(Boolean(result.requiresPageReload));
       setAuthMessage(result.message ?? null);
-      if (!result.authenticated) {
+      if (result.authenticated) {
+        roomReconnectSuppressedRef.current = false;
+      } else {
+        roomReconnectSuppressedRef.current = true;
+        clearRoomReconnectTimer();
         roomTokenRef.current = null;
         roomShareableLinkRef.current = null;
         setRoomToken(null);
@@ -1810,15 +1912,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         displayName: result.participant?.displayName ?? null,
       });
 
-      if (reconnectActiveRoom && activeRoomId && result.participant && roomTokenRef.current) {
-        connectToRoomAsParticipant(
-          activeRoomId,
-          result.participant,
-          roomTokenRef.current,
-        );
+      if (reconnectActiveRoom && activeRoomId && result.participant) {
+        scheduleRoomReconnect(`identity:${reason}`);
       }
     },
-    [connectToRoomAsParticipant],
+    [clearRoomReconnectTimer, scheduleRoomReconnect],
   );
 
   const handleSignIn = useCallback(async () => {
@@ -1838,6 +1936,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setAuthBusy(true);
     setAuthMessage(null);
     try {
+      roomReconnectSuppressedRef.current = true;
+      clearRoomReconnectTimer();
       applyParticipantIdentity(await signOutAndClearParticipant(), "sign-out", false);
       clientRef.current.close();
       setRoomId(null);
@@ -1848,7 +1948,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     } finally {
       setAuthBusy(false);
     }
-  }, [applyParticipantIdentity]);
+  }, [applyParticipantIdentity, clearRoomReconnectTimer]);
 
   useEffect(() => {
     applyParticipantIdentityRef.current = applyParticipantIdentity;
