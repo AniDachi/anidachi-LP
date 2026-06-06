@@ -280,6 +280,10 @@ export class RoomClient {
     this.ws = ws;
 
     ws.addEventListener("open", () => {
+      if (this.ws !== ws) {
+        return;
+      }
+
       logDebug("room.ws", "open", {
         roomId: options.roomId,
         participantId: options.participant.id,
@@ -300,6 +304,10 @@ export class RoomClient {
     });
 
     ws.addEventListener("message", (message) => {
+      if (this.ws !== ws) {
+        return;
+      }
+
       try {
         const event = ServerEventSchema.parse(JSON.parse(String(message.data)));
         logDebug("room.recv", event.type, roomEventDebugSnapshot(event));
@@ -314,6 +322,10 @@ export class RoomClient {
     });
 
     ws.addEventListener("close", (event) => {
+      if (this.ws !== ws) {
+        return;
+      }
+
       logDebug("room.ws", "closed", {
         code: event.code,
         reason: event.reason,
@@ -322,6 +334,10 @@ export class RoomClient {
       options.onStatus("closed");
     });
     ws.addEventListener("error", () => {
+      if (this.ws !== ws) {
+        return;
+      }
+
       logDebug("room.ws", "error");
       options.onStatus("error");
     });
@@ -351,8 +367,9 @@ export class RoomClient {
   }
 
   close(): void {
-    this.ws?.close();
+    const ws = this.ws;
     this.ws = null;
+    ws?.close();
     this.pendingEvents = [];
   }
 

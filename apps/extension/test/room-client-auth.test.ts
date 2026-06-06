@@ -9,6 +9,7 @@ import {
   createWebsiteRoomFromApi,
   createWebsiteRoomHeaders,
   isRoomHttpMessage,
+  RoomClient,
 } from "../src/room-client";
 
 describe("authenticated room client", () => {
@@ -139,5 +140,74 @@ describe("authenticated room client", () => {
       roomToken: "room-token-2",
     });
     expect(sendMessage).toHaveBeenCalledWith(connectRoomHttpMessage("room-2", "access-1"));
+  });
+
+  it("ignores close events from stale websocket connections", () => {
+    const sockets: FakeWebSocket[] = [];
+    class FakeWebSocket {
+      static CONNECTING = 0;
+      static OPEN = 1;
+      static CLOSING = 2;
+      static CLOSED = 3;
+
+      readonly listeners = new Map<string, Array<(event: unknown) => void>>();
+      readyState = FakeWebSocket.CONNECTING;
+      url: string;
+
+      constructor(url: string) {
+        this.url = url;
+        sockets.push(this);
+      }
+
+      addEventListener(type: string, listener: (event: unknown) => void): void {
+        this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+      }
+
+      close(): void {
+        this.readyState = FakeWebSocket.CLOSED;
+        this.dispatch("close", { code: 1000, reason: "client close", wasClean: true });
+      }
+
+      send(): void {
+        return undefined;
+      }
+
+      open(): void {
+        this.readyState = FakeWebSocket.OPEN;
+        this.dispatch("open", {});
+      }
+
+      dispatch(type: string, event: unknown): void {
+        for (const listener of this.listeners.get(type) ?? []) {
+          listener(event);
+        }
+      }
+    }
+
+    vi.stubGlobal("WebSocket", FakeWebSocket);
+    const statuses: string[] = [];
+    const client = new RoomClient();
+    const options = (roomToken: string) => ({
+      roomId: "room-1",
+      roomToken,
+      participant: {
+        id: "user-1",
+        displayName: "User",
+        role: "host" as const,
+        cameraEnabled: false,
+        syncStatus: "unknown" as const,
+        lastSeenAt: 0,
+      },
+      videoFingerprint: "video-1",
+      onEvent: vi.fn(),
+      onStatus: (status: string) => statuses.push(status),
+    });
+
+    client.connect(options("room-token-1"));
+    client.connect(options("room-token-2"));
+    sockets[0]?.dispatch("close", { code: 1006, reason: "", wasClean: false });
+    sockets[1]?.open();
+
+    expect(statuses).toEqual(["connecting", "connecting", "connected"]);
   });
 });
