@@ -53,6 +53,13 @@ Implementation:
 - Push-to-talk audio is sent only while the keyboard voice key is held.
 - Room events sent while the WebSocket is still connecting are queued by `RoomClient` so early
   `CAMERA_ON` and P2P control events are not lost during join.
+- Room WebSocket transport currently uses lightweight application-level `PING` / `PONG`
+  keepalive. The extension sends `PING` every `20s`; if no `PONG` arrives within `45s`, the client
+  closes the stale socket so the reconnect flow can fetch a fresh room token and rejoin.
+- Cloudflare Durable Object WebSocket Hibernation API is a planned follow-up, not the current
+  implementation. Do not remove the keepalive until the Durable Object can rebuild room presence,
+  socket maps, verified participant identity, host state, and short-lived P2P replay state after a
+  hibernation wake.
 - P2P media starts only after the first `ROOM_SNAPSHOT`, not merely after the WebSocket opens.
 - Extension P2P signals include `clientSignalId` and `senderConnectionId`; replayed or duplicated
   signals are deduped before they reach the media controller.
@@ -91,3 +98,6 @@ Known limitations:
   or relay-preferred modes for users who need it.
 - Mesh P2P is intended for `2-4` people. Do not raise the room camera limit without revisiting
   upload bandwidth and connection count.
+- The Worker still uses the standard Durable Object WebSocket API. The current keepalive prevents
+  idle closes in staging, but WebSocket Hibernation remains the preferred production hardening step
+  for lower cost and better idle-room behavior.
