@@ -14,7 +14,7 @@ import type {
   LiveVoiceStatus,
   MediaTransportName,
 } from "./media-types";
-import { loadP2PIceServers } from "./p2p-ice";
+import { loadP2PIceServers, refreshP2PIceServers } from "./p2p-ice";
 import { P2PMediaController } from "./p2p-media";
 
 export type { GhostVideo, LiveVoiceStatus } from "./media-types";
@@ -510,6 +510,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         onVideosChange: setVideos,
         onVoiceMessageChange: setVoiceMessage,
         onVoiceStatusChange: setVoiceStatus,
+        refreshIceServers: refreshP2PIceServers,
         sendSignal: sendP2PSignal,
       });
 

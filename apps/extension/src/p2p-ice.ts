@@ -15,8 +15,16 @@ let cachedUntilMs = 0;
 const ICE_SERVER_CACHE_SAFETY_MS = 5 * 60 * 1000;
 
 export async function loadP2PIceServers(): Promise<RTCIceServer[]> {
+  return loadP2PIceServersWithCache(false);
+}
+
+export async function refreshP2PIceServers(): Promise<RTCIceServer[]> {
+  return loadP2PIceServersWithCache(true);
+}
+
+async function loadP2PIceServersWithCache(forceRefresh: boolean): Promise<RTCIceServer[]> {
   const now = Date.now();
-  if (cachedIceServers?.length && cachedUntilMs > now) {
+  if (!forceRefresh && cachedIceServers?.length && cachedUntilMs > now) {
     return cachedIceServers;
   }
 
@@ -47,6 +55,7 @@ export async function loadP2PIceServers(): Promise<RTCIceServer[]> {
     cachedUntilMs = now + Math.max(60_000, ttlSeconds * 1000 - ICE_SERVER_CACHE_SAFETY_MS);
     logDebug("p2p.ice-config", "loaded", {
       configured: payload.configured,
+      forceRefresh,
       provider: payload.provider,
       ttlSeconds,
       iceServers: summarizeIceServers(iceServers),
@@ -58,6 +67,7 @@ export async function loadP2PIceServers(): Promise<RTCIceServer[]> {
     cachedUntilMs = now + 60_000;
     logDebug("p2p.ice-config", "fallback", {
       error: error instanceof Error ? error.message : String(error),
+      forceRefresh,
       iceServers: summarizeIceServers(fallback),
     });
     return fallback;

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { prioritizeDirectIceServers } from "../src/p2p-ice";
+import { getDefaultP2PIceServers } from "../src/p2p-media";
 
 describe("P2P ICE server prioritization", () => {
+  it("does not include OpenRelay TURN servers by default", () => {
+    expect(JSON.stringify(getDefaultP2PIceServers())).not.toContain("openrelay");
+  });
+
   it("keeps STUN-only servers before TURN fallback servers", () => {
     const servers = prioritizeDirectIceServers(
       [

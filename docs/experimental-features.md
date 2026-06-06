@@ -45,11 +45,17 @@ Implementation:
 - P2P media controller lives in `apps/extension/src/p2p-media.ts`.
 - `apps/extension/src/ghost-cam.ts` chooses between `p2p` and `livekit`.
 - Targeted signaling is typed in `packages/protocol/src/types.ts` as `P2P_SIGNAL`.
-- Durable Object only forwards `P2P_SIGNAL` between joined participants.
+- Durable Object forwards `P2P_SIGNAL` only between joined participants, assigns `serverSeq`, and
+  keeps a bounded short-lived replay buffer for reload/rejoin timing.
 - Camera is constrained to roughly `240x240`, `10-12fps`, with a `150kbps` sender bitrate target.
+  This is an ultra-light product constraint; do not increase the default video bitrate, resolution,
+  or framerate without a separate product decision.
 - Push-to-talk audio is sent only while the keyboard voice key is held.
 - Room events sent while the WebSocket is still connecting are queued by `RoomClient` so early
   `CAMERA_ON` and P2P control events are not lost during join.
+- P2P media starts only after the first `ROOM_SNAPSHOT`, not merely after the WebSocket opens.
+- Extension P2P signals include `clientSignalId` and `senderConnectionId`; replayed or duplicated
+  signals are deduped before they reach the media controller.
 - Compact debug logs include `p2p.*` entries for offer/answer, ICE candidates, connection state,
   selected candidate-pair stats, local/remote track arrival, and autoplay failures.
 - ICE config is loaded from the Anidachi API endpoint `GET /ice-servers`. In production/public
@@ -59,16 +65,19 @@ Implementation:
   entries are ordered before TURN entries, and the Cloudflare STUN list is supplemented with Google
   STUN as an extra direct-connect path. Browser ICE still chooses the candidate pair; TURN is only a
   fallback when host/server-reflexive pairs cannot connect.
+- Before ICE restart, the extension force-refreshes `/ice-servers`, applies the refreshed config
+  with `RTCPeerConnection.setConfiguration()`, then renegotiates through the existing signaling
+  path.
 - If Cloudflare TURN secrets are not configured or the endpoint is unreachable, the extension falls
-  back to build-time `WXT_P2P_ICE_SERVERS_JSON`, then Google STUN plus the best-effort OpenRelay
-  static TURN config. OpenRelay is not a production dependency.
+  back to build-time `WXT_P2P_ICE_SERVERS_JSON`, then direct STUN-only defaults. OpenRelay TURN is
+  opt-in only for local diagnostics and is not a production fallback.
 
 Disable options:
 
 - Build-time default: set `WXT_MEDIA_TRANSPORT=livekit` before building the extension.
 - Runtime/internal override: set WXT storage key `local:experiment:mediaTransport` to `livekit`.
-- Disable the bundled best-effort OpenRelay TURN attempt with
-  `WXT_P2P_ENABLE_OPEN_RELAY_TURN=false`.
+- Enable the bundled best-effort OpenRelay TURN attempt only for local diagnostics with
+  `WXT_P2P_ENABLE_OPEN_RELAY_TURN=true`.
 - Force all P2P media through TURN during diagnostics with `WXT_P2P_FORCE_RELAY=true`.
 
 Known limitations:

@@ -128,6 +128,7 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
       return {
         type: event.type,
         roomId: event.roomId,
+        lastSeenP2PServerSeq: event.lastSeenP2PServerSeq,
         participantId: event.participant.id,
         role: event.participant.role,
         videoFingerprint: event.videoFingerprint,
@@ -197,7 +198,10 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
       return {
         type: event.type,
         roomId: event.roomId,
+        clientSignalId: event.clientSignalId,
         fromUserId: event.fromUserId,
+        senderConnectionId: event.senderConnectionId,
+        serverSeq: event.serverSeq,
         toUserId: event.toUserId,
         signalKind: event.signal.kind,
       };

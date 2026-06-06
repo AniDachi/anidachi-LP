@@ -73,6 +73,7 @@ interface P2PMediaControllerOptions {
   onVideosChange: (videos: GhostVideo[]) => void;
   onVoiceMessageChange: (message: string | null) => void;
   onVoiceStatusChange: (status: LiveVoiceStatus) => void;
+  refreshIceServers?: () => Promise<RTCIceServer[]>;
   sendSignal: (toUserId: string, signal: P2PSignal) => void;
 }
 
@@ -84,13 +85,14 @@ type IceCandidateStatsSnapshot = RTCStats & {
 };
 
 export class P2PMediaController {
-  private readonly iceServers: RTCIceServer[];
+  private iceServers: RTCIceServer[];
   private readonly localParticipant: Participant;
   private readonly onActiveSpeakerIdsChange: (ids: string[]) => void;
   private readonly onCameraStatus: (enabled: boolean) => void;
   private readonly onVideosChange: (videos: GhostVideo[]) => void;
   private readonly onVoiceMessageChange: (message: string | null) => void;
   private readonly onVoiceStatusChange: (status: LiveVoiceStatus) => void;
+  private readonly refreshIceServers?: () => Promise<RTCIceServer[]>;
   private readonly sendSignal: (toUserId: string, signal: P2PSignal) => void;
   private readonly peers = new Map<string, P2PPeer>();
   private readonly videosByParticipant = new Map<string, GhostVideo>();
@@ -115,6 +117,7 @@ export class P2PMediaController {
     this.onVideosChange = options.onVideosChange;
     this.onVoiceMessageChange = options.onVoiceMessageChange;
     this.onVoiceStatusChange = options.onVoiceStatusChange;
+    this.refreshIceServers = options.refreshIceServers;
     this.sendSignal = options.sendSignal;
     logDebug("p2p.controller", "created", {
       localParticipantId: options.localParticipant.id,
@@ -410,7 +413,7 @@ export class P2PMediaController {
 
     if (signal.kind === "restart-ice") {
       if (this.shouldInitiateOffers(peer)) {
-        this.restartPeerIce(peer, "remote-request");
+        void this.restartPeerIce(peer, "remote-request");
       } else {
         logDebug("p2p.ice", "ignored restart request on answerer side", {
           localParticipantId: this.localParticipant.id,
@@ -654,7 +657,7 @@ export class P2PMediaController {
       }
 
       if (pc.iceConnectionState === "failed") {
-        this.restartPeerIce(peer, "ice-failed");
+        void this.restartPeerIce(peer, "ice-failed");
       }
     });
 
@@ -683,7 +686,7 @@ export class P2PMediaController {
       }
 
       if (pc.connectionState === "failed") {
-        this.restartPeerIce(peer, "connection-failed");
+        void this.restartPeerIce(peer, "connection-failed");
       }
     });
 
@@ -1135,7 +1138,7 @@ export class P2PMediaController {
     }
   }
 
-  private restartPeerIce(peer: P2PPeer, reason: string): void {
+  private async restartPeerIce(peer: P2PPeer, reason: string): Promise<void> {
     if (
       this.disposed ||
       this.peers.get(peer.remoteUserId) !== peer ||
@@ -1156,6 +1159,7 @@ export class P2PMediaController {
 
     peer.lastIceRestartAt = now;
     this.clearPeerDisconnectTimer(peer);
+    await this.refreshPeerIceServers(peer, reason);
     logDebug("p2p.ice", "restart", {
       localParticipantId: this.localParticipant.id,
       remoteUserId: peer.remoteUserId,
@@ -1163,6 +1167,35 @@ export class P2PMediaController {
     });
     peer.pc.restartIce();
     this.queueNegotiation(peer, reason);
+  }
+
+  private async refreshPeerIceServers(peer: P2PPeer, reason: string): Promise<void> {
+    if (!this.refreshIceServers) {
+      return;
+    }
+
+    try {
+      const iceServers = await this.refreshIceServers();
+      if (!iceServers.length || this.disposed || this.peers.get(peer.remoteUserId) !== peer) {
+        return;
+      }
+
+      this.iceServers = iceServers;
+      peer.pc.setConfiguration(createP2PRtcConfiguration(iceServers));
+      logDebug("p2p.ice-config", "refreshed before restart", {
+        localParticipantId: this.localParticipant.id,
+        remoteUserId: peer.remoteUserId,
+        reason,
+        iceServers: summarizeIceServers(iceServers),
+      });
+    } catch (error) {
+      logDebug("p2p.ice-config", "refresh before restart failed", {
+        localParticipantId: this.localParticipant.id,
+        remoteUserId: peer.remoteUserId,
+        reason,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   private schedulePeerIceRestart(peer: P2PPeer, reason: string, delayMs: number): void {
@@ -1187,7 +1220,7 @@ export class P2PMediaController {
         peer.pc.iceConnectionState === "disconnected" ||
         peer.pc.iceConnectionState === "failed"
       ) {
-        this.restartPeerIce(peer, reason);
+        void this.restartPeerIce(peer, reason);
       }
     }, delayMs);
   }
@@ -1281,7 +1314,7 @@ export function getDefaultP2PIceServers(): RTCIceServer[] {
     return configured;
   }
 
-  const enableOpenRelay = import.meta.env.WXT_P2P_ENABLE_OPEN_RELAY_TURN !== "false";
+  const enableOpenRelay = import.meta.env.WXT_P2P_ENABLE_OPEN_RELAY_TURN === "true";
   return enableOpenRelay
     ? [...DEFAULT_STUN_SERVERS, ...OPEN_RELAY_TURN_SERVERS]
     : DEFAULT_STUN_SERVERS;

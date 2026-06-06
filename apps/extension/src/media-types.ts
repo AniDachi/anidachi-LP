@@ -11,7 +11,12 @@ export type LiveVoiceStatus = "idle" | "connecting" | "talking" | "error";
 export type MediaTransportName = "livekit" | "p2p";
 
 export interface IncomingP2PSignal {
+  clientSignalId: string;
   fromUserId: string;
+  roomGeneration?: number;
   sequence: number;
+  senderConnectionId: string;
+  serverSeq?: number;
   signal: P2PSignal;
+  sourceGeneration?: number;
 }
