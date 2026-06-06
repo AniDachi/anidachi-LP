@@ -918,22 +918,68 @@ Expected:
 - no background audio processing loop is added for UI polish;
 - user privacy expectations stay simple.
 
-- [x] **Step 6.11: Defer Durable Object WebSocket hibernation until replay metadata is stable**
+- [ ] **Step 6.11: Migrate room WebSockets to Durable Object WebSocket Hibernation API**
+
+Current state as of 2026-06-07:
+
+- PR #20 added extension room auto-reconnect that refreshes room tokens through the website before
+  opening a replacement WebSocket.
+- PR #21 added application-level `PING` / `PONG` keepalive: extension sends `PING` every `20s`, the
+  Worker responds with `PONG`, and the extension closes the socket after `45s` without `PONG` so the
+  reconnect flow can rejoin.
+- This fixed the observed staging symptom where rooms closed after a couple of minutes.
+- The `roomToken` still intentionally expires after `30m`; it is only WebSocket handshake
+  authorization, not the room lifetime.
+
+Why hibernation remains a follow-up:
+
+```txt
+The current Worker uses the standard Durable Object WebSocket API.
+Cloudflare documents that non-hibernateable idle Durable Objects can be evicted after roughly
+70-140 seconds without incoming events, and WebSocket connections can close during shutdown.
+The heartbeat is a correct reliability workaround, but it is not the final scale/cost model.
+```
 
 Expected future migration:
 
 ```txt
-1. Move from server.accept() event listeners to ctx.acceptWebSocket(server).
-2. Store participant identity, connectionId, and lastSeenP2PServerSeq with serializeAttachment().
-3. Rebuild in-memory socket maps from ctx.getWebSockets() after constructor wake.
-4. Keep constructor work minimal.
-5. Do not use setTimeout/setInterval loops that prevent hibernation.
+1. Move from server.accept() event listeners to DurableObjectState.acceptWebSocket(server).
+2. Replace addEventListener("message" / "close" / "error") handling with webSocketMessage,
+   webSocketClose, and webSocketError handlers.
+3. Store per-socket metadata with serializeAttachment():
+   - roomId;
+   - participant id;
+   - role;
+   - displayName;
+   - avatarUrl;
+   - senderConnectionId / connection id;
+   - participantSessionId when Task 5 session identity exists;
+   - lastSeenP2PServerSeq at join time.
+4. Rebuild participantsBySocket, socketsByParticipant, and verified participant identity from
+   DurableObjectState.getWebSockets() and deserializeAttachment() after constructor wake.
+5. Persist or reconstruct the minimum room-level state needed after wake:
+   - current participants;
+   - latest host playback state;
+   - room/source generation once Task 4 and Task 7 are complete;
+   - bounded short-lived P2P replay state, or an explicit decision that replay is best-effort after
+     hibernation and reconnect fallback owns recovery.
+6. Keep constructor work minimal and avoid Durable Object setTimeout/setInterval loops that prevent
+   hibernation.
+7. Keep the current application-level keepalive during rollout; after hibernation is proven, either
+   remove it or reduce it to an infrequent connection-health check.
+8. Add tests for wake/rebuild behavior before deploying:
+   - existing connected clients still receive ROOM_SNAPSHOT after wake;
+   - stale socket replacement still works;
+   - P2P_SIGNAL permission checks still derive identity from server-side metadata;
+   - reconnect still refreshes roomToken and rejoins after forced socket close.
 ```
 
 Expected:
 
-- hibernation is treated as a scale/cost hardening step, not the first reliability fix;
-- when adopted, Durable Object wake-up does not lose connection identity;
+- hibernation is treated as the next architecture hardening step after heartbeat verification;
+- idle rooms do not close after a few minutes without relying on frequent app messages forever;
+- Durable Object wake-up does not lose connection identity, participant presence, host state, or
+  P2P signaling permissions;
 - no media payload is ever routed through Durable Object.
 
 - [ ] **Step 6.12: Run the P2P acceptance matrix before marking complete**
