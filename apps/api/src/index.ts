@@ -162,6 +162,9 @@ export class RoomDurableObject {
     }
 
     switch (event.type) {
+      case "PING":
+        this.handlePing(socket, event);
+        return;
       case "JOIN":
         this.handleJoin(socket, event);
         return;
@@ -184,6 +187,15 @@ export class RoomDurableObject {
         this.handlePlaybackCommand(socket, event);
         return;
     }
+  }
+
+  private handlePing(socket: WebSocket, event: Extract<ClientEvent, { type: "PING" }>): void {
+    this.send(socket, {
+      type: "PONG",
+      roomId: this.room.roomId,
+      sentAt: event.sentAt,
+      serverTime: Date.now(),
+    });
   }
 
   private handleJoin(socket: WebSocket, event: Extract<ClientEvent, { type: "JOIN" }>): void {

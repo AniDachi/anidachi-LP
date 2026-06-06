@@ -10,6 +10,34 @@ import {
 } from "../src";
 
 describe("room protocol schemas", () => {
+  it("accepts room keepalive ping and pong events", () => {
+    expect(
+      ClientEventSchema.parse({
+        type: "PING",
+        roomId: "room-1",
+        sentAt: 1_000,
+      }),
+    ).toEqual({
+      type: "PING",
+      roomId: "room-1",
+      sentAt: 1_000,
+    });
+
+    expect(
+      ServerEventSchema.parse({
+        type: "PONG",
+        roomId: "room-1",
+        sentAt: 1_000,
+        serverTime: 1_005,
+      }),
+    ).toEqual({
+      type: "PONG",
+      roomId: "room-1",
+      sentAt: 1_000,
+      serverTime: 1_005,
+    });
+  });
+
   it("accepts valid join and reaction events", () => {
     const joined = ClientEventSchema.parse({
       type: "JOIN",
