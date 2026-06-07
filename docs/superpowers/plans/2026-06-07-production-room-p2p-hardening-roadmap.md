@@ -1,0 +1,555 @@
+# Production Room, Realtime, and P2P Hardening Roadmap
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` for implementation tasks and update this file after every completed step. Use `superpowers:systematic-debugging` for regressions. Use the Cloudflare Durable Objects docs before changing hibernation behavior.
+
+**Goal:** Make AniDachi rooms, realtime sync, ultra-light P2P camera/audio, source switching, and durable watch progress reliable enough for normal development and staged releases.
+
+**Architecture:** Keep the three-plane model. `apps/web` and Supabase are the persistent control plane. `apps/api` with Cloudflare Workers and Durable Objects is the realtime live plane. `apps/extension` is the browser runtime/media plane. The Worker derives identity from short-lived room tokens and coordinates live state; it must not trust client-provided identity.
+
+**Current repo:** `/Users/vladyslavhulyi/anidachi-LP-monorepo`
+
+**Git workflow:** develop on `codex/*` or feature branches, open PRs into `staging`, let staging deploy and smoke tests run, then promote allowed site/docs changes to `main` automatically or merge app/API/extension work deliberately through the protected flow.
+
+**Primary external references checked on 2026-06-07:**
+
+- Cloudflare Durable Objects WebSocket hibernation: `https://developers.cloudflare.com/durable-objects/best-practices/websockets/`
+- Cloudflare `DurableObjectState` API: `https://developers.cloudflare.com/durable-objects/api/state/`
+- Cloudflare Durable Object lifecycle: `https://developers.cloudflare.com/durable-objects/concepts/durable-object-lifecycle/`
+- MDN WebRTC connectivity: `https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Connectivity`
+- MDN `RTCPeerConnection.restartIce()`: `https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/restartIce`
+- MDN `RTCPeerConnection.getStats()`: `https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/getStats`
+
+---
+
+## How To Use This Plan
+
+- Keep this file as the active source of truth for room/P2P hardening.
+- Do not mark a task complete unless code, tests, and staging/manual verification match its acceptance criteria.
+- After each real implementation step, add one bullet to **Progress Log** with date, branch, commit or PR, verification command, and remaining risk.
+- If a task is partially implemented, mark only the exact sub-step as done.
+- Do not jump to later tasks just because they are more interesting. Later tasks assume earlier protocol and lifecycle contracts are stable.
+
+## Progress Log
+
+- [x] 2026-06-07: Re-read the old commercial room/P2P/progress plan and found stale repo paths, stale repo names, and over-broad Task 6 completion claims.
+- [x] 2026-06-07: Audited current code in `packages/protocol`, `apps/api`, `apps/web`, and `apps/extension` for room lifecycle, P2P signaling, reconnect, and keepalive behavior.
+- [x] 2026-06-07: Ran two focused research passes: one repo-local audit for plan/task ordering and one Cloudflare Hibernation migration audit.
+- [x] 2026-06-07: Checked current Cloudflare and WebRTC primary docs and folded the findings into this roadmap.
+
+## Current Reality Check
+
+### Already Good Enough To Build On
+
+- [x] Monorepo exists and includes `apps/web`, `apps/api`, `apps/extension`, and `packages/protocol`.
+- [x] Extension signs in through the website and can create/connect to rooms with extension bearer auth.
+- [x] Website issues short-lived room tokens for host/member connections.
+- [x] Worker verifies the room token before accepting a WebSocket.
+- [x] P2P signaling is targeted, not room-wide broadcast.
+- [x] P2P signals include `clientSignalId`, `senderConnectionId`, optional `serverSeq`, and optional generation fields.
+- [x] Worker has an in-memory bounded P2P replay buffer.
+- [x] Extension tracks `lastSeenP2PServerSeq` across reconnect attempts.
+- [x] Extension has direct-first ICE with Cloudflare TURN fallback.
+- [x] P2P media is intentionally ultra-light: current video constraints and bitrate stay low; do not add an adaptive upscale profile.
+- [x] Extension has debug export and candidate-pair logging hooks.
+- [x] API deploy, extension build, CI, and staging smoke workflows exist.
+
+### Partial Or Misleading
+
+- [ ] Room creation is durable, but not idempotent and not lifecycle-complete.
+- [ ] Room status exists, but does not have complete draft/lobby/live/stale/ended semantics.
+- [ ] `roomGeneration` and `sourceGeneration` exist only as optional P2P fields, not as first-class room snapshot/source state.
+- [ ] `ROOM_SNAPSHOT` does not include generation fields, current source descriptor, or current server sequence.
+- [ ] `JOIN` still sends a full client-provided participant object even though the Worker derives identity from verified token claims.
+- [ ] Reconnect exists, but there is no stable `participantSessionId`.
+- [ ] Worker socket replacement is by user id, not by participant session.
+- [ ] P2P replay scope can filter by generation, but the Worker does not yet have authoritative room/source generation to pass into it.
+- [ ] WebSocket keepalive currently uses JSON `PING`/`PONG` every 20 seconds. That helps current stability, but would wake a hibernated Durable Object unless changed.
+- [ ] Durable Object currently uses `server.accept()` and event listeners, not the Cloudflare WebSocket Hibernation API.
+
+### Not Done Yet
+
+- [ ] First-class source switching protocol.
+- [ ] Durable shared watch progress backend.
+- [ ] Hibernation-safe room state rebuild.
+- [ ] SQLite-backed P2P replay state in the Durable Object.
+- [ ] Hibernation-aware integration tests.
+- [ ] Release gates that require manual two-browser room/P2P acceptance before marking P2P work complete.
+
+## Non-Negotiable Order
+
+1. Baseline and progress tracking.
+2. Room lifecycle and idempotent create.
+3. Protocol contract: identity, generations, server sequence, source descriptor.
+4. Reconnect/resume with `participantSessionId`.
+5. Source generation and source switching contract.
+6. Cloudflare WebSocket Hibernation migration.
+7. Remaining ultra-light P2P stability work.
+8. Durable watch progress.
+9. Observability and release gates.
+
+Cloudflare WebSocket Hibernation is intentionally Task 6, not Task 10. It is useful for cost and long-lived room stability, but it must not be implemented before the state that has to survive wake/rebuild is explicitly modeled.
+
+## Product Constraints
+
+- Keep P2P camera extremely light. Do not add a higher-quality adaptive profile as a feature goal.
+- Keep remote P2P participant limit small. Current limit of 3 remote participants is acceptable until product evidence says otherwise.
+- Do not proxy, host, record, or redistribute source video.
+- Do not put Supabase service role keys, JWT signing secrets, TURN secrets, Google OAuth secrets, or Discord OAuth secrets in the extension.
+- Do not make staging public-indexable. Staging must remain gated and noindexed.
+- Do not treat room/P2P work as finished without manual staging verification on at least two browser profiles or machines.
+
+---
+
+## Task 0: Baseline And Progress Tracking
+
+**Status:** In progress for documentation; product code not changed by this task.
+
+**Files:**
+
+- `docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md`
+- `docs/superpowers/plans/README.md`
+- `docs/current-development-state.md`
+
+**Steps:**
+
+- [x] Create this active roadmap.
+- [x] Mark the old 2026-06-03 commercial plan as historical/superseded.
+- [ ] Keep this roadmap updated after every future implementation PR.
+- [ ] Add PR numbers and commits to the Progress Log as work lands.
+
+**Acceptance Criteria:**
+
+- Another AI or developer can start from this file and understand what is done, what is partial, and what must happen next.
+- The old plan remains available as history, but is not the active execution source.
+
+## Task 1: Confirm Current Staging Baseline
+
+**Why this comes first:** We need one clean reference point before changing protocol and Durable Object behavior.
+
+**Files:**
+
+- `docs/development-environments.md`
+- `docs/current-development-state.md`
+- GitHub Actions runs for `staging`
+- Latest extension staging artifact
+
+**Steps:**
+
+- [ ] Confirm latest `staging` commit and extension artifact hash.
+- [ ] Install the latest staging extension zip on a clean browser profile.
+- [ ] Sign in through Google or Discord from a clean profile.
+- [ ] Create a room from the extension.
+- [ ] Join from a second profile or second machine.
+- [ ] Confirm video sync, P2P camera, and push-to-talk audio.
+- [ ] Leave the room idle for at least 10 minutes and confirm it does not close unexpectedly.
+- [ ] Reload one participant and confirm reconnect does not require manual room recreation.
+- [ ] Export debug logs from both participants and attach the relevant summary to the Progress Log.
+
+**Acceptance Criteria:**
+
+- Current baseline bugs are documented before refactors start.
+- If audio delay or room auto-close reproduces, the reproduction steps are captured before code changes.
+
+## Task 2: Durable Room Lifecycle And Idempotent Create
+
+**Why this matters:** Room creation currently works, but repeated clicks/reloads/new profiles can create confusing duplicate rooms or stale active rooms.
+
+**Files:**
+
+- `apps/web/app/api/rooms/route.ts`
+- `apps/web/app/api/rooms/[roomId]/connect/route.ts`
+- `apps/web/app/api/rooms/[roomId]/join/route.ts`
+- `apps/web/lib/anidachi-auth/db.ts`
+- `apps/web/supabase/migrations/*`
+- `packages/protocol/src/types.ts`
+- `apps/extension/src/room-client.ts`
+- `apps/extension/src/overlay-app.tsx`
+
+**Schema Target:**
+
+- Add room lifecycle fields:
+  - `status`: keep existing values and add any required lifecycle states deliberately.
+  - `client_request_id`: idempotency key from extension/website create action.
+  - `canonical_url`
+  - `provider`
+  - `source_descriptor` or explicit normalized columns.
+  - `room_generation`
+  - `source_generation`
+  - `last_active_at`
+  - `ended_at`
+  - `stale_after`
+- Add uniqueness for host + `client_request_id`.
+- Add indexes for host active rooms and stale cleanup queries.
+
+**Steps:**
+
+- [ ] Define the exact Supabase migration.
+- [ ] Add idempotent `createRoom()` behavior.
+- [ ] Add `clientRequestId` from extension room creation.
+- [ ] Ensure room create retry returns the same active room for the same idempotency key.
+- [ ] Add stale room cleanup helper or route-level stale filtering.
+- [ ] Ensure active room count excludes ended/stale rooms.
+- [ ] Add tests for duplicate create, stale exclusion, and room limit behavior.
+
+**Acceptance Criteria:**
+
+- Double-clicking create or retrying after network failure does not create duplicate active rooms.
+- A room does not count forever against the host after all participants disappear.
+- Room tokens are still short-lived, but the durable room record remains valid according to lifecycle rules.
+
+## Task 3: Protocol Contract Cleanup
+
+**Why this must happen before Hibernation:** The Durable Object can only restore and validate state after wake if room identity, session identity, source generation, and server ordering are explicit.
+
+**Files:**
+
+- `packages/protocol/src/types.ts`
+- `packages/protocol/test/protocol.test.ts`
+- `apps/api/src/index.ts`
+- `apps/api/src/room-state.ts`
+- `apps/api/test/*`
+- `apps/extension/src/room-client.ts`
+- `apps/extension/src/overlay-app.tsx`
+- `apps/extension/test/*`
+
+**Contract Target:**
+
+```ts
+interface RoomEventEnvelope<TPayload> {
+  schemaVersion: 1;
+  eventId: string;
+  roomId: string;
+  roomGeneration: number;
+  sourceGeneration: number;
+  serverSeq: number;
+  clientSeq?: number;
+  senderUserId: string;
+  senderConnectionId: string;
+  participantSessionId: string;
+  sentAt: number;
+  serverReceivedAt: number;
+  payload: TPayload;
+}
+```
+
+**Practical near-term target:**
+
+- [ ] `ROOM_SNAPSHOT` includes `roomGeneration`, `sourceGeneration`, `serverSeq`, and current source descriptor.
+- [ ] `P2P_SIGNAL` generation fields become required after extension and Worker both send them.
+- [ ] `JOIN` stops trusting a full client-provided participant object. It may send local capabilities, but identity comes from token claims.
+- [ ] Every room-scoped event is rejected if top-level `roomId` does not match the Durable Object room id.
+- [ ] Server-generated events include enough sequence/generation data for the extension to drop stale events.
+
+**Acceptance Criteria:**
+
+- Protocol tests fail for stale/missing generation fields once migration compatibility is removed.
+- Worker tests cover room-id mismatch rejection.
+- Extension drops stale events based on snapshot generation, not optional P2P-only fields.
+
+## Task 4: Reconnect, Resume, And Session Identity
+
+**Why this matters:** Current reconnect can refresh room tokens, but it cannot cleanly distinguish a browser tab lifetime from a WebSocket lifetime.
+
+**Files:**
+
+- `apps/extension/src/room-client.ts`
+- `apps/extension/src/overlay-app.tsx`
+- `apps/api/src/index.ts`
+- `apps/api/src/room-state.ts`
+- `packages/protocol/src/types.ts`
+
+**Target Identity Model:**
+
+- `userId`: durable user identity from auth.
+- `participantSessionId`: one extension overlay/tab room session.
+- `connectionId`: one WebSocket connection lifetime.
+- `senderConnectionId`: can become the same as `connectionId` or remain as a P2P-specific alias, but must be consistent.
+
+**Steps:**
+
+- [ ] Generate and persist `participantSessionId` for the current room session in the extension.
+- [ ] Send `participantSessionId` during join/resume.
+- [ ] Replace stale sockets by user + participant session, not only by user id.
+- [ ] Use jittered backoff for reconnect.
+- [ ] Resume with `lastSeenServerSeq` and `lastSeenP2PServerSeq`.
+- [ ] Confirm P2P starts only after `ROOM_SNAPSHOT` is received and generation is known.
+- [ ] Add tests for reconnect, duplicate sockets, stale socket close, and replay after reconnect.
+
+**Acceptance Criteria:**
+
+- Reloading a participant does not create ghost participants.
+- Two different browser profiles for the same user are not accidentally treated as the same socket unless product intentionally forbids that.
+- Reconnect after token expiry refreshes token and rejoins without manual sign-in.
+
+## Task 5: Source Descriptor, Source Generation, And Source Switching Contract
+
+**Why this must happen before Hibernation:** Waking a room without current source state would make replay and stale P2P filtering unreliable.
+
+**Files:**
+
+- `packages/protocol/src/types.ts`
+- `apps/api/src/room-state.ts`
+- `apps/api/src/index.ts`
+- `apps/web/lib/anidachi-auth/db.ts`
+- `apps/web/app/api/rooms/route.ts`
+- `apps/extension/src/source-adapters/*`
+- `apps/extension/src/overlay-app.tsx`
+- `docs/crunchyroll-adapter-notes.md`
+
+**Target Descriptor:**
+
+```ts
+interface WatchSourceDescriptor {
+  provider: "crunchyroll" | "youtube" | "generic";
+  sourceUrl: string;
+  canonicalUrl: string;
+  videoFingerprint: string;
+  title: string;
+  seriesTitle?: string;
+  episodeTitle?: string;
+  seasonNumber?: number;
+  episodeNumber?: number;
+  duration?: number;
+  posterUrl?: string;
+}
+```
+
+**Steps:**
+
+- [ ] Add protocol schema for `WatchSourceDescriptor`.
+- [ ] Add `SOURCE_CHANGED` server event and host-only source change client event.
+- [ ] Increment `sourceGeneration` on source change.
+- [ ] Add source descriptor to room create response/snapshot.
+- [ ] Persist normalized source fields in Supabase.
+- [ ] Extension applies source changes through adapter navigation only after validating provider/fingerprint.
+- [ ] P2P replay only replays signals from the current room/source generation.
+
+**Acceptance Criteria:**
+
+- Switching episode/provider cannot replay stale P2P offer/answer/ICE from the previous source.
+- `ROOM_SNAPSHOT` gives a freshly reconnected extension everything needed to know the active source.
+- Source switching remains host-controlled.
+
+## Task 6: Cloudflare WebSocket Hibernation Migration
+
+**Why now:** Once protocol/session/source state is explicit, Hibernation should be implemented before further large realtime features. This avoids building more code on the standard WebSocket API that will be replaced.
+
+**Files:**
+
+- `apps/api/src/index.ts`
+- `apps/api/src/room-state.ts`
+- `apps/api/src/p2p-signal-buffer.ts`
+- `apps/api/wrangler.toml` or `apps/api/wrangler.jsonc`
+- `apps/api/test/*`
+- `apps/extension/src/room-client.ts`
+- `packages/protocol/src/types.ts`
+
+**Cloudflare Requirements From Current Docs:**
+
+- Use `state.acceptWebSocket(server)` or `ctx.acceptWebSocket(server)`, not `server.accept()`.
+- Implement Durable Object methods `webSocketMessage`, `webSocketClose`, and `webSocketError`.
+- Expect the constructor to run again after hibernation.
+- Expect in-memory state to be reset after hibernation.
+- Use `serializeAttachment()` and `deserializeAttachment()` for small per-socket connection state.
+- Use `getWebSockets()` in the constructor to rebuild in-memory maps.
+- Keep serialized WebSocket attachments below Cloudflare's 2,048 byte limit.
+- Use `state.setWebSocketAutoResponse()` for static app-level keepalive if browser WebSocket protocol ping frames are not available.
+- Avoid frequent app-level JSON pings that wake the Durable Object.
+- Use WebSocket protocol ping/pong or Cloudflare auto-response behavior where practical.
+- Avoid Durable Object `setTimeout`/`setInterval` loops that prevent hibernation.
+
+**Attachment Target:**
+
+Store only trusted, small state:
+
+- attachment schema version;
+- room id;
+- user id from verified token;
+- role;
+- display name;
+- avatar URL;
+- participant session id;
+- connection id;
+- joined at;
+- last seen at;
+- current camera status;
+- sync status if needed;
+- current room/source generation at join.
+
+Do not store raw room tokens in attachments.
+
+**Durable Storage Target:**
+
+- room generation;
+- source generation;
+- current source descriptor;
+- host playback state or latest small host state snapshot;
+- monotonic `nextServerSeq`;
+- monotonic `nextP2PServerSeq`;
+- recent targeted P2P replay buffer with TTL and max count;
+- dedupe keys for recent P2P signals.
+
+**Steps:**
+
+- [ ] Introduce versioned attachment schema and validators.
+- [ ] Convert upgrade path to `state.acceptWebSocket(server)`.
+- [ ] Move message/close/error handling to hibernation handlers.
+- [ ] Rebuild `verifiedBySocket`, `participantsBySocket`, `socketsByParticipant`, and `RoomState` from attachments in constructor.
+- [ ] Deterministically close duplicate stale sockets after rebuild.
+- [ ] Persist P2P server sequence and replay buffer in Durable Object SQLite storage.
+- [ ] Keep an in-memory hot cache loaded from storage for active operation.
+- [ ] Replace JSON keepalive with hibernation-safe keepalive.
+- [ ] Keep compatibility with existing JSON `PING`/`PONG` only if it does not defeat hibernation in normal operation.
+- [ ] Add Workers-runtime integration tests, preferably using `@cloudflare/vitest-pool-workers`.
+
+**Required Tests:**
+
+- [ ] Missing/invalid room token is rejected before WebSocket accept.
+- [ ] Existing socket can send `HOST_STATE`, `CAMERA_ON/OFF`, and `P2P_SIGNAL` after simulated wake/rebuild.
+- [ ] Constructor rebuilds participants and socket maps from attachments.
+- [ ] Duplicate same-session socket replacement closes the stale socket.
+- [ ] Host state survives wake and appears in `ROOM_SNAPSHOT`.
+- [ ] P2P `serverSeq` remains monotonic after wake.
+- [ ] P2P replay honors `lastSeenP2PServerSeq`, `roomGeneration`, and `sourceGeneration`.
+- [ ] Raw keepalive does not go through normal JSON parsing.
+- [ ] Corrupt attachment is ignored or closed safely.
+
+**Acceptance Criteria:**
+
+- Idle connected rooms can hibernate without disconnecting clients.
+- The first message after idle does not lose participants, host state, P2P sequence, or current source.
+- Frequent app-level keepalive no longer wakes the object every 20 seconds in normal operation.
+
+## Task 7: Ultra-Light P2P Reliability Polish
+
+**Important product decision:** Do not add adaptive video upscaling. The value is extremely lightweight presence, not video-call quality.
+
+**Files:**
+
+- `apps/extension/src/p2p-media.ts`
+- `apps/extension/src/overlay-app.tsx`
+- `apps/extension/src/media-types.ts`
+- `apps/extension/src/debug-log.ts`
+- `apps/api/src/ice-servers.ts`
+- `apps/api/src/index.ts`
+- `packages/protocol/src/types.ts`
+
+**Keep:**
+
+- 240-ish square camera target.
+- Low frame rate.
+- Low bitrate.
+- Small remote participant cap.
+- Direct/STUN first and TURN fallback.
+- Push-to-talk as the primary voice interaction.
+
+**Steps:**
+
+- [ ] Keep current low video constraints unless real staging logs prove they are too high.
+- [ ] Add explicit local/remote audio state machine so delayed or missing audio is diagnosable.
+- [ ] Use WebRTC `getStats()` for actual audio packet/activity state where it helps debug real failures.
+- [ ] Keep voice UI tied to real track/connection state, not only local button events.
+- [ ] Add ICE restart counters and reason codes to debug export.
+- [ ] Add a user-visible lightweight recovery path when P2P fails, such as reconnect media without recreating the room.
+- [ ] Verify relay-only diagnostic mode remains dev-only.
+- [ ] Add tests around perfect negotiation helpers, ICE restart request throttling, and signal dedupe.
+
+**Acceptance Criteria:**
+
+- Two users can reload in either order and recover P2P without manually recreating the room.
+- Audio state can be debugged from exported logs.
+- P2P failures degrade gracefully and do not close the room.
+
+## Task 8: First-Class Source Switching
+
+**Files:**
+
+- `apps/extension/src/source-adapters/*`
+- `apps/extension/src/overlay-app.tsx`
+- `packages/protocol/src/types.ts`
+- `apps/api/src/index.ts`
+- `apps/api/src/room-state.ts`
+- `apps/web/app/room/*`
+- `docs/crunchyroll-adapter-notes.md`
+
+**Steps:**
+
+- [ ] Add host source switch UI or internal command path.
+- [ ] Host emits source change request with normalized descriptor.
+- [ ] Worker validates host role and increments `sourceGeneration`.
+- [ ] Worker broadcasts `SOURCE_CHANGED`.
+- [ ] Extension navigates or prompts safely according to provider adapter.
+- [ ] Reset or fence host playback state on source change.
+- [ ] Drop stale P2P/media signals from previous source generation.
+
+**Acceptance Criteria:**
+
+- Host can switch episode without forcing everyone to create a new room.
+- Guests do not process stale playback/P2P messages from the previous source.
+
+## Task 9: Durable Shared Watch Progress
+
+**Files:**
+
+- `apps/web/supabase/migrations/*`
+- `apps/web/app/api/watch-progress/*`
+- `apps/web/lib/anidachi-auth/db.ts`
+- `apps/extension/src/watch-progress.ts`
+- `apps/extension/src/overlay-app.tsx`
+- `docs/shared-watch-progress-tracker.md`
+
+**Steps:**
+
+- [ ] Define durable watch session tables.
+- [ ] Add per-user progress checkpoint route.
+- [ ] Add room/group progress aggregation route.
+- [ ] Extension emits low-frequency progress checkpoints.
+- [ ] Website exposes current-user progress and shared progress.
+- [ ] Add privacy and membership checks.
+- [ ] Add backfill/cleanup policy.
+
+**Acceptance Criteria:**
+
+- Progress survives browser reload and machine switch.
+- User can continue from durable progress, not only local extension storage.
+- Shared progress is visible only to authorized room/group members.
+
+## Task 10: Observability, QA, And Release Gates
+
+**Files:**
+
+- `.github/workflows/*`
+- `docs/development-environments.md`
+- `docs/extension-release-channels.md`
+- `docs/current-development-state.md`
+- `apps/extension/src/debug-log.ts`
+- `apps/api/src/index.ts`
+
+**Steps:**
+
+- [ ] Add a required room/P2P manual test checklist to release docs.
+- [ ] Add API logs for room lifecycle transitions.
+- [ ] Add structured logs for WebSocket reconnect, hibernation rebuild, and P2P replay.
+- [ ] Add staging smoke coverage for auth gate and room connect route.
+- [ ] Require `pnpm check`, `pnpm test`, API tests, extension tests, and relevant web tests before merging app/API/extension changes.
+- [ ] Keep docs-only and site-only auto-promotion separate from API/extension promotion.
+- [ ] Document exact rollback steps for website, API Worker, and extension artifact.
+
+**Acceptance Criteria:**
+
+- A developer can tell whether a room failure is auth, room lifecycle, WebSocket, hibernation rebuild, signaling, ICE, media track, or UI state.
+- Release promotion does not depend on guessing from a single local browser.
+
+---
+
+## Definition Of Done For The Whole Roadmap
+
+- Clean sign-in and room creation works from a new browser profile.
+- Two participants can join, reload, reconnect, and continue the same room.
+- Room does not close after a few idle minutes.
+- P2P camera and push-to-talk audio recover from reload and short disconnects.
+- Durable Object can hibernate and wake without losing room state.
+- Source generation prevents stale events after source switch.
+- Watch progress is persisted server-side and scoped by membership.
+- Staging has noindex/private gate behavior.
+- GitHub Actions and manual staging checks clearly separate site/docs work from API/extension work.
