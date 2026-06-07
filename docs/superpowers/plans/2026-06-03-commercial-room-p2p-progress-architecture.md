@@ -1,5 +1,7 @@
 # Commercial Room, P2P, and Watch Progress Architecture Implementation Plan
 
+> **Status:** Historical plan. It is superseded as the active execution source by `docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md`. Keep this file for context only; it contains old local paths and some task-completion claims that were later found to be too broad.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Turn the current Anidachi prototype into a commercial-grade architecture where website auth, room creation, realtime rooms, P2P media, and watch-progress persistence work as one coherent system.
