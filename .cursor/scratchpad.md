@@ -499,6 +499,32 @@ The survey should do more than “collect answers” — it should:
 - [x] CRM tabs: **Contacts** vs **Survey leads** in `crm-client.tsx`
 - [x] Survey tab shows parsed survey answers + follow-up actions (Gmail, status, notes)
 
+### SEO batch — 10 high-traffic pages (2026-06-08)
+
+**1 new genre hub:**
+- `/watch-fantasy-anime-with-friends` — fantasy genre cluster (Frieren, HxH, Ghibli, etc.)
+
+**4 new listicle guides:**
+- `/guides/best-sports-anime-to-watch-with-friends` — 9 picks
+- `/guides/best-comedy-anime-to-watch-with-friends` — 12 picks
+- `/guides/best-dubbed-anime-to-watch-with-friends` — 12 picks (dub vs sub friction)
+
+**4 new how-to / troubleshooting guides:**
+- `/guides/how-to-watch-seasonal-anime-together` — simulcast weekly workflow
+- `/guides/crunchyroll-watch-party-not-working` — sync/detection troubleshooting
+- `/guides/how-to-run-an-online-anime-club` — Discord + recurring clubs
+- `/guides/how-to-plan-an-anime-marathon-with-friends` — weekend binge planning
+
+**2 new compare pages:**
+- `/compare/anidachi-vs-rave` — missing competitor coverage
+- `/compare/crunchyroll-party-vs-teleparty-for-anime` — third-party tool-shopping intent
+
+**Infrastructure:**
+- `genre-hub-links.ts` + `sitemap-discovery.ts` updated for fantasy hub
+- `guide-links.ts` updated (new guides + previously missing shonen/classic/weekend binge entries)
+
+- [x] `npm run build` ✅ — 272 static routes (2026-06-08)
+
 ### Executor's Feedback or Assistance Requests
 
 - Please submit a test email in the hero survey and confirm the contact appears at `/kreatli-email-crm` with segment `survey_lead`.

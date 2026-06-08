@@ -40,6 +40,10 @@ export const GENRE_HUB_LINKS = [
     href: "/watch-mecha-anime-with-friends",
     label: "Watch mecha anime with friends",
   },
+  {
+    href: "/watch-fantasy-anime-with-friends",
+    label: "Watch fantasy anime with friends",
+  },
 ] as const;
 
 /** ItemList JSON-LD entries for pillar/toolkit pages. */
