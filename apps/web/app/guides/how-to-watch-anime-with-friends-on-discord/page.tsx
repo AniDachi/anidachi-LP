@@ -4,27 +4,37 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 
 export const metadata: Metadata = {
-  title: "How to Watch Anime With Friends on Discord — 2026",
+  title: "How to Stream Anime on Discord & Run an Anime Watch Party (2026)",
   description:
-    "Run an anime watch party on Discord: screen share, voice coordination, and spoiler-safe text channels. When to add synced Crunchyroll playback with AniDachi.",
+    "How to stream anime on Discord and run an anime watch party: screen share setup, voice coordination, spoiler-safe channels, and when to switch to synced Crunchyroll playback. Step-by-step guide.",
   alternates: {
     canonical: "/guides/how-to-watch-anime-with-friends-on-discord",
   },
   openGraph: {
-    title: "How to Watch Anime With Friends on Discord — 2026",
+    title: "How to Stream Anime on Discord — Anime Watch Party Guide (2026)",
     description:
-      "Set up voice, screen share, or hybrid sync for anime nights on Discord.",
+      "Stream anime on Discord or run a full anime watch party. Screen share, voice coordination, and hybrid sync options explained.",
     url: "/guides/how-to-watch-anime-with-friends-on-discord",
   },
   twitter: {
     card: "summary_large_image",
-    title: "How to Watch Anime With Friends on Discord — 2026",
+    title: "How to Stream Anime on Discord — Anime Watch Party Guide (2026)",
     description:
-      "Discord anime watch party setup: voice, screen share, and cleaner sync options.",
+      "Discord anime watch party: screen share, voice sync, and when to upgrade to dedicated watchrooms.",
   },
 };
 
 const faq = [
+  {
+    question: "How do you stream anime on Discord?",
+    answer:
+      "To stream anime on Discord: join a voice channel, click the screen icon next to your name at the bottom, choose 'Screen' and select your browser tab with Crunchyroll open, then click Go Live. Your friends in the same voice channel can watch via the screen share. Quality may be capped at 720p on free accounts; Nitro subscribers get 1080p/60fps.",
+  },
+  {
+    question: "How do you run an anime watch party on Discord?",
+    answer:
+      "For a Discord anime watch party: create a dedicated server (or use an existing one), add a voice lounge and a text channel for scheduling. The host streams the anime via Go Live screen share, or each person opens their own Crunchyroll stream and you count down in voice. For larger groups or better sync, pair Discord voice with a Crunchyroll watchroom extension like AniDachi.",
+  },
   {
     question: "Is Discord screen share good enough for anime watch parties?",
     answer:
@@ -44,9 +54,10 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
   { id: "why-discord", label: "Why Discord works", level: 2 },
-  { id: "method-screen-share", label: "Screen share watch party", level: 2 },
+  { id: "method-screen-share", label: "Stream anime on Discord (screen share)", level: 2 },
   { id: "method-voice-sync", label: "Voice + separate streams", level: 2 },
-  { id: "method-hybrid", label: "Voice on Discord, sync elsewhere", level: 2 },
+  { id: "method-hybrid", label: "Discord voice + dedicated watchroom", level: 2 },
+  { id: "watch-party-discord", label: "Discord anime watch party setup", level: 2 },
   { id: "steps-discord", label: "Quick setup checklist", level: 2 },
   { id: "related", label: "Related guides", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
@@ -96,12 +107,12 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
         description="Discord anime watch parties with voice, screen share, and hybrid sync options."
         url="/guides/how-to-watch-anime-with-friends-on-discord"
         datePublished="2026-05-01"
-        dateModified="2026-05-01"
+        dateModified="2026-06-08"
         faq={faq}
         headings={tocHeadings}
       >
         <h1 className="text-4xl font-bold text-gray-900 mb-6">
-          How to Watch Anime With Friends on Discord
+          How to Stream Anime on Discord &amp; Run an Anime Watch Party (2026)
         </h1>
 
         <p className="text-xl text-gray-700 leading-relaxed mb-8">
@@ -110,8 +121,9 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
             party stack is voice chat plus either screen share or coordinated
             individual streams.
           </strong>{" "}
-          This guide walks through the trade-offs and when to add a dedicated
-          sync layer on top of Crunchyroll.
+          This guide walks through how to stream anime on Discord, how to run a
+          full Discord anime watch party, and when to add a dedicated sync layer
+          on top of Crunchyroll.
         </p>
 
         <h2
@@ -133,7 +145,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
           id="method-screen-share"
           className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
         >
-          Screen share watch party (one host)
+          How to Stream Anime on Discord (Screen Share)
         </h2>
         <p className="text-gray-700 leading-relaxed mb-4">
           The host loads Crunchyroll in a browser tab, joins voice, and shares
@@ -178,6 +190,53 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
         </p>
 
         <h2
+          id="watch-party-discord"
+          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        >
+          Discord Anime Watch Party — Full Setup
+        </h2>
+        <p className="text-gray-700 leading-relaxed mb-4">
+          A <strong>Discord anime watch party</strong> combines Discord&apos;s
+          free voice and text infrastructure with a video source your friends
+          can see. Here&apos;s how to run one from scratch:
+        </p>
+        <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-4">
+          <li>
+            <strong>Create a watch party server (or use an existing one):</strong> Add
+            a voice channel (e.g., &quot;Watch Lounge&quot;) and a text channel
+            (e.g., #now-watching) for reactions and scheduling.
+          </li>
+          <li>
+            <strong>Choose your video source:</strong> Host screen share (one
+            person streams) or each person on their own Crunchyroll account with
+            voice countdown sync. Screen share is simpler; individual streams
+            give everyone full quality.
+          </li>
+          <li>
+            <strong>Start streaming:</strong> Host joins voice, clicks the screen
+            icon, selects the Crunchyroll browser tab, and goes Live. Everyone
+            in the channel sees the stream.
+          </li>
+          <li>
+            <strong>Set a spoiler rule:</strong> Pin the episode list and agree on a
+            rule — discuss in text only, or pause and talk in voice. This keeps
+            the session from splitting into spoiler chaos.
+          </li>
+          <li>
+            <strong>For bigger groups or better quality:</strong> Use Discord for
+            voice only and switch video to AniDachi or Crunchyroll Party so
+            everyone streams at full quality on their own account.
+          </li>
+        </ol>
+        <p className="text-gray-700 mb-6">
+          Discord anime watch parties work well for casual sessions. For a more
+          polished experience — especially for long series or async groups — see{" "}
+          <Link href="/watch-anime-together" className="text-purple-600 hover:underline">
+            dedicated anime watch party tools
+          </Link>.
+        </p>
+
+          <h2
           id="steps-discord"
           className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
         >

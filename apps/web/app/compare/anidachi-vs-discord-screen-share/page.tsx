@@ -8,22 +8,22 @@ const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Discord Screen Share — Anime Watch Parties Compared",
+  title: "Crunchyroll vs Discord Screen Share — Which Is Better for Anime Watch Parties? (2026)",
   description:
-    "Discord Go Live vs AniDachi on Crunchyroll: quality, sync, spoiler safety, and when to migrate from screen sharing to watchrooms.",
+    "Crunchyroll vs Discord screen share for anime watch parties: quality, sync, spoiler safety, and when to upgrade from Discord Go Live to dedicated Crunchyroll watchrooms. AniDachi vs Discord compared.",
   alternates: { canonical: "/compare/anidachi-vs-discord-screen-share" },
   openGraph: {
-    title: "AniDachi vs Discord Screen Share",
+    title: "Crunchyroll vs Discord Screen Share for Anime Watch Parties",
     description:
-      "Side-by-side look at anime watch setups for Discord-native groups.",
+      "Discord screen share vs Crunchyroll watchrooms: quality, sync, and which wins for anime groups.",
     url: "/compare/anidachi-vs-discord-screen-share",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AniDachi vs Discord Screen Share",
+    title: "Crunchyroll vs Discord Screen Share — Anime Watch Party",
     description:
-      "When Discord wins for voice—and when per-user Crunchyroll wins for video.",
+      "Discord screen share vs Crunchyroll watchrooms: quality and sync compared.",
     images: [BRAND_OG_PATH],
   },
 };

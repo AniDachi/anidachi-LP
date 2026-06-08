@@ -8,21 +8,21 @@ const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Scener — Crunchyroll Anime Co-Watching Compared",
+  title: "AniDachi vs Scener — Best Scener Alternative for Anime Watch Parties (2026)",
   description:
-    "AniDachi vs Scener for anime nights: Crunchyroll-first watchrooms with async catch-up vs general co-watching workflows.",
+    "Looking for a Scener alternative for anime? AniDachi vs Scener compared: Crunchyroll-first watchrooms with async catch-up vs Scener's general co-watching approach. Which is better for anime?",
   alternates: { canonical: "/compare/anidachi-vs-scener" },
   openGraph: {
-    title: "AniDachi vs Scener",
+    title: "AniDachi vs Scener — Scener Alternative for Anime Groups",
     description:
-      "Compare Crunchyroll-first watchrooms with a general co-watching tool for friend groups.",
+      "Best Scener alternative for Crunchyroll anime nights. AniDachi vs Scener: async, sync, and watchroom comparison.",
     url: "/compare/anidachi-vs-scener",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AniDachi vs Scener",
-    description: "Which workflow fits Crunchyroll-first anime groups?",
+    title: "AniDachi vs Scener — Scener Alternative for Anime",
+    description: "Scener alternative for Crunchyroll anime: AniDachi vs Scener compared.",
     images: [BRAND_OG_PATH],
   },
 };

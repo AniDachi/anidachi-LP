@@ -197,9 +197,11 @@ Run this before marking the migration PR ready for review.
 12. Confirm both participants appear.
 13. Confirm P2P video works both directions.
 14. Hold V and confirm push-to-talk audio works both directions.
-15. Confirm play, pause, and seek sync.
-16. Confirm reactions/chat render.
-17. Confirm debug info shows these staging bases:
+15. Reload one participant and confirm P2P reconnects without creating a new room.
+16. Confirm debug logs show P2P `serverSeq` and selected direct/STUN/TURN candidate path.
+17. Confirm play, pause, and seek sync.
+18. Confirm reactions/chat render.
+19. Confirm debug info shows these staging bases:
     WEB: https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
     API: https://anidachi-api-staging.vladislav-gul7.workers.dev
     WS:  wss://anidachi-api-staging.vladislav-gul7.workers.dev

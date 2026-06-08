@@ -218,7 +218,9 @@ These are intentionally not treated as solved:
 - Extension release channels: `docs/extension-release-channels.md`
 - Site and extension integration: `docs/site-extension-integration-notes.md`
 - P2P and experimental features: `docs/experimental-features.md`
-- Commercial room/P2P/progress plan:
+- Active room/P2P/realtime hardening roadmap:
+  `docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md`
+- Historical commercial room/P2P/progress plan:
   `docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`
 - Monorepo migration history:
   `docs/superpowers/plans/2026-06-03-main-repository-monorepo-migration.md`

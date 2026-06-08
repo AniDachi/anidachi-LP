@@ -86,7 +86,8 @@ function inferSitemapMeta(urlPath: string): {
     urlPath === "/watch-psychological-anime-with-friends" ||
     urlPath === "/watch-horror-anime-with-friends" ||
     urlPath === "/watch-slice-of-life-anime-with-friends" ||
-    urlPath === "/watch-mecha-anime-with-friends"
+    urlPath === "/watch-mecha-anime-with-friends" ||
+    urlPath === "/watch-fantasy-anime-with-friends"
   ) {
     return { changeFrequency: "monthly", priority: 0.85 };
   }

@@ -82,16 +82,27 @@ export const P2PSignalSchema = z.discriminatedUnion("kind", [
 
 const P2PSignalEnvelopeSchema = RoomScopedSchema.extend({
   type: z.literal("P2P_SIGNAL"),
+  clientSignalId: z.string().min(1),
   fromUserId: z.string().min(1),
+  roomGeneration: z.number().int().nonnegative().optional(),
+  senderConnectionId: z.string().min(1),
+  serverReceivedAt: z.number().int().nonnegative().optional(),
+  serverSeq: z.number().int().nonnegative().optional(),
+  sourceGeneration: z.number().int().nonnegative().optional(),
   toUserId: z.string().min(1),
   signal: P2PSignalSchema,
 });
 
 export const ClientEventSchema = z.discriminatedUnion("type", [
   RoomScopedSchema.extend({
+    type: z.literal("PING"),
+    sentAt: z.number().int().nonnegative(),
+  }),
+  RoomScopedSchema.extend({
     type: z.literal("JOIN"),
     participant: ParticipantSchema,
     videoFingerprint: z.string().min(1),
+    lastSeenP2PServerSeq: z.number().int().nonnegative().optional(),
   }),
   RoomScopedSchema.extend({
     type: z.literal("HOST_STATE"),
@@ -128,6 +139,11 @@ export const ClientEventSchema = z.discriminatedUnion("type", [
 ]);
 
 export const ServerEventSchema = z.discriminatedUnion("type", [
+  RoomScopedSchema.extend({
+    type: z.literal("PONG"),
+    sentAt: z.number().int().nonnegative(),
+    serverTime: z.number().int().nonnegative(),
+  }),
   RoomScopedSchema.extend({
     type: z.literal("ROOM_SNAPSHOT"),
     participants: z.array(ParticipantSchema),

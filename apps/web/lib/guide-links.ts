@@ -150,6 +150,56 @@ export const guideLinks: GuideLinkItem[] = [
     label: "Best Slice of Life Anime to Watch With Friends",
     tags: ["template-d", "listicle", "pillar-watch-anime"],
   },
+  {
+    href: "/guides/best-shonen-anime-to-watch-with-friends",
+    label: "Best Shonen Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-classic-anime-to-watch-with-friends",
+    label: "Best Classic Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-anime-to-binge-with-friends-this-weekend",
+    label: "Best Anime to Binge With Friends This Weekend",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-sports-anime-to-watch-with-friends",
+    label: "Best Sports Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-comedy-anime-to-watch-with-friends",
+    label: "Best Comedy Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-dubbed-anime-to-watch-with-friends",
+    label: "Best Dubbed Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/how-to-watch-seasonal-anime-together",
+    label: "How to Watch Seasonal Anime Together",
+    tags: ["template-c", "how-to-core", "watch-party", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/crunchyroll-watch-party-not-working",
+    label: "Crunchyroll Watch Party Not Working",
+    tags: ["template-c", "crunchyroll", "how-to-core", "pillar-watch-crunchyroll"],
+  },
+  {
+    href: "/guides/how-to-run-an-online-anime-club",
+    label: "How to Run an Online Anime Club",
+    tags: ["template-c", "how-to-core", "watch-party", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/how-to-plan-an-anime-marathon-with-friends",
+    label: "How to Plan an Anime Marathon With Friends",
+    tags: ["template-c", "how-to-core", "watch-party", "pillar-watch-anime"],
+  },
 ];
 
 export function getGuideLinks({

@@ -1,6 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // Canonicalize non-www → www to consolidate PageRank
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "anidachi.app" }],
+        destination: "https://www.anidachi.app/:path*",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.tiktokcdn.com", pathname: "/**" },

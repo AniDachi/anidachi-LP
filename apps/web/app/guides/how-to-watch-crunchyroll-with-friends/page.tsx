@@ -4,18 +4,38 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 
 export const metadata: Metadata = {
-  title: "How to Watch Crunchyroll with Friends (2026 Guide)",
+  title: "How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide (2026)",
   description:
-    "Step-by-step guide to watching Crunchyroll with friends online. Learn about Chrome extensions, Discord, and async watchrooms to enjoy anime together.",
+    "Step-by-step guide to watching Crunchyroll with friends in 2026. Does Crunchyroll have a watch party feature? Can you group watch on Crunchyroll? Every method — Chrome extensions, Discord screen share, and async watchrooms — compared and explained.",
   alternates: { canonical: "/guides/how-to-watch-crunchyroll-with-friends" },
   openGraph: {
-    title: "How to Watch Crunchyroll with Friends (2026 Guide)",
-    description: "Every method to watch Crunchyroll together, compared and explained.",
+    title: "How to Watch Crunchyroll with Friends — Watch Party Guide (2026)",
+    description: "Does Crunchyroll have a watch party? No — but here's how to do it anyway. Every method compared.",
     url: "/guides/how-to-watch-crunchyroll-with-friends",
   },
 };
 
 const faq = [
+  {
+    question: "Does Crunchyroll have a watch party feature in 2026?",
+    answer:
+      "No. As of 2026, Crunchyroll still does not have a built-in watch party or group watch feature. You need to use a third-party tool — Chrome extensions like AniDachi or Crunchyroll Party, or Discord screen sharing. This guide covers all three options step by step.",
+  },
+  {
+    question: "How do I watch Crunchyroll with friends online?",
+    answer:
+      "Install the AniDachi Chrome extension, open any anime on Crunchyroll, click Detect Anime, and create a watchroom. Share the invite link. Each friend joins with their own Crunchyroll account and playback stays in sync automatically. Alternatively, use the free Crunchyroll Party extension for a live-sync-only option.",
+  },
+  {
+    question: "Does Crunchyroll have a group watch or watch together option?",
+    answer:
+      "Crunchyroll does not have a native group watch or watch together feature. Third-party Chrome extensions fill this gap: AniDachi (sync + async + chat, paid), Crunchyroll Party (sync + basic chat, free), and Teleparty (cross-platform sync, freemium). All of them work with each person's own Crunchyroll account.",
+  },
+  {
+    question: "Can you do a watch party on Crunchyroll?",
+    answer:
+      "Yes, but only through a third-party extension. Install Crunchyroll Party (free) or AniDachi (paid) and you can host a Crunchyroll watch party with synced playback and chat. Crunchyroll itself does not have a watch party button or built-in feature.",
+  },
   {
     question: "Can two people watch Crunchyroll at the same time?",
     answer:
@@ -30,6 +50,11 @@ const faq = [
     question: "How do I set up a Crunchyroll watch party on Discord?",
     answer:
       "Join a voice channel, start streaming your browser window with Crunchyroll open, and your friends watch via screen share. Quality may be limited and there's no automatic sync — if someone pauses, you'll need to coordinate manually.",
+  },
+  {
+    question: "How do I watch anime with friends on Crunchyroll?",
+    answer:
+      "Since Crunchyroll has no native watch-together feature, install a Chrome extension: AniDachi for the best experience (sync, chat, and async watching), or Crunchyroll Party for a free live-sync option. Each person needs their own Crunchyroll account — free or paid — to stream the video.",
   },
 ];
 
@@ -59,22 +84,24 @@ export default function HowToWatchWithFriendsPage() {
       description="Every method to watch Crunchyroll together, compared and explained."
       url="/guides/how-to-watch-crunchyroll-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-04-24"
+      dateModified="2026-06-08"
       faq={faq}
       headings={tocHeadings}
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        How to Watch Crunchyroll with Friends in 2026
+        How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide (2026)
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
-          The best way to watch Crunchyroll with friends is using a Chrome
-          extension like AniDachi that syncs playback and adds real-time chat.
+          Crunchyroll does not have a built-in watch party feature in 2026 —
+          but you can easily create a Crunchyroll watch party using a Chrome
+          extension like AniDachi or Crunchyroll Party.
         </strong>{" "}
-        Since Crunchyroll has no built-in watch party feature, you need a
-        third-party tool. This guide covers every option — from free Discord
-        screen sharing to premium async watchrooms.
+        Each method syncs playback so everyone watches the same frame in full
+        quality on their own account. This guide covers every option — from free
+        Discord screen sharing to premium async watchrooms — and explains which
+        to choose for your group.
       </p>
 
       <h2

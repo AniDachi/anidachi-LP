@@ -10,10 +10,39 @@ import {
 } from "../src";
 
 describe("room protocol schemas", () => {
+  it("accepts room keepalive ping and pong events", () => {
+    expect(
+      ClientEventSchema.parse({
+        type: "PING",
+        roomId: "room-1",
+        sentAt: 1_000,
+      }),
+    ).toEqual({
+      type: "PING",
+      roomId: "room-1",
+      sentAt: 1_000,
+    });
+
+    expect(
+      ServerEventSchema.parse({
+        type: "PONG",
+        roomId: "room-1",
+        sentAt: 1_000,
+        serverTime: 1_005,
+      }),
+    ).toEqual({
+      type: "PONG",
+      roomId: "room-1",
+      sentAt: 1_000,
+      serverTime: 1_005,
+    });
+  });
+
   it("accepts valid join and reaction events", () => {
     const joined = ClientEventSchema.parse({
       type: "JOIN",
       roomId: "room-1",
+      lastSeenP2PServerSeq: 24,
       videoFingerprint: "video-1",
       participant: {
         id: "user-1",
@@ -112,8 +141,10 @@ describe("room protocol schemas", () => {
   it("accepts targeted P2P signaling events", () => {
     const offer = ClientEventSchema.parse({
       type: "P2P_SIGNAL",
+      clientSignalId: "signal-1",
       roomId: "room-1",
       fromUserId: "user-1",
+      senderConnectionId: "connection-1",
       toUserId: "user-2",
       signal: {
         kind: "offer",
@@ -123,8 +154,12 @@ describe("room protocol schemas", () => {
 
     const candidate = ServerEventSchema.parse({
       type: "P2P_SIGNAL",
+      clientSignalId: "signal-2",
       roomId: "room-1",
       fromUserId: "user-2",
+      senderConnectionId: "connection-2",
+      serverReceivedAt: 1_000,
+      serverSeq: 3,
       toUserId: "user-1",
       signal: {
         kind: "ice",
@@ -142,13 +177,18 @@ describe("room protocol schemas", () => {
       throw new Error("Expected P2P signal");
     }
     expect(candidate.signal.kind).toBe("ice");
+    expect(candidate.serverSeq).toBe(3);
   });
 
   it("accepts lightweight P2P renegotiation requests", () => {
     const renegotiate = ClientEventSchema.parse({
       type: "P2P_SIGNAL",
+      clientSignalId: "signal-3",
       roomId: "room-1",
       fromUserId: "user-1",
+      roomGeneration: 1,
+      senderConnectionId: "connection-1",
+      sourceGeneration: 2,
       toUserId: "user-2",
       signal: { kind: "renegotiate" },
     });
@@ -164,13 +204,37 @@ describe("room protocol schemas", () => {
     expect(() =>
       ClientEventSchema.parse({
         type: "P2P_SIGNAL",
+        clientSignalId: "signal-4",
         roomId: "room-1",
         fromUserId: "user-1",
+        senderConnectionId: "connection-1",
         toUserId: "user-2",
         signal: {
           kind: "offer",
           sdp: { type: "answer", sdp: "v=0\r\n" },
         },
+      }),
+    ).toThrow();
+
+    expect(() =>
+      ClientEventSchema.parse({
+        type: "P2P_SIGNAL",
+        roomId: "room-1",
+        fromUserId: "user-1",
+        senderConnectionId: "connection-1",
+        toUserId: "user-2",
+        signal: { kind: "renegotiate" },
+      }),
+    ).toThrow();
+
+    expect(() =>
+      ClientEventSchema.parse({
+        type: "P2P_SIGNAL",
+        clientSignalId: "signal-5",
+        roomId: "room-1",
+        fromUserId: "user-1",
+        toUserId: "user-2",
+        signal: { kind: "renegotiate" },
       }),
     ).toThrow();
   });

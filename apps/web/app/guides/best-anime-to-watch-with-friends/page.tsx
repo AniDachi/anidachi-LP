@@ -4,31 +4,63 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch with Friends (2026) — 115+ Top Picks for Group Watching",
+  title: "Best Anime to Watch with Friends (2026) — 115+ Good Anime for Group Watching",
   description:
-    "Curated list of 115+ top anime to watch with friends. Sorted by vibe — big reactions, comedy, discussion, and long marathons. Great for watch parties and group sessions.",
+    "The best anime to watch with friends in 2026 — 115+ picks sorted by vibe. Good anime for watch parties: big-reaction series, comedy, theory-crafting, and long marathons. Includes animes to watch with friends for any group size.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
 };
 
 const faq = [
   {
-    question: "What is the best anime to watch with friends for the first time?",
+    question: "What is the best anime to watch with friends?",
     answer:
-      "Attack on Titan, Demon Slayer, and Spy x Family are widely loved first-watch picks. They have broad appeal, strong hooks in the first episode, and plenty to discuss.",
+      "The best anime to watch with friends depends on your group's mood. For maximum reactions and cliffhangers: Attack on Titan, Jujutsu Kaisen, or Demon Slayer. For laughing together: Spy x Family, KonoSuba, or One Punch Man. For theory-crafting and discussion: Death Note, Steins;Gate, or Frieren. For a long marathon: One Piece, Hunter x Hunter, or Naruto.",
+  },
+  {
+    question: "What anime to watch with friends for the first time?",
+    answer:
+      "For a group that is new to anime, the best starting picks are: Demon Slayer (stunning animation, accessible story), Spy x Family (immediately funny and warm), Attack on Titan (irresistible hook in episode 1), or My Neighbor Totoro (universally loved, one evening). All four are available on Crunchyroll.",
+  },
+  {
+    question: "What are good anime to watch with friends?",
+    answer:
+      "Good anime to watch with friends share three traits: a strong hook in the first episode (so everyone is invested immediately), episodic moments worth reacting to out loud (fights, plot twists, funny scenes), and enough substance to discuss after. Top picks: Jujutsu Kaisen, KonoSuba, Death Note, One Punch Man, Spy x Family, and Attack on Titan.",
   },
   {
     question: "What anime is best for a large group watch party?",
     answer:
-      "Comedy anime like KonoSuba, Spy x Family, and One Punch Man work well for large groups because they do not require perfect attention to follow and keep the room laughing.",
+      "Comedy anime like KonoSuba, Spy x Family, and One Punch Man work well for large groups because they do not require perfect attention to follow and keep the room laughing. Shonen action series (Demon Slayer, Jujutsu Kaisen) work well too — explosive fights generate natural group reactions.",
+  },
+  {
+    question: "What is the best anime to watch with friends for the first time?",
+    answer:
+      "Attack on Titan, Demon Slayer, and Spy x Family are widely loved first-watch picks. They have broad appeal, strong hooks in the first episode, and plenty to discuss after.",
+  },
+  {
+    question: "What is the best short anime to watch with friends in one sitting?",
+    answer:
+      "For a one-night watch: A Silent Voice (film, ~2 hours), Your Name. (film, ~1h 50m), Cyberpunk: Edgerunners (10 episodes, ~25 min each), or Mob Psycho 100 Season 1 (13 episodes). Each is self-contained and lands well in a single session.",
+  },
+  {
+    question: "What anime should I watch with friends who don't watch anime?",
+    answer:
+      "For anime-skeptic friends: start with My Neighbor Totoro (no prior anime knowledge needed, universally accessible), Spy x Family (feels like a Western comedy-drama), or Demon Slayer (visuals convince skeptics in episode 1). Avoid long-running shonen or anything with complex lore upfront.",
+  },
+  {
+    question: "How do I pick the right anime to watch with my friend group?",
+    answer:
+      "Ask two questions: how much time do you have (one night = films or short series; ongoing = long-run shows), and what does your group enjoy (comedy vs. action vs. mystery). Then pick based on that. If you can not decide, Spy x Family and Attack on Titan are the two safest picks that almost always land with any group.",
   },
   {
     question: "How do I host a watch party for one of these shows?",
     answer:
-      "Use AniDachi to create a Crunchyroll watchroom, share the link, and decide as a group whether you will watch live or async. Everyone needs their own Crunchyroll access to stream the video.",
+      "Use AniDachi to create a Crunchyroll watchroom, share the invite link, and decide as a group whether you will watch live (everyone at the same time with synced playback) or async (each person at their own pace). Everyone needs their own Crunchyroll account to stream the video.",
   },
 ];
 
 const headings: TocHeading[] = [
+  { id: "how-to-pick", label: "How to pick the right anime", level: 2 },
+  { id: "quick-picks", label: "Quick picks at a glance", level: 2 },
   { id: "reactions", label: "Reactions & cliffhangers", level: 2 },
   { id: "comedy", label: "Comedy", level: 2 },
   { id: "discussion", label: "Theory & discussion", level: 2 },
@@ -68,28 +100,111 @@ export default function BestAnimeWithFriendsPage() {
         { name: "Guides", url: "/watch-anime-together" },
         { name: "Best Anime with Friends", url: "/guides/best-anime-to-watch-with-friends" },
       ]}
-      title="115+ Best Anime to Watch with Friends in 2026"
-      description="Top anime picks for group watching sessions."
+      title="Best Anime to Watch with Friends in 2026 — 115+ Picks"
+      description="115+ best anime to watch with friends, sorted by vibe: reactions, comedy, theory, and marathons."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-06-04"
+      dateModified="2026-06-08"
       faq={faq}
       headings={headings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
-        115+ Best Anime to Watch with Friends in 2026
+        Best Anime to Watch with Friends in 2026 — 115+ Picks
       </h1>
 
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
-          The best group-watch anime have strong hooks, discussion-worthy
-          episodes, and moments that demand real-time reactions.
+          The best anime to watch with friends have one thing in common: they
+          create moments you want to share out loud.
         </strong>{" "}
-        Here are our top picks sorted by what makes them great for watching
-        together. Open any title in a watchroom and sync with your group.
+        Whether that&apos;s a jaw-dropping cliffhanger, a joke that lands harder
+        with four people watching, or a twist that sends your chat into chaos —
+        the right show turns a viewing session into a shared memory. Here are
+        115+ good anime to watch with friends, sorted by vibe.
       </p>
+
+      <h2
+        id="how-to-pick"
+        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+      >
+        How to Pick the Right Anime to Watch with Friends
+      </h2>
+      <p className="text-gray-700 leading-relaxed mb-4">
+        Before picking a show, ask your group two questions:
+      </p>
+      <ul className="space-y-3 text-gray-700 mb-6">
+        <li>
+          <strong>How much time do you have?</strong> One night → films (A
+          Silent Voice, Your Name., Spirited Away) or short series (Cyberpunk:
+          Edgerunners, Madoka Magica). Ongoing → long-run shonen (One Piece,
+          Naruto, HxH) work best with AniDachi&apos;s async watchrooms so
+          everyone moves at their own pace.
+        </li>
+        <li>
+          <strong>What does the group enjoy?</strong> Loud reactions and fights
+          → action/shonen (AoT, Jujutsu Kaisen, Demon Slayer). Laughing
+          together → comedy (Spy x Family, KonoSuba, Nichijou). Pause-and-debate
+          → mystery/thriller (Death Note, Steins;Gate, Frieren). Mixed group
+          with non-anime fans → My Neighbor Totoro or Spy x Family.
+        </li>
+        <li>
+          <strong>Is anyone new to anime?</strong> Avoid long-running shonen or
+          complex lore upfront. Start with Demon Slayer, Spy x Family, or My
+          Neighbor Totoro — high accessibility, great first impressions.
+        </li>
+      </ul>
+
+      <h2
+        id="quick-picks"
+        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+      >
+        Quick Picks — Best Anime to Watch with Friends by Mood
+      </h2>
+      <div className="overflow-x-auto mb-8">
+        <table className="w-full text-sm border-collapse border border-gray-200 rounded-lg">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border border-gray-200 px-4 py-2 text-left">Mood</th>
+              <th className="border border-gray-200 px-4 py-2 text-left">Top picks</th>
+              <th className="border border-gray-200 px-4 py-2 text-left">Length</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border border-gray-200 px-4 py-2 font-medium">Big reactions</td>
+              <td className="border border-gray-200 px-4 py-2">Attack on Titan, Jujutsu Kaisen, Demon Slayer</td>
+              <td className="border border-gray-200 px-4 py-2">Medium (25–75 ep)</td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="border border-gray-200 px-4 py-2 font-medium">Comedy night</td>
+              <td className="border border-gray-200 px-4 py-2">Spy x Family, KonoSuba, One Punch Man</td>
+              <td className="border border-gray-200 px-4 py-2">Short–medium</td>
+            </tr>
+            <tr>
+              <td className="border border-gray-200 px-4 py-2 font-medium">Theory &amp; debate</td>
+              <td className="border border-gray-200 px-4 py-2">Death Note, Steins;Gate, Frieren</td>
+              <td className="border border-gray-200 px-4 py-2">Medium</td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="border border-gray-200 px-4 py-2 font-medium">One night (film)</td>
+              <td className="border border-gray-200 px-4 py-2">Your Name., A Silent Voice, Spirited Away</td>
+              <td className="border border-gray-200 px-4 py-2">~2 hours</td>
+            </tr>
+            <tr>
+              <td className="border border-gray-200 px-4 py-2 font-medium">Long marathon</td>
+              <td className="border border-gray-200 px-4 py-2">One Piece, Hunter x Hunter, Naruto</td>
+              <td className="border border-gray-200 px-4 py-2">Long (100+ ep)</td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="border border-gray-200 px-4 py-2 font-medium">Non-anime fans</td>
+              <td className="border border-gray-200 px-4 py-2">My Neighbor Totoro, Spy x Family, Demon Slayer</td>
+              <td className="border border-gray-200 px-4 py-2">Short</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <h2
         id="reactions"

@@ -177,6 +177,33 @@ New slugs (high-traffic + Crunchyroll group-watch intent):
 - Added an optional Discord username field on `/success` that saves to Stripe Customer metadata (key: `anidachi_discord_contact`) using the `session_id` from the success URL.
 - Build check: `npm run build` ✅
 
+## GSC SEO Optimisation Batch (2026-06-08)
+
+### What was done
+Live GSC data (Mar 9 – Jun 5 2026) pulled via Composio. Site had ~7,300 impressions / ~370 clicks (5% blended CTR). Key findings and all changes below.
+
+**Technical fix:**
+- `apps/web/next.config.ts` — added 301 redirect `anidachi.app/* → www.anidachi.app/*` to consolidate the www/non-www PageRank split (was costing ~33% of homepage authority).
+
+**Content / SEO changes (`dateModified` bumped to 2026-06-08 on all):**
+
+| File | Changes |
+|------|---------|
+| `app/watch-anime-together/page.tsx` | Title → includes "anime watch party"; new H2 "Host an Anime Watch Party Online"; new H2 "Watch Anime Together Long Distance" (59 impressions trapped at pos 9, 0 clicks); 4 new FAQ entries |
+| `app/watch-crunchyroll-together/page.tsx` | Title rewrite; 4 new FAQ entries: "Does Crunchyroll have watch party?", Teleparty, group watch; new "Crunchyroll Group Watch Tips" H2 section |
+| `app/guides/how-to-watch-crunchyroll-with-friends/page.tsx` | Title → "Crunchyroll Watch Party Guide (2026)"; H1 rewrite; 5 new FAQ entries for all "does crunchyroll have…" / "can you…" variants |
+| `app/glossary/ova-meaning/page.tsx` | Title → "What Does OVA Mean in Anime?" (377 imp, 0 clicks hidden gem); new "OVA Full Form" section; "Famous OVAs by Series" section (Haikyuu, AoT, Demon Slayer examples); 5 new FAQ entries |
+| `app/guides/how-to-watch-anime-with-friends-on-discord/page.tsx` | Title → "How to Stream Anime on Discord & Run an Anime Watch Party"; new "Discord Anime Watch Party" section; 2 new FAQ entries |
+| `app/compare/anidachi-vs-kast/page.tsx` | Title → "Best Kast Alternative for Crunchyroll Anime" |
+| `app/compare/anidachi-vs-scener/page.tsx` | Title → "Best Scener Alternative for Anime Watch Parties" |
+| `app/compare/anidachi-vs-syncplay/page.tsx` | Title → "Best Syncplay Alternative for Crunchyroll Anime" |
+| `app/compare/anidachi-vs-discord-screen-share/page.tsx` | Title → "Crunchyroll vs Discord Screen Share" |
+
+**Build:** `npm run build` ✅ (2026-06-08)
+
+**Remaining (Tier 3, not done):**
+- `/guides/best-anime-to-watch-with-friends` — ranks pos 18 for own keyword, needs content expansion
+
 ## Executor's Feedback or Assistance Requests
 
 - **Planner / user:** Please manually spot-check at least 2 of the new watch URLs (e.g. `/watch/soul-eater-with-friends`, `/watch/initial-d-with-friends`) in the browser with `npm run dev` or `npm start` running; confirm `200`, layout, and canonical. Executor validated via `npm run build` + prerender manifest.
@@ -471,6 +498,32 @@ The survey should do more than “collect answers” — it should:
 
 - [x] CRM tabs: **Contacts** vs **Survey leads** in `crm-client.tsx`
 - [x] Survey tab shows parsed survey answers + follow-up actions (Gmail, status, notes)
+
+### SEO batch — 10 high-traffic pages (2026-06-08)
+
+**1 new genre hub:**
+- `/watch-fantasy-anime-with-friends` — fantasy genre cluster (Frieren, HxH, Ghibli, etc.)
+
+**4 new listicle guides:**
+- `/guides/best-sports-anime-to-watch-with-friends` — 9 picks
+- `/guides/best-comedy-anime-to-watch-with-friends` — 12 picks
+- `/guides/best-dubbed-anime-to-watch-with-friends` — 12 picks (dub vs sub friction)
+
+**4 new how-to / troubleshooting guides:**
+- `/guides/how-to-watch-seasonal-anime-together` — simulcast weekly workflow
+- `/guides/crunchyroll-watch-party-not-working` — sync/detection troubleshooting
+- `/guides/how-to-run-an-online-anime-club` — Discord + recurring clubs
+- `/guides/how-to-plan-an-anime-marathon-with-friends` — weekend binge planning
+
+**2 new compare pages:**
+- `/compare/anidachi-vs-rave` — missing competitor coverage
+- `/compare/crunchyroll-party-vs-teleparty-for-anime` — third-party tool-shopping intent
+
+**Infrastructure:**
+- `genre-hub-links.ts` + `sitemap-discovery.ts` updated for fantasy hub
+- `guide-links.ts` updated (new guides + previously missing shonen/classic/weekend binge entries)
+
+- [x] `npm run build` ✅ — 272 static routes (2026-06-08)
 
 ### Executor's Feedback or Assistance Requests
 

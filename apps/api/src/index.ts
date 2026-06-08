@@ -9,6 +9,7 @@ import { cors } from "hono/cors";
 import { verifyRoomToken, type VerifiedRoomToken } from "./auth";
 import { createIceServersPayload } from "./ice-servers";
 import { createLiveKitToken } from "./livekit-token";
+import { RecentP2PSignalBuffer, type BufferedP2PSignalEvent } from "./p2p-signal-buffer";
 import { RoomState } from "./room-state";
 
 export interface Env {
@@ -99,8 +100,10 @@ function encode(event: ServerEvent): string {
 export class RoomDurableObject {
   private readonly room: RoomState;
   private readonly participantsBySocket = new Map<WebSocket, string>();
+  private readonly p2pSignalBuffer = new RecentP2PSignalBuffer();
   private readonly socketsByParticipant = new Map<string, WebSocket>();
   private readonly verifiedBySocket = new Map<WebSocket, VerifiedRoomToken>();
+  private nextP2PServerSeq = 1;
 
   constructor(
     private readonly state: DurableObjectState,
@@ -159,8 +162,11 @@ export class RoomDurableObject {
     }
 
     switch (event.type) {
+      case "PING":
+        this.handlePing(socket, event);
+        return;
       case "JOIN":
-        this.handleJoin(socket, event.participant);
+        this.handleJoin(socket, event);
         return;
       case "HOST_STATE":
         this.handleHostState(socket, event);
@@ -183,7 +189,16 @@ export class RoomDurableObject {
     }
   }
 
-  private handleJoin(socket: WebSocket, _participant: Participant): void {
+  private handlePing(socket: WebSocket, event: Extract<ClientEvent, { type: "PING" }>): void {
+    this.send(socket, {
+      type: "PONG",
+      roomId: this.room.roomId,
+      sentAt: event.sentAt,
+      serverTime: Date.now(),
+    });
+  }
+
+  private handleJoin(socket: WebSocket, event: Extract<ClientEvent, { type: "JOIN" }>): void {
     const verified = this.verifiedBySocket.get(socket);
     if (!verified) {
       this.send(socket, {
@@ -215,6 +230,7 @@ export class RoomDurableObject {
     this.participantsBySocket.set(socket, joined.id);
     this.socketsByParticipant.set(joined.id, socket);
     this.send(socket, this.room.snapshot);
+    this.replayP2PSignals(socket, joined.id, event.lastSeenP2PServerSeq ?? 0);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
   }
 
@@ -309,12 +325,48 @@ export class RoomDurableObject {
       return;
     }
 
+    const forwarded: BufferedP2PSignalEvent = {
+      ...event,
+      serverReceivedAt: Date.now(),
+      serverSeq: this.nextP2PServerSeq++,
+    };
+
+    const buffered = this.p2pSignalBuffer.add(forwarded, forwarded.serverReceivedAt);
     const target = this.socketsByParticipant.get(event.toUserId);
     if (!target) {
+      console.log(
+        JSON.stringify({
+          event: "p2p.signal.buffered_offline_target",
+          fromUserId: event.fromUserId,
+          roomId: event.roomId,
+          serverSeq: buffered.event.serverSeq,
+          signalKind: event.signal.kind,
+          toUserId: event.toUserId,
+        }),
+      );
       return;
     }
 
-    this.send(target, event);
+    this.send(target, buffered.event);
+  }
+
+  private replayP2PSignals(socket: WebSocket, participantId: string, afterServerSeq: number): void {
+    const replay = this.p2pSignalBuffer.replayFor(participantId, afterServerSeq);
+    for (const event of replay) {
+      this.send(socket, event);
+    }
+
+    if (replay.length > 0) {
+      console.log(
+        JSON.stringify({
+          event: "p2p.signal.replay",
+          afterServerSeq,
+          participantId,
+          replayed: replay.length,
+          roomId: this.room.roomId,
+        }),
+      );
+    }
   }
 
   private handleClose(socket: WebSocket): void {
