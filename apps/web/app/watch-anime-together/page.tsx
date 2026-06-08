@@ -6,14 +6,14 @@ import { animeList } from "@/lib/anime-data";
 import { genreHubItemList } from "@/lib/genre-hub-links";
 
 export const metadata: Metadata = {
-  title: "Watch Anime Together Online — The Complete Guide (2026)",
+  title: "Watch Anime Together Online — Free Anime Watch Party App (2026)",
   description:
-    "Everything you need to watch anime together with friends online. Watchrooms, async watching, Chrome extensions, and anime marathon tips. Free and paid options compared.",
+    "Watch anime together online with friends — live or async. AniDachi creates Crunchyroll watchrooms with sync, chat, and progress tracking. Free anime watch party options compared, including long-distance viewing.",
   alternates: { canonical: "/watch-anime-together" },
   openGraph: {
-    title: "Watch Anime Together Online — The Complete Guide",
+    title: "Watch Anime Together Online — Free Anime Watch Party (2026)",
     description:
-      "The definitive guide to watching anime with friends, whether live or asynchronously.",
+      "The definitive guide to hosting an anime watch party online, whether live, long-distance, or asynchronously.",
     url: "/watch-anime-together",
   },
 };
@@ -23,6 +23,26 @@ const faq = [
     question: "What is the best way to watch anime together online?",
     answer:
       "The best method depends on your group. For Crunchyroll users, AniDachi offers watchrooms with sync, chat, and async support. For cross-platform groups, Teleparty works across Netflix, Disney+, and Crunchyroll. For a free option, Discord screen sharing works in a pinch.",
+  },
+  {
+    question: "Is there a free anime watch party app?",
+    answer:
+      "Yes. Crunchyroll Party is a free Chrome extension for live anime watch parties. Discord screen sharing is also free. AniDachi starts at $8/month and adds async watching, progress tracking, and auto anime detection on top of free watch-party features.",
+  },
+  {
+    question: "How do you host an anime watch party online?",
+    answer:
+      "Install AniDachi, navigate to any anime on Crunchyroll, click Detect Anime, and create a watchroom. Share the invite link with friends. Everyone watches in full quality on their own account with synced playback and live chat. The whole setup takes under two minutes.",
+  },
+  {
+    question: "Can you watch anime together long distance for free?",
+    answer:
+      "Yes — for free, Discord screen sharing works over any distance. For a more polished long-distance anime watch party, Crunchyroll Party (free) or AniDachi (paid) give everyone full-quality streams and proper sync. AniDachi also supports async watching, so long-distance friends in different time zones never need to schedule.",
+  },
+  {
+    question: "How do you stream anime together online?",
+    answer:
+      "The easiest way to stream anime together is with a Chrome extension like AniDachi or Crunchyroll Party. Each person opens the episode on their own Crunchyroll account and the extension keeps playback in sync. No screen sharing, no quality loss.",
   },
   {
     question: "Can you watch anime together without being online at the same time?",
@@ -37,7 +57,7 @@ const faq = [
   {
     question: "How many people can join an anime watch party?",
     answer:
-      "It depends on the tool. AniDachi watchrooms support group watching with no hard limit on members. Crunchyroll Party and Teleparty typically support 10-50+ users per room.",
+      "It depends on the tool. AniDachi watchrooms support group watching with no hard limit on members. Crunchyroll Party and Teleparty typically support 10–50+ users per room.",
   },
   {
     question: "Do I need a Crunchyroll account to use AniDachi?",
@@ -48,10 +68,12 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
   { id: "why-watch", label: "Why watch anime together?", level: 2 },
+  { id: "watch-party", label: "Anime watch party options", level: 2 },
   { id: "methods-heading", label: "Methods", level: 2 },
   { id: "method-extensions", label: "Chrome extensions", level: 3 },
   { id: "method-discord", label: "Discord", level: 3 },
   { id: "method-in-person", label: "In-person", level: 3 },
+  { id: "long-distance", label: "Watch anime long distance", level: 2 },
   { id: "live-vs-async", label: "Live vs async", level: 2 },
   { id: "genre-hubs", label: "Browse by genre", level: 2 },
   { id: "popular-anime", label: "All anime watch guides", level: 2 },
@@ -71,11 +93,11 @@ export default function WatchAnimeTogetherPage() {
         { name: "Home", url: "/" },
         { name: "Watch Anime Together", url: "/watch-anime-together" },
       ]}
-      title="Watch Anime Together Online — The Complete Guide"
-      description="Everything you need to watch anime with friends online."
+      title="Watch Anime Together Online — Free Anime Watch Party App (2026)"
+      description="Watch anime with friends online — live sync, async, or long-distance. Free and paid options compared."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-06-04"
+      dateModified="2026-06-08"
       faq={faq}
       headings={tocHeadings}
       itemList={genreHubItemList(1)}
@@ -93,7 +115,7 @@ export default function WatchAnimeTogetherPage() {
         </strong>{" "}
         Whether your friends are across the room or across the world, shared
         anime experiences are better than watching alone. This guide covers
-        every method, tool, and tip.
+        every method — anime watch parties, long-distance viewing, and free options.
       </p>
 
       <p className="text-gray-700 mb-8">
@@ -118,6 +140,45 @@ export default function WatchAnimeTogetherPage() {
         re-watching One Piece with a friend, shared viewing makes every episode
         better. The word &quot;AniDachi&quot; itself means &quot;anime
         friend&quot; — 友達 (tomodachi) + アニメ (anime).
+      </p>
+
+      <h2
+        id="watch-party"
+        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+      >
+        Host an Anime Watch Party Online — Free &amp; Paid Options
+      </h2>
+      <p className="text-gray-700 leading-relaxed mb-4">
+        An <strong>anime watch party</strong> lets your group watch the same
+        episode at the same time, with reactions and chat flying in real-time.
+        Here are the main options ranked by quality:
+      </p>
+      <ul className="space-y-3 text-gray-700 mb-6">
+        <li>
+          <strong>AniDachi (Best):</strong> Crunchyroll-focused watchrooms with
+          live sync, real-time chat, and unique async support. Each person
+          streams on their own account in full quality. Starting at $8/month.
+        </li>
+        <li>
+          <strong>Crunchyroll Party (Free):</strong> A free Chrome extension for
+          live-sync anime watch parties on Crunchyroll. No async, no progress
+          tracking, but free and easy to set up.
+        </li>
+        <li>
+          <strong>Teleparty (Freemium):</strong> Works across Crunchyroll,
+          Netflix, and Disney+. Good for mixed-platform groups.
+        </li>
+        <li>
+          <strong>Discord Screen Share (Free):</strong> Share your browser tab
+          for free. Quality is capped and there&apos;s no playback sync, but
+          it&apos;s the quickest zero-setup option.
+        </li>
+      </ul>
+      <p className="text-gray-700 mb-6">
+        Want a step-by-step walkthrough?{" "}
+        <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="text-purple-600 hover:underline">
+          How to watch Crunchyroll with friends (full guide)
+        </Link>.
       </p>
 
       <h2
@@ -168,6 +229,48 @@ export default function WatchAnimeTogetherPage() {
           anime watch party ideas
         </Link>{" "}
         for inspiration.
+      </p>
+
+      <h2
+        id="long-distance"
+        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+      >
+        Watch Anime Together Long Distance
+      </h2>
+      <p className="text-gray-700 leading-relaxed mb-4">
+        Long-distance anime watching is one of the most common reasons people
+        look for watch-together tools. Whether you&apos;re in different cities,
+        time zones, or countries, these approaches work:
+      </p>
+      <ul className="space-y-3 text-gray-700 mb-4">
+        <li>
+          <strong>Live sync across distance:</strong> AniDachi, Crunchyroll
+          Party, and Teleparty all work regardless of location. Each person
+          needs a stable internet connection and their own Crunchyroll account.
+          Playback stays in sync automatically.
+        </li>
+        <li>
+          <strong>Async for time-zone gaps:</strong> If your friend is 8 hours
+          ahead, live sync is often impractical. AniDachi&apos;s async
+          watchrooms let each person watch at their own pace — episodes are
+          marked as watched, reactions appear in context, and nobody waits on a
+          schedule.
+        </li>
+        <li>
+          <strong>Free long-distance option:</strong> Discord screen sharing
+          works over any distance at no cost, though quality depends on the
+          host&apos;s upload speed.
+        </li>
+      </ul>
+      <p className="text-gray-700 mb-6">
+        See our full guide:{" "}
+        <Link href="/guides/how-to-watch-anime-long-distance" className="text-purple-600 hover:underline">
+          How to watch anime long distance
+        </Link>{" "}
+        and{" "}
+        <Link href="/guides/how-to-watch-anime-with-friends-in-different-time-zones" className="text-purple-600 hover:underline">
+          watching anime across time zones
+        </Link>.
       </p>
 
       <h2

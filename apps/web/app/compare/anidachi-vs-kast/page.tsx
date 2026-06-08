@@ -8,21 +8,21 @@ const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Kast — Crunchyroll Anime Watch Parties Compared",
+  title: "AniDachi vs Kast — Best Kast Alternative for Crunchyroll Anime (2026)",
   description:
-    "AniDachi vs Kast for anime nights: per-user Crunchyroll playback, watchrooms, and when a generic co-watching app is enough.",
+    "Looking for a Kast alternative for anime? AniDachi vs Kast compared: per-user Crunchyroll playback, async watching, and watchrooms vs a generic co-watching app. Which fits your group?",
   alternates: { canonical: "/compare/anidachi-vs-kast" },
   openGraph: {
-    title: "AniDachi vs Kast",
+    title: "AniDachi vs Kast — Kast Alternative for Anime Groups",
     description:
-      "Compare Crunchyroll-first watchrooms with a general-purpose co-watching setup.",
+      "Compare AniDachi's Crunchyroll-first watchrooms with Kast for anime nights. Best Kast alternative for anime watch parties.",
     url: "/compare/anidachi-vs-kast",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AniDachi vs Kast",
-    description: "Which is better for weekly Crunchyroll anime nights?",
+    title: "AniDachi vs Kast — Best Kast Alternative for Anime",
+    description: "Kast alternative for Crunchyroll anime nights: AniDachi vs Kast compared.",
     images: [BRAND_OG_PATH],
   },
 };

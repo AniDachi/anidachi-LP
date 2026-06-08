@@ -8,21 +8,21 @@ const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Syncplay — Crunchyroll Anime Watch Parties Compared",
+  title: "AniDachi vs Syncplay — Best Syncplay Alternative for Crunchyroll Anime (2026)",
   description:
-    "AniDachi vs Syncplay: browser-based Crunchyroll watchrooms vs desktop sync for local files. See which fits your friend group.",
+    "Looking for a Syncplay alternative for Crunchyroll? AniDachi vs Syncplay compared: browser-based Crunchyroll watchrooms vs desktop sync for local files. Which fits anime groups watching on Crunchyroll?",
   alternates: { canonical: "/compare/anidachi-vs-syncplay" },
   openGraph: {
-    title: "AniDachi vs Syncplay",
+    title: "AniDachi vs Syncplay — Syncplay Alternative for Crunchyroll",
     description:
-      "Compare synced watching for Crunchyroll tabs vs Syncplay-style desktop workflows.",
+      "Best Syncplay alternative for Crunchyroll anime groups. Browser watchrooms vs desktop sync compared.",
     url: "/compare/anidachi-vs-syncplay",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AniDachi vs Syncplay",
-    description: "Crunchyroll-first watchrooms vs desktop sync workflows.",
+    title: "AniDachi vs Syncplay — Syncplay Alternative for Crunchyroll",
+    description: "Syncplay alternative for Crunchyroll anime: browser watchrooms vs desktop sync.",
     images: [BRAND_OG_PATH],
   },
 };

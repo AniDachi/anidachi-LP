@@ -138,6 +138,52 @@ function useGmailOAuthCallbackUrl(): string {
   return url;
 }
 
+function useGoogleAdsOAuthCallbackUrl(): string {
+  const [url, setUrl] = useState(
+    "http://localhost:3003/api/google-ads/oauth/callback",
+  );
+  useEffect(() => {
+    setUrl(`${window.location.origin}/api/google-ads/oauth/callback`);
+  }, []);
+  return url;
+}
+
+function GoogleAdsBanner() {
+  const oauthCallbackUrl = useGoogleAdsOAuthCallbackUrl();
+  return (
+    <section
+      className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950"
+      aria-labelledby="google-ads-connect-heading"
+    >
+      <h2
+        id="google-ads-connect-heading"
+        className="mb-2 text-base font-semibold text-emerald-950"
+      >
+        Google Ads (Keyword Planner)
+      </h2>
+      <p className="mb-3 text-emerald-900">
+        Connect once to store a refresh token for Keyword Planner API calls.
+        Sign in with the Google account that has access to customer ID{" "}
+        <code className="rounded bg-white/80 px-1">572-335-2650</code>.
+      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button asChild className="bg-emerald-700 hover:bg-emerald-800">
+          <a href="/api/google-ads/oauth/connect">Connect Google Ads</a>
+        </Button>
+      </div>
+      <p className="mt-3 text-xs text-emerald-900/85">
+        Add this redirect URI in Google Cloud (same AniDachi OAuth client) and
+        enable scope{" "}
+        <code className="rounded bg-white/70 px-1">.../auth/adwords</code> on
+        the consent screen:{" "}
+        <code className="break-all rounded bg-white/70 px-1 py-0.5">
+          {oauthCallbackUrl}
+        </code>
+      </p>
+    </section>
+  );
+}
+
 function GmailBanner({ status }: { status: GmailUiStatus }) {
   const router = useRouter();
   const oauthCallbackUrl = useGmailOAuthCallbackUrl();
@@ -387,13 +433,23 @@ export function CrmClient({
     const p = new URLSearchParams(window.location.search);
     const ok = p.get("gmail");
     const err = p.get("gmail_error");
+    const googleAdsOk = p.get("google_ads");
+    const googleAdsErr = p.get("google_ads_error");
     if (ok === "connected") {
       setGmailFlash("Gmail connected successfully.");
     }
     if (err) {
       setGmailFlash(`Gmail error: ${decodeURIComponent(err)}`);
     }
-    if (ok || err) {
+    if (googleAdsOk === "connected") {
+      setGmailFlash(
+        "Google Ads connected. Refresh token saved — run pnpm --filter @anidachi/web google-ads:keywords -- \"watch anime with friends\"",
+      );
+    }
+    if (googleAdsErr) {
+      setGmailFlash(`Google Ads error: ${decodeURIComponent(googleAdsErr)}`);
+    }
+    if (ok || err || googleAdsOk || googleAdsErr) {
       router.replace("/kreatli-email-crm", { scroll: false });
     }
   }, [router]);
@@ -491,6 +547,7 @@ export function CrmClient({
       ) : null}
 
       <GmailBanner status={gmailStatus} />
+      <GoogleAdsBanner />
 
       <div
         className="mb-8 flex flex-wrap gap-1 rounded-xl border border-purple-200/80 bg-purple-50/60 p-1"
