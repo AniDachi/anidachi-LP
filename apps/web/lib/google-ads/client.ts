@@ -1,7 +1,7 @@
 import { createGoogleAdsOAuth2, normalizeCustomerId } from "./oauth";
 import { readGoogleAdsTokens } from "./tokens";
 
-const GOOGLE_ADS_API_VERSION = "v18";
+const GOOGLE_ADS_API_VERSION = "v20";
 
 export type KeywordIdeaResult = {
   text: string;
@@ -120,9 +120,45 @@ export async function generateKeywordIdeas(
 
   const text = await res.text();
   if (!res.ok) {
-    throw new Error(
-      `Google Ads generateKeywordIdeas failed (${res.status}): ${text.slice(0, 1200)}`
-    );
+    let detail = text.slice(0, 1200);
+    let authError = "";
+    try {
+      const parsed = JSON.parse(text) as {
+        error?: {
+          message?: string;
+          details?: Array<{
+            errors?: Array<{
+              message?: string;
+              errorCode?: { authorizationError?: string };
+            }>;
+          }>;
+        };
+      };
+      if (parsed.error?.message) detail = parsed.error.message;
+      authError =
+        parsed.error?.details?.[0]?.errors?.[0]?.errorCode?.authorizationError ??
+        "";
+      const specific = parsed.error?.details?.[0]?.errors?.[0]?.message;
+      if (specific) detail = specific;
+    } catch {
+      // keep raw body
+    }
+    if (res.status === 403 && detail.includes("has not been used in project")) {
+      throw new Error(
+        `${detail} Enable Google Ads API in Google Cloud Console for your AniDachi project, wait a few minutes, then retry.`
+      );
+    }
+    if (authError === "DEVELOPER_TOKEN_NOT_APPROVED") {
+      throw new Error(
+        "Developer token has Explorer (test) access only. Keyword Planner requires Basic or Standard access. Apply at Google Ads → Tools → API Center, then retry. See: https://developers.google.com/google-ads/api/docs/access-levels"
+      );
+    }
+    if (authError === "USER_PERMISSION_DENIED") {
+      throw new Error(
+        `${detail} Run pnpm --filter @anidachi/web google-ads:diagnose to list accessible customer IDs, update GOOGLE_ADS_CUSTOMER_ID, or reconnect OAuth with the Google account that owns the Ads account.`
+      );
+    }
+    throw new Error(`Google Ads generateKeywordIdeas failed (${res.status}): ${detail}`);
   }
 
   const data = JSON.parse(text) as {

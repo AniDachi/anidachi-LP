@@ -11,6 +11,7 @@
     "lint": "next lint",
     "crm": "tsx scripts/crm/cli.ts",
     "google-ads:keywords": "tsx scripts/google-ads/keyword-ideas.ts",
+    "google-ads:diagnose": "tsx scripts/google-ads/diagnose.ts",
     "stripe:webhook:subscription": "tsx scripts/stripe/register-subscription-webhook.ts",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test \"lib/**/*.test.ts\""

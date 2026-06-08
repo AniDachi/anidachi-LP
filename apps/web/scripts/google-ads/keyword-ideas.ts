@@ -8,16 +8,49 @@
  *   Refresh token from /api/google-ads/oauth/connect OR GOOGLE_ADS_REFRESH_TOKEN
  *
  * Usage:
- *   pnpm --filter @anidachi/web google-ads:keywords -- "watch anime with friends"
- *   pnpm --filter @anidachi/web google-ads:keywords -- "anidachi" "crunchyroll watch party"
+ *   pnpm --filter @anidachi/web google-ads:keywords "watch anime with friends"
+ *   pnpm --filter @anidachi/web google-ads:keywords "anidachi" "crunchyroll watch party"
  */
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { generateKeywordIdeas } from "../../lib/google-ads/client";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function loadEnvLocal() {
+  const envPath = path.join(__dirname, "../../.env.local");
+  if (!fs.existsSync(envPath)) return;
+  const raw = fs.readFileSync(envPath, "utf8");
+  for (const line of raw.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq <= 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+}
+
 async function main() {
-  const keywords = process.argv.slice(2).map((k) => k.trim()).filter(Boolean);
+  loadEnvLocal();
+
+  const keywords = process.argv
+    .slice(2)
+    .map((k) => k.trim())
+    .filter((k) => Boolean(k) && k !== "--");
   if (keywords.length === 0) {
     console.error(
-      'Pass at least one seed keyword, e.g. pnpm --filter @anidachi/web google-ads:keywords -- "watch anime with friends"'
+      'Pass at least one seed keyword, e.g. pnpm --filter @anidachi/web google-ads:keywords "watch anime with friends"'
     );
     process.exit(1);
   }
