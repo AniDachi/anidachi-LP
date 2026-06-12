@@ -228,3 +228,22 @@ Only run after staging acceptance passes.
 8. Smoke test production extension room creation and join.
 9. Tag the migration release.
 ```
+
+## P2P Scorecard
+
+Debug exports from the extension panel can be turned into the metrics the
+room/P2P SLOs are judged on (see the 2026-06-12 execution plan):
+
+```bash
+node scripts/p2p-scorecard.mjs export-host.json export-guest.json
+```
+
+It accepts one export per participant (full or compact format) and prints, per
+peer: time-to-connected, time-to-first-video, the selected candidate pair
+(direct/STUN/TURN), ICE restarts with reasons, offer collisions, and signal
+failures; per room: WebSocket opens/closes, pong timeouts, scheduled
+reconnects, and signal counts; plus a summary with connect success rate,
+median timings, and TURN relay share.
+
+Use it during staging acceptance: export debug logs from both participants
+after the checklist run and attach the summary to the plan's Progress Log.
