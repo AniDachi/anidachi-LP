@@ -35,6 +35,7 @@
 - [x] 2026-06-07: Audited current code in `packages/protocol`, `apps/api`, `apps/web`, and `apps/extension` for room lifecycle, P2P signaling, reconnect, and keepalive behavior.
 - [x] 2026-06-07: Ran two focused research passes: one repo-local audit for plan/task ordering and one Cloudflare Hibernation migration audit.
 - [x] 2026-06-07: Checked current Cloudflare and WebRTC primary docs and folded the findings into this roadmap.
+- [x] 2026-06-12: Full code audit of the end-to-end room flow confirmed the Task 2 premise plus two release-blocking defects (immortal rooms break plan limits; non-idempotent create). Created the execution program for this roadmap with SLOs, a two-browser Playwright harness, and fixed product defaults: `docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md`. Roadmap ordering remains authoritative.
 
 ## Current Reality Check
 
