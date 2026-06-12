@@ -51,9 +51,18 @@ export type RoomTokenPayload = {
   avatarUrl?: string | null;
 };
 
+const ROOM_TOKEN_DEFAULT_TTL_SECONDS = 30 * 60;
+
 export async function signRoomToken(
-  payload: RoomTokenPayload
+  payload: RoomTokenPayload,
+  expiresInSeconds: number = ROOM_TOKEN_DEFAULT_TTL_SECONDS
 ): Promise<string> {
+  // Free-plan hosts get tokens capped to their remaining daily quota (PD2);
+  // the TTL can shrink but never exceed the standard room token life.
+  const ttl = Math.max(
+    1,
+    Math.min(ROOM_TOKEN_DEFAULT_TTL_SECONDS, Math.floor(expiresInSeconds))
+  );
   return new SignJWT({
     roomId: payload.roomId,
     role: payload.role,
@@ -65,7 +74,7 @@ export async function signRoomToken(
     .setSubject(payload.sub)
     .setAudience("anidachi-worker")
     .setIssuedAt()
-    .setExpirationTime("30m")
+    .setExpirationTime(`${ttl}s`)
     .sign(getJwtSecret());
 }
 
