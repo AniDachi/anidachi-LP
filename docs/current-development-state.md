@@ -220,6 +220,9 @@ These are intentionally not treated as solved:
 - P2P and experimental features: `docs/experimental-features.md`
 - Active room/P2P/realtime hardening roadmap:
   `docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md`
+- Active execution program for that roadmap (SLOs, verified defects, e2e harness,
+  block-by-block plan):
+  `docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md`
 - Historical commercial room/P2P/progress plan:
   `docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`
 - Monorepo migration history:
