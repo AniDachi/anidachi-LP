@@ -41,6 +41,10 @@ export type RoomRow = {
   title: string | null;
   status: "lobby" | "live" | "ended";
   created_at: string;
+  client_request_id: string | null;
+  last_active_at: string;
+  ended_at: string | null;
+  host_connected_at: string | null;
 };
 
 // ---------- User helpers ----------
@@ -157,6 +161,14 @@ export async function deleteAllRefreshTokensForUser(
 
 // ---------- Room helpers ----------
 
+const UNIQUE_VIOLATION = "23505";
+
+/**
+ * Creates a room. When `clientRequestId` is provided the create is idempotent:
+ * retrying (double click, network retry) returns the existing non-ended room
+ * instead of creating a duplicate, enforced by the partial unique index
+ * `uniq_rooms_host_client_request`.
+ */
 export async function createRoom(params: {
   hostUserId: string;
   showId?: string;
@@ -164,7 +176,8 @@ export async function createRoom(params: {
   sourceUrl?: string;
   videoFingerprint?: string;
   title?: string;
-}): Promise<RoomRow> {
+  clientRequestId?: string;
+}): Promise<{ room: RoomRow; reused: boolean }> {
   const { data, error } = await db()
     .from("rooms")
     .insert({
@@ -174,11 +187,60 @@ export async function createRoom(params: {
       source_url: params.sourceUrl ?? null,
       video_fingerprint: params.videoFingerprint ?? null,
       title: params.title ?? null,
+      client_request_id: params.clientRequestId ?? null,
+      host_connected_at: new Date().toISOString(),
     })
     .select()
     .single();
-  if (error) throw new Error(`Failed to create room: ${error.message}`);
-  return data as RoomRow;
+
+  if (!error) return { room: data as RoomRow, reused: false };
+
+  if (error.code === UNIQUE_VIOLATION && params.clientRequestId) {
+    const existing = await getActiveRoomByClientRequestId(
+      params.hostUserId,
+      params.clientRequestId
+    );
+    if (existing) return { room: existing, reused: true };
+  }
+
+  throw new Error(`Failed to create room: ${error.message}`);
+}
+
+export async function getActiveRoomByClientRequestId(
+  hostUserId: string,
+  clientRequestId: string
+): Promise<RoomRow | null> {
+  const { data } = await db()
+    .from("rooms")
+    .select("*")
+    .eq("host_user_id", hostUserId)
+    .eq("client_request_id", clientRequestId)
+    .neq("status", "ended")
+    .maybeSingle();
+  return (data as RoomRow | null) ?? null;
+}
+
+export async function updateRoom(
+  roomId: string,
+  fields: Partial<
+    Pick<RoomRow, "status" | "last_active_at" | "ended_at" | "host_connected_at">
+  >
+): Promise<void> {
+  const { error } = await db().from("rooms").update(fields).eq("room_id", roomId);
+  if (error) throw new Error(`Failed to update room: ${error.message}`);
+}
+
+/** Rooms of this host that still have an open (unsettled) host segment. */
+export async function getOpenHostSegmentRooms(
+  hostUserId: string
+): Promise<RoomRow[]> {
+  const { data } = await db()
+    .from("rooms")
+    .select("*")
+    .eq("host_user_id", hostUserId)
+    .neq("status", "ended")
+    .not("host_connected_at", "is", null);
+  return (data as RoomRow[] | null) ?? [];
 }
 
 export async function getRoomById(roomId: string): Promise<RoomRow | null> {
@@ -190,15 +252,33 @@ export async function getRoomById(roomId: string): Promise<RoomRow | null> {
   return (data as RoomRow | null) ?? null;
 }
 
-export async function countActiveRoomsForHost(
-  hostUserId: string
+// ---------- Usage metering helpers (PD2 daily host quota) ----------
+
+export async function getUsageSecondsForDay(
+  userId: string,
+  day: string
 ): Promise<number> {
-  const { count } = await db()
-    .from("rooms")
-    .select("id", { count: "exact", head: true })
-    .eq("host_user_id", hostUserId)
-    .neq("status", "ended");
-  return count ?? 0;
+  const { data } = await db()
+    .from("usage_daily")
+    .select("host_seconds")
+    .eq("user_id", userId)
+    .eq("day", day)
+    .maybeSingle();
+  return (data?.host_seconds as number | undefined) ?? 0;
+}
+
+export async function incrementUsageSeconds(
+  userId: string,
+  day: string,
+  seconds: number
+): Promise<void> {
+  if (seconds <= 0) return;
+  const { error } = await db().rpc("increment_host_usage", {
+    p_user_id: userId,
+    p_day: day,
+    p_seconds: Math.floor(seconds),
+  });
+  if (error) throw new Error(`Failed to increment usage: ${error.message}`);
 }
 
 export async function addRoomMember(

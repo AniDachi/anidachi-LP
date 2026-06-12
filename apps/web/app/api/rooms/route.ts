@@ -1,18 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { createRoom, countActiveRoomsForHost, getUserById } from "@/lib/anidachi-auth/db";
+import { createRoom, getUserById } from "@/lib/anidachi-auth/db";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
+import {
+  getHostQuotaView,
+  quotaExhaustedResponseBody,
+  quotaSummaryForResponse,
+} from "@/lib/anidachi-auth/room-usage";
+import {
+  canStartHostSession,
+  hostRoomTokenTtlSeconds,
+} from "@/lib/room-quota";
 
 export const dynamic = "force-dynamic";
-
-// Plan room limits: watcher gets 1 active room, nakama/junkie get unlimited
-const ENFORCE_ROOM_LIMITS = process.env.ANIDACHI_ENFORCE_ROOM_LIMITS === "true";
-const ROOM_LIMITS: Record<string, number> = {
-  watcher: 1,
-  nakama: Infinity,
-  junkie: Infinity,
-};
 
 function cleanString(value: unknown, maxLength: number): string | undefined {
   if (typeof value !== "string") return undefined;
@@ -51,18 +52,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const limit = ROOM_LIMITS[session.plan] ?? 1;
-  if (ENFORCE_ROOM_LIMITS && Number.isFinite(limit)) {
-    const activeCount = await countActiveRoomsForHost(session.userId);
-    if (activeCount >= limit) {
-      return NextResponse.json(
-        {
-          error: "Room limit reached for your plan",
-          code: "ROOM_LIMIT_REACHED",
-        },
-        { status: 403 }
-      );
-    }
+  // PD2: free plans get a daily host-minutes quota instead of a room-count limit.
+  const now = new Date();
+  const quota = await getHostQuotaView(session.userId, session.plan, now);
+  if (!canStartHostSession(quota)) {
+    return NextResponse.json(quotaExhaustedResponseBody(quota), { status: 403 });
   }
 
   let showId: string | undefined;
@@ -70,6 +64,7 @@ export async function POST(request: NextRequest) {
   let sourceUrl: string | undefined;
   let videoFingerprint: string | undefined;
   let title: string | undefined;
+  let clientRequestId: string | undefined;
   try {
     const body = await request.json();
     showId = cleanString(body.showId, 200);
@@ -77,31 +72,38 @@ export async function POST(request: NextRequest) {
     sourceUrl = cleanHttpUrl(body.sourceUrl);
     videoFingerprint = cleanString(body.videoFingerprint, 400);
     title = cleanString(body.title, 300);
+    clientRequestId = cleanString(body.clientRequestId, 100);
   } catch {
     // body is optional
   }
 
-  const room = await createRoom({
+  const { room, reused } = await createRoom({
     hostUserId: session.userId,
     showId,
     episodeId,
     sourceUrl,
     videoFingerprint,
     title,
+    clientRequestId,
   });
   const user = await getUserById(session.userId);
-  const roomToken = await signRoomToken({
-    sub: session.userId,
-    roomId: room.room_id,
-    role: "host",
-    displayName: user?.display_name ?? session.email,
-    avatarUrl: user?.avatar_url ?? null,
-  });
+  const roomToken = await signRoomToken(
+    {
+      sub: session.userId,
+      roomId: room.room_id,
+      role: "host",
+      displayName: user?.display_name ?? session.email,
+      avatarUrl: user?.avatar_url ?? null,
+    },
+    hostRoomTokenTtlSeconds(quota)
+  );
 
   const origin = request.nextUrl.origin;
   return NextResponse.json({
     roomId: room.room_id,
     roomToken,
     shareableLink: `${origin}/room/${room.room_id}`,
+    reused,
+    quota: quotaSummaryForResponse(session.plan, quota),
   });
 }
