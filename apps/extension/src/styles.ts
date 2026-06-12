@@ -384,6 +384,17 @@ export const overlayStyles = `
     min-width: 0;
   }
 
+  .quota-note {
+    margin-top: 8px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(148, 163, 184, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 10.5px;
+    line-height: 1.3;
+  }
+
   .participant-main {
     display: flex;
     align-items: center;
