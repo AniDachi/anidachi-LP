@@ -31,7 +31,7 @@ Every block below is accepted only if these numbers hold (measured by the harnes
 | S4 | P2P pair connect success while both online | >= 99% |
 | S5 | Recovery after reload or <=30s network loss | >= 99% success, < 10s to restored media |
 | S6 | Push-to-talk: V keydown to audio audible at peer | p50 < 300ms (after Block 5) |
-| S7 | False `ROOM_LIMIT_REACHED` for users without an actually-active room | 0 |
+| S7 | False quota/limit blocks (free user with remaining daily minutes denied a room) | 0 |
 | S8 | Ghost participants after reload | 0 |
 | S9 | Room survives 2h session and 10+ min idle | yes |
 | S10 | TURN relay share of connections | measured and reported (expectation 10–25%) |
@@ -54,8 +54,9 @@ Confirmed defects:
 Owner approved delegating these defaults (change via PR if product evidence disagrees):
 
 - **PD1 — orphaned room:** overlay shows an explicit "Host offline" state; the room auto-ends after 4 hours with no connected participants. Host transfer is deferred to a future plan.
-- **PD2 — active-room definition:** a room counts against plan limits only if `last_active_at` is within the past 4 hours (updated on create and every `/connect`).
+- **PD2 — free plan quota (owner decision 2026-06-12):** the free (`watcher`) plan gets **30 host-minutes per day** instead of an active-room-count limit. Zoom-style semantics: the quota burns only while the user's *own* room has **2 or more connected participants** (solo testing is free); joining someone else's room never burns the guest's quota, whatever their plan — paid hosts can always invite free friends. Quota resets per UTC day. At 5 remaining minutes the room receives a warning event; at 0 the room ends gracefully with an upgrade prompt. Paid plans (`nakama`, `junkie`) stay unmetered. The 4-hour `last_active_at` staleness rule remains for room lifecycle hygiene (zombie cleanup, dashboards), but is no longer the plan-limit mechanism.
 - **PD3 — participant cap:** the Durable Object rejects a 5th concurrent participant with `ROOM_FULL`. Mesh P2P stays sized for 4.
+- **PD4 — free-account farming resistance (owner decision 2026-06-12):** layered and observability-first, no hard IP bans. (1) OAuth-only signup via Google/Discord stays — already the strongest single barrier to mass account creation. (2) App-level rate limits on signup, extension auth exchange, and room create, keyed by IP and /24 subnet. (3) Signup/recent IPs stored only as HMAC hashes (dedicated secret, ~30-day retention) — never raw IPs. (4) A *soft* combined per-IP daily cap on free host-minutes (3x a single user's quota): one household or campus NAT is never falsely blocked, but a farm of free accounts behind one IP stops scaling. (5) Cloudflare Turnstile challenge only when a rate limit trips, not on every signup. Heavier device fingerprinting is deliberately deferred until telemetry shows real abuse.
 
 ## Non-Negotiable Rules
 
@@ -94,13 +95,15 @@ Owner approved delegating these defaults (change via PR if product evidence disa
 
 **Steps:**
 
-- [ ] 2.1 Migration: add `client_request_id text`, `last_active_at timestamptz not null default now()`, `ended_at timestamptz`; unique index `(host_user_id, client_request_id)`; index `(host_user_id, status, last_active_at)`.
+- [ ] 2.1 Migration: add `client_request_id text`, `last_active_at timestamptz not null default now()`, `ended_at timestamptz`; unique index `(host_user_id, client_request_id)`; index `(host_user_id, status, last_active_at)`. New table `usage_daily (user_id uuid, day date, host_seconds int not null default 0, primary key (user_id, day))` for PD2 metering.
 - [ ] 2.2 Idempotent create: extension sends a per-click UUID `clientRequestId`; on conflict return the existing active room (same `roomId`/`roomToken` semantics). Retry after network failure returns the same room.
-- [ ] 2.3 Active definition (PD2): `countActiveRoomsForHost` counts rooms with `status != 'ended'` AND `last_active_at > now() - interval '4 hours'`. `/connect` updates `last_active_at` and promotes `lobby -> live` on first host connect.
+- [ ] 2.3 Lifecycle transitions: `/connect` updates `last_active_at` and promotes `lobby -> live` on first host connect. Remove the active-room-count plan limit entirely (superseded by PD2 quota).
 - [ ] 2.4 `POST /api/rooms/:roomId/end` (host only): sets `status='ended'`, `ended_at=now()`. Overlay gets an explicit "End room" control for hosts; ended rooms return 404/410 on `connect`/`join`.
-- [ ] 2.5 Tests: duplicate create (same key), parallel create race, limit excludes stale/ended, end-room flow, `last_active_at` bump on connect.
+- [ ] 2.5 PD2 quota enforcement v1 (web-side): room create and `/connect` for free-plan hosts check `usage_daily` remaining minutes and return `QUOTA_EXHAUSTED` (with reset time) when spent. Metering v1 approximates host-room active time from `/connect` timestamps and room-end events; precise DO-reported metering replaces it in Block 6 (6.6). Room tokens for free hosts are capped to remaining quota so an expired-quota session cannot outlive its token.
+- [ ] 2.6 Quota UX: overlay shows remaining free minutes near the room controls; warning state at <=5 minutes; graceful end + upgrade prompt at 0 (final cut enforced by Block 6 DO alarm; v1 relies on token expiry).
+- [ ] 2.7 Tests: duplicate create (same key), parallel create race, end-room flow, `last_active_at` bump, quota math across UTC day boundary, free host blocked at 0 minutes with correct reset time, guest join never meters, solo host (1 participant) never meters.
 
-**Acceptance:** S7 = 0 in tests; create → close tab → create again works for watcher plan; double-click creates one room; harness scenario "create twice, join once" green.
+**Acceptance:** S7 = 0 in tests; free host can create rooms every day (quota resets); double-click creates one room; paid plans unmetered; harness scenarios "create twice, join once" and "quota exhausted" green.
 
 ## Block 3 — Invite Flow Without Dead Ends
 
@@ -151,8 +154,9 @@ Follow the roadmap's task lists verbatim; additions:
 - [ ] 6.3 DO Alarm room end (PD1): when the last participant disconnects, set an alarm for +4h; on fire with the room still empty, call a server-to-server web endpoint (`POST /api/internal/rooms/:roomId/ended`, authenticated by a dedicated shared secret/Worker service binding — never the user JWT secret) to set `ended`. Cancels on rejoin.
 - [ ] 6.4 (PD3) DO join enforces max 4 concurrent participants → `ROOM_FULL` error event; overlay shows "Room is full".
 - [ ] 6.5 `@cloudflare/vitest-pool-workers` integration tests: wake/rebuild keeps participants, host state, monotonic seq; alarm ends empty room; full-room rejection; the roadmap Task 6 required-test list.
+- [ ] 6.6 PD2 precise quota metering: the DO tracks host-room active seconds (>=2 connected participants) hibernation-safely (timestamps in attachments/SQLite, not timers), reports usage server-to-server to the web internal endpoint on disconnect/alarm/threshold, and enforces the final cutoff: warning event at 5 remaining minutes, graceful room end + upgrade prompt at 0. Replaces the Block 2 token-expiry approximation.
 
-**Acceptance:** roadmap Task 5/6 acceptance + idle rooms hibernate without disconnecting clients (S9) + empty rooms end themselves (closes defect 3 with PD1).
+**Acceptance:** roadmap Task 5/6 acceptance + idle rooms hibernate without disconnecting clients (S9) + empty rooms end themselves (closes defect 3 with PD1) + quota metering accurate to <=1 minute drift in harness.
 
 ## Block 7 — Network, Security, Cost Guardrails
 
@@ -162,8 +166,11 @@ Follow the roadmap's task lists verbatim; additions:
 - [ ] 7.4 Proactive `restartIce` on network change (`navigator.connection` change listener) in addition to existing state-based restarts.
 - [ ] 7.5 Cost guardrails: Analytics Engine alert query for abnormal TURN/signal volume; document budget math (TURN free tier 1TB/month; ~150kbps relay leg ≈ 67MB/hour).
 - [ ] 7.6 Document (do not build) a future relay-only privacy mode: P2P exposes peer IPs; acceptable for friends-rooms, revisit for public rooms.
+- [ ] 7.7 PD4 anti-farming layer 1: app-level rate limits (small KV/Upstash-style counter) on signup/OAuth callback, extension auth exchange, and room create, keyed by IP and /24 subnet; generous limits, log-before-block rollout (observe a week, then enforce).
+- [ ] 7.8 PD4 layer 2: store HMAC-hashed signup/recent IPs (dedicated `ANIDACHI_IP_HASH_SECRET`, ~30-day retention) on `users`; soft combined per-IP daily free host-minutes cap = 3x single quota; exceeding it returns the same `QUOTA_EXHAUSTED` shape with a distinct internal reason code for telemetry.
+- [ ] 7.9 PD4 layer 3: Cloudflare Turnstile only on rate-limit trip (invisible mode); abuse dashboard query in Analytics Engine (accounts/IP-hash/day, free minutes/IP-hash/day) so heavier measures are built only on evidence.
 
-**Acceptance:** unauthorized `/ice-servers` request returns 401 in staging; CORS verified; cost dashboard query saved.
+**Acceptance:** unauthorized `/ice-servers` request returns 401 in staging; CORS verified; cost dashboard query saved; rate limits and per-IP soft cap covered by tests (shared-NAT false-positive test included: 3 distinct users behind one IP all get full quota).
 
 ## Block 8 — Release Gates And Rollback
 
@@ -188,7 +195,7 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 
 - All SLOs S1–S10 met on staging, measured, recorded.
 - Clean profile → sign in → create → invite → join → watch → reload → continue → end room: zero dead ends, zero ghosts, zero false limits.
-- Empty rooms end themselves; plan limits never block users without an active room.
+- Empty rooms end themselves; the free-plan daily quota meters only real host time and never falsely blocks; account farming does not scale behind one IP while shared-NAT users are unaffected.
 - DO hibernates on idle without dropping rooms; keepalive does not wake it.
 - P2P recovers from reload/network loss in either order without recreating the room.
 - Harness green in CI and required for `staging` merges of room/P2P paths.
@@ -197,3 +204,4 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 ## Progress Log
 
 - [x] 2026-06-12: Full end-to-end code audit of auth/room/invite/connect/reconnect flow in this monorepo; defects 1–6 verified against source (see Verified Current Reality). External references re-checked. Plan created. No product code changed yet.
+- [x] 2026-06-12: Owner set the free-plan business model: 30 free host-minutes per day plus resistance to free-account farming. Replaced the active-room-count limit with the PD2 quota model (Zoom-style host metering, guests always free), added PD4 layered anti-farming, extended Blocks 2/6/7 accordingly (usage_daily metering, DO-precise cutoff in 6.6, rate limits + hashed-IP soft caps in 7.7–7.9). Still docs-only.
