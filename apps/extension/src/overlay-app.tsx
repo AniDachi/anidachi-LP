@@ -88,8 +88,11 @@ import {
 import {
   connectWebsiteRoom,
   createRoom,
+  endRoom,
+  isQuotaExhaustedError,
   RoomClient,
   type RoomConnectionStatus,
+  type RoomQuotaSummary,
 } from "./room-client";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
 import { overlayStyles } from "./styles";
@@ -267,6 +270,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [roomToken, setRoomToken] = useState<string | null>(null);
   const [roomShareableLink, setRoomShareableLink] = useState<string | null>(null);
+  const [roomQuota, setRoomQuota] = useState<RoomQuotaSummary | null>(null);
+  const createRequestIdRef = useRef<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [status, setStatus] = useState<RoomConnectionStatus>("idle");
   const [panelOpen, setPanelOpen] = useState(false);
@@ -1755,6 +1760,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       const connected = await connectWebsiteRoom(nextRoomId, activeAccessToken);
       roomTokenRef.current = connected.roomToken;
       setRoomToken(connected.roomToken);
+      setRoomQuota(connected.quota ?? null);
       const shareableLink = new URL(`/room/${encodeURIComponent(nextRoomId)}`, WEB_HTTP_BASE)
         .toString();
       roomShareableLinkRef.current = shareableLink;
@@ -1991,11 +1997,17 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         return null;
       }
 
+      // Idempotency key survives retries of the same create attempt and is
+      // cleared only on success, so a network retry reuses the same room.
+      createRequestIdRef.current ??= crypto.randomUUID();
       const created = await createRoom(activeAccessToken, {
         sourceUrl: buildCurrentSourceUrlForInvite(),
         videoFingerprint: adapter.getFingerprint(),
         title: adapter.getTitle() ?? document.title,
+        clientRequestId: createRequestIdRef.current,
       });
+      createRequestIdRef.current = null;
+      setRoomQuota(created.quota ?? null);
       if (roomIdRef.current) {
         return null;
       }
@@ -2009,6 +2021,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       logDebug("overlay.room", "created", {
         reason,
         roomId: created.roomId,
+        reused: created.reused === true,
         authenticated: true,
         participantId: activeParticipant.id,
       });
@@ -2366,9 +2379,46 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     try {
       await createAndConnectRoom("manual");
     } catch (error) {
+      if (isQuotaExhaustedError(error)) {
+        logDebug("overlay.room", "create blocked by quota", { resetAt: error.resetAt });
+        setAuthMessage(quotaExhaustedMessage(error.resetAt));
+        return;
+      }
+
       const message = authErrorMessage(error, "Failed to create room");
       logDebug("overlay.room", "manual create failed", { message });
       setExtensionContextInvalidated(isExtensionContextInvalidatedError(error));
+      setAuthMessage(message);
+    }
+  };
+
+  const handleEndRoom = async () => {
+    const activeRoomId = roomIdRef.current;
+    const accessToken = authAccessTokenRef.current;
+    if (!activeRoomId || !isHost || !accessToken) {
+      return;
+    }
+
+    try {
+      roomReconnectSuppressedRef.current = true;
+      clearRoomReconnectTimer();
+      await endRoom(activeRoomId, accessToken);
+      clientRef.current.close();
+      setRoomId(null);
+      setParticipants([]);
+      setRoomQuota(null);
+      roomTokenRef.current = null;
+      roomShareableLinkRef.current = null;
+      setRoomToken(null);
+      setRoomShareableLink(null);
+      clearPersistedRoomId();
+      clearRoomHash();
+      setAuthMessage("Watch room ended.");
+      logDebug("overlay.room", "ended by host", { roomId: activeRoomId });
+    } catch (error) {
+      roomReconnectSuppressedRef.current = false;
+      const message = error instanceof Error ? error.message : "Failed to end room";
+      logDebug("overlay.room", "end failed", { roomId: activeRoomId, message });
       setAuthMessage(message);
     }
   };
@@ -3014,7 +3064,17 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             >
               Sync now
             </button>
+            {roomId && isHost ? (
+              <button className="button" type="button" onClick={handleEndRoom}>
+                End room
+              </button>
+            ) : null}
           </div>
+          {roomQuota ? (
+            <div className="quota-note">
+              Free watch-party time today: {quotaMinutesLeftLabel(roomQuota)} left
+            </div>
+          ) : null}
 
           <div className="auth-card">
             <span className="mini-avatar">{initials(participant?.displayName ?? "AN")}</span>
@@ -3699,6 +3759,46 @@ function persistRoomId(roomId: string): void {
   } catch {
     // Session storage may be unavailable on some embedded pages.
   }
+}
+
+function clearPersistedRoomId(): void {
+  try {
+    sessionStorage.removeItem(ROOM_SESSION_STORAGE_KEY);
+  } catch {
+    // Session storage may be unavailable on some embedded pages.
+  }
+}
+
+function clearRoomHash(): void {
+  const params = new URLSearchParams(location.hash.replace(/^#/, ""));
+  if (!params.has("anidachiRoom")) {
+    return;
+  }
+
+  params.delete("anidachiRoom");
+  const hash = params.toString();
+  history.replaceState(
+    null,
+    "",
+    `${location.pathname}${location.search}${hash ? `#${hash}` : ""}`,
+  );
+}
+
+function quotaExhaustedMessage(resetAt: string | undefined): string {
+  if (resetAt) {
+    const reset = new Date(resetAt);
+    if (!Number.isNaN(reset.getTime())) {
+      const label = reset.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return `Daily free watch-party time is used up. It resets at ${label}.`;
+    }
+  }
+
+  return "Daily free watch-party time is used up. It resets at midnight UTC.";
+}
+
+function quotaMinutesLeftLabel(quota: RoomQuotaSummary): string {
+  const minutes = Math.max(0, Math.ceil(quota.remainingSeconds / 60));
+  return `${minutes} min`;
 }
 
 function shouldOpenPanelForInitialRoom(hashRoomId: string | null, persistedRoomId: string | null) {
