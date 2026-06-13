@@ -63,7 +63,7 @@ class Client {
     this.closeInfo = null;
   }
 
-  async connect(lastSeenP2PServerSeq) {
+  async connect(lastSeenP2PServerSeq, participantSessionId) {
     const token = signRoomToken({ sub: this.sub, roomId: this.roomId, role: this.role });
     const url = `${WS_BASE}/ws/${this.roomId}?roomToken=${encodeURIComponent(token)}`;
     this.ws = new WebSocket(url);
@@ -97,6 +97,7 @@ class Client {
       videoFingerprint: "fp",
     };
     if (typeof lastSeenP2PServerSeq === "number") join.lastSeenP2PServerSeq = lastSeenP2PServerSeq;
+    if (typeof participantSessionId === "string") join.participantSessionId = participantSessionId;
     this.ws.send(JSON.stringify(join));
   }
 
@@ -151,7 +152,9 @@ async function runScenarios() {
   const guest = new Client(room, "user-guest", "member");
   await host.connect();
   await host.waitFor((e) => e.type === "ROOM_SNAPSHOT", "host snapshot");
-  await guest.connect();
+  // Guest uses a stable session id (as the real extension does) so its later
+  // reconnect is recognised as the same tab, not a takeover.
+  await guest.connect(undefined, "guest-sess");
   const guestSnap = await guest.waitFor((e) => e.type === "ROOM_SNAPSHOT", "guest snapshot");
   record(
     "guest snapshot includes host",
@@ -188,7 +191,7 @@ async function runScenarios() {
   //    lastSeenP2PServerSeq=0 and replays signals it missed (S5), while the
   //    stale socket is force-closed so no ghost participant remains (S8).
   const guestB = new Client(room, "user-guest", "member");
-  await guestB.connect(0);
+  await guestB.connect(0, "guest-sess");
   const replayed = await guestB.waitFor(
     (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "sig-1",
     "guest reconnect replay",
@@ -238,7 +241,51 @@ async function runScenarios() {
     .catch(() => null);
   record("existing member reconnect not capped", Boolean(rejoinSnap));
 
-  for (const c of [host, guest, guestB, observer, ...capped, fifth, rejoin]) c.close();
+  // 7. One active session (Block 4): a different session id for the same user
+  //    takes the session over (displaced tab gets SESSION_TAKEN_OVER + 4002),
+  //    while a reconnect with the SAME session id is a silent 4000 replace.
+  const sessionRoom = "session-room";
+  const tabA = new Client(sessionRoom, "user-tabs", "host");
+  await tabA.connect(undefined, "sess-A");
+  await tabA.waitFor((e) => e.type === "ROOM_SNAPSHOT", "tab A snapshot");
+  const tabB = new Client(sessionRoom, "user-tabs", "host");
+  await tabB.connect(undefined, "sess-B");
+  await tabB.waitFor((e) => e.type === "ROOM_SNAPSHOT", "tab B snapshot");
+  const takenOver = await tabA.waitFor(
+    (e) => e.type === "ERROR" && e.code === "SESSION_TAKEN_OVER",
+    "tab A taken over",
+  );
+  record("different session takes over (SESSION_TAKEN_OVER)", Boolean(takenOver));
+  await sleep(250);
+  record("displaced session closed (4002)", tabA.closeInfo?.code === 4002, `code=${tabA.closeInfo?.code}`);
+
+  const tabBReconnect = new Client(sessionRoom, "user-tabs", "host");
+  await tabBReconnect.connect(undefined, "sess-B");
+  await tabBReconnect.waitFor((e) => e.type === "ROOM_SNAPSHOT", "tab B reconnect snapshot");
+  await sleep(250);
+  const tabBTakeover = tabB.events.some(
+    (e) => e.type === "ERROR" && e.code === "SESSION_TAKEN_OVER",
+  );
+  record(
+    "same-session reconnect is silent (4000, no takeover error)",
+    tabB.closeInfo?.code === 4000 && !tabBTakeover,
+    `code=${tabB.closeInfo?.code} takeover=${tabBTakeover}`,
+  );
+
+  for (const c of [
+    host,
+    guest,
+    guestB,
+    observer,
+    ...capped,
+    fifth,
+    rejoin,
+    tabA,
+    tabB,
+    tabBReconnect,
+  ]) {
+    c.close();
+  }
 }
 
 async function main() {

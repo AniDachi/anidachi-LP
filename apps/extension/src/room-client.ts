@@ -16,6 +16,7 @@ export interface RoomClientOptions {
   participant: Participant;
   videoFingerprint: string;
   lastSeenP2PServerSeq?: number;
+  participantSessionId?: string;
   onEvent: (event: ServerEvent) => void;
   onStatus: (status: RoomConnectionStatus) => void;
 }
@@ -417,6 +418,9 @@ export class RoomClient {
       };
       if (options.lastSeenP2PServerSeq !== undefined) {
         joinEvent.lastSeenP2PServerSeq = options.lastSeenP2PServerSeq;
+      }
+      if (options.participantSessionId !== undefined) {
+        joinEvent.participantSessionId = options.participantSessionId;
       }
       this.send(joinEvent);
       this.flushPendingEvents();

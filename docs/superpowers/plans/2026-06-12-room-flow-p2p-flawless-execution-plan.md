@@ -122,9 +122,9 @@ Owner approved delegating these defaults (change via PR if product evidence disa
 
 Implements the roadmap contract exactly; protocol shapes follow the roadmap's Task 3 target. Additions on top:
 
-- [ ] 4.1 `participantSessionId` generated per overlay room session, persisted in `sessionStorage`, sent on JOIN/resume; Worker replaces stale sockets by `(userId, participantSessionId)` instead of userId only.
+- [x] 4.1 `participantSessionId` generated per overlay room session, persisted in `sessionStorage`, sent on JOIN/resume; Worker tracks session id per socket and distinguishes a same-session reconnect (silent 4000 replace) from a different-session takeover (displaced socket gets `ERROR SESSION_TAKEN_OVER` + close 4002 + `session_taken_over` telemetry). The extension treats `SESSION_TAKEN_OVER` as terminal (suppress reconnect, teardown, message) — this also kills the two-tab reconnect ping-pong. Owner decision 2026-06-13: one active session. Verified: protocol/api/extension typecheck, api 24 tests, harness 17/17 (takeover vs silent same-session reconnect both asserted).
 - [ ] 4.2 `ROOM_SNAPSHOT` carries `roomGeneration`, `sourceGeneration`, `serverSeq`; client drops stale events by generation; P2P controller starts only after snapshot.
-- [ ] 4.3 Multi-tab guard: Web Locks (`navigator.locks`) — one tab owns the room; other tabs show "Room is open in another tab" instead of fighting over the socket.
+- [ ] 4.3 Multi-tab guard (next PR, honors the one-active-tab decision precisely for the same browser): Web Locks (`navigator.locks`) — the first tab owns the room; a second tab in the same profile shows "Room is open in another tab" and does not connect (first-wins locally). The 4.1 server takeover already prevents the ping-pong and covers cross-device (last-wins) where Web Locks cannot reach.
 - [ ] 4.4 Page lifecycle: `pagehide` sends polite `bye`/leave; bfcache restore resumes by `participantSessionId`; SPA navigation (YouTube) and full navigation (Crunchyroll) perform controlled teardown/resume.
 - [ ] 4.5 Tests: reload either side without ghosts (S8), duplicate-socket replacement, resume replays only missed signals, two tabs same room, token-expiry reconnect (>30 min session).
 

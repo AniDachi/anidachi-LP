@@ -110,6 +110,7 @@ export class RoomDurableObject {
   private readonly p2pSignalBuffer = new RecentP2PSignalBuffer();
   private readonly socketsByParticipant = new Map<string, WebSocket>();
   private readonly verifiedBySocket = new Map<WebSocket, VerifiedRoomToken>();
+  private readonly sessionIdBySocket = new Map<WebSocket, string | undefined>();
   private nextP2PServerSeq = 1;
 
   constructor(
@@ -251,14 +252,36 @@ export class RoomDurableObject {
 
     const existingSocket = this.socketsByParticipant.get(serverParticipant.id);
     if (existingSocket && existingSocket !== socket) {
+      const existingSessionId = this.sessionIdBySocket.get(existingSocket);
+      const sameSession =
+        event.participantSessionId !== undefined &&
+        existingSessionId === event.participantSessionId;
+
       this.participantsBySocket.delete(existingSocket);
       this.verifiedBySocket.delete(existingSocket);
-      existingSocket.close(4000, "Replaced by a newer Anidachi session");
+      this.sessionIdBySocket.delete(existingSocket);
+
+      if (sameSession) {
+        // Same tab reconnecting: silently retire the stale socket.
+        existingSocket.close(4000, "Replaced by a newer Anidachi session");
+      } else {
+        // A different tab/device took the session over. Tell the displaced
+        // socket terminally so it stops instead of reconnect-fighting (one
+        // active session). The displaced client suppresses reconnect on this.
+        this.track("session_taken_over");
+        this.send(existingSocket, {
+          type: "ERROR",
+          code: "SESSION_TAKEN_OVER",
+          message: "This room was opened in another tab or device.",
+        });
+        existingSocket.close(4002, "Session taken over");
+      }
     }
 
     const joined = this.room.join(serverParticipant);
     this.participantsBySocket.set(socket, joined.id);
     this.socketsByParticipant.set(joined.id, socket);
+    this.sessionIdBySocket.set(socket, event.participantSessionId);
     this.send(socket, this.room.snapshot);
     this.replayP2PSignals(socket, joined.id, event.lastSeenP2PServerSeq ?? 0);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
@@ -405,6 +428,7 @@ export class RoomDurableObject {
   private handleClose(socket: WebSocket): void {
     const participantId = this.participantsBySocket.get(socket);
     this.verifiedBySocket.delete(socket);
+    this.sessionIdBySocket.delete(socket);
     if (!participantId) {
       return;
     }

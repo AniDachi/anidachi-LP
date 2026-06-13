@@ -24,7 +24,8 @@ export type RoomTelemetryEventName =
   | "join"
   | "p2p_signal"
   | "p2p_replay"
-  | "room_full";
+  | "room_full"
+  | "session_taken_over";
 
 export interface RoomTelemetryContext {
   /** "staging" | "production" | "local" — from the ANIDACHI_ENV worker var. */
