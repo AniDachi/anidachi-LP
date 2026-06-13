@@ -11,6 +11,11 @@ import { createIceServersPayload } from "./ice-servers";
 import { createLiveKitToken } from "./livekit-token";
 import { RecentP2PSignalBuffer, type BufferedP2PSignalEvent } from "./p2p-signal-buffer";
 import { RoomState } from "./room-state";
+import {
+  emitRoomTelemetry,
+  type AnalyticsEngineDataset,
+  type RoomTelemetryContext,
+} from "./telemetry";
 
 export interface Env {
   ROOMS: DurableObjectNamespace;
@@ -21,6 +26,8 @@ export interface Env {
   CLOUDFLARE_TURN_KEY_API_TOKEN?: string;
   CLOUDFLARE_TURN_TTL_SECONDS?: string;
   ANIDACHI_JWT_SECRET?: string;
+  ANIDACHI_ENV?: string;
+  ROOM_ANALYTICS?: AnalyticsEngineDataset;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -110,7 +117,14 @@ export class RoomDurableObject {
     private readonly env: Env,
   ) {
     this.room = new RoomState(state.id.name ?? "room");
-    void this.env;
+  }
+
+  private get telemetryContext(): RoomTelemetryContext {
+    return { env: this.env.ANIDACHI_ENV ?? "local", roomId: this.room.roomId };
+  }
+
+  private track(name: Parameters<typeof emitRoomTelemetry>[2]["name"], extra?: { role?: string; value?: number }): void {
+    emitRoomTelemetry(this.env.ROOM_ANALYTICS, this.telemetryContext, { name, ...extra });
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -122,11 +136,13 @@ export class RoomDurableObject {
     const url = new URL(request.url);
     const roomToken = url.searchParams.get("roomToken");
     if (!roomToken) {
+      this.track("ws_token_reject");
       return new Response("Missing room token", { status: 401 });
     }
 
     const verified = await verifyRoomToken(roomToken, this.room.roomId, this.env);
     if (!verified) {
+      this.track("ws_token_reject");
       return new Response("Invalid room token", { status: 401 });
     }
 
@@ -135,6 +151,7 @@ export class RoomDurableObject {
     const server = pair[1];
     server.accept();
     this.verifiedBySocket.set(server, verified);
+    this.track("ws_open", { role: verified.role });
 
     server.addEventListener("message", (event) => this.handleMessage(server, event.data));
     server.addEventListener("close", () => this.handleClose(server));
@@ -232,6 +249,7 @@ export class RoomDurableObject {
     this.send(socket, this.room.snapshot);
     this.replayP2PSignals(socket, joined.id, event.lastSeenP2PServerSeq ?? 0);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
+    this.track("join", { role: joined.role, value: this.room.participants.length });
   }
 
   private handleReaction(
@@ -347,6 +365,7 @@ export class RoomDurableObject {
       return;
     }
 
+    this.track("p2p_signal");
     this.send(target, buffered.event);
   }
 
@@ -357,6 +376,7 @@ export class RoomDurableObject {
     }
 
     if (replay.length > 0) {
+      this.track("p2p_replay", { value: replay.length });
       console.log(
         JSON.stringify({
           event: "p2p.signal.replay",
@@ -379,6 +399,7 @@ export class RoomDurableObject {
     this.participantsBySocket.delete(socket);
     this.socketsByParticipant.delete(participantId);
     const participant = this.room.leave(participantId);
+    this.track("ws_close", { value: this.room.participants.length });
 
     if (participant) {
       this.broadcast({ type: "PARTICIPANT_LEFT", participant });
