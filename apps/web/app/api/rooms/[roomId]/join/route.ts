@@ -39,6 +39,14 @@ export async function POST(
   const room = await getRoomById(roomId);
 
   if (!room || room.status === "ended") {
+    // Browser form posts get the friendly "ended" landing page; API callers
+    // still get a machine-readable 404.
+    if (!wantsJson(request)) {
+      return NextResponse.redirect(
+        new URL(`/room/${encodeURIComponent(roomId)}`, request.url),
+        303,
+      );
+    }
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
 
