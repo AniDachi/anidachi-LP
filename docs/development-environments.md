@@ -41,7 +41,16 @@ Production is public and must stay stable. Real users should only use the produc
 
 ### Staging Website
 
-Current fast staging uses the stable Vercel branch preview alias:
+> **Update 2026-06-13:** the canonical staging web URL is now
+> `https://staging.anidachi.app` (custom domain attached, same app-level
+> password gate, deploys from the `staging` branch). It matches the
+> `WXT_WEB_HTTP_BASE` build var and `current-development-state.md`. The
+> `git-3b9ab6` branch-preview alias below is historical: it points at the
+> `codex/monorepo-migration` branch and serves a stale pre-Block-2 deploy, so
+> do not use it for verification. The OAuth callback and env examples further
+> down still reference the old alias and need a follow-up pass.
+
+Earlier fast staging used the stable Vercel branch preview alias:
 
 ```txt
 https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
