@@ -78,8 +78,8 @@ Owner approved delegating these defaults (change via PR if product evidence disa
 
 **Steps:**
 
-- [ ] 1.1 Scorecard: script that parses extension debug exports and prints TTFM, ICE candidate types, restarts, reconnects, signal loss/dedupe counts.
-- [ ] 1.2 Worker telemetry via Workers Analytics Engine dataset `anidachi_room_events`: room connects, joins, closes, P2P signal volume, replay hits, token rejects, `ROOM_FULL`. Blobs: env/channel/event/roomId-hash; doubles: counts/latency. No IPs, no display names.
+- [x] 1.1 Scorecard merged (PR #28): `scripts/p2p-scorecard.mjs` parses debug exports → TTFM, candidate types, ICE restarts, reconnects, signal/dedupe stats; verified on a synthetic export.
+- [x] 1.2 Worker telemetry via Analytics Engine: `apps/api/src/telemetry.ts` (FNV-hashed room id, env/name/role blobs, no IPs/names, best-effort non-throwing). Wired into the DO for `ws_open`, `ws_close`, `ws_token_reject`, `join`, `p2p_signal`, `p2p_replay` (`room_full` reserved for Block 6.4). Bindings in `wrangler.toml` per env (`anidachi_room_events_staging/production`) + `ANIDACHI_ENV` var. Verified: api typecheck + 23 tests (6 new), staging dry-run shows the binding resolved. Datasets auto-create on first write; query via the Analytics Engine SQL API once traffic flows.
 - [ ] 1.3 Manual staging baseline (roadmap Task 1): two profiles + two devices on different networks; record results (including known audio-delay and room-close reports) in Progress Log before any behavior change.
 - [ ] 1.4 Playwright harness: chromium with `--use-fake-device-for-media-stream --use-fake-ui-for-media-stream`; two (later four) isolated contexts; demo page + `wrangler dev` Worker (local DO) + token stub signing room tokens with the local dev secret (mirrors `apps/web` JWT shape; no Supabase needed locally).
 - [ ] 1.5 Scenarios v1: create+join, both videos flowing (TTFM assert via `getStats`), reload A, reload B, `context.setOffline` 5s/30s, push-to-talk both ways, idle 10 min (fast-forwarded keepalive), force-relay run (`WXT_P2P_FORCE_RELAY=true`).
