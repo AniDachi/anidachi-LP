@@ -47,6 +47,9 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Lint web (matches Vercel build lint gate)
+        run: pnpm --filter @anidachi/web lint
+
       - name: Check Worker bundle
         working-directory: apps/api
         run: pnpm exec wrangler deploy --env staging --dry-run --outdir /tmp/anidachi-worker-dry-run
