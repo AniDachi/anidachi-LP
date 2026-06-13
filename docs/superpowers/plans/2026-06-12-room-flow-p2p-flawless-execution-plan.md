@@ -111,10 +111,10 @@ Owner approved delegating these defaults (change via PR if product evidence disa
 
 **Steps:**
 
-- [ ] 3.1 Room without `source_url`: after join, landing shows "Host has not opened a video yet" with auto-refresh/poll instead of a silent dead end; when `source_url` appears, show/redirect to the launch URL.
-- [ ] 3.2 Returning member: landing offers "Open watchroom" (re-issues launch URL) without re-posting join.
-- [ ] 3.3 Ended room: friendly "This watchroom has ended" page instead of bare 404.
-- [ ] 3.4 Harness: full invite e2e — host context creates room on demo page, guest context walks landing → join → launch URL → video both ways (S2 measured).
+- [x] 3.1 Room without `source_url`: joined guests now get a "Waiting for host" state (`waiting-refresh.tsx` polls via `router.refresh()` while visible) that auto-upgrades to "Open watchroom" once a source URL appears — no silent dead end.
+- [x] 3.2 Returning member / source present: landing detects membership and shows an "Open watchroom" CTA (the join POST is idempotent and redirects to the launch URL), with a note that it relaunches the video tab.
+- [x] 3.3 Ended (or missing) room: friendly "This watchroom has ended" page with a back-to-AniDachi action instead of a bare 404; the join route redirects browser posts to that page (JSON callers still get 404).
+- [~] 3.4 Harness: full invite e2e (host creates → guest landing → join → launch → video both ways, S2) is the Playwright browser slice, tracked with 1.5. Web typecheck green; web tests 21/21.
 
 **Acceptance:** no guest path terminates without a next action; S2 met in harness.
 
