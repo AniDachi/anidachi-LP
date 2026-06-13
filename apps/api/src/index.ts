@@ -54,6 +54,20 @@ app.post("/rooms", (c) => {
 });
 
 app.get("/ice-servers", async (c) => {
+  // Require a valid room token so anonymous callers can't mint Cloudflare TURN
+  // credentials at the project's expense (Block 7.1). The token proves the
+  // caller is a participant of a real room; roomId scopes the check.
+  const roomToken = c.req.query("roomToken");
+  const roomId = c.req.query("roomId");
+  if (!roomToken || !roomId) {
+    return c.json({ error: "ROOM_TOKEN_REQUIRED", message: "roomToken and roomId are required" }, 401);
+  }
+
+  const verified = await verifyRoomToken(roomToken, roomId, c.env);
+  if (!verified) {
+    return c.json({ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" }, 401);
+  }
+
   try {
     return c.json(await createIceServersPayload(c.env));
   } catch (error) {

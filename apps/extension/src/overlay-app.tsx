@@ -953,6 +953,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     incomingP2PSignals,
     participants: visibleParticipants,
     roomId,
+    roomToken,
     participant,
     onCameraStatus: sendCameraStatus,
     sendP2PSignal,
