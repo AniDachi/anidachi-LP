@@ -160,7 +160,7 @@ Follow the roadmap's task lists verbatim; additions:
 
 ## Block 7 — Network, Security, Cost Guardrails
 
-- [ ] 7.1 `GET /ice-servers` requires a valid `roomToken` (closes defect 5); extension fetches it after `/connect`.
+- [x] 7.1 `GET /ice-servers` requires `roomToken` + `roomId` and verifies them with `verifyRoomToken` (closes defect 5 — no anonymous minting of Cloudflare TURN credentials). The extension threads the current room token/id from `useGhostCam` → `loadP2PIceServers`/`refreshP2PIceServers` (read from a ref so token rotation doesn't churn the P2P connect). Backward compatible: an old extension (no token) gets 401 and falls back to default STUN — graceful, not a hard break. Verified: harness asserts no-token→401, valid-token→200 with iceServers, wrong-room→401; api/extension typecheck.
 - [ ] 7.2 Remove legacy `/livekit/token` (LiveKit stays historical per project docs); tighten CORS to channel web origins + extension origin.
 - [ ] 7.3 Verify `turns:443` is present in returned ICE servers (restrictive-network fallback); confirm relay-only diagnostic mode stays dev-only.
 - [ ] 7.4 Proactive `restartIce` on network change (`navigator.connection` change listener) in addition to existing state-based restarts.

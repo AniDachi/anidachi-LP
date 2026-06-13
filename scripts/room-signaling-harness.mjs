@@ -146,6 +146,24 @@ async function runScenarios() {
   const badToken = await rawConnect("reject-room", "not-a-jwt");
   record("invalid token rejected", badToken.opened === false);
 
+  // 1b. /ice-servers requires a valid room token (Block 7.1).
+  const iceNoAuth = await fetch(`${HTTP_BASE}/ice-servers`);
+  record("ice-servers without token rejected (401)", iceNoAuth.status === 401, `status=${iceNoAuth.status}`);
+  const iceToken = signRoomToken({ sub: "ice-user", roomId: "ice-room", role: "member" });
+  const iceAuthed = await fetch(
+    `${HTTP_BASE}/ice-servers?roomId=ice-room&roomToken=${encodeURIComponent(iceToken)}`,
+  );
+  const icePayload = await iceAuthed.json().catch(() => null);
+  record(
+    "ice-servers with valid token returns servers",
+    iceAuthed.status === 200 && Array.isArray(icePayload?.iceServers),
+    `status=${iceAuthed.status}`,
+  );
+  const iceWrongRoom = await fetch(
+    `${HTTP_BASE}/ice-servers?roomId=other-room&roomToken=${encodeURIComponent(iceToken)}`,
+  );
+  record("ice-servers rejects token for a different room (401)", iceWrongRoom.status === 401, `status=${iceWrongRoom.status}`);
+
   // 2. Two participants see each other.
   const room = "harness-room";
   const host = new Client(room, "user-host", "host");

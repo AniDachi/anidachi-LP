@@ -37,6 +37,7 @@ interface GhostCamOptions {
   participant: Participant | null;
   participants: Participant[];
   roomId: string | null;
+  roomToken: string | null;
   sendP2PSignal: IncomingP2PSignalSender;
   transport: MediaTransportName;
   voiceTalkActive: boolean;
@@ -450,6 +451,8 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     onCameraStatus,
     participant,
     participants,
+    roomId,
+    roomToken,
     sendP2PSignal,
     voiceTalkActive,
   } = options;
@@ -463,6 +466,10 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const participantsRef = useRef(participants);
   const voiceTalkActiveRef = useRef(voiceTalkActive);
   const lastSignalSequenceRef = useRef(0);
+  // Read at fetch time so ICE refreshes use the current room token without
+  // re-running the heavy P2P connect effect when the token rotates.
+  const iceAuthRef = useRef<{ roomId: string; roomToken: string } | null>(null);
+  iceAuthRef.current = roomId && roomToken ? { roomId, roomToken } : null;
 
   useEffect(() => {
     cameraEnabledRef.current = cameraEnabled;
@@ -497,7 +504,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     setVoiceStatus("connecting");
 
     async function connectP2P() {
-      const iceServers = await loadP2PIceServers();
+      const iceServers = await loadP2PIceServers(iceAuthRef.current ?? undefined);
       if (disposed) {
         return;
       }
@@ -510,7 +517,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         onVideosChange: setVideos,
         onVoiceMessageChange: setVoiceMessage,
         onVoiceStatusChange: setVoiceStatus,
-        refreshIceServers: refreshP2PIceServers,
+        refreshIceServers: () => refreshP2PIceServers(iceAuthRef.current ?? undefined),
         sendSignal: sendP2PSignal,
       });
 

@@ -14,22 +14,40 @@ let cachedUntilMs = 0;
 
 const ICE_SERVER_CACHE_SAFETY_MS = 5 * 60 * 1000;
 
-export async function loadP2PIceServers(): Promise<RTCIceServer[]> {
-  return loadP2PIceServersWithCache(false);
+/** Room credentials required to fetch authenticated TURN/STUN servers (Block 7.1). */
+export interface IceServersAuth {
+  roomId: string;
+  roomToken: string;
 }
 
-export async function refreshP2PIceServers(): Promise<RTCIceServer[]> {
-  return loadP2PIceServersWithCache(true);
+export async function loadP2PIceServers(auth?: IceServersAuth): Promise<RTCIceServer[]> {
+  return loadP2PIceServersWithCache(false, auth);
 }
 
-async function loadP2PIceServersWithCache(forceRefresh: boolean): Promise<RTCIceServer[]> {
+export async function refreshP2PIceServers(auth?: IceServersAuth): Promise<RTCIceServer[]> {
+  return loadP2PIceServersWithCache(true, auth);
+}
+
+function buildIceServersUrl(auth?: IceServersAuth): string {
+  const url = new URL(`${API_HTTP_BASE}/ice-servers`);
+  if (auth) {
+    url.searchParams.set("roomId", auth.roomId);
+    url.searchParams.set("roomToken", auth.roomToken);
+  }
+  return url.toString();
+}
+
+async function loadP2PIceServersWithCache(
+  forceRefresh: boolean,
+  auth?: IceServersAuth,
+): Promise<RTCIceServer[]> {
   const now = Date.now();
   if (!forceRefresh && cachedIceServers?.length && cachedUntilMs > now) {
     return cachedIceServers;
   }
 
   try {
-    const response = await fetch(`${API_HTTP_BASE}/ice-servers`, {
+    const response = await fetch(buildIceServersUrl(auth), {
       headers: { Accept: "application/json" },
       method: "GET",
     });
