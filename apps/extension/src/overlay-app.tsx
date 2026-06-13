@@ -1676,6 +1676,23 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           return;
         case "ERROR":
           console.warn("[Anidachi] Room error", event.code, event.message);
+          if (event.code === "ROOM_FULL") {
+            // Terminal: stop reconnecting (the server closes the socket right
+            // after this event) and surface the reason instead of looping.
+            roomReconnectSuppressedRef.current = true;
+            if (roomReconnectTimerRef.current !== null) {
+              window.clearTimeout(roomReconnectTimerRef.current);
+              roomReconnectTimerRef.current = null;
+            }
+            clientRef.current.close();
+            setRoomId(null);
+            setParticipants([]);
+            roomTokenRef.current = null;
+            clearPersistedRoomId();
+            clearRoomHash();
+            setAuthMessage(event.message || "This watch room is full (max 4 people).");
+            setPanelOpen(true);
+          }
           return;
       }
     },

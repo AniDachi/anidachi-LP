@@ -90,4 +90,21 @@ describe("RoomState", () => {
     expect(room.setCamera("user-1", true)?.cameraEnabled).toBe(true);
     expect(room.snapshot.type).toBe("ROOM_SNAPSHOT");
   });
+
+  it("caps the room at four participants but admits reconnecting members", () => {
+    const room = new RoomState("room-1");
+    room.join(participant("u1", "host"));
+    room.join(participant("u2"));
+    room.join(participant("u3"));
+    room.join(participant("u4"));
+
+    // Room is full: a new fifth user is rejected.
+    expect(room.canAdmit("u5")).toBe(false);
+    // But an already-joined member reconnecting is always admitted.
+    expect(room.canAdmit("u2")).toBe(true);
+
+    // After someone leaves, a new user can join again.
+    room.leave("u2");
+    expect(room.canAdmit("u5")).toBe(true);
+  });
 });
