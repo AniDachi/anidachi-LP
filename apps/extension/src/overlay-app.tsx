@@ -1676,9 +1676,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           return;
         case "ERROR":
           console.warn("[Anidachi] Room error", event.code, event.message);
-          if (event.code === "ROOM_FULL") {
+          if (event.code === "ROOM_FULL" || event.code === "SESSION_TAKEN_OVER") {
             // Terminal: stop reconnecting (the server closes the socket right
             // after this event) and surface the reason instead of looping.
+            // SESSION_TAKEN_OVER also prevents a reconnect ping-pong between
+            // two tabs/devices of the same user (one active session).
             roomReconnectSuppressedRef.current = true;
             if (roomReconnectTimerRef.current !== null) {
               window.clearTimeout(roomReconnectTimerRef.current);
@@ -1690,7 +1692,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             roomTokenRef.current = null;
             clearPersistedRoomId();
             clearRoomHash();
-            setAuthMessage(event.message || "This watch room is full (max 4 people).");
+            const fallback =
+              event.code === "ROOM_FULL"
+                ? "This watch room is full (max 4 people)."
+                : "This room was opened in another tab or device.";
+            setAuthMessage(event.message || fallback);
             setPanelOpen(true);
           }
           return;
@@ -1746,6 +1752,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       });
       clientRef.current.connect({
         lastSeenP2PServerSeq: sameRoomReconnect ? lastSeenP2PServerSeqRef.current : 0,
+        participantSessionId: getParticipantSessionId(),
         roomId: nextRoomId,
         roomToken: nextRoomToken,
         participant: activeParticipant,
@@ -3783,6 +3790,29 @@ function clearPersistedRoomId(): void {
     sessionStorage.removeItem(ROOM_SESSION_STORAGE_KEY);
   } catch {
     // Session storage may be unavailable on some embedded pages.
+  }
+}
+
+const PARTICIPANT_SESSION_STORAGE_KEY = "anidachi:participant-session-id";
+
+/**
+ * Stable id for this tab's room session. Persisted in sessionStorage so a
+ * reload of the same tab keeps the same id (the Worker treats it as a
+ * reconnect), while a different tab/device gets a different id (a takeover).
+ */
+function getParticipantSessionId(): string {
+  try {
+    const existing = sessionStorage.getItem(PARTICIPANT_SESSION_STORAGE_KEY);
+    if (existing) {
+      return existing;
+    }
+
+    const generated = `session-${crypto.randomUUID()}`;
+    sessionStorage.setItem(PARTICIPANT_SESSION_STORAGE_KEY, generated);
+    return generated;
+  } catch {
+    // sessionStorage may be unavailable; fall back to a per-call id.
+    return `session-${crypto.randomUUID()}`;
   }
 }
 
