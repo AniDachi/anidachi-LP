@@ -114,7 +114,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
           {justJoined ? "You're in!" : roomTitle}
         </h1>
         <p className="mt-2 text-sm text-slate-400">
-          The host hasn't opened a video yet. Keep this tab open — it updates
+          The host hasn&apos;t opened a video yet. Keep this tab open — it updates
           automatically the moment the watch party starts.
         </p>
         <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-400">
@@ -174,7 +174,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
 
       {isParticipant && launchUrl && (
         <p className="mt-3 text-center text-xs text-slate-500">
-          You're already in this room — opening it relaunches your video tab.
+          You&apos;re already in this room — opening it relaunches your video tab.
         </p>
       )}
 
