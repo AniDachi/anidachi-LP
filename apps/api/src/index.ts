@@ -236,6 +236,19 @@ export class RoomDurableObject {
       lastSeenAt: Date.now(),
     };
 
+    // PD3: cap mesh rooms at MAX_ROOM_PARTICIPANTS. Checked before stale-socket
+    // replacement so a reconnecting member is never rejected as the "5th".
+    if (!this.room.canAdmit(serverParticipant.id)) {
+      this.track("room_full", { role: serverParticipant.role });
+      this.send(socket, {
+        type: "ERROR",
+        code: "ROOM_FULL",
+        message: "This watch room is full (max 4 people).",
+      });
+      socket.close(4003, "Room is full");
+      return;
+    }
+
     const existingSocket = this.socketsByParticipant.get(serverParticipant.id);
     if (existingSocket && existingSocket !== socket) {
       this.participantsBySocket.delete(existingSocket);

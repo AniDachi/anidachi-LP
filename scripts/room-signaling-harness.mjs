@@ -211,7 +211,34 @@ async function runScenarios() {
   const pong = await guestB.waitFor((e) => e.type === "PONG", "pong");
   record("ping answered with pong", typeof pong.serverTime === "number");
 
-  for (const c of [host, guest, guestB, observer]) c.close();
+  // 6. Participant cap (PD3): 4 distinct users admitted, the 5th rejected with
+  //    ROOM_FULL + close 4003, while a reconnect of an existing member is fine.
+  const capRoom = "cap-room";
+  const capped = [];
+  for (let i = 1; i <= 4; i++) {
+    const member = new Client(capRoom, `cap-${i}`, i === 1 ? "host" : "member");
+    await member.connect();
+    await member.waitFor((e) => e.type === "ROOM_SNAPSHOT", `cap-${i} snapshot`);
+    capped.push(member);
+  }
+  const fifth = new Client(capRoom, "cap-5", "member");
+  await fifth.connect();
+  const fullError = await fifth.waitFor(
+    (e) => e.type === "ERROR" && e.code === "ROOM_FULL",
+    "fifth participant ROOM_FULL",
+  );
+  record("fifth participant rejected with ROOM_FULL", Boolean(fullError));
+  await sleep(300);
+  record("rejected fifth socket closed (4003)", fifth.closeInfo?.code === 4003, `code=${fifth.closeInfo?.code}`);
+
+  const rejoin = new Client(capRoom, "cap-1", "host");
+  await rejoin.connect();
+  const rejoinSnap = await rejoin
+    .waitFor((e) => e.type === "ROOM_SNAPSHOT", "cap-1 rejoin snapshot")
+    .catch(() => null);
+  record("existing member reconnect not capped", Boolean(rejoinSnap));
+
+  for (const c of [host, guest, guestB, observer, ...capped, fifth, rejoin]) c.close();
 }
 
 async function main() {
