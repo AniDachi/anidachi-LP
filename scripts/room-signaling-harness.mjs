@@ -214,6 +214,21 @@ async function runScenarios() {
   const pong = await guestB.waitFor((e) => e.type === "PONG", "pong");
   record("ping answered with pong", typeof pong.serverTime === "number");
 
+  // 5b. Clean leave: closing the socket (what the extension does on pagehide,
+  //     Block 4.4) makes the Worker drop the participant promptly and broadcast
+  //     PARTICIPANT_LEFT — no ghost waiting for the keepalive timeout.
+  guestB.close();
+  const leftEvent = await observer.waitFor(
+    (e) => e.type === "PARTICIPANT_LEFT" && e.participant.id === "user-guest",
+    "observer sees guest leave",
+  );
+  record("clean socket close broadcasts PARTICIPANT_LEFT", Boolean(leftEvent));
+  const afterLeave = await observer.waitFor(
+    (e) => e.type === "ROOM_SNAPSHOT" && !e.participants.some((p) => p.id === "user-guest"),
+    "snapshot without departed guest",
+  );
+  record("departed participant removed from snapshot", Boolean(afterLeave));
+
   // 6. Participant cap (PD3): 4 distinct users admitted, the 5th rejected with
   //    ROOM_FULL + close 4003, while a reconnect of an existing member is fine.
   const capRoom = "cap-room";

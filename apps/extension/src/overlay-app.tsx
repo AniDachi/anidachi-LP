@@ -1910,11 +1910,34 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
     }
 
+    // The page is unloading or being frozen into the back/forward cache. Close
+    // the socket so the Worker removes this participant promptly (no ghost
+    // lingering until the keepalive pong-timeout) instead of relying on the
+    // browser to tear the socket down. A real navigation discards the page; a
+    // bfcache freeze resumes via pageshow/visibility below.
+    function handlePageHide(): void {
+      if (roomIdRef.current) {
+        clientRef.current.close();
+      }
+    }
+
+    // Restored from the back/forward cache: the overlay state survived but the
+    // socket did not — reconnect to the room.
+    function handlePageShow(event: PageTransitionEvent): void {
+      if (event.persisted && roomIdRef.current) {
+        scheduleRoomReconnect("pageshow");
+      }
+    }
+
     window.addEventListener("online", handleOnline);
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("pageshow", handlePageShow);
     return () => {
       window.removeEventListener("online", handleOnline);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("pageshow", handlePageShow);
     };
   }, [scheduleRoomReconnect]);
 
