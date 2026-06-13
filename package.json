@@ -14,6 +14,7 @@
     "dev:demo": "pnpm --filter @anidachi/demo dev",
     "dev:extension": "pnpm --filter @anidachi/extension dev",
     "dev:web": "pnpm --filter @anidachi/web dev",
+    "harness:rooms": "node scripts/room-signaling-harness.mjs",
     "format": "biome format .",
     "lint": "biome lint .",
     "smoke:worker:staging": "WORKER_HTTP_BASE=https://anidachi-api-staging.vladislav-gul7.workers.dev WORKER_EXPECTED_ENV=staging node scripts/smoke-worker.mjs",

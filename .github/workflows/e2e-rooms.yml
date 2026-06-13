@@ -1,0 +1,51 @@
+name: E2E Rooms
+
+# Block 1.4 of docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md
+# Signaling-level room harness against the real Worker (workerd via wrangler dev).
+# Non-required at first; promote to a required check after it proves stable.
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - staging
+      - main
+    paths:
+      - "apps/api/**"
+      - "packages/protocol/**"
+      - "scripts/room-signaling-harness.mjs"
+      - ".github/workflows/e2e-rooms.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  room-signaling:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.2.2 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run room signaling harness
+        run: pnpm harness:rooms
