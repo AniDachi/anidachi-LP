@@ -95,6 +95,7 @@ import {
   type RoomQuotaSummary,
 } from "./room-client";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
+import { acquireRoomTabLock, releaseRoomTabLock } from "./room-tab-lock";
 import { overlayStyles } from "./styles";
 import { runCrunchyrollMainCommand, type PlayerEvent, type VideoAdapter } from "./video-adapter";
 import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
@@ -1687,6 +1688,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
               roomReconnectTimerRef.current = null;
             }
             clientRef.current.close();
+            releaseRoomTabLock();
             setRoomId(null);
             setParticipants([]);
             roomTokenRef.current = null;
@@ -1778,6 +1780,15 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           hasParticipant: Boolean(activeParticipant),
           hasAccessToken: Boolean(activeAccessToken),
         });
+        return;
+      }
+
+      // One active tab per browser (Block 4.3): a second tab can't take the
+      // room; a reconnect of the owning tab re-acquires instantly.
+      if (!(await acquireRoomTabLock())) {
+        setPanelOpen(true);
+        setAuthMessage("This room is already open in another tab.");
+        logDebug("overlay.room", "join blocked by tab lock", { roomId: nextRoomId, reason });
         return;
       }
 
@@ -1970,6 +1981,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       clearRoomReconnectTimer();
       applyParticipantIdentity(await signOutAndClearParticipant(), "sign-out", false);
       clientRef.current.close();
+      releaseRoomTabLock();
       setRoomId(null);
       setParticipants([]);
     } catch (error) {
@@ -2021,6 +2033,15 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         return null;
       }
 
+      // One active tab per browser (Block 4.3): don't open a second room from
+      // another tab while one is already active here.
+      if (!(await acquireRoomTabLock())) {
+        setPanelOpen(true);
+        setAuthMessage("A watch room is already open in another tab.");
+        logDebug("overlay.room", "create blocked by tab lock", { reason });
+        return null;
+      }
+
       // Idempotency key survives retries of the same create attempt and is
       // cleared only on success, so a network retry reuses the same room.
       createRequestIdRef.current ??= crypto.randomUUID();
@@ -2069,6 +2090,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     return () => {
       cancelled = true;
       clientRef.current.close();
+      releaseRoomTabLock();
     };
   }, []);
 
@@ -2428,6 +2450,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       clearRoomReconnectTimer();
       await endRoom(activeRoomId, accessToken);
       clientRef.current.close();
+      releaseRoomTabLock();
       setRoomId(null);
       setParticipants([]);
       setRoomQuota(null);
