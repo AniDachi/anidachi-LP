@@ -95,11 +95,45 @@ export default defineContentScript({
       mounted = mountOverlay(adapter);
     };
 
+    let mountCheckScheduled = false;
+    const scheduleMountCheck = () => {
+      if (mountCheckScheduled) {
+        return;
+      }
+
+      mountCheckScheduled = true;
+      window.requestAnimationFrame(() => {
+        mountCheckScheduled = false;
+        mountOrRelocate();
+      });
+    };
+
     mountOrRelocate();
     const interval = window.setInterval(mountOrRelocate, 1500);
+
+    // The content script runs at document_start, before any <video> exists, and
+    // the 1.5s poll above is only a safety net. Watch the DOM so the overlay
+    // mounts (or swaps to a new <video>) the instant the player appears —
+    // covering page reloads and Crunchyroll/YouTube SPA episode switches —
+    // instead of waiting up to a poll interval. Cheap: most mutation batches
+    // carry no <video> node and are skipped before any rAF work is scheduled.
+    const videoObserver = new MutationObserver((mutations) => {
+      // A check is already queued for this frame — skip the scan to keep the
+      // observer cheap on mutation-heavy SPA pages.
+      if (mountCheckScheduled) {
+        return;
+      }
+
+      if (mutationsTouchVideo(mutations)) {
+        scheduleMountCheck();
+      }
+    });
+    videoObserver.observe(document.documentElement, { childList: true, subtree: true });
+
     document.addEventListener("fullscreenchange", () => mounted?.relocate());
     window.addEventListener("pagehide", () => {
       window.clearInterval(interval);
+      videoObserver.disconnect();
       stopKeyboardGuard();
       stopCrunchyrollLauncher?.();
       stopCrunchyrollStudy?.();
@@ -107,6 +141,31 @@ export default defineContentScript({
     });
   },
 });
+
+function nodeContainsVideo(node: Node): boolean {
+  if (node instanceof HTMLVideoElement) {
+    return true;
+  }
+
+  return node instanceof Element && node.querySelector("video") !== null;
+}
+
+function mutationsTouchVideo(mutations: MutationRecord[]): boolean {
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (nodeContainsVideo(node)) {
+        return true;
+      }
+    }
+    for (const node of mutation.removedNodes) {
+      if (nodeContainsVideo(node)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 function installMessageComposerKeyboardGuard(): () => void {
   const isComposerOpen = () =>
