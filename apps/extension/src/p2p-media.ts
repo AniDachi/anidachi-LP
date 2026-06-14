@@ -168,6 +168,9 @@ export class P2PMediaController {
   private reconcileTimerId: number | null = null;
   // Last classified health per peer, for transition logging + observability (Block 5.4).
   private readonly healthByPeer = new Map<string, PeerHealth>();
+  // Re-acquire the camera when a device change kills the current track —
+  // unplugged webcam, switched camera, Bluetooth handoff (Block 5.5).
+  private readonly onDeviceChange = () => this.handleDeviceChange();
 
   constructor(options: P2PMediaControllerOptions) {
     this.iceServers = options.iceServers?.length ? options.iceServers : getDefaultP2PIceServers();
@@ -183,10 +186,33 @@ export class P2PMediaController {
       this.reconcile("interval");
       void this.samplePeerHealth();
     }, P2P_RECONCILE_INTERVAL_MS);
+    navigator.mediaDevices?.addEventListener?.("devicechange", this.onDeviceChange);
     logDebug("p2p.controller", "created", {
       localParticipantId: options.localParticipant.id,
       iceServers: summarizeIceServers(this.iceServers),
     });
+  }
+
+  /**
+   * On a device change, re-acquire the camera only if it was wanted but the
+   * current track is dead (unplug/switch). Guarded so a spurious devicechange
+   * never churns a healthy camera (Block 5.5).
+   */
+  private handleDeviceChange(): void {
+    if (this.disposed || !this.wantsCamera) {
+      return;
+    }
+    if (this.localVideoTrack && this.localVideoTrack.readyState === "live") {
+      return;
+    }
+
+    logDebug("p2p.camera", "re-acquire after device change", {
+      localParticipantId: this.localParticipant.id,
+      trackState: this.localVideoTrack?.readyState ?? "none",
+    });
+    this.localVideoStream = null;
+    this.localVideoTrack = null;
+    void this.setCameraEnabled(true);
   }
 
   /**
@@ -749,6 +775,7 @@ export class P2PMediaController {
       window.clearInterval(this.reconcileTimerId);
       this.reconcileTimerId = null;
     }
+    navigator.mediaDevices?.removeEventListener?.("devicechange", this.onDeviceChange);
     for (const peer of this.peers.values()) {
       this.sendSignal(peer.remoteUserId, { kind: "bye" });
     }
@@ -1750,6 +1777,9 @@ async function configureSender(
   firstEncoding.maxBitrate = maxBitrate;
   if (maxFramerate !== undefined) {
     firstEncoding.maxFramerate = maxFramerate;
+    // Ghost Cam is motion presence at a low frame rate: keep the frame rate
+    // steady and let resolution drop under pressure instead (Block 5.5).
+    parameters.degradationPreference = "maintain-framerate";
   }
 
   await sender.setParameters(parameters).catch(() => undefined);
