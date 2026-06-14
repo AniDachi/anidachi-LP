@@ -13,7 +13,7 @@ const AUTH_CALLBACK_PATH = "auth";
 const LOGOUT_CALLBACK_PATH = "logout";
 const AUTH_MESSAGE_TYPE = "ANIDACHI_AUTH";
 
-export type AuthCommand = "sign-in" | "sign-out" | "refresh" | "get-session";
+export type AuthCommand = "sign-in" | "sign-in-silent" | "sign-out" | "refresh" | "get-session";
 
 export interface AuthMessage {
   type: typeof AUTH_MESSAGE_TYPE;
@@ -49,6 +49,7 @@ export function isAuthMessage(value: unknown): value is AuthMessage {
   return (
     message.type === AUTH_MESSAGE_TYPE &&
     (message.command === "sign-in" ||
+      message.command === "sign-in-silent" ||
       message.command === "sign-out" ||
       message.command === "refresh" ||
       message.command === "get-session")
@@ -180,18 +181,44 @@ export async function getCurrentExtensionSession(): Promise<ExtensionAuthTokens 
   return tokens;
 }
 
-export async function signInWithWebsite(): Promise<ExtensionAuthTokens> {
+async function runWebsiteAuthFlow(interactive: boolean): Promise<ExtensionAuthTokens | null> {
   if (!chrome.identity?.getRedirectURL || !chrome.identity?.launchWebAuthFlow) {
-    throw new Error("Chrome Identity API is unavailable");
+    if (interactive) throw new Error("Chrome Identity API is unavailable");
+    return null;
   }
 
   const redirectUri = chrome.identity.getRedirectURL(AUTH_CALLBACK_PATH);
   const state = cryptoRandomState();
   const url = buildExtensionConnectUrl(redirectUri, state);
-  const redirectUrl = await chrome.identity.launchWebAuthFlow({ url, interactive: true });
-  if (!redirectUrl) throw new Error("Extension auth flow was cancelled");
+  const redirectUrl = await chrome.identity.launchWebAuthFlow({ url, interactive });
+  if (!redirectUrl) {
+    if (interactive) throw new Error("Extension auth flow was cancelled");
+    return null;
+  }
 
   return exchangeExtensionAuthCode(parseExtensionAuthRedirect(redirectUrl, state));
+}
+
+export async function signInWithWebsite(): Promise<ExtensionAuthTokens> {
+  const tokens = await runWebsiteAuthFlow(true);
+  if (!tokens) throw new Error("Extension auth flow was cancelled");
+  return tokens;
+}
+
+/**
+ * Picks up an existing website (cookie) session without any UI. When the user
+ * is already signed in on the website — e.g. right after opening a shared room
+ * link and logging in — `/extension/connect` redirects straight back with a
+ * one-time code, so the non-interactive auth flow completes silently. If no
+ * website session exists, the flow needs interaction and we resolve to null
+ * instead of throwing, leaving the overlay signed out.
+ */
+export async function signInWithWebsiteSilently(): Promise<ExtensionAuthTokens | null> {
+  try {
+    return await runWebsiteAuthFlow(false);
+  } catch {
+    return null;
+  }
 }
 
 export async function signOutWithWebsite(): Promise<void> {
@@ -221,6 +248,9 @@ export async function handleAuthMessage(message: AuthMessage): Promise<AuthMessa
   try {
     if (message.command === "sign-in") {
       return { ok: true, tokens: await signInWithWebsite() };
+    }
+    if (message.command === "sign-in-silent") {
+      return { ok: true, tokens: await signInWithWebsiteSilently() };
     }
     if (message.command === "sign-out") {
       await signOutWithWebsite();

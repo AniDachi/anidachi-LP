@@ -71,6 +71,7 @@ import {
   isExtensionContextInvalidatedError,
   signInAndCreateParticipant,
   signOutAndClearParticipant,
+  trySilentSignIn,
   type CurrentParticipantResult,
 } from "./user-identity";
 import { AUTH_TOKENS_KEY } from "./auth-tokens";
@@ -2103,12 +2104,32 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   useEffect(() => {
     let cancelled = false;
-    void createCurrentParticipant().then((result) => {
+    void createCurrentParticipant().then(async (result) => {
       if (cancelled) {
         return;
       }
 
       applyParticipantIdentityRef.current(result, "initial-load", false);
+      setIdentityLoaded(true);
+
+      // The guest may have just signed in on the website (cookie session) — for
+      // example after opening a shared room link — without ever connecting the
+      // extension. Pick that session up silently so the overlay reflects the
+      // account (and auto-joins a pending invite) without a manual "Sign in"
+      // click or a page reload.
+      if (result.authenticated || result.requiresPageReload) {
+        return;
+      }
+
+      const silent = await trySilentSignIn();
+      if (cancelled || !silent?.authenticated) {
+        return;
+      }
+
+      logDebug("identity", "silent website session adopted", {
+        participantId: silent.participant?.id ?? null,
+      });
+      applyParticipantIdentityRef.current(silent, "silent-sign-in", true);
       setIdentityLoaded(true);
     });
     return () => {
