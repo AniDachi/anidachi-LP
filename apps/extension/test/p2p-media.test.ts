@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  classifyPeerHealth,
   getP2PAudioTransceiverDirection,
   isPoliteP2PPeer,
   p2pAudioTrackSwapNeedsNegotiation,
@@ -43,5 +44,19 @@ describe("P2P reconciliation decision", () => {
     expect(reconcilePeerAction("connected", "connected")).toBe("sync");
     expect(reconcilePeerAction("connecting", "checking")).toBe("sync");
     expect(reconcilePeerAction("new", "new")).toBe("sync");
+  });
+});
+
+describe("P2P peer health classification", () => {
+  it("is recovering whenever the connection is not connected", () => {
+    expect(classifyPeerHealth("connecting", undefined)).toBe("recovering");
+    expect(classifyPeerHealth("disconnected", 0.05)).toBe("recovering");
+    expect(classifyPeerHealth("failed", undefined)).toBe("recovering");
+  });
+
+  it("is good when connected and responsive, degraded when RTT is high", () => {
+    expect(classifyPeerHealth("connected", 0.05)).toBe("good");
+    expect(classifyPeerHealth("connected", undefined)).toBe("good");
+    expect(classifyPeerHealth("connected", 0.6)).toBe("degraded");
   });
 });

@@ -26,6 +26,7 @@ interface HarnessState {
   remoteVideoCount: number;
   remoteFramesDecoded: number;
   candidatePairTypes: string[];
+  peerHealth: string[];
 }
 
 class Harness {
@@ -140,9 +141,10 @@ class Harness {
   async getState(): Promise<HarnessState> {
     let remoteFramesDecoded = 0;
     const candidatePairTypes: string[] = [];
+    const peerHealth: string[] = [];
     if (this.controller) {
       const stats = (await this.controller.getStats()) as {
-        peers?: Array<{ stats?: Record<string, unknown> }>;
+        peers?: Array<{ stats?: Record<string, unknown>; health?: string }>;
       };
       for (const peer of stats.peers ?? []) {
         const inbound = peer.stats?.videoInbound as { framesDecoded?: number } | undefined;
@@ -155,6 +157,7 @@ class Harness {
         if (pair?.localCandidateType) {
           candidatePairTypes.push(`${pair.localCandidateType}/${pair.remoteCandidateType ?? "?"}`);
         }
+        if (peer.health) peerHealth.push(peer.health);
       }
     }
     return {
@@ -163,6 +166,7 @@ class Harness {
       remoteVideoCount: this.remoteVideos.size,
       remoteFramesDecoded,
       candidatePairTypes,
+      peerHealth,
     };
   }
 

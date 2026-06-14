@@ -28,6 +28,28 @@ export function reconcilePeerAction(
   return down(connectionState) || down(iceConnectionState) ? "restart-ice" : "sync";
 }
 
+export type PeerHealth = "good" | "degraded" | "recovering";
+/** RTT above this on an otherwise-connected peer counts as degraded. */
+const P2P_DEGRADED_RTT_SECONDS = 0.4;
+
+/**
+ * Pure per-peer health classification from connection state + round-trip time
+ * (Block 5.4). "recovering" = not connected; "degraded" = connected but slow;
+ * "good" = connected and responsive. Exported for unit testing.
+ */
+export function classifyPeerHealth(
+  connectionState: RTCPeerConnectionState,
+  roundTripTimeSeconds: number | undefined,
+): PeerHealth {
+  if (connectionState !== "connected") {
+    return "recovering";
+  }
+  if (typeof roundTripTimeSeconds === "number" && roundTripTimeSeconds > P2P_DEGRADED_RTT_SECONDS) {
+    return "degraded";
+  }
+  return "good";
+}
+
 const DEFAULT_STUN_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
@@ -144,6 +166,8 @@ export class P2PMediaController {
   // Periodic desired-vs-actual reconciliation so a lost signal self-heals
   // instead of leaving a peer stuck (Block 5.3).
   private reconcileTimerId: number | null = null;
+  // Last classified health per peer, for transition logging + observability (Block 5.4).
+  private readonly healthByPeer = new Map<string, PeerHealth>();
 
   constructor(options: P2PMediaControllerOptions) {
     this.iceServers = options.iceServers?.length ? options.iceServers : getDefaultP2PIceServers();
@@ -155,10 +179,10 @@ export class P2PMediaController {
     this.onVoiceStatusChange = options.onVoiceStatusChange;
     this.refreshIceServers = options.refreshIceServers;
     this.sendSignal = options.sendSignal;
-    this.reconcileTimerId = window.setInterval(
-      () => this.reconcile("interval"),
-      P2P_RECONCILE_INTERVAL_MS,
-    );
+    this.reconcileTimerId = window.setInterval(() => {
+      this.reconcile("interval");
+      void this.samplePeerHealth();
+    }, P2P_RECONCILE_INTERVAL_MS);
     logDebug("p2p.controller", "created", {
       localParticipantId: options.localParticipant.id,
       iceServers: summarizeIceServers(this.iceServers),
@@ -629,17 +653,58 @@ export class P2PMediaController {
 
   async getStats(): Promise<Record<string, unknown>> {
     const peers = await Promise.all(
-      Array.from(this.peers.values()).map(async (peer) => ({
-        remoteUserId: peer.remoteUserId,
-        connectionState: peer.pc.connectionState,
-        iceRestartCount: peer.iceRestartCount,
-        iceConnectionState: peer.pc.iceConnectionState,
-        signalingState: peer.pc.signalingState,
-        stats: summarizeStats(await peer.pc.getStats()),
-      })),
+      Array.from(this.peers.values()).map(async (peer) => {
+        const stats = summarizeStats(await peer.pc.getStats());
+        const rtt = (stats.candidatePair as { currentRoundTripTime?: number } | undefined)
+          ?.currentRoundTripTime;
+        return {
+          remoteUserId: peer.remoteUserId,
+          connectionState: peer.pc.connectionState,
+          iceRestartCount: peer.iceRestartCount,
+          iceConnectionState: peer.pc.iceConnectionState,
+          signalingState: peer.pc.signalingState,
+          health: classifyPeerHealth(peer.pc.connectionState, rtt),
+          stats,
+        };
+      }),
     );
 
     return { peers };
+  }
+
+  /** Classify each peer's health and log transitions for observability (Block 5.4). */
+  private async samplePeerHealth(): Promise<void> {
+    if (this.disposed) {
+      return;
+    }
+
+    for (const peer of this.peers.values()) {
+      let rtt: number | undefined;
+      try {
+        const stats = summarizeStats(await peer.pc.getStats());
+        rtt = (stats.candidatePair as { currentRoundTripTime?: number } | undefined)
+          ?.currentRoundTripTime;
+      } catch {
+        rtt = undefined;
+      }
+
+      const health = classifyPeerHealth(peer.pc.connectionState, rtt);
+      if (this.healthByPeer.get(peer.remoteUserId) !== health) {
+        this.healthByPeer.set(peer.remoteUserId, health);
+        logDebug("p2p.health", health, {
+          localParticipantId: this.localParticipant.id,
+          remoteUserId: peer.remoteUserId,
+          connectionState: peer.pc.connectionState,
+          roundTripTime: rtt,
+        });
+      }
+    }
+
+    for (const remoteId of Array.from(this.healthByPeer.keys())) {
+      if (!this.peers.has(remoteId)) {
+        this.healthByPeer.delete(remoteId);
+      }
+    }
   }
 
   notifyPageLeaving(reason: string): void {
