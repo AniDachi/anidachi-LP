@@ -171,6 +171,31 @@ async function main() {
       console.log(`   candidate pairs: host=${JSON.stringify(hostSees.state.candidatePairTypes)} guest=${JSON.stringify(guestSees.state.candidatePairTypes)}`);
     }
 
+    // Push-to-talk latency (S6): time from startVoice() to the peer receiving
+    // audio bytes, measured twice to expose mic spin-up cost on repeat presses.
+    async function pressToAudioMs(speaker, listener, budgetMs) {
+      const before = await listener.evaluate(() => window.AnidachiHarness.remoteAudioBytes());
+      const t0 = Date.now();
+      await speaker.evaluate(() => window.AnidachiHarness.startVoice());
+      while (Date.now() - t0 < budgetMs) {
+        const bytes = await listener.evaluate(() => window.AnidachiHarness.remoteAudioBytes());
+        if (bytes > before + 500) return Date.now() - t0;
+        await sleep(50);
+      }
+      return null;
+    }
+
+    const firstPress = await pressToAudioMs(hostPage, guestPage, 9000);
+    record("push-to-talk audio reaches peer (S6)", firstPress !== null, `press1=${firstPress}ms`);
+    await hostPage.evaluate(() => window.AnidachiHarness.stopVoice());
+    await sleep(500);
+    const secondPress = await pressToAudioMs(hostPage, guestPage, 9000);
+    record("repeat push-to-talk also reaches peer", secondPress !== null, `press2=${secondPress}ms`);
+    if (firstPress !== null && secondPress !== null) {
+      console.log(`   push-to-talk: first=${firstPress}ms repeat=${secondPress}ms`);
+    }
+    await hostPage.evaluate(() => window.AnidachiHarness.stopVoice());
+
     // S5: reload the guest, restart, and confirm media recovers without
     // recreating the room.
     await guestPage.evaluate(() => window.AnidachiHarness.stop());
