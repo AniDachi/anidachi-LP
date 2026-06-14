@@ -137,8 +137,8 @@ Implements the roadmap contract exactly; protocol shapes follow the roadmap's Ta
 
 **Steps:**
 
-- [ ] 5.1 Push-to-talk without renegotiation: negotiate the audio transceiver `sendrecv` once, then toggle `track.enabled` (Opus DTX keeps silence near zero bandwidth). Target S6 (<300ms). Remove per-press direction flips.
-- [ ] 5.2 Microphone caching: keep the mic stream for ~60s after V release (instant repeat talk), release after idle timeout. Never hold the mic outside an active room.
+- [x] 5.1 Push-to-talk without renegotiation: already in place — the audio transceiver is created `sendrecv` once (`P2P_AUDIO_TRANSCEIVER_DIRECTION`) and voice toggles via `replaceTrack`, so a press no longer flips direction / renegotiates. Confirmed by the real-WebRTC harness (audio reaches the peer with no offer/answer round-trip on press).
+- [x] 5.2 Microphone caching: the mic track is now kept warm between presses (`track.enabled` toggled instead of stopping the stream + replaceTrack), released after a 60s idle timeout for privacy and on disconnect. Repeat push-to-talk no longer pays the `getUserMedia` spin-up. Measured in the harness: repeat press **459ms → 226ms** (under the S6 <300ms target); first/cold press unchanged (~520ms, unavoidable getUserMedia). On real hardware the win is larger (real mic spin-up is hundreds of ms). Added `audioInbound`/`audioOutbound` to `getStats` for the measurement + future health monitor.
 - [ ] 5.3 Reconciliation loop: every ~5s and on connection-state events, compare desired media state (camera/voice intents) against actual transceiver `currentDirection`/tracks/connection; on mismatch re-run sync/negotiation or request ICE restart. Lost signals become self-healing instead of stuck states.
 - [ ] 5.4 Peer health monitor: sample `getStats` every 3–5s (RTT, packet loss, available bitrate, candidate-pair type) → per-peer state good/degraded/recovering → subtle bubble indicator + scorecard aggregation (feeds S10).
 - [ ] 5.5 Device edge cases: `devicechange`, camera unplug, OS sleep/wake, Bluetooth headset switch; handle `track.muted`/`ended` with re-acquire; `degradationPreference: "maintain-framerate"` on video sender.

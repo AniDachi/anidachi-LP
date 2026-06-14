@@ -10,6 +10,8 @@ const P2P_ICE_RESTART_COOLDOWN_MS = 8_000;
 const P2P_ICE_RESTART_REQUEST_COOLDOWN_MS = 3_000;
 const P2P_DISCONNECTED_RESTART_DELAY_MS = 3_500;
 const P2P_AUDIO_TRANSCEIVER_DIRECTION: RTCRtpTransceiverDirection = "sendrecv";
+/** Keep the mic warm this long after release so repeat push-to-talk is instant. */
+const P2P_MIC_IDLE_RELEASE_MS = 60_000;
 
 const DEFAULT_STUN_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
@@ -120,6 +122,10 @@ export class P2PMediaController {
   private wantsVoiceTalk = false;
   private voiceStarting = false;
   private voiceTalking = false;
+  // The mic track is kept warm between presses (track.enabled toggled) so
+  // repeat push-to-talk is instant, then released after an idle timeout for
+  // privacy (Block 5.2).
+  private micReleaseTimerId: number | null = null;
 
   constructor(options: P2PMediaControllerOptions) {
     this.iceServers = options.iceServers?.length ? options.iceServers : getDefaultP2PIceServers();
@@ -292,6 +298,26 @@ export class P2PMediaController {
       return;
     }
 
+    this.clearMicReleaseTimer();
+
+    // Warm mic from a recent press: just re-enable the existing track. No
+    // getUserMedia, no track/transceiver churn — the encoder is already warm
+    // so audio resumes near-instantly (Block 5.2).
+    if (this.localAudioTrack && this.localAudioTrack.readyState === "live") {
+      this.localAudioTrack.enabled = true;
+      this.voiceTalking = true;
+      for (const peer of this.peers.values()) {
+        this.sendSignal(peer.remoteUserId, { kind: "voice-start" });
+      }
+      this.publishActiveSpeakerIds();
+      this.onVoiceStatusChange("talking");
+      logDebug("p2p.voice", "resumed warm mic", {
+        localParticipantId: this.localParticipant.id,
+        peerCount: this.peers.size,
+      });
+      return;
+    }
+
     this.voiceStarting = true;
     this.onVoiceStatusChange("connecting");
     this.onVoiceMessageChange(null);
@@ -370,15 +396,16 @@ export class P2PMediaController {
     this.voiceStarting = false;
     this.voiceTalking = false;
 
-    stopStream(this.localAudioStream);
-    this.localAudioStream = null;
-    this.localAudioTrack = null;
+    // Mute by disabling the track (DTX sends ~no bytes) but keep it warm so a
+    // repeat press resumes instantly. Release the mic after an idle timeout for
+    // privacy (Block 5.2). The audio transceiver/sender are untouched, so this
+    // never renegotiates.
+    if (this.localAudioTrack) {
+      this.localAudioTrack.enabled = false;
+      this.scheduleMicRelease();
+    }
 
     for (const peer of this.peers.values()) {
-      if (peer.audioTransceiver) {
-        await peer.audioTransceiver.sender.replaceTrack(null).catch(() => undefined);
-        peer.audioTransceiver.direction = P2P_AUDIO_TRANSCEIVER_DIRECTION;
-      }
       this.sendSignal(peer.remoteUserId, { kind: "voice-stop" });
     }
 
@@ -390,6 +417,35 @@ export class P2PMediaController {
     for (const element of this.audioElementsByParticipant.values()) {
       await element.play().catch(() => undefined);
     }
+  }
+
+  private scheduleMicRelease(): void {
+    this.clearMicReleaseTimer();
+    this.micReleaseTimerId = window.setTimeout(() => {
+      this.micReleaseTimerId = null;
+      if (!this.voiceTalking && !this.disposed) {
+        this.releaseMic();
+      }
+    }, P2P_MIC_IDLE_RELEASE_MS);
+  }
+
+  private clearMicReleaseTimer(): void {
+    if (this.micReleaseTimerId !== null) {
+      window.clearTimeout(this.micReleaseTimerId);
+      this.micReleaseTimerId = null;
+    }
+  }
+
+  private releaseMic(): void {
+    stopStream(this.localAudioStream);
+    this.localAudioStream = null;
+    this.localAudioTrack = null;
+    for (const peer of this.peers.values()) {
+      void peer.audioTransceiver?.sender.replaceTrack(null).catch(() => undefined);
+    }
+    logDebug("p2p.voice", "released idle mic", {
+      localParticipantId: this.localParticipant.id,
+    });
   }
 
   async handleSignal(fromUserId: string, signal: P2PSignal): Promise<void> {
@@ -584,6 +640,7 @@ export class P2PMediaController {
     this.disposed = true;
     this.wantsCamera = false;
     this.wantsVoiceTalk = false;
+    this.clearMicReleaseTimer();
     for (const peer of this.peers.values()) {
       this.sendSignal(peer.remoteUserId, { kind: "bye" });
     }
@@ -1633,6 +1690,18 @@ function summarizeStats(report: RTCStatsReport): Record<string, unknown> {
         bytesReceived: stat.bytesReceived,
         framesPerSecond: stat.framesPerSecond,
         framesDecoded: stat.framesDecoded,
+      };
+    }
+
+    if (stat.type === "outbound-rtp" && stat.kind === "audio") {
+      summary.audioOutbound = { bytesSent: stat.bytesSent, packetsSent: stat.packetsSent };
+    }
+
+    if (stat.type === "inbound-rtp" && stat.kind === "audio") {
+      summary.audioInbound = {
+        bytesReceived: stat.bytesReceived,
+        packetsReceived: stat.packetsReceived,
+        audioLevel: stat.audioLevel,
       };
     }
   }

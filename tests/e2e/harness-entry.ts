@@ -166,6 +166,29 @@ class Harness {
     };
   }
 
+  async startVoice(): Promise<void> {
+    await this.controller?.startVoiceTalk();
+  }
+
+  async stopVoice(): Promise<void> {
+    await this.controller?.stopVoiceTalk();
+  }
+
+  /** Max inbound audio bytes received across peers — proves audio actually flows. */
+  async remoteAudioBytes(): Promise<number> {
+    let bytes = 0;
+    if (this.controller) {
+      const stats = (await this.controller.getStats()) as {
+        peers?: Array<{ stats?: Record<string, unknown> }>;
+      };
+      for (const peer of stats.peers ?? []) {
+        const inbound = peer.stats?.audioInbound as { bytesReceived?: number } | undefined;
+        if (inbound?.bytesReceived) bytes = Math.max(bytes, inbound.bytesReceived);
+      }
+    }
+    return bytes;
+  }
+
   stop(): void {
     this.controller?.disconnect();
     this.client?.close();
