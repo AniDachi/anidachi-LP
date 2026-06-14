@@ -3,6 +3,7 @@ import {
   getP2PAudioTransceiverDirection,
   isPoliteP2PPeer,
   p2pAudioTrackSwapNeedsNegotiation,
+  reconcilePeerAction,
   shouldInitiateP2POffers,
 } from "../src/p2p-media";
 
@@ -27,5 +28,20 @@ describe("P2P perfect negotiation role helpers", () => {
     expect(p2pAudioTrackSwapNeedsNegotiation("sendrecv")).toBe(false);
     expect(p2pAudioTrackSwapNeedsNegotiation("recvonly")).toBe(true);
     expect(p2pAudioTrackSwapNeedsNegotiation(null)).toBe(true);
+  });
+});
+
+describe("P2P reconciliation decision", () => {
+  it("restarts ICE when the connection or ICE transport is down", () => {
+    expect(reconcilePeerAction("failed", "connected")).toBe("restart-ice");
+    expect(reconcilePeerAction("disconnected", "connected")).toBe("restart-ice");
+    expect(reconcilePeerAction("connected", "failed")).toBe("restart-ice");
+    expect(reconcilePeerAction("connected", "disconnected")).toBe("restart-ice");
+  });
+
+  it("re-syncs media (idempotent) when the connection is healthy", () => {
+    expect(reconcilePeerAction("connected", "connected")).toBe("sync");
+    expect(reconcilePeerAction("connecting", "checking")).toBe("sync");
+    expect(reconcilePeerAction("new", "new")).toBe("sync");
   });
 });

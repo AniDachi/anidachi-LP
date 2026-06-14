@@ -12,6 +12,21 @@ const P2P_DISCONNECTED_RESTART_DELAY_MS = 3_500;
 const P2P_AUDIO_TRANSCEIVER_DIRECTION: RTCRtpTransceiverDirection = "sendrecv";
 /** Keep the mic warm this long after release so repeat push-to-talk is instant. */
 const P2P_MIC_IDLE_RELEASE_MS = 60_000;
+/** Reconcile desired-vs-actual media/connection state on this cadence (Block 5.3). */
+const P2P_RECONCILE_INTERVAL_MS = 5_000;
+
+/**
+ * Pure reconciliation decision for one peer: should we restart ICE (the
+ * connection is down) or re-sync media (steady state — catches drift from a
+ * lost renegotiate/signal)? Exported for unit testing.
+ */
+export function reconcilePeerAction(
+  connectionState: RTCPeerConnectionState,
+  iceConnectionState: RTCIceConnectionState,
+): "restart-ice" | "sync" {
+  const down = (s: string) => s === "disconnected" || s === "failed";
+  return down(connectionState) || down(iceConnectionState) ? "restart-ice" : "sync";
+}
 
 const DEFAULT_STUN_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
@@ -126,6 +141,9 @@ export class P2PMediaController {
   // repeat push-to-talk is instant, then released after an idle timeout for
   // privacy (Block 5.2).
   private micReleaseTimerId: number | null = null;
+  // Periodic desired-vs-actual reconciliation so a lost signal self-heals
+  // instead of leaving a peer stuck (Block 5.3).
+  private reconcileTimerId: number | null = null;
 
   constructor(options: P2PMediaControllerOptions) {
     this.iceServers = options.iceServers?.length ? options.iceServers : getDefaultP2PIceServers();
@@ -137,10 +155,39 @@ export class P2PMediaController {
     this.onVoiceStatusChange = options.onVoiceStatusChange;
     this.refreshIceServers = options.refreshIceServers;
     this.sendSignal = options.sendSignal;
+    this.reconcileTimerId = window.setInterval(
+      () => this.reconcile("interval"),
+      P2P_RECONCILE_INTERVAL_MS,
+    );
     logDebug("p2p.controller", "created", {
       localParticipantId: options.localParticipant.id,
       iceServers: summarizeIceServers(this.iceServers),
     });
+  }
+
+  /**
+   * Bring every peer's actual state back to the desired one: restart ICE for a
+   * down connection, otherwise re-run the idempotent media sync (which only
+   * renegotiates on real drift). Self-heals a lost renegotiate/signal without
+   * waiting for another event (Block 5.3).
+   */
+  reconcile(reason: string): void {
+    if (this.disposed || !this.peers.size) {
+      return;
+    }
+
+    for (const peer of this.peers.values()) {
+      if (peer.pc.signalingState === "closed") {
+        continue;
+      }
+
+      const action = reconcilePeerAction(peer.pc.connectionState, peer.pc.iceConnectionState);
+      if (action === "restart-ice") {
+        void this.restartPeerIce(peer, `reconcile:${reason}`);
+      } else {
+        void this.syncPeerMediaAndNegotiate(peer, `reconcile:${reason}`, false);
+      }
+    }
   }
 
   updateParticipants(participants: Participant[]): void {
@@ -620,16 +667,8 @@ export class P2PMediaController {
       peerCount: this.peers.size,
       reason,
     });
-    for (const peer of this.peers.values()) {
-      if (
-        peer.pc.connectionState === "disconnected" ||
-        peer.pc.connectionState === "failed" ||
-        peer.pc.iceConnectionState === "disconnected" ||
-        peer.pc.iceConnectionState === "failed"
-      ) {
-        void this.restartPeerIce(peer, reason);
-      }
-    }
+    // Reconciliation already restarts ICE for down peers and re-syncs the rest.
+    this.reconcile(`recover:${reason}`);
   }
 
   disconnect(): void {
@@ -641,6 +680,10 @@ export class P2PMediaController {
     this.wantsCamera = false;
     this.wantsVoiceTalk = false;
     this.clearMicReleaseTimer();
+    if (this.reconcileTimerId !== null) {
+      window.clearInterval(this.reconcileTimerId);
+      this.reconcileTimerId = null;
+    }
     for (const peer of this.peers.values()) {
       this.sendSignal(peer.remoteUserId, { kind: "bye" });
     }
