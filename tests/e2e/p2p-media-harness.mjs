@@ -171,6 +171,14 @@ async function main() {
       console.log(`   candidate pairs: host=${JSON.stringify(hostSees.state.candidatePairTypes)} guest=${JSON.stringify(guestSees.state.candidatePairTypes)}`);
     }
 
+    // Health monitor (Block 5.4): a connected, responsive peer classifies "good".
+    const hostHealth = await hostPage.evaluate(() => window.AnidachiHarness.getState());
+    record(
+      "peer health classifies good on a live connection (S10/5.4)",
+      hostHealth.peerHealth.length > 0 && hostHealth.peerHealth.every((h) => h === "good"),
+      `health=${JSON.stringify(hostHealth.peerHealth)}`,
+    );
+
     // Push-to-talk latency (S6): time from startVoice() to the peer receiving
     // audio bytes, measured twice to expose mic spin-up cost on repeat presses.
     async function pressToAudioMs(speaker, listener, budgetMs) {
