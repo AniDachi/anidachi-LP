@@ -273,6 +273,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [roomToken, setRoomToken] = useState<string | null>(null);
   const [roomShareableLink, setRoomShareableLink] = useState<string | null>(null);
   const [roomQuota, setRoomQuota] = useState<RoomQuotaSummary | null>(null);
+  const [quotaDisplayTick, setQuotaDisplayTick] = useState(0);
+  const quotaMeteredMsRef = useRef(0);
+  const quotaTickAtRef = useRef<number | null>(null);
+  const quotaEndTriggeredRef = useRef(false);
   const createRequestIdRef = useRef<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [status, setStatus] = useState<RoomConnectionStatus>("idle");
@@ -492,6 +496,19 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     .filter(Boolean)
     .join(" ");
   const participantCount = participants.length || (participant ? 1 : 0);
+  // The free daily quota only burns while you host a room that a guest has
+  // actually joined (mirrors the server's metering proxy in room-quota.ts), so
+  // the live countdown ticks only under those conditions and freezes otherwise.
+  const quotaMeteringActive =
+    isConnected && isHost && participantCount > 1 && roomQuota !== null;
+  const quotaRemainingSeconds = useMemo(() => {
+    if (!roomQuota) {
+      return null;
+    }
+    // quotaDisplayTick advances once per second while metering is active so the
+    // countdown re-renders even though the elapsed time lives in a ref.
+    return Math.max(0, Math.floor(roomQuota.remainingSeconds - quotaMeteredMsRef.current / 1000));
+  }, [roomQuota, quotaDisplayTick]);
   const ghostCamSizePx = getGhostCamSizePx(ghostCamSizeStep);
   const ghostCamGapPx = getGhostCamGapPx(ghostCamSizeStep);
   const ghostCamSizeLabel = getGhostCamSizeLabel(ghostCamSizeStep);
@@ -1570,6 +1587,30 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     ],
   );
 
+  // Terminally end the local room session without a reconnect loop: used for
+  // server-terminal errors (ROOM_FULL / SESSION_TAKEN_OVER) and for graceful
+  // free-quota expiry, so the overlay settles on a clear message instead of
+  // jittering between connect attempts.
+  const terminateRoomSession = useCallback((message: string) => {
+    roomReconnectSuppressedRef.current = true;
+    if (roomReconnectTimerRef.current !== null) {
+      window.clearTimeout(roomReconnectTimerRef.current);
+      roomReconnectTimerRef.current = null;
+    }
+    clientRef.current.close();
+    releaseRoomTabLock();
+    setRoomId(null);
+    setParticipants([]);
+    roomTokenRef.current = null;
+    roomShareableLinkRef.current = null;
+    setRoomToken(null);
+    setRoomShareableLink(null);
+    clearPersistedRoomId();
+    clearRoomHash();
+    setAuthMessage(message);
+    setPanelOpen(true);
+  }, []);
+
   const handleServerEvent = useCallback(
     (event: ServerEvent) => {
       logDebug("overlay.server", event.type, {
@@ -1684,24 +1725,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             // after this event) and surface the reason instead of looping.
             // SESSION_TAKEN_OVER also prevents a reconnect ping-pong between
             // two tabs/devices of the same user (one active session).
-            roomReconnectSuppressedRef.current = true;
-            if (roomReconnectTimerRef.current !== null) {
-              window.clearTimeout(roomReconnectTimerRef.current);
-              roomReconnectTimerRef.current = null;
-            }
-            clientRef.current.close();
-            releaseRoomTabLock();
-            setRoomId(null);
-            setParticipants([]);
-            roomTokenRef.current = null;
-            clearPersistedRoomId();
-            clearRoomHash();
             const fallback =
               event.code === "ROOM_FULL"
                 ? "This watch room is full (max 4 people)."
                 : "This room was opened in another tab or device.";
-            setAuthMessage(event.message || fallback);
-            setPanelOpen(true);
+            terminateRoomSession(event.message || fallback);
           }
           return;
       }
@@ -1719,6 +1747,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       messageDisplayMode,
       recordChatHistoryMessage,
       reactionsEnabled,
+      terminateRoomSession,
       triggerFlameBurst,
     ],
   );
@@ -1875,6 +1904,19 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             roomReconnectAttemptRef.current = 0;
           })
           .catch((error) => {
+            // Free quota ran out — the server will keep rejecting reconnects, so
+            // end gracefully instead of looping (which made the panel jitter).
+            if (isQuotaExhaustedError(error)) {
+              logDebug("overlay.room", "auto reconnect blocked by quota", {
+                attempt,
+                reason,
+                roomId: reconnectRoomId,
+                resetAt: error.resetAt,
+              });
+              terminateRoomSession(quotaExhaustedMessage(error.resetAt));
+              return;
+            }
+
             const message = error instanceof Error ? error.message : "Room reconnect failed";
             logDebug("overlay.room", "auto reconnect failed", {
               attempt,
@@ -1892,7 +1934,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           });
       }, delayMs);
     },
-    [connectToExistingWebsiteRoom],
+    [connectToExistingWebsiteRoom, terminateRoomSession],
   );
 
   useEffect(() => {
@@ -1949,6 +1991,61 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       clearRoomReconnectTimer();
     };
   }, [clearRoomReconnectTimer]);
+
+  // Each fresh server quota snapshot is the source of truth — reset the locally
+  // metered elapsed time so the live countdown re-anchors to it.
+  useEffect(() => {
+    quotaMeteredMsRef.current = 0;
+    quotaTickAtRef.current = null;
+    quotaEndTriggeredRef.current = false;
+    setQuotaDisplayTick((tick) => tick + 1);
+  }, [roomQuota]);
+
+  // Live quota countdown: accrue metered wall-clock only while the session is
+  // actually burning quota, so the displayed time decreases every second
+  // instead of only refreshing on reconnect/reload.
+  useEffect(() => {
+    if (!quotaMeteringActive) {
+      quotaTickAtRef.current = null;
+      return;
+    }
+
+    quotaTickAtRef.current = Date.now();
+    const intervalId = window.setInterval(() => {
+      const now = Date.now();
+      const last = quotaTickAtRef.current ?? now;
+      quotaMeteredMsRef.current += now - last;
+      quotaTickAtRef.current = now;
+      setQuotaDisplayTick((tick) => tick + 1);
+    }, 1000);
+
+    return () => {
+      const now = Date.now();
+      const last = quotaTickAtRef.current;
+      if (last !== null) {
+        quotaMeteredMsRef.current += now - last;
+      }
+      quotaTickAtRef.current = null;
+      window.clearInterval(intervalId);
+    };
+  }, [quotaMeteringActive]);
+
+  // When the metered host's free time hits zero, end the session gracefully
+  // (once) rather than letting the room token expire into a reconnect loop.
+  useEffect(() => {
+    if (!quotaMeteringActive || quotaRemainingSeconds === null || quotaRemainingSeconds > 0) {
+      return;
+    }
+    if (quotaEndTriggeredRef.current) {
+      return;
+    }
+
+    quotaEndTriggeredRef.current = true;
+    logDebug("overlay.room", "free host quota exhausted; ending session", {
+      resetAt: roomQuota?.resetAt ?? null,
+    });
+    terminateRoomSession(quotaExhaustedMessage(roomQuota?.resetAt));
+  }, [quotaMeteringActive, quotaRemainingSeconds, roomQuota, terminateRoomSession]);
 
   const applyParticipantIdentity = useCallback(
     (result: CurrentParticipantResult, reason: string, reconnectActiveRoom: boolean) => {
@@ -2156,6 +2253,20 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
       void connectToExistingWebsiteRoom(initialRoomId, hashRoomId ? "hash" : "persisted").catch(
         (error) => {
+          // Quota is exhausted — drop the stale room pointer so reloads stop
+          // re-attempting a join that can only fail, and show why.
+          if (isQuotaExhaustedError(error)) {
+            logDebug("overlay.room", "initial join blocked by quota", {
+              roomId: initialRoomId,
+              resetAt: error.resetAt,
+            });
+            clearPersistedRoomId();
+            clearRoomHash();
+            setAuthMessage(quotaExhaustedMessage(error.resetAt));
+            setPanelOpen(true);
+            return;
+          }
+
           const message = error instanceof Error ? error.message : "Failed to join room";
           logDebug("overlay.room", "initial join failed", { roomId: initialRoomId, message });
           setAuthMessage(message);
@@ -3164,7 +3275,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           </div>
           {roomQuota ? (
             <div className="quota-note">
-              Free watch-party time today: {quotaMinutesLeftLabel(roomQuota)} left
+              Free watch-party time today: {formatQuotaCountdown(quotaRemainingSeconds)} left
             </div>
           ) : null}
 
@@ -3911,9 +4022,11 @@ function quotaExhaustedMessage(resetAt: string | undefined): string {
   return "Daily free watch-party time is used up. It resets at midnight UTC.";
 }
 
-function quotaMinutesLeftLabel(quota: RoomQuotaSummary): string {
-  const minutes = Math.max(0, Math.ceil(quota.remainingSeconds / 60));
-  return `${minutes} min`;
+function formatQuotaCountdown(remainingSeconds: number | null): string {
+  const total = Math.max(0, Math.floor(remainingSeconds ?? 0));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
 function shouldOpenPanelForInitialRoom(hashRoomId: string | null, persistedRoomId: string | null) {
