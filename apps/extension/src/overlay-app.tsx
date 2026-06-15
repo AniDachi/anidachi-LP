@@ -1684,6 +1684,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           }
 
           handledP2PSignalIdsRef.current.add(dedupeKey);
+          // Bound the dedupe set so a long session can't grow it without limit
+          // (it is otherwise cleared only when the room changes). Insertion
+          // order is preserved, so dropping the oldest keys is safe — anything
+          // that old is far beyond the 120-deep replay window below.
+          pruneHandledP2PSignalIds(handledP2PSignalIdsRef.current);
           setIncomingP2PSignals((current) =>
             [
               ...current,
@@ -3880,6 +3885,25 @@ function createClientSignalId(): string {
 
 function getIncomingP2PSignalDedupeKey(event: P2PSignalServerEvent): string {
   return `${event.fromUserId}:${event.senderConnectionId}:${event.clientSignalId}`;
+}
+
+const HANDLED_P2P_SIGNAL_ID_CAP = 600;
+
+/** Keeps the P2P-signal dedupe set bounded within a long-lived room session. */
+function pruneHandledP2PSignalIds(handled: Set<string>): void {
+  if (handled.size <= HANDLED_P2P_SIGNAL_ID_CAP) {
+    return;
+  }
+
+  const overflow = handled.size - HANDLED_P2P_SIGNAL_ID_CAP;
+  let removed = 0;
+  for (const key of handled) {
+    handled.delete(key);
+    removed += 1;
+    if (removed >= overflow) {
+      break;
+    }
+  }
 }
 
 function toIncomingP2PSignal(
