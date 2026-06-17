@@ -305,7 +305,7 @@
     "semantic_hash": ""
   },
   "apps/extension/test/debug-log.test.ts": {
-    "mtime": 1781717214.4645705,
+    "mtime": 1781717613.1111512,
     "ast_hash": "36273e0516756f2b451a584b968fa5d3",
     "semantic_hash": ""
   },
@@ -1680,7 +1680,7 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1781717002.9919605,
+    "mtime": 1781717613.119138,
     "ast_hash": "0204ce9915e90d328f41a42acef48365",
     "semantic_hash": ""
   },
@@ -1840,12 +1840,12 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1781717337.3215714,
+    "mtime": 1781717613.1105225,
     "ast_hash": "709044d98bd837eec6e31e4aa1499227",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1781717055.7942517,
+    "mtime": 1781717613.1108713,
     "ast_hash": "c772169b0be2e70420d778b4a5074181",
     "semantic_hash": ""
   },
@@ -1900,7 +1900,7 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1781717055.7944956,
+    "mtime": 1781717613.1114402,
     "ast_hash": "608b59ddf93f11d0d902a9da6ce5ae9a",
     "semantic_hash": ""
   },
@@ -1935,7 +1935,7 @@
     "semantic_hash": ""
   },
   "docs/project-knowledge-map.md": {
-    "mtime": 1781717103.8761904,
+    "mtime": 1781717613.1117175,
     "ast_hash": "40a3695567b1c91d692819bff7d63e5d",
     "semantic_hash": ""
   },
@@ -2085,52 +2085,52 @@
     "semantic_hash": ""
   },
   ".codex/hooks.json": {
-    "mtime": 1781716863.5672078,
+    "mtime": 1781717613.1063259,
     "ast_hash": "363c222f50e6f7b1e54d30457cf4c42b",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/SKILL.md": {
-    "mtime": 1781716767.4237716,
+    "mtime": 1781717613.1072276,
     "ast_hash": "5c72924d8902cf334936c5827ff65349",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/add-watch.md": {
-    "mtime": 1781716700.5437677,
+    "mtime": 1781717613.1075215,
     "ast_hash": "0df0589623217ca38a12bdcabfb42f4c",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/exports.md": {
-    "mtime": 1781716700.5438886,
+    "mtime": 1781717613.1077273,
     "ast_hash": "c04ddf8f1f5ef5e262ebec491a523c74",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/extraction-spec.md": {
-    "mtime": 1781716700.5440745,
+    "mtime": 1781717613.1083157,
     "ast_hash": "a86a7321597b23cc2b22e011b3dc6e1d",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/github-and-merge.md": {
-    "mtime": 1781716700.5441856,
+    "mtime": 1781717613.1085913,
     "ast_hash": "cde13df085e4c492aeb7ba298a996d0d",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/hooks.md": {
-    "mtime": 1781716700.5442894,
+    "mtime": 1781717613.108735,
     "ast_hash": "3f545db6ce646650bb9de588f5512a27",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/query.md": {
-    "mtime": 1781716700.5510445,
+    "mtime": 1781717613.1089876,
     "ast_hash": "c2a8e798674a81b02aa9975f43023819",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/transcribe.md": {
-    "mtime": 1781716700.551244,
+    "mtime": 1781717613.1092517,
     "ast_hash": "70f6aa30d6211f3a2c7e9fc45479f50c",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/update.md": {
-    "mtime": 1781716700.5514903,
+    "mtime": 1781717613.1095352,
     "ast_hash": "0dad167a95bdb389f02fecffb60b1bc8",
     "semantic_hash": ""
   }
