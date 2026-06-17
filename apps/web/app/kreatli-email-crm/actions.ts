@@ -12,6 +12,7 @@ import {
   type ImportMergeMode,
   type ImportPreviewLine,
 } from "@/lib/kreatli-crm/import-merge";
+import { surveyLeadsToDelimited } from "@/lib/kreatli-crm/survey-lead-shared";
 import { appendTouch, crmDataDir, readContacts, writeContacts } from "@/lib/kreatli-crm/store";
 import { renderTemplate } from "@/lib/kreatli-crm/template-render";
 import type { Contact, ContactStatus } from "@/lib/kreatli-crm/types";
@@ -244,6 +245,18 @@ export async function exportCsvDataAction(): Promise<
   }
   const contacts = await readContacts();
   return { ok: true, csv: contactsToCsv(contacts) };
+}
+
+export async function exportSurveyLeadsCsvAction(): Promise<
+  { ok: true; csv: string } | { ok: false; error: string }
+> {
+  try {
+    await guard();
+  } catch {
+    return { ok: false, error: "Unauthorized" };
+  }
+  const contacts = await readContacts();
+  return { ok: true, csv: surveyLeadsToDelimited(contacts, ",") };
 }
 
 export async function renderTemplateCopyAction(

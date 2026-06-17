@@ -1,14 +1,20 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import type { GmailUiStatus } from "@/lib/kreatli-crm/gmail-ui";
 import { isContactDue } from "@/lib/kreatli-crm/queue";
 import type { ImportPreviewLine } from "@/lib/kreatli-crm/import-merge";
 import {
+  formatSurveyValue,
+  isHighIntentTiming,
   isSurveyLead,
   parseSurveyTags,
+  recommendedPlanLabelForTags,
+  SURVEY_FIELD_LABELS,
+  surveyLeadsToDelimited,
   type ParsedSurveyTags,
 } from "@/lib/kreatli-crm/survey-lead-shared";
 import type { Contact, Touch } from "@/lib/kreatli-crm/types";
@@ -17,6 +23,7 @@ import {
   applyImportAction,
   deleteContactAction,
   exportCsvDataAction,
+  exportSurveyLeadsCsvAction,
   logTouchAction,
   previewImportAction,
   renderTemplateCopyAction,
@@ -38,42 +45,69 @@ function groupTouches(touches: Touch[]): Record<string, Touch[]> {
 
 type CrmTab = "contacts" | "survey_leads";
 
-const SURVEY_FIELD_LABELS: Record<keyof ParsedSurveyTags, string> = {
-  segment: "Who",
-  priority: "Priority",
-  timing: "Timing",
-  group_size: "Group size",
-  current_solution: "Current tool",
-  discovery: "Discovery",
+type SurveyDateRange = "all" | "7" | "30";
+
+type SurveyFilters = {
+  timing: string;
+  segment: string;
+  priority: string;
+  dateRange: SurveyDateRange;
 };
 
-function formatSurveyValue(raw: string): string {
-  const labels: Record<string, string> = {
-    Friend_group_host: "Friend group",
-    Long_distance_watch: "Long distance",
-    Community_mod: "Community / server",
-    sync_and_no_spoilers: "Stay in sync (no spoilers)",
-    chat_and_reactions: "Chat + reactions",
-    async_progress: "Async progress tracking",
-    host_controls: "Host controls",
-    today: "Today",
-    this_week: "This week",
-    planning_ahead: "Planning ahead",
-    just_researching: "Just researching",
-    "2_3": "2–3 people",
-    "4_8": "4–8 people",
-    "9_plus": "9+ people",
-    discord_screen_share: "Discord screen share",
-    teleparty_watch2gether: "Teleparty / Watch2Gether",
-    nothing_yet: "Nothing yet",
-    another_tool: "Another watch-party tool",
-    other: "Other",
-    google_search: "Google search",
-    reddit: "Reddit",
-    discord: "Discord",
-    friend: "Friend",
-  };
-  return labels[raw] ?? raw.replace(/_/g, " ");
+type SurveySortKey =
+  | "updated_at"
+  | "email"
+  | "segment"
+  | "priority"
+  | "timing"
+  | "status";
+
+const DEFAULT_SURVEY_FILTERS: SurveyFilters = {
+  timing: "",
+  segment: "",
+  priority: "",
+  dateRange: "all",
+};
+
+function passesSurveyDateRange(
+  updatedAt: string,
+  range: SurveyDateRange,
+): boolean {
+  if (range === "all") return true;
+  const days = range === "7" ? 7 : 30;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  return new Date(updatedAt) >= cutoff;
+}
+
+function contactStatusBadgeClass(status: string): string {
+  switch (status) {
+    case "active":
+      return "bg-green-100 text-green-900";
+    case "replied":
+      return "bg-blue-100 text-blue-900";
+    case "booked":
+      return "bg-indigo-100 text-indigo-900";
+    case "closed":
+      return "bg-gray-100 text-gray-800";
+    case "dnc":
+      return "bg-red-100 text-red-900";
+    default:
+      return "bg-violet-100 text-violet-900";
+  }
+}
+
+function surveyRowUrgencyClass(timing?: string): string {
+  if (timing === "today") return "border-l-4 border-l-red-500";
+  if (timing === "this_week") return "border-l-4 border-l-amber-500";
+  return "border-l-4 border-l-transparent";
+}
+
+function formatCapturedAt(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
 
 function SurveyAnswersSummary({ tags }: { tags: ParsedSurveyTags }) {
@@ -382,16 +416,53 @@ export function CrmClient({
   );
   const [activeTab, setActiveTab] = useState<CrmTab>("contacts");
   const [segmentFilter, setSegmentFilter] = useState("");
+  const [surveyFilters, setSurveyFilters] =
+    useState<SurveyFilters>(DEFAULT_SURVEY_FILTERS);
+  const [surveySortKey, setSurveySortKey] =
+    useState<SurveySortKey>("updated_at");
+  const [surveySortDir, setSurveySortDir] = useState<"asc" | "desc">("desc");
+  const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
+  const [copyTsvMsg, setCopyTsvMsg] = useState<string | null>(null);
+
+  const surveyStats = useMemo(() => {
+    const now = Date.now();
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+    let thisWeek = 0;
+    let highIntent = 0;
+    for (const c of surveyLeads) {
+      const tags = parseSurveyTags(c.segments);
+      if (now - new Date(c.updated_at).getTime() <= weekMs) thisWeek++;
+      if (isHighIntentTiming(tags.timing)) highIntent++;
+    }
+    return { total: surveyLeads.length, thisWeek, highIntent };
+  }, [surveyLeads]);
 
   const activeList =
     activeTab === "survey_leads" ? surveyLeads : outreachContacts;
 
   const filtered = useMemo(() => {
-    const q = segmentFilter.trim().toLowerCase();
-    if (!q) return activeList;
     if (activeTab === "survey_leads") {
-      return activeList.filter((c) => {
+      const q = segmentFilter.trim().toLowerCase();
+      return surveyLeads.filter((c) => {
         const tags = parseSurveyTags(c.segments);
+        if (surveyFilters.timing && tags.timing !== surveyFilters.timing) {
+          return false;
+        }
+        if (surveyFilters.segment && tags.segment !== surveyFilters.segment) {
+          return false;
+        }
+        if (
+          surveyFilters.priority &&
+          tags.priority !== surveyFilters.priority
+        ) {
+          return false;
+        }
+        if (
+          !passesSurveyDateRange(c.updated_at, surveyFilters.dateRange)
+        ) {
+          return false;
+        }
+        if (!q) return true;
         const haystack = [
           c.email,
           c.notes,
@@ -402,10 +473,60 @@ export function CrmClient({
         return haystack.includes(q);
       });
     }
+    const q = segmentFilter.trim().toLowerCase();
+    if (!q) return activeList;
     return activeList.filter((c) =>
       c.segments.some((s) => s.toLowerCase().includes(q)),
     );
-  }, [activeList, activeTab, segmentFilter]);
+  }, [activeList, activeTab, segmentFilter, surveyFilters, surveyLeads]);
+
+  const sortedSurveyLeads = useMemo(() => {
+    const list = [...filtered];
+    const dir = surveySortDir === "asc" ? 1 : -1;
+    list.sort((a, b) => {
+      const tagsA = parseSurveyTags(a.segments);
+      const tagsB = parseSurveyTags(b.segments);
+      let cmp = 0;
+      switch (surveySortKey) {
+        case "updated_at":
+          cmp = a.updated_at.localeCompare(b.updated_at);
+          break;
+        case "email":
+          cmp = a.email.localeCompare(b.email);
+          break;
+        case "segment":
+          cmp = (tagsA.segment ?? "").localeCompare(tagsB.segment ?? "");
+          break;
+        case "priority":
+          cmp = (tagsA.priority ?? "").localeCompare(tagsB.priority ?? "");
+          break;
+        case "timing":
+          cmp = (tagsA.timing ?? "").localeCompare(tagsB.timing ?? "");
+          break;
+        case "status":
+          cmp = a.status.localeCompare(b.status);
+          break;
+      }
+      return cmp * dir;
+    });
+    return list;
+  }, [filtered, surveySortDir, surveySortKey]);
+
+  function toggleSurveySort(key: SurveySortKey) {
+    if (surveySortKey === key) {
+      setSurveySortDir((d) => (d === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSurveySortKey(key);
+    setSurveySortDir(key === "updated_at" ? "desc" : "asc");
+  }
+
+  function resetSurveyTabState() {
+    setSegmentFilter("");
+    setSurveyFilters(DEFAULT_SURVEY_FILTERS);
+    setExpandedLeadId(null);
+    setCopyTsvMsg(null);
+  }
 
   const [addState, addFormAction, addPending] = useActionState(
     addContactAction,
@@ -501,6 +622,50 @@ export function CrmClient({
     URL.revokeObjectURL(url);
   }
 
+  const surveyFilterOptions = useMemo(() => {
+    const timing = new Set<string>();
+    const segment = new Set<string>();
+    const priority = new Set<string>();
+    for (const c of surveyLeads) {
+      const tags = parseSurveyTags(c.segments);
+      if (tags.timing) timing.add(tags.timing);
+      if (tags.segment) segment.add(tags.segment);
+      if (tags.priority) priority.add(tags.priority);
+    }
+    return {
+      timing: [...timing].sort(),
+      segment: [...segment].sort(),
+      priority: [...priority].sort(),
+    };
+  }, [surveyLeads]);
+
+  async function runExportSurveyLeads() {
+    const r = await exportSurveyLeadsCsvAction();
+    if (!r.ok) {
+      alert(r.error);
+      return;
+    }
+    const date = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([r.csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `survey-leads-${date}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function copyFilteredSurveyLeadsTsv() {
+    setCopyTsvMsg(null);
+    try {
+      const tsv = surveyLeadsToDelimited(sortedSurveyLeads, "\t");
+      await navigator.clipboard.writeText(tsv);
+      setCopyTsvMsg(`Copied ${sortedSurveyLeads.length} leads as TSV`);
+    } catch {
+      setCopyTsvMsg("Copy failed — check clipboard permissions");
+    }
+  }
+
   return (
     <main className="container mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -508,24 +673,59 @@ export function CrmClient({
           <h1 className="text-2xl font-bold text-purple-950">
             Kreatli Email CRM
           </h1>
-          <p className="text-sm text-purple-800/80">
-            Data:{" "}
-            <code className="rounded bg-purple-100/80 px-1">crm-data/</code> ·
-            CLI:{" "}
-            <code className="rounded bg-purple-100/80 px-1">
-              npm run crm -- doctor
-            </code>
-          </p>
+          {activeTab === "contacts" ? (
+            <p className="text-sm text-purple-800/80">
+              Data:{" "}
+              <code className="rounded bg-purple-100/80 px-1">crm-data/</code> ·
+              CLI:{" "}
+              <code className="rounded bg-purple-100/80 px-1">
+                npm run crm -- doctor
+              </code>
+            </p>
+          ) : (
+            <p className="text-sm text-violet-900/85">
+              Homepage plan survey leads — review, filter, and export.
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            className="border border-purple-200 bg-white text-purple-900 hover:bg-purple-50"
-            onClick={() => runExport()}
-          >
-            Export CSV
-          </Button>
+          {activeTab === "contacts" ? (
+            <Button
+              type="button"
+              variant="secondary"
+              className="border border-purple-200 bg-white text-purple-900 hover:bg-purple-50"
+              onClick={() => runExport()}
+            >
+              Export CSV
+            </Button>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                className="border border-violet-200 bg-white text-violet-900 hover:bg-violet-50"
+                onClick={() => router.refresh()}
+              >
+                Refresh
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="border border-violet-200 bg-white text-violet-900 hover:bg-violet-50"
+                onClick={() => copyFilteredSurveyLeadsTsv()}
+              >
+                Copy as TSV
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="border border-violet-200 bg-white text-violet-900 hover:bg-violet-50"
+                onClick={() => runExportSurveyLeads()}
+              >
+                Export survey leads
+              </Button>
+            </>
+          )}
           <LogoutButton />
         </div>
       </div>
@@ -546,8 +746,12 @@ export function CrmClient({
         </div>
       ) : null}
 
-      <GmailBanner status={gmailStatus} />
-      <GoogleAdsBanner />
+      {activeTab === "contacts" ? (
+        <>
+          <GmailBanner status={gmailStatus} />
+          <GoogleAdsBanner />
+        </>
+      ) : null}
 
       <div
         className="mb-8 flex flex-wrap gap-1 rounded-xl border border-purple-200/80 bg-purple-50/60 p-1"
@@ -581,7 +785,7 @@ export function CrmClient({
           }`}
           onClick={() => {
             setActiveTab("survey_leads");
-            setSegmentFilter("");
+            resetSurveyTabState();
           }}
         >
           Survey leads ({surveyLeads.length})
@@ -855,22 +1059,46 @@ export function CrmClient({
       </section>
         </>
       ) : (
-        <section>
-          <div className="mb-6 rounded-xl border border-violet-200/80 bg-violet-50/80 p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-violet-950">Survey leads</h2>
-            <p className="mt-1 text-sm text-violet-900/85">
-              Emails captured from the homepage plan survey. These are kept separate
-              from outreach contacts so manual CRM work stays clean.
-            </p>
+        <section aria-labelledby="survey-leads-heading">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2
+                id="survey-leads-heading"
+                className="text-lg font-semibold text-violet-950"
+              >
+                Survey leads ({sortedSurveyLeads.length}
+                {sortedSurveyLeads.length !== surveyLeads.length
+                  ? ` of ${surveyLeads.length}`
+                  : ""}
+                )
+              </h2>
+              <p className="mt-1 text-sm text-violet-900/85">
+                Homepage plan survey captures — kept separate from outreach
+                contacts.
+              </p>
+            </div>
+            {copyTsvMsg ? (
+              <p className="text-xs text-violet-700" role="status">
+                {copyTsvMsg}
+              </p>
+            ) : null}
           </div>
 
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <h2 className="text-lg font-semibold text-violet-950">
-              All survey leads ({filtered.length}
-              {segmentFilter ? ` of ${surveyLeads.length}` : ""})
-            </h2>
-            <div className="flex max-w-md flex-1 flex-col gap-1">
-              <label className="text-xs font-medium text-violet-900">
+          <div className="mb-4 flex flex-wrap gap-2">
+            <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-900">
+              {surveyStats.total} total
+            </span>
+            <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-900">
+              {surveyStats.thisWeek} this week
+            </span>
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-950">
+              {surveyStats.highIntent} high intent
+            </span>
+          </div>
+
+          <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="lg:col-span-2">
+              <label className="mb-1 block text-xs font-medium text-violet-900">
                 Search email or survey answers
               </label>
               <input
@@ -878,77 +1106,434 @@ export function CrmClient({
                 value={segmentFilter}
                 onChange={(e) => setSegmentFilter(e.target.value)}
                 placeholder="e.g. planning ahead, long distance"
-                className="rounded-md border border-violet-200 px-3 py-2 text-sm text-violet-950 outline-none focus:ring-2 focus:ring-violet-500/25"
+                className="w-full rounded-md border border-violet-200 px-3 py-2 text-sm text-violet-950 outline-none focus:ring-2 focus:ring-violet-500/25"
               />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-violet-900">
+                Timing
+              </label>
+              <select
+                value={surveyFilters.timing}
+                onChange={(e) =>
+                  setSurveyFilters((f) => ({ ...f, timing: e.target.value }))
+                }
+                className="w-full rounded-md border border-violet-200 px-2 py-2 text-sm text-violet-950"
+              >
+                <option value="">All</option>
+                {surveyFilterOptions.timing.map((v) => (
+                  <option key={v} value={v}>
+                    {formatSurveyValue(v)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-violet-900">
+                Who
+              </label>
+              <select
+                value={surveyFilters.segment}
+                onChange={(e) =>
+                  setSurveyFilters((f) => ({ ...f, segment: e.target.value }))
+                }
+                className="w-full rounded-md border border-violet-200 px-2 py-2 text-sm text-violet-950"
+              >
+                <option value="">All</option>
+                {surveyFilterOptions.segment.map((v) => (
+                  <option key={v} value={v}>
+                    {formatSurveyValue(v)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-violet-900">
+                Priority
+              </label>
+              <select
+                value={surveyFilters.priority}
+                onChange={(e) =>
+                  setSurveyFilters((f) => ({ ...f, priority: e.target.value }))
+                }
+                className="w-full rounded-md border border-violet-200 px-2 py-2 text-sm text-violet-950"
+              >
+                <option value="">All</option>
+                {surveyFilterOptions.priority.map((v) => (
+                  <option key={v} value={v}>
+                    {formatSurveyValue(v)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="sm:col-span-2 lg:col-span-1">
+              <label className="mb-1 block text-xs font-medium text-violet-900">
+                Captured
+              </label>
+              <select
+                value={surveyFilters.dateRange}
+                onChange={(e) =>
+                  setSurveyFilters((f) => ({
+                    ...f,
+                    dateRange: e.target.value as SurveyDateRange,
+                  }))
+                }
+                className="w-full rounded-md border border-violet-200 px-2 py-2 text-sm text-violet-950"
+              >
+                <option value="all">All time</option>
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+              </select>
             </div>
           </div>
 
-          <div className="space-y-6">
-            {filtered.length === 0 ? (
-              <p className="text-sm text-violet-800/80">
-                No survey leads yet. They appear here when someone saves their plan
-                recommendation in the homepage survey.
-              </p>
-            ) : (
-              filtered.map((c) => (
-                <SurveyLeadCard
-                  key={c.id}
-                  contact={c}
-                  touches={byContact[c.id] ?? []}
-                  templateSlugs={templateSlugs}
-                  gmailConnected={gmailStatus.connected}
-                />
-              ))
-            )}
-          </div>
+          <p
+            className="mb-3 text-xs text-violet-800/80"
+            aria-live="polite"
+          >
+            Showing {sortedSurveyLeads.length} lead
+            {sortedSurveyLeads.length === 1 ? "" : "s"}
+          </p>
+
+          {sortedSurveyLeads.length === 0 ? (
+            <div className="rounded-xl border border-violet-200/80 bg-violet-50/50 p-6 text-sm text-violet-800/90">
+              {surveyLeads.length === 0 ? (
+                <>
+                  No survey leads yet. They appear here when someone saves their
+                  plan in the homepage survey.{" "}
+                  <Link
+                    href="/#pick-a-plan"
+                    className="font-medium text-violet-700 underline hover:text-violet-900"
+                  >
+                    Test the survey
+                  </Link>
+                </>
+              ) : (
+                "No leads match your filters. Clear search or filters to see all leads."
+              )}
+            </div>
+          ) : (
+            <SurveyLeadsTable
+              leads={sortedSurveyLeads}
+              expandedLeadId={expandedLeadId}
+              onToggleExpand={(id) =>
+                setExpandedLeadId((cur) => (cur === id ? null : id))
+              }
+              sortKey={surveySortKey}
+              sortDir={surveySortDir}
+              onSort={toggleSurveySort}
+              byContact={byContact}
+              templateSlugs={templateSlugs}
+              gmailConnected={gmailStatus.connected}
+            />
+          )}
         </section>
       )}
     </main>
   );
 }
 
-function SurveyLeadCard({
+function SurveySortHeader({
+  label,
+  column,
+  sortKey,
+  sortDir,
+  onSort,
+  className = "",
+}: {
+  label: string;
+  column: SurveySortKey;
+  sortKey: SurveySortKey;
+  sortDir: "asc" | "desc";
+  onSort: (key: SurveySortKey) => void;
+  className?: string;
+}) {
+  const active = sortKey === column;
+  return (
+    <th className={`p-2 text-left ${className}`} scope="col">
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-violet-800 hover:text-violet-950"
+        onClick={() => onSort(column)}
+      >
+        {label}
+        {active ? (
+          <span aria-hidden="true">{sortDir === "asc" ? "↑" : "↓"}</span>
+        ) : null}
+      </button>
+    </th>
+  );
+}
+
+function SurveyLeadsTable({
+  leads,
+  expandedLeadId,
+  onToggleExpand,
+  sortKey,
+  sortDir,
+  onSort,
+  byContact,
+  templateSlugs,
+  gmailConnected,
+}: {
+  leads: Contact[];
+  expandedLeadId: string | null;
+  onToggleExpand: (id: string) => void;
+  sortKey: SurveySortKey;
+  sortDir: "asc" | "desc";
+  onSort: (key: SurveySortKey) => void;
+  byContact: Record<string, Touch[]>;
+  templateSlugs: string[];
+  gmailConnected: boolean;
+}) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-violet-200/80 bg-white/95 shadow-sm">
+      <table className="min-w-[960px] w-full border-collapse text-left text-sm">
+        <thead className="sticky top-0 z-10 bg-violet-50/95 backdrop-blur">
+          <tr className="border-b border-violet-200">
+            <th className="sticky left-0 z-20 bg-violet-50/95 p-2 text-xs font-semibold uppercase tracking-wide text-violet-800 backdrop-blur">
+              <span className="sr-only">Expand</span>
+            </th>
+            <SurveySortHeader
+              label="Email"
+              column="email"
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={onSort}
+              className="sticky left-8 z-20 min-w-[200px] bg-violet-50/95 backdrop-blur"
+            />
+            <SurveySortHeader
+              label="Captured"
+              column="updated_at"
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={onSort}
+            />
+            <th
+              className="p-2 text-xs font-semibold uppercase tracking-wide text-violet-800"
+              scope="col"
+            >
+              Plan
+            </th>
+            <SurveySortHeader
+              label="Who"
+              column="segment"
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={onSort}
+            />
+            <SurveySortHeader
+              label="Priority"
+              column="priority"
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={onSort}
+            />
+            <SurveySortHeader
+              label="Timing"
+              column="timing"
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={onSort}
+            />
+            <th
+              className="p-2 text-xs font-semibold uppercase tracking-wide text-violet-800"
+              scope="col"
+            >
+              Group
+            </th>
+            <th
+              className="p-2 text-xs font-semibold uppercase tracking-wide text-violet-800"
+              scope="col"
+            >
+              Tool
+            </th>
+            <th
+              className="p-2 text-xs font-semibold uppercase tracking-wide text-violet-800"
+              scope="col"
+            >
+              Discovery
+            </th>
+            <SurveySortHeader
+              label="Status"
+              column="status"
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={onSort}
+            />
+          </tr>
+        </thead>
+        <tbody>
+          {leads.map((c) => {
+            const tags = parseSurveyTags(c.segments);
+            const expanded = expandedLeadId === c.id;
+            const planLabel = recommendedPlanLabelForTags(tags);
+            const isHostTier = planLabel === "Anime junkie";
+            return (
+              <SurveyLeadTableRow
+                key={c.id}
+                contact={c}
+                tags={tags}
+                expanded={expanded}
+                onToggleExpand={() => onToggleExpand(c.id)}
+                planLabel={planLabel}
+                isHostTier={isHostTier}
+                touches={byContact[c.id] ?? []}
+                templateSlugs={templateSlugs}
+                gmailConnected={gmailConnected}
+              />
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function SurveyLeadTableRow({
   contact: c,
+  tags,
+  expanded,
+  onToggleExpand,
+  planLabel,
+  isHostTier,
   touches,
   templateSlugs,
   gmailConnected,
 }: {
   contact: Contact;
+  tags: ParsedSurveyTags;
+  expanded: boolean;
+  onToggleExpand: () => void;
+  planLabel: string;
+  isHostTier: boolean;
   touches: Touch[];
   templateSlugs: string[];
   gmailConnected: boolean;
 }) {
-  const surveyTags = useMemo(() => parseSurveyTags(c.segments), [c.segments]);
+  const urgency = surveyRowUrgencyClass(tags.timing);
+  const rowBg = expanded ? "bg-violet-50/60" : "bg-white";
 
   return (
-    <article className="rounded-xl border border-violet-200/80 bg-white/95 p-5 shadow-sm">
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <h3 className="font-semibold text-violet-950">{c.email}</h3>
-          <p className="text-xs text-violet-700">
-            Captured {new Date(c.updated_at).toLocaleString()}
-          </p>
-        </div>
-        <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-900">
-          {c.status}
-        </span>
-      </div>
-
-      <div className="mb-4">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-violet-700">
-          Survey answers
-        </p>
-        <SurveyAnswersSummary tags={surveyTags} />
-      </div>
-
-      <ContactCard
-        contact={c}
-        touches={touches}
-        templateSlugs={templateSlugs}
-        gmailConnected={gmailConnected}
-        embedded
-      />
-    </article>
+    <>
+      <tr
+        className={`border-b border-violet-100 ${urgency} ${rowBg} hover:bg-violet-50/40`}
+      >
+        <td className={`sticky left-0 z-[1] p-2 ${rowBg}`}>
+          <button
+            type="button"
+            className="rounded p-1 text-violet-700 hover:bg-violet-100"
+            aria-expanded={expanded}
+            aria-label={expanded ? "Collapse lead details" : "Expand lead details"}
+            onClick={onToggleExpand}
+          >
+            {expanded ? "▼" : "▶"}
+          </button>
+        </td>
+        <td
+          className={`sticky left-8 z-[1] min-w-[200px] p-2 font-medium text-violet-950 ${rowBg}`}
+        >
+          <button
+            type="button"
+            className="text-left hover:underline"
+            onClick={onToggleExpand}
+          >
+            {c.email}
+          </button>
+        </td>
+        <td className="whitespace-nowrap p-2 text-violet-800">
+          {formatCapturedAt(c.updated_at)}
+        </td>
+        <td className="p-2">
+          <span
+            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+              isHostTier
+                ? "bg-indigo-100 text-indigo-900"
+                : "bg-sky-100 text-sky-900"
+            }`}
+          >
+            {planLabel}
+          </span>
+        </td>
+        <td className="p-2 text-violet-900">
+          {tags.segment ? formatSurveyValue(tags.segment) : "—"}
+        </td>
+        <td className="p-2 text-violet-900">
+          {tags.priority ? formatSurveyValue(tags.priority) : "—"}
+        </td>
+        <td className="p-2">
+          {tags.timing ? (
+            <span
+              className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                isHighIntentTiming(tags.timing)
+                  ? "bg-amber-100 text-amber-950"
+                  : "bg-violet-100 text-violet-900"
+              }`}
+            >
+              {formatSurveyValue(tags.timing)}
+            </span>
+          ) : (
+            "—"
+          )}
+        </td>
+        <td className="p-2 text-violet-900">
+          {tags.group_size ? formatSurveyValue(tags.group_size) : "—"}
+        </td>
+        <td className="p-2 text-violet-900">
+          {tags.current_solution
+            ? formatSurveyValue(tags.current_solution)
+            : "—"}
+        </td>
+        <td className="p-2 text-violet-900">
+          {tags.discovery ? formatSurveyValue(tags.discovery) : "—"}
+        </td>
+        <td className="p-2">
+          <span
+            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${contactStatusBadgeClass(c.status)}`}
+          >
+            {c.status}
+          </span>
+        </td>
+      </tr>
+      {expanded ? (
+        <tr className="border-b border-violet-200 bg-violet-50/40">
+          <td colSpan={11} className="p-4">
+            <div className="space-y-4">
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-violet-700">
+                  Survey answers
+                </p>
+                <SurveyAnswersSummary tags={tags} />
+              </div>
+              {c.notes.trim() ? (
+                <div>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-violet-700">
+                    Notes snapshot
+                  </p>
+                  <pre className="max-h-40 overflow-auto rounded-md border border-violet-200 bg-white/90 p-3 text-xs whitespace-pre-wrap text-violet-950">
+                    {c.notes}
+                  </pre>
+                </div>
+              ) : null}
+              <details className="rounded-lg border border-violet-200 bg-white/80">
+                <summary className="cursor-pointer px-4 py-2 text-sm font-medium text-violet-900">
+                  Outreach tools (optional)
+                </summary>
+                <div className="px-4 pb-4">
+                  <ContactCard
+                    contact={c}
+                    touches={touches}
+                    templateSlugs={templateSlugs}
+                    gmailConnected={gmailConnected}
+                    embedded
+                  />
+                </div>
+              </details>
+            </div>
+          </td>
+        </tr>
+      ) : null}
+    </>
   );
 }
 
@@ -1068,7 +1653,9 @@ function ContactCard({
             ) : null}
           </p>
         </div>
-        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-900">
+        <span
+          className={`rounded-full px-2 py-0.5 text-xs font-medium ${contactStatusBadgeClass(c.status)}`}
+        >
           {c.status}
         </span>
       </div>
