@@ -99,9 +99,24 @@ security/env impact, and rollback notes.
 CI uses Node 22 and `pnpm install --frozen-lockfile`. Do not churn
 `pnpm-lock.yaml` unless dependency changes are intentional and reviewed.
 
-Graphify is allowed as a local architecture aid. Heavy generated output belongs
-in ignored `graphify-out/`; the committed summary lives in
-`docs/project-knowledge-map.md`.
+Graphify is the project knowledge graph for agent orientation. Commit only the
+team graph artifacts documented in `docs/project-knowledge-map.md`; keep local
+cost files, HTML exports, scoped scratch graphs, and other generated outputs
+ignored.
+
+Graphify is now available through repo scripts:
+
+```bash
+pnpm graph:baseline
+pnpm graph:update
+pnpm graph:watch
+pnpm graph:hook:install
+pnpm graph:query "Trace room token flow from web to Worker WebSocket join."
+```
+
+Use it before cross-plane work, especially room/P2P/auth/Worker/CI changes. Do
+not promote Graphify to a required CI check unless the team explicitly accepts
+the runtime and backend requirements.
 
 ## Runtime Environments
 
