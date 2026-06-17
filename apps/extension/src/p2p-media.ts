@@ -10,6 +10,45 @@ const P2P_ICE_RESTART_COOLDOWN_MS = 8_000;
 const P2P_ICE_RESTART_REQUEST_COOLDOWN_MS = 3_000;
 const P2P_DISCONNECTED_RESTART_DELAY_MS = 3_500;
 const P2P_AUDIO_TRANSCEIVER_DIRECTION: RTCRtpTransceiverDirection = "sendrecv";
+/** Keep the mic warm this long after release so repeat push-to-talk is instant. */
+const P2P_MIC_IDLE_RELEASE_MS = 60_000;
+/** Reconcile desired-vs-actual media/connection state on this cadence (Block 5.3). */
+const P2P_RECONCILE_INTERVAL_MS = 5_000;
+
+/**
+ * Pure reconciliation decision for one peer: should we restart ICE (the
+ * connection is down) or re-sync media (steady state — catches drift from a
+ * lost renegotiate/signal)? Exported for unit testing.
+ */
+export function reconcilePeerAction(
+  connectionState: RTCPeerConnectionState,
+  iceConnectionState: RTCIceConnectionState,
+): "restart-ice" | "sync" {
+  const down = (s: string) => s === "disconnected" || s === "failed";
+  return down(connectionState) || down(iceConnectionState) ? "restart-ice" : "sync";
+}
+
+export type PeerHealth = "good" | "degraded" | "recovering";
+/** RTT above this on an otherwise-connected peer counts as degraded. */
+const P2P_DEGRADED_RTT_SECONDS = 0.4;
+
+/**
+ * Pure per-peer health classification from connection state + round-trip time
+ * (Block 5.4). "recovering" = not connected; "degraded" = connected but slow;
+ * "good" = connected and responsive. Exported for unit testing.
+ */
+export function classifyPeerHealth(
+  connectionState: RTCPeerConnectionState,
+  roundTripTimeSeconds: number | undefined,
+): PeerHealth {
+  if (connectionState !== "connected") {
+    return "recovering";
+  }
+  if (typeof roundTripTimeSeconds === "number" && roundTripTimeSeconds > P2P_DEGRADED_RTT_SECONDS) {
+    return "degraded";
+  }
+  return "good";
+}
 
 const DEFAULT_STUN_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
@@ -120,6 +159,18 @@ export class P2PMediaController {
   private wantsVoiceTalk = false;
   private voiceStarting = false;
   private voiceTalking = false;
+  // The mic track is kept warm between presses (track.enabled toggled) so
+  // repeat push-to-talk is instant, then released after an idle timeout for
+  // privacy (Block 5.2).
+  private micReleaseTimerId: number | null = null;
+  // Periodic desired-vs-actual reconciliation so a lost signal self-heals
+  // instead of leaving a peer stuck (Block 5.3).
+  private reconcileTimerId: number | null = null;
+  // Last classified health per peer, for transition logging + observability (Block 5.4).
+  private readonly healthByPeer = new Map<string, PeerHealth>();
+  // Re-acquire the camera when a device change kills the current track —
+  // unplugged webcam, switched camera, Bluetooth handoff (Block 5.5).
+  private readonly onDeviceChange = () => this.handleDeviceChange();
 
   constructor(options: P2PMediaControllerOptions) {
     this.iceServers = options.iceServers?.length ? options.iceServers : getDefaultP2PIceServers();
@@ -131,10 +182,62 @@ export class P2PMediaController {
     this.onVoiceStatusChange = options.onVoiceStatusChange;
     this.refreshIceServers = options.refreshIceServers;
     this.sendSignal = options.sendSignal;
+    this.reconcileTimerId = window.setInterval(() => {
+      this.reconcile("interval");
+      void this.samplePeerHealth();
+    }, P2P_RECONCILE_INTERVAL_MS);
+    navigator.mediaDevices?.addEventListener?.("devicechange", this.onDeviceChange);
     logDebug("p2p.controller", "created", {
       localParticipantId: options.localParticipant.id,
       iceServers: summarizeIceServers(this.iceServers),
     });
+  }
+
+  /**
+   * On a device change, re-acquire the camera only if it was wanted but the
+   * current track is dead (unplug/switch). Guarded so a spurious devicechange
+   * never churns a healthy camera (Block 5.5).
+   */
+  private handleDeviceChange(): void {
+    if (this.disposed || !this.wantsCamera) {
+      return;
+    }
+    if (this.localVideoTrack && this.localVideoTrack.readyState === "live") {
+      return;
+    }
+
+    logDebug("p2p.camera", "re-acquire after device change", {
+      localParticipantId: this.localParticipant.id,
+      trackState: this.localVideoTrack?.readyState ?? "none",
+    });
+    this.localVideoStream = null;
+    this.localVideoTrack = null;
+    void this.setCameraEnabled(true);
+  }
+
+  /**
+   * Bring every peer's actual state back to the desired one: restart ICE for a
+   * down connection, otherwise re-run the idempotent media sync (which only
+   * renegotiates on real drift). Self-heals a lost renegotiate/signal without
+   * waiting for another event (Block 5.3).
+   */
+  reconcile(reason: string): void {
+    if (this.disposed || !this.peers.size) {
+      return;
+    }
+
+    for (const peer of this.peers.values()) {
+      if (peer.pc.signalingState === "closed") {
+        continue;
+      }
+
+      const action = reconcilePeerAction(peer.pc.connectionState, peer.pc.iceConnectionState);
+      if (action === "restart-ice") {
+        void this.restartPeerIce(peer, `reconcile:${reason}`);
+      } else {
+        void this.syncPeerMediaAndNegotiate(peer, `reconcile:${reason}`, false);
+      }
+    }
   }
 
   updateParticipants(participants: Participant[]): void {
@@ -292,6 +395,26 @@ export class P2PMediaController {
       return;
     }
 
+    this.clearMicReleaseTimer();
+
+    // Warm mic from a recent press: just re-enable the existing track. No
+    // getUserMedia, no track/transceiver churn — the encoder is already warm
+    // so audio resumes near-instantly (Block 5.2).
+    if (this.localAudioTrack && this.localAudioTrack.readyState === "live") {
+      this.localAudioTrack.enabled = true;
+      this.voiceTalking = true;
+      for (const peer of this.peers.values()) {
+        this.sendSignal(peer.remoteUserId, { kind: "voice-start" });
+      }
+      this.publishActiveSpeakerIds();
+      this.onVoiceStatusChange("talking");
+      logDebug("p2p.voice", "resumed warm mic", {
+        localParticipantId: this.localParticipant.id,
+        peerCount: this.peers.size,
+      });
+      return;
+    }
+
     this.voiceStarting = true;
     this.onVoiceStatusChange("connecting");
     this.onVoiceMessageChange(null);
@@ -370,15 +493,16 @@ export class P2PMediaController {
     this.voiceStarting = false;
     this.voiceTalking = false;
 
-    stopStream(this.localAudioStream);
-    this.localAudioStream = null;
-    this.localAudioTrack = null;
+    // Mute by disabling the track (DTX sends ~no bytes) but keep it warm so a
+    // repeat press resumes instantly. Release the mic after an idle timeout for
+    // privacy (Block 5.2). The audio transceiver/sender are untouched, so this
+    // never renegotiates.
+    if (this.localAudioTrack) {
+      this.localAudioTrack.enabled = false;
+      this.scheduleMicRelease();
+    }
 
     for (const peer of this.peers.values()) {
-      if (peer.audioTransceiver) {
-        await peer.audioTransceiver.sender.replaceTrack(null).catch(() => undefined);
-        peer.audioTransceiver.direction = P2P_AUDIO_TRANSCEIVER_DIRECTION;
-      }
       this.sendSignal(peer.remoteUserId, { kind: "voice-stop" });
     }
 
@@ -390,6 +514,35 @@ export class P2PMediaController {
     for (const element of this.audioElementsByParticipant.values()) {
       await element.play().catch(() => undefined);
     }
+  }
+
+  private scheduleMicRelease(): void {
+    this.clearMicReleaseTimer();
+    this.micReleaseTimerId = window.setTimeout(() => {
+      this.micReleaseTimerId = null;
+      if (!this.voiceTalking && !this.disposed) {
+        this.releaseMic();
+      }
+    }, P2P_MIC_IDLE_RELEASE_MS);
+  }
+
+  private clearMicReleaseTimer(): void {
+    if (this.micReleaseTimerId !== null) {
+      window.clearTimeout(this.micReleaseTimerId);
+      this.micReleaseTimerId = null;
+    }
+  }
+
+  private releaseMic(): void {
+    stopStream(this.localAudioStream);
+    this.localAudioStream = null;
+    this.localAudioTrack = null;
+    for (const peer of this.peers.values()) {
+      void peer.audioTransceiver?.sender.replaceTrack(null).catch(() => undefined);
+    }
+    logDebug("p2p.voice", "released idle mic", {
+      localParticipantId: this.localParticipant.id,
+    });
   }
 
   async handleSignal(fromUserId: string, signal: P2PSignal): Promise<void> {
@@ -526,17 +679,58 @@ export class P2PMediaController {
 
   async getStats(): Promise<Record<string, unknown>> {
     const peers = await Promise.all(
-      Array.from(this.peers.values()).map(async (peer) => ({
-        remoteUserId: peer.remoteUserId,
-        connectionState: peer.pc.connectionState,
-        iceRestartCount: peer.iceRestartCount,
-        iceConnectionState: peer.pc.iceConnectionState,
-        signalingState: peer.pc.signalingState,
-        stats: summarizeStats(await peer.pc.getStats()),
-      })),
+      Array.from(this.peers.values()).map(async (peer) => {
+        const stats = summarizeStats(await peer.pc.getStats());
+        const rtt = (stats.candidatePair as { currentRoundTripTime?: number } | undefined)
+          ?.currentRoundTripTime;
+        return {
+          remoteUserId: peer.remoteUserId,
+          connectionState: peer.pc.connectionState,
+          iceRestartCount: peer.iceRestartCount,
+          iceConnectionState: peer.pc.iceConnectionState,
+          signalingState: peer.pc.signalingState,
+          health: classifyPeerHealth(peer.pc.connectionState, rtt),
+          stats,
+        };
+      }),
     );
 
     return { peers };
+  }
+
+  /** Classify each peer's health and log transitions for observability (Block 5.4). */
+  private async samplePeerHealth(): Promise<void> {
+    if (this.disposed) {
+      return;
+    }
+
+    for (const peer of this.peers.values()) {
+      let rtt: number | undefined;
+      try {
+        const stats = summarizeStats(await peer.pc.getStats());
+        rtt = (stats.candidatePair as { currentRoundTripTime?: number } | undefined)
+          ?.currentRoundTripTime;
+      } catch {
+        rtt = undefined;
+      }
+
+      const health = classifyPeerHealth(peer.pc.connectionState, rtt);
+      if (this.healthByPeer.get(peer.remoteUserId) !== health) {
+        this.healthByPeer.set(peer.remoteUserId, health);
+        logDebug("p2p.health", health, {
+          localParticipantId: this.localParticipant.id,
+          remoteUserId: peer.remoteUserId,
+          connectionState: peer.pc.connectionState,
+          roundTripTime: rtt,
+        });
+      }
+    }
+
+    for (const remoteId of Array.from(this.healthByPeer.keys())) {
+      if (!this.peers.has(remoteId)) {
+        this.healthByPeer.delete(remoteId);
+      }
+    }
   }
 
   notifyPageLeaving(reason: string): void {
@@ -564,16 +758,8 @@ export class P2PMediaController {
       peerCount: this.peers.size,
       reason,
     });
-    for (const peer of this.peers.values()) {
-      if (
-        peer.pc.connectionState === "disconnected" ||
-        peer.pc.connectionState === "failed" ||
-        peer.pc.iceConnectionState === "disconnected" ||
-        peer.pc.iceConnectionState === "failed"
-      ) {
-        void this.restartPeerIce(peer, reason);
-      }
-    }
+    // Reconciliation already restarts ICE for down peers and re-syncs the rest.
+    this.reconcile(`recover:${reason}`);
   }
 
   disconnect(): void {
@@ -584,6 +770,12 @@ export class P2PMediaController {
     this.disposed = true;
     this.wantsCamera = false;
     this.wantsVoiceTalk = false;
+    this.clearMicReleaseTimer();
+    if (this.reconcileTimerId !== null) {
+      window.clearInterval(this.reconcileTimerId);
+      this.reconcileTimerId = null;
+    }
+    navigator.mediaDevices?.removeEventListener?.("devicechange", this.onDeviceChange);
     for (const peer of this.peers.values()) {
       this.sendSignal(peer.remoteUserId, { kind: "bye" });
     }
@@ -1585,6 +1777,9 @@ async function configureSender(
   firstEncoding.maxBitrate = maxBitrate;
   if (maxFramerate !== undefined) {
     firstEncoding.maxFramerate = maxFramerate;
+    // Ghost Cam is motion presence at a low frame rate: keep the frame rate
+    // steady and let resolution drop under pressure instead (Block 5.5).
+    parameters.degradationPreference = "maintain-framerate";
   }
 
   await sender.setParameters(parameters).catch(() => undefined);
@@ -1633,6 +1828,18 @@ function summarizeStats(report: RTCStatsReport): Record<string, unknown> {
         bytesReceived: stat.bytesReceived,
         framesPerSecond: stat.framesPerSecond,
         framesDecoded: stat.framesDecoded,
+      };
+    }
+
+    if (stat.type === "outbound-rtp" && stat.kind === "audio") {
+      summary.audioOutbound = { bytesSent: stat.bytesSent, packetsSent: stat.packetsSent };
+    }
+
+    if (stat.type === "inbound-rtp" && stat.kind === "audio") {
+      summary.audioInbound = {
+        bytesReceived: stat.bytesReceived,
+        packetsReceived: stat.packetsReceived,
+        audioLevel: stat.audioLevel,
       };
     }
   }

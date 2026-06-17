@@ -95,11 +95,70 @@ export default defineContentScript({
       mounted = mountOverlay(adapter);
     };
 
+    let mountCheckScheduled = false;
+    const scheduleMountCheck = () => {
+      if (mountCheckScheduled) {
+        return;
+      }
+
+      mountCheckScheduled = true;
+      window.requestAnimationFrame(() => {
+        mountCheckScheduled = false;
+        mountOrRelocate();
+      });
+    };
+
+    // The MutationObserver below mounts the overlay the instant a <video> node
+    // appears, so this poll is only a safety net for the rare case a video
+    // becomes the best adapter without a DOM insertion. It backs off while
+    // unmounted so frames that never host a player (ads, embeds) stop spinning,
+    // and slows right down once the overlay is mounted — keeping idle CPU low in
+    // every frame the content script runs in.
+    const MOUNT_POLL_MIN_MS = 1000;
+    const MOUNT_POLL_MAX_MS = 8000;
+    let mountPollDelay = MOUNT_POLL_MIN_MS;
+    let mountPollTimer: number | null = null;
+    const scheduleNextMountPoll = () => {
+      if (mountPollTimer !== null) {
+        return;
+      }
+
+      mountPollDelay = mounted
+        ? MOUNT_POLL_MAX_MS
+        : Math.min(Math.round(mountPollDelay * 1.5), MOUNT_POLL_MAX_MS);
+      mountPollTimer = window.setTimeout(() => {
+        mountPollTimer = null;
+        mountOrRelocate();
+        scheduleNextMountPoll();
+      }, mountPollDelay);
+    };
+
     mountOrRelocate();
-    const interval = window.setInterval(mountOrRelocate, 1500);
+    scheduleNextMountPoll();
+
+    // Watch the DOM so the overlay mounts (or swaps to a new <video>) the instant
+    // the player node is inserted — covering page reloads and Crunchyroll/YouTube
+    // SPA episode switches with no poll latency. Cheap: batches with no added
+    // <video> are skipped, and the scan is bypassed entirely when a check is
+    // already queued for the frame.
+    const videoObserver = new MutationObserver((mutations) => {
+      if (mountCheckScheduled) {
+        return;
+      }
+
+      if (mutationsAddVideo(mutations)) {
+        scheduleMountCheck();
+      }
+    });
+    videoObserver.observe(document.documentElement, { childList: true, subtree: true });
+
     document.addEventListener("fullscreenchange", () => mounted?.relocate());
     window.addEventListener("pagehide", () => {
-      window.clearInterval(interval);
+      if (mountPollTimer !== null) {
+        window.clearTimeout(mountPollTimer);
+        mountPollTimer = null;
+      }
+      videoObserver.disconnect();
       stopKeyboardGuard();
       stopCrunchyrollLauncher?.();
       stopCrunchyrollStudy?.();
@@ -107,6 +166,29 @@ export default defineContentScript({
     });
   },
 });
+
+function nodeContainsVideo(node: Node): boolean {
+  if (node instanceof HTMLVideoElement) {
+    return true;
+  }
+
+  return node instanceof Element && node.querySelector("video") !== null;
+}
+
+function mutationsAddVideo(mutations: MutationRecord[]): boolean {
+  // Only added nodes can introduce a new player to mount/swap to; removals are
+  // handled by the relocate observers and the safety-net poll, so skipping them
+  // halves the per-batch scan on mutation-heavy SPA pages.
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (nodeContainsVideo(node)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 function installMessageComposerKeyboardGuard(): () => void {
   const isComposerOpen = () =>

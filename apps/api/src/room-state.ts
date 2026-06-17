@@ -1,5 +1,8 @@
 import type { Participant, PlaybackState, ServerEvent } from "@anidachi/protocol";
 
+/** Mesh P2P is sized for small rooms (PD3); reject the 5th concurrent user. */
+export const MAX_ROOM_PARTICIPANTS = 4;
+
 export class RoomState {
   readonly roomId: string;
   private readonly participantsById = new Map<string, Participant>();
@@ -8,6 +11,15 @@ export class RoomState {
 
   constructor(roomId: string) {
     this.roomId = roomId;
+  }
+
+  /**
+   * Whether a JOIN for this user can be admitted. A reconnecting/known user is
+   * always allowed (they do not grow the room); a genuinely new user is
+   * rejected once the room holds MAX_ROOM_PARTICIPANTS distinct participants.
+   */
+  canAdmit(userId: string): boolean {
+    return this.participantsById.has(userId) || this.participantsById.size < MAX_ROOM_PARTICIPANTS;
   }
 
   get participants(): Participant[] {

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { getRoomById, addRoomMember, getUserById } from "@/lib/anidachi-auth/db";
+import { getRoomById, addRoomMember, getUserById, updateRoom } from "@/lib/anidachi-auth/db";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
 
 export const dynamic = "force-dynamic";
@@ -39,10 +39,19 @@ export async function POST(
   const room = await getRoomById(roomId);
 
   if (!room || room.status === "ended") {
+    // Browser form posts get the friendly "ended" landing page; API callers
+    // still get a machine-readable 404.
+    if (!wantsJson(request)) {
+      return NextResponse.redirect(
+        new URL(`/room/${encodeURIComponent(roomId)}`, request.url),
+        303,
+      );
+    }
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
 
   await addRoomMember(roomId, session.userId);
+  await updateRoom(roomId, { last_active_at: new Date().toISOString() });
 
   const user = await getUserById(session.userId);
   const roomToken = await signRoomToken({

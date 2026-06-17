@@ -76,6 +76,40 @@ export async function createCurrentParticipant(): Promise<CurrentParticipantResu
   };
 }
 
+/**
+ * Best-effort, non-interactive pickup of an existing website session. Returns
+ * an authenticated result when the website cookie session can be exchanged for
+ * extension tokens without UI, otherwise null (stay signed out quietly).
+ */
+export async function trySilentSignIn(): Promise<CurrentParticipantResult | null> {
+  let response;
+  try {
+    response = await sendAuthCommand("sign-in-silent");
+  } catch (error) {
+    if (isExtensionContextInvalidatedError(error)) {
+      return {
+        participant: null,
+        authenticated: false,
+        tokens: null,
+        requiresPageReload: true,
+        message: EXTENSION_CONTEXT_INVALIDATED_MESSAGE,
+      };
+    }
+
+    return null;
+  }
+
+  if (response?.ok && response.tokens) {
+    return {
+      participant: participantFromTokens(response.tokens),
+      authenticated: true,
+      tokens: response.tokens,
+    };
+  }
+
+  return null;
+}
+
 export async function signInAndCreateParticipant(): Promise<CurrentParticipantResult> {
   const response = await sendAuthCommand("sign-in");
   if (!response.ok || !response.tokens) {

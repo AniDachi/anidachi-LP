@@ -8,6 +8,11 @@ import {
   createRoom,
   createWebsiteRoomFromApi,
   createWebsiteRoomHeaders,
+  endRoom,
+  endRoomHttpMessage,
+  endWebsiteRoomFromApi,
+  handleRoomHttpMessage,
+  isQuotaExhaustedError,
   isRoomHttpMessage,
   RoomClient,
 } from "../src/room-client";
@@ -76,6 +81,8 @@ describe("authenticated room client", () => {
       roomId: "room-1",
       roomToken: "room-token-1",
       shareableLink: "http://localhost:3003/room/room-1",
+      reused: false,
+      quota: null,
     });
     expect(fetchMock).toHaveBeenCalledWith(new URL("http://localhost:3003/api/rooms"), {
       method: "POST",
@@ -95,6 +102,7 @@ describe("authenticated room client", () => {
 
     await expect(connectWebsiteRoomFromApi("room-2", "access-1")).resolves.toEqual({
       roomToken: "room-token-2",
+      quota: null,
     });
     expect(fetchMock).toHaveBeenCalledWith(new URL("http://localhost:3003/api/rooms/room-2/connect"), {
       method: "POST",
@@ -103,6 +111,100 @@ describe("authenticated room client", () => {
         "Content-Type": "application/json",
       },
     });
+  });
+
+  it("parses quota, reused, and clientRequestId on create", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          roomId: "room-1",
+          roomToken: "room-token-1",
+          shareableLink: "http://localhost:3003/room/room-1",
+          reused: true,
+          quota: { remainingSeconds: 900, resetAt: "2026-06-14T00:00:00.000Z" },
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const input = { clientRequestId: "click-1" };
+    await expect(createWebsiteRoomFromApi("access-1", input)).resolves.toEqual({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      shareableLink: "http://localhost:3003/room/room-1",
+      reused: true,
+      quota: { remainingSeconds: 900, resetAt: "2026-06-14T00:00:00.000Z" },
+    });
+    expect(isRoomHttpMessage(createRoomHttpMessage("access-1", input))).toBe(true);
+  });
+
+  it("surfaces quota exhaustion as a structured room api error", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: "Daily free watch-party time is used up",
+          code: "QUOTA_EXHAUSTED",
+          resetAt: "2026-06-14T00:00:00.000Z",
+          remainingSeconds: 0,
+        }),
+        { status: 403 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await handleRoomHttpMessage(createRoomHttpMessage("access-1"));
+    expect(response).toEqual({
+      ok: false,
+      error: "Daily free watch-party time is used up (403)",
+      code: "QUOTA_EXHAUSTED",
+      resetAt: "2026-06-14T00:00:00.000Z",
+    });
+  });
+
+  it("rebuilds quota errors across the runtime bridge", async () => {
+    const sendMessage = vi.fn().mockResolvedValue({
+      ok: false,
+      error: "Daily free watch-party time is used up (403)",
+      code: "QUOTA_EXHAUSTED",
+      resetAt: "2026-06-14T00:00:00.000Z",
+    });
+    vi.stubGlobal("chrome", { runtime: { sendMessage } });
+
+    const error = await createRoom("access-1").catch((caught) => caught);
+    expect(isQuotaExhaustedError(error)).toBe(true);
+    expect(error.resetAt).toBe("2026-06-14T00:00:00.000Z");
+  });
+
+  it("ends rooms through the api helper and runtime bridge", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, endedAt: "2026-06-13T12:00:00.000Z" }), {
+        status: 200,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(endWebsiteRoomFromApi("room-3", "access-1")).resolves.toEqual({
+      endedAt: "2026-06-13T12:00:00.000Z",
+    });
+    expect(fetchMock).toHaveBeenCalledWith(new URL("http://localhost:3003/api/rooms/room-3/end"), {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer access-1",
+        "Content-Type": "application/json",
+      },
+    });
+
+    expect(isRoomHttpMessage(endRoomHttpMessage("room-3", "access-1"))).toBe(true);
+    const sendMessage = vi.fn().mockResolvedValue({
+      ok: true,
+      ended: { endedAt: "2026-06-13T12:00:00.000Z" },
+    });
+    vi.stubGlobal("chrome", { runtime: { sendMessage } });
+    await expect(endRoom("room-3", "access-1")).resolves.toEqual({
+      endedAt: "2026-06-13T12:00:00.000Z",
+    });
+    expect(sendMessage).toHaveBeenCalledWith(endRoomHttpMessage("room-3", "access-1"));
   });
 
   it("creates rooms through the extension runtime bridge", async () => {

@@ -16,14 +16,24 @@ export interface RoomClientOptions {
   participant: Participant;
   videoFingerprint: string;
   lastSeenP2PServerSeq?: number;
+  participantSessionId?: string;
   onEvent: (event: ServerEvent) => void;
   onStatus: (status: RoomConnectionStatus) => void;
+}
+
+/** Free-plan daily quota summary attached to room API responses (PD2). */
+export interface RoomQuotaSummary {
+  remainingSeconds: number;
+  resetAt: string;
 }
 
 export interface CreatedRoom {
   roomId: string;
   roomToken: string;
   shareableLink: string;
+  /** True when an idempotent retry returned the already-created room. */
+  reused?: boolean;
+  quota?: RoomQuotaSummary | null;
 }
 
 export interface CreateRoomInput {
@@ -32,13 +42,32 @@ export interface CreateRoomInput {
   title?: string | null;
   showId?: string;
   episodeId?: string;
+  /** Per-click idempotency key; retries with the same id reuse the room. */
+  clientRequestId?: string;
+}
+
+/** Room API error that keeps the machine-readable code across the bridge. */
+export class RoomApiError extends Error {
+  readonly code?: string;
+  readonly resetAt?: string;
+
+  constructor(message: string, code?: string, resetAt?: string) {
+    super(message);
+    this.name = "RoomApiError";
+    this.code = code;
+    this.resetAt = resetAt;
+  }
+}
+
+export function isQuotaExhaustedError(error: unknown): error is RoomApiError {
+  return error instanceof RoomApiError && error.code === "QUOTA_EXHAUSTED";
 }
 
 const ROOM_HTTP_MESSAGE_TYPE = "ANIDACHI_ROOM_HTTP";
 const ROOM_KEEPALIVE_INTERVAL_MS = 20_000;
 const ROOM_KEEPALIVE_TIMEOUT_MS = 45_000;
 
-export type RoomHttpCommand = "create-room" | "connect-room";
+export type RoomHttpCommand = "create-room" | "connect-room" | "end-room";
 
 export type RoomHttpMessage =
   | {
@@ -52,12 +81,19 @@ export type RoomHttpMessage =
       command: "connect-room";
       accessToken: string;
       roomId: string;
+    }
+  | {
+      type: typeof ROOM_HTTP_MESSAGE_TYPE;
+      command: "end-room";
+      accessToken: string;
+      roomId: string;
     };
 
 export type RoomHttpMessageResponse =
   | { ok: true; room: CreatedRoom }
-  | { ok: true; connection: { roomToken: string } }
-  | { ok: false; error: string };
+  | { ok: true; connection: { roomToken: string; quota?: RoomQuotaSummary | null } }
+  | { ok: true; ended: { endedAt: string | null } }
+  | { ok: false; error: string; code?: string; resetAt?: string };
 
 export function buildRoomWebSocketUrl(roomId: string, roomToken: string): string {
   const url = new URL(`${API_WS_BASE}/ws/${encodeURIComponent(roomId)}`);
@@ -72,11 +108,12 @@ export function createWebsiteRoomHeaders(accessToken: string): Record<string, st
   };
 }
 
-async function websiteRoomHttpError(response: Response, fallback: string): Promise<Error> {
+async function websiteRoomHttpError(response: Response, fallback: string): Promise<RoomApiError> {
   const body = (await response.json().catch(() => null)) as {
     error?: unknown;
     message?: unknown;
     code?: unknown;
+    resetAt?: unknown;
   } | null;
   const detail =
     (typeof body?.message === "string" && body.message) ||
@@ -84,7 +121,20 @@ async function websiteRoomHttpError(response: Response, fallback: string): Promi
     (typeof body?.code === "string" && body.code) ||
     fallback;
 
-  return new Error(`${detail} (${response.status})`);
+  return new RoomApiError(
+    `${detail} (${response.status})`,
+    typeof body?.code === "string" ? body.code : undefined,
+    typeof body?.resetAt === "string" ? body.resetAt : undefined,
+  );
+}
+
+function parseQuotaSummary(value: unknown): RoomQuotaSummary | null {
+  if (typeof value !== "object" || value === null) return null;
+  const quota = value as Record<string, unknown>;
+  if (typeof quota.remainingSeconds !== "number" || typeof quota.resetAt !== "string") {
+    return null;
+  }
+  return { remainingSeconds: quota.remainingSeconds, resetAt: quota.resetAt };
 }
 
 function isCreateRoomInput(value: unknown): value is CreateRoomInput {
@@ -96,7 +146,8 @@ function isCreateRoomInput(value: unknown): value is CreateRoomInput {
     (input.videoFingerprint === undefined || typeof input.videoFingerprint === "string") &&
     (input.title === undefined || input.title === null || typeof input.title === "string") &&
     (input.showId === undefined || typeof input.showId === "string") &&
-    (input.episodeId === undefined || typeof input.episodeId === "string")
+    (input.episodeId === undefined || typeof input.episodeId === "string") &&
+    (input.clientRequestId === undefined || typeof input.clientRequestId === "string")
   );
 }
 
@@ -121,6 +172,15 @@ export function connectRoomHttpMessage(roomId: string, accessToken: string): Roo
   };
 }
 
+export function endRoomHttpMessage(roomId: string, accessToken: string): RoomHttpMessage {
+  return {
+    type: ROOM_HTTP_MESSAGE_TYPE,
+    command: "end-room",
+    roomId,
+    accessToken,
+  };
+}
+
 export function isRoomHttpMessage(value: unknown): value is RoomHttpMessage {
   if (typeof value !== "object" || value === null) return false;
   const message = value as Partial<RoomHttpMessage>;
@@ -128,7 +188,7 @@ export function isRoomHttpMessage(value: unknown): value is RoomHttpMessage {
   if (message.command === "create-room") {
     return typeof message.accessToken === "string" && isCreateRoomInput(message.input);
   }
-  if (message.command === "connect-room") {
+  if (message.command === "connect-room" || message.command === "end-room") {
     return typeof message.accessToken === "string" && typeof message.roomId === "string";
   }
   return false;
@@ -158,23 +218,30 @@ export async function createWebsiteRoomFromApi(
     roomId: string;
     roomToken?: unknown;
     shareableLink?: unknown;
+    reused?: unknown;
+    quota?: unknown;
   };
   if (typeof payload.roomToken !== "string" || typeof payload.shareableLink !== "string") {
     throw new Error("Website room response is missing roomToken or shareableLink");
   }
 
-  logDebug("room.http", "create website room success", payload);
+  logDebug("room.http", "create website room success", {
+    roomId: payload.roomId,
+    reused: payload.reused === true,
+  });
   return {
     roomId: payload.roomId,
     roomToken: payload.roomToken,
     shareableLink: payload.shareableLink,
+    reused: payload.reused === true,
+    quota: parseQuotaSummary(payload.quota),
   };
 }
 
 export async function connectWebsiteRoomFromApi(
   roomId: string,
   accessToken: string,
-): Promise<{ roomToken: string }> {
+): Promise<{ roomToken: string; quota?: RoomQuotaSummary | null }> {
   logDebug("room.http", "connect website room request", { webHttpBase: WEB_HTTP_BASE, roomId });
   const response = await fetch(
     new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
@@ -189,11 +256,33 @@ export async function connectWebsiteRoomFromApi(
     throw await websiteRoomHttpError(response, "Failed to connect website room");
   }
 
-  const payload = (await response.json()) as { roomToken?: unknown };
+  const payload = (await response.json()) as { roomToken?: unknown; quota?: unknown };
   if (typeof payload.roomToken !== "string") {
     throw new Error("Website room connect response is missing roomToken");
   }
-  return { roomToken: payload.roomToken };
+  return { roomToken: payload.roomToken, quota: parseQuotaSummary(payload.quota) };
+}
+
+export async function endWebsiteRoomFromApi(
+  roomId: string,
+  accessToken: string,
+): Promise<{ endedAt: string | null }> {
+  logDebug("room.http", "end website room request", { webHttpBase: WEB_HTTP_BASE, roomId });
+  const response = await fetch(
+    new URL(`/api/rooms/${encodeURIComponent(roomId)}/end`, WEB_HTTP_BASE),
+    {
+      method: "POST",
+      headers: createWebsiteRoomHeaders(accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    logDebug("room.http", "end website room failed", { roomId, status: response.status });
+    throw await websiteRoomHttpError(response, "Failed to end room");
+  }
+
+  const payload = (await response.json()) as { endedAt?: unknown };
+  return { endedAt: typeof payload.endedAt === "string" ? payload.endedAt : null };
 }
 
 export async function handleRoomHttpMessage(
@@ -203,11 +292,20 @@ export async function handleRoomHttpMessage(
     if (message.command === "create-room") {
       return { ok: true, room: await createWebsiteRoomFromApi(message.accessToken, message.input) };
     }
+    if (message.command === "end-room") {
+      return {
+        ok: true,
+        ended: await endWebsiteRoomFromApi(message.roomId, message.accessToken),
+      };
+    }
     return {
       ok: true,
       connection: await connectWebsiteRoomFromApi(message.roomId, message.accessToken),
     };
   } catch (error) {
+    if (error instanceof RoomApiError) {
+      return { ok: false, error: error.message, code: error.code, resetAt: error.resetAt };
+    }
     return {
       ok: false,
       error: error instanceof Error ? error.message : "Room request failed",
@@ -228,21 +326,24 @@ function assertRoomHttpResponse(
   return response;
 }
 
+function bridgeError(response: Extract<RoomHttpMessageResponse, { ok: false }>): RoomApiError {
+  return new RoomApiError(response.error, response.code, response.resetAt);
+}
+
 export async function createRoom(accessToken: string, input?: CreateRoomInput): Promise<CreatedRoom> {
   logDebug("room.http", "create room through background bridge", { webHttpBase: WEB_HTTP_BASE });
   const response = assertRoomHttpResponse(
     await sendRoomHttpMessage(createRoomHttpMessage(accessToken, input)),
   );
-  if (!response.ok || !("room" in response)) {
-    throw new Error(response.ok ? "Room bridge response is missing room" : response.error);
-  }
+  if (!response.ok) throw bridgeError(response);
+  if (!("room" in response)) throw new Error("Room bridge response is missing room");
   return response.room;
 }
 
 export async function connectWebsiteRoom(
   roomId: string,
   accessToken: string,
-): Promise<{ roomToken: string }> {
+): Promise<{ roomToken: string; quota?: RoomQuotaSummary | null }> {
   logDebug("room.http", "connect room through background bridge", {
     webHttpBase: WEB_HTTP_BASE,
     roomId,
@@ -250,10 +351,25 @@ export async function connectWebsiteRoom(
   const response = assertRoomHttpResponse(
     await sendRoomHttpMessage(connectRoomHttpMessage(roomId, accessToken)),
   );
-  if (!response.ok || !("connection" in response)) {
-    throw new Error(response.ok ? "Room bridge response is missing connection" : response.error);
-  }
+  if (!response.ok) throw bridgeError(response);
+  if (!("connection" in response)) throw new Error("Room bridge response is missing connection");
   return response.connection;
+}
+
+export async function endRoom(
+  roomId: string,
+  accessToken: string,
+): Promise<{ endedAt: string | null }> {
+  logDebug("room.http", "end room through background bridge", {
+    webHttpBase: WEB_HTTP_BASE,
+    roomId,
+  });
+  const response = assertRoomHttpResponse(
+    await sendRoomHttpMessage(endRoomHttpMessage(roomId, accessToken)),
+  );
+  if (!response.ok) throw bridgeError(response);
+  if (!("ended" in response)) throw new Error("Room bridge response is missing ended");
+  return response.ended;
 }
 
 export class RoomClient {
@@ -302,6 +418,9 @@ export class RoomClient {
       };
       if (options.lastSeenP2PServerSeq !== undefined) {
         joinEvent.lastSeenP2PServerSeq = options.lastSeenP2PServerSeq;
+      }
+      if (options.participantSessionId !== undefined) {
+        joinEvent.participantSessionId = options.participantSessionId;
       }
       this.send(joinEvent);
       this.flushPendingEvents();

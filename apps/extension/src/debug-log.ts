@@ -14,10 +14,13 @@ const STORAGE_KEY = "anidachi:debug-log:v1";
 const CONSOLE_DEBUG_STORAGE_KEY = "anidachi:debug-console";
 const MAX_ENTRIES = 1200;
 const COMPACT_ENTRIES = 350;
+const PERSIST_DEBOUNCE_MS = 2000;
 const STARTED_AT = performance.now();
 
 let sequence = 0;
 let entries: DebugEntry[] = loadEntries();
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
+let persistScheduled = false;
 
 export function logDebug(scope: string, message: string, data?: unknown): void {
   const entry: DebugEntry = {
@@ -47,7 +50,7 @@ export function getDebugEntries(): DebugEntry[] {
 export function clearDebugLog(): void {
   entries = [];
   sequence = 0;
-  persistEntries();
+  writeEntriesToStorage();
   logDebug("debug", "cleared");
 }
 
@@ -313,12 +316,38 @@ function loadEntries(): DebugEntry[] {
   }
 }
 
-function persistEntries(): void {
+function writeEntriesToStorage(): void {
+  persistScheduled = false;
+  if (persistTimer !== null) {
+    clearTimeout(persistTimer);
+    persistTimer = null;
+  }
+
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
   } catch {
     // Ignore storage pressure; debug export is best-effort in content scripts.
   }
+}
+
+function persistEntries(): void {
+  // logDebug fires very frequently during an active session (sync ticks, P2P
+  // signals, ICE/connection events, the reconcile loop…), and serialising the
+  // whole buffer plus a synchronous localStorage write on every call is a real
+  // main-thread cost — multiplied by every frame the content script runs in.
+  // Debounce so bursts collapse into at most one write per interval.
+  if (persistScheduled) {
+    return;
+  }
+
+  persistScheduled = true;
+  persistTimer = setTimeout(writeEntriesToStorage, PERSIST_DEBOUNCE_MS);
+}
+
+// Best-effort flush so the most recent entries survive a normal navigation.
+// A hard crash won't fire this, but debug export is best-effort anyway.
+if (typeof window !== "undefined") {
+  window.addEventListener("pagehide", writeEntriesToStorage);
 }
 
 function shouldPrintDebugToConsole(): boolean {

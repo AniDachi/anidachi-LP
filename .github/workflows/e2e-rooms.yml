@@ -1,17 +1,23 @@
-name: CI
+name: E2E Rooms
+
+# Block 1.4 of docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md
+# Signaling-level room harness against the real Worker (workerd via wrangler dev).
+# Non-required at first; promote to a required check after it proves stable.
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  push:
-    branches:
-      - main
-      - staging
+  workflow_dispatch:
   pull_request:
     branches:
-      - main
       - staging
+      - main
+    paths:
+      - "apps/api/**"
+      - "packages/protocol/**"
+      - "scripts/room-signaling-harness.mjs"
+      - ".github/workflows/e2e-rooms.yml"
 
 permissions:
   contents: read
@@ -21,7 +27,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-and-test:
+  room-signaling:
     runs-on: ubuntu-latest
 
     steps:
@@ -41,15 +47,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
-        run: pnpm check
-
-      - name: Test
-        run: pnpm test
-
-      - name: Lint web (matches Vercel build lint gate)
-        run: pnpm --filter @anidachi/web lint
-
-      - name: Check Worker bundle
-        working-directory: apps/api
-        run: pnpm exec wrangler deploy --env staging --dry-run --outdir /tmp/anidachi-worker-dry-run
+      - name: Run room signaling harness
+        run: pnpm harness:rooms

@@ -11,6 +11,11 @@ import { createIceServersPayload } from "./ice-servers";
 import { createLiveKitToken } from "./livekit-token";
 import { RecentP2PSignalBuffer, type BufferedP2PSignalEvent } from "./p2p-signal-buffer";
 import { RoomState } from "./room-state";
+import {
+  emitRoomTelemetry,
+  type AnalyticsEngineDataset,
+  type RoomTelemetryContext,
+} from "./telemetry";
 
 export interface Env {
   ROOMS: DurableObjectNamespace;
@@ -21,6 +26,8 @@ export interface Env {
   CLOUDFLARE_TURN_KEY_API_TOKEN?: string;
   CLOUDFLARE_TURN_TTL_SECONDS?: string;
   ANIDACHI_JWT_SECRET?: string;
+  ANIDACHI_ENV?: string;
+  ROOM_ANALYTICS?: AnalyticsEngineDataset;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -47,6 +54,20 @@ app.post("/rooms", (c) => {
 });
 
 app.get("/ice-servers", async (c) => {
+  // Require a valid room token so anonymous callers can't mint Cloudflare TURN
+  // credentials at the project's expense (Block 7.1). The token proves the
+  // caller is a participant of a real room; roomId scopes the check.
+  const roomToken = c.req.query("roomToken");
+  const roomId = c.req.query("roomId");
+  if (!roomToken || !roomId) {
+    return c.json({ error: "ROOM_TOKEN_REQUIRED", message: "roomToken and roomId are required" }, 401);
+  }
+
+  const verified = await verifyRoomToken(roomToken, roomId, c.env);
+  if (!verified) {
+    return c.json({ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" }, 401);
+  }
+
   try {
     return c.json(await createIceServersPayload(c.env));
   } catch (error) {
@@ -103,6 +124,7 @@ export class RoomDurableObject {
   private readonly p2pSignalBuffer = new RecentP2PSignalBuffer();
   private readonly socketsByParticipant = new Map<string, WebSocket>();
   private readonly verifiedBySocket = new Map<WebSocket, VerifiedRoomToken>();
+  private readonly sessionIdBySocket = new Map<WebSocket, string | undefined>();
   private nextP2PServerSeq = 1;
 
   constructor(
@@ -110,7 +132,14 @@ export class RoomDurableObject {
     private readonly env: Env,
   ) {
     this.room = new RoomState(state.id.name ?? "room");
-    void this.env;
+  }
+
+  private get telemetryContext(): RoomTelemetryContext {
+    return { env: this.env.ANIDACHI_ENV ?? "local", roomId: this.room.roomId };
+  }
+
+  private track(name: Parameters<typeof emitRoomTelemetry>[2]["name"], extra?: { role?: string; value?: number }): void {
+    emitRoomTelemetry(this.env.ROOM_ANALYTICS, this.telemetryContext, { name, ...extra });
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -122,11 +151,13 @@ export class RoomDurableObject {
     const url = new URL(request.url);
     const roomToken = url.searchParams.get("roomToken");
     if (!roomToken) {
+      this.track("ws_token_reject");
       return new Response("Missing room token", { status: 401 });
     }
 
     const verified = await verifyRoomToken(roomToken, this.room.roomId, this.env);
     if (!verified) {
+      this.track("ws_token_reject");
       return new Response("Invalid room token", { status: 401 });
     }
 
@@ -135,6 +166,7 @@ export class RoomDurableObject {
     const server = pair[1];
     server.accept();
     this.verifiedBySocket.set(server, verified);
+    this.track("ws_open", { role: verified.role });
 
     server.addEventListener("message", (event) => this.handleMessage(server, event.data));
     server.addEventListener("close", () => this.handleClose(server));
@@ -219,19 +251,55 @@ export class RoomDurableObject {
       lastSeenAt: Date.now(),
     };
 
+    // PD3: cap mesh rooms at MAX_ROOM_PARTICIPANTS. Checked before stale-socket
+    // replacement so a reconnecting member is never rejected as the "5th".
+    if (!this.room.canAdmit(serverParticipant.id)) {
+      this.track("room_full", { role: serverParticipant.role });
+      this.send(socket, {
+        type: "ERROR",
+        code: "ROOM_FULL",
+        message: "This watch room is full (max 4 people).",
+      });
+      socket.close(4003, "Room is full");
+      return;
+    }
+
     const existingSocket = this.socketsByParticipant.get(serverParticipant.id);
     if (existingSocket && existingSocket !== socket) {
+      const existingSessionId = this.sessionIdBySocket.get(existingSocket);
+      const sameSession =
+        event.participantSessionId !== undefined &&
+        existingSessionId === event.participantSessionId;
+
       this.participantsBySocket.delete(existingSocket);
       this.verifiedBySocket.delete(existingSocket);
-      existingSocket.close(4000, "Replaced by a newer Anidachi session");
+      this.sessionIdBySocket.delete(existingSocket);
+
+      if (sameSession) {
+        // Same tab reconnecting: silently retire the stale socket.
+        existingSocket.close(4000, "Replaced by a newer Anidachi session");
+      } else {
+        // A different tab/device took the session over. Tell the displaced
+        // socket terminally so it stops instead of reconnect-fighting (one
+        // active session). The displaced client suppresses reconnect on this.
+        this.track("session_taken_over");
+        this.send(existingSocket, {
+          type: "ERROR",
+          code: "SESSION_TAKEN_OVER",
+          message: "This room was opened in another tab or device.",
+        });
+        existingSocket.close(4002, "Session taken over");
+      }
     }
 
     const joined = this.room.join(serverParticipant);
     this.participantsBySocket.set(socket, joined.id);
     this.socketsByParticipant.set(joined.id, socket);
+    this.sessionIdBySocket.set(socket, event.participantSessionId);
     this.send(socket, this.room.snapshot);
     this.replayP2PSignals(socket, joined.id, event.lastSeenP2PServerSeq ?? 0);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
+    this.track("join", { role: joined.role, value: this.room.participants.length });
   }
 
   private handleReaction(
@@ -347,6 +415,7 @@ export class RoomDurableObject {
       return;
     }
 
+    this.track("p2p_signal");
     this.send(target, buffered.event);
   }
 
@@ -357,6 +426,7 @@ export class RoomDurableObject {
     }
 
     if (replay.length > 0) {
+      this.track("p2p_replay", { value: replay.length });
       console.log(
         JSON.stringify({
           event: "p2p.signal.replay",
@@ -372,6 +442,7 @@ export class RoomDurableObject {
   private handleClose(socket: WebSocket): void {
     const participantId = this.participantsBySocket.get(socket);
     this.verifiedBySocket.delete(socket);
+    this.sessionIdBySocket.delete(socket);
     if (!participantId) {
       return;
     }
@@ -379,6 +450,7 @@ export class RoomDurableObject {
     this.participantsBySocket.delete(socket);
     this.socketsByParticipant.delete(participantId);
     const participant = this.room.leave(participantId);
+    this.track("ws_close", { value: this.room.participants.length });
 
     if (participant) {
       this.broadcast({ type: "PARTICIPANT_LEFT", participant });
