@@ -68,6 +68,22 @@ Owner approved delegating these defaults (change via PR if product evidence disa
 - Update this file's Progress Log and `docs/current-development-state.md` in the same PR when behavior or endpoints change.
 - A block is done only when its acceptance criteria pass in the harness AND on staging with two real browser profiles.
 
+## Development-Flow Gate Before Block 6
+
+Before starting remaining Block 6 implementation, use the development quality
+system from
+`docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md`.
+Minimum startup for the next room/P2P PR:
+
+- read `AGENTS.md`, `docs/current-development-state.md`, this plan, and the
+  hardening roadmap;
+- run `pnpm dev:check -- --profile rooms` and record the selected checks in the
+  PR;
+- keep `graphify-out/` local if Graphify is used, and update only curated docs;
+- use the PR template's room/P2P section, staging acceptance section, and
+  rollback section;
+- let CodeRabbit review the PR with the Anidachi-specific path instructions.
+
 ---
 
 ## Block 1 — Measurement Foundation And Two-Browser Harness
@@ -212,3 +228,4 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 - [x] 2026-06-13: Block 2 staging acceptance PASSED 14/14 against the live `staging.anidachi.app` deployment (owner-authorized, disposable test user, full cleanup verified — 0 users/rooms left). Covered: fresh-quota create (1800s summary), idempotent retry (`reused=true`, same room), no false limits (S7), `lobby -> live` + host segment on connect, host End room + idempotent end + ended-room connect 404, `QUOTA_EXHAUSTED` with `resetAt` on both create and connect at zero quota, `usage_daily` persistence. Block 2 acceptance criteria met; checkboxes 2.1–2.7 satisfied on staging. Production promotion is a separate gated step.
 - [ ] 2026-06-13: First Block 2 acceptance attempt was 11/14 — create with 30-min quota summary, idempotent retry returns the same room (`reused=true`), no false limits (S7), `lobby -> live` + host segment on connect, `QUOTA_EXHAUSTED` with `resetAt` on create and connect at zero quota, `usage_daily` persisted. The 3 failures were all `POST /api/rooms/:id/end` blocked with 401 by the staging gate's bearer-path allowlist — fixed in this PR. Re-run to 14/14 pending after merge. Note: the stable preview alias from `development-environments.md` (`git-3b9ab6`) serves a stale pre-Block-2 deployment; current staging is the `git-staging` branch alias — docs follow-up needed.
 - [ ] 2026-06-15: Live-test bug fixes on `codex/fix-live-test-bugs` (extension-only). (1) Invite-login pickup: the content script never runs on the website, so a guest who signed in there (cookie session) and was redirected to the video page showed signed-out in the overlay until a manual "Sign in"/reload. Added a non-interactive `launchWebAuthFlow` pass (`sign-in-silent` in `auth-client.ts`, `trySilentSignIn` in `user-identity.ts`) attempted on overlay mount — reuses the existing one-time-code flow, so an existing website session is adopted with no UI and the pending invite auto-joins. (2) Quota timer: was a static snapshot that only refreshed on reconnect, and at expiry the room token lapsed into a `QUOTA_EXHAUSTED` reconnect loop that jittered the panel. Now ticks down once/second while actually metering (host + ≥1 guest, mirroring `room-quota.ts`), re-anchors on each server snapshot, displays m:ss; metered host ends gracefully at zero via a shared `terminateRoomSession()` (also reused for `ROOM_FULL`/`SESSION_TAKEN_OVER`); `QUOTA_EXHAUSTED` is terminal on auto-reconnect and initial invite join (stale room pointer dropped). (3) Slow re-mount: content script runs at `document_start` before any `<video>` and otherwise re-checked only every 1.5s, so the overlay + ghost-cam bubbles lagged on reload/episode-switch. Added a `MutationObserver` that mounts/swaps the instant a `<video>` is inserted/replaced (1.5s poll kept as safety net; scan skipped when a check is already queued). Verified: `pnpm check` green across all 5 packages; extension vitest 101 pass (only the documented Node-26-local `debug-log.test.ts` failure). Staging build + live retest pending owner.
+- [x] 2026-06-17: Development-flow gate added before remaining Block 6 work. Next room/P2P PR must use `AGENTS.md`, `.coderabbit.yaml`, the PR template, `pnpm dev:check -- --profile rooms`, the env/secrets matrix, and the staging acceptance checklist before promotion.

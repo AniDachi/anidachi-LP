@@ -19,6 +19,7 @@ dist/
 .output/
 coverage/
 artifacts/
+graphify-out/
 
 # extension generated artifacts
 anidachi-extension-public/

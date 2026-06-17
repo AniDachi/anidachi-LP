@@ -7,13 +7,11 @@ It is the shared reference for the team before testing or releasing changes.
 
 ```txt
 Primary repo: AniDachi/anidachi-LP
-Main local checkout: /Users/vladyslavhulyi/anidachi-LP-monorepo
-Legacy local repo: /Users/vladyslavhulyi/anidachi
+Local checkout placeholder: <repo>
 ```
 
-Use the primary repo for new product work. The legacy local repo should only be used as
-historical reference until the production migration is complete.
-ee
+Use the primary repo for new product work. In docs, `<repo>` means the folder
+where a developer cloned `AniDachi/anidachi-LP`.
 
 ## Branch Model
 
@@ -26,7 +24,9 @@ feature/* or codex/* -> staging -> main
 - Feature branches should normally branch from `staging`.
 - Open PRs into `staging` first.
 - After staging is tested, open a release PR from `staging` into `main`.
-- `main` and `staging` are protected: PR review, CI, conversation resolution, and no force-push/delete.
+- `main` and `staging` are protected. See
+  `docs/current-development-state.md` for the current required checks and
+  auto-promotion rules.
 
 ## Website Environments
 
@@ -41,19 +41,8 @@ Production is public and must stay stable. Real users should only use the produc
 
 ### Staging Website
 
-> **Update 2026-06-13:** the canonical staging web URL is now
-> `https://staging.anidachi.app` (custom domain attached, same app-level
-> password gate, deploys from the `staging` branch). It matches the
-> `WXT_WEB_HTTP_BASE` build var and `current-development-state.md`. The
-> `git-3b9ab6` branch-preview alias below is historical: it points at the
-> `codex/monorepo-migration` branch and serves a stale pre-Block-2 deploy, so
-> do not use it for verification. The OAuth callback and env examples further
-> down still reference the old alias and need a follow-up pass.
-
-Earlier fast staging used the stable Vercel branch preview alias:
-
 ```txt
-https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
+https://staging.anidachi.app
 ```
 
 This URL is protected by the app-level staging password gate, not by Vercel
@@ -73,9 +62,10 @@ ANIDACHI_STAGING_GATE_COOKIE_SECRET=<random secret>
 ANIDACHI_STAGING_GATE_COOKIE_MAX_AGE_SECONDS=2592000
 ```
 
-These variables are scoped to Preview for `codex/monorepo-migration`. The middleware is
-also hard-disabled when `VERCEL_ENV=production`, so the staging gate cannot appear on
-`www.anidachi.app` even if the variables are accidentally added to Production.
+These variables are scoped to the Vercel Preview/staging environment. The
+middleware is also hard-disabled when `VERCEL_ENV=production`, so the staging
+gate cannot appear on `www.anidachi.app` even if the variables are accidentally
+added to Production.
 
 The gate intentionally bypasses:
 
@@ -90,14 +80,6 @@ Unauthenticated API requests without a bearer token return JSON 401:
 ```json
 { "error": "Staging access required" }
 ```
-
-Do not attach `staging.anidachi.app` yet. On the current Vercel setup, deployment
-protection/custom-domain behavior is easy to misconfigure. A public staging custom
-domain should only be added after one of these is true:
-
-- `anidachi.app` DNS is managed in Cloudflare and Cloudflare Access protects staging;
-- Vercel deployment protection covers the custom staging domain;
-- the app-level staging auth middleware is confirmed to run on that custom domain.
 
 ## API Environments
 
@@ -133,7 +115,7 @@ anidachi-extension-staging
 Current staging build environment:
 
 ```txt
-WXT_WEB_HTTP_BASE=https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
+WXT_WEB_HTTP_BASE=https://staging.anidachi.app
 WXT_API_HTTP_BASE=https://anidachi-api-staging.vladislav-gul7.workers.dev
 WXT_API_WS_BASE=wss://anidachi-api-staging.vladislav-gul7.workers.dev
 ```
@@ -158,46 +140,30 @@ Staging OAuth redirect URLs must be added before staging login can be tested:
 
 ```txt
 Google:
-https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app/api/auth/callback/google
+https://staging.anidachi.app/api/auth/callback/google
 
 Discord:
-https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app/api/auth/callback/discord
+https://staging.anidachi.app/api/auth/callback/discord
 ```
 
 Adding staging redirects does not break production as long as production redirects are
 not removed or edited.
 
-## What Can Be Tested Before OAuth Redirects
-
-These are not blocked:
-
-- Vercel preview builds.
-- App-level staging password gate and noindex headers.
-- Cloudflare Worker health.
-- Cloudflare `/ice-servers`.
-- Extension typecheck/tests/build.
-- Static website rendering after entering the staging password.
-
-These are ready for manual staging acceptance:
-
-- Google/Discord sign-in on staging.
-- `/api/me` authenticated staging smoke test.
-- Extension sign-in against staging.
-- Room creation through authenticated website API.
-- Full invite flow through staging web auth.
+See `docs/environment-and-secrets-matrix.md` for the full OAuth, Vercel,
+GitHub, Cloudflare, and Supabase matrix.
 
 ## Staging Acceptance Checklist
 
-Run this before marking the migration PR ready for review.
+Run the full checklist in `docs/staging-acceptance-checklist.md` before
+promoting high-risk work to `main`. The short room/P2P smoke is:
 
 ```txt
-1. Open the protected Vercel preview URL.
+1. Open `https://staging.anidachi.app`.
 2. Enter the shared Anidachi staging password.
 3. Sign in with Google or Discord.
 4. Open /api/me and confirm user JSON is returned.
 5. Sign out and confirm /api/me returns 401.
 6. Load the latest anidachi-extension-staging artifact.
-   Local zip for this checkpoint: artifacts/anidachi-extension-staging-65bead8.zip
 7. Sign in through the extension.
 8. Open YouTube or Crunchyroll.
 9. Create a room.
@@ -211,7 +177,7 @@ Run this before marking the migration PR ready for review.
 17. Confirm play, pause, and seek sync.
 18. Confirm reactions/chat render.
 19. Confirm debug info shows these staging bases:
-    WEB: https://v0-anime-app-landing-page-git-3b9ab6-georges-projects-8c4bc43a.vercel.app
+    WEB: https://staging.anidachi.app
     API: https://anidachi-api-staging.vladislav-gul7.workers.dev
     WS:  wss://anidachi-api-staging.vladislav-gul7.workers.dev
 ```
