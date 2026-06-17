@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+early_access: false
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  review_details: false
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+  path_filters:
+    - "!node_modules/**"
+    - "!**/.next/**"
+    - "!**/.turbo/**"
+    - "!**/.wrangler/**"
+    - "!**/.wxt/**"
+    - "!**/.output/**"
+    - "!coverage/**"
+    - "!artifacts/**"
+    - "!anidachi-extension-*/**"
+    - "!anidachi-extension-*.zip"
+    - "!graphify-out/**"
+    - "!apps/web/lib/anime-jikan-cache.json"
+  path_instructions:
+    - path: "apps/api/**"
+      instructions: |
+        Review Cloudflare Worker and Durable Object changes for authorization,
+        room-token verification, WebSocket state, replay/serverSeq ordering,
+        hibernation compatibility, alarms, quota metering, CORS, TURN cost, and
+        telemetry privacy. Flag raw PII in telemetry and any anonymous TURN/ICE
+        credential path.
+    - path: "apps/extension/**"
+      instructions: |
+        Review Chrome MV3 extension changes for narrow store permissions,
+        content-script safety, auth pickup, room reconnect behavior, WebRTC
+        renegotiation risk, push-to-talk behavior, debug-log volume, and
+        compatibility with staging/production channels. Flag broad permissions
+        unless explicitly local-only.
+    - path: "apps/web/**"
+      instructions: |
+        Review website changes for staging gate/noindex safety, OAuth redirect
+        flow correctness, Supabase service-role containment, room create/join/end
+        semantics, Stripe/subscription side effects, and accidental public
+        exposure of internal staging or CRM surfaces.
+    - path: "packages/protocol/**"
+      instructions: |
+        Review shared protocol changes for backward compatibility across web,
+        Worker, and extension. Check event versioning, room/source generation,
+        serverSeq semantics, Zod schema shape, and migration ordering.
+    - path: ".github/**"
+      instructions: |
+        Review GitHub Actions for least-privilege tokens, stable unique job
+        names, branch restrictions, no secret echoing, no production deploys from
+        feature branches, and correct staging/main environment separation.
+    - path: "docs/superpowers/plans/**"
+      instructions: |
+        Review plans for concrete acceptance criteria, current endpoint names,
+        explicit verification commands, and consistency with
+        docs/current-development-state.md.
+
+chat:
+  auto_reply: true

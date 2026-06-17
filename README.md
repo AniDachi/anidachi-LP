@@ -4,6 +4,8 @@ AniDachi (アニ友 = "anime friend") is a platform for watching anime together 
 
 For how the project is organized and how development should move, start with
 **[docs/project-operating-manual.md](docs/project-operating-manual.md)**.
+AI and automation workers should start with **[AGENTS.md](AGENTS.md)**, then
+follow the active plan for the area they are changing.
 For current endpoints, branch protection, and known fragile areas, use
 **[docs/current-development-state.md](docs/current-development-state.md)**.
 For the complete architecture and development workflow, use
@@ -28,6 +30,7 @@ on your own machine.
 
 ```bash
 cd <repo>
+node --version   # CI uses Node 22
 corepack enable
 corepack prepare pnpm@11.2.2 --activate
 pnpm install
@@ -41,6 +44,7 @@ Useful commands:
 ```bash
 pnpm check
 pnpm test
+pnpm dev:check
 pnpm dev:extension
 pnpm dev:api
 pnpm dev:demo
@@ -115,6 +119,14 @@ git switch -c codex/task-name
 pnpm install --frozen-lockfile
 pnpm check
 pnpm test
+```
+
+Before opening a PR, ask the repo for the focused verification list:
+
+```bash
+pnpm dev:check
+pnpm dev:check -- --profile extension
+pnpm dev:check -- --profile rooms
 ```
 
 Run targeted checks for the surface you touched:

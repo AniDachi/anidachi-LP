@@ -11,6 +11,7 @@
     "build:extension:staging:broad": "WXT_BROAD_HOST_PERMISSIONS=true bash scripts/build-extension-staging.sh",
     "check": "turbo check",
     "dev:api": "pnpm --filter @anidachi/api dev",
+    "dev:check": "node scripts/dev-check.mjs",
     "dev:demo": "pnpm --filter @anidachi/demo dev",
     "dev:extension": "pnpm --filter @anidachi/extension dev",
     "dev:web": "pnpm --filter @anidachi/web dev",

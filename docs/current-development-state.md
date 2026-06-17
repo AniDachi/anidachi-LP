@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-06-04.
+Last updated: 2026-06-17.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -73,6 +73,35 @@ Site-only auto-promotion:
   or other sensitive paths, promotion is skipped and must be handled manually.
 - Workflow changes under `.github/**` are intentionally never auto-promoted; the
   auto-promotion workflow itself must be installed in `main` manually once.
+
+## Development Quality System
+
+Every contributor and AI worker should start from root `AGENTS.md`. It points to
+the required docs, the active plan, the git flow, and the verification commands.
+
+Before opening a PR, run:
+
+```bash
+pnpm dev:check
+```
+
+This prints the focused check profile for the files changed against
+`origin/staging`. High-risk profiles can also be inspected explicitly, for
+example `pnpm dev:check -- --profile rooms` or
+`pnpm dev:check -- --profile extension`.
+
+Project-aware review is configured in `.coderabbit.yaml`. CodeRabbit is
+advisory: it should catch Anidachi-specific risks, but it does not replace CI,
+staging acceptance, or human/agent review. PRs should use the root
+`.github/pull_request_template.md` and include verification, staging impact,
+security/env impact, and rollback notes.
+
+CI uses Node 22 and `pnpm install --frozen-lockfile`. Do not churn
+`pnpm-lock.yaml` unless dependency changes are intentional and reviewed.
+
+Graphify is allowed as a local architecture aid. Heavy generated output belongs
+in ignored `graphify-out/`; the committed summary lives in
+`docs/project-knowledge-map.md`.
 
 ## Runtime Environments
 
@@ -159,9 +188,10 @@ staging build is an explicit local-only command for development experiments. The
 same source code produces both store builds. The channel-specific behavior is
 selected through build environment variables in the build scripts.
 
-## Current Staging Store Artifact
+## Last Recorded Staging Store Artifact
 
-The latest staging artifact was generated from commit `6be6f82`:
+The last staging artifact explicitly recorded in this document was generated
+from commit `6be6f82`:
 
 ```txt
 <repo>/anidachi-extension-staging.zip
@@ -177,6 +207,9 @@ version_name: 6be6f82-staging-20260604040825
 
 The staging Chrome Web Store reviewer/tester access code is stored in the Chrome
 Web Store testing instructions, not in git.
+
+For new testing, prefer the latest `Build Extension` artifact from the
+`staging` branch unless a PR records a more specific artifact.
 
 ## Current Product Behavior
 
@@ -214,6 +247,13 @@ These are intentionally not treated as solved:
 - Project architecture and development workflow:
   `docs/project-architecture-and-development.md`
 - Current operational state: `docs/current-development-state.md`
+- Agent/contributor startup contract: `AGENTS.md`
+- Development flow quality plan:
+  `docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md`
+- Environment and secrets matrix: `docs/environment-and-secrets-matrix.md`
+- Staging acceptance checklist: `docs/staging-acceptance-checklist.md`
+- Release and rollback runbook: `docs/release-and-rollback-runbook.md`
+- Project knowledge map / Graphify policy: `docs/project-knowledge-map.md`
 - Overall architecture notes: `docs/architecture.md`
 - Extension release channels: `docs/extension-release-channels.md`
 - Site and extension integration: `docs/site-extension-integration-notes.md`
