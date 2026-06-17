@@ -19,7 +19,19 @@ dist/
 .output/
 coverage/
 artifacts/
-graphify-out/
+graphify-out/*
+!graphify-out/
+!graphify-out/graph.json
+!graphify-out/GRAPH_REPORT.md
+!graphify-out/manifest.json
+graphify-out/cache/
+graphify-out/cost.json
+graphify-out/*.html
+graphify-out/scopes/
+graphify-out/memory/
+graphify-out/obsidian/
+graphify-out/wiki/
+graphify-out/converted/
 
 # extension generated artifacts
 anidachi-extension-public/

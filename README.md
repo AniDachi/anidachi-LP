@@ -48,6 +48,9 @@ pnpm dev:check
 pnpm dev:extension
 pnpm dev:api
 pnpm dev:demo
+pnpm graph:baseline
+pnpm graph:update
+pnpm graph:query "Trace room token flow from web to Worker WebSocket join."
 pnpm build:extension:staging
 pnpm validate:extension:staging
 pnpm build:extension:public
@@ -128,6 +131,19 @@ pnpm dev:check
 pnpm dev:check -- --profile extension
 pnpm dev:check -- --profile rooms
 ```
+
+For cross-plane tasks, refresh the local knowledge graph before editing:
+
+```bash
+graphify install --platform codex
+pnpm graph:baseline   # first local code graph, no LLM backend required
+pnpm graph:update
+pnpm graph:query "Which files connect P2P signaling, room-client, and Durable Objects?"
+```
+
+In Codex, use `$graphify .` for a full assistant-backed graph. The headless
+`pnpm graph:extract` command is for CLI/CI usage and needs a Graphify backend
+when docs, PDFs, or images are included.
 
 Run targeted checks for the surface you touched:
 
