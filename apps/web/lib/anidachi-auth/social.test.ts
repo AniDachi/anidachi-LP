@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   cleanDisplayName,
   cleanGroupName,
+  cleanInviteMessage,
   friendshipPairKey,
   isUuid,
   normalizeHandle,
@@ -26,6 +27,12 @@ test("group names trim whitespace and keep a sane maximum", () => {
   assert.equal(cleanGroupName("  Friday   Anime  "), "Friday Anime");
   assert.equal(cleanGroupName("   "), null);
   assert.equal(cleanGroupName("x".repeat(100)), "x".repeat(80));
+});
+
+test("invite messages trim whitespace and keep a sane maximum", () => {
+  assert.equal(cleanInviteMessage("  Join   now  "), "Join now");
+  assert.equal(cleanInviteMessage("   "), null);
+  assert.equal(cleanInviteMessage("x".repeat(220)), "x".repeat(180));
 });
 
 test("friendship pair key is stable for unordered pairs", () => {

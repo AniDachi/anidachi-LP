@@ -1,4 +1,4 @@
-import { db, getUserById, type UserRow } from "./db";
+import { db, getRoomById, getUserById, type UserRow } from "./db";
 import { getPlanEntitlements } from "./plan-entitlements";
 
 const UNIQUE_VIOLATION = "23505";
@@ -54,6 +54,32 @@ export type FriendGroupMemberRow = {
   added_at: string;
 };
 
+export type InviteTargetKind = "direct" | "group";
+export type InviteRecipientStatus = "pending" | "accepted" | "declined" | "expired";
+
+export type RoomInviteRow = {
+  id: string;
+  room_id: string;
+  sender_user_id: string;
+  target_kind: InviteTargetKind;
+  target_group_id: string | null;
+  message: string | null;
+  room_title: string | null;
+  source_url: string | null;
+  video_fingerprint: string | null;
+  created_at: string;
+  expires_at: string;
+};
+
+export type RoomInviteRecipientRow = {
+  invite_id: string;
+  recipient_user_id: string;
+  status: InviteRecipientStatus;
+  created_at: string;
+  updated_at: string;
+  responded_at: string | null;
+};
+
 export type PublicProfile = {
   userId: string;
   handle: string | null;
@@ -90,6 +116,26 @@ export type FriendGroup = {
   }>;
 };
 
+export type RoomInvite = {
+  id: string;
+  roomId: string;
+  sender: PublicProfile;
+  targetKind: InviteTargetKind;
+  targetGroupId: string | null;
+  message: string | null;
+  roomTitle: string | null;
+  sourceUrl: string | null;
+  videoFingerprint: string | null;
+  createdAt: string;
+  expiresAt: string;
+  recipients: Array<{
+    user: PublicProfile;
+    status: InviteRecipientStatus;
+    updatedAt: string;
+    respondedAt: string | null;
+  }>;
+};
+
 export function normalizeHandle(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const normalized = value.trim().toLowerCase();
@@ -109,6 +155,13 @@ export function cleanGroupName(value: unknown): string | null {
   const cleaned = value.trim().replace(/\s+/g, " ");
   if (!cleaned) return null;
   return cleaned.slice(0, 80);
+}
+
+export function cleanInviteMessage(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const cleaned = value.trim().replace(/\s+/g, " ");
+  if (!cleaned) return null;
+  return cleaned.slice(0, 180);
 }
 
 export function friendshipPairKey(userA: string, userB: string): [string, string] {
@@ -782,6 +835,352 @@ export async function removeFriendGroupMember(params: {
   const updated = groups.find((item) => item.id === params.groupId);
   if (!updated) throw new Error("Updated group disappeared");
   return updated;
+}
+
+export async function createRoomInvite(params: {
+  senderUserId: string;
+  roomId: string;
+  recipientUserIds?: string[];
+  groupId?: string;
+  message?: string | null;
+}): Promise<RoomInvite> {
+  assertUuid(params.senderUserId, "senderUserId");
+  const room = await getRoomById(params.roomId);
+  if (!room) throw new SocialApiError(404, "Room not found");
+  if (room.host_user_id !== params.senderUserId) {
+    throw new SocialApiError(403, "Only the host can invite people to this room");
+  }
+  if (room.status === "ended") {
+    throw new SocialApiError(409, "Ended rooms cannot receive new invites");
+  }
+
+  const hasDirectTargets = Boolean(params.recipientUserIds?.length);
+  const hasGroupTarget = Boolean(params.groupId);
+  if (hasDirectTargets === hasGroupTarget) {
+    throw new SocialApiError(400, "Provide either recipientUserIds or groupId");
+  }
+
+  const targetKind: InviteTargetKind = hasGroupTarget ? "group" : "direct";
+  const recipientUserIds = hasGroupTarget
+    ? await recipientIdsForGroupInvite(params.senderUserId, params.groupId ?? "")
+    : await recipientIdsForDirectInvite(params.senderUserId, params.recipientUserIds ?? []);
+  if (recipientUserIds.length === 0) {
+    throw new SocialApiError(400, "Invite has no eligible recipients");
+  }
+
+  const { data: inviteData, error: inviteError } = await db()
+    .from("room_invites")
+    .insert({
+      room_id: room.room_id,
+      sender_user_id: params.senderUserId,
+      target_kind: targetKind,
+      target_group_id: params.groupId ?? null,
+      message: params.message ?? null,
+      room_title: room.title,
+      source_url: room.source_url,
+      video_fingerprint: room.video_fingerprint,
+    })
+    .select()
+    .single();
+  if (inviteError) throw new Error(`Failed to create invite: ${inviteError.message}`);
+
+  const invite = inviteData as RoomInviteRow;
+  const { data: recipientsData, error: recipientsError } = await db()
+    .from("room_invite_recipients")
+    .insert(
+      recipientUserIds.map((recipientUserId) => ({
+        invite_id: invite.id,
+        recipient_user_id: recipientUserId,
+      }))
+    )
+    .select();
+  if (recipientsError) {
+    throw new Error(`Failed to create invite recipients: ${recipientsError.message}`);
+  }
+
+  return inviteView(invite, (recipientsData as RoomInviteRecipientRow[] | null) ?? []);
+}
+
+export async function listRoomInvites(viewerUserId: string): Promise<{
+  inbox: RoomInvite[];
+  sent: RoomInvite[];
+}> {
+  assertUuid(viewerUserId, "viewerUserId");
+
+  const { data: inboxRecipientsData, error: inboxError } = await db()
+    .from("room_invite_recipients")
+    .select("*")
+    .eq("recipient_user_id", viewerUserId)
+    .order("updated_at", { ascending: false })
+    .limit(50);
+  if (inboxError) throw new Error(`Failed to list invite inbox: ${inboxError.message}`);
+
+  const inboxRecipients = (inboxRecipientsData as RoomInviteRecipientRow[] | null) ?? [];
+  const inboxInviteIds = Array.from(new Set(inboxRecipients.map((row) => row.invite_id)));
+
+  const { data: inboxInvitesData, error: inboxInvitesError } = inboxInviteIds.length
+    ? await db().from("room_invites").select("*").in("id", inboxInviteIds)
+    : { data: [], error: null };
+  if (inboxInvitesError) {
+    throw new Error(`Failed to list inbox invite details: ${inboxInvitesError.message}`);
+  }
+
+  const { data: sentInvitesData, error: sentError } = await db()
+    .from("room_invites")
+    .select("*")
+    .eq("sender_user_id", viewerUserId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (sentError) throw new Error(`Failed to list sent invites: ${sentError.message}`);
+
+  const sentInvites = (sentInvitesData as RoomInviteRow[] | null) ?? [];
+  const sentInviteIds = sentInvites.map((row) => row.id);
+  const { data: sentRecipientsData, error: sentRecipientsError } = sentInviteIds.length
+    ? await db().from("room_invite_recipients").select("*").in("invite_id", sentInviteIds)
+    : { data: [], error: null };
+  if (sentRecipientsError) {
+    throw new Error(`Failed to list sent invite recipients: ${sentRecipientsError.message}`);
+  }
+
+  return {
+    inbox: await inviteViews(
+      (inboxInvitesData as RoomInviteRow[] | null) ?? [],
+      inboxRecipients
+    ),
+    sent: await inviteViews(sentInvites, (sentRecipientsData as RoomInviteRecipientRow[] | null) ?? []),
+  };
+}
+
+export async function acceptRoomInvite(
+  viewerUserId: string,
+  inviteId: string
+): Promise<RoomInvite> {
+  assertUuid(viewerUserId, "viewerUserId");
+  assertUuid(inviteId, "inviteId");
+
+  const { invite, recipient } = await loadInviteForRecipient(viewerUserId, inviteId);
+  await assertInviteCanBeAccepted(viewerUserId, invite);
+  if (recipient.status === "accepted") {
+    return inviteView(invite, [recipient]);
+  }
+  if (recipient.status !== "pending") {
+    throw new SocialApiError(409, "Invite is not pending");
+  }
+
+  const { data, error } = await db()
+    .from("room_invite_recipients")
+    .update({
+      status: "accepted",
+      responded_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("invite_id", inviteId)
+    .eq("recipient_user_id", viewerUserId)
+    .select()
+    .single();
+  if (error) throw new Error(`Failed to accept invite: ${error.message}`);
+  return inviteView(invite, [data as RoomInviteRecipientRow]);
+}
+
+export async function declineRoomInvite(
+  viewerUserId: string,
+  inviteId: string
+): Promise<RoomInvite> {
+  assertUuid(viewerUserId, "viewerUserId");
+  assertUuid(inviteId, "inviteId");
+
+  const { invite, recipient } = await loadInviteForRecipient(viewerUserId, inviteId);
+  if (recipient.status === "declined" || recipient.status === "expired") {
+    return inviteView(invite, [recipient]);
+  }
+  if (recipient.status === "accepted") {
+    throw new SocialApiError(409, "Accepted invites cannot be declined");
+  }
+
+  const status: InviteRecipientStatus = inviteExpired(invite) ? "expired" : "declined";
+  const { data, error } = await db()
+    .from("room_invite_recipients")
+    .update({
+      status,
+      responded_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("invite_id", inviteId)
+    .eq("recipient_user_id", viewerUserId)
+    .select()
+    .single();
+  if (error) throw new Error(`Failed to decline invite: ${error.message}`);
+  return inviteView(invite, [data as RoomInviteRecipientRow]);
+}
+
+async function recipientIdsForDirectInvite(
+  senderUserId: string,
+  recipientUserIds: string[]
+): Promise<string[]> {
+  const uniqueRecipientIds = Array.from(
+    new Set(recipientUserIds.map((id) => id.trim()).filter(Boolean))
+  );
+  if (uniqueRecipientIds.length === 0) return [];
+
+  const relationships = await listFriendshipsForViewer(senderUserId);
+  const relationshipByUserId = new Map(
+    relationships.map((relationship) => [otherUserId(senderUserId, relationship), relationship])
+  );
+
+  const acceptedRecipients: string[] = [];
+  for (const recipientUserId of uniqueRecipientIds) {
+    assertUuid(recipientUserId, "recipientUserId");
+    if (recipientUserId === senderUserId) {
+      throw new SocialApiError(400, "Cannot invite yourself");
+    }
+    const relationship = relationshipByUserId.get(recipientUserId);
+    if (relationship?.status !== "accepted") {
+      throw new SocialApiError(403, "Direct invites can target accepted friends only");
+    }
+    acceptedRecipients.push(recipientUserId);
+  }
+
+  return acceptedRecipients;
+}
+
+async function recipientIdsForGroupInvite(
+  ownerUserId: string,
+  groupId: string
+): Promise<string[]> {
+  assertUuid(groupId, "groupId");
+  const group = await getOwnedGroup(ownerUserId, groupId);
+  if (!group) throw new SocialApiError(404, "Group not found");
+  if (group.archived_at) throw new SocialApiError(409, "Archived groups cannot be invited");
+
+  const { data, error } = await db()
+    .from("friend_group_members")
+    .select("*")
+    .eq("group_id", groupId);
+  if (error) throw new Error(`Failed to load group invite members: ${error.message}`);
+
+  const memberIds = ((data as FriendGroupMemberRow[] | null) ?? []).map(
+    (member) => member.friend_user_id
+  );
+  if (memberIds.length === 0) return [];
+
+  const relationships = await listFriendshipsForViewer(ownerUserId);
+  const relationshipByUserId = new Map(
+    relationships.map((relationship) => [otherUserId(ownerUserId, relationship), relationship])
+  );
+
+  return memberIds.filter((memberId) => relationshipByUserId.get(memberId)?.status === "accepted");
+}
+
+function inviteExpired(invite: RoomInviteRow): boolean {
+  return new Date(invite.expires_at).getTime() <= Date.now();
+}
+
+async function assertInviteCanBeAccepted(
+  viewerUserId: string,
+  invite: RoomInviteRow
+): Promise<void> {
+  if (inviteExpired(invite)) {
+    await db()
+      .from("room_invite_recipients")
+      .update({
+        status: "expired",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("invite_id", invite.id)
+      .eq("recipient_user_id", viewerUserId)
+      .eq("status", "pending");
+    throw new SocialApiError(410, "Invite has expired");
+  }
+
+  const friendship = await getFriendshipBetween(viewerUserId, invite.sender_user_id);
+  if (friendship?.status !== "accepted") {
+    throw new SocialApiError(403, "This invite is no longer available");
+  }
+}
+
+async function loadInviteForRecipient(
+  viewerUserId: string,
+  inviteId: string
+): Promise<{ invite: RoomInviteRow; recipient: RoomInviteRecipientRow }> {
+  const { data: recipientData, error: recipientError } = await db()
+    .from("room_invite_recipients")
+    .select("*")
+    .eq("invite_id", inviteId)
+    .eq("recipient_user_id", viewerUserId)
+    .maybeSingle();
+  if (recipientError) throw new Error(`Failed to load invite recipient: ${recipientError.message}`);
+  if (!recipientData) throw new SocialApiError(404, "Invite not found");
+
+  const { data: inviteData, error: inviteError } = await db()
+    .from("room_invites")
+    .select("*")
+    .eq("id", inviteId)
+    .maybeSingle();
+  if (inviteError) throw new Error(`Failed to load invite: ${inviteError.message}`);
+  if (!inviteData) throw new SocialApiError(404, "Invite not found");
+
+  return {
+    invite: inviteData as RoomInviteRow,
+    recipient: recipientData as RoomInviteRecipientRow,
+  };
+}
+
+async function inviteViews(
+  invites: RoomInviteRow[],
+  recipients: RoomInviteRecipientRow[]
+): Promise<RoomInvite[]> {
+  const recipientsByInviteId = new Map<string, RoomInviteRecipientRow[]>();
+  for (const recipient of recipients) {
+    const list = recipientsByInviteId.get(recipient.invite_id) ?? [];
+    list.push(recipient);
+    recipientsByInviteId.set(recipient.invite_id, list);
+  }
+
+  return Promise.all(
+    invites.map((invite) => inviteView(invite, recipientsByInviteId.get(invite.id) ?? []))
+  );
+}
+
+async function inviteView(
+  invite: RoomInviteRow,
+  recipients: RoomInviteRecipientRow[]
+): Promise<RoomInvite> {
+  const userIds = [
+    invite.sender_user_id,
+    ...recipients.map((recipient) => recipient.recipient_user_id),
+  ];
+  const [profiles, users] = await Promise.all([
+    getProfilesByUserIds(userIds),
+    getUsersByIds(userIds),
+  ]);
+
+  return {
+    id: invite.id,
+    roomId: invite.room_id,
+    sender: publicProfileFromRows(
+      invite.sender_user_id,
+      profiles.get(invite.sender_user_id),
+      users.get(invite.sender_user_id)
+    ),
+    targetKind: invite.target_kind,
+    targetGroupId: invite.target_group_id,
+    message: invite.message,
+    roomTitle: invite.room_title,
+    sourceUrl: invite.source_url,
+    videoFingerprint: invite.video_fingerprint,
+    createdAt: invite.created_at,
+    expiresAt: invite.expires_at,
+    recipients: recipients.map((recipient) => ({
+      user: publicProfileFromRows(
+        recipient.recipient_user_id,
+        profiles.get(recipient.recipient_user_id),
+        users.get(recipient.recipient_user_id)
+      ),
+      status: recipient.status,
+      updatedAt: recipient.updated_at,
+      respondedAt: recipient.responded_at,
+    })),
+  };
 }
 
 async function listHiddenRecentPeople(userId: string): Promise<RecentPeopleHiddenRow[]> {

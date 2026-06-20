@@ -976,8 +976,8 @@ Acceptance:
 - [x] Include capabilities in room tokens and snapshots.
 - [x] Replace Worker hardcoded cap with per-room `maxParticipants`.
 - [x] Add server-enforced `maxMediaSeats`.
-- [~] Restrict WebRTC media mesh to media participants.
-- [ ] Update extension room UI for participant/media seat counts.
+- [x] Restrict WebRTC media mesh to media participants.
+- [x] Update extension room UI for participant/media seat counts.
 
 Acceptance:
 
@@ -989,8 +989,9 @@ Acceptance:
 
 ### Phase 5 - Invites And Push Inbox
 
-- [ ] Add invite and invite recipient tables.
-- [ ] Add invite create/list/accept/decline APIs.
+- [x] Add invite and invite recipient tables.
+- [x] Add invite create/list/accept/decline APIs.
+- [x] Add extension friend/group invite send panel backed by durable inbox.
 - [ ] Add device push-token registration.
 - [ ] Add Chrome GCM sender configuration.
 - [ ] Add extension notification/inbox handlers.
@@ -1209,3 +1210,21 @@ Acceptance:
   `pnpm dev:check`, `git diff --check`, `pnpm check`, and `pnpm test`.
   Remote Supabase verification confirmed local/remote migration history aligned
   through `20260623` and the new `rooms` capability columns exist.
+- [x] 2026-06-20: Phase 4 client media-seat UX and Phase 5 durable invite
+  foundation implemented on `codex/social-invites-media-seats`. Extension P2P
+  now filters the media mesh to media participants instead of all room
+  participants, drops incoming P2P signals from chat-only participants, shows
+  participant/media-seat capacity in the overlay, disables local Ghost Cam when
+  the room has no seats or all seats are occupied, and handles
+  `MEDIA_SEATS_FULL` by rolling the UI back to chat/sync mode. Added
+  `20260624_room_invites.sql`, durable `room_invites` and
+  `room_invite_recipients`, invite create/list/accept/decline APIs, staging
+  gate bearer bypasses for invite endpoints, and a compact extension panel for
+  sending direct friend or personal group invites. Push/GCM delivery and
+  notification click handling are still not implemented. Verified the focused
+  slice with `pnpm --filter @anidachi/extension test`,
+  `pnpm --filter @anidachi/extension check`, `pnpm --filter @anidachi/web test`,
+  and `pnpm --filter @anidachi/web check`. Applied the remote Supabase migration
+  with `supabase db push --linked`; `supabase migration list --linked` is aligned
+  through `20260624`, and `supabase db query` confirmed `room_invites` and
+  `room_invite_recipients` exist with RLS enabled.
