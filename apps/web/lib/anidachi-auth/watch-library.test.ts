@@ -4,6 +4,7 @@ import {
   cleanWatchProgressEntries,
   cleanWatchProgressEntry,
   historyRetentionCutoff,
+  roomWatchParticipantTargets,
 } from "./watch-library";
 
 test("watch progress entries normalize episode checkpoints into series items", () => {
@@ -94,4 +95,37 @@ test("watch library retention follows account plan limits", () => {
     historyRetentionCutoff(now, "junkie").toISOString(),
     "2025-06-20T00:00:00.000Z"
   );
+});
+
+test("room watch participant targets include host and accepted room members once", () => {
+  const targets = roomWatchParticipantTargets(
+    {
+      host_user_id: "11111111-1111-4111-8111-111111111111",
+      created_at: "2026-06-21T01:00:00.000Z",
+      host_connected_at: "2026-06-21T01:01:00.000Z",
+    },
+    [
+      {
+        user_id: "22222222-2222-4222-8222-222222222222",
+        joined_at: "2026-06-21T01:02:00.000Z",
+      },
+      {
+        user_id: "11111111-1111-4111-8111-111111111111",
+        joined_at: "2026-06-21T01:03:00.000Z",
+      },
+    ]
+  );
+
+  assert.deepEqual(targets, [
+    {
+      userId: "11111111-1111-4111-8111-111111111111",
+      role: "host",
+      joinedAt: "2026-06-21T01:01:00.000Z",
+    },
+    {
+      userId: "22222222-2222-4222-8222-222222222222",
+      role: "viewer",
+      joinedAt: "2026-06-21T01:02:00.000Z",
+    },
+  ]);
 });

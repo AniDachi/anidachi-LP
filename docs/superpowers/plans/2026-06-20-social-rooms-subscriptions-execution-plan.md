@@ -1535,6 +1535,16 @@ Acceptance:
 
 ## Progress Log
 
+- [x] 2026-06-21: Fixed the first staging acceptance watch-library bug on
+  `codex/watch-library-room-participants`: room-backed watch progress now
+  expands `watch_session_participants` from the durable room host plus
+  `room_members`, so a host or guest checkpoint records the shared session for
+  everyone in the room instead of only the browser that sent the checkpoint.
+  The same reconcile also updates tracked titles for all room participants.
+  Extension progress extraction now records YouTube pages as movie progress in
+  addition to the existing Crunchyroll episode/movie parser. Verified with
+  `pnpm check`, `pnpm test`, `pnpm harness:rooms`,
+  `pnpm build:extension:staging`, and `pnpm validate:extension:staging`.
 - [x] 2026-06-21: Phase 6 watch library/history slice implemented on
   `codex/watch-library-phase6`. Added Supabase tables for `watch_sessions`,
   `watch_session_participants`, `watch_progress_checkpoints`, and
