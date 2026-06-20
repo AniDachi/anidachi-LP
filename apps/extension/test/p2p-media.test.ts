@@ -1,12 +1,26 @@
 import { describe, expect, it } from "vitest";
 import {
+  canReceiveP2PSignalFromParticipant,
   classifyPeerHealth,
   getP2PAudioTransceiverDirection,
   isPoliteP2PPeer,
   p2pAudioTrackSwapNeedsNegotiation,
   reconcilePeerAction,
+  selectP2PMediaParticipants,
   shouldInitiateP2POffers,
 } from "../src/p2p-media";
+import type { Participant } from "@anidachi/protocol";
+
+function participant(id: string, cameraEnabled = false): Participant {
+  return {
+    id,
+    displayName: id,
+    role: id === "host" ? "host" : "viewer",
+    cameraEnabled,
+    syncStatus: "unknown",
+    lastSeenAt: 1,
+  };
+}
 
 describe("P2P perfect negotiation role helpers", () => {
   it("uses the lower deterministic participant id as the offer initiator", () => {
@@ -58,5 +72,44 @@ describe("P2P peer health classification", () => {
     expect(classifyPeerHealth("connected", 0.05)).toBe("good");
     expect(classifyPeerHealth("connected", undefined)).toBe("good");
     expect(classifyPeerHealth("connected", 0.6)).toBe("degraded");
+  });
+});
+
+describe("P2P media participant selection", () => {
+  it("keeps chat-only participants out of the WebRTC mesh", () => {
+    const participants = [
+      participant("host", true),
+      participant("viewer-a", true),
+      participant("viewer-b", false),
+      participant("viewer-c", false),
+    ];
+
+    expect(selectP2PMediaParticipants(participants, "viewer-c", false).map((item) => item.id)).toEqual([
+      "host",
+      "viewer-a",
+    ]);
+  });
+
+  it("includes the local participant while they are trying to take a media seat", () => {
+    const participants = [participant("host", true), participant("viewer", false)];
+
+    expect(selectP2PMediaParticipants(participants, "viewer", true).map((item) => item.id)).toEqual([
+      "host",
+      "viewer",
+    ]);
+  });
+
+  it("drops incoming P2P signals from chat-only participants", () => {
+    const participants = [
+      participant("host", true),
+      participant("viewer-a", true),
+      participant("viewer-b", false),
+    ];
+
+    expect(canReceiveP2PSignalFromParticipant(participants, "viewer-a", "host", false)).toBe(true);
+    expect(canReceiveP2PSignalFromParticipant(participants, "viewer-a", "viewer-b", false)).toBe(
+      false,
+    );
+    expect(canReceiveP2PSignalFromParticipant(participants, "viewer-b", "host", false)).toBe(false);
   });
 });

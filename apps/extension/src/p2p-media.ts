@@ -96,6 +96,39 @@ export function p2pAudioTrackSwapNeedsNegotiation(
   return currentDirection !== P2P_AUDIO_TRANSCEIVER_DIRECTION;
 }
 
+export function selectP2PMediaParticipants(
+  participants: Participant[],
+  localParticipantId: string,
+  localMediaWanted: boolean,
+): Participant[] {
+  return participants.filter((participant) => {
+    if (participant.id === localParticipantId) {
+      return localMediaWanted || participant.cameraEnabled;
+    }
+
+    return participant.cameraEnabled;
+  });
+}
+
+export function canReceiveP2PSignalFromParticipant(
+  participants: Participant[],
+  localParticipantId: string,
+  remoteParticipantId: string,
+  localMediaWanted: boolean,
+): boolean {
+  if (localParticipantId === remoteParticipantId) {
+    return false;
+  }
+
+  const mediaParticipants = selectP2PMediaParticipants(
+    participants,
+    localParticipantId,
+    localMediaWanted,
+  );
+  const mediaParticipantIds = new Set(mediaParticipants.map((participant) => participant.id));
+  return mediaParticipantIds.has(localParticipantId) && mediaParticipantIds.has(remoteParticipantId);
+}
+
 interface P2PPeer {
   audioTransceiver: RTCRtpTransceiver | null;
   disconnectedRestartTimerId: number | null;

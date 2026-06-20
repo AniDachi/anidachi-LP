@@ -172,6 +172,11 @@ export const overlayStyles = `
     color: rgba(255, 255, 255, 0.5);
   }
 
+  .section-title.compact {
+    margin: 10px 0 4px;
+    font-size: 10px;
+  }
+
   .message-composer-shield {
     position: absolute;
     inset: 0;
@@ -393,6 +398,27 @@ export const overlayStyles = `
     color: rgba(255, 255, 255, 0.6);
     font-size: 10.5px;
     line-height: 1.3;
+  }
+
+  .invite-panel {
+    margin-top: 10px;
+    padding: 9px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.055);
+  }
+
+  .invite-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .invite-panel-header strong {
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 720;
   }
 
   .participant-main {
