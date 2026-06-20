@@ -72,4 +72,5 @@ package-lock.json
 .data/
 crm-data/
 apps/web/crm-data/
+apps/web/supabase/.temp/
 .vercel

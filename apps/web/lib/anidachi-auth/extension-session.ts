@@ -5,8 +5,7 @@ import {
   storeRefreshToken,
   validateRefreshToken,
 } from "./db";
-
-type Plan = "watcher" | "nakama" | "junkie";
+import type { PlanCode } from "./plan-entitlements";
 
 const EXTENSION_ACCESS_AUDIENCE = "anidachi-extension";
 const EXTENSION_ACCESS_TYPE = "extension_access";
@@ -21,7 +20,7 @@ function getJwtSecret(): Uint8Array {
 export type ExtensionAccessTokenPayload = {
   sub: string;
   email: string;
-  plan: Plan;
+  plan: PlanCode;
 };
 
 export type ExtensionUserProfile = {
@@ -29,7 +28,7 @@ export type ExtensionUserProfile = {
   email: string;
   displayName: string;
   avatarUrl: string | null;
-  plan: Plan;
+  plan: PlanCode;
 };
 
 export async function signExtensionAccessToken(

@@ -26,7 +26,11 @@ Project: Anidachi web app.
 | `ANIDACHI_STAGING_GATE_COOKIE_SECRET` | Preview / `staging` | Signs staging access cookie | Gate cookie persists in same browser |
 | `KREATLI_CRM_PASSWORD` | Production / Preview as needed | Internal CRM access | CRM login works only for authorized users |
 | `KREATLI_CRM_SESSION_SECRET` | Production / Preview as needed | Internal CRM session signing | CRM session survives refresh |
-| Stripe variables | Production | Checkout and subscription flow | Stripe webhook/checkout smoke |
+| `STRIPE_SECRET_KEY` | Production / Preview | Server-only Stripe API key for Checkout and webhook subscription lookup | Checkout session creation and webhook smoke |
+| `STRIPE_WEBHOOK_SECRET` | Production / Preview | Server-only Stripe webhook signature verification secret | Invalid signature rejected, valid webhook accepted |
+| `STRIPE_PRICE_ID_PLUS` | Production / Preview | Stripe Price id for Plus (`nakama`) subscriptions | Plus checkout creates `nakama` subscription metadata |
+| `STRIPE_PRICE_ID_PRO` | Production / Preview | Stripe Price id for Pro (`junkie`) subscriptions | Pro checkout creates `junkie` subscription metadata |
+| Legacy Stripe price vars | Production / Preview | Temporary compatibility for older `crunchyroll_subscriber` / `anime_junkie` price naming | Prefer replacing with `STRIPE_PRICE_ID_PLUS` / `STRIPE_PRICE_ID_PRO` |
 | OAuth client vars | Production / Preview | Google/Discord web auth | Login smoke on matching environment |
 | Supabase public vars | Production / Preview | Browser-safe Supabase project config | `/api/me` and room APIs work |
 

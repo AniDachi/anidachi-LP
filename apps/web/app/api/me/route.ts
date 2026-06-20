@@ -4,6 +4,7 @@ import {
   getExtensionUserProfile,
 } from "@/lib/anidachi-auth/extension-session";
 import { getSession } from "@/lib/anidachi-auth/session";
+import { ensureProfileForUser, publicProfileFromRows } from "@/lib/anidachi-auth/social";
 
 export const dynamic = "force-dynamic";
 
@@ -23,5 +24,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ user });
+  const profile = await ensureProfileForUser(userId);
+
+  return NextResponse.json({
+    user,
+    profile: publicProfileFromRows(
+      user.id,
+      profile,
+      { display_name: user.displayName, avatar_url: user.avatarUrl },
+    ),
+  });
 }

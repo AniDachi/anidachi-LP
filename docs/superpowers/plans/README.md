@@ -7,9 +7,11 @@ Most older files here are not current onboarding documentation. They may contain
 paths, old repository names, old endpoints, and decisions that were correct at
 the time but are no longer current.
 
-Current active execution plan for room/P2P/realtime hardening:
+Current active execution plans:
 
 1. `2026-06-07-production-room-p2p-hardening-roadmap.md`
+2. `2026-06-12-room-flow-p2p-flawless-execution-plan.md`
+3. `2026-06-20-social-rooms-subscriptions-execution-plan.md`
 
 For current development guidance, read:
 

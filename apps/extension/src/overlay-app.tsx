@@ -5,6 +5,7 @@ import {
   type Participant,
   type PlaybackState,
   type ReactionEvent,
+  type RoomCapabilities,
   type ServerEvent,
 } from "@anidachi/protocol";
 import { Mic, MicOff, SendHorizontal, SmilePlus, X } from "lucide-react";
@@ -273,6 +274,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [roomToken, setRoomToken] = useState<string | null>(null);
   const [roomShareableLink, setRoomShareableLink] = useState<string | null>(null);
   const [roomQuota, setRoomQuota] = useState<RoomQuotaSummary | null>(null);
+  const [roomCapabilities, setRoomCapabilities] = useState<RoomCapabilities | null>(null);
   const [quotaDisplayTick, setQuotaDisplayTick] = useState(0);
   const quotaMeteredMsRef = useRef(0);
   const quotaTickAtRef = useRef<number | null>(null);
@@ -348,6 +350,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   useEffect(() => {
     roomIdRef.current = roomId;
+    if (!roomId) {
+      setRoomCapabilities(null);
+    }
     handledP2PSignalIdsRef.current.clear();
     lastSeenP2PServerSeqRef.current = 0;
     p2pSignalSequenceRef.current = 0;
@@ -382,6 +387,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       roomShareableLinkRef.current = null;
       setRoomToken(null);
       setRoomShareableLink(null);
+      setRoomCapabilities(null);
     }
 
     logDebug("identity", "room action session refreshed", {
@@ -484,7 +490,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const visibleParticipants = participants.length ? participants : participant ? [participant] : [];
   const isHost = currentParticipant?.role === "host";
   const isConnected = status === "connected";
-  const p2pReady = Boolean(roomId && isConnected && roomSnapshotReady);
+  const p2pReady = Boolean(
+    roomId &&
+      isConnected &&
+      roomSnapshotReady &&
+      (roomCapabilities?.maxMediaSeats ?? 4) > 0,
+  );
   const title = adapter.getTitle() ?? "HTML5 video";
   const messageComposerShieldVisible = messageComposerOpen || messageComposerShieldActive;
   const messageComposerShieldLatched = messageComposerShieldActive && !messageComposerOpen;
@@ -1605,6 +1616,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     roomShareableLinkRef.current = null;
     setRoomToken(null);
     setRoomShareableLink(null);
+    setRoomCapabilities(null);
     clearPersistedRoomId();
     clearRoomHash();
     setAuthMessage(message);
@@ -1623,6 +1635,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       switch (event.type) {
         case "ROOM_SNAPSHOT":
           setParticipants(event.participants);
+          if (event.capabilities) {
+            setRoomCapabilities(event.capabilities);
+          }
           setRoomSnapshotReady(true);
           if (event.hostState && !isCurrentHost(event.participants)) {
             void applyHostState(event.hostState);
@@ -1831,6 +1846,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       const connected = await connectWebsiteRoom(nextRoomId, activeAccessToken);
       roomTokenRef.current = connected.roomToken;
       setRoomToken(connected.roomToken);
+      setRoomCapabilities(connected.capabilities ?? null);
       setRoomQuota(connected.quota ?? null);
       const shareableLink = new URL(`/room/${encodeURIComponent(nextRoomId)}`, WEB_HTTP_BASE)
         .toString();
@@ -2071,6 +2087,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         roomShareableLinkRef.current = null;
         setRoomToken(null);
         setRoomShareableLink(null);
+        setRoomCapabilities(null);
       }
       logDebug("identity", "participant ready", {
         reason,
@@ -2111,6 +2128,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       releaseRoomTabLock();
       setRoomId(null);
       setParticipants([]);
+      setRoomQuota(null);
+      setRoomCapabilities(null);
     } catch (error) {
       setExtensionContextInvalidated(isExtensionContextInvalidatedError(error));
       setAuthMessage(authErrorMessage(error, "Sign out failed"));
@@ -2180,6 +2199,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       });
       createRequestIdRef.current = null;
       setRoomQuota(created.quota ?? null);
+      setRoomCapabilities(created.capabilities ?? null);
       if (roomIdRef.current) {
         return null;
       }
@@ -2615,6 +2635,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       setRoomId(null);
       setParticipants([]);
       setRoomQuota(null);
+      setRoomCapabilities(null);
       roomTokenRef.current = null;
       roomShareableLinkRef.current = null;
       setRoomToken(null);

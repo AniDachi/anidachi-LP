@@ -160,6 +160,9 @@ export class RoomDurableObject {
       this.track("ws_token_reject");
       return new Response("Invalid room token", { status: 401 });
     }
+    if (verified.capabilities) {
+      this.room.setCapabilities(verified.capabilities);
+    }
 
     const pair = new WebSocketPair();
     const client = pair[0];
@@ -251,14 +254,14 @@ export class RoomDurableObject {
       lastSeenAt: Date.now(),
     };
 
-    // PD3: cap mesh rooms at MAX_ROOM_PARTICIPANTS. Checked before stale-socket
-    // replacement so a reconnecting member is never rejected as the "5th".
+    // Checked before stale-socket replacement so a reconnecting member is never
+    // rejected as an extra participant.
     if (!this.room.canAdmit(serverParticipant.id)) {
       this.track("room_full", { role: serverParticipant.role });
       this.send(socket, {
         type: "ERROR",
         code: "ROOM_FULL",
-        message: "This watch room is full (max 4 people).",
+        message: `This watch room is full (max ${this.room.roomCapabilities.maxParticipants} people).`,
       });
       socket.close(4003, "Room is full");
       return;
@@ -367,7 +370,20 @@ export class RoomDurableObject {
       return;
     }
 
-    const participant = this.room.setCamera(userId, event.type === "CAMERA_ON");
+    const wantsCamera = event.type === "CAMERA_ON";
+    if (wantsCamera && !this.room.canEnableCamera(userId)) {
+      this.send(socket, {
+        type: "ERROR",
+        code: "MEDIA_SEATS_FULL",
+        message:
+          this.room.roomCapabilities.maxMediaSeats === 0
+            ? "This room does not include live media seats."
+            : `This room has no free media seats (max ${this.room.roomCapabilities.maxMediaSeats}).`,
+      });
+      return;
+    }
+
+    const participant = this.room.setCamera(userId, wantsCamera);
     if (!participant) {
       return;
     }

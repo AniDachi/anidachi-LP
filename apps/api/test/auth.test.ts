@@ -27,6 +27,32 @@ describe("worker room auth", () => {
     });
   });
 
+  it("verifies signed room capabilities", async () => {
+    const token = await signRoomTokenForTest(
+      {
+        sub: "user-1",
+        roomId: "room-1",
+        role: "host",
+        capabilities: {
+          hostPlanCode: "junkie",
+          maxParticipants: 15,
+          maxMediaSeats: 4,
+          canNameRoom: true,
+          canSendPushInvites: true,
+        },
+      },
+      env,
+    );
+
+    await expect(verifyRoomToken(token, "room-1", env)).resolves.toMatchObject({
+      capabilities: {
+        hostPlanCode: "junkie",
+        maxParticipants: 15,
+        maxMediaSeats: 4,
+      },
+    });
+  });
+
   it("rejects room tokens for other rooms", async () => {
     const token = await signRoomTokenForTest(
       {

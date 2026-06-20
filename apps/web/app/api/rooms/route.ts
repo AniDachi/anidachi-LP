@@ -3,6 +3,7 @@ import { getSession } from "@/lib/anidachi-auth/session";
 import { createRoom, getUserById } from "@/lib/anidachi-auth/db";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
+import { roomCapabilitiesForPlan } from "@/lib/anidachi-auth/plan-entitlements";
 import {
   getHostQuotaView,
   quotaExhaustedResponseBody,
@@ -52,9 +53,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const user = await getUserById(session.userId);
+  const hostPlan = user?.plan ?? session.plan;
+  const capabilities = roomCapabilitiesForPlan(hostPlan);
+
   // PD2: free plans get a daily host-minutes quota instead of a room-count limit.
   const now = new Date();
-  const quota = await getHostQuotaView(session.userId, session.plan, now);
+  const quota = await getHostQuotaView(session.userId, hostPlan, now);
   if (!canStartHostSession(quota)) {
     return NextResponse.json(quotaExhaustedResponseBody(quota), { status: 403 });
   }
@@ -79,6 +84,7 @@ export async function POST(request: NextRequest) {
 
   const { room, reused } = await createRoom({
     hostUserId: session.userId,
+    capabilities,
     showId,
     episodeId,
     sourceUrl,
@@ -86,12 +92,12 @@ export async function POST(request: NextRequest) {
     title,
     clientRequestId,
   });
-  const user = await getUserById(session.userId);
   const roomToken = await signRoomToken(
     {
       sub: session.userId,
       roomId: room.room_id,
       role: "host",
+      capabilities,
       displayName: user?.display_name ?? session.email,
       avatarUrl: user?.avatar_url ?? null,
     },
@@ -104,6 +110,7 @@ export async function POST(request: NextRequest) {
     roomToken,
     shareableLink: `${origin}/room/${room.room_id}`,
     reused,
-    quota: quotaSummaryForResponse(session.plan, quota),
+    capabilities,
+    quota: quotaSummaryForResponse(hostPlan, quota),
   });
 }

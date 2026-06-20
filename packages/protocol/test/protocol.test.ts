@@ -38,6 +38,42 @@ describe("room protocol schemas", () => {
     });
   });
 
+  it("accepts room snapshots with capability metadata", () => {
+    const snapshot = ServerEventSchema.parse({
+      type: "ROOM_SNAPSHOT",
+      roomId: "room-1",
+      capabilities: {
+        hostPlanCode: "junkie",
+        maxParticipants: 15,
+        maxMediaSeats: 4,
+        canNameRoom: true,
+        canSendPushInvites: true,
+      },
+      participants: [],
+    });
+
+    expect(snapshot.type).toBe("ROOM_SNAPSHOT");
+    if (snapshot.type !== "ROOM_SNAPSHOT") {
+      throw new Error("Expected room snapshot");
+    }
+    expect(snapshot.capabilities?.maxParticipants).toBe(15);
+
+    expect(() =>
+      ServerEventSchema.parse({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-1",
+        capabilities: {
+          hostPlanCode: "junkie",
+          maxParticipants: 0,
+          maxMediaSeats: 4,
+          canNameRoom: true,
+          canSendPushInvites: true,
+        },
+        participants: [],
+      }),
+    ).toThrow();
+  });
+
   it("accepts valid join and reaction events", () => {
     const joined = ClientEventSchema.parse({
       type: "JOIN",

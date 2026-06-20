@@ -1,6 +1,14 @@
 import Stripe from "stripe";
 
-const EVENT = "checkout.session.completed" as const;
+const EVENTS = [
+  "checkout.session.completed",
+  "customer.subscription.created",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+  "invoice.paid",
+  "invoice.payment_failed",
+  "entitlements.active_entitlement_summary.updated",
+] as const;
 const PATH = "/api/stripe/webhook";
 const DEFAULT_LIVE_URL = `https://www.anidachi.app${PATH}`;
 
@@ -50,15 +58,15 @@ async function main() {
 
   const created = await stripe.webhookEndpoints.create({
     url: webhookUrl,
-    enabled_events: [EVENT],
-    description: "AniDachi: new subscription alert (checkout.session.completed)",
+    enabled_events: [...EVENTS],
+    description: "AniDachi: subscription and entitlement sync",
     api_version: "2025-08-27.basil",
   });
 
   process.stdout.write(
     `Registered ${mode} webhook endpoint ${created.id}\n` +
       `URL: ${webhookUrl}\n` +
-      `Event: ${EVENT}\n\n` +
+      `Events: ${EVENTS.join(", ")}\n\n` +
       `Add this to your deployment secrets (e.g. Vercel):\n` +
       `STRIPE_WEBHOOK_SECRET=${created.secret}\n`,
   );

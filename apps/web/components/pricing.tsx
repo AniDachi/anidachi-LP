@@ -95,9 +95,17 @@ export function Pricing({
         body: JSON.stringify({ tier }),
       });
 
-      const data = (await response.json()) as { url?: string; error?: string };
+      const data = (await response.json()) as {
+        url?: string;
+        error?: string;
+        loginUrl?: string;
+      };
 
       if (!response.ok) {
+        if (response.status === 401 && data.loginUrl) {
+          window.location.href = data.loginUrl;
+          return;
+        }
         const message =
           data.error ?? "Checkout could not start. Please try again.";
         trackConversion("checkout_error", {
