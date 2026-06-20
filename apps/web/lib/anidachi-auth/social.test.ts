@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  cleanFriendInviteToken,
   cleanDisplayName,
   cleanGroupName,
   cleanInviteMessage,
@@ -9,6 +10,15 @@ import {
   normalizeHandle,
   publicProfileFromRows,
 } from "./social";
+
+test("friend invite tokens accept only URL-safe opaque values", () => {
+  assert.equal(
+    cleanFriendInviteToken(" abcdefghijklmnopqrstuvwxyzABCD_123-xyz "),
+    "abcdefghijklmnopqrstuvwxyzABCD_123-xyz"
+  );
+  assert.equal(cleanFriendInviteToken("short"), null);
+  assert.equal(cleanFriendInviteToken("../not-a-token"), null);
+});
 
 test("social handles normalize to safe lowercase ids", () => {
   assert.equal(normalizeHandle("  Ani_Fan_7 "), "ani_fan_7");

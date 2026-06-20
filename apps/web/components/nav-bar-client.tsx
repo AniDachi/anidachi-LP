@@ -109,7 +109,7 @@ function UserMenu({ user }: { user: NavUser }) {
           {/* Actions */}
           <div className="border-t border-white/10 px-2 py-2">
             <Link
-              href="/friends"
+              href="/account/friends"
               onClick={() => setOpen(false)}
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-purple-200 transition-colors hover:bg-white/10 hover:text-white"
             >
@@ -344,7 +344,7 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
                   </li>
                   <li>
                     <Link
-                      href="/friends"
+                      href="/account/friends"
                       className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-base text-purple-200 transition-colors hover:bg-white/10 hover:text-white"
                       onClick={() => setMenuOpen(false)}
                     >

@@ -1,8 +1,12 @@
+import { createHash, randomBytes } from "crypto";
 import { db, getRoomById, getUserById, type UserRow } from "./db";
 import { getPlanEntitlements } from "./plan-entitlements";
 
 const UNIQUE_VIOLATION = "23505";
 const HANDLE_PATTERN = /^[a-z0-9_]{3,24}$/;
+const ACTIVE_FRIEND_INVITE_LINK_LIMIT = 20;
+const FRIEND_INVITE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{24,128}$/;
+const FRIEND_INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -80,6 +84,17 @@ export type RoomInviteRecipientRow = {
   responded_at: string | null;
 };
 
+export type FriendInviteLinkRow = {
+  id: string;
+  sender_user_id: string;
+  token_hash: string;
+  created_at: string;
+  expires_at: string;
+  accepted_at: string | null;
+  accepted_by_user_id: string | null;
+  revoked_at: string | null;
+};
+
 export type PublicProfile = {
   userId: string;
   handle: string | null;
@@ -102,6 +117,19 @@ export type RecentPerson = {
   lastWatchedAt: string;
   sharedRoomCount: number;
   relationshipStatus: FriendshipStatus | "none";
+};
+
+export type FriendInviteLink = {
+  token: string;
+  url: string;
+  expiresAt: string;
+};
+
+export type FriendInvitePreview = {
+  token: string;
+  sender: PublicProfile;
+  createdAt: string;
+  expiresAt: string;
 };
 
 export type FriendGroup = {
@@ -172,8 +200,26 @@ export function isUuid(value: string): boolean {
   return UUID_PATTERN.test(value);
 }
 
+export function cleanFriendInviteToken(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const token = value.trim();
+  return FRIEND_INVITE_TOKEN_PATTERN.test(token) ? token : null;
+}
+
 function assertUuid(value: string, label: string): void {
   if (!isUuid(value)) throw new SocialApiError(400, `Invalid ${label}`);
+}
+
+function generateFriendInviteToken(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+function hashFriendInviteToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+function friendInviteExpired(invite: Pick<FriendInviteLinkRow, "expires_at">): boolean {
+  return new Date(invite.expires_at).getTime() <= Date.now();
 }
 
 export function publicProfileFromRows(
@@ -227,21 +273,52 @@ export async function ensureProfileForUser(userId: string): Promise<ProfileRow |
   const user = await getUserById(userId);
   if (!user) return null;
 
-  const { data, error } = await db()
+  const { data: existing, error: readError } = await db()
     .from("profiles")
-    .upsert(
-      {
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (readError) throw new Error(`Failed to load profile: ${readError.message}`);
+
+  if (existing) {
+    const profile = existing as ProfileRow;
+    const updates: Partial<ProfileRow> = {};
+    if (!profile.avatar_url && user.avatar_url) updates.avatar_url = user.avatar_url;
+
+    if (Object.keys(updates).length === 0) return profile;
+
+    const { data, error } = await db()
+      .from("profiles")
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id)
+      .select()
+      .single();
+    if (error) throw new Error(`Failed to ensure profile: ${error.message}`);
+    return data as ProfileRow;
+  }
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data, error } = await db()
+      .from("profiles")
+      .insert({
         user_id: user.id,
         display_name: user.display_name,
         avatar_url: user.avatar_url,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    )
-    .select()
-    .single();
-  if (error) throw new Error(`Failed to ensure profile: ${error.message}`);
-  return data as ProfileRow;
+      })
+      .select()
+      .single();
+    if (!error) return data as ProfileRow;
+    if (error.code !== UNIQUE_VIOLATION) {
+      throw new Error(`Failed to ensure profile: ${error.message}`);
+    }
+    const existingProfile = await ensureProfileForUser(userId);
+    if (existingProfile) return existingProfile;
+  }
+
+  throw new Error("Failed to ensure profile");
 }
 
 export async function updateOwnProfile(params: {
@@ -368,6 +445,7 @@ export async function sendFriendRequest(params: {
 }): Promise<FriendListItem> {
   assertUuid(params.requesterUserId, "requesterUserId");
   assertUuid(params.addresseeUserId, "addresseeUserId");
+
   if (params.requesterUserId === params.addresseeUserId) {
     throw new SocialApiError(400, "Cannot send a friend request to yourself");
   }
@@ -417,6 +495,180 @@ export async function sendFriendRequest(params: {
   const { data, error } = await query.select().single();
   if (error) throw new Error(`Failed to send friend request: ${error.message}`);
   return itemForFriendship(params.requesterUserId, data as FriendshipRow);
+}
+
+export async function createFriendInviteLink(params: {
+  senderUserId: string;
+  origin: string;
+}): Promise<FriendInviteLink> {
+  assertUuid(params.senderUserId, "senderUserId");
+  const sender = await ensureProfileForUser(params.senderUserId);
+  if (!sender) throw new SocialApiError(404, "User not found");
+  await assertActiveFriendInviteLinkLimit(params.senderUserId);
+
+  const expiresAt = new Date(Date.now() + FRIEND_INVITE_TTL_MS).toISOString();
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const token = generateFriendInviteToken();
+    const { error } = await db().from("friend_invite_links").insert({
+      sender_user_id: params.senderUserId,
+      token_hash: hashFriendInviteToken(token),
+      expires_at: expiresAt,
+    });
+
+    if (!error) {
+      return {
+        token,
+        url: new URL(`/friend/invite/${token}`, params.origin).toString(),
+        expiresAt,
+      };
+    }
+
+    if (error.code !== UNIQUE_VIOLATION) {
+      throw new Error(`Failed to create friend invite link: ${error.message}`);
+    }
+  }
+
+  throw new Error("Failed to create a unique friend invite link");
+}
+
+async function assertActiveFriendInviteLinkLimit(senderUserId: string): Promise<void> {
+  const { count, error } = await db()
+    .from("friend_invite_links")
+    .select("id", { count: "exact", head: true })
+    .eq("sender_user_id", senderUserId)
+    .is("accepted_at", null)
+    .is("revoked_at", null)
+    .gt("expires_at", new Date().toISOString());
+  if (error) {
+    throw new Error(`Failed to count active friend invite links: ${error.message}`);
+  }
+  if ((count ?? 0) >= ACTIVE_FRIEND_INVITE_LINK_LIMIT) {
+    throw new SocialApiError(429, "Too many active friend invite links");
+  }
+}
+
+export async function getFriendInvitePreview(tokenValue: string): Promise<FriendInvitePreview> {
+  const token = cleanFriendInviteToken(tokenValue);
+  if (!token) throw new SocialApiError(404, "Friend invite not found");
+
+  const invite = await getFriendInviteLinkByToken(token);
+  if (!invite || invite.revoked_at) throw new SocialApiError(404, "Friend invite not found");
+  if (friendInviteExpired(invite)) throw new SocialApiError(410, "Friend invite expired");
+  if (invite.accepted_at) throw new SocialApiError(409, "Friend invite already used");
+
+  const [profile, user] = await Promise.all([
+    ensureProfileForUser(invite.sender_user_id),
+    getUserById(invite.sender_user_id),
+  ]);
+  if (!user) throw new SocialApiError(404, "Friend invite sender not found");
+
+  return {
+    token,
+    sender: publicProfileFromRows(invite.sender_user_id, profile, user),
+    createdAt: invite.created_at,
+    expiresAt: invite.expires_at,
+  };
+}
+
+export async function acceptFriendInviteLink(params: {
+  viewerUserId: string;
+  token: string;
+}): Promise<FriendListItem> {
+  assertUuid(params.viewerUserId, "viewerUserId");
+  const token = cleanFriendInviteToken(params.token);
+  if (!token) throw new SocialApiError(404, "Friend invite not found");
+
+  const invite = await getFriendInviteLinkByToken(token);
+  if (!invite || invite.revoked_at) throw new SocialApiError(404, "Friend invite not found");
+  if (friendInviteExpired(invite)) throw new SocialApiError(410, "Friend invite expired");
+  if (invite.sender_user_id === params.viewerUserId) {
+    throw new SocialApiError(400, "Cannot accept your own friend invite");
+  }
+
+  if (invite.accepted_at) {
+    if (invite.accepted_by_user_id === params.viewerUserId) {
+      const existing = await getFriendshipBetween(params.viewerUserId, invite.sender_user_id);
+      if (existing) return itemForFriendship(params.viewerUserId, existing);
+    }
+    throw new SocialApiError(409, "Friend invite already used");
+  }
+
+  const [viewer, sender] = await Promise.all([
+    ensureProfileForUser(params.viewerUserId),
+    ensureProfileForUser(invite.sender_user_id),
+  ]);
+  if (!viewer || !sender) throw new SocialApiError(404, "User not found");
+
+  const existing = await getFriendshipBetween(params.viewerUserId, invite.sender_user_id);
+  if (existing?.status === "blocked") {
+    throw new SocialApiError(403, "This relationship is blocked");
+  }
+
+  const now = new Date().toISOString();
+  const { data: acceptedInvite, error: acceptError } = await db()
+    .from("friend_invite_links")
+    .update({
+      accepted_at: now,
+      accepted_by_user_id: params.viewerUserId,
+    })
+    .eq("id", invite.id)
+    .is("accepted_at", null)
+    .select("*")
+    .maybeSingle();
+  if (acceptError) {
+    throw new Error(`Failed to accept friend invite link: ${acceptError.message}`);
+  }
+  if (!acceptedInvite) {
+    throw new SocialApiError(409, "Friend invite already used");
+  }
+
+  return acceptFriendshipFromInvite({
+    senderUserId: invite.sender_user_id,
+    viewerUserId: params.viewerUserId,
+    acceptedAt: now,
+  });
+}
+
+async function getFriendInviteLinkByToken(token: string): Promise<FriendInviteLinkRow | null> {
+  const { data, error } = await db()
+    .from("friend_invite_links")
+    .select("*")
+    .eq("token_hash", hashFriendInviteToken(token))
+    .maybeSingle();
+  if (error) throw new Error(`Failed to load friend invite link: ${error.message}`);
+  return (data as FriendInviteLinkRow | null) ?? null;
+}
+
+async function acceptFriendshipFromInvite(params: {
+  senderUserId: string;
+  viewerUserId: string;
+  acceptedAt: string;
+}): Promise<FriendListItem> {
+  const existing = await getFriendshipBetween(params.senderUserId, params.viewerUserId);
+  if (existing?.status === "blocked") {
+    throw new SocialApiError(403, "This relationship is blocked");
+  }
+  if (existing?.status === "accepted") {
+    return itemForFriendship(params.viewerUserId, existing);
+  }
+
+  const payload = {
+    requester_user_id: params.senderUserId,
+    addressee_user_id: params.viewerUserId,
+    status: "accepted" as FriendshipStatus,
+    blocked_by_user_id: null,
+    requested_at: existing?.requested_at ?? params.acceptedAt,
+    responded_at: params.acceptedAt,
+    updated_at: params.acceptedAt,
+  };
+
+  const query = existing
+    ? db().from("friendships").update(payload).eq("id", existing.id)
+    : db().from("friendships").insert(payload);
+
+  const { data, error } = await query.select().single();
+  if (error) throw new Error(`Failed to accept friend invite: ${error.message}`);
+  return itemForFriendship(params.viewerUserId, data as FriendshipRow);
 }
 
 export async function acceptFriendRequest(

@@ -140,9 +140,194 @@ export const popupStyles = `
     color: rgba(255, 255, 255, 0.46);
   }
 
+  .popup-tabs {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-bottom: 10px;
+    padding: 3px;
+    border-radius: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  .popup-tab {
+    min-height: 32px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.58);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 780;
+  }
+
+  .popup-tab span {
+    margin-left: 5px;
+    color: rgba(255, 255, 255, 0.36);
+  }
+
+  .popup-tab[data-active="true"] {
+    background: rgba(139, 92, 246, 0.22);
+    color: rgba(255, 255, 255, 0.95);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .popup-tab[data-active="true"] span {
+    color: #c4b5fd;
+  }
+
+  .popup-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .popup-mini-button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.78);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+
+  .popup-mini-button:disabled {
+    cursor: default;
+    opacity: 0.42;
+  }
+
   .popup-resource-list {
     display: grid;
     gap: 8px;
+  }
+
+  .popup-social-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .popup-social-block {
+    display: grid;
+    gap: 6px;
+  }
+
+  .popup-social-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 2px;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 11px;
+    font-weight: 760;
+  }
+
+  .popup-social-row {
+    min-height: 48px;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    padding: 7px 8px;
+    border-radius: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+      linear-gradient(120deg, rgba(255, 255, 255, 0.048), rgba(255, 255, 255, 0.016)),
+      rgba(14, 16, 30, 0.76);
+  }
+
+  .popup-social-avatar,
+  .popup-social-group-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(139, 92, 246, 0.22);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    font-weight: 820;
+  }
+
+  img.popup-social-avatar {
+    object-fit: cover;
+    display: block;
+  }
+
+  .popup-social-main {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+
+  .popup-social-main span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .popup-social-main span:first-child {
+    font-size: 12.5px;
+    font-weight: 780;
+  }
+
+  .popup-social-main span:last-child {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.52);
+  }
+
+  .popup-social-empty {
+    display: grid;
+    gap: 9px;
+    place-items: center;
+    padding: 18px 12px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.045);
+    color: rgba(255, 255, 255, 0.62);
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .popup-social-empty[data-tone="error"] {
+    border-color: rgba(248, 113, 113, 0.24);
+    background: rgba(239, 68, 68, 0.1);
+    color: rgba(254, 202, 202, 0.92);
+  }
+
+  .popup-primary-button,
+  .popup-dashboard-button {
+    min-height: 34px;
+    border: 0;
+    border-radius: 11px;
+    background: #7c3aed;
+    color: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 780;
+  }
+
+  .popup-primary-button {
+    padding: 0 15px;
+  }
+
+  .popup-dashboard-button {
+    width: 100%;
+  }
+
+  .popup-primary-button:hover,
+  .popup-dashboard-button:hover {
+    background: #8b5cf6;
   }
 
   .popup-provider {

@@ -33,6 +33,12 @@ export type UserRow = {
   created_at: string;
 };
 
+type ProfileSyncRow = {
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+};
+
 export type BillingCustomerRow = {
   user_id: string;
   stripe_customer_id: string;
@@ -130,16 +136,41 @@ export async function upsertUser(params: {
 }
 
 async function syncProfileFromUserRow(user: UserRow): Promise<void> {
-  const { error } = await db().from("profiles").upsert(
-    {
+  const client = db();
+  const { data: existing, error: readError } = await client
+    .from("profiles")
+    .select("user_id, display_name, avatar_url")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (readError) throw new Error(`Failed to load profile: ${readError.message}`);
+
+  if (existing) {
+    const profile = existing as ProfileSyncRow;
+    const updates: Partial<ProfileSyncRow> & { updated_at?: string } = {};
+    if (!profile.avatar_url && user.avatar_url) updates.avatar_url = user.avatar_url;
+
+    if (Object.keys(updates).length > 0) {
+      updates.updated_at = new Date().toISOString();
+      const { error } = await client.from("profiles").update(updates).eq("user_id", user.id);
+      if (error) throw new Error(`Failed to sync profile: ${error.message}`);
+    }
+    return;
+  }
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { error } = await client.from("profiles").insert({
       user_id: user.id,
       display_name: user.display_name,
       avatar_url: user.avatar_url,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id" }
-  );
-  if (error) throw new Error(`Failed to sync profile: ${error.message}`);
+    });
+    if (!error) return;
+    if (error.code !== UNIQUE_VIOLATION) {
+      throw new Error(`Failed to sync profile: ${error.message}`);
+    }
+    return;
+  }
+
+  throw new Error("Failed to sync profile");
 }
 
 export async function getUserById(userId: string): Promise<UserRow | null> {

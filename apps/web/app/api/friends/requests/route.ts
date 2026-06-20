@@ -12,12 +12,10 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await readJsonBody(request);
-  const userId =
-    body && typeof body === "object"
-      ? (body as Record<string, unknown>).userId
-      : undefined;
+  const input = body && typeof body === "object" ? body as Record<string, unknown> : {};
+  const userId = input.userId;
   if (typeof userId !== "string" || !userId.trim()) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    return NextResponse.json({ error: "Missing user id" }, { status: 400 });
   }
 
   try {
