@@ -136,6 +136,13 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (/^\/api\/invites\/[^/]+\/decline$/.test(pathname) && method === "POST") {
     return true;
   }
+  if (pathname === "/api/watch-library" && method === "GET") return true;
+  if (pathname === "/api/watch-progress/reconcile" && method === "POST") {
+    return true;
+  }
+  if (pathname === "/api/watch-library/rooms" && method === "POST") {
+    return true;
+  }
   if (pathname === "/api/rooms" && method === "POST") return true;
   if (/^\/api\/rooms\/[^/]+$/.test(pathname) && method === "GET") return true;
   if (/^\/api\/rooms\/[^/]+\/connect$/.test(pathname) && method === "POST") {

@@ -2,9 +2,10 @@
 
 **Created:** 2026-06-20.
 
-**Status:** implementation in progress. Phase 4.5 account/dashboard surface work
-is active on `codex/social-dashboard-phase45`. Stripe staging setup is deferred
-until Test Mode products, prices, and webhook secrets are available.
+**Status:** implementation in progress. Phases 4.5, 5 durable inbox, and 6
+watch library/history are implemented on staging-oriented feature branches.
+Stripe staging setup is deferred until Test Mode products, prices, and webhook
+secrets are available.
 
 **Product surface review:** updated 2026-06-21 to make the final product shape
 explicit: the extension popup is the fast watch-control surface, while the web
@@ -1362,9 +1363,10 @@ Acceptance:
   Resources, Friends & Groups, and durable Inbox are wired without adding push
   permissions.
 - [x] Keep Resources as the popup default.
-- [~] Add a shared client/read-model layer so popup and dashboard consume the
-  same account/social/watch-library data. Current slice shares web API/social
-  bridge contracts; watch-library rollup is still Phase 6.
+- [x] Add a shared client/read-model layer so popup and dashboard consume the
+  same account/social/watch-library data. Social uses the existing web APIs and
+  extension bridge; watch library now uses `/api/watch-library` plus local
+  progress reconciliation.
 - [x] Add human-friendly friend add flow using recent co-watchers and friend
   invite links, without manual codes.
 - [x] Add dashboard escape hatches from compact popup flows.
@@ -1403,17 +1405,17 @@ Acceptance:
 
 ### Phase 6 - Watch Library, History, And Continue Together
 
-- [ ] Add watch session/progress/tracked-title tables.
-- [ ] Add `/api/watch-library` rollup for dashboard and extension popup.
-- [ ] Add local extension progress reconciliation API.
-- [ ] Replace demo shared sessions in extension popup with backend-backed data
+- [x] Add watch session/progress/tracked-title tables.
+- [x] Add `/api/watch-library` rollup for dashboard and extension popup.
+- [x] Add local extension progress reconciliation API.
+- [x] Replace demo shared sessions in extension popup with backend-backed data
   from the watch-library rollup.
-- [ ] Add web dashboard Watch Library with provider/title/episode/session
+- [x] Add web dashboard Watch Library with provider/title/episode/session
   hierarchy.
-- [ ] Persist checkpoints at agreed cadence.
-- [ ] Add create-room-from-session API.
-- [ ] Enforce active tracked-title limits.
-- [ ] Apply personal retention windows.
+- [x] Persist checkpoints at agreed cadence.
+- [x] Add create-room-from-session API.
+- [x] Enforce active tracked-title limits.
+- [x] Apply personal retention windows.
 
 Acceptance:
 
@@ -1533,6 +1535,20 @@ Acceptance:
 
 ## Progress Log
 
+- [x] 2026-06-21: Phase 6 watch library/history slice implemented on
+  `codex/watch-library-phase6`. Added Supabase tables for `watch_sessions`,
+  `watch_session_participants`, `watch_progress_checkpoints`, and
+  `user_tracked_titles` with RLS enabled and FK/index coverage. Added
+  `/api/watch-library`, `/api/watch-progress/reconcile`, and
+  `/api/watch-library/rooms`; the room-from-session path reuses server-side
+  host quota/capability checks. The extension now has a watch-library HTTP
+  bridge, popup reconciliation from local progress cache, backend-backed shared
+  progress markers instead of demo sessions, and low-frequency overlay
+  checkpoint reconciliation (periodic plus pause/seek/ended/pagehide). Added
+  `/account/watch-library` with provider/title/episode/session hierarchy and
+  create-room actions. Verified focused web/extension checks and tests; staging
+  migration application and staging extension artifact validation remain in the
+  release checklist.
 - [x] 2026-06-21: Phase 5 durable in-app inbox slice implemented on
   `codex/social-inbox-phase5`. Extended the extension social bridge with
   invite inbox list, accept, and decline commands; added an Inbox tab to the

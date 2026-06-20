@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Inbox, User, Users } from "lucide-react";
+import { BookOpen, Inbox, User, Users } from "lucide-react";
 
 const ITEMS = [
   { href: "/account", label: "Overview", icon: User },
+  { href: "/account/watch-library", label: "Watch Library", icon: BookOpen },
   { href: "/account/friends", label: "Friends & Groups", icon: Users },
   { href: "/account/invites", label: "Invites", icon: Inbox },
 ] as const;
