@@ -120,8 +120,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/auth-client.ts": {
-    "mtime": 1781471698.9831848,
-    "ast_hash": "8703e41f98b249a7f0399029f35d542f",
+    "mtime": 1781996191.4835372,
+    "ast_hash": "b4d385b9d46a7a9435cafc4dc1529772",
     "semantic_hash": ""
   },
   "apps/extension/src/constants.ts": {
@@ -215,8 +215,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1781992822.3038983,
-    "ast_hash": "cfe6c7e4809501bd9cde413fb74e1121",
+    "mtime": 1781996215.4098103,
+    "ast_hash": "b12633ac2fbcb037acefdb7ac81163bc",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-mount.ts": {
@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/auth-client.test.ts": {
-    "mtime": 1780777198.7907472,
-    "ast_hash": "4c7fe275fb1768316e2f78ba2ade9fa6",
+    "mtime": 1781996292.992891,
+    "ast_hash": "7fd94bf5411bb62ccef238d4262e0d0a",
     "semantic_hash": ""
   },
   "apps/extension/test/crunchyroll-artwork.test.ts": {
@@ -440,8 +440,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/auth/refresh/route.ts": {
-    "mtime": 1780509466.0765443,
-    "ast_hash": "24d8b4272e42794a493105c27b230eb7",
+    "mtime": 1781996165.7994514,
+    "ast_hash": "2088795030687ccd385fbe35d14869af",
     "semantic_hash": ""
   },
   "apps/web/app/api/auth/tiktok/callback/route.ts": {
@@ -495,8 +495,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/extension/auth/refresh/route.ts": {
-    "mtime": 1780509466.0778418,
-    "ast_hash": "1439bdd5fdb5ce2ed7f9b023d1ee7748",
+    "mtime": 1781996191.4823368,
+    "ast_hash": "c97b9c96ab526e48f06c66413468daf4",
     "semantic_hash": ""
   },
   "apps/web/app/api/google-ads/oauth/callback/route.ts": {
@@ -1285,8 +1285,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/db.ts": {
-    "mtime": 1781992735.7313616,
-    "ast_hash": "f5c208ed227cd0296ad931e3184f4ece",
+    "mtime": 1781996292.991155,
+    "ast_hash": "12706e951dbada6e09635ae9d3bf4e0d",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/extension-codes.ts": {
@@ -1295,8 +1295,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/extension-session.ts": {
-    "mtime": 1781967993.668499,
-    "ast_hash": "e87e7b249d6e4fe7c11e49a84f780efd",
+    "mtime": 1781996292.9925013,
+    "ast_hash": "93bca52aee2d7e93aac5c81f138a1672",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/handle-oauth-callback.ts": {
@@ -1305,8 +1305,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/jwt.ts": {
-    "mtime": 1781967993.6685755,
-    "ast_hash": "b02802de25496cec325e6b3dc7afe61b",
+    "mtime": 1781996165.7976568,
+    "ast_hash": "03287a6bea681473ab582908a108d17a",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/oauth/discord.ts": {
@@ -1320,8 +1320,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/return-to.ts": {
-    "mtime": 1781984373.703801,
-    "ast_hash": "f9c20f4df97678879db61b527d787161",
+    "mtime": 1781996165.7987254,
+    "ast_hash": "c0686155a1f9e5bdd9b424e060408f1b",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/room-usage.ts": {
@@ -1330,8 +1330,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/session.ts": {
-    "mtime": 1781967993.6687632,
-    "ast_hash": "1428d6bc86bf95d7d3d6754db029fc85",
+    "mtime": 1781996165.797325,
+    "ast_hash": "8194628261a390f8c70d8b5cad950275",
     "semantic_hash": ""
   },
   "apps/web/lib/anime-data.ts": {
@@ -1535,13 +1535,13 @@
     "semantic_hash": ""
   },
   "apps/web/lib/staging-access.test.ts": {
-    "mtime": 1781970079.4207258,
-    "ast_hash": "a2ba2b2bd470b165b9414310b4b58d47",
+    "mtime": 1781996249.4229228,
+    "ast_hash": "1dae8a46598e429f8fe586140a40f1c6",
     "semantic_hash": ""
   },
   "apps/web/lib/staging-access.ts": {
-    "mtime": 1781990277.3700175,
-    "ast_hash": "2a8ca62631aed2adc25456fd9a194fbf",
+    "mtime": 1781996165.8007107,
+    "ast_hash": "a85dd8b74b5004e3e053d8130946c9a5",
     "semantic_hash": ""
   },
   "apps/web/lib/tiktok/api.test.ts": {
@@ -1585,8 +1585,8 @@
     "semantic_hash": ""
   },
   "apps/web/middleware.ts": {
-    "mtime": 1780761017.5861382,
-    "ast_hash": "cc728f6b956f0e0fd6f2948d10b0e721",
+    "mtime": 1781996165.800079,
+    "ast_hash": "588eeca7de9aace5fee0eab078c00b57",
     "semantic_hash": ""
   },
   "apps/web/next.config.ts": {
@@ -1950,8 +1950,8 @@
     "semantic_hash": ""
   },
   "docs/site-extension-integration-notes.md": {
-    "mtime": 1780509466.0989165,
-    "ast_hash": "b9a0a781ae21da471e2899d66cc45c72",
+    "mtime": 1781996352.071837,
+    "ast_hash": "48ce4601efe8405dea228148cbe4f06f",
     "semantic_hash": ""
   },
   "docs/staging-acceptance-checklist.md": {
@@ -2020,22 +2020,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1781992926.4504611,
+    "mtime": 1781996388.205461,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1781992926.4132602,
+    "mtime": 1781996388.1725705,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1781992926.420828,
+    "mtime": 1781996388.1783178,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1781992926.4249678,
+    "mtime": 1781996388.1810286,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },
@@ -2135,8 +2135,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-20-social-rooms-subscriptions-execution-plan.md": {
-    "mtime": 1781992995.2422268,
-    "ast_hash": "28743e861a488b0f07b97984771b0afc",
+    "mtime": 1781996445.9304187,
+    "ast_hash": "6b1e4ef215b7593c1ed5f841718e071d",
     "semantic_hash": ""
   },
   "apps/web/app/api/me/entitlements/route.ts": {
@@ -2410,12 +2410,12 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-library.test.ts": {
-    "mtime": 1781992849.28043,
+    "mtime": 1781993367.348604,
     "ast_hash": "26bae9fe2fad9fc2a855bdb074235199",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-library.ts": {
-    "mtime": 1781992764.5391686,
+    "mtime": 1781993367.3488638,
     "ast_hash": "5185433a36ef5842fcd37216c24cc964",
     "semantic_hash": ""
   },
@@ -2425,13 +2425,33 @@
     "semantic_hash": ""
   },
   "apps/extension/src/watch-progress-entry.ts": {
-    "mtime": 1781992805.235171,
+    "mtime": 1781993367.3479235,
     "ast_hash": "a4d17ebb80adb14ec5012ca8c6fd64bd",
     "semantic_hash": ""
   },
   "apps/extension/test/watch-progress-entry.test.ts": {
-    "mtime": 1781992867.8882222,
+    "mtime": 1781993367.3481019,
     "ast_hash": "185cf57dbce532c1a2519f776e7dd9c7",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/cookies.ts": {
+    "mtime": 1781996165.796918,
+    "ast_hash": "1828197cc2e734653c06fe7fde317041",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/return-to.test.ts": {
+    "mtime": 1781996249.4214442,
+    "ast_hash": "539d84a84081f187d4f2fb936a4f5f12",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/session-refresh.test.ts": {
+    "mtime": 1781996249.4219213,
+    "ast_hash": "ed6e829ffd92c0dae603d3bb5daf86d2",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/session-refresh.ts": {
+    "mtime": 1781996165.7989614,
+    "ast_hash": "c99700bb84d75051f958d3d210015ce1",
     "semantic_hash": ""
   }
 }

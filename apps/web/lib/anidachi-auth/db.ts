@@ -227,6 +227,17 @@ export async function validateRefreshToken(
   return data.user_id as string;
 }
 
+export async function extendRefreshToken(
+  token: string,
+  expiresAt: Date
+): Promise<void> {
+  const { error } = await db()
+    .from("refresh_tokens")
+    .update({ expires_at: expiresAt.toISOString() })
+    .eq("token_hash", hashToken(token));
+  if (error) throw new Error(`Failed to extend refresh token: ${error.message}`);
+}
+
 export async function deleteRefreshToken(token: string): Promise<void> {
   await db()
     .from("refresh_tokens")

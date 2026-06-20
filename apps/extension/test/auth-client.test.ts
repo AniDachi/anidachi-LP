@@ -5,6 +5,7 @@ import {
   buildExtensionLogoutUrl,
   createAuthMessage,
   isAuthMessage,
+  normalizeExtensionRefreshResponse,
   parseExtensionAuthRedirect,
 } from "../src/auth-client";
 import {
@@ -70,6 +71,28 @@ describe("extension auth client", () => {
     expect(isAuthMessage(createAuthMessage("sign-in"))).toBe(true);
     expect(isAuthMessage({ type: "ANIDACHI_AUTH", command: "unknown" })).toBe(false);
     expect(isAuthMessage({ command: "sign-in" })).toBe(false);
+  });
+
+  it("normalizes extension refresh responses with optional refresh tokens", () => {
+    expect(
+      normalizeExtensionRefreshResponse({
+        accessToken: "access-2",
+        refreshToken: "refresh-2",
+      }),
+    ).toEqual({ accessToken: "access-2", refreshToken: "refresh-2" });
+
+    expect(
+      normalizeExtensionRefreshResponse({
+        accessToken: "access-only",
+      }),
+    ).toEqual({ accessToken: "access-only" });
+
+    expect(
+      normalizeExtensionRefreshResponse({
+        accessToken: "access",
+        refreshToken: 123,
+      }),
+    ).toBeNull();
   });
 
   it("keeps the WXT auth key and raw storage key aligned", () => {

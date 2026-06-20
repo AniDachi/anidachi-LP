@@ -1,5 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server";
 import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+} from "./lib/anidachi-auth/cookies";
+import {
+  AUTH_REFRESH_PATH,
+  shouldAutoRefreshWebsiteSession,
+} from "./lib/anidachi-auth/session-refresh";
+import { sanitizeAuthReturnTo } from "./lib/anidachi-auth/return-to";
+import {
   STAGING_ACCESS_COOKIE,
   STAGING_ACCESS_PATH,
   buildStagingAccessCookieValue,
@@ -152,12 +161,30 @@ function withStagingNoindexHeaders(response: NextResponse): NextResponse {
 }
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const currentPath = `${pathname}${request.nextUrl.search}`;
+
+  if (
+    shouldAutoRefreshWebsiteSession({
+      method: request.method,
+      pathname,
+      hasAccessToken: Boolean(request.cookies.get(ACCESS_TOKEN_COOKIE)?.value),
+      hasRefreshToken: Boolean(request.cookies.get(REFRESH_TOKEN_COOKIE)?.value),
+    })
+  ) {
+    const nextPath = sanitizeAuthReturnTo(currentPath);
+    if (nextPath) {
+      const refreshUrl = new URL(AUTH_REFRESH_PATH, request.url);
+      refreshUrl.searchParams.set("next", nextPath);
+      return NextResponse.redirect(refreshUrl);
+    }
+  }
+
   const config = await getStagingAccessConfig();
   if (!config.enabled) return NextResponse.next();
 
-  const pathname = request.nextUrl.pathname;
   const nextPath = sanitizeStagingAccessNextPath(
-    `${pathname}${request.nextUrl.search}`,
+    currentPath,
   );
 
   if (pathname === STAGING_ACCESS_PATH && request.method === "GET") {

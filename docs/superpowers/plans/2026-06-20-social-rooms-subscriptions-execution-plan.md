@@ -1535,6 +1535,24 @@ Acceptance:
 
 ## Progress Log
 
+- [x] 2026-06-21: Started auth persistence hardening on
+  `codex/auth-session-refresh-hardening` after staging testing showed website
+  and extension sessions could appear signed out after the 15-minute access
+  token window. Website access tokens remain short-lived, but refresh cookies
+  now use a 90-day sliding window and normal page navigation with a refresh
+  cookie silently goes through `/api/auth/refresh` before returning to the
+  original page. Extension refresh responses can carry an updated refresh token,
+  and the long-lived overlay refreshes identity before watch-progress reconcile,
+  invite actions, and room end actions instead of reusing a stale access token.
+  Focused verification passed:
+  `pnpm --filter @anidachi/web test`,
+  `pnpm --filter @anidachi/web check`,
+  `pnpm --filter @anidachi/extension test`, and
+  `pnpm --filter @anidachi/extension check`. Full verification also passed:
+  `pnpm dev:check`, `pnpm check`, `pnpm test`,
+  `pnpm build:extension:staging`, and `pnpm validate:extension:staging`.
+  Final post-commit staging zip remains in progress so the artifact build id
+  matches the committed SHA.
 - [x] 2026-06-21: Fixed the first staging acceptance watch-library bug on
   `codex/watch-library-room-participants`: room-backed watch progress now
   expands `watch_session_participants` from the durable room host plus

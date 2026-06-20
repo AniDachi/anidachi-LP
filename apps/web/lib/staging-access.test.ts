@@ -72,6 +72,20 @@ test("staging gate bypasses extension token endpoints and allowed bearer API cal
   );
   assert.equal(
     canBypassStagingGate({
+      pathname: "/api/auth/refresh",
+      method: "GET",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/auth/refresh",
+      method: "POST",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
       pathname: "/api/rooms",
       method: "POST",
       authorization: "Bearer token",

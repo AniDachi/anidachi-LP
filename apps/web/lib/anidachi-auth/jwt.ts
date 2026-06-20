@@ -5,6 +5,7 @@ import {
   type PlanCode,
   type RoomCapabilities,
 } from "./plan-entitlements";
+import { ACCESS_TOKEN_TTL_SECONDS } from "./token-policy";
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.ANIDACHI_JWT_SECRET;
@@ -27,7 +28,7 @@ export async function signAccessToken(
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
     .setIssuedAt()
-    .setExpirationTime("15m")
+    .setExpirationTime(`${ACCESS_TOKEN_TTL_SECONDS}s`)
     .sign(getJwtSecret());
 }
 

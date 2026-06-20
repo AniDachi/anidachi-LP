@@ -426,6 +426,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     };
   }, []);
 
+  const getFreshAuthAccessToken = useCallback(
+    async (reason: string): Promise<string | null> => {
+      const refreshed = await refreshRoomActionIdentity(reason);
+      return refreshed.accessToken;
+    },
+    [refreshRoomActionIdentity],
+  );
+
   const setMessageComposerDomGuard = useCallback(
     (active: boolean) => {
       if (active) {
@@ -970,7 +978,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       checkpointKind: WatchCheckpointKind,
       force: boolean,
     ) => {
-      if (!authAccessToken || entry.duration <= 0 || entry.currentTime <= 0) {
+      if (!authAccessTokenRef.current || entry.duration <= 0 || entry.currentTime <= 0) {
         return;
       }
 
@@ -980,13 +988,22 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       lastRemoteReconcileAt = now;
-      void reconcileWatchProgress(authAccessToken, [
-        {
-          ...entry,
-          checkpointKind,
-          observedAt: now,
-        },
-      ]).catch((error: unknown) => {
+      void (async () => {
+        const accessToken = await getFreshAuthAccessToken(
+          `watch-library:${checkpointKind}`,
+        );
+        if (!accessToken) {
+          return;
+        }
+
+        await reconcileWatchProgress(accessToken, [
+          {
+            ...entry,
+            checkpointKind,
+            observedAt: now,
+          },
+        ]);
+      })().catch((error: unknown) => {
         logDebug("watch-library.reconcile", "remote reconcile failed", {
           checkpointKind,
           error: error instanceof Error ? error.message : String(error),
@@ -1039,7 +1056,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       adapter.video.removeEventListener("ended", persistEnded);
       window.removeEventListener("pagehide", persistPagehide);
     };
-  }, [adapter, authAccessToken, roomId, participantCount, loadPosterArtwork]);
+  }, [adapter, getFreshAuthAccessToken, roomId, participantCount, loadPosterArtwork]);
 
   const sendCameraStatus = useCallback((enabled: boolean) => {
     const activeRoomId = roomIdRef.current;
@@ -2751,7 +2768,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const handleEndRoom = async () => {
     const activeRoomId = roomIdRef.current;
-    const accessToken = authAccessTokenRef.current;
+    const accessToken = await getFreshAuthAccessToken("end-room");
     if (!activeRoomId || !isHost || !accessToken) {
       return;
     }
@@ -2798,7 +2815,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   };
 
   const loadInviteTargetsForRoom = useCallback(async () => {
-    const accessToken = authAccessTokenRef.current;
+    const accessToken = await getFreshAuthAccessToken("invite-targets");
     if (!accessToken) {
       setPanelOpen(true);
       setInviteStatusMessage("Sign in to invite friends.");
@@ -2822,7 +2839,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     } finally {
       setInviteTargetsLoading(false);
     }
-  }, []);
+  }, [getFreshAuthAccessToken]);
 
   const toggleInvitePanel = useCallback(async () => {
     if (invitePanelOpen) {
@@ -2840,7 +2857,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       input: Pick<CreateRoomInviteInput, "recipientUserIds" | "groupId">,
     ) => {
       const activeRoomId = roomIdRef.current;
-      const accessToken = authAccessTokenRef.current;
+      const accessToken = await getFreshAuthAccessToken("send-invite");
       if (!activeRoomId || !accessToken) {
         setInviteStatusMessage("Create a room and sign in before inviting friends.");
         return;
@@ -2868,7 +2885,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         setInviteSendingTarget(null);
       }
     },
-    [],
+    [getFreshAuthAccessToken],
   );
 
   const sendDirectInvite = useCallback(
