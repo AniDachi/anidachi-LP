@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { AnidachiLogoLink } from "@/components/anidachi-logo";
-import { Menu, X, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, LogOut, ChevronDown, Users } from "lucide-react";
 import { NavPricingButton } from "@/components/nav-pricing-button";
 import { NavPricingLink } from "@/components/nav-pricing-link";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
@@ -108,6 +108,14 @@ function UserMenu({ user }: { user: NavUser }) {
 
           {/* Actions */}
           <div className="border-t border-white/10 px-2 py-2">
+            <Link
+              href="/friends"
+              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-purple-200 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <Users className="h-4 w-4" aria-hidden />
+              Friends
+            </Link>
             <button
               type="button"
               onClick={handleSignOut}
@@ -333,6 +341,16 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
                         <p className="truncate text-xs text-purple-300">{user.email}</p>
                       </div>
                     </div>
+                  </li>
+                  <li>
+                    <Link
+                      href="/friends"
+                      className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-base text-purple-200 transition-colors hover:bg-white/10 hover:text-white"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <Users className="h-4 w-4" aria-hidden />
+                      Friends
+                    </Link>
                   </li>
                   <li>
                     <MobileSignOut onDone={() => setMenuOpen(false)} />
