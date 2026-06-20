@@ -1358,8 +1358,9 @@ Acceptance:
   Invites, Devices, Billing, and Settings. Initial real navigation exists for
   Overview and Friends & Groups; unimplemented sections must not be exposed as
   dead links.
-- [~] Add extension popup navigation for Resources, Friends, Groups, and Inbox.
-  Resources and Friends & Groups are wired; durable inbox remains Phase 5.
+- [x] Add extension popup navigation for Resources, Friends, Groups, and Inbox.
+  Resources, Friends & Groups, and durable Inbox are wired without adding push
+  permissions.
 - [x] Keep Resources as the popup default.
 - [~] Add a shared client/read-model layer so popup and dashboard consume the
   same account/social/watch-library data. Current slice shares web API/social
@@ -1383,8 +1384,8 @@ Acceptance:
 - [x] Add invite and invite recipient tables.
 - [x] Add invite create/list/accept/decline APIs.
 - [x] Add extension friend/group invite send panel backed by durable inbox.
-- [ ] Add durable inbox list to the extension popup.
-- [ ] Add durable invites section to the web dashboard.
+- [x] Add durable inbox list to the extension popup.
+- [x] Add durable invites section to the web dashboard.
 - [ ] Add device push-token registration.
 - [ ] Add Chrome GCM sender configuration.
 - [ ] Add extension notification/inbox handlers.
@@ -1532,6 +1533,17 @@ Acceptance:
 
 ## Progress Log
 
+- [x] 2026-06-21: Phase 5 durable in-app inbox slice implemented on
+  `codex/social-inbox-phase5`. Extended the extension social bridge with
+  invite inbox list, accept, and decline commands; added an Inbox tab to the
+  popup that reads `/api/invites` through the existing authenticated bridge;
+  accepting an invite opens the room join URL, while declining refreshes the
+  same durable inbox. Added `/account/invites` to the account dashboard with
+  incoming and sent invite views backed by the same `/api/invites` rows, and
+  added the section to account navigation. Chrome push/GCM, push-token
+  registration, notification handlers, and Web Store permission copy remain
+  intentionally deferred until the product is ready to request those
+  permissions.
 - [x] 2026-06-21: Phase 4.5 first implementation slice completed on
   `codex/social-dashboard-phase45`. Added authenticated `/account` dashboard
   shell, moved Friends & Groups to `/account/friends`, changed legacy

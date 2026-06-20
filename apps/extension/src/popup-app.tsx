@@ -1,13 +1,16 @@
 import {
+  Check,
   ChevronDown,
   Film,
   Folder,
+  Inbox,
   Link2,
   RefreshCw,
   RotateCcw,
   Trash2,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getCurrentExtensionSession, signInWithWebsite } from "./auth-client";
@@ -15,10 +18,15 @@ import { WEB_HTTP_BASE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
 import { popupStyles } from "./popup-styles";
 import {
+  acceptRoomInvite,
+  declineRoomInvite,
   listInviteTargets,
+  listRoomInvites,
   type FriendGroup,
   type FriendListItem,
   type InviteTargets,
+  type RoomInvite,
+  type RoomInvitesResponse,
 } from "./social-client";
 import {
   buildProviderFolders,
@@ -33,55 +41,116 @@ import {
   type WatchProgressStore,
 } from "./watch-progress";
 
-type PopupTab = "resources" | "friends";
+type PopupTab = "resources" | "friends" | "inbox";
+
+type SocialPanelData = {
+  targets: InviteTargets;
+  invites: RoomInvitesResponse;
+};
 
 type SocialPanelState =
-  | { status: "loading"; targets: InviteTargets | null; error: null }
-  | { status: "signed-out"; targets: null; error: null }
-  | { status: "ready"; targets: InviteTargets; error: null }
-  | { status: "error"; targets: InviteTargets | null; error: string };
+  | { status: "loading"; data: SocialPanelData | null; error: null }
+  | { status: "signed-out"; data: null; error: null }
+  | { status: "ready"; data: SocialPanelData; error: null }
+  | { status: "error"; data: SocialPanelData | null; error: string };
 
 export function PopupApp() {
   const [store, setStore] = useState<WatchProgressStore>(() => createEmptyWatchProgressStore());
   const [activeTab, setActiveTab] = useState<PopupTab>("resources");
   const [socialState, setSocialState] = useState<SocialPanelState>({
     status: "loading",
-    targets: null,
+    data: null,
     error: null,
   });
+  const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
   const [openProviders, setOpenProviders] = useState<Record<string, boolean>>({
     crunchyroll: true,
   });
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const posterRequestsRef = useRef<Record<string, boolean>>({});
   const folders = useMemo(() => buildProviderFolders(store), [store]);
-  const socialCount = socialState.targets
-    ? socialState.targets.friends.length + socialState.targets.groups.length
+  const socialCount = socialState.data
+    ? socialState.data.targets.friends.length + socialState.data.targets.groups.length
     : 0;
+  const pendingInviteCount =
+    socialState.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)).length ??
+    0;
 
   const loadSocial = useCallback(async (interactive = false) => {
     setSocialState((current) => ({
       status: "loading",
-      targets: current.targets,
+      data: current.data,
       error: null,
     }));
     try {
       const tokens = interactive ? await signInWithWebsite() : await getCurrentExtensionSession();
       if (!tokens) {
-        setSocialState({ status: "signed-out", targets: null, error: null });
+        setSocialState({ status: "signed-out", data: null, error: null });
         return;
       }
 
-      const targets = await listInviteTargets(tokens.accessToken);
-      setSocialState({ status: "ready", targets, error: null });
+      const [targets, invites] = await Promise.all([
+        listInviteTargets(tokens.accessToken),
+        listRoomInvites(tokens.accessToken),
+      ]);
+      setSocialState({ status: "ready", data: { targets, invites }, error: null });
     } catch (error) {
       setSocialState((current) => ({
         status: "error",
-        targets: current.targets,
+        data: current.data,
         error: error instanceof Error ? error.message : "Could not load friends",
       }));
     }
   }, []);
+
+  const acceptInvite = useCallback(
+    async (inviteId: string) => {
+      setBusyInviteId(inviteId);
+      try {
+        const tokens = await getCurrentExtensionSession();
+        if (!tokens) {
+          setSocialState({ status: "signed-out", data: null, error: null });
+          return;
+        }
+        const accepted = await acceptRoomInvite(tokens.accessToken, inviteId);
+        await loadSocial(false);
+        await chrome.tabs.create({ url: accepted.joinUrl });
+      } catch (error) {
+        setSocialState((current) => ({
+          status: "error",
+          data: current.data,
+          error: error instanceof Error ? error.message : "Could not accept invite",
+        }));
+      } finally {
+        setBusyInviteId(null);
+      }
+    },
+    [loadSocial],
+  );
+
+  const declineInvite = useCallback(
+    async (inviteId: string) => {
+      setBusyInviteId(inviteId);
+      try {
+        const tokens = await getCurrentExtensionSession();
+        if (!tokens) {
+          setSocialState({ status: "signed-out", data: null, error: null });
+          return;
+        }
+        await declineRoomInvite(tokens.accessToken, inviteId);
+        await loadSocial(false);
+      } catch (error) {
+        setSocialState((current) => ({
+          status: "error",
+          data: current.data,
+          error: error instanceof Error ? error.message : "Could not decline invite",
+        }));
+      } finally {
+        setBusyInviteId(null);
+      }
+    },
+    [loadSocial],
+  );
 
   useEffect(() => {
     void loadWatchProgressStore().then(setStore);
@@ -208,6 +277,16 @@ export function PopupApp() {
         >
           Friends <span>{socialCount}</span>
         </button>
+        <button
+          className="popup-tab"
+          data-active={activeTab === "inbox"}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "inbox"}
+          onClick={() => setActiveTab("inbox")}
+        >
+          Inbox <span>{pendingInviteCount}</span>
+        </button>
       </div>
 
       {activeTab === "resources" ? (
@@ -236,11 +315,20 @@ export function PopupApp() {
             ))}
           </div>
         </section>
-      ) : (
+      ) : activeTab === "friends" ? (
         <SocialPanel
           state={socialState}
           onRefresh={() => void loadSocial(false)}
           onSignIn={() => void loadSocial(true)}
+        />
+      ) : (
+        <InviteInboxPanel
+          busyInviteId={busyInviteId}
+          onAccept={(inviteId) => void acceptInvite(inviteId)}
+          onDecline={(inviteId) => void declineInvite(inviteId)}
+          onRefresh={() => void loadSocial(false)}
+          onSignIn={() => void loadSocial(true)}
+          state={socialState}
         />
       )}
     </main>
@@ -256,7 +344,7 @@ function SocialPanel({
   onSignIn: () => void;
   state: SocialPanelState;
 }) {
-  const targets = state.targets;
+  const data = state.data;
 
   return (
     <section className="popup-section">
@@ -293,12 +381,150 @@ function SocialPanel({
         </div>
       ) : null}
 
-      {state.status === "loading" && !targets ? (
+      {state.status === "loading" && !data ? (
         <div className="popup-empty">Loading friends...</div>
       ) : null}
 
-      {targets ? <SocialTargets targets={targets} /> : null}
+      {data ? <SocialTargets targets={data.targets} /> : null}
     </section>
+  );
+}
+
+function InviteInboxPanel({
+  busyInviteId,
+  onAccept,
+  onDecline,
+  onRefresh,
+  onSignIn,
+  state,
+}: {
+  busyInviteId: string | null;
+  onAccept: (inviteId: string) => void;
+  onDecline: (inviteId: string) => void;
+  onRefresh: () => void;
+  onSignIn: () => void;
+  state: SocialPanelState;
+}) {
+  const pendingInvites =
+    state.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)) ?? [];
+
+  return (
+    <section className="popup-section">
+      <div className="popup-section-header">
+        <div className="popup-section-title">Inbox</div>
+        <button
+          aria-label="Refresh inbox"
+          className="popup-mini-button"
+          disabled={state.status === "loading"}
+          title="Refresh inbox"
+          type="button"
+          onClick={onRefresh}
+        >
+          <RefreshCw size={13} />
+        </button>
+      </div>
+
+      {state.status === "signed-out" ? (
+        <div className="popup-social-empty">
+          <Inbox size={18} />
+          <span>Sign in to view room invites.</span>
+          <button className="popup-primary-button" type="button" onClick={onSignIn}>
+            Sign in
+          </button>
+        </div>
+      ) : null}
+
+      {state.status === "error" ? (
+        <div className="popup-social-empty" data-tone="error">
+          <span>{state.error}</span>
+          <button className="popup-primary-button" type="button" onClick={onRefresh}>
+            Retry
+          </button>
+        </div>
+      ) : null}
+
+      {state.status === "loading" && !state.data ? (
+        <div className="popup-empty">Loading invites...</div>
+      ) : null}
+
+      {state.data ? (
+        <div className="popup-social-list">
+          {pendingInvites.length ? (
+            pendingInvites.map((invite) => (
+              <InviteInboxRow
+                busy={busyInviteId === invite.id}
+                invite={invite}
+                key={invite.id}
+                onAccept={() => onAccept(invite.id)}
+                onDecline={() => onDecline(invite.id)}
+              />
+            ))
+          ) : (
+            <div className="popup-social-empty">
+              <Inbox size={18} />
+              <span>No pending room invites.</span>
+            </div>
+          )}
+
+          <button
+            className="popup-dashboard-button"
+            type="button"
+            onClick={() => {
+              void chrome.tabs.create({
+                url: new URL("/account/invites", WEB_HTTP_BASE).toString(),
+              });
+            }}
+          >
+            Open dashboard
+          </button>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function InviteInboxRow({
+  busy,
+  invite,
+  onAccept,
+  onDecline,
+}: {
+  busy: boolean;
+  invite: RoomInvite;
+  onAccept: () => void;
+  onDecline: () => void;
+}) {
+  return (
+    <div className="popup-inbox-card">
+      <div className="popup-inbox-main">
+        <ProfileAvatar avatarUrl={invite.sender.avatarUrl} displayName={invite.sender.displayName} />
+        <span className="popup-social-main">
+          <span>{invite.roomTitle ?? "Watch room invite"}</span>
+          <span>From {invite.sender.displayName} · {formatInviteExpiry(invite.expiresAt)}</span>
+        </span>
+      </div>
+      {invite.message ? <p className="popup-inbox-message">{invite.message}</p> : null}
+      <div className="popup-inbox-actions">
+        <button
+          className="popup-primary-button"
+          disabled={busy}
+          type="button"
+          onClick={onAccept}
+        >
+          <Check size={13} />
+          Join
+        </button>
+        <button
+          className="popup-secondary-button"
+          disabled={busy}
+          type="button"
+          onClick={onDecline}
+        >
+          <X size={13} />
+          Decline
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -373,6 +599,30 @@ function SocialGroupRow({ group }: { group: FriendGroup }) {
       </span>
     </div>
   );
+}
+
+function getViewerInviteStatus(invite: RoomInvite): string {
+  return invite.recipients[0]?.status ?? "pending";
+}
+
+function roomInviteCanBeAccepted(invite: RoomInvite): boolean {
+  return getViewerInviteStatus(invite) === "pending" && !roomInviteExpired(invite);
+}
+
+function roomInviteExpired(invite: RoomInvite): boolean {
+  return new Date(invite.expiresAt).getTime() <= Date.now();
+}
+
+function formatInviteExpiry(expiresAt: string): string {
+  const expires = new Date(expiresAt).getTime();
+  if (!Number.isFinite(expires)) return "expires soon";
+  const minutes = Math.max(0, Math.ceil((expires - Date.now()) / 60000));
+  if (minutes <= 1) return "expires now";
+  if (minutes < 60) return `${minutes}m left`;
+  const hours = Math.ceil(minutes / 60);
+  if (hours < 24) return `${hours}h left`;
+  const days = Math.ceil(hours / 24);
+  return `${days}d left`;
 }
 
 function ProfileAvatar({

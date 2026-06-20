@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Users } from "lucide-react";
+import { Inbox, User, Users } from "lucide-react";
 
 const ITEMS = [
   { href: "/account", label: "Overview", icon: User },
   { href: "/account/friends", label: "Friends & Groups", icon: Users },
+  { href: "/account/invites", label: "Invites", icon: Inbox },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {

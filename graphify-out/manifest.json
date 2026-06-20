@@ -240,13 +240,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/popup-app.tsx": {
-    "mtime": 1781982172.9652233,
-    "ast_hash": "2cb19d7e5369a320f416a4efb4eb916c",
+    "mtime": 1781985692.2228107,
+    "ast_hash": "1fa81d2b636f68057f1664e103b78fc1",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-styles.ts": {
-    "mtime": 1781980152.3986459,
-    "ast_hash": "ea4e88712308de18b268f358c4fc43df",
+    "mtime": 1781985412.7687204,
+    "ast_hash": "6906ca8c410a151c85d93361c2550eb2",
     "semantic_hash": ""
   },
   "apps/extension/src/room-client.ts": {
@@ -950,7 +950,7 @@
     "semantic_hash": ""
   },
   "apps/web/app/login/page.tsx": {
-    "mtime": 1781982027.407488,
+    "mtime": 1781984373.6969059,
     "ast_hash": "2842565227eb9a84eb5b2f0c22f9e1c3",
     "semantic_hash": ""
   },
@@ -1170,7 +1170,7 @@
     "semantic_hash": ""
   },
   "apps/web/components/nav-bar-client.tsx": {
-    "mtime": 1781979896.1477525,
+    "mtime": 1781984373.697122,
     "ast_hash": "57f8d2e0542ba900aa8c72ecf402418a",
     "semantic_hash": ""
   },
@@ -1285,7 +1285,7 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/db.ts": {
-    "mtime": 1781981905.063949,
+    "mtime": 1781984373.6973062,
     "ast_hash": "7a7df801fe8bc6f7b7dd5b4e7ea2563c",
     "semantic_hash": ""
   },
@@ -1300,7 +1300,7 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/handle-oauth-callback.ts": {
-    "mtime": 1781979732.0413682,
+    "mtime": 1781984373.6975121,
     "ast_hash": "4b89c5834c070ed28d2eed97dc0dbad5",
     "semantic_hash": ""
   },
@@ -1320,7 +1320,7 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/return-to.ts": {
-    "mtime": 1781982021.2837684,
+    "mtime": 1781984373.703801,
     "ast_hash": "f9c20f4df97678879db61b527d787161",
     "semantic_hash": ""
   },
@@ -2020,22 +2020,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1781982748.6620162,
+    "mtime": 1781985614.9168348,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1781982748.6279855,
+    "mtime": 1781985614.8814533,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1781982748.6340256,
+    "mtime": 1781985614.8876543,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1781982748.6372354,
+    "mtime": 1781985614.8914716,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },
@@ -2135,8 +2135,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-20-social-rooms-subscriptions-execution-plan.md": {
-    "mtime": 1781983933.5538838,
-    "ast_hash": "a6d5a163005795f7a84386a633b4ada8",
+    "mtime": 1781985553.7734838,
+    "ast_hash": "4c2c45f378f0e7b1840bdf3532d745ed",
     "semantic_hash": ""
   },
   "apps/web/app/api/me/entitlements/route.ts": {
@@ -2190,7 +2190,7 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/friends/requests/route.ts": {
-    "mtime": 1781981935.7080202,
+    "mtime": 1781984373.6952977,
     "ast_hash": "13f31bb97a9889da28cf158e2b5519f0",
     "semantic_hash": ""
   },
@@ -2230,12 +2230,12 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/social.test.ts": {
-    "mtime": 1781982200.6862152,
+    "mtime": 1781984373.703956,
     "ast_hash": "98c98057ca619cc02e7d1924213589f5",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/social.ts": {
-    "mtime": 1781982841.0830653,
+    "mtime": 1781984373.7042902,
     "ast_hash": "e1807c8ec77c09c27e0b72ba16068a8d",
     "semantic_hash": ""
   },
@@ -2275,13 +2275,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/social-client.ts": {
-    "mtime": 1781982166.5296695,
-    "ast_hash": "9e695a788b6f6fbcc4ee0e6bc5d4b499",
+    "mtime": 1781985579.8152235,
+    "ast_hash": "c02b27405b4ec0c5ef6d07bf9ed1b6e7",
     "semantic_hash": ""
   },
   "apps/extension/test/social-client.test.ts": {
-    "mtime": 1781970079.4199219,
-    "ast_hash": "f9492286baa30a7e438231d961c1bb3e",
+    "mtime": 1781985532.9856493,
+    "ast_hash": "62cb03e24943c0279cf2e468c4caba40",
     "semantic_hash": ""
   },
   "apps/web/app/api/invites/[inviteId]/accept/route.ts": {
@@ -2305,58 +2305,68 @@
     "semantic_hash": ""
   },
   "apps/web/app/friends/friends-client.tsx": {
-    "mtime": 1781982160.6512697,
+    "mtime": 1781984373.6957855,
     "ast_hash": "bfb9282a45c6538db8254cdaab61e12f",
     "semantic_hash": ""
   },
   "apps/web/app/friends/page.tsx": {
-    "mtime": 1781979882.3054936,
+    "mtime": 1781984373.695981,
     "ast_hash": "97fbe662f25967846e92d7200484cce0",
     "semantic_hash": ""
   },
   "apps/web/app/account/account-nav.tsx": {
-    "mtime": 1781979804.7291226,
-    "ast_hash": "d2663659699de3c027d65ba613dc8b9b",
+    "mtime": 1781985521.1059034,
+    "ast_hash": "1d2e62e4987b4ac47c356fd2c8f1af9a",
     "semantic_hash": ""
   },
   "apps/web/app/account/friends/page.tsx": {
-    "mtime": 1781982145.6364834,
+    "mtime": 1781984373.6943595,
     "ast_hash": "2a218e38edb0bcd10576e5e92757b875",
     "semantic_hash": ""
   },
   "apps/web/app/account/layout.tsx": {
-    "mtime": 1781982153.3213203,
+    "mtime": 1781984373.6944458,
     "ast_hash": "67bdf9ad8ec4665c1cea5c70e06c7e34",
     "semantic_hash": ""
   },
   "apps/web/app/account/page.tsx": {
-    "mtime": 1781979918.2434342,
+    "mtime": 1781984373.6945333,
     "ast_hash": "dab13fac87c3d593eb29248c9b70fda1",
     "semantic_hash": ""
   },
   "apps/web/app/api/friends/invite-links/[token]/accept/route.ts": {
-    "mtime": 1781981967.7070825,
+    "mtime": 1781984373.6947722,
     "ast_hash": "d935d8a1028ac0ba76c055d638aafed7",
     "semantic_hash": ""
   },
   "apps/web/app/api/friends/invite-links/route.ts": {
-    "mtime": 1781981959.6020095,
+    "mtime": 1781984373.6948426,
     "ast_hash": "1dfc332e92b422299adecb00c1adeb4c",
     "semantic_hash": ""
   },
   "apps/web/app/friend/invite/[token]/friend-invite-client.tsx": {
-    "mtime": 1781982651.8737507,
+    "mtime": 1781984373.6955168,
     "ast_hash": "0546b99229dc874b858f776b8e1eb563",
     "semantic_hash": ""
   },
   "apps/web/app/friend/invite/[token]/page.tsx": {
-    "mtime": 1781982014.8795524,
+    "mtime": 1781984373.6956005,
     "ast_hash": "a23fae0034dafe4d2dca3f9323521493",
     "semantic_hash": ""
   },
   "apps/web/supabase/migrations/20260625_friend_invite_links.sql": {
-    "mtime": 1781981925.9477618,
+    "mtime": 1781984373.7044573,
     "ast_hash": "97af5666455530511da25ffa1febab66",
+    "semantic_hash": ""
+  },
+  "apps/web/app/account/invites/invites-client.tsx": {
+    "mtime": 1781985514.0278988,
+    "ast_hash": "8182620f60338fb5d0424580cd526e98",
+    "semantic_hash": ""
+  },
+  "apps/web/app/account/invites/page.tsx": {
+    "mtime": 1781985433.2189388,
+    "ast_hash": "aa117422e6aa0be04b4eeca486fc15bc",
     "semantic_hash": ""
   }
 }
