@@ -117,6 +117,10 @@ import {
   type WatchProgressEntry,
   type WatchProgressStore,
 } from "./watch-progress";
+import {
+  reconcileWatchProgress,
+  type WatchCheckpointKind,
+} from "./watch-library-client";
 
 interface OverlayAppProps {
   adapter: VideoAdapter;
@@ -208,6 +212,7 @@ const LIVE_CHAT_MESSAGE_TTL_MS = 9000;
 const LIVE_CHAT_MAX_MESSAGES = 6;
 const CHAT_HISTORY_MAX_MESSAGES = 80;
 const MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS = 180;
+const WATCH_LIBRARY_REMOTE_RECONCILE_INTERVAL_MS = 60_000;
 const LIVE_CHAT_NAME_COLORS = [
   "#c4a7ff",
   "#7dd3fc",
@@ -954,6 +959,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
     let disposed = false;
     let lastPersistedAt = 0;
+    let lastRemoteReconcileAt = 0;
     const getEntry = () =>
       getCrunchyrollProgressEntry({
         title: adapter.getTitle(),
@@ -961,7 +967,39 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         roomId: roomId ?? undefined,
         watchedWithCount: Math.max(1, participantCount),
       });
-    const update = (persist: boolean) => {
+    const reconcileRemote = (
+      entry: WatchProgressEntry,
+      checkpointKind: WatchCheckpointKind,
+      force: boolean,
+    ) => {
+      if (!authAccessToken || entry.duration <= 0 || entry.currentTime <= 0) {
+        return;
+      }
+
+      const now = Date.now();
+      if (!force && now - lastRemoteReconcileAt < WATCH_LIBRARY_REMOTE_RECONCILE_INTERVAL_MS) {
+        return;
+      }
+
+      lastRemoteReconcileAt = now;
+      void reconcileWatchProgress(authAccessToken, [
+        {
+          ...entry,
+          checkpointKind,
+          observedAt: now,
+        },
+      ]).catch((error: unknown) => {
+        logDebug("watch-library.reconcile", "remote reconcile failed", {
+          checkpointKind,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+    };
+    const update = (
+      persist: boolean,
+      checkpointKind: WatchCheckpointKind = "local",
+      forceRemote = false,
+    ) => {
       const entry = getEntry();
       setCurrentResourceEntry(entry);
       loadPosterArtwork(entry, getEntry, () => disposed);
@@ -971,34 +1009,39 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       const now = Date.now();
-      if (now - lastPersistedAt < 2500) {
+      if (!forceRemote && now - lastPersistedAt < 2500) {
         return;
       }
 
       lastPersistedAt = now;
       void recordWatchProgress(entry).then(setWatchProgressStore);
+      reconcileRemote(entry, checkpointKind, forceRemote);
     };
     const updateDisplay = () => update(false);
-    const persist = () => update(true);
+    const persist = () => update(true, "local", false);
+    const persistPause = () => update(true, "pause", true);
+    const persistSeeked = () => update(true, "seeked", true);
+    const persistEnded = () => update(true, "ended", true);
+    const persistPagehide = () => update(true, "pagehide", true);
 
     update(true);
     const displayInterval = window.setInterval(updateDisplay, 1000);
     const persistInterval = window.setInterval(persist, 5000);
-    adapter.video.addEventListener("pause", persist);
-    adapter.video.addEventListener("seeked", persist);
-    adapter.video.addEventListener("ended", persist);
-    window.addEventListener("pagehide", persist);
+    adapter.video.addEventListener("pause", persistPause);
+    adapter.video.addEventListener("seeked", persistSeeked);
+    adapter.video.addEventListener("ended", persistEnded);
+    window.addEventListener("pagehide", persistPagehide);
 
     return () => {
       disposed = true;
       window.clearInterval(displayInterval);
       window.clearInterval(persistInterval);
-      adapter.video.removeEventListener("pause", persist);
-      adapter.video.removeEventListener("seeked", persist);
-      adapter.video.removeEventListener("ended", persist);
-      window.removeEventListener("pagehide", persist);
+      adapter.video.removeEventListener("pause", persistPause);
+      adapter.video.removeEventListener("seeked", persistSeeked);
+      adapter.video.removeEventListener("ended", persistEnded);
+      window.removeEventListener("pagehide", persistPagehide);
     };
-  }, [adapter, roomId, participantCount, loadPosterArtwork]);
+  }, [adapter, authAccessToken, roomId, participantCount, loadPosterArtwork]);
 
   const sendCameraStatus = useCallback((enabled: boolean) => {
     const activeRoomId = roomIdRef.current;

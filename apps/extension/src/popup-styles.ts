@@ -1137,6 +1137,12 @@ export const popupStyles = `
     filter: brightness(1.08);
   }
 
+  .shared-session-action:disabled {
+    cursor: default;
+    opacity: 0.56;
+    filter: none;
+  }
+
   .popup-invite-footer {
     display: grid;
     grid-template-columns: 32px minmax(0, 1fr) auto;

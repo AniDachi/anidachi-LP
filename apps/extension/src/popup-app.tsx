@@ -34,12 +34,21 @@ import {
   formatProgressClock,
   loadWatchProgressStore,
   normalizeWatchProgressStore,
+  recordWatchProgressInStore,
   WATCH_PROGRESS_STORAGE_KEY,
   type ProviderFolder,
   type StoredEpisodeProgress,
   type StoredWatchItem,
   type WatchProgressStore,
 } from "./watch-progress";
+import {
+  createRoomFromWatchSession,
+  reconcileWatchProgress,
+  watchProgressEntriesFromStore,
+  type WatchLibraryEpisode,
+  type WatchLibraryResponse,
+  type WatchLibrarySession,
+} from "./watch-library-client";
 
 type PopupTab = "resources" | "friends" | "inbox";
 
@@ -54,6 +63,12 @@ type SocialPanelState =
   | { status: "ready"; data: SocialPanelData; error: null }
   | { status: "error"; data: SocialPanelData | null; error: string };
 
+type WatchLibraryState =
+  | { status: "loading"; data: WatchLibraryResponse | null; error: null }
+  | { status: "signed-out"; data: null; error: null }
+  | { status: "ready"; data: WatchLibraryResponse; error: null }
+  | { status: "error"; data: WatchLibraryResponse | null; error: string };
+
 export function PopupApp() {
   const [store, setStore] = useState<WatchProgressStore>(() => createEmptyWatchProgressStore());
   const [activeTab, setActiveTab] = useState<PopupTab>("resources");
@@ -62,13 +77,27 @@ export function PopupApp() {
     data: null,
     error: null,
   });
+  const [watchLibraryState, setWatchLibraryState] = useState<WatchLibraryState>({
+    status: "loading",
+    data: null,
+    error: null,
+  });
   const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
+  const [busyWatchSessionId, setBusyWatchSessionId] = useState<string | null>(null);
   const [openProviders, setOpenProviders] = useState<Record<string, boolean>>({
     crunchyroll: true,
   });
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const posterRequestsRef = useRef<Record<string, boolean>>({});
-  const folders = useMemo(() => buildProviderFolders(store), [store]);
+  const displayStore = useMemo(
+    () => mergeWatchLibraryIntoStore(store, watchLibraryState.data),
+    [store, watchLibraryState.data],
+  );
+  const folders = useMemo(() => buildProviderFolders(displayStore), [displayStore]);
+  const libraryEpisodesByKey = useMemo(
+    () => buildLibraryEpisodeIndex(watchLibraryState.data),
+    [watchLibraryState.data],
+  );
   const socialCount = socialState.data
     ? socialState.data.targets.friends.length + socialState.data.targets.groups.length
     : 0;
@@ -102,6 +131,34 @@ export function PopupApp() {
       }));
     }
   }, []);
+
+  const loadWatchLibrary = useCallback(
+    async (localStore: WatchProgressStore, interactive = false) => {
+      setWatchLibraryState((current) => ({
+        status: "loading",
+        data: current.data,
+        error: null,
+      }));
+      try {
+        const tokens = interactive ? await signInWithWebsite() : await getCurrentExtensionSession();
+        if (!tokens) {
+          setWatchLibraryState({ status: "signed-out", data: null, error: null });
+          return;
+        }
+
+        const entries = watchProgressEntriesFromStore(localStore);
+        const library = await reconcileWatchProgress(tokens.accessToken, entries);
+        setWatchLibraryState({ status: "ready", data: library, error: null });
+      } catch (error) {
+        setWatchLibraryState((current) => ({
+          status: "error",
+          data: current.data,
+          error: error instanceof Error ? error.message : "Could not sync watch history",
+        }));
+      }
+    },
+    [],
+  );
 
   const acceptInvite = useCallback(
     async (inviteId: string) => {
@@ -152,8 +209,41 @@ export function PopupApp() {
     [loadSocial],
   );
 
+  const createRoomFromSession = useCallback(
+    async (session: WatchLibrarySession, sourceUrl: string) => {
+      setBusyWatchSessionId(session.id);
+      try {
+        const tokens = await getCurrentExtensionSession();
+        if (!tokens) {
+          setWatchLibraryState({ status: "signed-out", data: null, error: null });
+          return;
+        }
+
+        const room = await createRoomFromWatchSession({
+          accessToken: tokens.accessToken,
+          sessionId: session.id,
+          clientRequestId: `watch-library:${session.id}:${Date.now()}`,
+        });
+        await chrome.tabs.create({ url: buildWatchRoomLaunchUrl(sourceUrl, room.roomId) });
+        window.close();
+      } catch (error) {
+        setWatchLibraryState((current) => ({
+          status: "error",
+          data: current.data,
+          error: error instanceof Error ? error.message : "Could not create room",
+        }));
+      } finally {
+        setBusyWatchSessionId(null);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
-    void loadWatchProgressStore().then(setStore);
+    void loadWatchProgressStore().then((loadedStore) => {
+      setStore(loadedStore);
+      void loadWatchLibrary(loadedStore, false);
+    });
     void loadSocial(false);
 
     const handleStorageChange = (
@@ -169,9 +259,13 @@ export function PopupApp() {
 
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => chrome.storage.onChanged.removeListener(handleStorageChange);
-  }, [loadSocial]);
+  }, [loadSocial, loadWatchLibrary]);
 
   const totalItems = folders.reduce((sum, folder) => sum + folder.items.length, 0);
+  const localItemsCount = useMemo(
+    () => buildProviderFolders(store).reduce((sum, folder) => sum + folder.items.length, 0),
+    [store],
+  );
   useEffect(() => {
     const missingPosters = folders
       .flatMap((folder) => folder.items)
@@ -235,10 +329,10 @@ export function PopupApp() {
         </div>
         <div className="popup-header-actions">
           <button
-            aria-label="Clear watch history"
+            aria-label="Clear local progress cache"
             className="popup-icon-button"
-            disabled={!totalItems}
-            title="Clear watch history"
+            disabled={!localItemsCount}
+            title="Clear local progress cache"
             type="button"
             onClick={clearHistory}
           >
@@ -291,13 +385,42 @@ export function PopupApp() {
 
       {activeTab === "resources" ? (
         <section className="popup-section">
-          <div className="popup-section-title">Resources</div>
+          <div className="popup-section-header">
+            <div className="popup-section-title">Resources</div>
+            <button
+              aria-label="Sync watch library"
+              className="popup-mini-button"
+              disabled={watchLibraryState.status === "loading"}
+              title="Sync watch library"
+              type="button"
+              onClick={() => void loadWatchLibrary(store, false)}
+            >
+              <RefreshCw size={13} />
+            </button>
+          </div>
+          {watchLibraryState.status === "error" ? (
+            <div className="popup-social-empty" data-tone="error">
+              <span>{watchLibraryState.error}</span>
+              <button
+                className="popup-primary-button"
+                type="button"
+                onClick={() => void loadWatchLibrary(store, false)}
+              >
+                Retry
+              </button>
+            </div>
+          ) : null}
           <div className="popup-resource-list">
             {folders.map((folder) => (
               <ProviderRow
                 key={folder.provider}
                 folder={folder}
+                busyWatchSessionId={busyWatchSessionId}
+                libraryEpisodesByKey={libraryEpisodesByKey}
                 open={Boolean(openProviders[folder.provider])}
+                onCreateRoomFromSession={(session, sourceUrl) =>
+                  void createRoomFromSession(session, sourceUrl)
+                }
                 onToggle={() =>
                   setOpenProviders((current) => ({
                     ...current,
@@ -650,15 +773,84 @@ function getInitials(name: string): string {
   );
 }
 
+function buildLibraryEpisodeIndex(
+  library: WatchLibraryResponse | null,
+): Map<string, WatchLibraryEpisode> {
+  const index = new Map<string, WatchLibraryEpisode>();
+  for (const item of library?.items ?? []) {
+    for (const episode of item.episodes) {
+      index.set(libraryEpisodeKey(item.provider, item.itemKey, episode.episodeKey), episode);
+    }
+  }
+  return index;
+}
+
+function libraryEpisodeKey(
+  provider: string,
+  itemKey: string,
+  episodeKey: string,
+): string {
+  return `${provider}:${itemKey}:${episodeKey}`;
+}
+
+function mergeWatchLibraryIntoStore(
+  localStore: WatchProgressStore,
+  library: WatchLibraryResponse | null,
+): WatchProgressStore {
+  let nextStore = localStore;
+  for (const item of library?.items ?? []) {
+    for (const episode of item.episodes) {
+      const observedAt = new Date(episode.lastWatchedAt).getTime();
+      if (!Number.isFinite(observedAt)) {
+        continue;
+      }
+      const existingItem = nextStore.providers[item.provider]?.items[item.itemKey];
+      const existingEpisode =
+        item.itemKind === "series" ? existingItem?.episodes?.[episode.episodeKey] : existingItem;
+      if (existingEpisode && existingEpisode.lastWatchedAt >= observedAt) {
+        continue;
+      }
+
+      const latestSession = episode.sessions[0] ?? null;
+      nextStore = recordWatchProgressInStore(
+        nextStore,
+        {
+          provider: item.provider,
+          kind: item.itemKind === "series" ? "episode" : "movie",
+          itemId: item.itemKey,
+          itemTitle: item.itemTitle,
+          contentId: episode.episodeKey,
+          episodeId: episode.episodeKey,
+          episodeTitle: episode.episodeTitle,
+          artworkUrl: item.artworkUrl ?? undefined,
+          sourceUrl: episode.sourceUrl,
+          currentTime: episode.currentTime,
+          duration: episode.duration,
+          roomId: latestSession?.roomId ?? undefined,
+          watchedWithCount: Math.max(1, latestSession?.participants.length ?? 1),
+        },
+        observedAt,
+      );
+    }
+  }
+  return nextStore;
+}
+
 function ProviderRow({
+  busyWatchSessionId,
   folder,
+  libraryEpisodesByKey,
   open,
+  onCreateRoomFromSession,
   onToggle,
   openItems,
   onToggleItem,
 }: {
+  busyWatchSessionId: string | null;
   folder: ProviderFolder;
+  libraryEpisodesByKey: Map<string, WatchLibraryEpisode>;
   open: boolean;
+  onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
   onToggle: () => void;
   openItems: Record<string, boolean>;
   onToggleItem: (itemId: string) => void;
@@ -727,9 +919,12 @@ function ProviderRow({
           {visibleItems.length ? (
             visibleItems.map((item) => (
               <WatchItemRow
+                busyWatchSessionId={busyWatchSessionId}
                 key={item.id}
                 item={item}
+                libraryEpisodesByKey={libraryEpisodesByKey}
                 open={Boolean(openItems[item.id])}
+                onCreateRoomFromSession={onCreateRoomFromSession}
                 onToggle={() => onToggleItem(item.id)}
               />
             ))
@@ -744,12 +939,18 @@ function ProviderRow({
 }
 
 function WatchItemRow({
+  busyWatchSessionId,
   item,
+  libraryEpisodesByKey,
   open,
+  onCreateRoomFromSession,
   onToggle,
 }: {
+  busyWatchSessionId: string | null;
   item: StoredWatchItem;
+  libraryEpisodesByKey: Map<string, WatchLibraryEpisode>;
   open: boolean;
+  onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
   onToggle: () => void;
 }) {
   const episodes = Object.values(item.episodes ?? {}).sort(
@@ -758,7 +959,14 @@ function WatchItemRow({
   const isSeries = item.kind === "series";
 
   if (!isSeries) {
-    return <MovieRow item={item} />;
+    return (
+      <MovieRow
+        busyWatchSessionId={busyWatchSessionId}
+        item={item}
+        libraryEpisode={libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, item.id))}
+        onCreateRoomFromSession={onCreateRoomFromSession}
+      />
+    );
   }
 
   return (
@@ -787,7 +995,16 @@ function WatchItemRow({
       {open ? (
         <div className="popup-episode-list">
           {episodes.map((episode, index) => (
-            <EpisodeRow episode={episode} episodeIndex={index} key={episode.id} />
+            <EpisodeRow
+              busyWatchSessionId={busyWatchSessionId}
+              episode={episode}
+              episodeIndex={index}
+              key={episode.id}
+              libraryEpisode={libraryEpisodesByKey.get(
+                libraryEpisodeKey(item.provider, item.id, episode.id),
+              )}
+              onCreateRoomFromSession={onCreateRoomFromSession}
+            />
           ))}
         </div>
       ) : null}
@@ -795,7 +1012,17 @@ function WatchItemRow({
   );
 }
 
-function MovieRow({ item }: { item: StoredWatchItem }) {
+function MovieRow({
+  busyWatchSessionId,
+  item,
+  libraryEpisode,
+  onCreateRoomFromSession,
+}: {
+  busyWatchSessionId: string | null;
+  item: StoredWatchItem;
+  libraryEpisode?: WatchLibraryEpisode;
+  onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
+}) {
   const movieEpisode = getMovieEpisodeProgress(item);
 
   return (
@@ -823,7 +1050,13 @@ function MovieRow({ item }: { item: StoredWatchItem }) {
             <span className="popup-episode-number">Movie</span>
             <span className="popup-episode-title">{item.title}</span>
           </span>
-          <SharedProgressTracker episode={movieEpisode} episodeIndex={0} compact />
+          <SharedProgressTracker
+            busySessionId={busyWatchSessionId}
+            episode={movieEpisode}
+            libraryEpisode={libraryEpisode}
+            onCreateRoomFromSession={onCreateRoomFromSession}
+            compact
+          />
         </span>
       </div>
     </div>
@@ -831,11 +1064,17 @@ function MovieRow({ item }: { item: StoredWatchItem }) {
 }
 
 function EpisodeRow({
+  busyWatchSessionId,
   episode,
   episodeIndex,
+  libraryEpisode,
+  onCreateRoomFromSession,
 }: {
+  busyWatchSessionId: string | null;
   episode: StoredEpisodeProgress;
   episodeIndex: number;
+  libraryEpisode?: WatchLibraryEpisode;
+  onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
 }) {
   const selected = episodeIndex === 0;
 
@@ -854,73 +1093,33 @@ function EpisodeRow({
           </span>
           <span className="popup-episode-title">{stripEpisodePrefix(episode.title)}</span>
         </span>
-        <SharedProgressTracker episode={episode} episodeIndex={episodeIndex} compact />
+        <SharedProgressTracker
+          busySessionId={busyWatchSessionId}
+          episode={episode}
+          libraryEpisode={libraryEpisode}
+          onCreateRoomFromSession={onCreateRoomFromSession}
+          compact
+        />
       </span>
     </div>
   );
 }
 
-interface DemoFriend {
-  id: string;
-  name: string;
-  initials: string;
-  color: string;
-}
-
-interface DemoWatchSession {
-  id: string;
-  label: string;
-  detail: string;
-  actionLabel: string;
-  kind: "friends" | "date" | "solo";
-  progress: number;
-  friends: DemoFriend[];
-}
-
-const DEMO_FRIENDS: Record<string, DemoFriend> = {
-  you: {
-    id: "you",
-    name: "You",
-    initials: "YU",
-    color: "linear-gradient(135deg, #60a5fa, #8b5cf6)",
-  },
-  alina: {
-    id: "alina",
-    name: "Alina",
-    initials: "AL",
-    color: "linear-gradient(135deg, #fb7185, #f472b6)",
-  },
-  maxim: {
-    id: "maxim",
-    name: "Max",
-    initials: "MX",
-    color: "linear-gradient(135deg, #34d399, #22c55e)",
-  },
-  denis: {
-    id: "denis",
-    name: "Denis",
-    initials: "DN",
-    color: "linear-gradient(135deg, #f59e0b, #ef4444)",
-  },
-  ira: {
-    id: "ira",
-    name: "Ira",
-    initials: "IR",
-    color: "linear-gradient(135deg, #38bdf8, #06b6d4)",
-  },
-};
-
 function SharedProgressTracker({
+  busySessionId,
   episode,
-  episodeIndex,
+  libraryEpisode,
+  onCreateRoomFromSession,
   compact = false,
 }: {
+  busySessionId: string | null;
   episode: StoredEpisodeProgress;
-  episodeIndex: number;
+  libraryEpisode?: WatchLibraryEpisode;
+  onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
   compact?: boolean;
 }) {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const sessions = getDemoSessions(episode, episodeIndex);
+  const sessions = libraryEpisode?.sessions ?? [];
   const layeredSessions = getLayeredSessions(sessions);
   const activeSession = sessions.find((session) => session.id === activeSessionId) ?? null;
 
@@ -929,7 +1128,7 @@ function SharedProgressTracker({
       <span className="shared-progress-track" data-active={Boolean(activeSession)}>
         {layeredSessions.map((session) => (
           <span
-            className={`shared-progress-segment ${session.kind}`}
+            className={`shared-progress-segment ${sessionVisualKind(session)}`}
             data-tooltip={getSessionTooltip(session, episode.duration)}
             key={session.id}
             style={{
@@ -945,8 +1144,8 @@ function SharedProgressTracker({
         {sessions.map((session) => (
           <button
             aria-expanded={activeSessionId === session.id}
-            aria-label={`${session.label}: ${getSessionTimeLabel(session, episode.duration)}`}
-            className={`shared-progress-marker ${session.kind}`}
+            aria-label={`${sessionLabel(session)}: ${getSessionTimeLabel(session, episode.duration)}`}
+            className={`shared-progress-marker ${sessionVisualKind(session)}`}
             data-tooltip={getSessionTooltip(session, episode.duration)}
             key={`${session.id}-marker`}
             onClick={(event) => {
@@ -956,7 +1155,7 @@ function SharedProgressTracker({
             style={{ left: `${getMarkerPercent(session.progress)}%` }}
             type="button"
           >
-            <AvatarStack friends={session.friends} compact />
+            <AvatarStack participants={session.participants} compact />
           </button>
         ))}
         {activeSession ? (
@@ -967,26 +1166,28 @@ function SharedProgressTracker({
             style={{ left: `${getMarkerPercent(activeSession.progress)}%` }}
           >
             <span className="shared-session-topline">
-              <span>{activeSession.label}</span>
+              <span>{sessionLabel(activeSession)}</span>
               <span>{getSessionTimeLabel(activeSession, episode.duration)}</span>
             </span>
             <span className="shared-session-friends">
-              {activeSession.friends.map((friend) => (
-                <span className="shared-session-friend" key={friend.id}>
-                  <Avatar friend={friend} />
-                  <span>{friend.name}</span>
+              {activeSession.participants.map((participant) => (
+                <span className="shared-session-friend" key={participant.user.userId}>
+                  <Avatar participant={participant} />
+                  <span>{participant.user.displayName}</span>
                 </span>
               ))}
             </span>
             <button
               className="shared-session-action"
+              disabled={busySessionId === activeSession.id}
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
                 setActiveSessionId(null);
+                onCreateRoomFromSession(activeSession, libraryEpisode?.sourceUrl ?? episode.sourceUrl);
               }}
             >
-              {activeSession.actionLabel}
+              {busySessionId === activeSession.id ? "Creating..." : "Create room"}
             </button>
           </span>
         ) : null}
@@ -1013,117 +1214,56 @@ function InviteFooter() {
   );
 }
 
-function AvatarStack({ friends, compact }: { friends: DemoFriend[]; compact?: boolean }) {
+function AvatarStack({
+  participants,
+  compact,
+}: {
+  participants: WatchLibraryParticipantLike[];
+  compact?: boolean;
+}) {
+  const visible = participants.slice(0, 5);
   return (
     <span className={compact ? "avatar-stack compact" : "avatar-stack"}>
-      {friends.map((friend) => (
-        <Avatar friend={friend} key={friend.id} />
+      {visible.map((participant) => (
+        <Avatar participant={participant} key={participant.user.userId} />
       ))}
     </span>
   );
 }
 
-function Avatar({ friend }: { friend: DemoFriend }) {
+function Avatar({ participant }: { participant: WatchLibraryParticipantLike }) {
   return (
-    <span className="shared-avatar" style={{ background: friend.color }}>
-      {friend.initials}
+    <span className="shared-avatar" style={{ background: avatarGradient(participant.user.userId) }}>
+      {getInitials(participant.user.displayName)}
     </span>
   );
 }
 
-function getDemoSessions(episode: StoredEpisodeProgress, episodeIndex: number): DemoWatchSession[] {
-  const soloProgress = clampProgress(Math.max(episode.progress, 0.42));
-  const dateProgress = clampProgress(Math.max(Math.min(episode.progress, 0.62), 0.5));
+type WatchLibraryParticipantLike = WatchLibrarySession["participants"][number];
 
-  if (episodeIndex === 0) {
-    return [
-      {
-        id: `${episode.id}-date`,
-        label: "Досмотреть с Алиной",
-        detail: `${Math.round(dateProgress * 100)}%`,
-        actionLabel: "Создать комнату",
-        kind: "date",
-        progress: dateProgress,
-        friends: [DEMO_FRIENDS.alina],
-      },
-      {
-        id: `${episode.id}-friends`,
-        label: "Смотрели вместе",
-        detail: "5 друзей",
-        actionLabel: "Собрать группу",
-        kind: "friends",
-        progress: 1,
-        friends: [
-          DEMO_FRIENDS.you,
-          DEMO_FRIENDS.alina,
-          DEMO_FRIENDS.maxim,
-          DEMO_FRIENDS.denis,
-          DEMO_FRIENDS.ira,
-        ],
-      },
-    ];
-  }
-
-  if (episodeIndex === 1) {
-    return [
-      {
-        id: `${episode.id}-solo`,
-        label: "Ты смотрел один",
-        detail: `${Math.round(soloProgress * 100)}%`,
-        actionLabel: "Продолжить",
-        kind: "solo",
-        progress: soloProgress,
-        friends: [DEMO_FRIENDS.you],
-      },
-      {
-        id: `${episode.id}-date`,
-        label: "План с Алиной",
-        detail: "на выходные",
-        actionLabel: "Создать комнату",
-        kind: "date",
-        progress: 0.5,
-        friends: [DEMO_FRIENDS.alina],
-      },
-    ];
-  }
-
-  if (episodeIndex === 2) {
-    return [
-      {
-        id: `${episode.id}-friends`,
-        label: "Смотрели вместе",
-        detail: "4 друга",
-        actionLabel: "Повторить комнату",
-        kind: "friends",
-        progress: clampProgress(Math.max(episode.progress, 0.78)),
-        friends: [DEMO_FRIENDS.maxim, DEMO_FRIENDS.alina, DEMO_FRIENDS.denis, DEMO_FRIENDS.you],
-      },
-    ];
-  }
-
-  return [
-    {
-      id: `${episode.id}-solo`,
-      label: "Личный прогресс",
-      detail: `${Math.round(soloProgress * 100)}%`,
-      actionLabel: "Продолжить",
-      kind: "solo",
-      progress: soloProgress,
-      friends: [DEMO_FRIENDS.you],
-    },
-  ];
-}
-
-function getLayeredSessions(sessions: DemoWatchSession[]): DemoWatchSession[] {
+function getLayeredSessions(sessions: WatchLibrarySession[]): WatchLibrarySession[] {
   return [...sessions].sort((a, b) => b.progress - a.progress);
 }
 
-function getSessionTooltip(session: DemoWatchSession, duration: number): string {
-  return `${session.label} · ${getSessionTimeLabel(session, duration)}`;
+function getSessionTooltip(session: WatchLibrarySession, duration: number): string {
+  return `${sessionLabel(session)} · ${getSessionTimeLabel(session, duration)}`;
 }
 
-function getSessionTimeLabel(session: DemoWatchSession, duration: number): string {
+function getSessionTimeLabel(session: WatchLibrarySession, duration: number): string {
   return formatTimePair(clampProgress(session.progress) * duration, duration);
+}
+
+function sessionLabel(session: WatchLibrarySession): string {
+  if (session.kind === "shared") {
+    const others = session.participants.filter((participant) => participant.role !== "host");
+    const count = Math.max(1, others.length || session.participants.length);
+    return count === 1 ? "Watched together" : `Watched together · ${count}`;
+  }
+  return "Your progress";
+}
+
+function sessionVisualKind(session: WatchLibrarySession): "friends" | "solo" {
+  return session.kind === "shared" ? "friends" : "solo";
 }
 
 function getPopoverAlign(progress: number): "left" | "center" | "right" {
@@ -1216,6 +1356,35 @@ function getCrunchyrollWatchId(sourceUrl: string): string | undefined {
     return url.pathname.match(/\/watch\/([^/?#]+)/)?.[1];
   } catch {
     return undefined;
+  }
+}
+
+function avatarGradient(seed: string): string {
+  const gradients = [
+    "linear-gradient(135deg, #60a5fa, #8b5cf6)",
+    "linear-gradient(135deg, #fb7185, #f472b6)",
+    "linear-gradient(135deg, #34d399, #22c55e)",
+    "linear-gradient(135deg, #f59e0b, #ef4444)",
+    "linear-gradient(135deg, #38bdf8, #06b6d4)",
+    "linear-gradient(135deg, #a78bfa, #5b6cff)",
+  ];
+  const hash = Array.from(seed).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return gradients[hash % gradients.length] ?? gradients[0];
+}
+
+function buildWatchRoomLaunchUrl(sourceUrl: string, roomId: string): string {
+  try {
+    const url = new URL(sourceUrl);
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      throw new Error("Unsupported URL");
+    }
+
+    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
+    params.set("anidachiRoom", roomId);
+    url.hash = params.toString();
+    return url.toString();
+  } catch {
+    return new URL(`/room/${encodeURIComponent(roomId)}`, WEB_HTTP_BASE).toString();
   }
 }
 

@@ -250,8 +250,9 @@ These are intentionally not treated as solved:
 - P2P media reconnect and asymmetric join timing can still be fragile.
 - Room lifecycle and P2P source-generation hardening are planned but not fully
   complete.
-- Watch progress persistence and friend/group progress are planned architecture,
-  not finished product behavior.
+- Watch progress persistence now has a backend-backed watch-library foundation
+  on the Phase 6 branch, but staging acceptance across real browser profiles is
+  still required before treating it as finished product behavior.
 - Custom API domain for hiding the Cloudflare account subdomain is deferred.
 - Stripe production webhook appears wired, but end-to-end subscription testing is
   still a separate follow-up.
