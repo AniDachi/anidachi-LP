@@ -1,7 +1,25 @@
-import { ChevronDown, Film, Folder, Link2, RotateCcw, Trash2, UserPlus } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ChevronDown,
+  Film,
+  Folder,
+  Link2,
+  RefreshCw,
+  RotateCcw,
+  Trash2,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getCurrentExtensionSession, signInWithWebsite } from "./auth-client";
+import { WEB_HTTP_BASE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
 import { popupStyles } from "./popup-styles";
+import {
+  listInviteTargets,
+  type FriendGroup,
+  type FriendListItem,
+  type InviteTargets,
+} from "./social-client";
 import {
   buildProviderFolders,
   createEmptyWatchProgressStore,
@@ -15,17 +33,59 @@ import {
   type WatchProgressStore,
 } from "./watch-progress";
 
+type PopupTab = "resources" | "friends";
+
+type SocialPanelState =
+  | { status: "loading"; targets: InviteTargets | null; error: null }
+  | { status: "signed-out"; targets: null; error: null }
+  | { status: "ready"; targets: InviteTargets; error: null }
+  | { status: "error"; targets: InviteTargets | null; error: string };
+
 export function PopupApp() {
   const [store, setStore] = useState<WatchProgressStore>(() => createEmptyWatchProgressStore());
+  const [activeTab, setActiveTab] = useState<PopupTab>("resources");
+  const [socialState, setSocialState] = useState<SocialPanelState>({
+    status: "loading",
+    targets: null,
+    error: null,
+  });
   const [openProviders, setOpenProviders] = useState<Record<string, boolean>>({
     crunchyroll: true,
   });
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const posterRequestsRef = useRef<Record<string, boolean>>({});
   const folders = useMemo(() => buildProviderFolders(store), [store]);
+  const socialCount = socialState.targets
+    ? socialState.targets.friends.length + socialState.targets.groups.length
+    : 0;
+
+  const loadSocial = useCallback(async (interactive = false) => {
+    setSocialState((current) => ({
+      status: "loading",
+      targets: current.targets,
+      error: null,
+    }));
+    try {
+      const tokens = interactive ? await signInWithWebsite() : await getCurrentExtensionSession();
+      if (!tokens) {
+        setSocialState({ status: "signed-out", targets: null, error: null });
+        return;
+      }
+
+      const targets = await listInviteTargets(tokens.accessToken);
+      setSocialState({ status: "ready", targets, error: null });
+    } catch (error) {
+      setSocialState((current) => ({
+        status: "error",
+        targets: current.targets,
+        error: error instanceof Error ? error.message : "Could not load friends",
+      }));
+    }
+  }, []);
 
   useEffect(() => {
     void loadWatchProgressStore().then(setStore);
+    void loadSocial(false);
 
     const handleStorageChange = (
       changes: Record<string, chrome.storage.StorageChange>,
@@ -40,7 +100,7 @@ export function PopupApp() {
 
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => chrome.storage.onChanged.removeListener(handleStorageChange);
-  }, []);
+  }, [loadSocial]);
 
   const totalItems = folders.reduce((sum, folder) => sum + folder.items.length, 0);
   useEffect(() => {
@@ -127,32 +187,216 @@ export function PopupApp() {
         </div>
       </header>
 
-      <section className="popup-section">
-        <div className="popup-section-title">Resources</div>
-        <div className="popup-resource-list">
-          {folders.map((folder) => (
-            <ProviderRow
-              key={folder.provider}
-              folder={folder}
-              open={Boolean(openProviders[folder.provider])}
-              onToggle={() =>
-                setOpenProviders((current) => ({
-                  ...current,
-                  [folder.provider]: !current[folder.provider],
-                }))
-              }
-              openItems={openItems}
-              onToggleItem={(itemId) =>
-                setOpenItems((current) => ({
-                  ...current,
-                  [itemId]: !current[itemId],
-                }))
-              }
-            />
-          ))}
-        </div>
-      </section>
+      <div className="popup-tabs" role="tablist" aria-label="Popup sections">
+        <button
+          className="popup-tab"
+          data-active={activeTab === "resources"}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "resources"}
+          onClick={() => setActiveTab("resources")}
+        >
+          Resources <span>{totalItems}</span>
+        </button>
+        <button
+          className="popup-tab"
+          data-active={activeTab === "friends"}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "friends"}
+          onClick={() => setActiveTab("friends")}
+        >
+          Friends <span>{socialCount}</span>
+        </button>
+      </div>
+
+      {activeTab === "resources" ? (
+        <section className="popup-section">
+          <div className="popup-section-title">Resources</div>
+          <div className="popup-resource-list">
+            {folders.map((folder) => (
+              <ProviderRow
+                key={folder.provider}
+                folder={folder}
+                open={Boolean(openProviders[folder.provider])}
+                onToggle={() =>
+                  setOpenProviders((current) => ({
+                    ...current,
+                    [folder.provider]: !current[folder.provider],
+                  }))
+                }
+                openItems={openItems}
+                onToggleItem={(itemId) =>
+                  setOpenItems((current) => ({
+                    ...current,
+                    [itemId]: !current[itemId],
+                  }))
+                }
+              />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <SocialPanel
+          state={socialState}
+          onRefresh={() => void loadSocial(false)}
+          onSignIn={() => void loadSocial(true)}
+        />
+      )}
     </main>
+  );
+}
+
+function SocialPanel({
+  onRefresh,
+  onSignIn,
+  state,
+}: {
+  onRefresh: () => void;
+  onSignIn: () => void;
+  state: SocialPanelState;
+}) {
+  const targets = state.targets;
+
+  return (
+    <section className="popup-section">
+      <div className="popup-section-header">
+        <div className="popup-section-title">Friends & Groups</div>
+        <button
+          aria-label="Refresh friends and groups"
+          className="popup-mini-button"
+          disabled={state.status === "loading"}
+          title="Refresh friends and groups"
+          type="button"
+          onClick={onRefresh}
+        >
+          <RefreshCw size={13} />
+        </button>
+      </div>
+
+      {state.status === "signed-out" ? (
+        <div className="popup-social-empty">
+          <Users size={18} />
+          <span>Sign in to view friends and groups.</span>
+          <button className="popup-primary-button" type="button" onClick={onSignIn}>
+            Sign in
+          </button>
+        </div>
+      ) : null}
+
+      {state.status === "error" ? (
+        <div className="popup-social-empty" data-tone="error">
+          <span>{state.error}</span>
+          <button className="popup-primary-button" type="button" onClick={onRefresh}>
+            Retry
+          </button>
+        </div>
+      ) : null}
+
+      {state.status === "loading" && !targets ? (
+        <div className="popup-empty">Loading friends...</div>
+      ) : null}
+
+      {targets ? <SocialTargets targets={targets} /> : null}
+    </section>
+  );
+}
+
+function SocialTargets({ targets }: { targets: InviteTargets }) {
+  return (
+    <div className="popup-social-list">
+      <div className="popup-social-block">
+        <div className="popup-social-heading">
+          <span>Friends</span>
+          <span>{targets.friends.length}</span>
+        </div>
+        {targets.friends.length ? (
+          targets.friends.map((friend) => (
+            <SocialFriendRow friend={friend} key={friend.friendshipId} />
+          ))
+        ) : (
+          <div className="popup-empty">No friends yet.</div>
+        )}
+      </div>
+
+      <div className="popup-social-block">
+        <div className="popup-social-heading">
+          <span>Groups</span>
+          <span>{targets.groups.length}</span>
+        </div>
+        {targets.groups.length ? (
+          targets.groups.map((group) => <SocialGroupRow group={group} key={group.id} />)
+        ) : (
+          <div className="popup-empty">No groups yet.</div>
+        )}
+      </div>
+
+      <button
+        className="popup-dashboard-button"
+        type="button"
+        onClick={() => {
+          void chrome.tabs.create({
+            url: new URL("/account/friends", WEB_HTTP_BASE).toString(),
+          });
+        }}
+      >
+        Open dashboard
+      </button>
+    </div>
+  );
+}
+
+function SocialFriendRow({ friend }: { friend: FriendListItem }) {
+  return (
+    <div className="popup-social-row">
+      <ProfileAvatar
+        avatarUrl={friend.user.avatarUrl}
+        displayName={friend.user.displayName}
+      />
+      <span className="popup-social-main">
+        <span>{friend.user.displayName}</span>
+        <span>{friend.user.handle ? `@${friend.user.handle}` : "AniDachi user"}</span>
+      </span>
+    </div>
+  );
+}
+
+function SocialGroupRow({ group }: { group: FriendGroup }) {
+  return (
+    <div className="popup-social-row">
+      <span className="popup-social-group-icon">
+        <Users size={15} />
+      </span>
+      <span className="popup-social-main">
+        <span>{group.name}</span>
+        <span>{group.members.length} members</span>
+      </span>
+    </div>
+  );
+}
+
+function ProfileAvatar({
+  avatarUrl,
+  displayName,
+}: {
+  avatarUrl: string | null;
+  displayName: string;
+}) {
+  if (avatarUrl) {
+    return <img className="popup-social-avatar" src={avatarUrl} alt="" loading="lazy" />;
+  }
+
+  return <span className="popup-social-avatar">{getInitials(displayName)}</span>;
+}
+
+function getInitials(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "A"
   );
 }
 

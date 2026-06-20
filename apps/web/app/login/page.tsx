@@ -24,11 +24,11 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export default async function LoginPage({ searchParams }: Props) {
-  const session = await getSession();
-  if (session) redirect("/");
-
   const { next, error } = await searchParams;
   const sanitizedNext = sanitizeAuthReturnTo(next);
+  const session = await getSession();
+  if (session) redirect(sanitizedNext || "/account");
+
   const safeNext = sanitizedNext ? encodeURIComponent(sanitizedNext) : "";
 
   const errorMessage = error ? (ERROR_MESSAGES[error] ?? "An error occurred. Please try again.") : null;

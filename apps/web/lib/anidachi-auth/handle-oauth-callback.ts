@@ -86,7 +86,7 @@ export async function handleOAuthCallback({
   }
 
   const safeReturnTo = sanitizeAuthReturnTo(statePayload.returnTo);
-  const redirectTo = safeReturnTo ? `${origin}${safeReturnTo}` : `${origin}/`;
+  const redirectTo = safeReturnTo ? `${origin}${safeReturnTo}` : `${origin}/account`;
 
   const response = NextResponse.redirect(redirectTo);
   // Clear the state cookie

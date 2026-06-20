@@ -2,9 +2,15 @@
 
 **Created:** 2026-06-20.
 
-**Status:** implementation in progress on
-`codex/social-rooms-subscriptions-phase1`. Stripe staging setup is deferred
+**Status:** implementation in progress. Phase 4.5 account/dashboard surface work
+is active on `codex/social-dashboard-phase45`. Stripe staging setup is deferred
 until Test Mode products, prices, and webhook secrets are available.
+
+**Product surface review:** updated 2026-06-21 to make the final product shape
+explicit: the extension popup is the fast watch-control surface, while the web
+account dashboard is the full management surface. The current standalone
+`/friends` page is not the final destination; it should become part of the
+account/dashboard information architecture before this feature is promoted.
 
 **Goal:** add the social layer around Anidachi watchrooms without bloating the
 current architecture: explicit friends, personal groups, recent co-watchers,
@@ -40,6 +46,17 @@ Project files reviewed:
 - `apps/api/src/room-state.ts`
 - `packages/protocol/src/types.ts`
 - Supabase migrations under `apps/web/supabase/migrations/`
+- `apps/extension/src/popup-app.tsx`
+- `apps/extension/src/watch-progress.ts`
+- `apps/extension/src/social-client.ts`
+- `apps/extension/src/overlay-app.tsx`
+- `apps/web/app/friends/page.tsx`
+- `apps/web/app/friends/friends-client.tsx`
+
+Graphify queries checked on 2026-06-21:
+
+- `Extension popup resources dashboard friends groups watch history continue together social plan product surfaces`
+- `Extension popup resources progress tracking friends groups user dashboard account hub architecture`
 
 Official docs checked on 2026-06-20:
 
@@ -66,6 +83,25 @@ Official docs checked on 2026-06-20:
 - Cloudflare Durable Objects WebSocket Hibernation:
   `https://developers.cloudflare.com/durable-objects/best-practices/websockets/`
 
+Official docs rechecked on 2026-06-21:
+
+- Chrome extension `sidePanel` API:
+  `https://developer.chrome.com/docs/extensions/reference/api/sidePanel`
+- Chrome extension `gcm` API:
+  `https://developer.chrome.com/docs/extensions/reference/api/gcm`
+- Chrome extension `notifications` API:
+  `https://developer.chrome.com/docs/extensions/reference/api/notifications`
+- Firebase Cloud Messaging token management:
+  `https://firebase.google.com/docs/cloud-messaging/manage-tokens`
+- Firebase Cloud Messaging TTL:
+  `https://firebase.google.com/docs/cloud-messaging/customize-messages/setting-message-lifespan`
+- Supabase Row Level Security:
+  `https://supabase.com/docs/guides/database/postgres/row-level-security`
+- Supabase Realtime Broadcast:
+  `https://supabase.com/docs/guides/realtime/broadcast`
+- Stripe subscription webhooks:
+  `https://docs.stripe.com/billing/subscriptions/webhooks`
+
 ## Non-Goals
 
 - Do not build shared community servers or Discord-style spaces in the MVP.
@@ -78,6 +114,14 @@ Official docs checked on 2026-06-20:
 - Do not expose Supabase service-role keys, Stripe secrets, OAuth secrets, JWT
   signing secrets, Cloudflare tokens, or TURN secrets to the extension.
 - Do not replace the room/P2P hardening plan. This plan depends on it.
+- Do not turn the extension popup into a full admin console. It should stay a
+  fast, context-aware control surface.
+- Do not leave a standalone `/friends` page as the final product shape. Friends,
+  groups, invites, devices, billing, and watch library belong under the account
+  dashboard.
+- Do not add `sidePanel`, `gcm`, or `notifications` permissions to store builds
+  until the corresponding UX, privacy copy, and Chrome Web Store listing impact
+  are ready.
 
 ## Core Product Rules
 
@@ -85,8 +129,18 @@ Official docs checked on 2026-06-20:
 
 - A person must have an Anidachi account before they can become a friend,
   appear as a named recipient, or be stored in a group.
-- OAuth signup should create a minimal profile if one does not exist yet:
-  display name, avatar if available, and a stable user id.
+- OAuth signup through Google or Discord should automatically create or update
+  the Anidachi user account.
+- Google/Discord profile data should seed the account on first login: verified
+  email, provider id, display name, and avatar if available.
+- The AniDachi profile becomes the product source of truth after account
+  creation. Provider data is a starting point; the user can later edit their
+  AniDachi display name, avatar, and optional handle.
+- If the same verified email logs in through Google and Discord, the providers
+  should attach to one AniDachi account instead of creating duplicate people.
+- First successful login should make the account dashboard available
+  immediately. Redirect back to the original invite/extension flow when a
+  `returnTo`/`next` target exists; otherwise use the account/dashboard entry.
 - A one-off invite link remains supported. Watching together once does not
   automatically create a friendship.
 
@@ -133,6 +187,109 @@ Examples:
 - Plus user joins a Free host room: the room remains Free.
 - Free friends can join paid rooms.
 - Paid limits are not transferred to other users' personal accounts.
+
+## Product Surfaces And Sync Model
+
+AniDachi needs two first-class product surfaces over the same backend data:
+
+```txt
+Extension popup = fast watch control.
+Web account dashboard = full management and editing.
+```
+
+Both surfaces must use the same web APIs and durable Supabase state. The
+extension can cache recent data locally for speed, but local storage is never the
+source of truth for social relationships, room invites, shared watch sessions,
+subscription limits, or durable tracked-title counts.
+
+### Extension Popup
+
+The extension popup already has the right foundation: provider folders,
+resources, series, episodes, local progress, and shared-progress UI. It should
+become the quick "during watching" surface.
+
+Recommended top-level popup areas:
+
+```txt
+Resources
+Friends
+Groups
+Inbox
+```
+
+Responsibilities:
+
+- open watched resources quickly;
+- show local cached progress instantly;
+- show backend-backed shared session markers after sync;
+- create or continue a room from the current resource/session;
+- invite one friend, a group, recent people, or copy a link;
+- accept or decline pending invites;
+- send a friend request to a recent co-watcher;
+- create a simple personal group when the interaction is lightweight;
+- show plan limits only where the user hits them.
+
+The popup should avoid heavy management. If a flow needs bulk editing,
+multi-step settings, billing, device cleanup, privacy, or long history browsing,
+it should deep-link to the web dashboard.
+
+### Web Account Dashboard
+
+The website should become the full account control panel, not just marketing and
+auth pages. Recommended route shape:
+
+```txt
+/account
+  /account/watch-library
+  /account/friends
+  /account/groups
+  /account/invites
+  /account/devices
+  /account/billing
+  /account/settings
+```
+
+Responsibilities:
+
+- edit profile, display name, avatar, and optional handle;
+- browse the full watch library by provider, title, episode, and session;
+- edit or archive tracked titles;
+- inspect who watched what together and when;
+- create a room from a saved session;
+- manage friends, incoming/outgoing requests, blocked users, and recent people;
+- manage groups and group membership;
+- inspect pending/expired invites;
+- manage notification devices and push permissions;
+- manage billing and current plan limits.
+
+The current `/friends` page should be treated as a staging-only stepping stone.
+Before production promotion, it should either move into `/account/friends` or be
+replaced by the dashboard shell.
+
+### Optional Future Side Panel
+
+Chrome Side Panel is useful for a persistent, wider extension UI, but it requires
+the `sidePanel` permission and changes the Chrome Web Store permission surface.
+For MVP, prefer popup + overlay unless the popup becomes too dense. If side
+panel is adopted later, use it as a richer companion panel for watch library,
+friends, groups, and inbox, not as a replacement for the web dashboard.
+
+### Sync Rules
+
+- Backend APIs own durable social and watch data.
+- Extension `chrome.storage.local` owns only fast cache and offline-friendly
+  local provider progress.
+- Cached extension data must store `syncedAt` and enough version/revision
+  fields to avoid overwriting newer server state.
+- Server writes win for friends, groups, invites, devices, subscription limits,
+  and shared watch sessions.
+- Local provider progress can create a checkpoint candidate, but the server
+  decides whether it becomes durable history and whether it counts toward
+  tracked-title limits.
+- On login, the extension should reconcile local progress into the account using
+  explicit checkpoint APIs, not direct Supabase access.
+- On logout, local cache can remain device-local, but account-bound social data
+  must be cleared from the extension cache.
 
 ## Plan Matrix
 
@@ -203,6 +360,15 @@ But these gaps must be fixed before the social layer can be reliable:
   entitlement or seat reservation.
 - Current protocol snapshots do not carry room capabilities.
 - Extension permissions do not include `gcm` or `notifications` yet.
+- The staging `/friends` page is functional but not the final account
+  dashboard UX.
+- Friend request UX must avoid manual codes. The MVP friend-add paths are
+  recent co-watchers and a private one-time friend invite link.
+- The extension popup still contains demo shared-session markers; production
+  shared progress must come from backend watch history.
+- The extension popup currently owns the resource/progress browsing experience,
+  while the website does not yet have an equivalent account watch-library
+  dashboard.
 
 ## Billing And Entitlements
 
@@ -356,8 +522,46 @@ profiles (
 )
 ```
 
-MVP can auto-create a profile from `users`. A unique handle can be optional at
-first, but friend search is cleaner if users choose a handle.
+MVP can auto-create a profile from `users` immediately after OAuth account
+creation. A unique handle can be optional at first, but the MVP should not use
+manual handle/code search as the primary friend-add UX. Use recent co-watchers
+and short-lived friend invite links instead. Do not expose raw user UUIDs as a
+primary friend-add UX.
+
+Profile sync rules:
+
+- On first OAuth login, seed `profiles.display_name` and `profiles.avatar_url`
+  from the provider profile.
+- On later OAuth logins, do not blindly overwrite a user-edited AniDachi
+  profile. Keep provider data as fallback or refresh only if the AniDachi
+  profile has not been customized.
+- Friend invite links are separate one-time token records. Store only token
+  hashes server-side and expire links by default.
+- Store Google/Discord provider ids on `users`, but do not expose them in public
+  profile responses.
+
+### Friend Invite Link Table
+
+```sql
+friend_invite_links (
+  id uuid primary key default gen_random_uuid(),
+  sender_user_id uuid not null references users(id) on delete cascade,
+  token_hash text not null unique,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '30 days',
+  accepted_at timestamptz,
+  accepted_by_user_id uuid references users(id) on delete set null,
+  revoked_at timestamptz
+)
+```
+
+Friend invite links are for adding a person, not joining a room. Existing room
+invite links remain the watchroom join mechanism. A friend invite link should
+show the sender after sign-in and become accepted with one explicit click.
+Unauthenticated users go through Google/Discord OAuth first, get an AniDachi
+account/profile automatically, and then return to the invite page.
+Limit active unused friend invite links per sender to reduce spam and token
+spray.
 
 ### Friendship Tables
 
@@ -562,8 +766,13 @@ Supabase tables.
 - `POST /api/users/:userId/block`
 - `GET /api/recent-people`
 - `POST /api/recent-people/:userId/hide`
+- `POST /api/friends/invite-links`
+- `POST /api/friends/invite-links/:token/accept`
 
 Friend request creation must rate-limit spam and reject blocked pairs.
+Friend request creation should target a known user selected from recent
+co-watchers or another trusted internal list. Do not expose manual code,
+handle, or UUID lookup as the primary MVP UX.
 
 ### Groups
 
@@ -608,9 +817,24 @@ Group creation must enforce `maxOwnedGroups`.
 ### Watch History
 
 - `GET /api/watch-history`
+- `GET /api/watch-library`
+  - Returns provider/title/episode/session rollups for the account dashboard and
+    extension popup cache.
+- `POST /api/watch-progress/reconcile`
+  - Accepts local extension checkpoint candidates after login and merges them
+    without overwriting newer server state.
 - `POST /api/watch-sessions/:sessionId/checkpoint`
 - `POST /api/rooms/from-watch-session`
   - Creates a room with the saved source metadata and selected participants.
+
+### Dashboard Aggregates
+
+- `GET /api/account/summary`
+  - Returns the small account dashboard summary: plan, limits, pending invites,
+    pending friend requests, active groups, tracked-title usage, and device
+    notification status.
+- Dashboard routes should call existing specific APIs for mutations instead of
+  inventing parallel write paths.
 
 ## Protocol And Worker Changes
 
@@ -662,6 +886,27 @@ room state once the room plan reaches that block.
 
 ## Extension UX
 
+### Popup Navigation
+
+The extension popup should evolve from a resources-only view into a compact
+watch control hub:
+
+```txt
+Resources | Friends | Groups | Inbox
+```
+
+Rules:
+
+- `Resources` remains the default because opening the popup during watching
+  should show current progress first.
+- `Friends` shows accepted friends, pending requests, and recent co-watchers
+  with small actions.
+- `Groups` shows personal groups and lightweight create/edit flows.
+- `Inbox` shows durable invites, not push-only messages.
+- Every tab should have a web-dashboard escape hatch for full management.
+- Keep row actions compact; use icons/tooltips in the popup and fuller labels
+  in the web dashboard.
+
 ### Main Invite Surface
 
 In the extension room menu, the host should be able to choose:
@@ -680,6 +925,16 @@ Invite
   Groups
   Recent
   Link
+```
+
+From the popup resource list, an episode/session marker can open:
+
+```txt
+Continue
+  Same people
+  Pick friends
+  Pick group
+  Copy link
 ```
 
 The UI must show room capacity clearly:
@@ -736,6 +991,83 @@ When the permission lands:
 - keep notification payloads minimal;
 - provide a setting to disable notifications per device.
 
+## Web Account Dashboard UX
+
+The website should provide the same product domains as the extension, but with
+room for editing and review.
+
+### Dashboard Shell
+
+Recommended information architecture:
+
+```txt
+Overview
+Watch Library
+Friends
+Groups
+Invites
+Devices
+Billing
+Settings
+```
+
+Rules:
+
+- Move the staging `/friends` surface into this shell before production
+  promotion.
+- Keep the dashboard behind account auth and `noindex`.
+- Do not mix the dashboard with SEO landing pages or public anime pages.
+- Use the same server APIs as the extension; do not build a separate dashboard
+  data model.
+
+### Watch Library
+
+The dashboard watch library should mirror the popup resource hierarchy with more
+space and editing:
+
+```txt
+Provider -> Title -> Episode/Movie -> Sessions
+```
+
+Each row can show:
+
+- personal progress;
+- shared sessions and participants;
+- last watched date;
+- source provider;
+- active/archived tracked-title state;
+- continue/create room action;
+- invite same people/group action;
+- archive or restore action where allowed by plan.
+
+### Friends And Groups
+
+The web dashboard owns the full friend and group management UX:
+
+- profile display fields and optional handle;
+- copy profile/friend invite link;
+- add friend from recent co-watchers;
+- accept friend invite links;
+- incoming and outgoing requests;
+- accepted friends;
+- recent co-watchers;
+- hidden recent people;
+- blocked users;
+- group create/rename/archive;
+- group membership editing;
+- plan-limit state for Free/Plus/Pro groups.
+
+### Devices And Notifications
+
+The dashboard should show extension installs/devices after push registration:
+
+- device label where available;
+- last seen;
+- notification enabled/disabled;
+- revoke push token;
+- delivery error state;
+- explanation of why notifications exist.
+
 ## Push And Invite Delivery
 
 Use push as a delivery channel, not as the source of truth.
@@ -785,6 +1117,11 @@ Rules:
 - The extension can cache local provider progress for instant popup opening.
 - Backend history should merge room checkpoints into session summaries.
 - Shared progress is social-room metadata, not video content.
+- Replace demo shared-session markers in the popup only when backend session
+  rollups are available. Until then, demo markers must stay clearly isolated
+  from production data paths.
+- The web dashboard and extension popup should consume the same watch-library
+  rollup API so they cannot drift.
 - When creating a room from history, the host can select:
   - same group/session participants;
   - individual friends;
@@ -837,7 +1174,7 @@ Add gentle controls from the start:
 - hide recent people;
 - cap message length;
 - no public user directory in MVP;
-- exact handle search only until privacy settings exist.
+- no global people search until privacy settings exist.
 
 Reuse the anti-farming decisions from the P2P plan for Free host-minutes. Do not
 add raw IP storage.
@@ -916,6 +1253,31 @@ system.
   to archive one. Pick one behavior in the implementation PR and test it.
 - Archived titles can be restored if under the limit or after upgrade.
 
+### Local Progress Reconcile Conflict
+
+- If extension local progress is newer than server progress, create a checkpoint
+  candidate and let the server merge it.
+- If server progress is newer, keep server progress and update the local cache.
+- If the provider URL changed but title/episode keys match, keep both source
+  URLs until the provider adapter can confidently normalize them.
+- Never let a stale local popup cache remove friends, groups, invites, tracked
+  titles, or server sessions.
+
+### Dashboard And Popup Drift
+
+- The dashboard and popup must use the same read-model APIs for watch library,
+  friends, groups, invites, and limits.
+- If one surface cannot support a mutation cleanly, it should deep-link to the
+  other surface rather than adding a second mutation path.
+- Any dashboard-only action must still update extension cache on next refresh.
+
+### Side Panel Decision
+
+- Do not add the `sidePanel` permission for MVP unless the user explicitly
+  approves it after seeing the popup/dashboard design.
+- If side panel is added, it must reuse the popup data layer and dashboard
+  APIs. It must not become a third product model.
+
 ## Rollout Order
 
 ### Phase 0 - Contract And Plan
@@ -987,11 +1349,42 @@ Acceptance:
 - 5th media participant in Plus/Pro gets `MEDIA_SEATS_FULL`.
 - Chat-only participants do not create P2P media connections.
 
-### Phase 5 - Invites And Push Inbox
+### Phase 4.5 - Product Surface Reframe
+
+- [x] Replace standalone `/friends` direction with an authenticated account
+  dashboard shell.
+- [x] Move or prepare `/friends` to become `/account/friends`.
+- [~] Add account dashboard navigation for Watch Library, Friends, Groups,
+  Invites, Devices, Billing, and Settings. Initial real navigation exists for
+  Overview and Friends & Groups; unimplemented sections must not be exposed as
+  dead links.
+- [~] Add extension popup navigation for Resources, Friends, Groups, and Inbox.
+  Resources and Friends & Groups are wired; durable inbox remains Phase 5.
+- [x] Keep Resources as the popup default.
+- [~] Add a shared client/read-model layer so popup and dashboard consume the
+  same account/social/watch-library data. Current slice shares web API/social
+  bridge contracts; watch-library rollup is still Phase 6.
+- [x] Add human-friendly friend add flow using recent co-watchers and friend
+  invite links, without manual codes.
+- [x] Add dashboard escape hatches from compact popup flows.
+- [x] Decide explicitly whether side panel is out of MVP or approved for MVP.
+  Default: out of MVP.
+
+Acceptance:
+
+- A user can understand where to manage friends/groups/history without seeing
+  raw UUIDs.
+- Popup handles fast invite/continue actions.
+- Dashboard handles full editing and review.
+- No separate product logic exists for popup vs dashboard.
+
+### Phase 5 - Invites, Inbox, And Push Delivery
 
 - [x] Add invite and invite recipient tables.
 - [x] Add invite create/list/accept/decline APIs.
 - [x] Add extension friend/group invite send panel backed by durable inbox.
+- [ ] Add durable inbox list to the extension popup.
+- [ ] Add durable invites section to the web dashboard.
 - [ ] Add device push-token registration.
 - [ ] Add Chrome GCM sender configuration.
 - [ ] Add extension notification/inbox handlers.
@@ -1002,14 +1395,20 @@ Acceptance:
 
 - Direct friend invite creates inbox row.
 - Group invite snapshots recipients.
+- Dashboard and popup both show pending invites from the same backend rows.
 - Push notification click fetches invite and joins if valid.
 - Expired push cannot join.
 - Free receives paid host invites.
 
-### Phase 6 - Watch History And Continue Together
+### Phase 6 - Watch Library, History, And Continue Together
 
 - [ ] Add watch session/progress/tracked-title tables.
-- [ ] Replace demo shared sessions in extension popup with backend-backed data.
+- [ ] Add `/api/watch-library` rollup for dashboard and extension popup.
+- [ ] Add local extension progress reconciliation API.
+- [ ] Replace demo shared sessions in extension popup with backend-backed data
+  from the watch-library rollup.
+- [ ] Add web dashboard Watch Library with provider/title/episode/session
+  hierarchy.
 - [ ] Persist checkpoints at agreed cadence.
 - [ ] Add create-room-from-session API.
 - [ ] Enforce active tracked-title limits.
@@ -1019,6 +1418,7 @@ Acceptance:
 
 - Continue together works from a shared session marker.
 - Progress persists after room end.
+- Dashboard and popup show the same backend-backed watch sessions after sync.
 - Free sees 7 days, Plus 3 months, Pro 12 months.
 - Over-limit tracked titles archive instead of deleting history.
 
@@ -1052,6 +1452,8 @@ Acceptance:
 - Invite recipient snapshot.
 - Active tracked title limit.
 - Personal retention window.
+- Friend invite token validation, hashing, expiry, and one-time acceptance.
+- Local progress reconciliation conflict resolution.
 - Worker total participant cap.
 - Worker media seat cap.
 
@@ -1064,9 +1466,18 @@ Acceptance:
 - Webhook updates `users.plan`.
 - Direct and group invite flows.
 - Expired invite flow.
+- Friend request from recent co-watchers.
+- Friend invite link sign-in return and accept flow.
+- `/api/watch-library` returns the same durable rollup used by popup and
+  dashboard.
+- `/api/watch-progress/reconcile` cannot overwrite newer server progress with
+  stale local progress.
+- `/api/account/summary` reflects plan limits, pending invites, and social
+  counts without leaking private email addresses.
 
 ### Extension Tests
 
+- Popup top-level navigation: Resources, Friends, Groups, Inbox.
 - Invite tabs render from API state.
 - Friend/group/recent selection.
 - Participant/media counters.
@@ -1074,6 +1485,17 @@ Acceptance:
 - Push token registration.
 - Notification click fetches invite before joining.
 - Local cache fallback for history popup.
+- Logout clears account-bound social cache but keeps device-local provider
+  progress where appropriate.
+
+### Web Dashboard Tests
+
+- Account dashboard requires auth and stays noindex.
+- Friends page does not expose raw UUID as the primary add-friend flow.
+- Dashboard friends/groups/invites use the same API responses as the popup.
+- Watch Library renders provider/title/episode/session hierarchy.
+- Dashboard archive/restore actions respect plan limits and update the next
+  popup refresh.
 
 ### Harness/Staging Tests
 
@@ -1085,6 +1507,8 @@ Acceptance:
 - Paid guest does not upgrade a Free host room.
 - Free host quota remains host-based.
 - Room token refresh does not end paid rooms.
+- Popup invite inbox and web dashboard invite list agree after refresh.
+- Continue from history creates a room from a real saved session, not demo data.
 
 ## Done Means
 
@@ -1094,14 +1518,56 @@ Acceptance:
 - Host plan room limits and user personal limits are enforced server-side.
 - Worker enforces both total participant cap and media-seat cap.
 - Extension UI reflects limits but never becomes the authority.
+- Extension popup is the fast watch-control surface; web account dashboard is
+  the full management surface.
+- The current `/friends` staging page has either moved into the dashboard or
+  been replaced by the dashboard social section.
 - Push invites work through a durable inbox, not push-only delivery.
 - Watch history stores durable social checkpoints, not raw video or every tick.
+- Popup shared-progress markers are backend-backed before being treated as a
+  production feature.
 - Chrome Web Store permissions and privacy copy match actual behavior.
 - Staging acceptance covers Free, Plus, Pro, direct invite, group invite, and
   continue-together paths before production promotion.
 
 ## Progress Log
 
+- [x] 2026-06-21: Phase 4.5 first implementation slice completed on
+  `codex/social-dashboard-phase45`. Added authenticated `/account` dashboard
+  shell, moved Friends & Groups to `/account/friends`, changed legacy
+  `/friends` into a redirect, changed default post-login OAuth fallback to
+  `/account`, and updated nav links. Added extension popup tabs with Resources
+  as default plus a Friends & Groups read-only panel backed by the existing
+  extension social bridge and dashboard escape hatch. OAuth profile sync now
+  preserves already customized AniDachi profile fields. Verified with
+  `pnpm --filter @anidachi/web check`,
+  `pnpm --filter @anidachi/web test`,
+  `pnpm --filter @anidachi/extension check`, and
+  `pnpm --filter @anidachi/extension test`. Remaining: add durable inbox UI
+  and replace demo watch-progress sessions with the Phase 6 backend rollup.
+- [x] 2026-06-21: Reworked friend-add direction after product review. Removed
+  code-based adding from the profile model and UI, added short-lived one-time friend
+  invite links, added `/friend/invite/:token` with OAuth return support, and
+  changed dashboard friend-add to recent co-watchers instead of manual code,
+  handle, or UUID entry.
+- [x] 2026-06-21: Applied remote Supabase migration
+  `20260625_friend_invite_links.sql` to linked project `cyppqpprkygjloyfvvvj`
+  with `supabase db push --linked --yes`. Verified local/remote migration
+  history aligned through `20260625`, `friend_invite_links` exists with RLS
+  enabled, token hash uniqueness, sender/accepted indexes, foreign keys, check
+  constraints, and `supabase db advisors --linked --level error --fail-on error`
+  reported no issues.
+- [x] 2026-06-21: Product surface reframe added after reviewing the extension
+  popup/resource tracker, current staging `/friends` page, Graphify social
+  surface queries, and current official docs for Chrome Side Panel, Chrome GCM,
+  Chrome notifications, FCM token/TTL behavior, Supabase RLS/Realtime, and
+  Stripe subscription webhooks. The plan now treats the extension popup as the
+  fast watch-control surface and the web account dashboard as the full
+  management surface. Added account dashboard IA, popup navigation, shared
+  sync/read-model rules, friend invite/recent co-watcher UX requirement,
+  watch-library API,
+  local progress reconciliation, Phase 4.5 product surface reframe, and tests
+  for dashboard/popup drift.
 - [x] 2026-06-20: Plan created after reviewing current project docs, room/auth
   code, existing migrations, Graphify query output, and official docs for
   Stripe, Supabase, Chrome extension push/notifications, Firebase Cloud
