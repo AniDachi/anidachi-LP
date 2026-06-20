@@ -144,7 +144,7 @@ export const popupStyles = `
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 5px;
     margin-bottom: 10px;
     padding: 3px;
@@ -243,6 +243,41 @@ export const popupStyles = `
       rgba(14, 16, 30, 0.76);
   }
 
+  .popup-inbox-card {
+    display: grid;
+    gap: 8px;
+    padding: 9px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+      radial-gradient(circle at 0 0, rgba(139, 92, 246, 0.13), transparent 42%),
+      linear-gradient(120deg, rgba(255, 255, 255, 0.054), rgba(255, 255, 255, 0.018)),
+      rgba(14, 16, 30, 0.78);
+  }
+
+  .popup-inbox-main {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+  }
+
+  .popup-inbox-message {
+    margin: 0;
+    padding: 8px 9px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.055);
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  .popup-inbox-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
   .popup-social-avatar,
   .popup-social-group-icon {
     width: 34px;
@@ -306,10 +341,15 @@ export const popupStyles = `
   }
 
   .popup-primary-button,
+  .popup-secondary-button,
   .popup-dashboard-button {
     min-height: 34px;
-    border: 0;
     border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 0;
     background: #7c3aed;
     color: white;
     cursor: pointer;
@@ -321,6 +361,13 @@ export const popupStyles = `
     padding: 0 15px;
   }
 
+  .popup-secondary-button {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.075);
+    color: rgba(255, 255, 255, 0.82);
+    padding: 0 12px;
+  }
+
   .popup-dashboard-button {
     width: 100%;
   }
@@ -328,6 +375,16 @@ export const popupStyles = `
   .popup-primary-button:hover,
   .popup-dashboard-button:hover {
     background: #8b5cf6;
+  }
+
+  .popup-secondary-button:hover {
+    background: rgba(255, 255, 255, 0.11);
+  }
+
+  .popup-primary-button:disabled,
+  .popup-secondary-button:disabled {
+    cursor: default;
+    opacity: 0.48;
   }
 
   .popup-provider {

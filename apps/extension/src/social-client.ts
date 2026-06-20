@@ -47,13 +47,32 @@ export interface CreateRoomInviteInput {
 export interface RoomInvite {
   id: string;
   roomId: string;
+  sender: PublicProfile;
   targetKind: "direct" | "group";
   targetGroupId: string | null;
+  message: string | null;
+  roomTitle: string | null;
+  sourceUrl: string | null;
+  videoFingerprint: string | null;
+  createdAt: string;
   expiresAt: string;
   recipients: Array<{
     user: PublicProfile;
     status: string;
+    updatedAt: string;
+    respondedAt: string | null;
   }>;
+}
+
+export interface RoomInvitesResponse {
+  inbox: RoomInvite[];
+  sent: RoomInvite[];
+}
+
+export interface AcceptedRoomInviteResponse {
+  invite: RoomInvite;
+  roomId: string;
+  joinUrl: string;
 }
 
 export type SocialHttpMessage =
@@ -67,11 +86,24 @@ export type SocialHttpMessage =
       command: "create-invite";
       accessToken: string;
       input: CreateRoomInviteInput;
+    }
+  | {
+      type: typeof SOCIAL_HTTP_MESSAGE_TYPE;
+      command: "list-invites";
+      accessToken: string;
+    }
+  | {
+      type: typeof SOCIAL_HTTP_MESSAGE_TYPE;
+      command: "accept-invite" | "decline-invite";
+      accessToken: string;
+      inviteId: string;
     };
 
 export type SocialHttpMessageResponse =
   | { ok: true; targets: InviteTargets }
   | { ok: true; invite: RoomInvite }
+  | { ok: true; invites: RoomInvitesResponse }
+  | { ok: true; acceptedInvite: AcceptedRoomInviteResponse }
   | { ok: false; error: string; code?: string };
 
 export function listInviteTargetsHttpMessage(accessToken: string): SocialHttpMessage {
@@ -94,6 +126,38 @@ export function createInviteHttpMessage(
   };
 }
 
+export function listInvitesHttpMessage(accessToken: string): SocialHttpMessage {
+  return {
+    type: SOCIAL_HTTP_MESSAGE_TYPE,
+    command: "list-invites",
+    accessToken,
+  };
+}
+
+export function acceptInviteHttpMessage(
+  accessToken: string,
+  inviteId: string,
+): SocialHttpMessage {
+  return {
+    type: SOCIAL_HTTP_MESSAGE_TYPE,
+    command: "accept-invite",
+    accessToken,
+    inviteId,
+  };
+}
+
+export function declineInviteHttpMessage(
+  accessToken: string,
+  inviteId: string,
+): SocialHttpMessage {
+  return {
+    type: SOCIAL_HTTP_MESSAGE_TYPE,
+    command: "decline-invite",
+    accessToken,
+    inviteId,
+  };
+}
+
 export function isSocialHttpMessage(value: unknown): value is SocialHttpMessage {
   if (typeof value !== "object" || value === null) return false;
   const message = value as Partial<SocialHttpMessage>;
@@ -101,6 +165,10 @@ export function isSocialHttpMessage(value: unknown): value is SocialHttpMessage 
     return false;
   }
   if (message.command === "list-invite-targets") return true;
+  if (message.command === "list-invites") return true;
+  if (message.command === "accept-invite" || message.command === "decline-invite") {
+    return typeof message.inviteId === "string" && Boolean(message.inviteId.trim());
+  }
   if (message.command !== "create-invite") return false;
   const input = message.input as Partial<CreateRoomInviteInput> | undefined;
   return (
@@ -158,6 +226,25 @@ export async function listInviteTargetsFromApi(accessToken: string): Promise<Inv
   return { friends, groups };
 }
 
+export async function listRoomInvitesFromApi(
+  accessToken: string,
+): Promise<RoomInvitesResponse> {
+  logDebug("social.http", "list invites request", { webHttpBase: WEB_HTTP_BASE });
+  const response = await fetch(new URL("/api/invites", WEB_HTTP_BASE), {
+    headers: createWebsiteRoomHeaders(accessToken),
+  });
+
+  if (!response.ok) {
+    throw await socialHttpError(response, "Failed to load invites");
+  }
+
+  const payload = (await response.json()) as Partial<RoomInvitesResponse>;
+  return {
+    inbox: Array.isArray(payload.inbox) ? (payload.inbox as RoomInvite[]) : [],
+    sent: Array.isArray(payload.sent) ? (payload.sent as RoomInvite[]) : [],
+  };
+}
+
 export async function createRoomInviteFromApi(
   accessToken: string,
   input: CreateRoomInviteInput,
@@ -185,6 +272,50 @@ export async function createRoomInviteFromApi(
   return payload.invite as RoomInvite;
 }
 
+export async function acceptRoomInviteFromApi(
+  accessToken: string,
+  inviteId: string,
+): Promise<AcceptedRoomInviteResponse> {
+  logDebug("social.http", "accept invite request", { webHttpBase: WEB_HTTP_BASE, inviteId });
+  const response = await fetch(
+    new URL(`/api/invites/${encodeURIComponent(inviteId)}/accept`, WEB_HTTP_BASE),
+    {
+      method: "POST",
+      headers: createWebsiteRoomHeaders(accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    throw await socialHttpError(response, "Failed to accept invite");
+  }
+
+  return (await response.json()) as AcceptedRoomInviteResponse;
+}
+
+export async function declineRoomInviteFromApi(
+  accessToken: string,
+  inviteId: string,
+): Promise<RoomInvite> {
+  logDebug("social.http", "decline invite request", { webHttpBase: WEB_HTTP_BASE, inviteId });
+  const response = await fetch(
+    new URL(`/api/invites/${encodeURIComponent(inviteId)}/decline`, WEB_HTTP_BASE),
+    {
+      method: "POST",
+      headers: createWebsiteRoomHeaders(accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    throw await socialHttpError(response, "Failed to decline invite");
+  }
+
+  const payload = (await response.json()) as { invite?: unknown };
+  if (typeof payload.invite !== "object" || payload.invite === null) {
+    throw new Error("Invite response is missing invite");
+  }
+  return payload.invite as RoomInvite;
+}
+
 export async function handleSocialHttpMessage(
   message: SocialHttpMessage,
 ): Promise<SocialHttpMessageResponse> {
@@ -192,10 +323,28 @@ export async function handleSocialHttpMessage(
     if (message.command === "list-invite-targets") {
       return { ok: true, targets: await listInviteTargetsFromApi(message.accessToken) };
     }
-    return {
-      ok: true,
-      invite: await createRoomInviteFromApi(message.accessToken, message.input),
-    };
+    if (message.command === "list-invites") {
+      return { ok: true, invites: await listRoomInvitesFromApi(message.accessToken) };
+    }
+    if (message.command === "accept-invite") {
+      return {
+        ok: true,
+        acceptedInvite: await acceptRoomInviteFromApi(message.accessToken, message.inviteId),
+      };
+    }
+    if (message.command === "decline-invite") {
+      return {
+        ok: true,
+        invite: await declineRoomInviteFromApi(message.accessToken, message.inviteId),
+      };
+    }
+    if (message.command === "create-invite") {
+      return {
+        ok: true,
+        invite: await createRoomInviteFromApi(message.accessToken, message.input),
+      };
+    }
+    return { ok: false, error: "Unsupported social command" };
   } catch (error) {
     if (error instanceof RoomApiError) {
       return { ok: false, error: error.message, code: error.code };
@@ -235,12 +384,47 @@ export async function listInviteTargets(accessToken: string): Promise<InviteTarg
   return response.targets;
 }
 
+export async function listRoomInvites(accessToken: string): Promise<RoomInvitesResponse> {
+  const response = assertSocialHttpResponse(
+    await sendSocialHttpMessage(listInvitesHttpMessage(accessToken)),
+  );
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("invites" in response)) throw new Error("Social bridge response is missing invites");
+  return response.invites;
+}
+
 export async function createRoomInvite(
   accessToken: string,
   input: CreateRoomInviteInput,
 ): Promise<RoomInvite> {
   const response = assertSocialHttpResponse(
     await sendSocialHttpMessage(createInviteHttpMessage(accessToken, input)),
+  );
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("invite" in response)) throw new Error("Social bridge response is missing invite");
+  return response.invite;
+}
+
+export async function acceptRoomInvite(
+  accessToken: string,
+  inviteId: string,
+): Promise<AcceptedRoomInviteResponse> {
+  const response = assertSocialHttpResponse(
+    await sendSocialHttpMessage(acceptInviteHttpMessage(accessToken, inviteId)),
+  );
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("acceptedInvite" in response)) {
+    throw new Error("Social bridge response is missing accepted invite");
+  }
+  return response.acceptedInvite;
+}
+
+export async function declineRoomInvite(
+  accessToken: string,
+  inviteId: string,
+): Promise<RoomInvite> {
+  const response = assertSocialHttpResponse(
+    await sendSocialHttpMessage(declineInviteHttpMessage(accessToken, inviteId)),
   );
   if (!response.ok) throw socialBridgeError(response);
   if (!("invite" in response)) throw new Error("Social bridge response is missing invite");

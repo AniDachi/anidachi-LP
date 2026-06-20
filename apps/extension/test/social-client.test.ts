@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  acceptInviteHttpMessage,
   createInviteHttpMessage,
+  declineInviteHttpMessage,
   isSocialHttpMessage,
+  listInvitesHttpMessage,
   listInviteTargetsHttpMessage,
 } from "../src/social-client";
 
@@ -32,6 +35,12 @@ describe("extension social HTTP bridge", () => {
     ).toBe(true);
   });
 
+  it("accepts durable inbox list and response messages", () => {
+    expect(isSocialHttpMessage(listInvitesHttpMessage("access-1"))).toBe(true);
+    expect(isSocialHttpMessage(acceptInviteHttpMessage("access-1", "invite-1"))).toBe(true);
+    expect(isSocialHttpMessage(declineInviteHttpMessage("access-1", "invite-1"))).toBe(true);
+  });
+
   it("rejects malformed create invite messages", () => {
     expect(
       isSocialHttpMessage({
@@ -39,6 +48,17 @@ describe("extension social HTTP bridge", () => {
         command: "create-invite",
         accessToken: "access-1",
         input: { roomId: "room-1", recipientUserIds: [123] },
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects malformed invite response messages", () => {
+    expect(
+      isSocialHttpMessage({
+        type: "ANIDACHI_SOCIAL_HTTP",
+        command: "accept-invite",
+        accessToken: "access-1",
+        inviteId: "",
       }),
     ).toBe(false);
   });
