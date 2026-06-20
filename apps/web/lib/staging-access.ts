@@ -162,6 +162,7 @@ export function canBypassStagingGate(params: {
   if (params.method === "OPTIONS") return true;
   if (isStaticAssetPath(params.pathname)) return true;
   if (params.pathname === STAGING_ACCESS_PATH) return true;
+  if (params.pathname === "/api/auth/refresh") return true;
   if (params.pathname.startsWith("/api/extension/auth/")) return true;
   if (params.pathname === "/api/stripe/webhook" && params.method === "POST") {
     return true;

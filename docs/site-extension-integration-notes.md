@@ -59,6 +59,12 @@ Flow:
    - `anidachi_access_token`
    - `anidachi_refresh_token`
 
+Website sessions use a sliding refresh window. The access token remains short
+lived, but an active browser with a valid refresh cookie is silently refreshed
+through `/api/auth/refresh`; the refresh token expiry is extended on use. This
+keeps users signed in during normal use without making the access token long
+lived.
+
 The website also already has a room token concept:
 
 - `signRoomToken({ sub, roomId, role })`
@@ -290,6 +296,9 @@ Important:
 - Extension auth codes must be one-time and short-lived.
 - Access tokens should stay short-lived.
 - Refresh tokens should be rotatable and revocable per device.
+- Session refresh should be transparent to the user. Access tokens stay
+  short-lived; refresh tokens are long-lived, server-stored, and extended on
+  active use.
 - OAuth account linking by email is acceptable for MVP, but verified email checks
   must stay in place.
 
