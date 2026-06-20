@@ -15,19 +15,18 @@
  * This module is dependency-free so it can be unit tested without Supabase.
  */
 
+import { getPlanEntitlements } from "./anidachi-auth/plan-entitlements";
+
 export const ROOM_TOKEN_TTL_SECONDS = 30 * 60;
 export const HOST_SEGMENT_CAP_SECONDS = ROOM_TOKEN_TTL_SECONDS;
 export const MIN_SESSION_START_SECONDS = 60;
 
-const PLAN_DAILY_HOST_SECONDS: Record<string, number> = {
-  watcher: 30 * 60,
-  nakama: Number.POSITIVE_INFINITY,
-  junkie: Number.POSITIVE_INFINITY,
-};
-
 /** Unknown plans get the most restrictive quota, mirroring the old `?? 1` default. */
 export function planDailyHostSeconds(plan: string): number {
-  return PLAN_DAILY_HOST_SECONDS[plan] ?? PLAN_DAILY_HOST_SECONDS.watcher;
+  const dailyHostSeconds = getPlanEntitlements(plan).room.dailyHostSeconds;
+  return dailyHostSeconds === "unlimited"
+    ? Number.POSITIVE_INFINITY
+    : dailyHostSeconds;
 }
 
 export function isMeteredPlan(plan: string): boolean {

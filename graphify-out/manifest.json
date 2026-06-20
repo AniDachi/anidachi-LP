@@ -10,8 +10,8 @@
     "semantic_hash": ""
   },
   "apps/api/src/auth.ts": {
-    "mtime": 1780509466.0684636,
-    "ast_hash": "a0b26998a28a275b70aad0840aa6eeb7",
+    "mtime": 1781965924.6186776,
+    "ast_hash": "d6e2bcb4f5f8d259c26af022214ea767",
     "semantic_hash": ""
   },
   "apps/api/src/ice-servers.ts": {
@@ -20,8 +20,8 @@
     "semantic_hash": ""
   },
   "apps/api/src/index.ts": {
-    "mtime": 1781407872.1576605,
-    "ast_hash": "d212c274cd21faf9521393ab86a3bc96",
+    "mtime": 1781965724.9232147,
+    "ast_hash": "e14804ec6beee23f69f419d4fa2c0efe",
     "semantic_hash": ""
   },
   "apps/api/src/p2p-signal-buffer.ts": {
@@ -30,8 +30,8 @@
     "semantic_hash": ""
   },
   "apps/api/src/room-state.ts": {
-    "mtime": 1781346391.2538147,
-    "ast_hash": "4a4d68e44daff15c95f5f98e321fcbed",
+    "mtime": 1781965711.1041324,
+    "ast_hash": "4d6ffe98fcdde59f33c9229c0bbbe070",
     "semantic_hash": ""
   },
   "apps/api/src/telemetry.ts": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "apps/api/test/auth.test.ts": {
-    "mtime": 1780509466.0688205,
-    "ast_hash": "08579032f1deb23ed527abf252236c9c",
+    "mtime": 1781965758.212909,
+    "ast_hash": "07d7724b8d43d4371a6910b3fcad8d4c",
     "semantic_hash": ""
   },
   "apps/api/test/ice-servers.test.ts": {
@@ -55,8 +55,8 @@
     "semantic_hash": ""
   },
   "apps/api/test/room-state.test.ts": {
-    "mtime": 1781346391.254174,
-    "ast_hash": "2828600443389b247ec5076688bf44fe",
+    "mtime": 1781965749.1340394,
+    "ast_hash": "f87fb256b245a46c62ae83afe60812fd",
     "semantic_hash": ""
   },
   "apps/api/test/telemetry.test.ts": {
@@ -215,8 +215,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1781503242.333292,
-    "ast_hash": "54b13b7b3cbbf28b1da1d79f29164651",
+    "mtime": 1781965882.4014366,
+    "ast_hash": "8c9700dd7028e4b85c7b5fc4d7ed3b6e",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-mount.ts": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/room-client.ts": {
-    "mtime": 1781347170.8782356,
-    "ast_hash": "805134e959d3df53dc2f7e40170404d6",
+    "mtime": 1781965817.28774,
+    "ast_hash": "1e44f4c108432d1c42fc204f48f0d5b0",
     "semantic_hash": ""
   },
   "apps/extension/src/room-reconnect.ts": {
@@ -480,8 +480,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/create-checkout-session/route.ts": {
-    "mtime": 1780509466.077468,
-    "ast_hash": "77e9aa28bc9aefaf5d34108d64e4862d",
+    "mtime": 1781952495.8321395,
+    "ast_hash": "b503b56e62ebe65369d29cb56df1cdd9",
     "semantic_hash": ""
   },
   "apps/web/app/api/extension/auth/exchange/route.ts": {
@@ -540,8 +540,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/me/route.ts": {
-    "mtime": 1780509466.0785282,
-    "ast_hash": "0b00e9797751daccbf533dec12b4160a",
+    "mtime": 1781964427.575578,
+    "ast_hash": "89e8b05a0ce8bbc4e12d4835f8bb95af",
     "semantic_hash": ""
   },
   "apps/web/app/api/media/[...path]/route.ts": {
@@ -575,8 +575,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/rooms/[roomId]/connect/route.ts": {
-    "mtime": 1781292951.5677774,
-    "ast_hash": "3b7843f8ab41b753027c9dc2c6f2dc47",
+    "mtime": 1781965650.0142522,
+    "ast_hash": "4d9833000613ed489ad9a83086415802",
     "semantic_hash": ""
   },
   "apps/web/app/api/rooms/[roomId]/end/route.ts": {
@@ -585,8 +585,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/rooms/[roomId]/join/route.ts": {
-    "mtime": 1781345496.6735377,
-    "ast_hash": "cd37edaa2f50ac66aa0e555a664d6d2e",
+    "mtime": 1781965660.97481,
+    "ast_hash": "1bb808223726df1b62b02b8b58a6ba3e",
     "semantic_hash": ""
   },
   "apps/web/app/api/rooms/[roomId]/route.ts": {
@@ -595,8 +595,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/rooms/route.ts": {
-    "mtime": 1781292951.5686672,
-    "ast_hash": "8bf0e764c6ba3eaa40e5baa158a0c570",
+    "mtime": 1781965635.9837377,
+    "ast_hash": "2019f2de35d7411332e3c72db0a109ea",
     "semantic_hash": ""
   },
   "apps/web/app/api/save-discord-credentials/route.ts": {
@@ -605,8 +605,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/stripe/webhook/route.ts": {
-    "mtime": 1780509466.0797598,
-    "ast_hash": "b1d4186d3d30a38f82bc8c2eb8a35697",
+    "mtime": 1781953511.0060098,
+    "ast_hash": "3b823f5a07425bb32e05da3e39cdb7eb",
     "semantic_hash": ""
   },
   "apps/web/app/api/subscribe-interest/route.ts": {
@@ -1190,8 +1190,8 @@
     "semantic_hash": ""
   },
   "apps/web/components/plan-survey/plan-survey-modal.tsx": {
-    "mtime": 1780509466.0896041,
-    "ast_hash": "789c7c5d2583afabb61e1549703b1cf9",
+    "mtime": 1781952495.8337119,
+    "ast_hash": "704be6facd2a5053371f1d46941c8da8",
     "semantic_hash": ""
   },
   "apps/web/components/plan-survey/plan-survey-provider.tsx": {
@@ -1215,8 +1215,8 @@
     "semantic_hash": ""
   },
   "apps/web/components/pricing.tsx": {
-    "mtime": 1780509466.0899725,
-    "ast_hash": "a1256098eec624b7d26deef0fa3499a6",
+    "mtime": 1781952495.832943,
+    "ast_hash": "696393f3526b30d66ac61191ed0aace3",
     "semantic_hash": ""
   },
   "apps/web/components/primary-checkout-cta.tsx": {
@@ -1285,8 +1285,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/db.ts": {
-    "mtime": 1781292951.5689816,
-    "ast_hash": "e95f390a19f46906ecdca716757680ce",
+    "mtime": 1781965598.2621489,
+    "ast_hash": "0028fffb422d4e9bab86461eda18b002",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/extension-codes.ts": {
@@ -1295,8 +1295,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/extension-session.ts": {
-    "mtime": 1780509466.0916934,
-    "ast_hash": "59efdf6294f69b8a4925d39a3dd4cfa5",
+    "mtime": 1781952208.0433097,
+    "ast_hash": "e87e7b249d6e4fe7c11e49a84f780efd",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/handle-oauth-callback.ts": {
@@ -1305,8 +1305,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/jwt.ts": {
-    "mtime": 1781292951.5692108,
-    "ast_hash": "66d933205897bc10c63165b8e5f8cf63",
+    "mtime": 1781965618.9919226,
+    "ast_hash": "b02802de25496cec325e6b3dc7afe61b",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/oauth/discord.ts": {
@@ -1330,8 +1330,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/session.ts": {
-    "mtime": 1780509466.0921528,
-    "ast_hash": "178e39d2d42c013d8ce24c81fd28c491",
+    "mtime": 1781952218.7141776,
+    "ast_hash": "1428d6bc86bf95d7d3d6754db029fc85",
     "semantic_hash": ""
   },
   "apps/web/lib/anime-data.ts": {
@@ -1510,8 +1510,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/room-quota.ts": {
-    "mtime": 1781292951.5704231,
-    "ast_hash": "d270196f7ad5d838318c8c94e4aacc79",
+    "mtime": 1781952200.3827755,
+    "ast_hash": "f8442514dbeeaae96ee536086486aedb",
     "semantic_hash": ""
   },
   "apps/web/lib/send-subscription-alert-email.ts": {
@@ -1535,13 +1535,13 @@
     "semantic_hash": ""
   },
   "apps/web/lib/staging-access.test.ts": {
-    "mtime": 1781326992.0508988,
-    "ast_hash": "960a902725a938f291b7c5d42b5cc294",
+    "mtime": 1781964816.0010161,
+    "ast_hash": "2b36edeb4d37468d52e29edc6c276c5a",
     "semantic_hash": ""
   },
   "apps/web/lib/staging-access.ts": {
-    "mtime": 1781326992.0511005,
-    "ast_hash": "abd541fb541d3a4e1fb82a5aa8978c44",
+    "mtime": 1781964805.0398753,
+    "ast_hash": "093d0d7d9f36dd211b39dd55a3c09e6a",
     "semantic_hash": ""
   },
   "apps/web/lib/tiktok/api.test.ts": {
@@ -1640,8 +1640,8 @@
     "semantic_hash": ""
   },
   "apps/web/scripts/stripe/register-subscription-webhook.ts": {
-    "mtime": 1780761017.5864453,
-    "ast_hash": "33e17a7afb36cc279753f66ebdb2533f",
+    "mtime": 1781952336.370764,
+    "ast_hash": "14f41d2af9e344d983ecc0314bddf00f",
     "semantic_hash": ""
   },
   "apps/web/skills.ts": {
@@ -1657,11 +1657,6 @@
   "apps/web/supabase/migrations/20260602_extension_auth.sql": {
     "mtime": 1780509466.0980687,
     "ast_hash": "9659b693b6f113ac900437307c1180bf",
-    "semantic_hash": ""
-  },
-  "apps/web/supabase/migrations/20260602_room_invite_source.sql": {
-    "mtime": 1780509466.0981174,
-    "ast_hash": "f685ac75e35b52af3f80c78ccf5f716b",
     "semantic_hash": ""
   },
   "apps/web/supabase/migrations/20260612_room_lifecycle_quota.sql": {
@@ -1700,13 +1695,13 @@
     "semantic_hash": ""
   },
   "packages/protocol/src/types.ts": {
-    "mtime": 1781347170.8787727,
-    "ast_hash": "85b7e3867dce8cd949504d7f03c94fdf",
+    "mtime": 1781965519.7209988,
+    "ast_hash": "e848f0795c3b621459632489cc3cf123",
     "semantic_hash": ""
   },
   "packages/protocol/test/protocol.test.ts": {
-    "mtime": 1780778711.733506,
-    "ast_hash": "eb37aaa0fb70a61cf96b702a7057341b",
+    "mtime": 1781965530.780158,
+    "ast_hash": "5a8e9818a1c34496ef8426adf27c9817",
     "semantic_hash": ""
   },
   "packages/protocol/tsconfig.json": {
@@ -1740,8 +1735,8 @@
     "semantic_hash": ""
   },
   "scripts/room-signaling-harness.mjs": {
-    "mtime": 1781407872.159925,
-    "ast_hash": "bc465bf30359ebd469a953895aca1a3e",
+    "mtime": 1781965799.039407,
+    "ast_hash": "c4821a0686a3dcfa2cb15b0fc6abd948",
     "semantic_hash": ""
   },
   "scripts/smoke-staging-web.mjs": {
@@ -1910,8 +1905,8 @@
     "semantic_hash": ""
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1781714304.4518516,
-    "ast_hash": "56875f5266ca34ba7c5ac721588509cc",
+    "mtime": 1781953315.8397827,
+    "ast_hash": "0571a2cbf837d780d5573c26488d2f21",
     "semantic_hash": ""
   },
   "docs/experimental-features.md": {
@@ -2005,8 +2000,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/README.md": {
-    "mtime": 1780812471.1195927,
-    "ast_hash": "3f21b2946d098fe0d2357807652ef8f3",
+    "mtime": 1781951205.370255,
+    "ast_hash": "fba61065576adeeb1f3af000925ebc62",
     "semantic_hash": ""
   },
   "infra/livekit/docker-compose.yml": {
@@ -2132,6 +2127,151 @@
   ".codex/skills/graphify/references/update.md": {
     "mtime": 1781717613.1095352,
     "ast_hash": "0dad167a95bdb389f02fecffb60b1bc8",
+    "semantic_hash": ""
+  },
+  "docs/social-pricing-model.md": {
+    "mtime": 1781951205.3696997,
+    "ast_hash": "be7c96b50b0b5d274a3fef4604011527",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-06-20-social-rooms-subscriptions-execution-plan.md": {
+    "mtime": 1781966032.2406242,
+    "ast_hash": "ba6afbc845747a4fbbded13c77d405a0",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/me/entitlements/route.ts": {
+    "mtime": 1781952355.7460794,
+    "ast_hash": "19c679b6716faab5253fd4c39f15e5b5",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/plan-entitlements.test.ts": {
+    "mtime": 1781965571.8550146,
+    "ast_hash": "0ab817a2464cd188aea894927899de5b",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/plan-entitlements.ts": {
+    "mtime": 1781965554.8186316,
+    "ast_hash": "c1b7b17ea6619ac18fab334e0cdc11a1",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/stripe-plans.test.ts": {
+    "mtime": 1781953289.8601751,
+    "ast_hash": "ae959ed2881054993a63b46896ea143c",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/stripe-plans.ts": {
+    "mtime": 1781953277.72681,
+    "ast_hash": "296e836deb8b8ed788753a02a6c5b4b9",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20260620_billing_entitlements.sql": {
+    "mtime": 1781953466.051393,
+    "ast_hash": "bfc7040e1ebdc965dfacc79f4f066d1a",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20260603_room_invite_source.sql": {
+    "mtime": 1781963515.9293907,
+    "ast_hash": "f685ac75e35b52af3f80c78ccf5f716b",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/friends/[userId]/route.ts": {
+    "mtime": 1781964298.5051074,
+    "ast_hash": "4b7be081611d848838a10fc3e30615f4",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/friends/requests/[requestId]/accept/route.ts": {
+    "mtime": 1781964298.504419,
+    "ast_hash": "27b4fc8f92961ff9cc97dd5f8fa244c2",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/friends/requests/[requestId]/decline/route.ts": {
+    "mtime": 1781964298.5048213,
+    "ast_hash": "171a7873e5b837ed0eb9e1e71d43c7f5",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/friends/requests/route.ts": {
+    "mtime": 1781964298.503986,
+    "ast_hash": "fec542ae26e45a239628346d62904f57",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/friends/route.ts": {
+    "mtime": 1781964298.5035536,
+    "ast_hash": "f64ea11a893525a526fc27e207d00904",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/me/profile/route.ts": {
+    "mtime": 1781964364.7991984,
+    "ast_hash": "5f410e9f74a7a82e7936978915d4e5bf",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/recent-people/[userId]/hide/route.ts": {
+    "mtime": 1781964298.5061827,
+    "ast_hash": "302f3e03173e0350d8833e2491d796ad",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/recent-people/route.ts": {
+    "mtime": 1781964298.5058122,
+    "ast_hash": "bd14b552c5a1af9c680152ba4ae3dfe2",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/users/[userId]/block/route.ts": {
+    "mtime": 1781964298.5055141,
+    "ast_hash": "768587c6fe46d71706fb413c924a7ce6",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/api-session.ts": {
+    "mtime": 1781964109.0147293,
+    "ast_hash": "e139812a4347eae74c9ab1d681303bcc",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/social-routes.ts": {
+    "mtime": 1781964246.7382622,
+    "ast_hash": "6a5f22280a954c5c38b1380d33d7cba2",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/social.test.ts": {
+    "mtime": 1781964824.8673456,
+    "ast_hash": "2fdc395071eb685cc6cc7d2dc5cef2f4",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/social.ts": {
+    "mtime": 1781964855.492309,
+    "ast_hash": "107d8386ebecdcc2459d803142893ec1",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20260621_social_profiles_friends_recent.sql": {
+    "mtime": 1781964048.1508832,
+    "ast_hash": "c203167f9329b5723831cbaf1d2576d5",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/groups/[groupId]/members/[userId]/route.ts": {
+    "mtime": 1781964794.7197626,
+    "ast_hash": "afdbd45902e376edd6bf179eee144ef3",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/groups/[groupId]/members/route.ts": {
+    "mtime": 1781964794.7193959,
+    "ast_hash": "7a8648ab9b5048455a4ee789807e285e",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/groups/[groupId]/route.ts": {
+    "mtime": 1781964794.7190735,
+    "ast_hash": "4e71ce094fcc484905138f3849f39e0b",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/groups/route.ts": {
+    "mtime": 1781964794.7187154,
+    "ast_hash": "9d8054275ae8fc03ac0c933c1b80dd19",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20260622_friend_groups.sql": {
+    "mtime": 1781964696.676198,
+    "ast_hash": "7759c33c762fc863614ef8196f8cdcd3",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20260623_room_capabilities.sql": {
+    "mtime": 1781967070.8622198,
+    "ast_hash": "470f00555b8d0cd4a67da7a160afd4ec",
     "semantic_hash": ""
   }
 }

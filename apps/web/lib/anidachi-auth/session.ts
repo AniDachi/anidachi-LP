@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyAccessToken, type AccessTokenPayload } from "./jwt";
+import type { PlanCode } from "./plan-entitlements";
 
 export const ACCESS_TOKEN_COOKIE = "anidachi_access_token";
 export const REFRESH_TOKEN_COOKIE = "anidachi_refresh_token";
@@ -8,7 +9,7 @@ export const REFRESH_TOKEN_COOKIE = "anidachi_refresh_token";
 export type Session = {
   userId: string;
   email: string;
-  plan: "watcher" | "nakama" | "junkie";
+  plan: PlanCode;
 };
 
 /** Reads and verifies the access token cookie. Returns null if absent or invalid. */
