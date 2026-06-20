@@ -28,7 +28,6 @@ import {
 } from "./constants";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
-import { getCrunchyrollProgressEntry } from "./crunchyroll-progress";
 import {
   clearDebugLog,
   getCompactDebugLogText,
@@ -121,6 +120,7 @@ import {
   reconcileWatchProgress,
   type WatchCheckpointKind,
 } from "./watch-library-client";
+import { getWatchProgressEntryForAdapter } from "./watch-progress-entry";
 
 interface OverlayAppProps {
   adapter: VideoAdapter;
@@ -901,7 +901,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       getLatestEntry: () => WatchProgressEntry | null,
       isDisposed: () => boolean,
     ) => {
-      if ((!entry?.contentId && !entry?.seriesId) || entry.artworkUrl) {
+      if (
+        entry?.provider !== "crunchyroll" ||
+        (!entry.contentId && !entry.seriesId) ||
+        entry.artworkUrl
+      ) {
         return;
       }
 
@@ -952,18 +956,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   );
 
   useEffect(() => {
-    if (adapter.id !== "crunchyroll") {
-      setCurrentResourceEntry(null);
-      return;
-    }
-
     let disposed = false;
     let lastPersistedAt = 0;
     let lastRemoteReconcileAt = 0;
     const getEntry = () =>
-      getCrunchyrollProgressEntry({
-        title: adapter.getTitle(),
-        video: adapter.video,
+      getWatchProgressEntryForAdapter({
+        adapter,
         roomId: roomId ?? undefined,
         watchedWithCount: Math.max(1, participantCount),
       });

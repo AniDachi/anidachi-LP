@@ -82,6 +82,12 @@ export type RoomRow = {
   can_send_push_invites: boolean;
 };
 
+export type RoomMemberRow = {
+  room_id: string;
+  user_id: string;
+  joined_at: string;
+};
+
 // ---------- User helpers ----------
 
 export async function upsertUser(params: {
@@ -533,4 +539,14 @@ export async function getRoomMemberCount(roomId: string): Promise<number> {
     .select("user_id", { count: "exact", head: true })
     .eq("room_id", roomId);
   return count ?? 0;
+}
+
+export async function listRoomMembers(roomId: string): Promise<RoomMemberRow[]> {
+  const { data, error } = await db()
+    .from("room_members")
+    .select("room_id,user_id,joined_at")
+    .eq("room_id", roomId)
+    .order("joined_at", { ascending: true });
+  if (error) throw new Error(`Failed to list room members: ${error.message}`);
+  return (data as RoomMemberRow[] | null) ?? [];
 }

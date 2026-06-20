@@ -4,7 +4,9 @@ import {
   getRoomById,
   getUserById,
   isRoomMember,
+  listRoomMembers,
   type RoomRow,
+  type RoomMemberRow,
   type UserRow,
 } from "./db";
 import {
@@ -69,6 +71,12 @@ type CleanWatchProgressEntry = {
   watchedWithCount: number;
   checkpointKind: WatchCheckpointKind;
   observedAt: string;
+};
+
+export type RoomWatchParticipantTarget = {
+  userId: string;
+  role: "host" | "viewer";
+  joinedAt: string;
 };
 
 type WatchSessionRow = {
@@ -276,6 +284,36 @@ export function cleanWatchProgressEntries(value: unknown): CleanWatchProgressEnt
     .slice(0, MAX_RECONCILE_ENTRIES);
 }
 
+export function roomWatchParticipantTargets(
+  room: Pick<RoomRow, "host_user_id" | "created_at" | "host_connected_at">,
+  members: Array<Pick<RoomMemberRow, "user_id" | "joined_at">>
+): RoomWatchParticipantTarget[] {
+  const seen = new Set<string>();
+  const targets: RoomWatchParticipantTarget[] = [];
+
+  const add = (target: RoomWatchParticipantTarget) => {
+    if (seen.has(target.userId)) return;
+    seen.add(target.userId);
+    targets.push(target);
+  };
+
+  add({
+    userId: room.host_user_id,
+    role: "host",
+    joinedAt: room.host_connected_at ?? room.created_at,
+  });
+
+  for (const member of members) {
+    add({
+      userId: member.user_id,
+      role: member.user_id === room.host_user_id ? "host" : "viewer",
+      joinedAt: member.joined_at,
+    });
+  }
+
+  return targets;
+}
+
 export function historyRetentionCutoff(now: Date, planCode: PlanCode): Date {
   const days = getPlanEntitlements(planCode).account.historyRetentionDays;
   return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
@@ -421,27 +459,51 @@ async function reconcileWatchProgressEntry(
     room,
     now,
   });
+  const participantTargets = room
+    ? roomWatchParticipantTargets(room, await listRoomMembers(room.room_id))
+    : [
+        {
+          userId: user.id,
+          role: "host" as const,
+          joinedAt: now,
+        },
+      ];
+  const participantUsers = await Promise.all(
+    participantTargets.map(async (participant) => ({
+      participant,
+      user: participant.userId === user.id ? user : await getUserById(participant.userId),
+    }))
+  );
 
   await Promise.all([
-    upsertWatchSessionParticipant({
-      sessionId: session.id,
-      userId: user.id,
-      role: room?.host_user_id === user.id ? "host" : room ? "viewer" : "host",
-      entry,
-      now,
-    }),
+    ...participantTargets.map((participant) =>
+      upsertWatchSessionParticipant({
+        sessionId: session.id,
+        userId: participant.userId,
+        role: participant.role,
+        joinedAt: participant.joinedAt,
+        entry,
+        now,
+      })
+    ),
     insertWatchCheckpoint({
       sessionId: session.id,
       userId: user.id,
       roomId: room?.room_id ?? null,
       entry,
     }),
-    upsertTrackedTitle({
-      user,
-      entry,
-      sessionId: session.id,
-      now,
-    }),
+    ...participantUsers
+      .filter((item): item is { participant: RoomWatchParticipantTarget; user: UserRow } =>
+        Boolean(item.user)
+      )
+      .map((item) =>
+        upsertTrackedTitle({
+          user: item.user,
+          entry,
+          sessionId: session.id,
+          now,
+        })
+      ),
   ]);
 }
 
@@ -550,6 +612,7 @@ async function upsertWatchSessionParticipant(params: {
   sessionId: string;
   userId: string;
   role: "host" | "viewer";
+  joinedAt: string;
   entry: CleanWatchProgressEntry;
   now: string;
 }): Promise<void> {
@@ -560,6 +623,7 @@ async function upsertWatchSessionParticipant(params: {
         session_id: params.sessionId,
         user_id: params.userId,
         role: params.role,
+        joined_at: params.joinedAt,
         left_at: null,
         current_time_seconds: params.entry.currentTimeSeconds,
         progress: params.entry.progress,
