@@ -11,19 +11,7 @@ import {
   type PaidPlanCode,
 } from "@/lib/anidachi-auth/plan-entitlements";
 import { stripePriceIdForPlanCode } from "@/lib/anidachi-auth/stripe-plans";
-
-function getStripeSecretKey(): string | undefined {
-  return process.env.NODE_ENV === "development" && process.env.STRIPE_SECRET_KEY_TEST
-    ? process.env.STRIPE_SECRET_KEY_TEST
-    : process.env.STRIPE_SECRET_KEY;
-}
-
-function createStripeClient(): Stripe | null {
-  const secretKey = getStripeSecretKey();
-  return secretKey
-    ? new Stripe(secretKey, { apiVersion: "2025-08-27.basil" })
-    : null;
-}
+import { createStripeClient } from "@/lib/anidachi-auth/stripe-env";
 
 function loginUrlForRequest(request: NextRequest): string {
   let next = "/";
@@ -77,8 +65,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const stripe = createStripeClient();
-    if (!stripe) {
+    let stripe: Stripe;
+    try {
+      stripe = createStripeClient();
+    } catch (error) {
+      // Fail closed on missing/mismatched keys (e.g. a live key in a test env).
+      console.error("[create-checkout-session] Stripe is not configured:", error);
       return NextResponse.json(
         { error: "Stripe checkout is not configured" },
         { status: 500 }
