@@ -10,29 +10,33 @@ import {
 } from "./stripe-plans";
 
 test("Stripe price ids resolve from new env names first", () => {
-  const oldPlus = process.env.STRIPE_PRICE_ID_PLUS;
-  const oldPro = process.env.STRIPE_PRICE_ID_PRO;
-  process.env.STRIPE_PRICE_ID_PLUS = "price_plus_test";
-  process.env.STRIPE_PRICE_ID_PRO = "price_pro_test";
+  const oldPlus = process.env.STRIPE_PRICE_ID_PLUS_TEST;
+  const oldPro = process.env.STRIPE_PRICE_ID_PRO_TEST;
+  process.env.STRIPE_PRICE_ID_PLUS_TEST = "price_plus_test";
+  process.env.STRIPE_PRICE_ID_PRO_TEST = "price_pro_test";
   try {
     assert.equal(stripePriceIdForPlanCode("plus"), "price_plus_test");
     assert.equal(stripePriceIdForPlanCode("pro"), "price_pro_test");
     assert.equal(stripePlanCodeForPriceId("price_plus_test"), "plus");
     assert.equal(stripePlanCodeForPriceId("price_pro_test"), "pro");
   } finally {
-    if (oldPlus === undefined) delete process.env.STRIPE_PRICE_ID_PLUS;
-    else process.env.STRIPE_PRICE_ID_PLUS = oldPlus;
-    if (oldPro === undefined) delete process.env.STRIPE_PRICE_ID_PRO;
-    else process.env.STRIPE_PRICE_ID_PRO = oldPro;
+    if (oldPlus === undefined) delete process.env.STRIPE_PRICE_ID_PLUS_TEST;
+    else process.env.STRIPE_PRICE_ID_PLUS_TEST = oldPlus;
+    if (oldPro === undefined) delete process.env.STRIPE_PRICE_ID_PRO_TEST;
+    else process.env.STRIPE_PRICE_ID_PRO_TEST = oldPro;
   }
 });
 
 test("Stripe price ids require explicit env configuration", () => {
   const keys = [
+    "STRIPE_PRICE_ID_PLUS_TEST",
+    "STRIPE_PRICE_ID_PLUS_LIVE",
     "STRIPE_PRICE_ID_PLUS",
     "NEXT_PUBLIC_STRIPE_PRICE_ID_PLUS",
     "STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER",
     "NEXT_PUBLIC_STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER",
+    "STRIPE_PRICE_ID_PRO_TEST",
+    "STRIPE_PRICE_ID_PRO_LIVE",
     "STRIPE_PRICE_ID_PRO",
     "NEXT_PUBLIC_STRIPE_PRICE_ID_PRO",
     "STRIPE_PRICE_ID_ANIME_JUNKIE",

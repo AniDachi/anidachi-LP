@@ -118,6 +118,20 @@ Use it before cross-plane work, especially room/P2P/auth/Worker/CI changes. Do
 not promote Graphify to a required CI check unless the team explicitly accepts
 the runtime and backend requirements.
 
+## Subscription Plan Codes
+
+Canonical subscription plan codes are:
+
+```txt
+free | plus | pro
+```
+
+Legacy values `watcher`, `nakama`, `junkie`, `crunchyroll_subscriber`, and
+`anime_junkie` are migration-only aliases. Runtime code may accept them during
+the bridge window for old tokens, old Stripe metadata, and old database rows,
+but new UI, APIs, protocol payloads, Stripe metadata, database writes, and docs
+must emit `free`, `plus`, and `pro`.
+
 ## Runtime Environments
 
 Local development:
