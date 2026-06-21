@@ -400,7 +400,7 @@ function normalizeWatchLibraryResponse(value: unknown): WatchLibraryResponse {
       payload.limits && typeof payload.limits === "object"
         ? payload.limits
         : {
-            planCode: "watcher",
+            planCode: "free",
             maxActiveTrackedTitles: 0,
             activeTrackedTitleCount: 0,
             historyRetentionDays: 0,
