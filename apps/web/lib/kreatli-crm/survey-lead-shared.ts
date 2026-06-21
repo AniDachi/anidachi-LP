@@ -88,7 +88,7 @@ export function tagsToHomeSurveyAnswers(
 
 export function recommendedPlanLabelForTags(tags: ParsedSurveyTags): string {
   const tier = recommendedTierForSurvey(tagsToHomeSurveyAnswers(tags));
-  return tier === "anime_junkie" ? "Anime junkie" : "Crunchyroll subscriber";
+  return tier === "pro" ? "Pro" : "Plus";
 }
 
 export function isHighIntentTiming(timing?: string): boolean {

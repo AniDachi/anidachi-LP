@@ -24,11 +24,13 @@ function segmentStartedSecondsAgo(seconds: number, guestHasJoined = true) {
   };
 }
 
-test("watcher plan is metered at 30 minutes, paid plans are not", () => {
+test("free plan is metered at 30 minutes, paid plans are not", () => {
+  assert.equal(planDailyHostSeconds("free"), 30 * 60);
   assert.equal(planDailyHostSeconds("watcher"), 30 * 60);
+  assert.equal(isMeteredPlan("free"), true);
   assert.equal(isMeteredPlan("watcher"), true);
-  assert.equal(isMeteredPlan("nakama"), false);
-  assert.equal(isMeteredPlan("junkie"), false);
+  assert.equal(isMeteredPlan("plus"), false);
+  assert.equal(isMeteredPlan("pro"), false);
 });
 
 test("unknown plans fall back to the most restrictive quota", () => {
@@ -68,7 +70,7 @@ test("segments become stale exactly at the cap", () => {
 
 test("quota view sums persisted and open usage, never below zero remaining", () => {
   const view = computeQuotaView({
-    plan: "watcher",
+    plan: "free",
     persistedSecondsToday: 25 * 60,
     openSegments: [segmentStartedSecondsAgo(10 * 60)],
     now: NOW,
@@ -79,7 +81,7 @@ test("quota view sums persisted and open usage, never below zero remaining", () 
 
 test("quota view for paid plans reports infinite remaining", () => {
   const view = computeQuotaView({
-    plan: "junkie",
+    plan: "pro",
     persistedSecondsToday: 100_000,
     openSegments: [segmentStartedSecondsAgo(1_000)],
     now: NOW,
@@ -90,7 +92,7 @@ test("quota view for paid plans reports infinite remaining", () => {
 
 test("a session can start only with at least one minimum slice remaining", () => {
   const base = {
-    plan: "watcher",
+    plan: "free",
     openSegments: [],
     now: NOW,
   };
@@ -108,7 +110,7 @@ test("a session can start only with at least one minimum slice remaining", () =>
 
 test("free host tokens are capped to remaining quota with a floor", () => {
   const plenty = computeQuotaView({
-    plan: "watcher",
+    plan: "free",
     persistedSecondsToday: 0,
     openSegments: [],
     now: NOW,
@@ -116,7 +118,7 @@ test("free host tokens are capped to remaining quota with a floor", () => {
   assert.equal(hostRoomTokenTtlSeconds(plenty), ROOM_TOKEN_TTL_SECONDS);
 
   const nineHundredLeft = computeQuotaView({
-    plan: "watcher",
+    plan: "free",
     persistedSecondsToday: 30 * 60 - 900,
     openSegments: [],
     now: NOW,
@@ -124,7 +126,7 @@ test("free host tokens are capped to remaining quota with a floor", () => {
   assert.equal(hostRoomTokenTtlSeconds(nineHundredLeft), 900);
 
   const paid = computeQuotaView({
-    plan: "nakama",
+    plan: "plus",
     persistedSecondsToday: 0,
     openSegments: [],
     now: NOW,
@@ -150,7 +152,7 @@ test("utc day math handles the midnight boundary", () => {
 
 test("reset time is the next utc midnight", () => {
   const view = computeQuotaView({
-    plan: "watcher",
+    plan: "free",
     persistedSecondsToday: 0,
     openSegments: [],
     now: NOW,

@@ -84,15 +84,15 @@ test("watch library retention follows account plan limits", () => {
   const now = new Date("2026-06-21T00:00:00.000Z");
 
   assert.equal(
-    historyRetentionCutoff(now, "watcher").toISOString(),
+    historyRetentionCutoff(now, "free").toISOString(),
     "2026-06-14T00:00:00.000Z"
   );
   assert.equal(
-    historyRetentionCutoff(now, "nakama").toISOString(),
+    historyRetentionCutoff(now, "plus").toISOString(),
     "2026-03-21T00:00:00.000Z"
   );
   assert.equal(
-    historyRetentionCutoff(now, "junkie").toISOString(),
+    historyRetentionCutoff(now, "pro").toISOString(),
     "2025-06-20T00:00:00.000Z"
   );
 });

@@ -121,13 +121,13 @@ describe("extension auth client", () => {
         email: "user@example.com",
         displayName: "Alina",
         avatarUrl: null,
-        plan: "watcher",
+        plan: "free",
       },
     });
   });
 
   it("rejects malformed users", () => {
-    expect(normalizeAuthenticatedUser({ id: "user-1", plan: "watcher" })).toBeNull();
+    expect(normalizeAuthenticatedUser({ id: "user-1", plan: "free" })).toBeNull();
     expect(
       normalizeAuthenticatedUser({
         id: "user-1",

@@ -1,10 +1,11 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import {
-  isPlanCode,
   isRoomCapabilities,
+  normalizePlanCode,
   type PlanCode,
   type RoomCapabilities,
 } from "./plan-entitlements";
+import { isAcceptedPlanCode } from "./plan-codes";
 import { ACCESS_TOKEN_TTL_SECONDS } from "./token-policy";
 
 function getJwtSecret(): Uint8Array {
@@ -38,11 +39,11 @@ export async function verifyAccessToken(
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
     if (!payload.sub || !payload.email || !payload.plan) return null;
-    if (!isPlanCode(payload.plan)) return null;
+    if (!isAcceptedPlanCode(payload.plan)) return null;
     return {
       sub: payload.sub,
       email: payload.email as string,
-      plan: payload.plan,
+      plan: normalizePlanCode(payload.plan),
     };
   } catch {
     return null;

@@ -1,6 +1,25 @@
-export type PlanCode = "watcher" | "nakama" | "junkie";
-export type PaidPlanCode = Exclude<PlanCode, "watcher">;
-export type LegacyCheckoutTier = "crunchyroll_subscriber" | "anime_junkie";
+import {
+  FREE_PLAN_CODE,
+  checkoutInputToPaidPlanCode,
+  isCanonicalPlanCode,
+  isPaidPlanCode,
+  legacyTierToPlanCode,
+  normalizePaidPlanCode,
+  normalizePlanCode,
+  type LegacyCheckoutTier,
+  type PaidPlanCode,
+  type PlanCode,
+} from "./plan-codes";
+
+export {
+  FREE_PLAN_CODE,
+  checkoutInputToPaidPlanCode,
+  isPaidPlanCode,
+  legacyTierToPlanCode,
+  normalizePaidPlanCode,
+  normalizePlanCode,
+};
+export type { LegacyCheckoutTier, PaidPlanCode, PlanCode };
 
 export type PlanEntitlements = {
   planCode: PlanCode;
@@ -27,11 +46,9 @@ export type RoomCapabilities = {
   canSendPushInvites: boolean;
 };
 
-export const FREE_PLAN_CODE: PlanCode = "watcher";
-
 export const PLAN_ENTITLEMENTS: Record<PlanCode, PlanEntitlements> = {
-  watcher: {
-    planCode: "watcher",
+  free: {
+    planCode: "free",
     label: "Free",
     room: {
       dailyHostSeconds: 30 * 60,
@@ -46,8 +63,8 @@ export const PLAN_ENTITLEMENTS: Record<PlanCode, PlanEntitlements> = {
       historyRetentionDays: 7,
     },
   },
-  nakama: {
-    planCode: "nakama",
+  plus: {
+    planCode: "plus",
     label: "Plus",
     room: {
       dailyHostSeconds: "unlimited",
@@ -62,8 +79,8 @@ export const PLAN_ENTITLEMENTS: Record<PlanCode, PlanEntitlements> = {
       historyRetentionDays: 92,
     },
   },
-  junkie: {
-    planCode: "junkie",
+  pro: {
+    planCode: "pro",
     label: "Pro",
     room: {
       dailyHostSeconds: "unlimited",
@@ -81,17 +98,13 @@ export const PLAN_ENTITLEMENTS: Record<PlanCode, PlanEntitlements> = {
 };
 
 const PLAN_RANK: Record<PlanCode, number> = {
-  watcher: 0,
-  nakama: 1,
-  junkie: 2,
+  free: 0,
+  plus: 1,
+  pro: 2,
 };
 
 export function isPlanCode(value: unknown): value is PlanCode {
-  return value === "watcher" || value === "nakama" || value === "junkie";
-}
-
-export function isPaidPlanCode(value: unknown): value is PaidPlanCode {
-  return value === "nakama" || value === "junkie";
+  return isCanonicalPlanCode(value);
 }
 
 export function planRank(planCode: PlanCode): number {
@@ -107,7 +120,7 @@ export function maxPlanCode(plans: Iterable<PlanCode>): PlanCode {
 }
 
 export function getPlanEntitlements(planCode: unknown): PlanEntitlements {
-  return PLAN_ENTITLEMENTS[isPlanCode(planCode) ? planCode : FREE_PLAN_CODE];
+  return PLAN_ENTITLEMENTS[normalizePlanCode(planCode)];
 }
 
 export function roomCapabilitiesForPlan(planCode: unknown): RoomCapabilities {
@@ -139,18 +152,4 @@ export function isRoomCapabilities(value: unknown): value is RoomCapabilities {
     typeof capabilities.canNameRoom === "boolean" &&
     typeof capabilities.canSendPushInvites === "boolean"
   );
-}
-
-export function legacyTierToPlanCode(tier: unknown): PaidPlanCode | null {
-  if (tier === "crunchyroll_subscriber") return "nakama";
-  if (tier === "anime_junkie") return "junkie";
-  return null;
-}
-
-export function checkoutInputToPaidPlanCode(input: {
-  planCode?: unknown;
-  tier?: unknown;
-}): PaidPlanCode | null {
-  if (isPaidPlanCode(input.planCode)) return input.planCode;
-  return legacyTierToPlanCode(input.tier);
 }

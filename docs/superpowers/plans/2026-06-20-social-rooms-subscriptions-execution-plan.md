@@ -294,14 +294,18 @@ friends, groups, and inbox, not as a replacement for the web dashboard.
 
 ## Plan Matrix
 
-Internal plan codes should stay compatible with the current code unless a
-separate migration intentionally renames them:
+Internal plan codes are now canonical:
 
-- `watcher` -> Free
-- `nakama` -> Plus
-- `junkie` -> Pro
+- `free` -> Free
+- `plus` -> Plus
+- `pro` -> Pro
 
-| Capability | Free (`watcher`) | Plus (`nakama`) | Pro (`junkie`) |
+Legacy aliases `watcher`, `nakama`, `junkie`, `crunchyroll_subscriber`, and
+`anime_junkie` may be accepted only during the compatibility bridge window for
+old tokens, Stripe metadata, and pre-bridge data. New runtime code and new data
+must emit `free`, `plus`, and `pro`.
+
+| Capability | Free (`free`) | Plus (`plus`) | Pro (`pro`) |
 | --- | --- | --- | --- |
 | Price | $0 | $7.99/mo | $14.99/mo |
 | Main use | Try Anidachi and join friends | Regular watchrooms with friends | Larger groups |
@@ -340,7 +344,8 @@ or Cloudflare Realtime SFU feature.
 
 The existing code has a useful foundation:
 
-- `users.plan` already stores `watcher | nakama | junkie`.
+- `users.plan` stores canonical `free | plus | pro` after the bridge
+  canonicalization migration.
 - extension access tokens already include `plan`.
 - `room-quota.ts` already implements Free host-minutes.
 - room create/connect already flows through the web app.
@@ -349,7 +354,8 @@ The existing code has a useful foundation:
 
 But these gaps must be fixed before the social layer can be reliable:
 
-- Stripe checkout uses legacy tier names and price ids.
+- Stripe checkout must use canonical `plus` / `pro` plan codes and suffixed
+  test/live price env vars.
 - Stripe webhook currently sends a subscription alert email but does not update
   the user's plan or subscription state.
 - There is no durable `subscriptions` or `billing_customers` table.
@@ -437,7 +443,7 @@ Store processed Stripe event ids so retries do not double-process.
 Create one server helper and use it everywhere:
 
 ```ts
-type PlanCode = "watcher" | "nakama" | "junkie";
+type PlanCode = "free" | "plus" | "pro";
 
 type PlanEntitlements = {
   planCode: PlanCode;
@@ -487,7 +493,7 @@ subscriptions (
   stripe_customer_id text not null,
   stripe_subscription_id text not null unique,
   stripe_price_id text not null,
-  plan_code text not null check (plan_code in ('watcher', 'nakama', 'junkie')),
+  plan_code text not null check (plan_code in ('free', 'plus', 'pro')),
   status text not null,
   current_period_end timestamptz,
   cancel_at_period_end boolean not null default false,
@@ -740,7 +746,7 @@ Supabase tables.
 
 - `POST /api/create-checkout-session`
   - Auth required.
-  - Accepts `planCode: "nakama" | "junkie"`.
+  - Accepts `planCode: "plus" | "pro"`.
   - Creates or reuses Stripe customer.
   - Stores metadata.
 - `POST /api/stripe/webhook`
@@ -845,7 +851,7 @@ behavior:
 ```ts
 type RoomCapabilities = {
   hostUserId: string;
-  hostPlan: "watcher" | "nakama" | "junkie";
+  hostPlan: "free" | "plus" | "pro";
   maxParticipants: number;
   maxMediaSeats: number;
   canUseMedia: boolean;
@@ -1680,7 +1686,7 @@ Acceptance:
   `STRIPE_WEBHOOK_SECRET`.
 - [~] 2026-06-20: Stripe staging setup intentionally deferred until Test Mode
   products/prices and the staging webhook secret exist. Development can continue
-  by manually setting `users.plan` to `nakama` or `junkie` for staging test
+  by manually setting `users.plan` to `plus` or `pro` for staging test
   accounts when paid-plan behavior needs to be exercised before checkout is
   wired.
 - [x] 2026-06-20: Phase 2 foundation implemented and migrated on Supabase:

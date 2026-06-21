@@ -284,7 +284,7 @@ async function runScenarios() {
   // 6b. Signed room capabilities raise the participant cap above the legacy
   //     mesh default while keeping the same reconnect behavior.
   const plusCapabilities = {
-    hostPlanCode: "nakama",
+    hostPlanCode: "plus",
     maxParticipants: 6,
     maxMediaSeats: 4,
     canNameRoom: true,
@@ -325,7 +325,7 @@ async function runScenarios() {
 
   // 6c. Media seats are capped independently from total participants.
   const mediaCapabilities = {
-    hostPlanCode: "junkie",
+    hostPlanCode: "pro",
     maxParticipants: 4,
     maxMediaSeats: 1,
     canNameRoom: true,

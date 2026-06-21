@@ -18,9 +18,9 @@ type NavUser = {
 };
 
 const PLAN_LABELS: Record<string, string> = {
-  watcher: "Watcher",
-  nakama: "Nakama",
-  junkie: "Anime Junkie",
+  free: "Free",
+  plus: "Plus",
+  pro: "Pro",
 };
 
 function UserMenu({ user }: { user: NavUser }) {

@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     const body = (await request.json()) as {
       tier?: CheckoutTier;
-      planCode?: PaidPlanCode;
+      planCode?: unknown;
     };
 
     const planCode = checkoutInputToPaidPlanCode(body);

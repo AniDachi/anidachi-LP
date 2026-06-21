@@ -10,8 +10,16 @@ export const ParticipantSchema = z.object({
   lastSeenAt: z.number().int().nonnegative(),
 });
 
+const CanonicalPlanCodeSchema = z.enum(["free", "plus", "pro"]);
+const LegacyPlanCodeSchema = z.enum(["watcher", "nakama", "junkie"]);
+
 export const RoomCapabilitiesSchema = z.object({
-  hostPlanCode: z.enum(["watcher", "nakama", "junkie"]),
+  hostPlanCode: z.union([CanonicalPlanCodeSchema, LegacyPlanCodeSchema]).transform((value) => {
+    if (value === "watcher") return "free";
+    if (value === "nakama") return "plus";
+    if (value === "junkie") return "pro";
+    return value;
+  }),
   maxParticipants: z.number().int().min(1).max(50),
   maxMediaSeats: z.number().int().min(0).max(16),
   canNameRoom: z.boolean(),

@@ -106,7 +106,7 @@ async function syncSubscriptionById(
 export async function POST(request: NextRequest) {
   const webhookSecret = getStripeWebhookSecret();
   if (!webhookSecret) {
-    console.error("[stripe/webhook] STRIPE_WEBHOOK_SECRET is not set");
+    console.error("[stripe/webhook] Stripe webhook secret is not configured for the resolved mode");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
   }
 

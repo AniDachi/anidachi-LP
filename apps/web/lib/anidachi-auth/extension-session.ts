@@ -6,7 +6,7 @@ import {
   storeRefreshToken,
   validateRefreshToken,
 } from "./db";
-import type { PlanCode } from "./plan-entitlements";
+import { normalizePlanCode, type PlanCode } from "./plan-entitlements";
 import {
   ACCESS_TOKEN_TTL_SECONDS,
   REFRESH_TOKEN_TTL_DAYS,
@@ -60,14 +60,12 @@ export async function verifyExtensionAccessToken(
     });
     if (payload.typ !== EXTENSION_ACCESS_TYPE) return null;
     if (!payload.sub || typeof payload.email !== "string") return null;
-    if (payload.plan !== "watcher" && payload.plan !== "nakama" && payload.plan !== "junkie") {
-      return null;
-    }
+    const plan = normalizePlanCode(payload.plan);
 
     return {
       sub: payload.sub,
       email: payload.email,
-      plan: payload.plan,
+      plan,
     };
   } catch {
     return null;

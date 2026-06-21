@@ -258,7 +258,7 @@ export function PlanSurveyModal({
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier }),
+        body: JSON.stringify({ planCode: tier }),
       });
 
       const data = (await response.json()) as {
@@ -658,9 +658,9 @@ export function PlanSurveyModal({
                   <p className="text-sm text-purple-800">{upgradeText}</p>
                 ) : (
                   <p className="text-sm text-purple-800">
-                    {recommendedTier === "anime_junkie"
-                      ? "Anime Junkie — best if you want host controls and moderated rooms."
-                      : "Crunchyroll Subscriber — best for watchrooms, sync, and async progress on top of Crunchyroll."}
+                    {recommendedTier === "pro"
+                      ? "Pro — best if you want larger rooms, host controls, and longer history."
+                      : "Plus — best for regular watchrooms, sync, and shared progress with friends."}
                   </p>
                 )}
                 <p className="mt-1 text-xs text-purple-700 font-medium">
@@ -673,15 +673,15 @@ export function PlanSurveyModal({
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold">
-                      {recommendedTier === "anime_junkie" ? "Anime Junkie" : "Crunchyroll Subscriber"}
+                      {recommendedTier === "pro" ? "Pro" : "Plus"}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {recommendedTier === "anime_junkie" ? "$38/month" : "$8/month"}
+                      {recommendedTier === "pro" ? "$14.99/month" : "$7.99/month"}
                     </p>
                   </div>
                   <span
                     className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
-                      recommendedTier === "anime_junkie" ? "bg-gray-100 text-gray-900" : "bg-purple-100 text-purple-800"
+                      recommendedTier === "pro" ? "bg-gray-100 text-gray-900" : "bg-purple-100 text-purple-800"
                     }`}
                   >
                     <Check className="h-3.5 w-3.5" aria-hidden="true" />
@@ -696,7 +696,7 @@ export function PlanSurveyModal({
                     <Check className="h-4 w-4 text-purple-600 mt-0.5 shrink-0" aria-hidden="true" />
                     <span className="font-medium">{priorityFeatureBullet(survey.priority)}</span>
                   </li>
-                  {recommendedTier === "anime_junkie" ? (
+                  {recommendedTier === "pro" ? (
                     <>
                       <li className="flex items-start gap-2">
                         <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" aria-hidden="true" />
@@ -704,7 +704,7 @@ export function PlanSurveyModal({
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" aria-hidden="true" />
-                        Everything in Crunchyroll Subscriber, plus moderation tools
+                        Everything in Plus, plus moderation tools
                       </li>
                     </>
                   ) : (
@@ -729,7 +729,7 @@ export function PlanSurveyModal({
 
                 <Button
                   className={`mt-3 w-full text-white font-semibold disabled:opacity-60 ${
-                    recommendedTier === "anime_junkie" ? "bg-gray-900 hover:bg-gray-950" : "bg-purple-700 hover:bg-purple-800"
+                    recommendedTier === "pro" ? "bg-gray-900 hover:bg-gray-950" : "bg-purple-700 hover:bg-purple-800"
                   }`}
                   disabled={isSubmitting || !surveyReadyForRecommendation}
                   onClick={() => startCheckout(recommendedTier)}

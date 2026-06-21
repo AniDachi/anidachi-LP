@@ -110,7 +110,7 @@ describe("RoomState", () => {
 
   it("uses signed room capabilities for participant caps", () => {
     const room = new RoomState("room-1", {
-      hostPlanCode: "nakama",
+      hostPlanCode: "plus",
       maxParticipants: 6,
       maxMediaSeats: 4,
       canNameRoom: true,
@@ -132,7 +132,7 @@ describe("RoomState", () => {
 
   it("caps camera/media seats independently from participant count", () => {
     const room = new RoomState("room-1", {
-      hostPlanCode: "junkie",
+      hostPlanCode: "pro",
       maxParticipants: 15,
       maxMediaSeats: 2,
       canNameRoom: true,

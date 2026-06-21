@@ -1,18 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-
-function getStripeSecretKey(): string | undefined {
-  return process.env.NODE_ENV === "development" && process.env.STRIPE_SECRET_KEY_TEST
-    ? process.env.STRIPE_SECRET_KEY_TEST
-    : process.env.STRIPE_SECRET_KEY;
-}
-
-function createStripeClient(): Stripe | null {
-  const secretKey = getStripeSecretKey();
-  return secretKey
-    ? new Stripe(secretKey, { apiVersion: "2025-08-27.basil" })
-    : null;
-}
+import { createStripeClient } from "@/lib/anidachi-auth/stripe-env";
 
 function sanitizeDiscordHandle(raw: string): string {
   return raw.trim().replace(/\s+/g, " ");
@@ -20,8 +8,11 @@ function sanitizeDiscordHandle(raw: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const stripe = createStripeClient();
-    if (!stripe) {
+    let stripe: Stripe;
+    try {
+      stripe = createStripeClient();
+    } catch (error) {
+      console.error("[save-discord-credentials] Stripe is not configured:", error);
       return NextResponse.json(
         { error: "Stripe is not configured" },
         { status: 500 }

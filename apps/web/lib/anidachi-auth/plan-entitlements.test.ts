@@ -10,7 +10,7 @@ import {
 } from "./plan-entitlements";
 
 test("plan entitlements match the approved MVP pricing matrix", () => {
-  const free = getPlanEntitlements("watcher");
+  const free = getPlanEntitlements("free");
   assert.equal(free.label, "Free");
   assert.equal(free.room.dailyHostSeconds, 30 * 60);
   assert.equal(free.room.maxParticipants, 4);
@@ -19,7 +19,7 @@ test("plan entitlements match the approved MVP pricing matrix", () => {
   assert.equal(free.account.maxActiveTrackedTitles, 3);
   assert.equal(free.account.historyRetentionDays, 7);
 
-  const plus = getPlanEntitlements("nakama");
+  const plus = getPlanEntitlements("plus");
   assert.equal(plus.label, "Plus");
   assert.equal(plus.room.dailyHostSeconds, "unlimited");
   assert.equal(plus.room.maxParticipants, 6);
@@ -28,7 +28,7 @@ test("plan entitlements match the approved MVP pricing matrix", () => {
   assert.equal(plus.account.maxActiveTrackedTitles, 15);
   assert.equal(plus.account.historyRetentionDays, 92);
 
-  const pro = getPlanEntitlements("junkie");
+  const pro = getPlanEntitlements("pro");
   assert.equal(pro.label, "Pro");
   assert.equal(pro.room.dailyHostSeconds, "unlimited");
   assert.equal(pro.room.maxParticipants, 15);
@@ -39,28 +39,32 @@ test("plan entitlements match the approved MVP pricing matrix", () => {
 });
 
 test("unknown plan codes fall back to Free", () => {
-  assert.equal(getPlanEntitlements("unknown").planCode, "watcher");
+  assert.equal(getPlanEntitlements("unknown").planCode, "free");
+  assert.equal(getPlanEntitlements("watcher").planCode, "free");
+  assert.equal(getPlanEntitlements("nakama").planCode, "plus");
+  assert.equal(getPlanEntitlements("junkie").planCode, "pro");
 });
 
 test("room capabilities are derived from host plan entitlements", () => {
-  assert.deepEqual(roomCapabilitiesForPlan("watcher"), {
-    hostPlanCode: "watcher",
+  assert.deepEqual(roomCapabilitiesForPlan("free"), {
+    hostPlanCode: "free",
     maxParticipants: 4,
     maxMediaSeats: 0,
     canNameRoom: false,
     canSendPushInvites: false,
   });
-  assert.deepEqual(roomCapabilitiesForPlan("junkie"), {
-    hostPlanCode: "junkie",
+  assert.deepEqual(roomCapabilitiesForPlan("pro"), {
+    hostPlanCode: "pro",
     maxParticipants: 15,
     maxMediaSeats: 4,
     canNameRoom: true,
     canSendPushInvites: true,
   });
+  assert.equal(isRoomCapabilities(roomCapabilitiesForPlan("plus")), true);
   assert.equal(isRoomCapabilities(roomCapabilitiesForPlan("nakama")), true);
   assert.equal(
     isRoomCapabilities({
-      hostPlanCode: "junkie",
+      hostPlanCode: "pro",
       maxParticipants: 15,
       maxMediaSeats: -1,
       canNameRoom: true,
@@ -71,23 +75,26 @@ test("room capabilities are derived from host plan entitlements", () => {
 });
 
 test("legacy checkout tiers map to the new paid plan codes", () => {
-  assert.equal(legacyTierToPlanCode("crunchyroll_subscriber"), "nakama");
-  assert.equal(legacyTierToPlanCode("anime_junkie"), "junkie");
+  assert.equal(legacyTierToPlanCode("crunchyroll_subscriber"), "plus");
+  assert.equal(legacyTierToPlanCode("anime_junkie"), "pro");
   assert.equal(legacyTierToPlanCode("watcher"), null);
 });
 
 test("checkout plan parsing accepts new planCode and legacy tier", () => {
-  assert.equal(checkoutInputToPaidPlanCode({ planCode: "nakama" }), "nakama");
-  assert.equal(checkoutInputToPaidPlanCode({ planCode: "junkie" }), "junkie");
+  assert.equal(checkoutInputToPaidPlanCode({ planCode: "plus" }), "plus");
+  assert.equal(checkoutInputToPaidPlanCode({ planCode: "pro" }), "pro");
+  assert.equal(checkoutInputToPaidPlanCode({ planCode: "nakama" }), "plus");
+  assert.equal(checkoutInputToPaidPlanCode({ planCode: "junkie" }), "pro");
   assert.equal(
     checkoutInputToPaidPlanCode({ tier: "crunchyroll_subscriber" }),
-    "nakama"
+    "plus"
   );
-  assert.equal(checkoutInputToPaidPlanCode({ tier: "anime_junkie" }), "junkie");
+  assert.equal(checkoutInputToPaidPlanCode({ tier: "anime_junkie" }), "pro");
   assert.equal(checkoutInputToPaidPlanCode({ planCode: "watcher" }), null);
+  assert.equal(checkoutInputToPaidPlanCode({ planCode: "free" }), null);
 });
 
 test("highest active plan wins when several subscriptions exist", () => {
-  assert.equal(maxPlanCode(["watcher", "nakama"]), "nakama");
-  assert.equal(maxPlanCode(["junkie", "nakama", "watcher"]), "junkie");
+  assert.equal(maxPlanCode(["free", "plus"]), "plus");
+  assert.equal(maxPlanCode(["pro", "plus", "free"]), "pro");
 });

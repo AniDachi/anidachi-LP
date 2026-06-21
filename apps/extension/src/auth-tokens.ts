@@ -3,7 +3,7 @@ import { storage } from "wxt/utils/storage";
 export const AUTH_TOKENS_STORAGE_KEY = "authTokens";
 export const AUTH_TOKENS_KEY = `local:${AUTH_TOKENS_STORAGE_KEY}` as const;
 
-export type AuthenticatedUserPlan = "watcher" | "nakama" | "junkie";
+export type AuthenticatedUserPlan = "free" | "plus" | "pro";
 
 export interface AuthenticatedUser {
   id: string;
@@ -23,17 +23,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function isPlan(value: unknown): value is AuthenticatedUserPlan {
-  return value === "watcher" || value === "nakama" || value === "junkie";
+function normalizePlan(value: unknown): AuthenticatedUserPlan | null {
+  if (value === "free" || value === "watcher") return "free";
+  if (value === "plus" || value === "nakama") return "plus";
+  if (value === "pro" || value === "junkie") return "pro";
+  return null;
 }
 
 export function normalizeAuthenticatedUser(value: unknown): AuthenticatedUser | null {
   if (!isRecord(value)) return null;
+  const plan = normalizePlan(value.plan);
   if (
     typeof value.id !== "string" ||
     typeof value.email !== "string" ||
     typeof value.displayName !== "string" ||
-    !isPlan(value.plan)
+    !plan
   ) {
     return null;
   }
@@ -47,7 +51,7 @@ export function normalizeAuthenticatedUser(value: unknown): AuthenticatedUser | 
     email: value.email,
     displayName: value.displayName,
     avatarUrl: value.avatarUrl ?? null,
-    plan: value.plan,
+    plan,
   };
 }
 

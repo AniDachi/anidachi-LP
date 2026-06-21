@@ -6,7 +6,7 @@ import type {
 } from "@anidachi/protocol";
 
 export const LEGACY_ROOM_CAPABILITIES: RoomCapabilities = {
-  hostPlanCode: "watcher",
+  hostPlanCode: "free",
   maxParticipants: 4,
   // Backward-compatible fallback for old room tokens that predate capability
   // claims. New Free rooms sign maxMediaSeats=0 from the web app.

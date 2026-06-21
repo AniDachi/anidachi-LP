@@ -12,7 +12,7 @@ import Stripe from "stripe";
  */
 export type StripeMode = "test" | "live";
 
-const STRIPE_API_VERSION = "2025-08-27.basil";
+export const STRIPE_API_VERSION = "2025-08-27.basil";
 
 export class StripeConfigError extends Error {
   constructor(message: string) {

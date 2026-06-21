@@ -1,9 +1,35 @@
+import { SignJWT } from "jose";
 import { describe, expect, it } from "vitest";
 import { signRoomTokenForTest, verifyRoomToken } from "../src/auth";
 
 const env = {
   ANIDACHI_JWT_SECRET: "test-secret-test-secret-test-secret",
 };
+
+function testSecret(): Uint8Array {
+  return new TextEncoder().encode(env.ANIDACHI_JWT_SECRET);
+}
+
+async function signLegacyRoomTokenForTest(): Promise<string> {
+  return new SignJWT({
+    roomId: "room-1",
+    role: "host",
+    typ: "room",
+    capabilities: {
+      hostPlanCode: "junkie",
+      maxParticipants: 15,
+      maxMediaSeats: 4,
+      canNameRoom: true,
+      canSendPushInvites: true,
+    },
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject("user-1")
+    .setAudience("anidachi-worker")
+    .setIssuedAt()
+    .setExpirationTime("30m")
+    .sign(testSecret());
+}
 
 describe("worker room auth", () => {
   it("verifies room token claims for the matching room", async () => {
@@ -34,7 +60,7 @@ describe("worker room auth", () => {
         roomId: "room-1",
         role: "host",
         capabilities: {
-          hostPlanCode: "junkie",
+          hostPlanCode: "pro",
           maxParticipants: 15,
           maxMediaSeats: 4,
           canNameRoom: true,
@@ -46,7 +72,19 @@ describe("worker room auth", () => {
 
     await expect(verifyRoomToken(token, "room-1", env)).resolves.toMatchObject({
       capabilities: {
-        hostPlanCode: "junkie",
+        hostPlanCode: "pro",
+        maxParticipants: 15,
+        maxMediaSeats: 4,
+      },
+    });
+  });
+
+  it("normalizes legacy signed room capabilities", async () => {
+    const token = await signLegacyRoomTokenForTest();
+
+    await expect(verifyRoomToken(token, "room-1", env)).resolves.toMatchObject({
+      capabilities: {
+        hostPlanCode: "pro",
         maxParticipants: 15,
         maxMediaSeats: 4,
       },

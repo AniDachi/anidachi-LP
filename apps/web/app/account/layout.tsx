@@ -14,9 +14,9 @@ export const metadata: Metadata = {
 };
 
 const PLAN_LABELS: Record<string, string> = {
-  watcher: "Free",
-  nakama: "Plus",
-  junkie: "Pro",
+  free: "Free",
+  plus: "Plus",
+  pro: "Pro",
 };
 
 export default async function AccountLayout({ children }: { children: ReactNode }) {
