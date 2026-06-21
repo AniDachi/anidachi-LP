@@ -174,7 +174,7 @@ Delete after replacement:
 **Files:**
 - No source edits.
 
-- [ ] **Step 1: Confirm current working tree before touching source**
+- [x] **Step 1: Confirm current working tree before touching source**
 
 Run:
 
@@ -190,7 +190,7 @@ Expected:
 
 If only `graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.json`, and `graphify-out/manifest.json` are dirty, record that they were pre-existing dirty graph artifacts. Do not stage them with this migration unless this migration intentionally refreshes the team graph artifacts at the end.
 
-- [ ] **Step 2: Start from latest staging**
+- [x] **Step 2: Start from latest staging**
 
 Run:
 
@@ -207,7 +207,7 @@ Expected:
 Switched to a new branch 'codex/plan-code-canonicalization'
 ```
 
-- [ ] **Step 3: Install with the repo-pinned package manager**
+- [x] **Step 3: Install with the repo-pinned package manager**
 
 Run:
 
@@ -219,7 +219,7 @@ pnpm install --frozen-lockfile
 
 Expected: install completes without lockfile changes.
 
-- [ ] **Step 4: Run focused baseline checks**
+- [x] **Step 4: Run focused baseline checks**
 
 Run:
 
@@ -242,7 +242,7 @@ Expected: all commands pass before source changes. If a baseline fails, stop and
 - Modify: `apps/web/lib/anidachi-auth/plan-entitlements.ts`
 - Modify: `apps/web/lib/anidachi-auth/plan-entitlements.test.ts`
 
-- [ ] **Step 1: Create failing tests for canonical and legacy values**
+- [x] **Step 1: Create failing tests for canonical and legacy values**
 
 Create `apps/web/lib/anidachi-auth/plan-codes.test.ts`:
 
@@ -305,7 +305,7 @@ test("type guards only expose canonical names", () => {
 });
 ```
 
-- [ ] **Step 2: Run the new test and verify it fails**
+- [x] **Step 2: Run the new test and verify it fails**
 
 Run:
 
@@ -315,7 +315,7 @@ pnpm --filter @anidachi/web test -- lib/anidachi-auth/plan-codes.test.ts
 
 Expected: FAIL because `plan-codes.ts` does not exist.
 
-- [ ] **Step 3: Create the canonical plan-code helper**
+- [x] **Step 3: Create the canonical plan-code helper**
 
 Create `apps/web/lib/anidachi-auth/plan-codes.ts`:
 
@@ -382,7 +382,7 @@ export function checkoutInputToPaidPlanCode(input: {
 }
 ```
 
-- [ ] **Step 4: Update `plan-entitlements.ts` to use canonical names**
+- [x] **Step 4: Update `plan-entitlements.ts` to use canonical names**
 
 In `apps/web/lib/anidachi-auth/plan-entitlements.ts`, import plan-code types and helpers from `./plan-codes`, remove local `watcher/nakama/junkie` type definitions, and make `PLAN_ENTITLEMENTS` canonical:
 
@@ -482,7 +482,7 @@ export function getPlanEntitlements(planCode: unknown): PlanEntitlements {
 }
 ```
 
-- [ ] **Step 5: Update entitlement tests**
+- [x] **Step 5: Update entitlement tests**
 
 In `apps/web/lib/anidachi-auth/plan-entitlements.test.ts`, replace old assertions:
 
@@ -516,7 +516,7 @@ assert.equal(maxPlanCode(["free", "plus"]), "plus");
 assert.equal(maxPlanCode(["pro", "plus", "free"]), "pro");
 ```
 
-- [ ] **Step 6: Run web plan-code tests**
+- [x] **Step 6: Run web plan-code tests**
 
 Run:
 
@@ -526,7 +526,7 @@ pnpm --filter @anidachi/web test -- lib/anidachi-auth/plan-codes.test.ts lib/ani
 
 Expected: PASS.
 
-- [ ] **Step 7: Commit Task 1**
+- [x] **Step 7: Commit Task 1**
 
 Run:
 
@@ -544,7 +544,7 @@ git commit -m "refactor(web): introduce canonical subscription plan codes"
 - Modify: `apps/web/app/api/stripe/webhook/route.ts`
 - Modify: `apps/web/app/api/save-discord-credentials/route.ts`
 
-- [ ] **Step 1: Update Stripe plan mapping tests first**
+- [x] **Step 1: Update Stripe plan mapping tests first**
 
 In `apps/web/lib/anidachi-auth/stripe-plans.test.ts`, change expectations so Plus/Pro map to canonical codes:
 
@@ -581,7 +581,7 @@ assert.equal(planCodeFromStripeMetadata({ planCode: "junkie" }), "pro");
 assert.equal(planCodeFromStripeMetadata({ planCode: "watcher" }), "free");
 ```
 
-- [ ] **Step 2: Run Stripe plan tests and verify failure**
+- [x] **Step 2: Run Stripe plan tests and verify failure**
 
 Run:
 
@@ -591,7 +591,7 @@ pnpm --filter @anidachi/web test -- lib/anidachi-auth/stripe-plans.test.ts
 
 Expected: FAIL because implementation still emits `nakama/junkie/watcher`.
 
-- [ ] **Step 3: Update Stripe mapping implementation**
+- [x] **Step 3: Update Stripe mapping implementation**
 
 In `apps/web/lib/anidachi-auth/stripe-plans.ts`, use canonical paid codes:
 
@@ -659,7 +659,7 @@ export function paidPlanCodeFromStripeSubscription(
 }
 ```
 
-- [ ] **Step 4: Update checkout route typing**
+- [x] **Step 4: Update checkout route typing**
 
 In `apps/web/app/api/create-checkout-session/route.ts`, keep `tier` accepted as a bridge input, but return canonical `planCode`:
 
@@ -687,7 +687,7 @@ subscription_data: {
 
 Expected runtime behavior: any old UI still sending `tier: "crunchyroll_subscriber"` creates a `plus` subscription; any old UI still sending `tier: "anime_junkie"` creates a `pro` subscription.
 
-- [ ] **Step 5: Update webhook route to store canonical plans**
+- [x] **Step 5: Update webhook route to store canonical plans**
 
 In `apps/web/app/api/stripe/webhook/route.ts`, keep the current event handling but verify `planCode` passed to `upsertSubscription` is canonical by relying on updated `paidPlanCodeFromStripeSubscription` and `planCodeFromStripeMetadata`.
 
@@ -699,7 +699,7 @@ const planCode = paidPlanCode ?? metadataPlanCode;
 
 Expected: `planCode` is now `plus`, `pro`, or `free`; paid subscriptions should be `plus` or `pro`.
 
-- [ ] **Step 6: Move `save-discord-credentials` onto mode-aware Stripe config**
+- [x] **Step 6: Move `save-discord-credentials` onto mode-aware Stripe config**
 
 Replace the local Stripe helper in `apps/web/app/api/save-discord-credentials/route.ts`:
 
@@ -721,7 +721,7 @@ try {
 
 Remove the local `getStripeSecretKey` and local `createStripeClient` functions.
 
-- [ ] **Step 7: Run Stripe and route-related checks**
+- [x] **Step 7: Run Stripe and route-related checks**
 
 Run:
 
@@ -732,7 +732,7 @@ pnpm --filter @anidachi/web check
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit Task 2**
+- [x] **Step 8: Commit Task 2**
 
 Run:
 
@@ -747,7 +747,7 @@ git commit -m "fix(web): canonicalize Stripe subscription plan mapping"
 - Create: `apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql`
 - Modify: `apps/web/lib/anidachi-auth/db.ts`
 
-- [ ] **Step 1: Create bridge migration**
+- [x] **Step 1: Create bridge migration**
 
 Create `apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql`:
 
@@ -814,7 +814,7 @@ end
 where host_plan_code in ('watcher', 'nakama', 'junkie');
 ```
 
-- [ ] **Step 2: Update typed row shapes**
+- [x] **Step 2: Update typed row shapes**
 
 In `apps/web/lib/anidachi-auth/db.ts`, keep `plan`, `plan_code`, and `host_plan_code` typed as canonical `PlanCode`. No old-code type should leak from typed row shapes.
 
@@ -826,7 +826,7 @@ plan_code: PlanCode;
 host_plan_code: PlanCode;
 ```
 
-- [ ] **Step 3: Add a local SQL review command**
+- [x] **Step 3: Add a local SQL review command**
 
 Run:
 
@@ -842,7 +842,7 @@ apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql:...
 
 Only the bridge migration should mention old plan codes in this task output.
 
-- [ ] **Step 4: Commit Task 3**
+- [x] **Step 4: Commit Task 3**
 
 Run:
 
@@ -867,7 +867,7 @@ git commit -m "feat(db): bridge subscription plan codes to canonical values"
 - Modify: `apps/extension/test/auth-client.test.ts`
 - Modify: `scripts/room-signaling-harness.mjs`
 
-- [ ] **Step 1: Update protocol schema**
+- [x] **Step 1: Update protocol schema**
 
 In `packages/protocol/src/types.ts`, change room capability plan schema:
 
@@ -891,7 +891,7 @@ export const RoomCapabilitiesSchema = z.object({
 
 Expected effect: old signed room tokens can still parse, but parsed server/client snapshots use canonical `free/plus/pro`.
 
-- [ ] **Step 2: Update protocol tests**
+- [x] **Step 2: Update protocol tests**
 
 In `packages/protocol/test/protocol.test.ts`, replace capability expectations:
 
@@ -912,7 +912,7 @@ const parsed = RoomCapabilitiesSchema.parse({
 assert.equal(parsed.hostPlanCode, "pro");
 ```
 
-- [ ] **Step 3: Update Worker fallback capabilities**
+- [x] **Step 3: Update Worker fallback capabilities**
 
 In `apps/api/src/room-state.ts`, change the fallback:
 
@@ -928,7 +928,7 @@ export const LEGACY_ROOM_CAPABILITIES: RoomCapabilities = {
 
 Keep the comment explaining old room tokens. The fallback object name may remain `LEGACY_ROOM_CAPABILITIES` because it describes old tokens, not a product plan.
 
-- [ ] **Step 4: Update room quota helpers and tests**
+- [x] **Step 4: Update room quota helpers and tests**
 
 In `apps/web/lib/room-quota.ts`, change metered free logic to canonical:
 
@@ -947,7 +947,7 @@ assert.equal(isMeteredPlan("plus"), false);
 assert.equal(isMeteredPlan("pro"), false);
 ```
 
-- [ ] **Step 5: Update web extension session parsing**
+- [x] **Step 5: Update web extension session parsing**
 
 In `apps/web/lib/anidachi-auth/extension-session.ts`, replace old-plan validation with canonical normalization:
 
@@ -963,7 +963,7 @@ const plan = normalizePlanCode(payload.plan);
 
 Expected: old extension tokens still refresh into canonical user data.
 
-- [ ] **Step 6: Update extension auth token normalization**
+- [x] **Step 6: Update extension auth token normalization**
 
 In `apps/extension/src/auth-tokens.ts`, use canonical output with legacy input tolerance:
 
@@ -987,7 +987,7 @@ if (!plan) return null;
 
 Return `plan`.
 
-- [ ] **Step 7: Update extension watch-library fallback**
+- [x] **Step 7: Update extension watch-library fallback**
 
 In `apps/extension/src/watch-library-client.ts`, replace fallback limits:
 
@@ -1001,7 +1001,7 @@ limits: {
 },
 ```
 
-- [ ] **Step 8: Update API, extension, protocol, and harness tests**
+- [x] **Step 8: Update API, extension, protocol, and harness tests**
 
 Replace old plan literals in tests and harness with:
 
@@ -1023,7 +1023,7 @@ Expected parse result in the decoded capabilities:
 hostPlanCode: "pro"
 ```
 
-- [ ] **Step 9: Run cross-plane checks**
+- [x] **Step 9: Run cross-plane checks**
 
 Run:
 
@@ -1038,7 +1038,7 @@ pnpm harness:rooms
 
 Expected: PASS.
 
-- [ ] **Step 10: Commit Task 4**
+- [x] **Step 10: Commit Task 4**
 
 Run:
 
@@ -1060,7 +1060,7 @@ git commit -m "refactor: canonicalize room and extension plan contracts"
 - Modify: `apps/web/app/account/watch-library/watch-library-client.tsx`
 - Modify: `apps/web/app/kreatli-email-crm/crm-client.tsx`
 
-- [ ] **Step 1: Replace public tier ids in survey/domain types**
+- [x] **Step 1: Replace public tier ids in survey/domain types**
 
 In `apps/web/lib/home-survey.ts`, change:
 
@@ -1084,7 +1084,7 @@ if (tier === "pro") return "Unlock Pro";
 return "Unlock Plus";
 ```
 
-- [ ] **Step 2: Update pricing card labels and click handlers**
+- [x] **Step 2: Update pricing card labels and click handlers**
 
 In `apps/web/components/pricing.tsx`, replace visible and functional names:
 
@@ -1104,7 +1104,7 @@ handleSubscribe("plus")
 handleSubscribe("pro")
 ```
 
-- [ ] **Step 3: Update nav/account plan labels**
+- [x] **Step 3: Update nav/account plan labels**
 
 In `apps/web/components/nav-bar-client.tsx`, use:
 
@@ -1118,7 +1118,7 @@ const PLAN_LABELS = {
 
 In account layouts/watch-library client, use the same label map.
 
-- [ ] **Step 4: Update survey modal**
+- [x] **Step 4: Update survey modal**
 
 In `apps/web/components/plan-survey/plan-survey-modal.tsx`, replace:
 
@@ -1137,7 +1137,7 @@ recommendedTier === "pro"
 recommendedTier === "plus"
 ```
 
-- [ ] **Step 5: Update CRM and JSON-LD**
+- [x] **Step 5: Update CRM and JSON-LD**
 
 In `apps/web/lib/kreatli-crm/survey-lead-shared.ts`, change plan labels:
 
@@ -1158,7 +1158,7 @@ In `apps/web/app/kreatli-email-crm/crm-client.tsx`, replace:
 const isHostTier = planLabel === "Pro";
 ```
 
-- [ ] **Step 6: Run UI naming scan**
+- [x] **Step 6: Run UI naming scan**
 
 Run:
 
@@ -1168,7 +1168,7 @@ rg -n "Crunchyroll Subscriber|Anime Junkie|crunchyroll_subscriber|anime_junkie|N
 
 Expected: no matches outside bridge helpers/tests that intentionally accept legacy input.
 
-- [ ] **Step 7: Run web checks**
+- [x] **Step 7: Run web checks**
 
 Run:
 
@@ -1179,7 +1179,7 @@ pnpm --filter @anidachi/web check
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit Task 5**
+- [x] **Step 8: Commit Task 5**
 
 Run:
 
@@ -1200,7 +1200,7 @@ git commit -m "fix(web): rename subscription surfaces to Free Plus Pro"
 - Modify: `docs/environment-and-secrets-matrix.md`
 - Modify: `docs/current-development-state.md`
 
-- [ ] **Step 1: Add unified Stripe price script**
+- [x] **Step 1: Add unified Stripe price script**
 
 Create `apps/web/scripts/stripe/ensure-subscription-prices.ts`:
 
@@ -1301,7 +1301,7 @@ main().catch((error) => {
 });
 ```
 
-- [ ] **Step 2: Update webhook registration script**
+- [x] **Step 2: Update webhook registration script**
 
 In `apps/web/scripts/stripe/register-subscription-webhook.ts`, use suffixed keys only:
 
@@ -1320,7 +1320,7 @@ console.log(`STRIPE_WEBHOOK_SECRET_${mode === "live" ? "LIVE" : "TEST"}=${create
 
 Do not print or suggest unsuffixed `STRIPE_WEBHOOK_SECRET`.
 
-- [ ] **Step 3: Update package scripts**
+- [x] **Step 3: Update package scripts**
 
 In `apps/web/package.json`, replace old Stripe script names:
 
@@ -1332,7 +1332,7 @@ In `apps/web/package.json`, replace old Stripe script names:
 }
 ```
 
-- [ ] **Step 4: Delete old price scripts**
+- [x] **Step 4: Delete old price scripts**
 
 Delete:
 
@@ -1341,7 +1341,7 @@ apps/web/scripts/stripe/create-crunchyroll-subscriber-price.ts
 apps/web/scripts/stripe/create-anime-junkie-price.ts
 ```
 
-- [ ] **Step 5: Update `.env.example`**
+- [x] **Step 5: Update `.env.example`**
 
 In `apps/web/.env.example`, replace old Stripe env section with:
 
@@ -1367,7 +1367,7 @@ NEXT_PUBLIC_STRIPE_PRICE_ID_PLUS=
 NEXT_PUBLIC_STRIPE_PRICE_ID_PRO=
 ```
 
-- [ ] **Step 6: Update docs**
+- [x] **Step 6: Update docs**
 
 In `docs/environment-and-secrets-matrix.md`, replace old Stripe rows with:
 
@@ -1389,7 +1389,7 @@ values are accepted only during the bridge window and must not be emitted by new
 runtime code.
 ```
 
-- [ ] **Step 7: Run script/doc scan**
+- [x] **Step 7: Run script/doc scan**
 
 Run:
 
@@ -1399,7 +1399,7 @@ rg -n "Crunchyroll Subscriber|Anime Junkie|crunchyroll_subscriber|anime_junkie|S
 
 Expected: no matches except explanatory legacy text in `docs/current-development-state.md` during bridge window.
 
-- [ ] **Step 8: Run web checks**
+- [x] **Step 8: Run web checks**
 
 Run:
 
@@ -1410,7 +1410,7 @@ pnpm --filter @anidachi/web check
 
 Expected: PASS.
 
-- [ ] **Step 9: Commit Task 6**
+- [x] **Step 9: Commit Task 6**
 
 Run:
 
@@ -1569,7 +1569,7 @@ git commit -m "docs: record billing data isolation state"
 - Modify: `docs/current-development-state.md`
 - Modify: `docs/environment-and-secrets-matrix.md`
 
-- [ ] **Step 1: Update active social/subscription plan**
+- [x] **Step 1: Update active social/subscription plan**
 
 In `docs/superpowers/plans/2026-06-20-social-rooms-subscriptions-execution-plan.md`, replace the current internal code section:
 
@@ -1596,7 +1596,7 @@ Stripe metadata, room tokens, and extension auth payloads must use `free`,
 `plus`, and `pro`.
 ```
 
-- [ ] **Step 2: Run active-source legacy scan**
+- [x] **Step 2: Run active-source legacy scan**
 
 Run:
 
@@ -1609,6 +1609,15 @@ Expected allowed matches at this point:
 ```txt
 apps/web/lib/anidachi-auth/plan-codes.ts
 apps/web/lib/anidachi-auth/plan-codes.test.ts
+apps/web/lib/anidachi-auth/jwt.test.ts
+apps/web/lib/anidachi-auth/plan-entitlements.test.ts
+apps/web/lib/anidachi-auth/stripe-plans.test.ts
+apps/web/lib/room-quota.test.ts
+packages/protocol/src/types.ts
+packages/protocol/test/protocol.test.ts
+apps/api/test/auth.test.ts
+apps/extension/src/auth-tokens.ts
+apps/extension/test/auth-client.test.ts
 apps/web/supabase/migrations/20260525_anidachi_auth.sql
 apps/web/supabase/migrations/20260620_billing_entitlements.sql
 apps/web/supabase/migrations/20260623_room_capabilities.sql
@@ -1616,9 +1625,12 @@ apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql
 docs/superpowers/plans/2026-06-20-social-rooms-subscriptions-execution-plan.md bridge note only
 ```
 
-Historical applied migrations are allowed to retain old names. New runtime code is not.
+Historical applied migrations are allowed to retain old names. Runtime
+compatibility boundaries may accept old names during the bridge window, but new
+runtime emissions, database writes, Stripe metadata, room tokens, and extension
+payloads must use `free`, `plus`, and `pro`.
 
-- [ ] **Step 3: Run full verification**
+- [x] **Step 3: Run full verification**
 
 Run:
 
@@ -1637,7 +1649,7 @@ pnpm harness:rooms
 
 Expected: PASS.
 
-- [ ] **Step 4: Build and validate staging extension**
+- [x] **Step 4: Build and validate staging extension**
 
 Run:
 
