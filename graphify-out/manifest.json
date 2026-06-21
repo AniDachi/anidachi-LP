@@ -120,7 +120,7 @@
     "semantic_hash": ""
   },
   "apps/extension/src/auth-client.ts": {
-    "mtime": 1781996191.4835372,
+    "mtime": 1781996867.8081782,
     "ast_hash": "b4d385b9d46a7a9435cafc4dc1529772",
     "semantic_hash": ""
   },
@@ -215,7 +215,7 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1781996215.4098103,
+    "mtime": 1781996867.808755,
     "ast_hash": "b12633ac2fbcb037acefdb7ac81163bc",
     "semantic_hash": ""
   },
@@ -290,7 +290,7 @@
     "semantic_hash": ""
   },
   "apps/extension/test/auth-client.test.ts": {
-    "mtime": 1781996292.992891,
+    "mtime": 1781996867.8090014,
     "ast_hash": "7fd94bf5411bb62ccef238d4262e0d0a",
     "semantic_hash": ""
   },
@@ -440,7 +440,7 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/auth/refresh/route.ts": {
-    "mtime": 1781996165.7994514,
+    "mtime": 1781996867.8091946,
     "ast_hash": "2088795030687ccd385fbe35d14869af",
     "semantic_hash": ""
   },
@@ -495,7 +495,7 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/extension/auth/refresh/route.ts": {
-    "mtime": 1781996191.4823368,
+    "mtime": 1781996867.809369,
     "ast_hash": "c97b9c96ab526e48f06c66413468daf4",
     "semantic_hash": ""
   },
@@ -1285,7 +1285,7 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/db.ts": {
-    "mtime": 1781996292.991155,
+    "mtime": 1781996867.809789,
     "ast_hash": "12706e951dbada6e09635ae9d3bf4e0d",
     "semantic_hash": ""
   },
@@ -1295,7 +1295,7 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/extension-session.ts": {
-    "mtime": 1781996292.9925013,
+    "mtime": 1781996867.809967,
     "ast_hash": "93bca52aee2d7e93aac5c81f138a1672",
     "semantic_hash": ""
   },
@@ -1305,7 +1305,7 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/jwt.ts": {
-    "mtime": 1781996165.7976568,
+    "mtime": 1781996867.81013,
     "ast_hash": "03287a6bea681473ab582908a108d17a",
     "semantic_hash": ""
   },
@@ -1320,7 +1320,7 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/return-to.ts": {
-    "mtime": 1781996165.7987254,
+    "mtime": 1781996867.8104107,
     "ast_hash": "c0686155a1f9e5bdd9b424e060408f1b",
     "semantic_hash": ""
   },
@@ -1330,18 +1330,18 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/session.ts": {
-    "mtime": 1781996165.797325,
+    "mtime": 1781996867.8108327,
     "ast_hash": "8194628261a390f8c70d8b5cad950275",
     "semantic_hash": ""
   },
   "apps/web/lib/anime-data.ts": {
-    "mtime": 1780761017.5834708,
-    "ast_hash": "6d04ba485b131714b67630443ba20fe9",
+    "mtime": 1782059304.0112195,
+    "ast_hash": "48502945effa5713ba526e8fa97780aa",
     "semantic_hash": ""
   },
   "apps/web/lib/anime-jikan-cache.json": {
-    "mtime": 1781712338.0891674,
-    "ast_hash": "124aa07f73d67b6a53f543ac2e207c36",
+    "mtime": 1782059304.0114727,
+    "ast_hash": "db80b60062dde0c7cc2b4496c2a31ec0",
     "semantic_hash": ""
   },
   "apps/web/lib/anime-jikan-cache.ts": {
@@ -1375,8 +1375,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/genre-hub-links.ts": {
-    "mtime": 1780930896.537763,
-    "ast_hash": "34b0f8a55b98bb6cd998dc796020559c",
+    "mtime": 1782059304.0117571,
+    "ast_hash": "0ee921933e739ac523c74fe2e64ec721",
     "semantic_hash": ""
   },
   "apps/web/lib/google-ads/client.ts": {
@@ -1395,8 +1395,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/guide-links.ts": {
-    "mtime": 1780930896.5381703,
-    "ast_hash": "9265c7a5239537d56f703673fece3641",
+    "mtime": 1782059304.0120218,
+    "ast_hash": "e183b47455696448a40cf60cd6e442d9",
     "semantic_hash": ""
   },
   "apps/web/lib/home-faq.ts": {
@@ -1525,8 +1525,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/sitemap-discovery.ts": {
-    "mtime": 1780930896.5382764,
-    "ast_hash": "4d7e56936f8113994159902e04191109",
+    "mtime": 1782059304.0121143,
+    "ast_hash": "3c0f06e1017692780504140e7778da23",
     "semantic_hash": ""
   },
   "apps/web/lib/social-account-limits.ts": {
@@ -1535,12 +1535,12 @@
     "semantic_hash": ""
   },
   "apps/web/lib/staging-access.test.ts": {
-    "mtime": 1781996249.4229228,
+    "mtime": 1781996867.8112977,
     "ast_hash": "1dae8a46598e429f8fe586140a40f1c6",
     "semantic_hash": ""
   },
   "apps/web/lib/staging-access.ts": {
-    "mtime": 1781996165.8007107,
+    "mtime": 1781996867.8114655,
     "ast_hash": "a85dd8b74b5004e3e053d8130946c9a5",
     "semantic_hash": ""
   },
@@ -1585,7 +1585,7 @@
     "semantic_hash": ""
   },
   "apps/web/middleware.ts": {
-    "mtime": 1781996165.800079,
+    "mtime": 1781996867.8116505,
     "ast_hash": "588eeca7de9aace5fee0eab078c00b57",
     "semantic_hash": ""
   },
@@ -1950,7 +1950,7 @@
     "semantic_hash": ""
   },
   "docs/site-extension-integration-notes.md": {
-    "mtime": 1781996352.071837,
+    "mtime": 1781996867.8118703,
     "ast_hash": "48ce4601efe8405dea228148cbe4f06f",
     "semantic_hash": ""
   },
@@ -2020,22 +2020,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1781996388.205461,
+    "mtime": 1781996881.176508,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1781996388.1725705,
+    "mtime": 1781996881.1424236,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1781996388.1783178,
+    "mtime": 1781996881.1485813,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1781996388.1810286,
+    "mtime": 1781996881.1515574,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },
@@ -2135,7 +2135,7 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-20-social-rooms-subscriptions-execution-plan.md": {
-    "mtime": 1781996445.9304187,
+    "mtime": 1781996867.8122275,
     "ast_hash": "6b1e4ef215b7593c1ed5f841718e071d",
     "semantic_hash": ""
   },
@@ -2435,23 +2435,73 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/cookies.ts": {
-    "mtime": 1781996165.796918,
+    "mtime": 1781996867.8095028,
     "ast_hash": "1828197cc2e734653c06fe7fde317041",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/return-to.test.ts": {
-    "mtime": 1781996249.4214442,
+    "mtime": 1781996867.8102577,
     "ast_hash": "539d84a84081f187d4f2fb936a4f5f12",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/session-refresh.test.ts": {
-    "mtime": 1781996249.4219213,
+    "mtime": 1781996867.8105319,
     "ast_hash": "ed6e829ffd92c0dae603d3bb5daf86d2",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/session-refresh.ts": {
-    "mtime": 1781996165.7989614,
+    "mtime": 1781996867.810665,
     "ast_hash": "c99700bb84d75051f958d3d210015ce1",
+    "semantic_hash": ""
+  },
+  "apps/web/app/compare/anidachi-vs-amazon-watch-party/page.tsx": {
+    "mtime": 1782059304.009613,
+    "ast_hash": "bcec40631bb986b52942bec2d2fbe52c",
+    "semantic_hash": ""
+  },
+  "apps/web/app/glossary/anime-marathon/page.tsx": {
+    "mtime": 1782059304.009747,
+    "ast_hash": "c8a1d48c36a13fc7eb1c5a8e1044a38a",
+    "semantic_hash": ""
+  },
+  "apps/web/app/glossary/shonen-anime/page.tsx": {
+    "mtime": 1782059304.0098844,
+    "ast_hash": "5fefbec4afaac77c8c67de9e6a409184",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/best-anime-to-watch-on-crunchyroll-with-friends/page.tsx": {
+    "mtime": 1782059304.0100052,
+    "ast_hash": "144b4800993c2bc39223d2b31fac10d1",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/best-romance-anime-to-watch-with-friends/page.tsx": {
+    "mtime": 1782059304.0101223,
+    "ast_hash": "ad79267a25d9f46228740b2883b7c7b9",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/does-crunchyroll-have-watch-party/page.tsx": {
+    "mtime": 1782059304.0102582,
+    "ast_hash": "e089977c2ee6e54a82016ee3239a7c1d",
+    "semantic_hash": ""
+  },
+  "apps/web/app/guides/how-to-watch-anime-for-free-with-friends/page.tsx": {
+    "mtime": 1782059304.010397,
+    "ast_hash": "0c1b27980e3375272e64fbb180ea0d63",
+    "semantic_hash": ""
+  },
+  "apps/web/app/watch-sci-fi-anime-with-friends/page.tsx": {
+    "mtime": 1782059304.0105333,
+    "ast_hash": "c6ca606a8749eb874401325b6d0986c1",
+    "semantic_hash": ""
+  },
+  "apps/web/app/watch-shoujo-anime-with-friends/page.tsx": {
+    "mtime": 1782059304.01065,
+    "ast_hash": "e0f40049357ea82e96e2e90559c14f09",
+    "semantic_hash": ""
+  },
+  "apps/web/app/watch-supernatural-anime-with-friends/page.tsx": {
+    "mtime": 1782059304.0107756,
+    "ast_hash": "aa6a8a15c2834df28c4e279bbf391a0e",
     "semantic_hash": ""
   }
 }

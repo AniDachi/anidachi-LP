@@ -7,6 +7,7 @@ import {
   isPlanCode,
   maxPlanCode,
 } from "./plan-entitlements";
+import { stripeEnvForMode } from "./stripe-env";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set([
   "active",
@@ -19,9 +20,12 @@ export type SubscriptionPlanSnapshot = {
 };
 
 export function stripePriceIdForPlanCode(planCode: PaidPlanCode): string | null {
+  // Mode-aware: on staging/preview `stripeEnvForMode` resolves the *_TEST price,
+  // on production the *_LIVE price, with the unsuffixed var as transition
+  // fallback. Legacy CRUNCHYROLL_SUBSCRIBER/ANIME_JUNKIE vars remain a fallback.
   if (planCode === "nakama") {
     return (
-      process.env.STRIPE_PRICE_ID_PLUS ??
+      stripeEnvForMode("STRIPE_PRICE_ID_PLUS") ??
       process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PLUS ??
       process.env.STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER ??
       process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER ??
@@ -30,7 +34,7 @@ export function stripePriceIdForPlanCode(planCode: PaidPlanCode): string | null 
   }
 
   return (
-    process.env.STRIPE_PRICE_ID_PRO ??
+    stripeEnvForMode("STRIPE_PRICE_ID_PRO") ??
     process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO ??
     process.env.STRIPE_PRICE_ID_ANIME_JUNKIE ??
     process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANIME_JUNKIE ??
@@ -40,7 +44,11 @@ export function stripePriceIdForPlanCode(planCode: PaidPlanCode): string | null 
 
 export function stripePlanCodeForPriceId(priceId: string | null | undefined): PaidPlanCode | null {
   if (!priceId) return null;
+  // Match against every known plus/pro price id (both modes + legacy) so the
+  // webhook resolves the plan regardless of which env mode produced the event.
   const plusIds = [
+    process.env.STRIPE_PRICE_ID_PLUS_TEST,
+    process.env.STRIPE_PRICE_ID_PLUS_LIVE,
     process.env.STRIPE_PRICE_ID_PLUS,
     process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PLUS,
     process.env.STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER,
@@ -49,6 +57,8 @@ export function stripePlanCodeForPriceId(priceId: string | null | undefined): Pa
   if (plusIds.includes(priceId)) return "nakama";
 
   const proIds = [
+    process.env.STRIPE_PRICE_ID_PRO_TEST,
+    process.env.STRIPE_PRICE_ID_PRO_LIVE,
     process.env.STRIPE_PRICE_ID_PRO,
     process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO,
     process.env.STRIPE_PRICE_ID_ANIME_JUNKIE,

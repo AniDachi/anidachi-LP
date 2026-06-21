@@ -1,16 +1,16 @@
 # Graph Report - anidachi-LP-monorepo  (2026-06-21)
 
 ## Corpus Check
-- 467 files · ~364,140 words
+- 477 files · ~380,016 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4143 nodes · 8485 edges · 242 communities (216 shown, 26 thin omitted)
+- 4198 nodes · 8611 edges · 245 communities (220 shown, 25 thin omitted)
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 343 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `398d3e43`
+- Built from commit: `c64d925f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -253,17 +253,20 @@
 - [[_COMMUNITY_Community 235|Community 235]]
 - [[_COMMUNITY_Community 236|Community 236]]
 - [[_COMMUNITY_Community 237|Community 237]]
+- [[_COMMUNITY_Community 239|Community 239]]
+- [[_COMMUNITY_Community 240|Community 240]]
+- [[_COMMUNITY_Community 241|Community 241]]
 - [[_COMMUNITY_Community 243|Community 243]]
 - [[_COMMUNITY_Community 244|Community 244]]
 - [[_COMMUNITY_Community 245|Community 245]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `db()` - 87 edges
-2. `logDebug()` - 69 edges
-3. `SeoPageLayout()` - 69 edges
-4. `TocHeading` - 68 edges
-5. `P2PMediaController` - 53 edges
-6. `getResolvedSiteOrigin()` - 51 edges
+2. `SeoPageLayout()` - 79 edges
+3. `TocHeading` - 78 edges
+4. `logDebug()` - 69 edges
+5. `getResolvedSiteOrigin()` - 54 edges
+6. `P2PMediaController` - 53 edges
 7. `getApiSession()` - 48 edges
 8. `getSession()` - 42 edges
 9. `socialErrorResponse()` - 40 edges
@@ -282,10 +285,10 @@
   AGENTS.md → README.md
 
 ## Import Cycles
-- 1-file cycle: `apps/web/app/api/auth/logout/route.ts -> apps/web/app/api/auth/logout/route.ts`
 - 1-file cycle: `apps/api/src/index.ts -> apps/api/src/index.ts`
 - 1-file cycle: `apps/demo/src/main.ts -> apps/demo/src/main.ts`
 - 1-file cycle: `apps/extension/vitest.config.ts -> apps/extension/vitest.config.ts`
+- 1-file cycle: `apps/web/app/api/auth/logout/route.ts -> apps/web/app/api/auth/logout/route.ts`
 - 1-file cycle: `apps/web/app/api/google-ads/oauth/callback/route.ts -> apps/web/app/api/google-ads/oauth/callback/route.ts`
 - 1-file cycle: `apps/web/app/api/kreatli-crm/gmail/callback/route.ts -> apps/web/app/api/kreatli-crm/gmail/callback/route.ts`
 - 1-file cycle: `apps/web/app/kreatli-email-crm/actions.ts -> apps/web/app/kreatli-email-crm/actions.ts`
@@ -299,19 +302,19 @@
 - 1-file cycle: `tests/e2e/p2p-media-harness.mjs -> tests/e2e/p2p-media-harness.mjs`
 - 2-file cycle: `apps/web/app/api/kreatli-crm/gmail/callback/route.ts -> apps/web/lib/kreatli-crm/gmail.ts -> apps/web/app/api/kreatli-crm/gmail/callback/route.ts`
 
-## Communities (242 total, 26 thin omitted)
+## Communities (245 total, 25 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.04
-Nodes (68): listRoomMembers(), roomCapabilitiesForPlan(), ProfileRow, PublicProfile, archiveOldestTrackedTitlesOverLimit(), buildWatchLibraryItems(), CHECKPOINT_KINDS, clampProgress() (+60 more)
+Cohesion: 0.06
+Nodes (53): listRoomMembers(), ProfileRow, PublicProfile, archiveOldestTrackedTitlesOverLimit(), buildWatchLibraryItems(), CHECKPOINT_KINDS, clampProgress(), clampSeconds() (+45 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.03
-Nodes (44): COMPOSER_EMOJI_PACK, HOLD_FIRE_SUPER_REACTION_EXPERIMENT, MediaTransportExperiment, normalizeExperimentFlag(), normalizeMediaTransportExperiment(), CameraBubble(), CatchUpState, ChatDisplayMode (+36 more)
+Cohesion: 0.04
+Nodes (48): HOLD_FIRE_SUPER_REACTION_EXPERIMENT, MediaTransportExperiment, normalizeExperimentFlag(), normalizeMediaTransportExperiment(), getGhostCamGapPx(), getGhostCamSizeLabel(), getGhostCamSizePx(), GHOST_CAM_SIZE_STEPS (+40 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.07
-Nodes (57): beginStripeEventProcessing(), getBillingCustomerByUserId(), getUserIdByStripeCustomerId(), listSubscriptionsForUser(), markStripeEventFailed(), markStripeEventProcessed(), updateUserPlan(), upsertBillingCustomer() (+49 more)
+Cohesion: 0.11
+Nodes (32): checkoutInputToPaidPlanCode(), getPlanEntitlements(), isPaidPlanCode(), isPlanCode(), isRoomCapabilities(), LegacyCheckoutTier, legacyTierToPlanCode(), maxPlanCode() (+24 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.08
@@ -322,20 +325,20 @@ Cohesion: 0.12
 Nodes (35): ApiSession, getApiSession(), cleanDisplayName(), cleanGroupName(), cleanInviteMessage(), normalizeHandle(), readJsonBody(), socialErrorResponse() (+27 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.16
-Nodes (19): FooterPricingCta(), Hero(), NavBarClient(), navLinks, NavUser, PLAN_LABELS, UserMenu(), NavPricingButton() (+11 more)
+Cohesion: 0.11
+Nodes (25): FooterPricingCta(), Hero(), HowItWorks(), howToSteps, steps, FAQPageJsonLd(), MainAppFeatures(), NavBarClient() (+17 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.05
-Nodes (53): SeoPageLayout(), components seo page layout tocheading, animeList, getAnimeByGenre(), faq, metadata, tocHeadings, faq (+45 more)
+Cohesion: 0.03
+Nodes (77): faq, metadata, tocHeadings, faq, metadata, tocHeadings, faq, metadata (+69 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.04
-Nodes (47): AI_TRAINING_BOT_AGENTS, robots(), ArticleJsonLd(), BreadcrumbJsonLd(), FAQPageJsonLd(), ItemListJsonLd(), JsonLdProps, MediaJsonLd() (+39 more)
+Cohesion: 0.03
+Nodes (56): faq, headings, metadata, SITE_URL, faq, headings, metadata, SITE_URL (+48 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.05
-Nodes (43): faq, headings, itemList, metadata, SITE_URL, faq, headings, itemList (+35 more)
+Cohesion: 0.04
+Nodes (56): faq, headings, itemList, metadata, SITE_URL, faq, headings, itemList (+48 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.15
@@ -343,51 +346,51 @@ Nodes (16): createStripeClient(), getStripeSecretKey(), POST(), sanitizeDiscordH
 
 ### Community 10 - "Community 10"
 Cohesion: 0.06
-Nodes (20): duckVideoVolume(), clampMediaTime(), clampVolumePercent(), createMessageId(), CrunchyrollVideoAdapter, findBestVideoAdapter(), findCrunchyrollFullscreenButton(), findCrunchyrollPlayerContainer() (+12 more)
+Nodes (18): duckVideoVolume(), clampMediaTime(), clampVolumePercent(), findBestVideoAdapter(), findCrunchyrollFullscreenButton(), findCrunchyrollPlayerContainer(), findPlayerContainer(), findVideosDeep() (+10 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.16
-Nodes (29): getOpenHostSegmentRooms(), getUsageSecondsForDay(), incrementUsageSeconds(), getPlanEntitlements(), getHostQuotaView(), quotaExhaustedResponseBody(), quotaSummaryForResponse(), roomSegment() (+21 more)
+Cohesion: 0.13
+Nodes (41): addRoomMember(), getOpenHostSegmentRooms(), getRoomById(), getUsageSecondsForDay(), incrementUsageSeconds(), isRoomMember(), roomCapabilitiesFromRoom(), updateRoom() (+33 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.10
-Nodes (38): cmdAddContact(), cmdExportCsv(), cmdImportCsv(), cmdImportPaste(), cmdLogTouch(), cmdQueue(), cmdSet(), cmdShow() (+30 more)
+Cohesion: 0.14
+Nodes (29): cmdAddContact(), cmdImportCsv(), cmdImportPaste(), cmdLogTouch(), cmdQueue(), cmdRender(), cmdSet(), cmdShow() (+21 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.18
 Nodes (7): src crunchyroll control crunchyroll control result source, src crunchyroll control crunchyroll control source, CrunchyrollControlAction, CrunchyrollControlRequest, CrunchyrollControlResult, CrunchyrollTimelineSnapshot, CrunchyrollVideoSnapshot
 
 ### Community 14 - "Community 14"
-Cohesion: 0.11
-Nodes (35): AccountLayout(), metadata, PLAN_LABELS, ACCESS_TOKEN_COOKIE_MAX_AGE_SECONDS, REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS, addRoomMember(), getRoomById(), getRoomMemberCount() (+27 more)
+Cohesion: 0.09
+Nodes (29): AccountLayout(), metadata, PLAN_LABELS, ACCESS_TOKEN_COOKIE_MAX_AGE_SECONDS, REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS, getRoomMemberCount(), getUserById(), AccessTokenPayload (+21 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.05
-Nodes (47): client, rootElement, Avatar(), avatarGradient(), buildLibraryEpisodeIndex(), clampProgress(), EpisodeRow(), formatInviteExpiry() (+39 more)
+Nodes (45): client, rootElement, Avatar(), avatarGradient(), buildLibraryEpisodeIndex(), clampProgress(), EpisodeRow(), formatInviteExpiry() (+37 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.18
-Nodes (20): AccountResult, publishToIgAccount(), ContainerStatus, createCarouselChildImage(), createCarouselChildVideo(), createCarouselParent(), createReelContainer(), ensureAllCredentials() (+12 more)
+Cohesion: 0.20
+Nodes (19): publishToIgAccount(), ContainerStatus, createCarouselChildImage(), createCarouselChildVideo(), createCarouselParent(), createReelContainer(), ensureAllCredentials(), ensureCredentials() (+11 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.07
-Nodes (51): cache, cmdRender(), buildImportPreview(), ImportPreviewLine, mergeSegments(), readContacts(), formatSurveyValue(), isHighIntentTiming() (+43 more)
+Cohesion: 0.09
+Nodes (29): formatSurveyValue(), isHighIntentTiming(), isSurveyLead(), ParsedSurveyTags, parseSurveyTags(), recommendedPlanLabelForTags(), SURVEY_FIELD_LABELS, surveyLeadsToDelimited() (+21 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.05
-Nodes (32): FAQItem, HowToJsonLd(), SeoPageLayoutProps, TocHeading, faq, howToSteps, metadata, tocHeadings (+24 more)
+Nodes (29): HowToJsonLd(), faq, howToSteps, metadata, tocHeadings, faq, howToSteps, metadata (+21 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.13
-Nodes (6): logDebug(), createP2PRtcConfiguration(), P2PMediaController, stopStream(), summarizeIceServers(), summarizeTransceivers()
+Nodes (6): configureSender(), createVideoElement(), P2PMediaController, reconcilePeerAction(), stopStream(), summarizeTransceivers()
 
 ### Community 20 - "Community 20"
 Cohesion: 0.06
 Nodes (35): Checkout Events, CTA Click Events, GA4 Conversion Funnel, CTA Surface Map, Page Template IDs, Pricing Checkout Surface, 100-page build order (summary), AniDachi Programmatic SEO — Content Engine Guidelines (+27 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.09
-Nodes (36): BillingCustomerRow, createRoom(), deleteAllRefreshTokensForUser(), deleteRefreshToken(), extendRefreshToken(), generateRefreshToken(), getActiveRoomByClientRequestId(), getSupabaseServiceClient() (+28 more)
+Cohesion: 0.12
+Nodes (27): deleteRefreshToken(), extendRefreshToken(), generateRefreshToken(), hashToken(), storeRefreshToken(), validateRefreshToken(), consumeExtensionAuthCode(), createExtensionAuthCode() (+19 more)
 
 ### Community 22 - "Community 22"
 Cohesion: 0.05
@@ -395,43 +398,43 @@ Nodes (41): Additional batch (10 more watch pages — 2026-05-12), Additional ba
 
 ### Community 23 - "Community 23"
 Cohesion: 0.07
-Nodes (35): mountOverlay(), togglePlayerFullscreen(), src constants anidachi build id, src constants api ws base, cleanClassName(), cleanText(), clearDebugLog(), compactDebugData() (+27 more)
+Nodes (38): mountOverlay(), togglePlayerFullscreen(), src constants anidachi build id, cleanClassName(), cleanText(), clearDebugLog(), compactDebugData(), compactInputData() (+30 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.10
 Nodes (21): Project Graphify Rules, Graph Build Cluster Outputs, Graphify Corpus Detection, Existing Graph Fast Path, Graphify Full Pipeline, Structural AST Extraction, README Graphify Workflow, Graphify File Watcher (+13 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.11
-Nodes (35): CurrentResourcePanel(), CurrentResourcePanelProps, getEntryProgress(), mergeWatchLibraryIntoStore(), averageProgress(), buildProviderFolders(), clampTime(), clearLegacyWatchProgressIfNeeded() (+27 more)
+Cohesion: 0.10
+Nodes (37): CurrentResourcePanel(), CurrentResourcePanelProps, getEntryProgress(), mergeWatchLibraryIntoStore(), averageProgress(), buildProviderFolders(), clampTime(), clearLegacyWatchProgressIfNeeded() (+29 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.17
-Nodes (30): POST(), POST(), GET(), POST(), prepareTikTokImages(), GET(), InstagramCredentials, AccountFilter (+22 more)
+Cohesion: 0.20
+Nodes (24): POST(), POST(), POST(), InstagramCredentials, AccountFilter, filterIgCredentials(), filterTtCredentials(), formDataStringList() (+16 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.13
-Nodes (20): image, lucide-react, ConnectClient(), ERROR_MESSAGES, IgAccount, IgStatus, TtAccount, TtStatus (+12 more)
+Cohesion: 0.22
+Nodes (14): ChromeExtensionFeatures(), UserMenu(), Pricing(), TableOfContents(), cn(), lucide-react, metadata, Card() (+6 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.09
-Nodes (30): BitmovinLikePlayer, BitmovinNamespace, BitmovinPlayerConstructor, BitmovinPlayerMethod, clampMediaTime(), CrunchyrollKatamariPlayer, dispatchTimelinePointerGesture(), findCapturedBitmovinPlayer() (+22 more)
+Nodes (32): BitmovinLikePlayer, BitmovinNamespace, BitmovinPlayerConstructor, BitmovinPlayerMethod, clampMediaTime(), CrunchyrollKatamariPlayer, dispatchTimelinePointerGesture(), findAncestor() (+24 more)
 
 ### Community 29 - "Community 29"
 Cohesion: 0.04
-Nodes (56): AnimeWatchPartyIdeasPage(), faq, metadata, tocHeadings, AnimeWatchPartyToolkitPage(), faq, metadata, SITE_URL (+48 more)
+Nodes (65): AniDachiVsRavePage(), faq, headings, metadata, SITE_URL, AniDachiVsTelepartyPage(), faq, headings (+57 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.08
-Nodes (25): classifyPeerHealth(), configureSender(), countMatches(), createVideoElement(), DEFAULT_STUN_SERVERS, findMediaTransceiver(), getCandidateProtocol(), getCandidateType() (+17 more)
+Cohesion: 0.09
+Nodes (18): classifyPeerHealth(), DEFAULT_STUN_SERVERS, findMediaTransceiver(), getP2PAudioTransceiverDirection(), IceCandidateStatsSnapshot, isPoliteP2PPeer(), mediaElementUsesTrack(), OPEN_RELAY_TURN_SERVERS (+10 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.07
-Nodes (25): faq, headings, metadata, SITE_URL, AniDachiVsRavePage(), faq, headings, metadata (+17 more)
+Cohesion: 0.08
+Nodes (20): faq, headings, metadata, SITE_URL, faq, headings, metadata, SITE_URL (+12 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.16
-Nodes (28): MovieJsonLd(), TvSeriesJsonLd(), isMovieEntry(), getMalIdForSlug(), fetchJikanForWatchPage, formatEpisodesForUi(), formatMembersLine(), formatScoreLine() (+20 more)
+Cohesion: 0.07
+Nodes (57): AnimeEntry, animeList, isMovieEntry(), AnimeJikanCacheFile, cache, CachedJikanEntry, getCachedJikanEntry(), jikanAnimeFromCache() (+49 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.10
@@ -446,44 +449,44 @@ Cohesion: 0.07
 Nodes (29): scripts, build, build:extension:icons, build:extension:public, build:extension:staging, build:extension:staging:broad, check, dev:api (+21 more)
 
 ### Community 36 - "Community 36"
-Cohesion: 0.17
-Nodes (25): assertRoomHttpResponse(), bridgeError(), buildRoomWebSocketUrl(), connectRoomHttpMessage(), connectWebsiteRoom(), connectWebsiteRoomFromApi(), CreatedRoom, createRoom() (+17 more)
+Cohesion: 0.13
+Nodes (21): src constants api ws base, assertRoomHttpResponse(), bridgeError(), buildRoomWebSocketUrl(), connectRoomHttpMessage(), connectWebsiteRoom(), createRoom(), createRoomConnectionId() (+13 more)
 
 ### Community 37 - "Community 37"
 Cohesion: 0.08
 Nodes (25): Commit Strategy, Current Status, Definition Of Done, Execution Order, Known Migration Risks And Mitigations, Main Repository Monorepo Migration Implementation Plan, Non-Negotiable Rules, Source And Build Output Policy (+17 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.13
-Nodes (15): metadata, metadata, DiscordCredentialsForm(), DiscordCredentialsFormProps, requireBlouAccess(), BlouLoginForm(), BlouLoginPage(), ManagerLayout() (+7 more)
+Cohesion: 0.11
+Nodes (17): AccountNav(), ITEMS, metadata, metadata, DiscordCredentialsForm(), DiscordCredentialsFormProps, requireBlouAccess(), BlouLoginForm() (+9 more)
 
 ### Community 39 - "Community 39"
-Cohesion: 0.13
-Nodes (15): geistMono, geistSans, metadata, shouldNoindex, AnalyticsEvents(), google, ensureReady(), initAmplitudeClient() (+7 more)
+Cohesion: 0.14
+Nodes (14): geistMono, geistSans, metadata, shouldNoindex, AnalyticsEvents(), google, ensureReady(), initAmplitudeClient() (+6 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.05
-Nodes (23): faq, headings, metadata, SITE_URL, faq, metadata, tocHeadings, faq (+15 more)
+Cohesion: 0.29
+Nodes (5): faq, headings, itemList, metadata, SITE_URL
 
 ### Community 41 - "Community 41"
 Cohesion: 0.08
-Nodes (28): amplitude unified, class variance authority, clsx, TableOfContents(), google auth library, cn(), radix ui react slot, react slot (+20 more)
+Nodes (26): amplitude unified, class variance authority, clsx, google auth library, googleapis, radix ui react slot, react slot, supabase supabase js (+18 more)
 
 ### Community 42 - "Community 42"
 Cohesion: 0.12
 Nodes (21): AcceptInviteResponse, api(), Avatar(), canRespond(), EMPTY_INVITES, formatDate(), InboxInviteRow(), initials() (+13 more)
 
 ### Community 43 - "Community 43"
-Cohesion: 0.12
-Nodes (19): AnimeEntry, AnimeJikanCacheFile, cache, CachedJikanEntry, getCachedJikanEntry(), jikanAnimeFromCache(), getSlugByMalIdMap(), fetchOptions (+11 more)
+Cohesion: 0.13
+Nodes (29): cache, cmdExportCsv(), buildImportPreview(), contactsToCsv(), detectDelimiter(), guessEmailColumn(), ImportMergeMode, ImportPreviewLine (+21 more)
 
 ### Community 44 - "Community 44"
 Cohesion: 0.18
 Nodes (23): assertExtensionLogoutRedirect(), AuthCommand, AuthMessage, AuthMessageResponse, buildExtensionConnectUrl(), buildExtensionLogoutUrl(), buildWebUrl(), createAuthMessage() (+15 more)
 
 ### Community 45 - "Community 45"
-Cohesion: 0.13
-Nodes (21): RoomApiError, assertWatchLibraryHttpResponse(), createRoomFromWatchSession(), createRoomFromWatchSessionHttpMessage(), isWatchLibraryHttpMessage(), listWatchLibrary(), listWatchLibraryHttpMessage(), reconcileWatchProgress() (+13 more)
+Cohesion: 0.12
+Nodes (23): CreatedRoom, RoomApiError, assertWatchLibraryHttpResponse(), createRoomFromWatchSession(), createRoomFromWatchSessionHttpMessage(), isWatchLibraryHttpMessage(), listWatchLibrary(), listWatchLibraryHttpMessage() (+15 more)
 
 ### Community 46 - "Community 46"
 Cohesion: 0.15
@@ -494,8 +497,8 @@ Cohesion: 0.22
 Nodes (21): cmdDoctor(), getGmailUiStatus(), appendTouch(), BLOB_ACCESS, blobReadText(), blobToken(), blobWriteText(), contactsFilePath() (+13 more)
 
 ### Community 48 - "Community 48"
-Cohesion: 0.20
-Nodes (16): OgImage(), GET(), instagram graph instagramcredentials, getCredentialsById(), AccountProgress, BLOB_ACCESS, blobPath(), CarouselJob (+8 more)
+Cohesion: 0.21
+Nodes (19): GET(), GET(), GET(), instagram graph instagramcredentials, unauthorizedResponse(), validateOpenClawSecret(), AccountProgress, BLOB_ACCESS (+11 more)
 
 ### Community 49 - "Community 49"
 Cohesion: 0.25
@@ -503,11 +506,11 @@ Nodes (8): Environment Separation, Extension Build Environments, Staging Passwor
 
 ### Community 50 - "Community 50"
 Cohesion: 0.05
-Nodes (59): handleOAuthCallback(), HandleOAuthCallbackOptions, OAuthProfile, parseState(), StatePayload, isSafeAuthReturnTo(), sanitizeAuthReturnTo(), clearAuthCookies() (+51 more)
+Nodes (61): syncProfileFromUserRow(), upsertUser(), handleOAuthCallback(), HandleOAuthCallbackOptions, OAuthProfile, parseState(), StatePayload, isSafeAuthReturnTo() (+53 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.13
-Nodes (7): Harness, HarnessState, StartOptions, Window, createRoomConnectionId(), RoomClient, RoomConnectionStatus
+Cohesion: 0.17
+Nodes (6): Harness, HarnessState, StartOptions, Window, src index p2psignal, RoomConnectionStatus
 
 ### Community 52 - "Community 52"
 Cohesion: 0.08
@@ -546,16 +549,16 @@ Cohesion: 0.10
 Nodes (20): Anidachi Project Operating Manual, Development Flow, Development Startup Checklist, Documents To Read First, Everyday Development Loop, How Future Watch Progress Should Fit, How Joining Works, How Login Works (+12 more)
 
 ### Community 61 - "Community 61"
-Cohesion: 0.16
+Cohesion: 0.18
 Nodes (15): cleanCrunchyrollTitle(), collectJsonLdSeriesCandidates(), CrunchyrollProgressInput, CrunchyrollSeriesCandidate, CrunchyrollSeriesInfo, getCrunchyrollProgressEntry(), getCrunchyrollSeriesInfo(), getJsonLdSeriesCandidates() (+7 more)
 
 ### Community 62 - "Community 62"
-Cohesion: 0.15
-Nodes (7): AddP2PSignalResult, BufferedP2PSignalEvent, getDedupeKey(), P2PSignalReplayScope, RecentP2PSignalBuffer, RoomClientOptions, ServerEvent
+Cohesion: 0.21
+Nodes (5): AddP2PSignalResult, BufferedP2PSignalEvent, getDedupeKey(), P2PSignalReplayScope, RecentP2PSignalBuffer
 
 ### Community 63 - "Community 63"
-Cohesion: 0.16
-Nodes (19): buildSeed(), generateKeywordIdeas(), GenerateKeywordIdeasInput, getAccessToken(), getCustomerId(), getDeveloperToken(), KeywordIdeaResult, __dirname (+11 more)
+Cohesion: 0.17
+Nodes (17): buildSeed(), generateKeywordIdeas(), GenerateKeywordIdeasInput, getAccessToken(), getCustomerId(), getDeveloperToken(), KeywordIdeaResult, __dirname (+9 more)
 
 ### Community 64 - "Community 64"
 Cohesion: 0.13
@@ -578,16 +581,16 @@ Cohesion: 0.11
 Nodes (18): Anidachi Auth Integration Implementation Plan, Branch, Backup, and Commit Strategy, Current Research Snapshot, Database Migration Design, Key Decision, Non-Negotiable Safety Rules, Recommended Execution Order, Rollback Plan (+10 more)
 
 ### Community 69 - "Community 69"
-Cohesion: 0.15
-Nodes (10): size, node path, og, args, broadPatterns, channel, contentMatches, expectedByChannel (+2 more)
+Cohesion: 0.14
+Nodes (11): OgImage(), size, node path, og, args, broadPatterns, channel, contentMatches (+3 more)
 
 ### Community 70 - "Community 70"
 Cohesion: 0.15
 Nodes (17): args, changedFiles(), classify(), commands, dedupe(), fail(), files, isDocs() (+9 more)
 
 ### Community 71 - "Community 71"
-Cohesion: 0.19
-Nodes (16): buildIceServersUrl(), dedupeIceServers(), getIceServerUrls(), IceServersAuth, IceServersPayload, isStunOnlyIceServer(), loadP2PIceServers(), loadP2PIceServersWithCache() (+8 more)
+Cohesion: 0.20
+Nodes (15): buildIceServersUrl(), dedupeIceServers(), getIceServerUrls(), IceServersAuth, IceServersPayload, isStunOnlyIceServer(), loadP2PIceServers(), loadP2PIceServersWithCache() (+7 more)
 
 ### Community 72 - "Community 72"
 Cohesion: 0.12
@@ -598,8 +601,8 @@ Cohesion: 0.11
 Nodes (17): compilerOptions, allowSyntheticDefaultImports, exactOptionalPropertyTypes, forceConsistentCasingInFileNames, isolatedModules, module, moduleResolution, noEmit (+9 more)
 
 ### Community 74 - "Community 74"
-Cohesion: 0.14
-Nodes (5): LEGACY_ROOM_CAPABILITIES, RoomState, PlaybackState, RoomCapabilities, src video adapter videoadapter getstate
+Cohesion: 0.12
+Nodes (10): VerifiedRoomToken, RoomClientOptions, LEGACY_ROOM_CAPABILITIES, RoomState, Participant, PlaybackState, RoomCapabilities, ServerEvent (+2 more)
 
 ### Community 75 - "Community 75"
 Cohesion: 0.11
@@ -614,12 +617,12 @@ Cohesion: 0.12
 Nodes (17): noLabelWithoutControl, useButtonType, useKeyWithClickEvents, useSemanticElements, useValidAnchor, useExhaustiveDependencies, rules, a11y (+9 more)
 
 ### Community 78 - "Community 78"
-Cohesion: 0.16
-Nodes (20): src constants api http base, GHOST_CAM_VIDEO_OPTIONS, GhostCamOptions, GhostCamSession, IncomingP2PSignalSender, LIVE_VOICE_AUDIO_OPTIONS, LIVE_VOICE_PUBLISH_OPTIONS, useGhostCam() (+12 more)
+Cohesion: 0.17
+Nodes (18): src constants api http base, GHOST_CAM_VIDEO_OPTIONS, GhostCamOptions, GhostCamSession, IncomingP2PSignalSender, LIVE_VOICE_AUDIO_OPTIONS, LIVE_VOICE_PUBLISH_OPTIONS, useGhostCam() (+10 more)
 
 ### Community 79 - "Community 79"
-Cohesion: 0.24
-Nodes (15): publishToTtAccount(), safeRefreshTiktok(), publishToTtAccount(), processTikTokAccount(), processTikTokVideo(), apiError(), ensureAllCredentials(), ensureCredentials() (+7 more)
+Cohesion: 0.19
+Nodes (18): AccountResult, prepareTikTokImages(), publishToTtAccount(), safeRefreshTiktok(), publishToTtAccount(), processTikTokAccount(), processTikTokVideo(), apiError() (+10 more)
 
 ### Community 80 - "Community 80"
 Cohesion: 0.12
@@ -634,16 +637,16 @@ Cohesion: 0.12
 Nodes (16): Block 1 — Measurement Foundation And Two-Browser Harness, Block 2 — Room Lifecycle And Idempotent Create (roadmap Task 2), Block 3 — Invite Flow Without Dead Ends, Block 4 — Sessions, Reconnect Identity, Tab Lifecycle (roadmap Tasks 3–4), Block 5 — P2P Media Engine Polish (roadmap Task 7, client-only), Block 6 — Source Switching, Hibernation, Room-End Alarms (roadmap Tasks 5–6), Block 7 — Network, Security, Cost Guardrails, Block 8 — Release Gates And Rollback (+8 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.27
-Nodes (14): getCrunchyrollApiUrl(), getCrunchyrollContentToken(), getCrunchyrollLocale(), getCrunchyrollOrigin(), isCrunchyrollPage(), loadCrunchyrollCmsObject(), loadCrunchyrollPosterArtwork(), loadCrunchyrollPosterFromMainWorld() (+6 more)
+Cohesion: 0.25
+Nodes (15): getCrunchyrollApiUrl(), getCrunchyrollContentToken(), getCrunchyrollLocale(), getCrunchyrollOrigin(), isCrunchyrollPage(), loadCrunchyrollCmsObject(), loadCrunchyrollPosterArtwork(), loadCrunchyrollPosterFromMainWorld() (+7 more)
 
 ### Community 84 - "Community 84"
-Cohesion: 0.12
-Nodes (16): name, private, scripts, build, cache:jikan, check, crm, dev (+8 more)
+Cohesion: 0.15
+Nodes (13): scripts, build, cache:jikan, check, crm, dev, dev:clean, google-ads:diagnose (+5 more)
 
 ### Community 85 - "Community 85"
-Cohesion: 0.19
-Nodes (9): ChromeExtensionFeatures(), FAQSection(), HowItWorks(), howToSteps, steps, MainAppFeatures(), Pricing(), HomeClient() (+1 more)
+Cohesion: 0.12
+Nodes (30): beginStripeEventProcessing(), BillingCustomerRow, createRoom(), deleteAllRefreshTokensForUser(), getActiveRoomByClientRequestId(), getBillingCustomerByUserId(), getSupabaseServiceClient(), getUserIdByStripeCustomerId() (+22 more)
 
 ### Community 86 - "Community 86"
 Cohesion: 0.22
@@ -662,8 +665,8 @@ Cohesion: 0.12
 Nodes (15): Block 0 - Stabilize The Working Baseline, Block 10 - Integrate The Flow Into Product Planning, Block 1 - Add One Canonical Agent Entry Point, Block 2 - Configure CodeRabbit As A Contextual Reviewer, Block 3 - Build A Local Project Knowledge Graph, Block 4 - Formalize PR Templates And Review Checklists, Block 5 - Make Local Verification Easy And Standard, Block 6 - Strengthen CI Without Blocking Fast Iteration (+7 more)
 
 ### Community 91 - "Community 91"
-Cohesion: 0.21
-Nodes (10): sitemap(), APP_DIR, discoverStaticSitemapUrlPaths(), EXCLUDED_TOP_LEVEL, EXCLUDED_URL_PATHS, isExcludedTreeRel(), relPathToUrlPath(), staticPathsToSitemapEntries() (+2 more)
+Cohesion: 0.20
+Nodes (11): sitemap(), APP_DIR, discoverStaticSitemapUrlPaths(), EXCLUDED_TOP_LEVEL, EXCLUDED_URL_PATHS, isExcludedTreeRel(), relPathToUrlPath(), staticPathsToSitemapEntries() (+3 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.13
@@ -690,8 +693,8 @@ Cohesion: 0.14
 Nodes (13): Branch Model, Checks To Run, Current Expected Workflow Summary, Handoff For AI Working On AniDachi Site Pages, How Site Changes Reach Main, Paths That Are Safe For Site-Only Auto-Promotion, Paths That Block Auto-Promotion, Production Environment (+5 more)
 
 ### Community 98 - "Community 98"
-Cohesion: 0.24
-Nodes (15): failRedirect(), GET(), GET(), createGoogleAdsOAuth2(), exchangeGoogleAdsCode(), getGoogleAdsOAuthCredentials(), getGoogleAdsRedirectUri(), googleAdsAuthUrl() (+7 more)
+Cohesion: 0.26
+Nodes (14): failRedirect(), GET(), GET(), createGoogleAdsOAuth2(), exchangeGoogleAdsCode(), getGoogleAdsOAuthCredentials(), getGoogleAdsRedirectUri(), googleAdsAuthUrl() (+6 more)
 
 ### Community 99 - "Community 99"
 Cohesion: 0.21
@@ -710,8 +713,8 @@ Cohesion: 0.22
 Nodes (10): MountedOverlay, entrypoints content mountedoverlay updateadapter, OverlayAppProps, VideoAdapter, canonicalSourceUrl(), cleanVideoId(), getWatchProgressEntryForAdapter(), getYouTubeProgressEntry() (+2 more)
 
 ### Community 103 - "Community 103"
-Cohesion: 0.14
-Nodes (10): wxt, apiHttpHostPermission, apiWsHostPermission, buildId, ExtensionChannel, extensionIcons, LOCAL_HOST_PERMISSIONS, STORE_VIDEO_HOST_PERMISSIONS (+2 more)
+Cohesion: 0.17
+Nodes (8): apiHttpHostPermission, apiWsHostPermission, buildId, ExtensionChannel, extensionIcons, LOCAL_HOST_PERMISSIONS, STORE_VIDEO_HOST_PERMISSIONS, webHostPermission
 
 ### Community 104 - "Community 104"
 Cohesion: 0.20
@@ -726,8 +729,8 @@ Cohesion: 0.14
 Nodes (14): Blocked User, Dashboard And Popup Drift, Edge Cases, Free Guest In Paid Room, Friend Removed After Invite, Group Changed After Invite, Local Progress Reconcile Conflict, Multi-Device User (+6 more)
 
 ### Community 107 - "Community 107"
-Cohesion: 0.20
-Nodes (10): EMOJI_PALETTE, getEmojiHotkey(), getHotkeyAction(), hasBlockedModifier(), HotkeyAction, HotkeyEventLike, HotkeyState, isEditableEventTarget() (+2 more)
+Cohesion: 0.10
+Nodes (19): COMPOSER_EMOJI_PACK, EMOJI_PALETTE, VOICE_KEYWORD_EMOJI, getEmojiHotkey(), getHotkeyAction(), hasBlockedModifier(), HotkeyAction, HotkeyEventLike (+11 more)
 
 ### Community 108 - "Community 108"
 Cohesion: 0.18
@@ -754,12 +757,12 @@ Cohesion: 0.14
 Nodes (14): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, module, moduleResolution (+6 more)
 
 ### Community 114 - "Community 114"
-Cohesion: 0.14
-Nodes (9): faq, headings, metadata, SITE_URL, faq, headings, itemList, metadata (+1 more)
+Cohesion: 0.29
+Nodes (5): faq, headings, itemList, metadata, SITE_URL
 
 ### Community 115 - "Community 115"
-Cohesion: 0.14
-Nodes (9): faq, headings, metadata, SITE_URL, faq, headings, itemList, metadata (+1 more)
+Cohesion: 0.04
+Nodes (28): faq, headings, metadata, SITE_URL, faq, headings, metadata, SITE_URL (+20 more)
 
 ### Community 116 - "Community 116"
 Cohesion: 0.20
@@ -771,23 +774,23 @@ Nodes (10): Genre Hub Page Pattern, SEO Skill Invocation Flow, JSON LD Initial H
 
 ### Community 118 - "Community 118"
 Cohesion: 0.14
-Nodes (9): faq, headings, metadata, SITE_URL, faq, headings, itemList, metadata (+1 more)
+Nodes (15): WatchLibraryEpisode, WatchLibraryItem, WatchLibraryResponse, WatchLibrarySession, api(), clampProgress(), CreatedRoomResponse, EpisodeRow() (+7 more)
 
 ### Community 119 - "Community 119"
-Cohesion: 0.12
-Nodes (16): @anidachi/protocol, dependencies, @anidachi/protocol, hono, jose, name, private, scripts (+8 more)
+Cohesion: 0.20
+Nodes (9): name, private, scripts, build, check, dev, test, type (+1 more)
 
 ### Community 120 - "Community 120"
 Cohesion: 0.15
 Nodes (12): compilerOptions, types, compilerOptions, jsx, types, extends, compilerOptions, types (+4 more)
 
 ### Community 121 - "Community 121"
-Cohesion: 0.15
-Nodes (13): devDependencies, happy-dom, @types/chrome, @types/react, @types/react-dom, typescript, vitest, happy dom (+5 more)
+Cohesion: 0.17
+Nodes (12): devDependencies, happy-dom, @types/chrome, @types/react-dom, typescript, vitest, wxt, happy dom (+4 more)
 
 ### Community 122 - "Community 122"
-Cohesion: 0.18
-Nodes (10): biomejs biome, devDependencies, @biomejs/biome, turbo, typescript, vitest, name, packageManager (+2 more)
+Cohesion: 0.15
+Nodes (11): biomejs biome, devDependencies, @biomejs/biome, turbo, typescript, vitest, name, packageManager (+3 more)
 
 ### Community 123 - "Community 123"
 Cohesion: 0.15
@@ -802,8 +805,8 @@ Cohesion: 0.67
 Nodes (3): Monorepo Layout, Monorepo Migration Plan, Source Of Truth Repo
 
 ### Community 126 - "Community 126"
-Cohesion: 0.24
-Nodes (11): MAL_ID_BY_SLUG, CACHE_PATH, __dirname, entryFromApi(), fetchAnime(), force, JikanApiAnime, loadExisting() (+3 more)
+Cohesion: 0.29
+Nodes (6): DiscordContact(), DiscordContactProps, DiscordIcon(), PrePurchaseDiscordWalkthrough(), PrePurchaseDiscordWalkthroughProps, lib founder discord founder discord username
 
 ### Community 127 - "Community 127"
 Cohesion: 0.21
@@ -814,8 +817,8 @@ Cohesion: 0.29
 Nodes (10): assertHeaderIncludes(), assertStatus(), assertTextIncludes(), baseUrl, extractCookie(), fetchManual(), formBody(), getSetCookies() (+2 more)
 
 ### Community 129 - "Community 129"
-Cohesion: 0.24
-Nodes (10): getGhostCamGapPx(), getGhostCamSizeLabel(), getGhostCamSizePx(), GHOST_CAM_SIZE_STEPS, GhostCamSizeStep, normalizeGhostCamSizeStep(), formatQuotaCountdown(), getCrunchyrollMiniPanelMaxHeightPx() (+2 more)
+Cohesion: 0.22
+Nodes (7): image, ConnectClient(), ERROR_MESSAGES, IgAccount, IgStatus, TtAccount, TtStatus
 
 ### Community 130 - "Community 130"
 Cohesion: 0.18
@@ -855,7 +858,7 @@ Nodes (10): Manifest Preupload Checklist, Promotion Flow, Extension Rollback, Fi
 
 ### Community 140 - "Community 140"
 Cohesion: 0.20
-Nodes (12): POST(), kreatli crm auth cookie name, getPassword(), getSessionSecret(), kreatliCrmSessionToken(), verifyKreatliCrmSession(), verifyKreatliPassword(), kreatli crm gmail tokens cleargmailtokens (+4 more)
+Nodes (12): crypto, kreatli crm auth cookie name, getPassword(), getSessionSecret(), kreatliCrmSessionToken(), verifyKreatliCrmSession(), verifyKreatliPassword(), LoginForm() (+4 more)
 
 ### Community 141 - "Community 141"
 Cohesion: 0.20
@@ -870,8 +873,8 @@ Cohesion: 0.22
 Nodes (11): Crunchyroll Progress Identity, Future Backend Progress Upgrade, Local Watch Progress Store, Overlay Progress Recorder, Resources Panel UI, Resources Progress Plan, Durable Watch Progress, Observability Debug Export (+3 more)
 
 ### Community 144 - "Community 144"
-Cohesion: 0.14
-Nodes (26): failRedirect(), GET(), GET(), errorToShortString(), createGmailOAuth2(), exchangeCodeForTokens(), fetchGmailProfileEmail(), formatFromHeader() (+18 more)
+Cohesion: 0.13
+Nodes (29): failRedirect(), GET(), GET(), POST(), errorToShortString(), createGmailOAuth2(), exchangeCodeForTokens(), fetchGmailProfileEmail() (+21 more)
 
 ### Community 145 - "Community 145"
 Cohesion: 0.20
@@ -890,12 +893,12 @@ Cohesion: 0.24
 Nodes (10): devDependencies, @cloudflare/workers-types, typescript, vitest, wrangler, devDependencies, typescript, vitest (+2 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.42
-Nodes (9): sendAuthCommand(), authErrorMessage(), createCurrentParticipant(), CurrentParticipantResult, isExtensionContextInvalidatedError(), participantFromTokens(), signInAndCreateParticipant(), signOutAndClearParticipant() (+1 more)
+Cohesion: 0.50
+Nodes (8): sendAuthCommand(), authErrorMessage(), createCurrentParticipant(), isExtensionContextInvalidatedError(), participantFromTokens(), signInAndCreateParticipant(), signOutAndClearParticipant(), trySilentSignIn()
 
 ### Community 151 - "Community 151"
-Cohesion: 0.09
-Nodes (25): DiscordContact(), DiscordContactProps, DiscordIcon(), PrePurchaseDiscordWalkthrough(), PrePurchaseDiscordWalkthroughProps, lib founder discord founder discord username, CheckoutTier, currentSolutionUpgradeText() (+17 more)
+Cohesion: 0.11
+Nodes (20): CheckoutTier, currentSolutionUpgradeText(), defaultHomeSurveyAnswers(), HomeSurveyCurrentSolution, HomeSurveyDiscovery, HomeSurveyGroupSize, HomeSurveyPriority, HomeSurveySegment (+12 more)
 
 ### Community 152 - "Community 152"
 Cohesion: 0.22
@@ -930,16 +933,16 @@ Cohesion: 0.22
 Nodes (8): my video, next env d.ts, next types.ts, node modules, ts, tsx, exclude, include
 
 ### Community 160 - "Community 160"
-Cohesion: 0.33
-Nodes (7): getSecret(), signRoomTokenForTest(), VerifiedRoomToken, verifyRoomToken(), WorkerAuthEnv, RoomCapabilitiesSchema, env
+Cohesion: 0.39
+Nodes (6): getSecret(), signRoomTokenForTest(), verifyRoomToken(), WorkerAuthEnv, RoomCapabilitiesSchema, env
 
 ### Community 161 - "Community 161"
 Cohesion: 0.29
 Nodes (7): LiveKit Dev Server, LiveKit Ports, Branch Protection Workflow, Build Output Policy, Environment Model, GitHub CI Deploy Workflows, Vercel Monorepo Deploy
 
 ### Community 162 - "Community 162"
-Cohesion: 0.22
-Nodes (8): VOICE_KEYWORD_EMOJI, isSpeechRecognitionSupported(), mapVoiceToEmoji(), SpeechRecognitionConstructor, SpeechRecognitionEventLike, SpeechRecognitionLike, startVoiceRecognition(), Window
+Cohesion: 0.29
+Nodes (5): countMatches(), getCandidateProtocol(), getCandidateType(), summarizeSdp(), summarizeSignal()
 
 ### Community 163 - "Community 163"
 Cohesion: 0.12
@@ -974,12 +977,12 @@ Cohesion: 0.25
 Nodes (7): eslintrc, path, url, compat, __dirname, eslintConfig, __filename
 
 ### Community 172 - "Community 172"
-Cohesion: 0.29
-Nodes (4): SocialApiError, FriendInvitePage(), metadata, Props
+Cohesion: 0.25
+Nodes (6): AccountResult, IgAccount, PublishClient(), PublishStatus, TabType, TtAccount
 
 ### Community 173 - "Community 173"
-Cohesion: 0.29
-Nodes (5): faq, headings, itemList, metadata, SITE_URL
+Cohesion: 0.14
+Nodes (9): faq, headings, metadata, SITE_URL, faq, headings, itemList, metadata (+1 more)
 
 ### Community 174 - "Community 174"
 Cohesion: 0.29
@@ -991,15 +994,15 @@ Nodes (7): AniDachi Apple Touch Icon, Flame Hair Gradient, Friendly Closed-Eye E
 
 ### Community 176 - "Community 176"
 Cohesion: 0.29
-Nodes (5): faq, headings, itemList, metadata, SITE_URL
+Nodes (7): @anidachi/protocol, dependencies, @anidachi/protocol, hono, jose, @anidachi/protocol, hono
 
 ### Community 177 - "Community 177"
 Cohesion: 0.29
 Nodes (6): linter, $schema, vcs, clientKind, enabled, useIgnoreFile
 
 ### Community 178 - "Community 178"
-Cohesion: 0.48
-Nodes (7): findAncestor(), findKatamariPlayer(), findKatamariPlayerFromReactNode(), isKatamariPlayer(), isRecord(), readKatamariPlayer(), readObjectProperty()
+Cohesion: 0.80
+Nodes (5): findKatamariPlayerFromReactNode(), isKatamariPlayer(), isRecord(), readKatamariPlayer(), readObjectProperty()
 
 ### Community 179 - "Community 179"
 Cohesion: 0.29
@@ -1034,20 +1037,20 @@ Cohesion: 0.20
 Nodes (11): SEO Conversion CTA Rules, SEO Internal Linking Rules, Programmatic Watch Page Guardrails, SEO Voice and Claims Rules, Homepage CRO Rework, Hub and Listicle Backlinks, MAL ID and Jikan Cache Work, Plan Picker Survey (+3 more)
 
 ### Community 187 - "Community 187"
-Cohesion: 0.14
-Nodes (33): createWebsiteRoomHeaders(), AcceptedRoomInviteResponse, acceptInviteHttpMessage(), acceptRoomInvite(), acceptRoomInviteFromApi(), assertSocialHttpResponse(), createInviteHttpMessage(), createRoomInvite() (+25 more)
+Cohesion: 0.12
+Nodes (40): connectWebsiteRoomFromApi(), createWebsiteRoomFromApi(), createWebsiteRoomHeaders(), endWebsiteRoomFromApi(), handleRoomHttpMessage(), parseQuotaSummary(), parseRoomCapabilities(), websiteRoomHttpError() (+32 more)
 
 ### Community 188 - "Community 188"
-Cohesion: 0.52
-Nodes (5): acquireRoomTabLock(), getLockManager(), isRoomTabLockSupported(), LockManagerLike, releaseRoomTabLock()
+Cohesion: 0.23
+Nodes (7): getRoomReconnectDelayMs(), acquireRoomTabLock(), getLockManager(), isRoomTabLockSupported(), LockManagerLike, releaseRoomTabLock(), vitest
 
 ### Community 189 - "Community 189"
 Cohesion: 0.40
 Nodes (6): AniDachi App Icon, Browser Tab Identity, Red Orange Circular Badge, Stylized Anime Mascot Face, Transparent PNG Icon Asset, White Face Silhouette
 
 ### Community 190 - "Community 190"
-Cohesion: 0.33
-Nodes (4): faq, headings, metadata, SITE_URL
+Cohesion: 0.29
+Nodes (5): faq, headings, itemList, metadata, SITE_URL
 
 ### Community 191 - "Community 191"
 Cohesion: 0.33
@@ -1062,8 +1065,8 @@ Cohesion: 0.33
 Nodes (4): faq, headings, metadata, SITE_URL
 
 ### Community 194 - "Community 194"
-Cohesion: 0.21
-Nodes (16): GET(), getOrigin(), clearCookies(), lib social account limits max tiktok accounts, BLOB_ACCESS, clearBlob(), clearCredentials(), credentialsPath() (+8 more)
+Cohesion: 0.22
+Nodes (15): GET(), getOrigin(), clearCookies(), lib social account limits max tiktok accounts, BLOB_ACCESS, clearBlob(), clearCredentials(), credentialsPath() (+7 more)
 
 ### Community 195 - "Community 195"
 Cohesion: 0.33
@@ -1094,8 +1097,8 @@ Cohesion: 0.33
 Nodes (6): Extension UX, Friend And Group Actions, Main Invite Surface, Notification Permission, Plan-Limit States, Popup Navigation
 
 ### Community 202 - "Community 202"
-Cohesion: 0.08
-Nodes (27): dist, next, next cache, output, dependsOn, outputs, dependsOn, outputs (+19 more)
+Cohesion: 0.11
+Nodes (23): dist, output, dependsOn, outputs, dependsOn, outputs, dependsOn, dependsOn (+15 more)
 
 ### Community 203 - "Community 203"
 Cohesion: 0.40
@@ -1124,6 +1127,10 @@ Nodes (5): Extension Popup, Optional Future Side Panel, Product Surfaces And Syn
 ### Community 209 - "Community 209"
 Cohesion: 0.40
 Nodes (3): SKILL_CONTENT, SKILL_NAMES, SkillName
+
+### Community 210 - "Community 210"
+Cohesion: 0.33
+Nodes (4): faq, headings, itemList, metadata
 
 ### Community 211 - "Community 211"
 Cohesion: 0.50
@@ -1161,25 +1168,37 @@ Nodes (3): For /graphify explain, For /graphify path, graphify reference: query,
 Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
+### Community 239 - "Community 239"
+Cohesion: 0.50
+Nodes (3): name, private, version
+
+### Community 240 - "Community 240"
+Cohesion: 0.67
+Nodes (3): @types/react, types react, @types/react
+
+### Community 241 - "Community 241"
+Cohesion: 0.67
+Nodes (3): next, next cache, outputs
+
 ## Knowledge Gaps
-- **1442 isolated node(s):** `AuthCommand`, `AuthMessage`, `AuthMessageResponse`, `ExtensionAuthRedirect`, `CatchUpState` (+1437 more)
+- **1477 isolated node(s):** `name`, `private`, `version`, `type`, `build` (+1472 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **26 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `vitest` connect `Community 122` to `Community 187`?**
-  _High betweenness centrality (0.039) - this node is a cross-community bridge._
-- **Why does `turbo` connect `Community 122` to `Community 202`?**
-  _High betweenness centrality (0.034) - this node is a cross-community bridge._
-- **What connects `AuthCommand`, `AuthMessage`, `AuthMessageResponse` to the rest of the system?**
-  _1445 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `logDebug()` connect `Community 23` to `Community 33`, `Community 1`, `Community 162`, `Community 36`, `Community 229`, `Community 71`, `Community 10`, `Community 45`, `Community 19`, `Community 187`, `Community 30`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Why does `vitest` connect `Community 122` to `Community 188`?**
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+- **What connects `name`, `private`, `version` to the rest of the system?**
+  _1480 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.0431578947368421 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05889724310776942 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.034035087719298245 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.03553146642577537 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.06526806526806526 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10512820512820513 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
   _Cohesion score 0.07747747747747748 - nodes in this community are weakly interconnected._

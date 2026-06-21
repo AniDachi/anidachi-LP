@@ -18,21 +18,7 @@ import {
   planCodeFromStripeMetadata,
 } from "@/lib/anidachi-auth/stripe-plans";
 import { sendSubscriptionAlertEmail } from "@/lib/send-subscription-alert-email";
-
-function getStripeSecretKey(): string | undefined {
-  return process.env.NODE_ENV === "development" && process.env.STRIPE_SECRET_KEY_TEST
-    ? process.env.STRIPE_SECRET_KEY_TEST
-    : process.env.STRIPE_SECRET_KEY;
-}
-
-function createStripeClient(): Stripe | null {
-  const secretKey = getStripeSecretKey();
-  return secretKey
-    ? new Stripe(secretKey, { apiVersion: "2025-08-27.basil" })
-    : null;
-}
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+import { createStripeClient, getStripeWebhookSecret } from "@/lib/anidachi-auth/stripe-env";
 
 function stripeCustomerIdFrom(value: string | Stripe.Customer | Stripe.DeletedCustomer | null): string | null {
   if (!value) return null;
@@ -118,14 +104,18 @@ async function syncSubscriptionById(
 }
 
 export async function POST(request: NextRequest) {
+  const webhookSecret = getStripeWebhookSecret();
   if (!webhookSecret) {
     console.error("[stripe/webhook] STRIPE_WEBHOOK_SECRET is not set");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
   }
 
-  const stripe = createStripeClient();
-  if (!stripe) {
-    console.error("[stripe/webhook] STRIPE_SECRET_KEY is not set");
+  let stripe: Stripe;
+  try {
+    // Fail closed on missing/mismatched keys (e.g. a live key in a test env).
+    stripe = createStripeClient();
+  } catch (error) {
+    console.error("[stripe/webhook] Stripe is not configured:", error);
     return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
   }
 
