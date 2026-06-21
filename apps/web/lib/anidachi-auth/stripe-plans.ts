@@ -3,9 +3,9 @@ import {
   FREE_PLAN_CODE,
   type PaidPlanCode,
   type PlanCode,
-  isPaidPlanCode,
-  isPlanCode,
   maxPlanCode,
+  normalizePaidPlanCode,
+  normalizePlanCode,
 } from "./plan-entitlements";
 import { stripeEnvForMode } from "./stripe-env";
 
@@ -23,7 +23,7 @@ export function stripePriceIdForPlanCode(planCode: PaidPlanCode): string | null 
   // Mode-aware: on staging/preview `stripeEnvForMode` resolves the *_TEST price,
   // on production the *_LIVE price, with the unsuffixed var as transition
   // fallback. Legacy CRUNCHYROLL_SUBSCRIBER/ANIME_JUNKIE vars remain a fallback.
-  if (planCode === "nakama") {
+  if (planCode === "plus") {
     return (
       stripeEnvForMode("STRIPE_PRICE_ID_PLUS") ??
       process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PLUS ??
@@ -54,7 +54,7 @@ export function stripePlanCodeForPriceId(priceId: string | null | undefined): Pa
     process.env.STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER,
     process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CRUNCHYROLL_SUBSCRIBER,
   ].filter((id): id is string => Boolean(id));
-  if (plusIds.includes(priceId)) return "nakama";
+  if (plusIds.includes(priceId)) return "plus";
 
   const proIds = [
     process.env.STRIPE_PRICE_ID_PRO_TEST,
@@ -64,7 +64,7 @@ export function stripePlanCodeForPriceId(priceId: string | null | undefined): Pa
     process.env.STRIPE_PRICE_ID_ANIME_JUNKIE,
     process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANIME_JUNKIE,
   ].filter((id): id is string => Boolean(id));
-  if (proIds.includes(priceId)) return "junkie";
+  if (proIds.includes(priceId)) return "pro";
 
   return null;
 }
@@ -87,8 +87,8 @@ export function effectivePlanFromSubscriptions(
 export function planCodeFromStripeMetadata(
   metadata: Stripe.Metadata | null | undefined
 ): PlanCode | null {
-  const planCode = metadata?.planCode;
-  return isPlanCode(planCode) ? planCode : null;
+  if (!metadata?.planCode) return null;
+  return normalizePlanCode(metadata.planCode);
 }
 
 export function paidPlanCodeFromStripeSubscription(
@@ -98,8 +98,7 @@ export function paidPlanCodeFromStripeSubscription(
   const fromPrice = stripePlanCodeForPriceId(firstPriceId);
   if (fromPrice) return fromPrice;
 
-  const fromMetadata = planCodeFromStripeMetadata(subscription.metadata);
-  return isPaidPlanCode(fromMetadata) ? fromMetadata : null;
+  return normalizePaidPlanCode(subscription.metadata.planCode);
 }
 
 export function currentPeriodEndIso(subscription: Stripe.Subscription): string | null {

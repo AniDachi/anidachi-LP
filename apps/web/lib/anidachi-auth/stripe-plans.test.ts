@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   effectivePlanForSubscription,
   effectivePlanFromSubscriptions,
+  planCodeFromStripeMetadata,
   stripePlanCodeForPriceId,
   stripePriceIdForPlanCode,
   subscriptionStatusGrantsPaidAccess,
@@ -14,10 +15,10 @@ test("Stripe price ids resolve from new env names first", () => {
   process.env.STRIPE_PRICE_ID_PLUS = "price_plus_test";
   process.env.STRIPE_PRICE_ID_PRO = "price_pro_test";
   try {
-    assert.equal(stripePriceIdForPlanCode("nakama"), "price_plus_test");
-    assert.equal(stripePriceIdForPlanCode("junkie"), "price_pro_test");
-    assert.equal(stripePlanCodeForPriceId("price_plus_test"), "nakama");
-    assert.equal(stripePlanCodeForPriceId("price_pro_test"), "junkie");
+    assert.equal(stripePriceIdForPlanCode("plus"), "price_plus_test");
+    assert.equal(stripePriceIdForPlanCode("pro"), "price_pro_test");
+    assert.equal(stripePlanCodeForPriceId("price_plus_test"), "plus");
+    assert.equal(stripePlanCodeForPriceId("price_pro_test"), "pro");
   } finally {
     if (oldPlus === undefined) delete process.env.STRIPE_PRICE_ID_PLUS;
     else process.env.STRIPE_PRICE_ID_PLUS = oldPlus;
@@ -40,8 +41,8 @@ test("Stripe price ids require explicit env configuration", () => {
   const oldValues = new Map(keys.map((key) => [key, process.env[key]]));
   for (const key of keys) delete process.env[key];
   try {
-    assert.equal(stripePriceIdForPlanCode("nakama"), null);
-    assert.equal(stripePriceIdForPlanCode("junkie"), null);
+    assert.equal(stripePriceIdForPlanCode("plus"), null);
+    assert.equal(stripePriceIdForPlanCode("pro"), null);
   } finally {
     for (const [key, value] of oldValues) {
       if (value === undefined) delete process.env[key];
@@ -60,36 +61,44 @@ test("active and trialing subscription statuses grant paid access", () => {
 
 test("subscription status maps paid plans to Free when not active", () => {
   assert.equal(
-    effectivePlanForSubscription({ planCode: "nakama", status: "active" }),
-    "nakama"
+    effectivePlanForSubscription({ planCode: "plus", status: "active" }),
+    "plus"
   );
   assert.equal(
-    effectivePlanForSubscription({ planCode: "junkie", status: "trialing" }),
-    "junkie"
+    effectivePlanForSubscription({ planCode: "pro", status: "trialing" }),
+    "pro"
   );
   assert.equal(
-    effectivePlanForSubscription({ planCode: "junkie", status: "unpaid" }),
-    "watcher"
+    effectivePlanForSubscription({ planCode: "pro", status: "unpaid" }),
+    "free"
   );
 });
 
 test("effective plan chooses the highest paid active subscription", () => {
   assert.equal(
     effectivePlanFromSubscriptions([
-      { planCode: "nakama", status: "active" },
-      { planCode: "junkie", status: "canceled" },
+      { planCode: "plus", status: "active" },
+      { planCode: "pro", status: "canceled" },
     ]),
-    "nakama"
+    "plus"
   );
   assert.equal(
     effectivePlanFromSubscriptions([
-      { planCode: "nakama", status: "active" },
-      { planCode: "junkie", status: "trialing" },
+      { planCode: "plus", status: "active" },
+      { planCode: "pro", status: "trialing" },
     ]),
-    "junkie"
+    "pro"
   );
   assert.equal(
-    effectivePlanFromSubscriptions([{ planCode: "junkie", status: "past_due" }]),
-    "watcher"
+    effectivePlanFromSubscriptions([{ planCode: "pro", status: "past_due" }]),
+    "free"
   );
+});
+
+test("Stripe metadata plan codes normalize legacy values", () => {
+  assert.equal(planCodeFromStripeMetadata({ planCode: "plus" }), "plus");
+  assert.equal(planCodeFromStripeMetadata({ planCode: "pro" }), "pro");
+  assert.equal(planCodeFromStripeMetadata({ planCode: "nakama" }), "plus");
+  assert.equal(planCodeFromStripeMetadata({ planCode: "junkie" }), "pro");
+  assert.equal(planCodeFromStripeMetadata({ planCode: "watcher" }), "free");
 });
