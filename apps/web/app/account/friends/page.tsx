@@ -27,7 +27,7 @@ export default async function AccountFriendsPage() {
         userId: session.userId,
         displayName: profile?.display_name ?? user?.display_name ?? "AniDachi user",
         email: session.email,
-        plan: session.plan,
+        plan: user?.plan ?? session.plan,
       }}
     />
   );

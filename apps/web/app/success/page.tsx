@@ -6,15 +6,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, Rocket, Mail } from "lucide-react";
+import { CheckCircle, CreditCard, Mail } from "lucide-react";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { DiscordContact } from "@/components/discord-contact";
 import { DiscordCredentialsForm } from "@/components/discord-credentials-form";
+import { getUserById } from "@/lib/anidachi-auth/db";
+import { getPlanEntitlements } from "@/lib/anidachi-auth/plan-entitlements";
+import { getSession } from "@/lib/anidachi-auth/session";
+import { CheckoutSessionSync } from "./checkout-session-sync";
 
 export const metadata: Metadata = {
-  title: "Welcome to AniDachi – Subscription Confirmed",
+  title: "AniDachi Subscription Confirmed",
   description:
-    "Your AniDachi early-access subscription is confirmed. Here's what happens next.",
+    "Your AniDachi subscription is confirmed and your account is being updated.",
   robots: { index: false, follow: false },
 };
 
@@ -26,6 +30,10 @@ export default async function SuccessPage({
   const sp = await searchParams;
   const sessionId =
     typeof sp?.session_id === "string" ? sp.session_id : undefined;
+  const authSession = await getSession();
+  const user = authSession ? await getUserById(authSession.userId) : null;
+  const currentPlan = user?.plan ?? authSession?.plan ?? "free";
+  const currentPlanLabel = getPlanEntitlements(currentPlan).label;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
@@ -38,18 +46,22 @@ export default async function SuccessPage({
             </span>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
-            You&apos;re In — Welcome to AniDachi!
+            Subscription confirmed
           </CardTitle>
           <CardDescription className="text-lg mt-2">
-            Thanks for becoming a founding member. You&apos;ve locked in
-            early-access pricing for life.
+            Your AniDachi account is being updated to {currentPlanLabel}.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
+          <CheckoutSessionSync
+            sessionId={sessionId}
+            initialPlanCode={currentPlan}
+          />
+
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <Rocket className="h-5 w-5 text-purple-600" aria-hidden="true" />
-              What happens next
+              <CreditCard className="h-5 w-5 text-purple-600" aria-hidden="true" />
+              What is active now
             </h3>
             <ol className="space-y-3 text-gray-700 text-sm">
               <li className="flex gap-3">
@@ -57,9 +69,8 @@ export default async function SuccessPage({
                   1
                 </span>
                 <span>
-                  We&apos;re finalizing the Chrome extension and watchroom
-                  features. You&apos;ll get an email as soon as early access
-                  opens.
+                  Stripe checkout is complete. AniDachi confirms the session
+                  and mirrors the subscription into your account.
                 </span>
               </li>
               <li className="flex gap-3">
@@ -67,9 +78,8 @@ export default async function SuccessPage({
                   2
                 </span>
                 <span>
-                  As a founding member, you&apos;ll be first in line for every
-                  new feature — watchrooms, async group watching, and real-time
-                  chat.
+                  Account, room creation, and extension auth should now use your
+                  current plan limits.
                 </span>
               </li>
               <li className="flex gap-3">
@@ -77,8 +87,9 @@ export default async function SuccessPage({
                   3
                 </span>
                 <span>
-                  Your feedback shapes the product. Reply to any email from us
-                  to share ideas or requests.
+                  If you already have the extension open, refresh the AniDachi
+                  menu or create a new room so it picks up the latest account
+                  state.
                 </span>
               </li>
             </ol>

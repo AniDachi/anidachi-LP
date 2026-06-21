@@ -33,5 +33,5 @@ Legacy `subscribe_click` was replaced by the events above for the primary checko
 ## Next test hypotheses
 
 1. **Hero copy** — Test headline emphasizing “async watchrooms” vs “Crunchyroll sync” (`NEXT_PUBLIC_CTA_EXPERIMENT_VARIANT`).
-2. **Pricing card** — A/B first line under “Crunchyroll Subscriber” (who it’s for).
+2. **Pricing card** — A/B first line under “Plus” (who it’s for).
 3. **Second CTA on long guides** — Optional `midContentSlot` in `SeoPageLayout` for one high-traffic guide only.

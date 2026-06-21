@@ -3,105 +3,16 @@ import Stripe from "stripe";
 
 import {
   beginStripeEventProcessing,
-  getUserIdByStripeCustomerId,
-  listSubscriptionsForUser,
   markStripeEventFailed,
   markStripeEventProcessed,
-  updateUserPlan,
-  upsertBillingCustomer,
-  upsertSubscription,
 } from "@/lib/anidachi-auth/db";
 import {
-  currentPeriodEndIso,
-  effectivePlanFromSubscriptions,
-  paidPlanCodeFromStripeSubscription,
-  planCodeFromStripeMetadata,
-} from "@/lib/anidachi-auth/stripe-plans";
+  stripeSubscriptionIdFromUnknown,
+  syncStripeSubscriptionById,
+  syncStripeSubscriptionFromStripe,
+} from "@/lib/anidachi-auth/stripe-subscription-sync";
 import { sendSubscriptionAlertEmail } from "@/lib/send-subscription-alert-email";
 import { createStripeClient, getStripeWebhookSecret } from "@/lib/anidachi-auth/stripe-env";
-
-function stripeCustomerIdFrom(value: string | Stripe.Customer | Stripe.DeletedCustomer | null): string | null {
-  if (!value) return null;
-  return typeof value === "string" ? value : value.id;
-}
-
-function stripeSubscriptionIdFromUnknown(value: unknown): string | null {
-  if (!value) return null;
-  if (typeof value === "string") return value;
-  if (typeof value === "object" && "id" in value) {
-    const id = (value as { id?: unknown }).id;
-    return typeof id === "string" ? id : null;
-  }
-  return null;
-}
-
-async function refreshUserPlan(userId: string): Promise<void> {
-  const subscriptions = await listSubscriptionsForUser(userId);
-  const effectivePlan = effectivePlanFromSubscriptions(
-    subscriptions.map((subscription) => ({
-      planCode: subscription.plan_code,
-      status: subscription.status,
-    }))
-  );
-  await updateUserPlan(userId, effectivePlan);
-}
-
-async function syncSubscriptionFromStripe(
-  subscription: Stripe.Subscription
-): Promise<void> {
-  const stripeCustomerId = stripeCustomerIdFrom(subscription.customer);
-  if (!stripeCustomerId) {
-    console.error("[stripe/webhook] Subscription is missing customer id", subscription.id);
-    return;
-  }
-
-  const metadataUserId = subscription.metadata.userId;
-  const userId =
-    metadataUserId || (await getUserIdByStripeCustomerId(stripeCustomerId));
-  if (!userId) {
-    console.error(
-      "[stripe/webhook] Could not map subscription customer to user",
-      stripeCustomerId
-    );
-    return;
-  }
-
-  await upsertBillingCustomer({ userId, stripeCustomerId });
-
-  const paidPlanCode = paidPlanCodeFromStripeSubscription(subscription);
-  const metadataPlanCode = planCodeFromStripeMetadata(subscription.metadata);
-  const planCode = paidPlanCode ?? metadataPlanCode;
-  const stripePriceId = subscription.items.data[0]?.price.id;
-  if (!planCode || !stripePriceId) {
-    console.error("[stripe/webhook] Could not resolve subscription plan", {
-      subscriptionId: subscription.id,
-      stripePriceId,
-      metadataPlanCode,
-    });
-    return;
-  }
-
-  await upsertSubscription({
-    userId,
-    stripeCustomerId,
-    stripeSubscriptionId: subscription.id,
-    stripePriceId,
-    planCode,
-    status: subscription.status,
-    currentPeriodEnd: currentPeriodEndIso(subscription),
-    cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
-  });
-  await refreshUserPlan(userId);
-}
-
-async function syncSubscriptionById(
-  stripe: Stripe,
-  subscriptionId: string | null
-): Promise<void> {
-  if (!subscriptionId) return;
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  await syncSubscriptionFromStripe(subscription);
-}
 
 export async function POST(request: NextRequest) {
   const webhookSecret = getStripeWebhookSecret();
@@ -157,6 +68,9 @@ export async function POST(request: NextRequest) {
             typeof session.subscription === "string"
               ? session.subscription
               : session.subscription?.id ?? null;
+          if (!subscriptionId) {
+            throw new Error(`Paid checkout session ${session.id} is missing subscription id`);
+          }
 
           const customerId =
             typeof session.customer === "string"
@@ -181,7 +95,7 @@ export async function POST(request: NextRequest) {
             console.error("[stripe/webhook] Subscription alert email failed:", e);
           }
 
-          await syncSubscriptionById(stripe, subscriptionId);
+          await syncStripeSubscriptionById(stripe, subscriptionId);
         }
       }
     } else if (
@@ -189,13 +103,13 @@ export async function POST(request: NextRequest) {
       event.type === "customer.subscription.updated" ||
       event.type === "customer.subscription.deleted"
     ) {
-      await syncSubscriptionFromStripe(event.data.object as Stripe.Subscription);
+      await syncStripeSubscriptionFromStripe(event.data.object as Stripe.Subscription);
     } else if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
       const invoice = event.data.object as Stripe.Invoice;
       const subscriptionId = stripeSubscriptionIdFromUnknown(
         (invoice as unknown as { subscription?: unknown }).subscription
       );
-      await syncSubscriptionById(stripe, subscriptionId);
+      await syncStripeSubscriptionById(stripe, subscriptionId);
     } else if (event.type === "entitlements.active_entitlement_summary.updated") {
       // Stripe Entitlements can become the primary feature gate once configured.
       // For now, subscription events above keep the plan mirror current.

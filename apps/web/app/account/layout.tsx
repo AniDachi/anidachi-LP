@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { getUserById } from "@/lib/anidachi-auth/db";
+import { getPlanEntitlements } from "@/lib/anidachi-auth/plan-entitlements";
 import { getSession } from "@/lib/anidachi-auth/session";
 import { ensureProfileForUser } from "@/lib/anidachi-auth/social";
 import { AccountNav } from "./account-nav";
@@ -11,12 +12,6 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Account",
   robots: { index: false, follow: false },
-};
-
-const PLAN_LABELS: Record<string, string> = {
-  free: "Free",
-  plus: "Plus",
-  pro: "Pro",
 };
 
 export default async function AccountLayout({ children }: { children: ReactNode }) {
@@ -30,6 +25,8 @@ export default async function AccountLayout({ children }: { children: ReactNode 
     ensureProfileForUser(session.userId),
   ]);
   const displayName = profile?.display_name ?? user?.display_name ?? "AniDachi user";
+  const effectivePlan = user?.plan ?? session.plan;
+  const planLabel = getPlanEntitlements(effectivePlan).label;
 
   return (
     <main id="main-content" className="min-h-screen bg-slate-950 text-slate-100">
@@ -46,7 +43,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
           </div>
           <div className="flex flex-wrap gap-2 text-xs font-semibold">
             <span className="rounded-full border border-violet-400/30 bg-violet-500/15 px-3 py-1.5 text-violet-100">
-              {PLAN_LABELS[session.plan] ?? session.plan}
+              {planLabel}
             </span>
           </div>
         </header>
