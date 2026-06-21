@@ -1771,6 +1771,34 @@ Manual staging smoke:
 9. Confirm Worker room snapshot exposes `plus`.
 ```
 
+2026-06-22 follow-up from staging Plus checkout:
+
+- [x] Manual staging test found that the paid plan was not reliably reflected in
+  user-facing surfaces after checkout.
+- [x] Root cause identified in code:
+  - `/account` and `/account/friends` were reading `session.plan` from the
+    short-lived access-token cookie even though fresh `users.plan` was already
+    loaded from Supabase.
+  - extension auth `refresh` returned the stored `user` object after refreshing
+    the access token, so a refreshed token could still carry stale UI state.
+  - `/success` was still an old founder/early-access screen and did not provide
+    a same-origin fallback to reconcile the Stripe Checkout Session and refresh
+    auth cookies.
+  - webhook subscription sync returned early when a subscription could not be
+    mapped to a plan/user, which could mark a Stripe event processed without
+    actually updating AniDachi subscription state.
+- [x] Fix prepared on `codex/billing-plan-refresh-staging`:
+  - shared Stripe subscription sync helper;
+  - fail-fast webhook subscription processing so unresolved paid events retry
+    instead of being silently accepted;
+  - `/api/billing/sync-checkout-session` fallback for the `/success` page;
+  - fresh Supabase plan display on account surfaces;
+  - extension refresh re-fetches `/api/me` before saving user state;
+  - stale public `Crunchyroll Subscriber` conversion note renamed to `Plus`.
+- [ ] Deploy the fix to staging, repeat the Plus checkout smoke, and verify that
+  `/success`, `/account`, extension auth, room creation, and Worker snapshots all
+  show canonical `plus`.
+
 - [ ] **Step 5: Query Supabase after staging smoke**
 
 Run in Supabase SQL editor or approved SQL access:

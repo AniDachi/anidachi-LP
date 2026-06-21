@@ -150,6 +150,10 @@ export async function refreshExtensionSession(): Promise<ExtensionAuthTokens | n
     accessToken: body.accessToken,
     refreshToken: body.refreshToken ?? stored.refreshToken,
   };
+  const freshUser = await fetchAuthenticatedUser(tokens.accessToken);
+  if (freshUser) {
+    tokens.user = freshUser;
+  }
   await setStoredAuthTokens(tokens);
   return tokens;
 }
