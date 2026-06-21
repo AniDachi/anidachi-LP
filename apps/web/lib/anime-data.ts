@@ -658,7 +658,7 @@ export const animeList: AnimeEntry[] = [
     synopsis:
       "Orphaned high schooler Tohru Honda becomes entangled with the Soma family, who hide a supernatural curse. A heartfelt blend of comedy, romance, and healing character arcs.",
     episodes: "63 episodes across 3 seasons",
-    genres: ["Drama", "Romance", "Slice of Life"],
+    genres: ["Drama", "Romance", "Slice of Life", "Shoujo"],
     related: ["toradora", "horimiya", "your-lie-in-april"],
   },
   {
@@ -1595,7 +1595,7 @@ export const animeList: AnimeEntry[] = [
     synopsis:
       "Scholarship student Haruhi accidentally breaks an expensive vase and must repay the debt by joining the Host Club, whose six eccentric members sell fantasies to wealthy girls. Gender-flipping comedy, rapid-fire character archetypes, and surprisingly tender arcs make it a perennial group-watch pick—everyone in the room picks a favorite host before episode four.",
     episodes: "26 episodes",
-    genres: ["Comedy", "Romance", "School"],
+    genres: ["Comedy", "Romance", "School", "Shoujo"],
     related: ["kaguya-sama", "fruits-basket", "the-disastrous-life-of-saiki-k"],
   },
   {
@@ -1665,7 +1665,7 @@ export const animeList: AnimeEntry[] = [
     synopsis:
       "Fourth-grader Sakura Kinomoto accidentally releases a deck of magical Clow Cards and must recapture each one before disaster strikes, assisted by guardian Keroberos and her best friend Tomoyo. Episodic captures escalate into a heartfelt coming-of-age arc that's as rewatchable as it is beloved—perfect for nostalgic marathons or introducing the magical-girl genre to a group for the first time.",
     episodes: "70 episodes + 2 movies",
-    genres: ["Adventure", "Fantasy", "Magic"],
+    genres: ["Adventure", "Fantasy", "Magic", "Shoujo"],
     related: ["spirited-away", "frieren-beyond-journeys-end", "howls-moving-castle"],
   },
   {
@@ -1745,7 +1745,7 @@ export const animeList: AnimeEntry[] = [
     synopsis:
       "Sawako Kuronuma is nicknamed 'Sadako' after the horror film character she resembles — and her classmates avoid her because of it. When the most popular boy in school, Shota Kazehaya, starts genuinely talking to her, her world slowly opens. One of the most warmhearted slow-burn romance anime ever made, built for groups who love cheering characters on across small, earned moments.",
     episodes: "25 episodes across 2 seasons",
-    genres: ["Romance", "Drama", "School"],
+    genres: ["Romance", "Drama", "School", "Shoujo"],
     related: ["toradora", "horimiya", "fruits-basket"],
   },
   {
@@ -1755,7 +1755,7 @@ export const animeList: AnimeEntry[] = [
     synopsis:
       "Two young women named Nana share a Tokyo apartment by chance: one chases rock stardom, the other follows love across the city. Their wildly different dreams and personalities forge a bond tested by ambition, heartbreak, and the music industry — one of the most emotionally honest anime about adult friendship and the cost of chasing what you want.",
     episodes: "47 episodes",
-    genres: ["Romance", "Drama", "Music"],
+    genres: ["Romance", "Drama", "Music", "Shoujo"],
     related: ["your-lie-in-april", "clannad", "violet-evergarden"],
   },
   {
@@ -1765,7 +1765,7 @@ export const animeList: AnimeEntry[] = [
     synopsis:
       "Middle schooler Madoka Kaname is offered the chance to become a magical girl and have any wish granted — by a small creature named Kyubey. What begins as a pastel magical adventure quickly reveals itself as a psychological horror about contracts, grief, and what it costs to change the world. Best experienced with a group that hasn't seen any spoilers.",
     episodes: "12 episodes",
-    genres: ["Psychological", "Dark Fantasy", "Magical Girl"],
+    genres: ["Psychological", "Dark Fantasy", "Magical Girl", "Shoujo"],
     related: ["angel-beats", "another", "violet-evergarden"],
   },
   {
@@ -1785,7 +1785,7 @@ export const animeList: AnimeEntry[] = [
     synopsis:
       "Middle schooler Usagi Tsukino discovers she is Sailor Moon — champion of love and justice — when a talking cat gives her the power to transform and fight the forces of the Dark Kingdom. Joined by her fellow Sailor Guardians, she searches for the Silver Crystal while navigating school and friendship. A genre-defining magical-girl classic that works for nostalgic group rewatches, first-time anime clubs, and anyone curious about the series that shaped the genre.",
     episodes: "200 episodes across 5 seasons",
-    genres: ["Magical Girl", "Romance", "Action"],
+    genres: ["Magical Girl", "Romance", "Action", "Shoujo"],
     related: ["cardcaptor-sakura", "puella-magi-madoka-magica", "k-on"],
   },
   {

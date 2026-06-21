@@ -44,6 +44,18 @@ export const GENRE_HUB_LINKS = [
     href: "/watch-fantasy-anime-with-friends",
     label: "Watch fantasy anime with friends",
   },
+  {
+    href: "/watch-sci-fi-anime-with-friends",
+    label: "Watch sci-fi anime with friends",
+  },
+  {
+    href: "/watch-shoujo-anime-with-friends",
+    label: "Watch shoujo anime with friends",
+  },
+  {
+    href: "/watch-supernatural-anime-with-friends",
+    label: "Watch supernatural anime with friends",
+  },
 ] as const;
 
 /** ItemList JSON-LD entries for pillar/toolkit pages. */

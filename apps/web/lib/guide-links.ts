@@ -200,6 +200,26 @@ export const guideLinks: GuideLinkItem[] = [
     label: "How to Plan an Anime Marathon With Friends",
     tags: ["template-c", "how-to-core", "watch-party", "pillar-watch-anime"],
   },
+  {
+    href: "/guides/best-anime-to-watch-on-crunchyroll-with-friends",
+    label: "Best Anime to Watch on Crunchyroll With Friends",
+    tags: ["template-d", "listicle", "crunchyroll", "pillar-watch-crunchyroll"],
+  },
+  {
+    href: "/guides/best-romance-anime-to-watch-with-friends",
+    label: "Best Romance Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/does-crunchyroll-have-watch-party",
+    label: "Does Crunchyroll Have a Watch Party Feature?",
+    tags: ["template-c", "crunchyroll", "pillar-watch-crunchyroll"],
+  },
+  {
+    href: "/guides/how-to-watch-anime-for-free-with-friends",
+    label: "How to Watch Anime for Free With Friends",
+    tags: ["template-c", "how-to-core", "online", "pillar-watch-anime"],
+  },
 ];
 
 export function getGuideLinks({
