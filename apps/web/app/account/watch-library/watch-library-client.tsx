@@ -26,9 +26,9 @@ type CreatedRoomResponse = {
 };
 
 const PLAN_LABELS: Record<string, string> = {
-  watcher: "Free",
-  nakama: "Plus",
-  junkie: "Pro",
+  free: "Free",
+  plus: "Plus",
+  pro: "Pro",
 };
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {

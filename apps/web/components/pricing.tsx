@@ -92,7 +92,7 @@ export function Pricing({
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier }),
+        body: JSON.stringify({ planCode: tier }),
       });
 
       const data = (await response.json()) as {
@@ -209,7 +209,7 @@ export function Pricing({
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12 items-stretch">
           <Card
             className={`relative order-1 border-2 shadow-xl md:scale-105 bg-gradient-to-br from-purple-50 to-white transition-all duration-300 hover:shadow-2xl px-6 py-8 z-10 ${
-              recommendedTier === "crunchyroll_subscriber"
+              recommendedTier === "plus"
                 ? "border-purple-600 ring-4 ring-purple-100"
                 : "border-purple-500"
             }`}
@@ -217,7 +217,7 @@ export function Pricing({
             <div className="absolute -top-5 left-1/2 transform -translate-x-1/2">
               <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 text-sm font-semibold">
                 <Star className="w-3 h-3 mr-1" aria-hidden="true" />
-                {recommendedTier === "crunchyroll_subscriber"
+                {recommendedTier === "plus"
                   ? "Recommended"
                   : "Most Popular"}
               </Badge>
@@ -225,19 +225,19 @@ export function Pricing({
 
             <CardHeader className="text-center pt-6 pb-4">
               <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
-                Crunchyroll Subscriber
+                Plus
               </CardTitle>
               <p className="text-sm font-medium text-purple-800 mb-2">
-                Who it&apos;s for: you already stream on Crunchyroll and want
-                watchrooms on top
+                Who it&apos;s for: regular watch nights with friends, sync,
+                chat, and shared progress
               </p>
               <div className="flex items-baseline justify-center mb-2">
-                <span className="text-5xl font-bold text-gray-900">$8</span>
+                <span className="text-5xl font-bold text-gray-900">$7.99</span>
                 <span className="text-gray-600 ml-1 text-lg">/month</span>
               </div>
               <CardDescription className="text-gray-600 text-base">
-                Works with the Crunchyroll tab you already use — AniDachi adds
-                sync, chat, and async progress
+                Host rooms without the free time limit, invite friends, and use
+                up to 4 video seats
               </CardDescription>
             </CardHeader>
 
@@ -264,13 +264,12 @@ export function Pricing({
               <div className="pt-4">
                 <Button
                   className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60"
-                  onClick={() => handleSubscribe("crunchyroll_subscriber")}
+                  onClick={() => handleSubscribe("plus")}
                   disabled={isSubmitting}
                 >
                   {isSubmitting
                     ? "Redirecting to Stripe…"
-                    : (getCtaLabelForTier?.("crunchyroll_subscriber") ??
-                      "Start paid plan")}
+                    : (getCtaLabelForTier?.("plus") ?? "Start Plus")}
                 </Button>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
                   <div className="flex items-center gap-1.5">
@@ -292,29 +291,29 @@ export function Pricing({
 
           <Card
             className={`relative order-2 border bg-white transition-all duration-300 px-6 py-8 md:opacity-95 md:scale-[0.99] hover:shadow-lg ${
-              recommendedTier === "anime_junkie"
+              recommendedTier === "pro"
                 ? "border-gray-900 ring-4 ring-gray-200"
                 : "border-gray-200"
             }`}
           >
             <CardHeader className="text-center pt-6 pb-4">
               <CardTitle className="text-2xl font-bold text-gray-700 mb-2">
-                Anime Junkie
+                Pro
               </CardTitle>
               <div className="flex items-baseline justify-center mb-2">
-                <span className="text-5xl font-bold text-gray-900">$38</span>
+                <span className="text-5xl font-bold text-gray-900">$14.99</span>
                 <span className="text-gray-600 ml-1 text-lg">/month</span>
               </div>
               <CardDescription className="text-gray-500 text-base">
-                For serious groups: advanced room controls + founder support.
-                Everyone still uses their own Crunchyroll login.
+                For bigger groups: more participants, more groups, longer
+                history, and the same lightweight 4-seat video limit.
               </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-3 px-6 pb-6">
               <ul className="space-y-2 mb-4">
                 {[
-                  "Everything in Crunchyroll Subscriber",
+                  "Everything in Plus",
                   "Invite-only rooms (private links + approval)",
                   "Host & moderator controls (kick/ban, lock playback, room rules)",
                   "Room personalization (name, cover, pinned notes)",
@@ -334,13 +333,12 @@ export function Pricing({
               <div className="pt-4">
                 <Button
                   className="w-full py-4 text-lg font-semibold bg-gray-900 hover:bg-gray-950 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60"
-                  onClick={() => handleSubscribe("anime_junkie")}
+                  onClick={() => handleSubscribe("pro")}
                   disabled={isSubmitting}
                 >
                   {isSubmitting
                     ? "Redirecting to Stripe…"
-                    : (getCtaLabelForTier?.("anime_junkie") ??
-                      "Start Anime Junkie")}
+                    : (getCtaLabelForTier?.("pro") ?? "Start Pro")}
                 </Button>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
                   <div className="flex items-center gap-1.5">
