@@ -116,7 +116,7 @@ Create:
 - `apps/web/lib/anidachi-auth/plan-codes.test.ts`  
   Unit tests for old-to-new mapping and paid-plan parsing.
 
-- `apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql`  
+- `apps/web/supabase/migrations/20260627_plan_code_canonicalization_bridge.sql`
   First database migration: broaden constraints, canonicalize existing data, keep old inputs allowed during bridge window.
 
 - `apps/web/supabase/migrations/20260622_plan_code_canonicalization_tighten.sql`  
@@ -744,12 +744,12 @@ git commit -m "fix(web): canonicalize Stripe subscription plan mapping"
 ## Task 3: Add Supabase Bridge Migration
 
 **Files:**
-- Create: `apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql`
+- Create: `apps/web/supabase/migrations/20260627_plan_code_canonicalization_bridge.sql`
 - Modify: `apps/web/lib/anidachi-auth/db.ts`
 
 - [x] **Step 1: Create bridge migration**
 
-Create `apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql`:
+Create `apps/web/supabase/migrations/20260627_plan_code_canonicalization_bridge.sql`:
 
 ```sql
 -- Canonicalize AniDachi subscription plan codes.
@@ -831,13 +831,13 @@ host_plan_code: PlanCode;
 Run:
 
 ```bash
-rg -n "watcher|nakama|junkie" apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql apps/web/lib/anidachi-auth/db.ts
+rg -n "watcher|nakama|junkie" apps/web/supabase/migrations/20260627_plan_code_canonicalization_bridge.sql apps/web/lib/anidachi-auth/db.ts
 ```
 
 Expected:
 
 ```txt
-apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql:...
+apps/web/supabase/migrations/20260627_plan_code_canonicalization_bridge.sql:...
 ```
 
 Only the bridge migration should mention old plan codes in this task output.
@@ -847,7 +847,7 @@ Only the bridge migration should mention old plan codes in this task output.
 Run:
 
 ```bash
-git add apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql apps/web/lib/anidachi-auth/db.ts
+git add apps/web/supabase/migrations/20260627_plan_code_canonicalization_bridge.sql apps/web/lib/anidachi-auth/db.ts
 git commit -m "feat(db): bridge subscription plan codes to canonical values"
 ```
 
@@ -1621,7 +1621,7 @@ apps/extension/test/auth-client.test.ts
 apps/web/supabase/migrations/20260525_anidachi_auth.sql
 apps/web/supabase/migrations/20260620_billing_entitlements.sql
 apps/web/supabase/migrations/20260623_room_capabilities.sql
-apps/web/supabase/migrations/20260622_plan_code_canonicalization_bridge.sql
+apps/web/supabase/migrations/20260627_plan_code_canonicalization_bridge.sql
 docs/superpowers/plans/2026-06-20-social-rooms-subscriptions-execution-plan.md bridge note only
 ```
 
