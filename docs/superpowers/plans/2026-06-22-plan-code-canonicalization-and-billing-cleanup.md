@@ -1664,7 +1664,7 @@ Expected:
 Staging extension artifact validates with staging endpoints and store-safe permissions.
 ```
 
-- [ ] **Step 5: Commit Task 9**
+- [x] **Step 5: Commit Task 9**
 
 Run:
 
@@ -1678,7 +1678,7 @@ git commit -m "docs: document canonical subscription plan codes"
 **Files:**
 - No direct source edits unless staging findings require a fix.
 
-- [ ] **Step 1: Push feature branch and open PR to staging**
+- [x] **Step 1: Push feature branch and open PR to staging**
 
 Run:
 
@@ -1723,11 +1723,11 @@ PR body must include:
 - Keep bridge migration in place if already applied; it accepts old and new values.
 ```
 
-- [ ] **Step 2: Merge to staging after CI**
+- [x] **Step 2: Merge to staging after CI**
 
 Use the normal protected-branch PR flow. Do not force-push staging.
 
-- [ ] **Step 3: Verify staging deployment**
+- [x] **Step 3: Verify staging deployment**
 
 Run:
 
@@ -1742,6 +1742,18 @@ Expected:
 staging remains noindex/password-gated as appropriate
 webhook returns 400 Missing stripe-signature
 ```
+
+2026-06-22 evidence:
+
+- PR `#64` was opened from `codex/plan-code-canonicalization` to `staging` and
+  merged as `e9c0ba8120a41b30f7e675aed93ce5184d3025df`.
+- GitHub post-merge workflows on `staging` completed successfully: CI,
+  Deploy API, Build Extension, Staging Smoke.
+- Vercel latest deployment for the web project reached `READY`.
+- `curl -fsSI https://staging.anidachi.app` returned `x-robots-tag: noindex,
+  nofollow`.
+- Unsigned `POST https://staging.anidachi.app/api/stripe/webhook` returned
+  `400` with `{"error":"Missing stripe-signature"}`.
 
 - [ ] **Step 4: Run staging product smoke**
 
