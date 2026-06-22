@@ -1,0 +1,15 @@
+# Supabase config for the AniDachi web control plane (apps/web).
+#
+# Schema migrations live in ./migrations and are deployed per environment by the
+# GitHub Actions workflows .github/workflows/db-staging.yml and db-production.yml
+# (via `supabase db push`):
+#   - staging project    (cyppqpprkygjloyfvvvj) <- branch `staging`
+#   - production project (bynsjjxzatxndzjkogim) <- branch `main`
+#
+# CI always links an explicit --project-ref, so `project_id` below is only the
+# DEFAULT target for local `supabase` commands. It is intentionally the STAGING
+# ref so that an accidental local `supabase db push` can never touch production.
+project_id = "cyppqpprkygjloyfvvvj"
+
+[db]
+major_version = 17
