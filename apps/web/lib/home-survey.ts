@@ -37,7 +37,7 @@ export type HomeSurveyAnswers = {
   current_solution?: HomeSurveyCurrentSolution;
 };
 
-export type CheckoutTier = "crunchyroll_subscriber" | "anime_junkie";
+export type CheckoutTier = "plus" | "pro";
 
 export function defaultHomeSurveyAnswers(): HomeSurveyAnswers {
   return { segment: "Friend_group_host" };
@@ -45,10 +45,10 @@ export function defaultHomeSurveyAnswers(): HomeSurveyAnswers {
 
 export function recommendedTierForSurvey(a: HomeSurveyAnswers): CheckoutTier {
   // If someone explicitly wants host controls, they self-identify into the higher tier.
-  if (a.priority === "host_controls") return "anime_junkie";
-  if (a.segment === "Community_mod") return "anime_junkie";
-  if (a.group_size === "9_plus") return "anime_junkie";
-  return "crunchyroll_subscriber";
+  if (a.priority === "host_controls") return "pro";
+  if (a.segment === "Community_mod") return "pro";
+  if (a.group_size === "9_plus") return "pro";
+  return "plus";
 }
 
 export function primaryCtaLabelForSurvey(a: HomeSurveyAnswers): string {
@@ -66,7 +66,7 @@ export function pricingCtaLabelForTier(opts: {
   survey: HomeSurveyAnswers;
 }): string {
   const { tier, survey } = opts;
-  if (tier === "anime_junkie") return "Unlock host controls";
+  if (tier === "pro") return "Unlock host controls";
   if (survey.segment === "Long_distance_watch") return "Start watching together";
   if (survey.segment === "Friend_group_host") return "Start hosting watchrooms";
   return "Start paid plan";

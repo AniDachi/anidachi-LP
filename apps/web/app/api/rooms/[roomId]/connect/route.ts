@@ -4,6 +4,7 @@ import {
   getRoomById,
   getUserById,
   isRoomMember,
+  roomCapabilitiesFromRoom,
   updateRoom,
 } from "@/lib/anidachi-auth/db";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
@@ -71,24 +72,27 @@ export async function POST(
   }
 
   const now = new Date();
+  const user = await getUserById(session.userId);
+  const userPlan = user?.plan ?? session.plan;
+  const capabilities = roomCapabilitiesFromRoom(room);
   let tokenTtlSeconds = ROOM_TOKEN_TTL_SECONDS;
   let quotaSummary: { remainingSeconds: number; resetAt: string } | null = null;
 
   if (isHost) {
-    if (isMeteredPlan(session.plan)) {
+    if (isMeteredPlan(userPlan)) {
       // Close the previous segment before recomputing the quota so a
       // reconnect never double-counts the same span.
-      await settleHostSegment(room, session.plan, now);
+      await settleHostSegment(room, userPlan, now);
       await updateRoom(roomId, { host_connected_at: null });
 
-      const quota = await getHostQuotaView(session.userId, session.plan, now);
+      const quota = await getHostQuotaView(session.userId, userPlan, now);
       if (!canStartHostSession(quota)) {
         return NextResponse.json(quotaExhaustedResponseBody(quota), {
           status: 403,
         });
       }
       tokenTtlSeconds = hostRoomTokenTtlSeconds(quota);
-      quotaSummary = quotaSummaryForResponse(session.plan, quota);
+      quotaSummary = quotaSummaryForResponse(userPlan, quota);
     }
 
     await updateRoom(roomId, {
@@ -101,17 +105,17 @@ export async function POST(
   }
 
   const role = isHost ? "host" : "member";
-  const user = await getUserById(session.userId);
   const roomToken = await signRoomToken(
     {
       sub: session.userId,
       roomId,
       role,
+      capabilities,
       displayName: user?.display_name ?? session.email,
       avatarUrl: user?.avatar_url ?? null,
     },
     tokenTtlSeconds
   );
 
-  return NextResponse.json({ roomToken, quota: quotaSummary });
+  return NextResponse.json({ roomToken, capabilities, quota: quotaSummary });
 }

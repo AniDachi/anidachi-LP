@@ -1,16 +1,19 @@
 import { SignJWT, jwtVerify } from "jose";
 import {
+  extendRefreshToken,
   generateRefreshToken,
   getUserById,
   storeRefreshToken,
   validateRefreshToken,
 } from "./db";
-
-type Plan = "watcher" | "nakama" | "junkie";
+import { normalizePlanCode, type PlanCode } from "./plan-entitlements";
+import {
+  ACCESS_TOKEN_TTL_SECONDS,
+  REFRESH_TOKEN_TTL_DAYS,
+} from "./token-policy";
 
 const EXTENSION_ACCESS_AUDIENCE = "anidachi-extension";
 const EXTENSION_ACCESS_TYPE = "extension_access";
-const EXTENSION_REFRESH_TOKEN_TTL_DAYS = 30;
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.ANIDACHI_JWT_SECRET;
@@ -21,7 +24,7 @@ function getJwtSecret(): Uint8Array {
 export type ExtensionAccessTokenPayload = {
   sub: string;
   email: string;
-  plan: Plan;
+  plan: PlanCode;
 };
 
 export type ExtensionUserProfile = {
@@ -29,7 +32,7 @@ export type ExtensionUserProfile = {
   email: string;
   displayName: string;
   avatarUrl: string | null;
-  plan: Plan;
+  plan: PlanCode;
 };
 
 export async function signExtensionAccessToken(
@@ -44,7 +47,7 @@ export async function signExtensionAccessToken(
     .setSubject(payload.sub)
     .setAudience(EXTENSION_ACCESS_AUDIENCE)
     .setIssuedAt()
-    .setExpirationTime("15m")
+    .setExpirationTime(`${ACCESS_TOKEN_TTL_SECONDS}s`)
     .sign(getJwtSecret());
 }
 
@@ -57,14 +60,12 @@ export async function verifyExtensionAccessToken(
     });
     if (payload.typ !== EXTENSION_ACCESS_TYPE) return null;
     if (!payload.sub || typeof payload.email !== "string") return null;
-    if (payload.plan !== "watcher" && payload.plan !== "nakama" && payload.plan !== "junkie") {
-      return null;
-    }
+    const plan = normalizePlanCode(payload.plan);
 
     return {
       sub: payload.sub,
       email: payload.email,
-      plan: payload.plan,
+      plan,
     };
   } catch {
     return null;
@@ -112,24 +113,36 @@ export async function issueExtensionTokenPair(userId: string): Promise<{
 
   const refreshToken = generateRefreshToken();
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + EXTENSION_REFRESH_TOKEN_TTL_DAYS);
+  expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
   await storeRefreshToken(user.id, refreshToken, expiresAt);
 
   return { accessToken, refreshToken, user };
 }
 
-export async function refreshExtensionAccessToken(
+export async function refreshExtensionTokenPair(
   refreshToken: string,
-): Promise<string | null> {
+): Promise<{ accessToken: string; refreshToken: string } | null> {
   const userId = await validateRefreshToken(refreshToken);
   if (!userId) return null;
 
   const user = await getExtensionUserProfile(userId);
   if (!user) return null;
 
-  return signExtensionAccessToken({
+  const accessToken = await signExtensionAccessToken({
     sub: user.id,
     email: user.email,
     plan: user.plan,
   });
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
+  await extendRefreshToken(refreshToken, expiresAt);
+
+  return { accessToken, refreshToken };
+}
+
+export async function refreshExtensionAccessToken(
+  refreshToken: string,
+): Promise<string | null> {
+  return (await refreshExtensionTokenPair(refreshToken))?.accessToken ?? null;
 }

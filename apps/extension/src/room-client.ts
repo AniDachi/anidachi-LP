@@ -1,8 +1,10 @@
 import {
   ClientEventSchema,
+  RoomCapabilitiesSchema,
   ServerEventSchema,
   type ClientEvent,
   type Participant,
+  type RoomCapabilities,
   type ServerEvent,
 } from "@anidachi/protocol";
 import { API_WS_BASE, WEB_HTTP_BASE } from "./constants";
@@ -33,6 +35,7 @@ export interface CreatedRoom {
   shareableLink: string;
   /** True when an idempotent retry returned the already-created room. */
   reused?: boolean;
+  capabilities?: RoomCapabilities;
   quota?: RoomQuotaSummary | null;
 }
 
@@ -91,7 +94,14 @@ export type RoomHttpMessage =
 
 export type RoomHttpMessageResponse =
   | { ok: true; room: CreatedRoom }
-  | { ok: true; connection: { roomToken: string; quota?: RoomQuotaSummary | null } }
+  | {
+      ok: true;
+      connection: {
+        roomToken: string;
+        capabilities?: RoomCapabilities;
+        quota?: RoomQuotaSummary | null;
+      };
+    }
   | { ok: true; ended: { endedAt: string | null } }
   | { ok: false; error: string; code?: string; resetAt?: string };
 
@@ -135,6 +145,12 @@ function parseQuotaSummary(value: unknown): RoomQuotaSummary | null {
     return null;
   }
   return { remainingSeconds: quota.remainingSeconds, resetAt: quota.resetAt };
+}
+
+function parseRoomCapabilities(value: unknown): RoomCapabilities | undefined {
+  if (value === undefined || value === null) return undefined;
+  const parsed = RoomCapabilitiesSchema.safeParse(value);
+  return parsed.success ? parsed.data : undefined;
 }
 
 function isCreateRoomInput(value: unknown): value is CreateRoomInput {
@@ -219,6 +235,7 @@ export async function createWebsiteRoomFromApi(
     roomToken?: unknown;
     shareableLink?: unknown;
     reused?: unknown;
+    capabilities?: unknown;
     quota?: unknown;
   };
   if (typeof payload.roomToken !== "string" || typeof payload.shareableLink !== "string") {
@@ -234,6 +251,7 @@ export async function createWebsiteRoomFromApi(
     roomToken: payload.roomToken,
     shareableLink: payload.shareableLink,
     reused: payload.reused === true,
+    capabilities: parseRoomCapabilities(payload.capabilities),
     quota: parseQuotaSummary(payload.quota),
   };
 }
@@ -241,7 +259,11 @@ export async function createWebsiteRoomFromApi(
 export async function connectWebsiteRoomFromApi(
   roomId: string,
   accessToken: string,
-): Promise<{ roomToken: string; quota?: RoomQuotaSummary | null }> {
+): Promise<{
+  roomToken: string;
+  capabilities?: RoomCapabilities;
+  quota?: RoomQuotaSummary | null;
+}> {
   logDebug("room.http", "connect website room request", { webHttpBase: WEB_HTTP_BASE, roomId });
   const response = await fetch(
     new URL(`/api/rooms/${encodeURIComponent(roomId)}/connect`, WEB_HTTP_BASE),
@@ -256,11 +278,19 @@ export async function connectWebsiteRoomFromApi(
     throw await websiteRoomHttpError(response, "Failed to connect website room");
   }
 
-  const payload = (await response.json()) as { roomToken?: unknown; quota?: unknown };
+  const payload = (await response.json()) as {
+    roomToken?: unknown;
+    capabilities?: unknown;
+    quota?: unknown;
+  };
   if (typeof payload.roomToken !== "string") {
     throw new Error("Website room connect response is missing roomToken");
   }
-  return { roomToken: payload.roomToken, quota: parseQuotaSummary(payload.quota) };
+  return {
+    roomToken: payload.roomToken,
+    capabilities: parseRoomCapabilities(payload.capabilities),
+    quota: parseQuotaSummary(payload.quota),
+  };
 }
 
 export async function endWebsiteRoomFromApi(
@@ -343,7 +373,11 @@ export async function createRoom(accessToken: string, input?: CreateRoomInput): 
 export async function connectWebsiteRoom(
   roomId: string,
   accessToken: string,
-): Promise<{ roomToken: string; quota?: RoomQuotaSummary | null }> {
+): Promise<{
+  roomToken: string;
+  capabilities?: RoomCapabilities;
+  quota?: RoomQuotaSummary | null;
+}> {
   logDebug("room.http", "connect room through background bridge", {
     webHttpBase: WEB_HTTP_BASE,
     roomId,

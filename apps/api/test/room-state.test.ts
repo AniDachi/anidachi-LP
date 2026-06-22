@@ -107,4 +107,49 @@ describe("RoomState", () => {
     room.leave("u2");
     expect(room.canAdmit("u5")).toBe(true);
   });
+
+  it("uses signed room capabilities for participant caps", () => {
+    const room = new RoomState("room-1", {
+      hostPlanCode: "plus",
+      maxParticipants: 6,
+      maxMediaSeats: 4,
+      canNameRoom: true,
+      canSendPushInvites: true,
+    });
+    for (let i = 1; i <= 6; i++) {
+      room.join(participant(`u${i}`, i === 1 ? "host" : "viewer"));
+    }
+
+    expect(room.canAdmit("u7")).toBe(false);
+    expect(room.canAdmit("u3")).toBe(true);
+    const snapshot = room.snapshot;
+    expect(snapshot.type).toBe("ROOM_SNAPSHOT");
+    if (snapshot.type !== "ROOM_SNAPSHOT") {
+      throw new Error("Expected room snapshot");
+    }
+    expect(snapshot.capabilities?.maxParticipants).toBe(6);
+  });
+
+  it("caps camera/media seats independently from participant count", () => {
+    const room = new RoomState("room-1", {
+      hostPlanCode: "pro",
+      maxParticipants: 15,
+      maxMediaSeats: 2,
+      canNameRoom: true,
+      canSendPushInvites: true,
+    });
+    room.join(participant("u1", "host"));
+    room.join(participant("u2"));
+    room.join(participant("u3"));
+
+    expect(room.canEnableCamera("u1")).toBe(true);
+    room.setCamera("u1", true);
+    expect(room.canEnableCamera("u2")).toBe(true);
+    room.setCamera("u2", true);
+    expect(room.canEnableCamera("u3")).toBe(false);
+    expect(room.canEnableCamera("missing")).toBe(false);
+
+    room.setCamera("u2", false);
+    expect(room.canEnableCamera("u3")).toBe(true);
+  });
 });

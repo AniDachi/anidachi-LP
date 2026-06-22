@@ -90,6 +90,21 @@ export function assertExtensionLogoutRedirect(redirectUrl: string, expectedState
   if (!state || state !== expectedState) throw new Error("Invalid extension logout state");
 }
 
+export function normalizeExtensionRefreshResponse(
+  value: unknown,
+): { accessToken: string; refreshToken?: string } | null {
+  if (typeof value !== "object" || value === null) return null;
+  const body = value as { accessToken?: unknown; refreshToken?: unknown };
+  if (typeof body.accessToken !== "string") return null;
+  if (body.refreshToken !== undefined && typeof body.refreshToken !== "string") {
+    return null;
+  }
+  return {
+    accessToken: body.accessToken,
+    ...(body.refreshToken ? { refreshToken: body.refreshToken } : {}),
+  };
+}
+
 export async function exchangeExtensionAuthCode(
   redirect: ExtensionAuthRedirect,
 ): Promise<ExtensionAuthTokens> {
@@ -124,8 +139,8 @@ export async function refreshExtensionSession(): Promise<ExtensionAuthTokens | n
     return null;
   }
 
-  const body = (await response.json().catch(() => null)) as { accessToken?: unknown } | null;
-  if (!body || typeof body.accessToken !== "string") {
+  const body = normalizeExtensionRefreshResponse(await response.json().catch(() => null));
+  if (!body) {
     await clearStoredAuthTokens();
     return null;
   }
@@ -133,7 +148,12 @@ export async function refreshExtensionSession(): Promise<ExtensionAuthTokens | n
   const tokens: ExtensionAuthTokens = {
     ...stored,
     accessToken: body.accessToken,
+    refreshToken: body.refreshToken ?? stored.refreshToken,
   };
+  const freshUser = await fetchAuthenticatedUser(tokens.accessToken);
+  if (freshUser) {
+    tokens.user = freshUser;
+  }
   await setStoredAuthTokens(tokens);
   return tokens;
 }

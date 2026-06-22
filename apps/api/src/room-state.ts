@@ -1,25 +1,42 @@
-import type { Participant, PlaybackState, ServerEvent } from "@anidachi/protocol";
+import type {
+  Participant,
+  PlaybackState,
+  RoomCapabilities,
+  ServerEvent,
+} from "@anidachi/protocol";
 
-/** Mesh P2P is sized for small rooms (PD3); reject the 5th concurrent user. */
-export const MAX_ROOM_PARTICIPANTS = 4;
+export const LEGACY_ROOM_CAPABILITIES: RoomCapabilities = {
+  hostPlanCode: "free",
+  maxParticipants: 4,
+  // Backward-compatible fallback for old room tokens that predate capability
+  // claims. New Free rooms sign maxMediaSeats=0 from the web app.
+  maxMediaSeats: 4,
+  canNameRoom: false,
+  canSendPushInvites: false,
+};
 
 export class RoomState {
   readonly roomId: string;
+  private capabilities: RoomCapabilities;
   private readonly participantsById = new Map<string, Participant>();
   private hostId: string | null = null;
   private hostState: PlaybackState | undefined;
 
-  constructor(roomId: string) {
+  constructor(roomId: string, capabilities: RoomCapabilities = LEGACY_ROOM_CAPABILITIES) {
     this.roomId = roomId;
+    this.capabilities = capabilities;
   }
 
   /**
    * Whether a JOIN for this user can be admitted. A reconnecting/known user is
-   * always allowed (they do not grow the room); a genuinely new user is
-   * rejected once the room holds MAX_ROOM_PARTICIPANTS distinct participants.
+   * always allowed (they do not grow the room); a genuinely new user is rejected
+   * once the room reaches its signed maxParticipants capability.
    */
   canAdmit(userId: string): boolean {
-    return this.participantsById.has(userId) || this.participantsById.size < MAX_ROOM_PARTICIPANTS;
+    return (
+      this.participantsById.has(userId) ||
+      this.participantsById.size < this.capabilities.maxParticipants
+    );
   }
 
   get participants(): Participant[] {
@@ -30,10 +47,19 @@ export class RoomState {
     return this.hostId;
   }
 
+  get roomCapabilities(): RoomCapabilities {
+    return this.capabilities;
+  }
+
+  setCapabilities(capabilities: RoomCapabilities): void {
+    this.capabilities = capabilities;
+  }
+
   get snapshot(): ServerEvent {
     const base = {
       type: "ROOM_SNAPSHOT" as const,
       roomId: this.roomId,
+      capabilities: this.capabilities,
       participants: this.participants,
     };
 
@@ -105,6 +131,18 @@ export class RoomState {
     return (
       fromUserId !== toUserId && this.hasParticipant(fromUserId) && this.hasParticipant(toUserId)
     );
+  }
+
+  canEnableCamera(userId: string): boolean {
+    const participant = this.participantsById.get(userId);
+    if (!participant) {
+      return false;
+    }
+    if (participant.cameraEnabled) {
+      return true;
+    }
+    const activeMediaSeats = this.participants.filter((item) => item.cameraEnabled).length;
+    return activeMediaSeats < this.capabilities.maxMediaSeats;
   }
 
   setCamera(userId: string, cameraEnabled: boolean): Participant | null {

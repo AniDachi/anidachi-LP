@@ -98,6 +98,51 @@ export function isStaticAssetPath(pathname: string): boolean {
 
 function canBearerBypassStagingGate(pathname: string, method: string): boolean {
   if (pathname === "/api/me" && method === "GET") return true;
+  if (pathname === "/api/me/profile" && method === "PATCH") return true;
+  if (pathname === "/api/friends" && method === "GET") return true;
+  if (pathname === "/api/friends/requests" && method === "POST") return true;
+  if (/^\/api\/friends\/requests\/[^/]+\/accept$/.test(pathname) && method === "POST") {
+    return true;
+  }
+  if (/^\/api\/friends\/requests\/[^/]+\/decline$/.test(pathname) && method === "POST") {
+    return true;
+  }
+  if (/^\/api\/friends\/[^/]+$/.test(pathname) && method === "DELETE") return true;
+  if (/^\/api\/users\/[^/]+\/block$/.test(pathname) && method === "POST") {
+    return true;
+  }
+  if (pathname === "/api/recent-people" && method === "GET") return true;
+  if (/^\/api\/recent-people\/[^/]+\/hide$/.test(pathname) && method === "POST") {
+    return true;
+  }
+  if (pathname === "/api/groups" && (method === "GET" || method === "POST")) {
+    return true;
+  }
+  if (/^\/api\/groups\/[^/]+$/.test(pathname) && (method === "PATCH" || method === "DELETE")) {
+    return true;
+  }
+  if (/^\/api\/groups\/[^/]+\/members$/.test(pathname) && method === "POST") {
+    return true;
+  }
+  if (/^\/api\/groups\/[^/]+\/members\/[^/]+$/.test(pathname) && method === "DELETE") {
+    return true;
+  }
+  if (pathname === "/api/invites" && (method === "GET" || method === "POST")) {
+    return true;
+  }
+  if (/^\/api\/invites\/[^/]+\/accept$/.test(pathname) && method === "POST") {
+    return true;
+  }
+  if (/^\/api\/invites\/[^/]+\/decline$/.test(pathname) && method === "POST") {
+    return true;
+  }
+  if (pathname === "/api/watch-library" && method === "GET") return true;
+  if (pathname === "/api/watch-progress/reconcile" && method === "POST") {
+    return true;
+  }
+  if (pathname === "/api/watch-library/rooms" && method === "POST") {
+    return true;
+  }
   if (pathname === "/api/rooms" && method === "POST") return true;
   if (/^\/api\/rooms\/[^/]+$/.test(pathname) && method === "GET") return true;
   if (/^\/api\/rooms\/[^/]+\/connect$/.test(pathname) && method === "POST") {
@@ -117,7 +162,11 @@ export function canBypassStagingGate(params: {
   if (params.method === "OPTIONS") return true;
   if (isStaticAssetPath(params.pathname)) return true;
   if (params.pathname === STAGING_ACCESS_PATH) return true;
+  if (params.pathname === "/api/auth/refresh") return true;
   if (params.pathname.startsWith("/api/extension/auth/")) return true;
+  if (params.pathname === "/api/stripe/webhook" && params.method === "POST") {
+    return true;
+  }
   return (
     params.authorization?.startsWith("Bearer ") === true &&
     canBearerBypassStagingGate(params.pathname, params.method)

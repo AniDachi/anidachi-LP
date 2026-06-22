@@ -64,14 +64,23 @@ export function SoftwareApplicationJsonLd() {
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "USD",
-      lowPrice: "8",
-      highPrice: "8",
-      offerCount: 1,
+      lowPrice: "7.99",
+      highPrice: "14.99",
+      offerCount: 2,
       offers: [
         {
           "@type": "Offer",
-          name: "Crunchyroll Subscriber",
-          price: "8",
+          name: "AniDachi Plus",
+          price: "7.99",
+          priceCurrency: "USD",
+          priceValidUntil: "2027-12-31",
+          availability: "https://schema.org/InStock",
+          url: `${siteUrl}/#pricing`,
+        },
+        {
+          "@type": "Offer",
+          name: "AniDachi Pro",
+          price: "14.99",
           priceCurrency: "USD",
           priceValidUntil: "2027-12-31",
           availability: "https://schema.org/InStock",
@@ -281,4 +290,3 @@ export function ItemListJsonLd({
   };
   return <JsonLd data={data} />;
 }
-

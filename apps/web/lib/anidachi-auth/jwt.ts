@@ -1,4 +1,12 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
+import {
+  isRoomCapabilities,
+  normalizePlanCode,
+  type PlanCode,
+  type RoomCapabilities,
+} from "./plan-entitlements";
+import { isAcceptedPlanCode } from "./plan-codes";
+import { ACCESS_TOKEN_TTL_SECONDS } from "./token-policy";
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.ANIDACHI_JWT_SECRET;
@@ -11,7 +19,7 @@ function getJwtSecret(): Uint8Array {
 export type AccessTokenPayload = {
   sub: string; // userId
   email: string;
-  plan: "watcher" | "nakama" | "junkie";
+  plan: PlanCode;
 };
 
 export async function signAccessToken(
@@ -21,7 +29,7 @@ export async function signAccessToken(
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
     .setIssuedAt()
-    .setExpirationTime("15m")
+    .setExpirationTime(`${ACCESS_TOKEN_TTL_SECONDS}s`)
     .sign(getJwtSecret());
 }
 
@@ -31,10 +39,11 @@ export async function verifyAccessToken(
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
     if (!payload.sub || !payload.email || !payload.plan) return null;
+    if (!isAcceptedPlanCode(payload.plan)) return null;
     return {
       sub: payload.sub,
       email: payload.email as string,
-      plan: payload.plan as AccessTokenPayload["plan"],
+      plan: normalizePlanCode(payload.plan),
     };
   } catch {
     return null;
@@ -47,6 +56,7 @@ export type RoomTokenPayload = {
   sub: string; // userId
   roomId: string;
   role: "host" | "member";
+  capabilities?: RoomCapabilities;
   displayName?: string;
   avatarUrl?: string | null;
 };
@@ -66,6 +76,7 @@ export async function signRoomToken(
   return new SignJWT({
     roomId: payload.roomId,
     role: payload.role,
+    capabilities: payload.capabilities,
     displayName: payload.displayName,
     avatarUrl: payload.avatarUrl ?? null,
     typ: "room",
@@ -88,6 +99,9 @@ export async function verifyRoomToken(
     if (payload.typ !== "room") return null;
     if (!payload.sub || !payload.roomId || !payload.role) return null;
     if (payload.role !== "host" && payload.role !== "member") return null;
+    if (payload.capabilities !== undefined && !isRoomCapabilities(payload.capabilities)) {
+      return null;
+    }
     if (payload.displayName !== undefined && typeof payload.displayName !== "string") return null;
     if (
       payload.avatarUrl !== null &&
@@ -101,6 +115,7 @@ export async function verifyRoomToken(
       sub: payload.sub,
       roomId: payload.roomId as string,
       role: payload.role,
+      capabilities: payload.capabilities,
       displayName: payload.displayName,
       avatarUrl: payload.avatarUrl ?? null,
     };

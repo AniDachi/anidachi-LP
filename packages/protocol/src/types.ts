@@ -10,6 +10,22 @@ export const ParticipantSchema = z.object({
   lastSeenAt: z.number().int().nonnegative(),
 });
 
+const CanonicalPlanCodeSchema = z.enum(["free", "plus", "pro"]);
+const LegacyPlanCodeSchema = z.enum(["watcher", "nakama", "junkie"]);
+
+export const RoomCapabilitiesSchema = z.object({
+  hostPlanCode: z.union([CanonicalPlanCodeSchema, LegacyPlanCodeSchema]).transform((value) => {
+    if (value === "watcher") return "free";
+    if (value === "nakama") return "plus";
+    if (value === "junkie") return "pro";
+    return value;
+  }),
+  maxParticipants: z.number().int().min(1).max(50),
+  maxMediaSeats: z.number().int().min(0).max(16),
+  canNameRoom: z.boolean(),
+  canSendPushInvites: z.boolean(),
+});
+
 export const PlaybackStateSchema = z.object({
   videoFingerprint: z.string().min(1),
   sourceUrl: z.string().url().optional(),
@@ -151,6 +167,7 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
   RoomScopedSchema.extend({
     type: z.literal("ROOM_SNAPSHOT"),
     participants: z.array(ParticipantSchema),
+    capabilities: RoomCapabilitiesSchema.optional(),
     hostState: PlaybackStateSchema.optional(),
   }),
   z.object({
@@ -193,6 +210,7 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
 ]);
 
 export type Participant = z.infer<typeof ParticipantSchema>;
+export type RoomCapabilities = z.infer<typeof RoomCapabilitiesSchema>;
 export type PlaybackState = z.infer<typeof PlaybackStateSchema>;
 export type ReactionEvent = z.infer<typeof ReactionEventSchema>;
 export type P2PSessionDescription = z.infer<typeof P2PSessionDescriptionSchema>;

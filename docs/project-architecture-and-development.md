@@ -68,7 +68,7 @@ Client plane:  apps/extension inside the user's browser
 Ownership rules:
 
 - durable users, profiles, subscriptions, persistent rooms, room memberships,
-  and future watch progress belong to `apps/web` and Supabase;
+  and watch progress belong to `apps/web` and Supabase;
 - live room state, playback synchronization, participant presence, reactions,
   chat, and P2P signaling belong to `apps/api`;
 - video-page detection, overlay UI, media capture, player control, keyboard
@@ -381,8 +381,8 @@ LiveKit:
 
 ## Watch Progress Direction
 
-Watch progress is planned durable product data. It should not be modeled as only
-live room state.
+Watch progress is durable product data. It should not be modeled as only live
+room state.
 
 Expected ownership:
 
@@ -393,8 +393,9 @@ Expected ownership:
 - Worker may broadcast live progress inside an active room, but durable progress
   belongs to Supabase.
 
-This is planned architecture. Do not assume all watch-progress behavior is
-already shipped.
+The backend-backed watch-library foundation exists, but real staging acceptance
+across extension/browser profiles is still required before treating every
+watch-progress behavior as finished.
 
 ## Local Development
 

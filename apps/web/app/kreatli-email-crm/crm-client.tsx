@@ -1368,7 +1368,7 @@ function SurveyLeadsTable({
             const tags = parseSurveyTags(c.segments);
             const expanded = expandedLeadId === c.id;
             const planLabel = recommendedPlanLabelForTags(tags);
-            const isHostTier = planLabel === "Anime junkie";
+            const isHostTier = planLabel === "Pro";
             return (
               <SurveyLeadTableRow
                 key={c.id}

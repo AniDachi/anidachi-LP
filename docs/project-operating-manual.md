@@ -110,7 +110,7 @@ When deciding where a new feature belongs, ask which plane should own the truth:
 - room membership;
 - invite landing/join routes;
 - Stripe checkout and subscription state;
-- future friends, profiles, and watch-progress persistence.
+- friends, profiles, and watch-progress persistence.
 
 Supabase access lives server-side in the web app. The service role key must never
 be exposed to the extension or browser client code.
@@ -274,8 +274,8 @@ The Durable Object keeps only live state:
 - P2P signaling.
 
 Postgres should not receive per-second playback state. Persist only durable
-business/product data there: users, rooms, memberships, plans, future watch
-progress, and history.
+business/product data there: users, rooms, memberships, plans, watch progress,
+and history.
 
 ## How Playback Sync Works
 

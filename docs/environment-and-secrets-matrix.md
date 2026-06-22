@@ -26,7 +26,12 @@ Project: Anidachi web app.
 | `ANIDACHI_STAGING_GATE_COOKIE_SECRET` | Preview / `staging` | Signs staging access cookie | Gate cookie persists in same browser |
 | `KREATLI_CRM_PASSWORD` | Production / Preview as needed | Internal CRM access | CRM login works only for authorized users |
 | `KREATLI_CRM_SESSION_SECRET` | Production / Preview as needed | Internal CRM session signing | CRM session survives refresh |
-| Stripe variables | Production | Checkout and subscription flow | Stripe webhook/checkout smoke |
+| `STRIPE_SECRET_KEY_TEST` | Preview / `staging`, Development | Server-only Stripe sandbox key. Must start with `sk_test_` | Staging checkout creates a test Checkout Session |
+| `STRIPE_SECRET_KEY_LIVE` | Production | Server-only Stripe live key. Must start with `sk_live_` | Production checkout creates a live Checkout Session |
+| `STRIPE_WEBHOOK_SECRET_TEST` | Preview / `staging`, Development | Stripe test webhook signing secret for `https://staging.anidachi.app/api/stripe/webhook` | Unsigned POST returns `400 Missing stripe-signature`; signed test event returns 2xx |
+| `STRIPE_WEBHOOK_SECRET_LIVE` | Production | Stripe live webhook signing secret for `https://www.anidachi.app/api/stripe/webhook` | Unsigned POST returns `400 Missing stripe-signature`; signed live event returns 2xx |
+| `STRIPE_PRICE_ID_PLUS_TEST` / `STRIPE_PRICE_ID_PRO_TEST` | Preview / `staging`, Development | Stripe test prices for AniDachi Plus/Pro | Test checkout writes `plus`/`pro` subscription state |
+| `STRIPE_PRICE_ID_PLUS_LIVE` / `STRIPE_PRICE_ID_PRO_LIVE` | Production | Stripe live prices for AniDachi Plus/Pro | Live checkout writes `plus`/`pro` subscription state |
 | OAuth client vars | Production / Preview | Google/Discord web auth | Login smoke on matching environment |
 | Supabase public vars | Production / Preview | Browser-safe Supabase project config | `/api/me` and room APIs work |
 

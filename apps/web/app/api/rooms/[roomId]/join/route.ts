@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { getRoomById, addRoomMember, getUserById, updateRoom } from "@/lib/anidachi-auth/db";
+import {
+  addRoomMember,
+  getRoomById,
+  getUserById,
+  roomCapabilitiesFromRoom,
+  updateRoom,
+} from "@/lib/anidachi-auth/db";
 import { signRoomToken } from "@/lib/anidachi-auth/jwt";
 
 export const dynamic = "force-dynamic";
@@ -54,16 +60,18 @@ export async function POST(
   await updateRoom(roomId, { last_active_at: new Date().toISOString() });
 
   const user = await getUserById(session.userId);
+  const capabilities = roomCapabilitiesFromRoom(room);
   const roomToken = await signRoomToken({
     sub: session.userId,
     roomId,
     role: "member",
+    capabilities,
     displayName: user?.display_name ?? session.email,
     avatarUrl: user?.avatar_url ?? null,
   });
 
   if (wantsJson(request)) {
-    return NextResponse.json({ roomToken });
+    return NextResponse.json({ roomToken, capabilities });
   }
 
   const launchUrl = room.source_url ? buildLaunchUrl(room.source_url, roomId) : null;

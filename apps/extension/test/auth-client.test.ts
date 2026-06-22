@@ -5,6 +5,7 @@ import {
   buildExtensionLogoutUrl,
   createAuthMessage,
   isAuthMessage,
+  normalizeExtensionRefreshResponse,
   parseExtensionAuthRedirect,
 } from "../src/auth-client";
 import {
@@ -72,6 +73,28 @@ describe("extension auth client", () => {
     expect(isAuthMessage({ command: "sign-in" })).toBe(false);
   });
 
+  it("normalizes extension refresh responses with optional refresh tokens", () => {
+    expect(
+      normalizeExtensionRefreshResponse({
+        accessToken: "access-2",
+        refreshToken: "refresh-2",
+      }),
+    ).toEqual({ accessToken: "access-2", refreshToken: "refresh-2" });
+
+    expect(
+      normalizeExtensionRefreshResponse({
+        accessToken: "access-only",
+      }),
+    ).toEqual({ accessToken: "access-only" });
+
+    expect(
+      normalizeExtensionRefreshResponse({
+        accessToken: "access",
+        refreshToken: 123,
+      }),
+    ).toBeNull();
+  });
+
   it("keeps the WXT auth key and raw storage key aligned", () => {
     expect(AUTH_TOKENS_STORAGE_KEY).toBe("authTokens");
     expect(AUTH_TOKENS_KEY).toBe("local:authTokens");
@@ -98,13 +121,13 @@ describe("extension auth client", () => {
         email: "user@example.com",
         displayName: "Alina",
         avatarUrl: null,
-        plan: "watcher",
+        plan: "free",
       },
     });
   });
 
   it("rejects malformed users", () => {
-    expect(normalizeAuthenticatedUser({ id: "user-1", plan: "watcher" })).toBeNull();
+    expect(normalizeAuthenticatedUser({ id: "user-1", plan: "free" })).toBeNull();
     expect(
       normalizeAuthenticatedUser({
         id: "user-1",

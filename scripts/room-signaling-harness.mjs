@@ -33,38 +33,45 @@ function b64url(input) {
   return Buffer.from(input).toString("base64url");
 }
 
-function signRoomToken({ sub, roomId, role }) {
+function signRoomToken({ sub, roomId, role, capabilities }) {
   const header = b64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const now = Math.floor(Date.now() / 1000);
-  const payload = b64url(
-    JSON.stringify({
+  const claims = {
       sub,
       roomId,
       role,
+      capabilities,
       displayName: sub,
       avatarUrl: null,
       typ: "room",
       aud: "anidachi-worker",
       iat: now,
       exp: now + 1800,
-    }),
-  );
+  };
+  if (!capabilities) delete claims.capabilities;
+  const payload = b64url(JSON.stringify(claims));
   const data = `${header}.${payload}`;
   const sig = createHmac("sha256", SECRET).update(data).digest("base64url");
   return `${data}.${sig}`;
 }
 
 class Client {
-  constructor(roomId, sub, role) {
+  constructor(roomId, sub, role, capabilities) {
     this.roomId = roomId;
     this.sub = sub;
     this.role = role;
+    this.capabilities = capabilities;
     this.events = [];
     this.closeInfo = null;
   }
 
   async connect(lastSeenP2PServerSeq, participantSessionId) {
-    const token = signRoomToken({ sub: this.sub, roomId: this.roomId, role: this.role });
+    const token = signRoomToken({
+      sub: this.sub,
+      roomId: this.roomId,
+      role: this.role,
+      capabilities: this.capabilities,
+    });
     const url = `${WS_BASE}/ws/${this.roomId}?roomToken=${encodeURIComponent(token)}`;
     this.ws = new WebSocket(url);
     this.ws.addEventListener("message", (event) => {
@@ -273,6 +280,94 @@ async function runScenarios() {
     .waitFor((e) => e.type === "ROOM_SNAPSHOT", "cap-1 rejoin snapshot")
     .catch(() => null);
   record("existing member reconnect not capped", Boolean(rejoinSnap));
+
+  // 6b. Signed room capabilities raise the participant cap above the legacy
+  //     mesh default while keeping the same reconnect behavior.
+  const plusCapabilities = {
+    hostPlanCode: "plus",
+    maxParticipants: 6,
+    maxMediaSeats: 4,
+    canNameRoom: true,
+    canSendPushInvites: true,
+  };
+  const plusRoom = "plus-cap-room";
+  const plusMembers = [];
+  for (let i = 1; i <= 6; i++) {
+    const member = new Client(
+      plusRoom,
+      `plus-${i}`,
+      i === 1 ? "host" : "member",
+      plusCapabilities,
+    );
+    await member.connect();
+    const snapshot = await member.waitFor(
+      (e) => e.type === "ROOM_SNAPSHOT",
+      `plus-${i} snapshot`,
+    );
+    if (i === 1) {
+      record(
+        "signed capabilities included in room snapshot",
+        snapshot.capabilities?.maxParticipants === 6 &&
+          snapshot.capabilities?.maxMediaSeats === 4,
+      );
+    }
+    plusMembers.push(member);
+  }
+  const plusSeventh = new Client(plusRoom, "plus-7", "member", plusCapabilities);
+  await plusSeventh.connect();
+  const plusFullError = await plusSeventh.waitFor(
+    (e) => e.type === "ERROR" && e.code === "ROOM_FULL",
+    "plus seventh participant ROOM_FULL",
+  );
+  record("signed participant cap rejects seventh member", Boolean(plusFullError));
+  plusMembers.forEach((member) => member.close());
+  plusSeventh.close();
+
+  // 6c. Media seats are capped independently from total participants.
+  const mediaCapabilities = {
+    hostPlanCode: "pro",
+    maxParticipants: 4,
+    maxMediaSeats: 1,
+    canNameRoom: true,
+    canSendPushInvites: true,
+  };
+  const mediaRoom = "media-seat-room";
+  const mediaHost = new Client(mediaRoom, "media-host", "host", mediaCapabilities);
+  const mediaGuest = new Client(mediaRoom, "media-guest", "member", mediaCapabilities);
+  await mediaHost.connect();
+  await mediaHost.waitFor((e) => e.type === "ROOM_SNAPSHOT", "media host snapshot");
+  await mediaGuest.connect();
+  await mediaGuest.waitFor((e) => e.type === "ROOM_SNAPSHOT", "media guest snapshot");
+  mediaHost.send({ type: "CAMERA_ON", roomId: mediaRoom, userId: "media-host" });
+  await mediaGuest.waitFor(
+    (e) =>
+      e.type === "ROOM_SNAPSHOT" &&
+      e.participants.some((participant) => participant.id === "media-host" && participant.cameraEnabled),
+    "media host camera enabled",
+  );
+  mediaGuest.send({ type: "CAMERA_ON", roomId: mediaRoom, userId: "media-guest" });
+  const mediaSeatError = await mediaGuest.waitFor(
+    (e) => e.type === "ERROR" && e.code === "MEDIA_SEATS_FULL",
+    "media seat full error",
+  );
+  record("media seat cap rejects extra camera", Boolean(mediaSeatError));
+  mediaHost.send({ type: "CAMERA_OFF", roomId: mediaRoom, userId: "media-host" });
+  await mediaGuest.waitFor(
+    (e) =>
+      e.type === "ROOM_SNAPSHOT" &&
+      e.participants.some((participant) => participant.id === "media-host" && !participant.cameraEnabled),
+    "media host camera disabled",
+  );
+  mediaGuest.send({ type: "CAMERA_ON", roomId: mediaRoom, userId: "media-guest" });
+  const guestCameraSnapshot = await mediaHost.waitFor(
+    (e) =>
+      e.type === "ROOM_SNAPSHOT" &&
+      e.participants.some((participant) => participant.id === "media-guest" && participant.cameraEnabled),
+    "media guest camera enabled",
+  );
+  record("media seat frees after camera off", Boolean(guestCameraSnapshot));
+  mediaHost.close();
+  mediaGuest.close();
 
   // 7. One active session (Block 4): a different session id for the same user
   //    takes the session over (displaced tab gets SESSION_TAKEN_OVER + 4002),

@@ -1,13 +1,21 @@
-import Stripe from "stripe";
+import {
+  STRIPE_API_VERSION,
+  createStripeClient,
+  type StripeMode,
+} from "../../lib/anidachi-auth/stripe-env";
 
-const EVENT = "checkout.session.completed" as const;
+const EVENTS = [
+  "checkout.session.completed",
+  "customer.subscription.created",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+  "invoice.paid",
+  "invoice.payment_failed",
+  "entitlements.active_entitlement_summary.updated",
+] as const;
 const PATH = "/api/stripe/webhook";
 const DEFAULT_LIVE_URL = `https://www.anidachi.app${PATH}`;
-
-function required(name: string, value: string | undefined): string {
-  if (!value) throw new Error(`Missing env var: ${name}`);
-  return value;
-}
+const DEFAULT_TEST_URL = `https://staging.anidachi.app${PATH}`;
 
 function normalizeWebhookUrl(raw: string): string {
   const u = raw.trim();
@@ -18,25 +26,16 @@ function normalizeWebhookUrl(raw: string): string {
 }
 
 async function main() {
-  const mode = (process.argv[2] ?? "live").toLowerCase();
+  const mode = (process.argv[2] ?? "live").toLowerCase() as StripeMode;
   if (mode !== "test" && mode !== "live") {
     throw new Error('First argument must be "test" or "live"');
   }
 
   const urlArg = process.argv[3];
-  if (!urlArg?.trim() && mode === "test") {
-    throw new Error(
-      'For test mode pass the full webhook URL, e.g. https://your-app.vercel.app/api/stripe/webhook (Stripe test webhooks cannot reach localhost unless you use stripe listen).',
-    );
-  }
-  const webhookUrl = normalizeWebhookUrl(urlArg?.trim() || DEFAULT_LIVE_URL);
+  const defaultUrl = mode === "live" ? DEFAULT_LIVE_URL : DEFAULT_TEST_URL;
+  const webhookUrl = normalizeWebhookUrl(urlArg?.trim() || defaultUrl);
 
-  const key =
-    mode === "live"
-      ? required("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY)
-      : required("STRIPE_SECRET_KEY_TEST", process.env.STRIPE_SECRET_KEY_TEST);
-
-  const stripe = new Stripe(key, { apiVersion: "2025-08-27.basil" });
+  const stripe = createStripeClient(mode);
 
   const existing = await stripe.webhookEndpoints.list({ limit: 100 });
   const duplicate = existing.data.find((e) => e.url === webhookUrl);
@@ -50,17 +49,17 @@ async function main() {
 
   const created = await stripe.webhookEndpoints.create({
     url: webhookUrl,
-    enabled_events: [EVENT],
-    description: "AniDachi: new subscription alert (checkout.session.completed)",
-    api_version: "2025-08-27.basil",
+    enabled_events: [...EVENTS],
+    description: "AniDachi: subscription and entitlement sync",
+    api_version: STRIPE_API_VERSION,
   });
 
   process.stdout.write(
     `Registered ${mode} webhook endpoint ${created.id}\n` +
       `URL: ${webhookUrl}\n` +
-      `Event: ${EVENT}\n\n` +
+      `Events: ${EVENTS.join(", ")}\n\n` +
       `Add this to your deployment secrets (e.g. Vercel):\n` +
-      `STRIPE_WEBHOOK_SECRET=${created.secret}\n`,
+      `STRIPE_WEBHOOK_SECRET_${mode === "live" ? "LIVE" : "TEST"}=${created.secret}\n`,
   );
 }
 

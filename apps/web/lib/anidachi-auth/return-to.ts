@@ -7,7 +7,15 @@ export function isSafeAuthReturnTo(value: string): boolean {
     return false;
   }
 
-  return value.startsWith("/room/") || value.startsWith("/extension/connect?");
+  if (
+    value.startsWith("/api/") ||
+    value.startsWith("/_next/") ||
+    value.startsWith("/__anidachi/")
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 export function sanitizeAuthReturnTo(value: string | null | undefined): string {

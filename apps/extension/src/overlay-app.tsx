@@ -5,6 +5,7 @@ import {
   type Participant,
   type PlaybackState,
   type ReactionEvent,
+  type RoomCapabilities,
   type ServerEvent,
 } from "@anidachi/protocol";
 import { Mic, MicOff, SendHorizontal, SmilePlus, X } from "lucide-react";
@@ -27,7 +28,6 @@ import {
 } from "./constants";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
-import { getCrunchyrollProgressEntry } from "./crunchyroll-progress";
 import {
   clearDebugLog,
   getCompactDebugLogText,
@@ -52,6 +52,15 @@ import {
 import { useGhostCam, type GhostVideo, type LiveVoiceStatus } from "./ghost-cam";
 import { getHotkeyAction } from "./hotkeys";
 import type { IncomingP2PSignal, MediaTransportName } from "./media-types";
+import { selectP2PMediaParticipants } from "./p2p-media";
+import {
+  createRoomInvite,
+  listInviteTargets,
+  type CreateRoomInviteInput,
+  type FriendGroup,
+  type FriendListItem,
+  type InviteTargets,
+} from "./social-client";
 import {
   ANIDACHI_COMPOSER_OPEN_ATTR,
   ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
@@ -107,6 +116,11 @@ import {
   type WatchProgressEntry,
   type WatchProgressStore,
 } from "./watch-progress";
+import {
+  reconcileWatchProgress,
+  type WatchCheckpointKind,
+} from "./watch-library-client";
+import { getWatchProgressEntryForAdapter } from "./watch-progress-entry";
 
 interface OverlayAppProps {
   adapter: VideoAdapter;
@@ -198,6 +212,7 @@ const LIVE_CHAT_MESSAGE_TTL_MS = 9000;
 const LIVE_CHAT_MAX_MESSAGES = 6;
 const CHAT_HISTORY_MAX_MESSAGES = 80;
 const MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS = 180;
+const WATCH_LIBRARY_REMOTE_RECONCILE_INTERVAL_MS = 60_000;
 const LIVE_CHAT_NAME_COLORS = [
   "#c4a7ff",
   "#7dd3fc",
@@ -273,6 +288,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [roomToken, setRoomToken] = useState<string | null>(null);
   const [roomShareableLink, setRoomShareableLink] = useState<string | null>(null);
   const [roomQuota, setRoomQuota] = useState<RoomQuotaSummary | null>(null);
+  const [roomCapabilities, setRoomCapabilities] = useState<RoomCapabilities | null>(null);
   const [quotaDisplayTick, setQuotaDisplayTick] = useState(0);
   const quotaMeteredMsRef = useRef(0);
   const quotaTickAtRef = useRef<number | null>(null);
@@ -282,6 +298,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [status, setStatus] = useState<RoomConnectionStatus>("idle");
   const [panelOpen, setPanelOpen] = useState(false);
   const [messageComposerOpen, setMessageComposerOpen] = useState(false);
+  const [invitePanelOpen, setInvitePanelOpen] = useState(false);
+  const [inviteTargets, setInviteTargets] = useState<InviteTargets | null>(null);
+  const [inviteTargetsLoading, setInviteTargetsLoading] = useState(false);
+  const [inviteSendingTarget, setInviteSendingTarget] = useState<string | null>(null);
+  const [inviteStatusMessage, setInviteStatusMessage] = useState<string | null>(null);
   const [messageComposerGuardActive, setMessageComposerGuardActive] = useState(false);
   const [messageComposerShieldActive, setMessageComposerShieldActive] = useState(false);
   const [messageComposerShieldReleasing, setMessageComposerShieldReleasing] = useState(false);
@@ -348,6 +369,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   useEffect(() => {
     roomIdRef.current = roomId;
+    if (!roomId) {
+      setRoomCapabilities(null);
+      setInvitePanelOpen(false);
+      setInviteTargets(null);
+      setInviteStatusMessage(null);
+    }
     handledP2PSignalIdsRef.current.clear();
     lastSeenP2PServerSeqRef.current = 0;
     p2pSignalSequenceRef.current = 0;
@@ -382,6 +409,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       roomShareableLinkRef.current = null;
       setRoomToken(null);
       setRoomShareableLink(null);
+      setRoomCapabilities(null);
     }
 
     logDebug("identity", "room action session refreshed", {
@@ -397,6 +425,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       participant: result.participant,
     };
   }, []);
+
+  const getFreshAuthAccessToken = useCallback(
+    async (reason: string): Promise<string | null> => {
+      const refreshed = await refreshRoomActionIdentity(reason);
+      return refreshed.accessToken;
+    },
+    [refreshRoomActionIdentity],
+  );
 
   const setMessageComposerDomGuard = useCallback(
     (active: boolean) => {
@@ -482,9 +518,32 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     [participant, participants],
   );
   const visibleParticipants = participants.length ? participants : participant ? [participant] : [];
+  const participantCount = participants.length || (participant ? 1 : 0);
+  const roomParticipantLimit = roomCapabilities?.maxParticipants ?? 4;
+  const roomMediaSeatLimit = roomCapabilities?.maxMediaSeats ?? 4;
+  const occupiedMediaSeatCount = visibleParticipants.filter((item) => item.cameraEnabled).length;
+  const localHasMediaSeat = Boolean(
+    currentParticipant &&
+      visibleParticipants.find((item) => item.id === currentParticipant.id)?.cameraEnabled,
+  );
+  const localTryingMedia = Boolean(camsEnabled && currentParticipant && roomMediaSeatLimit > 0);
+  const mediaParticipants = currentParticipant
+    ? selectP2PMediaParticipants(visibleParticipants, currentParticipant.id, localTryingMedia)
+    : [];
+  const displayedCameraParticipants = mediaParticipants.length ? mediaParticipants : [];
+  const liveMediaAvailable =
+    roomMediaSeatLimit > 0 &&
+    (localHasMediaSeat || occupiedMediaSeatCount < roomMediaSeatLimit);
+  const mediaSeatText =
+    roomMediaSeatLimit > 0
+      ? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
+      : "No live media";
+  const participantLimitText = `${participantCount}/${roomParticipantLimit} people`;
   const isHost = currentParticipant?.role === "host";
   const isConnected = status === "connected";
-  const p2pReady = Boolean(roomId && isConnected && roomSnapshotReady);
+  const p2pReady = Boolean(
+    roomId && isConnected && roomSnapshotReady && roomMediaSeatLimit > 0,
+  );
   const title = adapter.getTitle() ?? "HTML5 video";
   const messageComposerShieldVisible = messageComposerOpen || messageComposerShieldActive;
   const messageComposerShieldLatched = messageComposerShieldActive && !messageComposerOpen;
@@ -495,7 +554,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   ]
     .filter(Boolean)
     .join(" ");
-  const participantCount = participants.length || (participant ? 1 : 0);
   // The free daily quota only burns while you host a room that a guest has
   // actually joined (mirrors the server's metering proxy in room-quota.ts), so
   // the live countdown ticks only under those conditions and freezes otherwise.
@@ -517,7 +575,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     ? crunchyrollPlayerChrome.camStackBottomPx
     : DEFAULT_CAM_STACK_BOTTOM_PX;
   const liveChatBottomPx =
-    camsEnabled && visibleParticipants.length
+    camsEnabled && displayedCameraParticipants.length
       ? camStackBottomPx + ghostCamSizePx + Math.max(12, Math.round(ghostCamSizePx * 0.16))
       : Math.max(32, camStackBottomPx);
   const miniPanelMaxHeightPx = isCrunchyroll
@@ -551,6 +609,28 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     .join(" ");
   const displayedChatMessages =
     chatDisplayMode === "history" ? chatHistoryMessages : liveChatMessages;
+
+  useEffect(() => {
+    if (!roomId || !roomSnapshotReady || !camsEnabled) {
+      return;
+    }
+
+    if (roomMediaSeatLimit <= 0) {
+      setCamsEnabled(false);
+      return;
+    }
+
+    if (!localHasMediaSeat && occupiedMediaSeatCount >= roomMediaSeatLimit) {
+      setCamsEnabled(false);
+    }
+  }, [
+    camsEnabled,
+    localHasMediaSeat,
+    occupiedMediaSeatCount,
+    roomId,
+    roomMediaSeatLimit,
+    roomSnapshotReady,
+  ]);
 
   const setRoomStatus = useCallback(
     (nextStatus: RoomConnectionStatus) => {
@@ -829,7 +909,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       getLatestEntry: () => WatchProgressEntry | null,
       isDisposed: () => boolean,
     ) => {
-      if ((!entry?.contentId && !entry?.seriesId) || entry.artworkUrl) {
+      if (
+        entry?.provider !== "crunchyroll" ||
+        (!entry.contentId && !entry.seriesId) ||
+        entry.artworkUrl
+      ) {
         return;
       }
 
@@ -880,21 +964,57 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   );
 
   useEffect(() => {
-    if (adapter.id !== "crunchyroll") {
-      setCurrentResourceEntry(null);
-      return;
-    }
-
     let disposed = false;
     let lastPersistedAt = 0;
+    let lastRemoteReconcileAt = 0;
     const getEntry = () =>
-      getCrunchyrollProgressEntry({
-        title: adapter.getTitle(),
-        video: adapter.video,
+      getWatchProgressEntryForAdapter({
+        adapter,
         roomId: roomId ?? undefined,
         watchedWithCount: Math.max(1, participantCount),
       });
-    const update = (persist: boolean) => {
+    const reconcileRemote = (
+      entry: WatchProgressEntry,
+      checkpointKind: WatchCheckpointKind,
+      force: boolean,
+    ) => {
+      if (!authAccessTokenRef.current || entry.duration <= 0 || entry.currentTime <= 0) {
+        return;
+      }
+
+      const now = Date.now();
+      if (!force && now - lastRemoteReconcileAt < WATCH_LIBRARY_REMOTE_RECONCILE_INTERVAL_MS) {
+        return;
+      }
+
+      lastRemoteReconcileAt = now;
+      void (async () => {
+        const accessToken = await getFreshAuthAccessToken(
+          `watch-library:${checkpointKind}`,
+        );
+        if (!accessToken) {
+          return;
+        }
+
+        await reconcileWatchProgress(accessToken, [
+          {
+            ...entry,
+            checkpointKind,
+            observedAt: now,
+          },
+        ]);
+      })().catch((error: unknown) => {
+        logDebug("watch-library.reconcile", "remote reconcile failed", {
+          checkpointKind,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+    };
+    const update = (
+      persist: boolean,
+      checkpointKind: WatchCheckpointKind = "local",
+      forceRemote = false,
+    ) => {
       const entry = getEntry();
       setCurrentResourceEntry(entry);
       loadPosterArtwork(entry, getEntry, () => disposed);
@@ -904,34 +1024,39 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       const now = Date.now();
-      if (now - lastPersistedAt < 2500) {
+      if (!forceRemote && now - lastPersistedAt < 2500) {
         return;
       }
 
       lastPersistedAt = now;
       void recordWatchProgress(entry).then(setWatchProgressStore);
+      reconcileRemote(entry, checkpointKind, forceRemote);
     };
     const updateDisplay = () => update(false);
-    const persist = () => update(true);
+    const persist = () => update(true, "local", false);
+    const persistPause = () => update(true, "pause", true);
+    const persistSeeked = () => update(true, "seeked", true);
+    const persistEnded = () => update(true, "ended", true);
+    const persistPagehide = () => update(true, "pagehide", true);
 
     update(true);
     const displayInterval = window.setInterval(updateDisplay, 1000);
     const persistInterval = window.setInterval(persist, 5000);
-    adapter.video.addEventListener("pause", persist);
-    adapter.video.addEventListener("seeked", persist);
-    adapter.video.addEventListener("ended", persist);
-    window.addEventListener("pagehide", persist);
+    adapter.video.addEventListener("pause", persistPause);
+    adapter.video.addEventListener("seeked", persistSeeked);
+    adapter.video.addEventListener("ended", persistEnded);
+    window.addEventListener("pagehide", persistPagehide);
 
     return () => {
       disposed = true;
       window.clearInterval(displayInterval);
       window.clearInterval(persistInterval);
-      adapter.video.removeEventListener("pause", persist);
-      adapter.video.removeEventListener("seeked", persist);
-      adapter.video.removeEventListener("ended", persist);
-      window.removeEventListener("pagehide", persist);
+      adapter.video.removeEventListener("pause", persistPause);
+      adapter.video.removeEventListener("seeked", persistSeeked);
+      adapter.video.removeEventListener("ended", persistEnded);
+      window.removeEventListener("pagehide", persistPagehide);
     };
-  }, [adapter, roomId, participantCount, loadPosterArtwork]);
+  }, [adapter, getFreshAuthAccessToken, roomId, participantCount, loadPosterArtwork]);
 
   const sendCameraStatus = useCallback((enabled: boolean) => {
     const activeRoomId = roomIdRef.current;
@@ -964,6 +1089,33 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       signal,
     });
   }, []);
+
+  const handleGhostCamToggle = useCallback(() => {
+    setCamsEnabled((current) => {
+      const next = !current;
+      if (!next) {
+        return false;
+      }
+
+      if (roomIdRef.current && roomMediaSeatLimit <= 0) {
+        setAuthMessage("Live media is not available in this room.");
+        setPanelOpen(true);
+        return false;
+      }
+
+      if (
+        roomIdRef.current &&
+        !localHasMediaSeat &&
+        occupiedMediaSeatCount >= roomMediaSeatLimit
+      ) {
+        setAuthMessage(`All ${roomMediaSeatLimit} live media seats are already in use.`);
+        setPanelOpen(true);
+        return false;
+      }
+
+      return true;
+    });
+  }, [localHasMediaSeat, occupiedMediaSeatCount, roomMediaSeatLimit]);
 
   const ghostCamSession = useGhostCam({
     cameraEnabled: camsEnabled,
@@ -1605,6 +1757,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     roomShareableLinkRef.current = null;
     setRoomToken(null);
     setRoomShareableLink(null);
+    setRoomCapabilities(null);
     clearPersistedRoomId();
     clearRoomHash();
     setAuthMessage(message);
@@ -1623,6 +1776,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       switch (event.type) {
         case "ROOM_SNAPSHOT":
           setParticipants(event.participants);
+          if (event.capabilities) {
+            setRoomCapabilities(event.capabilities);
+          }
           setRoomSnapshotReady(true);
           if (event.hostState && !isCurrentHost(event.participants)) {
             void applyHostState(event.hostState);
@@ -1725,6 +1881,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           return;
         case "ERROR":
           console.warn("[Anidachi] Room error", event.code, event.message);
+          if (event.code === "MEDIA_SEATS_FULL") {
+            setCamsEnabled(false);
+            setAuthMessage(event.message || "No live media seats are available in this room.");
+            setPanelOpen(true);
+            return;
+          }
           if (event.code === "ROOM_FULL" || event.code === "SESSION_TAKEN_OVER") {
             // Terminal: stop reconnecting (the server closes the socket right
             // after this event) and surface the reason instead of looping.
@@ -1831,6 +1993,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       const connected = await connectWebsiteRoom(nextRoomId, activeAccessToken);
       roomTokenRef.current = connected.roomToken;
       setRoomToken(connected.roomToken);
+      setRoomCapabilities(connected.capabilities ?? null);
       setRoomQuota(connected.quota ?? null);
       const shareableLink = new URL(`/room/${encodeURIComponent(nextRoomId)}`, WEB_HTTP_BASE)
         .toString();
@@ -2071,6 +2234,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         roomShareableLinkRef.current = null;
         setRoomToken(null);
         setRoomShareableLink(null);
+        setRoomCapabilities(null);
       }
       logDebug("identity", "participant ready", {
         reason,
@@ -2111,6 +2275,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       releaseRoomTabLock();
       setRoomId(null);
       setParticipants([]);
+      setRoomQuota(null);
+      setRoomCapabilities(null);
     } catch (error) {
       setExtensionContextInvalidated(isExtensionContextInvalidatedError(error));
       setAuthMessage(authErrorMessage(error, "Sign out failed"));
@@ -2180,6 +2346,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       });
       createRequestIdRef.current = null;
       setRoomQuota(created.quota ?? null);
+      setRoomCapabilities(created.capabilities ?? null);
       if (roomIdRef.current) {
         return null;
       }
@@ -2601,7 +2768,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const handleEndRoom = async () => {
     const activeRoomId = roomIdRef.current;
-    const accessToken = authAccessTokenRef.current;
+    const accessToken = await getFreshAuthAccessToken("end-room");
     if (!activeRoomId || !isHost || !accessToken) {
       return;
     }
@@ -2615,6 +2782,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       setRoomId(null);
       setParticipants([]);
       setRoomQuota(null);
+      setRoomCapabilities(null);
       roomTokenRef.current = null;
       roomShareableLinkRef.current = null;
       setRoomToken(null);
@@ -2645,6 +2813,96 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     await navigator.clipboard.writeText(invite).catch(() => fallbackCopy(invite));
     logDebug("overlay.invite", "copied", { roomId, invite });
   };
+
+  const loadInviteTargetsForRoom = useCallback(async () => {
+    const accessToken = await getFreshAuthAccessToken("invite-targets");
+    if (!accessToken) {
+      setPanelOpen(true);
+      setInviteStatusMessage("Sign in to invite friends.");
+      return;
+    }
+
+    setInviteTargetsLoading(true);
+    setInviteStatusMessage(null);
+    try {
+      const targets = await listInviteTargets(accessToken);
+      setInviteTargets(targets);
+      setInvitePanelOpen(true);
+      logDebug("overlay.invite", "targets loaded", {
+        friendCount: targets.friends.length,
+        groupCount: targets.groups.length,
+      });
+    } catch (error) {
+      const message = authErrorMessage(error, "Failed to load invite targets");
+      setInviteStatusMessage(message);
+      logDebug("overlay.invite", "targets failed", { message });
+    } finally {
+      setInviteTargetsLoading(false);
+    }
+  }, [getFreshAuthAccessToken]);
+
+  const toggleInvitePanel = useCallback(async () => {
+    if (invitePanelOpen) {
+      setInvitePanelOpen(false);
+      return;
+    }
+
+    await loadInviteTargetsForRoom();
+  }, [invitePanelOpen, loadInviteTargetsForRoom]);
+
+  const sendInviteToTarget = useCallback(
+    async (
+      targetKey: string,
+      label: string,
+      input: Pick<CreateRoomInviteInput, "recipientUserIds" | "groupId">,
+    ) => {
+      const activeRoomId = roomIdRef.current;
+      const accessToken = await getFreshAuthAccessToken("send-invite");
+      if (!activeRoomId || !accessToken) {
+        setInviteStatusMessage("Create a room and sign in before inviting friends.");
+        return;
+      }
+
+      setInviteSendingTarget(targetKey);
+      setInviteStatusMessage(null);
+      try {
+        await createRoomInvite(accessToken, { roomId: activeRoomId, ...input });
+        setInviteStatusMessage(`Invite sent to ${label}.`);
+        logDebug("overlay.invite", "sent", {
+          roomId: activeRoomId,
+          targetKey,
+          label,
+        });
+      } catch (error) {
+        const message = authErrorMessage(error, "Failed to send invite");
+        setInviteStatusMessage(message);
+        logDebug("overlay.invite", "send failed", {
+          roomId: activeRoomId,
+          targetKey,
+          message,
+        });
+      } finally {
+        setInviteSendingTarget(null);
+      }
+    },
+    [getFreshAuthAccessToken],
+  );
+
+  const sendDirectInvite = useCallback(
+    (friend: FriendListItem) =>
+      sendInviteToTarget(`friend:${friend.user.userId}`, friend.user.displayName, {
+        recipientUserIds: [friend.user.userId],
+      }),
+    [sendInviteToTarget],
+  );
+
+  const sendGroupInvite = useCallback(
+    (group: FriendGroup) =>
+      sendInviteToTarget(`group:${group.id}`, group.name, {
+        groupId: group.id,
+      }),
+    [sendInviteToTarget],
+  );
 
   const copyDebugLog = async (mode: "compact" | "full" = "compact") => {
     logDebug("debug", "copy requested", {
@@ -3267,6 +3525,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             <button
               className="button"
               type="button"
+              onClick={toggleInvitePanel}
+              disabled={!roomId || !authAuthenticated || inviteTargetsLoading}
+            >
+              {inviteTargetsLoading ? "Loading" : "Invite"}
+            </button>
+            <button
+              className="button"
+              type="button"
               onClick={() => sendHostState(true)}
               disabled={!roomId || !isHost}
             >
@@ -3281,6 +3547,72 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           {roomQuota ? (
             <div className="quota-note">
               Free watch-party time today: {formatQuotaCountdown(quotaRemainingSeconds)} left
+            </div>
+          ) : null}
+          {roomId ? (
+            <div className="quota-note">
+              Room capacity: {participantLimitText} · {mediaSeatText}
+            </div>
+          ) : null}
+          {invitePanelOpen ? (
+            <div className="invite-panel">
+              <div className="invite-panel-header">
+                <strong>Friends & groups</strong>
+                <button className="button compact" type="button" onClick={loadInviteTargetsForRoom}>
+                  Refresh
+                </button>
+              </div>
+              {inviteStatusMessage ? <div className="footnote">{inviteStatusMessage}</div> : null}
+              {inviteTargets && inviteTargets.groups.length ? (
+                <>
+                  <div className="section-title compact">Groups</div>
+                  {inviteTargets.groups.map((group) => (
+                    <div className="participant-row" key={group.id}>
+                      <div className="participant-main">
+                        <span className="mini-avatar">{initials(group.name)}</span>
+                        <span className="participant-name">{group.name}</span>
+                      </div>
+                      <button
+                        className="button compact"
+                        disabled={inviteSendingTarget !== null || group.members.length === 0}
+                        onClick={() => sendGroupInvite(group)}
+                        type="button"
+                      >
+                        {inviteSendingTarget === `group:${group.id}` ? "Sending" : "Invite"}
+                      </button>
+                    </div>
+                  ))}
+                </>
+              ) : null}
+              {inviteTargets && inviteTargets.friends.length ? (
+                <>
+                  <div className="section-title compact">Friends</div>
+                  {inviteTargets.friends.map((friend) => (
+                    <div className="participant-row" key={friend.user.userId}>
+                      <div className="participant-main">
+                        <span className="mini-avatar">{initials(friend.user.displayName)}</span>
+                        <span className="participant-name">{friend.user.displayName}</span>
+                      </div>
+                      <button
+                        className="button compact"
+                        disabled={inviteSendingTarget !== null}
+                        onClick={() => sendDirectInvite(friend)}
+                        type="button"
+                      >
+                        {inviteSendingTarget === `friend:${friend.user.userId}` ? "Sending" : "Invite"}
+                      </button>
+                    </div>
+                  ))}
+                </>
+              ) : null}
+              {inviteTargets &&
+              !inviteTargets.friends.length &&
+              !inviteTargets.groups.length &&
+              !inviteTargetsLoading ? (
+                <div className="footnote">
+                  No friends or groups yet. Copy invite still works for one-off watching.
+                </div>
+              ) : null}
             </div>
           ) : null}
 
@@ -3357,6 +3689,13 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             </span>
             <span>{liveVoiceStatusText}</span>
           </div>
+          {roomId && !liveMediaAvailable ? (
+            <div className="footnote">
+              {roomMediaSeatLimit <= 0
+                ? "Live media is not included in this room."
+                : "All live media seats are in use. Sync, chat, and reactions still work."}
+            </div>
+          ) : null}
           {ghostCamSession.voiceMessage ? (
             <div className="footnote">{ghostCamSession.voiceMessage}</div>
           ) : null}
@@ -3370,7 +3709,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
               </div>
               <span className="participant-status">
                 {item.role}
-                {item.cameraEnabled ? " · cam" : ""}
+                {item.cameraEnabled ? " · media" : ""}
                 {liveVoiceActiveSpeakerIds.includes(item.id) ? " · voice" : ""}
               </span>
             </div>
@@ -3383,10 +3722,18 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             <button
               className="toggle"
               type="button"
-              onClick={() => setCamsEnabled((value) => !value)}
+              onClick={handleGhostCamToggle}
             >
               <span>Ghost Cam</span>
-              <span>{camsEnabled ? "On" : "Off"}</span>
+              <span>
+                {roomId && roomMediaSeatLimit <= 0
+                  ? "No seats"
+                  : roomId && !localHasMediaSeat && occupiedMediaSeatCount >= roomMediaSeatLimit
+                    ? "Full"
+                    : camsEnabled
+                      ? "On"
+                      : "Off"}
+              </span>
             </button>
             <div className="size-control">
               <div className="size-control-header">
@@ -3482,6 +3829,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             <div className="debug-line">
               <span>Media</span>
               <strong>{mediaTransport}</strong>
+            </div>
+            <div className="debug-line">
+              <span>Seats</span>
+              <strong>{mediaSeatText}</strong>
             </div>
             <div className="debug-line">
               <span>Logs</span>
@@ -3580,9 +3931,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
       {socialVisible ? (
         <>
-          {camsEnabled ? (
+          {camsEnabled && displayedCameraParticipants.length ? (
             <div className="cam-stack">
-              {visibleParticipants.map((item) => (
+              {displayedCameraParticipants.map((item) => (
                 <CameraBubble
                   key={item.id}
                   participant={item}

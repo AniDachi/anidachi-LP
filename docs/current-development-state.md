@@ -118,6 +118,20 @@ Use it before cross-plane work, especially room/P2P/auth/Worker/CI changes. Do
 not promote Graphify to a required CI check unless the team explicitly accepts
 the runtime and backend requirements.
 
+## Subscription Plan Codes
+
+Canonical subscription plan codes are:
+
+```txt
+free | plus | pro
+```
+
+Legacy values `watcher`, `nakama`, `junkie`, `crunchyroll_subscriber`, and
+`anime_junkie` are migration-only aliases. Runtime code may accept them during
+the bridge window for old tokens, old Stripe metadata, and old database rows,
+but new UI, APIs, protocol payloads, Stripe metadata, database writes, and docs
+must emit `free`, `plus`, and `pro`.
+
 ## Runtime Environments
 
 Local development:
@@ -250,8 +264,9 @@ These are intentionally not treated as solved:
 - P2P media reconnect and asymmetric join timing can still be fragile.
 - Room lifecycle and P2P source-generation hardening are planned but not fully
   complete.
-- Watch progress persistence and friend/group progress are planned architecture,
-  not finished product behavior.
+- Watch progress persistence now has a backend-backed watch-library foundation
+  on the Phase 6 branch, but staging acceptance across real browser profiles is
+  still required before treating it as finished product behavior.
 - Custom API domain for hiding the Cloudflare account subdomain is deferred.
 - Stripe production webhook appears wired, but end-to-end subscription testing is
   still a separate follow-up.

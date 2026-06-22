@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { refreshExtensionAccessToken } from "@/lib/anidachi-auth/extension-session";
+import { refreshExtensionTokenPair } from "@/lib/anidachi-auth/extension-session";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +12,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "refreshToken is required" }, { status: 400 });
   }
 
-  const accessToken = await refreshExtensionAccessToken(body.refreshToken);
-  if (!accessToken) {
+  const tokens = await refreshExtensionTokenPair(body.refreshToken);
+  if (!tokens) {
     return NextResponse.json({ error: "Invalid refresh token" }, { status: 401 });
   }
 
-  return NextResponse.json({ accessToken });
+  return NextResponse.json(tokens);
 }

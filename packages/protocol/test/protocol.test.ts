@@ -3,6 +3,7 @@ import {
   ClientEventSchema,
   type PlaybackState,
   ReactionEventSchema,
+  RoomCapabilitiesSchema,
   ServerEventSchema,
   getExpectedHostTime,
   normalizeRemotePlaybackState,
@@ -36,6 +37,52 @@ describe("room protocol schemas", () => {
       sentAt: 1_000,
       serverTime: 1_005,
     });
+  });
+
+  it("accepts room snapshots with capability metadata", () => {
+    const snapshot = ServerEventSchema.parse({
+      type: "ROOM_SNAPSHOT",
+      roomId: "room-1",
+      capabilities: {
+        hostPlanCode: "pro",
+        maxParticipants: 15,
+        maxMediaSeats: 4,
+        canNameRoom: true,
+        canSendPushInvites: true,
+      },
+      participants: [],
+    });
+
+    expect(snapshot.type).toBe("ROOM_SNAPSHOT");
+    if (snapshot.type !== "ROOM_SNAPSHOT") {
+      throw new Error("Expected room snapshot");
+    }
+    expect(snapshot.capabilities?.hostPlanCode).toBe("pro");
+    expect(snapshot.capabilities?.maxParticipants).toBe(15);
+
+    expect(() =>
+      ServerEventSchema.parse({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-1",
+        capabilities: {
+          hostPlanCode: "pro",
+          maxParticipants: 0,
+          maxMediaSeats: 4,
+          canNameRoom: true,
+          canSendPushInvites: true,
+        },
+        participants: [],
+      }),
+    ).toThrow();
+
+    const parsedLegacy = RoomCapabilitiesSchema.parse({
+      hostPlanCode: "junkie",
+      maxParticipants: 15,
+      maxMediaSeats: 4,
+      canNameRoom: true,
+      canSendPushInvites: true,
+    });
+    expect(parsedLegacy.hostPlanCode).toBe("pro");
   });
 
   it("accepts valid join and reaction events", () => {

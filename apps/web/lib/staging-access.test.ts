@@ -58,6 +58,34 @@ test("staging gate bypasses extension token endpoints and allowed bearer API cal
   );
   assert.equal(
     canBypassStagingGate({
+      pathname: "/api/stripe/webhook",
+      method: "POST",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/stripe/webhook",
+      method: "GET",
+    }),
+    false,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/auth/refresh",
+      method: "GET",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/auth/refresh",
+      method: "POST",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
       pathname: "/api/rooms",
       method: "POST",
       authorization: "Bearer token",
@@ -68,6 +96,142 @@ test("staging gate bypasses extension token endpoints and allowed bearer API cal
     canBypassStagingGate({
       pathname: "/api/me",
       method: "GET",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/me/profile",
+      method: "PATCH",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/friends",
+      method: "GET",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/friends/requests",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/friends/requests/request_1/accept",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/friends/request_1",
+      method: "DELETE",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/users/user_1/block",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/recent-people",
+      method: "GET",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/recent-people/user_1/hide",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/groups",
+      method: "GET",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/groups",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/groups/group_1",
+      method: "PATCH",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/groups/group_1/members",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/groups/group_1/members/user_1",
+      method: "DELETE",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/invites",
+      method: "GET",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/invites",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/invites/invite_1/accept",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/invites/invite_1/decline",
+      method: "POST",
       authorization: "Bearer token",
     }),
     true,

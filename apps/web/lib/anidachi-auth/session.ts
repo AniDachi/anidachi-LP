@@ -1,14 +1,20 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import {
+  ACCESS_TOKEN_COOKIE,
+  ACCESS_TOKEN_COOKIE_MAX_AGE_SECONDS,
+  REFRESH_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS,
+} from "./cookies";
 import { verifyAccessToken, type AccessTokenPayload } from "./jwt";
+import type { PlanCode } from "./plan-entitlements";
 
-export const ACCESS_TOKEN_COOKIE = "anidachi_access_token";
-export const REFRESH_TOKEN_COOKIE = "anidachi_refresh_token";
+export { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE };
 
 export type Session = {
   userId: string;
   email: string;
-  plan: "watcher" | "nakama" | "junkie";
+  plan: PlanCode;
 };
 
 /** Reads and verifies the access token cookie. Returns null if absent or invalid. */
@@ -44,11 +50,11 @@ export function setAuthCookies(
   const base = { httpOnly: true, secure: isProduction, sameSite: "lax" as const, path: "/" };
   response.cookies.set(ACCESS_TOKEN_COOKIE, accessToken, {
     ...base,
-    maxAge: 60 * 15, // 15 minutes
+    maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE_SECONDS,
   });
   response.cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, {
     ...base,
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS,
   });
 }
 
