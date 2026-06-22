@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 import {
   resolveStripeSubscriptionPlan,
   StripeSubscriptionSyncError,
+  syncStripeSubscriptionFromStripe,
 } from "./stripe-subscription-sync";
 
 function subscriptionFixture(params: {
@@ -63,4 +64,14 @@ test("subscription plan resolution fails when price and metadata cannot map to a
     () => resolveStripeSubscriptionPlan(subscriptionFixture({ planCode: "plus" })),
     StripeSubscriptionSyncError,
   );
+});
+
+test("ignores a subscription whose Stripe customer maps to no AniDachi user (no-op, no throw)", async () => {
+  // A subscription.* event for an untracked customer (legacy/manual/abandoned
+  // checkout) must be a no-op so the webhook returns 200 and Stripe stops
+  // retrying — never a thrown 500.
+  const result = await syncStripeSubscriptionFromStripe(subscriptionFixture({}), {
+    resolveUserId: async () => null,
+  });
+  assert.equal(result, null);
 });
