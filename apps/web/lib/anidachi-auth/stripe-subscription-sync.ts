@@ -79,9 +79,15 @@ export async function refreshUserPlanFromSubscriptions(
   return effectivePlan;
 }
 
+export type SyncStripeSubscriptionDeps = {
+  /** Override the Stripe-customer -> AniDachi-user lookup (used by tests). */
+  resolveUserId?: (stripeCustomerId: string) => Promise<string | null>;
+};
+
 export async function syncStripeSubscriptionFromStripe(
   subscription: Stripe.Subscription,
-): Promise<StripeSubscriptionSyncResult> {
+  deps: SyncStripeSubscriptionDeps = {},
+): Promise<StripeSubscriptionSyncResult | null> {
   const stripeCustomerId = stripeCustomerIdFrom(subscription.customer);
   if (!stripeCustomerId) {
     throw new StripeSubscriptionSyncError(
@@ -89,13 +95,21 @@ export async function syncStripeSubscriptionFromStripe(
     );
   }
 
+  const resolveUserId = deps.resolveUserId ?? getUserIdByStripeCustomerId;
   const metadataUserId = subscription.metadata.userId;
-  const userId =
-    metadataUserId || (await getUserIdByStripeCustomerId(stripeCustomerId));
+  const userId = metadataUserId || (await resolveUserId(stripeCustomerId));
   if (!userId) {
-    throw new StripeSubscriptionSyncError(
-      `Could not map subscription customer ${stripeCustomerId} to an AniDachi user`,
+    // The subscription belongs to a Stripe customer we don't track: a legacy
+    // customer from before this project's database, a subscription created
+    // directly in the Stripe dashboard, or an abandoned/incomplete checkout
+    // that Stripe later expired (which still fires customer.subscription.*).
+    // Nothing to sync on our side, so treat it as a no-op instead of throwing:
+    // a thrown error returns HTTP 500 from the webhook and makes Stripe retry a
+    // permanently-unmappable event for days.
+    console.warn(
+      `[stripe-sync] Ignoring subscription ${subscription.id}: Stripe customer ${stripeCustomerId} maps to no AniDachi user`,
     );
+    return null;
   }
 
   await upsertBillingCustomer({ userId, stripeCustomerId });
