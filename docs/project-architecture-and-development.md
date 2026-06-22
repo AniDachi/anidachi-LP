@@ -437,11 +437,23 @@ Local extension dev build:
 pnpm dev:extension
 ```
 
+Use the shared staging website and staging Worker from the WXT dev browser:
+
+```bash
+pnpm dev:extension:staging
+```
+
 Load the dev extension from:
 
 ```txt
 apps/extension/.output/chrome-mv3-dev
 ```
+
+The WXT dev browser uses a persistent local Chrome profile at
+`apps/extension/.wxt/chrome-data`, so login/cookies survive restarts. Refresh the
+video page after content script changes if the page looks stale, and reload the
+extension in `chrome://extensions` after manifest, permission, or background
+service-worker changes.
 
 Local auth/room testing requires the web app and Worker to share compatible
 environment values, especially the JWT secret used for room tokens. Do not guess

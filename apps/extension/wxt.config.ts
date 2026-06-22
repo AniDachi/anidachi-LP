@@ -70,6 +70,7 @@ const extensionDescription =
       : "Ambient watch-party overlay for local Anidachi MVP testing.";
 const extensionVersion = process.env.WXT_EXTENSION_VERSION ?? "0.1.0";
 const buildId = process.env.WXT_BUILD_ID?.trim();
+const chromeProfileDir = process.env.WXT_CHROME_PROFILE_DIR?.trim() ?? "./.wxt/chrome-data";
 const useBroadHostPermissions =
   extensionChannel === "local" ||
   (extensionChannel === "staging" && process.env.WXT_BROAD_HOST_PERMISSIONS === "true");
@@ -97,6 +98,13 @@ const extensionIcons = {
 };
 
 export default defineConfig({
+  webExt: {
+    chromiumArgs: [
+      `--user-data-dir=${chromeProfileDir}`,
+      "--no-first-run",
+      "--no-default-browser-check",
+    ],
+  },
   manifest: {
     name: extensionName,
     short_name: extensionShortName,
