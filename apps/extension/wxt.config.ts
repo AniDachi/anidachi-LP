@@ -71,6 +71,7 @@ const extensionDescription =
 const extensionVersion = process.env.WXT_EXTENSION_VERSION ?? "0.1.0";
 const buildId = process.env.WXT_BUILD_ID?.trim();
 const chromeProfileDir = process.env.WXT_CHROME_PROFILE_DIR?.trim() ?? "./.wxt/chrome-data";
+const disableAutoBrowser = process.env.WXT_DISABLE_WEB_EXT === "true";
 const useBroadHostPermissions =
   extensionChannel === "local" ||
   (extensionChannel === "staging" && process.env.WXT_BROAD_HOST_PERMISSIONS === "true");
@@ -99,6 +100,7 @@ const extensionIcons = {
 
 export default defineConfig({
   webExt: {
+    disabled: disableAutoBrowser,
     chromiumArgs: [
       `--user-data-dir=${chromeProfileDir}`,
       "--no-first-run",
