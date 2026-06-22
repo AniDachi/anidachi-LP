@@ -116,10 +116,10 @@ architecture, auth, room, P2P, Worker, CI, or release-flow changes.
 Setup per machine:
 
 ```bash
-uv tool install graphifyy
-graphify install --platform codex
+uv tool install --upgrade graphifyy
+graphify install --project --platform codex
 pnpm graph:baseline
-pnpm graph:hook:install
+pnpm graph:hook:uninstall
 pnpm graph:hook:status
 pnpm graph:merge-driver:install
 ```
@@ -133,7 +133,6 @@ Daily use:
 graphify query "Trace room token flow from web to Worker WebSocket join."
 pnpm graph:update
 pnpm graph:query "Trace room token flow from web to Worker WebSocket join."
-pnpm graph:watch
 ```
 
 Rules:
@@ -144,8 +143,10 @@ Rules:
   `GRAPH_REPORT.md`, and `manifest.json`.
 - Do not commit `graphify-out/cost.json`, HTML exports, scoped scratch graphs,
   cache files, Obsidian/wiki exports, or other local generated files.
-- The post-commit hook keeps code relationships fresh; docs/semantic changes
-  can still need a manual `$graphify . --update` in Codex.
+- Git hooks are not installed by default because they dirty `graphify-out/`
+  during normal checkout/commit work. Use `pnpm graph:update` manually after
+  meaningful code or architecture changes. `pnpm graph:watch` and
+  `pnpm graph:hook:install` are local opt-ins only.
 - `.gitattributes` marks `graphify-out/graph.json` for Graphify's merge
   driver. Run `pnpm graph:merge-driver:install` once per clone.
 - `$graphify .` in Codex uses the active Codex session and does not require a
@@ -205,7 +206,7 @@ Release/deploy:
 
 ## graphify
 
-This project has a knowledge graph at graphify-out/ with god nodes, community
+This project has a knowledge graph at `graphify-out/` with god nodes, community
 structure, and cross-file relationships.
 
 When the user types `$graphify` in Codex, use the Graphify skill before doing
@@ -214,17 +215,16 @@ slash commands.
 
 Rules:
 - For codebase questions, first run `graphify query "<question>"` when
-  graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for
+  `graphify-out/graph.json` exists. Use `graphify path "<A>" "<B>"` for
   relationships and `graphify explain "<concept>"` for focused concepts. These
-  return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw
+  return a scoped subgraph, usually much smaller than `GRAPH_REPORT.md` or raw
   grep output.
-- Dirty graphify-out/ files are expected after hooks or incremental updates;
-  dirty graph files are not a reason to skip graphify. Only skip graphify if
-  the task is about stale or incorrect graph output, or the user explicitly says
-  not to use it.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of
-  raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when
-  query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current
-  (AST-only, no API cost).
+- Dirty graph files are not a reason to skip Graphify, but do not include
+  `graphify-out/` in ordinary feature PRs unless the graph was intentionally
+  refreshed.
+- If `graphify-out/wiki/index.md` exists, use it for broad navigation instead
+  of raw source browsing.
+- Read `graphify-out/GRAPH_REPORT.md` only for broad architecture review or
+  when query/path/explain do not surface enough context.
+- After meaningful code or architecture changes, run `pnpm graph:update`
+  manually. For docs/semantic changes, use `$graphify . --update` in Codex.

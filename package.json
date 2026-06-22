@@ -21,6 +21,7 @@
     "graph:extract": "graphify extract . --no-cluster",
     "graph:hook:install": "graphify hook install",
     "graph:hook:status": "graphify hook status",
+    "graph:hook:uninstall": "graphify hook uninstall",
     "graph:merge-driver:install": "git config merge.graphify.name 'Graphify graph.json union merge' && git config merge.graphify.driver 'graphify merge-driver %O %A %B'",
     "graph:query": "graphify query",
     "graph:update": "graphify update . --no-cluster",
