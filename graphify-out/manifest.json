@@ -380,7 +380,7 @@
     "semantic_hash": ""
   },
   "apps/extension/wxt.config.ts": {
-    "mtime": 1782167559.5078804,
+    "mtime": 1782168101.713851,
     "ast_hash": "c404f40998669fce0d398418faa3d4d3",
     "semantic_hash": ""
   },
@@ -1665,7 +1665,7 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1782167589.031018,
+    "mtime": 1782168101.7190435,
     "ast_hash": "db0e0c3121292ff854dcea9502ff59bf",
     "semantic_hash": ""
   },
@@ -1830,7 +1830,7 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1782167615.8660438,
+    "mtime": 1782168101.7136135,
     "ast_hash": "c9652cd6e6f3bd981c04abbf370f8f65",
     "semantic_hash": ""
   },
@@ -1890,8 +1890,8 @@
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
-    "mtime": 1782167598.9502785,
-    "ast_hash": "478bc3bff3ae39c7eba3704ed27a16b2",
+    "mtime": 1782169416.3212776,
+    "ast_hash": "91aedd3b4bacfba76812caf296ec23c0",
     "semantic_hash": ""
   },
   "docs/environment-and-secrets-matrix.md": {
@@ -1915,8 +1915,8 @@
     "semantic_hash": ""
   },
   "docs/project-architecture-and-development.md": {
-    "mtime": 1782167607.6536722,
-    "ast_hash": "599cce1099fa240a5c9bf2a19af006da",
+    "mtime": 1782169422.8508859,
+    "ast_hash": "0e7ca8c342f8693451a86df479a90c51",
     "semantic_hash": ""
   },
   "docs/project-knowledge-map.md": {
@@ -2565,8 +2565,8 @@
     "semantic_hash": ""
   },
   "scripts/dev-extension-staging-google.sh": {
-    "mtime": 1782167580.9853697,
-    "ast_hash": "fb9c18fa91f1f0b6e90a4fad0390ba90",
+    "mtime": 1782169407.1881206,
+    "ast_hash": "53ab6922057b41ee671fd35daf76b60f",
     "semantic_hash": ""
   }
 }
