@@ -22,14 +22,16 @@ Current policy:
 If `graphify-out/graph.json` exists, agents should query it before broad
 architecture reads.
 
-Observed local status on 2026-06-18:
+Observed local status on 2026-06-23:
 
 - Graphify CLI is installed via `uv tool` in the current development
-  environment and upgraded to `0.8.40`.
+  environment and upgraded to `0.8.44`.
 - Codex project integration is installed under `.codex/`.
 - Codex `multi_agent = true` is enabled in the local `~/.codex/config.toml`.
 - Code graph baseline is maintained with `graphify update . --no-cluster`.
-- Post-commit and post-checkout hooks are installed locally.
+- Post-commit and post-checkout hooks are intentionally uninstalled locally to
+  avoid dirtying `graphify-out/` during normal checkout/commit work.
+- The Graphify merge driver is installed locally for `graphify-out/graph.json`.
 
 ## Why Use It
 
@@ -74,9 +76,9 @@ Graphify should be installed outside the repo, preferably with `uv tool` or
 Check the local install:
 
 ```bash
-uv tool install graphifyy
+uv tool install --upgrade graphifyy
 graphify --help
-graphify install --platform codex
+graphify install --project --platform codex
 ```
 
 For Codex, enable subagents once per machine:
@@ -88,18 +90,19 @@ multi_agent = true
 
 This belongs in `~/.codex/config.toml`. Restart Codex after changing it.
 
-Install local git hooks after the first graph exists:
+Install the merge driver once per clone and keep git hooks disabled by default:
 
 ```bash
-pnpm graph:hook:install
+pnpm graph:hook:uninstall
 pnpm graph:hook:status
 pnpm graph:merge-driver:install
 ```
 
-The hook updates code relationships after commits. It also installs a merge
-driver command locally; `.gitattributes` marks `graphify-out/graph.json` to use
-that driver so parallel graph updates are union-merged instead of leaving
-conflict markers. It does not make Graphify a CI dependency.
+`.gitattributes` marks `graphify-out/graph.json` to use Graphify's merge driver
+so parallel graph updates are union-merged instead of leaving conflict markers.
+Git hooks are a local opt-in only; they are useful for people who want automatic
+refreshes, but they also dirty `graphify-out/` during routine branch switches and
+commits. The default project workflow is manual updates.
 
 ## Baseline Graph
 
@@ -145,33 +148,35 @@ With `--out graphify-out/scopes/api`, Graphify writes to
 
 ## Keeping The Graph Current
 
-Use three layers:
+Use manual updates as the default:
 
-1. Post-commit hook for code changes:
-
-```bash
-pnpm graph:hook:install
-```
-
-2. Watcher during active agent/coding sessions:
+1. Before broad architecture, auth, room, P2P, Worker, CI, or release-flow work,
+   query the existing graph:
 
 ```bash
-pnpm graph:watch
+pnpm graph:query "Trace room token flow from web to Worker WebSocket join."
 ```
 
-3. Manual update before complex PRs or after code changes:
+2. After meaningful code or architecture changes, refresh the code graph:
 
 ```bash
 pnpm graph:update
 ```
 
-`pnpm graph:update` uses `graphify update . --no-cluster`, so it is fast and
-does not require an LLM backend for code changes.
-
-For docs/semantic changes in Codex, use:
+3. For docs/semantic changes in Codex, use the Codex-hosted extraction path:
 
 ```txt
 $graphify . --update
+```
+
+`pnpm graph:update` uses `graphify update . --no-cluster`, so it is fast and
+does not require an LLM backend for code changes.
+
+Watcher and git hooks are local opt-ins only:
+
+```bash
+pnpm graph:watch
+pnpm graph:hook:install
 ```
 
 Check whether Graphify thinks a manual update is pending:
