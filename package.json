@@ -16,6 +16,7 @@
     "dev:extension": "pnpm --filter @anidachi/extension dev",
     "dev:extension:local": "pnpm --filter @anidachi/extension dev:local",
     "dev:extension:staging": "pnpm --filter @anidachi/extension dev:staging",
+    "dev:extension:staging:google": "bash scripts/dev-extension-staging-google.sh",
     "dev:extension:staging:narrow": "pnpm --filter @anidachi/extension dev:staging:narrow",
     "dev:web": "pnpm --filter @anidachi/web dev",
     "graph:baseline": "graphify update . --no-cluster",

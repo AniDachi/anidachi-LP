@@ -443,6 +443,16 @@ Use the shared staging website and staging Worker from the WXT dev browser:
 pnpm dev:extension:staging
 ```
 
+Use the Google-friendly launcher when testing Google sign-in:
+
+```bash
+pnpm dev:extension:staging:google
+```
+
+It starts WXT without auto-opening the `web-ext` browser, then opens a normal
+Chrome profile with the dev extension loaded. This avoids Google's "browser or
+app may not be secure" block while keeping WXT rebuilds active.
+
 Load the dev extension from:
 
 ```txt

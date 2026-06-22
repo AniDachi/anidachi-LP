@@ -119,6 +119,22 @@ Worker, use:
 pnpm dev:extension:staging
 ```
 
+Google can reject WXT's auto-opened browser because `web-ext` launches Chrome
+with remote debugging flags. For testing Google sign-in, use the Google-friendly
+launcher instead:
+
+```bash
+pnpm dev:extension:staging:google
+```
+
+This keeps WXT running for rebuilds, but opens a normal macOS Chrome instance
+with the dev extension loaded from `.output/chrome-mv3-dev`. Its persistent
+profile lives at:
+
+```txt
+apps/extension/.wxt/google-auth-chrome-data
+```
+
 The staging dev command intentionally uses broad host permissions for local
 developer speed. It does not change the store-safe staging artifact. To test the
 same narrow host permissions used by tester/store builds, run:
