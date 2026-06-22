@@ -7,6 +7,9 @@
     "build": "wxt build",
     "check": "wxt prepare && tsc -p tsconfig.json",
     "dev": "wxt",
+    "dev:local": "wxt",
+    "dev:staging": "WXT_EXTENSION_CHANNEL=staging WXT_WEB_HTTP_BASE=https://staging.anidachi.app WXT_API_HTTP_BASE=https://anidachi-api-staging.vladislav-gul7.workers.dev WXT_API_WS_BASE=wss://anidachi-api-staging.vladislav-gul7.workers.dev WXT_BROAD_HOST_PERMISSIONS=true wxt",
+    "dev:staging:narrow": "WXT_EXTENSION_CHANNEL=staging WXT_WEB_HTTP_BASE=https://staging.anidachi.app WXT_API_HTTP_BASE=https://anidachi-api-staging.vladislav-gul7.workers.dev WXT_API_WS_BASE=wss://anidachi-api-staging.vladislav-gul7.workers.dev WXT_BROAD_HOST_PERMISSIONS=false wxt",
     "test": "wxt prepare && vitest run"
   },
   "dependencies": {

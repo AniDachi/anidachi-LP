@@ -46,6 +46,7 @@ pnpm check
 pnpm test
 pnpm dev:check
 pnpm dev:extension
+pnpm dev:extension:staging
 pnpm dev:api
 pnpm dev:demo
 pnpm graph:baseline
