@@ -36,22 +36,6 @@ function assertWorkerHostMatchesEnv() {
   }
 }
 
-function assertNoSecretFieldNames(value, label) {
-  const text = JSON.stringify(value).toLowerCase();
-  const forbidden = [
-    "api_token",
-    "apitoken",
-    "cloudflare_turn_key_api_token",
-    "livekit_api_secret",
-    "anidachi_jwt_secret",
-  ];
-  for (const key of forbidden) {
-    if (text.includes(key)) {
-      throw new Error(`${label}: response includes forbidden secret field ${key}`);
-    }
-  }
-}
-
 assertWorkerHostMatchesEnv();
 
 const health = await fetchJson("/");
@@ -59,16 +43,15 @@ if (health.ok !== true || health.service !== "anidachi-api") {
   throw new Error(`Unexpected Worker health response: ${JSON.stringify(health)}`);
 }
 
-const ice = await fetchJson("/ice-servers");
-if (!Array.isArray(ice.iceServers) || ice.iceServers.length === 0) {
-  throw new Error("/ice-servers: expected at least one ICE server");
+// /ice-servers is authenticated (Block 7.1: only signed-in room members receive
+// TURN credentials). A smoke run carries no token, so the correct and secure
+// response is 401. Asserting it confirms both that the route is deployed and
+// that the auth gate is active — an unauthenticated 2xx would be a regression.
+const iceResponse = await fetch(url("/ice-servers"));
+if (iceResponse.status !== 401) {
+  throw new Error(
+    `/ice-servers: expected 401 (auth-gated) without a token, got ${iceResponse.status}`,
+  );
 }
-if (!Number.isInteger(ice.ttlSeconds) || ice.ttlSeconds < 600 || ice.ttlSeconds > 86400) {
-  throw new Error(`/ice-servers: unexpected ttlSeconds ${ice.ttlSeconds}`);
-}
-if (!["cloudflare", "fallback"].includes(ice.provider)) {
-  throw new Error(`/ice-servers: unexpected provider ${ice.provider}`);
-}
-assertNoSecretFieldNames(ice, "/ice-servers");
 
 console.log(`Worker smoke passed for ${baseUrl}`);
