@@ -16,11 +16,11 @@ function isStaticOrInternalAssetPath(pathname: string): boolean {
 export function shouldAutoRefreshWebsiteSession(params: {
   method: string;
   pathname: string;
-  hasAccessToken: boolean;
+  hasValidAccessToken: boolean;
   hasRefreshToken: boolean;
 }): boolean {
   if (params.method !== "GET") return false;
-  if (params.hasAccessToken || !params.hasRefreshToken) return false;
+  if (params.hasValidAccessToken || !params.hasRefreshToken) return false;
   if (params.pathname === AUTH_REFRESH_PATH) return false;
   if (params.pathname.startsWith("/api/")) return false;
   if (params.pathname.startsWith("/__anidachi/")) return false;

@@ -3,6 +3,7 @@ import {
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
 } from "./lib/anidachi-auth/cookies";
+import { verifyAccessToken } from "./lib/anidachi-auth/jwt";
 import {
   AUTH_REFRESH_PATH,
   shouldAutoRefreshWebsiteSession,
@@ -163,12 +164,16 @@ function withStagingNoindexHeaders(response: NextResponse): NextResponse {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const currentPath = `${pathname}${request.nextUrl.search}`;
+  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const hasValidAccessToken = accessToken
+    ? Boolean(await verifyAccessToken(accessToken))
+    : false;
 
   if (
     shouldAutoRefreshWebsiteSession({
       method: request.method,
       pathname,
-      hasAccessToken: Boolean(request.cookies.get(ACCESS_TOKEN_COOKIE)?.value),
+      hasValidAccessToken,
       hasRefreshToken: Boolean(request.cookies.get(REFRESH_TOKEN_COOKIE)?.value),
     })
   ) {
