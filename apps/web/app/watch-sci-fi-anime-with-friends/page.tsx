@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Sci-Fi Anime With Friends — AniDachi Group Watchrooms",
+  title: "Watch Sci-Fi Anime With Friends (2026) | AniDachi",
   description:
-    "The best sci-fi anime to watch with friends on Crunchyroll. Sync mind-bending reveals, debate theories, and track everyone's progress with AniDachi watchrooms. Steins;Gate, Code Geass, Cowboy Bebop, Neon Genesis Evangelion, and more.",
+    "Watch sci-fi anime with friends on Crunchyroll — sync mind-bending reveals live or catch up at your own pace with AniDachi. Steins;Gate, Vivy, Ghost in the Shell, and more.",
   alternates: { canonical: "/watch-sci-fi-anime-with-friends" },
   openGraph: {
-    title: "Watch Sci-Fi Anime With Friends | AniDachi",
+    title: "Watch Sci-Fi Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for the best sci-fi anime on Crunchyroll — synced playback, theory chat, and async catch-up.",
     url: "/watch-sci-fi-anime-with-friends",
@@ -45,6 +45,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-sci-fi", label: "Why sci-fi anime for groups?", level: 2 },
   { id: "top-picks", label: "Top sci-fi anime to watch together", level: 2 },
   { id: "setup", label: "How to set up your watchroom", level: 2 },
@@ -68,11 +69,11 @@ export default function WatchSciFiAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Sci-Fi Anime", url: "/watch-sci-fi-anime-with-friends" },
       ]}
-      title="Watch Sci-Fi Anime With Friends — AniDachi Watchrooms"
+      title="Watch Sci-Fi Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for sci-fi anime on Crunchyroll."
       url="/watch-sci-fi-anime-with-friends"
       datePublished="2026-06-21"
-      dateModified="2026-06-21"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -81,7 +82,12 @@ export default function WatchSciFiAnimeWithFriendsPage() {
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
         Watch Sci-Fi Anime With Friends
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Sci-fi anime is built for group discussion. Install AniDachi, open
@@ -191,6 +197,8 @@ export default function WatchSciFiAnimeWithFriendsPage() {
         <Link href="/watch-psychological-anime-with-friends" className="text-purple-600 hover:underline">Psychological anime</Link>
         {" · "}
         <Link href="/watch-mecha-anime-with-friends" className="text-purple-600 hover:underline">Mecha anime</Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

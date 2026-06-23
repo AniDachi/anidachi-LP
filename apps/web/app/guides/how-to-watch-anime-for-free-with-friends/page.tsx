@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { HowToJsonLd } from "@/components/json-ld";
 
 export const metadata: Metadata = {
   title: "How to Watch Anime for Free With Friends Online (2026) | AniDachi",
@@ -57,9 +58,24 @@ const tocHeadings: TocHeading[] = [
   { id: "faq", label: "FAQ", level: 2 },
 ];
 
+const howToSteps = [
+  { name: "Create a free Crunchyroll account", text: "Go to crunchyroll.com, sign up with an email address, and select the free tier. No credit card required." },
+  { name: "Install AniDachi on Chrome", text: "Everyone in the group adds the AniDachi Chrome extension to sync playback and host the shared watchroom." },
+  { name: "Find a title on Crunchyroll free tier", text: "Filter Browse by 'Free' to find titles available on Crunchyroll's ad-supported plan." },
+  { name: "Create an AniDachi watchroom", text: "One person clicks the AniDachi icon, creates a new room, and copies the invite link." },
+  { name: "Share the invite link", text: "Send the link via Discord, iMessage, or wherever your group communicates." },
+  { name: "Everyone opens the same episode and joins", text: "AniDachi auto-detects the episode and syncs playback. Free accounts see their own ads; AniDachi pauses sync during ad breaks." },
+];
+
 export default function HowToWatchAnimeForFreeWithFriendsPage() {
   return (
-    <SeoPageLayout
+    <>
+      <HowToJsonLd
+        name="How to watch anime for free with friends online"
+        description="Watch anime together online using Crunchyroll's free tier and AniDachi for synchronized watchrooms."
+        steps={howToSteps}
+      />
+      <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
         { name: "Guides", url: "/watch-anime-together" },
@@ -258,5 +274,6 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
         </li>
       </ul>
     </SeoPageLayout>
+    </>
   );
 }

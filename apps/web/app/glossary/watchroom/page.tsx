@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "What Is a Watchroom? — Anime Watch Party Glossary",
+  title: "What Is a Watchroom? — Anime Watch Party Glossary (2026)",
   description:
     "A watchroom is a shared virtual space where friends watch the same anime together, either in real-time or asynchronously. Learn how watchrooms work in AniDachi.",
   alternates: { canonical: "/glossary/watchroom" },
@@ -28,6 +28,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "how-anidachi", label: "How it works in AniDachi", level: 2 },
   { id: "vs-watch-party", label: "Watchroom vs watch party", level: 2 },
   { id: "related", label: "Related", level: 2 },
@@ -46,14 +47,19 @@ export default function WatchroomGlossaryPage() {
       description="Definition and explanation of anime watchrooms."
       url="/glossary/watchroom"
       datePublished="2026-04-23"
-      dateModified="2026-04-24"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         What Is a Watchroom?
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           A watchroom is a shared virtual space where friends watch the same

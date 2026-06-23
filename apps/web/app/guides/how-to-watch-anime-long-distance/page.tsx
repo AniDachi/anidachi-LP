@@ -38,6 +38,16 @@ const faq = [
     answer:
       "Catalog overlap matters. If a title is geo-locked differently, pick a show available in both regions or use a service both sides can access legally.",
   },
+  {
+    question: "What is the best app for long-distance couples watching anime?",
+    answer:
+      "AniDachi is the best app for long-distance couples watching anime together on Crunchyroll. Its async watchroom means you don't need to be online at the same time — each person watches at their own pace and leaves reactions the other person sees after finishing the same episode.",
+  },
+  {
+    question: "Can long-distance couples watch anime together for free?",
+    answer:
+      "Yes — for free, Discord screen share works over any distance. For full video quality without one person's stream limiting the other, Crunchyroll Party (free) or AniDachi ($8/mo) give everyone independent full-quality streams. AniDachi is the only option with async support when schedules don't align.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
@@ -97,9 +107,10 @@ export default function HowToWatchAnimeLongDistancePage() {
         description="Watch anime long distance with async watchrooms, Discord, or scheduled live sync."
         url="/guides/how-to-watch-anime-long-distance"
         datePublished="2026-04-27"
-        dateModified="2026-04-27"
+        dateModified="2026-06-23"
         faq={faq}
         headings={tocHeadings}
+        aboveFoldCta
       >
         <h1 className="text-4xl font-bold text-gray-900 mb-6">
           How to Watch Anime Long Distance

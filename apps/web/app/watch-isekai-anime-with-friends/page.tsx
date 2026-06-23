@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Isekai Anime With Friends | AniDachi",
+  title: "Watch Isekai Anime With Friends (2026) | AniDachi",
   description:
-    "Watch isekai anime with friends online — Re:Zero, Mushoku Tensei, Overlord & more. Sync Crunchyroll with your friend group and react together in real time.",
+    "Watch isekai anime with friends on Crunchyroll using AniDachi — synced playthroughs, async catch-up, and spoiler controls. Re:Zero, KonoSuba, Mushoku Tensei, and more.",
   alternates: { canonical: "/watch-isekai-anime-with-friends" },
   openGraph: {
-    title: "Watch Isekai Anime With Friends | AniDachi",
+    title: "Watch Isekai Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for the best isekai anime on Crunchyroll — synced playback, spoiler-safe reactions, and async catch-up for transported-to-another-world adventures.",
     url: "/watch-isekai-anime-with-friends",
@@ -50,6 +50,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-isekai", label: "Why isekai anime for groups?", level: 2 },
   { id: "top-picks", label: "Top isekai anime to watch together", level: 2 },
   { id: "setup", label: "How to set up your watchroom", level: 2 },
@@ -73,11 +74,11 @@ export default function WatchIsekaiAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Isekai Anime", url: "/watch-isekai-anime-with-friends" },
       ]}
-      title="Watch Isekai Anime With Friends — AniDachi Watchrooms"
+      title="Watch Isekai Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for isekai anime on Crunchyroll."
       url="/watch-isekai-anime-with-friends"
       datePublished="2025-06-01"
-      dateModified="2026-06-01"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -87,14 +88,20 @@ export default function WatchIsekaiAnimeWithFriendsPage() {
         Watch Isekai Anime With Friends
       </h1>
 
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
-          Yes, you can watch isekai anime with friends using AniDachi&apos;s
-          watchroom on Crunchyroll. Sync playback in real time or use async
-          catch-up so members who binge ahead don&apos;t spoil the next world
-          rule for everyone else. Works for 2–10 people across different time
-          zones, all on Crunchyroll.
-        </strong>
+          Yes — you can watch isekai anime with friends using AniDachi on
+          Crunchyroll. Sync playback in real time or use async catch-up so
+          members who binge ahead don&apos;t spoil the next world rule for
+          everyone else.
+        </strong>{" "}
+        Each person streams from their own Crunchyroll account at full quality.
       </p>
 
       <h2
@@ -247,6 +254,8 @@ export default function WatchIsekaiAnimeWithFriendsPage() {
         >
           Horror anime
         </Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

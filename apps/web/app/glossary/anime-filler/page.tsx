@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "What Is Anime Filler? — Anime Watch Party Glossary | AniDachi",
+  title: "What Is Anime Filler? — Anime Watch Party Glossary | AniDachi (2026)",
   description:
     "Anime filler is content not adapted from the original manga — non-canon episodes added to avoid catching up with the source material. Learn how to skip filler when watching with friends.",
   alternates: { canonical: "/glossary/anime-filler" },
@@ -50,6 +50,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-filler-exists", label: "Why anime filler exists", level: 2 },
   { id: "most-filler", label: "Series with the most filler", level: 2 },
   { id: "skipping-with-groups", label: "Skipping filler in a group watch", level: 2 },
@@ -69,14 +70,19 @@ export default function AnimeFillerGlossaryPage() {
       description="Definition and guide to anime filler — what it is, which series have the most, and how to skip it when watching with friends."
       url="/glossary/anime-filler"
       datePublished="2026-06-04"
-      dateModified="2026-06-04"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         What Is Anime Filler?
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Anime filler refers to episodes or arcs that are not adapted from the

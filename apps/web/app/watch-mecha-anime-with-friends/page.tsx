@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Mecha Anime With Friends | AniDachi",
+  title: "Watch Mecha Anime With Friends (2026) | AniDachi",
   description:
-    "Watch mecha anime with friends online — Evangelion, Gurren Lagann, Code Geass & more. Sync your streams and break down every battle together.",
+    "Watch mecha anime battles with friends in real-time sync or async on Crunchyroll. AniDachi watchrooms keep everyone at the same robot reveal. Gurren Lagann, Evangelion, Code Geass, and more.",
   alternates: { canonical: "/watch-mecha-anime-with-friends" },
   openGraph: {
-    title: "Watch Mecha Anime With Friends | AniDachi",
+    title: "Watch Mecha Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for mecha anime on Crunchyroll — synced robot battles, shared lore debates, and spoiler-safe reactions for the most ambitious anime series.",
     url: "/watch-mecha-anime-with-friends",
@@ -50,6 +50,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-mecha", label: "Why mecha anime for groups?", level: 2 },
   { id: "top-picks", label: "Top mecha anime to watch together", level: 2 },
   { id: "setup", label: "How to set up your watchroom", level: 2 },
@@ -77,11 +78,11 @@ export default function WatchMechaAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Mecha Anime", url: "/watch-mecha-anime-with-friends" },
       ]}
-      title="Watch Mecha Anime With Friends — AniDachi Watchrooms"
+      title="Watch Mecha Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for mecha anime on Crunchyroll."
       url="/watch-mecha-anime-with-friends"
       datePublished="2025-06-01"
-      dateModified="2026-06-01"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -90,7 +91,12 @@ export default function WatchMechaAnimeWithFriendsPage() {
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
         Watch Mecha Anime With Friends
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Yes, you can watch mecha anime with friends using AniDachi&apos;s
@@ -253,6 +259,8 @@ export default function WatchMechaAnimeWithFriendsPage() {
         >
           Isekai anime
         </Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

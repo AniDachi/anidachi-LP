@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { animeList } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Mystery & Psychological Anime With Friends — AniDachi Watchrooms",
+  title: "Watch Mystery & Psychological Anime With Friends (2026) | AniDachi",
   description:
-    "The best mystery and psychological anime to watch with friends on Crunchyroll. Share theories, debate twists, and keep spoilers contained with AniDachi watchrooms. Death Note, Steins;Gate, Monster, Odd Taxi, and more.",
+    "Mystery anime is the ultimate group watch — theorize together live or async with AniDachi on Crunchyroll. Death Note, Steins;Gate, Erased, and more.",
   alternates: { canonical: "/watch-mystery-anime-with-friends" },
   openGraph: {
-    title: "Watch Mystery Anime With Friends | AniDachi",
+    title: "Watch Mystery Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for mystery and psychological anime on Crunchyroll — theory threads, spoiler-safe chat, and twist-reaction sessions.",
     url: "/watch-mystery-anime-with-friends",
@@ -45,6 +45,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-mystery", label: "Why mystery anime for groups?", level: 2 },
   { id: "top-picks", label: "Mystery anime to watch together", level: 2 },
   { id: "theory-setup", label: "Setting up theory threads", level: 2 },
@@ -73,11 +74,11 @@ export default function WatchMysteryAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Mystery Anime", url: "/watch-mystery-anime-with-friends" },
       ]}
-      title="Watch Mystery & Psychological Anime With Friends — AniDachi Watchrooms"
+      title="Watch Mystery & Psychological Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for mystery and psychological anime on Crunchyroll."
       url="/watch-mystery-anime-with-friends"
       datePublished="2026-05-18"
-      dateModified="2026-05-18"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -86,7 +87,12 @@ export default function WatchMysteryAnimeWithFriendsPage() {
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
         Watch Mystery &amp; Psychological Anime With Friends
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Mystery anime is the ultimate group experience — theory-crafting
@@ -194,6 +200,8 @@ export default function WatchMysteryAnimeWithFriendsPage() {
         <Link href="/watch-action-anime-with-friends" className="text-purple-600 hover:underline">Action anime</Link>
         {" · "}
         <Link href="/watch-romance-anime-with-friends" className="text-purple-600 hover:underline">Romance anime</Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

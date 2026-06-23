@@ -267,6 +267,7 @@ export default function BestRomanceAnimeWithFriendsPage() {
         <li><Link href="/watch-romance-anime-with-friends" className="hover:underline">Watch romance anime with friends — genre hub</Link></li>
         <li><Link href="/watch-shoujo-anime-with-friends" className="hover:underline">Watch shoujo anime with friends — genre hub</Link></li>
         <li><Link href="/watch-anime-together" className="hover:underline">Watch anime together online — complete guide</Link></li>
+        <li><Link href="/best-anime-for-long-distance-relationships" className="hover:underline">Best anime for long-distance relationships</Link></li>
       </ul>
 
       <PrimaryCheckoutCta

@@ -8,7 +8,7 @@ import { genreHubItemList } from "@/lib/genre-hub-links";
 export const metadata: Metadata = {
   title: "Watch Anime Together Online — Free Anime Watch Party App (2026)",
   description:
-    "Watch anime together online with friends — live or async. AniDachi creates Crunchyroll watchrooms with sync, chat, and progress tracking. Free anime watch party options compared, including long-distance viewing.",
+    "The best way to watch anime together online is AniDachi — Crunchyroll watchrooms with sync, chat, and async support. Free options (Discord, Crunchyroll Party) and paid options compared.",
   alternates: { canonical: "/watch-anime-together" },
   openGraph: {
     title: "Watch Anime Together Online — Free Anime Watch Party (2026)",
@@ -67,6 +67,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-watch", label: "Why watch anime together?", level: 2 },
   { id: "watch-party", label: "Anime watch party options", level: 2 },
   { id: "methods-heading", label: "Methods", level: 2 },
@@ -107,6 +108,12 @@ export default function WatchAnimeTogetherPage() {
         Watch Anime Together Online
       </h1>
 
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           The best way to watch anime together online is with a dedicated

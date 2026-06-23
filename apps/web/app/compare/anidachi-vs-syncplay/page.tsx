@@ -41,6 +41,7 @@ const faq = [
 ];
 
 const headings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "tldr", label: "At a glance", level: 2 },
   { id: "what-youre-syncing", label: "What you are syncing", level: 2 },
   { id: "when-syncplay", label: "When Syncplay makes sense", level: 2 },
@@ -61,7 +62,7 @@ export default function AniDachiVsSyncplayPage() {
       description="Compare Crunchyroll-first watchrooms with desktop sync workflows."
       url="/compare/anidachi-vs-syncplay"
       datePublished="2026-05-11"
-      dateModified="2026-05-11"
+      dateModified="2026-06-23"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -70,8 +71,13 @@ export default function AniDachiVsSyncplayPage() {
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         AniDachi vs Syncplay for anime watch parties
       </h1>
-
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
+      <p className="text-xl text-gray-700 leading-relaxed mb-6">
         <strong>
           The real decision is what you are trying to sync. If your group watches anime
           on Crunchyroll, the simplest path is: everyone streams locally, and a browser

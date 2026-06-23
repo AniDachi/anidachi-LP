@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Romance Anime With Friends — AniDachi Group Watchrooms",
+  title: "Watch Romance Anime With Friends (2026) | AniDachi",
   description:
-    "The best romance anime to watch with friends on Crunchyroll. Share emotional moments, debate ships, and sync tearjerker episodes with AniDachi watchrooms. Your Lie in April, Toradora, Clannad, and more.",
+    "The best romance anime to watch with friends on Crunchyroll — sync tearjerker moments live or catch up at your own pace with AniDachi. Your Lie in April, Toradora, Clannad, and more.",
   alternates: { canonical: "/watch-romance-anime-with-friends" },
   openGraph: {
-    title: "Watch Romance Anime With Friends | AniDachi",
+    title: "Watch Romance Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for romance anime on Crunchyroll — spoiler-safe shipping debates, emotional sync sessions, and async catch-up.",
     url: "/watch-romance-anime-with-friends",
@@ -45,6 +45,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-romance", label: "Why romance anime for groups?", level: 2 },
   { id: "top-picks", label: "Top romance anime to watch together", level: 2 },
   { id: "setup", label: "How to set up your watchroom", level: 2 },
@@ -68,11 +69,11 @@ export default function WatchRomanceAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Romance Anime", url: "/watch-romance-anime-with-friends" },
       ]}
-      title="Watch Romance Anime With Friends — AniDachi Watchrooms"
+      title="Watch Romance Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for romance anime on Crunchyroll."
       url="/watch-romance-anime-with-friends"
       datePublished="2026-05-18"
-      dateModified="2026-05-18"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -82,13 +83,20 @@ export default function WatchRomanceAnimeWithFriendsPage() {
         Watch Romance Anime With Friends
       </h1>
 
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
-          Romance anime lands hardest when someone else is watching with you.
-          Install AniDachi, open any Crunchyroll series below, and create a
-          watchroom — sync tearjerker episodes live or leave episode-tagged
+          Romance anime lands hardest when someone else is watching with you —
+          install AniDachi, open any Crunchyroll series below, and create a
+          watchroom. Sync tearjerker episodes live or leave episode-tagged
           reactions for friends who are a few episodes behind.
-        </strong>
+        </strong>{" "}
+        Each person streams from their own Crunchyroll account at full quality.
       </p>
 
       <h2
@@ -188,6 +196,8 @@ export default function WatchRomanceAnimeWithFriendsPage() {
         <Link href="/watch-comedy-anime-with-friends" className="text-purple-600 hover:underline">Comedy anime</Link>
         {" · "}
         <Link href="/watch-action-anime-with-friends" className="text-purple-600 hover:underline">Action anime</Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

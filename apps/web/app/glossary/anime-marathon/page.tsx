@@ -50,6 +50,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "definition", label: "Anime marathon definition", level: 2 },
   { id: "best-series", label: "Best anime for marathoning", level: 2 },
   { id: "group-marathon", label: "How to run a group anime marathon", level: 2 },
@@ -70,14 +71,19 @@ export default function AnimeMarathonGlossaryPage() {
       description="Definition and tips for anime marathon watching — what it means, best series for marathoning, and how to run a group anime marathon."
       url="/glossary/anime-marathon"
       datePublished="2026-06-21"
-      dateModified="2026-06-21"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         What Is an Anime Marathon? (Meaning, Tips & Best Series)
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           An anime marathon is an extended watching session where you work
