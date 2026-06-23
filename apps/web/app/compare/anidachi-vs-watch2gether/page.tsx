@@ -8,9 +8,9 @@ const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Watch2Gether — Which Works Better for Crunchyroll?",
+  title: "AniDachi vs Watch2Gether — Which Works Better for Crunchyroll? (2026)",
   description:
-    "AniDachi vs Watch2Gether for anime nights: Crunchyroll-first watchrooms, per-user playback, and when a generic room link is enough.",
+    "AniDachi is the better choice for Crunchyroll anime groups. Watch2Gether is a generic free room for casual co-watching. Full comparison to find the right fit.",
   alternates: { canonical: "/compare/anidachi-vs-watch2gether" },
   openGraph: {
     title: "AniDachi vs Watch2Gether",
@@ -41,6 +41,7 @@ const faq = [
 ];
 
 const headings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "tldr", label: "At a glance", level: 2 },
   { id: "what-anime-groups-need", label: "What anime groups need", level: 2 },
   { id: "when-watch2gether", label: "When Watch2Gether is enough", level: 2 },
@@ -61,7 +62,7 @@ export default function AniDachiVsWatch2GetherPage() {
       description="Compare Crunchyroll-first watchrooms with generic watch-together rooms."
       url="/compare/anidachi-vs-watch2gether"
       datePublished="2026-05-11"
-      dateModified="2026-05-11"
+      dateModified="2026-06-23"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -70,8 +71,13 @@ export default function AniDachiVsWatch2GetherPage() {
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         AniDachi vs Watch2Gether for anime watch parties
       </h1>
-
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
+      <p className="text-xl text-gray-700 leading-relaxed mb-6">
         <strong>
           If your group is Crunchyroll-first, the most reliable workflow is per-user
           playback in each person’s own tab—then sync the room on top. Generic “room link”

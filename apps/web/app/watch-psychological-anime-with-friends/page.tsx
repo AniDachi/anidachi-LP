@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Psychological Anime With Friends | AniDachi",
+  title: "Watch Psychological Anime With Friends (2026) | AniDachi",
   description:
-    "Watch psychological anime with friends — Death Note, Steins;Gate, Monster & more. Sync your streams and theorize together in real time.",
+    "Watch psychological anime twists with friends in real-time using AniDachi on Crunchyroll. Synced reveals, spoiler-safe chat, and async catch-up. Death Note, Paranoia Agent, Psycho-Pass, and more.",
   alternates: { canonical: "/watch-psychological-anime-with-friends" },
   openGraph: {
-    title: "Watch Psychological Anime With Friends | AniDachi",
+    title: "Watch Psychological Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for psychological anime on Crunchyroll — synced playback, theory-tracking chat, and spoiler-safe async for mind-bending series.",
     url: "/watch-psychological-anime-with-friends",
@@ -90,11 +90,11 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
           url: "/watch-psychological-anime-with-friends",
         },
       ]}
-      title="Watch Psychological Anime With Friends — AniDachi Watchrooms"
+      title="Watch Psychological Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for psychological anime on Crunchyroll."
       url="/watch-psychological-anime-with-friends"
       datePublished="2025-06-01"
-      dateModified="2026-06-01"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -103,7 +103,12 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
         Watch Psychological Anime With Friends
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Yes, you can watch psychological anime with friends using AniDachi&apos;s
@@ -265,6 +270,8 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
         >
           Isekai anime
         </Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

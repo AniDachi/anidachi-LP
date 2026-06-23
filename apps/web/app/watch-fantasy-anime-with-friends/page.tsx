@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Fantasy Anime With Friends | AniDachi",
+  title: "Watch Fantasy Anime With Friends (2026) | AniDachi",
   description:
-    "Watch fantasy anime with friends online — Frieren, Hunter x Hunter, Made in Abyss & more. Sync Crunchyroll with your group and react to world-building together.",
+    "AniDachi lets you watch fantasy anime with friends on Crunchyroll in sync or async. Share every world-building reveal with your group. Frieren, Hunter x Hunter, Made in Abyss, and more.",
   alternates: { canonical: "/watch-fantasy-anime-with-friends" },
   openGraph: {
-    title: "Watch Fantasy Anime With Friends | AniDachi",
+    title: "Watch Fantasy Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for fantasy anime on Crunchyroll — synced playback, spoiler-safe reactions, and async catch-up for epic adventures.",
     url: "/watch-fantasy-anime-with-friends",
@@ -50,6 +50,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-fantasy", label: "Why fantasy anime for groups?", level: 2 },
   { id: "top-picks", label: "Top fantasy anime to watch together", level: 2 },
   { id: "setup", label: "How to set up your watchroom", level: 2 },
@@ -73,11 +74,11 @@ export default function WatchFantasyAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Fantasy Anime", url: "/watch-fantasy-anime-with-friends" },
       ]}
-      title="Watch Fantasy Anime With Friends — AniDachi Watchrooms"
+      title="Watch Fantasy Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for fantasy anime on Crunchyroll."
       url="/watch-fantasy-anime-with-friends"
       datePublished="2026-06-08"
-      dateModified="2026-06-08"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -86,7 +87,12 @@ export default function WatchFantasyAnimeWithFriendsPage() {
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
         Watch Fantasy Anime With Friends
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Yes, you can watch fantasy anime with friends using AniDachi&apos;s
@@ -243,6 +249,8 @@ export default function WatchFantasyAnimeWithFriendsPage() {
         >
           Classic anime listicle
         </Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

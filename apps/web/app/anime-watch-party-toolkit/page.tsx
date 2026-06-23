@@ -12,7 +12,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Anime Watch Party Toolkit — Guides, Glossary & Compare (2026)",
   description:
-    "One hub for Crunchyroll group watching: pillars, how-to guides, glossary terms, and competitor context—before you install AniDachi.",
+    "Start here for Crunchyroll anime watch parties: install AniDachi, read a setup guide, compare alternatives, and learn the key terms — all in one place.",
   alternates: { canonical: "/anime-watch-party-toolkit" },
   openGraph: {
     title: "Anime Watch Party Toolkit",
@@ -31,18 +31,34 @@ export const metadata: Metadata = {
 
 const faq = [
   {
-    question: "When should I open this toolkit instead of the long-form pillars?",
+    question: "What is the best anime watch party setup for Crunchyroll?",
     answer:
-      "Use it when you already know you need a Crunchyroll stack but want fast orientation—compare tools, skim definitions, and dive into one deep guide without hunting the footer.",
+      "The best Crunchyroll watch party setup is AniDachi — a Chrome extension that syncs playback, adds real-time chat, and supports async watching. Install it on each participant's device, open any Crunchyroll episode, create a watchroom, and share the invite link.",
   },
   {
-    question: "Does the toolkit replace the Chrome extension install?",
+    question: "Can you do an anime watch party without everyone being online at the same time?",
     answer:
-      "No. It explains what to read before install. You still add AniDachi from the Chrome Web Store and sign into Crunchyroll on each device.",
+      "Yes — AniDachi supports async watching. Each person watches at their own pace, marks episodes as done, and leaves timestamped reactions. Others see those reactions when they finish the same episode. No scheduling required.",
+  },
+  {
+    question: "Is Teleparty better than AniDachi for anime watch parties?",
+    answer:
+      "Teleparty supports more streaming platforms but has no async mode. AniDachi is purpose-built for Crunchyroll with async watching, auto anime detection, and per-person progress tracking. For Crunchyroll-first groups, AniDachi is the better choice.",
+  },
+  {
+    question: "When should I open this toolkit instead of the long-form pillars?",
+    answer:
+      "Use it when you already know you need a Crunchyroll stack but want fast orientation — compare tools, skim definitions, and dive into one deep guide without hunting the footer.",
+  },
+  {
+    question: "Do I need a Crunchyroll subscription to join an AniDachi watchroom?",
+    answer:
+      "Yes — each participant needs their own Crunchyroll account to stream. AniDachi provides the sync, watchroom, and chat layer on top. The host creates the room; everyone else joins via invite link using their own Crunchyroll login.",
   },
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "pillars", label: "Big-picture guides", level: 2 },
   { id: "genre-hubs", label: "Browse by genre", level: 2 },
   { id: "playbooks", label: "Playbooks & checklists", level: 2 },
@@ -82,7 +98,7 @@ export default function AnimeWatchPartyToolkitPage() {
       description="Structured starting point for Crunchyroll group watching with AniDachi."
       url="/anime-watch-party-toolkit"
       datePublished="2026-05-08"
-      dateModified="2026-05-18"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={[...toolkitItemList, ...genreHubItemList(toolkitItemList.length + 1)]}
@@ -92,11 +108,20 @@ export default function AnimeWatchPartyToolkitPage() {
       <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
         Anime watch party toolkit
       </h1>
+
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-10">
         <strong>
-          Built for hosts who need orientation fast: read a pillar, skim a checklist,
-          compare tools, then install AniDachi when you are ready for watchrooms.
-        </strong>
+          The fastest path to an anime watch party on Crunchyroll: install
+          AniDachi, open any episode, create a watchroom, share the link.
+        </strong>{" "}
+        This toolkit organizes every guide, glossary term, and comparison in
+        one place — so you can orient quickly and get to watching.
       </p>
 
       <h2

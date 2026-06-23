@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Slice of Life Anime With Friends | AniDachi",
+  title: "Watch Slice of Life Anime With Friends (2026) | AniDachi",
   description:
-    "Watch slice of life anime with friends online — Bocchi the Rock, K-On, Horimiya & more. Cozy watch parties on Crunchyroll, synced perfectly.",
+    "Cozy up with slice of life anime and friends on Crunchyroll — sync live sessions or async watching with AniDachi. A-Silent-Voice, Toradora, Violet Evergarden, and more.",
   alternates: { canonical: "/watch-slice-of-life-anime-with-friends" },
   openGraph: {
-    title: "Watch Slice of Life Anime With Friends | AniDachi",
+    title: "Watch Slice of Life Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for slice of life anime on Crunchyroll — synced cozy sessions, low-pressure async catch-up, and shared moments that feel even warmer together.",
     url: "/watch-slice-of-life-anime-with-friends",
@@ -89,11 +89,11 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
           url: "/watch-slice-of-life-anime-with-friends",
         },
       ]}
-      title="Watch Slice of Life Anime With Friends — AniDachi Watchrooms"
+      title="Watch Slice of Life Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for slice of life anime on Crunchyroll."
       url="/watch-slice-of-life-anime-with-friends"
       datePublished="2025-06-01"
-      dateModified="2026-06-01"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -102,7 +102,12 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
         Watch Slice of Life Anime With Friends
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Yes, you can watch slice of life anime with friends using AniDachi&apos;s
@@ -260,6 +265,8 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
         >
           Mecha anime
         </Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

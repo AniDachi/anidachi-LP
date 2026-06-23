@@ -60,6 +60,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "definition", label: "Shonen definition", level: 2 },
   { id: "shonen-vs-other", label: "Shonen vs other demographics", level: 2 },
   { id: "famous-series", label: "Famous shonen series", level: 2 },
@@ -80,14 +81,19 @@ export default function ShonenAnimeGlossaryPage() {
       description="Definition and explanation of shonen anime — what it means, famous series, and which shonen anime are best for watching with friends."
       url="/glossary/shonen-anime"
       datePublished="2026-06-21"
-      dateModified="2026-06-21"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         What Is Shonen Anime? (Meaning, Definition & Best Examples)
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Shonen anime is anime targeted at teenage male audiences — the

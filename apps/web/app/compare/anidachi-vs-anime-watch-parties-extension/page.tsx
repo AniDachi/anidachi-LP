@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     "Compare AniDachi with an “anime watch parties” style extension: Crunchyroll-first watchrooms, async catch-up, progress tracking, and setup friction.",
   alternates: { canonical: "/compare/anidachi-vs-anime-watch-parties-extension" },
   openGraph: {
-    title: "AniDachi vs Anime Watch Parties Extension",
+    title: "AniDachi vs Anime Watch Parties Extension (2026)",
     description:
       "Side-by-side comparison for Crunchyroll-first anime groups and weekly watch nights.",
     url: "/compare/anidachi-vs-anime-watch-parties-extension",
@@ -42,6 +42,7 @@ const faq = [
 ];
 
 const headings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "tldr", label: "At a glance", level: 2 },
   { id: "comparison", label: "What to compare", level: 2 },
   { id: "recommendation", label: "Which to choose", level: 2 },
@@ -64,7 +65,7 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
       description="Compare Crunchyroll-first watchrooms with generic watch-party extension workflows."
       url="/compare/anidachi-vs-anime-watch-parties-extension"
       datePublished="2026-05-11"
-      dateModified="2026-05-11"
+      dateModified="2026-06-23"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -73,8 +74,13 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         AniDachi vs an “Anime Watch Parties” extension
       </h1>
-
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
+      <p className="text-xl text-gray-700 leading-relaxed mb-6">
         <strong>
           Many extensions help you press play together. AniDachi is designed for what
           happens after episode one: long shows, friends falling behind, and spoiler-safe

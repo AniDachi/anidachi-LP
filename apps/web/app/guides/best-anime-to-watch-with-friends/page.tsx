@@ -402,6 +402,7 @@ export default function BestAnimeWithFriendsPage() {
         <li><Link href="/guides/best-shonen-anime-to-watch-with-friends" className="hover:underline">Best Shonen Anime to Watch With Friends</Link></li>
         <li><Link href="/guides/best-classic-anime-to-watch-with-friends" className="hover:underline">Best Classic Anime to Watch With Friends</Link></li>
         <li><Link href="/guides/best-anime-to-binge-with-friends-this-weekend" className="hover:underline">Best Anime to Binge With Friends This Weekend</Link></li>
+        <li><Link href="/best-anime-for-long-distance-relationships" className="hover:underline">Best Anime for Long-Distance Relationships</Link></li>
       </ul>
     </SeoPageLayout>
   );

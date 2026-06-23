@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 
 export const metadata: Metadata = {
-  title: "Dub vs Sub for Anime Watch Parties — Which Is Better?",
+  title: "Dub vs Sub for Anime Watch Parties — Which Is Better? (2026)",
   description:
     "Should your anime watch party use dubbed or subbed episodes? Pros and cons of each for group watching, plus tips for mixed-preference groups.",
   alternates: { canonical: "/glossary/dub-vs-sub-watch-party" },
@@ -29,6 +29,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "dub-advantages", label: "Dub advantages", level: 2 },
   { id: "sub-advantages", label: "Sub advantages", level: 2 },
   { id: "mixed-groups", label: "Mixed groups", level: 2 },
@@ -53,14 +54,19 @@ export default function DubVsSubGlossaryPage() {
       description="Choosing dubbed or subbed anime for group watching."
       url="/glossary/dub-vs-sub-watch-party"
       datePublished="2026-04-23"
-      dateModified="2026-04-24"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         Dub vs Sub for Anime Watch Parties
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           For anime watch parties, dubbed episodes work better for socializing

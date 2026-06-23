@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Horror Anime With Friends | AniDachi",
+  title: "Watch Horror Anime With Friends (2026) | AniDachi",
   description:
-    "Watch horror anime with friends online — Parasyte, Berserk, Hell's Paradise & more. Sync Crunchyroll and scream together in real time.",
+    "Experience every jump scare and twist simultaneously — AniDachi syncs horror anime on Crunchyroll for your group. Higurashi, Elfen Lied, Junji Ito, and more.",
   alternates: { canonical: "/watch-horror-anime-with-friends" },
   openGraph: {
-    title: "Watch Horror Anime With Friends | AniDachi",
+    title: "Watch Horror Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for horror anime on Crunchyroll — synced playback, shared scares, and spoiler-safe reactions for the most intense anime series.",
     url: "/watch-horror-anime-with-friends",
@@ -50,6 +50,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-horror", label: "Why horror anime for groups?", level: 2 },
   { id: "top-picks", label: "Top horror anime to watch together", level: 2 },
   { id: "setup", label: "How to set up your watchroom", level: 2 },
@@ -77,11 +78,11 @@ export default function WatchHorrorAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Horror Anime", url: "/watch-horror-anime-with-friends" },
       ]}
-      title="Watch Horror Anime With Friends — AniDachi Watchrooms"
+      title="Watch Horror Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for horror anime on Crunchyroll."
       url="/watch-horror-anime-with-friends"
       datePublished="2025-06-01"
-      dateModified="2026-06-01"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -90,7 +91,12 @@ export default function WatchHorrorAnimeWithFriendsPage() {
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
         Watch Horror Anime With Friends
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Yes, you can watch horror anime with friends using AniDachi&apos;s
@@ -251,6 +257,8 @@ export default function WatchHorrorAnimeWithFriendsPage() {
         >
           Action anime
         </Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

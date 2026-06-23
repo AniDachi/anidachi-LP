@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Shoujo Anime With Friends — AniDachi Group Watchrooms",
+  title: "Watch Shoujo Anime With Friends (2026) | AniDachi",
   description:
-    "The best shoujo anime to watch with friends on Crunchyroll. Sailor Moon, Fruits Basket, Cardcaptor Sakura, Ouran High School Host Club, and more. Sync emotional moments and share reactions with AniDachi watchrooms.",
+    "Shoujo anime is made for shared emotional moments — sync heartfelt episodes live or async on Crunchyroll with AniDachi. Fruits Basket, Sailor Moon, Nana, and more.",
   alternates: { canonical: "/watch-shoujo-anime-with-friends" },
   openGraph: {
-    title: "Watch Shoujo Anime With Friends | AniDachi",
+    title: "Watch Shoujo Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for the best shoujo anime on Crunchyroll — synced playback, emotional reactions, and async catch-up.",
     url: "/watch-shoujo-anime-with-friends",
@@ -45,6 +45,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-shoujo", label: "Why shoujo anime for groups?", level: 2 },
   { id: "top-picks", label: "Top shoujo anime to watch together", level: 2 },
   { id: "setup", label: "How to set up your watchroom", level: 2 },
@@ -68,11 +69,11 @@ export default function WatchShoujoAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Shoujo Anime", url: "/watch-shoujo-anime-with-friends" },
       ]}
-      title="Watch Shoujo Anime With Friends — AniDachi Watchrooms"
+      title="Watch Shoujo Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for shoujo anime on Crunchyroll."
       url="/watch-shoujo-anime-with-friends"
       datePublished="2026-06-21"
-      dateModified="2026-06-21"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -81,7 +82,12 @@ export default function WatchShoujoAnimeWithFriendsPage() {
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
         Watch Shoujo Anime With Friends
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Shoujo anime is made for shared emotional experiences. Install
@@ -192,6 +198,8 @@ export default function WatchShoujoAnimeWithFriendsPage() {
         <Link href="/watch-romance-anime-with-friends" className="text-purple-600 hover:underline">Romance anime</Link>
         {" · "}
         <Link href="/watch-slice-of-life-anime-with-friends" className="text-purple-600 hover:underline">Slice of life anime</Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

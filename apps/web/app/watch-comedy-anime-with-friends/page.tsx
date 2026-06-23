@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Comedy Anime With Friends — AniDachi Group Watchrooms",
+  title: "Watch Comedy Anime With Friends (2026) | AniDachi",
   description:
-    "The best comedy anime to watch with friends on Crunchyroll. Share laughs, timestamp your favorite gags, and catch up at your own pace with AniDachi watchrooms. Spy x Family, KonoSuba, Gintama, and more.",
+    "Laugh louder together — AniDachi watchrooms let you sync Crunchyroll comedy anime live or timestamp favorite gags for friends who catch up later. Spy x Family, KonoSuba, Gintama, and more.",
   alternates: { canonical: "/watch-comedy-anime-with-friends" },
   openGraph: {
-    title: "Watch Comedy Anime With Friends | AniDachi",
+    title: "Watch Comedy Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for comedy anime on Crunchyroll — share gag reactions, async catch-up, and watch at your own pace.",
     url: "/watch-comedy-anime-with-friends",
@@ -45,6 +45,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-comedy", label: "Why comedy anime for groups?", level: 2 },
   { id: "top-picks", label: "Comedy anime to watch together", level: 2 },
   { id: "setup", label: "How to set up your watchroom", level: 2 },
@@ -68,11 +69,11 @@ export default function WatchComedyAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Comedy Anime", url: "/watch-comedy-anime-with-friends" },
       ]}
-      title="Watch Comedy Anime With Friends — AniDachi Watchrooms"
+      title="Watch Comedy Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for comedy anime on Crunchyroll."
       url="/watch-comedy-anime-with-friends"
       datePublished="2026-05-18"
-      dateModified="2026-05-18"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -82,12 +83,19 @@ export default function WatchComedyAnimeWithFriendsPage() {
         Watch Comedy Anime With Friends
       </h1>
 
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
-          Comedy anime is better with an audience. Install AniDachi, pick a
-          series below, and create a Crunchyroll watchroom — laugh together live
+          Comedy anime is better with an audience — install AniDachi, pick a
+          series below, and create a Crunchyroll watchroom. Laugh together live
           or timestamp your favorite gags for friends who catch up later.
-        </strong>
+        </strong>{" "}
+        Each person streams from their own Crunchyroll account at full quality.
       </p>
 
       <h2
@@ -188,6 +196,8 @@ export default function WatchComedyAnimeWithFriendsPage() {
         <Link href="/watch-romance-anime-with-friends" className="text-purple-600 hover:underline">Romance anime</Link>
         {" · "}
         <Link href="/watch-action-anime-with-friends" className="text-purple-600 hover:underline">Action anime</Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

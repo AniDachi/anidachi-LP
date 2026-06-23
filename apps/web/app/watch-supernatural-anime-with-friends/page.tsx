@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Supernatural Anime With Friends — AniDachi Group Watchrooms",
+  title: "Watch Supernatural Anime With Friends (2026) | AniDachi",
   description:
-    "The best supernatural anime to watch with friends on Crunchyroll. Demon Slayer, Jujutsu Kaisen, Bleach, Noragami, and more — sync group reactions and track everyone's progress with AniDachi watchrooms.",
+    "Supernatural anime power reveals hit harder together — AniDachi syncs Crunchyroll watchrooms for your group live or async. Fullmetal Alchemist, Jujutsu Kaisen, Noragami, and more.",
   alternates: { canonical: "/watch-supernatural-anime-with-friends" },
   openGraph: {
-    title: "Watch Supernatural Anime With Friends | AniDachi",
+    title: "Watch Supernatural Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for the best supernatural anime on Crunchyroll — synced playback, power-system debates, and async catch-up.",
     url: "/watch-supernatural-anime-with-friends",
@@ -40,6 +40,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-supernatural", label: "Why supernatural anime for groups?", level: 2 },
   { id: "top-picks", label: "Top supernatural anime to watch together", level: 2 },
   { id: "setup", label: "How to set up your watchroom", level: 2 },
@@ -63,11 +64,11 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Supernatural Anime", url: "/watch-supernatural-anime-with-friends" },
       ]}
-      title="Watch Supernatural Anime With Friends — AniDachi Watchrooms"
+      title="Watch Supernatural Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for supernatural anime on Crunchyroll."
       url="/watch-supernatural-anime-with-friends"
       datePublished="2026-06-21"
-      dateModified="2026-06-21"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -76,7 +77,12 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
         Watch Supernatural Anime With Friends
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Supernatural anime thrives on shared reactions — power reveals,
@@ -189,6 +195,8 @@ export default function WatchSupernaturalAnimeWithFriendsPage() {
         <Link href="/watch-action-anime-with-friends" className="text-purple-600 hover:underline">Action anime</Link>
         {" · "}
         <Link href="/watch-horror-anime-with-friends" className="text-purple-600 hover:underline">Horror anime</Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

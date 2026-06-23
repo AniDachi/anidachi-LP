@@ -9,9 +9,9 @@ const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Crunchyroll Party — Which Is Better for Anime Nights?",
+  title: "AniDachi vs Crunchyroll Party — Which Is Better for Anime Nights? (2026)",
   description:
-    "AniDachi vs Crunchyroll Party for Crunchyroll watch parties: async catch-up, progress, detection, and when free live sync is enough.",
+    "Crunchyroll Party is the free live-sync option. AniDachi adds async watching, per-user progress, and auto anime detection. Full comparison to help you pick.",
   alternates: { canonical: "/compare/anidachi-vs-crunchyroll-party" },
   openGraph: {
     title: "AniDachi vs Crunchyroll Party",
@@ -47,6 +47,7 @@ const faq = [
 ];
 
 const headings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "tldr", label: "At a glance", level: 2 },
   { id: "feature-comparison", label: "Feature comparison", level: 2 },
   { id: "when-crunchyroll-party", label: "When Crunchyroll Party is enough", level: 2 },
@@ -71,7 +72,7 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       description="Side-by-side comparison for Crunchyroll watch parties."
       url="/compare/anidachi-vs-crunchyroll-party"
       datePublished="2026-05-11"
-      dateModified="2026-05-11"
+      dateModified="2026-06-23"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -80,8 +81,13 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         AniDachi vs Crunchyroll Party for anime watch parties
       </h1>
-
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
+      <p className="text-xl text-gray-700 leading-relaxed mb-6">
         <strong>
           Crunchyroll Party is great when everyone can watch live. AniDachi is built
           for real friend groups: mixed schedules, time zones, and long-running

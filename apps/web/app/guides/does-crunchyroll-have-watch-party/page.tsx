@@ -270,6 +270,11 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
             Best anime to watch on Crunchyroll with friends
           </Link>
         </li>
+        <li>
+          <Link href="/watch-crunchyroll-together-long-distance" className="hover:underline">
+            Watch Crunchyroll together long distance
+          </Link>
+        </li>
       </ul>
     </SeoPageLayout>
   );

@@ -75,6 +75,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "ova-full-form", label: "OVA full form & meaning", level: 2 },
   { id: "ova-vs-tv", label: "OVA vs TV anime", level: 2 },
   { id: "famous-ovas", label: "Famous OVAs by series", level: 2 },
@@ -96,14 +97,19 @@ export default function OvaMeaningGlossaryPage() {
       description="Definition and explanation of OVA (Original Video Animation) — what it is, how it differs from TV anime, and when to watch OVAs in a group session."
       url="/glossary/ova-meaning"
       datePublished="2026-06-04"
-      dateModified="2026-06-08"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         What Does OVA Mean in Anime? (Full Form, Examples & Watch Order)
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           OVA stands for Original Video Animation — anime that is released

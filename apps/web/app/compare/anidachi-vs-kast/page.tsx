@@ -10,7 +10,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "AniDachi vs Kast — Best Kast Alternative for Crunchyroll Anime (2026)",
   description:
-    "Looking for a Kast alternative for anime? AniDachi vs Kast compared: per-user Crunchyroll playback, async watching, and watchrooms vs a generic co-watching app. Which fits your group?",
+    "AniDachi is the best Kast alternative for anime on Crunchyroll — per-user playback, async watchrooms, and auto anime detection. Kast vs AniDachi compared.",
   alternates: { canonical: "/compare/anidachi-vs-kast" },
   openGraph: {
     title: "AniDachi vs Kast — Kast Alternative for Anime Groups",
@@ -41,6 +41,7 @@ const faq = [
 ];
 
 const headings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "tldr", label: "At a glance", level: 2 },
   { id: "reliability", label: "Reliability and quality", level: 2 },
   { id: "workflow", label: "Workflow for weekly anime nights", level: 2 },
@@ -60,7 +61,7 @@ export default function AniDachiVsKastPage() {
       description="Compare Crunchyroll-first watchrooms with general-purpose co-watching."
       url="/compare/anidachi-vs-kast"
       datePublished="2026-05-11"
-      dateModified="2026-05-11"
+      dateModified="2026-06-23"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -69,8 +70,13 @@ export default function AniDachiVsKastPage() {
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         AniDachi vs Kast for anime watch parties
       </h1>
-
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
+      <p className="text-xl text-gray-700 leading-relaxed mb-6">
         <strong>
           If your group watches on Crunchyroll, the highest-quality setup is usually “everyone
           streams locally.” AniDachi adds the watchroom and sync layer without turning one friend’s

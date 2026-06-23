@@ -41,6 +41,7 @@ const faq = [
 ];
 
 const headings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "tldr", label: "At a glance", level: 2 },
   { id: "decision", label: "Decision checklist", level: 2 },
   { id: "when-anidachi", label: "When AniDachi wins", level: 2 },
@@ -60,7 +61,7 @@ export default function AniDachiVsScenerPage() {
       description="Compare Crunchyroll-first watchrooms with general co-watching workflows."
       url="/compare/anidachi-vs-scener"
       datePublished="2026-05-11"
-      dateModified="2026-05-11"
+      dateModified="2026-06-23"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -69,8 +70,13 @@ export default function AniDachiVsScenerPage() {
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         AniDachi vs Scener for anime watch parties
       </h1>
-
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
+      <p className="text-xl text-gray-700 leading-relaxed mb-6">
         <strong>
           The easiest way to run anime nights on Crunchyroll is per-user playback: everyone
           streams locally and joins the same room. AniDachi is built around that workflow—

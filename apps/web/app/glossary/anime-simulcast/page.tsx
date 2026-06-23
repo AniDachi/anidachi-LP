@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 
 export const metadata: Metadata = {
-  title: "What Is an Anime Simulcast? — Glossary",
+  title: "What Is an Anime Simulcast? — Glossary (2026)",
   description:
     "An anime simulcast is when an episode airs in Japan and becomes available internationally at the same time. Learn how simulcasts work on Crunchyroll and why they matter for watch parties.",
   alternates: { canonical: "/glossary/anime-simulcast" },
@@ -23,6 +23,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "watch-parties", label: "Why simulcasts matter", level: 2 },
   { id: "where", label: "Where to watch", level: 2 },
   { id: "related", label: "Related", level: 2 },
@@ -41,14 +42,19 @@ export default function AnimeSimulcastGlossaryPage() {
       description="Definition of anime simulcasts and how they work."
       url="/glossary/anime-simulcast"
       datePublished="2026-04-23"
-      dateModified="2026-04-24"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         What Is an Anime Simulcast?
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           An anime simulcast is when a new episode airs in Japan and becomes

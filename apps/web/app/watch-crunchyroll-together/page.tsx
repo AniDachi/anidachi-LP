@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
 
 export const metadata: Metadata = {
   title: "Watch Crunchyroll Together — Group Watch Party & Sync Guide (2026)",
   description:
-    "Learn how to do a Crunchyroll watch party with friends. AniDachi creates watchrooms with sync, chat, and async support. Answers: does Crunchyroll have watch party? Does Teleparty work with Crunchyroll?",
+    "Crunchyroll has no built-in watch party — use AniDachi to create a watchroom with sync, chat, and async support in under 2 minutes. Every Crunchyroll watch party method compared.",
   alternates: { canonical: "/watch-crunchyroll-together" },
   openGraph: {
     title: "Watch Crunchyroll Together — Group Watch Party (2026)",
@@ -70,6 +71,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "no-native-watch-party", label: "Why no built-in watch party", level: 2 },
   { id: "step-by-step", label: "Step-by-step", level: 2 },
   { id: "compare-methods", label: "Compare methods", level: 2 },
@@ -79,6 +81,14 @@ const tocHeadings: TocHeading[] = [
   { id: "faq", label: "FAQ", level: 2 },
 ];
 
+const howToSteps = [
+  { name: "Install AniDachi", text: "Add the AniDachi Chrome extension from the Chrome Web Store. Takes seconds." },
+  { name: "Navigate to any Crunchyroll anime", text: "Open any episode on Crunchyroll and click 'Detect Anime' in the AniDachi toolbar." },
+  { name: "Create a watchroom", text: "Click 'Create Room' in AniDachi. The room is linked to the detected anime and episode." },
+  { name: "Share the invite link", text: "Copy the invite link and share it with friends via Discord, text, or email." },
+  { name: "Watch together or asynchronously", text: "Go live together with synced playback and real-time chat, or use async mode to watch at your own pace and share reactions." },
+];
+
 export default function WatchCrunchyrollTogetherPage() {
   const relatedGuideLinks = getGuideLinks({
     includeTags: ["pillar-watch-crunchyroll", "how-to-core", "time-zones"],
@@ -86,7 +96,13 @@ export default function WatchCrunchyrollTogetherPage() {
   });
 
   return (
-    <SeoPageLayout
+    <>
+      <HowToJsonLd
+        name="How to watch Crunchyroll together with friends"
+        description="Set up a Crunchyroll watchroom with AniDachi for synced or async anime viewing."
+        steps={howToSteps}
+      />
+      <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
         { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
@@ -98,11 +114,18 @@ export default function WatchCrunchyrollTogetherPage() {
       dateModified="2026-06-08"
       faq={faq}
       headings={tocHeadings}
+      aboveFoldCta
     >
       <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
         Watch Crunchyroll Together with Friends
       </h1>
 
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           You can watch Crunchyroll together with friends using AniDachi —
@@ -317,5 +340,6 @@ export default function WatchCrunchyrollTogetherPage() {
         </li>
       </ul>
     </SeoPageLayout>
+    </>
   );
 }

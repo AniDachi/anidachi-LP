@@ -8,7 +8,7 @@ const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "What Is Crunchyroll Mega Fan? — Glossary for Watch Parties",
+  title: "What Is Crunchyroll Mega Fan? — Glossary for Watch Parties (2026)",
   description:
     "Plain-language primer on Crunchyroll’s Mega Fan subscription tier—what it affects for multi-device watchers and how watch party tools plug in afterward.",
   alternates: { canonical: "/glossary/crunchyroll-mega-fan" },
@@ -41,6 +41,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "definition", label: "Definition", level: 2 },
   { id: "watch-parties", label: "How it affects watch parties", level: 2 },
   { id: "related", label: "Related", level: 2 },
@@ -59,7 +60,7 @@ export default function CrunchyrollMegaFanGlossaryPage() {
       description="Glossary entry describing Crunchyroll Mega Fan in context of group watching."
       url="/glossary/crunchyroll-mega-fan"
       datePublished="2026-05-08"
-      dateModified="2026-05-08"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -67,7 +68,12 @@ export default function CrunchyrollMegaFanGlossaryPage() {
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         What is Crunchyroll Mega Fan?
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Mega Fan is a paid Crunchyroll subscription tier that bundles ad-free

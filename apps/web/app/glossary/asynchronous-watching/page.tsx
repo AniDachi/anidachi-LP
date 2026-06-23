@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 
 export const metadata: Metadata = {
-  title: "What Is Asynchronous Anime Watching? — Glossary",
+  title: "What Is Asynchronous Anime Watching? — Glossary (2026)",
   description:
     "Asynchronous anime watching means friends watch the same show at their own pace and share reactions later. Learn how it works and which tools support it.",
   alternates: { canonical: "/glossary/asynchronous-watching" },
@@ -26,9 +26,20 @@ const faq = [
     answer:
       "Neither is universally better. Async works well for groups with different schedules or time zones. Live watching is better for premieres and finales where simultaneous reactions are the point. AniDachi supports both in the same watchroom.",
   },
+  {
+    question: "Can long-distance couples use asynchronous watching?",
+    answer:
+      "Yes — async watching is ideal for long-distance couples who can't watch at the same time due to different schedules or time zones. Each person watches when free, marks episodes done, and leaves timestamped reactions. The other person reads those reactions after finishing the same episode, creating a shared experience without scheduling pressure.",
+  },
+  {
+    question: "Does asynchronous watching spoil plot twists for slower watchers?",
+    answer:
+      "No — AniDachi's async mode uses episode-scoped reactions. Reactions are only visible after a user marks that episode as watched. Faster watchers can't accidentally spoil a twist because their comments are hidden from viewers who haven't reached that episode yet.",
+  },
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "how-it-works", label: "How it works", level: 2 },
   { id: "why-growing", label: "Why it is growing", level: 2 },
   { id: "related", label: "Related", level: 2 },
@@ -52,14 +63,20 @@ export default function AsyncWatchingGlossaryPage() {
       description="How async anime watching works and why it's growing."
       url="/glossary/asynchronous-watching"
       datePublished="2026-04-23"
-      dateModified="2026-04-24"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
+      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         What Is Asynchronous Anime Watching?
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
           Asynchronous anime watching means friends watch the same anime at
@@ -106,6 +123,7 @@ export default function AsyncWatchingGlossaryPage() {
       <ul className="space-y-2 text-purple-600">
         <li><Link href="/glossary/watchroom" className="hover:underline">What Is a Watchroom?</Link></li>
         <li><Link href="/guides/asynchronous-vs-live-watch-party" className="hover:underline">Async vs Live Watch Parties</Link></li>
+        <li><Link href="/timezone-friendly-anime-watch-parties" className="hover:underline">Timezone-Friendly Anime Watch Parties for Long-Distance Couples</Link></li>
         <li><Link href="/watch-anime-together" className="hover:underline">Watch Anime Together Guide</Link></li>
         {relatedGuideLinks.map((guide) => (
           <li key={guide.href}>

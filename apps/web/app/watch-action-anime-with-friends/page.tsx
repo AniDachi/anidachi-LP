@@ -4,12 +4,12 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getAnimeByGenre } from "@/lib/anime-data";
 
 export const metadata: Metadata = {
-  title: "Watch Action Anime With Friends — AniDachi Group Watchrooms",
+  title: "Watch Action Anime With Friends (2026) | AniDachi",
   description:
-    "The best action anime to watch with friends on Crunchyroll. Sync battles, share hype reactions, and avoid spoilers with AniDachi watchrooms. Attack on Titan, Demon Slayer, Jujutsu Kaisen, and more.",
+    "AniDachi is the best way to watch action anime with friends on Crunchyroll — synced fight scenes, spoiler-safe reactions, and async catch-up. Attack on Titan, Demon Slayer, Jujutsu Kaisen, and more.",
   alternates: { canonical: "/watch-action-anime-with-friends" },
   openGraph: {
-    title: "Watch Action Anime With Friends | AniDachi",
+    title: "Watch Action Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for the best action anime on Crunchyroll — synced playback, spoiler-safe chat, and async catch-up.",
     url: "/watch-action-anime-with-friends",
@@ -45,6 +45,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-action", label: "Why action anime for groups?", level: 2 },
   { id: "top-picks", label: "Top action anime to watch together", level: 2 },
   { id: "setup", label: "How to set up your watchroom", level: 2 },
@@ -68,11 +69,11 @@ export default function WatchActionAnimeWithFriendsPage() {
         { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Action Anime", url: "/watch-action-anime-with-friends" },
       ]}
-      title="Watch Action Anime With Friends — AniDachi Watchrooms"
+      title="Watch Action Anime With Friends (2026) | AniDachi"
       description="Group watchroom guides for action anime on Crunchyroll."
       url="/watch-action-anime-with-friends"
       datePublished="2026-05-18"
-      dateModified="2026-05-18"
+      dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
@@ -82,12 +83,19 @@ export default function WatchActionAnimeWithFriendsPage() {
         Watch Action Anime With Friends
       </h1>
 
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-8">
         <strong>
-          Action anime is made for group reactions. Install AniDachi, open any
-          Crunchyroll series below, and create a watchroom — sync the big fight
-          scenes live or catch up at your own pace without spoilers.
-        </strong>
+          Action anime is made for group reactions — install AniDachi, open any
+          Crunchyroll series below, and create a watchroom. Sync fight scenes
+          live or catch up at your own pace without spoilers.
+        </strong>{" "}
+        Each person streams from their own Crunchyroll account at full quality.
       </p>
 
       <h2
@@ -188,6 +196,8 @@ export default function WatchActionAnimeWithFriendsPage() {
         <Link href="/watch-romance-anime-with-friends" className="text-purple-600 hover:underline">Romance anime</Link>
         {" · "}
         <Link href="/watch-mystery-anime-with-friends" className="text-purple-600 hover:underline">Mystery anime</Link>
+        {" · "}
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

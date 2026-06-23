@@ -58,6 +58,7 @@ const faq = [
 ];
 
 const headings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "tldr", label: "At a glance", level: 2 },
   { id: "feature-comparison", label: "Feature comparison", level: 2 },
   { id: "anime-catalog", label: "Anime catalog: Prime vs Crunchyroll", level: 2 },
@@ -79,7 +80,7 @@ export default function AniDachiVsAmazonWatchPartyPage() {
       description="Side-by-side comparison for anime watch parties — Crunchyroll vs Prime Video catalog and sync features."
       url="/compare/anidachi-vs-amazon-watch-party"
       datePublished="2026-06-21"
-      dateModified="2026-06-21"
+      dateModified="2026-06-23"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -88,7 +89,12 @@ export default function AniDachiVsAmazonWatchPartyPage() {
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         AniDachi vs Amazon Watch Party for Anime (2026)
       </h1>
-
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
       <p className="text-xl text-gray-700 leading-relaxed mb-6">
         <strong>
           AniDachi is purpose-built for Crunchyroll anime — the platform with

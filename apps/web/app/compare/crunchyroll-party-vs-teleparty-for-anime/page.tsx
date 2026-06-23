@@ -52,6 +52,7 @@ const faq = [
 ];
 
 const headings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "tldr", label: "At a glance", level: 2 },
   { id: "feature-comparison", label: "Feature comparison", level: 2 },
   { id: "when-crunchyroll-party", label: "When Crunchyroll Party wins", level: 2 },
@@ -81,7 +82,7 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
       description="Third-party comparison for Crunchyroll watch party extensions."
       url="/compare/crunchyroll-party-vs-teleparty-for-anime"
       datePublished="2026-06-08"
-      dateModified="2026-06-08"
+      dateModified="2026-06-23"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -90,8 +91,13 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
       <h1 className="text-4xl font-bold text-gray-900 mb-6">
         Crunchyroll Party vs Teleparty for anime watch parties
       </h1>
-
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <h2
+        id="answer"
+        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+      >
+        Short Answer
+      </h2>
+      <p className="text-xl text-gray-700 leading-relaxed mb-6">
         <strong>
           Both extensions sync Crunchyroll playback for live watch parties — but
           they target different groups. Crunchyroll Party is anime-only; Teleparty
