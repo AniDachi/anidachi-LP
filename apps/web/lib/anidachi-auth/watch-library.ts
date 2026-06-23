@@ -319,6 +319,24 @@ export function historyRetentionCutoff(now: Date, planCode: PlanCode): Date {
   return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 }
 
+function dedupeLatestWatchProgressEntries(
+  entries: CleanWatchProgressEntry[]
+): CleanWatchProgressEntry[] {
+  // A single reconcile batch can carry more than one checkpoint for the same
+  // title+episode (e.g. a backfill from the extension's local store). Only the
+  // most recently observed one carries useful state, so collapse duplicates to
+  // avoid redundant session/participant upserts and checkpoint inserts.
+  const latest = new Map<string, CleanWatchProgressEntry>();
+  for (const entry of entries) {
+    const key = `${entry.provider}:${entry.itemKey}:${entry.episodeKey}`;
+    const existing = latest.get(key);
+    if (!existing || entry.observedAt > existing.observedAt) {
+      latest.set(key, entry);
+    }
+  }
+  return Array.from(latest.values());
+}
+
 export async function reconcileWatchProgressBatch(params: {
   userId: string;
   entries: unknown;
@@ -326,7 +344,9 @@ export async function reconcileWatchProgressBatch(params: {
   const user = await getUserById(params.userId);
   if (!user) throw new WatchLibraryApiError(404, "User not found");
 
-  const entries = cleanWatchProgressEntries(params.entries);
+  const entries = dedupeLatestWatchProgressEntries(
+    cleanWatchProgressEntries(params.entries)
+  );
   for (const entry of entries) {
     await reconcileWatchProgressEntry(user, entry);
   }
@@ -358,8 +378,13 @@ export async function listWatchLibrary(userId: string): Promise<WatchLibraryResp
 
   const participantRows = await listViewerSessionParticipants(userId, retainedSince);
   const sessionIds = participantRows.map((row) => row.session_id);
-  const sessions = await listWatchSessionsByIds(sessionIds);
-  const allParticipants = await listParticipantsForSessions(sessionIds);
+  // The session rows and the full participant set both depend only on
+  // sessionIds, so resolve them together instead of in series; profiles still
+  // depend on the participants returned here.
+  const [sessions, allParticipants] = await Promise.all([
+    listWatchSessionsByIds(sessionIds),
+    listParticipantsForSessions(sessionIds),
+  ]);
   const profiles = await publicProfilesForParticipants(allParticipants);
 
   return {

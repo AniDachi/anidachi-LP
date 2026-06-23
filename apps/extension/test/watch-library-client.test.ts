@@ -134,4 +134,69 @@ describe("extension watch library HTTP bridge", () => {
       episodeId: "movie-1",
     });
   });
+
+  it("only returns entries strictly newer than the provided watermark", () => {
+    const store: WatchProgressStore = {
+      version: 1,
+      providers: {
+        crunchyroll: {
+          items: {
+            "series-1": {
+              id: "series-1",
+              kind: "series",
+              title: "Kill Blue",
+              provider: "crunchyroll",
+              sourceUrl: "https://www.crunchyroll.com/watch/G31UXV53P/example",
+              currentTime: 90,
+              duration: 100,
+              progress: 0.9,
+              watchedWithCount: 1,
+              lastWatchedAt: 3_000,
+              episodes: {
+                G31UXV53P: {
+                  id: "G31UXV53P",
+                  title: "E3",
+                  sourceUrl: "https://www.crunchyroll.com/watch/G31UXV53P/example",
+                  currentTime: 90,
+                  duration: 100,
+                  progress: 0.9,
+                  watchedWithCount: 1,
+                  lastWatchedAt: 3_000,
+                },
+              },
+            },
+          },
+        },
+        netflix: { items: {} },
+        youtube: {
+          items: {
+            "movie-1": {
+              id: "movie-1",
+              kind: "movie",
+              title: "Video",
+              provider: "youtube",
+              sourceUrl: "https://youtube.com/watch?v=1",
+              currentTime: 20,
+              duration: 200,
+              progress: 0.1,
+              watchedWithCount: 1,
+              lastWatchedAt: 1_000,
+            },
+          },
+        },
+        amazon: { items: {} },
+      },
+    };
+
+    // Default watermark (0) backfills everything.
+    expect(watchProgressEntriesFromStore(store)).toHaveLength(2);
+
+    // A mid watermark drops the older movie (1_000) and keeps the newer episode (3_000).
+    const sinceMid = watchProgressEntriesFromStore(store, "reconcile", 1_500);
+    expect(sinceMid).toHaveLength(1);
+    expect(sinceMid[0]).toMatchObject({ provider: "crunchyroll", episodeId: "G31UXV53P" });
+
+    // A watermark at the newest observation leaves nothing to send (strictly-greater).
+    expect(watchProgressEntriesFromStore(store, "reconcile", 3_000)).toHaveLength(0);
+  });
 });

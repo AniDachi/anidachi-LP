@@ -46,9 +46,11 @@ import {
 import {
   createRoomFromWatchSession,
   getCachedWatchLibraryForUser,
+  getWatchLibrarySyncWatermark,
   listWatchLibrary,
   reconcileWatchProgress,
   setCachedWatchLibraryForUser,
+  setWatchLibrarySyncWatermark,
   watchProgressEntriesFromStore,
   type WatchLibraryEpisode,
   type WatchLibraryResponse,
@@ -165,10 +167,21 @@ export function PopupApp() {
           }
         }
 
-        const entries = watchProgressEntriesFromStore(localStore);
+        // The overlay reconciles progress live during playback, so the popup
+        // only needs to backfill local progress newer than our last successful
+        // sync instead of re-sending the entire local store on every open.
+        const watermark = await getWatchLibrarySyncWatermark(tokens.user.id);
+        const entries = watchProgressEntriesFromStore(localStore, "reconcile", watermark);
         const library = entries.length
           ? await reconcileWatchProgress(tokens.accessToken, entries)
           : await listWatchLibrary(tokens.accessToken);
+        if (entries.length) {
+          const latestObservedAt = entries.reduce(
+            (max, entry) => Math.max(max, Number(entry.observedAt ?? 0)),
+            watermark,
+          );
+          await setWatchLibrarySyncWatermark(tokens.user.id, latestObservedAt);
+        }
         await setCachedWatchLibraryForUser(tokens.user.id, library);
         setWatchLibraryState({ status: "ready", data: library, error: null });
       } catch (error) {
