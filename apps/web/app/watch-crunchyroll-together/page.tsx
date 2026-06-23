@@ -307,6 +307,14 @@ export default function WatchCrunchyrollTogetherPage() {
             Best isekai anime to watch with friends
           </Link>
         </li>
+        <li>
+          <Link
+            href="/watch-crunchyroll-together-long-distance"
+            className="hover:underline"
+          >
+            Watch Crunchyroll Together Long Distance — LDR guide
+          </Link>
+        </li>
       </ul>
     </SeoPageLayout>
   );

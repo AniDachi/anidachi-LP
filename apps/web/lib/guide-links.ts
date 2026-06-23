@@ -220,6 +220,56 @@ export const guideLinks: GuideLinkItem[] = [
     label: "How to Watch Anime for Free With Friends",
     tags: ["template-c", "how-to-core", "online", "pillar-watch-anime"],
   },
+  {
+    href: "/watch-crunchyroll-together-long-distance",
+    label: "Watch Crunchyroll Together Long Distance",
+    tags: ["how-to-core", "long-distance", "crunchyroll", "pillar-watch-crunchyroll"],
+  },
+  {
+    href: "/best-apps-watch-anime-together-long-distance",
+    label: "Best Apps to Watch Anime Together Long Distance",
+    tags: ["listicle", "long-distance", "crunchyroll", "pillar-watch-anime"],
+  },
+  {
+    href: "/watch-anime-long-distance-boyfriend-girlfriend",
+    label: "Watch Anime With Your Long Distance Partner",
+    tags: ["how-to-core", "long-distance", "pillar-watch-anime"],
+  },
+  {
+    href: "/timezone-friendly-anime-watch-parties",
+    label: "Anime Watch Parties Across Time Zones",
+    tags: ["how-to-core", "long-distance", "time-zones", "async", "pillar-watch-anime"],
+  },
+  {
+    href: "/long-distance-anime-date-night-ideas",
+    label: "12 Anime Date Night Ideas for Long-Distance Couples",
+    tags: ["listicle", "long-distance", "pillar-watch-anime"],
+  },
+  {
+    href: "/watch-kdrama-together-long-distance",
+    label: "How to Watch K-Dramas Together Long Distance",
+    tags: ["how-to-core", "long-distance", "pillar-watch-anime"],
+  },
+  {
+    href: "/watch-youtube-together-long-distance",
+    label: "How to Watch YouTube Together Long Distance",
+    tags: ["how-to-core", "long-distance", "online"],
+  },
+  {
+    href: "/watch-movies-together-long-distance",
+    label: "How to Watch Movies Together Long Distance",
+    tags: ["how-to-core", "long-distance", "online"],
+  },
+  {
+    href: "/best-anime-for-long-distance-relationships",
+    label: "Best Anime for Long Distance Relationships",
+    tags: ["listicle", "long-distance", "pillar-watch-anime"],
+  },
+  {
+    href: "/watch-netflix-together-long-distance",
+    label: "How to Watch Netflix Together Long Distance",
+    tags: ["how-to-core", "long-distance", "online"],
+  },
 ];
 
 export function getGuideLinks({
