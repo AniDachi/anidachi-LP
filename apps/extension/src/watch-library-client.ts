@@ -167,6 +167,7 @@ export function isWatchLibraryHttpMessage(value: unknown): value is WatchLibrary
 export function watchProgressEntriesFromStore(
   store: WatchProgressStore,
   checkpointKind: WatchCheckpointKind = "reconcile",
+  sinceMs = 0,
 ): WatchProgressReconcileEntry[] {
   const entries: WatchProgressReconcileEntry[] = [];
   for (const provider of Object.keys(store.providers) as ResourceProvider[]) {
@@ -174,7 +175,10 @@ export function watchProgressEntriesFromStore(
       entries.push(...watchProgressEntriesFromItem(item, checkpointKind));
     }
   }
-  return entries.sort((a, b) => Number(b.observedAt ?? 0) - Number(a.observedAt ?? 0)).slice(0, 100);
+  return entries
+    .filter((entry) => Number(entry.observedAt ?? 0) > sinceMs)
+    .sort((a, b) => Number(b.observedAt ?? 0) - Number(a.observedAt ?? 0))
+    .slice(0, 100);
 }
 
 export async function getCachedWatchLibraryForUser(userId: string): Promise<CachedWatchLibrary | null> {
@@ -192,6 +196,41 @@ export async function setCachedWatchLibraryForUser(userId: string, library: Watc
 
 export async function clearCachedWatchLibrary(): Promise<void> {
   await storage.removeItem(WATCH_LIBRARY_CACHE_KEY);
+}
+
+const WATCH_LIBRARY_SYNC_WATERMARK_STORAGE_KEY = "anidachi.watchLibrarySync.v1";
+export const WATCH_LIBRARY_SYNC_WATERMARK_KEY =
+  `local:${WATCH_LIBRARY_SYNC_WATERMARK_STORAGE_KEY}` as const;
+
+interface WatchLibrarySyncWatermark {
+  userId: string;
+  lastObservedAtMs: number;
+}
+
+/**
+ * Highest `observedAt` (epoch ms) already reconciled to the server for a user.
+ * The popup uses this to push only newly-watched local progress instead of
+ * re-sending the entire local store on every open — the overlay already
+ * reconciles live during playback, so the popup only needs to backfill what was
+ * watched while it could not (e.g. signed out). Scoped by user id so switching
+ * accounts resets to a full backfill.
+ */
+export async function getWatchLibrarySyncWatermark(userId: string): Promise<number> {
+  const stored = normalizeSyncWatermark(
+    await storage.getItem<unknown>(WATCH_LIBRARY_SYNC_WATERMARK_KEY),
+  );
+  return stored && stored.userId === userId ? stored.lastObservedAtMs : 0;
+}
+
+export async function setWatchLibrarySyncWatermark(
+  userId: string,
+  lastObservedAtMs: number,
+): Promise<void> {
+  if (!Number.isFinite(lastObservedAtMs) || lastObservedAtMs <= 0) return;
+  await storage.setItem(WATCH_LIBRARY_SYNC_WATERMARK_KEY, {
+    userId,
+    lastObservedAtMs,
+  } satisfies WatchLibrarySyncWatermark);
 }
 
 export async function listWatchLibraryFromApi(accessToken: string): Promise<WatchLibraryResponse> {
@@ -435,6 +474,18 @@ function normalizeCachedWatchLibrary(value: unknown): CachedWatchLibrary | null 
     cachedAt: payload.cachedAt,
     library: normalizeWatchLibraryResponse(payload.library),
   };
+}
+
+function normalizeSyncWatermark(value: unknown): WatchLibrarySyncWatermark | null {
+  if (!value || typeof value !== "object") return null;
+  const payload = value as Partial<WatchLibrarySyncWatermark>;
+  if (typeof payload.userId !== "string") return null;
+  const lastObservedAtMs =
+    typeof payload.lastObservedAtMs === "number" &&
+    Number.isFinite(payload.lastObservedAtMs)
+      ? payload.lastObservedAtMs
+      : 0;
+  return { userId: payload.userId, lastObservedAtMs };
 }
 
 function assertWatchLibraryHttpResponse(
