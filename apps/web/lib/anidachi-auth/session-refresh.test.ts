@@ -10,7 +10,7 @@ test("website session auto refresh targets only page navigation with a refresh c
     shouldAutoRefreshWebsiteSession({
       method: "GET",
       pathname: "/account/watch-library",
-      hasAccessToken: false,
+      hasValidAccessToken: false,
       hasRefreshToken: true,
     }),
     true,
@@ -20,7 +20,7 @@ test("website session auto refresh targets only page navigation with a refresh c
     shouldAutoRefreshWebsiteSession({
       method: "GET",
       pathname: "/account/watch-library",
-      hasAccessToken: true,
+      hasValidAccessToken: true,
       hasRefreshToken: true,
     }),
     false,
@@ -29,7 +29,7 @@ test("website session auto refresh targets only page navigation with a refresh c
     shouldAutoRefreshWebsiteSession({
       method: "GET",
       pathname: "/account/watch-library",
-      hasAccessToken: false,
+      hasValidAccessToken: false,
       hasRefreshToken: false,
     }),
     false,
@@ -38,10 +38,22 @@ test("website session auto refresh targets only page navigation with a refresh c
     shouldAutoRefreshWebsiteSession({
       method: "POST",
       pathname: "/account/watch-library",
-      hasAccessToken: false,
+      hasValidAccessToken: false,
       hasRefreshToken: true,
     }),
     false,
+  );
+});
+
+test("website session auto refresh treats an expired access token as refreshable", () => {
+  assert.equal(
+    shouldAutoRefreshWebsiteSession({
+      method: "GET",
+      pathname: "/account",
+      hasValidAccessToken: false,
+      hasRefreshToken: true,
+    }),
+    true,
   );
 });
 
@@ -58,7 +70,7 @@ test("website session auto refresh skips API, refresh, staging, and static paths
       shouldAutoRefreshWebsiteSession({
         method: "GET",
         pathname,
-        hasAccessToken: false,
+        hasValidAccessToken: false,
         hasRefreshToken: true,
       }),
       false,

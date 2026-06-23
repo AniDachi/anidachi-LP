@@ -109,6 +109,33 @@ export const popupStyles = `
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
+  .popup-account-button {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid rgba(196, 181, 253, 0.24);
+    background: rgba(124, 58, 237, 0.16);
+    color: rgba(255, 255, 255, 0.88);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 8px 20px rgba(79, 70, 229, 0.18);
+  }
+
+  .popup-account-button:hover {
+    background: rgba(124, 58, 237, 0.25);
+    border-color: rgba(196, 181, 253, 0.36);
+    color: rgba(255, 255, 255, 0.98);
+  }
+
+  .popup-account-button .popup-social-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+
   .popup-icon-button:hover {
     color: rgba(255, 255, 255, 0.96);
     background: rgba(255, 255, 255, 0.12);

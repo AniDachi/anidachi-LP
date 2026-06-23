@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { api } from "@/lib/client-api";
 
 type PublicProfile = {
   userId: string;
@@ -58,36 +59,6 @@ const EMPTY_INVITES: InvitesResponse = {
   inbox: [],
   sent: [],
 };
-
-async function readJson<T>(response: Response): Promise<T> {
-  const body = (await response.json().catch(() => null)) as
-    | { error?: unknown; message?: unknown }
-    | T
-    | null;
-  if (!response.ok) {
-    const errorPayload =
-      body && typeof body === "object" && ("message" in body || "error" in body)
-        ? (body as { message?: unknown; error?: unknown })
-        : null;
-    const message = errorPayload
-      ? String(errorPayload.message ?? errorPayload.error)
-      : `Request failed (${response.status})`;
-    throw new Error(message);
-  }
-  return body as T;
-}
-
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers);
-  if (init?.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-  const response = await fetch(path, {
-    ...init,
-    headers,
-  });
-  return readJson<T>(response);
-}
 
 function initials(name: string): string {
   return (

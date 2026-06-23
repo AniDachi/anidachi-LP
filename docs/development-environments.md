@@ -103,6 +103,67 @@ Both Workers use Cloudflare TURN/STUN through `/ice-servers`.
 
 There is one extension codebase and two kinds of builds.
 
+### Fast Local Extension Development
+
+Use WXT dev mode while changing overlay, popup, content script, or extension
+room behavior:
+
+```bash
+pnpm dev:extension
+```
+
+For local extension changes against the shared staging website and staging
+Worker, use:
+
+```bash
+pnpm dev:extension:staging
+```
+
+Google can reject WXT's auto-opened browser because `web-ext` launches Chrome
+with remote debugging flags. For testing Google sign-in, use the Google-friendly
+launcher instead:
+
+```bash
+pnpm dev:extension:staging:google
+```
+
+This keeps WXT running for rebuilds, but opens a normal macOS Chrome instance
+with the dev extension loaded from `.output/chrome-mv3-dev`. Its persistent
+profile lives at:
+
+```txt
+apps/extension/.wxt/google-auth-chrome-data
+```
+
+The staging dev command intentionally uses broad host permissions for local
+developer speed. It does not change the store-safe staging artifact. To test the
+same narrow host permissions used by tester/store builds, run:
+
+```bash
+pnpm dev:extension:staging:narrow
+```
+
+WXT writes the unpacked development extension to:
+
+```txt
+apps/extension/.output/chrome-mv3-dev
+```
+
+If WXT does not open Chrome automatically, open `chrome://extensions`, enable
+Developer mode, choose "Load unpacked", and select that folder.
+
+WXT launches Chromium with a persistent local profile at:
+
+```txt
+apps/extension/.wxt/chrome-data
+```
+
+That profile is gitignored and keeps cookies, extension storage, and login state
+between dev restarts. UI and popup changes usually hot-reload. For content script
+changes, refresh the video page if behavior looks stale. For manifest,
+permission, or background/service-worker changes, reload the extension from
+`chrome://extensions`.
+
 ### Staging Extension
 
 Used for internal testing only. It is loaded manually as an unpacked Chrome extension or
