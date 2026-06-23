@@ -14,6 +14,7 @@ import type {
   WatchLibraryResponse,
   WatchLibrarySession,
 } from "@/lib/anidachi-auth/watch-library";
+import { api } from "@/lib/client-api";
 
 type Notice = {
   tone: "success" | "error";
@@ -30,30 +31,6 @@ const PLAN_LABELS: Record<string, string> = {
   plus: "Plus",
   pro: "Pro",
 };
-
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers);
-  if (init?.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-  const response = await fetch(path, { ...init, headers });
-  const body = (await response.json().catch(() => null)) as
-    | T
-    | { error?: unknown; message?: unknown }
-    | null;
-  if (!response.ok) {
-    const message =
-      body && typeof body === "object"
-        ? String(
-            (body as { message?: unknown; error?: unknown }).message ??
-              (body as { message?: unknown; error?: unknown }).error ??
-              `Request failed (${response.status})`
-          )
-        : `Request failed (${response.status})`;
-    throw new Error(message);
-  }
-  return body as T;
-}
 
 export function WatchLibraryClient({
   initialLibrary,

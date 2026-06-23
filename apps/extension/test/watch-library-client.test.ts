@@ -3,11 +3,18 @@ import {
   createRoomFromWatchSessionHttpMessage,
   isWatchLibraryHttpMessage,
   reconcileWatchProgressHttpMessage,
+  WATCH_LIBRARY_CACHE_KEY,
+  WATCH_LIBRARY_CACHE_STORAGE_KEY,
   watchProgressEntriesFromStore,
 } from "../src/watch-library-client";
 import type { WatchProgressStore } from "../src/watch-progress";
 
 describe("extension watch library HTTP bridge", () => {
+  it("keeps the watch library cache in extension-local storage", () => {
+    expect(WATCH_LIBRARY_CACHE_STORAGE_KEY).toBe("anidachi.watchLibraryCache.v1");
+    expect(WATCH_LIBRARY_CACHE_KEY).toBe("local:anidachi.watchLibraryCache.v1");
+  });
+
   it("accepts list, reconcile, and create-room messages", () => {
     expect(
       isWatchLibraryHttpMessage({

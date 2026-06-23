@@ -1,28 +1,14 @@
 import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
-import {
-  createWebsiteRoomHeaders,
-  RoomApiError,
-  type CreatedRoom,
-} from "./room-client";
-import type {
-  ResourceProvider,
-  StoredWatchItem,
-  WatchProgressEntry,
-  WatchProgressStore,
-} from "./watch-progress";
+import { createWebsiteRoomHeaders, RoomApiError, type CreatedRoom } from "./room-client";
+import { storage } from "wxt/utils/storage";
+import type { ResourceProvider, StoredWatchItem, WatchProgressEntry, WatchProgressStore } from "./watch-progress";
 
 const WATCH_LIBRARY_HTTP_MESSAGE_TYPE = "ANIDACHI_WATCH_LIBRARY_HTTP";
+export const WATCH_LIBRARY_CACHE_STORAGE_KEY = "anidachi.watchLibraryCache.v1";
+export const WATCH_LIBRARY_CACHE_KEY = `local:${WATCH_LIBRARY_CACHE_STORAGE_KEY}` as const;
 
-export type WatchCheckpointKind =
-  | "local"
-  | "room"
-  | "pause"
-  | "seeked"
-  | "ended"
-  | "pagehide"
-  | "reconcile"
-  | "manual";
+export type WatchCheckpointKind = "local" | "room" | "pause" | "seeked" | "ended" | "pagehide" | "reconcile" | "manual";
 
 export type WatchProgressReconcileEntry = WatchProgressEntry & {
   checkpointKind?: WatchCheckpointKind;
@@ -93,6 +79,12 @@ export interface WatchLibraryResponse {
   items: WatchLibraryItem[];
 }
 
+export interface CachedWatchLibrary {
+  userId: string;
+  cachedAt: string;
+  library: WatchLibraryResponse;
+}
+
 export type WatchLibraryHttpMessage =
   | {
       type: typeof WATCH_LIBRARY_HTTP_MESSAGE_TYPE;
@@ -155,10 +147,7 @@ export function createRoomFromWatchSessionHttpMessage(params: {
 export function isWatchLibraryHttpMessage(value: unknown): value is WatchLibraryHttpMessage {
   if (typeof value !== "object" || value === null) return false;
   const message = value as Partial<WatchLibraryHttpMessage>;
-  if (
-    message.type !== WATCH_LIBRARY_HTTP_MESSAGE_TYPE ||
-    typeof message.accessToken !== "string"
-  ) {
+  if (message.type !== WATCH_LIBRARY_HTTP_MESSAGE_TYPE || typeof message.accessToken !== "string") {
     return false;
   }
   if (message.command === "list-library") return true;
@@ -188,10 +177,27 @@ export function watchProgressEntriesFromStore(
   return entries.sort((a, b) => Number(b.observedAt ?? 0) - Number(a.observedAt ?? 0)).slice(0, 100);
 }
 
-export async function listWatchLibraryFromApi(
-  accessToken: string,
-): Promise<WatchLibraryResponse> {
-  logDebug("watch-library.http", "list watch library request", { webHttpBase: WEB_HTTP_BASE });
+export async function getCachedWatchLibraryForUser(userId: string): Promise<CachedWatchLibrary | null> {
+  const cached = normalizeCachedWatchLibrary(await storage.getItem<unknown>(WATCH_LIBRARY_CACHE_KEY));
+  return cached?.userId === userId ? cached : null;
+}
+
+export async function setCachedWatchLibraryForUser(userId: string, library: WatchLibraryResponse): Promise<void> {
+  await storage.setItem(WATCH_LIBRARY_CACHE_KEY, {
+    userId,
+    cachedAt: new Date().toISOString(),
+    library: normalizeWatchLibraryResponse(library),
+  } satisfies CachedWatchLibrary);
+}
+
+export async function clearCachedWatchLibrary(): Promise<void> {
+  await storage.removeItem(WATCH_LIBRARY_CACHE_KEY);
+}
+
+export async function listWatchLibraryFromApi(accessToken: string): Promise<WatchLibraryResponse> {
+  logDebug("watch-library.http", "list watch library request", {
+    webHttpBase: WEB_HTTP_BASE,
+  });
   const response = await fetch(new URL("/api/watch-library", WEB_HTTP_BASE), {
     headers: createWebsiteRoomHeaders(accessToken),
   });
@@ -259,7 +265,10 @@ export async function handleWatchLibraryHttpMessage(
 ): Promise<WatchLibraryHttpMessageResponse> {
   try {
     if (message.command === "list-library") {
-      return { ok: true, library: await listWatchLibraryFromApi(message.accessToken) };
+      return {
+        ok: true,
+        library: await listWatchLibraryFromApi(message.accessToken),
+      };
     }
     if (message.command === "reconcile-progress") {
       return {
@@ -277,7 +286,12 @@ export async function handleWatchLibraryHttpMessage(
     };
   } catch (error) {
     if (error instanceof RoomApiError) {
-      return { ok: false, error: error.message, code: error.code, resetAt: error.resetAt };
+      return {
+        ok: false,
+        error: error.message,
+        code: error.code,
+        resetAt: error.resetAt,
+      };
     }
     return {
       ok: false,
@@ -410,6 +424,19 @@ function normalizeWatchLibraryResponse(value: unknown): WatchLibraryResponse {
   };
 }
 
+function normalizeCachedWatchLibrary(value: unknown): CachedWatchLibrary | null {
+  if (!value || typeof value !== "object") return null;
+  const payload = value as Partial<CachedWatchLibrary>;
+  if (typeof payload.userId !== "string" || typeof payload.cachedAt !== "string") {
+    return null;
+  }
+  return {
+    userId: payload.userId,
+    cachedAt: payload.cachedAt,
+    library: normalizeWatchLibraryResponse(payload.library),
+  };
+}
+
 function assertWatchLibraryHttpResponse(
   response: WatchLibraryHttpMessageResponse | null | undefined,
 ): WatchLibraryHttpMessageResponse {
@@ -419,9 +446,7 @@ function assertWatchLibraryHttpResponse(
   return response;
 }
 
-function watchLibraryBridgeError(
-  response: Extract<WatchLibraryHttpMessageResponse, { ok: false }>,
-): RoomApiError {
+function watchLibraryBridgeError(response: Extract<WatchLibraryHttpMessageResponse, { ok: false }>): RoomApiError {
   return new RoomApiError(response.error, response.code, response.resetAt);
 }
 

@@ -5,6 +5,7 @@ import {
   Folder,
   Inbox,
   Link2,
+  LogIn,
   RefreshCw,
   RotateCcw,
   Trash2,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getCurrentExtensionSession, signInWithWebsite } from "./auth-client";
+import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
 import { popupStyles } from "./popup-styles";
@@ -43,7 +45,10 @@ import {
 } from "./watch-progress";
 import {
   createRoomFromWatchSession,
+  getCachedWatchLibraryForUser,
+  listWatchLibrary,
   reconcileWatchProgress,
+  setCachedWatchLibraryForUser,
   watchProgressEntriesFromStore,
   type WatchLibraryEpisode,
   type WatchLibraryResponse,
@@ -69,9 +74,20 @@ type WatchLibraryState =
   | { status: "ready"; data: WatchLibraryResponse; error: null }
   | { status: "error"; data: WatchLibraryResponse | null; error: string };
 
+type AuthSessionState =
+  | { status: "loading"; tokens: null; error: null }
+  | { status: "signed-out"; tokens: null; error: null }
+  | { status: "ready"; tokens: ExtensionAuthTokens; error: null }
+  | { status: "error"; tokens: null; error: string };
+
 export function PopupApp() {
   const [store, setStore] = useState<WatchProgressStore>(() => createEmptyWatchProgressStore());
   const [activeTab, setActiveTab] = useState<PopupTab>("resources");
+  const [authSession, setAuthSession] = useState<AuthSessionState>({
+    status: "loading",
+    tokens: null,
+    error: null,
+  });
   const [socialState, setSocialState] = useState<SocialPanelState>({
     status: "loading",
     data: null,
@@ -102,27 +118,25 @@ export function PopupApp() {
     ? socialState.data.targets.friends.length + socialState.data.targets.groups.length
     : 0;
   const pendingInviteCount =
-    socialState.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)).length ??
-    0;
+    socialState.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)).length ?? 0;
+  const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
 
-  const loadSocial = useCallback(async (interactive = false) => {
+  const loadSocialForTokens = useCallback(async (tokens: ExtensionAuthTokens) => {
     setSocialState((current) => ({
       status: "loading",
       data: current.data,
       error: null,
     }));
     try {
-      const tokens = interactive ? await signInWithWebsite() : await getCurrentExtensionSession();
-      if (!tokens) {
-        setSocialState({ status: "signed-out", data: null, error: null });
-        return;
-      }
-
       const [targets, invites] = await Promise.all([
         listInviteTargets(tokens.accessToken),
         listRoomInvites(tokens.accessToken),
       ]);
-      setSocialState({ status: "ready", data: { targets, invites }, error: null });
+      setSocialState({
+        status: "ready",
+        data: { targets, invites },
+        error: null,
+      });
     } catch (error) {
       setSocialState((current) => ({
         status: "error",
@@ -132,22 +146,30 @@ export function PopupApp() {
     }
   }, []);
 
-  const loadWatchLibrary = useCallback(
-    async (localStore: WatchProgressStore, interactive = false) => {
+  const loadWatchLibraryForTokens = useCallback(
+    async (tokens: ExtensionAuthTokens, localStore: WatchProgressStore, useCachedSnapshot = true) => {
       setWatchLibraryState((current) => ({
         status: "loading",
         data: current.data,
         error: null,
       }));
       try {
-        const tokens = interactive ? await signInWithWebsite() : await getCurrentExtensionSession();
-        if (!tokens) {
-          setWatchLibraryState({ status: "signed-out", data: null, error: null });
-          return;
+        if (useCachedSnapshot) {
+          const cached = await getCachedWatchLibraryForUser(tokens.user.id);
+          if (cached) {
+            setWatchLibraryState({
+              status: "ready",
+              data: cached.library,
+              error: null,
+            });
+          }
         }
 
         const entries = watchProgressEntriesFromStore(localStore);
-        const library = await reconcileWatchProgress(tokens.accessToken, entries);
+        const library = entries.length
+          ? await reconcileWatchProgress(tokens.accessToken, entries)
+          : await listWatchLibrary(tokens.accessToken);
+        await setCachedWatchLibraryForUser(tokens.user.id, library);
         setWatchLibraryState({ status: "ready", data: library, error: null });
       } catch (error) {
         setWatchLibraryState((current) => ({
@@ -160,6 +182,54 @@ export function PopupApp() {
     [],
   );
 
+  const syncPopupData = useCallback(
+    async (
+      localStore: WatchProgressStore,
+      options: {
+        interactive?: boolean;
+        tokens?: ExtensionAuthTokens;
+        useCachedSnapshot?: boolean;
+      } = {},
+    ): Promise<ExtensionAuthTokens | null> => {
+      try {
+        const tokens =
+          options.tokens ?? (options.interactive ? await signInWithWebsite() : await getCurrentExtensionSession());
+        if (!tokens) {
+          setAuthSession({ status: "signed-out", tokens: null, error: null });
+          setSocialState({ status: "signed-out", data: null, error: null });
+          setWatchLibraryState({
+            status: "signed-out",
+            data: null,
+            error: null,
+          });
+          return null;
+        }
+
+        setAuthSession({ status: "ready", tokens, error: null });
+        await Promise.all([
+          loadWatchLibraryForTokens(tokens, localStore, options.useCachedSnapshot ?? true),
+          loadSocialForTokens(tokens),
+        ]);
+        return tokens;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Could not sync account";
+        setAuthSession({ status: "error", tokens: null, error: message });
+        setSocialState((current) => ({
+          status: "error",
+          data: current.data,
+          error: message,
+        }));
+        setWatchLibraryState((current) => ({
+          status: "error",
+          data: current.data,
+          error: message,
+        }));
+        return null;
+      }
+    },
+    [loadSocialForTokens, loadWatchLibraryForTokens],
+  );
+
   const acceptInvite = useCallback(
     async (inviteId: string) => {
       setBusyInviteId(inviteId);
@@ -170,7 +240,8 @@ export function PopupApp() {
           return;
         }
         const accepted = await acceptRoomInvite(tokens.accessToken, inviteId);
-        await loadSocial(false);
+        setAuthSession({ status: "ready", tokens, error: null });
+        await loadSocialForTokens(tokens);
         await chrome.tabs.create({ url: accepted.joinUrl });
       } catch (error) {
         setSocialState((current) => ({
@@ -182,7 +253,7 @@ export function PopupApp() {
         setBusyInviteId(null);
       }
     },
-    [loadSocial],
+    [loadSocialForTokens],
   );
 
   const declineInvite = useCallback(
@@ -195,7 +266,8 @@ export function PopupApp() {
           return;
         }
         await declineRoomInvite(tokens.accessToken, inviteId);
-        await loadSocial(false);
+        setAuthSession({ status: "ready", tokens, error: null });
+        await loadSocialForTokens(tokens);
       } catch (error) {
         setSocialState((current) => ({
           status: "error",
@@ -206,50 +278,52 @@ export function PopupApp() {
         setBusyInviteId(null);
       }
     },
-    [loadSocial],
+    [loadSocialForTokens],
   );
 
-  const createRoomFromSession = useCallback(
-    async (session: WatchLibrarySession, sourceUrl: string) => {
-      setBusyWatchSessionId(session.id);
-      try {
-        const tokens = await getCurrentExtensionSession();
-        if (!tokens) {
-          setWatchLibraryState({ status: "signed-out", data: null, error: null });
-          return;
-        }
-
-        const room = await createRoomFromWatchSession({
-          accessToken: tokens.accessToken,
-          sessionId: session.id,
-          clientRequestId: `watch-library:${session.id}:${Date.now()}`,
+  const createRoomFromSession = useCallback(async (session: WatchLibrarySession, sourceUrl: string) => {
+    setBusyWatchSessionId(session.id);
+    try {
+      const tokens = await getCurrentExtensionSession();
+      if (!tokens) {
+        setWatchLibraryState({
+          status: "signed-out",
+          data: null,
+          error: null,
         });
-        await chrome.tabs.create({ url: buildWatchRoomLaunchUrl(sourceUrl, room.roomId) });
-        window.close();
-      } catch (error) {
-        setWatchLibraryState((current) => ({
-          status: "error",
-          data: current.data,
-          error: error instanceof Error ? error.message : "Could not create room",
-        }));
-      } finally {
-        setBusyWatchSessionId(null);
+        return;
       }
-    },
-    [],
-  );
+      setAuthSession({ status: "ready", tokens, error: null });
+
+      const room = await createRoomFromWatchSession({
+        accessToken: tokens.accessToken,
+        sessionId: session.id,
+        clientRequestId: `watch-library:${session.id}:${Date.now()}`,
+      });
+      await chrome.tabs.create({
+        url: buildWatchRoomLaunchUrl(sourceUrl, room.roomId),
+      });
+      window.close();
+    } catch (error) {
+      setWatchLibraryState((current) => ({
+        status: "error",
+        data: current.data,
+        error: error instanceof Error ? error.message : "Could not create room",
+      }));
+    } finally {
+      setBusyWatchSessionId(null);
+    }
+  }, []);
 
   useEffect(() => {
+    let cancelled = false;
     void loadWatchProgressStore().then((loadedStore) => {
+      if (cancelled) return;
       setStore(loadedStore);
-      void loadWatchLibrary(loadedStore, false);
+      void syncPopupData(loadedStore, { useCachedSnapshot: true });
     });
-    void loadSocial(false);
 
-    const handleStorageChange = (
-      changes: Record<string, chrome.storage.StorageChange>,
-      areaName: string,
-    ) => {
+    const handleStorageChange = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
       if (areaName !== "local" || !changes[WATCH_PROGRESS_STORAGE_KEY]) {
         return;
       }
@@ -258,8 +332,11 @@ export function PopupApp() {
     };
 
     chrome.storage.onChanged.addListener(handleStorageChange);
-    return () => chrome.storage.onChanged.removeListener(handleStorageChange);
-  }, [loadSocial, loadWatchLibrary]);
+    return () => {
+      cancelled = true;
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, [syncPopupData]);
 
   const totalItems = folders.reduce((sum, folder) => sum + folder.items.length, 0);
   const localItemsCount = useMemo(
@@ -306,7 +383,9 @@ export function PopupApp() {
         }
 
         nextItem.artworkUrl = posterUrl;
-        await chrome.storage.local.set({ [WATCH_PROGRESS_STORAGE_KEY]: nextStore });
+        await chrome.storage.local.set({
+          [WATCH_PROGRESS_STORAGE_KEY]: nextStore,
+        });
         setStore(nextStore);
       });
     }
@@ -317,6 +396,20 @@ export function PopupApp() {
     setStore(createEmptyWatchProgressStore());
   };
 
+  const openAccount = async () => {
+    const tokens =
+      authSession.status === "ready"
+        ? authSession.tokens
+        : await syncPopupData(store, {
+            interactive: true,
+            useCachedSnapshot: true,
+          });
+    if (!tokens) return;
+    await chrome.tabs.create({
+      url: new URL("/account", WEB_HTTP_BASE).toString(),
+    });
+  };
+
   return (
     <main className="popup-shell">
       <style>{popupStyles}</style>
@@ -324,10 +417,25 @@ export function PopupApp() {
         <div>
           <div className="popup-brand">Anidachi</div>
           <div className="popup-subtitle">
-            {totalItems ? `${totalItems} saved items` : "No saved progress yet"}
+            {accountUser
+              ? `${totalItems ? `${totalItems} saved items` : "No saved progress yet"} · ${accountUser.displayName}`
+              : "Sign in to sync progress"}
           </div>
         </div>
         <div className="popup-header-actions">
+          <button
+            aria-label={accountUser ? "Open account dashboard" : "Sign in and open account"}
+            className="popup-account-button"
+            title={accountUser ? `${accountUser.displayName} · ${planLabel(accountUser.plan)}` : "Sign in"}
+            type="button"
+            onClick={() => void openAccount()}
+          >
+            {accountUser ? (
+              <ProfileAvatar avatarUrl={accountUser.avatarUrl} displayName={accountUser.displayName} />
+            ) : (
+              <LogIn size={15} />
+            )}
+          </button>
           <button
             aria-label="Clear local progress cache"
             className="popup-icon-button"
@@ -393,7 +501,7 @@ export function PopupApp() {
               disabled={watchLibraryState.status === "loading"}
               title="Sync watch library"
               type="button"
-              onClick={() => void loadWatchLibrary(store, false)}
+              onClick={() => void syncPopupData(store, { useCachedSnapshot: false })}
             >
               <RefreshCw size={13} />
             </button>
@@ -404,7 +512,7 @@ export function PopupApp() {
               <button
                 className="popup-primary-button"
                 type="button"
-                onClick={() => void loadWatchLibrary(store, false)}
+                onClick={() => void syncPopupData(store, { useCachedSnapshot: false })}
               >
                 Retry
               </button>
@@ -418,9 +526,7 @@ export function PopupApp() {
                 busyWatchSessionId={busyWatchSessionId}
                 libraryEpisodesByKey={libraryEpisodesByKey}
                 open={Boolean(openProviders[folder.provider])}
-                onCreateRoomFromSession={(session, sourceUrl) =>
-                  void createRoomFromSession(session, sourceUrl)
-                }
+                onCreateRoomFromSession={(session, sourceUrl) => void createRoomFromSession(session, sourceUrl)}
                 onToggle={() =>
                   setOpenProviders((current) => ({
                     ...current,
@@ -441,16 +547,26 @@ export function PopupApp() {
       ) : activeTab === "friends" ? (
         <SocialPanel
           state={socialState}
-          onRefresh={() => void loadSocial(false)}
-          onSignIn={() => void loadSocial(true)}
+          onRefresh={() => void syncPopupData(store, { useCachedSnapshot: true })}
+          onSignIn={() =>
+            void syncPopupData(store, {
+              interactive: true,
+              useCachedSnapshot: true,
+            })
+          }
         />
       ) : (
         <InviteInboxPanel
           busyInviteId={busyInviteId}
           onAccept={(inviteId) => void acceptInvite(inviteId)}
           onDecline={(inviteId) => void declineInvite(inviteId)}
-          onRefresh={() => void loadSocial(false)}
-          onSignIn={() => void loadSocial(true)}
+          onRefresh={() => void syncPopupData(store, { useCachedSnapshot: true })}
+          onSignIn={() =>
+            void syncPopupData(store, {
+              interactive: true,
+              useCachedSnapshot: true,
+            })
+          }
           state={socialState}
         />
       )}
@@ -504,9 +620,7 @@ function SocialPanel({
         </div>
       ) : null}
 
-      {state.status === "loading" && !data ? (
-        <div className="popup-empty">Loading friends...</div>
-      ) : null}
+      {state.status === "loading" && !data ? <div className="popup-empty">Loading friends...</div> : null}
 
       {data ? <SocialTargets targets={data.targets} /> : null}
     </section>
@@ -528,8 +642,7 @@ function InviteInboxPanel({
   onSignIn: () => void;
   state: SocialPanelState;
 }) {
-  const pendingInvites =
-    state.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)) ?? [];
+  const pendingInvites = state.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)) ?? [];
 
   return (
     <section className="popup-section">
@@ -566,9 +679,7 @@ function InviteInboxPanel({
         </div>
       ) : null}
 
-      {state.status === "loading" && !state.data ? (
-        <div className="popup-empty">Loading invites...</div>
-      ) : null}
+      {state.status === "loading" && !state.data ? <div className="popup-empty">Loading invites...</div> : null}
 
       {state.data ? (
         <div className="popup-social-list">
@@ -623,26 +734,18 @@ function InviteInboxRow({
         <ProfileAvatar avatarUrl={invite.sender.avatarUrl} displayName={invite.sender.displayName} />
         <span className="popup-social-main">
           <span>{invite.roomTitle ?? "Watch room invite"}</span>
-          <span>From {invite.sender.displayName} · {formatInviteExpiry(invite.expiresAt)}</span>
+          <span>
+            From {invite.sender.displayName} · {formatInviteExpiry(invite.expiresAt)}
+          </span>
         </span>
       </div>
       {invite.message ? <p className="popup-inbox-message">{invite.message}</p> : null}
       <div className="popup-inbox-actions">
-        <button
-          className="popup-primary-button"
-          disabled={busy}
-          type="button"
-          onClick={onAccept}
-        >
+        <button className="popup-primary-button" disabled={busy} type="button" onClick={onAccept}>
           <Check size={13} />
           Join
         </button>
-        <button
-          className="popup-secondary-button"
-          disabled={busy}
-          type="button"
-          onClick={onDecline}
-        >
+        <button className="popup-secondary-button" disabled={busy} type="button" onClick={onDecline}>
           <X size={13} />
           Decline
         </button>
@@ -660,9 +763,7 @@ function SocialTargets({ targets }: { targets: InviteTargets }) {
           <span>{targets.friends.length}</span>
         </div>
         {targets.friends.length ? (
-          targets.friends.map((friend) => (
-            <SocialFriendRow friend={friend} key={friend.friendshipId} />
-          ))
+          targets.friends.map((friend) => <SocialFriendRow friend={friend} key={friend.friendshipId} />)
         ) : (
           <div className="popup-empty">No friends yet.</div>
         )}
@@ -698,10 +799,7 @@ function SocialTargets({ targets }: { targets: InviteTargets }) {
 function SocialFriendRow({ friend }: { friend: FriendListItem }) {
   return (
     <div className="popup-social-row">
-      <ProfileAvatar
-        avatarUrl={friend.user.avatarUrl}
-        displayName={friend.user.displayName}
-      />
+      <ProfileAvatar avatarUrl={friend.user.avatarUrl} displayName={friend.user.displayName} />
       <span className="popup-social-main">
         <span>{friend.user.displayName}</span>
         <span>{friend.user.handle ? `@${friend.user.handle}` : "AniDachi user"}</span>
@@ -748,13 +846,7 @@ function formatInviteExpiry(expiresAt: string): string {
   return `${days}d left`;
 }
 
-function ProfileAvatar({
-  avatarUrl,
-  displayName,
-}: {
-  avatarUrl: string | null;
-  displayName: string;
-}) {
+function ProfileAvatar({ avatarUrl, displayName }: { avatarUrl: string | null; displayName: string }) {
   if (avatarUrl) {
     return <img className="popup-social-avatar" src={avatarUrl} alt="" loading="lazy" />;
   }
@@ -773,9 +865,13 @@ function getInitials(name: string): string {
   );
 }
 
-function buildLibraryEpisodeIndex(
-  library: WatchLibraryResponse | null,
-): Map<string, WatchLibraryEpisode> {
+function planLabel(plan: string): string {
+  if (plan === "plus") return "Plus";
+  if (plan === "pro") return "Pro";
+  return "Free";
+}
+
+function buildLibraryEpisodeIndex(library: WatchLibraryResponse | null): Map<string, WatchLibraryEpisode> {
   const index = new Map<string, WatchLibraryEpisode>();
   for (const item of library?.items ?? []) {
     for (const episode of item.episodes) {
@@ -785,11 +881,7 @@ function buildLibraryEpisodeIndex(
   return index;
 }
 
-function libraryEpisodeKey(
-  provider: string,
-  itemKey: string,
-  episodeKey: string,
-): string {
+function libraryEpisodeKey(provider: string, itemKey: string, episodeKey: string): string {
   return `${provider}:${itemKey}:${episodeKey}`;
 }
 
@@ -805,8 +897,7 @@ function mergeWatchLibraryIntoStore(
         continue;
       }
       const existingItem = nextStore.providers[item.provider]?.items[item.itemKey];
-      const existingEpisode =
-        item.itemKind === "series" ? existingItem?.episodes?.[episode.episodeKey] : existingItem;
+      const existingEpisode = item.itemKind === "series" ? existingItem?.episodes?.[episode.episodeKey] : existingItem;
       if (existingEpisode && existingEpisode.lastWatchedAt >= observedAt) {
         continue;
       }
@@ -858,11 +949,8 @@ function ProviderRow({
   const [activeKind, setActiveKind] = useState<"series" | "movie">("series");
   const seriesCount = folder.items.filter((item) => item.kind === "series").length;
   const movieCount = folder.items.filter((item) => item.kind === "movie").length;
-  const hasKindTabs =
-    folder.provider === "crunchyroll" && Boolean(seriesCount) && Boolean(movieCount);
-  const visibleItems = hasKindTabs
-    ? folder.items.filter((item) => item.kind === activeKind)
-    : folder.items;
+  const hasKindTabs = folder.provider === "crunchyroll" && Boolean(seriesCount) && Boolean(movieCount);
+  const visibleItems = hasKindTabs ? folder.items.filter((item) => item.kind === activeKind) : folder.items;
 
   useEffect(() => {
     if (activeKind === "series" && !seriesCount && movieCount) {
@@ -953,9 +1041,7 @@ function WatchItemRow({
   onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
   onToggle: () => void;
 }) {
-  const episodes = Object.values(item.episodes ?? {}).sort(
-    (a, b) => b.lastWatchedAt - a.lastWatchedAt,
-  );
+  const episodes = Object.values(item.episodes ?? {}).sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
   const isSeries = item.kind === "series";
 
   if (!isSeries) {
@@ -972,16 +1058,8 @@ function WatchItemRow({
   return (
     <div className="popup-watch-item" data-kind="series">
       <button className="popup-watch-row" type="button" onClick={onToggle}>
-        <span
-          className="popup-watch-artwork"
-          data-has-artwork={Boolean(item.artworkUrl)}
-          aria-hidden="true"
-        >
-          {item.artworkUrl ? (
-            <img src={item.artworkUrl} alt="" loading="lazy" />
-          ) : (
-            <Folder size={16} />
-          )}
+        <span className="popup-watch-artwork" data-has-artwork={Boolean(item.artworkUrl)} aria-hidden="true">
+          {item.artworkUrl ? <img src={item.artworkUrl} alt="" loading="lazy" /> : <Folder size={16} />}
         </span>
         <span className="popup-watch-main">
           <span className="popup-watch-title">{item.title}</span>
@@ -1000,9 +1078,7 @@ function WatchItemRow({
               episode={episode}
               episodeIndex={index}
               key={episode.id}
-              libraryEpisode={libraryEpisodesByKey.get(
-                libraryEpisodeKey(item.provider, item.id, episode.id),
-              )}
+              libraryEpisode={libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, episode.id))}
               onCreateRoomFromSession={onCreateRoomFromSession}
             />
           ))}
@@ -1039,11 +1115,7 @@ function MovieRow({
           data-has-artwork={Boolean(item.artworkUrl)}
           aria-hidden="true"
         >
-          {item.artworkUrl ? (
-            <img src={item.artworkUrl} alt="" loading="lazy" />
-          ) : (
-            <Film size={15} />
-          )}
+          {item.artworkUrl ? <img src={item.artworkUrl} alt="" loading="lazy" /> : <Film size={15} />}
         </span>
         <span className="popup-episode-main">
           <span className="popup-episode-header">
@@ -1088,9 +1160,7 @@ function EpisodeRow({
       />
       <span className="popup-episode-main">
         <span className="popup-episode-header">
-          <span className="popup-episode-number">
-            {getEpisodeLabel(episode.title, episodeIndex)}
-          </span>
+          <span className="popup-episode-number">{getEpisodeLabel(episode.title, episodeIndex)}</span>
           <span className="popup-episode-title">{stripEpisodePrefix(episode.title)}</span>
         </span>
         <SharedProgressTracker
@@ -1137,10 +1207,7 @@ function SharedProgressTracker({
             }}
           />
         ))}
-        <span
-          className="shared-progress-base"
-          style={{ width: `${toPercent(episode.progress)}%` }}
-        />
+        <span className="shared-progress-base" style={{ width: `${toPercent(episode.progress)}%` }} />
         {sessions.map((session) => (
           <button
             aria-expanded={activeSessionId === session.id}
@@ -1214,13 +1281,7 @@ function InviteFooter() {
   );
 }
 
-function AvatarStack({
-  participants,
-  compact,
-}: {
-  participants: WatchLibraryParticipantLike[];
-  compact?: boolean;
-}) {
+function AvatarStack({ participants, compact }: { participants: WatchLibraryParticipantLike[]; compact?: boolean }) {
   const visible = participants.slice(0, 5);
   return (
     <span className={compact ? "avatar-stack compact" : "avatar-stack"}>
