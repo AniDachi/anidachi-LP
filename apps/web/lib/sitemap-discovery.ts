@@ -90,9 +90,23 @@ function inferSitemapMeta(urlPath: string): {
     urlPath === "/watch-fantasy-anime-with-friends" ||
     urlPath === "/watch-sci-fi-anime-with-friends" ||
     urlPath === "/watch-shoujo-anime-with-friends" ||
-    urlPath === "/watch-supernatural-anime-with-friends"
+    urlPath === "/watch-supernatural-anime-with-friends" ||
+    urlPath === "/watch-crunchyroll-together-long-distance" ||
+    urlPath === "/best-apps-watch-anime-together-long-distance" ||
+    urlPath === "/watch-anime-long-distance-boyfriend-girlfriend" ||
+    urlPath === "/timezone-friendly-anime-watch-parties"
   ) {
     return { changeFrequency: "monthly", priority: 0.85 };
+  }
+  if (
+    urlPath === "/long-distance-anime-date-night-ideas" ||
+    urlPath === "/watch-kdrama-together-long-distance" ||
+    urlPath === "/watch-youtube-together-long-distance" ||
+    urlPath === "/watch-movies-together-long-distance" ||
+    urlPath === "/best-anime-for-long-distance-relationships" ||
+    urlPath === "/watch-netflix-together-long-distance"
+  ) {
+    return { changeFrequency: "monthly", priority: 0.75 };
   }
   if (urlPath.startsWith("/compare/")) {
     return { changeFrequency: "monthly", priority: 0.7 };

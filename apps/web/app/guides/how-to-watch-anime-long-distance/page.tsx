@@ -221,6 +221,22 @@ export default function HowToWatchAnimeLongDistancePage() {
               Anime Watch Party Ideas
             </Link>
           </li>
+          <li>
+            <Link
+              href="/watch-crunchyroll-together-long-distance"
+              className="hover:underline"
+            >
+              Watch Crunchyroll Together Long Distance
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/timezone-friendly-anime-watch-parties"
+              className="hover:underline"
+            >
+              Anime Watch Parties Across Time Zones — The Async Guide
+            </Link>
+          </li>
         </ul>
       </SeoPageLayout>
     </>
