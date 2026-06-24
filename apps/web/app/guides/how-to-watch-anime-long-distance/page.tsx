@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
+import { PRICING_COMPARE_OVERVIEW } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "How to Watch Anime Long Distance — 2026",
@@ -46,7 +47,7 @@ const faq = [
   {
     question: "Can long-distance couples watch anime together for free?",
     answer:
-      "Yes — for free, Discord screen share works over any distance. For full video quality without one person's stream limiting the other, Crunchyroll Party (free) or AniDachi ($8/mo) give everyone independent full-quality streams. AniDachi is the only option with async support when schedules don't align.",
+      `Yes — for free, Discord screen share works over any distance. For full video quality without one person's stream limiting the other, Crunchyroll Party (free) or AniDachi (Free to join; Plus to host) give everyone independent full-quality streams. ${PRICING_COMPARE_OVERVIEW} AniDachi is the only option with async support when schedules don't align.`,
   },
 ];
 

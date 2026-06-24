@@ -1,5 +1,6 @@
 import type { AnimeEntry } from "@/lib/anime-data";
 import { isMovieEntry } from "@/lib/anime-data";
+import { pricingWatchPageFaqAnswer } from "@/lib/pricing-copy";
 
 function genreSet(genres: string[]): Set<string> {
   return new Set(genres.map((g) => g.toLowerCase()));
@@ -360,7 +361,7 @@ export function buildWatchPageFaq(
     },
     {
       question: `Is AniDachi free for ${anime.title} watch parties?`,
-      answer: `AniDachi is a paid Chrome extension during early access — pricing and checkout are on the AniDachi homepage. You still need individual Crunchyroll access for ${anime.title}; AniDachi provides the watchroom, sync, and chat layer on top of each person's stream.`,
+      answer: pricingWatchPageFaqAnswer(anime.title),
     },
     {
       question: `Can we host a ${anime.title} watch night if we live in different countries?`,

@@ -41,7 +41,7 @@ AniDachi is a Chrome extension for anime fans who want to watch Crunchyroll toge
 
 **Supported Platforms:** Crunchyroll (more platforms coming soon)
 
-**Requirements:** Each person needs their own Crunchyroll account. AniDachi subscription starts at $8/month with a full refund guarantee.
+**Requirements:** Each person needs their own Crunchyroll account. AniDachi has a Free tier for joining rooms; Plus starts at $7.99/month and Pro at $14.99/month for hosts, with a full refund guarantee.
 
 AniDachi (アニ友) means "anime friend" in Japanese. Built by anime fans, for anime fans.
 

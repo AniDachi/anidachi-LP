@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { PRICING_AMAZON_SUBSCRIPTION_ROW } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
@@ -172,7 +173,7 @@ export default function AniDachiVsAmazonWatchPartyPage() {
           },
           {
             feature: "Cost",
-            values: { anidachi: "AniDachi subscription", amazon: "Included with Prime" },
+            values: { anidachi: PRICING_AMAZON_SUBSCRIPTION_ROW, amazon: "Included with Prime" },
           },
         ]}
       />

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
+import { PRICING_LONG_DISTANCE_SNIPPET } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Watch Anime With Your Long Distance Partner (2026) | AniDachi",
@@ -30,7 +31,7 @@ const faq = [
   {
     question: "Is there a way to watch anime together long distance for free?",
     answer:
-      "Crunchyroll Party is a free Chrome extension that supports live sync on Crunchyroll. Discord screen share is also free for occasional sessions. AniDachi ($8/month) adds async mode, spoiler control, and progress tracking — features that matter most for long-distance couples on different schedules.",
+      `Crunchyroll Party is a free Chrome extension that supports live sync on Crunchyroll. Discord screen share is also free for occasional sessions. ${PRICING_LONG_DISTANCE_SNIPPET}`,
   },
   {
     question: "What anime is best for long-distance couples to watch together?",

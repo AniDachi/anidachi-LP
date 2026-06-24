@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
+import { PRICING_GROUP_ONBOARDING } from "@/lib/pricing-copy";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
@@ -31,8 +32,7 @@ export const metadata: Metadata = {
 const faq = [
   {
     question: "Who should be the billing owner for watch party tools?",
-    answer:
-      "Each viewer still pays their own streaming provider. Watch party extensions like AniDachi bill per subscriber on the checkout page—you can rotate who researches pricing, but every participant keeps their Crunchyroll login private.",
+    answer: PRICING_GROUP_ONBOARDING,
   },
   {
     question: "Should new groups start with Discord or per-user streams?",

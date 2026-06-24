@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +18,27 @@ import {
 } from "@/lib/conversion-events";
 import type { CheckoutTier, HomeSurveyAnswers } from "@/lib/home-survey";
 import { PRICING_CTA_LABEL } from "@/lib/home-survey";
+import {
+  PRICING_TIERS,
+  type PricingTierId,
+} from "@/lib/pricing-tiers";
 import { PricingSurveyLink } from "@/components/pricing-survey-link";
+
+function FeatureList({ features }: { features: string[] }) {
+  return (
+    <ul className="mb-6 flex-1 space-y-2">
+      {features.map((feature) => (
+        <li key={feature} className="flex items-start gap-3">
+          <Check
+            className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-orange"
+            aria-hidden="true"
+          />
+          <span className="text-sm text-foreground/80">{feature}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function Pricing({
   survey,
@@ -30,6 +51,7 @@ export function Pricing({
 } = {}) {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingTier, setSubmittingTier] = useState<CheckoutTier | null>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
   const pricingViewFired = useRef(false);
 
@@ -89,6 +111,7 @@ export function Pricing({
     });
 
     setIsSubmitting(true);
+    setSubmittingTier(tier);
     try {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
@@ -162,8 +185,14 @@ export function Pricing({
       );
     } finally {
       setIsSubmitting(false);
+      setSubmittingTier(null);
     }
   };
+
+  const isRecommended = (tierId: PricingTierId) =>
+    tierId === "plus" && recommendedTier === "plus";
+
+  const isHighlighted = (tierId: PricingTierId) => tierId === "plus";
 
   return (
     <section
@@ -185,8 +214,9 @@ export function Pricing({
             Pre-launch pricing. Locked in forever.
           </h2>
           <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
-          <p className="mx-auto max-w-xl text-base text-foreground/70">
-            Subscribe before launch — your rate stays forever.
+          <p className="mx-auto max-w-2xl text-base text-foreground/70">
+            Friends join free. Subscribe when you want to host without limits —
+            your pre-launch rate stays forever.
           </p>
 
           {checkoutError && (
@@ -199,154 +229,50 @@ export function Pricing({
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-4xl mx-auto mb-12 items-stretch pt-6">
-          <div className="flex flex-col h-full animate-fade-in-up">
-            <div className="flex flex-1 flex-col rounded-xl p-[2px] animated-gradient-border">
-              <Card className="flex h-full flex-1 flex-col gap-0 border-0 bg-brand-surface p-6 shadow-xl rounded-[calc(var(--radius-xl)-2px)]">
-                <div className="mb-5 flex min-h-8 items-center justify-center">
-                  <Badge className="bg-brand-orange px-5 py-1.5 text-sm font-semibold text-primary-foreground shadow-md">
-                    <Star className="mr-1 h-3 w-3" aria-hidden="true" />
-                    {recommendedTier === "plus"
-                      ? "Recommended"
-                      : "Most Popular"}
-                  </Badge>
-                </div>
+        <div className="mx-auto mb-12 grid max-w-6xl items-stretch gap-6 pt-6 md:grid-cols-3 lg:gap-8">
+          {PRICING_TIERS.map((tier, index) => {
+            const highlighted = isHighlighted(tier.id);
+            const recommended = isRecommended(tier.id);
+            const paidTier = tier.id !== "free" ? tier.id : null;
 
-                <CardHeader className="space-y-2 p-0 pb-5 text-center">
-                  <CardTitle className="text-2xl font-bold text-foreground">
-                    Plus
-                  </CardTitle>
-                  <p className="min-h-[4.5rem] text-sm font-medium leading-snug text-brand-orange-bright">
-                    Who it&apos;s for: regular watch nights with friends, sync,
-                    chat, and shared progress
-                  </p>
-                  <div className="flex items-baseline justify-center pt-1">
-                    <span className="text-5xl font-bold text-foreground">$7.99</span>
-                    <span className="ml-1 text-lg text-foreground/60">/month</span>
-                  </div>
-                  <CardDescription className="min-h-[4.5rem] text-base text-foreground/70">
-                    Host rooms without the free time limit, invite friends, and use
-                    up to 4 video seats
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="flex flex-1 flex-col p-0">
-                  <ul className="mb-6 flex-1 space-y-2">
-                    {[
-                      "Unlimited watchrooms",
-                      "Real-time chat & discussions",
-                      "Chrome extension access",
-                      "Cross-device playback sync",
-                      "Watch history & progress tracking",
-                      "Priority support",
-                    ].map((feature, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <Check
-                          className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-orange"
-                          aria-hidden="true"
-                        />
-                        <span className="text-sm text-foreground/80">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="mt-auto pt-2">
-                    <Button
-                      className="w-full py-4 text-lg font-semibold bg-brand-orange text-primary-foreground shadow-lg glow-orange transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange-lg disabled:opacity-60"
-                      onClick={() => handleSubscribe("plus")}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting
-                        ? "Redirecting to Stripe…"
-                        : (getCtaLabelForTier?.("plus") ?? PRICING_CTA_LABEL)}
-                    </Button>
-                    <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-foreground/50">
-                      <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-                      Secured by Stripe
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          <div
-            className="flex h-full flex-col animate-fade-in-up"
-            style={{ animationDelay: "100ms" }}
-          >
-            <Card
-              className={`flex h-full flex-1 flex-col gap-0 border bg-brand-surface p-6 shadow-xl transition-all duration-300 hover:border-brand-orange/40 hover:shadow-lg ${
-                recommendedTier === "pro"
-                  ? "border-brand-orange/40 ring-2 ring-brand-orange/30"
-                  : "border-brand-border"
-              }`}
-            >
+            return (
               <div
-                className="mb-5 flex min-h-8 items-center justify-center opacity-0 pointer-events-none"
-                aria-hidden
+                key={tier.id}
+                className="flex h-full flex-col animate-fade-in-up"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
-                <Badge className="px-5 py-1.5 text-sm font-semibold">
-                  Placeholder
-                </Badge>
-              </div>
-
-              <CardHeader className="space-y-2 p-0 pb-5 text-center">
-                <CardTitle className="text-2xl font-bold text-foreground">
-                  Pro
-                </CardTitle>
-                <p className="min-h-[4.5rem] text-sm font-medium leading-snug text-brand-orange-bright">
-                  Who it&apos;s for: club hosts and bigger groups who need
-                  private rooms, moderator controls, and room personalization
-                </p>
-                <div className="flex items-baseline justify-center pt-1">
-                  <span className="text-5xl font-bold text-foreground">$14.99</span>
-                  <span className="ml-1 text-lg text-foreground/60">/month</span>
-                </div>
-                <CardDescription className="min-h-[4.5rem] text-base text-foreground/70">
-                  For bigger groups: more participants, more groups, longer
-                  history, and the same lightweight 4-seat video limit.
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="flex flex-1 flex-col p-0">
-                <ul className="mb-6 flex-1 space-y-2">
-                  {[
-                    "Everything in Plus",
-                    "Invite-only rooms (private links + approval)",
-                    "Host & moderator controls (kick/ban, lock playback, room rules)",
-                    "Room personalization (name, cover, pinned notes)",
-                    "Founder badge + early feature drops",
-                    "Fast-track support (same-day replies)",
-                  ].map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <Check
-                        className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-orange"
-                        aria-hidden="true"
+                {highlighted ? (
+                  <div className="flex flex-1 flex-col rounded-xl p-[2px] animated-gradient-border">
+                    <Card className="flex h-full flex-1 flex-col gap-0 border-0 bg-brand-surface p-6 shadow-xl rounded-[calc(var(--radius-xl)-2px)]">
+                      <TierCardBody
+                        tier={tier}
+                        recommended={recommended}
+                        highlighted={highlighted}
+                        isSubmitting={isSubmitting}
+                        submittingTier={submittingTier}
+                        paidTier={paidTier}
+                        getCtaLabelForTier={getCtaLabelForTier}
+                        onSubscribe={handleSubscribe}
                       />
-                      <span className="text-sm text-foreground/80">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-auto pt-2">
-                  <Button
-                    variant="outline"
-                    className="w-full border-brand-orange/50 py-4 text-lg font-semibold text-brand-orange transition-all duration-300 hover:border-brand-orange hover:bg-brand-orange hover:text-primary-foreground disabled:opacity-60"
-                    onClick={() => handleSubscribe("pro")}
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting
-                      ? "Redirecting to Stripe…"
-                      : (getCtaLabelForTier?.("pro") ?? PRICING_CTA_LABEL)}
-                  </Button>
-                  <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-foreground/50">
-                    <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-                    Secured by Stripe
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                    </Card>
+                  </div>
+                ) : (
+                  <Card className="flex h-full flex-1 flex-col gap-0 border border-brand-border bg-brand-surface p-6 shadow-xl transition-all duration-300 hover:border-brand-orange/40 hover:shadow-lg">
+                    <TierCardBody
+                      tier={tier}
+                      recommended={recommended}
+                      highlighted={highlighted}
+                      isSubmitting={isSubmitting}
+                      submittingTier={submittingTier}
+                      paidTier={paidTier}
+                      getCtaLabelForTier={getCtaLabelForTier}
+                      onSubscribe={handleSubscribe}
+                    />
+                  </Card>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <p className="text-center mt-8">
@@ -354,5 +280,119 @@ export function Pricing({
         </p>
       </div>
     </section>
+  );
+}
+
+function TierCardBody({
+  tier,
+  recommended,
+  highlighted,
+  isSubmitting,
+  submittingTier,
+  paidTier,
+  getCtaLabelForTier,
+  onSubscribe,
+}: {
+  tier: (typeof PRICING_TIERS)[number];
+  recommended: boolean;
+  highlighted: boolean;
+  isSubmitting: boolean;
+  submittingTier: CheckoutTier | null;
+  paidTier: CheckoutTier | null;
+  getCtaLabelForTier?: (tier: CheckoutTier) => string;
+  onSubscribe: (tier: CheckoutTier) => void;
+}) {
+  const badgeLabel =
+    tier.id === "plus"
+      ? recommended
+        ? "Recommended"
+        : "Most Popular"
+      : null;
+
+  return (
+    <>
+      <div
+        className={`mb-5 flex min-h-8 items-center justify-center ${
+          badgeLabel ? "" : "opacity-0 pointer-events-none"
+        }`}
+        aria-hidden={!badgeLabel}
+      >
+        {badgeLabel ? (
+          <Badge
+            className={`px-5 py-1.5 text-sm font-semibold ${
+              highlighted
+                ? "bg-brand-orange text-primary-foreground shadow-md"
+                : "border border-brand-orange/40 bg-brand-orange/10 text-brand-orange"
+            }`}
+          >
+            {highlighted ? (
+              <Star className="mr-1 h-3 w-3" aria-hidden="true" />
+            ) : null}
+            {badgeLabel}
+          </Badge>
+        ) : (
+          <Badge className="px-5 py-1.5 text-sm font-semibold">Placeholder</Badge>
+        )}
+      </div>
+
+      <CardHeader className="space-y-2 p-0 pb-5 text-center">
+        <CardTitle className="text-2xl font-bold text-foreground">
+          {tier.label}
+        </CardTitle>
+        <p className="min-h-[4.5rem] text-sm font-medium leading-snug text-brand-orange-bright">
+          {tier.audience}
+        </p>
+        <div className="flex items-baseline justify-center pt-1">
+          <span className="text-5xl font-bold text-foreground">{tier.priceDisplay}</span>
+          {tier.priceSuffix ? (
+            <span className="ml-1 text-lg text-foreground/60">{tier.priceSuffix}</span>
+          ) : null}
+        </div>
+        <CardDescription className="min-h-[4.5rem] text-base text-foreground/70">
+          {tier.summary}
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="flex flex-1 flex-col p-0">
+        <FeatureList features={tier.features} />
+
+        <div className="mt-auto pt-2">
+          {paidTier ? (
+            <Button
+              className={`w-full py-4 text-lg font-semibold disabled:opacity-60 ${
+                tier.id === "plus"
+                  ? "bg-brand-orange text-primary-foreground shadow-lg glow-orange transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange-lg"
+                  : "border-brand-orange/50 text-brand-orange transition-all duration-300 hover:border-brand-orange hover:bg-brand-orange hover:text-primary-foreground"
+              }`}
+              variant={tier.id === "plus" ? "default" : "outline"}
+              onClick={() => onSubscribe(paidTier)}
+              disabled={isSubmitting}
+            >
+              {isSubmitting && submittingTier === paidTier
+                ? "Redirecting to Stripe…"
+                : (getCtaLabelForTier?.(paidTier) ?? PRICING_CTA_LABEL)}
+            </Button>
+          ) : (
+            <Button
+              asChild
+              variant="outline"
+              className="w-full border-brand-border py-4 text-lg font-semibold text-foreground transition-all duration-300 hover:border-brand-orange hover:bg-brand-orange/10 hover:text-brand-orange"
+            >
+              <Link href="/login">Create free account</Link>
+            </Button>
+          )}
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-foreground/50">
+            {paidTier ? (
+              <>
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                Secured by Stripe
+              </>
+            ) : (
+              "No credit card required"
+            )}
+          </p>
+        </div>
+      </CardContent>
+    </>
   );
 }

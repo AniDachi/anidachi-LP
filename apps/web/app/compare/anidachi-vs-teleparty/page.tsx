@@ -3,6 +3,10 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
+import {
+  PRICING_FREE_TIER_TABLE,
+  PRICING_TELEPARTY_COMPARE_FAQ,
+} from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "AniDachi vs Teleparty: Which Is Better for Anime Watch Parties? (2026)",
@@ -20,7 +24,7 @@ const faq = [
   {
     question: "Is AniDachi free compared to Teleparty?",
     answer:
-      "Teleparty has a free tier for basic live sync, plus a premium tier. AniDachi is a paid product during early access (with a clear refund path) and focuses on Crunchyroll-first anime features like async watchrooms. Which is 'cheaper' depends on whether you need multi-platform, free live sync, or async progress and anime detection.",
+      PRICING_TELEPARTY_COMPARE_FAQ,
   },
   {
     question: "Does Teleparty work with Crunchyroll?",
@@ -142,7 +146,7 @@ export default function AniDachiVsTelepartyPage() {
           },
           {
             feature: "Free tier",
-            values: { anidachi: "No ($8/mo)", teleparty: "Yes (basic)" },
+            values: { anidachi: PRICING_FREE_TIER_TABLE, teleparty: "Yes (basic)" },
           },
         ]}
       />
@@ -200,7 +204,7 @@ export default function AniDachiVsTelepartyPage() {
       <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/#pricing" className="hover:underline">
-            Start paid plan — unlock async watchrooms on Crunchyroll
+            See pricing — Free to join, Plus from $7.99/mo to host
           </Link>
         </li>
         <li><Link href="/best-apps-watch-anime-together-long-distance" className="hover:underline">Best Apps for Watching Anime Together Long Distance</Link></li>

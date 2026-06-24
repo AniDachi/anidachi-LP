@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { PRICING_FIRST_CHECKLIST_FAQ } from "@/lib/pricing-copy";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
@@ -53,8 +54,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free or paid?",
-    answer:
-      "AniDachi is a paid Chrome extension with early-access pricing shown on the AniDachi homepage. You still need your own Crunchyroll subscription to stream episodes; AniDachi provides watchrooms, sync, and chat on top.",
+    answer: PRICING_FIRST_CHECKLIST_FAQ,
   },
 ];
 

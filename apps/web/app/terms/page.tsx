@@ -50,8 +50,9 @@ export default function TermsPage() {
                 AniDachi provides a platform for watching anime together through
                 watchrooms, real-time chat, playback synchronization, and a
                 Chrome extension that detects anime on supported streaming
-                platforms (e.g., Crunchyroll). Some features require a paid
-                subscription.
+                platforms (e.g., Crunchyroll). Free accounts can join
+                friends&apos; watchrooms; Plus and Pro subscriptions unlock
+                hosting without daily limits and larger room capacity.
               </p>
             </section>
 
@@ -84,8 +85,9 @@ export default function TermsPage() {
                 5. Subscriptions & Payments
               </h2>
               <p>
-                Paid subscriptions are billed monthly through Stripe. Prices are
-                listed on our{" "}
+                Paid Plus and Pro subscriptions are billed monthly through Stripe.
+                Free accounts are available at no charge. Prices are listed on
+                our{" "}
                 <Link href="/#pricing" className="text-brand-orange hover:underline">
                   pricing page
                 </Link>

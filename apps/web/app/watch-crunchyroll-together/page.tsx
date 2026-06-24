@@ -3,6 +3,11 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
+import {
+  PRICING_ASYNC_HOST_SNIPPET,
+  PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION,
+  PRICING_EARLY_ACCESS_PRICE,
+} from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Watch Crunchyroll Together — Group Watch Party & Sync Guide (2026)",
@@ -41,7 +46,7 @@ const faq = [
   {
     question: "What is a Crunchyroll group watch?",
     answer:
-      "A Crunchyroll group watch is when multiple people watch the same anime on Crunchyroll at the same time, with synced playback and shared chat. Since Crunchyroll has no native group watch feature, you create this with a Chrome extension like AniDachi (paid, with async) or Crunchyroll Party (free, live-only).",
+      `A Crunchyroll group watch is when multiple people watch the same anime on Crunchyroll at the same time, with synced playback and shared chat. Since Crunchyroll has no native group watch feature, you create this with ${PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION} or Crunchyroll Party (free, live-only).`,
   },
   {
     question: "Can you Teleparty Crunchyroll — is there a Teleparty for Crunchyroll?",
@@ -51,7 +56,7 @@ const faq = [
   {
     question: "Is there a free way to watch Crunchyroll together?",
     answer:
-      "Free options include Discord screen sharing and the free Crunchyroll Party Chrome extension. AniDachi offers unique async-watching and progress tracking features starting at $8/month with a full refund guarantee.",
+      PRICING_ASYNC_HOST_SNIPPET,
   },
   {
     question: "Do all my friends need Crunchyroll accounts?",
@@ -207,7 +212,7 @@ export default function WatchCrunchyrollTogetherPage() {
               <td className="border border-brand-border px-4 py-2">Yes</td>
               <td className="border border-brand-border px-4 py-2">Yes</td>
               <td className="border border-brand-border px-4 py-2">Yes</td>
-              <td className="border border-brand-border px-4 py-2">$8/mo</td>
+              <td className="border border-brand-border px-4 py-2">{PRICING_EARLY_ACCESS_PRICE}</td>
             </tr>
             <tr className="bg-brand-surface">
               <td className="border border-brand-border px-4 py-2 font-medium">Crunchyroll Party</td>

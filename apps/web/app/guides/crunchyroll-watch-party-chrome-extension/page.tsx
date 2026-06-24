@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
+import {
+  PRICING_ASYNC_HOST_SNIPPET,
+  PRICING_EARLY_ACCESS_PRICE,
+} from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Best Crunchyroll Watch Party Chrome Extensions (2026)",
@@ -87,8 +91,7 @@ export default function CrunchyrollExtensionsPage() {
         AniDachi auto-detects anime on Crunchyroll, creates one-click
         watchrooms, and is the only extension that supports asynchronous
         watching. Friends mark episodes as watched at their own pace and leave
-        reactions for others to see later. Pricing starts at $8/month with a
-        full refund guarantee.
+        reactions for others to see later. {PRICING_ASYNC_HOST_SNIPPET}
       </p>
       <ul className="list-disc pl-6 space-y-1 text-foreground/80 mb-6">
         <li>Auto anime detection</li>
@@ -154,7 +157,7 @@ export default function CrunchyrollExtensionsPage() {
             </tr>
           </thead>
           <tbody className="text-foreground/80">
-            <tr><td className="border border-brand-border px-3 py-2 font-medium">AniDachi</td><td className="border border-brand-border px-3 py-2">Yes</td><td className="border border-brand-border px-3 py-2">Yes</td><td className="border border-brand-border px-3 py-2">Yes</td><td className="border border-brand-border px-3 py-2">$8/mo</td></tr>
+            <tr><td className="border border-brand-border px-3 py-2 font-medium">AniDachi</td><td className="border border-brand-border px-3 py-2">Yes</td><td className="border border-brand-border px-3 py-2">Yes</td><td className="border border-brand-border px-3 py-2">Yes</td><td className="border border-brand-border px-3 py-2">{PRICING_EARLY_ACCESS_PRICE}</td></tr>
             <tr className="bg-brand-surface"><td className="border border-brand-border px-3 py-2 font-medium">CR Party</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">Free</td></tr>
             <tr><td className="border border-brand-border px-3 py-2 font-medium">Teleparty</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">Freemium</td></tr>
             <tr className="bg-brand-surface"><td className="border border-brand-border px-3 py-2 font-medium">Roll Together</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">Free</td></tr>

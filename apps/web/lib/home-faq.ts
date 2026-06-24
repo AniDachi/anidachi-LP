@@ -1,3 +1,9 @@
+import {
+  PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
+  PRICING_IS_ANIDACHI_FREE_ANSWER,
+  PRICING_PLUS_VS_PRO_ANSWER,
+} from "@/lib/pricing-copy";
+
 export const homeFAQ = [
   {
     question: "Does Crunchyroll have a built-in watch party feature?",
@@ -21,8 +27,15 @@ export const homeFAQ = [
   },
   {
     question: "Is AniDachi free?",
-    answer:
-      "AniDachi offers a paid subscription starting at $8/month during early access. All subscriptions come with a full refund guarantee — cancel anytime, no questions asked.",
+    answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
+  },
+  {
+    question: "Do all my friends need an AniDachi subscription?",
+    answer: PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
+  },
+  {
+    question: "What's the difference between Plus and Pro?",
+    answer: PRICING_PLUS_VS_PRO_ANSWER,
   },
   {
     question: "How is AniDachi different from Teleparty or Crunchyroll Party?",
