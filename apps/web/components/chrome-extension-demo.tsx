@@ -246,7 +246,7 @@ function MiniPanel({
           type="button"
           onClick={onCreateRoom}
           className={btnPrimary}
-          style={{ background: "linear-gradient(135deg,#7c3aed,#2563eb)" }}
+          style={{ background: "oklch(0.71 0.20 45)", color: "oklch(0.07 0.008 35)" }}
         >
           {roomActive ? "New room" : "Create room"}
         </button>
@@ -348,13 +348,13 @@ function StepIndicator({ current }: { current: number }) {
           <div key={label} className="flex items-center gap-1">
             <div className="flex flex-col items-center gap-1">
               <div
-                className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                  active ? "bg-purple-400 scale-125" : done ? "bg-purple-600" : "bg-gray-600"
+              className={`w-2 h-2 rounded-full transition-all duration-500 ${
+                  active ? "bg-[--brand-orange] scale-125" : done ? "bg-[--brand-orange-deep]" : "bg-[--brand-border]"
                 }`}
               />
               <span
                 className={`text-[9px] font-semibold tracking-wide uppercase transition-colors duration-500 leading-none ${
-                  active ? "text-purple-300" : done ? "text-purple-500" : "text-gray-600"
+                  active ? "text-[--brand-orange]" : done ? "text-[--brand-orange-deep]" : "text-foreground/30"
                 }`}
               >
                 {label}
@@ -363,7 +363,7 @@ function StepIndicator({ current }: { current: number }) {
             {i < STEP_LABELS.length - 1 && (
               <div
                 className={`w-6 h-px mb-3 transition-colors duration-500 ${
-                  done ? "bg-purple-600" : "bg-gray-700"
+                  done ? "bg-[--brand-orange-deep]" : "bg-[--brand-border]"
                 }`}
               />
             )}
@@ -509,7 +509,7 @@ export function ChromeExtensionDemo() {
   return (
     <section
       ref={sectionRef}
-      className="py-24 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden"
+      className="py-24 bg-background text-foreground overflow-hidden"
     >
       <style>{`
         @keyframes anidachi-pop {
@@ -531,7 +531,7 @@ export function ChromeExtensionDemo() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1600px]">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">See It In Action</h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
             The Anidachi button lives directly on the video. One click to open, one more to create
             a room — then paste the link in Discord and you&apos;re watching together.
           </p>
@@ -602,12 +602,12 @@ export function ChromeExtensionDemo() {
                     }}
                   >
                     <span>3.2s out of sync</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowCatchUp(false)}
-                      className="inline-flex items-center h-[26px] px-2.5 rounded-full text-[11px] font-bold cursor-pointer border-0 text-white"
-                      style={{ background: "linear-gradient(135deg,#7c3aed,#2563eb)" }}
-                    >
+          <button
+          type="button"
+          onClick={() => setShowCatchUp(false)}
+          className="inline-flex items-center h-[26px] px-2.5 rounded-full text-[11px] font-bold cursor-pointer border-0"
+          style={{ background: "oklch(0.71 0.20 45)", color: "oklch(0.07 0.008 35)" }}
+        >
                       Catch up
                     </button>
                   </div>
@@ -615,8 +615,8 @@ export function ChromeExtensionDemo() {
               </div>
             </div>
 
-            <div className="bg-gray-900/80 px-5 py-4 border-t border-white/10">
-              <p className="text-sm text-gray-300 text-center min-h-[1.25rem]">{caption}</p>
+            <div className="bg-background/80 px-5 py-4 border-t border-[--brand-border]">
+              <p className="text-sm text-foreground/60 text-center min-h-[1.25rem]">{caption}</p>
             </div>
           </div>
 
@@ -640,11 +640,11 @@ export function ChromeExtensionDemo() {
             ].map(({ emoji, title, desc }) => (
               <div
                 key={title}
-                className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 text-center"
+                className="bg-[--brand-surface] border border-[--brand-border] rounded-2xl p-6 text-center"
               >
                 <div className="text-3xl mb-3">{emoji}</div>
                 <h3 className="font-semibold mb-2">{title}</h3>
-                <p className="text-sm text-gray-300">{desc}</p>
+                <p className="text-sm text-foreground/60">{desc}</p>
               </div>
             ))}
           </div>

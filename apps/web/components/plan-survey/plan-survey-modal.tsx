@@ -383,9 +383,9 @@ export function PlanSurveyModal({
         aria-modal="true"
         aria-labelledby="plan-survey-title"
       >
-      <div className="pointer-events-auto relative flex max-h-[min(90dvh,calc(100vh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-white/95 to-white/90 text-gray-900 shadow-2xl backdrop-blur-xl">
+      <div className="pointer-events-auto relative flex max-h-[min(90dvh,calc(100vh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[--brand-border] bg-[--brand-surface]/95 text-foreground shadow-2xl backdrop-blur-xl glow-orange-sm">
         {/* Header */}
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200/70 px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[--brand-border] px-6 py-4">
           <div className="flex items-center gap-2">
             <AnidachiLogo size={24} aria-hidden />
             <p id="plan-survey-title" className="text-sm font-semibold">
@@ -396,7 +396,7 @@ export function PlanSurveyModal({
             ref={closeButtonRef}
             type="button"
             variant="ghost"
-            className="min-h-11 min-w-11 text-gray-700 hover:bg-gray-100"
+            className="min-h-11 min-w-11 text-foreground/70 hover:bg-[--brand-orange]/10"
             aria-label="Close survey"
             onClick={() => closeSurvey("close_button")}
           >
@@ -406,9 +406,9 @@ export function PlanSurveyModal({
         </div>
 
         {/* Progress bar */}
-        <div className="h-1 w-full shrink-0 overflow-hidden rounded-none bg-gray-100">
+        <div className="h-1 w-full shrink-0 overflow-hidden rounded-none bg-[--brand-surface]">
           <div
-            className="h-full bg-purple-600 transition-all duration-300 ease-out"
+            className="h-full bg-[--brand-orange] transition-all duration-300 ease-out"
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -419,7 +419,7 @@ export function PlanSurveyModal({
         >
           {checkoutError && (
             <div
-              className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
               role="alert"
             >
               {checkoutError}
@@ -429,7 +429,7 @@ export function PlanSurveyModal({
           {/* Step 1 — Who are you watching with? */}
           {step === 1 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-2">Who are you watching with?</p>
+              <p className="text-sm font-medium text-foreground mb-2">Who are you watching with?</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
                   { id: "Friend_group_host", label: "My friend group" },
@@ -440,8 +440,8 @@ export function PlanSurveyModal({
                     key={o.id}
                     type="button"
                     variant="outline"
-                    className={`justify-start border-gray-200 bg-white text-gray-900 hover:bg-gray-50 ${
-                      survey.segment === o.id ? "border-purple-400 bg-purple-50" : ""
+                    className={`justify-start border-[--brand-border] bg-background text-foreground hover:bg-[--brand-orange]/5 ${
+                      survey.segment === o.id ? "border-[--brand-orange] bg-[--brand-orange]/10" : ""
                     }`}
                     onClick={() => {
                       setSurvey({ ...survey, segment: o.id as HomeSurveyAnswers["segment"] });
@@ -459,7 +459,7 @@ export function PlanSurveyModal({
           {/* Step 2 — What matters most? */}
           {step === 2 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-2">What matters most?</p>
+              <p className="text-sm font-medium text-foreground mb-2">What matters most?</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   { id: "sync_and_no_spoilers", label: "Stay in sync (no spoilers)" },
@@ -471,8 +471,8 @@ export function PlanSurveyModal({
                     key={o.id}
                     type="button"
                     variant="outline"
-                    className={`justify-start border-gray-200 bg-white text-gray-900 hover:bg-gray-50 ${
-                      survey.priority === o.id ? "border-purple-400 bg-purple-50" : ""
+                    className={`justify-start border-[--brand-border] bg-background text-foreground hover:bg-[--brand-orange]/5 ${
+                      survey.priority === o.id ? "border-[--brand-orange] bg-[--brand-orange]/10" : ""
                     }`}
                     onClick={() => {
                       setSurvey({ ...survey, priority: o.id as HomeSurveyAnswers["priority"] });
@@ -493,7 +493,7 @@ export function PlanSurveyModal({
           {/* Step 3 — Typical watchroom size? */}
           {step === 3 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-2">Typical watchroom size?</p>
+              <p className="text-sm font-medium text-foreground mb-2">Typical watchroom size?</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
                   { id: "2_3", label: "2–3 people" },
@@ -504,8 +504,8 @@ export function PlanSurveyModal({
                     key={o.id}
                     type="button"
                     variant="outline"
-                    className={`justify-start border-gray-200 bg-white text-gray-900 hover:bg-gray-50 ${
-                      survey.group_size === o.id ? "border-purple-400 bg-purple-50" : ""
+                    className={`justify-start border-[--brand-border] bg-background text-foreground hover:bg-[--brand-orange]/5 ${
+                      survey.group_size === o.id ? "border-[--brand-orange] bg-[--brand-orange]/10" : ""
                     }`}
                     onClick={() => {
                       setSurvey({ ...survey, group_size: o.id as HomeSurveyAnswers["group_size"] });
@@ -526,7 +526,7 @@ export function PlanSurveyModal({
           {/* Step 4 — When do you want to use it? */}
           {step === 4 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-2">When do you want to use it?</p>
+              <p className="text-sm font-medium text-foreground mb-2">When do you want to use it?</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
                   { id: "today", label: "Today" },
@@ -537,8 +537,8 @@ export function PlanSurveyModal({
                     key={o.id}
                     type="button"
                     variant="outline"
-                    className={`justify-start border-gray-200 bg-white text-gray-900 hover:bg-gray-50 ${
-                      survey.timing === o.id ? "border-purple-400 bg-purple-50" : ""
+                    className={`justify-start border-[--brand-border] bg-background text-foreground hover:bg-[--brand-orange]/5 ${
+                      survey.timing === o.id ? "border-[--brand-orange] bg-[--brand-orange]/10" : ""
                     }`}
                     onClick={() => {
                       const timing = o.id as HomeSurveyAnswers["timing"];
@@ -552,10 +552,10 @@ export function PlanSurveyModal({
                 ))}
               </div>
               {survey.timing === "today" && (
-                <p className="mt-2 text-xs text-gray-600">You can be in a watchroom in about 2 minutes.</p>
+                <p className="mt-2 text-xs text-foreground/60">You can be in a watchroom in about 2 minutes.</p>
               )}
               {survey.timing === "this_week" && (
-                <p className="mt-2 text-xs text-gray-600">Set it up once and reuse it for every episode.</p>
+                <p className="mt-2 text-xs text-foreground/60">Set it up once and reuse it for every episode.</p>
               )}
               <div className="mt-4">
                 <Button type="button" variant="ghost" onClick={() => setStep(3)}>Back</Button>
@@ -566,10 +566,10 @@ export function PlanSurveyModal({
           {/* Step 5 — Email capture / claim waitlist spot */}
           {step === 5 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-1">
+              <p className="text-sm font-medium text-foreground mb-1">
                 Claim your early access spot
               </p>
-              <p className="text-xs text-gray-500 mb-4">
+              <p className="text-xs text-foreground/50 mb-4">
                 You&apos;ll be among the first to get access when we launch. We&apos;ll notify you the moment doors open.
               </p>
               {emailSubmitted ? (
@@ -580,7 +580,7 @@ export function PlanSurveyModal({
                   </div>
                   <Button
                     type="button"
-                    className="bg-purple-700 hover:bg-purple-800 text-white font-semibold"
+                    className="bg-[--brand-orange] hover:bg-[--brand-orange-deep] text-[--primary-foreground] font-semibold"
                     onClick={() => setStep(6)}
                   >
                     Continue
@@ -598,7 +598,7 @@ export function PlanSurveyModal({
                     inputMode="email"
                     required
                     aria-required="true"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                    className="w-full rounded-lg border border-[--brand-border] bg-background px-3 py-2 text-base text-foreground placeholder:text-foreground/40 focus:border-[--brand-orange] focus:outline-none focus:ring-2 focus:ring-[--brand-orange]/20"
                   />
                   {emailError && (
                     <p className="text-xs text-red-600">{emailError}</p>
@@ -606,7 +606,7 @@ export function PlanSurveyModal({
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
-                      className="bg-purple-700 hover:bg-purple-800 text-white font-semibold"
+                      className="bg-[--brand-orange] hover:bg-[--brand-orange-deep] text-[--primary-foreground] font-semibold"
                       disabled={emailSubmitting || !emailInput.trim()}
                       onClick={submitEmail}
                     >
@@ -624,8 +624,8 @@ export function PlanSurveyModal({
           {/* Step 6 — What are you using today? */}
           {step === 6 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-1">What are you using today?</p>
-              <p className="text-xs text-gray-500 mb-3">Helps us tailor the recommendation to what you already know.</p>
+              <p className="text-sm font-medium text-foreground mb-1">What are you using today?</p>
+              <p className="text-xs text-foreground/50 mb-3">Helps us tailor the recommendation to what you already know.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   { id: "discord_screen_share", label: "Discord screen share" },
@@ -638,8 +638,8 @@ export function PlanSurveyModal({
                     key={o.id}
                     type="button"
                     variant="outline"
-                    className={`justify-start border-gray-200 bg-white text-gray-900 hover:bg-gray-50 ${
-                      survey.current_solution === o.id ? "border-purple-400 bg-purple-50" : ""
+                    className={`justify-start border-[--brand-border] bg-background text-foreground hover:bg-[--brand-orange]/5 ${
+                      survey.current_solution === o.id ? "border-[--brand-orange] bg-[--brand-orange]/10" : ""
                     }`}
                     onClick={() => {
                       setSurvey({
@@ -687,19 +687,19 @@ export function PlanSurveyModal({
               </div>
 
               {/* What to expect */}
-              <div className="mb-5 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">What happens next</p>
+              <div className="mb-5 rounded-xl border border-[--brand-border] bg-background px-4 py-3">
+                <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wide mb-2">What happens next</p>
                 <ul className="space-y-2">
-                  <li className="flex items-start gap-2 text-sm text-gray-700">
-                    <Check className="h-4 w-4 text-purple-500 mt-0.5 shrink-0" aria-hidden="true" />
+                  <li className="flex items-start gap-2 text-sm text-foreground/70">
+                    <Check className="h-4 w-4 text-[--brand-orange] mt-0.5 shrink-0" aria-hidden="true" />
                     First access when we go live — no waiting in line
                   </li>
-                  <li className="flex items-start gap-2 text-sm text-gray-700">
-                    <Check className="h-4 w-4 text-purple-500 mt-0.5 shrink-0" aria-hidden="true" />
+                  <li className="flex items-start gap-2 text-sm text-foreground/70">
+                    <Check className="h-4 w-4 text-[--brand-orange] mt-0.5 shrink-0" aria-hidden="true" />
                     Pre-launch pricing locked in forever if you subscribe today
                   </li>
-                  <li className="flex items-start gap-2 text-sm text-gray-700">
-                    <Check className="h-4 w-4 text-purple-500 mt-0.5 shrink-0" aria-hidden="true" />
+                  <li className="flex items-start gap-2 text-sm text-foreground/70">
+                    <Check className="h-4 w-4 text-[--brand-orange] mt-0.5 shrink-0" aria-hidden="true" />
                     Your personalized{" "}
                     <span className="font-medium">
                       {recommendedTier === "pro" ? "Pro" : "Plus"}
@@ -710,28 +710,26 @@ export function PlanSurveyModal({
               </div>
 
               {/* Optional pre-launch pricing lock */}
-              <div className="rounded-xl border border-purple-200 bg-white p-4">
-                <p className="text-sm font-semibold text-gray-900 mb-0.5">
+              <div className="rounded-xl border border-[--brand-orange]/30 bg-background p-4">
+                <p className="text-sm font-semibold text-foreground mb-0.5">
                   Want to lock in pre-launch pricing?
                 </p>
-                <p className="text-xs text-gray-500 mb-4">
+                <p className="text-xs text-foreground/50 mb-4">
                   This price is only available before we launch. Lock it in today and keep it
                   forever — even after we go public. Your waitlist spot is confirmed either way.
                 </p>
 
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-foreground">
                       {recommendedTier === "pro" ? "Pro" : "Plus"}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-foreground/60">
                       {recommendedTier === "pro" ? "$14.99/month" : "$7.99/month"}
                     </p>
                   </div>
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
-                      recommendedTier === "pro" ? "bg-gray-100 text-gray-900" : "bg-purple-100 text-purple-800"
-                    }`}
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold bg-[--brand-orange]/15 text-[--brand-orange]"
                   >
                     <Check className="h-3.5 w-3.5" aria-hidden="true" />
                     Recommended
@@ -739,30 +737,30 @@ export function PlanSurveyModal({
                 </div>
 
                 {/* Priority-personalised bullet list */}
-                <ul className="mb-4 space-y-1 text-sm text-gray-700">
+                <ul className="mb-4 space-y-1 text-sm text-foreground/70">
                   <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-purple-600 mt-0.5 shrink-0" aria-hidden="true" />
+                    <Check className="h-4 w-4 text-[--brand-orange] mt-0.5 shrink-0" aria-hidden="true" />
                     <span className="font-medium">{priorityFeatureBullet(survey.priority)}</span>
                   </li>
                   {recommendedTier === "pro" ? (
                     <>
                       <li className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" aria-hidden="true" />
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
                         Invite-only rooms with approval flow
                       </li>
                       <li className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" aria-hidden="true" />
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
                         Everything in Plus, plus moderation tools
                       </li>
                     </>
                   ) : (
                     <>
                       <li className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" aria-hidden="true" />
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
                         Unlimited watchrooms — create once, reuse every episode
                       </li>
                       <li className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" aria-hidden="true" />
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" aria-hidden="true" />
                         Works with Crunchyroll — no extra subscription needed
                       </li>
                     </>
@@ -770,22 +768,20 @@ export function PlanSurveyModal({
                 </ul>
 
                 {/* Trust signal */}
-                <div className="mb-3 flex items-center gap-2 rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-xs text-green-800">
-                  <ShieldCheck className="h-4 w-4 text-green-600 shrink-0" aria-hidden="true" />
+                <div className="mb-3 flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/10 px-3 py-2 text-xs text-green-400">
+                  <ShieldCheck className="h-4 w-4 text-green-400 shrink-0" aria-hidden="true" />
                   Full refund before launch — no questions asked.
                 </div>
 
                 <Button
-                  className={`w-full text-white font-semibold disabled:opacity-60 ${
-                    recommendedTier === "pro" ? "bg-gray-900 hover:bg-gray-950" : "bg-purple-700 hover:bg-purple-800"
-                  }`}
+                  className="w-full text-[--primary-foreground] font-semibold disabled:opacity-60 bg-[--brand-orange] hover:bg-[--brand-orange-deep] glow-orange"
                   disabled={isSubmitting || !surveyReadyForRecommendation}
                   onClick={() => startCheckout(recommendedTier)}
                 >
                   {isSubmitting ? "Redirecting to Stripe…" : "Lock in my pre-launch price"}
                 </Button>
 
-                <div className="mt-2 flex items-center justify-between text-[11px] text-gray-500">
+                <div className="mt-2 flex items-center justify-between text-[11px] text-foreground/50">
                   <span className="inline-flex items-center gap-1">
                     <Lock className="h-3.5 w-3.5" aria-hidden="true" /> Secure Stripe checkout
                   </span>
@@ -803,7 +799,7 @@ export function PlanSurveyModal({
               <div className="mt-4 flex flex-col items-center gap-3">
                 <button
                   type="button"
-                  className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2 transition-colors"
+                  className="text-xs text-foreground/40 hover:text-foreground/70 underline underline-offset-2 transition-colors"
                   onClick={() => closeSurvey("not_now")}
                 >
                   No thanks, I&apos;ll wait for launch

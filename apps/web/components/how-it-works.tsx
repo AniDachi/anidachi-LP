@@ -35,32 +35,32 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 bg-white">
+    <section id="how-it-works" className="py-24 bg-[--brand-surface]">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             How AniDachi Works
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-foreground/70 max-w-2xl mx-auto">
             From install to your first shared episode in under two minutes.
           </p>
         </div>
 
         <div className="max-w-3xl mx-auto">
-          <ol className="relative border-l-2 border-purple-200 ml-4 space-y-10">
+          <ol className="relative border-l-2 border-[--brand-orange]/25 ml-4 space-y-10">
             {steps.map((step, i) => (
               <li key={i} className="ml-8">
-                <div className="absolute -left-5 w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                <div className="absolute -left-5 w-10 h-10 bg-[--brand-orange] rounded-full flex items-center justify-center text-[--primary-foreground] font-bold text-sm glow-orange-sm">
                   {i + 1}
                 </div>
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-background border border-[--brand-border] rounded-lg p-6">
                   <div className="flex items-center gap-3 mb-2">
-                    <step.icon className="h-5 w-5 text-purple-600" aria-hidden="true" />
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <step.icon className="h-5 w-5 text-[--brand-orange]" aria-hidden="true" />
+                    <h3 className="text-lg font-semibold text-foreground">
                       {step.title}
                     </h3>
                   </div>
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-foreground/70 leading-relaxed">
                     {step.description}
                   </p>
                 </div>

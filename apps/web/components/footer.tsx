@@ -4,32 +4,32 @@ import { FooterPricingCta } from "@/components/footer-pricing-cta";
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-white py-16">
+    <footer className="bg-background border-t border-[--brand-border] text-foreground py-16">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           <div className="col-span-2 lg:col-span-2">
             <AnidachiLogoLink
               size={40}
-              wordmarkClassName="text-2xl font-bold text-white"
+              wordmarkClassName="text-2xl font-bold text-foreground"
               className="mb-4"
             />
-            <p className="text-gray-400 mb-4 max-w-md text-sm leading-relaxed">
+            <p className="text-foreground/50 mb-4 max-w-md text-sm leading-relaxed">
               AniDachi (アニ友) means &quot;anime friend.&quot; We built the
               ultimate platform for watching anime together — create watchrooms,
               sync Crunchyroll playback, and share every reaction with your crew.
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-foreground/40">
               Not affiliated with Crunchyroll, Sony, or any streaming platform.
             </p>
           </div>
 
           <div>
             <h4 className="font-semibold mb-4 text-sm">Product</h4>
-            <ul className="space-y-2 text-gray-400 text-sm">
+            <ul className="space-y-2 text-foreground/50 text-sm">
               <li>
                 <Link
                   href="/#how-it-works"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   How It Works
                 </Link>
@@ -37,7 +37,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/#features"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Features
                 </Link>
@@ -45,18 +45,18 @@ export function Footer() {
               <li>
                 <Link
                   href="/#compare"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Compare
                 </Link>
               </li>
               <li>
-                <FooterPricingCta className="hover:text-white transition-colors" />
+                <FooterPricingCta className="hover:text-[--brand-orange-bright] transition-colors" />
               </li>
               <li>
                 <Link
                   href="/#faq"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   FAQ
                 </Link>
@@ -66,11 +66,11 @@ export function Footer() {
 
           <div>
             <h4 className="font-semibold mb-4 text-sm">Guides</h4>
-            <ul className="space-y-2 text-gray-400 text-sm">
+            <ul className="space-y-2 text-foreground/50 text-sm">
               <li>
                 <Link
                   href="/watch-anime-together"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Watch Anime Together
                 </Link>
@@ -78,7 +78,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/watch-crunchyroll-together"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Watch Crunchyroll Together
                 </Link>
@@ -86,7 +86,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/guides/how-to-watch-crunchyroll-with-friends"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   How to Watch with Friends
                 </Link>
@@ -94,7 +94,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/guides/how-to-watch-anime-with-friends-on-discord"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Anime Watch Party on Discord
                 </Link>
@@ -102,7 +102,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/guides/first-anime-watch-party-checklist"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   First Watch Party Checklist
                 </Link>
@@ -110,7 +110,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/guides/how-to-watch-anime-with-a-group"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Watch Anime With a Group
                 </Link>
@@ -118,7 +118,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/watch-party-starter"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Watch Party Starter
                 </Link>
@@ -126,7 +126,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/anime-watch-party-toolkit"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Watch Party Toolkit
                 </Link>
@@ -134,7 +134,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/compare/anidachi-vs-discord-screen-share"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   AniDachi vs Discord
                 </Link>
@@ -142,7 +142,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/guides/best-anime-to-watch-as-a-couple"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Anime for Couples
                 </Link>
@@ -150,7 +150,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/compare/anidachi-vs-teleparty"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   AniDachi vs Teleparty
                 </Link>
@@ -158,7 +158,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/guides/best-anime-to-watch-with-friends"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Best Anime with Friends
                 </Link>
@@ -166,7 +166,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/guides/best-isekai-anime-to-watch-with-friends"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Best Isekai with Friends
                 </Link>
@@ -174,7 +174,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/watch-anime-together#genre-hubs"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Browse Anime by Genre
                 </Link>
@@ -182,7 +182,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/guides/best-anime-to-watch-for-beginners"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Best Anime for Beginners
                 </Link>
@@ -192,11 +192,11 @@ export function Footer() {
 
           <div>
             <h4 className="font-semibold mb-4 text-sm">Company</h4>
-            <ul className="space-y-2 text-gray-400 text-sm">
+            <ul className="space-y-2 text-foreground/50 text-sm">
               <li>
                 <a
                   href="mailto:goshan.tolochko@gmail.com"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Contact Us
                 </a>
@@ -204,7 +204,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/privacy"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Privacy Policy
                 </Link>
@@ -212,7 +212,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/terms"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-[--brand-orange-bright] transition-colors"
                 >
                   Terms of Service
                 </Link>
@@ -220,7 +220,7 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
+        <div className="border-t border-[--brand-border] mt-12 pt-8 text-center text-foreground/40 text-sm">
           <p>&copy; {new Date().getFullYear()} AniDachi. All rights reserved.</p>
         </div>
       </div>

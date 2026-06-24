@@ -30,13 +30,13 @@ export function ChromeExtensionFeatures() {
   ];
 
   return (
-    <section id="extension" className="py-24 bg-gradient-to-br from-blue-50 to-purple-50">
+    <section id="extension" className="py-24 bg-[--brand-surface]">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Anime Detection Chrome Extension
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
             Seamlessly detect anime on Crunchyroll and instantly create
             watchrooms. The best way to watch anime with friends online.
           </p>
@@ -45,18 +45,18 @@ export function ChromeExtensionFeatures() {
           {features.map((feature, index) => (
             <Card
               key={index}
-              className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-6"
+              className="border border-[--brand-border] shadow-lg hover:shadow-xl hover:border-[--brand-orange]/40 transition-all duration-300 bg-background p-6"
             >
               <CardHeader className="p-0">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
-                  <feature.icon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                <div className="w-12 h-12 bg-[--brand-orange]/15 rounded-lg flex items-center justify-center mb-2">
+                  <feature.icon className="h-6 w-6 text-[--brand-orange]" aria-hidden="true" />
                 </div>
-                <CardTitle className="text-xl font-semibold text-gray-900 mb-2">
+                <CardTitle className="text-xl font-semibold text-foreground mb-2">
                   {feature.title}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0 pt-4">
-                <CardDescription className="text-gray-600 text-base leading-relaxed">
+                <CardDescription className="text-foreground/70 text-base leading-relaxed">
                   {feature.description}
                 </CardDescription>
               </CardContent>

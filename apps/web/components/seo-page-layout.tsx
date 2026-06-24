@@ -77,22 +77,22 @@ export function SeoPageLayout({
 
   return (
     <>
-      <main id="main-content" className="min-h-screen bg-white">
-        <nav aria-label="Breadcrumb" className="bg-gray-50 border-b">
+      <main id="main-content" className="min-h-screen bg-background">
+        <nav aria-label="Breadcrumb" className="bg-[--brand-surface] border-b border-[--brand-border]">
           <div className="container mx-auto px-4 py-3">
-            <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+            <ol className="flex flex-wrap items-center gap-2 text-sm text-foreground/50">
               {breadcrumbs.map((crumb, i) => (
                 <li key={crumb.url} className="flex items-center gap-2">
                   {i > 0 && <span aria-hidden="true">/</span>}
                   {i < breadcrumbs.length - 1 ? (
                     <Link
                       href={crumb.url}
-                      className="hover:text-purple-600 transition-colors"
+                      className="hover:text-[--brand-orange] transition-colors"
                     >
                       {crumb.name}
                     </Link>
                   ) : (
-                    <span className="text-gray-900 font-medium">
+                    <span className="text-foreground font-medium">
                       {crumb.name}
                     </span>
                   )}

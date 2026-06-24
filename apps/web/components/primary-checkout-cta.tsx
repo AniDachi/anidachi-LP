@@ -76,7 +76,7 @@ export function PrimaryCheckoutCta({
   placement,
   className = "",
   ctaVariant = "primary_checkout",
-  trustMicrocopyClassName = "text-sm text-gray-500 mt-4 max-w-md mx-auto flex items-start justify-center gap-2",
+  trustMicrocopyClassName = "text-sm text-foreground/50 mt-4 max-w-md mx-auto flex items-start justify-center gap-2",
 }: PrimaryCheckoutCtaProps) {
   const { openSurvey } = usePlanSurvey();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -123,13 +123,13 @@ export function PrimaryCheckoutCta({
   return (
     <div
       ref={rootRef}
-      className={`p-8 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl text-center ${className}`.trim()}
+      className={`p-8 bg-[--brand-surface] border border-[--brand-border] rounded-xl text-center ${className}`.trim()}
     >
-      <h3 className="text-2xl font-bold text-gray-900 mb-3">{copy.title}</h3>
-      <p className="text-gray-600 mb-6 max-w-lg mx-auto">{copy.body}</p>
+      <h3 className="text-2xl font-bold text-foreground mb-3">{copy.title}</h3>
+      <p className="text-foreground/70 mb-6 max-w-lg mx-auto">{copy.body}</p>
       <Button
         size="lg"
-        className="bg-purple-600 hover:bg-purple-700 text-white"
+        className="bg-[--brand-orange] hover:bg-[--brand-orange-deep] text-[--primary-foreground] glow-orange"
         asChild
       >
         <Link

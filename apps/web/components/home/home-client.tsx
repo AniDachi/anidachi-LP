@@ -18,7 +18,7 @@ export function HomeClient({ waitlistCount }: { waitlistCount: number | null }) 
   return (
     <main
       id="main-content"
-      className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50"
+      className="min-h-screen bg-background"
     >
       <Hero waitlistCount={waitlistCount} />
       <ChromeExtensionDemo />

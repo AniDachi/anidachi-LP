@@ -11,7 +11,7 @@ export function PricingSurveyLink() {
   return (
     <button
       type="button"
-      className="text-sm text-purple-600 underline underline-offset-2 hover:text-purple-800 min-h-11 inline-flex items-center"
+      className="text-sm text-[--brand-orange] underline underline-offset-2 hover:text-[--brand-orange-bright] min-h-11 inline-flex items-center"
       onClick={() => {
         const path =
           typeof window !== "undefined" ? window.location.pathname : "/";

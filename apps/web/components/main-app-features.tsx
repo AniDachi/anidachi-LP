@@ -89,32 +89,25 @@ export function MainAppFeatures() {
     },
   ];
 
-  const getColorClasses = (color: string) => {
-    const colors: Record<string, string> = {
-      purple:
-        "bg-purple-100 text-purple-600 group-hover:bg-purple-600 group-hover:text-white",
-      blue: "bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white",
-      green:
-        "bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white",
-    };
-    return colors[color] || colors.purple;
+  const getColorClasses = (_color: string) => {
+    return "bg-[--brand-orange]/15 text-[--brand-orange] group-hover:bg-[--brand-orange] group-hover:text-[--primary-foreground]";
   };
 
   return (
     <section
       id="features"
-      className="py-24 bg-gradient-to-b from-white to-gray-50"
+      className="py-24 bg-background"
     >
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
-            <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+          <div className="inline-flex items-center gap-2 bg-[--brand-orange]/15 border border-[--brand-orange]/30 text-[--brand-orange] px-4 py-2 rounded-full text-sm font-medium mb-4">
+            <span className="w-2 h-2 bg-[--brand-orange] rounded-full animate-pulse" />
             Features
           </div>
-          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6">
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
             Your Asynchronous Anime Hub
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
             Transform solo viewing into shared experiences with powerful
             features designed for anime lovers who want to watch Crunchyroll
             together
@@ -126,7 +119,7 @@ export function MainAppFeatures() {
             <Card
               key={feature.id}
               id={feature.id}
-              className="group border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white p-6"
+              className="group border border-[--brand-border] shadow-lg hover:shadow-2xl hover:border-[--brand-orange]/40 transition-all duration-500 hover:-translate-y-2 bg-[--brand-surface] p-6"
             >
               <CardHeader className="p-0">
                 <div
@@ -139,20 +132,20 @@ export function MainAppFeatures() {
                     aria-hidden="true"
                   />
                 </div>
-                <CardTitle className="text-xl font-bold text-gray-900 mb-2">
+                <CardTitle className="text-xl font-bold text-foreground mb-2">
                   {feature.title}
                 </CardTitle>
-                <div className="text-sm font-medium text-purple-600 mb-3">
+                <div className="text-sm font-medium text-[--brand-orange] mb-3">
                   {feature.benefit}
                 </div>
               </CardHeader>
               <CardContent className="p-0 pt-4">
-                <CardDescription className="text-gray-600 text-base leading-relaxed mb-4">
+                <CardDescription className="text-foreground/70 text-base leading-relaxed mb-4">
                   {feature.description}
                 </CardDescription>
                 <Button
                   variant="ghost"
-                  className="text-purple-600 hover:text-purple-700 p-0 h-auto font-medium group/btn"
+                  className="text-[--brand-orange] hover:text-[--brand-orange-bright] p-0 h-auto font-medium group/btn"
                   asChild
                 >
                   <Link href={feature.link}>
@@ -171,7 +164,7 @@ export function MainAppFeatures() {
         <div className="text-center" ref={bottomCtaRef}>
           <Button
             size="lg"
-            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+            className="bg-[--brand-orange] hover:bg-[--brand-orange-deep] text-[--primary-foreground] px-8 py-4 text-lg font-semibold shadow-lg glow-orange hover:glow-orange-lg transition-all duration-300"
             asChild
           >
             <Link
