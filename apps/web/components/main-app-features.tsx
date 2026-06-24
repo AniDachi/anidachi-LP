@@ -50,7 +50,7 @@ export function MainAppFeatures() {
           }
         }
       },
-      { threshold: 0.25 }
+      { threshold: 0.25 },
     );
     ob.observe(el);
     return () => ob.disconnect();
@@ -101,7 +101,10 @@ export function MainAppFeatures() {
   };
 
   return (
-    <section id="features" className="py-24 bg-gradient-to-b from-white to-gray-50">
+    <section
+      id="features"
+      className="py-24 bg-gradient-to-b from-white to-gray-50"
+    >
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
@@ -128,7 +131,7 @@ export function MainAppFeatures() {
               <CardHeader className="p-0">
                 <div
                   className={`w-14 h-14 rounded-xl flex items-center justify-center mb-2 transition-all duration-300 ${getColorClasses(
-                    feature.color
+                    feature.color,
                   )}`}
                 >
                   <feature.icon
@@ -187,7 +190,7 @@ export function MainAppFeatures() {
                 });
               }}
             >
-              Help me pick a plan
+              Get early access
               <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
             </Link>
           </Button>

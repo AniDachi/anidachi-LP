@@ -13,39 +13,39 @@ import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
 const COPY = {
   default: {
-    title: "We’ll help you pick the right plan",
-    body: "$8/mo (early access) · Billed by Stripe. Full refund if you change your mind — no hidden fees.",
-    button: "Help me pick a plan",
+    title: "Get early access and lock in your price",
+    body: "Pre-launch pricing on Stripe — subscribe now and keep your rate forever. Full refund if you change your mind.",
+    button: "Get early access",
   },
   guide: {
-    title: "Not sure which plan fits?",
-    body: "Same Crunchyroll account you already use. Checkout takes under a minute; cancel or refund on your terms.",
-    button: "Help me pick a plan",
+    title: "Join early access and lock in your rate",
+    body: "Pre-launch pricing only available before we launch. Same Crunchyroll account you already use — cancel or refund on your terms.",
+    button: "Get early access",
   },
   compare: {
-    title: "Pick a plan in under a minute",
-    body: "Compare plans on the home page, then start a secure Stripe checkout when you are ready.",
-    button: "Help me pick a plan",
+    title: "Lock in pre-launch pricing today",
+    body: "Get early access before public launch — prices go up when we ship. Secure Stripe checkout in under a minute.",
+    button: "Get early access",
   },
   anime: {
-    title: "We’ll help you pick a plan for your watchroom",
-    body: "Unlimited watchrooms, sync, and chat on Crunchyroll. Each viewer still needs their own Crunchyroll access.",
-    button: "Help me pick a plan",
+    title: "Get early access for your watchroom",
+    body: "Lock in pre-launch pricing, then open any title on Crunchyroll in an AniDachi room. Each viewer keeps their own login.",
+    button: "Get early access",
   },
   listicle: {
-    title: "Pick a plan for your group",
-    body: "Lock in early-access pricing, then open any title on Crunchyroll in an AniDachi room.",
-    button: "Help me pick a plan",
+    title: "Lock in early-access pricing for your group",
+    body: "Subscribe before launch and keep your rate forever — then start watchrooms on any Crunchyroll title.",
+    button: "Get early access",
   },
   glossary: {
-    title: "Pick a plan with a clear refund path",
-    body: "Early-access pricing with Stripe — cancel or refund if it is not a fit.",
-    button: "Help me pick a plan",
+    title: "Early access with a clear refund path",
+    body: "Lock in pre-launch pricing on Stripe — cancel or get a full refund if it is not a fit.",
+    button: "Get early access",
   },
   pillar: {
-    title: "We’ll help you pick a plan",
-    body: "Founding-member pricing on Stripe. Refund if you are not happy — we built this for long-running anime groups.",
-    button: "Help me pick a plan",
+    title: "Get early access and lock in your price",
+    body: "Pre-launch pricing on Stripe — subscribe now and keep your rate forever. Full refund if you change your mind.",
+    button: "Get early access",
   },
 } as const;
 
@@ -114,7 +114,7 @@ export function PrimaryCheckoutCta({
           }
         }
       },
-      { threshold: 0.2, rootMargin: "0px" }
+      { threshold: 0.2, rootMargin: "0px" },
     );
     ob.observe(el);
     return () => ob.disconnect();
@@ -154,7 +154,10 @@ export function PrimaryCheckoutCta({
           className="h-4 w-4 flex-shrink-0 text-green-600 mt-0.5"
           aria-hidden="true"
         />
-        <span>Secure checkout via Stripe. Crunchyroll subscription not included — everyone keeps their own streaming login.</span>
+        <span>
+          Secure checkout via Stripe. Crunchyroll subscription not included —
+          everyone keeps their own streaming login.
+        </span>
       </p>
     </div>
   );

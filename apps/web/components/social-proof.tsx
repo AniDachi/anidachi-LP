@@ -44,13 +44,13 @@ export function SocialProof() {
               <div className="flex items-center gap-2 text-purple-700">
                 <Sparkles className="h-4 w-4" aria-hidden="true" />
                 <CardTitle className="text-sm font-semibold">
-                  Founding member perks
+                  Price locked forever
                 </CardTitle>
               </div>
             </CardHeader>
             <CardContent className="pb-6 text-sm text-gray-600 leading-relaxed">
-              Early access pricing + priority support while we ship watchrooms
-              and async co-watching.
+              Subscribe during early access and keep your pre-launch rate — even
+              after we go public. Priority support while we ship watchrooms.
             </CardContent>
           </Card>
         </div>

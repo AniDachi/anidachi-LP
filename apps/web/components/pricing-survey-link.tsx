@@ -1,7 +1,10 @@
 "use client";
 
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
-import { inferPageTemplateFromPath, trackConversion } from "@/lib/conversion-events";
+import {
+  inferPageTemplateFromPath,
+  trackConversion,
+} from "@/lib/conversion-events";
 
 export function PricingSurveyLink() {
   const { openSurvey } = usePlanSurvey();
@@ -24,7 +27,7 @@ export function PricingSurveyLink() {
         });
       }}
     >
-      Not sure yet? Help me pick a plan
+      Not sure yet? Get early access and lock in your price
     </button>
   );
 }
