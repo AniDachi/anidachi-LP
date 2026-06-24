@@ -128,12 +128,16 @@ pnpm dev:extension:staging:google
 ```
 
 This keeps WXT running for rebuilds, but opens a normal macOS Chrome instance
-with the dev extension loaded from `.output/chrome-mv3-dev`. Its persistent
-profile lives at:
+at `chrome://extensions`. Load the dev extension once with Chrome's official
+Developer mode flow: click "Load unpacked" and select
+`apps/extension/.output/chrome-mv3-dev`. Its persistent profile lives at:
 
 ```txt
 apps/extension/.wxt/google-auth-chrome-data
 ```
+
+After the extension is loaded once in that profile, keep using the same command.
+Chrome will remember the unpacked extension while WXT keeps rebuilding the files.
 
 The staging dev command intentionally uses broad host permissions for local
 developer speed. It does not change the store-safe staging artifact. To test the

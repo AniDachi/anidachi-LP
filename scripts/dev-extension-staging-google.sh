@@ -55,15 +55,27 @@ fi
 
 open -na "Google Chrome" --args \
   --user-data-dir="$PROFILE_DIR" \
-  --load-extension="$OUTPUT_DIR" \
   --no-first-run \
   --no-default-browser-check \
-  "$START_URL"
+  --new-window \
+  "chrome://extensions"
 
-echo "Opened Google-friendly Chrome profile:"
-echo "  $PROFILE_DIR"
-echo "Loaded extension from:"
-echo "  $OUTPUT_DIR"
-echo "Keep this process running while developing. Press Ctrl-C to stop WXT."
+cat <<EOF
+Opened Google-friendly Chrome profile:
+  $PROFILE_DIR
+
+WXT dev extension output:
+  $OUTPUT_DIR
+
+One-time Chrome step for this profile:
+  1. Enable Developer mode in chrome://extensions.
+  2. Click "Load unpacked".
+  3. Select:
+     $OUTPUT_DIR
+  4. Open:
+     $START_URL
+
+Keep this process running while developing. Press Ctrl-C to stop WXT.
+EOF
 
 wait "$WXT_PID"
