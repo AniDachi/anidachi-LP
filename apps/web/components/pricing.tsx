@@ -172,17 +172,17 @@ export function Pricing({
     >
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
+          <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
             <Zap className="w-4 h-4" aria-hidden="true" />
-            Early Access Pricing
+            Pre-Launch Pricing
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-            Simple pricing. Cancel anytime.
+            Pre-launch pricing. Locked in forever.
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-            Start paid checkout in one click. You&apos;ll see the full line items
-            in Stripe before you pay. Full refund in early access if you change
-            your mind.
+            These prices are only available before we launch. Subscribe now and
+            lock in your rate permanently — prices go up at public launch. Full
+            refund before launch if you change your mind.
           </p>
 
           {checkoutError && (
@@ -282,8 +282,7 @@ export function Pricing({
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 text-center mt-2">
-                  Refundable in early access &bull; Cancel anytime &bull; No
-                  hidden fees
+                  Pre-launch rate locked forever &bull; Cancel anytime &bull; Full refund before launch
                 </p>
               </div>
             </CardContent>
@@ -351,8 +350,7 @@ export function Pricing({
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 text-center mt-2">
-                  Secure Stripe checkout &bull; Cancel anytime &bull; Early-access
-                  refunds available
+                  Pre-launch rate locked forever &bull; Cancel anytime &bull; Full refund before launch
                 </p>
               </div>
             </CardContent>

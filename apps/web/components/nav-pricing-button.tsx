@@ -26,7 +26,7 @@ export function NavPricingButton() {
         openSurvey({ placement: "nav", ctaVariant: "nav_pricing_button" });
       }}
     >
-      Help me pick a plan
+      Get early access
     </Button>
   );
 }

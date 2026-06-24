@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Chrome, MessageCircle, Play, Users } from "lucide-react";
+import { Chrome, MessageCircle, Play, Rocket, Users } from "lucide-react";
 import { trackEvent } from "@/lib/gtag";
 import { trackConversion } from "@/lib/conversion-events";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
@@ -15,7 +15,7 @@ export function Hero() {
       page_path: "/",
       page_template: "home",
       placement: "hero",
-      cta_variant: "hero_survey_recommended_plan",
+      cta_variant: "hero_waitlist_early_access",
     });
   }, []);
 
@@ -30,6 +30,15 @@ export function Hero() {
       <div className="absolute inset-0 bg-black/20" />
       <div className="relative container mx-auto px-4 py-24 lg:py-32">
         <div className="max-w-4xl mx-auto text-center">
+          {/* Pre-launch status pill */}
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/25 text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 motion-reduce:animate-none" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+            </span>
+            Launching soon &middot; 800+ people already on the waitlist
+          </div>
+
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
             Your friends are watching without you. Fix that.
           </h1>
@@ -48,19 +57,19 @@ export function Hero() {
                   page_path: "/",
                   page_template: "home",
                   placement: "hero",
-                  cta_variant: "hero_survey_recommended_plan",
+                  cta_variant: "hero_waitlist_early_access",
                   recommended_tier: recommendedTier,
                   segment: survey.segment,
                   priority: survey.priority ?? "unset",
                 });
                 openSurvey({
                   placement: "hero",
-                  ctaVariant: "hero_survey_recommended_plan",
+                  ctaVariant: "hero_waitlist_early_access",
                 });
               }}
             >
-              <Play className="h-5 w-5" aria-hidden="true" />
-              Help me pick a plan
+              <Rocket className="h-5 w-5" aria-hidden="true" />
+              Get early access
             </Button>
             <Button
               asChild

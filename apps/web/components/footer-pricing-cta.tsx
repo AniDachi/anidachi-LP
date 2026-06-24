@@ -24,7 +24,7 @@ export function FooterPricingCta({ className = "" }: { className?: string }) {
         openSurvey({ placement: "footer", ctaVariant: "footer_pricing" });
       }}
     >
-      Pick a plan
+      Join the waitlist
     </Link>
   );
 }
