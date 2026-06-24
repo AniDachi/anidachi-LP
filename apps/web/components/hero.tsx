@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Chrome, MessageCircle, Play, Rocket, Users } from "lucide-react";
 import { trackEvent } from "@/lib/gtag";
 import { trackConversion } from "@/lib/conversion-events";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
-export function Hero() {
+function formatWaitlistPill(count: number | null): string {
+  if (count === null) return "Launching soon · join the waitlist";
+  if (count === 0) return "Launching soon · be the first on the waitlist";
+  const label = count === 1 ? "person" : "people";
+  return `Launching soon · ${count.toLocaleString()} ${label} already on the waitlist`;
+}
+
+export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: number | null }) {
   const { openSurvey, recommendedTier, survey } = usePlanSurvey();
+  const [waitlistCount, setWaitlistCount] = useState<number | null>(initialWaitlistCount);
 
   useEffect(() => {
     trackConversion("cta_impression", {
@@ -18,6 +26,27 @@ export function Hero() {
       cta_variant: "hero_waitlist_early_access",
     });
   }, []);
+
+  useEffect(() => {
+    setWaitlistCount(initialWaitlistCount);
+  }, [initialWaitlistCount]);
+
+  useEffect(() => {
+    if (initialWaitlistCount !== null) return;
+    let cancelled = false;
+    fetch("/api/waitlist-stats")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { count?: number | null } | null) => {
+        if (cancelled || !data || typeof data.count !== "number") return;
+        setWaitlistCount(data.count);
+      })
+      .catch(() => {
+        // Keep fallback copy if the count cannot be loaded.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialWaitlistCount]);
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 text-white">
@@ -36,7 +65,7 @@ export function Hero() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 motion-reduce:animate-none" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
             </span>
-            Launching soon &middot; 800+ people already on the waitlist
+            {formatWaitlistPill(waitlistCount)}
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">

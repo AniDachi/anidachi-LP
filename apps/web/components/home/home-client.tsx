@@ -12,7 +12,7 @@ import { homeFAQ } from "@/lib/home-faq";
 import { pricingCtaLabelForTier } from "@/lib/home-survey";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
-export function HomeClient() {
+export function HomeClient({ waitlistCount }: { waitlistCount: number | null }) {
   const { survey, recommendedTier } = usePlanSurvey();
 
   return (
@@ -20,7 +20,7 @@ export function HomeClient() {
       id="main-content"
       className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50"
     >
-      <Hero />
+      <Hero waitlistCount={waitlistCount} />
       <ChromeExtensionDemo />
       <HowItWorks />
       <MainAppFeatures />

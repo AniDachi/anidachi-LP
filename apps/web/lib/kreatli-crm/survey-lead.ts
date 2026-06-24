@@ -1,6 +1,10 @@
 import { randomUUID } from "crypto";
 import type { HomeSurveyAnswers } from "@/lib/home-survey";
-import { SURVEY_LEAD_SEGMENT, isSurveyLead } from "./survey-lead-shared";
+import {
+  SURVEY_LEAD_SEGMENT,
+  countSurveyLeads,
+  waitlistPositionForEmail,
+} from "./survey-lead-shared";
 import { readContacts, writeContacts } from "./store";
 import type { Contact } from "./types";
 import { isValidEmail, normalizeEmail } from "./validation";
@@ -38,11 +42,21 @@ function buildSurveyNote(survey: Partial<HomeSurveyAnswers>): string {
 export async function upsertSurveyLead(
   email: string,
   survey: Partial<HomeSurveyAnswers>,
-): Promise<{ saved: boolean; reason?: string; waitlistCount: number }> {
+): Promise<{
+  saved: boolean;
+  reason?: string;
+  waitlistCount: number;
+  waitlistPosition: number | null;
+}> {
   const normalized = normalizeEmail(email);
   if (!isValidEmail(normalized)) {
     const contacts = await readContacts();
-    return { saved: false, reason: "invalid_email", waitlistCount: contacts.filter(isSurveyLead).length };
+    return {
+      saved: false,
+      reason: "invalid_email",
+      waitlistCount: countSurveyLeads(contacts),
+      waitlistPosition: null,
+    };
   }
 
   const contacts = await readContacts();
@@ -79,6 +93,7 @@ export async function upsertSurveyLead(
   }
 
   await writeContacts(contacts);
-  const waitlistCount = contacts.filter(isSurveyLead).length;
-  return { saved: true, waitlistCount };
+  const waitlistCount = countSurveyLeads(contacts);
+  const waitlistPosition = waitlistPositionForEmail(contacts, normalized);
+  return { saved: true, waitlistCount, waitlistPosition };
 }

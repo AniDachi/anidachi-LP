@@ -6,11 +6,23 @@ import {
   HowToJsonLd,
 } from "@/components/json-ld";
 import { homeFAQ } from "@/lib/home-faq";
+import { countSurveyLeads } from "@/lib/kreatli-crm/survey-lead-shared";
+import { readContacts } from "@/lib/kreatli-crm/store";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  let waitlistCount: number | null = null;
+  try {
+    const contacts = await readContacts();
+    waitlistCount = countSurveyLeads(contacts);
+  } catch (e) {
+    console.error("[home] Failed to load waitlist count:", e);
+  }
+
   return (
     <>
-      <HomeClient />
+      <HomeClient waitlistCount={waitlistCount} />
       <SoftwareApplicationJsonLd />
       <FAQPageJsonLd questions={homeFAQ} />
       <HowToJsonLd

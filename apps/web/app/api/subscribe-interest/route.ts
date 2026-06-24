@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   let waitlistPosition: number | null = null;
   try {
     const crmResult = await upsertSurveyLead(email, survey);
-    waitlistPosition = crmResult.waitlistCount;
+    waitlistPosition = crmResult.waitlistPosition;
     if (crmResult.saved) {
       console.info("[subscribe-interest] Saved to CRM:", email, "waitlist position:", waitlistPosition);
     } else {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
   const tokens = await readGmailTokens();
   if (!tokens?.refresh_token) {
     console.warn("[subscribe-interest] Gmail not connected (no refresh token); skipping alert");
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, waitlistPosition });
   }
 
   const redirectUri = getGmailRedirectUri(getResolvedSiteOrigin());
