@@ -44,6 +44,20 @@ export interface CreateRoomInviteInput {
   groupId?: string;
 }
 
+export interface CreateFriendGroupInput {
+  name: string;
+}
+
+export interface UpdateFriendGroupInput {
+  groupId: string;
+  name: string;
+}
+
+export interface FriendGroupMemberInput {
+  groupId: string;
+  userId: string;
+}
+
 export interface RoomInvite {
   id: string;
   roomId: string;
@@ -89,6 +103,30 @@ export type SocialHttpMessage =
     }
   | {
       type: typeof SOCIAL_HTTP_MESSAGE_TYPE;
+      command: "create-group";
+      accessToken: string;
+      input: CreateFriendGroupInput;
+    }
+  | {
+      type: typeof SOCIAL_HTTP_MESSAGE_TYPE;
+      command: "update-group";
+      accessToken: string;
+      input: UpdateFriendGroupInput;
+    }
+  | {
+      type: typeof SOCIAL_HTTP_MESSAGE_TYPE;
+      command: "archive-group";
+      accessToken: string;
+      groupId: string;
+    }
+  | {
+      type: typeof SOCIAL_HTTP_MESSAGE_TYPE;
+      command: "add-group-member" | "remove-group-member";
+      accessToken: string;
+      input: FriendGroupMemberInput;
+    }
+  | {
+      type: typeof SOCIAL_HTTP_MESSAGE_TYPE;
       command: "list-invites";
       accessToken: string;
     }
@@ -102,6 +140,8 @@ export type SocialHttpMessage =
 export type SocialHttpMessageResponse =
   | { ok: true; targets: InviteTargets }
   | { ok: true; invite: RoomInvite }
+  | { ok: true; group: FriendGroup }
+  | { ok: true; archivedGroupId: string }
   | { ok: true; invites: RoomInvitesResponse }
   | { ok: true; acceptedInvite: AcceptedRoomInviteResponse }
   | { ok: false; error: string; code?: string };
@@ -121,6 +161,66 @@ export function createInviteHttpMessage(
   return {
     type: SOCIAL_HTTP_MESSAGE_TYPE,
     command: "create-invite",
+    accessToken,
+    input,
+  };
+}
+
+export function createGroupHttpMessage(
+  accessToken: string,
+  input: CreateFriendGroupInput,
+): SocialHttpMessage {
+  return {
+    type: SOCIAL_HTTP_MESSAGE_TYPE,
+    command: "create-group",
+    accessToken,
+    input,
+  };
+}
+
+export function updateGroupHttpMessage(
+  accessToken: string,
+  input: UpdateFriendGroupInput,
+): SocialHttpMessage {
+  return {
+    type: SOCIAL_HTTP_MESSAGE_TYPE,
+    command: "update-group",
+    accessToken,
+    input,
+  };
+}
+
+export function archiveGroupHttpMessage(
+  accessToken: string,
+  groupId: string,
+): SocialHttpMessage {
+  return {
+    type: SOCIAL_HTTP_MESSAGE_TYPE,
+    command: "archive-group",
+    accessToken,
+    groupId,
+  };
+}
+
+export function addGroupMemberHttpMessage(
+  accessToken: string,
+  input: FriendGroupMemberInput,
+): SocialHttpMessage {
+  return {
+    type: SOCIAL_HTTP_MESSAGE_TYPE,
+    command: "add-group-member",
+    accessToken,
+    input,
+  };
+}
+
+export function removeGroupMemberHttpMessage(
+  accessToken: string,
+  input: FriendGroupMemberInput,
+): SocialHttpMessage {
+  return {
+    type: SOCIAL_HTTP_MESSAGE_TYPE,
+    command: "remove-group-member",
     accessToken,
     input,
   };
@@ -169,15 +269,42 @@ export function isSocialHttpMessage(value: unknown): value is SocialHttpMessage 
   if (message.command === "accept-invite" || message.command === "decline-invite") {
     return typeof message.inviteId === "string" && Boolean(message.inviteId.trim());
   }
-  if (message.command !== "create-invite") return false;
-  const input = message.input as Partial<CreateRoomInviteInput> | undefined;
-  return (
-    typeof input?.roomId === "string" &&
-    (input.recipientUserIds === undefined ||
-      (Array.isArray(input.recipientUserIds) &&
-        input.recipientUserIds.every((item) => typeof item === "string"))) &&
-    (input.groupId === undefined || typeof input.groupId === "string")
-  );
+  if (message.command === "create-invite") {
+    const input = message.input as Partial<CreateRoomInviteInput> | undefined;
+    return (
+      typeof input?.roomId === "string" &&
+      (input.recipientUserIds === undefined ||
+        (Array.isArray(input.recipientUserIds) &&
+          input.recipientUserIds.every((item) => typeof item === "string"))) &&
+      (input.groupId === undefined || typeof input.groupId === "string")
+    );
+  }
+  if (message.command === "create-group") {
+    const input = message.input as Partial<CreateFriendGroupInput> | undefined;
+    return typeof input?.name === "string" && Boolean(input.name.trim());
+  }
+  if (message.command === "update-group") {
+    const input = message.input as Partial<UpdateFriendGroupInput> | undefined;
+    return (
+      typeof input?.groupId === "string" &&
+      Boolean(input.groupId.trim()) &&
+      typeof input.name === "string" &&
+      Boolean(input.name.trim())
+    );
+  }
+  if (message.command === "archive-group") {
+    return typeof message.groupId === "string" && Boolean(message.groupId.trim());
+  }
+  if (message.command === "add-group-member" || message.command === "remove-group-member") {
+    const input = message.input as Partial<FriendGroupMemberInput> | undefined;
+    return (
+      typeof input?.groupId === "string" &&
+      Boolean(input.groupId.trim()) &&
+      typeof input.userId === "string" &&
+      Boolean(input.userId.trim())
+    );
+  }
+  return false;
 }
 
 async function socialHttpError(response: Response, fallback: string): Promise<RoomApiError> {
@@ -272,6 +399,133 @@ export async function createRoomInviteFromApi(
   return payload.invite as RoomInvite;
 }
 
+export async function createFriendGroupFromApi(
+  accessToken: string,
+  input: CreateFriendGroupInput,
+): Promise<FriendGroup> {
+  logDebug("social.http", "create group request", { webHttpBase: WEB_HTTP_BASE });
+  const response = await fetch(new URL("/api/groups", WEB_HTTP_BASE), {
+    method: "POST",
+    headers: createWebsiteRoomHeaders(accessToken),
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw await socialHttpError(response, "Failed to create group");
+  }
+
+  const payload = (await response.json()) as { group?: unknown };
+  if (typeof payload.group !== "object" || payload.group === null) {
+    throw new Error("Group response is missing group");
+  }
+  return payload.group as FriendGroup;
+}
+
+export async function updateFriendGroupFromApi(
+  accessToken: string,
+  input: UpdateFriendGroupInput,
+): Promise<FriendGroup> {
+  logDebug("social.http", "update group request", {
+    webHttpBase: WEB_HTTP_BASE,
+    groupId: input.groupId,
+  });
+  const response = await fetch(
+    new URL(`/api/groups/${encodeURIComponent(input.groupId)}`, WEB_HTTP_BASE),
+    {
+      method: "PATCH",
+      headers: createWebsiteRoomHeaders(accessToken),
+      body: JSON.stringify({ name: input.name }),
+    },
+  );
+
+  if (!response.ok) {
+    throw await socialHttpError(response, "Failed to update group");
+  }
+
+  const payload = (await response.json()) as { group?: unknown };
+  if (typeof payload.group !== "object" || payload.group === null) {
+    throw new Error("Group response is missing group");
+  }
+  return payload.group as FriendGroup;
+}
+
+export async function archiveFriendGroupFromApi(
+  accessToken: string,
+  groupId: string,
+): Promise<void> {
+  logDebug("social.http", "archive group request", { webHttpBase: WEB_HTTP_BASE, groupId });
+  const response = await fetch(
+    new URL(`/api/groups/${encodeURIComponent(groupId)}`, WEB_HTTP_BASE),
+    {
+      method: "DELETE",
+      headers: createWebsiteRoomHeaders(accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    throw await socialHttpError(response, "Failed to archive group");
+  }
+}
+
+export async function addFriendGroupMemberFromApi(
+  accessToken: string,
+  input: FriendGroupMemberInput,
+): Promise<FriendGroup> {
+  logDebug("social.http", "add group member request", {
+    webHttpBase: WEB_HTTP_BASE,
+    groupId: input.groupId,
+  });
+  const response = await fetch(
+    new URL(`/api/groups/${encodeURIComponent(input.groupId)}/members`, WEB_HTTP_BASE),
+    {
+      method: "POST",
+      headers: createWebsiteRoomHeaders(accessToken),
+      body: JSON.stringify({ userId: input.userId }),
+    },
+  );
+
+  if (!response.ok) {
+    throw await socialHttpError(response, "Failed to add group member");
+  }
+
+  const payload = (await response.json()) as { group?: unknown };
+  if (typeof payload.group !== "object" || payload.group === null) {
+    throw new Error("Group response is missing group");
+  }
+  return payload.group as FriendGroup;
+}
+
+export async function removeFriendGroupMemberFromApi(
+  accessToken: string,
+  input: FriendGroupMemberInput,
+): Promise<FriendGroup> {
+  logDebug("social.http", "remove group member request", {
+    webHttpBase: WEB_HTTP_BASE,
+    groupId: input.groupId,
+    userId: input.userId,
+  });
+  const response = await fetch(
+    new URL(
+      `/api/groups/${encodeURIComponent(input.groupId)}/members/${encodeURIComponent(input.userId)}`,
+      WEB_HTTP_BASE,
+    ),
+    {
+      method: "DELETE",
+      headers: createWebsiteRoomHeaders(accessToken),
+    },
+  );
+
+  if (!response.ok) {
+    throw await socialHttpError(response, "Failed to remove group member");
+  }
+
+  const payload = (await response.json()) as { group?: unknown };
+  if (typeof payload.group !== "object" || payload.group === null) {
+    throw new Error("Group response is missing group");
+  }
+  return payload.group as FriendGroup;
+}
+
 export async function acceptRoomInviteFromApi(
   accessToken: string,
   inviteId: string,
@@ -344,6 +598,34 @@ export async function handleSocialHttpMessage(
         invite: await createRoomInviteFromApi(message.accessToken, message.input),
       };
     }
+    if (message.command === "create-group") {
+      return {
+        ok: true,
+        group: await createFriendGroupFromApi(message.accessToken, message.input),
+      };
+    }
+    if (message.command === "update-group") {
+      return {
+        ok: true,
+        group: await updateFriendGroupFromApi(message.accessToken, message.input),
+      };
+    }
+    if (message.command === "archive-group") {
+      await archiveFriendGroupFromApi(message.accessToken, message.groupId);
+      return { ok: true, archivedGroupId: message.groupId };
+    }
+    if (message.command === "add-group-member") {
+      return {
+        ok: true,
+        group: await addFriendGroupMemberFromApi(message.accessToken, message.input),
+      };
+    }
+    if (message.command === "remove-group-member") {
+      return {
+        ok: true,
+        group: await removeFriendGroupMemberFromApi(message.accessToken, message.input),
+      };
+    }
     return { ok: false, error: "Unsupported social command" };
   } catch (error) {
     if (error instanceof RoomApiError) {
@@ -403,6 +685,67 @@ export async function createRoomInvite(
   if (!response.ok) throw socialBridgeError(response);
   if (!("invite" in response)) throw new Error("Social bridge response is missing invite");
   return response.invite;
+}
+
+export async function createFriendGroup(
+  accessToken: string,
+  input: CreateFriendGroupInput,
+): Promise<FriendGroup> {
+  const response = assertSocialHttpResponse(
+    await sendSocialHttpMessage(createGroupHttpMessage(accessToken, input)),
+  );
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("group" in response)) throw new Error("Social bridge response is missing group");
+  return response.group;
+}
+
+export async function updateFriendGroup(
+  accessToken: string,
+  input: UpdateFriendGroupInput,
+): Promise<FriendGroup> {
+  const response = assertSocialHttpResponse(
+    await sendSocialHttpMessage(updateGroupHttpMessage(accessToken, input)),
+  );
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("group" in response)) throw new Error("Social bridge response is missing group");
+  return response.group;
+}
+
+export async function archiveFriendGroup(
+  accessToken: string,
+  groupId: string,
+): Promise<void> {
+  const response = assertSocialHttpResponse(
+    await sendSocialHttpMessage(archiveGroupHttpMessage(accessToken, groupId)),
+  );
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("archivedGroupId" in response)) {
+    throw new Error("Social bridge response is missing archived group id");
+  }
+}
+
+export async function addFriendGroupMember(
+  accessToken: string,
+  input: FriendGroupMemberInput,
+): Promise<FriendGroup> {
+  const response = assertSocialHttpResponse(
+    await sendSocialHttpMessage(addGroupMemberHttpMessage(accessToken, input)),
+  );
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("group" in response)) throw new Error("Social bridge response is missing group");
+  return response.group;
+}
+
+export async function removeFriendGroupMember(
+  accessToken: string,
+  input: FriendGroupMemberInput,
+): Promise<FriendGroup> {
+  const response = assertSocialHttpResponse(
+    await sendSocialHttpMessage(removeGroupMemberHttpMessage(accessToken, input)),
+  );
+  if (!response.ok) throw socialBridgeError(response);
+  if (!("group" in response)) throw new Error("Social bridge response is missing group");
+  return response.group;
 }
 
 export async function acceptRoomInvite(

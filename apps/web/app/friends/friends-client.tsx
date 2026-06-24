@@ -13,6 +13,7 @@ import {
   Copy,
   EyeOff,
   Link2,
+  Pencil,
   RefreshCw,
   Trash2,
   UserMinus,
@@ -92,6 +93,10 @@ type Notice = {
   text: string;
 };
 
+type RefreshOptions = {
+  showLoading?: boolean;
+};
+
 const EMPTY_FRIENDS: FriendsResponse = {
   friends: [],
   incomingRequests: [],
@@ -134,6 +139,40 @@ function formatRecentMeta(person: RecentPerson) {
     ? "recently"
     : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   return `${roomLabel} · ${dateLabel}`;
+}
+
+function sortGroupMembers(members: FriendGroup["members"]): FriendGroup["members"] {
+  return [...members].sort((a, b) => a.user.displayName.localeCompare(b.user.displayName));
+}
+
+function addOptimisticMember(
+  group: FriendGroup,
+  friend: FriendListItem,
+  addedAt: string,
+): FriendGroup {
+  if (group.members.some((member) => member.user.userId === friend.user.userId)) {
+    return group;
+  }
+
+  return {
+    ...group,
+    updatedAt: addedAt,
+    members: sortGroupMembers([
+      ...group.members,
+      {
+        user: friend.user,
+        addedAt,
+      },
+    ]),
+  };
+}
+
+function removeOptimisticMember(group: FriendGroup, userId: string, updatedAt: string): FriendGroup {
+  return {
+    ...group,
+    updatedAt,
+    members: group.members.filter((member) => member.user.userId !== userId),
+  };
 }
 
 function canRequestFromRecent(status: string) {
@@ -216,6 +255,8 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
   const [groups, setGroups] = useState<FriendGroup[]>([]);
   const [recentPeople, setRecentPeople] = useState<RecentPerson[]>([]);
   const [groupName, setGroupName] = useState("");
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editingGroupName, setEditingGroupName] = useState("");
   const [loading, setLoading] = useState(true);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -225,8 +266,9 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
     [groups],
   );
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(async (options: RefreshOptions = {}) => {
+    const showLoading = options.showLoading ?? true;
+    if (showLoading) setLoading(true);
     try {
       const [friends, groupPayload, recentPayload] = await Promise.all([
         api<FriendsResponse>("/api/friends"),
@@ -242,7 +284,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
         text: error instanceof Error ? error.message : "Could not load friends",
       });
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, []);
 
@@ -257,7 +299,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
       try {
         await action();
         setNotice({ tone: "success", text: success });
-        await refresh();
+        await refresh({ showLoading: false });
       } catch (error) {
         setNotice({
           tone: "error",
@@ -270,24 +312,64 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
     [refresh],
   );
 
+  const runLocalAction = useCallback(
+    async (key: string, action: () => Promise<void>, success: string) => {
+      setBusyKey(key);
+      setNotice(null);
+      try {
+        await action();
+        setNotice({ tone: "success", text: success });
+      } catch (error) {
+        setNotice({
+          tone: "error",
+          text: error instanceof Error ? error.message : "Action failed",
+        });
+      } finally {
+        setBusyKey(null);
+      }
+    },
+    [],
+  );
+
+  const upsertGroup = useCallback((group: FriendGroup) => {
+    setGroups((current) => {
+      const exists = current.some((item) => item.id === group.id);
+      if (!exists) return [group, ...current];
+      return current.map((item) => (item.id === group.id ? group : item));
+    });
+  }, []);
+
+  const patchGroup = useCallback((groupId: string, updater: (group: FriendGroup) => FriendGroup) => {
+    let previous: FriendGroup | null = null;
+    setGroups((current) =>
+      current.map((group) => {
+        if (group.id !== groupId) return group;
+        previous = group;
+        return updater(group);
+      }),
+    );
+    return previous;
+  }, []);
+
   const createGroup = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const name = groupName.trim();
       if (!name) return;
-      await runAction(
+      await runLocalAction(
         "create-group",
         async () => {
-          await api("/api/groups", {
+          const payload = await api<{ group: FriendGroup }>("/api/groups", {
             body: JSON.stringify({ name }),
             method: "POST",
           });
+          upsertGroup(payload.group);
           setGroupName("");
         },
         "Group created.",
       );
     },
-    [groupName, runAction],
+    [groupName, runLocalAction, upsertGroup],
   );
 
   const copyFriendInviteLink = useCallback(async () => {
@@ -340,6 +422,44 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
     [friendsData.friends],
   );
 
+  const startRenameGroup = useCallback((group: FriendGroup) => {
+    setEditingGroupId(group.id);
+    setEditingGroupName(group.name);
+  }, []);
+
+  const renameGroup = useCallback(
+    async (event: FormEvent<HTMLFormElement>, groupId: string) => {
+      event.preventDefault();
+      const name = editingGroupName.trim();
+      if (!name) return;
+      await runLocalAction(
+        `rename-group:${groupId}`,
+        async () => {
+          const updatedAt = new Date().toISOString();
+          const previous = patchGroup(groupId, (group) => ({
+            ...group,
+            name,
+            updatedAt,
+          }));
+          try {
+            const payload = await api<{ group: FriendGroup }>(`/api/groups/${groupId}`, {
+              body: JSON.stringify({ name }),
+              method: "PATCH",
+            });
+            upsertGroup(payload.group);
+            setEditingGroupId(null);
+            setEditingGroupName("");
+          } catch (error) {
+            if (previous) upsertGroup(previous);
+            throw error;
+          }
+        },
+        "Group renamed.",
+      );
+    },
+    [editingGroupName, patchGroup, runLocalAction, upsertGroup],
+  );
+
   return (
     <div className="flex w-full flex-col gap-6">
         <header className="flex flex-col justify-between gap-4 border-b border-brand-border pb-6 md:flex-row md:items-end">
@@ -356,7 +476,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
           </div>
           <IconButton
             icon={<RefreshCw className="h-4 w-4" aria-hidden />}
-            onClick={refresh}
+            onClick={() => void refresh()}
             title="Refresh"
           >
             Refresh
@@ -365,7 +485,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
 
         {notice ? (
           <div
-            className={`rounded-lg border px-4 py-3 text-sm ${
+            className={`fixed right-4 top-4 z-50 max-w-[min(24rem,calc(100vw-2rem))] rounded-lg border px-4 py-3 text-sm shadow-2xl ${
               notice.tone === "success"
                 ? "border-brand-orange/30 bg-brand-orange/10 text-brand-orange"
                 : "border-red-400/30 bg-red-500/10 text-red-200"
@@ -598,24 +718,73 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                     key={group.id}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-base font-semibold text-foreground">
-                          {group.name}
-                        </h3>
-                        <p className="text-xs text-foreground/50">
-                          {group.members.length} members
-                        </p>
-                      </div>
+                      {editingGroupId === group.id ? (
+                        <form
+                          className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row"
+                          onSubmit={(event) => void renameGroup(event, group.id)}
+                        >
+                          <input
+                            className="min-h-10 min-w-0 flex-1 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-foreground/30 focus:border-brand-orange"
+                            maxLength={80}
+                            onChange={(event) => setEditingGroupName(event.target.value)}
+                            value={editingGroupName}
+                          />
+                          <IconButton
+                            disabled={!editingGroupName.trim() || busyKey !== null}
+                            icon={<Check className="h-4 w-4" aria-hidden />}
+                            title="Save group name"
+                            tone="primary"
+                            type="submit"
+                          />
+                          <IconButton
+                            disabled={busyKey !== null}
+                            icon={<X className="h-4 w-4" aria-hidden />}
+                            onClick={() => {
+                              setEditingGroupId(null);
+                              setEditingGroupName("");
+                            }}
+                            title="Cancel rename"
+                          />
+                        </form>
+                      ) : (
+                        <div className="min-w-0">
+                          <h3 className="truncate text-base font-semibold text-foreground">
+                            {group.name}
+                          </h3>
+                          <p className="text-xs text-foreground/50">
+                            {group.members.length} members
+                          </p>
+                        </div>
+                      )}
+                      {editingGroupId !== group.id ? (
+                        <IconButton
+                          disabled={busyKey !== null}
+                          icon={<Pencil className="h-4 w-4" aria-hidden />}
+                          onClick={() => startRenameGroup(group)}
+                          title="Rename group"
+                        />
+                      ) : null}
                       <IconButton
                         disabled={busyKey !== null}
                         icon={<Trash2 className="h-4 w-4" aria-hidden />}
                         onClick={() =>
-                          void runAction(
+                          void runLocalAction(
                             `archive-group:${group.id}`,
-                            () =>
-                              api(`/api/groups/${group.id}`, {
-                                method: "DELETE",
-                              }),
+                            async () => {
+                              let previousGroups: FriendGroup[] = [];
+                              setGroups((current) => {
+                                previousGroups = current;
+                                return current.filter((item) => item.id !== group.id);
+                              });
+                              try {
+                                await api(`/api/groups/${group.id}`, {
+                                  method: "DELETE",
+                                });
+                              } catch (error) {
+                                setGroups(previousGroups);
+                                throw error;
+                              }
+                            },
                             "Group archived.",
                           )
                         }
@@ -633,13 +802,27 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                                 disabled={busyKey !== null}
                                 icon={<X className="h-4 w-4" aria-hidden />}
                                 onClick={() =>
-                                  void runAction(
+                                  void runLocalAction(
                                     `remove-member:${group.id}:${member.user.userId}`,
-                                    () =>
-                                      api(
-                                        `/api/groups/${group.id}/members/${member.user.userId}`,
-                                        { method: "DELETE" },
-                                      ),
+                                    async () => {
+                                      const previous = patchGroup(group.id, (currentGroup) =>
+                                        removeOptimisticMember(
+                                          currentGroup,
+                                          member.user.userId,
+                                          new Date().toISOString(),
+                                        ),
+                                      );
+                                      try {
+                                        const payload = await api<{ group: FriendGroup }>(
+                                          `/api/groups/${group.id}/members/${member.user.userId}`,
+                                          { method: "DELETE" },
+                                        );
+                                        upsertGroup(payload.group);
+                                      } catch (error) {
+                                        if (previous) upsertGroup(previous);
+                                        throw error;
+                                      }
+                                    },
                                     "Group member removed.",
                                   )
                                 }
@@ -663,13 +846,28 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                           const userId = event.target.value;
                           if (!userId) return;
                           event.target.value = "";
-                          void runAction(
+                          const friend = addableFriends.find((item) => item.user.userId === userId);
+                          if (!friend) return;
+                          void runLocalAction(
                             `add-member:${group.id}:${userId}`,
-                            () =>
-                              api(`/api/groups/${group.id}/members`, {
-                                body: JSON.stringify({ userId }),
-                                method: "POST",
-                              }),
+                            async () => {
+                              const previous = patchGroup(group.id, (currentGroup) =>
+                                addOptimisticMember(currentGroup, friend, new Date().toISOString()),
+                              );
+                              try {
+                                const payload = await api<{ group: FriendGroup }>(
+                                  `/api/groups/${group.id}/members`,
+                                  {
+                                    body: JSON.stringify({ userId }),
+                                    method: "POST",
+                                  },
+                                );
+                                upsertGroup(payload.group);
+                              } catch (error) {
+                                if (previous) upsertGroup(previous);
+                                throw error;
+                              }
+                            },
                             "Friend added to group.",
                           );
                         }}
