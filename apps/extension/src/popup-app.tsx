@@ -6,6 +6,7 @@ import {
   Inbox,
   Link2,
   LogIn,
+  Pencil,
   RefreshCw,
   RotateCcw,
   Trash2,
@@ -13,7 +14,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { getCurrentExtensionSession, signInWithWebsite } from "./auth-client";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
@@ -21,14 +22,19 @@ import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
 import { popupStyles } from "./popup-styles";
 import {
   acceptRoomInvite,
+  addFriendGroupMember,
+  archiveFriendGroup,
+  createFriendGroup,
   declineRoomInvite,
   listInviteTargets,
   listRoomInvites,
+  removeFriendGroupMember,
   type FriendGroup,
   type FriendListItem,
   type InviteTargets,
   type RoomInvite,
   type RoomInvitesResponse,
+  updateFriendGroup,
 } from "./social-client";
 import {
   buildProviderFolders,
@@ -58,10 +64,30 @@ import {
 } from "./watch-library-client";
 
 type PopupTab = "resources" | "friends" | "inbox";
+type LibraryActivityFilter = "all" | "solo" | "together";
+type LibraryPersonFilter = "all" | `user:${string}`;
+
+type LibraryCompanionFilter = {
+  value: LibraryPersonFilter;
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  sessionCount: number;
+};
+
+type LibraryFilterOptions = {
+  activity: LibraryActivityFilter;
+  person: LibraryPersonFilter;
+};
 
 type SocialPanelData = {
   targets: InviteTargets;
   invites: RoomInvitesResponse;
+};
+
+type PopupNotice = {
+  tone: "success" | "error";
+  text: string;
 };
 
 type SocialPanelState =
@@ -101,12 +127,17 @@ export function PopupApp() {
     error: null,
   });
   const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
+  const [busySocialAction, setBusySocialAction] = useState<string | null>(null);
+  const [socialNotice, setSocialNotice] = useState<PopupNotice | null>(null);
   const [busyWatchSessionId, setBusyWatchSessionId] = useState<string | null>(null);
+  const [libraryActivityFilter, setLibraryActivityFilter] = useState<LibraryActivityFilter>("all");
+  const [libraryPersonFilter, setLibraryPersonFilter] = useState<LibraryPersonFilter>("all");
   const [openProviders, setOpenProviders] = useState<Record<string, boolean>>({
     crunchyroll: true,
   });
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const posterRequestsRef = useRef<Record<string, boolean>>({});
+  const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
   const displayStore = useMemo(
     () => mergeWatchLibraryIntoStore(store, watchLibraryState.data),
     [store, watchLibraryState.data],
@@ -116,12 +147,44 @@ export function PopupApp() {
     () => buildLibraryEpisodeIndex(watchLibraryState.data),
     [watchLibraryState.data],
   );
+  const libraryFilterOptions = useMemo<LibraryFilterOptions>(
+    () => ({
+      activity: libraryActivityFilter,
+      person: libraryActivityFilter === "together" ? libraryPersonFilter : "all",
+    }),
+    [libraryActivityFilter, libraryPersonFilter],
+  );
+  const filteredFolders = useMemo(
+    () => filterProviderFolders(folders, libraryEpisodesByKey, libraryFilterOptions),
+    [folders, libraryEpisodesByKey, libraryFilterOptions],
+  );
+  const companionFilters = useMemo(
+    () => buildCompanionFilters(watchLibraryState.data, accountUser?.id ?? null),
+    [watchLibraryState.data, accountUser?.id],
+  );
+  const libraryFilterCounts = useMemo(
+    () => ({
+      all: countProviderItems(folders),
+      solo: countProviderItems(
+        filterProviderFolders(folders, libraryEpisodesByKey, {
+          activity: "solo",
+          person: "all",
+        }),
+      ),
+      together: countProviderItems(
+        filterProviderFolders(folders, libraryEpisodesByKey, {
+          activity: "together",
+          person: "all",
+        }),
+      ),
+    }),
+    [folders, libraryEpisodesByKey],
+  );
   const socialCount = socialState.data
     ? socialState.data.targets.friends.length + socialState.data.targets.groups.length
     : 0;
   const pendingInviteCount =
     socialState.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)).length ?? 0;
-  const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
 
   const loadSocialForTokens = useCallback(async (tokens: ExtensionAuthTokens) => {
     setSocialState((current) => ({
@@ -294,6 +357,204 @@ export function PopupApp() {
     [loadSocialForTokens],
   );
 
+  const upsertSocialGroup = useCallback((group: FriendGroup) => {
+    setSocialState((current) => {
+      if (!current.data) return current;
+      const groups = current.data.targets.groups.some((item) => item.id === group.id)
+        ? current.data.targets.groups.map((item) => (item.id === group.id ? group : item))
+        : [group, ...current.data.targets.groups];
+      return {
+        ...current,
+        data: {
+          ...current.data,
+          targets: {
+            ...current.data.targets,
+            groups: groups.filter((item) => !item.archivedAt),
+          },
+        },
+      };
+    });
+  }, []);
+
+  const patchSocialGroup = useCallback((groupId: string, updater: (group: FriendGroup) => FriendGroup) => {
+    let previous: FriendGroup | null = null;
+    setSocialState((current) => {
+      if (!current.data) return current;
+      return {
+        ...current,
+        data: {
+          ...current.data,
+          targets: {
+            ...current.data.targets,
+            groups: current.data.targets.groups.map((group) => {
+              if (group.id !== groupId) return group;
+              previous = group;
+              return updater(group);
+            }),
+          },
+        },
+      };
+    });
+    return previous;
+  }, []);
+
+  const runSocialAction = useCallback(
+    async (
+      key: string,
+      action: (accessToken: string) => Promise<unknown>,
+      success: string,
+      fallbackError: string,
+    ): Promise<boolean> => {
+      setBusySocialAction(key);
+      setSocialNotice(null);
+      try {
+        const tokens = await getCurrentExtensionSession();
+        if (!tokens) {
+          setSocialState({ status: "signed-out", data: null, error: null });
+          return false;
+        }
+
+        setAuthSession({ status: "ready", tokens, error: null });
+        await action(tokens.accessToken);
+        setSocialNotice({ tone: "success", text: success });
+        return true;
+      } catch (error) {
+        setSocialNotice({
+          tone: "error",
+          text: error instanceof Error ? error.message : fallbackError,
+        });
+        return false;
+      } finally {
+        setBusySocialAction(null);
+      }
+    },
+    [],
+  );
+
+  const createGroup = useCallback(
+    async (name: string) =>
+      runSocialAction(
+        "create-group",
+        async (accessToken) => {
+          const group = await createFriendGroup(accessToken, { name });
+          upsertSocialGroup(group);
+        },
+        "Group created.",
+        "Could not create group",
+      ),
+    [runSocialAction, upsertSocialGroup],
+  );
+
+  const renameGroup = useCallback(
+    async (groupId: string, name: string) =>
+      runSocialAction(
+        `rename-group:${groupId}`,
+        async (accessToken) => {
+          const updatedAt = new Date().toISOString();
+          const previous = patchSocialGroup(groupId, (group) => ({
+            ...group,
+            name,
+            updatedAt,
+          }));
+          try {
+            const group = await updateFriendGroup(accessToken, { groupId, name });
+            upsertSocialGroup(group);
+          } catch (error) {
+            if (previous) upsertSocialGroup(previous);
+            throw error;
+          }
+        },
+        "Group renamed.",
+        "Could not rename group",
+      ),
+    [patchSocialGroup, runSocialAction, upsertSocialGroup],
+  );
+
+  const archiveGroup = useCallback(
+    async (groupId: string) =>
+      runSocialAction(
+        `archive-group:${groupId}`,
+        async (accessToken) => {
+          let previous: FriendGroup | null = null;
+          setSocialState((current) => {
+            if (!current.data) return current;
+            return {
+              ...current,
+              data: {
+                ...current.data,
+                targets: {
+                  ...current.data.targets,
+                  groups: current.data.targets.groups.filter((group) => {
+                    if (group.id !== groupId) return true;
+                    previous = group;
+                    return false;
+                  }),
+                },
+              },
+            };
+          });
+          try {
+            await archiveFriendGroup(accessToken, groupId);
+          } catch (error) {
+            if (previous) upsertSocialGroup(previous);
+            throw error;
+          }
+        },
+        "Group archived.",
+        "Could not archive group",
+      ),
+    [runSocialAction, upsertSocialGroup],
+  );
+
+  const addGroupMember = useCallback(
+    async (groupId: string, userId: string) =>
+      runSocialAction(
+        `add-member:${groupId}:${userId}`,
+        async (accessToken) => {
+          const friend = socialState.data?.targets.friends.find(
+            (item) => item.user.userId === userId,
+          );
+          const previous = friend
+            ? patchSocialGroup(groupId, (group) =>
+                addOptimisticMember(group, friend, new Date().toISOString()),
+              )
+            : null;
+          try {
+            const group = await addFriendGroupMember(accessToken, { groupId, userId });
+            upsertSocialGroup(group);
+          } catch (error) {
+            if (previous) upsertSocialGroup(previous);
+            throw error;
+          }
+        },
+        "Friend added.",
+        "Could not add friend",
+      ),
+    [patchSocialGroup, runSocialAction, socialState.data?.targets.friends, upsertSocialGroup],
+  );
+
+  const removeGroupMember = useCallback(
+    async (groupId: string, userId: string) =>
+      runSocialAction(
+        `remove-member:${groupId}:${userId}`,
+        async (accessToken) => {
+          const previous = patchSocialGroup(groupId, (group) =>
+            removeOptimisticMember(group, userId, new Date().toISOString()),
+          );
+          try {
+            const group = await removeFriendGroupMember(accessToken, { groupId, userId });
+            upsertSocialGroup(group);
+          } catch (error) {
+            if (previous) upsertSocialGroup(previous);
+            throw error;
+          }
+        },
+        "Member removed.",
+        "Could not remove member",
+      ),
+    [patchSocialGroup, runSocialAction, upsertSocialGroup],
+  );
+
   const createRoomFromSession = useCallback(async (session: WatchLibrarySession, sourceUrl: string) => {
     setBusyWatchSessionId(session.id);
     try {
@@ -351,7 +612,23 @@ export function PopupApp() {
     };
   }, [syncPopupData]);
 
+  useEffect(() => {
+    if (libraryActivityFilter !== "together" && libraryPersonFilter !== "all") {
+      setLibraryPersonFilter("all");
+    }
+  }, [libraryActivityFilter, libraryPersonFilter]);
+
+  useEffect(() => {
+    if (
+      libraryPersonFilter !== "all" &&
+      !companionFilters.some((filter) => filter.value === libraryPersonFilter)
+    ) {
+      setLibraryPersonFilter("all");
+    }
+  }, [companionFilters, libraryPersonFilter]);
+
   const totalItems = folders.reduce((sum, folder) => sum + folder.items.length, 0);
+  const filteredItemsCount = filteredFolders.reduce((sum, folder) => sum + folder.items.length, 0);
   const localItemsCount = useMemo(
     () => buildProviderFolders(store).reduce((sum, folder) => sum + folder.items.length, 0),
     [store],
@@ -480,7 +757,7 @@ export function PopupApp() {
           aria-selected={activeTab === "resources"}
           onClick={() => setActiveTab("resources")}
         >
-          Resources <span>{totalItems}</span>
+          Library <span>{totalItems}</span>
         </button>
         <button
           className="popup-tab"
@@ -507,7 +784,7 @@ export function PopupApp() {
       {activeTab === "resources" ? (
         <section className="popup-section">
           <div className="popup-section-header">
-            <div className="popup-section-title">Resources</div>
+            <div className="popup-section-title">Watch library</div>
             <button
               aria-label="Sync watch library"
               className="popup-mini-button"
@@ -519,6 +796,42 @@ export function PopupApp() {
               <RefreshCw size={13} />
             </button>
           </div>
+          <div className="popup-library-filter-row" role="tablist" aria-label="Watch library filter">
+            <button
+              aria-selected={libraryActivityFilter === "all"}
+              data-active={libraryActivityFilter === "all"}
+              role="tab"
+              type="button"
+              onClick={() => setLibraryActivityFilter("all")}
+            >
+              All <span>{libraryFilterCounts.all}</span>
+            </button>
+            <button
+              aria-selected={libraryActivityFilter === "solo"}
+              data-active={libraryActivityFilter === "solo"}
+              role="tab"
+              type="button"
+              onClick={() => setLibraryActivityFilter("solo")}
+            >
+              Solo <span>{libraryFilterCounts.solo}</span>
+            </button>
+            <button
+              aria-selected={libraryActivityFilter === "together"}
+              data-active={libraryActivityFilter === "together"}
+              role="tab"
+              type="button"
+              onClick={() => setLibraryActivityFilter("together")}
+            >
+              Together <span>{libraryFilterCounts.together}</span>
+            </button>
+          </div>
+          {libraryActivityFilter === "together" ? (
+            <CompanionFilterBar
+              companions={companionFilters}
+              selectedValue={libraryPersonFilter}
+              onSelect={setLibraryPersonFilter}
+            />
+          ) : null}
           {watchLibraryState.status === "error" ? (
             <div className="popup-social-empty" data-tone="error">
               <span>{watchLibraryState.error}</span>
@@ -531,36 +844,48 @@ export function PopupApp() {
               </button>
             </div>
           ) : null}
-          <div className="popup-resource-list">
-            {folders.map((folder) => (
-              <ProviderRow
-                key={folder.provider}
-                folder={folder}
-                busyWatchSessionId={busyWatchSessionId}
-                libraryEpisodesByKey={libraryEpisodesByKey}
-                open={Boolean(openProviders[folder.provider])}
-                onCreateRoomFromSession={(session, sourceUrl) => void createRoomFromSession(session, sourceUrl)}
-                onToggle={() =>
-                  setOpenProviders((current) => ({
-                    ...current,
-                    [folder.provider]: !current[folder.provider],
-                  }))
-                }
-                openItems={openItems}
-                onToggleItem={(itemId) =>
-                  setOpenItems((current) => ({
-                    ...current,
-                    [itemId]: !current[itemId],
-                  }))
-                }
-              />
-            ))}
-          </div>
+          {filteredItemsCount ? (
+            <div className="popup-resource-list">
+              {filteredFolders.map((folder) => (
+                <ProviderRow
+                  key={folder.provider}
+                  folder={folder}
+                  busyWatchSessionId={busyWatchSessionId}
+                  libraryEpisodesByKey={libraryEpisodesByKey}
+                  open={Boolean(openProviders[folder.provider])}
+                  onCreateRoomFromSession={(session, sourceUrl) => void createRoomFromSession(session, sourceUrl)}
+                  viewerUserId={accountUser?.id ?? null}
+                  onToggle={() =>
+                    setOpenProviders((current) => ({
+                      ...current,
+                      [folder.provider]: !current[folder.provider],
+                    }))
+                  }
+                  openItems={openItems}
+                  onToggleItem={(itemId) =>
+                    setOpenItems((current) => ({
+                      ...current,
+                      [itemId]: !current[itemId],
+                    }))
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <LibraryEmptyState activity={libraryActivityFilter} personFilter={libraryPersonFilter} />
+          )}
         </section>
       ) : activeTab === "friends" ? (
         <SocialPanel
+          busyAction={busySocialAction}
+          notice={socialNotice}
+          onAddGroupMember={addGroupMember}
+          onArchiveGroup={archiveGroup}
+          onCreateGroup={createGroup}
           state={socialState}
           onRefresh={() => void syncPopupData(store, { useCachedSnapshot: true })}
+          onRemoveGroupMember={removeGroupMember}
+          onRenameGroup={renameGroup}
           onSignIn={() =>
             void syncPopupData(store, {
               interactive: true,
@@ -588,15 +913,40 @@ export function PopupApp() {
 }
 
 function SocialPanel({
+  busyAction,
+  notice,
+  onAddGroupMember,
+  onArchiveGroup,
+  onCreateGroup,
   onRefresh,
+  onRemoveGroupMember,
+  onRenameGroup,
   onSignIn,
   state,
 }: {
+  busyAction: string | null;
+  notice: PopupNotice | null;
+  onAddGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onArchiveGroup: (groupId: string) => Promise<boolean>;
+  onCreateGroup: (name: string) => Promise<boolean>;
   onRefresh: () => void;
+  onRemoveGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onRenameGroup: (groupId: string, name: string) => Promise<boolean>;
   onSignIn: () => void;
   state: SocialPanelState;
 }) {
   const data = state.data;
+  const [groupName, setGroupName] = useState("");
+  const createDisabled = !groupName.trim() || busyAction !== null;
+
+  const submitCreateGroup = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const name = groupName.trim();
+    if (!name || busyAction) return;
+    void onCreateGroup(name).then((ok) => {
+      if (ok) setGroupName("");
+    });
+  };
 
   return (
     <section className="popup-section">
@@ -635,7 +985,28 @@ function SocialPanel({
 
       {state.status === "loading" && !data ? <div className="popup-empty">Loading friends...</div> : null}
 
-      {data ? <SocialTargets targets={data.targets} /> : null}
+      <div className="popup-social-notice-slot" aria-live="polite">
+        {notice ? (
+          <div className="popup-social-notice" data-tone={notice.tone} role="status">
+            {notice.text}
+          </div>
+        ) : null}
+      </div>
+
+      {data ? (
+        <SocialTargets
+          busyAction={busyAction}
+          createDisabled={createDisabled}
+          groupName={groupName}
+          onAddGroupMember={onAddGroupMember}
+          onArchiveGroup={onArchiveGroup}
+          onCreateGroupNameChange={setGroupName}
+          onRemoveGroupMember={onRemoveGroupMember}
+          onRenameGroup={onRenameGroup}
+          onSubmitCreateGroup={submitCreateGroup}
+          targets={data.targets}
+        />
+      ) : null}
     </section>
   );
 }
@@ -767,7 +1138,29 @@ function InviteInboxRow({
   );
 }
 
-function SocialTargets({ targets }: { targets: InviteTargets }) {
+function SocialTargets({
+  busyAction,
+  createDisabled,
+  groupName,
+  onAddGroupMember,
+  onArchiveGroup,
+  onCreateGroupNameChange,
+  onRemoveGroupMember,
+  onRenameGroup,
+  onSubmitCreateGroup,
+  targets,
+}: {
+  busyAction: string | null;
+  createDisabled: boolean;
+  groupName: string;
+  onAddGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onArchiveGroup: (groupId: string) => Promise<boolean>;
+  onCreateGroupNameChange: (name: string) => void;
+  onRemoveGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onRenameGroup: (groupId: string, name: string) => Promise<boolean>;
+  onSubmitCreateGroup: (event: FormEvent<HTMLFormElement>) => void;
+  targets: InviteTargets;
+}) {
   return (
     <div className="popup-social-list">
       <div className="popup-social-block">
@@ -787,8 +1180,38 @@ function SocialTargets({ targets }: { targets: InviteTargets }) {
           <span>Groups</span>
           <span>{targets.groups.length}</span>
         </div>
+        <form className="popup-group-create-form" onSubmit={onSubmitCreateGroup}>
+          <input
+            className="popup-group-name-input"
+            disabled={busyAction !== null}
+            maxLength={80}
+            onChange={(event) => onCreateGroupNameChange(event.target.value)}
+            placeholder="New group"
+            value={groupName}
+          />
+          <button
+            aria-label="Create group"
+            className="popup-primary-button"
+            disabled={createDisabled}
+            type="submit"
+          >
+            <UserPlus size={13} />
+            Create
+          </button>
+        </form>
         {targets.groups.length ? (
-          targets.groups.map((group) => <SocialGroupRow group={group} key={group.id} />)
+          targets.groups.map((group) => (
+            <SocialGroupRow
+              busyAction={busyAction}
+              friends={targets.friends}
+              group={group}
+              key={group.id}
+              onAddGroupMember={onAddGroupMember}
+              onArchiveGroup={onArchiveGroup}
+              onRemoveGroupMember={onRemoveGroupMember}
+              onRenameGroup={onRenameGroup}
+            />
+          ))
         ) : (
           <div className="popup-empty">No groups yet.</div>
         )}
@@ -821,16 +1244,167 @@ function SocialFriendRow({ friend }: { friend: FriendListItem }) {
   );
 }
 
-function SocialGroupRow({ group }: { group: FriendGroup }) {
+function SocialGroupRow({
+  busyAction,
+  friends,
+  group,
+  onAddGroupMember,
+  onArchiveGroup,
+  onRemoveGroupMember,
+  onRenameGroup,
+}: {
+  busyAction: string | null;
+  friends: FriendListItem[];
+  group: FriendGroup;
+  onAddGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onArchiveGroup: (groupId: string) => Promise<boolean>;
+  onRemoveGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onRenameGroup: (groupId: string, name: string) => Promise<boolean>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(group.name);
+  const memberIds = useMemo(
+    () => new Set(group.members.map((member) => member.user.userId)),
+    [group.members],
+  );
+  const addableFriends = friends.filter((friend) => !memberIds.has(friend.user.userId));
+  const renameBusy = busyAction === `rename-group:${group.id}`;
+  const archiveBusy = busyAction === `archive-group:${group.id}`;
+  const canSaveName = name.trim().length > 0 && name.trim() !== group.name && busyAction === null;
+
+  useEffect(() => {
+    if (!editing) setName(group.name);
+  }, [editing, group.name]);
+
+  const submitRename = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextName = name.trim();
+    if (!nextName || nextName === group.name || busyAction !== null) return;
+    void onRenameGroup(group.id, nextName).then((ok) => {
+      if (ok) setEditing(false);
+    });
+  };
+
   return (
-    <div className="popup-social-row">
-      <span className="popup-social-group-icon">
-        <Users size={15} />
-      </span>
-      <span className="popup-social-main">
-        <span>{group.name}</span>
-        <span>{group.members.length} members</span>
-      </span>
+    <div className="popup-group-card">
+      <div className="popup-group-header">
+        <span className="popup-social-group-icon">
+          <Users size={15} />
+        </span>
+        <div className="popup-social-main">
+          {editing ? (
+            <form className="popup-group-edit-form" onSubmit={submitRename}>
+              <input
+                className="popup-group-name-input"
+                disabled={busyAction !== null}
+                maxLength={80}
+                onChange={(event) => setName(event.target.value)}
+                value={name}
+              />
+              <button
+                aria-label="Save group name"
+                className="popup-mini-button"
+                disabled={!canSaveName || renameBusy}
+                title="Save group name"
+                type="submit"
+              >
+                <Check size={13} />
+              </button>
+              <button
+                aria-label="Cancel rename"
+                className="popup-mini-button"
+                disabled={renameBusy}
+                title="Cancel rename"
+                type="button"
+                onClick={() => setEditing(false)}
+              >
+                <X size={13} />
+              </button>
+            </form>
+          ) : (
+            <>
+              <span>{group.name}</span>
+              <span>{group.members.length} members</span>
+            </>
+          )}
+        </div>
+        {!editing ? (
+          <div className="popup-group-actions">
+            <button
+              aria-label={`Rename ${group.name}`}
+              className="popup-mini-button"
+              disabled={busyAction !== null}
+              title="Rename group"
+              type="button"
+              onClick={() => setEditing(true)}
+            >
+              <Pencil size={13} />
+            </button>
+            <button
+              aria-label={`Archive ${group.name}`}
+              className="popup-mini-button popup-mini-button-danger"
+              disabled={busyAction !== null}
+              title="Archive group"
+              type="button"
+              onClick={() => {
+                if (archiveBusy) return;
+                const confirmed = window.confirm(`Archive "${group.name}"?`);
+                if (confirmed) void onArchiveGroup(group.id);
+              }}
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="popup-group-member-list">
+        {group.members.length ? (
+          group.members.map((member) => {
+            const removeKey = `remove-member:${group.id}:${member.user.userId}`;
+            return (
+              <div className="popup-group-member-row" key={member.user.userId}>
+                <ProfileAvatar
+                  avatarUrl={member.user.avatarUrl}
+                  displayName={member.user.displayName}
+                />
+                <span>{member.user.displayName}</span>
+                <button
+                  aria-label={`Remove ${member.user.displayName}`}
+                  className="popup-mini-button"
+                  disabled={busyAction !== null}
+                  title="Remove member"
+                  type="button"
+                  onClick={() => void onRemoveGroupMember(group.id, member.user.userId)}
+                >
+                  {busyAction === removeKey ? <RefreshCw size={13} /> : <X size={13} />}
+                </button>
+              </div>
+            );
+          })
+        ) : (
+          <div className="popup-group-empty">No members yet.</div>
+        )}
+      </div>
+
+      <div className="popup-group-add-row">
+        <select
+          className="popup-group-select"
+          disabled={!addableFriends.length || busyAction !== null}
+          value=""
+          onChange={(event) => {
+            const userId = event.target.value;
+            if (userId) void onAddGroupMember(group.id, userId);
+          }}
+        >
+          <option value="">{addableFriends.length ? "Add friend" : "No friends to add"}</option>
+          {addableFriends.map((friend) => (
+            <option key={friend.user.userId} value={friend.user.userId}>
+              {friend.user.displayName}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }
@@ -857,6 +1431,40 @@ function formatInviteExpiry(expiresAt: string): string {
   if (hours < 24) return `${hours}h left`;
   const days = Math.ceil(hours / 24);
   return `${days}d left`;
+}
+
+function sortGroupMembers(members: FriendGroup["members"]): FriendGroup["members"] {
+  return [...members].sort((a, b) => a.user.displayName.localeCompare(b.user.displayName));
+}
+
+function addOptimisticMember(
+  group: FriendGroup,
+  friend: FriendListItem,
+  addedAt: string,
+): FriendGroup {
+  if (group.members.some((member) => member.user.userId === friend.user.userId)) {
+    return group;
+  }
+
+  return {
+    ...group,
+    updatedAt: addedAt,
+    members: sortGroupMembers([
+      ...group.members,
+      {
+        user: friend.user,
+        addedAt,
+      },
+    ]),
+  };
+}
+
+function removeOptimisticMember(group: FriendGroup, userId: string, updatedAt: string): FriendGroup {
+  return {
+    ...group,
+    updatedAt,
+    members: group.members.filter((member) => member.user.userId !== userId),
+  };
 }
 
 function ProfileAvatar({ avatarUrl, displayName }: { avatarUrl: string | null; displayName: string }) {
@@ -940,6 +1548,210 @@ function mergeWatchLibraryIntoStore(
   return nextStore;
 }
 
+function CompanionFilterBar({
+  companions,
+  onSelect,
+  selectedValue,
+}: {
+  companions: LibraryCompanionFilter[];
+  onSelect: (value: LibraryPersonFilter) => void;
+  selectedValue: LibraryPersonFilter;
+}) {
+  return (
+    <div className="popup-companion-filter">
+      <span className="popup-companion-filter-label">With</span>
+      <div className="popup-companion-scroll" role="listbox" aria-label="People watched with">
+        <button
+          aria-selected={selectedValue === "all"}
+          className="popup-companion-chip"
+          data-active={selectedValue === "all"}
+          type="button"
+          onClick={() => onSelect("all")}
+        >
+          All people
+        </button>
+        {companions.map((companion) => (
+          <button
+            aria-selected={selectedValue === companion.value}
+            className="popup-companion-chip"
+            data-active={selectedValue === companion.value}
+            key={companion.userId}
+            title={companion.displayName}
+            type="button"
+            onClick={() => onSelect(companion.value)}
+          >
+            <span className="popup-companion-avatar" style={{ background: avatarGradient(companion.userId) }}>
+              {getInitials(companion.displayName)}
+            </span>
+            <span>{companion.displayName}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LibraryEmptyState({
+  activity,
+  personFilter,
+}: {
+  activity: LibraryActivityFilter;
+  personFilter: LibraryPersonFilter;
+}) {
+  const message =
+    activity === "together"
+      ? personFilter === "all"
+        ? "No shared watch history yet."
+        : "No shared sessions with this person yet."
+      : activity === "solo"
+        ? "No solo watch progress yet."
+        : "Progress will appear here after watching.";
+
+  return <div className="popup-empty">{message}</div>;
+}
+
+function filterProviderFolders(
+  folders: ProviderFolder[],
+  libraryEpisodesByKey: Map<string, WatchLibraryEpisode>,
+  filters: LibraryFilterOptions,
+): ProviderFolder[] {
+  const keepEmptyProviders = filters.activity === "all" && filters.person === "all";
+  return folders
+    .map((folder) => ({
+      ...folder,
+      items: folder.items
+        .map((item) => filterStoredWatchItem(item, libraryEpisodesByKey, filters))
+        .filter((item): item is StoredWatchItem => item !== null),
+    }))
+    .filter((folder) => keepEmptyProviders || folder.items.length > 0);
+}
+
+function filterStoredWatchItem(
+  item: StoredWatchItem,
+  libraryEpisodesByKey: Map<string, WatchLibraryEpisode>,
+  filters: LibraryFilterOptions,
+): StoredWatchItem | null {
+  if (item.kind === "movie") {
+    const libraryEpisode = libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, item.id));
+    return watchEntryMatchesFilters(item, libraryEpisode, filters) ? item : null;
+  }
+
+  const episodes = Object.values(item.episodes ?? {});
+  if (!episodes.length) {
+    return null;
+  }
+
+  const filteredEpisodes = episodes.filter((episode) =>
+    watchEntryMatchesFilters(
+      episode,
+      libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, episode.id)),
+      filters,
+    ),
+  );
+
+  if (!filteredEpisodes.length) {
+    return null;
+  }
+
+  return {
+    ...item,
+    episodes: Object.fromEntries(filteredEpisodes.map((episode) => [episode.id, episode])),
+  };
+}
+
+function watchEntryMatchesFilters(
+  entry: StoredEpisodeProgress | StoredWatchItem,
+  libraryEpisode: WatchLibraryEpisode | undefined,
+  filters: LibraryFilterOptions,
+): boolean {
+  if (filters.activity === "all" && filters.person === "all") {
+    return true;
+  }
+
+  const sessions = libraryEpisode?.sessions ?? [];
+  if (filters.activity === "together" || filters.person !== "all") {
+    const sharedSessions = sessions.filter((session) => session.kind === "shared");
+    if (!sharedSessions.length) {
+      return false;
+    }
+
+    if (filters.person === "all") {
+      return true;
+    }
+
+    const userId = filters.person.slice("user:".length);
+    return sharedSessions.some((session) =>
+      session.participants.some((participant) => participant.user.userId === userId),
+    );
+  }
+
+  if (filters.activity === "solo") {
+    if (sessions.length) {
+      return sessions.some((session) => session.kind === "solo");
+    }
+    return !entry.lastRoomId && entry.watchedWithCount <= 1;
+  }
+
+  return true;
+}
+
+function buildCompanionFilters(
+  library: WatchLibraryResponse | null,
+  viewerUserId: string | null,
+): LibraryCompanionFilter[] {
+  const companionsByUserId = new Map<
+    string,
+    {
+      displayName: string;
+      avatarUrl: string | null;
+      sessionIds: Set<string>;
+    }
+  >();
+
+  for (const item of library?.items ?? []) {
+    for (const episode of item.episodes) {
+      for (const session of episode.sessions) {
+        if (session.kind !== "shared") {
+          continue;
+        }
+
+        for (const participant of session.participants) {
+          if (viewerUserId && participant.user.userId === viewerUserId) {
+            continue;
+          }
+
+          const existing = companionsByUserId.get(participant.user.userId) ?? {
+            displayName: participant.user.displayName,
+            avatarUrl: participant.user.avatarUrl,
+            sessionIds: new Set<string>(),
+          };
+          existing.sessionIds.add(session.id);
+          companionsByUserId.set(participant.user.userId, existing);
+        }
+      }
+    }
+  }
+
+  return Array.from(companionsByUserId.entries())
+    .map(([userId, companion]) => ({
+      value: `user:${userId}` as const,
+      userId,
+      displayName: companion.displayName,
+      avatarUrl: companion.avatarUrl,
+      sessionCount: companion.sessionIds.size,
+    }))
+    .sort(
+      (a, b) =>
+        b.sessionCount - a.sessionCount ||
+        a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }),
+    )
+    .slice(0, 12);
+}
+
+function countProviderItems(folders: ProviderFolder[]): number {
+  return folders.reduce((sum, folder) => sum + folder.items.length, 0);
+}
+
 function ProviderRow({
   busyWatchSessionId,
   folder,
@@ -949,6 +1761,7 @@ function ProviderRow({
   onToggle,
   openItems,
   onToggleItem,
+  viewerUserId,
 }: {
   busyWatchSessionId: string | null;
   folder: ProviderFolder;
@@ -958,6 +1771,7 @@ function ProviderRow({
   onToggle: () => void;
   openItems: Record<string, boolean>;
   onToggleItem: (itemId: string) => void;
+  viewerUserId: string | null;
 }) {
   const [activeKind, setActiveKind] = useState<"series" | "movie">("series");
   const seriesCount = folder.items.filter((item) => item.kind === "series").length;
@@ -1027,6 +1841,7 @@ function ProviderRow({
                 open={Boolean(openItems[item.id])}
                 onCreateRoomFromSession={onCreateRoomFromSession}
                 onToggle={() => onToggleItem(item.id)}
+                viewerUserId={viewerUserId}
               />
             ))
           ) : (
@@ -1046,6 +1861,7 @@ function WatchItemRow({
   open,
   onCreateRoomFromSession,
   onToggle,
+  viewerUserId,
 }: {
   busyWatchSessionId: string | null;
   item: StoredWatchItem;
@@ -1053,6 +1869,7 @@ function WatchItemRow({
   open: boolean;
   onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
   onToggle: () => void;
+  viewerUserId: string | null;
 }) {
   const episodes = Object.values(item.episodes ?? {}).sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
   const isSeries = item.kind === "series";
@@ -1064,6 +1881,7 @@ function WatchItemRow({
         item={item}
         libraryEpisode={libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, item.id))}
         onCreateRoomFromSession={onCreateRoomFromSession}
+        viewerUserId={viewerUserId}
       />
     );
   }
@@ -1093,6 +1911,7 @@ function WatchItemRow({
               key={episode.id}
               libraryEpisode={libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, episode.id))}
               onCreateRoomFromSession={onCreateRoomFromSession}
+              viewerUserId={viewerUserId}
             />
           ))}
         </div>
@@ -1106,11 +1925,13 @@ function MovieRow({
   item,
   libraryEpisode,
   onCreateRoomFromSession,
+  viewerUserId,
 }: {
   busyWatchSessionId: string | null;
   item: StoredWatchItem;
   libraryEpisode?: WatchLibraryEpisode;
   onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
+  viewerUserId: string | null;
 }) {
   const movieEpisode = getMovieEpisodeProgress(item);
 
@@ -1142,6 +1963,13 @@ function MovieRow({
             onCreateRoomFromSession={onCreateRoomFromSession}
             compact
           />
+          <SharedSessionSummary
+            busySessionId={busyWatchSessionId}
+            libraryEpisode={libraryEpisode}
+            onCreateRoomFromSession={onCreateRoomFromSession}
+            sourceUrl={item.sourceUrl}
+            viewerUserId={viewerUserId}
+          />
         </span>
       </div>
     </div>
@@ -1154,12 +1982,14 @@ function EpisodeRow({
   episodeIndex,
   libraryEpisode,
   onCreateRoomFromSession,
+  viewerUserId,
 }: {
   busyWatchSessionId: string | null;
   episode: StoredEpisodeProgress;
   episodeIndex: number;
   libraryEpisode?: WatchLibraryEpisode;
   onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
+  viewerUserId: string | null;
 }) {
   const selected = episodeIndex === 0;
 
@@ -1183,8 +2013,54 @@ function EpisodeRow({
           onCreateRoomFromSession={onCreateRoomFromSession}
           compact
         />
+        <SharedSessionSummary
+          busySessionId={busyWatchSessionId}
+          libraryEpisode={libraryEpisode}
+          onCreateRoomFromSession={onCreateRoomFromSession}
+          sourceUrl={episode.sourceUrl}
+          viewerUserId={viewerUserId}
+        />
       </span>
     </div>
+  );
+}
+
+function SharedSessionSummary({
+  busySessionId,
+  libraryEpisode,
+  onCreateRoomFromSession,
+  sourceUrl,
+  viewerUserId,
+}: {
+  busySessionId: string | null;
+  libraryEpisode?: WatchLibraryEpisode;
+  onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
+  sourceUrl: string;
+  viewerUserId: string | null;
+}) {
+  const session = latestSharedSession(libraryEpisode);
+  if (!session) {
+    return null;
+  }
+
+  return (
+    <span className="popup-session-summary">
+      <span className="popup-session-summary-main">
+        <AvatarStack participants={session.participants} compact />
+        <span>{sharedParticipantSummary(session.participants, viewerUserId)}</span>
+      </span>
+      <button
+        className="popup-session-summary-action"
+        disabled={busySessionId === session.id}
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onCreateRoomFromSession(session, libraryEpisode?.sourceUrl ?? sourceUrl);
+        }}
+      >
+        {busySessionId === session.id ? "Creating..." : "Continue"}
+      </button>
+    </span>
   );
 }
 
@@ -1334,6 +2210,34 @@ function sessionLabel(session: WatchLibrarySession): string {
     return count === 1 ? "Watched together" : `Watched together · ${count}`;
   }
   return "Your progress";
+}
+
+function latestSharedSession(libraryEpisode?: WatchLibraryEpisode): WatchLibrarySession | null {
+  return (
+    [...(libraryEpisode?.sessions ?? [])]
+      .filter((session) => session.kind === "shared")
+      .sort((a, b) => watchedAtMs(b.lastWatchedAt) - watchedAtMs(a.lastWatchedAt))[0] ?? null
+  );
+}
+
+function sharedParticipantSummary(participants: WatchLibraryParticipantLike[], viewerUserId: string | null): string {
+  const names = participants
+    .filter((participant) => !viewerUserId || participant.user.userId !== viewerUserId)
+    .map((participant) => participant.user.displayName)
+    .filter(Boolean);
+  if (!names.length) {
+    return "Watched together";
+  }
+
+  const visibleNames = names.slice(0, 2);
+  const remainingCount = names.length - visibleNames.length;
+  const people = remainingCount > 0 ? `${visibleNames.join(", ")} +${remainingCount}` : visibleNames.join(", ");
+  return `Watched with ${people}`;
+}
+
+function watchedAtMs(value: string): number {
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 function sessionVisualKind(session: WatchLibrarySession): "friends" | "solo" {
