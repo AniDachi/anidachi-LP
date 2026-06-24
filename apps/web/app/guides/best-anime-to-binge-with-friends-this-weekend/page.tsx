@@ -107,7 +107,6 @@ export default function BestAnimeToBingeWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Anime to Binge With Friends This Weekend (2026)
@@ -526,14 +525,6 @@ export default function BestAnimeToBingeWithFriendsPage() {
             Watch anime together online — complete guide
           </Link>
         </li>
-      </ul>
-
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-anime-to-binge-with-friends-this-weekend"
-        pageTemplate="listicle"
-        placement="content_bottom"
-        className="mt-6"
-      />
-    </SeoPageLayout>
+      </ul></SeoPageLayout>
   );
 }

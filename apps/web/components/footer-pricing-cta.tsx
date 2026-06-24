@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { inferPageTemplateFromPath, trackConversion } from "@/lib/conversion-events";
+import { PRICING_CTA_LABEL } from "@/lib/home-survey";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
 export function FooterPricingCta({ className = "" }: { className?: string }) {
@@ -24,8 +25,7 @@ export function FooterPricingCta({ className = "" }: { className?: string }) {
         openSurvey({ placement: "footer", ctaVariant: "footer_pricing" });
       }}
     >
-      Join the waitlist
+      {PRICING_CTA_LABEL}
     </Link>
   );
 }
-

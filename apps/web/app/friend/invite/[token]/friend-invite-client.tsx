@@ -79,7 +79,7 @@ export function FriendInviteClient({ sender, token }: Props) {
       </div>
 
       {accepted ? (
-        <div className="mt-6 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+        <div className="mt-6 rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-4 py-3 text-sm text-brand-orange">
           <Check className="mr-2 inline h-4 w-4" aria-hidden />
           You are friends now.
         </div>

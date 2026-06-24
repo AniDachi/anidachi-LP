@@ -94,7 +94,6 @@ export default function BestRomanceAnimeWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Romance Anime to Watch With Friends (2026)
@@ -268,14 +267,6 @@ export default function BestRomanceAnimeWithFriendsPage() {
         <li><Link href="/watch-shoujo-anime-with-friends" className="hover:underline">Watch shoujo anime with friends — genre hub</Link></li>
         <li><Link href="/watch-anime-together" className="hover:underline">Watch anime together online — complete guide</Link></li>
         <li><Link href="/best-anime-for-long-distance-relationships" className="hover:underline">Best anime for long-distance relationships</Link></li>
-      </ul>
-
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-romance-anime-to-watch-with-friends"
-        pageTemplate="listicle"
-        placement="content_bottom"
-        className="mt-6"
-      />
-    </SeoPageLayout>
+      </ul></SeoPageLayout>
   );
 }

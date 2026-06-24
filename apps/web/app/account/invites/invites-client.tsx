@@ -150,7 +150,7 @@ function formatDate(value: string): string {
 }
 
 function statusTone(status: string): string {
-  if (status === "accepted") return "bg-emerald-500/15 text-emerald-200";
+  if (status === "accepted") return "bg-brand-orange/15 text-brand-orange";
   if (status === "declined") return "bg-red-500/15 text-red-200";
   if (status === "expired") return "bg-amber-500/15 text-amber-200";
   return "bg-brand-orange/15 text-brand-orange";
@@ -263,7 +263,7 @@ export function InvitesClient() {
         <div
           className={`rounded-lg border px-4 py-3 text-sm ${
             notice.tone === "success"
-              ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
+              ? "border-brand-orange/30 bg-brand-orange/10 text-brand-orange"
               : "border-red-400/30 bg-red-500/10 text-red-200"
           }`}
           role="status"

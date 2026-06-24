@@ -108,7 +108,6 @@ export default function BestAnimeWithFriendsPage() {
       faq={faq}
       headings={headings}
       itemList={itemList}
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Anime to Watch with Friends in 2026 — 115+ Picks

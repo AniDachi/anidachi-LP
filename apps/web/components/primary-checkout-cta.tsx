@@ -108,7 +108,7 @@ export function PrimaryCheckoutCta({
   return (
     <div
       ref={rootRef}
-      className={`mx-auto w-full max-w-4xl rounded-lg border border-brand-border border-l-2 border-l-brand-orange/70 bg-brand-surface/60 px-4 py-4 sm:px-5 ${className}`.trim()}
+      className={`not-prose mx-auto w-full max-w-4xl rounded-lg border border-brand-border border-l-2 border-l-brand-orange/70 bg-brand-surface/60 px-4 py-4 sm:px-5 ${className}`.trim()}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
         <div className="min-w-0 flex-1 text-left">

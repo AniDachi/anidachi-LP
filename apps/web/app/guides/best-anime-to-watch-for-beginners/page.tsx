@@ -90,7 +90,6 @@ export default function BestAnimeForBeginnersPage() {
       faq={faq}
       headings={headings}
       itemList={itemList}
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         29 Best Anime to Watch for Beginners in 2026

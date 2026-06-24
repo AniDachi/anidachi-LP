@@ -83,17 +83,17 @@ function passesSurveyDateRange(
 function contactStatusBadgeClass(status: string): string {
   switch (status) {
     case "active":
-      return "bg-green-100 text-green-900";
+      return "bg-brand-orange/15 text-brand-orange";
     case "replied":
-      return "bg-blue-100 text-blue-900";
+      return "bg-blue-500/15 text-blue-400";
     case "booked":
-      return "bg-indigo-100 text-indigo-900";
+      return "bg-brand-orange/20 text-brand-orange-bright";
     case "closed":
-      return "bg-brand-surface text-foreground";
+      return "bg-brand-surface text-foreground/60";
     case "dnc":
-      return "bg-red-100 text-red-900";
+      return "bg-destructive/15 text-destructive";
     default:
-      return "bg-violet-100 text-violet-900";
+      return "bg-brand-surface text-foreground/70";
   }
 }
 
@@ -121,7 +121,7 @@ function SurveyAnswersSummary({ tags }: { tags: ParsedSurveyTags }) {
 
   if (entries.length === 0) {
     return (
-      <p className="text-sm text-violet-800/80">
+      <p className="text-sm text-foreground/60">
         No survey answers recorded on this contact yet.
       </p>
     );
@@ -132,12 +132,12 @@ function SurveyAnswersSummary({ tags }: { tags: ParsedSurveyTags }) {
       {entries.map(({ key, label, value }) => (
         <div
           key={key}
-          className="rounded-md border border-violet-200/80 bg-white/80 px-3 py-2"
+          className="rounded-md border border-brand-border bg-brand-surface px-3 py-2"
         >
-          <dt className="text-[11px] font-medium uppercase tracking-wide text-violet-700">
+          <dt className="text-[11px] font-medium uppercase tracking-wide text-brand-orange/80">
             {label}
           </dt>
-          <dd className="text-sm font-medium text-violet-950">{value}</dd>
+          <dd className="text-sm font-medium text-foreground">{value}</dd>
         </div>
       ))}
     </dl>
@@ -150,7 +150,7 @@ function LogoutButton() {
     <Button
       type="button"
       variant="outline"
-      className="border-purple-300 text-purple-900 hover:bg-brand-orange/25"
+      className="border-brand-border text-foreground/80 hover:bg-brand-orange/10 hover:text-brand-orange"
       onClick={async () => {
         await fetch("/api/kreatli-crm/logout", { method: "POST" });
         router.push("/kreatli-email-crm/login");
@@ -186,26 +186,26 @@ function GoogleAdsBanner() {
   const oauthCallbackUrl = useGoogleAdsOAuthCallbackUrl();
   return (
     <section
-      className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950"
+      className="mb-6 rounded-lg border border-brand-orange/30 bg-brand-orange/10 p-4 text-sm text-foreground"
       aria-labelledby="google-ads-connect-heading"
     >
       <h2
         id="google-ads-connect-heading"
-        className="mb-2 text-base font-semibold text-emerald-950"
+        className="mb-2 text-base font-semibold text-foreground"
       >
         Google Ads (Keyword Planner)
       </h2>
-      <p className="mb-3 text-emerald-900">
+      <p className="mb-3 text-foreground/80">
         Connect once to store a refresh token for Keyword Planner API calls.
         Sign in with the Google account that has access to customer ID{" "}
-        <code className="rounded bg-white/80 px-1">572-335-2650</code>.
+        <code className="rounded bg-brand-surface px-1">572-335-2650</code>.
       </p>
       <div className="flex flex-wrap items-center gap-3">
-        <Button asChild className="bg-emerald-700 hover:bg-emerald-800">
+        <Button asChild className="bg-brand-orange hover:bg-brand-orange-deep">
           <a href="/api/google-ads/oauth/connect">Connect Google Ads</a>
         </Button>
       </div>
-      <p className="mt-3 text-xs text-emerald-900/85">
+      <p className="mt-3 text-xs text-foreground/70">
         Add this redirect URI in Google Cloud (same AniDachi OAuth client) and
         enable scope{" "}
         <code className="rounded bg-white/70 px-1">.../auth/adwords</code> on
@@ -224,47 +224,47 @@ function GmailBanner({ status }: { status: GmailUiStatus }) {
   if (!status.configured) {
     return (
       <section
-        className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+        className="mb-6 rounded-lg border border-brand-orange/40 bg-brand-orange/10 p-4 text-sm text-foreground"
         aria-labelledby="gmail-banner-heading"
       >
         <h2
           id="gmail-banner-heading"
-          className="mb-2 text-base font-semibold text-amber-950"
+          className="mb-2 text-base font-semibold text-foreground"
         >
           Gmail
         </h2>
-        <p className="mb-3 text-amber-900">
+        <p className="mb-3 text-foreground/80">
           The <strong>Connect Gmail</strong> action is hidden until Google OAuth
           env vars are set. Add{" "}
-          <code className="rounded bg-white/80 px-1">GOOGLE_CLIENT_ID</code> and{" "}
-          <code className="rounded bg-white/80 px-1">GOOGLE_CLIENT_SECRET</code>{" "}
-          to <code className="rounded bg-white/80 px-1">.env.local</code>, then{" "}
+          <code className="rounded bg-brand-surface px-1">GOOGLE_CLIENT_ID</code> and{" "}
+          <code className="rounded bg-brand-surface px-1">GOOGLE_CLIENT_SECRET</code>{" "}
+          to <code className="rounded bg-brand-surface px-1">.env.local</code>, then{" "}
           <strong>restart</strong>{" "}
-          <code className="rounded bg-white/80 px-1">npm run dev</code> and
+          <code className="rounded bg-brand-surface px-1">npm run dev</code> and
           reload this page — the blue Connect button will show here.
         </p>
         <div className="mb-3 flex flex-wrap items-center gap-3">
           <Button
             type="button"
             disabled
-            className="cursor-not-allowed bg-amber-200/80 text-amber-900 opacity-90 hover:bg-amber-200/80"
+            className="cursor-not-allowed bg-brand-orange/20 text-foreground/80 opacity-90 hover:bg-brand-orange/20"
             title="Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, restart dev server, then reload"
           >
             Connect Gmail
           </Button>
-          <span className="text-xs text-amber-800/90">
+          <span className="text-xs text-foreground/60">
             Inactive until OAuth credentials are in env.
           </span>
         </div>
-        <p className="text-amber-900/90">
+        <p className="text-foreground/70">
           In Google Cloud Console, create OAuth credentials (Web application)
           and add this <strong>authorized redirect URI</strong> (must match
           exactly — this page uses your current origin):
         </p>
-        <code className="mt-1 mb-2 block break-all rounded bg-white/80 px-1 py-0.5">
+        <code className="mt-1 mb-2 block break-all rounded bg-brand-surface px-1 py-0.5">
           {oauthCallbackUrl}
         </code>
-        <p className="text-amber-900/90">
+        <p className="text-foreground/70">
           Enable the <strong>Gmail API</strong> for the project. Scope used:
           send only.
         </p>
@@ -303,12 +303,12 @@ function GmailBanner({ status }: { status: GmailUiStatus }) {
   }
   return (
     <section
-      className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-950"
+      className="mb-6 rounded-lg border border-brand-orange/30 bg-brand-orange/10 p-4 text-sm text-foreground"
       aria-labelledby="gmail-connected-heading"
     >
       <h2
         id="gmail-connected-heading"
-        className="mb-2 text-base font-semibold text-green-950"
+        className="mb-2 text-base font-semibold text-foreground"
       >
         Gmail
       </h2>
@@ -324,7 +324,7 @@ function GmailBanner({ status }: { status: GmailUiStatus }) {
           type="button"
           variant="outline"
           size="sm"
-          className="border-green-600 text-green-900 hover:bg-green-100"
+          className="border-brand-orange text-foreground/80 hover:bg-brand-orange/15"
           onClick={async () => {
             await fetch("/api/kreatli-crm/gmail/disconnect", {
               method: "POST",
@@ -335,7 +335,7 @@ function GmailBanner({ status }: { status: GmailUiStatus }) {
           Disconnect Gmail
         </Button>
       </div>
-      <p className="mt-3 text-xs leading-relaxed text-green-900/90">
+      <p className="mt-3 text-xs leading-relaxed text-foreground/70">
         Recipients see the <strong>From</strong> header Gmail attaches for the
         mailbox used on send — not only what Gmail Settings shows. Open{" "}
         <strong>Show original</strong> on a received message and confirm the
@@ -361,16 +361,16 @@ function GmailBanner({ status }: { status: GmailUiStatus }) {
         </code>{" "}
         or reconnect so the stored profile matches.
       </p>
-      <ul className="mt-2 list-inside list-disc text-xs text-green-900/85">
+      <ul className="mt-2 list-inside list-disc text-xs text-foreground/60">
         <li>
           <code className="rounded bg-white/70 px-1">
             GOOGLE_GMAIL_SENDER_NAME
           </code>{" "}
           on this server:{" "}
           {status.senderDisplayNameEnvSet ? (
-            <span className="font-medium text-green-800">set</span>
+            <span className="font-medium text-brand-orange">set</span>
           ) : (
-            <span className="font-medium text-amber-800">
+            <span className="font-medium text-brand-orange">
               not set — the API will not sync send-as display name; set it in
               env and restart
             </span>
@@ -670,20 +670,20 @@ export function CrmClient({
     <main className="container mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-purple-950">
+          <h1 className="text-2xl font-bold text-foreground">
             Kreatli Email CRM
           </h1>
           {activeTab === "contacts" ? (
             <p className="text-sm text-brand-orange/80">
               Data:{" "}
-              <code className="rounded bg-brand-orange/15/80 px-1">crm-data/</code> ·
+              <code className="rounded bg-brand-orange/15 px-1">crm-data/</code> ·
               CLI:{" "}
-              <code className="rounded bg-brand-orange/15/80 px-1">
+              <code className="rounded bg-brand-orange/15 px-1">
                 npm run crm -- doctor
               </code>
             </p>
           ) : (
-            <p className="text-sm text-violet-900/85">
+            <p className="text-sm text-foreground/70">
               Homepage plan survey leads — review, filter, and export.
             </p>
           )}
@@ -693,7 +693,7 @@ export function CrmClient({
             <Button
               type="button"
               variant="secondary"
-              className="border border-brand-orange/30 bg-background text-purple-900 hover:bg-brand-orange/20"
+              className="border border-brand-orange/30 bg-background text-foreground/80 hover:bg-brand-orange/20"
               onClick={() => runExport()}
             >
               Export CSV
@@ -703,7 +703,7 @@ export function CrmClient({
               <Button
                 type="button"
                 variant="secondary"
-                className="border border-violet-200 bg-background text-violet-900 hover:bg-violet-50"
+                className="border border-brand-border bg-background text-foreground/80 hover:bg-brand-surface"
                 onClick={() => router.refresh()}
               >
                 Refresh
@@ -711,7 +711,7 @@ export function CrmClient({
               <Button
                 type="button"
                 variant="secondary"
-                className="border border-violet-200 bg-background text-violet-900 hover:bg-violet-50"
+                className="border border-brand-border bg-background text-foreground/80 hover:bg-brand-surface"
                 onClick={() => copyFilteredSurveyLeadsTsv()}
               >
                 Copy as TSV
@@ -719,7 +719,7 @@ export function CrmClient({
               <Button
                 type="button"
                 variant="secondary"
-                className="border border-violet-200 bg-background text-violet-900 hover:bg-violet-50"
+                className="border border-brand-border bg-background text-foreground/80 hover:bg-brand-surface"
                 onClick={() => runExportSurveyLeads()}
               >
                 Export survey leads
@@ -732,7 +732,7 @@ export function CrmClient({
 
       {gmailFlash ? (
         <div
-          className="mb-4 rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-4 py-2 text-sm text-purple-900"
+          className="mb-4 rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-4 py-2 text-sm text-foreground/80"
           role="status"
         >
           {gmailFlash}
@@ -754,7 +754,7 @@ export function CrmClient({
       ) : null}
 
       <div
-        className="mb-8 flex flex-wrap gap-1 rounded-xl border border-brand-orange/30/80 bg-brand-orange/10/60 p-1"
+        className="mb-8 flex flex-wrap gap-1 rounded-xl border border-brand-border bg-brand-surface p-1"
         role="tablist"
         aria-label="CRM sections"
       >
@@ -764,8 +764,8 @@ export function CrmClient({
           aria-selected={activeTab === "contacts"}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === "contacts"
-              ? "bg-background text-purple-950 shadow-sm"
-              : "text-brand-orange hover:bg-white/60"
+              ? "bg-brand-orange text-primary-foreground shadow-sm"
+              : "text-foreground/60 hover:bg-brand-orange/10"
           }`}
           onClick={() => {
             setActiveTab("contacts");
@@ -780,8 +780,8 @@ export function CrmClient({
           aria-selected={activeTab === "survey_leads"}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === "survey_leads"
-              ? "bg-background text-purple-950 shadow-sm"
-              : "text-brand-orange hover:bg-white/60"
+              ? "bg-brand-orange text-primary-foreground shadow-sm"
+              : "text-foreground/60 hover:bg-brand-orange/10"
           }`}
           onClick={() => {
             setActiveTab("survey_leads");
@@ -794,17 +794,17 @@ export function CrmClient({
 
       {activeTab === "contacts" ? (
         <>
-      <section className="mb-10 rounded-xl border border-amber-200/80 bg-amber-50/90 p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-amber-950">
+      <section className="mb-10 rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-foreground">
           Due today (UTC)
         </h2>
-        <p className="mb-3 text-sm text-amber-900/80">
+        <p className="mb-3 text-sm text-foreground/70">
           Active contacts with{" "}
-          <code className="rounded bg-amber-100 px-1">next_action_date</code> on
+          <code className="rounded bg-brand-orange/15 px-1">next_action_date</code> on
           or before today. Null date = not in queue.
         </p>
         {due.length === 0 ? (
-          <p className="text-sm text-amber-900/70">
+          <p className="text-sm text-foreground/60">
             Nobody due. You are clear.
           </p>
         ) : (
@@ -812,9 +812,9 @@ export function CrmClient({
             {due.map((c) => (
               <li
                 key={c.id}
-                className="rounded-md border border-amber-200/60 bg-white/80 px-3 py-2"
+                className="rounded-md border border-brand-border bg-brand-surface px-3 py-2"
               >
-                <span className="font-medium text-purple-950">{c.email}</span>
+                <span className="font-medium text-foreground">{c.email}</span>
                 {c.company ? (
                   <span className="text-brand-orange/80"> — {c.company}</span>
                 ) : null}
@@ -828,13 +828,13 @@ export function CrmClient({
         )}
       </section>
 
-      <section className="mb-10 rounded-xl border border-emerald-200/80 bg-emerald-50/80 p-6 shadow-sm">
-        <h2 className="mb-2 text-lg font-semibold text-emerald-950">
+      <section className="mb-10 rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-6 shadow-sm">
+        <h2 className="mb-2 text-lg font-semibold text-foreground">
           Import CSV / paste
         </h2>
-        <p className="mb-4 text-sm text-emerald-900/85">
+        <p className="mb-4 text-sm text-foreground/70">
           Paste from Sheets or open a{" "}
-          <code className="rounded bg-white/80 px-1">.csv</code> file. Headers
+          <code className="rounded bg-brand-surface px-1">.csv</code> file. Headers
           like <strong>email</strong>, <strong>company</strong>,{" "}
           <strong>first name</strong> are auto-mapped. Preview, then apply.
         </p>
@@ -842,7 +842,7 @@ export function CrmClient({
           <input
             type="file"
             accept=".csv,.txt,.tsv,text/csv"
-            className="text-sm text-emerald-950 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-700 file:px-3 file:py-1.5 file:text-sm file:text-foreground hover:file:bg-emerald-800"
+            className="text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-brand-orange file:px-3 file:py-1.5 file:text-sm file:text-foreground hover:file:bg-brand-orange-deep"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (!f) return;
@@ -859,18 +859,18 @@ export function CrmClient({
             onChange={(e) => setImportText(e.target.value)}
             rows={6}
             placeholder="email,company,first name&#10;a@b.co,Acme,Ada"
-            className="w-full rounded-md border border-emerald-200 bg-background px-3 py-2 font-mono text-sm text-purple-950 outline-none focus:ring-2 focus:ring-emerald-500/30"
+            className="w-full rounded-md border border-brand-orange/30 bg-background px-3 py-2 font-mono text-sm text-foreground outline-none focus:ring-2 focus:ring-brand-orange/20"
           />
           <input type="hidden" name="mode" value={importMode} />
           <div className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-2 text-sm text-emerald-950">
+            <label className="flex items-center gap-2 text-sm text-foreground">
               <span>Merge mode</span>
               <select
                 value={importMode}
                 onChange={(e) =>
                   setImportMode(e.target.value as "skip" | "upsert")
                 }
-                className="rounded-md border border-emerald-200 px-2 py-1 text-sm"
+                className="rounded-md border border-brand-orange/30 px-2 py-1 text-sm"
               >
                 <option value="skip">skip existing emails</option>
                 <option value="upsert">
@@ -890,7 +890,7 @@ export function CrmClient({
             <Button
               type="submit"
               disabled={applyPending || !importText.trim()}
-              className="bg-emerald-700 hover:bg-emerald-800"
+              className="bg-brand-orange hover:bg-brand-orange-deep"
             >
               {applyPending ? "Applying…" : "Apply import"}
             </Button>
@@ -902,15 +902,15 @@ export function CrmClient({
           ) : null}
         </form>
         {importCounts ? (
-          <p className="mt-3 text-sm text-emerald-900">
+          <p className="mt-3 text-sm text-foreground/80">
             Preview: +{importCounts.create} new · {importCounts.skip} skip ·{" "}
             {importCounts.update} update
           </p>
         ) : null}
         {importPreview && importPreview.length > 0 ? (
-          <div className="mt-3 max-h-48 overflow-auto rounded-md border border-emerald-200 bg-background text-xs">
+          <div className="mt-3 max-h-48 overflow-auto rounded-md border border-brand-orange/30 bg-background text-xs">
             <table className="w-full border-collapse text-left">
-              <thead className="sticky top-0 bg-emerald-100/90">
+              <thead className="sticky top-0 bg-brand-surface">
                 <tr>
                   <th className="p-2">Action</th>
                   <th className="p-2">Email</th>
@@ -919,7 +919,7 @@ export function CrmClient({
               </thead>
               <tbody>
                 {importPreview.slice(0, 200).map((row, i) => (
-                  <tr key={i} className="border-t border-emerald-100">
+                  <tr key={i} className="border-t border-brand-border">
                     <td className="p-2 font-medium">{row.action}</td>
                     <td className="p-2">{row.email}</td>
                     <td className="p-2 text-brand-orange">{row.detail}</td>
@@ -936,78 +936,78 @@ export function CrmClient({
         ) : null}
       </section>
 
-      <section className="mb-10 rounded-xl border border-brand-orange/30/80 bg-white/90 p-6 shadow-md backdrop-blur">
-        <h2 className="mb-4 text-lg font-semibold text-purple-950">
+      <section className="mb-10 rounded-xl border border-brand-orange/30/80 bg-brand-surface p-6 shadow-md backdrop-blur">
+        <h2 className="mb-4 text-lg font-semibold text-foreground">
           Add contact
         </h2>
         <form action={addFormAction} className="grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-xs font-medium text-purple-900">
+            <label className="mb-1 block text-xs font-medium text-foreground/80">
               Email *
             </label>
             <input
               name="email"
               type="email"
               required
-              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-foreground outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-purple-900">
+            <label className="mb-1 block text-xs font-medium text-foreground/80">
               Company
             </label>
             <input
               name="company"
               type="text"
-              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-foreground outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-purple-900">
+            <label className="mb-1 block text-xs font-medium text-foreground/80">
               First name
             </label>
             <input
               name="first_name"
               type="text"
-              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-foreground outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-xs font-medium text-purple-900">
+            <label className="mb-1 block text-xs font-medium text-foreground/80">
               Segments (comma-separated)
             </label>
             <input
               name="segments"
               type="text"
               placeholder="e.g. Austin video, warm intro"
-              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-foreground outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-xs font-medium text-purple-900">
+            <label className="mb-1 block text-xs font-medium text-foreground/80">
               Notes
             </label>
             <textarea
               name="notes"
               rows={2}
-              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-foreground outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-purple-900">
+            <label className="mb-1 block text-xs font-medium text-foreground/80">
               Next action date
             </label>
             <input
               name="next_action_date"
               type="date"
-              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-foreground outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
           <div className="flex items-end sm:col-span-2">
             <Button
               type="submit"
               disabled={addPending}
-              className="bg-brand-orange hover:bg-purple-800"
+              className="bg-brand-orange hover:bg-brand-orange-deep"
             >
               {addPending ? "Adding…" : "Add contact"}
             </Button>
@@ -1022,12 +1022,12 @@ export function CrmClient({
 
       <section>
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="text-lg font-semibold text-purple-950">
+          <h2 className="text-lg font-semibold text-foreground">
             All contacts ({filtered.length}
             {segmentFilter ? ` of ${outreachContacts.length}` : ""})
           </h2>
           <div className="flex max-w-md flex-1 flex-col gap-1">
-            <label className="text-xs font-medium text-purple-900">
+            <label className="text-xs font-medium text-foreground/80">
               Filter by segment (substring)
             </label>
             <input
@@ -1035,7 +1035,7 @@ export function CrmClient({
               value={segmentFilter}
               onChange={(e) => setSegmentFilter(e.target.value)}
               placeholder="e.g. video"
-              className="rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:ring-2 focus:ring-purple-500/25"
+              className="rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
         </div>
@@ -1064,7 +1064,7 @@ export function CrmClient({
             <div>
               <h2
                 id="survey-leads-heading"
-                className="text-lg font-semibold text-violet-950"
+                className="text-lg font-semibold text-foreground"
               >
                 Survey leads ({sortedSurveyLeads.length}
                 {sortedSurveyLeads.length !== surveyLeads.length
@@ -1072,33 +1072,33 @@ export function CrmClient({
                   : ""}
                 )
               </h2>
-              <p className="mt-1 text-sm text-violet-900/85">
+              <p className="mt-1 text-sm text-foreground/70">
                 Homepage plan survey captures — kept separate from outreach
                 contacts.
               </p>
             </div>
             {copyTsvMsg ? (
-              <p className="text-xs text-violet-700" role="status">
+              <p className="text-xs text-brand-orange/80" role="status">
                 {copyTsvMsg}
               </p>
             ) : null}
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2">
-            <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-900">
+            <span className="rounded-full bg-brand-orange/15 px-3 py-1 text-xs font-medium text-foreground/80">
               {surveyStats.total} total
             </span>
-            <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-900">
+            <span className="rounded-full bg-brand-orange/15 px-3 py-1 text-xs font-medium text-foreground/80">
               {surveyStats.thisWeek} this week
             </span>
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-950">
+            <span className="rounded-full bg-brand-orange/20 px-3 py-1 text-xs font-medium text-brand-orange">
               {surveyStats.highIntent} high intent
             </span>
           </div>
 
           <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div className="lg:col-span-2">
-              <label className="mb-1 block text-xs font-medium text-violet-900">
+              <label className="mb-1 block text-xs font-medium text-foreground/80">
                 Search email or survey answers
               </label>
               <input
@@ -1106,11 +1106,11 @@ export function CrmClient({
                 value={segmentFilter}
                 onChange={(e) => setSegmentFilter(e.target.value)}
                 placeholder="e.g. planning ahead, long distance"
-                className="w-full rounded-md border border-violet-200 px-3 py-2 text-sm text-violet-950 outline-none focus:ring-2 focus:ring-violet-500/25"
+                className="w-full rounded-md border border-brand-border px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-brand-orange/20"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-violet-900">
+              <label className="mb-1 block text-xs font-medium text-foreground/80">
                 Timing
               </label>
               <select
@@ -1118,7 +1118,7 @@ export function CrmClient({
                 onChange={(e) =>
                   setSurveyFilters((f) => ({ ...f, timing: e.target.value }))
                 }
-                className="w-full rounded-md border border-violet-200 px-2 py-2 text-sm text-violet-950"
+                className="w-full rounded-md border border-brand-border px-2 py-2 text-sm text-foreground"
               >
                 <option value="">All</option>
                 {surveyFilterOptions.timing.map((v) => (
@@ -1129,7 +1129,7 @@ export function CrmClient({
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-violet-900">
+              <label className="mb-1 block text-xs font-medium text-foreground/80">
                 Who
               </label>
               <select
@@ -1137,7 +1137,7 @@ export function CrmClient({
                 onChange={(e) =>
                   setSurveyFilters((f) => ({ ...f, segment: e.target.value }))
                 }
-                className="w-full rounded-md border border-violet-200 px-2 py-2 text-sm text-violet-950"
+                className="w-full rounded-md border border-brand-border px-2 py-2 text-sm text-foreground"
               >
                 <option value="">All</option>
                 {surveyFilterOptions.segment.map((v) => (
@@ -1148,7 +1148,7 @@ export function CrmClient({
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-violet-900">
+              <label className="mb-1 block text-xs font-medium text-foreground/80">
                 Priority
               </label>
               <select
@@ -1156,7 +1156,7 @@ export function CrmClient({
                 onChange={(e) =>
                   setSurveyFilters((f) => ({ ...f, priority: e.target.value }))
                 }
-                className="w-full rounded-md border border-violet-200 px-2 py-2 text-sm text-violet-950"
+                className="w-full rounded-md border border-brand-border px-2 py-2 text-sm text-foreground"
               >
                 <option value="">All</option>
                 {surveyFilterOptions.priority.map((v) => (
@@ -1167,7 +1167,7 @@ export function CrmClient({
               </select>
             </div>
             <div className="sm:col-span-2 lg:col-span-1">
-              <label className="mb-1 block text-xs font-medium text-violet-900">
+              <label className="mb-1 block text-xs font-medium text-foreground/80">
                 Captured
               </label>
               <select
@@ -1178,7 +1178,7 @@ export function CrmClient({
                     dateRange: e.target.value as SurveyDateRange,
                   }))
                 }
-                className="w-full rounded-md border border-violet-200 px-2 py-2 text-sm text-violet-950"
+                className="w-full rounded-md border border-brand-border px-2 py-2 text-sm text-foreground"
               >
                 <option value="all">All time</option>
                 <option value="7">Last 7 days</option>
@@ -1188,7 +1188,7 @@ export function CrmClient({
           </div>
 
           <p
-            className="mb-3 text-xs text-violet-800/80"
+            className="mb-3 text-xs text-foreground/60"
             aria-live="polite"
           >
             Showing {sortedSurveyLeads.length} lead
@@ -1196,14 +1196,14 @@ export function CrmClient({
           </p>
 
           {sortedSurveyLeads.length === 0 ? (
-            <div className="rounded-xl border border-violet-200/80 bg-violet-50/50 p-6 text-sm text-violet-800/90">
+            <div className="rounded-xl border border-brand-border bg-brand-surface p-6 text-sm text-foreground/60">
               {surveyLeads.length === 0 ? (
                 <>
                   No survey leads yet. They appear here when someone saves their
                   plan in the homepage survey.{" "}
                   <Link
                     href="/#pick-a-plan"
-                    className="font-medium text-violet-700 underline hover:text-violet-900"
+                    className="font-medium text-brand-orange/80 underline hover:text-foreground/80"
                   >
                     Test the survey
                   </Link>
@@ -1253,7 +1253,7 @@ function SurveySortHeader({
     <th className={`p-2 text-left ${className}`} scope="col">
       <button
         type="button"
-        className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-violet-800 hover:text-violet-950"
+        className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-foreground/60 hover:text-foreground"
         onClick={() => onSort(column)}
       >
         {label}
@@ -1287,11 +1287,11 @@ function SurveyLeadsTable({
   gmailConnected: boolean;
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-violet-200/80 bg-white/95 shadow-sm">
+    <div className="overflow-x-auto rounded-xl border border-brand-border bg-brand-surface shadow-sm">
       <table className="min-w-[960px] w-full border-collapse text-left text-sm">
-        <thead className="sticky top-0 z-10 bg-violet-50/95 backdrop-blur">
-          <tr className="border-b border-violet-200">
-            <th className="sticky left-0 z-20 bg-violet-50/95 p-2 text-xs font-semibold uppercase tracking-wide text-violet-800 backdrop-blur">
+        <thead className="sticky top-0 z-10 bg-brand-surface backdrop-blur">
+          <tr className="border-b border-brand-border">
+            <th className="sticky left-0 z-20 bg-brand-surface p-2 text-xs font-semibold uppercase tracking-wide text-foreground/60 backdrop-blur">
               <span className="sr-only">Expand</span>
             </th>
             <SurveySortHeader
@@ -1300,7 +1300,7 @@ function SurveyLeadsTable({
               sortKey={sortKey}
               sortDir={sortDir}
               onSort={onSort}
-              className="sticky left-8 z-20 min-w-[200px] bg-violet-50/95 backdrop-blur"
+              className="sticky left-8 z-20 min-w-[200px] bg-brand-surface backdrop-blur"
             />
             <SurveySortHeader
               label="Captured"
@@ -1310,7 +1310,7 @@ function SurveyLeadsTable({
               onSort={onSort}
             />
             <th
-              className="p-2 text-xs font-semibold uppercase tracking-wide text-violet-800"
+              className="p-2 text-xs font-semibold uppercase tracking-wide text-foreground/60"
               scope="col"
             >
               Plan
@@ -1337,19 +1337,19 @@ function SurveyLeadsTable({
               onSort={onSort}
             />
             <th
-              className="p-2 text-xs font-semibold uppercase tracking-wide text-violet-800"
+              className="p-2 text-xs font-semibold uppercase tracking-wide text-foreground/60"
               scope="col"
             >
               Group
             </th>
             <th
-              className="p-2 text-xs font-semibold uppercase tracking-wide text-violet-800"
+              className="p-2 text-xs font-semibold uppercase tracking-wide text-foreground/60"
               scope="col"
             >
               Tool
             </th>
             <th
-              className="p-2 text-xs font-semibold uppercase tracking-wide text-violet-800"
+              className="p-2 text-xs font-semibold uppercase tracking-wide text-foreground/60"
               scope="col"
             >
               Discovery
@@ -1412,17 +1412,17 @@ function SurveyLeadTableRow({
   gmailConnected: boolean;
 }) {
   const urgency = surveyRowUrgencyClass(tags.timing);
-  const rowBg = expanded ? "bg-violet-50/60" : "bg-background";
+  const rowBg = expanded ? "bg-brand-orange/5" : "bg-background";
 
   return (
     <>
       <tr
-        className={`border-b border-violet-100 ${urgency} ${rowBg} hover:bg-violet-50/40`}
+        className={`border-b border-brand-border ${urgency} ${rowBg} hover:bg-brand-surface/80`}
       >
         <td className={`sticky left-0 z-[1] p-2 ${rowBg}`}>
           <button
             type="button"
-            className="rounded p-1 text-violet-700 hover:bg-violet-100"
+            className="rounded p-1 text-brand-orange/80 hover:bg-brand-orange/15"
             aria-expanded={expanded}
             aria-label={expanded ? "Collapse lead details" : "Expand lead details"}
             onClick={onToggleExpand}
@@ -1431,7 +1431,7 @@ function SurveyLeadTableRow({
           </button>
         </td>
         <td
-          className={`sticky left-8 z-[1] min-w-[200px] p-2 font-medium text-violet-950 ${rowBg}`}
+          className={`sticky left-8 z-[1] min-w-[200px] p-2 font-medium text-foreground ${rowBg}`}
         >
           <button
             type="button"
@@ -1441,7 +1441,7 @@ function SurveyLeadTableRow({
             {c.email}
           </button>
         </td>
-        <td className="whitespace-nowrap p-2 text-violet-800">
+        <td className="whitespace-nowrap p-2 text-foreground/60">
           {formatCapturedAt(c.updated_at)}
         </td>
         <td className="p-2">
@@ -1455,10 +1455,10 @@ function SurveyLeadTableRow({
             {planLabel}
           </span>
         </td>
-        <td className="p-2 text-violet-900">
+        <td className="p-2 text-foreground/80">
           {tags.segment ? formatSurveyValue(tags.segment) : "—"}
         </td>
-        <td className="p-2 text-violet-900">
+        <td className="p-2 text-foreground/80">
           {tags.priority ? formatSurveyValue(tags.priority) : "—"}
         </td>
         <td className="p-2">
@@ -1466,8 +1466,8 @@ function SurveyLeadTableRow({
             <span
               className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                 isHighIntentTiming(tags.timing)
-                  ? "bg-amber-100 text-amber-950"
-                  : "bg-violet-100 text-violet-900"
+                  ? "bg-brand-orange/15 text-foreground"
+                  : "bg-brand-orange/15 text-foreground/80"
               }`}
             >
               {formatSurveyValue(tags.timing)}
@@ -1476,15 +1476,15 @@ function SurveyLeadTableRow({
             "—"
           )}
         </td>
-        <td className="p-2 text-violet-900">
+        <td className="p-2 text-foreground/80">
           {tags.group_size ? formatSurveyValue(tags.group_size) : "—"}
         </td>
-        <td className="p-2 text-violet-900">
+        <td className="p-2 text-foreground/80">
           {tags.current_solution
             ? formatSurveyValue(tags.current_solution)
             : "—"}
         </td>
-        <td className="p-2 text-violet-900">
+        <td className="p-2 text-foreground/80">
           {tags.discovery ? formatSurveyValue(tags.discovery) : "—"}
         </td>
         <td className="p-2">
@@ -1496,27 +1496,27 @@ function SurveyLeadTableRow({
         </td>
       </tr>
       {expanded ? (
-        <tr className="border-b border-violet-200 bg-violet-50/40">
+        <tr className="border-b border-brand-border bg-brand-surface/80">
           <td colSpan={11} className="p-4">
             <div className="space-y-4">
               <div>
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-violet-700">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-brand-orange/80">
                   Survey answers
                 </p>
                 <SurveyAnswersSummary tags={tags} />
               </div>
               {c.notes.trim() ? (
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-violet-700">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-brand-orange/80">
                     Notes snapshot
                   </p>
-                  <pre className="max-h-40 overflow-auto rounded-md border border-violet-200 bg-white/90 p-3 text-xs whitespace-pre-wrap text-violet-950">
+                  <pre className="max-h-40 overflow-auto rounded-md border border-brand-border bg-brand-surface p-3 text-xs whitespace-pre-wrap text-foreground">
                     {c.notes}
                   </pre>
                 </div>
               ) : null}
-              <details className="rounded-lg border border-violet-200 bg-white/80">
-                <summary className="cursor-pointer px-4 py-2 text-sm font-medium text-violet-900">
+              <details className="rounded-lg border border-brand-border bg-brand-surface">
+                <summary className="cursor-pointer px-4 py-2 text-sm font-medium text-foreground/80">
                   Outreach tools (optional)
                 </summary>
                 <div className="px-4 pb-4">
@@ -1635,14 +1635,14 @@ function ContactCard({
     <Wrapper
       className={
         embedded
-          ? "border-t border-violet-100 pt-4"
-          : "rounded-xl border border-brand-orange/30/80 bg-white/95 p-5 shadow-sm"
+          ? "border-t border-brand-border pt-4"
+          : "rounded-xl border border-brand-orange/30/80 bg-brand-surface p-5 shadow-sm"
       }
     >
       {!embedded ? (
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h3 className="font-semibold text-purple-950">{c.email}</h3>
+          <h3 className="font-semibold text-foreground">{c.email}</h3>
           <p className="text-sm text-brand-orange/85">
             {[c.first_name, c.company].filter(Boolean).join(" · ") || "—"}
             {c.segments.length > 0 ? (
@@ -1662,15 +1662,15 @@ function ContactCard({
       ) : null}
 
       {templateSlugs.length > 0 ? (
-        <div className="mb-4 flex flex-wrap items-end gap-2 border-b border-purple-100 pb-4">
+        <div className="mb-4 flex flex-wrap items-end gap-2 border-b border-brand-border pb-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-purple-900">
+            <label className="mb-1 block text-xs font-medium text-foreground/80">
               Template → clipboard
             </label>
             <select
               value={tpl}
               onChange={(e) => setTpl(e.target.value)}
-              className="rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-purple-950"
+              className="rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-foreground"
             >
               {templateSlugs.map((s) => (
                 <option key={s} value={s}>
@@ -1706,7 +1706,7 @@ function ContactCard({
               type="text"
               value={sendSubject}
               onChange={(e) => setSendSubject(e.target.value)}
-              className="w-full rounded-md border border-sky-200 bg-background px-2 py-1.5 text-sm text-purple-950"
+              className="w-full rounded-md border border-sky-200 bg-background px-2 py-1.5 text-sm text-foreground"
               placeholder="Subject line"
             />
           </div>
@@ -1718,7 +1718,7 @@ function ContactCard({
               value={sendBody}
               onChange={(e) => setSendBody(e.target.value)}
               rows={8}
-              className="w-full rounded-md border border-sky-200 bg-background px-2 py-1.5 font-mono text-sm text-purple-950"
+              className="w-full rounded-md border border-sky-200 bg-background px-2 py-1.5 font-mono text-sm text-foreground"
               placeholder="Email body…"
             />
           </div>
@@ -1748,10 +1748,10 @@ function ContactCard({
           ) : null}
           {sendWarn ? (
             <div
-              className="rounded-md border border-amber-400 bg-amber-100 px-3 py-2 text-sm font-medium text-amber-950 shadow-sm"
+              className="rounded-md border border-brand-orange/50 bg-brand-orange/15 px-3 py-2 text-sm font-medium text-foreground shadow-sm"
               role="alert"
             >
-              <p className="text-xs font-semibold uppercase tracking-wide text-amber-900/90">
+              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
                 Sender display name
               </p>
               <p className="mt-1">{sendWarn}</p>
@@ -1759,7 +1759,7 @@ function ContactCard({
           ) : null}
           {sendDevFromMailbox ? (
             <div
-              className="rounded-md border border-sky-300 bg-white/90 px-3 py-2 text-xs text-sky-950"
+              className="rounded-md border border-sky-300 bg-brand-surface px-3 py-2 text-xs text-sky-950"
               role="status"
             >
               <span className="font-semibold text-sky-900">Dev:</span> this send
@@ -1776,17 +1776,17 @@ function ContactCard({
 
       <form
         action={updAction}
-        className="mb-4 grid gap-2 border-t border-purple-100 pt-4 sm:grid-cols-2"
+        className="mb-4 grid gap-2 border-t border-brand-border pt-4 sm:grid-cols-2"
       >
         <input type="hidden" name="id" value={c.id} />
         <div>
-          <label className="mb-1 block text-xs font-medium text-purple-900">
+          <label className="mb-1 block text-xs font-medium text-foreground/80">
             Status
           </label>
           <select
             name="status"
             defaultValue={c.status}
-            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-purple-950"
+            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-foreground"
           >
             <option value="active">active</option>
             <option value="replied">replied</option>
@@ -1796,25 +1796,25 @@ function ContactCard({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-purple-900">
+          <label className="mb-1 block text-xs font-medium text-foreground/80">
             Next action
           </label>
           <input
             name="next_action_date"
             type="date"
             defaultValue={c.next_action_date ?? ""}
-            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-purple-950"
+            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-foreground"
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-medium text-purple-900">
+          <label className="mb-1 block text-xs font-medium text-foreground/80">
             Notes
           </label>
           <textarea
             name="notes"
             rows={2}
             defaultValue={c.notes}
-            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-purple-950"
+            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-foreground"
           />
         </div>
         <div className="sm:col-span-2 flex flex-wrap gap-2">
@@ -1822,7 +1822,7 @@ function ContactCard({
             type="submit"
             size="sm"
             disabled={updPending}
-            className="bg-brand-orange hover:bg-purple-800"
+            className="bg-brand-orange hover:bg-brand-orange-deep"
           >
             {updPending ? "Saving…" : "Save"}
           </Button>
@@ -1834,18 +1834,18 @@ function ContactCard({
 
       <form
         action={touchAction}
-        className="mb-4 flex flex-wrap items-end gap-2 border-t border-purple-100 pt-4"
+        className="mb-4 flex flex-wrap items-end gap-2 border-t border-brand-border pt-4"
       >
         <input type="hidden" name="contact_id" value={c.id} />
         <div className="min-w-[200px] flex-1">
-          <label className="mb-1 block text-xs font-medium text-purple-900">
+          <label className="mb-1 block text-xs font-medium text-foreground/80">
             Log touch (summary)
           </label>
           <input
             name="summary"
             type="text"
             placeholder="e.g. 1st touch sent — intro Kreatli"
-            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-purple-950"
+            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-foreground"
           />
         </div>
         <Button
@@ -1862,14 +1862,14 @@ function ContactCard({
       </form>
 
       {touches.length > 0 ? (
-        <div className="mb-4 border-t border-purple-100 pt-3">
+        <div className="mb-4 border-t border-brand-border pt-3">
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-brand-orange">
             Recent touches
           </p>
-          <ul className="max-h-32 space-y-1 overflow-y-auto text-xs text-purple-900">
+          <ul className="max-h-32 space-y-1 overflow-y-auto text-xs text-foreground/80">
             {touches.slice(0, 8).map((t) => (
               <li key={t.id}>
-                <span className="text-purple-500">
+                <span className="text-brand-orange">
                   {t.sent_at.slice(0, 10)}
                 </span>{" "}
                 — {t.summary}
@@ -1879,7 +1879,7 @@ function ContactCard({
         </div>
       ) : null}
 
-      <form action={delAction} className="border-t border-purple-100 pt-3">
+      <form action={delAction} className="border-t border-brand-border pt-3">
         <input type="hidden" name="id" value={c.id} />
         <Button
           type="submit"

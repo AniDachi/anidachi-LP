@@ -110,7 +110,6 @@ export default function HowToWatchAnimeLongDistancePage() {
         dateModified="2026-06-23"
         faq={faq}
         headings={tocHeadings}
-        aboveFoldCta
       >
         <h1 className="text-4xl font-bold text-foreground mb-6">
           How to Watch Anime Long Distance

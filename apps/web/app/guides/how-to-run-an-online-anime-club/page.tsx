@@ -108,7 +108,6 @@ export default function HowToRunAnOnlineAnimeClubPage() {
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
-        aboveFoldCta
       >
         <h1 className="text-4xl font-bold text-foreground mb-6">
           How to run an online anime club

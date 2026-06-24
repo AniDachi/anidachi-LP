@@ -29,7 +29,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
   const planLabel = getPlanEntitlements(effectivePlan).label;
 
   return (
-    <main id="main-content" className="min-h-screen bg-slate-950 text-foreground/90">
+    <main id="main-content" className="min-h-screen bg-background text-foreground/90">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
         <header className="flex flex-col justify-between gap-4 border-b border-brand-border pb-6 lg:flex-row lg:items-end">
           <div className="min-w-0">

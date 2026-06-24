@@ -66,7 +66,6 @@ export default function AsyncWatchingGlossaryPage() {
       dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         What Is Asynchronous Anime Watching?

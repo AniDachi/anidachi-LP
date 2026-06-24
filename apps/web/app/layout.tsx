@@ -3,6 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/nav-bar";
+import {
+  ConditionalFooter,
+  ConditionalNav,
+} from "@/components/conditional-site-chrome";
 import { AnalyticsEvents } from "@/components/analytics-events";
 import { OrganizationJsonLd } from "@/components/json-ld";
 import { PlanSurveyProvider } from "@/components/plan-survey/plan-survey-provider";
@@ -82,9 +86,9 @@ export default function RootLayout({
           `}
         </Script>
         <PlanSurveyProvider>
-          <NavBar />
+          <ConditionalNav marketingNav={<NavBar />} />
           {children}
-          <Footer />
+          <ConditionalFooter marketingFooter={<Footer />} />
           <OrganizationJsonLd />
           <AnalyticsEvents />
         </PlanSurveyProvider>

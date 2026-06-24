@@ -75,7 +75,6 @@ export default function AniDachiVsTelepartyPage() {
       dateModified="2026-06-23"
       faq={faq}
       headings={headings}
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Teleparty: Which Is Better for Anime Watch Parties?

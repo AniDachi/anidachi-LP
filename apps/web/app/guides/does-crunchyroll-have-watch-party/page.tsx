@@ -78,7 +78,6 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
       dateModified="2026-06-21"
       faq={faq}
       headings={tocHeadings}
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         Does Crunchyroll Have a Watch Party Feature? (2026)

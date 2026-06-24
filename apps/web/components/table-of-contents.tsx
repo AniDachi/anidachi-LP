@@ -92,7 +92,7 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
 
   return (
     <>
-      <div className="lg:hidden mb-6 rounded-lg border border-brand-border bg-brand-surface/80 p-0 overflow-hidden">
+      <div className="mb-6 overflow-hidden rounded-lg border border-brand-border border-l-2 border-l-brand-orange/50 bg-brand-surface/80 lg:hidden">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -100,7 +100,7 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
           aria-expanded={open}
         >
           <span className="inline-flex items-center gap-2">
-            <List className="h-4 w-4 text-foreground/50" aria-hidden="true" />
+            <List className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
             Contents
           </span>
           <ChevronDown
@@ -115,7 +115,7 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
       </div>
 
       <div className="hidden lg:block">
-        <div className="sticky top-24 max-h-[min(80vh,32rem)] overflow-y-auto pr-1">
+        <div className="sticky top-24 max-h-[min(80vh,32rem)] overflow-y-auto rounded-lg border border-brand-border border-l-2 border-l-brand-orange/40 bg-brand-surface/40 py-3 pr-1 pl-1">
           {list}
         </div>
       </div>

@@ -6,6 +6,7 @@ import {
   getRoomMemberCount,
   isRoomMember,
 } from "@/lib/anidachi-auth/db";
+import { AuthPageCard, AuthPageShell } from "@/components/auth-page-shell";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { ExtensionCheck } from "./extension-check";
 import { WaitingRefresh } from "./waiting-refresh";
@@ -40,16 +41,14 @@ function buildLaunchUrl(sourceUrl: string, roomId: string): string | null {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-violet-950 via-slate-900 to-slate-950 px-4">
-      <div className="mx-auto w-full max-w-md">
-        <div className="rounded-2xl border border-brand-border bg-brand-orange/5 p-8 shadow-2xl backdrop-blur-sm">
-          <div className="mb-6 flex justify-center">
-            <AnidachiLogo size={48} className="ring-2 ring-white/10" />
-          </div>
-          {children}
+    <AuthPageShell maxWidth="max-w-md">
+      <AuthPageCard>
+        <div className="mb-6 flex justify-center">
+          <AnidachiLogo size={48} />
         </div>
-      </div>
-    </main>
+        {children}
+      </AuthPageCard>
+    </AuthPageShell>
   );
 }
 
@@ -67,7 +66,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
     return (
       <Shell>
         <div className="mb-1 flex items-center gap-2">
-          <span className="inline-block h-2 w-2 rounded-full bg-slate-500" />
+          <span className="inline-block h-2 w-2 rounded-full bg-foreground/30" />
           <span className="text-xs font-medium uppercase tracking-widest text-foreground/50">
             Ended
           </span>
@@ -105,7 +104,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
     return (
       <Shell>
         <div className="mb-1 flex items-center gap-2">
-          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-orange" />
           <span className="text-xs font-medium uppercase tracking-widest text-foreground/50">
             Waiting for host
           </span>
@@ -142,7 +141,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
       <div className="mb-1 flex items-center gap-2">
         <span
           className={`inline-block h-2 w-2 rounded-full ${
-            room.status === "live" ? "bg-emerald-400" : "bg-amber-400"
+            room.status === "live" ? "bg-brand-orange" : "bg-brand-orange/50"
           }`}
         />
         <span className="text-xs font-medium uppercase tracking-widest text-foreground/50">
@@ -173,7 +172,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
       </form>
 
       {isParticipant && launchUrl && (
-        <p className="mt-3 text-center text-xs text-slate-500">
+        <p className="mt-3 text-center text-xs text-foreground/45">
           You&apos;re already in this room — opening it relaunches your video tab.
         </p>
       )}

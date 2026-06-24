@@ -108,7 +108,6 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
-        aboveFoldCta
       >
         <h1 className="text-4xl font-bold text-foreground mb-6">
           Crunchyroll watch party not working? Here&apos;s how to fix it

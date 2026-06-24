@@ -74,7 +74,6 @@ export default function BestAnimeToWatchAsACouplePage() {
       headings={headings}
       itemList={itemList}
       articleImage={articleImageAbsolute}
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         20 best anime to watch as a couple in 2026

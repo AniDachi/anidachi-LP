@@ -88,7 +88,6 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
       dateModified="2026-06-21"
       faq={faq}
       headings={tocHeadings}
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         How to Watch Anime for Free With Friends Online (2026)

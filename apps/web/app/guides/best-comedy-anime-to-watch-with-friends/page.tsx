@@ -87,7 +87,6 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         12 best comedy anime to watch with friends in 2026

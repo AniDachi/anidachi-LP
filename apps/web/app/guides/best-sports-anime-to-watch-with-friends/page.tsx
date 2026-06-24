@@ -86,7 +86,6 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         9 best sports anime to watch with friends in 2026

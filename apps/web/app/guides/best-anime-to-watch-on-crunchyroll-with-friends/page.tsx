@@ -99,7 +99,6 @@ export default function BestAnimeOnCrunchyrollWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Anime to Watch on Crunchyroll With Friends (2026)
@@ -275,14 +274,6 @@ export default function BestAnimeOnCrunchyrollWithFriendsPage() {
         <li><Link href="/guides/how-to-watch-crunchyroll-with-friends" className="hover:underline">How to watch Crunchyroll with friends</Link></li>
         <li><Link href="/guides/does-crunchyroll-have-watch-party" className="hover:underline">Does Crunchyroll have a watch party feature?</Link></li>
         <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll together — complete guide</Link></li>
-      </ul>
-
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-anime-to-watch-on-crunchyroll-with-friends"
-        pageTemplate="listicle"
-        placement="content_bottom"
-        className="mt-6"
-      />
-    </SeoPageLayout>
+      </ul></SeoPageLayout>
   );
 }

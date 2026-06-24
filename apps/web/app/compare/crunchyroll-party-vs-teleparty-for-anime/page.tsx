@@ -86,7 +86,6 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         Crunchyroll Party vs Teleparty for anime watch parties

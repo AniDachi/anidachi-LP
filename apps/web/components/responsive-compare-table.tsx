@@ -15,7 +15,7 @@ export type CompareTableRow = {
 
 function CellIcon({ value }: { value: CompareCellValue }) {
   if (value === "yes")
-    return <Check className="h-5 w-5 text-green-600 shrink-0" aria-label="Yes" />;
+    return <Check className="h-5 w-5 shrink-0 text-brand-orange" aria-label="Yes" />;
   if (value === "no")
     return <X className="h-5 w-5 text-red-400 shrink-0" aria-label="No" />;
   if (value === "partial")
@@ -109,7 +109,7 @@ export function ResponsiveCompareTable({
                       key={col.id}
                       className={`border border-brand-border px-4 py-2 ${
                         col.highlight && !isIcon
-                          ? "font-medium text-green-400"
+                          ? "font-medium text-brand-orange"
                           : ""
                       } ${isIcon ? "text-center" : ""}`}
                     >

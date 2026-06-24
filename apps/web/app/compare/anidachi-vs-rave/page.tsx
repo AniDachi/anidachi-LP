@@ -88,7 +88,6 @@ export default function AniDachiVsRavePage() {
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Rave: Which Is Better for Anime Watch Parties?

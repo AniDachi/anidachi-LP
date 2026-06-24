@@ -144,7 +144,6 @@ export default function FirstAnimeWatchPartyChecklistPage() {
         headings={tocHeadings}
         itemList={prepItemList}
         articleImage={articleImageAbsolute}
-        aboveFoldCta
       >
         <h1 className="text-4xl font-bold text-foreground mb-6">
           First Anime Watch Party Checklist

@@ -143,7 +143,7 @@ export function WatchLibraryClient({
           className={`rounded-lg border px-4 py-3 text-sm ${
             notice.tone === "error"
               ? "border-red-400/25 bg-red-500/10 text-red-100"
-              : "border-emerald-400/25 bg-emerald-500/10 text-emerald-100"
+              : "border-brand-orange/25 bg-brand-orange/10 text-brand-orange"
           }`}
         >
           {notice.text}
@@ -248,7 +248,7 @@ function EpisodeRow({
         <p className="truncate text-sm font-semibold text-foreground">{episode.episodeTitle}</p>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-brand-surface">
           <span
-            className="block h-full rounded-full bg-gradient-to-r from-[--brand-orange] to-[--brand-orange-bright]"
+            className="block h-full rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright"
             style={{ width: `${Math.round(clampProgress(episode.progress) * 100)}%` }}
           />
         </div>

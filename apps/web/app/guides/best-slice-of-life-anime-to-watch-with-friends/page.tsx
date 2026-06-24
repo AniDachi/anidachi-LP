@@ -112,7 +112,6 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Slice of Life Anime to Watch With Friends (2026)
@@ -554,14 +553,6 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
             How to watch anime long distance
           </Link>
         </li>
-      </ul>
-
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-slice-of-life-anime-to-watch-with-friends"
-        pageTemplate="listicle"
-        placement="content_bottom"
-        className="mt-6"
-      />
-    </SeoPageLayout>
+      </ul></SeoPageLayout>
   );
 }

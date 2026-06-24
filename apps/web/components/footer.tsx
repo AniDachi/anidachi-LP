@@ -4,7 +4,7 @@ import { FooterPricingCta } from "@/components/footer-pricing-cta";
 
 export function Footer() {
   return (
-    <footer className="relative bg-background text-foreground py-16 overflow-hidden">
+    <footer className="relative overflow-hidden bg-background py-12 text-foreground">
       <div
         className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-orange to-transparent"
         aria-hidden
@@ -21,10 +21,9 @@ export function Footer() {
               wordmarkClassName="text-2xl font-bold text-foreground"
               className="mb-4"
             />
-            <p className="text-foreground/50 mb-4 max-w-md text-sm leading-relaxed">
-              AniDachi (アニ友) means &quot;anime friend.&quot; We built the
-              ultimate platform for watching anime together — create watchrooms,
-              sync Crunchyroll playback, and share every reaction with your crew.
+            <p className="mb-4 max-w-md text-sm leading-relaxed text-foreground/50">
+              AniDachi (アニ友) — watch anime with friends on Crunchyroll. Sync,
+              chat, and async watchrooms in one place.
             </p>
             <p className="text-xs text-foreground/40">
               Not affiliated with Crunchyroll, Sony, or any streaming platform.

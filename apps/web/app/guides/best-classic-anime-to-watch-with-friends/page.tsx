@@ -101,7 +101,6 @@ export default function BestClassicAnimeWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Classic Anime to Watch With Friends (2026)
@@ -474,14 +473,6 @@ export default function BestClassicAnimeWithFriendsPage() {
             Watch anime together online — complete guide
           </Link>
         </li>
-      </ul>
-
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-classic-anime-to-watch-with-friends"
-        pageTemplate="listicle"
-        placement="content_bottom"
-        className="mt-6"
-      />
-    </SeoPageLayout>
+      </ul></SeoPageLayout>
   );
 }

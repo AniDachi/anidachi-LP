@@ -147,6 +147,39 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  .seo-prose h1 {
+    @apply mb-5 text-4xl font-bold text-foreground md:text-5xl;
+  }
+
+  .seo-prose h2 {
+    @apply mb-3 mt-8 scroll-mt-24 text-2xl font-bold text-foreground;
+  }
+
+  .seo-prose h3 {
+    @apply mb-2 mt-6 scroll-mt-24 text-xl font-semibold text-foreground;
+  }
+
+  .seo-prose p {
+    @apply mb-4 leading-relaxed text-foreground/80;
+  }
+
+  .seo-prose ul,
+  .seo-prose ol {
+    @apply mb-4 space-y-2 text-foreground/80;
+  }
+
+  .seo-prose li {
+    @apply leading-relaxed;
+  }
+
+  .seo-prose a:not([class]) {
+    @apply text-brand-orange underline-offset-2 hover:text-brand-orange-bright hover:underline;
+  }
+
+  .seo-prose strong {
+    @apply font-semibold text-foreground;
+  }
 }
 
 @layer utilities {

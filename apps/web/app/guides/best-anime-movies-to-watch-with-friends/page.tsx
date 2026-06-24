@@ -115,7 +115,6 @@ export default function BestAnimeMoviesWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Anime Movies to Watch with Friends (2026)
@@ -463,14 +462,6 @@ export default function BestAnimeMoviesWithFriendsPage() {
             First anime watch party checklist
           </Link>
         </li>
-      </ul>
-
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-anime-movies-to-watch-with-friends"
-        pageTemplate="listicle"
-        placement="content_bottom"
-        className="mt-6"
-      />
-    </SeoPageLayout>
+      </ul></SeoPageLayout>
   );
 }

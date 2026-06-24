@@ -66,7 +66,6 @@ export default function AniDachiVsSyncplayPage() {
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
-      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Syncplay for anime watch parties
