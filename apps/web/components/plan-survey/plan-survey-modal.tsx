@@ -123,6 +123,15 @@ export function PlanSurveyModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
+  // Step 7: recover position if email submit did not return one (e.g. blob write misconfig).
+  useEffect(() => {
+    if (!isOpen || step !== 7 || waitlistPosition !== null || !emailInput.trim()) {
+      return;
+    }
+    void resolveWaitlistPosition(emailInput);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, step, waitlistPosition, emailInput]);
+
   // Track step views
   useEffect(() => {
     if (!isOpen) return;
@@ -305,6 +314,23 @@ export function PlanSurveyModal({
     }
   };
 
+  const resolveWaitlistPosition = async (email: string) => {
+    const trimmed = email.trim();
+    if (!trimmed) return;
+    try {
+      const res = await fetch(
+        `/api/waitlist-position?email=${encodeURIComponent(trimmed)}`,
+      );
+      if (!res.ok) return;
+      const data = (await res.json()) as { waitlistPosition?: number | null };
+      if (typeof data.waitlistPosition === "number" && data.waitlistPosition > 0) {
+        setWaitlistPosition(data.waitlistPosition);
+      }
+    } catch {
+      // Keep fallback copy if position lookup fails.
+    }
+  };
+
   const submitEmail = async () => {
     const trimmed = emailInput.trim();
     if (!trimmed) {
@@ -326,6 +352,8 @@ export function PlanSurveyModal({
       const data = (await res.json()) as { ok?: boolean; waitlistPosition?: number | null };
       if (typeof data.waitlistPosition === "number" && data.waitlistPosition > 0) {
         setWaitlistPosition(data.waitlistPosition);
+      } else if (res.ok) {
+        void resolveWaitlistPosition(trimmed);
       }
       setEmailSubmitted(true);
       setTimeout(() => setStep(6), 1200);

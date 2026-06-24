@@ -2,6 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getGmailRedirectUri, isGmailConfigured, sendPlaintextEmail } from "@/lib/kreatli-crm/gmail";
 import { readGmailTokens } from "@/lib/kreatli-crm/gmail-tokens";
 import { upsertSurveyLead } from "@/lib/kreatli-crm/survey-lead";
+import { waitlistPositionForEmail } from "@/lib/kreatli-crm/survey-lead-shared";
+import { readContacts } from "@/lib/kreatli-crm/store";
+import { normalizeEmail } from "@/lib/kreatli-crm/validation";
 import type { HomeSurveyAnswers } from "@/lib/home-survey";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
@@ -53,6 +56,12 @@ export async function POST(request: NextRequest) {
     }
   } catch (e) {
     console.error("[subscribe-interest] Failed to save to CRM:", email, e);
+    try {
+      const contacts = await readContacts();
+      waitlistPosition = waitlistPositionForEmail(contacts, normalizeEmail(email));
+    } catch (readError) {
+      console.error("[subscribe-interest] Failed to read waitlist position:", readError);
+    }
   }
 
   const toRaw = process.env.SUBSCRIPTION_NOTIFY_EMAILS;

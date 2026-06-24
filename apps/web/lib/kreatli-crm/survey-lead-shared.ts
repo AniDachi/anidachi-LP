@@ -28,7 +28,9 @@ export function waitlistPositionForEmail(
 ): number | null {
   const normalized = email.trim().toLowerCase();
   const ordered = listSurveyLeads(contacts);
-  const idx = ordered.findIndex((c) => c.email === normalized);
+  const idx = ordered.findIndex(
+    (c) => c.email.trim().toLowerCase() === normalized,
+  );
   return idx === -1 ? null : idx + 1;
 }
 

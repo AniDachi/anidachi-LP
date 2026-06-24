@@ -60,10 +60,14 @@ export async function upsertSurveyLead(
   }
 
   const contacts = await readContacts();
-  const idx = contacts.findIndex((c) => c.email === normalized);
+  const idx = contacts.findIndex(
+    (c) => normalizeEmail(c.email) === normalized,
+  );
   const now = new Date().toISOString();
   const segments = buildSurveySegments(survey);
   const surveyNote = buildSurveyNote(survey);
+
+  const wasExistingLead = idx !== -1;
 
   if (idx === -1) {
     const contact: Contact = {
@@ -92,7 +96,21 @@ export async function upsertSurveyLead(
     };
   }
 
-  await writeContacts(contacts);
+  try {
+    await writeContacts(contacts);
+  } catch (error) {
+    console.error("[survey-lead] Failed to write contacts:", error);
+    const persisted = await readContacts();
+    return {
+      saved: false,
+      reason: "write_failed",
+      waitlistCount: countSurveyLeads(persisted),
+      waitlistPosition: wasExistingLead
+        ? waitlistPositionForEmail(persisted, normalized)
+        : null,
+    };
+  }
+
   const waitlistCount = countSurveyLeads(contacts);
   const waitlistPosition = waitlistPositionForEmail(contacts, normalized);
   return { saved: true, waitlistCount, waitlistPosition };
