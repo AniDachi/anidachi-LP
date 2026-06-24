@@ -65,16 +65,16 @@ export default function CrunchyrollMegaFanGlossaryPage() {
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         What is Crunchyroll Mega Fan?
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Mega Fan is a paid Crunchyroll subscription tier that bundles ad-free
           streaming with offline downloads and multiple simultaneous streams—check
@@ -86,11 +86,11 @@ export default function CrunchyrollMegaFanGlossaryPage() {
 
       <h2
         id="definition"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Definition
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Think of Mega Fan as Crunchyroll&apos;s power-user path: more flexibility for
         households or friends who juggle multiple devices. Plans and pricing change;
         confirm what&apos;s live in your country before promising your crew a specific
@@ -99,32 +99,32 @@ export default function CrunchyrollMegaFanGlossaryPage() {
 
       <h2
         id="watch-parties"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How it affects watch parties
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Watch party tools never replace private Crunchyroll credentials. They add
         watchrooms, chat, and sync on top of each viewer&apos;s authenticated tab. If
         someone is still on a limited free plan, backlog availability may differ—align
         on tiers before announcing premiere night.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Once accounts are squared away, browse{" "}
-        <Link href="/watch-crunchyroll-together" className="text-purple-600 hover:underline">
+        <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
           Watch Crunchyroll Together
         </Link>{" "}
         and{" "}
-        <Link href="/glossary/watchroom" className="text-purple-600 hover:underline">
+        <Link href="/glossary/watchroom" className="text-brand-orange hover:underline">
           what a watchroom is
         </Link>{" "}
         next.
       </p>
 
-      <h2 id="related" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="hover:underline">
             How to watch Crunchyroll with friends

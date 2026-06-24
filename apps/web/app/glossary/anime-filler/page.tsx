@@ -74,16 +74,16 @@ export default function AnimeFillerGlossaryPage() {
       faq={faq}
       headings={tocHeadings}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         What Is Anime Filler?
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Anime filler refers to episodes or arcs that are not adapted from the
           original manga or source material — original content created by the
@@ -97,17 +97,17 @@ export default function AnimeFillerGlossaryPage() {
 
       <h2
         id="why-filler-exists"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Anime Filler Exists
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Anime production schedules require 1–2 episodes per week. Manga
         chapters are typically released weekly or monthly, with a volume of
         chapters averaging about 8–10 chapters per arc. When an anime adaptation
         catches up to the manga&apos;s current chapter, it faces a choice:
       </p>
-      <ul className="space-y-2 text-gray-700 mb-6">
+      <ul className="space-y-2 text-foreground/80 mb-6">
         <li>
           <strong>Go on hiatus</strong> — pause airing until the manga has
           enough chapters to resume. Modern adaptations (Jujutsu Kaisen, Demon
@@ -121,7 +121,7 @@ export default function AnimeFillerGlossaryPage() {
           series (Naruto, Bleach, One Piece).
         </li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Filler content must be self-contained and consequence-free — characters
         cannot gain new abilities, die, or have permanent relationship changes
         in filler, because the episode must be skippable when the anime returns
@@ -130,19 +130,19 @@ export default function AnimeFillerGlossaryPage() {
 
       <h2
         id="most-filler"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Series With the Most Filler
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Filler percentages for the most-watched long-run shonen series:
       </p>
-      <ul className="space-y-3 text-gray-700 mb-8">
+      <ul className="space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>
             <Link
               href="/watch/naruto-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Naruto
             </Link>
@@ -156,7 +156,7 @@ export default function AnimeFillerGlossaryPage() {
           <strong>
             <Link
               href="/watch/bleach-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Bleach
             </Link>
@@ -170,7 +170,7 @@ export default function AnimeFillerGlossaryPage() {
           <strong>
             <Link
               href="/watch/one-piece-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               One Piece
             </Link>
@@ -183,7 +183,7 @@ export default function AnimeFillerGlossaryPage() {
           <strong>
             <Link
               href="/watch/dragon-ball-z-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Dragon Ball Z
             </Link>
@@ -196,15 +196,15 @@ export default function AnimeFillerGlossaryPage() {
 
       <h2
         id="skipping-with-groups"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Skipping Filler in a Group Watch
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         For group sessions, agree on your filler policy before starting the
         series:
       </p>
-      <ol className="space-y-3 text-gray-700 mb-8 list-decimal list-inside">
+      <ol className="space-y-3 text-foreground/80 mb-8 list-decimal list-inside">
         <li>
           Look up the series on a filler guide (Anime Filler List is the
           standard reference) and note which episodes are filler vs canon.
@@ -225,7 +225,7 @@ export default function AnimeFillerGlossaryPage() {
           alone form a tighter and more satisfying arc sequence.
         </li>
       </ol>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Modern seasonal anime (series that air for one or two cours and then
         pause) do not produce filler — there is no catch-up problem when the
         studio deliberately limits the season length to match available manga
@@ -235,11 +235,11 @@ export default function AnimeFillerGlossaryPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link
             href="/glossary/anime-simulcast"

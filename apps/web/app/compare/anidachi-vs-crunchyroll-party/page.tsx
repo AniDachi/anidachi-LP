@@ -76,18 +76,17 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Crunchyroll Party for anime watch parties
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           Crunchyroll Party is great when everyone can watch live. AniDachi is built
           for real friend groups: mixed schedules, time zones, and long-running
@@ -95,10 +94,10 @@ export default function AniDachiVsCrunchyrollPartyPage() {
         </strong>
       </p>
 
-      <h2 id="tldr" className="text-2xl font-bold text-gray-900 mt-10 mb-3 scroll-mt-24">
+      <h2 id="tldr" className="text-2xl font-bold text-foreground mt-10 mb-3 scroll-mt-24">
         At a glance
       </h2>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>TL;DR:</strong> Use <strong>Crunchyroll Party</strong> for free, live
         synchronized watching. Use <strong>AniDachi</strong> if your group wants one
         persistent watchroom, per-person progress, and async catch-up without losing
@@ -107,7 +106,7 @@ export default function AniDachiVsCrunchyrollPartyPage() {
 
       <h2
         id="feature-comparison"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Feature comparison
       </h2>
@@ -142,11 +141,11 @@ export default function AniDachiVsCrunchyrollPartyPage() {
 
       <h2
         id="when-crunchyroll-party"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When Crunchyroll Party is enough
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>Your whole group can watch at the same time every week.</li>
         <li>You mainly need basic live sync and a lightweight chat.</li>
         <li>You want a free option and can accept fewer “anime-specific” workflows.</li>
@@ -154,11 +153,11 @@ export default function AniDachiVsCrunchyrollPartyPage() {
 
       <h2
         id="when-anidachi"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When AniDachi wins
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>You want async watching without losing the shared room context.</li>
         <li>You want per-person progress and spoiler boundaries that stick.</li>
         <li>You host long shows (or simulcasts) and need consistent pacing.</li>
@@ -166,19 +165,19 @@ export default function AniDachiVsCrunchyrollPartyPage() {
 
       <h2
         id="migration"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Migration path
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         If your crew started on a free live-sync tool and it keeps breaking due to
         scheduling, switch to a workflow where everyone streams locally and the
         room tracks progress. Start with{" "}
-        <Link href="/watch-crunchyroll-together" className="text-purple-600 hover:underline">
+        <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
           Watch Crunchyroll Together
         </Link>{" "}
         and then review{" "}
-        <Link href="/#pricing" className="text-purple-600 font-medium hover:underline">
+        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
           AniDachi pricing
         </Link>
         .
@@ -186,11 +185,11 @@ export default function AniDachiVsCrunchyrollPartyPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
             AniDachi vs Teleparty

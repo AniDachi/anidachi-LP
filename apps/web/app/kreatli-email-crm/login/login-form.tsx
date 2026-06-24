@@ -35,20 +35,20 @@ export function LoginForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="mx-auto max-w-sm space-y-4 rounded-xl border border-purple-200/80 bg-white/90 p-8 shadow-lg backdrop-blur"
+      className="mx-auto max-w-sm space-y-4 rounded-xl border border-brand-border bg-brand-surface p-8 shadow-lg"
     >
       <div>
-        <h1 className="text-xl font-semibold text-purple-950">
+        <h1 className="text-xl font-semibold text-foreground">
           Kreatli Email CRM
         </h1>
-        <p className="mt-1 text-sm text-purple-800/80">
+        <p className="mt-1 text-sm text-foreground/60">
           Enter the access password to continue.
         </p>
       </div>
       <div>
         <label
           htmlFor="password"
-          className="mb-1 block text-sm font-medium text-purple-900"
+          className="mb-1 block text-sm font-medium text-foreground/80"
         >
           Password
         </label>
@@ -59,18 +59,18 @@ export function LoginForm() {
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-md border border-purple-200 bg-white px-3 py-2 text-purple-950 shadow-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
+          className="w-full rounded-md border border-brand-border bg-background px-3 py-2 text-foreground shadow-sm outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20"
           required
         />
       </div>
       {error ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
       <Button
         type="submit"
-        className="w-full bg-purple-700 hover:bg-purple-800"
+        className="w-full bg-brand-orange text-primary-foreground hover:bg-brand-orange-deep"
         disabled={pending}
       >
         {pending ? "Signing in…" : "Sign in"}

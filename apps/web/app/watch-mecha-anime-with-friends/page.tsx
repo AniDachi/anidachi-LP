@@ -88,16 +88,16 @@ export default function WatchMechaAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Mecha Anime With Friends
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Yes, you can watch mecha anime with friends using AniDachi&apos;s
           watchroom on Crunchyroll. Sync robot battles and war-turning moments
@@ -108,11 +108,11 @@ export default function WatchMechaAnimeWithFriendsPage() {
 
       <h2
         id="why-mecha"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Mecha Anime Perfect for Group Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Mecha anime is uniquely designed for communal experience. The genre&apos;s
         most celebrated moments — Kamina&apos;s final speech in Gurren Lagann,
         Lelouch&apos;s Zero Requiem in Code Geass, Unit 01&apos;s awakening in
@@ -121,7 +121,7 @@ export default function WatchMechaAnimeWithFriendsPage() {
         adrenaline spike, then immediately argue whether the sacrifice was worth
         it.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Mecha series also carry some of the highest lore density in anime — world
         rules, political systems, and piloting philosophies that deepen on rewatch
         and generate long post-episode discussions. AniDachi watchrooms support
@@ -132,15 +132,15 @@ export default function WatchMechaAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Mecha Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {mechaAnime.length} titles below have dedicated watchroom guides
         with setup steps, pacing advice, and lore primers:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {mechaAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -155,29 +155,29 @@ export default function WatchMechaAnimeWithFriendsPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up a Mecha Anime Watchroom
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Add the Chrome extension on every device in your watch group.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Open the series on Crunchyroll.
           </span>{" "}
           Each person streams from their own account — no screen sharing needed.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
           Send the invite link via Discord, group chat, or email.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Schedule live sessions for key battles.
           </span>{" "}
           Mecha finales and major power-up episodes benefit from synchronized
@@ -185,7 +185,7 @@ export default function WatchMechaAnimeWithFriendsPage() {
           to async.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Pin your spoiler boundary.
           </span>{" "}
           Character deaths in mecha anime (especially Gurren Lagann and Gundam:
@@ -196,16 +196,16 @@ export default function WatchMechaAnimeWithFriendsPage() {
 
       <h2
         id="lore-strategy"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Lore and Spoiler Strategy for Mecha Anime Watchrooms
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Mecha spoilers are double-edged: knowing a character dies in battle
         removes tension, but so does knowing a robot &quot;wins&quot; before
         the fight starts. Rules that help:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           React to the strategy, not the outcome — &quot;Lelouch is walking
           into a trap&quot; is a reaction; &quot;Lelouch survives this
@@ -230,37 +230,37 @@ export default function WatchMechaAnimeWithFriendsPage() {
         </li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
         <Link
           href="/watch-anime-together"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Watch anime together
         </Link>
         {" · "}
         <Link
           href="/watch-action-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Action anime
         </Link>
         {" · "}
         <Link
           href="/watch-psychological-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Psychological anime
         </Link>
         {" · "}
         <Link
           href="/watch-isekai-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Isekai anime
         </Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

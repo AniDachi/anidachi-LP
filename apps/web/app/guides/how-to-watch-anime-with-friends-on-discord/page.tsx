@@ -111,11 +111,11 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
         faq={faq}
         headings={tocHeadings}
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to Stream Anime on Discord &amp; Run an Anime Watch Party (2026)
         </h1>
 
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Most anime groups already live on Discord, so the simplest watch
             party stack is voice chat plus either screen share or coordinated
@@ -128,11 +128,11 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 
         <h2
           id="why-discord"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Why Discord works for anime nights
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Servers, roles, and voice channels are free infrastructure your friends
           already understand. You can spin up a{" "}
           <span className="font-medium">#today-we-watch</span> text channel,
@@ -143,11 +143,11 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 
         <h2
           id="method-screen-share"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           How to Stream Anime on Discord (Screen Share)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           The host loads Crunchyroll in a browser tab, joins voice, and shares
           that tab with the group. Everyone watches the same encode, which keeps
           reactions aligned automatically. Downsides: quality depends on the
@@ -157,15 +157,15 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 
         <h2
           id="method-voice-sync"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Voice + separate streams (manual sync)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Each viewer opens the episode on their own{" "}
           <a
             href="https://www.crunchyroll.com/help"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
             rel="noopener noreferrer"
           >
             Crunchyroll account
@@ -177,11 +177,11 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 
         <h2
           id="method-hybrid"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Voice on Discord, sync with a watchroom
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           When your group wants sharper video{" "}
           <em>and</em> tighter playback alignment, keep Discord for voice and run
           playback through a Crunchyroll-focused watch party stack. AniDachi adds
@@ -191,16 +191,16 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 
         <h2
           id="watch-party-discord"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Discord Anime Watch Party — Full Setup
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           A <strong>Discord anime watch party</strong> combines Discord&apos;s
           free voice and text infrastructure with a video source your friends
           can see. Here&apos;s how to run one from scratch:
         </p>
-        <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-4">
+        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-4">
           <li>
             <strong>Create a watch party server (or use an existing one):</strong> Add
             a voice channel (e.g., &quot;Watch Lounge&quot;) and a text channel
@@ -228,21 +228,21 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
             everyone streams at full quality on their own account.
           </li>
         </ol>
-        <p className="text-gray-700 mb-6">
+        <p className="text-foreground/80 mb-6">
           Discord anime watch parties work well for casual sessions. For a more
           polished experience — especially for long series or async groups — see{" "}
-          <Link href="/watch-anime-together" className="text-purple-600 hover:underline">
+          <Link href="/watch-anime-together" className="text-brand-orange hover:underline">
             dedicated anime watch party tools
           </Link>.
         </p>
 
           <h2
           id="steps-discord"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Quick setup checklist
         </h2>
-        <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Create or choose a server and a dedicated voice lounge.</li>
           <li>Add a text channel for schedules and non-spoiler reactions.</li>
           <li>Agree on screen share vs solo streams before episode one starts.</li>
@@ -257,11 +257,11 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600">
+        <ul className="space-y-2 text-brand-orange">
           <li>
             <Link href="/watch-anime-together" className="hover:underline">
               Watch Anime Together (pillar guide)

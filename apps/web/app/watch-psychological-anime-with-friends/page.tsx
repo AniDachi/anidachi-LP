@@ -100,16 +100,16 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Psychological Anime With Friends
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Yes, you can watch psychological anime with friends using AniDachi&apos;s
           watchroom on Crunchyroll. Sync playback so everyone hits twists at the
@@ -120,11 +120,11 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
 
       <h2
         id="why-psychological"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Psychological Anime Perfect for Group Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Psychological anime is built on deliberate information gaps — each
         episode reveals just enough to sustain a theory and introduce a new
         one. Watching alone, those theory moments pass in silence. In a
@@ -135,7 +135,7 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
         natural group reaction — pausing, reacting, then continuing — feel
         intentional rather than disruptive.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         The genre also rewards async watchrooms: psychological series typically
         have 12–37 episodes with dense individual episodes, making two-per-week
         sessions sustainable without burning out the group. AniDachi&apos;s
@@ -145,15 +145,15 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Psychological Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {psychologicalAnime.length} titles below have dedicated watchroom
         guides with setup steps, pacing advice, and spoiler management tips:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {psychologicalAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -168,29 +168,29 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up a Psychological Anime Watchroom
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Add the Chrome extension on every device in your watch group.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Open the series on Crunchyroll.
           </span>{" "}
           Each person streams from their own account — no screen sharing needed.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
           Send the invite link via Discord, group chat, or email.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Set up a theory thread before episode one.
           </span>{" "}
           Pin a prediction post so each member writes down their theory before
@@ -198,7 +198,7 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
           demolished is half the fun.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Pin your spoiler boundary.
           </span>{" "}
           Psychological series have twist endings that collapse 10+ episodes of
@@ -208,16 +208,16 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
 
       <h2
         id="theory-tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Theory and Spoiler Strategy for Psychological Anime
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Psychological anime spoilers are uniquely damaging because they
         retroactively change every prior scene. A few watchroom rules that
         protect the group experience:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           Use &quot;theory only&quot; reactions until an episode ends — write
           what you think will happen, not what you know from the manga or a
@@ -241,37 +241,37 @@ export default function WatchPsychologicalAnimeWithFriendsPage() {
         </li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
         <Link
           href="/watch-anime-together"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Watch anime together
         </Link>
         {" · "}
         <Link
           href="/watch-mystery-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Mystery anime
         </Link>
         {" · "}
         <Link
           href="/watch-horror-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Horror anime
         </Link>
         {" · "}
         <Link
           href="/watch-isekai-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Isekai anime
         </Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

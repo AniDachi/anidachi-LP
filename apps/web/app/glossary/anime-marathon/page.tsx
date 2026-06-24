@@ -75,16 +75,16 @@ export default function AnimeMarathonGlossaryPage() {
       faq={faq}
       headings={tocHeadings}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         What Is an Anime Marathon? (Meaning, Tips & Best Series)
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           An anime marathon is an extended watching session where you work
           through multiple episodes — or an entire series — in a single sitting
@@ -98,20 +98,20 @@ export default function AnimeMarathonGlossaryPage() {
 
       <h2
         id="definition"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Anime Marathon Definition
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         <strong>Anime marathon</strong> is an informal term for an extended
         anime watching session, typically defined by:
       </p>
-      <ul className="space-y-3 text-gray-700 mb-6">
+      <ul className="space-y-3 text-foreground/80 mb-6">
         <li><strong>Duration:</strong> Usually 4+ hours in a single sitting, or a full day of watching.</li>
         <li><strong>Continuity:</strong> Episodes are watched in sequence without breaking for multi-day gaps — the defining feature of a marathon vs a regular watching habit.</li>
         <li><strong>Goal:</strong> Often aimed at completing an arc, a season, or a full short series (12–26 episodes).</li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         The term borrows from the running marathon — an endurance effort that
         continues past the point where stopping would be comfortable. In anime
         watching, this usually means the episode cliffhangers are doing their
@@ -120,80 +120,80 @@ export default function AnimeMarathonGlossaryPage() {
 
       <h2
         id="best-series"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Best Anime for a Marathon Watch
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The best marathon anime have strong episode-ending momentum — each
         episode closes in a way that makes stopping difficult. The best picks
         by length:
       </p>
-      <ul className="space-y-4 text-gray-700 mb-8">
+      <ul className="space-y-4 text-foreground/80 mb-8">
         <li>
           <strong>One-day marathons (12–13 episodes, ~5 hours):</strong>{" "}
-          <Link href="/watch/one-punch-man-with-friends" className="text-purple-600 hover:underline">One Punch Man Season 1</Link>,{" "}
-          <Link href="/watch/mob-psycho-100-with-friends" className="text-purple-600 hover:underline">Mob Psycho 100 Season 1</Link>,{" "}
-          <Link href="/watch/death-note-with-friends" className="text-purple-600 hover:underline">Death Note</Link> (37 episodes — push to finish by early evening with two sessions).
+          <Link href="/watch/one-punch-man-with-friends" className="text-brand-orange hover:underline">One Punch Man Season 1</Link>,{" "}
+          <Link href="/watch/mob-psycho-100-with-friends" className="text-brand-orange hover:underline">Mob Psycho 100 Season 1</Link>,{" "}
+          <Link href="/watch/death-note-with-friends" className="text-brand-orange hover:underline">Death Note</Link> (37 episodes — push to finish by early evening with two sessions).
         </li>
         <li>
           <strong>Weekend marathons (24–26 episodes, ~10 hours):</strong>{" "}
-          <Link href="/watch/demon-slayer-with-friends" className="text-purple-600 hover:underline">Demon Slayer Season 1</Link>,{" "}
-          <Link href="/watch/jujutsu-kaisen-with-friends" className="text-purple-600 hover:underline">Jujutsu Kaisen Season 1</Link>,{" "}
-          <Link href="/watch/attack-on-titan-with-friends" className="text-purple-600 hover:underline">Attack on Titan Season 1</Link>,{" "}
-          <Link href="/watch/steins-gate-with-friends" className="text-purple-600 hover:underline">Steins;Gate</Link> (24 episodes).
+          <Link href="/watch/demon-slayer-with-friends" className="text-brand-orange hover:underline">Demon Slayer Season 1</Link>,{" "}
+          <Link href="/watch/jujutsu-kaisen-with-friends" className="text-brand-orange hover:underline">Jujutsu Kaisen Season 1</Link>,{" "}
+          <Link href="/watch/attack-on-titan-with-friends" className="text-brand-orange hover:underline">Attack on Titan Season 1</Link>,{" "}
+          <Link href="/watch/steins-gate-with-friends" className="text-brand-orange hover:underline">Steins;Gate</Link> (24 episodes).
         </li>
         <li>
           <strong>Multi-day marathons (50–64 episodes, full weekend):</strong>{" "}
-          <Link href="/watch/fullmetal-alchemist-brotherhood-with-friends" className="text-purple-600 hover:underline">Fullmetal Alchemist: Brotherhood</Link> (64 eps),{" "}
-          <Link href="/watch/soul-eater-with-friends" className="text-purple-600 hover:underline">Soul Eater</Link> (51 eps),{" "}
-          <Link href="/watch/code-geass-with-friends" className="text-purple-600 hover:underline">Code Geass</Link> (50 eps across 2 seasons).
+          <Link href="/watch/fullmetal-alchemist-brotherhood-with-friends" className="text-brand-orange hover:underline">Fullmetal Alchemist: Brotherhood</Link> (64 eps),{" "}
+          <Link href="/watch/soul-eater-with-friends" className="text-brand-orange hover:underline">Soul Eater</Link> (51 eps),{" "}
+          <Link href="/watch/code-geass-with-friends" className="text-brand-orange hover:underline">Code Geass</Link> (50 eps across 2 seasons).
         </li>
         <li>
           <strong>Film marathons (complete in 2–4 hours):</strong>{" "}
           Studio Ghibli double-bills —{" "}
-          <Link href="/watch/spirited-away-with-friends" className="text-purple-600 hover:underline">Spirited Away</Link> + <Link href="/watch/howls-moving-castle-with-friends" className="text-purple-600 hover:underline">Howl&apos;s Moving Castle</Link>,{" "}
+          <Link href="/watch/spirited-away-with-friends" className="text-brand-orange hover:underline">Spirited Away</Link> + <Link href="/watch/howls-moving-castle-with-friends" className="text-brand-orange hover:underline">Howl&apos;s Moving Castle</Link>,{" "}
           or the Makoto Shinkai trilogy:{" "}
-          <Link href="/watch/your-name-with-friends" className="text-purple-600 hover:underline">Your Name</Link> + <Link href="/watch/weathering-with-you-with-friends" className="text-purple-600 hover:underline">Weathering with You</Link> + <Link href="/watch/suzume-with-friends" className="text-purple-600 hover:underline">Suzume</Link>.
+          <Link href="/watch/your-name-with-friends" className="text-brand-orange hover:underline">Your Name</Link> + <Link href="/watch/weathering-with-you-with-friends" className="text-brand-orange hover:underline">Weathering with You</Link> + <Link href="/watch/suzume-with-friends" className="text-brand-orange hover:underline">Suzume</Link>.
         </li>
       </ul>
 
       <h2
         id="group-marathon"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Run a Group Anime Marathon Online
       </h2>
-      <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Pick the series and set a target.</span>{" "}
+          <span className="font-medium text-foreground">Pick the series and set a target.</span>{" "}
           Decide the episode goal before starting — &quot;finish the first 12 episodes&quot; is more sustainable than &quot;let&apos;s see how far we get.&quot;
         </li>
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Every group member adds the Chrome extension. Create a watchroom and share the invite link.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Plan break points at arc boundaries.</span>{" "}
+          <span className="font-medium text-foreground">Plan break points at arc boundaries.</span>{" "}
           Don&apos;t plan breaks mid-arc — use arc endings as natural stopping points. Anime arcs are designed to feel complete; stopping mid-arc creates avoidable frustration.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Set the spoiler boundary.</span>{" "}
+          <span className="font-medium text-foreground">Set the spoiler boundary.</span>{" "}
           If some group members have seen the series before, establish what they can and can&apos;t say during the marathon.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Run a brief debrief after the finale.</span>{" "}
+          <span className="font-medium text-foreground">Run a brief debrief after the finale.</span>{" "}
           A marathon ending needs time — build 30–45 minutes after the final episode for conversation before anyone leaves.
         </li>
       </ol>
 
       <h2
         id="tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Anime Marathon Tips and Pacing
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li><strong>Set arc-based break times, not episode-count breaks.</strong> Stopping at the end of an arc feels natural. Stopping mid-arc feels like a cliffhanger without resolution — group energy drops.</li>
         <li><strong>For very long marathons (8+ hours), keep snacks and hydration on hand.</strong> Physical discomfort is the most common reason groups abandon marathons before the finish.</li>
         <li><strong>Agree on minimum episode counts before &quot;just one more&quot; negotiation starts.</strong> If the group agrees &quot;we watch at least 6 episodes&quot; at the start, the decision point for stopping moves to after episode 6 — not after every single episode.</li>
@@ -202,11 +202,11 @@ export default function AnimeMarathonGlossaryPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/guides/how-to-plan-an-anime-marathon-with-friends" className="hover:underline">
             How to plan an anime marathon with friends — full guide

@@ -117,17 +117,17 @@ export function WatchLibraryClient({
         />
       </section>
 
-      <section className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+      <section className="rounded-lg border border-brand-border bg-brand-surface p-5">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h2 className="text-lg font-semibold text-white">Watch Library</h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <h2 className="text-lg font-semibold text-foreground">Watch Library</h2>
+            <p className="mt-1 text-sm text-foreground/50">
               {PLAN_LABELS[library.limits.planCode] ?? library.limits.planCode} keeps{" "}
               {library.limits.historyRetentionDays} days of history.
             </p>
           </div>
           <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-4 text-sm font-semibold text-foreground transition hover:bg-brand-orange/20 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={loading}
             onClick={() => void refresh()}
             type="button"
@@ -143,7 +143,7 @@ export function WatchLibraryClient({
           className={`rounded-lg border px-4 py-3 text-sm ${
             notice.tone === "error"
               ? "border-red-400/25 bg-red-500/10 text-red-100"
-              : "border-emerald-400/25 bg-emerald-500/10 text-emerald-100"
+              : "border-brand-orange/25 bg-brand-orange/10 text-brand-orange"
           }`}
         >
           {notice.text}
@@ -162,7 +162,7 @@ export function WatchLibraryClient({
           ))}
         </div>
       ) : (
-        <section className="rounded-lg border border-white/10 bg-white/[0.04] p-6 text-sm text-slate-400">
+        <section className="rounded-lg border border-brand-border bg-brand-surface p-6 text-sm text-foreground/50">
           Progress will appear here after you watch from the extension while signed in.
         </section>
       )}
@@ -180,14 +180,14 @@ function StatCard({
   value: string | number;
 }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+    <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/15 text-violet-200">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
           {icon}
         </span>
         <div>
-          <p className="text-2xl font-bold text-white">{value}</p>
-          <p className="text-sm text-slate-400">{label}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          <p className="text-sm text-foreground/50">{label}</p>
         </div>
       </div>
     </div>
@@ -204,21 +204,21 @@ function WatchItemCard({
   onCreateRoom: (session: WatchLibrarySession, sourceUrl: string) => void;
 }) {
   return (
-    <section className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.04]">
-      <div className="flex items-center gap-4 border-b border-white/10 p-4">
+    <section className="overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
+      <div className="flex items-center gap-4 border-b border-brand-border p-4">
         <Poster item={item} />
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-orange">
             {providerLabel(item.provider)} · {item.itemKind}
           </p>
-          <h3 className="mt-1 truncate text-lg font-bold text-white">{item.itemTitle}</h3>
-          <p className="mt-1 text-sm text-slate-400">
+          <h3 className="mt-1 truncate text-lg font-bold text-foreground">{item.itemTitle}</h3>
+          <p className="mt-1 text-sm text-foreground/50">
             Last watched {formatDate(item.lastWatchedAt)}
           </p>
         </div>
       </div>
 
-      <div className="divide-y divide-white/10">
+      <div className="divide-y divide-[--brand-border]">
         {item.episodes.map((episode) => (
           <EpisodeRow
             busySessionId={busySessionId}
@@ -245,14 +245,14 @@ function EpisodeRow({
   return (
     <div className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-white">{episode.episodeTitle}</p>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+        <p className="truncate text-sm font-semibold text-foreground">{episode.episodeTitle}</p>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-brand-surface">
           <span
-            className="block h-full rounded-full bg-gradient-to-r from-violet-400 to-blue-400"
+            className="block h-full rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright"
             style={{ width: `${Math.round(clampProgress(episode.progress) * 100)}%` }}
           />
         </div>
-        <p className="mt-2 text-xs text-slate-400">
+        <p className="mt-2 text-xs text-foreground/50">
           {formatClock(episode.currentTime)} / {formatClock(episode.duration)} ·{" "}
           {formatDate(episode.lastWatchedAt)}
         </p>
@@ -266,7 +266,7 @@ function EpisodeRow({
       </div>
 
       <button
-        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-foreground transition hover:bg-brand-orange-deep disabled:cursor-not-allowed disabled:opacity-50"
         disabled={!latestSession || busySessionId === latestSession.id}
         onClick={() => latestSession && onCreateRoom(latestSession, episode.sourceUrl)}
         type="button"
@@ -284,8 +284,8 @@ function SessionPill({ session }: { session: WatchLibrarySession }) {
       ? `${session.participants.length} people`
       : "Solo";
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
-      <Users className="h-3.5 w-3.5 text-violet-200" aria-hidden />
+    <span className="inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-orange/5 px-3 py-1 text-xs text-foreground/70">
+      <Users className="h-3.5 w-3.5 text-brand-orange" aria-hidden />
       {label} · {formatDate(session.lastWatchedAt)}
     </span>
   );
@@ -302,7 +302,7 @@ function Poster({ item }: { item: WatchLibraryItem }) {
     );
   }
   return (
-    <span className="flex h-16 w-11 shrink-0 items-center justify-center rounded-md bg-white/10 text-slate-400">
+    <span className="flex h-16 w-11 shrink-0 items-center justify-center rounded-md bg-brand-surface text-foreground/50">
       <Film className="h-5 w-5" aria-hidden />
     </span>
   );

@@ -2,6 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getGmailRedirectUri, isGmailConfigured, sendPlaintextEmail } from "@/lib/kreatli-crm/gmail";
 import { readGmailTokens } from "@/lib/kreatli-crm/gmail-tokens";
 import { upsertSurveyLead } from "@/lib/kreatli-crm/survey-lead";
+import { waitlistPositionForEmail } from "@/lib/kreatli-crm/survey-lead-shared";
+import { readContacts } from "@/lib/kreatli-crm/store";
+import { normalizeEmail } from "@/lib/kreatli-crm/validation";
 import type { HomeSurveyAnswers } from "@/lib/home-survey";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
@@ -42,22 +45,30 @@ export async function POST(request: NextRequest) {
 
   console.info("[subscribe-interest] New lead:", email, survey);
 
+  let waitlistPosition: number | null = null;
   try {
     const crmResult = await upsertSurveyLead(email, survey);
+    waitlistPosition = crmResult.waitlistPosition;
     if (crmResult.saved) {
-      console.info("[subscribe-interest] Saved to CRM:", email);
+      console.info("[subscribe-interest] Saved to CRM:", email, "waitlist position:", waitlistPosition);
     } else {
       console.warn("[subscribe-interest] CRM save skipped:", crmResult.reason, email);
     }
   } catch (e) {
     console.error("[subscribe-interest] Failed to save to CRM:", email, e);
+    try {
+      const contacts = await readContacts();
+      waitlistPosition = waitlistPositionForEmail(contacts, normalizeEmail(email));
+    } catch (readError) {
+      console.error("[subscribe-interest] Failed to read waitlist position:", readError);
+    }
   }
 
   const toRaw = process.env.SUBSCRIPTION_NOTIFY_EMAILS;
   if (!toRaw?.trim() || !isGmailConfigured()) {
     // Log but still return success so the modal flow isn't blocked
     console.warn("[subscribe-interest] Email not sent — Gmail not configured or no notify address");
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, waitlistPosition });
   }
 
   const to = toRaw
@@ -68,7 +79,7 @@ export async function POST(request: NextRequest) {
   const tokens = await readGmailTokens();
   if (!tokens?.refresh_token) {
     console.warn("[subscribe-interest] Gmail not connected (no refresh token); skipping alert");
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, waitlistPosition });
   }
 
   const redirectUri = getGmailRedirectUri(getResolvedSiteOrigin());
@@ -82,5 +93,5 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, waitlistPosition });
 }

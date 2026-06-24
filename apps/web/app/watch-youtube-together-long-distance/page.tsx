@@ -70,17 +70,17 @@ export default function WatchYoutubeTogetherLongDistancePage() {
       headings={tocHeadings}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         How to Watch YouTube Together Long Distance
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           YouTube has no built-in watch party feature. The easiest free
           tool to watch YouTube together long distance is Watch2Gether
@@ -94,22 +94,22 @@ export default function WatchYoutubeTogetherLongDistancePage() {
 
       <h2
         id="watch2gether"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Watch2Gether — The Best Free Option for YouTube
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Watch2Gether runs entirely in the browser — no extension
         installation required. Here is how to use it:
       </p>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Go to <strong>w2g.tv</strong> and click &quot;Create Room.&quot;</li>
         <li>Copy the room URL and send it to your partner.</li>
         <li>Paste a YouTube video URL into the search bar inside the room.</li>
         <li>Both of you press play — playback stays in sync automatically.</li>
         <li>Use the text chat on the right side to react in real time.</li>
       </ol>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Watch2Gether also supports Vimeo and Dailymotion. The free tier
         is sufficient for most use cases. Note: you will need a separate
         voice or video call (Discord, FaceTime) if you want to hear each
@@ -118,17 +118,17 @@ export default function WatchYoutubeTogetherLongDistancePage() {
 
       <h2
         id="teleparty"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Teleparty for YouTube
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Teleparty supports YouTube alongside Netflix, Disney+, and Crunchyroll.
         It requires both people to install the Chrome extension. The advantage
         over Watch2Gether: Teleparty integrates with the YouTube player
         natively, so the experience is smoother for YouTube-specific content.
       </p>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Both install the Teleparty Chrome extension.</li>
         <li>One person opens a YouTube video and clicks the Teleparty icon to create a session.</li>
         <li>Share the session link.</li>
@@ -137,41 +137,41 @@ export default function WatchYoutubeTogetherLongDistancePage() {
 
       <h2
         id="manual"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         The Press-Play-Together Method (No App)
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         If you do not want to install anything, the simplest fallback is:
         both open the same YouTube video, go on a video call, and count
         down from 3 before pressing play simultaneously. This works
         passably for short videos but drifts over time due to network
         buffering — expect a 1–5 second gap after 10–15 minutes.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         For anything longer than a 10-minute video, Watch2Gether or
         Teleparty is worth the 2-minute setup.
       </p>
 
       <h2
         id="async"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         For Different Time Zones — The Async Workaround
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         None of the YouTube watch party tools support async watching.
         The best workaround for different-schedule LDR couples:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Each person watches the video independently.</li>
         <li>Keep a dedicated Discord channel or WhatsApp thread for reactions — link to timestamps (e.g., &quot;the moment at 4:23 got me&quot;).</li>
         <li>Agree not to post spoilers until both of you have confirmed you watched.</li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         For longer-form content like anime series (YouTube has some, and
         Crunchyroll has much more),{" "}
-        <Link href="/timezone-friendly-anime-watch-parties" className="text-purple-600 hover:underline">
+        <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
           AniDachi&apos;s async mode handles this automatically
         </Link>{" "}
         with episode-level spoiler protection — no manual coordination needed.
@@ -179,18 +179,18 @@ export default function WatchYoutubeTogetherLongDistancePage() {
 
       <h2
         id="anime-upgrade"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Watching Anime on Crunchyroll Too?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         YouTube is great for anime trailers, AMVs, and video essays — but
         for actual series, Crunchyroll is a significantly better experience.
         If you and your partner are anime fans, the most natural upgrade
         from YouTube watch parties is shifting your series watching to
         Crunchyroll with AniDachi.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         The key difference: AniDachi supports async watching, which means
         you are not locked into watching simultaneously. For long-distance
         couples, this removes the biggest friction point in maintaining a
@@ -199,11 +199,11 @@ export default function WatchYoutubeTogetherLongDistancePage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/watch-movies-together-long-distance" className="hover:underline">
             How to watch movies together long distance

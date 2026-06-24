@@ -72,17 +72,17 @@ export default function WatchMoviesTogetherLongDistancePage() {
       headings={tocHeadings}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         How to Watch Movies &amp; TV Together Long Distance (2026)
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           The best way to watch movies long distance depends on your platform:
           Teleparty for Netflix, Rave for multi-platform with voice chat,
@@ -95,7 +95,7 @@ export default function WatchMoviesTogetherLongDistancePage() {
 
       <h2
         id="compare"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         All Methods Compared
       </h2>
@@ -136,18 +136,18 @@ export default function WatchMoviesTogetherLongDistancePage() {
 
       <h2
         id="teleparty"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Teleparty — Best for Netflix and Multi-Platform Sessions
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Teleparty (formerly Netflix Party) is the most widely known watch
         party tool. It supports Netflix, Disney+, Hulu, Crunchyroll, and
         others via Chrome extension. Both people install it, one creates
         a session on any supported platform, shares the link, and playback
         stays in sync with text chat.
       </p>
-      <ul className="list-disc pl-6 space-y-1 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-1 text-foreground/80 mb-8">
         <li>Supports the most streaming platforms.</li>
         <li>Free tier available with basic features.</li>
         <li>No async mode — both must be online at the same time.</li>
@@ -156,17 +156,17 @@ export default function WatchMoviesTogetherLongDistancePage() {
 
       <h2
         id="rave"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Rave — Best Free Option with Built-in Video Calling
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Rave (formerly Wacup) is free and includes built-in voice and video
         calling alongside stream sync — so you do not need a separate Discord
         call to see each other while watching. It supports Netflix, Crunchyroll,
         and others.
       </p>
-      <ul className="list-disc pl-6 space-y-1 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-1 text-foreground/80 mb-8">
         <li>Free tier covers most features.</li>
         <li>Voice and video built in.</li>
         <li>No async mode.</li>
@@ -175,56 +175,56 @@ export default function WatchMoviesTogetherLongDistancePage() {
 
       <h2
         id="press-play"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Press Play Together (No App Required)
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         For the simplest possible option: video call each other, both
         open the same content, and count down from 3 before pressing play.
         This works reasonably well for the first 10–15 minutes, after which
         network buffering causes a 2–5 second drift.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Good for: a quick unplanned movie night. Not good for: a regular
         routine where drift and resync interruptions are frustrating.
       </p>
 
       <h2
         id="anidachi"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         AniDachi — Best for Crunchyroll Anime + Async Watching
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         If your movie nights include anime on Crunchyroll, AniDachi is the
         most capable tool specifically for that platform. The key feature
         for long-distance couples is async mode: each person watches on
         their own schedule, and reactions are attached to specific episodes
         so no one gets spoiled.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi does not support Netflix, Disney+, or other general
         streaming platforms. It is Crunchyroll-only and is the right tool
         when your primary shared content is anime.{" "}
-        <Link href="/timezone-friendly-anime-watch-parties" className="text-purple-600 hover:underline">
+        <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
           Learn how async anime watching works across time zones.
         </Link>
       </p>
 
       <h2
         id="decision"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Which Should You Use?
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li><strong>Multi-platform movies and TV + always watch live → Teleparty</strong></li>
         <li><strong>Want voice/video built in + free → Rave</strong></li>
         <li><strong>Crunchyroll anime + can&apos;t always watch simultaneously → AniDachi</strong></li>
         <li><strong>No setup, occasional session → Press play together or Discord</strong></li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Many long-distance couples run multiple tools: Teleparty for Netflix,
         AniDachi for Crunchyroll anime, and Discord for voice during any
         live session.
@@ -232,11 +232,11 @@ export default function WatchMoviesTogetherLongDistancePage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/watch-crunchyroll-together-long-distance" className="hover:underline">
             How to watch Crunchyroll together long distance

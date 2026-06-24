@@ -71,17 +71,17 @@ export default function WatchKdramaTogetherLongDistancePage() {
       headings={tocHeadings}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         How to Watch K-Dramas Together Long Distance
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           There is no single best K-drama watch party tool — the right
           option depends on which platform your K-dramas are on.
@@ -95,44 +95,44 @@ export default function WatchKdramaTogetherLongDistancePage() {
 
       <h2
         id="platforms"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         K-Drama Platforms and Watch Party Tools
       </h2>
       <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-gray-200 rounded-lg">
+        <table className="w-full text-sm border-collapse border border-brand-border rounded-lg">
           <thead>
-            <tr className="bg-gray-50">
-              <th className="border border-gray-200 px-4 py-2 text-left">Platform</th>
-              <th className="border border-gray-200 px-4 py-2 text-left">Best watch party tool</th>
-              <th className="border border-gray-200 px-4 py-2 text-left">Async option</th>
+            <tr className="bg-brand-surface">
+              <th className="border border-brand-border px-4 py-2 text-left">Platform</th>
+              <th className="border border-brand-border px-4 py-2 text-left">Best watch party tool</th>
+              <th className="border border-brand-border px-4 py-2 text-left">Async option</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="border border-gray-200 px-4 py-2">Netflix</td>
-              <td className="border border-gray-200 px-4 py-2">Teleparty or Rave</td>
-              <td className="border border-gray-200 px-4 py-2">None (watch separately, discuss later)</td>
+              <td className="border border-brand-border px-4 py-2">Netflix</td>
+              <td className="border border-brand-border px-4 py-2">Teleparty or Rave</td>
+              <td className="border border-brand-border px-4 py-2">None (watch separately, discuss later)</td>
             </tr>
-            <tr className="bg-gray-50">
-              <td className="border border-gray-200 px-4 py-2">Viki</td>
-              <td className="border border-gray-200 px-4 py-2">Check Viki&apos;s current support or Rave</td>
-              <td className="border border-gray-200 px-4 py-2">None</td>
-            </tr>
-            <tr>
-              <td className="border border-gray-200 px-4 py-2">YouTube</td>
-              <td className="border border-gray-200 px-4 py-2">Watch2Gether</td>
-              <td className="border border-gray-200 px-4 py-2">None</td>
-            </tr>
-            <tr className="bg-gray-50">
-              <td className="border border-gray-200 px-4 py-2">Crunchyroll (anime)</td>
-              <td className="border border-gray-200 px-4 py-2 text-purple-700 font-medium">AniDachi</td>
-              <td className="border border-gray-200 px-4 py-2 text-purple-700">Yes — async mode built in</td>
+            <tr className="bg-brand-surface">
+              <td className="border border-brand-border px-4 py-2">Viki</td>
+              <td className="border border-brand-border px-4 py-2">Check Viki&apos;s current support or Rave</td>
+              <td className="border border-brand-border px-4 py-2">None</td>
             </tr>
             <tr>
-              <td className="border border-gray-200 px-4 py-2">Any platform</td>
-              <td className="border border-gray-200 px-4 py-2">Discord (screen share) or press-play-together</td>
-              <td className="border border-gray-200 px-4 py-2">None</td>
+              <td className="border border-brand-border px-4 py-2">YouTube</td>
+              <td className="border border-brand-border px-4 py-2">Watch2Gether</td>
+              <td className="border border-brand-border px-4 py-2">None</td>
+            </tr>
+            <tr className="bg-brand-surface">
+              <td className="border border-brand-border px-4 py-2">Crunchyroll (anime)</td>
+              <td className="border border-brand-border px-4 py-2 text-brand-orange font-medium">AniDachi</td>
+              <td className="border border-brand-border px-4 py-2 text-brand-orange">Yes — async mode built in</td>
+            </tr>
+            <tr>
+              <td className="border border-brand-border px-4 py-2">Any platform</td>
+              <td className="border border-brand-border px-4 py-2">Discord (screen share) or press-play-together</td>
+              <td className="border border-brand-border px-4 py-2">None</td>
             </tr>
           </tbody>
         </table>
@@ -140,22 +140,22 @@ export default function WatchKdramaTogetherLongDistancePage() {
 
       <h2
         id="netflix"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Netflix K-Dramas: Use Teleparty or Rave
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Netflix has the largest English-subtitle K-drama catalog — Crash
         Landing on You, Squid Game, My Mister, Business Proposal. For live
         watch sessions, Teleparty is the most widely used option:
       </p>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Both install the Teleparty Chrome extension.</li>
         <li>One person opens the episode on Netflix and clicks &quot;Create a Teleparty.&quot;</li>
         <li>Share the room link.</li>
         <li>Both join and playback syncs automatically with text chat.</li>
       </ol>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Rave is a free alternative that adds built-in voice and video calling,
         so you can see each other&apos;s faces without a separate Discord call.
         Both require you to be online at the same time — neither supports
@@ -164,17 +164,17 @@ export default function WatchKdramaTogetherLongDistancePage() {
 
       <h2
         id="viki"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Viki and Other Platforms
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Viki (Rakuten Viki) is the largest dedicated K-drama streaming
         platform and has offered watch party features — but availability
         and functionality change over time. Check the current Viki website
         for their most recent group watch support before relying on it.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         For a reliable fallback on any platform: use a video call (FaceTime,
         WhatsApp, Discord) and count down together before pressing play.
         This gives you voice contact but no playback sync — if one person
@@ -183,11 +183,11 @@ export default function WatchKdramaTogetherLongDistancePage() {
 
       <h2
         id="youtube"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Watching K-Drama Clips or Trailers on YouTube
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         For YouTube content — trailers, fan cuts, episode clips, music
         videos — Watch2Gether (w2g.tv) syncs YouTube playback with text
         chat and is completely free. It also supports Vimeo and Dailymotion.
@@ -196,35 +196,35 @@ export default function WatchKdramaTogetherLongDistancePage() {
 
       <h2
         id="async"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When Your Schedules Never Align
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         For K-dramas specifically, there is currently no tool that offers
         async watching equivalent to AniDachi. The best workaround for
         different-schedule LDR couples is:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Set a weekly episode target — 2 or 3 episodes per week.</li>
         <li>Watch on your own schedule but do not discuss any specifics until both have seen the episode.</li>
         <li>Use a Discord or WhatsApp channel dedicated to the show — keep all reactions there, and agree on a rule: no posting about an episode until both of you confirm you watched it.</li>
         <li>Schedule a weekly video call to discuss everything you watched that week.</li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         For anime on Crunchyroll,{" "}
-        <Link href="/timezone-friendly-anime-watch-parties" className="text-purple-600 hover:underline">
+        <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
           AniDachi&apos;s async mode handles all of this automatically.
         </Link>
       </p>
 
       <h2
         id="crunchyroll-anime"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Also Watching Anime on Crunchyroll?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         If your LDR watch list includes anime alongside K-dramas, AniDachi
         handles the Crunchyroll side with a much better experience than
         any general watch party tool — including async mode, per-person
@@ -235,11 +235,11 @@ export default function WatchKdramaTogetherLongDistancePage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/watch-crunchyroll-together-long-distance" className="hover:underline">
             How to watch Crunchyroll together long distance

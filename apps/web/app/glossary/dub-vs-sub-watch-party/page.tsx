@@ -58,16 +58,16 @@ export default function DubVsSubGlossaryPage() {
       faq={faq}
       headings={tocHeadings}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Dub vs Sub for Anime Watch Parties
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           For anime watch parties, dubbed episodes work better for socializing
           (you can look away from subtitles to chat), while subbed episodes
@@ -79,11 +79,11 @@ export default function DubVsSubGlossaryPage() {
 
       <h2
         id="dub-advantages"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Advantages of Dubbed (English) for Watch Parties
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Easier to follow while chatting and reacting with friends.</li>
         <li>Better for newcomers who aren&apos;t used to reading subtitles.</li>
         <li>Works well for large group settings where attention is divided.</li>
@@ -91,11 +91,11 @@ export default function DubVsSubGlossaryPage() {
 
       <h2
         id="sub-advantages"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Advantages of Subbed (Japanese with Subtitles) for Watch Parties
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Original voice acting often conveys more emotion and nuance.</li>
         <li>Available immediately on simulcast — dubs often lag by weeks.</li>
         <li>Preferred by the majority of the anime community.</li>
@@ -103,11 +103,11 @@ export default function DubVsSubGlossaryPage() {
 
       <h2
         id="mixed-groups"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Tips for Mixed-Preference Groups
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Poll the group before starting — majority wins.</li>
         <li>
           For async watchrooms in AniDachi, each person can watch in their
@@ -120,11 +120,11 @@ export default function DubVsSubGlossaryPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li><Link href="/glossary/anime-simulcast" className="hover:underline">What Is an Anime Simulcast?</Link></li>
         <li><Link href="/glossary/watchroom" className="hover:underline">What Is a Watchroom?</Link></li>
         <li><Link href="/guides/best-anime-to-watch-with-friends" className="hover:underline">Best Anime to Watch with Friends</Link></li>

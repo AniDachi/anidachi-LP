@@ -86,18 +86,17 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Crunchyroll Party vs Teleparty for anime watch parties
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           Both extensions sync Crunchyroll playback for live watch parties — but
           they target different groups. Crunchyroll Party is anime-only; Teleparty
@@ -108,11 +107,11 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
 
       <h2
         id="tldr"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-3 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-3 scroll-mt-24"
       >
         At a glance
       </h2>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>TL;DR:</strong> Pick <strong>Crunchyroll Party</strong> for
         Crunchyroll-only anime groups who want a focused, lightweight extension.
         Pick <strong>Teleparty</strong> if you also watch Netflix, Disney+, and
@@ -122,7 +121,7 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
 
       <h2
         id="feature-comparison"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Feature comparison
       </h2>
@@ -165,11 +164,11 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
 
       <h2
         id="when-crunchyroll-party"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When Crunchyroll Party wins
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Your group watches anime exclusively on Crunchyroll.</li>
         <li>You want a lightweight extension without multi-platform overhead.</li>
         <li>Everyone can watch live at the same time every session.</li>
@@ -178,11 +177,11 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
 
       <h2
         id="when-teleparty"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When Teleparty wins
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Your group watches on Crunchyroll and other platforms.</li>
         <li>You want one extension for movie nights and anime sessions.</li>
         <li>Premium video/audio chat during watch parties matters to you.</li>
@@ -191,37 +190,37 @@ export default function CrunchyrollPartyVsTelepartyForAnimePage() {
 
       <h2
         id="upgrade"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When to upgrade to AniDachi
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Both extensions break down when real friend groups try to use them long-term:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Members in different time zones can&apos;t watch live every week.</li>
         <li>Someone always binges ahead and spoils the group chat.</li>
         <li>Sync drift becomes a weekly troubleshooting ritual.</li>
         <li>Long-running series need per-person progress tracking.</li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi is the async upgrade for Crunchyroll anime groups. Compare directly:{" "}
-        <Link href="/compare/anidachi-vs-crunchyroll-party" className="text-purple-600 hover:underline">
+        <Link href="/compare/anidachi-vs-crunchyroll-party" className="text-brand-orange hover:underline">
           AniDachi vs Crunchyroll Party
         </Link>
         {" · "}
-        <Link href="/compare/anidachi-vs-teleparty" className="text-purple-600 hover:underline">
+        <Link href="/compare/anidachi-vs-teleparty" className="text-brand-orange hover:underline">
           AniDachi vs Teleparty
         </Link>
       </p>
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/guides/crunchyroll-watch-party-not-working" className="hover:underline">
             Crunchyroll watch party not working — troubleshooting

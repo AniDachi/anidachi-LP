@@ -30,13 +30,17 @@ export function ChromeExtensionFeatures() {
   ];
 
   return (
-    <section id="extension" className="py-24 bg-gradient-to-br from-blue-50 to-purple-50">
+    <section id="extension" className="py-24 bg-brand-surface">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="inline-flex items-center gap-2 bg-brand-orange/15 border border-brand-orange/30 text-brand-orange px-4 py-1.5 rounded-full text-sm font-semibold mb-4 tracking-wide uppercase">
+            Extension
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Anime Detection Chrome Extension
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <div className="w-16 h-1 bg-gradient-to-r from-brand-orange to-brand-orange-bright mx-auto rounded-full mb-4" />
+          <p className="text-xl text-foreground/70 max-w-3xl mx-auto">
             Seamlessly detect anime on Crunchyroll and instantly create
             watchrooms. The best way to watch anime with friends online.
           </p>
@@ -45,18 +49,19 @@ export function ChromeExtensionFeatures() {
           {features.map((feature, index) => (
             <Card
               key={index}
-              className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-6"
+              className="group border border-brand-border shadow-lg hover:shadow-xl hover:border-brand-orange/40 hover:-translate-y-1 transition-all duration-300 bg-background p-6 animate-fade-in-up"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
               <CardHeader className="p-0">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
-                  <feature.icon className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                <div className="w-12 h-12 bg-brand-orange/15 rounded-xl flex items-center justify-center mb-2 transition-all duration-300 group-hover:bg-brand-orange group-hover:text-primary-foreground">
+                  <feature.icon className="h-6 w-6 text-brand-orange group-hover:text-primary-foreground transition-colors duration-300" aria-hidden="true" />
                 </div>
-                <CardTitle className="text-xl font-semibold text-gray-900 mb-2">
+                <CardTitle className="text-xl font-semibold text-foreground mb-2">
                   {feature.title}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0 pt-4">
-                <CardDescription className="text-gray-600 text-base leading-relaxed">
+                <CardDescription className="text-foreground/70 text-base leading-relaxed">
                   {feature.description}
                 </CardDescription>
               </CardContent>

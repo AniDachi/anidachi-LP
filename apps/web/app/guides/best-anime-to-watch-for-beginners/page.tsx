@@ -90,13 +90,12 @@ export default function BestAnimeForBeginnersPage() {
       faq={faq}
       headings={headings}
       itemList={itemList}
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         29 Best Anime to Watch for Beginners in 2026
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           The best anime for beginners reward curiosity quickly: readable plots,
           standout episodes inside the first three installments, and hooks that
@@ -107,9 +106,9 @@ export default function BestAnimeForBeginnersPage() {
         cadence — live or async.
       </p>
 
-      <p className="text-gray-700 leading-relaxed mb-10">
+      <p className="text-foreground/80 leading-relaxed mb-10">
         Jump to a category below or open any title&apos;s{" "}
-        <Link href="/watch-anime-together" className="text-purple-600 hover:underline">
+        <Link href="/watch-anime-together" className="text-brand-orange hover:underline">
           dedicated watch page
         </Link>{" "}
         for SEO landing context before you invite friends.
@@ -117,20 +116,20 @@ export default function BestAnimeForBeginnersPage() {
 
       <h2
         id="easy-hooks"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Easy hooks &amp; modern pacing
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         These shows explain themselves fast and lean on crisp animation or
         character chemistry instead of decades of continuity.
       </p>
-      <ul className="space-y-5 text-gray-700 mb-10">
+      <ul className="space-y-5 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/spy-x-family-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Spy x Family
             </Link>
@@ -144,7 +143,7 @@ export default function BestAnimeForBeginnersPage() {
           <strong>
             <Link
               href="/watch/demon-slayer-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Demon Slayer
             </Link>
@@ -157,7 +156,7 @@ export default function BestAnimeForBeginnersPage() {
           <strong>
             <Link
               href="/watch/my-hero-academia-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               My Hero Academia
             </Link>
@@ -170,7 +169,7 @@ export default function BestAnimeForBeginnersPage() {
           <strong>
             <Link
               href="/watch/kaiju-no-8-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Kaiju No. 8
             </Link>
@@ -182,7 +181,7 @@ export default function BestAnimeForBeginnersPage() {
           <strong>
             <Link
               href="/watch/lycoris-recoil-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Lycoris Recoil
             </Link>
@@ -195,7 +194,7 @@ export default function BestAnimeForBeginnersPage() {
           <strong>
             <Link
               href="/watch/delicious-in-dungeon-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Delicious in Dungeon
             </Link>
@@ -206,7 +205,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/hyouka-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/hyouka-with-friends" className="text-brand-orange hover:underline">
               Hyouka
             </Link>
           </strong>{" "}
@@ -214,7 +213,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/noragami-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/noragami-with-friends" className="text-brand-orange hover:underline">
               Noragami
             </Link>
           </strong>{" "}
@@ -222,7 +221,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/horimiya-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/horimiya-with-friends" className="text-brand-orange hover:underline">
               Horimiya
             </Link>
           </strong>{" "}
@@ -230,7 +229,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/assassination-classroom-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/assassination-classroom-with-friends" className="text-brand-orange hover:underline">
               Assassination Classroom
             </Link>
           </strong>{" "}
@@ -240,18 +239,18 @@ export default function BestAnimeForBeginnersPage() {
 
       <h2
         id="comedy-starters"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Comedy-first starters
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Humor lowers stakes for first-timers and keeps watch parties loud even
         when someone misses a lore detail.
       </p>
-      <ul className="space-y-5 text-gray-700 mb-10">
+      <ul className="space-y-5 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/konosuba-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/konosuba-with-friends" className="text-brand-orange hover:underline">
               KonoSuba
             </Link>
           </strong>{" "}
@@ -264,7 +263,7 @@ export default function BestAnimeForBeginnersPage() {
           <strong>
             <Link
               href="/watch/one-punch-man-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               One Punch Man
             </Link>
@@ -275,7 +274,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/kaguya-sama-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/kaguya-sama-with-friends" className="text-brand-orange hover:underline">
               Kaguya-sama: Love Is War
             </Link>
           </strong>{" "}
@@ -285,7 +284,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/rent-a-girlfriend-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/rent-a-girlfriend-with-friends" className="text-brand-orange hover:underline">
               Rent-a-Girlfriend
             </Link>
           </strong>{" "}
@@ -295,7 +294,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/bocchi-the-rock-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/bocchi-the-rock-with-friends" className="text-brand-orange hover:underline">
               Bocchi the Rock!
             </Link>
           </strong>{" "}
@@ -305,7 +304,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/mashle-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/mashle-with-friends" className="text-brand-orange hover:underline">
               Mashle: Magic and Muscles
             </Link>
           </strong>{" "}
@@ -315,7 +314,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/angel-beats-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/angel-beats-with-friends" className="text-brand-orange hover:underline">
               Angel Beats!
             </Link>
           </strong>{" "}
@@ -323,7 +322,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="text-brand-orange hover:underline">
               The Disastrous Life of Saiki K.
             </Link>
           </strong>{" "}
@@ -331,7 +330,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/zom-100-bucket-list-of-the-dead-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/zom-100-bucket-list-of-the-dead-with-friends" className="text-brand-orange hover:underline">
               Zom 100
             </Link>
           </strong>{" "}
@@ -341,20 +340,20 @@ export default function BestAnimeForBeginnersPage() {
 
       <h2
         id="compact-classics"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Compact classics
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Pick these when someone asks for &quot;the anime everyone says to watch&quot;
         but still wants a finish line without hundreds of episodes.
       </p>
-      <ul className="space-y-5 text-gray-700 mb-10">
+      <ul className="space-y-5 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/fullmetal-alchemist-brotherhood-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Fullmetal Alchemist: Brotherhood
             </Link>
@@ -365,7 +364,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/cowboy-bebop-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/cowboy-bebop-with-friends" className="text-brand-orange hover:underline">
               Cowboy Bebop
             </Link>
           </strong>{" "}
@@ -375,7 +374,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/death-note-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/death-note-with-friends" className="text-brand-orange hover:underline">
               Death Note
             </Link>
           </strong>{" "}
@@ -387,7 +386,7 @@ export default function BestAnimeForBeginnersPage() {
           <strong>
             <Link
               href="/watch/samurai-champloo-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Samurai Champloo
             </Link>
@@ -397,7 +396,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/trigun-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/trigun-with-friends" className="text-brand-orange hover:underline">
               Trigun
             </Link>
           </strong>{" "}
@@ -407,7 +406,7 @@ export default function BestAnimeForBeginnersPage() {
           <strong>
             <Link
               href="/watch/march-comes-in-like-a-lion-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               March Comes in Like a Lion
             </Link>
@@ -416,7 +415,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/your-lie-in-april-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/your-lie-in-april-with-friends" className="text-brand-orange hover:underline">
               Your Lie in April
             </Link>
           </strong>{" "}
@@ -426,7 +425,7 @@ export default function BestAnimeForBeginnersPage() {
           <strong>
             <Link
               href="/watch/my-neighbor-totoro-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               My Neighbor Totoro
             </Link>
@@ -437,18 +436,18 @@ export default function BestAnimeForBeginnersPage() {
 
       <h2
         id="sports-and-life"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Sports with grounded stakes
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Grounded competition helps viewers who think anime equals only fantasy
         spells. Expect teamwork speeches, training arcs, and motivational pacing.
       </p>
-      <ul className="space-y-5 text-gray-700 mb-10">
+      <ul className="space-y-5 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/haikyuu-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/haikyuu-with-friends" className="text-brand-orange hover:underline">
               Haikyu!!
             </Link>
           </strong>{" "}
@@ -458,7 +457,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/blue-lock-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/blue-lock-with-friends" className="text-brand-orange hover:underline">
               Blue Lock
             </Link>
           </strong>{" "}
@@ -468,7 +467,7 @@ export default function BestAnimeForBeginnersPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/sk8-the-infinity-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/sk8-the-infinity-with-friends" className="text-brand-orange hover:underline">
               SK8 the Infinity
             </Link>
           </strong>{" "}
@@ -480,11 +479,11 @@ export default function BestAnimeForBeginnersPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-6">
+      <ul className="space-y-2 text-brand-orange mb-6">
         <li>
           <Link href="/guides/best-anime-to-watch-with-friends" className="hover:underline">
             Best Anime to Watch with Friends

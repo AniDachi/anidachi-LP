@@ -51,16 +51,16 @@ export default function WatchroomGlossaryPage() {
       faq={faq}
       headings={tocHeadings}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         What Is a Watchroom?
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           A watchroom is a shared virtual space where friends watch the same
           anime together — either at the same time with synced playback, or
@@ -72,11 +72,11 @@ export default function WatchroomGlossaryPage() {
 
       <h2
         id="how-anidachi"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How Watchrooms Work in AniDachi
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         When you create a watchroom in AniDachi, it&apos;s linked to a specific
         anime series. The watchroom tracks each member&apos;s progress,
         provides episode-level chat and reactions, and optionally syncs
@@ -86,11 +86,11 @@ export default function WatchroomGlossaryPage() {
 
       <h2
         id="vs-watch-party"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Watchroom vs Watch Party
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         A &quot;watch party&quot; typically implies everyone watching at the
         same time. A watchroom is more flexible — it persists over days or weeks
         and supports both synchronous and asynchronous watching. It&apos;s
@@ -99,11 +99,11 @@ export default function WatchroomGlossaryPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li><Link href="/glossary/asynchronous-watching" className="hover:underline">What Is Asynchronous Watching?</Link></li>
         <li><Link href="/watch-anime-together" className="hover:underline">Watch Anime Together Guide</Link></li>
         <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll Together</Link></li>

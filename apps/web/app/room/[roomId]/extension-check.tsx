@@ -67,8 +67,8 @@ export function ExtensionCheck() {
   }
 
   return (
-    <p className="mt-4 flex items-center gap-2 text-sm text-emerald-400">
-      <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+    <p className="mt-4 flex items-center gap-2 text-sm text-brand-orange">
+      <span className="inline-block h-2 w-2 rounded-full bg-brand-orange" />
       Extension detected
     </p>
   );

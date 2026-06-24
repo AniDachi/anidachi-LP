@@ -79,16 +79,16 @@ export default function WatchSportsAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Sports Anime With Friends
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Sports anime is designed to be watched like a live game — with people
           who care. Install AniDachi, open any series below on Crunchyroll, and
@@ -99,18 +99,18 @@ export default function WatchSportsAnimeWithFriendsPage() {
 
       <h2
         id="why-sports"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Sports Anime Perfect for Group Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Sports anime replicates the communal energy of watching a live match —
         the momentum swings, the comeback moments, and the team dynamics are all
         designed to produce shared reactions. Unlike other genres, sports anime
         has natural episode boundaries (one match = one session) that make
         scheduling watch nights straightforward.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi watchrooms are especially well-suited for sports series: pin the
         tournament bracket, tag reactions by match episode, and use async mode
         when someone misses a session so they can catch up before the next game
@@ -119,15 +119,15 @@ export default function WatchSportsAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Sports Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {sportsAnime.length} titles below have dedicated watchroom guides
         with session structure, bracket tips, and spoiler management:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {sportsAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -142,60 +142,60 @@ export default function WatchSportsAnimeWithFriendsPage() {
 
       <h2
         id="match-nights"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Run Match-Night Sessions
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi and create a watchroom.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi and create a watchroom.</span>{" "}
           Share the invite before the first match episode.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Pin the tournament bracket.</span>{" "}
+          <span className="font-medium text-foreground">Pin the tournament bracket.</span>{" "}
           Keep a shared note showing current standings so latecomers can orient quickly.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Schedule live sessions for semifinals and finals.</span>{" "}
+          <span className="font-medium text-foreground">Schedule live sessions for semifinals and finals.</span>{" "}
           These are the must-watch-together moments. Use async for training arcs.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Agree on match-result spoiler rules.</span>{" "}
+          <span className="font-medium text-foreground">Agree on match-result spoiler rules.</span>{" "}
           Reactions only after the group finishes the same match episode together.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Celebrate milestones.</span>{" "}
+          <span className="font-medium text-foreground">Celebrate milestones.</span>{" "}
           Major tournament wins and eliminations deserve their own debrief thread.
         </li>
       </ol>
 
       <h2
         id="spoilers"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Avoid Match Result Spoilers
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Match spoilers in sports anime are particularly brutal — knowing which
         team wins before the episode removes all the tension. Protect your
         group&apos;s experience:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Tag all reactions with the specific match name (e.g. &quot;Karasuno vs Aoba Johsai&quot;) so late viewers know exactly which episodes to avoid.</li>
         <li>React with energy descriptions only — &quot;that rally had me standing&quot; — not scores or winners until everyone finishes.</li>
         <li>Stay off sports anime subreddits and Twitter during active tournament arcs — match results spread fast.</li>
         <li>For async members, use AniDachi&apos;s episode markers to set &quot;safe through Match X&quot; so they know where to re-enter the group chat.</li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
-        <Link href="/watch-anime-together" className="text-purple-600 hover:underline">Watch anime together</Link>
+        <Link href="/watch-anime-together" className="text-brand-orange hover:underline">Watch anime together</Link>
         {" · "}
-        <Link href="/watch-action-anime-with-friends" className="text-purple-600 hover:underline">Action anime</Link>
+        <Link href="/watch-action-anime-with-friends" className="text-brand-orange hover:underline">Action anime</Link>
         {" · "}
-        <Link href="/watch-mystery-anime-with-friends" className="text-purple-600 hover:underline">Mystery anime</Link>
+        <Link href="/watch-mystery-anime-with-friends" className="text-brand-orange hover:underline">Mystery anime</Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

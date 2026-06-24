@@ -85,16 +85,16 @@ export default function ShonenAnimeGlossaryPage() {
       faq={faq}
       headings={tocHeadings}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         What Is Shonen Anime? (Meaning, Definition & Best Examples)
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Shonen anime is anime targeted at teenage male audiences — the
           demographic that reads magazines like Weekly Shonen Jump. The most
@@ -106,27 +106,27 @@ export default function ShonenAnimeGlossaryPage() {
 
       <h2
         id="definition"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Shonen Definition: What the Word Means
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The word <strong>shonen</strong> (少年) means &quot;boy&quot; or &quot;youth&quot; in
         Japanese — specifically, a young male. In the anime and manga industry,
         &quot;shonen&quot; refers to the demographic target of the work: content
         aimed at teenage boys, typically published in weekly manga anthologies
         directed at that audience.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The demographic classification system in Japan organizes manga into:
       </p>
-      <ul className="space-y-2 text-gray-700 mb-6">
+      <ul className="space-y-2 text-foreground/80 mb-6">
         <li><strong>Shonen</strong> (少年) — teenage boys (12–18)</li>
         <li><strong>Shoujo</strong> (少女) — teenage girls (12–18)</li>
         <li><strong>Seinen</strong> (青年) — adult men (18–40)</li>
         <li><strong>Josei</strong> (女性) — adult women (18–40)</li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         These categories describe the <em>intended audience</em>, not the
         content or who actually watches. Many of the most popular shonen series
         have large female fanbases; many shoujo series are enjoyed by men.
@@ -136,15 +136,15 @@ export default function ShonenAnimeGlossaryPage() {
 
       <h2
         id="shonen-vs-other"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Shonen vs Other Anime Demographics
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The practical differences between shonen and other demographics as they
         typically manifest in anime:
       </p>
-      <ul className="space-y-4 text-gray-700 mb-8">
+      <ul className="space-y-4 text-foreground/80 mb-8">
         <li>
           <strong>Shonen vs Shoujo:</strong> Shonen typically centers on
           action, competition, and individual growth through effort; shoujo
@@ -170,86 +170,86 @@ export default function ShonenAnimeGlossaryPage() {
 
       <h2
         id="famous-series"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Famous Shonen Anime Series
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The most culturally significant shonen anime, roughly categorized:
       </p>
-      <ul className="space-y-3 text-gray-700 mb-8">
+      <ul className="space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>The classic era (1990s–2000s):</strong>{" "}
-          <Link href="/watch/dragon-ball-super-with-friends" className="text-purple-600 hover:underline">Dragon Ball Z</Link>,{" "}
-          <Link href="/watch/naruto-with-friends" className="text-purple-600 hover:underline">Naruto</Link>,{" "}
-          <Link href="/watch/bleach-with-friends" className="text-purple-600 hover:underline">Bleach</Link>,{" "}
-          <Link href="/watch/yu-yu-hakusho-with-friends" className="text-purple-600 hover:underline">Yu Yu Hakusho</Link>,{" "}
-          <Link href="/watch/slam-dunk-with-friends" className="text-purple-600 hover:underline">Slam Dunk</Link>
+          <Link href="/watch/dragon-ball-super-with-friends" className="text-brand-orange hover:underline">Dragon Ball Z</Link>,{" "}
+          <Link href="/watch/naruto-with-friends" className="text-brand-orange hover:underline">Naruto</Link>,{" "}
+          <Link href="/watch/bleach-with-friends" className="text-brand-orange hover:underline">Bleach</Link>,{" "}
+          <Link href="/watch/yu-yu-hakusho-with-friends" className="text-brand-orange hover:underline">Yu Yu Hakusho</Link>,{" "}
+          <Link href="/watch/slam-dunk-with-friends" className="text-brand-orange hover:underline">Slam Dunk</Link>
         </li>
         <li>
           <strong>The long-run era (2000s–ongoing):</strong>{" "}
-          <Link href="/watch/one-piece-with-friends" className="text-purple-600 hover:underline">One Piece</Link>,{" "}
-          <Link href="/watch/fairy-tail-with-friends" className="text-purple-600 hover:underline">Fairy Tail</Link>,{" "}
-          <Link href="/watch/bleach-with-friends" className="text-purple-600 hover:underline">Bleach TYBW</Link>
+          <Link href="/watch/one-piece-with-friends" className="text-brand-orange hover:underline">One Piece</Link>,{" "}
+          <Link href="/watch/fairy-tail-with-friends" className="text-brand-orange hover:underline">Fairy Tail</Link>,{" "}
+          <Link href="/watch/bleach-with-friends" className="text-brand-orange hover:underline">Bleach TYBW</Link>
         </li>
         <li>
           <strong>The prestige era (2010s–present):</strong>{" "}
-          <Link href="/watch/fullmetal-alchemist-brotherhood-with-friends" className="text-purple-600 hover:underline">Fullmetal Alchemist: Brotherhood</Link>,{" "}
-          <Link href="/watch/hunter-x-hunter-with-friends" className="text-purple-600 hover:underline">Hunter x Hunter (2011)</Link>,{" "}
-          <Link href="/watch/attack-on-titan-with-friends" className="text-purple-600 hover:underline">Attack on Titan</Link>,{" "}
-          <Link href="/watch/my-hero-academia-with-friends" className="text-purple-600 hover:underline">My Hero Academia</Link>,{" "}
-          <Link href="/watch/haikyuu-with-friends" className="text-purple-600 hover:underline">Haikyuu!!</Link>
+          <Link href="/watch/fullmetal-alchemist-brotherhood-with-friends" className="text-brand-orange hover:underline">Fullmetal Alchemist: Brotherhood</Link>,{" "}
+          <Link href="/watch/hunter-x-hunter-with-friends" className="text-brand-orange hover:underline">Hunter x Hunter (2011)</Link>,{" "}
+          <Link href="/watch/attack-on-titan-with-friends" className="text-brand-orange hover:underline">Attack on Titan</Link>,{" "}
+          <Link href="/watch/my-hero-academia-with-friends" className="text-brand-orange hover:underline">My Hero Academia</Link>,{" "}
+          <Link href="/watch/haikyuu-with-friends" className="text-brand-orange hover:underline">Haikyuu!!</Link>
         </li>
         <li>
           <strong>Current generation (2020s):</strong>{" "}
-          <Link href="/watch/demon-slayer-with-friends" className="text-purple-600 hover:underline">Demon Slayer</Link>,{" "}
-          <Link href="/watch/jujutsu-kaisen-with-friends" className="text-purple-600 hover:underline">Jujutsu Kaisen</Link>,{" "}
-          <Link href="/watch/chainsaw-man-with-friends" className="text-purple-600 hover:underline">Chainsaw Man</Link>,{" "}
-          <Link href="/watch/blue-lock-with-friends" className="text-purple-600 hover:underline">Blue Lock</Link>,{" "}
-          <Link href="/watch/frieren-beyond-journeys-end-with-friends" className="text-purple-600 hover:underline">Frieren: Beyond Journey&apos;s End</Link>
+          <Link href="/watch/demon-slayer-with-friends" className="text-brand-orange hover:underline">Demon Slayer</Link>,{" "}
+          <Link href="/watch/jujutsu-kaisen-with-friends" className="text-brand-orange hover:underline">Jujutsu Kaisen</Link>,{" "}
+          <Link href="/watch/chainsaw-man-with-friends" className="text-brand-orange hover:underline">Chainsaw Man</Link>,{" "}
+          <Link href="/watch/blue-lock-with-friends" className="text-brand-orange hover:underline">Blue Lock</Link>,{" "}
+          <Link href="/watch/frieren-beyond-journeys-end-with-friends" className="text-brand-orange hover:underline">Frieren: Beyond Journey&apos;s End</Link>
         </li>
       </ul>
 
       <h2
         id="group-watch"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Best Shonen Anime for Group Watching
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Shonen is the best genre for group anime watches because its core
         appeal is universal — competition, effort, and friendship translate
         across age, gender, and anime experience level. Three starting points
         based on group profile:
       </p>
-      <ul className="space-y-3 text-gray-700 mb-8">
+      <ul className="space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>New to anime:</strong>{" "}
-          <Link href="/watch/demon-slayer-with-friends" className="text-purple-600 hover:underline">Demon Slayer Season 1</Link> (26 episodes) — animation quality hooks newcomers before lore knowledge becomes relevant.
+          <Link href="/watch/demon-slayer-with-friends" className="text-brand-orange hover:underline">Demon Slayer Season 1</Link> (26 episodes) — animation quality hooks newcomers before lore knowledge becomes relevant.
         </li>
         <li>
           <strong>Sports fans:</strong>{" "}
-          <Link href="/watch/haikyuu-with-friends" className="text-purple-600 hover:underline">Haikyuu!!</Link> (85 episodes) — every match is structured like a thriller, and group prediction games add meta-competition.
+          <Link href="/watch/haikyuu-with-friends" className="text-brand-orange hover:underline">Haikyuu!!</Link> (85 episodes) — every match is structured like a thriller, and group prediction games add meta-competition.
         </li>
         <li>
           <strong>Committed groups:</strong>{" "}
-          <Link href="/watch/hunter-x-hunter-with-friends" className="text-purple-600 hover:underline">Hunter x Hunter (2011)</Link> (148 episodes, zero filler) — widely considered the most ambitious shonen storytelling ever made.
+          <Link href="/watch/hunter-x-hunter-with-friends" className="text-brand-orange hover:underline">Hunter x Hunter (2011)</Link> (148 episodes, zero filler) — widely considered the most ambitious shonen storytelling ever made.
         </li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         For a full curated list of shonen picks with group-watch setup guides, see{" "}
-        <Link href="/guides/best-shonen-anime-to-watch-with-friends" className="text-purple-600 hover:underline">
+        <Link href="/guides/best-shonen-anime-to-watch-with-friends" className="text-brand-orange hover:underline">
           Best shonen anime to watch with friends
         </Link>.
       </p>
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/guides/best-shonen-anime-to-watch-with-friends" className="hover:underline">
             Best shonen anime to watch with friends

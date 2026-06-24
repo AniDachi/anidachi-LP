@@ -86,12 +86,11 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         9 best sports anime to watch with friends in 2026
       </h1>
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Sports anime is built for group reactions — every match has sides to
           pick, clutch moments to scream at, and training montages to debate.
@@ -102,14 +101,14 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
 
       <h2
         id="team-sports"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Team sports picks
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/haikyuu-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/haikyuu-with-friends" className="text-brand-orange hover:underline">
               Haikyuu!!
             </Link>
           </strong>{" "}
@@ -120,7 +119,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/blue-lock-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/blue-lock-with-friends" className="text-brand-orange hover:underline">
               Blue Lock
             </Link>
           </strong>{" "}
@@ -131,7 +130,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/kuroko-no-basket-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/kuroko-no-basket-with-friends" className="text-brand-orange hover:underline">
               Kuroko&apos;s Basketball
             </Link>
           </strong>{" "}
@@ -141,7 +140,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/slam-dunk-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/slam-dunk-with-friends" className="text-brand-orange hover:underline">
               Slam Dunk
             </Link>
           </strong>{" "}
@@ -153,14 +152,14 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
 
       <h2
         id="individual-sports"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Individual &amp; combat sports
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/hajime-no-ippo-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/hajime-no-ippo-with-friends" className="text-brand-orange hover:underline">
               Hajime no Ippo
             </Link>
           </strong>{" "}
@@ -170,7 +169,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/initial-d-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/initial-d-with-friends" className="text-brand-orange hover:underline">
               Initial D: First Stage
             </Link>
           </strong>{" "}
@@ -180,7 +179,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/yuri-on-ice-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/yuri-on-ice-with-friends" className="text-brand-orange hover:underline">
               Yuri on Ice
             </Link>
           </strong>{" "}
@@ -190,7 +189,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/march-comes-in-like-a-lion-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/march-comes-in-like-a-lion-with-friends" className="text-brand-orange hover:underline">
               March Comes in Like a Lion
             </Link>
           </strong>{" "}
@@ -200,7 +199,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/sk8-the-infinity-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/sk8-the-infinity-with-friends" className="text-brand-orange hover:underline">
               SK8 the Infinity
             </Link>
           </strong>{" "}
@@ -212,11 +211,11 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
 
       <h2
         id="tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Sports watch party tips
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-10">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-10">
         <li>
           Schedule live sync for tournament finals and elimination matches — the
           crowd energy is half the point.
@@ -237,11 +236,11 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/watch-sports-anime-with-friends" className="hover:underline">
             Watch sports anime with friends — genre hub

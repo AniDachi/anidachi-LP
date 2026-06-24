@@ -1,6 +1,10 @@
 import { randomUUID } from "crypto";
 import type { HomeSurveyAnswers } from "@/lib/home-survey";
-import { SURVEY_LEAD_SEGMENT } from "./survey-lead-shared";
+import {
+  SURVEY_LEAD_SEGMENT,
+  countSurveyLeads,
+  waitlistPositionForEmail,
+} from "./survey-lead-shared";
 import { readContacts, writeContacts } from "./store";
 import type { Contact } from "./types";
 import { isValidEmail, normalizeEmail } from "./validation";
@@ -38,17 +42,32 @@ function buildSurveyNote(survey: Partial<HomeSurveyAnswers>): string {
 export async function upsertSurveyLead(
   email: string,
   survey: Partial<HomeSurveyAnswers>,
-): Promise<{ saved: boolean; reason?: string }> {
+): Promise<{
+  saved: boolean;
+  reason?: string;
+  waitlistCount: number;
+  waitlistPosition: number | null;
+}> {
   const normalized = normalizeEmail(email);
   if (!isValidEmail(normalized)) {
-    return { saved: false, reason: "invalid_email" };
+    const contacts = await readContacts();
+    return {
+      saved: false,
+      reason: "invalid_email",
+      waitlistCount: countSurveyLeads(contacts),
+      waitlistPosition: null,
+    };
   }
 
   const contacts = await readContacts();
-  const idx = contacts.findIndex((c) => c.email === normalized);
+  const idx = contacts.findIndex(
+    (c) => normalizeEmail(c.email) === normalized,
+  );
   const now = new Date().toISOString();
   const segments = buildSurveySegments(survey);
   const surveyNote = buildSurveyNote(survey);
+
+  const wasExistingLead = idx !== -1;
 
   if (idx === -1) {
     const contact: Contact = {
@@ -77,6 +96,22 @@ export async function upsertSurveyLead(
     };
   }
 
-  await writeContacts(contacts);
-  return { saved: true };
+  try {
+    await writeContacts(contacts);
+  } catch (error) {
+    console.error("[survey-lead] Failed to write contacts:", error);
+    const persisted = await readContacts();
+    return {
+      saved: false,
+      reason: "write_failed",
+      waitlistCount: countSurveyLeads(persisted),
+      waitlistPosition: wasExistingLead
+        ? waitlistPositionForEmail(persisted, normalized)
+        : null,
+    };
+  }
+
+  const waitlistCount = countSurveyLeads(contacts);
+  const waitlistPosition = waitlistPositionForEmail(contacts, normalized);
+  return { saved: true, waitlistCount, waitlistPosition };
 }

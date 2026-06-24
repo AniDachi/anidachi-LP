@@ -104,17 +104,17 @@ export default function WatchAnimeTogetherPage() {
       itemList={genreHubItemList(1)}
       aboveFoldCta
     >
-      <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
         Watch Anime Together Online
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           The best way to watch anime together online is with a dedicated
           watchroom tool like AniDachi that syncs playback, adds real-time chat,
@@ -125,9 +125,9 @@ export default function WatchAnimeTogetherPage() {
         every method — anime watch parties, long-distance viewing, and free options.
       </p>
 
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         Ready to try the Crunchyroll-first option?{" "}
-        <Link href="/#pricing" className="text-purple-600 font-medium hover:underline">
+        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
           Start a paid AniDachi plan
         </Link>{" "}
         — early-access pricing with a clear refund path, then create your first
@@ -136,11 +136,11 @@ export default function WatchAnimeTogetherPage() {
 
       <h2
         id="why-watch"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Why Watch Anime Together?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Anime is a social experience. Discussing plot twists, debating character
         arcs, and reacting to cliffhangers together is what makes it memorable.
         Whether it&apos;s your first time watching Attack on Titan or
@@ -151,16 +151,16 @@ export default function WatchAnimeTogetherPage() {
 
       <h2
         id="watch-party"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Host an Anime Watch Party Online — Free &amp; Paid Options
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         An <strong>anime watch party</strong> lets your group watch the same
         episode at the same time, with reactions and chat flying in real-time.
         Here are the main options ranked by quality:
       </p>
-      <ul className="space-y-3 text-gray-700 mb-6">
+      <ul className="space-y-3 text-foreground/80 mb-6">
         <li>
           <strong>AniDachi (Best):</strong> Crunchyroll-focused watchrooms with
           live sync, real-time chat, and unique async support. Each person
@@ -181,15 +181,15 @@ export default function WatchAnimeTogetherPage() {
           it&apos;s the quickest zero-setup option.
         </li>
       </ul>
-      <p className="text-gray-700 mb-6">
+      <p className="text-foreground/80 mb-6">
         Want a step-by-step walkthrough?{" "}
-        <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="text-purple-600 hover:underline">
+        <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="text-brand-orange hover:underline">
           How to watch Crunchyroll with friends (full guide)
         </Link>.
       </p>
 
       <h2
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         id="methods-heading"
       >
         Methods for Watching Anime Together
@@ -197,11 +197,11 @@ export default function WatchAnimeTogetherPage() {
 
       <h3
         id="method-extensions"
-        className="text-xl font-semibold text-gray-900 mt-8 mb-3 scroll-mt-24"
+        className="text-xl font-semibold text-foreground mt-8 mb-3 scroll-mt-24"
       >
         1. Chrome Extensions (Best Quality &amp; Features)
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Extensions like AniDachi, Crunchyroll Party, and Teleparty sync
         playback so everyone sees the same frame. Each person watches on their
         own account in full quality. AniDachi uniquely supports async watching
@@ -210,11 +210,11 @@ export default function WatchAnimeTogetherPage() {
 
       <h3
         id="method-discord"
-        className="text-xl font-semibold text-gray-900 mt-8 mb-3 scroll-mt-24"
+        className="text-xl font-semibold text-foreground mt-8 mb-3 scroll-mt-24"
       >
         2. Discord Screen Sharing (Free &amp; Easy)
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Share your Crunchyroll tab via Discord&apos;s Go Live feature. Free and
         requires no extra tools, but quality is often capped at 720p and
         there&apos;s no automatic sync. Best for casual, impromptu sessions.
@@ -222,16 +222,16 @@ export default function WatchAnimeTogetherPage() {
 
       <h3
         id="method-in-person"
-        className="text-xl font-semibold text-gray-900 mt-8 mb-3 scroll-mt-24"
+        className="text-xl font-semibold text-foreground mt-8 mb-3 scroll-mt-24"
       >
         3. In-Person Watch Parties
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Nothing beats a TV, snacks, and friends on the couch. Cast Crunchyroll
         to a TV, grab some Japanese snacks, and binge away. Check our guide on{" "}
         <Link
           href="/guides/anime-watch-party-ideas"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           anime watch party ideas
         </Link>{" "}
@@ -240,16 +240,16 @@ export default function WatchAnimeTogetherPage() {
 
       <h2
         id="long-distance"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Watch Anime Together Long Distance
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Long-distance anime watching is one of the most common reasons people
         look for watch-together tools. Whether you&apos;re in different cities,
         time zones, or countries, these approaches work:
       </p>
-      <ul className="space-y-3 text-gray-700 mb-4">
+      <ul className="space-y-3 text-foreground/80 mb-4">
         <li>
           <strong>Live sync across distance:</strong> AniDachi, Crunchyroll
           Party, and Teleparty all work regardless of location. Each person
@@ -269,24 +269,24 @@ export default function WatchAnimeTogetherPage() {
           host&apos;s upload speed.
         </li>
       </ul>
-      <p className="text-gray-700 mb-6">
+      <p className="text-foreground/80 mb-6">
         See our full guide:{" "}
-        <Link href="/guides/how-to-watch-anime-long-distance" className="text-purple-600 hover:underline">
+        <Link href="/guides/how-to-watch-anime-long-distance" className="text-brand-orange hover:underline">
           How to watch anime long distance
         </Link>{" "}
         and{" "}
-        <Link href="/guides/how-to-watch-anime-with-friends-in-different-time-zones" className="text-purple-600 hover:underline">
+        <Link href="/guides/how-to-watch-anime-with-friends-in-different-time-zones" className="text-brand-orange hover:underline">
           watching anime across time zones
         </Link>.
       </p>
 
       <h2
         id="live-vs-async"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Live vs Asynchronous Watch Parties
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         <strong>Live watch parties</strong> require everyone to be online at the
         same time. Great for premieres and season finales, but hard to schedule.{" "}
         <strong>Asynchronous watch parties</strong> let everyone watch at their
@@ -294,7 +294,7 @@ export default function WatchAnimeTogetherPage() {
         fully supports async anime watching. Read our{" "}
         <Link
           href="/guides/asynchronous-vs-live-watch-party"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           full comparison
         </Link>
@@ -303,14 +303,14 @@ export default function WatchAnimeTogetherPage() {
 
       <h2
         id="genre-hubs"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Browse Anime by Genre
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Genre hubs group the best titles for group watchrooms — each links to a dedicated watch page with setup steps, spoiler tips, and pacing advice:
       </p>
-      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-purple-600 mb-4">
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-brand-orange mb-4">
         <li><Link href="/watch-action-anime-with-friends" className="hover:underline font-medium">Action anime with friends →</Link></li>
         <li><Link href="/watch-romance-anime-with-friends" className="hover:underline font-medium">Romance anime with friends →</Link></li>
         <li><Link href="/watch-comedy-anime-with-friends" className="hover:underline font-medium">Comedy anime with friends →</Link></li>
@@ -321,14 +321,14 @@ export default function WatchAnimeTogetherPage() {
 
       <h2
         id="popular-anime"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         All Anime Watch Guides ({animeList.length} titles)
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Every title below has its own watchroom guide — step-by-step setup, genre-specific FAQs, and Crunchyroll watch-party tips:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {animeList.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -343,11 +343,11 @@ export default function WatchAnimeTogetherPage() {
 
       <h2
         id="all-guides"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         All Guides
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll Together</Link></li>
         <li>
           <Link href="/#pricing" className="hover:underline">

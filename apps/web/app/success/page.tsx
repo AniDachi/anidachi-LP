@@ -36,16 +36,19 @@ export default async function SuccessPage({
   const currentPlanLabel = getPlanEntitlements(currentPlan).label;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
-      <Card className="max-w-2xl w-full">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="absolute left-1/2 top-0 h-[420px] w-[640px] -translate-x-1/2 rounded-full bg-brand-orange/8 blur-[100px]" />
+      </div>
+      <Card className="relative max-w-2xl w-full">
         <CardHeader className="text-center">
           <div className="relative mx-auto mb-4 flex h-20 w-20 items-center justify-center">
-            <AnidachiLogo size={64} className="ring-2 ring-purple-100" priority />
-            <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
+            <AnidachiLogo size={64} priority />
+            <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand-orange/15">
+              <CheckCircle className="h-4 w-4 text-brand-orange" aria-hidden="true" />
             </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
+          <CardTitle className="text-2xl font-bold text-foreground">
             Subscription confirmed
           </CardTitle>
           <CardDescription className="text-lg mt-2">
@@ -59,13 +62,13 @@ export default async function SuccessPage({
           />
 
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-purple-600" aria-hidden="true" />
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-brand-orange" aria-hidden="true" />
               What is active now
             </h3>
-            <ol className="space-y-3 text-gray-700 text-sm">
+            <ol className="space-y-3 text-foreground/80 text-sm">
               <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs font-bold flex items-center justify-center">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand-orange/15 text-brand-orange text-xs font-bold flex items-center justify-center">
                   1
                 </span>
                 <span>
@@ -74,7 +77,7 @@ export default async function SuccessPage({
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs font-bold flex items-center justify-center">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand-orange/15 text-brand-orange text-xs font-bold flex items-center justify-center">
                   2
                 </span>
                 <span>
@@ -83,7 +86,7 @@ export default async function SuccessPage({
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs font-bold flex items-center justify-center">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand-orange/15 text-brand-orange text-xs font-bold flex items-center justify-center">
                   3
                 </span>
                 <span>
@@ -95,8 +98,8 @@ export default async function SuccessPage({
             </ol>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-            <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
+          <div className="bg-brand-surface rounded-lg p-4 text-sm text-foreground/70">
+            <h4 className="font-medium text-foreground mb-1 flex items-center gap-2">
               <Mail className="h-4 w-4" aria-hidden="true" />
               Full refund guarantee
             </h4>
@@ -104,7 +107,7 @@ export default async function SuccessPage({
               Changed your mind? No worries — email{" "}
               <a
                 href="mailto:goshan.tolochko@gmail.com"
-                className="text-purple-600 hover:underline"
+                className="text-brand-orange hover:underline"
               >
                 goshan.tolochko@gmail.com
               </a>{" "}

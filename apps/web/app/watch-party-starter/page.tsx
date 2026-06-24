@@ -58,27 +58,27 @@ export default function WatchPartyStarterPage() {
       aboveFoldCta
       conversionTemplate="home"
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Start an anime watch party on Crunchyroll
       </h1>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           Grab your crew, confirm everyone can open the same series on Crunchyroll,
           then use AniDachi for the watchroom layer—synced frames, chat, and async
           catch-up when schedules slip.
         </strong>
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Prefer the full story first? Read the{" "}
-        <Link href="/" className="text-purple-600 hover:underline">
+        <Link href="/" className="text-brand-orange hover:underline">
           AniDachi homepage
         </Link>
         , browse the{" "}
-        <Link href="/watch-anime-together" className="text-purple-600 hover:underline">
+        <Link href="/watch-anime-together" className="text-brand-orange hover:underline">
           complete watch-together guide
         </Link>
         , or jump to{" "}
-        <Link href="/#pricing" className="text-purple-600 font-medium hover:underline">
+        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
           pricing
         </Link>{" "}
         if you are ready to checkout.

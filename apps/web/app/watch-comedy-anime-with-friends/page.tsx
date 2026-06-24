@@ -79,17 +79,17 @@ export default function WatchComedyAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Comedy Anime With Friends
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Comedy anime is better with an audience — install AniDachi, pick a
           series below, and create a Crunchyroll watchroom. Laugh together live
@@ -100,18 +100,18 @@ export default function WatchComedyAnimeWithFriendsPage() {
 
       <h2
         id="why-comedy"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Comedy Anime Great for Group Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Laughter is social — the best gags land twice as hard when you can
         immediately share the reaction. Comedy anime&apos;s episodic structure also
         makes it forgiving for async schedules: there is rarely a continuity
         penalty for watching episodes out of order or taking a week off, so
         groups with busy calendars can dip in and out without losing the thread.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi watchrooms let you timestamp specific gag moments so friends
         who missed a live session can replay the exact scene that broke the chat.
         Episode-scoped threads mean the funniest moments stay discoverable long
@@ -120,15 +120,15 @@ export default function WatchComedyAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Comedy Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {comedyAnime.length} titles below have dedicated watchroom guides
         with setup steps, pacing advice, and tips for sharing laughs:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {comedyAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -143,61 +143,61 @@ export default function WatchComedyAnimeWithFriendsPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up a Comedy Anime Watchroom
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Add the Chrome extension on every device in your watch group.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Pick a low-barrier entry title.</span>{" "}
+          <span className="font-medium text-foreground">Pick a low-barrier entry title.</span>{" "}
           For new-to-anime friends, start with Spy x Family or Nichijou.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Create a watchroom and share the invite.</span>{" "}
+          <span className="font-medium text-foreground">Create a watchroom and share the invite.</span>{" "}
           Pin a &quot;best gag timestamps&quot; thread for ongoing highlights.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Set a casual cadence.</span>{" "}
+          <span className="font-medium text-foreground">Set a casual cadence.</span>{" "}
           Two or three episodes per session keeps energy high without overstaying the joke.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Encourage timestamped reactions.</span>{" "}
+          <span className="font-medium text-foreground">Encourage timestamped reactions.</span>{" "}
           &quot;Ep 3 at 8:42 — I&apos;m done&quot; is better than explaining it.
         </li>
       </ol>
 
       <h2
         id="async-comedy"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Async Watching and Sharing Gags
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Comedy anime is the friendliest genre for asynchronous schedules. Since
         most episodes are self-contained, a group member who misses a session
         can catch up in twenty minutes and immediately join the gag thread without
         needing a recap. A few tips:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Use timestamped reactions instead of episode summaries — the gag is the content.</li>
         <li>For sketch-heavy series (Nichijou, Saiki K.), pin a &quot;top 3 moments&quot; per episode so latecomers know what to rewind.</li>
         <li>For parody series (KonoSuba, Gintama), keep a &quot;explain this reference&quot; thread for viewers who missed the source material.</li>
         <li>Async mode works especially well for long series like Gintama — no need to coordinate 367 episode watches.</li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
-        <Link href="/watch-anime-together" className="text-purple-600 hover:underline">Watch anime together</Link>
+        <Link href="/watch-anime-together" className="text-brand-orange hover:underline">Watch anime together</Link>
         {" · "}
-        <Link href="/watch-romance-anime-with-friends" className="text-purple-600 hover:underline">Romance anime</Link>
+        <Link href="/watch-romance-anime-with-friends" className="text-brand-orange hover:underline">Romance anime</Link>
         {" · "}
-        <Link href="/watch-action-anime-with-friends" className="text-purple-600 hover:underline">Action anime</Link>
+        <Link href="/watch-action-anime-with-friends" className="text-brand-orange hover:underline">Action anime</Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

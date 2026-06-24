@@ -57,7 +57,7 @@ function UserMenu({ user }: { user: NavUser }) {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label="Account menu"
-        className="flex min-h-9 items-center gap-2 rounded-full border border-white/20 bg-white/10 py-1 pl-1 pr-3 text-sm font-medium text-white transition-colors hover:bg-white/20"
+        className="flex min-h-9 items-center gap-2 rounded-full border border-brand-border bg-brand-surface py-1 pl-1 pr-3 text-sm font-medium text-foreground transition-colors hover:bg-brand-orange hover:text-primary-foreground hover:border-brand-orange"
       >
         {user.avatarUrl ? (
           <Image
@@ -68,7 +68,7 @@ function UserMenu({ user }: { user: NavUser }) {
             className="h-7 w-7 rounded-full object-cover"
           />
         ) : (
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-500 text-xs font-bold text-white">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-orange text-xs font-bold text-primary-foreground">
             {initials}
           </span>
         )}
@@ -77,9 +77,9 @@ function UserMenu({ user }: { user: NavUser }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-[100] mt-2 w-64 rounded-xl border border-white/15 bg-purple-950 shadow-2xl">
+        <div className="absolute right-0 top-full z-[100] mt-2 w-64 rounded-xl border border-brand-border bg-brand-surface shadow-2xl glow-orange-sm">
           {/* User info */}
-          <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
+          <div className="flex items-center gap-3 border-b border-brand-border px-4 py-3">
             {user.avatarUrl ? (
               <Image
                 src={user.avatarUrl}
@@ -89,29 +89,29 @@ function UserMenu({ user }: { user: NavUser }) {
                 className="h-10 w-10 rounded-full object-cover"
               />
             ) : (
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-500 text-sm font-bold text-white">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-orange text-sm font-bold text-primary-foreground">
                 {initials}
               </span>
             )}
             <div className="min-w-0">
-              <p className="truncate font-semibold text-white">{user.displayName}</p>
-              <p className="truncate text-xs text-purple-300">{user.email}</p>
+              <p className="truncate font-semibold text-foreground">{user.displayName}</p>
+              <p className="truncate text-xs text-foreground/50">{user.email}</p>
             </div>
           </div>
 
           {/* Plan badge */}
           <div className="px-4 py-2.5">
-            <span className="inline-block rounded-full bg-violet-700/60 px-2.5 py-0.5 text-xs font-medium text-violet-200">
+            <span className="inline-block rounded-full bg-brand-orange/15 border border-brand-orange/30 px-2.5 py-0.5 text-xs font-medium text-brand-orange-bright">
               {PLAN_LABELS[user.plan] ?? user.plan}
             </span>
           </div>
 
           {/* Actions */}
-          <div className="border-t border-white/10 px-2 py-2">
+          <div className="border-t border-brand-border px-2 py-2">
             <Link
               href="/account/friends"
               onClick={() => setOpen(false)}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-purple-200 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
             >
               <Users className="h-4 w-4" aria-hidden />
               Friends
@@ -119,7 +119,7 @@ function UserMenu({ user }: { user: NavUser }) {
             <button
               type="button"
               onClick={handleSignOut}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-purple-200 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
             >
               <LogOut className="h-4 w-4" aria-hidden />
               Sign out
@@ -141,7 +141,7 @@ function MobileSignOut({ onDone }: { onDone: () => void }) {
     <button
       type="button"
       onClick={handleSignOut}
-      className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 text-base text-purple-200 transition-colors hover:bg-white/10 hover:text-white"
+      className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
     >
       <LogOut className="h-4 w-4" aria-hidden />
       Sign out
@@ -180,7 +180,7 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
     <nav
       aria-label="Main navigation"
       className={cn(
-        "top-0 z-[90] flex min-h-14 w-full items-center border-b border-white/10 bg-purple-900/95 backdrop-blur-md",
+        "top-0 z-[90] flex min-h-14 w-full items-center border-b border-brand-border bg-background/80 backdrop-blur-xl",
         surveyOpen ? "fixed left-0 right-0" : "sticky",
       )}
     >
@@ -199,14 +199,14 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
               {isExternalNavLink(link.href) ? (
                 <a
                   href={link.href}
-                  className="inline-flex min-h-11 items-center text-purple-100 transition-colors hover:text-white"
+                  className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
                 >
                   {link.label}
                 </a>
               ) : (
                 <Link
                   href={link.href}
-                  className="inline-flex min-h-11 items-center text-purple-100 transition-colors hover:text-white"
+                  className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
                 >
                   {link.label}
                 </Link>
@@ -222,7 +222,7 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
             ) : (
               <Link
                 href="/login"
-                className="inline-flex min-h-9 items-center rounded-full border border-white/30 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                className="inline-flex min-h-9 items-center rounded-full border border-brand-border px-4 text-sm font-semibold text-foreground transition-colors hover:border-brand-orange/50 hover:text-brand-orange-bright"
               >
                 Sign in
               </Link>
@@ -233,11 +233,11 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
         {/* Mobile: pricing + menu */}
         <div className="flex items-center gap-1 md:hidden">
           <span className="inline-flex min-h-11 min-w-11 items-center justify-center sm:hidden">
-            <NavPricingLink className="inline-flex min-h-11 items-center rounded-full bg-white/15 px-3 text-sm font-semibold text-white transition-colors hover:bg-white/25" />
+            <NavPricingLink className="inline-flex min-h-11 items-center rounded-full bg-brand-orange/15 border border-brand-orange/30 px-3 text-sm font-semibold text-brand-orange-bright transition-colors hover:bg-brand-orange" />
           </span>
           <button
             type="button"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-white transition-colors hover:bg-white/10"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-brand-orange hover:text-primary-foreground"
             aria-expanded={menuOpen}
             aria-controls="mobile-nav-menu"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -257,14 +257,14 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="inline-flex min-h-11 items-center text-purple-100 transition-colors hover:text-white"
+                className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
               >
                 {link.label}
               </Link>
             </li>
           ))}
           <li className="hidden sm:block">
-            <NavPricingLink className="inline-flex min-h-11 items-center font-semibold text-white transition-colors hover:text-purple-100" />
+            <NavPricingLink className="inline-flex min-h-11 items-center font-semibold text-brand-orange-bright transition-colors hover:text-brand-orange" />
           </li>
         </ul>
       </div>
@@ -280,7 +280,7 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
           />
           <div
             id="mobile-nav-menu"
-            className="fixed inset-x-0 top-14 z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem))] overflow-y-auto overscroll-contain border-b border-white/10 bg-purple-900/98 px-4 py-4 shadow-lg md:hidden"
+            className="fixed inset-x-0 top-14 z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem))] overflow-y-auto overscroll-contain border-b border-brand-border bg-background/95 backdrop-blur-xl px-4 py-4 shadow-lg md:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile navigation menu"
@@ -291,7 +291,7 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
                   {isExternalNavLink(link.href) ? (
                     <a
                       href={link.href}
-                      className="flex min-h-11 items-center rounded-lg px-3 text-base text-purple-100 transition-colors hover:bg-white/10 hover:text-white"
+                      className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
                       onClick={() => setMenuOpen(false)}
                     >
                       {link.label}
@@ -299,7 +299,7 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
                   ) : (
                     <Link
                       href={link.href}
-                      className="flex min-h-11 items-center rounded-lg px-3 text-base text-purple-100 transition-colors hover:bg-white/10 hover:text-white"
+                      className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
                       onClick={() => setMenuOpen(false)}
                     >
                       {link.label}
@@ -308,9 +308,9 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
                 </li>
               ))}
               <li>
-                <Link
+                  <Link
                   href="/#faq"
-                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-purple-100 transition-colors hover:bg-white/10 hover:text-white"
+                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
                   onClick={() => setMenuOpen(false)}
                 >
                   FAQ
@@ -321,7 +321,7 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
               </li>
               {user ? (
                 <>
-                  <li className="mt-3 border-t border-white/10 pt-3">
+                  <li className="mt-3 border-t border-brand-border pt-3">
                     <div className="flex items-center gap-3 px-3 py-1">
                       {user.avatarUrl ? (
                         <Image
@@ -332,20 +332,20 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
                           className="h-9 w-9 rounded-full object-cover"
                         />
                       ) : (
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-500 text-sm font-bold text-white">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange text-sm font-bold text-primary-foreground">
                           {user.displayName.slice(0, 2).toUpperCase()}
                         </span>
                       )}
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-white">{user.displayName}</p>
-                        <p className="truncate text-xs text-purple-300">{user.email}</p>
+                        <p className="truncate text-sm font-semibold text-foreground">{user.displayName}</p>
+                        <p className="truncate text-xs text-foreground/50">{user.email}</p>
                       </div>
                     </div>
                   </li>
                   <li>
                     <Link
                       href="/account/friends"
-                      className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-base text-purple-200 transition-colors hover:bg-white/10 hover:text-white"
+                      className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
                       onClick={() => setMenuOpen(false)}
                     >
                       <Users className="h-4 w-4" aria-hidden />
@@ -357,10 +357,10 @@ export function NavBarClient({ user }: { user?: NavUser | null }) {
                   </li>
                 </>
               ) : (
-                <li className="mt-2 border-t border-white/10 pt-2" onClick={() => setMenuOpen(false)}>
+                <li className="mt-2 border-t border-brand-border pt-2" onClick={() => setMenuOpen(false)}>
                   <Link
                     href="/login"
-                    className="flex min-h-11 items-center rounded-lg px-3 text-base font-semibold text-white transition-colors hover:bg-white/10"
+                    className="flex min-h-11 items-center rounded-lg px-3 text-base font-semibold text-foreground transition-colors hover:bg-brand-orange hover:text-primary-foreground"
                   >
                     Sign in
                   </Link>

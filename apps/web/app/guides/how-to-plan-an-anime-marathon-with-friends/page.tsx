@@ -108,12 +108,11 @@ export default function HowToPlanAnAnimeMarathonWithFriendsPage() {
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
-        aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to plan an anime marathon with friends
         </h1>
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             An anime marathon is a planned binge — a weekend, a holiday, or a
             rainy day where your group commits to watching a full series or
@@ -124,33 +123,33 @@ export default function HowToPlanAnAnimeMarathonWithFriendsPage() {
 
         <h2
           id="pick-show"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Pick the right show
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Marathon length should match your window. Quick reference:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             <strong>Half day (4–6 hours):</strong> 6–8 episodes or 1–2 movies —
             try{" "}
-            <Link href="/watch/konosuba-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/konosuba-with-friends" className="text-brand-orange hover:underline">
               KonoSuba S1
             </Link>{" "}
             or a Ghibli double feature.
           </li>
           <li>
             <strong>Full day (8–12 hours):</strong> 10–14 episodes —{" "}
-            <Link href="/watch/death-note-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/death-note-with-friends" className="text-brand-orange hover:underline">
               Death Note
             </Link>
             ,{" "}
-            <Link href="/watch/spy-x-family-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/spy-x-family-with-friends" className="text-brand-orange hover:underline">
               Spy x Family S1
             </Link>
             , or{" "}
-            <Link href="/guides/best-anime-to-binge-with-friends-this-weekend" className="text-purple-600 hover:underline">
+            <Link href="/guides/best-anime-to-binge-with-friends-this-weekend" className="text-brand-orange hover:underline">
               our weekend binge list
             </Link>
             .
@@ -158,7 +157,7 @@ export default function HowToPlanAnAnimeMarathonWithFriendsPage() {
           <li>
             <strong>Two-day marathon:</strong> 24–26 episodes — a full cour or
             short series like{" "}
-            <Link href="/watch/bocchi-the-rock-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/bocchi-the-rock-with-friends" className="text-brand-orange hover:underline">
               Bocchi the Rock!
             </Link>{" "}
             plus extras.
@@ -167,14 +166,14 @@ export default function HowToPlanAnAnimeMarathonWithFriendsPage() {
 
         <h2
           id="howto"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           HowTo: plan your marathon
         </h2>
-        <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
           {howToSteps.map((step) => (
             <li key={step.name}>
-              <span className="font-medium text-gray-900">{step.name}.</span>{" "}
+              <span className="font-medium text-foreground">{step.name}.</span>{" "}
               {step.text}
             </li>
           ))}
@@ -182,11 +181,11 @@ export default function HowToPlanAnAnimeMarathonWithFriendsPage() {
 
         <h2
           id="pacing"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Episode pacing &amp; breaks
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           Anime fatigue is real — reactions get quieter, jokes land softer, and
           emotional beats lose impact after hour six. Build breaks into the
           schedule rather than pushing through. A 10-minute stretch break every
@@ -197,15 +196,15 @@ export default function HowToPlanAnAnimeMarathonWithFriendsPage() {
 
         <h2
           id="rules"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Marathon house rules
         </h2>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>No skipping ahead — pause the watchroom during breaks.</li>
           <li>Phones on silent during episodes; chat in the watchroom instead.</li>
           <li>Agree on dub vs sub before starting — see our{" "}
-            <Link href="/glossary/dub-vs-sub-watch-party" className="text-purple-600 hover:underline">
+            <Link href="/glossary/dub-vs-sub-watch-party" className="text-brand-orange hover:underline">
               dub vs sub guide
             </Link>
             .
@@ -215,11 +214,11 @@ export default function HowToPlanAnAnimeMarathonWithFriendsPage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600 mb-8">
+        <ul className="space-y-2 text-brand-orange mb-8">
           <li>
             <Link href="/guides/best-anime-to-binge-with-friends-this-weekend" className="hover:underline">
               Best anime to binge with friends this weekend

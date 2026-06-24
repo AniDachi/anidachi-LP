@@ -79,16 +79,16 @@ export default function WatchShoujoAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Shoujo Anime With Friends
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Shoujo anime is made for shared emotional experiences. Install
           AniDachi, open any Crunchyroll series below, and create a watchroom
@@ -99,11 +99,11 @@ export default function WatchShoujoAnimeWithFriendsPage() {
 
       <h2
         id="why-shoujo"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Shoujo Anime Perfect for Group Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Shoujo anime is centered on character relationships, emotional growth,
         and the kind of slow-burn storytelling that benefits from having someone
         to process it with. The genre ranges from lighthearted magical-girl
@@ -111,7 +111,7 @@ export default function WatchShoujoAnimeWithFriendsPage() {
         character studies (Fruits Basket, Nana) — but all of it generates
         the kind of conversation that makes a watch night feel meaningful.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi watchrooms work especially well for shoujo anime because the
         emotional payoffs are spread across episodes — someone who catches up
         a week late still needs to experience the same moments without having
@@ -121,15 +121,15 @@ export default function WatchShoujoAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Shoujo Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {shoujoAnime.length} titles below have dedicated watchroom guides
         with setup steps, pacing advice, and spoiler management tips:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {shoujoAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -144,31 +144,31 @@ export default function WatchShoujoAnimeWithFriendsPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up a Shoujo Anime Watchroom
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Add the Chrome extension on every device in your watch group.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Open the series on Crunchyroll.</span>{" "}
+          <span className="font-medium text-foreground">Open the series on Crunchyroll.</span>{" "}
           Each person streams from their own account — no screen sharing needed.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Create a watchroom and share the link.</span>{" "}
+          <span className="font-medium text-foreground">Create a watchroom and share the link.</span>{" "}
           Send the invite link via Discord, group chat, or email.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Set ship-prediction rules.</span>{" "}
+          <span className="font-medium text-foreground">Set ship-prediction rules.</span>{" "}
           For romance series, have everyone commit to a prediction before the
           episode starts — reactions are funnier when you locked in before the
           show proved you wrong.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Pin your spoiler boundary.</span>{" "}
+          <span className="font-medium text-foreground">Pin your spoiler boundary.</span>{" "}
           Set the safe episode number so the friend who binged ahead doesn&apos;t
           accidentally confirm the ending of the romance arc.
         </li>
@@ -176,30 +176,30 @@ export default function WatchShoujoAnimeWithFriendsPage() {
 
       <h2
         id="emotional-tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Tips for Emotional Watch Sessions
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Shoujo anime often delivers emotional climaxes that hit harder than
         expected — a few watchroom practices that make those moments better:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Schedule &quot;debrief time&quot; after emotional episodes — 10–15 minutes of unstructured chat before moving to the next episode. Some scenes need processing out loud before the group can continue.</li>
         <li>For series with multiple romance ships (Ouran, Fruits Basket), have everyone declare their pick before the series starts. Track how opinions shift across the season.</li>
         <li>For longer series like Fruits Basket, break the watch into arcs rather than raw episode counts. Each arc has its own emotional climax — treat arc endings as session boundaries.</li>
         <li>Use AniDachi&apos;s async mode for members who fall behind during an emotional arc. Let them catch up on their own rather than waiting — the shared reaction thread means they still feel part of the group when they get there.</li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
-        <Link href="/watch-anime-together" className="text-purple-600 hover:underline">Watch anime together</Link>
+        <Link href="/watch-anime-together" className="text-brand-orange hover:underline">Watch anime together</Link>
         {" · "}
-        <Link href="/watch-romance-anime-with-friends" className="text-purple-600 hover:underline">Romance anime</Link>
+        <Link href="/watch-romance-anime-with-friends" className="text-brand-orange hover:underline">Romance anime</Link>
         {" · "}
-        <Link href="/watch-slice-of-life-anime-with-friends" className="text-purple-600 hover:underline">Slice of life anime</Link>
+        <Link href="/watch-slice-of-life-anime-with-friends" className="text-brand-orange hover:underline">Slice of life anime</Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

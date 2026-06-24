@@ -7,7 +7,6 @@ import { FOUNDER_DISCORD_USERNAME } from "@/lib/founder-discord";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import {
   Check,
-  CreditCard,
   Lock,
   ShieldCheck,
   X,
@@ -15,9 +14,8 @@ import {
 import { trackEvent } from "@/lib/gtag";
 import { inferPageTemplateFromPath, trackConversion } from "@/lib/conversion-events";
 import {
-  currentSolutionUpgradeText,
+  PRICING_CTA_LABEL,
   priorityFeatureBullet,
-  pricingCtaLabelForTier,
 } from "@/lib/home-survey";
 import type { CheckoutTier, HomeSurveyAnswers } from "@/lib/home-survey";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
@@ -63,11 +61,8 @@ export function PlanSurveyModal({
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailSubmitting, setEmailSubmitting] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
 
-  // Objection handler state (step 7)
-  const [objectionVisible, setObjectionVisible] = useState(false);
-  const [selectedObjection, setSelectedObjection] = useState<string | null>(null);
-  const objectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useBodyScrollLock(isOpen);
 
@@ -114,8 +109,7 @@ export function PlanSurveyModal({
     setEmailSubmitted(false);
     setEmailSubmitting(false);
     setEmailError(null);
-    setObjectionVisible(false);
-    setSelectedObjection(null);
+    setWaitlistPosition(null);
     completedEventFired.current = false;
     const pagePath = typeof window !== "undefined" ? window.location.pathname : "/";
     const pageTemplate = inferPageTemplateFromPath(pagePath);
@@ -128,6 +122,15 @@ export function PlanSurveyModal({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Step 7: recover position if email submit did not return one (e.g. blob write misconfig).
+  useEffect(() => {
+    if (!isOpen || step !== 7 || waitlistPosition !== null || !emailInput.trim()) {
+      return;
+    }
+    void resolveWaitlistPosition(emailInput);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, step, waitlistPosition, emailInput]);
 
   // Track step views
   useEffect(() => {
@@ -199,19 +202,6 @@ export function PlanSurveyModal({
     surveyReadyForRecommendation,
   ]);
 
-  // Show the objection handler after 3 seconds of inactivity on the recommendation step
-  useEffect(() => {
-    if (step !== 7) {
-      setObjectionVisible(false);
-      setSelectedObjection(null);
-      if (objectionTimerRef.current) clearTimeout(objectionTimerRef.current);
-      return;
-    }
-    objectionTimerRef.current = setTimeout(() => setObjectionVisible(true), 10000);
-    return () => {
-      if (objectionTimerRef.current) clearTimeout(objectionTimerRef.current);
-    };
-  }, [step]);
 
   const closeSurvey = (reason: "backdrop" | "close_button" | "not_now") => {
     const pagePath = typeof window !== "undefined" ? window.location.pathname : "/";
@@ -324,6 +314,23 @@ export function PlanSurveyModal({
     }
   };
 
+  const resolveWaitlistPosition = async (email: string) => {
+    const trimmed = email.trim();
+    if (!trimmed) return;
+    try {
+      const res = await fetch(
+        `/api/waitlist-position?email=${encodeURIComponent(trimmed)}`,
+      );
+      if (!res.ok) return;
+      const data = (await res.json()) as { waitlistPosition?: number | null };
+      if (typeof data.waitlistPosition === "number" && data.waitlistPosition > 0) {
+        setWaitlistPosition(data.waitlistPosition);
+      }
+    } catch {
+      // Keep fallback copy if position lookup fails.
+    }
+  };
+
   const submitEmail = async () => {
     const trimmed = emailInput.trim();
     if (!trimmed) {
@@ -337,11 +344,17 @@ export function PlanSurveyModal({
     setEmailError(null);
     setEmailSubmitting(true);
     try {
-      await fetch("/api/subscribe-interest", {
+      const res = await fetch("/api/subscribe-interest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmed, survey }),
       });
+      const data = (await res.json()) as { ok?: boolean; waitlistPosition?: number | null };
+      if (typeof data.waitlistPosition === "number" && data.waitlistPosition > 0) {
+        setWaitlistPosition(data.waitlistPosition);
+      } else if (res.ok) {
+        void resolveWaitlistPosition(trimmed);
+      }
       setEmailSubmitted(true);
       setTimeout(() => setStep(6), 1200);
     } catch {
@@ -353,7 +366,6 @@ export function PlanSurveyModal({
 
   if (!isOpen) return null;
 
-  const upgradeText = currentSolutionUpgradeText(survey.current_solution);
 
   return (
     <>
@@ -371,20 +383,20 @@ export function PlanSurveyModal({
         aria-modal="true"
         aria-labelledby="plan-survey-title"
       >
-      <div className="pointer-events-auto relative flex max-h-[min(90dvh,calc(100vh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-white/95 to-white/90 text-gray-900 shadow-2xl backdrop-blur-xl">
+      <div className="pointer-events-auto relative flex max-h-[min(90dvh,calc(100vh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-brand-border bg-background text-foreground shadow-2xl backdrop-blur-xl glow-orange-sm">
         {/* Header */}
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200/70 px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-brand-border px-6 py-4">
           <div className="flex items-center gap-2">
             <AnidachiLogo size={24} aria-hidden />
-            <p id="plan-survey-title" className="text-sm font-semibold">
-              {step === 7 ? "Your plan is ready" : `Find your plan (${step}/6)`}
+            <p id="plan-survey-title" className="text-sm font-semibold text-foreground">
+              {step === 7 ? "You're on the list" : `Get early access (${step}/6)`}
             </p>
           </div>
           <Button
             ref={closeButtonRef}
             type="button"
             variant="ghost"
-            className="min-h-11 min-w-11 text-gray-700 hover:bg-gray-100"
+            className="min-h-11 min-w-11 text-foreground/70 hover:bg-brand-orange hover:text-primary-foreground"
             aria-label="Close survey"
             onClick={() => closeSurvey("close_button")}
           >
@@ -394,9 +406,9 @@ export function PlanSurveyModal({
         </div>
 
         {/* Progress bar */}
-        <div className="h-1 w-full shrink-0 overflow-hidden rounded-none bg-gray-100">
+        <div className="h-1 w-full shrink-0 overflow-hidden rounded-none bg-brand-surface">
           <div
-            className="h-full bg-purple-600 transition-all duration-300 ease-out"
+            className="h-full bg-brand-orange transition-all duration-300 ease-out"
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -407,7 +419,7 @@ export function PlanSurveyModal({
         >
           {checkoutError && (
             <div
-              className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
               role="alert"
             >
               {checkoutError}
@@ -417,7 +429,7 @@ export function PlanSurveyModal({
           {/* Step 1 — Who are you watching with? */}
           {step === 1 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-2">Who are you watching with?</p>
+              <p className="text-sm font-medium text-foreground mb-2">Who are you watching with?</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
                   { id: "Friend_group_host", label: "My friend group" },
@@ -428,8 +440,8 @@ export function PlanSurveyModal({
                     key={o.id}
                     type="button"
                     variant="outline"
-                    className={`justify-start border-gray-200 bg-white text-gray-900 hover:bg-gray-50 ${
-                      survey.segment === o.id ? "border-purple-400 bg-purple-50" : ""
+                    className={`justify-start border-brand-border bg-background text-foreground hover:bg-brand-orange hover:text-primary-foreground hover:border-brand-orange ${
+                      survey.segment === o.id ? "border-brand-orange bg-brand-orange/10" : ""
                     }`}
                     onClick={() => {
                       setSurvey({ ...survey, segment: o.id as HomeSurveyAnswers["segment"] });
@@ -447,7 +459,7 @@ export function PlanSurveyModal({
           {/* Step 2 — What matters most? */}
           {step === 2 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-2">What matters most?</p>
+              <p className="text-sm font-medium text-foreground mb-2">What matters most?</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   { id: "sync_and_no_spoilers", label: "Stay in sync (no spoilers)" },
@@ -459,8 +471,8 @@ export function PlanSurveyModal({
                     key={o.id}
                     type="button"
                     variant="outline"
-                    className={`justify-start border-gray-200 bg-white text-gray-900 hover:bg-gray-50 ${
-                      survey.priority === o.id ? "border-purple-400 bg-purple-50" : ""
+                    className={`justify-start border-brand-border bg-background text-foreground hover:bg-brand-orange hover:text-primary-foreground hover:border-brand-orange ${
+                      survey.priority === o.id ? "border-brand-orange bg-brand-orange/10" : ""
                     }`}
                     onClick={() => {
                       setSurvey({ ...survey, priority: o.id as HomeSurveyAnswers["priority"] });
@@ -481,7 +493,7 @@ export function PlanSurveyModal({
           {/* Step 3 — Typical watchroom size? */}
           {step === 3 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-2">Typical watchroom size?</p>
+              <p className="text-sm font-medium text-foreground mb-2">Typical watchroom size?</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
                   { id: "2_3", label: "2–3 people" },
@@ -492,8 +504,8 @@ export function PlanSurveyModal({
                     key={o.id}
                     type="button"
                     variant="outline"
-                    className={`justify-start border-gray-200 bg-white text-gray-900 hover:bg-gray-50 ${
-                      survey.group_size === o.id ? "border-purple-400 bg-purple-50" : ""
+                    className={`justify-start border-brand-border bg-background text-foreground hover:bg-brand-orange hover:text-primary-foreground hover:border-brand-orange ${
+                      survey.group_size === o.id ? "border-brand-orange bg-brand-orange/10" : ""
                     }`}
                     onClick={() => {
                       setSurvey({ ...survey, group_size: o.id as HomeSurveyAnswers["group_size"] });
@@ -514,7 +526,7 @@ export function PlanSurveyModal({
           {/* Step 4 — When do you want to use it? */}
           {step === 4 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-2">When do you want to use it?</p>
+              <p className="text-sm font-medium text-foreground mb-2">When do you want to use it?</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
                   { id: "today", label: "Today" },
@@ -525,8 +537,8 @@ export function PlanSurveyModal({
                     key={o.id}
                     type="button"
                     variant="outline"
-                    className={`justify-start border-gray-200 bg-white text-gray-900 hover:bg-gray-50 ${
-                      survey.timing === o.id ? "border-purple-400 bg-purple-50" : ""
+                    className={`justify-start border-brand-border bg-background text-foreground hover:bg-brand-orange hover:text-primary-foreground hover:border-brand-orange ${
+                      survey.timing === o.id ? "border-brand-orange bg-brand-orange/10" : ""
                     }`}
                     onClick={() => {
                       const timing = o.id as HomeSurveyAnswers["timing"];
@@ -540,10 +552,10 @@ export function PlanSurveyModal({
                 ))}
               </div>
               {survey.timing === "today" && (
-                <p className="mt-2 text-xs text-gray-600">You can be in a watchroom in about 2 minutes.</p>
+                <p className="mt-2 text-xs text-foreground/60">You can be in a watchroom in about 2 minutes.</p>
               )}
               {survey.timing === "this_week" && (
-                <p className="mt-2 text-xs text-gray-600">Set it up once and reuse it for every episode.</p>
+                <p className="mt-2 text-xs text-foreground/60">Set it up once and reuse it for every episode.</p>
               )}
               <div className="mt-4">
                 <Button type="button" variant="ghost" onClick={() => setStep(3)}>Back</Button>
@@ -551,24 +563,24 @@ export function PlanSurveyModal({
             </div>
           )}
 
-          {/* Step 5 — Email capture */}
+          {/* Step 5 — Email capture / claim waitlist spot */}
           {step === 5 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-1">
-                Save your plan recommendation
+              <p className="text-sm font-medium text-foreground mb-1">
+                Claim your early access spot
               </p>
-              <p className="text-xs text-gray-500 mb-4">
-                We&apos;ll send it to your inbox so you can come back to it when you&apos;re ready.
+              <p className="text-xs text-foreground/50 mb-4">
+                You&apos;ll be among the first to get access when we launch. We&apos;ll notify you the moment doors open.
               </p>
               {emailSubmitted ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-                    <Check className="h-4 w-4 text-green-600 shrink-0" aria-hidden="true" />
-                    Got it — we&apos;ll send your plan recommendation shortly.
+                  <div className="flex items-center gap-2 rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-4 py-3 text-sm text-foreground">
+                    <Check className="h-4 w-4 shrink-0 text-brand-orange" aria-hidden="true" />
+                    You&apos;re on the list! We&apos;ll reach out the moment we launch.
                   </div>
                   <Button
                     type="button"
-                    className="bg-purple-700 hover:bg-purple-800 text-white font-semibold"
+                    className="bg-brand-orange hover:bg-brand-orange-deep text-primary-foreground font-semibold"
                     onClick={() => setStep(6)}
                   >
                     Continue
@@ -586,19 +598,19 @@ export function PlanSurveyModal({
                     inputMode="email"
                     required
                     aria-required="true"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                    className="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-foreground placeholder:text-foreground/40 focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
                   />
                   {emailError && (
-                    <p className="text-xs text-red-600">{emailError}</p>
+                    <p className="text-xs text-destructive">{emailError}</p>
                   )}
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
-                      className="bg-purple-700 hover:bg-purple-800 text-white font-semibold"
+                      className="bg-brand-orange hover:bg-brand-orange-deep text-primary-foreground font-semibold"
                       disabled={emailSubmitting || !emailInput.trim()}
                       onClick={submitEmail}
                     >
-                      {emailSubmitting ? "Saving…" : "Send my recommendation"}
+                      {emailSubmitting ? "Saving…" : "Claim my spot"}
                     </Button>
                   </div>
                 </div>
@@ -612,8 +624,8 @@ export function PlanSurveyModal({
           {/* Step 6 — What are you using today? */}
           {step === 6 && (
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-1">What are you using today?</p>
-              <p className="text-xs text-gray-500 mb-3">Helps us tailor the recommendation to what you already know.</p>
+              <p className="text-sm font-medium text-foreground mb-1">What are you using today?</p>
+              <p className="text-xs text-foreground/50 mb-3">Helps us tailor the recommendation to what you already know.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   { id: "discord_screen_share", label: "Discord screen share" },
@@ -626,8 +638,8 @@ export function PlanSurveyModal({
                     key={o.id}
                     type="button"
                     variant="outline"
-                    className={`justify-start border-gray-200 bg-white text-gray-900 hover:bg-gray-50 ${
-                      survey.current_solution === o.id ? "border-purple-400 bg-purple-50" : ""
+                    className={`justify-start border-brand-border bg-background text-foreground hover:bg-brand-orange hover:text-primary-foreground hover:border-brand-orange ${
+                      survey.current_solution === o.id ? "border-brand-orange bg-brand-orange/10" : ""
                     }`}
                     onClick={() => {
                       setSurvey({
@@ -648,104 +660,137 @@ export function PlanSurveyModal({
             </div>
           )}
 
-          {/* Step 7 — Recommendation + checkout */}
+          {/* Step 7 — Waitlist confirmed + optional pre-launch pricing */}
           {step === 7 && (
             <div>
-              {/* Recommendation header */}
-              <div className="mb-4 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3">
-                <p className="text-sm font-semibold text-purple-900">Recommended for you</p>
-                {upgradeText ? (
-                  <p className="text-sm text-purple-800">{upgradeText}</p>
-                ) : (
-                  <p className="text-sm text-purple-800">
-                    {recommendedTier === "pro"
-                      ? "Pro — best if you want larger rooms, host controls, and longer history."
-                      : "Plus — best for regular watchrooms, sync, and shared progress with friends."}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-purple-700 font-medium">
-                  Early access pricing — locks in your rate before public launch.
-                </p>
+              {/* Victory banner */}
+              <div className="mb-4 overflow-hidden rounded-xl border border-brand-orange/35 bg-brand-orange/10 px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-orange/20">
+                    <Check className="h-5 w-5 text-brand-orange" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">You&apos;re on the list!</p>
+                    {waitlistPosition !== null ? (
+                      <p className="mt-0.5 text-sm text-foreground/70">
+                        You&apos;re{" "}
+                        <span className="font-bold text-brand-orange">#{waitlistPosition}</span> in
+                        line. We&apos;ll notify you the moment we launch.
+                      </p>
+                    ) : (
+                      <p className="mt-0.5 text-sm text-foreground/70">
+                        We&apos;ll notify you the moment we launch. You&apos;ll be among the very first in.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Plan card */}
-              <div className="rounded-xl border border-gray-200 bg-white p-4">
-                <div className="flex items-start justify-between gap-3">
+              {/* What to expect */}
+              <div className="mb-5 rounded-xl border border-brand-border bg-brand-surface px-4 py-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-orange/80">
+                  What happens next
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2 text-sm text-foreground/70">
+                    <Check className="h-4 w-4 text-brand-orange mt-0.5 shrink-0" aria-hidden="true" />
+                    First access when we go live — no waiting in line
+                  </li>
+                  <li className="flex items-start gap-2 text-sm text-foreground/70">
+                    <Check className="h-4 w-4 text-brand-orange mt-0.5 shrink-0" aria-hidden="true" />
+                    Pre-launch pricing locked in forever if you subscribe today
+                  </li>
+                  <li className="flex items-start gap-2 text-sm text-foreground/70">
+                    <Check className="h-4 w-4 text-brand-orange mt-0.5 shrink-0" aria-hidden="true" />
+                    Your personalized{" "}
+                    <span className="font-medium">
+                      {recommendedTier === "pro" ? "Pro" : "Plus"}
+                    </span>{" "}
+                    plan is ready for you
+                  </li>
+                </ul>
+              </div>
+
+              {/* Optional pre-launch pricing lock */}
+              <div className="overflow-hidden rounded-xl p-[2px] animated-gradient-border">
+                <div className="rounded-[10px] bg-brand-surface p-4">
+                <p className="mb-0.5 text-sm font-semibold text-foreground">
+                  Want to lock in pre-launch pricing?
+                </p>
+                <p className="mb-4 text-xs text-foreground/60">
+                  This price is only available before we launch. Lock it in today and keep it
+                  forever — even after we go public. Your waitlist spot is confirmed either way.
+                </p>
+
+                <div className="mb-3 flex items-start justify-between gap-3 border-b border-brand-border pb-3">
                   <div>
-                    <p className="font-semibold">
+                    <p className="font-semibold text-foreground">
                       {recommendedTier === "pro" ? "Pro" : "Plus"}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs font-medium text-brand-orange-bright">
+                      {recommendedTier === "pro"
+                        ? "Club hosts and bigger groups who need private rooms and moderator controls"
+                        : "Regular watch nights with friends, sync, chat, and shared progress"}
+                    </p>
+                    <p className="mt-1 text-sm text-foreground/60">
                       {recommendedTier === "pro" ? "$14.99/month" : "$7.99/month"}
                     </p>
                   </div>
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
-                      recommendedTier === "pro" ? "bg-gray-100 text-gray-900" : "bg-purple-100 text-purple-800"
-                    }`}
-                  >
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-orange/15 px-2.5 py-1 text-xs font-semibold text-brand-orange">
                     <Check className="h-3.5 w-3.5" aria-hidden="true" />
                     Recommended
                   </span>
                 </div>
 
                 {/* Priority-personalised bullet list */}
-                <ul className="mt-3 space-y-1 text-sm text-gray-700">
-                  {/* First bullet mirrors back what the user said they care about */}
+                <ul className="mb-4 space-y-2 text-sm text-foreground/70">
                   <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-purple-600 mt-0.5 shrink-0" aria-hidden="true" />
-                    <span className="font-medium">{priorityFeatureBullet(survey.priority)}</span>
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-orange" aria-hidden="true" />
+                    <span className="font-medium text-foreground/90">{priorityFeatureBullet(survey.priority)}</span>
                   </li>
                   {recommendedTier === "pro" ? (
                     <>
                       <li className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" aria-hidden="true" />
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-orange" aria-hidden="true" />
                         Invite-only rooms with approval flow
                       </li>
                       <li className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" aria-hidden="true" />
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-orange" aria-hidden="true" />
                         Everything in Plus, plus moderation tools
                       </li>
                     </>
                   ) : (
                     <>
                       <li className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" aria-hidden="true" />
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-orange" aria-hidden="true" />
                         Unlimited watchrooms — create once, reuse every episode
                       </li>
                       <li className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" aria-hidden="true" />
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-orange" aria-hidden="true" />
                         Works with Crunchyroll — no extra subscription needed
                       </li>
                     </>
                   )}
                 </ul>
 
-                {/* Trust signal above the CTA */}
-                <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-xs text-green-800">
-                  <ShieldCheck className="h-4 w-4 text-green-600 shrink-0" aria-hidden="true" />
-                  30-day refund during early access — no questions asked.
+                {/* Trust signal */}
+                <div className="mb-3 flex items-center gap-2 rounded-lg border border-brand-orange/25 bg-brand-orange/10 px-3 py-2 text-xs text-foreground/70">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-brand-orange" aria-hidden="true" />
+                  Full refund before launch — no questions asked.
                 </div>
 
                 <Button
-                  className={`mt-3 w-full text-white font-semibold disabled:opacity-60 ${
-                    recommendedTier === "pro" ? "bg-gray-900 hover:bg-gray-950" : "bg-purple-700 hover:bg-purple-800"
-                  }`}
+                  className="w-full bg-brand-orange font-semibold text-primary-foreground glow-orange hover:bg-brand-orange-deep hover:glow-orange-lg disabled:opacity-60"
                   disabled={isSubmitting || !surveyReadyForRecommendation}
                   onClick={() => startCheckout(recommendedTier)}
                 >
-                  {isSubmitting
-                    ? "Redirecting to Stripe…"
-                    : pricingCtaLabelForTier({ tier: recommendedTier, survey })}
+                  {isSubmitting ? "Redirecting to Stripe…" : PRICING_CTA_LABEL}
                 </Button>
 
-                <div className="mt-2 flex items-center justify-between text-[11px] text-gray-500">
-                  <span className="inline-flex items-center gap-1">
-                    <Lock className="h-3.5 w-3.5" aria-hidden="true" /> Secure Stripe checkout
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <CreditCard className="h-3.5 w-3.5" aria-hidden="true" /> Card
-                  </span>
+                <div className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-foreground/50">
+                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                  Secured by Stripe
+                </div>
                 </div>
               </div>
 
@@ -754,77 +799,14 @@ export function PlanSurveyModal({
                 username={FOUNDER_DISCORD_USERNAME}
               />
 
-              {/* Objection handler — appears after 10 seconds on this step */}
-              {objectionVisible && !selectedObjection && (
-                <div className="mt-4 text-center">
-                  <button
-                    type="button"
-                    className="text-xs text-gray-400 underline underline-offset-2 hover:text-gray-600"
-                    onClick={() => setObjectionVisible(true)}
-                  >
-                    What&apos;s holding you back?
-                  </button>
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {[
-                      { id: "try_first", label: "I want to try before paying" },
-                      { id: "friends_join", label: "Not sure my friends will join" },
-                      { id: "price", label: "Price feels high for early access" },
-                      { id: "streaming", label: "Not sure it works with my streaming app" },
-                    ].map((o) => (
-                      <button
-                        key={o.id}
-                        type="button"
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-3 text-left text-sm text-gray-700 hover:border-purple-200 hover:bg-purple-50 transition-colors min-h-11"
-                        onClick={() => setSelectedObjection(o.id)}
-                      >
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Objection response */}
-              {selectedObjection && (
-                <div className="mt-4 rounded-xl border border-purple-100 bg-purple-50 px-4 py-3 text-sm">
-                  {selectedObjection === "try_first" && (
-                    <div>
-                      <p className="font-semibold text-purple-900 mb-1">We&apos;re happy to walk you through it first.</p>
-                      <p className="text-purple-800 text-xs">
-                        Use the Discord section above to message the founder — we&apos;ll set up a
-                        live demo for your group with no commitment.
-                      </p>
-                    </div>
-                  )}
-                  {selectedObjection === "friends_join" && (
-                    <div>
-                      <p className="font-semibold text-purple-900 mb-1">One link, your whole group gets in.</p>
-                      <p className="text-purple-800 text-xs">Your subscription covers your watchroom — you just share the room link. Your friends don&apos;t need an account or a subscription to join a session you host.</p>
-                    </div>
-                  )}
-                  {selectedObjection === "price" && (
-                    <div>
-                      <p className="font-semibold text-purple-900 mb-1">Early access pricing locks in your rate forever.</p>
-                      <p className="text-purple-800 text-xs">When AniDachi launches publicly, this price goes up. Early access members keep this rate as long as they stay subscribed. And if it&apos;s not right for you — full refund, no questions.</p>
-                    </div>
-                  )}
-                  {selectedObjection === "streaming" && (
-                    <div>
-                      <p className="font-semibold text-purple-900 mb-1">Works with the services you already use.</p>
-                      <p className="text-purple-800 text-xs">AniDachi supports Crunchyroll and HiDive today, with more services being added during early access. Not sure if your service is covered? Message us and we&apos;ll confirm.</p>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    className="mt-2 text-[11px] text-purple-600 underline underline-offset-2"
-                    onClick={() => setSelectedObjection(null)}
-                  >
-                    ← Back to other questions
-                  </button>
-                </div>
-              )}
-
-              <div className="mt-4">
+              <div className="mt-4 flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  className="text-xs text-foreground/50 underline underline-offset-2 transition-colors hover:text-brand-orange"
+                  onClick={() => closeSurvey("not_now")}
+                >
+                  No thanks, I&apos;ll wait for launch
+                </button>
                 <Button type="button" variant="ghost" onClick={() => setStep(6)}>
                   Back
                 </Button>

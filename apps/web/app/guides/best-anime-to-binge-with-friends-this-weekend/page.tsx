@@ -107,13 +107,12 @@ export default function BestAnimeToBingeWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Anime to Binge With Friends This Weekend (2026)
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           The best group binge is a series short enough to finish before Monday
           — where every episode ends with a cliffhanger that makes stopping
@@ -128,20 +127,20 @@ export default function BestAnimeToBingeWithFriendsPage() {
       {/* ── SECTION 1: UNDER 15 EPISODES ─────────────────── */}
       <h2
         id="under-15"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Under 15 Episodes — One Evening
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         These series fit in a single evening (4–5 hours) and feel complete.
         Perfect for groups that can only commit to one night.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/erased-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Erased
             </Link>
@@ -158,7 +157,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/one-punch-man-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               One Punch Man
             </Link>
@@ -174,7 +173,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/anohana-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Anohana: The Flower We Saw That Day
             </Link>
@@ -190,7 +189,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/mob-psycho-100-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Mob Psycho 100
             </Link>
@@ -207,7 +206,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/puella-magi-madoka-magica-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Puella Magi Madoka★Magica
             </Link>
@@ -224,20 +223,20 @@ export default function BestAnimeToBingeWithFriendsPage() {
       {/* ── SECTION 2: FULL WEEKEND ──────────────────────── */}
       <h2
         id="full-weekend"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         25–40 Episodes — A Full Weekend Run
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Series completable across Saturday and Sunday with consistent pacing —
         aim for 10–13 episodes per day for a two-day completion.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/death-note-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Death Note
             </Link>
@@ -254,7 +253,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/steins-gate-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Steins;Gate
             </Link>
@@ -271,7 +270,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/attack-on-titan-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Attack on Titan — Season 1
             </Link>
@@ -287,7 +286,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/code-geass-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Code Geass
             </Link>
@@ -303,7 +302,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/parasyte-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Parasyte: The Maxim
             </Link>
@@ -319,7 +318,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/no-game-no-life-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               No Game No Life
             </Link>
@@ -343,34 +342,34 @@ export default function BestAnimeToBingeWithFriendsPage() {
       {/* ── SECTION 3: FILM MARATHONS ────────────────────── */}
       <h2
         id="films"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Anime Film Marathons
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         For groups that prefer films over episodes — these marathon sequences
         work as complete Saturday or Sunday experiences.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>The Makoto Shinkai Trilogy:</strong>{" "}
           <Link
             href="/watch/your-name-with-friends"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             Your Name
           </Link>{" "}
           →{" "}
           <Link
             href="/watch/weathering-with-you-with-friends"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             Weathering with You
           </Link>{" "}
           →{" "}
           <Link
             href="/watch/suzume-with-friends"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             Suzume
           </Link>{" "}
@@ -384,14 +383,14 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>The Ghibli Evening:</strong>{" "}
           <Link
             href="/watch/my-neighbor-totoro-with-friends"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             My Neighbor Totoro
           </Link>{" "}
           (86 min) +{" "}
           <Link
             href="/watch/spirited-away-with-friends"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             Spirited Away
           </Link>{" "}
@@ -405,7 +404,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>The Jujutsu Kaisen Film Night:</strong>{" "}
           <Link
             href="/watch/jujutsu-kaisen-0-with-friends"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             Jujutsu Kaisen 0
           </Link>{" "}
@@ -418,7 +417,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           <strong>The Emotional Anime Film Night:</strong>{" "}
           <Link
             href="/watch/a-silent-voice-with-friends"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             A Silent Voice
           </Link>{" "}
@@ -433,11 +432,11 @@ export default function BestAnimeToBingeWithFriendsPage() {
       {/* ── SECTION 4: PLANNING ──────────────────────────── */}
       <h2
         id="planning"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Planning Your Weekend Binge
       </h2>
-      <ul className="space-y-3 text-gray-700 mb-10">
+      <ul className="space-y-3 text-foreground/80 mb-10">
         <li>
           <strong>Lock in the episode count before Saturday.</strong> Tell
           the group: &quot;We&apos;re watching episodes 1–25 of Death Note this
@@ -457,7 +456,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
           13 reveal at the exact same second, regardless of time zone. The
           chat overlay means the group conversation happens live without
           anyone needing to text separately.{" "}
-          <Link href="/#pricing" className="text-purple-600 hover:underline">
+          <Link href="/#pricing" className="text-brand-orange hover:underline">
             Set up a binge watchroom here.
           </Link>
         </li>
@@ -473,11 +472,11 @@ export default function BestAnimeToBingeWithFriendsPage() {
       {/* ── RELATED ─────────────────────────────────────── */}
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
             href="/guides/best-short-anime-to-watch-with-friends"
@@ -526,14 +525,6 @@ export default function BestAnimeToBingeWithFriendsPage() {
             Watch anime together online — complete guide
           </Link>
         </li>
-      </ul>
-
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-anime-to-binge-with-friends-this-weekend"
-        pageTemplate="listicle"
-        placement="content_bottom"
-        className="mt-6"
-      />
-    </SeoPageLayout>
+      </ul></SeoPageLayout>
   );
 }

@@ -112,13 +112,12 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Slice of Life Anime to Watch With Friends (2026)
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Slice of life anime are the best genre for a low-pressure, cozy watch
           party — no cliffhangers demanding you stay up until 3am, no complex
@@ -133,20 +132,20 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
       {/* ── SECTION 1: COZY COMEDY ───────────────────────── */}
       <h2
         id="cozy-comedy"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Cozy Comedy Slice of Life
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Low-stakes and warm — these are shows where the goal is to enjoy the
         company of the characters as much as the company of your friends.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/bocchi-the-rock-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Bocchi the Rock!
             </Link>
@@ -164,7 +163,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/k-on-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               K-On!
             </Link>
@@ -180,7 +179,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/nichijou-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Nichijou — My Ordinary Life
             </Link>
@@ -197,7 +196,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/barakamon-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Barakamon
             </Link>
@@ -212,7 +211,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/the-disastrous-life-of-saiki-k-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               The Disastrous Life of Saiki K.
             </Link>
@@ -229,21 +228,21 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
       {/* ── SECTION 2: ROMANCE & DRAMA ───────────────────── */}
       <h2
         id="romance-drama"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Romance &amp; Emotional Drama
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Slice of life with emotional stakes — relationship-driven stories where
         the group debates ship outcomes, processes shared feelings, and
         collectively experiences the good endings they earned.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/horimiya-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Horimiya
             </Link>
@@ -259,7 +258,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/fruits-basket-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Fruits Basket (2019)
             </Link>
@@ -275,7 +274,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/toradora-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Toradora!
             </Link>
@@ -291,7 +290,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/oregairu-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               My Teen Romantic Comedy SNAFU (OreGairu)
             </Link>
@@ -307,7 +306,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/anohana-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Anohana: The Flower We Saw That Day
             </Link>
@@ -322,7 +321,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/clannad-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Clannad + After Story
             </Link>
@@ -337,7 +336,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/kimi-ni-todoke-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Kimi ni Todoke
             </Link>
@@ -352,7 +351,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/plastic-memories-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Plastic Memories
             </Link>
@@ -375,21 +374,21 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
       {/* ── SECTION 3: CREATIVE & ARTISTIC ───────────────── */}
       <h2
         id="creative-artistic"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Creative &amp; Artistic Slice of Life
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Slice of life centered on creative pursuits — music, art, shogi, writing
         — where the group becomes invested in the craft as much as the
         characters.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/blue-period-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Blue Period
             </Link>
@@ -406,7 +405,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/march-comes-in-like-a-lion-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               March Comes in Like a Lion
             </Link>
@@ -422,7 +421,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/hyouka-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Hyouka
             </Link>
@@ -438,7 +437,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/my-dress-up-darling-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               My Dress-Up Darling
             </Link>
@@ -454,11 +453,11 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
       {/* ── SECTION 4: TIPS ──────────────────────────────── */}
       <h2
         id="tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Tips for a Cozy Slice of Life Watch Party
       </h2>
-      <ul className="space-y-3 text-gray-700 mb-10">
+      <ul className="space-y-3 text-foreground/80 mb-10">
         <li>
           <strong>Lean into the vibe, not the plot.</strong> Slice of life is
           not usually about plot. The goal is atmosphere — good lighting, the
@@ -484,7 +483,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
           or K-On! with friends over distance is one of the best use cases for a
           watchroom — the low-stakes vibe makes chat conversation natural and the
           sync ensures everyone reacts to the same moment simultaneously.{" "}
-          <Link href="/#pricing" className="text-purple-600 hover:underline">
+          <Link href="/#pricing" className="text-brand-orange hover:underline">
             Start a cozy watchroom here.
           </Link>
         </li>
@@ -493,11 +492,11 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
       {/* ── RELATED ─────────────────────────────────────── */}
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
             href="/guides/best-anime-to-watch-with-friends"
@@ -554,14 +553,6 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
             How to watch anime long distance
           </Link>
         </li>
-      </ul>
-
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-slice-of-life-anime-to-watch-with-friends"
-        pageTemplate="listicle"
-        placement="content_bottom"
-        className="mt-6"
-      />
-    </SeoPageLayout>
+      </ul></SeoPageLayout>
   );
 }

@@ -15,12 +15,12 @@ export type CompareTableRow = {
 
 function CellIcon({ value }: { value: CompareCellValue }) {
   if (value === "yes")
-    return <Check className="h-5 w-5 text-green-600 shrink-0" aria-label="Yes" />;
+    return <Check className="h-5 w-5 shrink-0 text-brand-orange" aria-label="Yes" />;
   if (value === "no")
     return <X className="h-5 w-5 text-red-400 shrink-0" aria-label="No" />;
   if (value === "partial")
     return <Minus className="h-5 w-5 text-amber-500 shrink-0" aria-label="Partial" />;
-  return <span className="text-sm text-gray-700 text-right">{value}</span>;
+  return <span className="text-sm text-foreground/70 text-right">{value}</span>;
 }
 
 function displayValue(value: CompareCellValue): CompareCellValue {
@@ -43,26 +43,26 @@ export function ResponsiveCompareTable({
         {rows.map((row, i) => (
           <div
             key={row.feature}
-            className={`rounded-xl border border-gray-200 bg-white p-4 ${
-              i % 2 === 1 ? "bg-gray-50/80" : ""
+            className={`rounded-xl border border-brand-border bg-brand-surface p-4 ${
+              i % 2 === 1 ? "bg-brand-surface/80" : ""
             }`}
           >
-            <p className="font-semibold text-gray-900 mb-3">{row.feature}</p>
+            <p className="font-semibold text-foreground mb-3">{row.feature}</p>
             <div className="space-y-2">
               {columns.map((col) => (
                 <div
                   key={col.id}
                   className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm ${
                     col.highlight
-                      ? "bg-purple-50 border border-purple-100"
-                      : "bg-gray-50"
+                      ? "bg-brand-orange/10 border border-brand-orange/20"
+                      : "bg-background"
                   }`}
                 >
                   <span
                     className={
                       col.highlight
-                        ? "font-medium text-purple-800"
-                        : "text-gray-600"
+                        ? "font-medium text-brand-orange"
+                        : "text-foreground/60"
                     }
                   >
                     {col.label}
@@ -76,17 +76,17 @@ export function ResponsiveCompareTable({
       </div>
 
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm border-collapse border border-gray-200">
+        <table className="w-full text-sm border-collapse border border-brand-border">
           <thead>
-            <tr className="bg-gray-50">
-              <th className="border border-gray-200 px-4 py-2 text-left">
+            <tr className="bg-brand-surface">
+              <th className="border border-brand-border px-4 py-2 text-left">
                 Feature
               </th>
               {columns.map((col) => (
                 <th
                   key={col.id}
-                  className={`border border-gray-200 px-4 py-2 text-left ${
-                    col.highlight ? "text-purple-700" : ""
+                  className={`border border-brand-border px-4 py-2 text-left ${
+                    col.highlight ? "text-brand-orange" : ""
                   }`}
                 >
                   {col.label}
@@ -94,10 +94,10 @@ export function ResponsiveCompareTable({
               ))}
             </tr>
           </thead>
-          <tbody className="text-gray-700">
+          <tbody className="text-foreground/70">
             {rows.map((row, i) => (
-              <tr key={row.feature} className={i % 2 === 1 ? "bg-gray-50" : ""}>
-                <td className="border border-gray-200 px-4 py-2">
+              <tr key={row.feature} className={i % 2 === 1 ? "bg-brand-surface/50" : ""}>
+                <td className="border border-brand-border px-4 py-2">
                   {row.feature}
                 </td>
                 {columns.map((col) => {
@@ -107,9 +107,9 @@ export function ResponsiveCompareTable({
                   return (
                     <td
                       key={col.id}
-                      className={`border border-gray-200 px-4 py-2 ${
+                      className={`border border-brand-border px-4 py-2 ${
                         col.highlight && !isIcon
-                          ? "font-medium text-green-700"
+                          ? "font-medium text-brand-orange"
                           : ""
                       } ${isIcon ? "text-center" : ""}`}
                     >

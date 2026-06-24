@@ -66,18 +66,17 @@ export default function AniDachiVsWatch2GetherPage() {
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Watch2Gether for anime watch parties
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           If your group is Crunchyroll-first, the most reliable workflow is per-user
           playback in each person’s own tab—then sync the room on top. Generic “room link”
@@ -86,10 +85,10 @@ export default function AniDachiVsWatch2GetherPage() {
         </strong>
       </p>
 
-      <h2 id="tldr" className="text-2xl font-bold text-gray-900 mt-10 mb-3 scroll-mt-24">
+      <h2 id="tldr" className="text-2xl font-bold text-foreground mt-10 mb-3 scroll-mt-24">
         At a glance
       </h2>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>Watch2Gether:</strong> fast to start, generic room model.{" "}
         <strong>AniDachi:</strong> Crunchyroll watchrooms with anime detection,
         sync, chat, and optional async catch-up.
@@ -97,11 +96,11 @@ export default function AniDachiVsWatch2GetherPage() {
 
       <h2
         id="what-anime-groups-need"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         What anime groups need (beyond “press play together”)
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>Everyone watches in full quality on their own stream.</li>
         <li>Chat stays tied to the right episode so late viewers aren’t spoiled.</li>
         <li>A repeatable room workflow for weekly seasons and long shows.</li>
@@ -110,11 +109,11 @@ export default function AniDachiVsWatch2GetherPage() {
 
       <h2
         id="when-watch2gether"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When Watch2Gether is enough
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>You want a quick, casual hang with minimal setup.</li>
         <li>Everyone can watch at the same time and doesn’t need async pacing.</li>
         <li>You don’t need anime detection or per-person progress.</li>
@@ -122,20 +121,20 @@ export default function AniDachiVsWatch2GetherPage() {
 
       <h2
         id="when-anidachi"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When AniDachi wins
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>You host Crunchyroll anime nights regularly.</li>
         <li>Your group needs spoiler-safe episode context.</li>
         <li>You want async catch-up and progress tracking built in.</li>
       </ul>
 
-      <h2 id="related" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/watch-crunchyroll-together" className="hover:underline">
             Watch Crunchyroll Together

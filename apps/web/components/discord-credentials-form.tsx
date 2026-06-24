@@ -58,8 +58,8 @@ export function DiscordCredentialsForm({
   }, [sessionId, value]);
 
   return (
-    <div className={`bg-gray-50 rounded-lg p-4 text-sm text-gray-600 ${className}`.trim()}>
-      <h4 className="font-medium text-gray-900 mb-1">Your Discord contact (optional)</h4>
+    <div className={`bg-brand-surface border border-brand-border rounded-lg p-4 text-sm text-foreground/70 ${className}`.trim()}>
+      <h4 className="font-medium text-foreground mb-1">Your Discord contact (optional)</h4>
       <p className="mb-3">
         Leave your Discord username so we can reach you faster about refunds or questions.
       </p>
@@ -69,14 +69,14 @@ export function DiscordCredentialsForm({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Example: .profun"
-          className="flex-1 h-10 rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-200"
+          className="flex-1 h-10 rounded-md border border-brand-border bg-background px-3 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-[--brand-orange]/20 focus:border-brand-orange"
           aria-label="Discord username"
           disabled={status === "saving" || status === "saved"}
         />
 
         <Button
           type="button"
-          className="h-10 bg-purple-600 hover:bg-purple-700 text-white"
+          className="h-10 bg-brand-orange hover:bg-brand-orange-deep text-primary-foreground"
           onClick={submit}
           disabled={disabled}
         >
@@ -97,7 +97,7 @@ export function DiscordCredentialsForm({
       </div>
 
       {!sessionId ? (
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-foreground/50">
           Note: this field is only available when you arrive from Stripe checkout.
         </p>
       ) : null}

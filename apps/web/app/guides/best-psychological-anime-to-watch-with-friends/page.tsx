@@ -112,13 +112,12 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
       itemList={itemList}
       articleImage={articleImageAbsolute}
       conversionTemplate="listicle"
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Psychological Anime to Watch With Friends (2026)
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Psychological anime are built for group watches. The theory threads,
           the unreliable narrators, the mid-episode reveals that make someone
@@ -132,21 +131,21 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
       {/* ── SECTION 1: GATEWAY ───────────────────────────── */}
       <h2
         id="gateway"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Gateway Picks — Accessible &amp; Gripping
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Start here if your group is new to psychological anime. These shows hook
         you with clear premises and escalate the complexity gradually — no prior
         genre knowledge required.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/death-note-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Death Note
             </Link>
@@ -163,7 +162,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/erased-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Erased (Boku dake ga Inai Machi)
             </Link>
@@ -180,7 +179,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/promised-neverland-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               The Promised Neverland
             </Link>
@@ -196,7 +195,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/odd-taxi-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Odd Taxi
             </Link>
@@ -212,7 +211,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/classroom-of-the-elite-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Classroom of the Elite
             </Link>
@@ -227,7 +226,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/steins-gate-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Steins;Gate
             </Link>
@@ -245,21 +244,21 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
       {/* ── SECTION 2: DEEP MYSTERY ──────────────────────── */}
       <h2
         id="deep-mystery"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Deep Mystery &amp; Noir
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         These reward groups willing to treat episodes like case files — patient
         pacing, layered character motivations, and payoffs that arrive over
         dozens of episodes.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/monster-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Monster
             </Link>
@@ -276,7 +275,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/psycho-pass-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Psycho-Pass
             </Link>
@@ -292,7 +291,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/hyouka-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Hyouka
             </Link>
@@ -307,7 +306,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/code-geass-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Code Geass
             </Link>
@@ -331,22 +330,22 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
       {/* ── SECTION 3: MIND-BENDERS ──────────────────────── */}
       <h2
         id="mind-benders"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Mind-Bending &amp; Avant-Garde
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         These require a group willing to sit with ambiguity and build
         interpretations collaboratively. Not recommended as a first
         psychological anime — watch at least one entry from the gateway section
         first.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/neon-genesis-evangelion-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Neon Genesis Evangelion
             </Link>
@@ -362,7 +361,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/paranoia-agent-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Paranoia Agent
             </Link>
@@ -378,7 +377,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/serial-experiments-lain-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Serial Experiments Lain
             </Link>
@@ -394,7 +393,7 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/ergo-proxy-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Ergo Proxy
             </Link>
@@ -412,11 +411,11 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
       {/* ── SECTION 4: DISCUSSION TIPS ───────────────────── */}
       <h2
         id="discussion-tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Discussion Prompts for Psychological Anime Watch Parties
       </h2>
-      <ul className="space-y-3 text-gray-700 mb-10">
+      <ul className="space-y-3 text-foreground/80 mb-10">
         <li>
           <strong>After Death Note:</strong> Is Light a villain or a hero who
           went too far? Where exactly does the line get crossed — episode 1,
@@ -448,11 +447,11 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
       {/* ── RELATED ─────────────────────────────────────── */}
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
             href="/guides/best-anime-to-watch-with-friends"
@@ -509,14 +508,6 @@ export default function BestPsychologicalAnimeWithFriendsPage() {
             First anime watch party checklist
           </Link>
         </li>
-      </ul>
-
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-psychological-anime-to-watch-with-friends"
-        pageTemplate="listicle"
-        placement="content_bottom"
-        className="mt-6"
-      />
-    </SeoPageLayout>
+      </ul></SeoPageLayout>
   );
 }

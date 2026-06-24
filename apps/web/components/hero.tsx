@@ -1,72 +1,137 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Chrome, MessageCircle, Play, Users } from "lucide-react";
+import { ArrowDown, MessageCircle, Play, Rocket, Users } from "lucide-react";
 import { trackEvent } from "@/lib/gtag";
 import { trackConversion } from "@/lib/conversion-events";
+import { PRICING_CTA_LABEL } from "@/lib/home-survey";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
-export function Hero() {
+function WaitlistPillContent({ count }: { count: number | null }) {
+  if (count === null) {
+    return <>Launching soon · join the waitlist</>;
+  }
+  if (count === 0) {
+    return <>Launching soon · be first on the waitlist</>;
+  }
+  return (
+    <>
+      Launching soon ·{" "}
+      <span className="font-semibold text-brand-orange">
+        {count.toLocaleString()}
+      </span>{" "}
+      on the waitlist
+    </>
+  );
+}
+
+export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: number | null }) {
   const { openSurvey, recommendedTier, survey } = usePlanSurvey();
+  const [waitlistCount, setWaitlistCount] = useState<number | null>(initialWaitlistCount);
 
   useEffect(() => {
     trackConversion("cta_impression", {
       page_path: "/",
       page_template: "home",
       placement: "hero",
-      cta_variant: "hero_survey_recommended_plan",
+      cta_variant: "hero_waitlist_early_access",
     });
   }, []);
 
+  useEffect(() => {
+    setWaitlistCount(initialWaitlistCount);
+  }, [initialWaitlistCount]);
+
+  useEffect(() => {
+    if (initialWaitlistCount !== null) return;
+    let cancelled = false;
+    fetch("/api/waitlist-stats")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { count?: number | null } | null) => {
+        if (cancelled || !data || typeof data.count !== "number") return;
+        setWaitlistCount(data.count);
+      })
+      .catch(() => {
+        // Keep fallback copy if the count cannot be loaded.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialWaitlistCount]);
+
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 text-white">
-      <div className="absolute inset-0 motion-reduce:hidden">
-        <div className="absolute top-20 left-10 w-20 h-20 bg-purple-400/20 rounded-full blur-lg md:blur-xl motion-reduce:animate-none animate-pulse" />
-        <div className="absolute top-40 right-20 w-32 h-32 bg-blue-400/20 rounded-full blur-lg md:blur-xl motion-reduce:animate-none animate-pulse delay-1000" />
-        <div className="absolute bottom-20 left-1/3 w-24 h-24 bg-purple-300/20 rounded-full blur-lg md:blur-xl motion-reduce:animate-none animate-pulse delay-500" />
+    <section className="relative overflow-hidden bg-background text-foreground">
+      {/* Radial orange glow — subtle accent */}
+      <div className="pointer-events-none absolute inset-0 motion-reduce:hidden">
+        <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[500px] w-[700px] rounded-full bg-brand-orange/8 blur-[120px]" />
+        <div className="absolute right-16 top-32 h-24 w-24 rounded-full bg-brand-orange/10 blur-2xl motion-reduce:animate-none" />
       </div>
 
-      <div className="absolute inset-0 bg-black/20" />
-      <div className="relative container mx-auto px-4 py-24 lg:py-32">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-            Your friends are watching without you. Fix that.
+      {/* Subtle grain texture */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.025] noise-overlay mix-blend-overlay"
+        aria-hidden
+      />
+
+      {/* Subtle grid overlay for the futuristic feel */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(oklch(0.95 0.008 60) 1px, transparent 1px), linear-gradient(90deg, oklch(0.95 0.008 60) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      <div className="relative container mx-auto px-4 py-16 lg:py-20">
+        <div className="mx-auto max-w-4xl text-center">
+          {/* Pre-launch status pill */}
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-4 py-2 text-sm font-medium text-foreground/80 backdrop-blur-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-orange opacity-60 motion-reduce:animate-none" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-orange" />
+            </span>
+            <WaitlistPillContent count={waitlistCount} />
+          </div>
+
+          <h1 className="mb-4 text-4xl font-bold text-foreground md:text-6xl lg:text-7xl">
+            Your friends are watching without you.{" "}
+            <span className="text-brand-orange">Fix that.</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-4 text-purple-100 max-w-3xl mx-auto leading-relaxed">
-            Sync with your crew across any timezone. Create a watchroom, share
-            the link, react to every plot twist — even when you don&apos;t watch
-            at the same time.
+          <p className="mx-auto mb-6 max-w-2xl text-lg text-foreground/70 md:text-xl">
+            Watch anime with friends on Crunchyroll — synced, in chat, across
+            time zones.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+          <div className="mb-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
-              size="touch"
-              className="bg-white text-purple-700 hover:bg-purple-50 w-full sm:w-auto px-8 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 md:hover:scale-105"
+              size="lg"
+              className="w-full bg-brand-orange px-8 text-base font-semibold text-primary-foreground glow-orange transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange-lg sm:w-auto"
               onClick={() => {
                 trackConversion("cta_click", {
                   page_path: "/",
                   page_template: "home",
                   placement: "hero",
-                  cta_variant: "hero_survey_recommended_plan",
+                  cta_variant: "hero_waitlist_early_access",
                   recommended_tier: recommendedTier,
                   segment: survey.segment,
                   priority: survey.priority ?? "unset",
                 });
                 openSurvey({
                   placement: "hero",
-                  ctaVariant: "hero_survey_recommended_plan",
+                  ctaVariant: "hero_waitlist_early_access",
                 });
               }}
             >
-              <Play className="h-5 w-5" aria-hidden="true" />
-              Help me pick a plan
+              <Rocket className="h-5 w-5" aria-hidden="true" />
+              {PRICING_CTA_LABEL}
             </Button>
             <Button
               asChild
               size="lg"
               variant="ghost"
-              className="text-purple-100 hover:text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold bg-transparent backdrop-blur-sm transition-all duration-300"
+              className="w-full border border-brand-border bg-transparent px-8 text-base font-semibold text-foreground/70 transition-all duration-300 hover:bg-brand-orange hover:text-primary-foreground sm:w-auto"
             >
               <a
                 href="#how-it-works"
@@ -74,28 +139,31 @@ export function Hero() {
                   trackEvent("extension_clicked", { cta: "hero_extension" })
                 }
               >
-                <Chrome className="h-5 w-5" aria-hidden="true" />
+                <ArrowDown className="h-5 w-5" aria-hidden="true" />
                 See How It Works
               </a>
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-            <div className="flex flex-col items-center gap-2 p-4 bg-white/10 backdrop-blur-sm rounded-lg">
-              <Users className="h-6 w-6 text-purple-200" aria-hidden="true" />
-              <span className="text-sm font-medium">Crunchyroll Detection</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-white/10 backdrop-blur-sm rounded-lg">
-              <MessageCircle
-                className="h-6 w-6 text-purple-200"
-                aria-hidden="true"
-              />
-              <span className="text-sm font-medium">Real-time Chat</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-white/10 backdrop-blur-sm rounded-lg">
-              <Play className="h-6 w-6 text-purple-200" aria-hidden="true" />
-              <span className="text-sm font-medium">Perfect Sync</span>
-            </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-foreground/50">
+            <span className="inline-flex items-center gap-1.5">
+              <Users className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
+              Crunchyroll
+            </span>
+            <span className="text-brand-border/80" aria-hidden="true">
+              ·
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MessageCircle className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
+              Real-time chat
+            </span>
+            <span className="text-brand-border/80" aria-hidden="true">
+              ·
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Play className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
+              Perfect sync
+            </span>
           </div>
         </div>
       </div>

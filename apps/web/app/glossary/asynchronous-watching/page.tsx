@@ -66,18 +66,17 @@ export default function AsyncWatchingGlossaryPage() {
       dateModified="2026-06-23"
       faq={faq}
       headings={tocHeadings}
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         What Is Asynchronous Anime Watching?
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Asynchronous anime watching means friends watch the same anime at
           their own pace — not at the same time — and share reactions, comments,
@@ -89,11 +88,11 @@ export default function AsyncWatchingGlossaryPage() {
 
       <h2
         id="how-it-works"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How Async Watching Works
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-6">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Someone creates a watchroom for a specific anime.</li>
         <li>Everyone joins via invite link.</li>
         <li>Each person watches episodes whenever they have time.</li>
@@ -103,11 +102,11 @@ export default function AsyncWatchingGlossaryPage() {
 
       <h2
         id="why-growing"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Async Is Growing
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Coordinating schedules across time zones is the number-one pain point
         for anime watch groups. Async watching removes that friction entirely.
         It&apos;s especially popular for long-running series (One Piece, Naruto)
@@ -116,11 +115,11 @@ export default function AsyncWatchingGlossaryPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li><Link href="/glossary/watchroom" className="hover:underline">What Is a Watchroom?</Link></li>
         <li><Link href="/guides/asynchronous-vs-live-watch-party" className="hover:underline">Async vs Live Watch Parties</Link></li>
         <li><Link href="/timezone-friendly-anime-watch-parties" className="hover:underline">Timezone-Friendly Anime Watch Parties for Long-Distance Couples</Link></li>

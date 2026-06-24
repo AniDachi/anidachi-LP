@@ -99,16 +99,16 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Slice of Life Anime With Friends
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Yes, you can watch slice of life anime with friends using AniDachi&apos;s
           watchroom on Crunchyroll. Sync cozy sessions in real time or use async
@@ -119,11 +119,11 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
 
       <h2
         id="why-slice-of-life"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Slice of Life Anime Perfect for Group Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Slice of life anime removes the pressure that action or thriller genres
         carry — there are no deaths to spoil, no power-level debates to prepare
         for, and no mandatory premiere sessions. Instead, the genre produces
@@ -132,7 +132,7 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
         K-On!&apos;s graduation concert lands harder when shared with friends
         who&apos;ve watched every practice session together.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         The episodic format also makes slice of life the most async-friendly
         genre for group watching. Each 24-minute episode is largely self-contained,
         so members can catch up across two episodes before the next session
@@ -143,15 +143,15 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Slice of Life Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {sliceOfLifeAnime.length} titles below have dedicated watchroom
         guides with setup steps, pacing advice, and session-planning tips:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {sliceOfLifeAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -166,29 +166,29 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up a Slice of Life Anime Watchroom
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Add the Chrome extension on every device in your watch group.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Open the series on Crunchyroll.
           </span>{" "}
           Each person streams from their own account — no screen sharing needed.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
           Send the invite link via Discord, group chat, or email.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Choose async over live for daily-life series.
           </span>{" "}
           Slice of life doesn&apos;t require synchronized viewing the way action
@@ -196,7 +196,7 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
           for a low-pressure experience.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Set a comfortable session pace.
           </span>{" "}
           Two to three episodes per session keeps the group emotionally connected
@@ -206,15 +206,15 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
 
       <h2
         id="cozy-session-tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Tips for Cozy Slice of Life Group Sessions
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Slice of life works best when the watchroom mirrors the comfort of the
         genre itself. A few habits that keep the group experience warm:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           Pick a recurring time slot — Thursday evenings, Sunday mornings — so
           the watchroom becomes a ritual rather than a scheduling puzzle.
@@ -236,37 +236,37 @@ export default function WatchSliceOfLifeAnimeWithFriendsPage() {
         </li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
         <Link
           href="/watch-anime-together"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Watch anime together
         </Link>
         {" · "}
         <Link
           href="/watch-romance-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Romance anime
         </Link>
         {" · "}
         <Link
           href="/watch-comedy-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Comedy anime
         </Link>
         {" · "}
         <Link
           href="/watch-mecha-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Mecha anime
         </Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

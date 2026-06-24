@@ -10,6 +10,30 @@ export function isSurveyLead(contact: Contact): boolean {
   return contact.segments.includes(SURVEY_LEAD_SEGMENT);
 }
 
+/** Survey leads in waitlist order (first email submission = #1). */
+export function listSurveyLeads(contacts: Contact[]): Contact[] {
+  return contacts
+    .filter(isSurveyLead)
+    .slice()
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
+export function countSurveyLeads(contacts: Contact[]): number {
+  return listSurveyLeads(contacts).length;
+}
+
+export function waitlistPositionForEmail(
+  contacts: Contact[],
+  email: string,
+): number | null {
+  const normalized = email.trim().toLowerCase();
+  const ordered = listSurveyLeads(contacts);
+  const idx = ordered.findIndex(
+    (c) => c.email.trim().toLowerCase() === normalized,
+  );
+  return idx === -1 ? null : idx + 1;
+}
+
 export type ParsedSurveyTags = Partial<
   Record<
     | "segment"

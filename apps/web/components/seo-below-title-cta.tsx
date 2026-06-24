@@ -52,7 +52,7 @@ export function SeoBelowTitleCta({
         pagePath={pagePath}
         pageTemplate={pageTemplate}
         placement="content_above_fold"
-        className="!mt-0 mb-10"
+        className="!mt-0 mb-6"
       />
       {arr.slice(insertAt)}
     </>

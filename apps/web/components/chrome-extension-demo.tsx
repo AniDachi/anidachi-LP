@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Mic } from "lucide-react";
+import { X, Mic, Link2, Mic2, Tv } from "lucide-react";
 import Image from "next/image";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 
@@ -77,11 +77,14 @@ function TopBubble({
       className="flex items-center gap-1.5 h-[30px] px-2 rounded-full cursor-pointer border border-white/[0.16] bg-[rgba(10,10,18,0.38)] backdrop-blur-lg shadow-[0_10px_30px_rgba(0,0,0,0.24)] pointer-events-auto transition-transform active:scale-95"
     >
       <AnidachiLogo size={20} alt="" className="w-5 h-5 shrink-0" aria-hidden />
-      <span
-        className={`w-1.5 h-1.5 rounded-full transition-colors duration-700 ${
-          connected ? "bg-[#7dd3a7]" : "bg-[#9ca3af]"
-        }`}
-      />
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-orange opacity-60 motion-reduce:animate-none" />
+          <span
+            className={`relative inline-flex h-2 w-2 rounded-full transition-colors duration-700 ${
+              connected ? "bg-brand-orange" : "bg-[#9ca3af]"
+            }`}
+          />
+        </span>
       <span className="text-[12px] font-semibold text-white/90 leading-none">{count}</span>
     </button>
   );
@@ -206,7 +209,7 @@ function MiniPanel({
   };
 
   const btnBase =
-    "inline-flex items-center gap-1.5 h-[30px] px-2.5 rounded-full text-[11px] font-semibold cursor-pointer border border-white/[0.14] bg-white/[0.08] text-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:bg-white/[0.14]";
+    "inline-flex items-center gap-1.5 h-[30px] px-2.5 rounded-full text-[11px] font-semibold cursor-pointer border border-white/[0.14] bg-white/[0.08] text-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:bg-brand-orange/30 hover:border-brand-orange/50 hover:text-brand-orange-bright";
   const btnPrimary =
     "inline-flex items-center gap-1.5 h-[30px] px-2.5 rounded-full text-[11px] font-semibold cursor-pointer border-0 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:opacity-90";
   const sectionLabel =
@@ -246,7 +249,7 @@ function MiniPanel({
           type="button"
           onClick={onCreateRoom}
           className={btnPrimary}
-          style={{ background: "linear-gradient(135deg,#7c3aed,#2563eb)" }}
+          style={{ background: "oklch(0.71 0.20 45)", color: "oklch(0.07 0.008 35)" }}
         >
           {roomActive ? "New room" : "Create room"}
         </button>
@@ -266,7 +269,7 @@ function MiniPanel({
             type="button"
             onClick={() => onReact(emoji)}
             disabled={!roomActive}
-            className="w-[30px] h-[30px] rounded-full border border-white/[0.14] bg-white/[0.08] flex items-center justify-center cursor-pointer text-base disabled:opacity-50 hover:bg-white/[0.18] transition-colors"
+            className="w-[30px] h-[30px] rounded-full border border-white/[0.14] bg-white/[0.08] flex items-center justify-center cursor-pointer text-base disabled:opacity-50 hover:bg-brand-orange/30 hover:border-brand-orange/50 transition-colors"
           >
             {emoji}
           </button>
@@ -323,7 +326,7 @@ function MiniPanel({
             key={label}
             type="button"
             onClick={() => set(!value)}
-            className="flex items-center justify-between gap-2.5 w-full px-2.5 py-[9px] rounded-xl border border-white/10 bg-white/[0.06] cursor-pointer hover:bg-white/[0.10] transition-colors"
+            className="flex items-center justify-between gap-2.5 w-full px-2.5 py-[9px] rounded-xl border border-white/10 bg-white/[0.06] cursor-pointer hover:bg-brand-orange/30 hover:border-brand-orange/40 transition-colors"
           >
             <span className="text-[13px] font-semibold">{label}</span>
             <span className="text-[12px] text-white/58">{value ? onLabel : offLabel}</span>
@@ -348,13 +351,13 @@ function StepIndicator({ current }: { current: number }) {
           <div key={label} className="flex items-center gap-1">
             <div className="flex flex-col items-center gap-1">
               <div
-                className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                  active ? "bg-purple-400 scale-125" : done ? "bg-purple-600" : "bg-gray-600"
+              className={`w-2 h-2 rounded-full transition-all duration-500 ${
+                  active ? "bg-brand-orange scale-125" : done ? "bg-brand-orange-deep" : "bg-brand-border"
                 }`}
               />
               <span
                 className={`text-[9px] font-semibold tracking-wide uppercase transition-colors duration-500 leading-none ${
-                  active ? "text-purple-300" : done ? "text-purple-500" : "text-gray-600"
+                  active ? "text-brand-orange" : done ? "text-brand-orange-deep" : "text-foreground/30"
                 }`}
               >
                 {label}
@@ -363,7 +366,7 @@ function StepIndicator({ current }: { current: number }) {
             {i < STEP_LABELS.length - 1 && (
               <div
                 className={`w-6 h-px mb-3 transition-colors duration-500 ${
-                  done ? "bg-purple-600" : "bg-gray-700"
+                  done ? "bg-brand-orange-deep" : "bg-brand-border"
                 }`}
               />
             )}
@@ -509,7 +512,7 @@ export function ChromeExtensionDemo() {
   return (
     <section
       ref={sectionRef}
-      className="py-24 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden"
+      className="overflow-hidden bg-background py-16 text-foreground lg:py-20"
     >
       <style>{`
         @keyframes anidachi-pop {
@@ -529,11 +532,15 @@ export function ChromeExtensionDemo() {
       `}</style>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1600px]">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">See It In Action</h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            The Anidachi button lives directly on the video. One click to open, one more to create
-            a room — then paste the link in Discord and you&apos;re watching together.
+        <div className="mb-8 text-center">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide text-brand-orange">
+            Live Demo
+          </div>
+          <h2 className="mb-3 text-3xl font-bold md:text-4xl">See It In Action</h2>
+          <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
+          <p className="mx-auto max-w-xl text-base text-foreground/70">
+            The overlay sits on any Crunchyroll player. Create a room, share the
+            link, you&apos;re in.
           </p>
         </div>
 
@@ -602,12 +609,12 @@ export function ChromeExtensionDemo() {
                     }}
                   >
                     <span>3.2s out of sync</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowCatchUp(false)}
-                      className="inline-flex items-center h-[26px] px-2.5 rounded-full text-[11px] font-bold cursor-pointer border-0 text-white"
-                      style={{ background: "linear-gradient(135deg,#7c3aed,#2563eb)" }}
-                    >
+          <button
+          type="button"
+          onClick={() => setShowCatchUp(false)}
+          className="inline-flex items-center h-[26px] px-2.5 rounded-full text-[11px] font-bold cursor-pointer border-0"
+          style={{ background: "oklch(0.71 0.20 45)", color: "oklch(0.07 0.008 35)" }}
+        >
                       Catch up
                     </button>
                   </div>
@@ -615,38 +622,30 @@ export function ChromeExtensionDemo() {
               </div>
             </div>
 
-            <div className="bg-gray-900/80 px-5 py-4 border-t border-white/10">
-              <p className="text-sm text-gray-300 text-center min-h-[1.25rem]">{caption}</p>
+            <div className="bg-background/80 px-5 py-4 border-t border-brand-border">
+              <p className="text-sm text-foreground/60 text-center min-h-[1.25rem]">{caption}</p>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mt-12">
-            {[
-              {
-                emoji: "🎯",
-                title: "Works on any video",
-                desc: "YouTube, Crunchyroll, or any HTML5 player — the overlay attaches automatically.",
-              },
-              {
-                emoji: "🔗",
-                title: "Share with one link",
-                desc: "Rooms live in the URL hash. Copy the invite link and your friend lands right in the session.",
-              },
-              {
-                emoji: "🎙️",
-                title: "Push-to-talk reactions",
-                desc: "Hold V to speak a reaction. Your voice is transcribed and floats up over the video.",
-              },
-            ].map(({ emoji, title, desc }) => (
-              <div
-                key={title}
-                className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 text-center"
-              >
-                <div className="text-3xl mb-3">{emoji}</div>
-                <h3 className="font-semibold mb-2">{title}</h3>
-                <p className="text-sm text-gray-300">{desc}</p>
-              </div>
-            ))}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-foreground/50">
+            <span className="inline-flex items-center gap-1.5">
+              <Tv className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
+              Any video
+            </span>
+            <span className="text-brand-border/80" aria-hidden="true">
+              ·
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Link2 className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
+              One invite link
+            </span>
+            <span className="text-brand-border/80" aria-hidden="true">
+              ·
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Mic2 className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
+              Push-to-talk reactions
+            </span>
           </div>
         </div>
       </div>

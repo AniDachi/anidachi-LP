@@ -88,18 +88,17 @@ export default function AniDachiVsRavePage() {
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Rave: Which Is Better for Anime Watch Parties?
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           AniDachi is purpose-built for Crunchyroll anime groups who need async
           watchrooms and progress tracking. Rave is a general multi-platform watch
@@ -109,11 +108,11 @@ export default function AniDachiVsRavePage() {
 
       <h2
         id="tldr"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-3 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-3 scroll-mt-24"
       >
         At a glance
       </h2>
-      <p className="text-gray-700 mb-6">
+      <p className="text-foreground/80 mb-6">
         <strong>TL;DR:</strong> Choose AniDachi for Crunchyroll-first, async-friendly
         group watching with spoiler controls. Choose Rave if you need multi-platform
         support and can always watch live together.
@@ -121,7 +120,7 @@ export default function AniDachiVsRavePage() {
 
       <h2
         id="feature-comparison"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Feature comparison
       </h2>
@@ -162,11 +161,11 @@ export default function AniDachiVsRavePage() {
 
       <h2
         id="when-anidachi"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When to choose AniDachi
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Your group watches primarily on Crunchyroll.</li>
         <li>You need async watching — different schedules or time zones.</li>
         <li>You want individual episode progress and spoiler boundaries.</li>
@@ -175,11 +174,11 @@ export default function AniDachiVsRavePage() {
 
       <h2
         id="when-rave"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When to choose Rave
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>You watch on multiple platforms beyond Crunchyroll.</li>
         <li>Everyone is available to watch at the same time.</li>
         <li>You want built-in voice chat without a separate Discord setup.</li>
@@ -188,17 +187,17 @@ export default function AniDachiVsRavePage() {
 
       <h2
         id="deep-dive"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Deeper look: anime-specific vs general-purpose
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Rave&apos;s strength is breadth — one tool for Netflix movie nights and
         Crunchyroll anime sessions alike. AniDachi trades that breadth for depth
         on the anime use case: seasonal simulcasts, long-running shonen marathons,
         and friend groups where someone always watches ahead.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         If your group only watches live and switches platforms often, Rave is a
         reasonable fit. If Crunchyroll is your primary destination and schedules
         never align perfectly, AniDachi&apos;s async watchrooms solve the problem
@@ -207,11 +206,11 @@ export default function AniDachiVsRavePage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/best-apps-watch-anime-together-long-distance" className="hover:underline">
             Best Apps for Watching Anime Together Long Distance

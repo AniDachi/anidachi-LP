@@ -74,12 +74,11 @@ export default function BestAnimeToWatchAsACouplePage() {
       headings={headings}
       itemList={itemList}
       articleImage={articleImageAbsolute}
-      aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         20 best anime to watch as a couple in 2026
       </h1>
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           These picks reward pausing mid-episode to talk—perfect for couches,
           headsets, or long-distance watchrooms—without dumping overwhelming lore on
@@ -89,14 +88,14 @@ export default function BestAnimeToWatchAsACouplePage() {
 
       <h2
         id="romcoms"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Rom-com &amp; spark
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/toradora-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/toradora-with-friends" className="text-brand-orange hover:underline">
               Toradora!
             </Link>
           </strong>{" "}
@@ -105,7 +104,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/kaguya-sama-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/kaguya-sama-with-friends" className="text-brand-orange hover:underline">
               Kaguya-sama: Love Is War
             </Link>
           </strong>{" "}
@@ -114,7 +113,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/horimiya-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/horimiya-with-friends" className="text-brand-orange hover:underline">
               Horimiya
             </Link>
           </strong>{" "}
@@ -123,7 +122,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/my-dress-up-darling-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/my-dress-up-darling-with-friends" className="text-brand-orange hover:underline">
               My Dress-Up Darling
             </Link>
           </strong>{" "}
@@ -132,7 +131,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/kimi-ni-todoke-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/kimi-ni-todoke-with-friends" className="text-brand-orange hover:underline">
               Kimi ni Todoke
             </Link>
           </strong>{" "}
@@ -142,14 +141,14 @@ export default function BestAnimeToWatchAsACouplePage() {
 
       <h2
         id="dramas"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Earnest dramas
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/your-name-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/your-name-with-friends" className="text-brand-orange hover:underline">
               Your Name.
             </Link>
           </strong>{" "}
@@ -157,7 +156,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/a-silent-voice-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/a-silent-voice-with-friends" className="text-brand-orange hover:underline">
               A Silent Voice
             </Link>
           </strong>{" "}
@@ -165,7 +164,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/your-lie-in-april-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/your-lie-in-april-with-friends" className="text-brand-orange hover:underline">
               Your Lie in April
             </Link>
           </strong>{" "}
@@ -174,7 +173,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/violet-evergarden-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/violet-evergarden-with-friends" className="text-brand-orange hover:underline">
               Violet Evergarden
             </Link>
           </strong>{" "}
@@ -183,7 +182,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/march-comes-in-like-a-lion-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/march-comes-in-like-a-lion-with-friends" className="text-brand-orange hover:underline">
               March Comes in Like a Lion
             </Link>
           </strong>{" "}
@@ -191,7 +190,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/nana-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/nana-with-friends" className="text-brand-orange hover:underline">
               Nana
             </Link>
           </strong>{" "}
@@ -201,14 +200,14 @@ export default function BestAnimeToWatchAsACouplePage() {
 
       <h2
         id="cozy"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Cozy low-stress nights
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/spy-x-family-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/spy-x-family-with-friends" className="text-brand-orange hover:underline">
               Spy x Family
             </Link>
           </strong>{" "}
@@ -217,7 +216,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/delicious-in-dungeon-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/delicious-in-dungeon-with-friends" className="text-brand-orange hover:underline">
               Delicious in Dungeon
             </Link>
           </strong>{" "}
@@ -226,7 +225,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/frieren-beyond-journeys-end-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/frieren-beyond-journeys-end-with-friends" className="text-brand-orange hover:underline">
               Frieren: Beyond Journey&apos;s End
             </Link>
           </strong>{" "}
@@ -235,7 +234,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/golden-kamuy-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/golden-kamuy-with-friends" className="text-brand-orange hover:underline">
               Golden Kamuy
             </Link>
           </strong>{" "}
@@ -244,7 +243,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/darling-in-the-franxx-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/darling-in-the-franxx-with-friends" className="text-brand-orange hover:underline">
               Darling in the Franxx
             </Link>
           </strong>{" "}
@@ -253,7 +252,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/the-apothecary-diaries-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/the-apothecary-diaries-with-friends" className="text-brand-orange hover:underline">
               The Apothecary Diaries
             </Link>
           </strong>{" "}
@@ -262,7 +261,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/re-zero-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/re-zero-with-friends" className="text-brand-orange hover:underline">
               Re:Zero
             </Link>
           </strong>{" "}
@@ -271,7 +270,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/konosuba-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/konosuba-with-friends" className="text-brand-orange hover:underline">
               KonoSuba
             </Link>
           </strong>{" "}
@@ -280,7 +279,7 @@ export default function BestAnimeToWatchAsACouplePage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/ranking-of-kings-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/ranking-of-kings-with-friends" className="text-brand-orange hover:underline">
               Ranking of Kings
             </Link>
           </strong>{" "}
@@ -288,18 +287,18 @@ export default function BestAnimeToWatchAsACouplePage() {
           beats.
         </li>
       </ul>
-      <p className="text-sm text-gray-600 mb-6">
+      <p className="text-sm text-foreground/70 mb-6">
         Heads-up: eighteen titles are listed across the three buckets above—perfect
         for rotating weekend themes.
       </p>
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/guides/how-to-watch-anime-long-distance" className="hover:underline">
             How to watch anime long distance

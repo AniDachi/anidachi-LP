@@ -84,16 +84,16 @@ export default function WatchMysteryAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Mystery &amp; Psychological Anime With Friends
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Mystery anime is the ultimate group experience — theory-crafting
           together is half the show. Install AniDachi, open any series below
@@ -104,18 +104,18 @@ export default function WatchMysteryAnimeWithFriendsPage() {
 
       <h2
         id="why-mystery"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Mystery Anime the Best Genre for Group Theory-Crafting?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Mystery and psychological anime are engineered around reveals — the
         entire viewing experience is an attempt to outwit the show before it
         outsmarts you. Watching alone, your theory lives and dies in your head.
         Watching with friends, every wrong theory becomes a shared joke and every
         correct one is a shared triumph.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi watchrooms are particularly valuable here: episode-scoped threads
         prevent theory posts from becoming accidental spoilers, and async mode
         lets each viewer post their raw theory after each episode before reading
@@ -125,15 +125,15 @@ export default function WatchMysteryAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Mystery &amp; Psychological Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {mysteryAnime.length} titles below have dedicated watchroom guides
         with setup steps, theory-thread advice, and spoiler management:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {mysteryAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -148,60 +148,60 @@ export default function WatchMysteryAnimeWithFriendsPage() {
 
       <h2
         id="theory-setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up Theory Threads in Your Watchroom
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Create two pinned threads before episode one.</span>{" "}
+          <span className="font-medium text-foreground">Create two pinned threads before episode one.</span>{" "}
           &quot;Theory Sandbox&quot; (speculation, anything goes) and &quot;Episode Reactions&quot; (confirmed facts only, episode-tagged).
         </li>
         <li>
-          <span className="font-medium text-gray-900">Post your theory immediately after each episode.</span>{" "}
+          <span className="font-medium text-foreground">Post your theory immediately after each episode.</span>{" "}
           Before reading anyone else&apos;s. This creates an authentic record.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Tag all reactions with episode numbers.</span>{" "}
+          <span className="font-medium text-foreground">Tag all reactions with episode numbers.</span>{" "}
           &quot;Theory after Ep 5:&quot; keeps latecomers safe.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Keep re-watchers in a separate hindsight thread.</span>{" "}
+          <span className="font-medium text-foreground">Keep re-watchers in a separate hindsight thread.</span>{" "}
           Their retroactive foreshadowing notes are valuable — after the series ends.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Run a finale debrief session live.</span>{" "}
+          <span className="font-medium text-foreground">Run a finale debrief session live.</span>{" "}
           The mystery reveal is the best moment to be synchronized.
         </li>
       </ol>
 
       <h2
         id="spoilers"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Protect Twist Reveals for the Whole Group
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Mystery spoilers are irreversible — once someone knows who did it or how
         the twist works, the entire rewatch value of that episode is gone. Protect
         the experience:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Stay off wiki pages, subreddits, and social media during active watch — mystery fandoms post freely.</li>
         <li>For films (Perfect Blue, Your Name), set a strict movie-night date so everyone watches simultaneously.</li>
         <li>Anyone who has seen the series before must stay silent in theory threads — their participation starts in the hindsight channel after the final episode.</li>
         <li>Use &quot;evidence vs vibe&quot; polls (who do you think did it?) to make theory-crafting formal and fun without requiring anyone to explain their reasoning publicly.</li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
-        <Link href="/watch-anime-together" className="text-purple-600 hover:underline">Watch anime together</Link>
+        <Link href="/watch-anime-together" className="text-brand-orange hover:underline">Watch anime together</Link>
         {" · "}
-        <Link href="/watch-action-anime-with-friends" className="text-purple-600 hover:underline">Action anime</Link>
+        <Link href="/watch-action-anime-with-friends" className="text-brand-orange hover:underline">Action anime</Link>
         {" · "}
-        <Link href="/watch-romance-anime-with-friends" className="text-purple-600 hover:underline">Romance anime</Link>
+        <Link href="/watch-romance-anime-with-friends" className="text-brand-orange hover:underline">Romance anime</Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

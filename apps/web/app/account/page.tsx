@@ -27,14 +27,14 @@ function StatPanel({
   value: string | number;
 }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+    <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/15 text-violet-200">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
           {icon}
         </span>
         <div>
-          <p className="text-2xl font-bold text-white">{value}</p>
-          <p className="text-sm text-slate-400">{label}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          <p className="text-sm text-foreground/50">{label}</p>
         </div>
       </div>
     </div>
@@ -77,16 +77,16 @@ export default async function AccountOverviewPage() {
         />
       </section>
 
-      <section className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+      <section className="rounded-lg border border-brand-border bg-brand-surface p-5">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h2 className="text-lg font-semibold text-white">Friends & Groups</h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <h2 className="text-lg font-semibold text-foreground">Friends & Groups</h2>
+            <p className="mt-1 text-sm text-foreground/50">
               Manage friend requests and watch groups.
             </p>
           </div>
           <Link
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white transition hover:bg-violet-400"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-primary-foreground transition hover:bg-brand-orange-deep"
             href="/account/friends"
           >
             Open

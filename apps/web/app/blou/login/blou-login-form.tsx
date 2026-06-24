@@ -65,7 +65,7 @@ export function BlouLoginForm() {
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-md border border-teal-200 bg-white px-3 py-2 text-stone-900 shadow-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30"
+          className="w-full rounded-md border border-teal-200 bg-background px-3 py-2 text-stone-900 shadow-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30"
           required
         />
       </div>

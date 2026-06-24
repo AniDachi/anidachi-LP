@@ -13,7 +13,7 @@ export function NavPricingButton() {
     <Button
       type="button"
       size="sm"
-      className="bg-white text-purple-800 hover:bg-purple-50 font-semibold"
+      className="bg-brand-orange text-primary-foreground hover:bg-brand-orange-deep font-semibold glow-orange-sm"
       onClick={() => {
         if (typeof window === "undefined") return;
         const path = window.location.pathname;
@@ -26,7 +26,7 @@ export function NavPricingButton() {
         openSurvey({ placement: "nav", ctaVariant: "nav_pricing_button" });
       }}
     >
-      Help me pick a plan
+      Get early access
     </Button>
   );
 }

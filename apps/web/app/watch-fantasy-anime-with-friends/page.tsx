@@ -84,16 +84,16 @@ export default function WatchFantasyAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Fantasy Anime With Friends
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Yes, you can watch fantasy anime with friends using AniDachi&apos;s
           watchroom on Crunchyroll. Sync playback in real time or use async
@@ -105,18 +105,18 @@ export default function WatchFantasyAnimeWithFriendsPage() {
 
       <h2
         id="why-fantasy"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Fantasy Anime Perfect for Group Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Fantasy anime builds entire worlds with their own magic rules, geography,
         and history — and group watching turns every reveal into a shared
         discovery moment. When Frieren revisits a place from her past adventure,
         or when Hunter x Hunter introduces a new Nen ability, your watchroom
         becomes a live theory board where everyone contributes observations.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         The genre spans cozy slice-of-fantasy (Violet Evergarden) to brutal
         adventure (Made in Abyss) to epic quest narratives (Mushoku Tensei).
         That range means you can match a fantasy pick to your group&apos;s mood
@@ -126,15 +126,15 @@ export default function WatchFantasyAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Fantasy Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {fantasyAnime.length} titles below have dedicated watchroom guides
         with setup steps, pacing advice, and spoiler management tips:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {fantasyAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -149,36 +149,36 @@ export default function WatchFantasyAnimeWithFriendsPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up a Fantasy Anime Watchroom
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Add the Chrome extension on every device in your watch group.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Open the series on Crunchyroll.
           </span>{" "}
           Each person streams from their own account — no screen sharing needed.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
           Send the invite via Discord, group chat, or email.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Agree on live or async pacing.
           </span>{" "}
           Live for movie nights and arc finales; async for long epics like Hunter
           x Hunter where members watch at different speeds.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Pin your spoiler boundary.
           </span>{" "}
           Set the safe episode number so nobody spoils the next magic system
@@ -188,11 +188,11 @@ export default function WatchFantasyAnimeWithFriendsPage() {
 
       <h2
         id="discussion-tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Fantasy Discussion Tips for Watchrooms
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           Keep a shared lore doc for long series — track factions, magic rules,
           and character relationships so late joiners can catch up without
@@ -211,7 +211,7 @@ export default function WatchFantasyAnimeWithFriendsPage() {
           Isekai-with-fantasy titles (Mushoku Tensei, Re:Zero) overlap with the{" "}
           <Link
             href="/watch-isekai-anime-with-friends"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             isekai genre hub
           </Link>{" "}
@@ -220,37 +220,37 @@ export default function WatchFantasyAnimeWithFriendsPage() {
         </li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
         <Link
           href="/watch-anime-together"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Watch anime together
         </Link>
         {" · "}
         <Link
           href="/watch-action-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Action anime
         </Link>
         {" · "}
         <Link
           href="/watch-isekai-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Isekai anime
         </Link>
         {" · "}
         <Link
           href="/guides/best-classic-anime-to-watch-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Classic anime listicle
         </Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

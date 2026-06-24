@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { PRICING_CTA_LABEL } from "@/lib/home-survey";
 import { trackConversion, type PageTemplateId } from "@/lib/conversion-events";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
@@ -29,13 +30,13 @@ export function StickyMobileCheckoutBar({
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-purple-200/80 bg-white/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-md md:hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-border bg-background/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] backdrop-blur-xl md:hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       role="region"
       aria-label="Quick checkout"
     >
       <Link
         href="/#pricing"
-        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 text-base font-semibold text-white transition-colors hover:bg-purple-700"
+        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-orange px-4 text-base font-semibold text-primary-foreground transition-colors hover:bg-brand-orange-deep glow-orange"
         onClick={(e) => {
           e.preventDefault();
           trackConversion("cta_click", {
@@ -50,7 +51,7 @@ export function StickyMobileCheckoutBar({
           });
         }}
       >
-        Pick a plan
+        {PRICING_CTA_LABEL}
         <ArrowRight className="h-5 w-5" aria-hidden="true" />
       </Link>
     </div>
