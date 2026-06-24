@@ -52,11 +52,11 @@ export default function AnimeWatchPartyIdeasPage() {
       faq={faq}
       headings={tocHeadings}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Anime Watch Party Ideas for 2026
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           A great anime watch party is more than pressing play — it&apos;s
           themed snacks, real-time reactions, and the right anime for your
@@ -68,11 +68,11 @@ export default function AnimeWatchPartyIdeasPage() {
 
       <h2
         id="online-ideas"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Online Watch Party Ideas
       </h2>
-      <ul className="list-disc pl-6 space-y-3 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>Blind Watch:</strong> Everyone picks an anime they&apos;ve
           never seen. Vote on which to watch. No spoilers allowed.
@@ -101,11 +101,11 @@ export default function AnimeWatchPartyIdeasPage() {
 
       <h2
         id="in-person"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         In-Person Watch Party Ideas
       </h2>
-      <ul className="list-disc pl-6 space-y-3 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-3 text-foreground/80 mb-8">
         <li><strong>Cosplay Watch Party:</strong> Dress as characters from the anime you&apos;re watching.</li>
         <li><strong>Themed Food Night:</strong> Cook dishes inspired by the anime (ramen for Naruto, curry for One Piece).</li>
         <li><strong>Anime Trivia Breaks:</strong> Between episodes, quiz each other on anime trivia.</li>
@@ -114,24 +114,24 @@ export default function AnimeWatchPartyIdeasPage() {
 
       <h2
         id="best-anime"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Best Anime for Group Watching
       </h2>
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Check our dedicated guide:{" "}
-        <Link href="/guides/best-anime-to-watch-with-friends" className="text-purple-600 hover:underline">
+        <Link href="/guides/best-anime-to-watch-with-friends" className="text-brand-orange hover:underline">
           Best Anime to Watch with Friends
         </Link>
       </p>
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li><Link href="/watch-anime-together" className="hover:underline">Watch Anime Together (Complete Guide)</Link></li>
         <li><Link href="/guides/best-anime-to-watch-with-friends" className="hover:underline">Best Anime to Watch with Friends</Link></li>
         <li><Link href="/guides/asynchronous-vs-live-watch-party" className="hover:underline">Async vs Live Watch Parties</Link></li>

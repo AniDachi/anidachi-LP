@@ -80,17 +80,17 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
       headings={tocHeadings}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Does Crunchyroll Have a Watch Party Feature? (2026)
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           No — Crunchyroll does not have a native watch party or group-watching
           feature as of 2026.
@@ -103,15 +103,15 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
 
       <h2
         id="what-crunchyroll-offers"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         What Crunchyroll Actually Offers for Group Watching
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Crunchyroll&apos;s group features are limited to social sharing, not
         synchronized watching:
       </p>
-      <ul className="space-y-3 text-gray-700 mb-8">
+      <ul className="space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>Social sharing:</strong> You can share what you are watching
           to Twitter/X and other platforms from the Crunchyroll player — but
@@ -129,7 +129,7 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
           diverge immediately.
         </li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Crunchyroll users have requested a native watch party feature on the
         community forums since at least 2020. As of mid-2026, it has not been
         implemented.
@@ -137,14 +137,14 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
 
       <h2
         id="alternatives"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Alternatives to Watch Crunchyroll With Friends
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Several third-party tools add group-watching functionality to Crunchyroll:
       </p>
-      <ul className="space-y-4 text-gray-700 mb-8">
+      <ul className="space-y-4 text-foreground/80 mb-8">
         <li>
           <strong>AniDachi</strong> — purpose-built for Crunchyroll anime groups.
           Adds synchronized live playback, async progress tracking (for different
@@ -157,7 +157,7 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
           Crunchyroll (and other platforms). Best for groups that always watch at
           the same time. Does not support async catch-up or episode-level spoiler
           boundaries.{" "}
-          <Link href="/compare/anidachi-vs-teleparty" className="text-purple-600 hover:underline">
+          <Link href="/compare/anidachi-vs-teleparty" className="text-brand-orange hover:underline">
             AniDachi vs Teleparty comparison →
           </Link>
         </li>
@@ -167,7 +167,7 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
           Crunchyroll account, so video quality is lower and only one person
           has playback controls. Works for occasional sessions but not ideal for
           regular group watches.{" "}
-          <Link href="/guides/how-to-watch-anime-with-friends-on-discord" className="text-purple-600 hover:underline">
+          <Link href="/guides/how-to-watch-anime-with-friends-on-discord" className="text-brand-orange hover:underline">
             Discord watch party guide →
           </Link>
         </li>
@@ -175,17 +175,17 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
 
       <h2
         id="how-anidachi-works"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How AniDachi Works With Crunchyroll
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         AniDachi is a Chrome extension that integrates directly with the
         Crunchyroll player. It does not access your Crunchyroll account data —
         it reads the currently playing episode and syncs playback timestamps
         between members of a shared watchroom.
       </p>
-      <ul className="space-y-3 text-gray-700 mb-8">
+      <ul className="space-y-3 text-foreground/80 mb-8">
         <li><strong>Live sync:</strong> When your group is all online at the same time, AniDachi plays, pauses, and seeks the video together — if one person pauses, everyone pauses.</li>
         <li><strong>Async mode:</strong> When group members have different schedules, each person watches at their own time and posts episode-tagged reactions to the shared room thread. No one gets spoiled — the room tracks how far each person has watched.</li>
         <li><strong>Spoiler controls:</strong> Set a safe episode number at the top of the room. Members who are ahead can still participate in the room, but their reactions are visible only to members who have passed the same episode.</li>
@@ -194,39 +194,39 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up a Crunchyroll Watch Party With AniDachi
       </h2>
-      <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Every person in your group adds the Chrome extension from the Chrome
           Web Store. This takes about 30 seconds.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Each person opens Crunchyroll.</span>{" "}
+          <span className="font-medium text-foreground">Each person opens Crunchyroll.</span>{" "}
           Everyone streams from their own active Crunchyroll account on their
           own device. No account sharing or screen sharing is needed.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Create a watchroom.</span>{" "}
+          <span className="font-medium text-foreground">Create a watchroom.</span>{" "}
           The group host clicks the AniDachi icon in the browser, creates a room,
           and copies the invite link.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Share the invite link.</span>{" "}
+          <span className="font-medium text-foreground">Share the invite link.</span>{" "}
           Send the link via Discord, WhatsApp, email — wherever your group
           already communicates.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Navigate to the same episode.</span>{" "}
+          <span className="font-medium text-foreground">Navigate to the same episode.</span>{" "}
           Everyone opens the same Crunchyroll series and episode. AniDachi
           auto-detects the content and syncs playback as soon as everyone is
           in the room.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Watch together.</span>{" "}
+          <span className="font-medium text-foreground">Watch together.</span>{" "}
           Press play and AniDachi keeps everyone in sync. For async watching,
           members just open the same series on their own schedule and the
           room thread updates automatically.
@@ -235,11 +235,11 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="hover:underline">
             How to watch Crunchyroll with friends — full guide

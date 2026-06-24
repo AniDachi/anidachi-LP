@@ -187,7 +187,7 @@ export function ConnectClient() {
       )}
 
       {/* Instagram Card */}
-      <Card className="border-teal-100 bg-white shadow-sm">
+      <Card className="border-teal-100 bg-background shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-teal-800">
             <Instagram className="h-5 w-5" />
@@ -257,7 +257,7 @@ export function ConnectClient() {
       </Card>
 
       {/* TikTok Card */}
-      <Card className="border-teal-100 bg-white shadow-sm">
+      <Card className="border-teal-100 bg-background shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-teal-800">
             <Music2 className="h-5 w-5" />

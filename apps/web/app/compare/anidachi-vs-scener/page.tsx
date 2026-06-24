@@ -67,16 +67,16 @@ export default function AniDachiVsScenerPage() {
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Scener for anime watch parties
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           The easiest way to run anime nights on Crunchyroll is per-user playback: everyone
           streams locally and joins the same room. AniDachi is built around that workflow—
@@ -84,19 +84,19 @@ export default function AniDachiVsScenerPage() {
         </strong>
       </p>
 
-      <h2 id="tldr" className="text-2xl font-bold text-gray-900 mt-10 mb-3 scroll-mt-24">
+      <h2 id="tldr" className="text-2xl font-bold text-foreground mt-10 mb-3 scroll-mt-24">
         At a glance
       </h2>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>AniDachi:</strong> Crunchyroll-first watchrooms (sync, chat, progress, async).{" "}
         <strong>General co-watching tools:</strong> useful for quick hangs across many contexts,
         but often lack anime-specific episode context and async pacing.
       </p>
 
-      <h2 id="decision" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="decision" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Decision checklist
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>
           <strong>Platform:</strong> If you watch on Crunchyroll, pick a Crunchyroll-first workflow.
         </li>
@@ -110,20 +110,20 @@ export default function AniDachiVsScenerPage() {
 
       <h2
         id="when-anidachi"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When AniDachi wins
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>You host weekly anime nights on Crunchyroll.</li>
         <li>You want one persistent room per series.</li>
         <li>You need async catch-up without spoilers.</li>
       </ul>
 
-      <h2 id="related" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/watch-crunchyroll-together" className="hover:underline">
             Watch Crunchyroll Together

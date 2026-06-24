@@ -71,16 +71,16 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs an “Anime Watch Parties” extension
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           Many extensions help you press play together. AniDachi is designed for what
           happens after episode one: long shows, friends falling behind, and spoiler-safe
@@ -88,10 +88,10 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
         </strong>
       </p>
 
-      <h2 id="tldr" className="text-2xl font-bold text-gray-900 mt-10 mb-3 scroll-mt-24">
+      <h2 id="tldr" className="text-2xl font-bold text-foreground mt-10 mb-3 scroll-mt-24">
         At a glance
       </h2>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>TL;DR:</strong> If you only need basic live sync, a simple extension can be
         enough. If your group needs a persistent watchroom, anime detection, and optional
         async catch-up, choose AniDachi.
@@ -99,11 +99,11 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
 
       <h2
         id="comparison"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         What to compare
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>
           <strong>Async support:</strong> can friends watch later without losing the room?
         </li>
@@ -120,24 +120,24 @@ export default function AniDachiVsAnimeWatchPartiesExtensionPage() {
 
       <h2
         id="recommendation"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Which to choose
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         If your group watches occasionally and always live, start simple. If you host weekly
         anime nights, want async catch-up, and don’t want to manage spoilers manually, AniDachi
         is built for that workflow. Pricing and checkout live on{" "}
-        <Link href="/#pricing" className="text-purple-600 font-medium hover:underline">
+        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
           the homepage
         </Link>
         .
       </p>
 
-      <h2 id="related" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/watch-crunchyroll-together" className="hover:underline">
             Watch Crunchyroll Together

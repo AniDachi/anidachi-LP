@@ -65,37 +65,37 @@ export default function GroupWatchOnboardingPage() {
       faq={faq}
       articleImage={articleImageAbsolute}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Group watch onboarding
       </h1>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           This resource page lives outside `/guides/` on purpose—it is for club
           admins and Discord mods who already picked a stack but still need crisp
           talking points before night one.
         </strong>
       </p>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Route uses the{" "}
-        <code className="text-sm bg-gray-100 px-1 rounded">default</code> funnel
+        <code className="text-sm bg-brand-surface px-1 rounded">default</code> funnel
         template automatically. Tie follow-up CTAs back to pricing after you clarify
         roles so nobody feels pressured before accounts are squared away.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-10">
+      <p className="text-foreground/80 leading-relaxed mb-10">
         After the social contract is clear,{" "}
-        <Link href="/#pricing" className="text-purple-600 font-medium hover:underline">
+        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
           review AniDachi pricing
         </Link>{" "}
         and route power users through the{" "}
-        <Link href="/anime-watch-party-toolkit" className="text-purple-600 hover:underline">
+        <Link href="/anime-watch-party-toolkit" className="text-brand-orange hover:underline">
           anime watch party toolkit
         </Link>
         .
       </p>
-      <h2 className="text-2xl font-bold text-gray-900 mt-10 mb-4">
+      <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">
         Suggested follow-up guides
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         {guides.map((g) => (
           <li key={g.href}>
             <Link href={g.href} className="hover:underline">

@@ -117,11 +117,11 @@ export default function BestAnimeMoviesWithFriendsPage() {
       conversionTemplate="listicle"
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Anime Movies to Watch with Friends (2026)
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Anime films are perfect for a single-night group watch — self-contained
           stories, stunning animation, and emotional payoffs that land even harder
@@ -135,21 +135,21 @@ export default function BestAnimeMoviesWithFriendsPage() {
       {/* ── SECTION 1: EMOTIONAL ─────────────────────────── */}
       <h2
         id="emotional"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Emotional &amp; Crowd-Pleasing Anime Films
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         These films work for any group, regardless of how much anime experience
         everyone has. Strong storytelling, universal themes, and emotional peaks
         that hit harder in real-time.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/your-name-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Your Name (Kimi no Na wa)
             </Link>
@@ -165,7 +165,7 @@ export default function BestAnimeMoviesWithFriendsPage() {
           <strong>
             <Link
               href="/watch/a-silent-voice-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               A Silent Voice (Koe no Katachi)
             </Link>
@@ -180,7 +180,7 @@ export default function BestAnimeMoviesWithFriendsPage() {
           <strong>
             <Link
               href="/watch/spirited-away-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Spirited Away (Sen to Chihiro)
             </Link>
@@ -196,7 +196,7 @@ export default function BestAnimeMoviesWithFriendsPage() {
           <strong>
             <Link
               href="/watch/howls-moving-castle-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Howl&apos;s Moving Castle
             </Link>
@@ -211,7 +211,7 @@ export default function BestAnimeMoviesWithFriendsPage() {
           <strong>
             <Link
               href="/watch/princess-mononoke-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Princess Mononoke (Mononoke Hime)
             </Link>
@@ -225,7 +225,7 @@ export default function BestAnimeMoviesWithFriendsPage() {
           <strong>
             <Link
               href="/watch/anohana-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Anohana: The Movie
             </Link>
@@ -240,21 +240,21 @@ export default function BestAnimeMoviesWithFriendsPage() {
       {/* ── SECTION 2: THRILLER ──────────────────────────── */}
       <h2
         id="thriller"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Thriller &amp; Psychological Anime Films
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Films built to disturb, disorient, and generate long post-credits
         arguments. Best for groups who want to sit with something difficult and
         work through it together.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/perfect-blue-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Perfect Blue
             </Link>
@@ -270,7 +270,7 @@ export default function BestAnimeMoviesWithFriendsPage() {
           <strong>
             <Link
               href="/watch/akira-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Akira
             </Link>
@@ -287,7 +287,7 @@ export default function BestAnimeMoviesWithFriendsPage() {
           <strong>
             <Link
               href="/watch/jujutsu-kaisen-0-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Jujutsu Kaisen 0
             </Link>
@@ -311,21 +311,21 @@ export default function BestAnimeMoviesWithFriendsPage() {
       {/* ── SECTION 3: EPIC ──────────────────────────────── */}
       <h2
         id="epic"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Epic &amp; Action-Packed Anime Films
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Films with large-scale set pieces, iconic animation, and the kind of
         energy that fills a room. Great for groups who want to cheer and react
         rather than debrief.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/demon-slayer-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Demon Slayer: Mugen Train
             </Link>
@@ -341,7 +341,7 @@ export default function BestAnimeMoviesWithFriendsPage() {
           <strong>
             <Link
               href="/watch/ghost-in-the-shell-stand-alone-complex-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Ghost in the Shell (1995)
             </Link>
@@ -358,11 +358,11 @@ export default function BestAnimeMoviesWithFriendsPage() {
       {/* ── SECTION 4: TIPS ──────────────────────────────── */}
       <h2
         id="tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Tips for the Perfect Anime Movie Night
       </h2>
-      <ul className="space-y-3 text-gray-700 mb-10">
+      <ul className="space-y-3 text-foreground/80 mb-10">
         <li>
           <strong>Choose your platform before committing to a title.</strong>{" "}
           Studio Ghibli films are on Max; most other titles are on Crunchyroll.
@@ -387,7 +387,7 @@ export default function BestAnimeMoviesWithFriendsPage() {
           syncs automatically. No more &quot;okay, on three&quot; countdown
           attempts. The group chat keeps reactions rolling without splitting
           attention between video and messaging apps.{" "}
-          <Link href="/#pricing" className="text-purple-600 hover:underline">
+          <Link href="/#pricing" className="text-brand-orange hover:underline">
             Start a watchroom here.
           </Link>
         </li>
@@ -402,11 +402,11 @@ export default function BestAnimeMoviesWithFriendsPage() {
       {/* ── RELATED ─────────────────────────────────────── */}
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
             href="/guides/best-anime-to-watch-with-friends"

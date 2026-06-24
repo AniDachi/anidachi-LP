@@ -146,11 +146,11 @@ export default function FirstAnimeWatchPartyChecklistPage() {
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           First Anime Watch Party Checklist
         </h1>
 
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             A smooth first watch party comes down to three things: everyone can
             open the same show legally, you agree on live vs.&nbsp;async pacing,
@@ -162,18 +162,18 @@ export default function FirstAnimeWatchPartyChecklistPage() {
 
         <h2
           id="prep-resources"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Prep resources (read these once)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Skim the four links below in order. They mirror the same flow we surface
           to search engines via structured data—plain language first, tooling second.
         </p>
-        <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
           {prepItemList.map((item) => (
             <li key={item.url}>
-              <Link href={item.url} className="text-purple-600 hover:underline">
+              <Link href={item.url} className="text-brand-orange hover:underline">
                 {item.name}
               </Link>
             </li>
@@ -182,11 +182,11 @@ export default function FirstAnimeWatchPartyChecklistPage() {
 
         <h2
           id="night-before"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Night-before checklist
         </h2>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             <strong>Show + episode boundary:</strong> pick the series and whether
             you are stopping after one episode or a mini-marathon block.
@@ -206,11 +206,11 @@ export default function FirstAnimeWatchPartyChecklistPage() {
             reactions feel fun instead of risky.
           </li>
         </ul>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Need language for slower schedules? Pair this list with our{" "}
           <Link
             href="/glossary/asynchronous-watching"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             asynchronous watching glossary entry
           </Link>{" "}
@@ -219,29 +219,29 @@ export default function FirstAnimeWatchPartyChecklistPage() {
 
         <h2
           id="howto-anidachi"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Step-by-step: launch an AniDachi watchroom
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           These steps intentionally match the structured HowTo markup on this
           page—if you edit the content, update both places so Google and readers see
           the same flow.
         </p>
-        <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           {howToSteps.map((step) => (
             <li key={step.name}>
-              <span className="font-medium text-gray-900">{step.name}. </span>
+              <span className="font-medium text-foreground">{step.name}. </span>
               {step.text}
             </li>
           ))}
         </ol>
 
-        <p className="text-gray-700 leading-relaxed border-l-4 border-purple-200 pl-4 py-2 my-10">
+        <p className="text-foreground/80 leading-relaxed border-l-4 border-brand-orange/30 pl-4 py-2 my-10">
           Once pacing and accounts are confirmed, you can{" "}
           <Link
             href="/#pricing"
-            className="text-purple-600 font-medium hover:underline"
+            className="text-brand-orange font-medium hover:underline"
           >
             start an AniDachi plan
           </Link>{" "}
@@ -251,11 +251,11 @@ export default function FirstAnimeWatchPartyChecklistPage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600 mb-8">
+        <ul className="space-y-2 text-brand-orange mb-8">
           {relatedGuideLinks.map((g) => (
             <li key={g.href}>
               <Link href={g.href} className="hover:underline">

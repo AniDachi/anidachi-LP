@@ -79,16 +79,16 @@ export default function WatchSciFiAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Sci-Fi Anime With Friends
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Sci-fi anime is built for group discussion. Install AniDachi, open
           any Crunchyroll series below, and create a watchroom — sync the
@@ -99,11 +99,11 @@ export default function WatchSciFiAnimeWithFriendsPage() {
 
       <h2
         id="why-sci-fi"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Sci-Fi Anime Perfect for Group Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Sci-fi anime rewards shared viewing more than almost any other genre.
         The twists, reveals, and hidden rules of each fictional world generate
         exactly the kind of post-episode conversation that makes watching with
@@ -112,7 +112,7 @@ export default function WatchSciFiAnimeWithFriendsPage() {
         group becomes a collective fact-checking machine as everyone pieces the
         story together.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi watchrooms let your group react in real time during live
         sessions and post theory updates between sessions without accidentally
         spoiling members who are still catching up. Episode-scoped reactions
@@ -122,15 +122,15 @@ export default function WatchSciFiAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Sci-Fi Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {scifiAnime.length} titles below have dedicated watchroom guides
         with setup steps, pacing advice, and spoiler management tips:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {scifiAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -145,60 +145,60 @@ export default function WatchSciFiAnimeWithFriendsPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up a Sci-Fi Anime Watchroom
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Add the Chrome extension on every device in your watch group.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Open the series on Crunchyroll.</span>{" "}
+          <span className="font-medium text-foreground">Open the series on Crunchyroll.</span>{" "}
           Each person streams from their own account — no screen sharing needed.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Create a watchroom and share the link.</span>{" "}
+          <span className="font-medium text-foreground">Create a watchroom and share the link.</span>{" "}
           Send the invite link via Discord, group chat, or email.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Set a theory thread rule.</span>{" "}
+          <span className="font-medium text-foreground">Set a theory thread rule.</span>{" "}
           Tag every message with the episode number so members who are behind
           can scroll up safely without hitting a spoiler.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Pin your spoiler boundary.</span>{" "}
+          <span className="font-medium text-foreground">Pin your spoiler boundary.</span>{" "}
           Set the safe episode number so nobody accidentally reveals the twist before everyone reaches it.
         </li>
       </ol>
 
       <h2
         id="theory-tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Theory and Discussion Tips for Sci-Fi Watch Groups
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Sci-fi anime generates more rewatch value than most genres — having
         group discussion rules set early makes a second watch far richer:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Post one &quot;theory of the week&quot; per member after each session. Whoever was closest collects bragging rights, whoever was most wrong gets to pick the next episode count.</li>
         <li>Use &quot;observation only&quot; rules for the first watch — save analysis for after the episode ends, not during. Talking through a scene as it plays can break immersion for the one person genuinely confused.</li>
         <li>For timeline-heavy series like Steins;Gate, keep a shared note (Google Doc or Notion) that the group updates after each episode with the chronological event list. This prevents continuity confusion in later episodes.</li>
         <li>When the series ends, schedule a retrospective session to re-watch the first episode together. Sci-fi anime almost always plants answers in the pilot that the group missed the first time.</li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
-        <Link href="/watch-anime-together" className="text-purple-600 hover:underline">Watch anime together</Link>
+        <Link href="/watch-anime-together" className="text-brand-orange hover:underline">Watch anime together</Link>
         {" · "}
-        <Link href="/watch-psychological-anime-with-friends" className="text-purple-600 hover:underline">Psychological anime</Link>
+        <Link href="/watch-psychological-anime-with-friends" className="text-brand-orange hover:underline">Psychological anime</Link>
         {" · "}
-        <Link href="/watch-mecha-anime-with-friends" className="text-purple-600 hover:underline">Mecha anime</Link>
+        <Link href="/watch-mecha-anime-with-friends" className="text-brand-orange hover:underline">Mecha anime</Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

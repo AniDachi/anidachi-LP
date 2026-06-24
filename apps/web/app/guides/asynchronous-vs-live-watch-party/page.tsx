@@ -60,11 +60,11 @@ export default function AsyncVsLivePage() {
       faq={faq}
       headings={tocHeadings}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Asynchronous vs Live Anime Watch Parties: Which Is Right for You?
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Asynchronous watching lets friends watch at their own pace and share
           reactions later. Live watch parties require everyone online at the
@@ -76,11 +76,11 @@ export default function AsyncVsLivePage() {
 
       <h2
         id="what-live"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         What Is a Live Watch Party?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         A live watch party means everyone starts watching at the same time with
         synchronized playback. You pause, play, and seek together. Chat happens
         in real-time. This is how most tools (Teleparty, Crunchyroll Party,
@@ -90,11 +90,11 @@ export default function AsyncVsLivePage() {
 
       <h2
         id="what-async"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         What Is Asynchronous Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Asynchronous (async) watching means each person watches on their own
         schedule. A shared watchroom tracks everyone&apos;s progress. You leave
         reactions, comments, and ratings on each episode, and friends see them
@@ -104,37 +104,37 @@ export default function AsyncVsLivePage() {
 
       <h2
         id="comparison"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Comparison
       </h2>
       <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-gray-200">
+        <table className="w-full text-sm border-collapse border border-brand-border">
           <thead>
-            <tr className="bg-gray-50">
-              <th className="border border-gray-200 px-4 py-2 text-left">Aspect</th>
-              <th className="border border-gray-200 px-4 py-2 text-left">Live</th>
-              <th className="border border-gray-200 px-4 py-2 text-left">Async</th>
+            <tr className="bg-brand-surface">
+              <th className="border border-brand-border px-4 py-2 text-left">Aspect</th>
+              <th className="border border-brand-border px-4 py-2 text-left">Live</th>
+              <th className="border border-brand-border px-4 py-2 text-left">Async</th>
             </tr>
           </thead>
-          <tbody className="text-gray-700">
-            <tr><td className="border border-gray-200 px-4 py-2">Scheduling</td><td className="border border-gray-200 px-4 py-2">Everyone must be free</td><td className="border border-gray-200 px-4 py-2">Watch anytime</td></tr>
-            <tr className="bg-gray-50"><td className="border border-gray-200 px-4 py-2">Real-time reactions</td><td className="border border-gray-200 px-4 py-2">Yes</td><td className="border border-gray-200 px-4 py-2">Delayed but preserved</td></tr>
-            <tr><td className="border border-gray-200 px-4 py-2">Time zones</td><td className="border border-gray-200 px-4 py-2">Painful</td><td className="border border-gray-200 px-4 py-2">No problem</td></tr>
-            <tr className="bg-gray-50"><td className="border border-gray-200 px-4 py-2">Progress tracking</td><td className="border border-gray-200 px-4 py-2">No</td><td className="border border-gray-200 px-4 py-2">Per-user</td></tr>
-            <tr><td className="border border-gray-200 px-4 py-2">Spoiler risk</td><td className="border border-gray-200 px-4 py-2">None</td><td className="border border-gray-200 px-4 py-2">Managed by tool</td></tr>
-            <tr className="bg-gray-50"><td className="border border-gray-200 px-4 py-2">Best for</td><td className="border border-gray-200 px-4 py-2">Premieres, finales</td><td className="border border-gray-200 px-4 py-2">Ongoing series, marathons</td></tr>
+          <tbody className="text-foreground/80">
+            <tr><td className="border border-brand-border px-4 py-2">Scheduling</td><td className="border border-brand-border px-4 py-2">Everyone must be free</td><td className="border border-brand-border px-4 py-2">Watch anytime</td></tr>
+            <tr className="bg-brand-surface"><td className="border border-brand-border px-4 py-2">Real-time reactions</td><td className="border border-brand-border px-4 py-2">Yes</td><td className="border border-brand-border px-4 py-2">Delayed but preserved</td></tr>
+            <tr><td className="border border-brand-border px-4 py-2">Time zones</td><td className="border border-brand-border px-4 py-2">Painful</td><td className="border border-brand-border px-4 py-2">No problem</td></tr>
+            <tr className="bg-brand-surface"><td className="border border-brand-border px-4 py-2">Progress tracking</td><td className="border border-brand-border px-4 py-2">No</td><td className="border border-brand-border px-4 py-2">Per-user</td></tr>
+            <tr><td className="border border-brand-border px-4 py-2">Spoiler risk</td><td className="border border-brand-border px-4 py-2">None</td><td className="border border-brand-border px-4 py-2">Managed by tool</td></tr>
+            <tr className="bg-brand-surface"><td className="border border-brand-border px-4 py-2">Best for</td><td className="border border-brand-border px-4 py-2">Premieres, finales</td><td className="border border-brand-border px-4 py-2">Ongoing series, marathons</td></tr>
           </tbody>
         </table>
       </div>
 
       <h2
         id="when-live"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         When to Go Live
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Season premieres or finales where simultaneous reactions are the point.</li>
         <li>Everyone is in the same or close time zone.</li>
         <li>Small group that can easily coordinate schedules.</li>
@@ -142,11 +142,11 @@ export default function AsyncVsLivePage() {
 
       <h2
         id="when-async"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         When to Go Async
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Friends in different time zones or with busy schedules.</li>
         <li>Long series (One Piece, Naruto) where everyone goes at a different pace.</li>
         <li>You want to discuss each episode thoroughly without rushing.</li>
@@ -155,23 +155,23 @@ export default function AsyncVsLivePage() {
 
       <h2
         id="tools"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Tools for Each Approach
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
-        <li><strong>Async:</strong> <Link href="/" className="text-purple-600 hover:underline">AniDachi</Link> (the only async-first tool for Crunchyroll)</li>
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
+        <li><strong>Async:</strong> <Link href="/" className="text-brand-orange hover:underline">AniDachi</Link> (the only async-first tool for Crunchyroll)</li>
         <li><strong>Live:</strong> Teleparty, Crunchyroll Party, Discord screen sharing</li>
         <li><strong>Both:</strong> AniDachi supports live sync and async in the same watchroom</li>
       </ul>
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li><Link href="/watch-anime-together" className="hover:underline">Watch Anime Together (Complete Guide)</Link></li>
         <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll Together</Link></li>
         <li><Link href="/glossary/asynchronous-watching" className="hover:underline">What Is Asynchronous Watching?</Link></li>

@@ -114,11 +114,11 @@ export default function BestHorrorAnimeWithFriendsPage() {
       conversionTemplate="listicle"
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Horror Anime to Watch With Friends (2026)
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Horror anime is arguably the best genre for group watches. Jump scares
           hit harder, body horror is more bearable when someone else is
@@ -133,21 +133,21 @@ export default function BestHorrorAnimeWithFriendsPage() {
       {/* ── SECTION 1: ACCESSIBLE ────────────────────────── */}
       <h2
         id="accessible"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Accessible Horror — Best Starting Points
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Good first picks for groups new to horror anime: engaging mystery or
         tension-driven premises without overwhelming gore. The horror is there
         but it serves a story you will be genuinely invested in.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/another-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Another
             </Link>
@@ -164,7 +164,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/promised-neverland-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               The Promised Neverland
             </Link>
@@ -180,7 +180,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/parasyte-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Parasyte: The Maxim
             </Link>
@@ -197,7 +197,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/perfect-blue-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Perfect Blue
             </Link>
@@ -215,21 +215,21 @@ export default function BestHorrorAnimeWithFriendsPage() {
       {/* ── SECTION 2: INTENSE ───────────────────────────── */}
       <h2
         id="intense"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Intense &amp; Graphic Horror
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         These contain significant graphic violence, body horror, or disturbing
         imagery. Outstanding horror anime that deserve their reputations — but
         confirm your group&apos;s tolerance before starting.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/berserk-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Berserk (1997)
             </Link>
@@ -246,7 +246,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/hellsing-ultimate-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Hellsing Ultimate
             </Link>
@@ -263,7 +263,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/goblin-slayer-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Goblin Slayer
             </Link>
@@ -279,7 +279,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/beastars-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Beastars
             </Link>
@@ -304,21 +304,21 @@ export default function BestHorrorAnimeWithFriendsPage() {
       {/* ── SECTION 3: DARK FANTASY ──────────────────────── */}
       <h2
         id="dark-fantasy"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Dark Fantasy &amp; Survival Horror
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Horror through world design and escalating stakes rather than pure
         shock. These shows build dread through atmosphere and the sense that
         something is fundamentally wrong with the world.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/made-in-abyss-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Made in Abyss
             </Link>
@@ -335,7 +335,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/hells-paradise-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Hell&apos;s Paradise: Jigokuraku
             </Link>
@@ -352,7 +352,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/kabaneri-of-the-iron-fortress-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Kabaneri of the Iron Fortress
             </Link>
@@ -367,7 +367,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/dororo-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Dororo
             </Link>
@@ -384,11 +384,11 @@ export default function BestHorrorAnimeWithFriendsPage() {
       {/* ── SECTION 4: TIPS ──────────────────────────────── */}
       <h2
         id="tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Tips for a Horror Anime Watch Party
       </h2>
-      <ul className="space-y-3 text-gray-700 mb-10">
+      <ul className="space-y-3 text-foreground/80 mb-10">
         <li>
           <strong>Set content expectations before you start.</strong> Horror
           anime ranges from psychological thriller (Another, The Promised
@@ -413,7 +413,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
           <strong>Use AniDachi for online horror watch parties.</strong> Sync
           your streams so everyone reacts to the scary moments at exactly the
           same time — scattered playback kills horror pacing.{" "}
-          <Link href="/#pricing" className="text-purple-600 hover:underline">
+          <Link href="/#pricing" className="text-brand-orange hover:underline">
             Create a watchroom here.
           </Link>
         </li>
@@ -428,11 +428,11 @@ export default function BestHorrorAnimeWithFriendsPage() {
       {/* ── RELATED ─────────────────────────────────────── */}
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
             href="/guides/best-anime-to-watch-with-friends"

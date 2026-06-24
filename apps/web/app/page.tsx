@@ -27,7 +27,7 @@ export default async function Home() {
       <FAQPageJsonLd questions={homeFAQ} />
       <HowToJsonLd
         name="How to Watch Anime Together with AniDachi"
-        description="Set up shared anime watchrooms on Crunchyroll in 5 easy steps."
+        description="Set up shared anime watchrooms on Crunchyroll in 4 easy steps."
         steps={howToSteps}
       />
     </>

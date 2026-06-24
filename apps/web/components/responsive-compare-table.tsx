@@ -43,8 +43,8 @@ export function ResponsiveCompareTable({
         {rows.map((row, i) => (
           <div
             key={row.feature}
-            className={`rounded-xl border border-[--brand-border] bg-[--brand-surface] p-4 ${
-              i % 2 === 1 ? "bg-[--brand-surface]/80" : ""
+            className={`rounded-xl border border-brand-border bg-brand-surface p-4 ${
+              i % 2 === 1 ? "bg-brand-surface/80" : ""
             }`}
           >
             <p className="font-semibold text-foreground mb-3">{row.feature}</p>
@@ -54,14 +54,14 @@ export function ResponsiveCompareTable({
                   key={col.id}
                   className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm ${
                     col.highlight
-                      ? "bg-[--brand-orange]/10 border border-[--brand-orange]/20"
+                      ? "bg-brand-orange/10 border border-brand-orange/20"
                       : "bg-background"
                   }`}
                 >
                   <span
                     className={
                       col.highlight
-                        ? "font-medium text-[--brand-orange]"
+                        ? "font-medium text-brand-orange"
                         : "text-foreground/60"
                     }
                   >
@@ -76,17 +76,17 @@ export function ResponsiveCompareTable({
       </div>
 
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm border-collapse border border-[--brand-border]">
+        <table className="w-full text-sm border-collapse border border-brand-border">
           <thead>
-            <tr className="bg-[--brand-surface]">
-              <th className="border border-[--brand-border] px-4 py-2 text-left">
+            <tr className="bg-brand-surface">
+              <th className="border border-brand-border px-4 py-2 text-left">
                 Feature
               </th>
               {columns.map((col) => (
                 <th
                   key={col.id}
-                  className={`border border-[--brand-border] px-4 py-2 text-left ${
-                    col.highlight ? "text-[--brand-orange]" : ""
+                  className={`border border-brand-border px-4 py-2 text-left ${
+                    col.highlight ? "text-brand-orange" : ""
                   }`}
                 >
                   {col.label}
@@ -96,8 +96,8 @@ export function ResponsiveCompareTable({
           </thead>
           <tbody className="text-foreground/70">
             {rows.map((row, i) => (
-              <tr key={row.feature} className={i % 2 === 1 ? "bg-[--brand-surface]/50" : ""}>
-                <td className="border border-[--brand-border] px-4 py-2">
+              <tr key={row.feature} className={i % 2 === 1 ? "bg-brand-surface/50" : ""}>
+                <td className="border border-brand-border px-4 py-2">
                   {row.feature}
                 </td>
                 {columns.map((col) => {
@@ -107,7 +107,7 @@ export function ResponsiveCompareTable({
                   return (
                     <td
                       key={col.id}
-                      className={`border border-[--brand-border] px-4 py-2 ${
+                      className={`border border-brand-border px-4 py-2 ${
                         col.highlight && !isIcon
                           ? "font-medium text-green-400"
                           : ""

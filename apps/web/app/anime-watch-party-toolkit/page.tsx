@@ -105,17 +105,17 @@ export default function AnimeWatchPartyToolkitPage() {
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
         Anime watch party toolkit
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           The fastest path to an anime watch party on Crunchyroll: install
           AniDachi, open any episode, create a watchroom, share the link.
@@ -126,11 +126,11 @@ export default function AnimeWatchPartyToolkitPage() {
 
       <h2
         id="pillars"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Big-picture guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/watch-anime-together" className="hover:underline">
             Watch Anime Together — complete online guide
@@ -145,14 +145,14 @@ export default function AnimeWatchPartyToolkitPage() {
 
       <h2
         id="genre-hubs"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Browse anime by genre
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Genre hubs group the best Crunchyroll titles for group watchrooms — each links to a dedicated watch page with setup steps and spoiler tips.
       </p>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/watch-action-anime-with-friends" className="hover:underline">
             Watch action anime with friends
@@ -187,11 +187,11 @@ export default function AnimeWatchPartyToolkitPage() {
 
       <h2
         id="playbooks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Playbooks &amp; checklists
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-4">
+      <ul className="space-y-2 text-brand-orange mb-4">
         {toolkitItemList.slice(2).map((row) => (
           <li key={row.url}>
             <Link href={row.url} className="hover:underline">
@@ -207,17 +207,17 @@ export default function AnimeWatchPartyToolkitPage() {
           </li>
         ))}
       </ul>
-      <p className="text-gray-700 text-sm mb-8">
+      <p className="text-foreground/80 text-sm mb-8">
         ItemList JSON-LD mirrors the numbered resources above for crawlers.
       </p>
 
       <h2
         id="compare"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Compare approaches
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
             href="/compare/anidachi-vs-crunchyroll-party"
@@ -276,11 +276,11 @@ export default function AnimeWatchPartyToolkitPage() {
 
       <h2
         id="glossary"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Glossary quick links
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/glossary/watchroom" className="hover:underline">
             What is a watchroom?

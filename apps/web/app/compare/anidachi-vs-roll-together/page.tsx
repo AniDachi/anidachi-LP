@@ -70,16 +70,16 @@ export default function AniDachiVsRollTogetherPage() {
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Roll Together for Crunchyroll watch parties
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           Most Crunchyroll watch party extensions solve one problem: live sync. AniDachi
           focuses on the next problem: what happens when one friend is late, in another
@@ -87,19 +87,19 @@ export default function AniDachiVsRollTogetherPage() {
         </strong>
       </p>
 
-      <h2 id="tldr" className="text-2xl font-bold text-gray-900 mt-10 mb-3 scroll-mt-24">
+      <h2 id="tldr" className="text-2xl font-bold text-foreground mt-10 mb-3 scroll-mt-24">
         At a glance
       </h2>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>TL;DR:</strong> If you always watch live, a live-sync extension can be
         enough. If you want one shared room for a series with async catch-up, spoiler-aware
         episode context, and progress tracking, choose AniDachi.
       </p>
 
-      <h2 id="choose" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="choose" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         How to choose
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>
           <strong>Do schedules align?</strong> If not, async watchrooms beat live-only sync.
         </li>
@@ -111,19 +111,19 @@ export default function AniDachiVsRollTogetherPage() {
         </li>
       </ul>
 
-      <h2 id="anidachi" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="anidachi" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Why people pick AniDachi
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>Async catch-up in the same room as live viewers.</li>
         <li>Auto anime detection for repeatable weekly sessions.</li>
         <li>Per-person progress for long-running groups.</li>
       </ul>
 
-      <h2 id="related" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/guides/crunchyroll-watch-party-chrome-extension" className="hover:underline">
             Best Crunchyroll watch party Chrome extensions

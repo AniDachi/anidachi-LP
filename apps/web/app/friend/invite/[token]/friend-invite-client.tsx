@@ -57,7 +57,7 @@ export function FriendInviteClient({ sender, token }: Props) {
   }, [token]);
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.04] p-6">
+    <div className="rounded-lg border border-brand-border bg-brand-surface p-6">
       <div className="flex items-center gap-4">
         {sender.avatarUrl ? (
           <img
@@ -66,13 +66,13 @@ export function FriendInviteClient({ sender, token }: Props) {
             src={sender.avatarUrl}
           />
         ) : (
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-violet-500 text-lg font-bold text-white">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-orange text-lg font-bold text-foreground">
             {initials(sender.displayName)}
           </span>
         )}
         <div className="min-w-0">
-          <p className="truncate text-lg font-semibold text-white">{sender.displayName}</p>
-          <p className="truncate text-sm text-slate-400">
+          <p className="truncate text-lg font-semibold text-foreground">{sender.displayName}</p>
+          <p className="truncate text-sm text-foreground/50">
             {sender.handle ? `@${sender.handle}` : "AniDachi user"}
           </p>
         </div>
@@ -93,7 +93,7 @@ export function FriendInviteClient({ sender, token }: Props) {
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-foreground transition hover:bg-brand-orange-deep disabled:cursor-not-allowed disabled:opacity-60"
           disabled={busy || accepted}
           onClick={acceptInvite}
           type="button"
@@ -106,7 +106,7 @@ export function FriendInviteClient({ sender, token }: Props) {
           {accepted ? "Accepted" : "Add friend"}
         </button>
         <Link
-          className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/15 bg-white/10 px-4 text-sm font-semibold text-slate-100 transition hover:bg-white/15"
+          className="inline-flex min-h-11 items-center justify-center rounded-lg border border-brand-border bg-brand-surface px-4 text-sm font-semibold text-foreground/90 transition hover:bg-brand-orange/20"
           href="/account/friends"
         >
           Open friends

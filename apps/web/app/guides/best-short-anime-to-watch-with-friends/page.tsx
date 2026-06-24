@@ -115,11 +115,11 @@ export default function BestShortAnimeWithFriendsPage() {
       conversionTemplate="listicle"
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Short Anime to Watch With Friends (2026)
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Not every group can commit to 50+ episodes. Short anime — defined here
           as 25 episodes or fewer — are the ideal format for a single-night or
@@ -133,21 +133,21 @@ export default function BestShortAnimeWithFriendsPage() {
       {/* ── SECTION 1: UNDER 12 ──────────────────────────── */}
       <h2
         id="single-night"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Under 12 Episodes — Completable in One Night
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         These fit a single long evening (4–5 hours). Start after dinner and
         finish before midnight with time to spare for the post-credits
         conversation.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/cyberpunk-edgerunners-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Cyberpunk: Edgerunners
             </Link>
@@ -164,7 +164,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/anohana-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Anohana: The Flower We Saw That Day
             </Link>
@@ -180,7 +180,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/land-of-the-lustrous-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Land of the Lustrous
             </Link>
@@ -196,22 +196,22 @@ export default function BestShortAnimeWithFriendsPage() {
       {/* ── SECTION 2: ONE COUR ──────────────────────────── */}
       <h2
         id="one-cour"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         One Cour (12–13 Episodes) — Ideal Weekend Series
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The one-cour format is the sweet spot for group watches: two evening
         sessions of six or seven episodes each, with a debrief between. Long
         enough to build real attachment, short enough to finish before
         enthusiasm drops.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/erased-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Erased (Boku dake ga Inai Machi)
             </Link>
@@ -227,7 +227,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/mob-psycho-100-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Mob Psycho 100 (Season 1)
             </Link>
@@ -242,7 +242,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/bocchi-the-rock-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Bocchi the Rock!
             </Link>
@@ -258,7 +258,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/odd-taxi-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Odd Taxi
             </Link>
@@ -273,7 +273,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/blue-period-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Blue Period
             </Link>
@@ -289,7 +289,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/angel-beats-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Angel Beats!
             </Link>
@@ -305,7 +305,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/another-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Another
             </Link>
@@ -319,7 +319,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/lycoris-recoil-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Lycoris Recoil
             </Link>
@@ -334,7 +334,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/plastic-memories-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Plastic Memories
             </Link>
@@ -349,7 +349,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/charlotte-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Charlotte
             </Link>
@@ -372,21 +372,21 @@ export default function BestShortAnimeWithFriendsPage() {
       {/* ── SECTION 3: BINGEABLE LONGER ──────────────────── */}
       <h2
         id="bingeable-longer"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Short-Run But Bingeable (Up to 25 Episodes)
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Slightly longer than a single cour but tight enough to finish in two or
         three dedicated sessions — no filler, self-contained arcs, and endings
         that justify the full commitment.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/your-lie-in-april-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Your Lie in April (Shigatsu wa Kimi no Uso)
             </Link>
@@ -402,7 +402,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/violet-evergarden-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Violet Evergarden
             </Link>
@@ -418,7 +418,7 @@ export default function BestShortAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/summertime-render-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Summertime Render
             </Link>
@@ -435,11 +435,11 @@ export default function BestShortAnimeWithFriendsPage() {
       {/* ── SECTION 4: TIPS ──────────────────────────────── */}
       <h2
         id="tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Tips for a Single-Session Watch Party
       </h2>
-      <ul className="space-y-3 text-gray-700 mb-10">
+      <ul className="space-y-3 text-foreground/80 mb-10">
         <li>
           <strong>Pick your pace before you start.</strong> A 12-episode series
           at 23 minutes each is about 4.5 hours of content. Add 45–60 minutes
@@ -460,7 +460,7 @@ export default function BestShortAnimeWithFriendsPage() {
           When you pause to discuss a scene, AniDachi&apos;s shared watchroom
           keeps everyone at the same timestamp — no &quot;wait, I&apos;m two
           seconds ahead&quot; confusion.{" "}
-          <Link href="/#pricing" className="text-purple-600 hover:underline">
+          <Link href="/#pricing" className="text-brand-orange hover:underline">
             Set up a watchroom for free.
           </Link>
         </li>
@@ -476,11 +476,11 @@ export default function BestShortAnimeWithFriendsPage() {
       {/* ── RELATED ─────────────────────────────────────── */}
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
             href="/guides/best-anime-to-watch-with-friends"

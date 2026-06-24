@@ -94,7 +94,7 @@ export function CheckoutSessionSync({
           ? "border-emerald-200 bg-emerald-50 text-emerald-800"
           : isError
             ? "border-amber-200 bg-amber-50 text-amber-900"
-            : "border-purple-200 bg-purple-50 text-purple-900"
+            : "border-brand-orange/30 bg-brand-orange/10 text-purple-900"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -117,7 +117,7 @@ export function CheckoutSessionSync({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button asChild className="bg-purple-600 text-white hover:bg-purple-700">
+        <Button asChild className="bg-brand-orange text-primary-foreground hover:bg-brand-orange-deep">
           <Link href="/account">Open account</Link>
         </Button>
         <Button asChild variant="outline" className="bg-transparent">

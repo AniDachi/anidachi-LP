@@ -89,10 +89,10 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
       conversionTemplate="listicle"
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         12 best dubbed anime to watch with friends in 2026
       </h1>
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Dub vs sub splits friend groups more than any other watch party
           decision. These 12 titles have English dubs strong enough that
@@ -103,14 +103,14 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
 
       <h2
         id="legendary-dubs"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Legendary English dubs
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/cowboy-bebop-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/cowboy-bebop-with-friends" className="text-brand-orange hover:underline">
               Cowboy Bebop
             </Link>
           </strong>{" "}
@@ -120,7 +120,7 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/fullmetal-alchemist-brotherhood-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/fullmetal-alchemist-brotherhood-with-friends" className="text-brand-orange hover:underline">
               Fullmetal Alchemist: Brotherhood
             </Link>
           </strong>{" "}
@@ -129,7 +129,7 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/death-note-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/death-note-with-friends" className="text-brand-orange hover:underline">
               Death Note
             </Link>
           </strong>{" "}
@@ -141,14 +141,14 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
 
       <h2
         id="modern-dubs"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Modern group-watch dubs
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/spy-x-family-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/spy-x-family-with-friends" className="text-brand-orange hover:underline">
               Spy x Family
             </Link>
           </strong>{" "}
@@ -157,7 +157,7 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/my-hero-academia-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/my-hero-academia-with-friends" className="text-brand-orange hover:underline">
               My Hero Academia
             </Link>
           </strong>{" "}
@@ -166,7 +166,7 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/one-punch-man-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/one-punch-man-with-friends" className="text-brand-orange hover:underline">
               One Punch Man
             </Link>
           </strong>{" "}
@@ -175,7 +175,7 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/mob-psycho-100-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/mob-psycho-100-with-friends" className="text-brand-orange hover:underline">
               Mob Psycho 100
             </Link>
           </strong>{" "}
@@ -186,14 +186,14 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
 
       <h2
         id="action-dubs"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Action &amp; shonen dubs
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/attack-on-titan-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/attack-on-titan-with-friends" className="text-brand-orange hover:underline">
               Attack on Titan
             </Link>
           </strong>{" "}
@@ -202,7 +202,7 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/demon-slayer-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/demon-slayer-with-friends" className="text-brand-orange hover:underline">
               Demon Slayer
             </Link>
           </strong>{" "}
@@ -211,7 +211,7 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/jujutsu-kaisen-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/jujutsu-kaisen-with-friends" className="text-brand-orange hover:underline">
               Jujutsu Kaisen
             </Link>
           </strong>{" "}
@@ -220,7 +220,7 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/naruto-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/naruto-with-friends" className="text-brand-orange hover:underline">
               Naruto / Naruto Shippuden
             </Link>
           </strong>{" "}
@@ -229,7 +229,7 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/dragon-ball-z-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/dragon-ball-z-with-friends" className="text-brand-orange hover:underline">
               Dragon Ball Z
             </Link>
           </strong>{" "}
@@ -241,11 +241,11 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
 
       <h2
         id="tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Dub watch party tips
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-10">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-10">
         <li>
           Vote on dub vs sub before episode 1 — switching mid-series breaks sync
           and confuses chat.
@@ -262,11 +262,11 @@ export default function BestDubbedAnimeToWatchWithFriendsPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/glossary/dub-vs-sub-watch-party" className="hover:underline">
             Dub vs sub for watch parties — glossary

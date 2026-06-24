@@ -17,13 +17,13 @@ type Props = {
 
 function InviteError({ message }: { message: string }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-slate-100">
-      <div className="w-full max-w-md rounded-lg border border-white/10 bg-white/[0.04] p-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-300">
+    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-foreground/90">
+      <div className="w-full max-w-md rounded-lg border border-brand-border bg-brand-surface p-6">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
           AniDachi
         </p>
-        <h1 className="mt-3 text-2xl font-bold text-white">Friend invite</h1>
-        <p className="mt-3 text-sm text-slate-300">{message}</p>
+        <h1 className="mt-3 text-2xl font-bold text-foreground">Friend invite</h1>
+        <p className="mt-3 text-sm text-foreground/70">{message}</p>
       </div>
     </main>
   );
@@ -53,13 +53,13 @@ export default async function FriendInvitePage({ params }: Props) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10 text-slate-100">
+    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10 text-foreground/90">
       <div className="w-full max-w-md">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-300">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
           AniDachi
         </p>
-        <h1 className="mt-3 text-3xl font-bold text-white">Add friend</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <h1 className="mt-3 text-3xl font-bold text-foreground">Add friend</h1>
+        <p className="mt-2 text-sm text-foreground/50">
           Accept the invite to add this person to your AniDachi friends.
         </p>
         <div className="mt-6">

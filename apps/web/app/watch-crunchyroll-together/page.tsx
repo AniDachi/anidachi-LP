@@ -116,17 +116,17 @@ export default function WatchCrunchyrollTogetherPage() {
       headings={tocHeadings}
       aboveFoldCta
     >
-      <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
         Watch Crunchyroll Together with Friends
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           You can watch Crunchyroll together with friends using AniDachi —
           a Chrome extension that syncs playback, creates watchrooms, and adds
@@ -139,11 +139,11 @@ export default function WatchCrunchyrollTogetherPage() {
 
       <h2
         id="no-native-watch-party"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Why Crunchyroll Doesn&apos;t Have a Watch Party Feature
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         As of 2026, Crunchyroll still has no built-in watch-together or
         watch-party feature — unlike Amazon Prime Video or Hulu. This means
         anime fans must rely on third-party tools to create shared viewing
@@ -153,82 +153,82 @@ export default function WatchCrunchyrollTogetherPage() {
 
       <h2
         id="step-by-step"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         How to Watch Crunchyroll Together (Step by Step)
       </h2>
-      <ol className="space-y-4 text-gray-700 mb-8">
+      <ol className="space-y-4 text-foreground/80 mb-8">
         <li className="flex gap-3">
-          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex items-center justify-center">1</span>
+          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-orange/15 text-brand-orange text-sm font-bold flex items-center justify-center">1</span>
           <span><strong>Install the AniDachi Chrome extension</strong> from the Chrome Web Store. It takes seconds.</span>
         </li>
         <li className="flex gap-3">
-          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex items-center justify-center">2</span>
+          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-orange/15 text-brand-orange text-sm font-bold flex items-center justify-center">2</span>
           <span><strong>Navigate to any anime on Crunchyroll</strong> and click &quot;Detect Anime.&quot; AniDachi identifies the show and episode.</span>
         </li>
         <li className="flex gap-3">
-          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex items-center justify-center">3</span>
+          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-orange/15 text-brand-orange text-sm font-bold flex items-center justify-center">3</span>
           <span><strong>Create a watchroom</strong> with one click and share the invite link with friends.</span>
         </li>
         <li className="flex gap-3">
-          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex items-center justify-center">4</span>
+          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-orange/15 text-brand-orange text-sm font-bold flex items-center justify-center">4</span>
           <span><strong>Watch together</strong> — playback stays synced. Chat, react, and discuss in real-time.</span>
         </li>
         <li className="flex gap-3">
-          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex items-center justify-center">5</span>
+          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-orange/15 text-brand-orange text-sm font-bold flex items-center justify-center">5</span>
           <span><strong>Or watch asynchronously</strong> — mark episodes as watched and leave reactions for friends to see later.</span>
         </li>
       </ol>
 
       <h2
         id="compare-methods"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Best Ways to Watch Crunchyroll with Friends
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Here are the most popular methods for watching Crunchyroll anime
         together, ranked by feature richness:
       </p>
       <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-gray-200 rounded-lg">
+        <table className="w-full text-sm border-collapse border border-brand-border rounded-lg">
           <thead>
-            <tr className="bg-gray-50">
-              <th className="border border-gray-200 px-4 py-2 text-left">Method</th>
-              <th className="border border-gray-200 px-4 py-2 text-left">Sync</th>
-              <th className="border border-gray-200 px-4 py-2 text-left">Async</th>
-              <th className="border border-gray-200 px-4 py-2 text-left">Chat</th>
-              <th className="border border-gray-200 px-4 py-2 text-left">Free</th>
+            <tr className="bg-brand-surface">
+              <th className="border border-brand-border px-4 py-2 text-left">Method</th>
+              <th className="border border-brand-border px-4 py-2 text-left">Sync</th>
+              <th className="border border-brand-border px-4 py-2 text-left">Async</th>
+              <th className="border border-brand-border px-4 py-2 text-left">Chat</th>
+              <th className="border border-brand-border px-4 py-2 text-left">Free</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="border border-gray-200 px-4 py-2 font-medium">AniDachi</td>
-              <td className="border border-gray-200 px-4 py-2">Yes</td>
-              <td className="border border-gray-200 px-4 py-2">Yes</td>
-              <td className="border border-gray-200 px-4 py-2">Yes</td>
-              <td className="border border-gray-200 px-4 py-2">$8/mo</td>
+              <td className="border border-brand-border px-4 py-2 font-medium">AniDachi</td>
+              <td className="border border-brand-border px-4 py-2">Yes</td>
+              <td className="border border-brand-border px-4 py-2">Yes</td>
+              <td className="border border-brand-border px-4 py-2">Yes</td>
+              <td className="border border-brand-border px-4 py-2">$8/mo</td>
             </tr>
-            <tr className="bg-gray-50">
-              <td className="border border-gray-200 px-4 py-2 font-medium">Crunchyroll Party</td>
-              <td className="border border-gray-200 px-4 py-2">Yes</td>
-              <td className="border border-gray-200 px-4 py-2">No</td>
-              <td className="border border-gray-200 px-4 py-2">Yes</td>
-              <td className="border border-gray-200 px-4 py-2">Free</td>
+            <tr className="bg-brand-surface">
+              <td className="border border-brand-border px-4 py-2 font-medium">Crunchyroll Party</td>
+              <td className="border border-brand-border px-4 py-2">Yes</td>
+              <td className="border border-brand-border px-4 py-2">No</td>
+              <td className="border border-brand-border px-4 py-2">Yes</td>
+              <td className="border border-brand-border px-4 py-2">Free</td>
             </tr>
             <tr>
-              <td className="border border-gray-200 px-4 py-2 font-medium">Teleparty</td>
-              <td className="border border-gray-200 px-4 py-2">Yes</td>
-              <td className="border border-gray-200 px-4 py-2">No</td>
-              <td className="border border-gray-200 px-4 py-2">Yes</td>
-              <td className="border border-gray-200 px-4 py-2">Freemium</td>
+              <td className="border border-brand-border px-4 py-2 font-medium">Teleparty</td>
+              <td className="border border-brand-border px-4 py-2">Yes</td>
+              <td className="border border-brand-border px-4 py-2">No</td>
+              <td className="border border-brand-border px-4 py-2">Yes</td>
+              <td className="border border-brand-border px-4 py-2">Freemium</td>
             </tr>
-            <tr className="bg-gray-50">
-              <td className="border border-gray-200 px-4 py-2 font-medium">Discord</td>
-              <td className="border border-gray-200 px-4 py-2">Manual</td>
-              <td className="border border-gray-200 px-4 py-2">No</td>
-              <td className="border border-gray-200 px-4 py-2">Voice/Text</td>
-              <td className="border border-gray-200 px-4 py-2">Free</td>
+            <tr className="bg-brand-surface">
+              <td className="border border-brand-border px-4 py-2 font-medium">Discord</td>
+              <td className="border border-brand-border px-4 py-2">Manual</td>
+              <td className="border border-brand-border px-4 py-2">No</td>
+              <td className="border border-brand-border px-4 py-2">Voice/Text</td>
+              <td className="border border-brand-border px-4 py-2">Free</td>
             </tr>
           </tbody>
         </table>
@@ -236,15 +236,15 @@ export default function WatchCrunchyrollTogetherPage() {
 
       <h2
         id="group-watch"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Crunchyroll Group Watch — Tips for Bigger Groups
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Running a <strong>Crunchyroll group watch</strong> for more than two or
         three people introduces some logistics worth planning for:
       </p>
-      <ul className="space-y-3 text-gray-700 mb-6">
+      <ul className="space-y-3 text-foreground/80 mb-6">
         <li>
           <strong>Everyone needs their own account:</strong> Crunchyroll does
           not allow account sharing. Each person needs at minimum a free account
@@ -270,11 +270,11 @@ export default function WatchCrunchyrollTogetherPage() {
 
       <h2
         id="anidachi-difference"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         What Makes AniDachi Different
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         AniDachi is the only Crunchyroll watch-party tool designed for
         <strong> asynchronous watching</strong>. Friends don&apos;t need to be
         online at the same time. Each person watches at their own pace, marks
@@ -285,11 +285,11 @@ export default function WatchCrunchyrollTogetherPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         {relatedGuideLinks.map((guide) => (
           <li key={guide.href}>
             <Link href={guide.href} className="hover:underline">

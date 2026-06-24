@@ -65,7 +65,7 @@ export function SeoPageLayout({
         children
       )}
       {midContentSlot}
-      <div className="mt-12">
+      <div className="mt-8">
         <PrimaryCheckoutCta
           pagePath={url}
           pageTemplate={pageTemplate}
@@ -78,7 +78,7 @@ export function SeoPageLayout({
   return (
     <>
       <main id="main-content" className="min-h-screen bg-background">
-        <nav aria-label="Breadcrumb" className="bg-[--brand-surface] border-b border-[--brand-border]">
+        <nav aria-label="Breadcrumb" className="bg-brand-surface border-b border-brand-border">
           <div className="container mx-auto px-4 py-3">
             <ol className="flex flex-wrap items-center gap-2 text-sm text-foreground/50">
               {breadcrumbs.map((crumb, i) => (
@@ -87,7 +87,7 @@ export function SeoPageLayout({
                   {i < breadcrumbs.length - 1 ? (
                     <Link
                       href={crumb.url}
-                      className="hover:text-[--brand-orange] transition-colors"
+                      className="hover:text-brand-orange transition-colors"
                     >
                       {crumb.name}
                     </Link>

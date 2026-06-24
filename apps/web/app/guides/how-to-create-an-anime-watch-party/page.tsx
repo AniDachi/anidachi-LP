@@ -105,11 +105,11 @@ export default function HowToCreateAnimeWatchPartyPage() {
         faq={faq}
         headings={tocHeadings}
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to Create an Anime Watch Party
         </h1>
 
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Creating an anime watch party is possible by gathering everyone on
             the same episode with a shared chat layer. The easiest way is AniDachi
@@ -121,22 +121,22 @@ export default function HowToCreateAnimeWatchPartyPage() {
 
         <h2
           id="method-anidachi"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 1: AniDachi (Crunchyroll-native hosting)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Hosting should feel like starting a group text, not configuring a
           server. AniDachi focuses on the repetitive chores: recognizing which
           anime is playing, attaching chat to that context, and giving moderators
           a predictable invite flow. You still communicate house rules—no
           unmuted mics crunching chips—but the technical scaffolding stays short.
         </p>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Share{" "}
           <a
             href="https://www.crunchyroll.com/help"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
             rel="noopener noreferrer"
           >
             Crunchyroll Help
@@ -145,7 +145,7 @@ export default function HowToCreateAnimeWatchPartyPage() {
           countdown. Ask guests to install via the official{" "}
           <a
             href="https://chromewebstore.google.com/"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
             rel="noopener noreferrer"
           >
             Chrome Web Store
@@ -155,11 +155,11 @@ export default function HowToCreateAnimeWatchPartyPage() {
 
         <h2
           id="method-discord"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 2: Discord (scheduled stage or voice)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Create a Discord event, pick a voice channel, and decide whether you
           will screen share or ask everyone to press play manually. Discord shines
           for banter; it is lighter on automated Crunchyroll sync unless you pair
@@ -168,11 +168,11 @@ export default function HowToCreateAnimeWatchPartyPage() {
 
         <h2
           id="method-calendar"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 3: Calendar invite + honor-system sync
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Low-tech clubs sometimes email a calendar invite and trust everyone to
           press play at :00. That can survive for movies, yet anime episodes invite
           mid-credit scenes and post-credit stingers that desync casual countdowns.
@@ -180,11 +180,11 @@ export default function HowToCreateAnimeWatchPartyPage() {
 
         <h2
           id="steps-anidachi"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Step-by-step with AniDachi
         </h2>
-        <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Decide the series and episode with your co-hosts.</li>
           <li>Open that episode on Crunchyroll while signed in.</li>
           <li>Launch AniDachi and run anime detection.</li>
@@ -196,11 +196,11 @@ export default function HowToCreateAnimeWatchPartyPage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600">
+        <ul className="space-y-2 text-brand-orange">
           <li>
             <Link href="/watch-crunchyroll-together" className="hover:underline">
               Watch Crunchyroll Together

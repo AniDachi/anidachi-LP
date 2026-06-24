@@ -89,10 +89,10 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
       conversionTemplate="listicle"
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         12 best comedy anime to watch with friends in 2026
       </h1>
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Comedy anime is the genre that most needs a crowd — punchlines land
           harder, absurd moments get timestamped in chat, and running jokes become
@@ -103,14 +103,14 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
 
       <h2
         id="quick-laughs"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Quick laugh starters
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/konosuba-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/konosuba-with-friends" className="text-brand-orange hover:underline">
               KonoSuba
             </Link>
           </strong>{" "}
@@ -120,7 +120,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/nichijou-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/nichijou-with-friends" className="text-brand-orange hover:underline">
               Nichijou: My Ordinary Life
             </Link>
           </strong>{" "}
@@ -130,7 +130,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/the-disastrous-life-of-saiki-k-with-friends" className="text-brand-orange hover:underline">
               The Disastrous Life of Saiki K.
             </Link>
           </strong>{" "}
@@ -140,7 +140,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/kaguya-sama-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/kaguya-sama-with-friends" className="text-brand-orange hover:underline">
               Kaguya-sama: Love Is War
             </Link>
           </strong>{" "}
@@ -151,14 +151,14 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
 
       <h2
         id="action-comedy"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Action-comedy hybrids
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/spy-x-family-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/spy-x-family-with-friends" className="text-brand-orange hover:underline">
               Spy x Family
             </Link>
           </strong>{" "}
@@ -167,7 +167,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/one-punch-man-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/one-punch-man-with-friends" className="text-brand-orange hover:underline">
               One Punch Man
             </Link>
           </strong>{" "}
@@ -176,7 +176,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/mob-psycho-100-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/mob-psycho-100-with-friends" className="text-brand-orange hover:underline">
               Mob Psycho 100
             </Link>
           </strong>{" "}
@@ -185,7 +185,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/dandadan-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/dandadan-with-friends" className="text-brand-orange hover:underline">
               Dan Da Dan
             </Link>
           </strong>{" "}
@@ -196,14 +196,14 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
 
       <h2
         id="deep-comedy"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Long-form comedy epics
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/gintama-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/gintama-with-friends" className="text-brand-orange hover:underline">
               Gintama
             </Link>
           </strong>{" "}
@@ -213,7 +213,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/bocchi-the-rock-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/bocchi-the-rock-with-friends" className="text-brand-orange hover:underline">
               Bocchi the Rock!
             </Link>
           </strong>{" "}
@@ -222,7 +222,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/soul-eater-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/soul-eater-with-friends" className="text-brand-orange hover:underline">
               Soul Eater
             </Link>
           </strong>{" "}
@@ -232,7 +232,7 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/the-eminence-in-shadow-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/the-eminence-in-shadow-with-friends" className="text-brand-orange hover:underline">
               The Eminence in Shadow
             </Link>
           </strong>{" "}
@@ -244,11 +244,11 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
 
       <h2
         id="tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Comedy watch party tips
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-10">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-10">
         <li>
           Always sync live for pure comedy — joke timing is everything.
         </li>
@@ -264,12 +264,12 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
           For mixed dub/sub groups, see our{" "}
           <Link
             href="/guides/best-dubbed-anime-to-watch-with-friends"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             best dubbed anime list
           </Link>{" "}
           or the{" "}
-          <Link href="/glossary/dub-vs-sub-watch-party" className="text-purple-600 hover:underline">
+          <Link href="/glossary/dub-vs-sub-watch-party" className="text-brand-orange hover:underline">
             dub vs sub watch party guide
           </Link>
           .
@@ -278,11 +278,11 @@ export default function BestComedyAnimeToWatchWithFriendsPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/watch-comedy-anime-with-friends" className="hover:underline">
             Watch comedy anime with friends — genre hub

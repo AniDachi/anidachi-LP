@@ -16,24 +16,24 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <>
-      <main className="min-h-screen bg-white">
+      <main className="min-h-screen bg-background">
         <article className="container mx-auto max-w-3xl px-4 py-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
             Terms of Service
           </h1>
-          <p className="text-sm text-gray-500 mb-10">
+          <p className="text-sm text-foreground/50 mb-10">
             Last updated: April 23, 2026
           </p>
 
-          <div className="prose prose-gray max-w-none space-y-8 text-gray-700 leading-relaxed">
+          <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 1. Acceptance of Terms
               </h2>
               <p>
                 By accessing or using AniDachi (the &quot;Service&quot;),
                 including our website at{" "}
-                <Link href="/" className="text-purple-600 hover:underline">
+                <Link href="/" className="text-brand-orange hover:underline">
                   anidachi.app
                 </Link>{" "}
                 and the AniDachi Chrome Extension, you agree to be bound by
@@ -43,7 +43,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 2. Description of Service
               </h2>
               <p>
@@ -56,7 +56,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 3. Early Access & Platform Status
               </h2>
               <p>
@@ -68,7 +68,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 4. Accounts
               </h2>
               <p>
@@ -80,20 +80,20 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 5. Subscriptions & Payments
               </h2>
               <p>
                 Paid subscriptions are billed monthly through Stripe. Prices are
                 listed on our{" "}
-                <Link href="/#pricing" className="text-purple-600 hover:underline">
+                <Link href="/#pricing" className="text-brand-orange hover:underline">
                   pricing page
                 </Link>
                 . All subscriptions are refundable — if you want a refund or to
                 cancel, email us at{" "}
                 <a
                   href="mailto:goshan.tolochko@gmail.com"
-                  className="text-purple-600 hover:underline"
+                  className="text-brand-orange hover:underline"
                 >
                   goshan.tolochko@gmail.com
                 </a>{" "}
@@ -102,7 +102,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 6. Acceptable Use
               </h2>
               <p>You agree not to:</p>
@@ -127,7 +127,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 7. Intellectual Property
               </h2>
               <p>
@@ -140,7 +140,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 8. Disclaimer of Warranties
               </h2>
               <p>
@@ -152,7 +152,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 9. Limitation of Liability
               </h2>
               <p>
@@ -165,7 +165,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 10. Termination
               </h2>
               <p>
@@ -177,7 +177,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 11. Changes to These Terms
               </h2>
               <p>
@@ -188,7 +188,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 12. Contact Us
               </h2>
               <p>
@@ -196,7 +196,7 @@ export default function TermsPage() {
                 at{" "}
                 <a
                   href="mailto:goshan.tolochko@gmail.com"
-                  className="text-purple-600 hover:underline"
+                  className="text-brand-orange hover:underline"
                 >
                   goshan.tolochko@gmail.com
                 </a>
@@ -204,12 +204,12 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="border-t border-gray-200 pt-6 mt-10">
-              <p className="text-sm text-gray-500">
+            <section className="border-t border-brand-border pt-6 mt-10">
+              <p className="text-sm text-foreground/50">
                 See also:{" "}
                 <Link
                   href="/privacy"
-                  className="text-purple-600 hover:underline"
+                  className="text-brand-orange hover:underline"
                 >
                   Privacy Policy
                 </Link>

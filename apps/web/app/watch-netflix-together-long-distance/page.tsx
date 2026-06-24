@@ -69,17 +69,17 @@ export default function WatchNetflixTogetherLongDistancePage() {
       headings={tocHeadings}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         How to Watch Netflix Together Long Distance (2026)
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Netflix has no built-in watch party feature. Long-distance couples
           use Teleparty for live Netflix sync with chat, or Rave for a free
@@ -92,15 +92,15 @@ export default function WatchNetflixTogetherLongDistancePage() {
 
       <h2
         id="teleparty"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Teleparty — Most Popular Netflix Watch Party Tool
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Teleparty (formerly Netflix Party) is the standard tool for long-distance
         Netflix sessions. Here is how to set it up:
       </p>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Both people install the <strong>Teleparty Chrome extension</strong>.</li>
         <li>One person opens a Netflix show or movie and clicks the Teleparty icon in the browser toolbar.</li>
         <li>Click &quot;Start the party&quot; and copy the room link.</li>
@@ -108,7 +108,7 @@ export default function WatchNetflixTogetherLongDistancePage() {
         <li>Partner clicks the link, joins the room, and playback syncs automatically.</li>
         <li>Text chat appears on the right side of the screen.</li>
       </ol>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Teleparty also supports Disney+, Hulu, Crunchyroll, and Amazon Prime —
         making it versatile if you watch across multiple platforms. Pair it
         with a Discord or FaceTime call for voice contact during the watch.
@@ -116,17 +116,17 @@ export default function WatchNetflixTogetherLongDistancePage() {
 
       <h2
         id="rave"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Rave — Best Free Option with Built-in Video Calling
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Rave (formerly Wacup) syncs Netflix with built-in voice and video
         calling — so you can see each other during the watch without a
         separate Discord call. The app (iOS, Android, and browser) is
         free for the core features.
       </p>
-      <ul className="list-disc pl-6 space-y-1 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-1 text-foreground/80 mb-8">
         <li>Free tier available with Netflix sync + voice/video.</li>
         <li>Works on mobile as well as desktop.</li>
         <li>No async mode — both must be online at the same time.</li>
@@ -135,11 +135,11 @@ export default function WatchNetflixTogetherLongDistancePage() {
 
       <h2
         id="manual"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         The No-App Method
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         If you do not want to install anything: video call each other, both
         open the same Netflix content, pause at the same timestamp, and count
         down from 3 before pressing play together. This gives you voice
@@ -150,11 +150,11 @@ export default function WatchNetflixTogetherLongDistancePage() {
 
       <h2
         id="crunchyroll"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Also Watching Anime on Crunchyroll?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         If your LDR watch list includes anime on Crunchyroll, AniDachi is
         significantly better than Teleparty for that specific context.
         The key difference is async mode — each person can watch on their
@@ -162,19 +162,19 @@ export default function WatchNetflixTogetherLongDistancePage() {
         full spoiler protection. This matters most for long-distance couples
         with time zone differences or inconsistent schedules.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
-        <Link href="/timezone-friendly-anime-watch-parties" className="text-purple-600 hover:underline">
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
           Learn how async anime watching works across time zones.
         </Link>
       </p>
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/watch-movies-together-long-distance" className="hover:underline">
             How to watch movies and TV together long distance

@@ -99,10 +99,10 @@ export default function HowToFixWatchPartyAudioDelayPage() {
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to fix anime watch party audio delay
         </h1>
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Delay usually means one person is hauling video through an upload pipe
             while everyone else only sends voice. Separate the problem, resync
@@ -112,11 +112,11 @@ export default function HowToFixWatchPartyAudioDelayPage() {
 
         <h2
           id="isolate"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Isolate the bottleneck
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           Confirm whether only the host sees early voice or if every participant
           hears the same mismatch. If it is host-only, blame screen-share encoding;
           if universal, check browser audio passthrough or Bluetooth headphones.
@@ -124,14 +124,14 @@ export default function HowToFixWatchPartyAudioDelayPage() {
 
         <h2
           id="howto"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           HowTo: recover with your crew
         </h2>
-        <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
           {howToSteps.map((s) => (
             <li key={s.name}>
-              <span className="font-medium text-gray-900">{s.name}. </span>
+              <span className="font-medium text-foreground">{s.name}. </span>
               {s.text}
             </li>
           ))}
@@ -139,28 +139,28 @@ export default function HowToFixWatchPartyAudioDelayPage() {
 
         <h2
           id="upgrade"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Upgrade path when lag returns every week
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Stable groups eventually move everyone to legal per-user playback plus a
           watchroom Extension. Pair this guide with{" "}
           <Link
             href="/compare/anidachi-vs-discord-screen-share"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             AniDachi vs Discord screen share
           </Link>{" "}
           and{" "}
-          <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="text-purple-600 hover:underline">
+          <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="text-brand-orange hover:underline">
             how to watch Crunchyroll with friends
           </Link>
           .
         </p>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           When you land on per-user playback, grab{" "}
-          <Link href="/#pricing" className="text-purple-600 font-medium hover:underline">
+          <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
             current AniDachi pricing
           </Link>{" "}
           and spin up your first Crunchyroll watchroom directly from episode pages.
@@ -168,11 +168,11 @@ export default function HowToFixWatchPartyAudioDelayPage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600">
+        <ul className="space-y-2 text-brand-orange">
           <li>
             <Link href="/guides/how-to-watch-anime-with-friends-on-discord" className="hover:underline">
               How to watch anime with friends on Discord

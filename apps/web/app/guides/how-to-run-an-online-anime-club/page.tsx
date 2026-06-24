@@ -110,10 +110,10 @@ export default function HowToRunAnOnlineAnimeClubPage() {
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to run an online anime club
         </h1>
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             An online anime club is a recurring watch group — college societies,
             Discord communities, or friend circles that meet weekly to watch and
@@ -124,11 +124,11 @@ export default function HowToRunAnOnlineAnimeClubPage() {
 
         <h2
           id="setup"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Club setup checklist
         </h2>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Discord server or group chat with dedicated watch channels</li>
           <li>AniDachi installed on every active member&apos;s Chrome browser</li>
           <li>Each member has their own Crunchyroll subscription</li>
@@ -139,14 +139,14 @@ export default function HowToRunAnOnlineAnimeClubPage() {
 
         <h2
           id="howto"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           HowTo: launch your club
         </h2>
-        <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
           {howToSteps.map((step) => (
             <li key={step.name}>
-              <span className="font-medium text-gray-900">{step.name}.</span>{" "}
+              <span className="font-medium text-foreground">{step.name}.</span>{" "}
               {step.text}
             </li>
           ))}
@@ -154,18 +154,18 @@ export default function HowToRunAnOnlineAnimeClubPage() {
 
         <h2
           id="schedule"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Scheduling across time zones
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           Clubs with international members need a hybrid approach. Schedule one
           live sync per week at a rotating time so no region is always stuck at
           3 AM. Between syncs, use AniDachi&apos;s async mode so members watch on
           their own schedule without spoiling the group. See our{" "}
           <Link
             href="/guides/how-to-watch-anime-with-friends-in-different-time-zones"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             time zone guide
           </Link>{" "}
@@ -174,11 +174,11 @@ export default function HowToRunAnOnlineAnimeClubPage() {
 
         <h2
           id="growth"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Keeping members engaged
         </h2>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             Mix genres each month — comedy after a heavy drama prevents burnout.
           </li>
@@ -187,7 +187,7 @@ export default function HowToRunAnOnlineAnimeClubPage() {
             always something fresh. See{" "}
             <Link
               href="/guides/how-to-watch-seasonal-anime-together"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               how to watch seasonal anime together
             </Link>
@@ -205,11 +205,11 @@ export default function HowToRunAnOnlineAnimeClubPage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600 mb-8">
+        <ul className="space-y-2 text-brand-orange mb-8">
           <li>
             <Link href="/guides/first-anime-watch-party-checklist" className="hover:underline">
               First anime watch party checklist

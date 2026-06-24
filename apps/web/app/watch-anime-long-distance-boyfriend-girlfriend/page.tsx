@@ -105,17 +105,17 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
         headings={tocHeadings}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to Watch Anime With Your Long-Distance Boyfriend or Girlfriend
         </h1>
 
         <h2
           id="answer"
-          className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
         >
           Short Answer
         </h2>
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             The best way to watch anime with a long-distance partner is
             AniDachi — install it on both Chrome browsers, open the same
@@ -128,16 +128,16 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
 
         <h2
           id="why-anime"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Why Anime Works as an LDR Ritual
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Long-distance relationships need shared experiences that do not
           require being physically together. Anime is better suited to this
           than most shared activities for a few reasons:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             <strong>Episodic structure.</strong> A 24-minute episode is the
             right length for a LDR session — short enough to not require a
@@ -164,14 +164,14 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
 
         <h2
           id="setup"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           How to Set Up a Long-Distance Watchroom
         </h2>
-        <ol className="space-y-4 text-gray-700 mb-8">
+        <ol className="space-y-4 text-foreground/80 mb-8">
           {howToSteps.map((step, i) => (
             <li key={step.name} className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex items-center justify-center">
+              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-orange/15 text-brand-orange text-sm font-bold flex items-center justify-center">
                 {i + 1}
               </span>
               <span>
@@ -183,46 +183,46 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
 
         <h2
           id="timezone"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           When Time Zones Make Live Watching Impossible
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           If you are 8 hours apart, there may be no time where you are both
           awake and free to watch together. This is where async mode becomes
           essential — and it is the feature that separates AniDachi from
           every other watch party tool.
         </p>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Here is what async watching actually looks like in practice:
         </p>
-        <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>You watch episode 6 on Saturday afternoon.</li>
           <li>You leave reactions at the moments that hit hardest — the plot twist, the scene that made you laugh, the line that hit different.</li>
           <li>Your partner watches episode 6 on Sunday morning and sees your reactions at the exact moments you left them.</li>
           <li>They reply. You read their replies the next time you open the watchroom.</li>
           <li>Neither of you knows what happens in episode 7 yet, so there is nothing to spoil.</li>
         </ol>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           The emotional experience of watching together survives the time
           gap.{" "}
-          <Link href="/timezone-friendly-anime-watch-parties" className="text-purple-600 hover:underline">
+          <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
             Learn more about how async anime watching works across time zones.
           </Link>
         </p>
 
         <h2
           id="genre"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Best Anime Genres for Long-Distance Couples
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Genre matching matters more in an LDR context. You want something
           that creates shared emotional investment without being so intense
           it leaves one of you needing to process it alone.
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             <strong>Romance/slice-of-life:</strong> Toradora, Fruits Basket,
             Horimiya, Kimi ni Todoke — emotionally driven, relationship-focused,
@@ -239,9 +239,9 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
             engage with after a long day, still builds shared investment.
           </li>
         </ul>
-        <p className="text-gray-700 mb-8">
+        <p className="text-foreground/80 mb-8">
           See the full list:{" "}
-          <Link href="/best-anime-for-long-distance-relationships" className="text-purple-600 hover:underline">
+          <Link href="/best-anime-for-long-distance-relationships" className="text-brand-orange hover:underline">
             best anime for long-distance relationships
           </Link>
           .
@@ -249,25 +249,25 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
 
         <h2
           id="date-night"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Building a Weekly Anime Date Night
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           The most sustainable LDR anime routine is a weekly episode target,
           not a fixed watch time. Instead of &quot;we watch together at 8pm
           every Friday&quot; — which breaks when one of you travels — try:
           &quot;we both watch 2 episodes before Sunday.&quot;
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Set the episode target in your shared watchroom at the start of each week.</li>
           <li>Watch independently but leave reactions as you go.</li>
           <li>Schedule one voice/video call per week where you discuss the episodes — this is your &quot;date night.&quot;</li>
           <li>For arc endings and finales, try to sync live — the moment is worth the extra scheduling effort.</li>
         </ul>
-        <p className="text-gray-700 mb-8">
+        <p className="text-foreground/80 mb-8">
           For more structured ideas:{" "}
-          <Link href="/long-distance-anime-date-night-ideas" className="text-purple-600 hover:underline">
+          <Link href="/long-distance-anime-date-night-ideas" className="text-brand-orange hover:underline">
             12 anime date night ideas for long-distance couples
           </Link>
           .
@@ -275,15 +275,15 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
 
         <h2
           id="spoilers"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Spoiler Etiquette for Long-Distance Watching
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Spoilers are the fastest way to kill the shared excitement of an
           ongoing series. A few rules that actually work:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             <strong>Never text about episode content outside the watchroom.</strong>{" "}
             Keep all reactions inside AniDachi — they are episode-locked and
@@ -304,11 +304,11 @@ export default function WatchAnimeLongDistanceBoyfriendGirlfriendPage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related
         </h2>
-        <ul className="space-y-2 text-purple-600">
+        <ul className="space-y-2 text-brand-orange">
           <li>
             <Link href="/watch-crunchyroll-together-long-distance" className="hover:underline">
               How to watch Crunchyroll together long distance

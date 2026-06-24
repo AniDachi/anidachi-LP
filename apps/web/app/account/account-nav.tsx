@@ -28,8 +28,8 @@ export function AccountNav() {
           <Link
             className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition ${
               active
-                ? "bg-violet-500 text-white"
-                : "text-slate-300 hover:bg-white/10 hover:text-white"
+                ? "bg-brand-orange text-primary-foreground"
+                : "text-foreground/70 hover:bg-brand-orange hover:text-primary-foreground"
             }`}
             href={item.href}
             key={item.href}

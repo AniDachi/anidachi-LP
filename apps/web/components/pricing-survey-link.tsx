@@ -1,6 +1,7 @@
 "use client";
 
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
+import { PRICING_CTA_LABEL } from "@/lib/home-survey";
 import {
   inferPageTemplateFromPath,
   trackConversion,
@@ -11,7 +12,7 @@ export function PricingSurveyLink() {
   return (
     <button
       type="button"
-      className="text-sm text-[--brand-orange] underline underline-offset-2 hover:text-[--brand-orange-bright] min-h-11 inline-flex items-center"
+      className="text-sm text-brand-orange underline underline-offset-2 hover:text-brand-orange-bright min-h-11 inline-flex items-center"
       onClick={() => {
         const path =
           typeof window !== "undefined" ? window.location.pathname : "/";
@@ -27,7 +28,7 @@ export function PricingSurveyLink() {
         });
       }}
     >
-      Not sure yet? Get early access and lock in your price
+      Not sure yet? {PRICING_CTA_LABEL}
     </button>
   );
 }

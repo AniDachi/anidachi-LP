@@ -42,15 +42,15 @@ export function DiscordContact({
 
   return (
     <div
-      className={`bg-gray-50 rounded-lg p-4 text-sm text-gray-600 ${className}`.trim()}
+      className={`bg-brand-surface border border-brand-border rounded-lg p-4 text-sm text-foreground/70 ${className}`.trim()}
     >
-      <h4 className="font-medium text-gray-900 mb-1 flex items-center gap-2">
+      <h4 className="font-medium text-foreground mb-1 flex items-center gap-2">
         <DiscordIcon className="h-5 w-5 shrink-0 text-[#5865F2]" />
         DM the AniDachi Founder
       </h4>
       <p className="mb-3 flex flex-wrap items-center gap-1.5">
         <span>Message</span>
-        <span className="inline-flex items-center gap-1.5 rounded-md border border-[#5865F2]/25 bg-[#5865F2]/5 px-2 py-0.5 font-mono text-gray-900 select-all">
+        <span className="inline-flex items-center gap-1.5 rounded-md border border-[#5865F2]/25 bg-[#5865F2]/5 px-2 py-0.5 font-mono text-foreground select-all">
           <DiscordIcon className="h-4 w-4 shrink-0 text-[#5865F2]" />
           {username}
         </span>

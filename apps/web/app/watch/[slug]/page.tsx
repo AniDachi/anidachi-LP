@@ -270,15 +270,15 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       itemList={resourceItemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
         Watch {anime.title} with Friends
       </h1>
 
-      <p className="text-xs text-gray-400 mb-6">
+      <p className="text-xs text-foreground/40 mb-6">
         Last updated: {new Date(dateModified).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
       </p>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           {isMovie
             ? `Yes — you can watch ${anime.title} with friends as a group movie night using AniDachi's watchroom on Crunchyroll. Set up a shared watch party in under 2 minutes: no screen-share, no spoiler risk, everyone streams in sync. Works for 2–10 people across different time zones, all on their own Crunchyroll account.`
@@ -299,7 +299,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
 
       <div
         id="series-overview"
-        className="bg-gray-50 rounded-lg p-6 mb-8 scroll-mt-24"
+        className="bg-brand-surface rounded-lg p-6 mb-8 scroll-mt-24"
       >
         <div className="flex flex-col gap-6 md:flex-row md:items-start">
           {posterUrl ? (
@@ -314,82 +314,82 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
                 decoding="async"
                 priority
               />
-              <figcaption className="text-gray-500 text-xs mt-2 text-center md:text-left">
+              <figcaption className="text-foreground/50 text-xs mt-2 text-center md:text-left">
                 Poster via MyAnimeList / Jikan
               </figcaption>
             </figure>
           ) : null}
           <div className="min-w-0 flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4" id="series-overview-heading">
+            <h2 className="text-2xl font-bold text-foreground mb-4" id="series-overview-heading">
               What is {anime.title}?
             </h2>
             <div className="grid grid-cols-2 gap-4 text-sm">
               {anime.japaneseTitle && (
                 <div>
-                  <span className="text-gray-500">Japanese title</span>
-                  <p className="font-medium text-gray-900">{anime.japaneseTitle}</p>
+                  <span className="text-foreground/50">Japanese title</span>
+                  <p className="font-medium text-foreground">{anime.japaneseTitle}</p>
                 </div>
               )}
               <div>
-                <span className="text-gray-500">{isMovie ? "Format" : "Episodes"}</span>
-                <p className="font-medium text-gray-900">{episodesDisplay}</p>
+                <span className="text-foreground/50">{isMovie ? "Format" : "Episodes"}</span>
+                <p className="font-medium text-foreground">{episodesDisplay}</p>
               </div>
               {statusLine && (
                 <div>
-                  <span className="text-gray-500">Airing status</span>
-                  <p className="font-medium text-gray-900">{statusLine}</p>
+                  <span className="text-foreground/50">Airing status</span>
+                  <p className="font-medium text-foreground">{statusLine}</p>
                 </div>
               )}
               {scoreLine && (
                 <div>
-                  <span className="text-gray-500">Score</span>
-                  <p className="font-medium text-gray-900">{scoreLine}</p>
+                  <span className="text-foreground/50">Score</span>
+                  <p className="font-medium text-foreground">{scoreLine}</p>
                 </div>
               )}
               {membersLine && (
                 <div>
-                  <span className="text-gray-500">Popularity</span>
-                  <p className="font-medium text-gray-900">{membersLine}</p>
+                  <span className="text-foreground/50">Popularity</span>
+                  <p className="font-medium text-foreground">{membersLine}</p>
                 </div>
               )}
               <div>
-                <span className="text-gray-500">Genres</span>
-                <p className="font-medium text-gray-900">
+                <span className="text-foreground/50">Genres</span>
+                <p className="font-medium text-foreground">
                   {genresDisplay}
                 </p>
               </div>
               <div>
-                <span className="text-gray-500">Platform</span>
-                <p className="font-medium text-gray-900">Crunchyroll</p>
+                <span className="text-foreground/50">Platform</span>
+                <p className="font-medium text-foreground">Crunchyroll</p>
               </div>
             </div>
-            <p className="text-gray-600 text-xs mt-3">
+            <p className="text-foreground/70 text-xs mt-3">
               Episode count, status, scores, and poster are from MyAnimeList (via
               the Jikan API) and refresh about once a day. If the service is slow,
               the site falls back to our written summary.
             </p>
-            <p className="text-gray-700 leading-relaxed mt-4 text-base">{anime.synopsis}</p>
+            <p className="text-foreground/80 leading-relaxed mt-4 text-base">{anime.synopsis}</p>
           </div>
         </div>
       </div>
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Watch {anime.title} Together — Step by Step
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-4">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-4">
         {howToSteps.map((step, i) => (
           <li key={i}>
-            <span className="font-medium text-gray-900">{step.name}. </span>
+            <span className="font-medium text-foreground">{step.name}. </span>
             {step.text}
           </li>
         ))}
       </ol>
-      <p className="text-gray-700 leading-relaxed border-l-4 border-purple-200 pl-4 py-2 mb-8">
+      <p className="text-foreground/80 leading-relaxed border-l-4 border-brand-orange/30 pl-4 py-2 mb-8">
         Hosting {anime.title} this week?{" "}
-        <Link href="/#pricing" className="text-purple-600 font-medium hover:underline">
+        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
           Check AniDachi pricing
         </Link>{" "}
         on the homepage, install the extension, then create your watchroom from the
@@ -399,23 +399,23 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
 
       <h2
         id="watch-formats"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Live, Async, and Hybrid Watch Nights for {anime.title}
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         <strong>Live premiere energy.</strong> Pick a recurring window (Sunday
         evenings, post-work Tuesdays) and count down in voice chat before you
         hit play. Best when everyone shares at least one overlapping hour — great
         for seasonal drops or finale episodes you want to experience unmuted.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         <strong>Async with guardrails.</strong> When someone travels or pulls a
         late shift, each viewer finishes {anime.title} on their own Crunchyroll
         tab while reactions stack under the same episode index. Late arrivals read
         backward chronologically so punchlines land in order.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         <strong>Hybrid Discord workflow.</strong> Keep Discord or SMS for voice,
         but let each person render {anime.title} locally so bitrate stays crisp.
         Use AniDachi for the shared timeline — otherwise one streamer&apos;s upload
@@ -424,32 +424,32 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
 
       <h2
         id="why-async"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Is {anime.title} Good to Watch With a Group?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         {isMovie
           ? `${anime.title} is an excellent group watch — a self-contained story that fits a single evening and gives everyone the same shared experience to talk about right after the credits. The ${genreBits} tone makes it easy to react together to key moments without needing to coordinate across multiple sessions.`
           : `With ${episodesDisplay} to work through, ${anime.title} rewards a watchroom that respects real life. The ${genreBits} mix means cliffhangers and emotional swings show up often enough that async chat stays lively — no one has to sit through a four-hour call to stay in sync.`}
       </p>
       {extraWhyWatchParagraphs(anime).map((para, i) => (
-        <p key={i} className="text-gray-700 leading-relaxed mb-4">
+        <p key={i} className="text-foreground/80 leading-relaxed mb-4">
           {para}
         </p>
       ))}
 
       <h2
         id="pacing"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Pacing {anime.title} with a Busy Friend Group
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         {pacingLeadParagraph(anime, episodesDisplay)}
       </p>
       {!isMovie && (
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             Pick a default cadence — one episode on weeknights, two on Fridays — and
             pin it above your invite links so newcomers know what &quot;on
@@ -468,11 +468,11 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
 
       <h2
         id="discussion-tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         {anime.title} Discussion Tips
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-4">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
         <li>Agree on sub vs. dub for the room so reactions line up with audio.</li>
         <li>
           Use &quot;no spoilers past episode N&quot; in the room title when
@@ -493,11 +493,11 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
 
       <h2
         id="spoilers"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How Do You Avoid Spoilers Watching {anime.title} With Friends?
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           Split threads into &quot;caught up through Ep X&quot; vs. &quot;free
           chat&quot; once everyone crosses the same cliffhanger.
@@ -520,11 +520,11 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
 
       <h2
         id="crunchyroll-note"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Accounts, Dub/Sub Choices, and Regional Catalog
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Each viewer streams {anime.title} through their own Crunchyroll session.
         Dub and subtitle tracks can vary by region and license window — double-check
         that everyone sees the same audio option before you hype a shared line
@@ -536,17 +536,17 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
 
       <h2
         id="more-guides"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Pillars, Glossary, and Guides
       </h2>
-      <p className="text-gray-600 text-sm mb-4">
+      <p className="text-foreground/70 text-sm mb-4">
         Same ordered list is emitted as{" "}
-        <strong className="text-gray-700">ItemList</strong> structured data for
+        <strong className="text-foreground/80">ItemList</strong> structured data for
         crawlers — start at the pillars, then skim glossary terms if your crew is new
         to watchrooms or async pacing.
       </p>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         {resourceItemList.map((item) => (
           <li key={item.url}>
             <Link href={item.url} className="hover:underline">
@@ -560,12 +560,12 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
         <>
           <h2
             id="related-anime"
-            className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+            className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
           >
             Related Anime to Watch With Friends
           </h2>
-          <p className="text-sm text-gray-600 mb-3">{relatedSourceLabel}</p>
-          <ul className="space-y-2 text-purple-600 mb-8">
+          <p className="text-sm text-foreground/70 mb-3">{relatedSourceLabel}</p>
+          <ul className="space-y-2 text-brand-orange mb-8">
             {relatedAnime.map((related) => (
               <li key={related.slug}>
                 <Link

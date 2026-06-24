@@ -13,7 +13,7 @@ export function NavPricingButton() {
     <Button
       type="button"
       size="sm"
-      className="bg-[--brand-orange] text-[--primary-foreground] hover:bg-[--brand-orange-deep] font-semibold glow-orange-sm"
+      className="bg-brand-orange text-primary-foreground hover:bg-brand-orange-deep font-semibold glow-orange-sm"
       onClick={() => {
         if (typeof window === "undefined") return;
         const path = window.location.pathname;

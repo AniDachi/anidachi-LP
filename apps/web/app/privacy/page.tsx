@@ -16,24 +16,24 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <>
-      <main className="min-h-screen bg-white">
+      <main className="min-h-screen bg-background">
         <article className="container mx-auto max-w-3xl px-4 py-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
             Privacy Policy
           </h1>
-          <p className="text-sm text-gray-500 mb-10">
+          <p className="text-sm text-foreground/50 mb-10">
             Last updated: April 23, 2026
           </p>
 
-          <div className="prose prose-gray max-w-none space-y-8 text-gray-700 leading-relaxed">
+          <div className="prose prose-gray max-w-none space-y-8 text-foreground/80 leading-relaxed">
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 1. Who We Are
               </h2>
               <p>
                 AniDachi (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;)
                 operates the website at{" "}
-                <Link href="/" className="text-purple-600 hover:underline">
+                <Link href="/" className="text-brand-orange hover:underline">
                   anidachi.app
                 </Link>{" "}
                 and the AniDachi Chrome Extension. Our mission is to help anime
@@ -43,10 +43,10 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 2. Information We Collect
               </h2>
-              <h3 className="text-lg font-medium text-gray-800 mt-6 mb-2">
+              <h3 className="text-lg font-medium text-foreground mt-6 mb-2">
                 2.1 Account Information
               </h3>
               <p>
@@ -54,7 +54,7 @@ export default function PrivacyPage() {
                 If you subscribe through Stripe, Stripe processes your payment
                 details — we never store your full card number.
               </p>
-              <h3 className="text-lg font-medium text-gray-800 mt-6 mb-2">
+              <h3 className="text-lg font-medium text-foreground mt-6 mb-2">
                 2.2 Usage Data
               </h3>
               <p>
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
                 detection happens locally in your browser and is only transmitted
                 when you explicitly create or join a watchroom.
               </p>
-              <h3 className="text-lg font-medium text-gray-800 mt-6 mb-2">
+              <h3 className="text-lg font-medium text-foreground mt-6 mb-2">
                 2.3 Chat & Watchroom Data
               </h3>
               <p>
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 3. How We Use Your Information
               </h2>
               <ul className="list-disc pl-6 space-y-2">
@@ -94,7 +94,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 4. Third-Party Services
               </h2>
               <p>We use the following third-party services:</p>
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
                   <strong>Stripe</strong> — payment processing (
                   <a
                     href="https://stripe.com/privacy"
-                    className="text-purple-600 hover:underline"
+                    className="text-brand-orange hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
                   <strong>Google Analytics</strong> — anonymous site analytics (
                   <a
                     href="https://policies.google.com/privacy"
-                    className="text-purple-600 hover:underline"
+                    className="text-brand-orange hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -130,7 +130,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 5. Data Retention
               </h2>
               <p>
@@ -142,7 +142,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 6. Your Rights
               </h2>
               <p>
@@ -151,7 +151,7 @@ export default function PrivacyPage() {
                 these rights, email us at{" "}
                 <a
                   href="mailto:goshan.tolochko@gmail.com"
-                  className="text-purple-600 hover:underline"
+                  className="text-brand-orange hover:underline"
                 >
                   goshan.tolochko@gmail.com
                 </a>
@@ -160,7 +160,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 7. Cookies
               </h2>
               <p>
@@ -172,7 +172,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 8. Security
               </h2>
               <p>
@@ -183,7 +183,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 9. Changes to This Policy
               </h2>
               <p>
@@ -195,14 +195,14 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mt-10 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mt-10 mb-4">
                 10. Contact Us
               </h2>
               <p>
                 If you have questions about this Privacy Policy, contact us at{" "}
                 <a
                   href="mailto:goshan.tolochko@gmail.com"
-                  className="text-purple-600 hover:underline"
+                  className="text-brand-orange hover:underline"
                 >
                   goshan.tolochko@gmail.com
                 </a>

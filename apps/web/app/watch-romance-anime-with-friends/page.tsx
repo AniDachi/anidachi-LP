@@ -79,17 +79,17 @@ export default function WatchRomanceAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Romance Anime With Friends
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Romance anime lands hardest when someone else is watching with you —
           install AniDachi, open any Crunchyroll series below, and create a
@@ -101,18 +101,18 @@ export default function WatchRomanceAnimeWithFriendsPage() {
 
       <h2
         id="why-romance"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Romance Anime Great for Group Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Romance anime is driven by emotional payoff moments — confessions, near
         misses, and sudden reveals — that are significantly more satisfying when
         shared. Shipping debates, theory threads, and post-episode debriefs
         naturally emerge in any group that watches romance together, making it
         one of the most social genres.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi watchrooms keep shipping debates in episode-scoped threads so
         nobody reads a confession reaction before they&apos;ve reached that scene.
         The async mode is especially useful for romance: emotional moments don&apos;t
@@ -122,15 +122,15 @@ export default function WatchRomanceAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Romance Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {romanceAnime.length} titles below have dedicated watchroom guides
         with setup steps, pacing advice, and spoiler management tips:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {romanceAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -145,59 +145,59 @@ export default function WatchRomanceAnimeWithFriendsPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up a Romance Anime Watchroom
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Add the Chrome extension on every device in your watch group.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Open the series on Crunchyroll.</span>{" "}
+          <span className="font-medium text-foreground">Open the series on Crunchyroll.</span>{" "}
           Each person streams from their own account in full quality.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Create a watchroom and share the invite.</span>{" "}
+          <span className="font-medium text-foreground">Create a watchroom and share the invite.</span>{" "}
           Set a &quot;ship theories&quot; pinned thread right away for speculation.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Agree on episode-tagging rules.</span>{" "}
+          <span className="font-medium text-foreground">Agree on episode-tagging rules.</span>{" "}
           All messages that reference romantic developments must include the episode number.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Schedule live sessions for major episodes.</span>{" "}
+          <span className="font-medium text-foreground">Schedule live sessions for major episodes.</span>{" "}
           Confessions and finales are best experienced at the same time.
         </li>
       </ol>
 
       <h2
         id="shipping"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Managing Shipping Debates and Emotional Spoilers
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Romance spoilers are uniquely painful because the &quot;will they or won&apos;t
         they&quot; tension is the entire point. A few rules that work well:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>Tag any message that references a relationship development with its episode number.</li>
         <li>Keep a separate ship theory thread for speculation — viewers who are behind can read theories but know to skip the main thread.</li>
         <li>For tearjerker episodes, react with emotions only until everyone catches up, then open a debrief thread.</li>
         <li>For movies (A Silent Voice, Your Name), set a &quot;movie night&quot; date so everyone watches simultaneously and no one is spoiled before the event.</li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
-        <Link href="/watch-anime-together" className="text-purple-600 hover:underline">Watch anime together</Link>
+        <Link href="/watch-anime-together" className="text-brand-orange hover:underline">Watch anime together</Link>
         {" · "}
-        <Link href="/watch-comedy-anime-with-friends" className="text-purple-600 hover:underline">Comedy anime</Link>
+        <Link href="/watch-comedy-anime-with-friends" className="text-brand-orange hover:underline">Comedy anime</Link>
         {" · "}
-        <Link href="/watch-action-anime-with-friends" className="text-purple-600 hover:underline">Action anime</Link>
+        <Link href="/watch-action-anime-with-friends" className="text-brand-orange hover:underline">Action anime</Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

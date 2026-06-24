@@ -110,10 +110,10 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           Crunchyroll watch party not working? Here&apos;s how to fix it
         </h1>
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             When your watch party won&apos;t sync, won&apos;t detect Crunchyroll,
             or keeps drifting mid-episode, the fix is usually simpler than
@@ -125,11 +125,11 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
 
         <h2
           id="symptoms"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Common symptoms
         </h2>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             <strong>Playback drift</strong> — reactions arrive before the
             cliffhanger lands on someone&apos;s screen.
@@ -154,14 +154,14 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
 
         <h2
           id="howto"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           HowTo: fix sync issues
         </h2>
-        <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
           {howToSteps.map((step) => (
             <li key={step.name}>
-              <span className="font-medium text-gray-900">{step.name}.</span>{" "}
+              <span className="font-medium text-foreground">{step.name}.</span>{" "}
               {step.text}
             </li>
           ))}
@@ -169,15 +169,15 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
 
         <h2
           id="detection"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Extension not detecting Crunchyroll
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Detection failures usually come from browser environment issues, not
           Crunchyroll itself:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             Make sure you&apos;re on{" "}
             <strong>crunchyroll.com/watch/</strong> with the video player visible
@@ -197,42 +197,42 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
 
         <h2
           id="upgrade"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           When to upgrade your setup
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Free extensions work for occasional live sync, but recurring groups hit
           limits fast. Consider AniDachi when:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Sync breaks every session and manual resync becomes routine.</li>
           <li>Your group spans time zones and needs async catch-up.</li>
           <li>You want per-person progress tracking on long series.</li>
           <li>Spoiler leaks from early watchers ruin the group experience.</li>
         </ul>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           Compare options:{" "}
-          <Link href="/compare/anidachi-vs-teleparty" className="text-purple-600 hover:underline">
+          <Link href="/compare/anidachi-vs-teleparty" className="text-brand-orange hover:underline">
             AniDachi vs Teleparty
           </Link>
           {" · "}
-          <Link href="/compare/anidachi-vs-crunchyroll-party" className="text-purple-600 hover:underline">
+          <Link href="/compare/anidachi-vs-crunchyroll-party" className="text-brand-orange hover:underline">
             AniDachi vs Crunchyroll Party
           </Link>
           {" · "}
-          <Link href="/compare/crunchyroll-party-vs-teleparty-for-anime" className="text-purple-600 hover:underline">
+          <Link href="/compare/crunchyroll-party-vs-teleparty-for-anime" className="text-brand-orange hover:underline">
             Crunchyroll Party vs Teleparty
           </Link>
         </p>
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600 mb-8">
+        <ul className="space-y-2 text-brand-orange mb-8">
           <li>
             <Link href="/guides/how-to-fix-watch-party-audio-delay" className="hover:underline">
               How to fix watch party audio delay

@@ -3,49 +3,36 @@
 import { useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import {
   trackConversion,
   type PageTemplateId,
   ctaCopyVariantForTemplate,
 } from "@/lib/conversion-events";
+import { PRICING_CTA_LABEL } from "@/lib/home-survey";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
 const COPY = {
   default: {
-    title: "Get early access and lock in your price",
-    body: "Pre-launch pricing on Stripe — subscribe now and keep your rate forever. Full refund if you change your mind.",
-    button: "Get early access",
+    body: "Lock in pre-launch pricing before we go public.",
   },
   guide: {
-    title: "Join early access and lock in your rate",
-    body: "Pre-launch pricing only available before we launch. Same Crunchyroll account you already use — cancel or refund on your terms.",
-    button: "Get early access",
+    body: "Pre-launch rate locked forever — same Crunchyroll account you already use.",
   },
   compare: {
-    title: "Lock in pre-launch pricing today",
-    body: "Get early access before public launch — prices go up when we ship. Secure Stripe checkout in under a minute.",
-    button: "Get early access",
+    body: "Prices go up at public launch. Secure checkout in under a minute.",
   },
   anime: {
-    title: "Get early access for your watchroom",
-    body: "Lock in pre-launch pricing, then open any title on Crunchyroll in an AniDachi room. Each viewer keeps their own login.",
-    button: "Get early access",
+    body: "Start watchrooms on any Crunchyroll title — each viewer keeps their own login.",
   },
   listicle: {
-    title: "Lock in early-access pricing for your group",
-    body: "Subscribe before launch and keep your rate forever — then start watchrooms on any Crunchyroll title.",
-    button: "Get early access",
+    body: "Subscribe before launch and keep your rate forever.",
   },
   glossary: {
-    title: "Early access with a clear refund path",
-    body: "Lock in pre-launch pricing on Stripe — cancel or get a full refund if it is not a fit.",
-    button: "Get early access",
+    body: "Full refund before launch if it is not a fit.",
   },
   pillar: {
-    title: "Get early access and lock in your price",
-    body: "Pre-launch pricing on Stripe — subscribe now and keep your rate forever. Full refund if you change your mind.",
-    button: "Get early access",
+    body: "Lock in pre-launch pricing before we go public.",
   },
 } as const;
 
@@ -66,7 +53,6 @@ export interface PrimaryCheckoutCtaProps {
     | string;
   className?: string;
   ctaVariant?: string;
-  trustMicrocopyClassName?: string;
 }
 
 export function PrimaryCheckoutCta({
@@ -76,7 +62,6 @@ export function PrimaryCheckoutCta({
   placement,
   className = "",
   ctaVariant = "primary_checkout",
-  trustMicrocopyClassName = "text-sm text-foreground/50 mt-4 max-w-md mx-auto flex items-start justify-center gap-2",
 }: PrimaryCheckoutCtaProps) {
   const { openSurvey } = usePlanSurvey();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -123,42 +108,44 @@ export function PrimaryCheckoutCta({
   return (
     <div
       ref={rootRef}
-      className={`p-8 bg-[--brand-surface] border border-[--brand-border] rounded-xl text-center ${className}`.trim()}
+      className={`mx-auto w-full max-w-4xl rounded-lg border border-brand-border border-l-2 border-l-brand-orange/70 bg-brand-surface/60 px-4 py-4 sm:px-5 ${className}`.trim()}
     >
-      <h3 className="text-2xl font-bold text-foreground mb-3">{copy.title}</h3>
-      <p className="text-foreground/70 mb-6 max-w-lg mx-auto">{copy.body}</p>
-      <Button
-        size="lg"
-        className="bg-[--brand-orange] hover:bg-[--brand-orange-deep] text-[--primary-foreground] glow-orange"
-        asChild
-      >
-        <Link
-          href="/#pricing"
-          onClick={(e) => {
-            e.preventDefault();
-            trackConversion("cta_click", {
-              page_path: pagePath,
-              page_template: pageTemplate,
-              placement,
-              cta_variant: ctaVariant,
-            });
-            openSurvey({ placement, ctaVariant });
-          }}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+        <div className="min-w-0 flex-1 text-left">
+          <p className="text-base font-semibold text-foreground">
+            {PRICING_CTA_LABEL}
+          </p>
+          <p className="mt-0.5 text-sm leading-snug text-foreground/60">
+            {copy.body}
+          </p>
+          <p className="mt-1.5 flex items-center gap-1 text-[11px] text-foreground/45">
+            <Lock className="h-3 w-3 shrink-0" aria-hidden="true" />
+            Secured by Stripe
+          </p>
+        </div>
+
+        <Button
+          className="h-10 w-full shrink-0 bg-brand-orange px-5 text-sm font-semibold text-primary-foreground glow-orange-sm transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange sm:w-auto"
+          asChild
         >
-          {copy.button}
-          <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
-        </Link>
-      </Button>
-      <p className={trustMicrocopyClassName}>
-        <Shield
-          className="h-4 w-4 flex-shrink-0 text-green-600 mt-0.5"
-          aria-hidden="true"
-        />
-        <span>
-          Secure checkout via Stripe. Crunchyroll subscription not included —
-          everyone keeps their own streaming login.
-        </span>
-      </p>
+          <Link
+            href="/#pricing"
+            onClick={(e) => {
+              e.preventDefault();
+              trackConversion("cta_click", {
+                page_path: pagePath,
+                page_template: pageTemplate,
+                placement,
+                cta_variant: ctaVariant,
+              });
+              openSurvey({ placement, ctaVariant });
+            }}
+          >
+            {PRICING_CTA_LABEL}
+            <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 }

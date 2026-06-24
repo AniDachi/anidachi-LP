@@ -90,11 +90,11 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
       headings={tocHeadings}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         How to Watch Anime for Free With Friends Online (2026)
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           The most reliable way to watch anime with friends for free is to
           combine Crunchyroll&apos;s ad-supported free tier with a group-sync
@@ -106,14 +106,14 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
 
       <h2
         id="free-options"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Free Anime Streaming Options
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The most practical legal free streaming options for group watches:
       </p>
-      <ul className="space-y-4 text-gray-700 mb-8">
+      <ul className="space-y-4 text-foreground/80 mb-8">
         <li>
           <strong>Crunchyroll Free Tier</strong> — Crunchyroll offers a large
           catalog of anime with ad-supported free access. Free accounts have
@@ -139,15 +139,15 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
 
       <h2
         id="free-sync-tools"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Free Watch Party Sync Tools for Anime
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The sync layer (keeping everyone&apos;s video in sync) is separate from
         the streaming catalog. The main options:
       </p>
-      <ul className="space-y-4 text-gray-700 mb-8">
+      <ul className="space-y-4 text-foreground/80 mb-8">
         <li>
           <strong>AniDachi</strong> — purpose-built Crunchyroll sync for anime
           groups. Supports both live sync (everyone watches simultaneously)
@@ -176,39 +176,39 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Step-by-Step: Watch Crunchyroll for Free With Friends
       </h2>
-      <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Every person creates a free Crunchyroll account.</span>{" "}
+          <span className="font-medium text-foreground">Every person creates a free Crunchyroll account.</span>{" "}
           Go to crunchyroll.com, sign up with an email address, and select
           the free tier. No credit card required for the free plan.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi on Chrome.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi on Chrome.</span>{" "}
           Everyone in the group adds the AniDachi Chrome extension. This is
           the layer that keeps playback synchronized and hosts the shared
           reaction room.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Find a title available on Crunchyroll free.</span>{" "}
+          <span className="font-medium text-foreground">Find a title available on Crunchyroll free.</span>{" "}
           On Crunchyroll, filter Browse by &quot;Free&quot; to see the current
           free catalog. Classic shonen series like Naruto, Bleach, and older
           One Piece arcs are commonly available free.
         </li>
         <li>
-          <span className="font-medium text-gray-900">One person creates an AniDachi watchroom.</span>{" "}
+          <span className="font-medium text-foreground">One person creates an AniDachi watchroom.</span>{" "}
           Click the AniDachi icon in the browser toolbar, create a new room,
           and copy the invite link.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Share the invite link with your group.</span>{" "}
+          <span className="font-medium text-foreground">Share the invite link with your group.</span>{" "}
           Send via Discord, iMessage, WhatsApp — wherever your group communicates.
         </li>
         <li>
-          <span className="font-medium text-gray-900">Everyone opens the same episode and joins the room.</span>{" "}
+          <span className="font-medium text-foreground">Everyone opens the same episode and joins the room.</span>{" "}
           AniDachi auto-detects the episode and syncs playback when everyone
           is in the room. For free accounts, ads play at each person&apos;s
           own device — AniDachi pauses sync during ad breaks so no one falls
@@ -218,21 +218,21 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
 
       <h2
         id="limitations"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Limitations of Free Methods
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Free anime group watching works well for occasional sessions, but has
         practical limits to be aware of:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li><strong>Catalog gaps:</strong> Crunchyroll&apos;s free catalog does not include all titles, and simulcast episodes (new weekly releases) are typically premium-only for one week after release. For current-season anime, a Crunchyroll subscription is required.</li>
         <li><strong>Ad interruptions:</strong> Free Crunchyroll shows ads during playback. If your group watches frequently, the ad experience across a 3-episode session adds up significantly.</li>
         <li><strong>Geographic restrictions:</strong> Crunchyroll free catalog varies by country. Titles available in the US free tier may not be available in other regions.</li>
         <li><strong>Async limitations:</strong> For groups that watch at different times (different time zones, varying schedules), the free tier still works — but the sync experience is better with a paid Crunchyroll account because premium removes ad disruptions between episodes.</li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         If your group watches anime regularly (weekly sessions for a seasonal
         series), a Crunchyroll subscription ($8–$15/month) pays for itself
         quickly in reduced friction — especially since each person&apos;s
@@ -242,11 +242,11 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/guides/how-to-watch-anime-with-friends-online" className="hover:underline">
             How to watch anime with friends online — full guide

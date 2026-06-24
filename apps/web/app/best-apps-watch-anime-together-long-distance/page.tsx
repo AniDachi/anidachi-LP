@@ -86,17 +86,17 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         7 Best Apps to Watch Anime Together Long Distance (2026)
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           The best app for long-distance anime watching is AniDachi if you
           watch on Crunchyroll — it is the only option with async mode, which
@@ -110,7 +110,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
 
       <h2
         id="comparison-table"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Full Comparison: Apps to Watch Anime Together Long Distance
       </h2>
@@ -152,11 +152,11 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
 
       <h2
         id="anidachi"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         1. AniDachi — Best for Long-Distance Crunchyroll Couples
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         AniDachi is the only anime watch-party tool built specifically for
         Crunchyroll with <strong>async watching support</strong>. This is the
         key differentiator for long-distance couples: when your time zones or
@@ -164,7 +164,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         independently while reactions, progress, and watchroom chat remain
         fully shared. No other tool on this list does this.
       </p>
-      <ul className="list-disc pl-6 space-y-1 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-1 text-foreground/80 mb-6">
         <li>Live sync + async mode</li>
         <li>Auto anime detection on Crunchyroll</li>
         <li>Episode-level spoiler control</li>
@@ -172,24 +172,24 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         <li>Persistent watchroom chat that survives session gaps</li>
         <li>$8/month — full refund guarantee</li>
       </ul>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> Long-distance couples on Crunchyroll with
         5+ hour time differences or inconsistent schedules.
       </p>
 
       <h2
         id="teleparty"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         2. Teleparty — Best Free Multi-Platform Option
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Teleparty (formerly Netflix Party) supports Crunchyroll alongside
         Netflix, Disney+, Hulu, and others. It is primarily a live sync
         tool — both people must be online at the same time. There is no async
         mode, no per-person progress tracking, and no spoiler control.
       </p>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> Couples who can reliably schedule live
         watch sessions and also watch content across multiple streaming
         platforms.
@@ -197,46 +197,46 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
 
       <h2
         id="rave"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         3. Rave — Best Free Option with Voice Chat
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Rave (formerly Wacup) supports live sync across Crunchyroll, Netflix,
         and others, and includes built-in voice and video chat — removing
         the need to run a separate Discord call. The free tier covers most
         features. Like Teleparty, there is no async support.
       </p>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> Couples who want a free option with
         voice chat built in and don&apos;t need async features.
       </p>
 
       <h2
         id="scener"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         4. Scener — Best for Video Call Alongside Streaming
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Scener runs in the browser and overlays video calling directly on top
         of streaming content from Netflix, HBO Max, and others. It is the
         most visually polished option for seeing each other&apos;s faces while
         watching. Crunchyroll support is limited; Scener works best for
         non-anime content.
       </p>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> Non-anime movie nights or couples who
         prioritize seeing each other&apos;s face during the watch.
       </p>
 
       <h2
         id="discord"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         5. Discord Screen Share — Best Free Fallback
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Discord is not a watch party app — it is a voice and screen share
         tool. One person shares their Crunchyroll screen while the other
         watches. This means only one person streams in full quality; the
@@ -244,63 +244,63 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         simultaneously and provides no sync, progress tracking, or spoiler
         control.
       </p>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> Quick, unplanned sessions when you
         don&apos;t want to set up another tool.
       </p>
 
       <h2
         id="crunchyroll-party"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         6. Crunchyroll Party — Best Free Crunchyroll-Only Option
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Crunchyroll Party is a free Chrome extension that adds live sync and
         text chat to Crunchyroll. It is straightforward and works well for
         same-time watching. No async, no progress tracking, no video
         reactions.
       </p>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> Budget-conscious couples who can always
         watch live together and only use Crunchyroll.
       </p>
 
       <h2
         id="watch2gether"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         7. Watch2Gether — Best for YouTube and Non-Streaming Content
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Watch2Gether supports YouTube, Vimeo, and some other platforms — but
         not Crunchyroll. It is most useful for watching anime trailers,
         music videos, or fan content on YouTube together. Not recommended
         for Crunchyroll anime series.
       </p>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> YouTube content specifically.
       </p>
 
       <h2
         id="decision"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Which Should You Pick?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Use this decision framework:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li><strong>You watch on Crunchyroll + can&apos;t always sync schedules → AniDachi</strong> (async mode solves the time zone problem)</li>
         <li><strong>You watch live together across multiple platforms → Teleparty or Rave</strong></li>
         <li><strong>You want video calling built in → Rave or Scener</strong></li>
         <li><strong>You want completely free + Crunchyroll → Crunchyroll Party or Discord</strong></li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         For long-distance couples specifically: async support is the most
         important feature, and{" "}
-        <Link href="/timezone-friendly-anime-watch-parties" className="text-purple-600 hover:underline">
+        <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
           AniDachi&apos;s async watching mode
         </Link>{" "}
         is the only option on this list that provides it.
@@ -308,11 +308,11 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/watch-crunchyroll-together-long-distance" className="hover:underline">
             How to watch Crunchyroll together long distance

@@ -86,16 +86,16 @@ export default function AniDachiVsAmazonWatchPartyPage() {
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Amazon Watch Party for Anime (2026)
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           AniDachi is purpose-built for Crunchyroll anime — the platform with
           the largest anime catalog. Amazon Watch Together works only with
@@ -106,11 +106,11 @@ export default function AniDachiVsAmazonWatchPartyPage() {
 
       <h2
         id="tldr"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-3 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-3 scroll-mt-24"
       >
         At a glance
       </h2>
-      <p className="text-gray-700 mb-6">
+      <p className="text-foreground/80 mb-6">
         <strong>TL;DR:</strong> For most anime watch parties — Demon Slayer,
         Jujutsu Kaisen, Attack on Titan, Haikyuu!!, One Piece, and nearly all
         current simulcasts — AniDachi on Crunchyroll is the correct tool.
@@ -121,7 +121,7 @@ export default function AniDachiVsAmazonWatchPartyPage() {
 
       <h2
         id="feature-comparison"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Feature comparison
       </h2>
@@ -180,14 +180,14 @@ export default function AniDachiVsAmazonWatchPartyPage() {
 
       <h2
         id="anime-catalog"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Anime Catalog: Amazon Prime Video vs Crunchyroll
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The platform choice determines which watch party tool you need:
       </p>
-      <ul className="space-y-4 text-gray-700 mb-8">
+      <ul className="space-y-4 text-foreground/80 mb-8">
         <li>
           <strong>Amazon Prime Video anime exclusives (partial list):</strong>{" "}
           Vinland Saga Season 2, Made in Abyss Seasons 1–2,
@@ -197,19 +197,19 @@ export default function AniDachiVsAmazonWatchPartyPage() {
         </li>
         <li>
           <strong>Crunchyroll&apos;s catalog (much larger):</strong>{" "}
-          <Link href="/watch/demon-slayer-with-friends" className="text-purple-600 hover:underline">Demon Slayer</Link>,{" "}
-          <Link href="/watch/jujutsu-kaisen-with-friends" className="text-purple-600 hover:underline">Jujutsu Kaisen</Link>,{" "}
-          <Link href="/watch/attack-on-titan-with-friends" className="text-purple-600 hover:underline">Attack on Titan</Link>,{" "}
-          <Link href="/watch/haikyuu-with-friends" className="text-purple-600 hover:underline">Haikyuu!!</Link>,{" "}
-          <Link href="/watch/one-piece-with-friends" className="text-purple-600 hover:underline">One Piece</Link>,{" "}
-          <Link href="/watch/naruto-with-friends" className="text-purple-600 hover:underline">Naruto</Link>,{" "}
-          <Link href="/watch/bleach-with-friends" className="text-purple-600 hover:underline">Bleach</Link>,{" "}
-          <Link href="/watch/chainsaw-man-with-friends" className="text-purple-600 hover:underline">Chainsaw Man</Link>,{" "}
-          <Link href="/watch/fullmetal-alchemist-brotherhood-with-friends" className="text-purple-600 hover:underline">Fullmetal Alchemist: Brotherhood</Link>, and the
+          <Link href="/watch/demon-slayer-with-friends" className="text-brand-orange hover:underline">Demon Slayer</Link>,{" "}
+          <Link href="/watch/jujutsu-kaisen-with-friends" className="text-brand-orange hover:underline">Jujutsu Kaisen</Link>,{" "}
+          <Link href="/watch/attack-on-titan-with-friends" className="text-brand-orange hover:underline">Attack on Titan</Link>,{" "}
+          <Link href="/watch/haikyuu-with-friends" className="text-brand-orange hover:underline">Haikyuu!!</Link>,{" "}
+          <Link href="/watch/one-piece-with-friends" className="text-brand-orange hover:underline">One Piece</Link>,{" "}
+          <Link href="/watch/naruto-with-friends" className="text-brand-orange hover:underline">Naruto</Link>,{" "}
+          <Link href="/watch/bleach-with-friends" className="text-brand-orange hover:underline">Bleach</Link>,{" "}
+          <Link href="/watch/chainsaw-man-with-friends" className="text-brand-orange hover:underline">Chainsaw Man</Link>,{" "}
+          <Link href="/watch/fullmetal-alchemist-brotherhood-with-friends" className="text-brand-orange hover:underline">Fullmetal Alchemist: Brotherhood</Link>, and the
           vast majority of current simulcasts.
         </li>
       </ul>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         If your group watches a mix of Amazon-exclusive and Crunchyroll anime,
         you will need both tools — Amazon Watch Together for Prime Video
         content and AniDachi for Crunchyroll content. There is no single tool
@@ -218,11 +218,11 @@ export default function AniDachiVsAmazonWatchPartyPage() {
 
       <h2
         id="when-anidachi"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When to choose AniDachi
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Your group watches primarily on Crunchyroll — which covers most popular anime.</li>
         <li>You need async watching — your group has different schedules or time zones.</li>
         <li>You want episode-level spoiler controls so members who catch up late aren&apos;t spoiled.</li>
@@ -231,11 +231,11 @@ export default function AniDachiVsAmazonWatchPartyPage() {
 
       <h2
         id="when-amazon"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When to use Amazon Watch Together
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
         <li>The specific anime you want to watch is available on Amazon Prime Video, not Crunchyroll.</li>
         <li>Everyone in your group has Amazon Prime subscriptions already.</li>
         <li>You watch live and always sync schedules — no async catch-up needed.</li>
@@ -244,11 +244,11 @@ export default function AniDachiVsAmazonWatchPartyPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
             AniDachi vs Teleparty

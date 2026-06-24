@@ -83,7 +83,7 @@ function Avatar({ user }: { user: PublicProfile }) {
   }
 
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500 text-sm font-bold text-white">
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-orange text-sm font-bold text-foreground">
       {initials(user.displayName)}
     </span>
   );
@@ -106,10 +106,10 @@ function IconButton({
 }) {
   const toneClass =
     tone === "primary"
-      ? "border-violet-400/30 bg-violet-500 text-white hover:bg-violet-400"
+      ? "border-brand-orange/30 bg-brand-orange text-foreground hover:bg-brand-orange-deep"
       : tone === "danger"
         ? "border-red-400/30 bg-red-500/10 text-red-200 hover:bg-red-500/20"
-        : "border-white/15 bg-white/10 text-slate-100 hover:bg-white/15";
+        : "border-brand-border bg-brand-surface text-foreground/90 hover:bg-brand-orange";
 
   return (
     <button
@@ -153,7 +153,7 @@ function statusTone(status: string): string {
   if (status === "accepted") return "bg-emerald-500/15 text-emerald-200";
   if (status === "declined") return "bg-red-500/15 text-red-200";
   if (status === "expired") return "bg-amber-500/15 text-amber-200";
-  return "bg-violet-500/15 text-violet-200";
+  return "bg-brand-orange/15 text-brand-orange";
 }
 
 function statusLabel(status: string, expired: boolean): string {
@@ -237,15 +237,15 @@ export function InvitesClient() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <header className="flex flex-col justify-between gap-4 border-b border-white/10 pb-6 md:flex-row md:items-end">
+      <header className="flex flex-col justify-between gap-4 border-b border-brand-border pb-6 md:flex-row md:items-end">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-300">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
             AniDachi
           </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Invites
           </h1>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-foreground/50">
             Room invites from friends and group sends.
           </p>
         </div>
@@ -279,16 +279,16 @@ export function InvitesClient() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+        <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Inbox</h2>
-            <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-slate-300">
+            <h2 className="text-lg font-semibold text-foreground">Inbox</h2>
+            <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
               {data.inbox.length}
             </span>
           </div>
           <div className="mt-3">
             {loading ? (
-              <p className="py-4 text-sm text-slate-400">Loading...</p>
+              <p className="py-4 text-sm text-foreground/50">Loading...</p>
             ) : data.inbox.length ? (
               data.inbox.map((invite) => (
                 <InboxInviteRow
@@ -300,25 +300,25 @@ export function InvitesClient() {
                 />
               ))
             ) : (
-              <p className="py-4 text-sm text-slate-400">No room invites yet.</p>
+              <p className="py-4 text-sm text-foreground/50">No room invites yet.</p>
             )}
           </div>
         </div>
 
-        <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+        <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Sent</h2>
-            <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-slate-300">
+            <h2 className="text-lg font-semibold text-foreground">Sent</h2>
+            <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
               {data.sent.length}
             </span>
           </div>
           <div className="mt-3">
             {loading ? (
-              <p className="py-4 text-sm text-slate-400">Loading...</p>
+              <p className="py-4 text-sm text-foreground/50">Loading...</p>
             ) : data.sent.length ? (
               data.sent.map((invite) => <SentInviteRow invite={invite} key={invite.id} />)
             ) : (
-              <p className="py-4 text-sm text-slate-400">No sent invites yet.</p>
+              <p className="py-4 text-sm text-foreground/50">No sent invites yet.</p>
             )}
           </div>
         </div>
@@ -337,14 +337,14 @@ function SummaryTile({
   value: number;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.04] p-4">
+    <div className="flex items-center justify-between rounded-lg border border-brand-border bg-brand-surface p-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/20 text-violet-200">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
           {icon}
         </span>
-        <span className="text-sm font-semibold text-slate-200">{label}</span>
+        <span className="text-sm font-semibold text-foreground/80">{label}</span>
       </div>
-      <span className="text-2xl font-bold text-white">{value}</span>
+      <span className="text-2xl font-bold text-foreground">{value}</span>
     </div>
   );
 }
@@ -365,13 +365,13 @@ function InboxInviteRow({
   const disabled = busyKey !== null || !canRespond(invite);
 
   return (
-    <div className="border-b border-white/10 py-4 last:border-b-0">
+    <div className="border-b border-brand-border py-4 last:border-b-0">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div className="flex min-w-0 gap-3">
           <Avatar user={invite.sender} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate text-base font-semibold text-white">
+              <h3 className="truncate text-base font-semibold text-foreground">
                 {invite.roomTitle ?? "Watch room invite"}
               </h3>
               <span
@@ -382,11 +382,11 @@ function InboxInviteRow({
                 {statusLabel(status, expired)}
               </span>
             </div>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-foreground/50">
               From {invite.sender.displayName} · expires {formatDate(invite.expiresAt)}
             </p>
             {invite.message ? (
-              <p className="mt-2 rounded-lg bg-white/[0.05] px-3 py-2 text-sm text-slate-300">
+              <p className="mt-2 rounded-lg bg-brand-surface px-3 py-2 text-sm text-foreground/70">
                 {invite.message}
               </p>
             ) : null}
@@ -416,9 +416,9 @@ function InboxInviteRow({
 
 function SentInviteRow({ invite }: { invite: RoomInvite }) {
   return (
-    <div className="border-b border-white/10 py-4 last:border-b-0">
+    <div className="border-b border-brand-border py-4 last:border-b-0">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-violet-100">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-orange/15 text-brand-orange">
           {invite.targetKind === "group" ? (
             <Users className="h-4 w-4" aria-hidden />
           ) : (
@@ -426,10 +426,10 @@ function SentInviteRow({ invite }: { invite: RoomInvite }) {
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-white">
+          <h3 className="truncate text-sm font-semibold text-foreground">
             {invite.roomTitle ?? "Watch room invite"}
           </h3>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-foreground/50">
             Sent {formatDate(invite.createdAt)} · expires {formatDate(invite.expiresAt)}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">

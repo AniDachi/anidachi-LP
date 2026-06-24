@@ -10,12 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Star, Zap, Shield, Lock, CreditCard } from "lucide-react";
+import { Check, Star, Zap, Lock } from "lucide-react";
 import {
   inferPageTemplateFromPath,
   trackConversion,
 } from "@/lib/conversion-events";
 import type { CheckoutTier, HomeSurveyAnswers } from "@/lib/home-survey";
+import { PRICING_CTA_LABEL } from "@/lib/home-survey";
 import { PricingSurveyLink } from "@/components/pricing-survey-link";
 
 export function Pricing({
@@ -168,193 +169,184 @@ export function Pricing({
     <section
       ref={sectionRef}
       id="pricing"
-      className="py-24 bg-background"
+      className="relative overflow-hidden bg-background py-16 lg:py-20"
     >
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-[--brand-orange]/15 border border-[--brand-orange]/30 text-[--brand-orange] px-4 py-2 rounded-full text-sm font-medium mb-4">
-            <Zap className="w-4 h-4" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 w-[600px] h-[400px] bg-brand-orange/8 blur-[100px]"
+        aria-hidden
+      />
+      <div className="container mx-auto px-4 relative">
+        <div className="mb-10 text-center">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange/15 px-4 py-2 text-sm font-medium text-brand-orange">
+            <Zap className="h-4 w-4" aria-hidden="true" />
             Pre-Launch Pricing
           </div>
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+          <h2 className="mb-3 text-3xl font-bold text-foreground md:text-5xl">
             Pre-launch pricing. Locked in forever.
           </h2>
-          <p className="text-lg text-foreground/70 max-w-2xl mx-auto mb-6">
-            These prices are only available before we launch. Subscribe now and
-            lock in your rate permanently — prices go up at public launch. Full
-            refund before launch if you change your mind.
+          <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
+          <p className="mx-auto max-w-xl text-base text-foreground/70">
+            Subscribe before launch — your rate stays forever.
           </p>
 
           {checkoutError && (
             <div
-              className="max-w-lg mx-auto mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              className="mx-auto mb-6 mt-4 max-w-lg rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
               role="alert"
             >
               {checkoutError}
             </div>
           )}
-
-          <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-foreground/50 mb-8">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4" aria-hidden="true" />
-              <span>Secure payments via Stripe</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4" aria-hidden="true" />
-              <span>Cancel &amp; refund anytime</span>
-            </div>
-          </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12 items-stretch">
-          <Card
-            className={`relative order-1 border-2 shadow-xl md:scale-105 bg-[--brand-surface] transition-all duration-300 hover:shadow-2xl px-6 py-8 z-10 glow-orange ${
-              recommendedTier === "plus"
-                ? "border-[--brand-orange] ring-4 ring-[--brand-orange]/20"
-                : "border-[--brand-orange]"
-            }`}
-          >
-            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2">
-              <Badge className="bg-[--brand-orange] text-[--primary-foreground] px-6 py-2 text-sm font-semibold">
-                <Star className="w-3 h-3 mr-1" aria-hidden="true" />
-                {recommendedTier === "plus"
-                  ? "Recommended"
-                  : "Most Popular"}
-              </Badge>
+        <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-4xl mx-auto mb-12 items-stretch pt-6">
+          <div className="flex flex-col h-full animate-fade-in-up">
+            <div className="flex flex-1 flex-col rounded-xl p-[2px] animated-gradient-border">
+              <Card className="flex h-full flex-1 flex-col gap-0 border-0 bg-brand-surface p-6 shadow-xl rounded-[calc(var(--radius-xl)-2px)]">
+                <div className="mb-5 flex min-h-8 items-center justify-center">
+                  <Badge className="bg-brand-orange px-5 py-1.5 text-sm font-semibold text-primary-foreground shadow-md">
+                    <Star className="mr-1 h-3 w-3" aria-hidden="true" />
+                    {recommendedTier === "plus"
+                      ? "Recommended"
+                      : "Most Popular"}
+                  </Badge>
+                </div>
+
+                <CardHeader className="space-y-2 p-0 pb-5 text-center">
+                  <CardTitle className="text-2xl font-bold text-foreground">
+                    Plus
+                  </CardTitle>
+                  <p className="min-h-[4.5rem] text-sm font-medium leading-snug text-brand-orange-bright">
+                    Who it&apos;s for: regular watch nights with friends, sync,
+                    chat, and shared progress
+                  </p>
+                  <div className="flex items-baseline justify-center pt-1">
+                    <span className="text-5xl font-bold text-foreground">$7.99</span>
+                    <span className="ml-1 text-lg text-foreground/60">/month</span>
+                  </div>
+                  <CardDescription className="min-h-[4.5rem] text-base text-foreground/70">
+                    Host rooms without the free time limit, invite friends, and use
+                    up to 4 video seats
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="flex flex-1 flex-col p-0">
+                  <ul className="mb-6 flex-1 space-y-2">
+                    {[
+                      "Unlimited watchrooms",
+                      "Real-time chat & discussions",
+                      "Chrome extension access",
+                      "Cross-device playback sync",
+                      "Watch history & progress tracking",
+                      "Priority support",
+                    ].map((feature, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <Check
+                          className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-orange"
+                          aria-hidden="true"
+                        />
+                        <span className="text-sm text-foreground/80">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-auto pt-2">
+                    <Button
+                      className="w-full py-4 text-lg font-semibold bg-brand-orange text-primary-foreground shadow-lg glow-orange transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange-lg disabled:opacity-60"
+                      onClick={() => handleSubscribe("plus")}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting
+                        ? "Redirecting to Stripe…"
+                        : (getCtaLabelForTier?.("plus") ?? PRICING_CTA_LABEL)}
+                    </Button>
+                    <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-foreground/50">
+                      <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                      Secured by Stripe
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
+          </div>
 
-            <CardHeader className="text-center pt-6 pb-4">
-              <CardTitle className="text-2xl font-bold text-foreground mb-2">
-                Plus
-              </CardTitle>
-              <p className="text-sm font-medium text-[--brand-orange-bright] mb-2">
-                Who it&apos;s for: regular watch nights with friends, sync,
-                chat, and shared progress
-              </p>
-              <div className="flex items-baseline justify-center mb-2">
-                <span className="text-5xl font-bold text-foreground">$7.99</span>
-                <span className="text-foreground/60 ml-1 text-lg">/month</span>
-              </div>
-              <CardDescription className="text-foreground/70 text-base">
-                Host rooms without the free time limit, invite friends, and use
-                up to 4 video seats
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-3 px-6 pb-6">
-              <ul className="space-y-2 mb-4">
-                {[
-                  "Unlimited watchrooms",
-                  "Real-time chat & discussions",
-                  "Chrome extension access",
-                  "Cross-device playback sync",
-                  "Watch history & progress tracking",
-                  "Priority support",
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Check
-                      className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5"
-                      aria-hidden="true"
-                    />
-                    <span className="text-foreground/80 text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="pt-4">
-                <Button
-                  className="w-full py-4 text-lg font-semibold bg-[--brand-orange] hover:bg-[--brand-orange-deep] text-[--primary-foreground] shadow-lg glow-orange hover:glow-orange-lg transition-all duration-300 disabled:opacity-60"
-                  onClick={() => handleSubscribe("plus")}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting
-                    ? "Redirecting to Stripe…"
-                    : (getCtaLabelForTier?.("plus") ?? "Start Plus")}
-                </Button>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-foreground/60">
-                  <div className="flex items-center gap-1.5">
-                    <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-                    Secured by Stripe
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
-                    Card checkout
-                  </div>
-                </div>
-                <p className="text-xs text-foreground/50 text-center mt-2">
-                  Pre-launch rate locked forever &bull; Cancel anytime &bull; Full refund before launch
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`relative order-2 border bg-[--brand-surface] transition-all duration-300 px-6 py-8 md:opacity-95 md:scale-[0.99] hover:shadow-lg ${
-              recommendedTier === "pro"
-                ? "border-[--brand-border] ring-4 ring-[--brand-orange]/10"
-                : "border-[--brand-border]"
-            }`}
+          <div
+            className="flex h-full flex-col animate-fade-in-up"
+            style={{ animationDelay: "100ms" }}
           >
-            <CardHeader className="text-center pt-6 pb-4">
-              <CardTitle className="text-2xl font-bold text-foreground/80 mb-2">
-                Pro
-              </CardTitle>
-              <div className="flex items-baseline justify-center mb-2">
-                <span className="text-5xl font-bold text-foreground">$14.99</span>
-                <span className="text-foreground/60 ml-1 text-lg">/month</span>
+            <Card
+              className={`flex h-full flex-1 flex-col gap-0 border bg-brand-surface p-6 shadow-xl transition-all duration-300 hover:border-brand-orange/40 hover:shadow-lg ${
+                recommendedTier === "pro"
+                  ? "border-brand-orange/40 ring-2 ring-brand-orange/30"
+                  : "border-brand-border"
+              }`}
+            >
+              <div
+                className="mb-5 flex min-h-8 items-center justify-center opacity-0 pointer-events-none"
+                aria-hidden
+              >
+                <Badge className="px-5 py-1.5 text-sm font-semibold">
+                  Placeholder
+                </Badge>
               </div>
-              <CardDescription className="text-foreground/60 text-base">
-                For bigger groups: more participants, more groups, longer
-                history, and the same lightweight 4-seat video limit.
-              </CardDescription>
-            </CardHeader>
 
-            <CardContent className="space-y-3 px-6 pb-6">
-              <ul className="space-y-2 mb-4">
-                {[
-                  "Everything in Plus",
-                  "Invite-only rooms (private links + approval)",
-                  "Host & moderator controls (kick/ban, lock playback, room rules)",
-                  "Room personalization (name, cover, pinned notes)",
-                  "Founder badge + early feature drops",
-                  "Fast-track support (same-day replies)",
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Check
-                      className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5"
-                      aria-hidden="true"
-                    />
-                    <span className="text-foreground/80 text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              <CardHeader className="space-y-2 p-0 pb-5 text-center">
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  Pro
+                </CardTitle>
+                <p className="min-h-[4.5rem] text-sm font-medium leading-snug text-brand-orange-bright">
+                  Who it&apos;s for: club hosts and bigger groups who need
+                  private rooms, moderator controls, and room personalization
+                </p>
+                <div className="flex items-baseline justify-center pt-1">
+                  <span className="text-5xl font-bold text-foreground">$14.99</span>
+                  <span className="ml-1 text-lg text-foreground/60">/month</span>
+                </div>
+                <CardDescription className="min-h-[4.5rem] text-base text-foreground/70">
+                  For bigger groups: more participants, more groups, longer
+                  history, and the same lightweight 4-seat video limit.
+                </CardDescription>
+              </CardHeader>
 
-              <div className="pt-4">
-                <Button
-                  className="w-full py-4 text-lg font-semibold bg-background border border-[--brand-border] hover:border-[--brand-orange]/40 text-foreground shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60"
-                  onClick={() => handleSubscribe("pro")}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting
-                    ? "Redirecting to Stripe…"
-                    : (getCtaLabelForTier?.("pro") ?? "Start Pro")}
-                </Button>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-foreground/60">
-                  <div className="flex items-center gap-1.5">
+              <CardContent className="flex flex-1 flex-col p-0">
+                <ul className="mb-6 flex-1 space-y-2">
+                  {[
+                    "Everything in Plus",
+                    "Invite-only rooms (private links + approval)",
+                    "Host & moderator controls (kick/ban, lock playback, room rules)",
+                    "Room personalization (name, cover, pinned notes)",
+                    "Founder badge + early feature drops",
+                    "Fast-track support (same-day replies)",
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <Check
+                        className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-orange"
+                        aria-hidden="true"
+                      />
+                      <span className="text-sm text-foreground/80">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-auto pt-2">
+                  <Button
+                    variant="outline"
+                    className="w-full border-brand-orange/50 py-4 text-lg font-semibold text-brand-orange transition-all duration-300 hover:border-brand-orange hover:bg-brand-orange hover:text-primary-foreground disabled:opacity-60"
+                    onClick={() => handleSubscribe("pro")}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting
+                      ? "Redirecting to Stripe…"
+                      : (getCtaLabelForTier?.("pro") ?? PRICING_CTA_LABEL)}
+                  </Button>
+                  <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-foreground/50">
                     <Lock className="h-3.5 w-3.5" aria-hidden="true" />
                     Secured by Stripe
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
-                    Card checkout
-                  </div>
+                  </p>
                 </div>
-                <p className="text-xs text-foreground/50 text-center mt-2">
-                  Pre-launch rate locked forever &bull; Cancel anytime &bull; Full refund before launch
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         <p className="text-center mt-8">

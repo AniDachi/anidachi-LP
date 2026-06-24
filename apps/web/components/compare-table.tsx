@@ -48,16 +48,7 @@ const rows: CompareTableRow[] = [
     },
   },
   {
-    feature: "Watch history tracking",
-    values: {
-      anidachi: "yes",
-      teleparty: "no",
-      crunchyrollParty: "no",
-      discord: "no",
-    },
-  },
-  {
-    feature: "Episode progress per user",
+    feature: "Per-user progress tracking",
     values: {
       anidachi: "yes",
       teleparty: "no",
@@ -68,37 +59,31 @@ const rows: CompareTableRow[] = [
   {
     feature: "Free tier available",
     values: {
-      anidachi: "no",
+      anidachi: "yes",
       teleparty: "yes",
       crunchyrollParty: "yes",
       discord: "yes",
-    },
-  },
-  {
-    feature: "No account required for extension",
-    values: {
-      anidachi: "no",
-      teleparty: "yes",
-      crunchyrollParty: "yes",
-      discord: "no",
     },
   },
 ];
 
 export function CompareTable() {
   return (
-    <section id="compare" className="py-24 bg-gray-50">
+    <section id="compare" className="bg-brand-surface py-16 lg:py-20">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        <div className="mb-8 text-center">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide text-brand-orange">
+            Compare
+          </div>
+          <h2 className="mb-3 text-3xl font-bold text-foreground md:text-4xl">
             How AniDachi Compares
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            See how AniDachi stacks up against other ways to watch anime with
-            friends.
+          <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
+          <p className="mx-auto max-w-xl text-base text-foreground/70">
+            Built for anime watch parties, not generic screen share.
           </p>
         </div>
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl">
           <ResponsiveCompareTable columns={columns} rows={rows} />
         </div>
       </div>

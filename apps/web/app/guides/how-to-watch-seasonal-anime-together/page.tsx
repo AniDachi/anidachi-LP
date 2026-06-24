@@ -110,10 +110,10 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to watch seasonal anime together
         </h1>
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Seasonal anime drops one episode per week — perfect for a recurring
             watch party if you set a schedule, a persistent watchroom, and clear
@@ -124,11 +124,11 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
 
         <h2
           id="why-seasonal"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Why watch seasonal anime together?
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           Seasonal anime creates a shared ritual — every week your group returns
           to the same watchroom for a fresh episode, fresh theories, and fresh
           reactions. Unlike bingeing a completed series, simulcasts build
@@ -139,14 +139,14 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
 
         <h2
           id="howto"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           HowTo: weekly simulcast workflow
         </h2>
-        <ol className="list-decimal pl-6 space-y-3 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
           {howToSteps.map((step) => (
             <li key={step.name}>
-              <span className="font-medium text-gray-900">{step.name}.</span>{" "}
+              <span className="font-medium text-foreground">{step.name}.</span>{" "}
               {step.text}
             </li>
           ))}
@@ -154,19 +154,19 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
 
         <h2
           id="schedule"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Building your seasonal schedule
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Simulcast drops vary by show and region, but most Crunchyroll simulcasts
           go live within 1–2 hours of the Japan broadcast. Check the{" "}
-          <Link href="/glossary/anime-simulcast" className="text-purple-600 hover:underline">
+          <Link href="/glossary/anime-simulcast" className="text-brand-orange hover:underline">
             anime simulcast glossary
           </Link>{" "}
           for timing basics, then block a recurring slot:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             <strong>Saturday or Sunday evenings</strong> work for most groups in
             North America — many seasonals drop Friday/Saturday JST.
@@ -183,15 +183,15 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
 
         <h2
           id="spoiler-rules"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Spoiler rules for weekly drops
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Seasonal anime spoilers travel fast — episode 1 reactions hit social
           media within minutes of the drop. Inside your AniDachi watchroom:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             No reactions past the pinned episode number until the weekly sync
             happens.
@@ -208,11 +208,11 @@ export default function HowToWatchSeasonalAnimeTogetherPage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600 mb-8">
+        <ul className="space-y-2 text-brand-orange mb-8">
           <li>
             <Link href="/guides/how-to-run-an-online-anime-club" className="hover:underline">
               How to run an online anime club

@@ -101,11 +101,11 @@ export default function HowToWatchAnimeWithAGroupPage() {
         faq={faq}
         headings={tocHeadings}
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to Watch Anime With a Group
         </h1>
 
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Watching anime together as a group works best when someone owns the
             countdown, chat stays structured, and everyone streams legally on
@@ -118,18 +118,18 @@ export default function HowToWatchAnimeWithAGroupPage() {
 
         <h2
           id="roles"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Hosts &amp; co-hosts
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Scale responsibilities instead of letting nine people moderate at once.
           The primary host spins up invites, confirms everyone detected the same
           series, and calls pause breaks for snacks or bandwidth hiccups. A
           co-host watches chat scroll speed, pins reminders about dub versus
           sub, and redirects spoiler slips into the right channel.
         </p>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           If your anime club mixes veterans with first-timers, ask mentors to DM
           newcomers rather than explaining lore unprompted in the main thread —
           it keeps the timeline readable for people still hearing names for the
@@ -138,25 +138,25 @@ export default function HowToWatchAnimeWithAGroupPage() {
 
         <h2
           id="sync-choice"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Pick sync vs async early
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Live sessions thrive when at least half the group can arrive within five
           minutes of start. Post the timezone explicitly and convert it once so
           international members self-select honestly. If attendance spreads
           across continents, commit to{" "}
           <Link
             href="/glossary/asynchronous-watching"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             asynchronous watching
           </Link>{" "}
           instead of dragging everyone through fuzzy “we’ll pause until Kelly
           wakes up” plans.
         </p>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Async groups still benefit from a shared watchroom: reactions stack per
           episode, late viewers avoid scrolling past spoilers, and hosts can post
           recap prompts after credits without splitting into fifteen side threads.
@@ -164,17 +164,17 @@ export default function HowToWatchAnimeWithAGroupPage() {
 
         <h2
           id="chat-rules"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Chat &amp; spoiler hygiene
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Large rooms amplify meme floods — fun until someone misses a pivotal
           line. Pin three bullets before play: spoiler scope (episode only vs
           whole arc), emoji shorthand for “pause please,” and whether MVPs should
           summarize after fights or stay silent for tension.
         </p>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           When parallel jokes spike, move tangent chatter to a breakout voice or
           secondary channel so the watchroom stays tied to on-screen beats.
           Moderators should aggressively thread replies rather than stacking fresh
@@ -183,11 +183,11 @@ export default function HowToWatchAnimeWithAGroupPage() {
 
         <h2
           id="steps-anidachi"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Step-by-step with AniDachi
         </h2>
-        <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Install AniDachi from the Chrome Web Store on laptops guests use.</li>
           <li>Open the agreed Crunchyroll episode and detect the anime.</li>
           <li>Create a watchroom name your club recognizes across invites.</li>
@@ -207,11 +207,11 @@ export default function HowToWatchAnimeWithAGroupPage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600">
+        <ul className="space-y-2 text-brand-orange">
           <li>
             <Link href="/watch-anime-together" className="hover:underline">
               Watch Anime Together (pillar guide)

@@ -7,7 +7,7 @@ import {
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
 export function NavPricingLink({
-  className = "text-foreground/70 hover:text-[--brand-orange-bright] transition-colors",
+  className = "text-foreground/70 hover:text-brand-orange-bright transition-colors",
 }: {
   className?: string;
 }) {

@@ -46,16 +46,16 @@ export default function AnimeSimulcastGlossaryPage() {
       faq={faq}
       headings={tocHeadings}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         What Is an Anime Simulcast?
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           An anime simulcast is when a new episode airs in Japan and becomes
           available to international viewers on platforms like Crunchyroll at
@@ -67,11 +67,11 @@ export default function AnimeSimulcastGlossaryPage() {
 
       <h2
         id="watch-parties"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Simulcasts Matter for Watch Parties
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Simulcasts make group watching exciting because everyone can react to
         new episodes at the same time — no spoiler risk. Create an AniDachi
         watchroom for a seasonal simulcast anime, and your group gets the
@@ -80,11 +80,11 @@ export default function AnimeSimulcastGlossaryPage() {
 
       <h2
         id="where"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Where to Watch Simulcasts
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Crunchyroll is the largest simulcast platform for anime, streaming most
         seasonal series within hours of their Japanese broadcast. Other options
         include HIDIVE and Netflix (for select titles with delayed availability).
@@ -92,11 +92,11 @@ export default function AnimeSimulcastGlossaryPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li><Link href="/glossary/watchroom" className="hover:underline">What Is a Watchroom?</Link></li>
         <li><Link href="/glossary/dub-vs-sub-watch-party" className="hover:underline">Dub vs Sub Watch Party</Link></li>
         <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll Together</Link></li>

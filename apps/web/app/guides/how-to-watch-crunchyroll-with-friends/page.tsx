@@ -88,11 +88,11 @@ export default function HowToWatchWithFriendsPage() {
       faq={faq}
       headings={tocHeadings}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide (2026)
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Crunchyroll does not have a built-in watch party feature in 2026 —
           but you can easily create a Crunchyroll watch party using a Chrome
@@ -106,17 +106,17 @@ export default function HowToWatchWithFriendsPage() {
 
       <h2
         id="method-anidachi"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Method 1: AniDachi Chrome Extension (Best for Groups)
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         AniDachi offers the most feature-rich experience for watching
         Crunchyroll together. It auto-detects anime, creates watchrooms with
         one click, and uniquely supports async watching — friends don&apos;t
         need to be online at the same time.
       </p>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-6">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-6">
         <li>Install the AniDachi extension from the Chrome Web Store.</li>
         <li>Navigate to any anime episode on Crunchyroll.</li>
         <li>Click &quot;Detect Anime&quot; — AniDachi identifies the show automatically.</li>
@@ -126,11 +126,11 @@ export default function HowToWatchWithFriendsPage() {
 
       <h2
         id="method-discord"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Method 2: Discord Screen Sharing (Free, Quick)
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Discord&apos;s Go Live feature lets you share your Crunchyroll browser
         tab with friends in a voice channel. It&apos;s free and fast, but
         quality is limited (often 720p) and there&apos;s no automatic playback
@@ -140,11 +140,11 @@ export default function HowToWatchWithFriendsPage() {
 
       <h2
         id="method-cr-party"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Method 3: Crunchyroll Party Extension (Free, Live Sync)
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Crunchyroll Party is a free Chrome extension that syncs playback across
         multiple browsers. Each person watches on their own Crunchyroll account
         in full quality. It includes basic text chat but lacks async features,
@@ -153,11 +153,11 @@ export default function HowToWatchWithFriendsPage() {
 
       <h2
         id="which-method"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Which Method Should You Choose?
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li><strong>For async groups across time zones:</strong> AniDachi</li>
         <li><strong>For free one-off sessions:</strong> Discord screen sharing</li>
         <li><strong>For free live sync:</strong> Crunchyroll Party</li>
@@ -165,11 +165,11 @@ export default function HowToWatchWithFriendsPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/watch-crunchyroll-together" className="hover:underline">
             Watch Crunchyroll Together (Pillar Guide)

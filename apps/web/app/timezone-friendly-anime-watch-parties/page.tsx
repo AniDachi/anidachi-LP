@@ -105,17 +105,17 @@ export default function TimezoneFriendlyAnimeWatchPartiesPage() {
         headings={tocHeadings}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           Anime Watch Parties Across Time Zones — The Async Guide
         </h1>
 
         <h2
           id="answer"
-          className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
         >
           Short Answer
         </h2>
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             The best way to watch anime with friends or a partner across
             time zones is async mode in AniDachi — each person watches when
@@ -128,16 +128,16 @@ export default function TimezoneFriendlyAnimeWatchPartiesPage() {
 
         <h2
           id="the-real-problem"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           The Real Problem with Live Watch Parties Across Time Zones
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Live watch parties require everyone online at exactly the same
           moment. For groups separated by 5+ hours, this creates a cascading
           failure:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             <strong>The scheduling problem.</strong> Finding a time when
             one person is not at work, asleep, or in a different country
@@ -158,28 +158,28 @@ export default function TimezoneFriendlyAnimeWatchPartiesPage() {
             spoiler.
           </li>
         </ul>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           Async watching solves all three by decoupling the emotional
           experience from the physical clock.
         </p>
 
         <h2
           id="what-async-means"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           What &quot;Async Watching&quot; Actually Means
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Async (asynchronous) watching means that participants do not need
           to watch at the same time. Instead, each person:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Watches each episode at a time that works for their schedule.</li>
           <li>Marks the episode as done inside the shared watchroom.</li>
           <li>Leaves reactions — timestamped to the exact moments that stood out.</li>
           <li>Reads other people&apos;s reactions only after finishing that same episode.</li>
         </ul>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           The result is that everyone is always in the same emotional
           position relative to the series — even if they watched episode 4
           on different days. The shared experience is not the simultaneous
@@ -189,14 +189,14 @@ export default function TimezoneFriendlyAnimeWatchPartiesPage() {
 
         <h2
           id="how-anidachi-async-works"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           How AniDachi&apos;s Async Mode Works, Step by Step
         </h2>
-        <ol className="space-y-4 text-gray-700 mb-8">
+        <ol className="space-y-4 text-foreground/80 mb-8">
           {howToSteps.map((step, i) => (
             <li key={step.name} className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex items-center justify-center">
+              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-orange/15 text-brand-orange text-sm font-bold flex items-center justify-center">
                 {i + 1}
               </span>
               <span>
@@ -208,15 +208,15 @@ export default function TimezoneFriendlyAnimeWatchPartiesPage() {
 
         <h2
           id="spoiler-management"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           How Spoilers Are Handled
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Spoiler management is the core engineering challenge of async
           watching. AniDachi solves it at the episode level:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li>
             Every reaction is tagged to the episode in which it was left.
           </li>
@@ -234,7 +234,7 @@ export default function TimezoneFriendlyAnimeWatchPartiesPage() {
             seeing everything in a flat timeline.
           </li>
         </ul>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           This means you can be anywhere in the series relative to your
           friends and leave reactions freely without risking spoiling them.
           The system handles the access control for you.
@@ -242,22 +242,22 @@ export default function TimezoneFriendlyAnimeWatchPartiesPage() {
 
         <h2
           id="real-example"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Real Example: Three Continents, One Series
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Here is what async watching looks like for a friend group spread
           across time zones — say, one person in New York, one in London,
           one in Tokyo:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li><strong>Monday:</strong> Tokyo finishes episode 3 during their commute. They leave 4 reactions in the watchroom.</li>
           <li><strong>Tuesday:</strong> London watches episodes 3 and 4 after work. They see Tokyo&apos;s reactions on episode 3 and leave their own on episode 4.</li>
           <li><strong>Wednesday:</strong> New York catches up on both over lunch. They see all accumulated reactions for episodes 3 and 4 in order.</li>
           <li><strong>Thursday:</strong> All three are now through episode 4. Tokyo starts episode 5. The cycle continues.</li>
         </ul>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           No one coordinated. No one was spoiled. Everyone had the shared
           experience of reacting to the same moments — just not
           simultaneously.
@@ -265,32 +265,32 @@ export default function TimezoneFriendlyAnimeWatchPartiesPage() {
 
         <h2
           id="when-live-sync"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           When Live Sync Is Still Worth It
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Async is better for the week-to-week rhythm of a series. Live sync
           is worth the scheduling effort for specific high-stakes moments:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
           <li><strong>Series finales</strong> — the ending deserves a simultaneous reaction.</li>
           <li><strong>Major arc climaxes</strong> — episodes everyone knows are going to hit hard.</li>
           <li><strong>Season premieres</strong> for a show you have all been waiting for.</li>
           <li><strong>Re-watches</strong> of a series you have all finished — the stakes are already known.</li>
         </ul>
-        <p className="text-gray-700 leading-relaxed mb-8">
+        <p className="text-foreground/80 leading-relaxed mb-8">
           The sustainable pattern: async for the regular episodes, schedule
           live sync for the moments that actually demand it.
         </p>
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related
         </h2>
-        <ul className="space-y-2 text-purple-600">
+        <ul className="space-y-2 text-brand-orange">
           <li>
             <Link href="/watch-crunchyroll-together-long-distance" className="hover:underline">
               How to watch Crunchyroll together long distance

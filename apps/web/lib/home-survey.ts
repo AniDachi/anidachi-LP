@@ -61,15 +61,13 @@ export function primaryCtaLabelForSurvey(a: HomeSurveyAnswers): string {
   return "See my recommended plan";
 }
 
-export function pricingCtaLabelForTier(opts: {
+export const PRICING_CTA_LABEL = "Get early access";
+
+export function pricingCtaLabelForTier(_opts: {
   tier: CheckoutTier;
   survey: HomeSurveyAnswers;
 }): string {
-  const { tier, survey } = opts;
-  if (tier === "pro") return "Unlock host controls";
-  if (survey.segment === "Long_distance_watch") return "Start watching together";
-  if (survey.segment === "Friend_group_host") return "Start hosting watchrooms";
-  return "Start paid plan";
+  return PRICING_CTA_LABEL;
 }
 
 /**

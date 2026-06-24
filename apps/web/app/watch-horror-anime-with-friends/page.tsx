@@ -88,16 +88,16 @@ export default function WatchHorrorAnimeWithFriendsPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
         Watch Horror Anime With Friends
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           Yes, you can watch horror anime with friends using AniDachi&apos;s
           watchroom on Crunchyroll. Sync playback so everyone experiences jumps
@@ -108,11 +108,11 @@ export default function WatchHorrorAnimeWithFriendsPage() {
 
       <h2
         id="why-horror"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Why Is Horror Anime Perfect for Group Watching?
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Horror anime is engineered to be more effective with an audience.
         Tension builds across multiple episodes — the dread of Parasyte&apos;s
         parasitic reveals, the escalating kills in Another, the oppressive
@@ -120,7 +120,7 @@ export default function WatchHorrorAnimeWithFriendsPage() {
         simultaneously with friends transforms a solo shudder into a shared
         emotional event that gets discussed long after the credits roll.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Horror series also generate organic group discussion: who will die next,
         what the monster&apos;s motivation is, whether the protagonist made the
         right survival choice. AniDachi watchrooms let groups react in the moment
@@ -130,15 +130,15 @@ export default function WatchHorrorAnimeWithFriendsPage() {
 
       <h2
         id="top-picks"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Horror Anime to Watch Together — Full List
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         All {horrorAnime.length} titles below have dedicated watchroom guides
         with setup steps, pacing advice, and content notes:
       </p>
-      <ul className="grid grid-cols-2 gap-2 text-purple-600 mb-8">
+      <ul className="grid grid-cols-2 gap-2 text-brand-orange mb-8">
         {horrorAnime.map((anime) => (
           <li key={anime.slug}>
             <Link
@@ -153,29 +153,29 @@ export default function WatchHorrorAnimeWithFriendsPage() {
 
       <h2
         id="setup"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Set Up a Horror Anime Watch Party
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
-          <span className="font-medium text-gray-900">Install AniDachi.</span>{" "}
+          <span className="font-medium text-foreground">Install AniDachi.</span>{" "}
           Add the Chrome extension on every device in your watch group.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Open the series on Crunchyroll.
           </span>{" "}
           Each person streams from their own account — no screen sharing needed.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Create a watchroom and share the link.
           </span>{" "}
           Send the invite link via Discord, group chat, or email.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Agree on content comfort levels before starting.
           </span>{" "}
           Horror anime varies widely — Parasyte is body-horror sci-fi, Another
@@ -183,7 +183,7 @@ export default function WatchHorrorAnimeWithFriendsPage() {
           series that fits your group&apos;s tolerance.
         </li>
         <li>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-foreground">
             Pin your spoiler boundary.
           </span>{" "}
           Horror deaths and reveals lose all impact when spoiled — set the safe
@@ -193,16 +193,16 @@ export default function WatchHorrorAnimeWithFriendsPage() {
 
       <h2
         id="spoiler-strategy"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         How to Protect Spoilers in Horror Anime Watchrooms
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Horror spoilers destroy both tension and emotional payoffs — knowing a
         character survives removes an entire episode&apos;s suspense. Watchroom
         rules that help:
       </p>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           React to atmosphere, not outcomes — &quot;I can&apos;t watch&quot; is
           safe; &quot;don&apos;t worry they survive&quot; is a spoiler.
@@ -228,37 +228,37 @@ export default function WatchHorrorAnimeWithFriendsPage() {
         </li>
       </ul>
 
-      <p className="text-gray-700 mb-4">
+      <p className="text-foreground/80 mb-4">
         Browse more watching guides:{" "}
         <Link
           href="/watch-anime-together"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Watch anime together
         </Link>
         {" · "}
         <Link
           href="/watch-psychological-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Psychological anime
         </Link>
         {" · "}
         <Link
           href="/watch-mystery-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Mystery anime
         </Link>
         {" · "}
         <Link
           href="/watch-action-anime-with-friends"
-          className="text-purple-600 hover:underline"
+          className="text-brand-orange hover:underline"
         >
           Action anime
         </Link>
         {" · "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">Long-distance anime watching</Link>
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">Long-distance anime watching</Link>
       </p>
     </SeoPageLayout>
   );

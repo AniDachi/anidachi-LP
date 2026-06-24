@@ -104,11 +104,11 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
         faq={faq}
         headings={tocHeadings}
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to Watch Anime With Friends in Different Time Zones
         </h1>
 
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Watching anime with friends in different time zones is possible by
             ditching a single global air time and using per-person playback with
@@ -120,22 +120,22 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
 
         <h2
           id="method-anidachi"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 1: AniDachi (async-first scheduling)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Time zones punish tools that assume everyone presses play together.
           AniDachi keeps the social layer alive: you still share a watchroom, but
           each friend streams on their own schedule while chat accumulates around
           the episode list. When two people overlap online, they can still react
           live without resetting the room for the rest of the club.
         </p>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           If someone hits a billing or playback snag, send them to{" "}
           <a
             href="https://www.crunchyroll.com/help"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
             rel="noopener noreferrer"
           >
             Crunchyroll Help
@@ -143,7 +143,7 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
           . Install browsers extensions from the official{" "}
           <a
             href="https://chromewebstore.google.com/"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
             rel="noopener noreferrer"
           >
             Chrome Web Store
@@ -153,11 +153,11 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
 
         <h2
           id="method-discord"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 2: Discord (roles + threaded chat)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Discord threads help when half the server is a day ahead on a
           seasonal finale. Pin episode-specific threads so latecomers do not read
           spoilers for episode nine while they are still on episode seven. Voice
@@ -167,11 +167,11 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
 
         <h2
           id="method-schedule"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 3: Rotating live host times
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Democracy-minded clubs sometimes rotate who stays up late. That can
           work for short series, but fatigue shows up fast on twelve-episode
           cours. Treat this as a fallback when everyone insists on simultaneous
@@ -180,11 +180,11 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
 
         <h2
           id="steps-anidachi"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Step-by-step with AniDachi
         </h2>
-        <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Confirm each member can access the show in their region.</li>
           <li>Install AniDachi on Chrome for desktop viewing.</li>
           <li>Open the agreed episode on Crunchyroll and run anime detection.</li>
@@ -195,11 +195,11 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600">
+        <ul className="space-y-2 text-brand-orange">
           <li>
             <Link href="/watch-anime-together" className="hover:underline">
               Watch Anime Together

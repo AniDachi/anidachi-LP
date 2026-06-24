@@ -112,11 +112,11 @@ export default function HowToWatchAnimeLongDistancePage() {
         headings={tocHeadings}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to Watch Anime Long Distance
         </h1>
 
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Watching anime long distance is possible by streaming on each
             person&apos;s device with a shared chat layer, or by one-way screen
@@ -128,11 +128,11 @@ export default function HowToWatchAnimeLongDistancePage() {
 
         <h2
           id="method-anidachi"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 1: AniDachi (async-friendly distance watching)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Long-distance groups usually fail when one person flies through a
           cliffhanger night while another is still at work. AniDachi treats the
           watchroom as the home base: chat stays attached to the series, and you
@@ -140,11 +140,11 @@ export default function HowToWatchAnimeLongDistancePage() {
           finishes the episode. When you do align for a premiere, flip back to
           live-style watching without changing tools.
         </p>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Point partners to official{" "}
           <a
             href="https://www.crunchyroll.com/help"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
             rel="noopener noreferrer"
           >
             Crunchyroll Help
@@ -153,7 +153,7 @@ export default function HowToWatchAnimeLongDistancePage() {
           AniDachi from the{" "}
           <a
             href="https://chromewebstore.google.com/"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
             rel="noopener noreferrer"
           >
             Chrome Web Store
@@ -163,11 +163,11 @@ export default function HowToWatchAnimeLongDistancePage() {
 
         <h2
           id="method-discord"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 2: Discord (voice-first hangouts)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Discord keeps cross-country friend groups in one place. Combine a
           voice channel with either Go Live screen share or a synced extension
           everyone agrees on. Voice latency is low, but video still rides on one
@@ -176,11 +176,11 @@ export default function HowToWatchAnimeLongDistancePage() {
 
         <h2
           id="method-calendar"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 3: Shared calendar plus live sync
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Some long-distance clubs only want live premieres. Pick a weekly slot
           in Google Calendar, then use any Crunchyroll-capable sync extension for
           that window. This works when time zones still overlap for an hour, but
@@ -189,11 +189,11 @@ export default function HowToWatchAnimeLongDistancePage() {
 
         <h2
           id="steps-anidachi"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Step-by-step with AniDachi
         </h2>
-        <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Confirm everyone has access to the same Crunchyroll series.</li>
           <li>Install AniDachi in Chrome for each participant.</li>
           <li>Open episode one (or your agreed checkpoint) while signed in.</li>
@@ -204,11 +204,11 @@ export default function HowToWatchAnimeLongDistancePage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600">
+        <ul className="space-y-2 text-brand-orange">
           <li>
             <Link href="/" className="hover:underline">
               AniDachi home

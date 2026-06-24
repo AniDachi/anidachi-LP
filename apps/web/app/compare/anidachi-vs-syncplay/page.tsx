@@ -68,16 +68,16 @@ export default function AniDachiVsSyncplayPage() {
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Syncplay for anime watch parties
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           The real decision is what you are trying to sync. If your group watches anime
           on Crunchyroll, the simplest path is: everyone streams locally, and a browser
@@ -86,10 +86,10 @@ export default function AniDachiVsSyncplayPage() {
         </strong>
       </p>
 
-      <h2 id="tldr" className="text-2xl font-bold text-gray-900 mt-10 mb-3 scroll-mt-24">
+      <h2 id="tldr" className="text-2xl font-bold text-foreground mt-10 mb-3 scroll-mt-24">
         At a glance
       </h2>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>AniDachi:</strong> Crunchyroll-first watchrooms, sync, chat, and optional
         async catch-up. <strong>Syncplay:</strong> desktop sync style workflows (often for
         local playback) that don’t map cleanly onto per-user Crunchyroll accounts.
@@ -97,11 +97,11 @@ export default function AniDachiVsSyncplayPage() {
 
       <h2
         id="what-youre-syncing"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         What you are syncing
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>
           <strong>Crunchyroll group watching:</strong> everyone streams through their own
           Crunchyroll login; the tool syncs playback state and adds a room layer.
@@ -114,11 +114,11 @@ export default function AniDachiVsSyncplayPage() {
 
       <h2
         id="when-syncplay"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When Syncplay makes sense
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>You are syncing desktop playback rather than streaming in a web tab.</li>
         <li>Your group has a consistent “everyone start now” live schedule.</li>
         <li>You don’t need Crunchyroll-specific detection or per-episode progress tracking.</li>
@@ -126,20 +126,20 @@ export default function AniDachiVsSyncplayPage() {
 
       <h2
         id="when-anidachi"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         When AniDachi makes sense
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>Your anime nights happen on Crunchyroll.</li>
         <li>You want a persistent watchroom for a show (not a one-off link).</li>
         <li>Your group needs async catch-up without losing episode context.</li>
       </ul>
 
-      <h2 id="related" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/watch-crunchyroll-together" className="hover:underline">
             Watch Crunchyroll Together — complete guide

@@ -101,16 +101,16 @@ export default function OvaMeaningGlossaryPage() {
       faq={faq}
       headings={tocHeadings}
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         What Does OVA Mean in Anime? (Full Form, Examples & Watch Order)
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           OVA stands for Original Video Animation — anime that is released
           directly to home video rather than broadcast on television.
@@ -124,27 +124,27 @@ export default function OvaMeaningGlossaryPage() {
 
       <h2
         id="ova-full-form"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         OVA Full Form: What OVA Stands For
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The <strong>full form of OVA</strong> is <strong>Original Video Animation</strong> (オリジナル・ビデオ・アニメーション in Japanese). The term has been used since the early 1980s, when anime studios began releasing content directly on VHS and LaserDisc, bypassing broadcast TV entirely.
       </p>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Today, OVA episodes appear on Crunchyroll alongside the TV episodes of their parent series — usually in the episode list or a dedicated &quot;Extras&quot; section. When you see an episode labeled OVA on Crunchyroll, it means it was never broadcast on TV and was originally released as a premium home-video product.
       </p>
 
       <h2
         id="ova-vs-tv"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         OVA vs TV Anime
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The practical differences between OVAs and standard TV anime episodes:
       </p>
-      <ul className="space-y-3 text-gray-700 mb-8">
+      <ul className="space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>Runtime:</strong> TV anime episodes are typically 23–24
           minutes (with opening and ending themes). OVA episodes are often
@@ -172,11 +172,11 @@ export default function OvaMeaningGlossaryPage() {
 
       <h2
         id="famous-ovas"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Famous OVAs by Series — What Each One Is
       </h2>
-      <ul className="space-y-4 text-gray-700 mb-8">
+      <ul className="space-y-4 text-foreground/80 mb-8">
         <li>
           <strong>Haikyuu!! OVAs:</strong> The Haikyuu OVAs are bonus comedy
           and character episodes — training camp scenes, side character
@@ -198,7 +198,7 @@ export default function OvaMeaningGlossaryPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/hellsing-ultimate-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/hellsing-ultimate-with-friends" className="text-brand-orange hover:underline">
               Hellsing Ultimate OVAs
             </Link>:
           </strong>{" "}
@@ -217,14 +217,14 @@ export default function OvaMeaningGlossaryPage() {
 
       <h2
         id="types-of-ova"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Types of OVA Content
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Not all OVAs serve the same purpose. Common types:
       </p>
-      <ul className="space-y-3 text-gray-700 mb-8">
+      <ul className="space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>Side story OVAs</strong> — bonus episodes that explore
           characters or events not in the main series. Usually low narrative
@@ -249,7 +249,7 @@ export default function OvaMeaningGlossaryPage() {
           always intended as OVAs, never broadcast. Example:{" "}
           <Link
             href="/watch/hellsing-ultimate-with-friends"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
           >
             Hellsing Ultimate
           </Link>{" "}
@@ -260,14 +260,14 @@ export default function OvaMeaningGlossaryPage() {
 
       <h2
         id="watch-order"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         OVA Watch Order for Group Sessions
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The standard recommendation for group watch order with OVAs:
       </p>
-      <ol className="space-y-3 text-gray-700 mb-8 list-decimal list-inside">
+      <ol className="space-y-3 text-foreground/80 mb-8 list-decimal list-inside">
         <li>
           Check the series fandom wiki or a dedicated watch order guide for
           the chronological vs release order recommendation.
@@ -287,7 +287,7 @@ export default function OvaMeaningGlossaryPage() {
           release schedule as the episode list and watch them in release order.
         </li>
       </ol>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Most OVAs are available on Crunchyroll alongside the main series.
         AniDachi watchrooms work for any Crunchyroll content including OVA
         episodes — the watchroom tracks each title&apos;s full episode list
@@ -296,11 +296,11 @@ export default function OvaMeaningGlossaryPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/glossary/anime-filler" className="hover:underline">
             What Is Anime Filler?

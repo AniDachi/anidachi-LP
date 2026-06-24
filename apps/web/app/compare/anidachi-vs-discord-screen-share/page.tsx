@@ -72,16 +72,16 @@ export default function AnidachiVsDiscordScreenSharePage() {
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         AniDachi vs Discord screen share for anime watch parties
       </h1>
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-6">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           Discord is unbeatable for cozy voice chats; screen share is unbeatable for a
           two-minute peek. Serious weekly anime nights usually outgrow bandwidth caps
@@ -89,53 +89,53 @@ export default function AnidachiVsDiscordScreenSharePage() {
         </strong>
       </p>
 
-      <h2 id="tldr" className="text-2xl font-bold text-gray-900 mt-10 mb-3 scroll-mt-24">
+      <h2 id="tldr" className="text-2xl font-bold text-foreground mt-10 mb-3 scroll-mt-24">
         At a glance
       </h2>
-      <p className="text-gray-700 mb-8">
+      <p className="text-foreground/80 mb-8">
         <strong>Discord screen share:</strong> one stream, quickest setup, weakest
         video fidelity.{" "}
         <strong>AniDachi:</strong> every viewer opens Crunchyroll locally—higher bitrate,
         easier spoiler hygiene, optional async pacing.
       </p>
 
-      <h2 id="when-discord" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="when-discord" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         When Discord screen share is enough
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>You only need informal demos before someone subscribes.</li>
         <li>Someone has fiber upload headroom and the room tolerates occasional lag.</li>
         <li>Everyone already lives inside the same Discord server nightly.</li>
       </ul>
 
-      <h2 id="when-anidachi" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="when-anidachi" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         When AniDachi earns the upgrade
       </h2>
-      <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-8">
+      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
         <li>Chat wants frame-accurate reactions without shouting “pause.”</li>
         <li>Half the group watches next-day asynchronously while others stay live.</li>
         <li>You want episode-scoped chats without pinning endless Discord threads.</li>
       </ul>
 
-      <h2 id="migration" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="migration" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Migration path
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-8">
+      <p className="text-foreground/80 leading-relaxed mb-8">
         Keep Discord for VOIP, migrate video to synced tabs, and follow{" "}
-        <Link href="/guides/how-to-fix-watch-party-audio-delay" className="text-purple-600 hover:underline">
+        <Link href="/guides/how-to-fix-watch-party-audio-delay" className="text-brand-orange hover:underline">
           watch party delay troubleshooting
         </Link>{" "}
         if timing feels weird the first session. Pricing lives on{" "}
-        <Link href="/#pricing" className="text-purple-600 font-medium hover:underline">
+        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
           the homepage
         </Link>
         .
       </p>
 
-      <h2 id="related" className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/guides/how-to-watch-anime-with-friends-on-discord" className="hover:underline">
             How to watch anime with friends on Discord

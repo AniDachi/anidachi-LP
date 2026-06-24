@@ -373,7 +373,7 @@ export function PublishClient() {
 
   if (loading) {
     return (
-      <Card className="border-teal-100 bg-white shadow-sm">
+      <Card className="border-teal-100 bg-background shadow-sm">
         <CardContent className="pt-6 flex items-center gap-2 text-stone-600">
           <Loader2 className="h-4 w-4 animate-spin text-teal-600" />
           <span>Checking connections…</span>
@@ -384,7 +384,7 @@ export function PublishClient() {
 
   if (totalAccounts === 0) {
     return (
-      <Card className="border-teal-100 bg-white shadow-sm">
+      <Card className="border-teal-100 bg-background shadow-sm">
         <CardContent className="pt-6">
           <p className="text-stone-600 mb-4">
             Connect at least one Instagram or TikTok account to publish content.
@@ -479,7 +479,7 @@ export function PublishClient() {
         </button>
       </div>
 
-      <Card className="border-teal-100 bg-white shadow-sm">
+      <Card className="border-teal-100 bg-background shadow-sm">
         <CardHeader>
           <CardTitle className="text-teal-800">
             {tab === "reel" ? "Publish a Reel / Video" : "Publish a Carousel"}

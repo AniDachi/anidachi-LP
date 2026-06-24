@@ -89,7 +89,7 @@ function contactStatusBadgeClass(status: string): string {
     case "booked":
       return "bg-indigo-100 text-indigo-900";
     case "closed":
-      return "bg-gray-100 text-gray-800";
+      return "bg-brand-surface text-foreground";
     case "dnc":
       return "bg-red-100 text-red-900";
     default:
@@ -150,7 +150,7 @@ function LogoutButton() {
     <Button
       type="button"
       variant="outline"
-      className="border-purple-300 text-purple-900 hover:bg-purple-100"
+      className="border-purple-300 text-purple-900 hover:bg-brand-orange/25"
       onClick={async () => {
         await fetch("/api/kreatli-crm/logout", { method: "POST" });
         router.push("/kreatli-email-crm/login");
@@ -674,11 +674,11 @@ export function CrmClient({
             Kreatli Email CRM
           </h1>
           {activeTab === "contacts" ? (
-            <p className="text-sm text-purple-800/80">
+            <p className="text-sm text-brand-orange/80">
               Data:{" "}
-              <code className="rounded bg-purple-100/80 px-1">crm-data/</code> ·
+              <code className="rounded bg-brand-orange/15/80 px-1">crm-data/</code> ·
               CLI:{" "}
-              <code className="rounded bg-purple-100/80 px-1">
+              <code className="rounded bg-brand-orange/15/80 px-1">
                 npm run crm -- doctor
               </code>
             </p>
@@ -693,7 +693,7 @@ export function CrmClient({
             <Button
               type="button"
               variant="secondary"
-              className="border border-purple-200 bg-white text-purple-900 hover:bg-purple-50"
+              className="border border-brand-orange/30 bg-background text-purple-900 hover:bg-brand-orange/20"
               onClick={() => runExport()}
             >
               Export CSV
@@ -703,7 +703,7 @@ export function CrmClient({
               <Button
                 type="button"
                 variant="secondary"
-                className="border border-violet-200 bg-white text-violet-900 hover:bg-violet-50"
+                className="border border-violet-200 bg-background text-violet-900 hover:bg-violet-50"
                 onClick={() => router.refresh()}
               >
                 Refresh
@@ -711,7 +711,7 @@ export function CrmClient({
               <Button
                 type="button"
                 variant="secondary"
-                className="border border-violet-200 bg-white text-violet-900 hover:bg-violet-50"
+                className="border border-violet-200 bg-background text-violet-900 hover:bg-violet-50"
                 onClick={() => copyFilteredSurveyLeadsTsv()}
               >
                 Copy as TSV
@@ -719,7 +719,7 @@ export function CrmClient({
               <Button
                 type="button"
                 variant="secondary"
-                className="border border-violet-200 bg-white text-violet-900 hover:bg-violet-50"
+                className="border border-violet-200 bg-background text-violet-900 hover:bg-violet-50"
                 onClick={() => runExportSurveyLeads()}
               >
                 Export survey leads
@@ -732,13 +732,13 @@ export function CrmClient({
 
       {gmailFlash ? (
         <div
-          className="mb-4 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-sm text-purple-900"
+          className="mb-4 rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-4 py-2 text-sm text-purple-900"
           role="status"
         >
           {gmailFlash}
           <button
             type="button"
-            className="ml-3 text-purple-600 underline"
+            className="ml-3 text-brand-orange underline"
             onClick={() => setGmailFlash(null)}
           >
             Dismiss
@@ -754,7 +754,7 @@ export function CrmClient({
       ) : null}
 
       <div
-        className="mb-8 flex flex-wrap gap-1 rounded-xl border border-purple-200/80 bg-purple-50/60 p-1"
+        className="mb-8 flex flex-wrap gap-1 rounded-xl border border-brand-orange/30/80 bg-brand-orange/10/60 p-1"
         role="tablist"
         aria-label="CRM sections"
       >
@@ -764,8 +764,8 @@ export function CrmClient({
           aria-selected={activeTab === "contacts"}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === "contacts"
-              ? "bg-white text-purple-950 shadow-sm"
-              : "text-purple-800 hover:bg-white/60"
+              ? "bg-background text-purple-950 shadow-sm"
+              : "text-brand-orange hover:bg-white/60"
           }`}
           onClick={() => {
             setActiveTab("contacts");
@@ -780,8 +780,8 @@ export function CrmClient({
           aria-selected={activeTab === "survey_leads"}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === "survey_leads"
-              ? "bg-white text-purple-950 shadow-sm"
-              : "text-purple-800 hover:bg-white/60"
+              ? "bg-background text-purple-950 shadow-sm"
+              : "text-brand-orange hover:bg-white/60"
           }`}
           onClick={() => {
             setActiveTab("survey_leads");
@@ -816,9 +816,9 @@ export function CrmClient({
               >
                 <span className="font-medium text-purple-950">{c.email}</span>
                 {c.company ? (
-                  <span className="text-purple-800/80"> — {c.company}</span>
+                  <span className="text-brand-orange/80"> — {c.company}</span>
                 ) : null}
-                <span className="text-purple-700">
+                <span className="text-brand-orange">
                   {" "}
                   · next {c.next_action_date}
                 </span>
@@ -842,7 +842,7 @@ export function CrmClient({
           <input
             type="file"
             accept=".csv,.txt,.tsv,text/csv"
-            className="text-sm text-emerald-950 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-700 file:px-3 file:py-1.5 file:text-sm file:text-white hover:file:bg-emerald-800"
+            className="text-sm text-emerald-950 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-700 file:px-3 file:py-1.5 file:text-sm file:text-foreground hover:file:bg-emerald-800"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (!f) return;
@@ -859,7 +859,7 @@ export function CrmClient({
             onChange={(e) => setImportText(e.target.value)}
             rows={6}
             placeholder="email,company,first name&#10;a@b.co,Acme,Ada"
-            className="w-full rounded-md border border-emerald-200 bg-white px-3 py-2 font-mono text-sm text-purple-950 outline-none focus:ring-2 focus:ring-emerald-500/30"
+            className="w-full rounded-md border border-emerald-200 bg-background px-3 py-2 font-mono text-sm text-purple-950 outline-none focus:ring-2 focus:ring-emerald-500/30"
           />
           <input type="hidden" name="mode" value={importMode} />
           <div className="flex flex-wrap items-center gap-3">
@@ -881,7 +881,7 @@ export function CrmClient({
             <Button
               type="button"
               variant="secondary"
-              className="bg-white"
+              className="bg-background"
               disabled={importBusy}
               onClick={() => runPreview()}
             >
@@ -908,7 +908,7 @@ export function CrmClient({
           </p>
         ) : null}
         {importPreview && importPreview.length > 0 ? (
-          <div className="mt-3 max-h-48 overflow-auto rounded-md border border-emerald-200 bg-white text-xs">
+          <div className="mt-3 max-h-48 overflow-auto rounded-md border border-emerald-200 bg-background text-xs">
             <table className="w-full border-collapse text-left">
               <thead className="sticky top-0 bg-emerald-100/90">
                 <tr>
@@ -922,13 +922,13 @@ export function CrmClient({
                   <tr key={i} className="border-t border-emerald-100">
                     <td className="p-2 font-medium">{row.action}</td>
                     <td className="p-2">{row.email}</td>
-                    <td className="p-2 text-purple-800">{row.detail}</td>
+                    <td className="p-2 text-brand-orange">{row.detail}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {importPreview.length > 200 ? (
-              <p className="p-2 text-purple-600">
+              <p className="p-2 text-brand-orange">
                 … truncated to 200 rows in preview
               </p>
             ) : null}
@@ -936,7 +936,7 @@ export function CrmClient({
         ) : null}
       </section>
 
-      <section className="mb-10 rounded-xl border border-purple-200/80 bg-white/90 p-6 shadow-md backdrop-blur">
+      <section className="mb-10 rounded-xl border border-brand-orange/30/80 bg-white/90 p-6 shadow-md backdrop-blur">
         <h2 className="mb-4 text-lg font-semibold text-purple-950">
           Add contact
         </h2>
@@ -949,7 +949,7 @@ export function CrmClient({
               name="email"
               type="email"
               required
-              className="w-full rounded-md border border-purple-200 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
             />
           </div>
           <div>
@@ -959,7 +959,7 @@ export function CrmClient({
             <input
               name="company"
               type="text"
-              className="w-full rounded-md border border-purple-200 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
             />
           </div>
           <div>
@@ -969,7 +969,7 @@ export function CrmClient({
             <input
               name="first_name"
               type="text"
-              className="w-full rounded-md border border-purple-200 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
             />
           </div>
           <div className="sm:col-span-2">
@@ -980,7 +980,7 @@ export function CrmClient({
               name="segments"
               type="text"
               placeholder="e.g. Austin video, warm intro"
-              className="w-full rounded-md border border-purple-200 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
             />
           </div>
           <div className="sm:col-span-2">
@@ -990,7 +990,7 @@ export function CrmClient({
             <textarea
               name="notes"
               rows={2}
-              className="w-full rounded-md border border-purple-200 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
             />
           </div>
           <div>
@@ -1000,14 +1000,14 @@ export function CrmClient({
             <input
               name="next_action_date"
               type="date"
-              className="w-full rounded-md border border-purple-200 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
+              className="w-full rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25"
             />
           </div>
           <div className="flex items-end sm:col-span-2">
             <Button
               type="submit"
               disabled={addPending}
-              className="bg-purple-700 hover:bg-purple-800"
+              className="bg-brand-orange hover:bg-purple-800"
             >
               {addPending ? "Adding…" : "Add contact"}
             </Button>
@@ -1035,13 +1035,13 @@ export function CrmClient({
               value={segmentFilter}
               onChange={(e) => setSegmentFilter(e.target.value)}
               placeholder="e.g. video"
-              className="rounded-md border border-purple-200 px-3 py-2 text-sm text-purple-950 outline-none focus:ring-2 focus:ring-purple-500/25"
+              className="rounded-md border border-brand-orange/30 px-3 py-2 text-sm text-purple-950 outline-none focus:ring-2 focus:ring-purple-500/25"
             />
           </div>
         </div>
         <div className="space-y-6">
           {filtered.length === 0 ? (
-            <p className="text-sm text-purple-800/80">
+            <p className="text-sm text-brand-orange/80">
               No contacts match. Clear the filter or import above.
             </p>
           ) : (
@@ -1412,7 +1412,7 @@ function SurveyLeadTableRow({
   gmailConnected: boolean;
 }) {
   const urgency = surveyRowUrgencyClass(tags.timing);
-  const rowBg = expanded ? "bg-violet-50/60" : "bg-white";
+  const rowBg = expanded ? "bg-violet-50/60" : "bg-background";
 
   return (
     <>
@@ -1636,17 +1636,17 @@ function ContactCard({
       className={
         embedded
           ? "border-t border-violet-100 pt-4"
-          : "rounded-xl border border-purple-200/80 bg-white/95 p-5 shadow-sm"
+          : "rounded-xl border border-brand-orange/30/80 bg-white/95 p-5 shadow-sm"
       }
     >
       {!embedded ? (
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <h3 className="font-semibold text-purple-950">{c.email}</h3>
-          <p className="text-sm text-purple-800/85">
+          <p className="text-sm text-brand-orange/85">
             {[c.first_name, c.company].filter(Boolean).join(" · ") || "—"}
             {c.segments.length > 0 ? (
-              <span className="text-purple-600">
+              <span className="text-brand-orange">
                 {" "}
                 · {c.segments.join(", ")}
               </span>
@@ -1670,7 +1670,7 @@ function ContactCard({
             <select
               value={tpl}
               onChange={(e) => setTpl(e.target.value)}
-              className="rounded-md border border-purple-200 px-2 py-1.5 text-sm text-purple-950"
+              className="rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-purple-950"
             >
               {templateSlugs.map((s) => (
                 <option key={s} value={s}>
@@ -1688,7 +1688,7 @@ function ContactCard({
             Copy rendered
           </Button>
           {copyMsg ? (
-            <span className="text-xs text-purple-700">{copyMsg}</span>
+            <span className="text-xs text-brand-orange">{copyMsg}</span>
           ) : null}
         </div>
       ) : null}
@@ -1706,7 +1706,7 @@ function ContactCard({
               type="text"
               value={sendSubject}
               onChange={(e) => setSendSubject(e.target.value)}
-              className="w-full rounded-md border border-sky-200 bg-white px-2 py-1.5 text-sm text-purple-950"
+              className="w-full rounded-md border border-sky-200 bg-background px-2 py-1.5 text-sm text-purple-950"
               placeholder="Subject line"
             />
           </div>
@@ -1718,7 +1718,7 @@ function ContactCard({
               value={sendBody}
               onChange={(e) => setSendBody(e.target.value)}
               rows={8}
-              className="w-full rounded-md border border-sky-200 bg-white px-2 py-1.5 font-mono text-sm text-purple-950"
+              className="w-full rounded-md border border-sky-200 bg-background px-2 py-1.5 font-mono text-sm text-purple-950"
               placeholder="Email body…"
             />
           </div>
@@ -1786,7 +1786,7 @@ function ContactCard({
           <select
             name="status"
             defaultValue={c.status}
-            className="w-full rounded-md border border-purple-200 px-2 py-1.5 text-sm text-purple-950"
+            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-purple-950"
           >
             <option value="active">active</option>
             <option value="replied">replied</option>
@@ -1803,7 +1803,7 @@ function ContactCard({
             name="next_action_date"
             type="date"
             defaultValue={c.next_action_date ?? ""}
-            className="w-full rounded-md border border-purple-200 px-2 py-1.5 text-sm text-purple-950"
+            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-purple-950"
           />
         </div>
         <div className="sm:col-span-2">
@@ -1814,7 +1814,7 @@ function ContactCard({
             name="notes"
             rows={2}
             defaultValue={c.notes}
-            className="w-full rounded-md border border-purple-200 px-2 py-1.5 text-sm text-purple-950"
+            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-purple-950"
           />
         </div>
         <div className="sm:col-span-2 flex flex-wrap gap-2">
@@ -1822,7 +1822,7 @@ function ContactCard({
             type="submit"
             size="sm"
             disabled={updPending}
-            className="bg-purple-700 hover:bg-purple-800"
+            className="bg-brand-orange hover:bg-purple-800"
           >
             {updPending ? "Saving…" : "Save"}
           </Button>
@@ -1845,7 +1845,7 @@ function ContactCard({
             name="summary"
             type="text"
             placeholder="e.g. 1st touch sent — intro Kreatli"
-            className="w-full rounded-md border border-purple-200 px-2 py-1.5 text-sm text-purple-950"
+            className="w-full rounded-md border border-brand-orange/30 px-2 py-1.5 text-sm text-purple-950"
           />
         </div>
         <Button
@@ -1863,7 +1863,7 @@ function ContactCard({
 
       {touches.length > 0 ? (
         <div className="mb-4 border-t border-purple-100 pt-3">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-purple-700">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-brand-orange">
             Recent touches
           </p>
           <ul className="max-h-32 space-y-1 overflow-y-auto text-xs text-purple-900">

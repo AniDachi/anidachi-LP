@@ -103,11 +103,11 @@ export default function BestClassicAnimeWithFriendsPage() {
       conversionTemplate="listicle"
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Classic Anime to Watch With Friends (2026)
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Classic anime — roughly, series and films from 1985 to 2005 — are
           uniquely well-suited to group watching because they reward debate in
@@ -123,21 +123,21 @@ export default function BestClassicAnimeWithFriendsPage() {
       {/* ── SECTION 1: GOLDEN AGE TV ─────────────────────── */}
       <h2
         id="golden-age-series"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Golden Age TV Series (90s–2000s)
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Series that define the medium and remain essential viewing for any
         serious group — whether experiencing them for the first time or
         returning after years away.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/cowboy-bebop-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Cowboy Bebop
             </Link>
@@ -155,7 +155,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/neon-genesis-evangelion-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Neon Genesis Evangelion
             </Link>
@@ -171,7 +171,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/ghost-in-the-shell-stand-alone-complex-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Ghost in the Shell: Stand Alone Complex
             </Link>
@@ -188,7 +188,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/sailor-moon-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Sailor Moon
             </Link>
@@ -205,7 +205,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/samurai-champloo-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Samurai Champloo
             </Link>
@@ -221,7 +221,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/fullmetal-alchemist-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Fullmetal Alchemist (2003)
             </Link>
@@ -237,7 +237,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/great-teacher-onizuka-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Great Teacher Onizuka
             </Link>
@@ -254,7 +254,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/inuyasha-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Inuyasha
             </Link>
@@ -271,20 +271,20 @@ export default function BestClassicAnimeWithFriendsPage() {
       {/* ── SECTION 2: CLASSIC FILMS ─────────────────────── */}
       <h2
         id="classic-films"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Classic Anime Films
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         The best anime films for a group movie night — complete experiences that
         work without series context and reward post-watch conversation.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/akira-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Akira
             </Link>
@@ -301,7 +301,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/my-neighbor-totoro-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               My Neighbor Totoro
             </Link>
@@ -318,7 +318,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/spirited-away-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Spirited Away
             </Link>
@@ -334,7 +334,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/howls-moving-castle-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Howl&apos;s Moving Castle
             </Link>
@@ -349,7 +349,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/princess-mononoke-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Princess Mononoke
             </Link>
@@ -364,7 +364,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/perfect-blue-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Perfect Blue
             </Link>
@@ -389,11 +389,11 @@ export default function BestClassicAnimeWithFriendsPage() {
       {/* ── SECTION 3: REWATCH TIPS ──────────────────────── */}
       <h2
         id="rewatch-tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Tips for a Classic Anime Rewatch Party
       </h2>
-      <ul className="space-y-3 text-gray-700 mb-10">
+      <ul className="space-y-3 text-foreground/80 mb-10">
         <li>
           <strong>Mix first-timers with rewatchers.</strong> Classic anime
           rewards second viewings with completely different things — the person
@@ -420,7 +420,7 @@ export default function BestClassicAnimeWithFriendsPage() {
           <strong>Sync classic anime just like modern anime.</strong> Older
           series are on Crunchyroll too. AniDachi watchrooms work for any
           Crunchyroll title — no special setup for classic series.{" "}
-          <Link href="/#pricing" className="text-purple-600 hover:underline">
+          <Link href="/#pricing" className="text-brand-orange hover:underline">
             Create a classic anime watchroom here.
           </Link>
         </li>
@@ -429,11 +429,11 @@ export default function BestClassicAnimeWithFriendsPage() {
       {/* ── RELATED ─────────────────────────────────────── */}
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
             href="/guides/best-anime-movies-to-watch-with-friends"

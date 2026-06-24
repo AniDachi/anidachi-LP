@@ -18,12 +18,16 @@ export function FAQSection({
   defaultOpenIndexes?: number[];
 }) {
   return (
-    <section id="faq" className="py-24 bg-white">
-      <div className="container mx-auto px-4 max-w-3xl">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">
-          {title}
-        </h2>
-        <div className="space-y-4">
+    <section id="faq" className="bg-background py-16 lg:py-20">
+      <div className="container mx-auto max-w-3xl px-4">
+        <div className="mb-8 text-center">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide text-brand-orange">
+            FAQ
+          </div>
+          <h2 className="text-3xl font-bold text-foreground md:text-4xl">{title}</h2>
+          <div className="mx-auto mt-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
+        </div>
+        <div className="space-y-3">
           {questions.map((q, i) => (
             <FAQAccordion
               key={i}
@@ -46,23 +50,25 @@ function FAQAccordion({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-gray-200 rounded-lg">
+    <div className="overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
       <button
-        className="flex w-full items-center justify-between px-6 py-4 text-left text-gray-900 font-medium hover:bg-gray-50 transition-colors"
+        className={`group flex w-full items-center justify-between px-5 py-3.5 text-left font-medium text-foreground transition-colors hover:bg-brand-orange hover:text-primary-foreground ${
+          open ? "rounded-t-lg" : "rounded-lg"
+        }`}
         onClick={() => setOpen(!open)}
         aria-expanded={open}
       >
         <span>{question}</span>
         <ChevronDown
-          className={`h-5 w-5 flex-shrink-0 text-gray-500 transition-transform duration-200 ${
+          className={`h-5 w-5 flex-shrink-0 text-brand-orange transition-all duration-200 group-hover:text-primary-foreground ${
             open ? "rotate-180" : ""
           }`}
           aria-hidden="true"
         />
       </button>
       {open && (
-        <div className="px-6 pb-4 text-gray-600 leading-relaxed">
-          {answer}
+        <div className="border-t border-brand-border px-5 pb-3.5 pt-0 text-sm leading-relaxed text-foreground/70">
+          <div className="pt-3">{answer}</div>
         </div>
       )}
     </div>

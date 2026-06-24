@@ -2,16 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Chrome, MessageCircle, Play, Rocket, Users } from "lucide-react";
+import { ArrowDown, MessageCircle, Play, Rocket, Users } from "lucide-react";
 import { trackEvent } from "@/lib/gtag";
 import { trackConversion } from "@/lib/conversion-events";
+import { PRICING_CTA_LABEL } from "@/lib/home-survey";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
-function formatWaitlistPill(count: number | null): string {
-  if (count === null) return "Launching soon · join the waitlist";
-  if (count === 0) return "Launching soon · be the first on the waitlist";
-  const label = count === 1 ? "person" : "people";
-  return `Launching soon · ${count.toLocaleString()} ${label} already on the waitlist`;
+function WaitlistPillContent({ count }: { count: number | null }) {
+  if (count === null) {
+    return <>Launching soon · join the waitlist</>;
+  }
+  if (count === 0) {
+    return <>Launching soon · be first on the waitlist</>;
+  }
+  return (
+    <>
+      Launching soon ·{" "}
+      <span className="font-semibold text-brand-orange">
+        {count.toLocaleString()}
+      </span>{" "}
+      on the waitlist
+    </>
+  );
 }
 
 export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: number | null }) {
@@ -50,13 +62,17 @@ export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: n
 
   return (
     <section className="relative overflow-hidden bg-background text-foreground">
-      {/* Radial orange glow — the energy core */}
+      {/* Radial orange glow — subtle accent */}
       <div className="pointer-events-none absolute inset-0 motion-reduce:hidden">
-        <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-[--brand-orange]/10 blur-[120px]" />
-        <div className="absolute top-20 left-10 w-20 h-20 bg-[--brand-orange]/15 rounded-full blur-xl motion-reduce:animate-none animate-pulse" />
-        <div className="absolute top-40 right-20 w-32 h-32 bg-[--brand-orange-bright]/10 rounded-full blur-xl motion-reduce:animate-none animate-pulse delay-1000" />
-        <div className="absolute bottom-20 left-1/3 w-24 h-24 bg-[--brand-orange-deep]/15 rounded-full blur-xl motion-reduce:animate-none animate-pulse delay-500" />
+        <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[500px] w-[700px] rounded-full bg-brand-orange/8 blur-[120px]" />
+        <div className="absolute right-16 top-32 h-24 w-24 rounded-full bg-brand-orange/10 blur-2xl motion-reduce:animate-none" />
       </div>
+
+      {/* Subtle grain texture */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.025] noise-overlay mix-blend-overlay"
+        aria-hidden
+      />
 
       {/* Subtle grid overlay for the futuristic feel */}
       <div
@@ -68,30 +84,30 @@ export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: n
         }}
       />
 
-      <div className="relative container mx-auto px-4 py-24 lg:py-32">
-        <div className="max-w-4xl mx-auto text-center">
+      <div className="relative container mx-auto px-4 py-16 lg:py-20">
+        <div className="mx-auto max-w-4xl text-center">
           {/* Pre-launch status pill */}
-          <div className="inline-flex items-center gap-2 bg-[--brand-surface] backdrop-blur-sm border border-[--brand-border] text-foreground/80 px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-4 py-2 text-sm font-medium text-foreground/80 backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 motion-reduce:animate-none" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-orange opacity-60 motion-reduce:animate-none" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-orange" />
             </span>
-            {formatWaitlistPill(waitlistCount)}
+            <WaitlistPillContent count={waitlistCount} />
           </div>
 
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-[--brand-orange-bright] bg-clip-text text-transparent">
-            Your friends are watching without you. Fix that.
+          <h1 className="mb-4 text-4xl font-bold text-foreground md:text-6xl lg:text-7xl">
+            Your friends are watching without you.{" "}
+            <span className="text-brand-orange">Fix that.</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-4 text-foreground/70 max-w-3xl mx-auto leading-relaxed">
-            Sync with your crew across any timezone. Create a watchroom, share
-            the link, react to every plot twist — even when you don&apos;t watch
-            at the same time.
+          <p className="mx-auto mb-6 max-w-2xl text-lg text-foreground/70 md:text-xl">
+            Watch anime with friends on Crunchyroll — synced, in chat, across
+            time zones.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+          <div className="mb-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
-              size="touch"
-              className="bg-[--brand-orange] text-[--primary-foreground] hover:bg-[--brand-orange-deep] w-full sm:w-auto px-8 text-lg font-semibold glow-orange hover:glow-orange-lg transition-all duration-300 md:hover:scale-105"
+              size="lg"
+              className="w-full bg-brand-orange px-8 text-base font-semibold text-primary-foreground glow-orange transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange-lg sm:w-auto"
               onClick={() => {
                 trackConversion("cta_click", {
                   page_path: "/",
@@ -109,13 +125,13 @@ export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: n
               }}
             >
               <Rocket className="h-5 w-5" aria-hidden="true" />
-              Get early access
+              {PRICING_CTA_LABEL}
             </Button>
             <Button
               asChild
               size="lg"
               variant="ghost"
-              className="text-foreground/70 hover:text-foreground hover:bg-[--brand-surface] px-8 py-4 text-lg font-semibold bg-transparent transition-all duration-300"
+              className="w-full border border-brand-border bg-transparent px-8 text-base font-semibold text-foreground/70 transition-all duration-300 hover:bg-brand-orange hover:text-primary-foreground sm:w-auto"
             >
               <a
                 href="#how-it-works"
@@ -123,28 +139,31 @@ export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: n
                   trackEvent("extension_clicked", { cta: "hero_extension" })
                 }
               >
-                <Chrome className="h-5 w-5" aria-hidden="true" />
+                <ArrowDown className="h-5 w-5" aria-hidden="true" />
                 See How It Works
               </a>
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-            <div className="flex flex-col items-center gap-2 p-4 bg-[--brand-surface] border border-[--brand-border] rounded-lg">
-              <Users className="h-6 w-6 text-[--brand-orange]" aria-hidden="true" />
-              <span className="text-sm font-medium">Crunchyroll Detection</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-[--brand-surface] border border-[--brand-border] rounded-lg">
-              <MessageCircle
-                className="h-6 w-6 text-[--brand-orange]"
-                aria-hidden="true"
-              />
-              <span className="text-sm font-medium">Real-time Chat</span>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-[--brand-surface] border border-[--brand-border] rounded-lg">
-              <Play className="h-6 w-6 text-[--brand-orange]" aria-hidden="true" />
-              <span className="text-sm font-medium">Perfect Sync</span>
-            </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-foreground/50">
+            <span className="inline-flex items-center gap-1.5">
+              <Users className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
+              Crunchyroll
+            </span>
+            <span className="text-brand-border/80" aria-hidden="true">
+              ·
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MessageCircle className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
+              Real-time chat
+            </span>
+            <span className="text-brand-border/80" aria-hidden="true">
+              ·
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Play className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
+              Perfect sync
+            </span>
           </div>
         </div>
       </div>

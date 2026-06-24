@@ -88,10 +88,10 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
       conversionTemplate="listicle"
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         14 best isekai anime to watch with friends in 2026
       </h1>
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Isekai is the most group-watch-friendly genre — the protagonist is always
           discovering the world for the first time, so newcomers and veterans
@@ -104,18 +104,18 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
       {/* ── SECTION 1 ───────────────────────────────────── */}
       <h2
         id="binge-ready"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Short and binge-ready isekai
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Five picks that finish in one or two weekends — low barrier, high laughs,
         ideal if your group hasn&apos;t committed to a long series before.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/konosuba-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/konosuba-with-friends" className="text-brand-orange hover:underline">
               KonoSuba: God&apos;s Blessing on This Wonderful World!
             </Link>
           </strong>{" "}
@@ -126,7 +126,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/no-game-no-life-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/no-game-no-life-with-friends" className="text-brand-orange hover:underline">
               No Game, No Life
             </Link>
           </strong>{" "}
@@ -137,7 +137,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/the-devil-is-a-part-timer-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/the-devil-is-a-part-timer-with-friends" className="text-brand-orange hover:underline">
               The Devil Is a Part-Timer!
             </Link>
           </strong>{" "}
@@ -148,7 +148,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/the-eminence-in-shadow-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/the-eminence-in-shadow-with-friends" className="text-brand-orange hover:underline">
               The Eminence in Shadow
             </Link>
           </strong>{" "}
@@ -159,7 +159,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/solo-leveling-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/solo-leveling-with-friends" className="text-brand-orange hover:underline">
               Solo Leveling
             </Link>
           </strong>{" "}
@@ -173,18 +173,18 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
       {/* ── SECTION 2 ───────────────────────────────────── */}
       <h2
         id="medium-arcs"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Medium-length group picks
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         One to two seasons, arc-structured pacing — long enough to build
         attachment, short enough to finish before the group loses momentum.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/sword-art-online-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/sword-art-online-with-friends" className="text-brand-orange hover:underline">
               Sword Art Online
             </Link>
           </strong>{" "}
@@ -195,7 +195,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/rising-of-the-shield-hero-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/rising-of-the-shield-hero-with-friends" className="text-brand-orange hover:underline">
               The Rising of the Shield Hero
             </Link>
           </strong>{" "}
@@ -206,7 +206,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/that-time-i-got-reincarnated-as-a-slime-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/that-time-i-got-reincarnated-as-a-slime-with-friends" className="text-brand-orange hover:underline">
               That Time I Got Reincarnated as a Slime
             </Link>
           </strong>{" "}
@@ -217,7 +217,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/tower-of-god-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/tower-of-god-with-friends" className="text-brand-orange hover:underline">
               Tower of God
             </Link>
           </strong>{" "}
@@ -227,7 +227,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/danmachi-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/danmachi-with-friends" className="text-brand-orange hover:underline">
               Is It Wrong to Try to Pick Up Girls in a Dungeon?
             </Link>
           </strong>{" "}
@@ -240,19 +240,19 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
       {/* ── SECTION 3 ───────────────────────────────────── */}
       <h2
         id="deep-lore"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Deep-lore marathons
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         These reward a long-term watchroom with genuine world-building payoffs.
         Set a monthly arc cadence, use AniDachi&apos;s async mode for catch-up,
         and celebrate arc finales as group milestones.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
-            <Link href="/watch/re-zero-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/re-zero-with-friends" className="text-brand-orange hover:underline">
               Re:Zero − Starting Life in Another World
             </Link>
           </strong>{" "}
@@ -264,7 +264,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/overlord-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/overlord-with-friends" className="text-brand-orange hover:underline">
               Overlord
             </Link>
           </strong>{" "}
@@ -274,7 +274,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/mushoku-tensei-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/mushoku-tensei-with-friends" className="text-brand-orange hover:underline">
               Mushoku Tensei: Jobless Reincarnation
             </Link>
           </strong>{" "}
@@ -285,7 +285,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
         </li>
         <li>
           <strong>
-            <Link href="/watch/log-horizon-with-friends" className="text-purple-600 hover:underline">
+            <Link href="/watch/log-horizon-with-friends" className="text-brand-orange hover:underline">
               Log Horizon
             </Link>
           </strong>{" "}
@@ -299,11 +299,11 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
       {/* ── RELATED ─────────────────────────────────────── */}
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link href="/guides/best-anime-to-watch-with-friends" className="hover:underline">
             Best anime to watch with friends — full list

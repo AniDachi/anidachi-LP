@@ -120,7 +120,7 @@ function Avatar({ user }: { user: PublicProfile }) {
   }
 
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500 text-sm font-bold text-white">
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-orange text-sm font-bold text-foreground">
       {initials(user.displayName)}
     </span>
   );
@@ -157,12 +157,12 @@ function PersonRow({
   user: PublicProfile;
 }) {
   return (
-    <div className="flex min-h-16 items-center justify-between gap-3 border-b border-white/10 py-3 last:border-b-0">
+    <div className="flex min-h-16 items-center justify-between gap-3 border-b border-brand-border py-3 last:border-b-0">
       <div className="flex min-w-0 items-center gap-3">
         <Avatar user={user} />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-white">{user.displayName}</p>
-          <p className="truncate text-xs text-slate-400">
+          <p className="truncate text-sm font-semibold text-foreground">{user.displayName}</p>
+          <p className="truncate text-xs text-foreground/50">
             {user.handle ? `@${user.handle}` : meta ?? "AniDachi user"}
           </p>
         </div>
@@ -191,10 +191,10 @@ function IconButton({
 }) {
   const toneClass =
     tone === "primary"
-      ? "bg-violet-500 text-white hover:bg-violet-400"
+      ? "bg-brand-orange text-foreground hover:bg-brand-orange-deep"
       : tone === "danger"
         ? "border-red-400/30 bg-red-500/10 text-red-200 hover:bg-red-500/20"
-        : "border-white/15 bg-white/10 text-slate-100 hover:bg-white/15";
+        : "border-brand-border bg-brand-surface text-foreground/90 hover:bg-brand-orange";
 
   return (
     <button
@@ -342,15 +342,15 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
 
   return (
     <div className="flex w-full flex-col gap-6">
-        <header className="flex flex-col justify-between gap-4 border-b border-white/10 pb-6 md:flex-row md:items-end">
+        <header className="flex flex-col justify-between gap-4 border-b border-brand-border pb-6 md:flex-row md:items-end">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-300">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
               AniDachi
             </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
               Friends
             </h1>
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-foreground/50">
               {currentUser.displayName} · {currentUser.email}
             </p>
           </div>
@@ -377,15 +377,15 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
         ) : null}
 
         <section className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+          <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-violet-500/20 text-violet-200">
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
                   <Link2 className="h-5 w-5" aria-hidden />
                 </span>
                 <div className="min-w-0">
-                  <h2 className="text-lg font-semibold text-white">Friend invite link</h2>
-                  <p className="text-sm text-slate-400">
+                  <h2 className="text-lg font-semibold text-foreground">Friend invite link</h2>
+                  <p className="text-sm text-foreground/50">
                     Copy a private one-time link to add someone after sign-in.
                   </p>
                 </div>
@@ -402,21 +402,21 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
             </div>
           </div>
 
-          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+          <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-white">Watched together</h2>
-                <p className="mt-1 text-sm text-slate-400">
+                <h2 className="text-lg font-semibold text-foreground">Watched together</h2>
+                <p className="mt-1 text-sm text-foreground/50">
                   Add people from recent shared rooms.
                 </p>
               </div>
-              <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-slate-300">
+              <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
                 {recentPeople.length}
               </span>
             </div>
             <div className="mt-3">
               {loading ? (
-                <p className="py-4 text-sm text-slate-400">Loading...</p>
+                <p className="py-4 text-sm text-foreground/50">Loading...</p>
               ) : recentPeople.length ? (
                 recentPeople.slice(0, 5).map((person) => {
                   const statusLabel = recentStatusLabel(person.relationshipStatus);
@@ -433,7 +433,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                               tone="primary"
                             />
                           ) : statusLabel ? (
-                            <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-300">
+                            <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs font-semibold text-foreground/70">
                               {statusLabel}
                             </span>
                           ) : null}
@@ -452,23 +452,23 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                   );
                 })
               ) : (
-                <p className="py-4 text-sm text-slate-400">No shared watch history yet.</p>
+                <p className="py-4 text-sm text-foreground/50">No shared watch history yet.</p>
               )}
             </div>
           </div>
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+          <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-white">Incoming</h2>
-              <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-slate-300">
+              <h2 className="text-lg font-semibold text-foreground">Incoming</h2>
+              <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
                 {friendsData.incomingRequests.length}
               </span>
             </div>
             <div className="mt-3">
               {loading ? (
-                <p className="py-4 text-sm text-slate-400">Loading...</p>
+                <p className="py-4 text-sm text-foreground/50">Loading...</p>
               ) : friendsData.incomingRequests.length ? (
                 friendsData.incomingRequests.map((request) => (
                   <PersonRow
@@ -512,21 +512,21 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                   />
                 ))
               ) : (
-                <p className="py-4 text-sm text-slate-400">No incoming requests.</p>
+                <p className="py-4 text-sm text-foreground/50">No incoming requests.</p>
               )}
             </div>
           </div>
 
-          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+          <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-white">Friends</h2>
-              <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-slate-300">
+              <h2 className="text-lg font-semibold text-foreground">Friends</h2>
+              <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
                 {friendsData.friends.length}
               </span>
             </div>
             <div className="mt-3">
               {loading ? (
-                <p className="py-4 text-sm text-slate-400">Loading...</p>
+                <p className="py-4 text-sm text-foreground/50">Loading...</p>
               ) : friendsData.friends.length ? (
                 friendsData.friends.map((friend) => (
                   <PersonRow
@@ -553,23 +553,23 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                   />
                 ))
               ) : (
-                <p className="py-4 text-sm text-slate-400">No friends yet.</p>
+                <p className="py-4 text-sm text-foreground/50">No friends yet.</p>
               )}
             </div>
           </div>
         </section>
 
-        <section id="groups" className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
+        <section id="groups" className="rounded-lg border border-brand-border bg-brand-surface p-5">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <h2 className="text-lg font-semibold text-white">Groups</h2>
-              <p className="mt-1 text-sm text-slate-400">
+              <h2 className="text-lg font-semibold text-foreground">Groups</h2>
+              <p className="mt-1 text-sm text-foreground/50">
                 {activeGroups.length} active · {friendsData.friends.length} friends available
               </p>
             </div>
             <form className="flex flex-col gap-3 sm:flex-row" onSubmit={createGroup}>
               <input
-                className="min-h-11 min-w-0 rounded-lg border border-white/15 bg-slate-900 px-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-violet-400 sm:w-64"
+                className="min-h-11 min-w-0 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-foreground/30 focus:border-brand-orange sm:w-64"
                 onChange={(event) => setGroupName(event.target.value)}
                 placeholder="Group name"
                 value={groupName}
@@ -588,21 +588,21 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
 
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
             {loading ? (
-              <p className="text-sm text-slate-400">Loading...</p>
+              <p className="text-sm text-foreground/50">Loading...</p>
             ) : activeGroups.length ? (
               activeGroups.map((group) => {
                 const addableFriends = friendOptionsForGroup(group);
                 return (
                   <div
-                    className="rounded-lg border border-white/10 bg-slate-950/60 p-4"
+                    className="rounded-lg border border-brand-border bg-slate-950/60 p-4"
                     key={group.id}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="truncate text-base font-semibold text-white">
+                        <h3 className="truncate text-base font-semibold text-foreground">
                           {group.name}
                         </h3>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-foreground/50">
                           {group.members.length} members
                         </p>
                       </div>
@@ -651,13 +651,13 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                           />
                         ))
                       ) : (
-                        <p className="text-sm text-slate-400">No members.</p>
+                        <p className="text-sm text-foreground/50">No members.</p>
                       )}
                     </div>
 
                     <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                       <select
-                        className="min-h-11 min-w-0 flex-1 rounded-lg border border-white/15 bg-slate-900 px-3 text-sm text-white outline-none transition focus:border-violet-400"
+                        className="min-h-11 min-w-0 flex-1 rounded-lg border border-brand-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-brand-orange"
                         disabled={!addableFriends.length || busyKey !== null}
                         onChange={(event) => {
                           const userId = event.target.value;
@@ -688,14 +688,14 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                 );
               })
             ) : (
-              <p className="text-sm text-slate-400">No groups yet.</p>
+              <p className="text-sm text-foreground/50">No groups yet.</p>
             )}
           </div>
         </section>
 
         {friendsData.outgoingRequests.length ? (
-          <section className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
-            <h2 className="text-lg font-semibold text-white">Outgoing</h2>
+          <section className="rounded-lg border border-brand-border bg-brand-surface p-5">
+            <h2 className="text-lg font-semibold text-foreground">Outgoing</h2>
             <div className="mt-3">
               {friendsData.outgoingRequests.map((request) => (
                 <PersonRow

@@ -114,11 +114,11 @@ export default function BestShonenAnimeWithFriendsPage() {
       conversionTemplate="listicle"
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Shonen Anime to Watch With Friends (2026)
       </h1>
 
-      <p className="text-xl text-gray-700 leading-relaxed mb-10">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-10">
         <strong>
           Shonen is the most group-watch-friendly genre in anime — the battles
           demand live reactions, the rivalries create natural debate, and the
@@ -133,20 +133,20 @@ export default function BestShonenAnimeWithFriendsPage() {
       {/* ── SECTION 1: ACTION SHONEN ─────────────────────── */}
       <h2
         id="action-shonen"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Action &amp; Battle Shonen
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         High-production action series where fights are visual events — best
         watched the moment a new episode drops so no one spoils the result.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/demon-slayer-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Demon Slayer: Kimetsu no Yaiba
             </Link>
@@ -163,7 +163,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/jujutsu-kaisen-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Jujutsu Kaisen
             </Link>
@@ -180,7 +180,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/my-hero-academia-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               My Hero Academia
             </Link>
@@ -197,7 +197,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/one-punch-man-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               One Punch Man
             </Link>
@@ -213,7 +213,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/mob-psycho-100-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Mob Psycho 100
             </Link>
@@ -229,7 +229,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/assassination-classroom-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Assassination Classroom
             </Link>
@@ -245,7 +245,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/soul-eater-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Soul Eater
             </Link>
@@ -261,7 +261,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/fullmetal-alchemist-brotherhood-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Fullmetal Alchemist: Brotherhood
             </Link>
@@ -278,21 +278,21 @@ export default function BestShonenAnimeWithFriendsPage() {
       {/* ── SECTION 2: SPORTS SHONEN ─────────────────────── */}
       <h2
         id="sports-shonen"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Sports Shonen
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         Sports anime are arguably the best group-watch format in shonen — every
         match has a real winner, and group prediction games add a meta-layer of
         competition over the show itself.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/haikyuu-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Haikyuu!!
             </Link>
@@ -309,7 +309,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/blue-lock-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Blue Lock
             </Link>
@@ -326,7 +326,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/kuroko-no-basket-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Kuroko&apos;s Basketball
             </Link>
@@ -342,7 +342,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/slam-dunk-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Slam Dunk
             </Link>
@@ -359,7 +359,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/hajime-no-ippo-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Hajime no Ippo
             </Link>
@@ -383,22 +383,22 @@ export default function BestShonenAnimeWithFriendsPage() {
       {/* ── SECTION 3: LONG-RUN SHONEN ───────────────────── */}
       <h2
         id="long-run"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Long-Run Shonen for Dedicated Groups
       </h2>
-      <p className="text-gray-700 leading-relaxed mb-4">
+      <p className="text-foreground/80 leading-relaxed mb-4">
         These series require commitment — but groups that reach the end have
         shared an experience most casual viewers never get. Use AniDachi&apos;s
         async mode so members who fall behind can catch up without spoiling
         the group.
       </p>
-      <ul className="space-y-4 text-gray-700 mb-10">
+      <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
           <strong>
             <Link
               href="/watch/hunter-x-hunter-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Hunter x Hunter (2011)
             </Link>
@@ -416,7 +416,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/naruto-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Naruto
             </Link>
@@ -433,7 +433,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/one-piece-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               One Piece
             </Link>
@@ -450,7 +450,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/bleach-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Bleach
             </Link>
@@ -467,7 +467,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           <strong>
             <Link
               href="/watch/yu-yu-hakusho-with-friends"
-              className="text-purple-600 hover:underline"
+              className="text-brand-orange hover:underline"
             >
               Yu Yu Hakusho
             </Link>
@@ -484,11 +484,11 @@ export default function BestShonenAnimeWithFriendsPage() {
       {/* ── SECTION 4: TIPS ──────────────────────────────── */}
       <h2
         id="tips"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Tips for a Shonen Watch Party
       </h2>
-      <ul className="space-y-3 text-gray-700 mb-10">
+      <ul className="space-y-3 text-foreground/80 mb-10">
         <li>
           <strong>Run episode predictions before fights.</strong> Before each
           major battle, have everyone predict the outcome. The wrong predictions
@@ -512,7 +512,7 @@ export default function BestShonenAnimeWithFriendsPage() {
           session. AniDachi&apos;s watchroom tracks individual progress so
           late members can catch up without asking for spoilers and the group
           can continue the club without anyone permanently falling behind.{" "}
-          <Link href="/#pricing" className="text-purple-600 hover:underline">
+          <Link href="/#pricing" className="text-brand-orange hover:underline">
             Start a watchroom here.
           </Link>
         </li>
@@ -521,11 +521,11 @@ export default function BestShonenAnimeWithFriendsPage() {
       {/* ── RELATED ─────────────────────────────────────── */}
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related Guides
       </h2>
-      <ul className="space-y-2 text-purple-600 mb-8">
+      <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
             href="/guides/best-anime-to-watch-with-friends"

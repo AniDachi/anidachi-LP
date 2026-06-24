@@ -83,17 +83,17 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
       itemList={itemList}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-gray-900 mb-6">
+      <h1 className="text-4xl font-bold text-foreground mb-6">
         12 Anime Date Night Ideas for Long-Distance Couples
       </h1>
 
       <h2
         id="answer"
-        className="text-2xl font-bold text-gray-900 mt-8 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
       >
         Short Answer
       </h2>
-      <p className="text-xl text-gray-700 leading-relaxed mb-8">
+      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
           The best anime date night format for long-distance couples is a
           weekly episode target (not a fixed time) — watch 2–3 episodes on
@@ -106,15 +106,15 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
 
       <h2
         id="ideas"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         The 12 Ideas
       </h2>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         1. Weekly Sync-Watch Ritual
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Set a weekly episode target — 2 or 3 episodes — instead of a
         fixed time. Each person watches when it works for them, leaves
         reactions in AniDachi, and you discuss on your regular video call.
@@ -123,25 +123,25 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
         becomes the through-line even when life gets in the way.
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         2. Themed Watch Party
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Pick a theme and plan a full evening around it: a Studio Ghibli
         double feature, a specific director&apos;s filmography, a genre deep
         dive (all psychological thriller, all isekai), or a franchise marathon.
         Dress for it, decorate your respective spaces, and treat it as a real
         event. For live watching,{" "}
-        <Link href="/watch-crunchyroll-together-long-distance" className="text-purple-600 hover:underline">
+        <Link href="/watch-crunchyroll-together-long-distance" className="text-brand-orange hover:underline">
           set up a watchroom
         </Link>{" "}
         and sync playback.
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         3. Cook a Dish Together on Video Call
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Watch a food-heavy anime episode — Shokugeki no Soma, Sweetness and
         Lightning, Restaurant to Another World — and then each of you cooks
         the featured dish over a video call while the episode plays in the
@@ -150,10 +150,10 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
         passive activity.
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         4. Build a Couples Watchlist
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Create a shared list of every series you want to watch together —
         ranked by priority, annotated with why you each want to watch it.
         Use the AniDachi watchroom to log completed series and build momentum.
@@ -161,25 +161,25 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
         thread between series.
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         5. Async Reactions Date
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Watch the same episode independently — at whatever time works for
         each of you — and agree to leave unusually detailed reactions in
         the watchroom. Not just emoji reactions; write a sentence or two for
         the moments that hit hardest. The other person reads them after
         finishing the same episode. When you get on a call, discuss those
         specific moments.{" "}
-        <Link href="/timezone-friendly-anime-watch-parties" className="text-purple-600 hover:underline">
+        <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
           Async mode makes this possible without spoilers.
         </Link>
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         6. Anime Trivia Night
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Use a shared quiz platform (Kahoot, Jackbox, or a custom Google
         Form) and compete on knowledge from the series you have watched
         together. Categories: character names, episode titles, opening
@@ -187,10 +187,10 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
         multiple sessions and put a small stake on it.
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         7. Comfort Rewatch
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Go back to the first series you watched together, or a series that
         had major moments in your relationship. Rewatching something you
         both love is different from discovering it — you are now reacting to
@@ -199,10 +199,10 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
         by definition.
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         8. Shared OP/ED Playlist
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Build a Spotify or Apple Music playlist of opening and ending
         themes from every series you have watched together, in the order
         you watched them. It becomes a musical timeline of your
@@ -210,10 +210,10 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
         each series as a ritual.
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         9. Movie Tie-In Date
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         After finishing a series together, watch the companion film —
         Sword Art Online: Ordinal Scale after the series, Demon Slayer
         Mugen Train after Season 1, Evangelion 3.0+1.0 after the series.
@@ -221,10 +221,10 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
         celebration of finishing the show.
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         10. Character Costume Exchange
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Each person picks a character from the current series and does a
         lightweight version of their look for the next live watch session —
         even just the color palette, a key accessory, or a hairstyle
@@ -232,10 +232,10 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
         and creates a recurring in-joke.
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         11. Milestone Episode Tracker
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Keep a count of total episodes watched together across all series.
         Celebrate every 50 or 100 episodes — the same way you would
         celebrate a relationship milestone. Frame it as a shared
@@ -243,10 +243,10 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
         extra intention.
       </p>
 
-      <h3 className="text-xl font-semibold text-gray-900 mt-8 mb-2">
+      <h3 className="text-xl font-semibold text-foreground mt-8 mb-2">
         12. Plan a Reunion Around a Convention or Theatrical Screening
       </h3>
-      <p className="text-gray-700 leading-relaxed mb-6">
+      <p className="text-foreground/80 leading-relaxed mb-6">
         Use an upcoming anime event as the anchor for your next in-person
         visit: a Crunchyroll theatrical screening, an Anime NYC or Anime
         Expo event, or a Funimation live event. The series you are
@@ -257,15 +257,15 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
 
       <h2
         id="tools"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         What You Need to Get Started
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-8">
+      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>
           <strong>AniDachi</strong> — for the shared Crunchyroll watchroom
           (live + async mode).{" "}
-          <Link href="/" className="text-purple-600 hover:underline">
+          <Link href="/" className="text-brand-orange hover:underline">
             Get started here.
           </Link>
         </li>
@@ -284,11 +284,11 @@ export default function LongDistanceAnimeDateNightIdeasPage() {
 
       <h2
         id="related"
-        className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
         Related
       </h2>
-      <ul className="space-y-2 text-purple-600">
+      <ul className="space-y-2 text-brand-orange">
         <li>
           <Link href="/watch-anime-long-distance-boyfriend-girlfriend" className="hover:underline">
             How to watch anime with your long-distance partner

@@ -101,11 +101,11 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
         faq={faq}
         headings={tocHeadings}
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+        <h1 className="text-4xl font-bold text-foreground mb-6">
           How to Watch Anime With Friends Online
         </h1>
 
-        <p className="text-xl text-gray-700 leading-relaxed mb-8">
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
             Watching anime with friends online is possible by syncing playback
             in everyone&apos;s browser or sharing one screen. The easiest way is
@@ -116,11 +116,11 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
 
         <h2
           id="method-anidachi"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 1: AniDachi (Crunchyroll watchrooms)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           AniDachi is built for anime groups who live in different cities or
           rarely share the same evening. It detects the show you are on, opens a
           shared watchroom, and lets people catch up on their own time while
@@ -128,11 +128,11 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
           watch party; async mode removes the pressure to start the episode at
           the exact same minute.
         </p>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Everyone keeps their own{" "}
           <a
             href="https://www.crunchyroll.com/help"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
             rel="noopener noreferrer"
           >
             Crunchyroll account
@@ -141,7 +141,7 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
           share. For installation, use the{" "}
           <a
             href="https://chromewebstore.google.com/"
-            className="text-purple-600 hover:underline"
+            className="text-brand-orange hover:underline"
             rel="noopener noreferrer"
           >
             Chrome Web Store
@@ -152,11 +152,11 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
 
         <h2
           id="method-discord"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 2: Discord (voice + screen share)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Discord stays popular because servers already exist for most friend
           groups. One person shares a browser tab with the episode while others
           watch the stream. Go Live is simple but quality tiers depend on
@@ -166,11 +166,11 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
 
         <h2
           id="method-teleparty"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Method 3: Teleparty (multi-service live sync)
         </h2>
-        <p className="text-gray-700 leading-relaxed mb-4">
+        <p className="text-foreground/80 leading-relaxed mb-4">
           Teleparty supports Crunchyroll among other services and keeps playback
           aligned for live sessions. It works best when everyone can start
           together. It does not replace a dedicated async progress model if half
@@ -179,11 +179,11 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
 
         <h2
           id="steps-anidachi"
-          className="text-2xl font-bold text-gray-900 mt-12 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
         >
           Step-by-step with AniDachi
         </h2>
-        <ol className="list-decimal pl-6 space-y-2 text-gray-700 mb-8">
+        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
           <li>Install AniDachi from the Chrome Web Store and pin the extension.</li>
           <li>Open Crunchyroll and sign in with the account you use for anime.</li>
           <li>Load the episode your group agreed to watch.</li>
@@ -194,11 +194,11 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
 
         <h2
           id="related"
-          className="text-2xl font-bold text-gray-900 mt-10 mb-4 scroll-mt-24"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
           Related guides
         </h2>
-        <ul className="space-y-2 text-purple-600">
+        <ul className="space-y-2 text-brand-orange">
           <li>
             <Link href="/watch-anime-together" className="hover:underline">
               Watch Anime Together (pillar guide)
