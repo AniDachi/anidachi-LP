@@ -42,10 +42,12 @@ export async function POST(request: NextRequest) {
 
   console.info("[subscribe-interest] New lead:", email, survey);
 
+  let waitlistPosition: number | null = null;
   try {
     const crmResult = await upsertSurveyLead(email, survey);
+    waitlistPosition = crmResult.waitlistCount;
     if (crmResult.saved) {
-      console.info("[subscribe-interest] Saved to CRM:", email);
+      console.info("[subscribe-interest] Saved to CRM:", email, "waitlist position:", waitlistPosition);
     } else {
       console.warn("[subscribe-interest] CRM save skipped:", crmResult.reason, email);
     }
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
   if (!toRaw?.trim() || !isGmailConfigured()) {
     // Log but still return success so the modal flow isn't blocked
     console.warn("[subscribe-interest] Email not sent — Gmail not configured or no notify address");
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, waitlistPosition });
   }
 
   const to = toRaw
@@ -82,5 +84,5 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, waitlistPosition });
 }

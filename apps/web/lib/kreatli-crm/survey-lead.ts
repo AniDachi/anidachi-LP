@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import type { HomeSurveyAnswers } from "@/lib/home-survey";
-import { SURVEY_LEAD_SEGMENT } from "./survey-lead-shared";
+import { SURVEY_LEAD_SEGMENT, isSurveyLead } from "./survey-lead-shared";
 import { readContacts, writeContacts } from "./store";
 import type { Contact } from "./types";
 import { isValidEmail, normalizeEmail } from "./validation";
@@ -38,10 +38,11 @@ function buildSurveyNote(survey: Partial<HomeSurveyAnswers>): string {
 export async function upsertSurveyLead(
   email: string,
   survey: Partial<HomeSurveyAnswers>,
-): Promise<{ saved: boolean; reason?: string }> {
+): Promise<{ saved: boolean; reason?: string; waitlistCount: number }> {
   const normalized = normalizeEmail(email);
   if (!isValidEmail(normalized)) {
-    return { saved: false, reason: "invalid_email" };
+    const contacts = await readContacts();
+    return { saved: false, reason: "invalid_email", waitlistCount: contacts.filter(isSurveyLead).length };
   }
 
   const contacts = await readContacts();
@@ -78,5 +79,6 @@ export async function upsertSurveyLead(
   }
 
   await writeContacts(contacts);
-  return { saved: true };
+  const waitlistCount = contacts.filter(isSurveyLead).length;
+  return { saved: true, waitlistCount };
 }

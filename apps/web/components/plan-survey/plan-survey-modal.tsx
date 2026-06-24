@@ -61,6 +61,7 @@ export function PlanSurveyModal({
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailSubmitting, setEmailSubmitting] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
 
 
   useBodyScrollLock(isOpen);
@@ -108,6 +109,7 @@ export function PlanSurveyModal({
     setEmailSubmitted(false);
     setEmailSubmitting(false);
     setEmailError(null);
+    setWaitlistPosition(null);
     completedEventFired.current = false;
     const pagePath = typeof window !== "undefined" ? window.location.pathname : "/";
     const pageTemplate = inferPageTemplateFromPath(pagePath);
@@ -316,11 +318,15 @@ export function PlanSurveyModal({
     setEmailError(null);
     setEmailSubmitting(true);
     try {
-      await fetch("/api/subscribe-interest", {
+      const res = await fetch("/api/subscribe-interest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmed, survey }),
       });
+      const data = (await res.json()) as { ok?: boolean; waitlistPosition?: number | null };
+      if (typeof data.waitlistPosition === "number" && data.waitlistPosition > 0) {
+        setWaitlistPosition(data.waitlistPosition);
+      }
       setEmailSubmitted(true);
       setTimeout(() => setStep(6), 1200);
     } catch {
@@ -637,9 +643,17 @@ export function PlanSurveyModal({
                   </div>
                   <div>
                     <p className="font-semibold text-green-900">You&apos;re on the list!</p>
-                    <p className="text-sm text-green-800 mt-0.5">
-                      We&apos;ll notify you the moment we launch. You&apos;ll be among the very first in.
-                    </p>
+                    {waitlistPosition !== null ? (
+                      <p className="text-sm text-green-800 mt-0.5">
+                        You&apos;re{" "}
+                        <span className="font-bold">#{waitlistPosition}</span> in
+                        line. We&apos;ll notify you the moment we launch.
+                      </p>
+                    ) : (
+                      <p className="text-sm text-green-800 mt-0.5">
+                        We&apos;ll notify you the moment we launch. You&apos;ll be among the very first in.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
