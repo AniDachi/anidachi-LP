@@ -18,6 +18,10 @@ import {
   priorityFeatureBullet,
 } from "@/lib/home-survey";
 import type { CheckoutTier, HomeSurveyAnswers } from "@/lib/home-survey";
+import {
+  PRICING_PLUS_LABEL,
+  PRICING_PRO_LABEL,
+} from "@/lib/pricing-tiers";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 
 export type PlanSurveyOpenContext = {
@@ -733,7 +737,9 @@ export function PlanSurveyModal({
                         : "Regular watch nights with friends, sync, chat, and shared progress"}
                     </p>
                     <p className="mt-1 text-sm text-foreground/60">
-                      {recommendedTier === "pro" ? "$14.99/month" : "$7.99/month"}
+                      {recommendedTier === "pro"
+                        ? `${PRICING_PRO_LABEL}/month`
+                        : `${PRICING_PLUS_LABEL}/month`}
                     </p>
                   </div>
                   <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-orange/15 px-2.5 py-1 text-xs font-semibold text-brand-orange">

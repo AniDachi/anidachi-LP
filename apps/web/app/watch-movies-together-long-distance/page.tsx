@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
+import { PRICING_COMPARE_OVERVIEW, PRICING_PRICE_TABLE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "How to Watch Movies & TV Together Long Distance (2026) | AniDachi",
@@ -30,7 +31,7 @@ const faq = [
   {
     question: "Is there a way to watch movies together long distance for free?",
     answer:
-      "Yes — Rave and Crunchyroll Party are free. Watch2Gether is free for YouTube. Discord screen share is free for any platform. Teleparty has a free tier. AniDachi ($8/month) is the only paid option in this list and is Crunchyroll-specific.",
+      `Yes — Rave and Crunchyroll Party are free. Watch2Gether is free for YouTube. Discord screen share is free for any platform. Teleparty has a free tier. AniDachi is Crunchyroll-specific with a Free tier to join rooms; ${PRICING_COMPARE_OVERVIEW}`,
   },
   {
     question: "Does Netflix have a built-in watch party?",
@@ -129,7 +130,7 @@ export default function WatchMoviesTogetherLongDistancePage() {
           },
           {
             feature: "Price",
-            values: { teleparty: "Freemium", rave: "Freemium", anidachi: "$8/mo", discord: "Free" },
+            values: { teleparty: "Freemium", rave: "Freemium", anidachi: PRICING_PRICE_TABLE, discord: "Free" },
           },
         ]}
       />

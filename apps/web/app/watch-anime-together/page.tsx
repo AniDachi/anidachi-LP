@@ -4,6 +4,10 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { animeList } from "@/lib/anime-data";
 import { genreHubItemList } from "@/lib/genre-hub-links";
+import {
+  PRICING_ASYNC_HOST_SNIPPET,
+  PRICING_STARTING_AT,
+} from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Watch Anime Together Online — Free Anime Watch Party App (2026)",
@@ -27,7 +31,7 @@ const faq = [
   {
     question: "Is there a free anime watch party app?",
     answer:
-      "Yes. Crunchyroll Party is a free Chrome extension for live anime watch parties. Discord screen sharing is also free. AniDachi starts at $8/month and adds async watching, progress tracking, and auto anime detection on top of free watch-party features.",
+      `Yes. Crunchyroll Party is a free Chrome extension for live anime watch parties. Discord screen sharing is also free. ${PRICING_ASYNC_HOST_SNIPPET}`,
   },
   {
     question: "How do you host an anime watch party online?",
@@ -37,7 +41,7 @@ const faq = [
   {
     question: "Can you watch anime together long distance for free?",
     answer:
-      "Yes — for free, Discord screen sharing works over any distance. For a more polished long-distance anime watch party, Crunchyroll Party (free) or AniDachi (paid) give everyone full-quality streams and proper sync. AniDachi also supports async watching, so long-distance friends in different time zones never need to schedule.",
+      "Yes — for free, Discord screen sharing works over any distance. For a more polished long-distance anime watch party, Crunchyroll Party (free) or AniDachi (Free to join; Plus to host) give everyone full-quality streams and proper sync. AniDachi also supports async watching, so long-distance friends in different time zones never need to schedule.",
   },
   {
     question: "How do you stream anime together online?",
@@ -128,7 +132,7 @@ export default function WatchAnimeTogetherPage() {
       <p className="text-foreground/80 mb-8">
         Ready to try the Crunchyroll-first option?{" "}
         <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
-          Start a paid AniDachi plan
+          See AniDachi pricing — Free to join, Plus to host
         </Link>{" "}
         — early-access pricing with a clear refund path, then create your first
         watchroom in minutes.
@@ -164,7 +168,8 @@ export default function WatchAnimeTogetherPage() {
         <li>
           <strong>AniDachi (Best):</strong> Crunchyroll-focused watchrooms with
           live sync, real-time chat, and unique async support. Each person
-          streams on their own account in full quality. Starting at $8/month.
+          streams on their own account in full quality. Free to join; Plus for
+          hosts starts at {PRICING_STARTING_AT}.
         </li>
         <li>
           <strong>Crunchyroll Party (Free):</strong> A free Chrome extension for
@@ -351,7 +356,7 @@ export default function WatchAnimeTogetherPage() {
         <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll Together</Link></li>
         <li>
           <Link href="/#pricing" className="hover:underline">
-            Start paid plan — see early-access pricing
+            See pricing — Free to join, Plus from $7.99/mo to host
           </Link>
         </li>
         <li><Link href="/compare/anidachi-vs-teleparty" className="hover:underline">AniDachi vs Teleparty</Link></li>

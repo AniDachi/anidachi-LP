@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
+import { PRICING_EARLY_ACCESS_PRICE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Watch Crunchyroll Together Long Distance (2026) | AniDachi",
@@ -254,7 +255,7 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
                 <td className="border border-brand-border px-4 py-2">Yes</td>
                 <td className="border border-brand-border px-4 py-2">Yes</td>
                 <td className="border border-brand-border px-4 py-2">Episode-level</td>
-                <td className="border border-brand-border px-4 py-2">$8/mo</td>
+                <td className="border border-brand-border px-4 py-2">{PRICING_EARLY_ACCESS_PRICE}</td>
               </tr>
               <tr className="bg-brand-surface">
                 <td className="border border-brand-border px-4 py-2 font-medium">Teleparty</td>

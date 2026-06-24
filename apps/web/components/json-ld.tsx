@@ -64,10 +64,18 @@ export function SoftwareApplicationJsonLd() {
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "USD",
-      lowPrice: "7.99",
+      lowPrice: "0",
       highPrice: "14.99",
-      offerCount: 2,
+      offerCount: 3,
       offers: [
+        {
+          "@type": "Offer",
+          name: "AniDachi Free",
+          price: "0",
+          priceCurrency: "USD",
+          availability: "https://schema.org/InStock",
+          url: `${siteUrl}/login`,
+        },
         {
           "@type": "Offer",
           name: "AniDachi Plus",

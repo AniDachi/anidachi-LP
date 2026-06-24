@@ -4,6 +4,10 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
+import {
+  PRICING_FREE_TIER_TABLE,
+  PRICING_RAVE_COMPARE_FAQ,
+} from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
@@ -37,7 +41,7 @@ const faq = [
   {
     question: "Is Rave free compared to AniDachi?",
     answer:
-      "Rave offers a free tier with basic sync and chat. AniDachi is a paid product during early access ($8/mo) focused on Crunchyroll-first features like async watchrooms, auto anime detection, and per-person progress tracking.",
+      PRICING_RAVE_COMPARE_FAQ,
   },
   {
     question: "Which is better for anime groups in different time zones?",
@@ -154,7 +158,7 @@ export default function AniDachiVsRavePage() {
           },
           {
             feature: "Free tier",
-            values: { anidachi: "No ($8/mo)", rave: "Yes (basic)" },
+            values: { anidachi: PRICING_FREE_TIER_TABLE, rave: "Yes (basic)" },
           },
         ]}
       />

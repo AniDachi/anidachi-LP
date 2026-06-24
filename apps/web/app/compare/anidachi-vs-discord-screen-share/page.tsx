@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
+import {
+  PRICING_DISCORD_COMPARE_FAQ,
+} from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
@@ -32,7 +35,7 @@ const faq = [
   {
     question: "Is Discord screen share free compared to AniDachi?",
     answer:
-      "Discord screen sharing is bundled with their app, but you still need individual Crunchyroll access for everyone to watch legally unless one person hosts a single stream. AniDachi is a paid extension that adds watchrooms, anime detection, sync, and async pacing on top of personal Crunchyroll streams.",
+      PRICING_DISCORD_COMPARE_FAQ,
   },
   {
     question: "Can we keep Discord voice and ditch video screen share?",

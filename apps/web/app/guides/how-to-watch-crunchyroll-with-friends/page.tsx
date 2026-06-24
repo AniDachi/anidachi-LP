@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
+import { PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION, PRICING_GROUP_ONBOARDING } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide (2026)",
@@ -29,12 +30,12 @@ const faq = [
   {
     question: "Does Crunchyroll have a group watch or watch together option?",
     answer:
-      "Crunchyroll does not have a native group watch or watch together feature. Third-party Chrome extensions fill this gap: AniDachi (sync + async + chat, paid), Crunchyroll Party (sync + basic chat, free), and Teleparty (cross-platform sync, freemium). All of them work with each person's own Crunchyroll account.",
+      `Crunchyroll does not have a native group watch or watch together feature. Third-party Chrome extensions fill this gap: ${PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION}, Crunchyroll Party (sync + basic chat, free), and Teleparty (cross-platform sync, freemium). All of them work with each person's own Crunchyroll account.`,
   },
   {
     question: "Can you do a watch party on Crunchyroll?",
     answer:
-      "Yes, but only through a third-party extension. Install Crunchyroll Party (free) or AniDachi (paid) and you can host a Crunchyroll watch party with synced playback and chat. Crunchyroll itself does not have a watch party button or built-in feature.",
+      "Yes, but only through a third-party extension. Install Crunchyroll Party (free) or AniDachi (Free to join; Plus/Pro to host) and you can host a Crunchyroll watch party with synced playback and chat. Crunchyroll itself does not have a watch party button or built-in feature.",
   },
   {
     question: "Can two people watch Crunchyroll at the same time?",

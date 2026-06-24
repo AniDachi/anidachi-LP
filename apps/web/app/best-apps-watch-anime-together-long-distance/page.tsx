@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
+import { PRICING_PRICE_TABLE, PRICING_REFUND_NOTE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "7 Best Apps to Watch Anime Together Long Distance (2026) | AniDachi",
@@ -145,7 +146,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
           },
           {
             feature: "Price",
-            values: { anidachi: "$8/mo", teleparty: "Freemium", rave: "Freemium", discord: "Free", "crunchyroll-party": "Free" },
+            values: { anidachi: PRICING_PRICE_TABLE, teleparty: "Freemium", rave: "Freemium", discord: "Free", "crunchyroll-party": "Free" },
           },
         ]}
       />
@@ -170,7 +171,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         <li>Episode-level spoiler control</li>
         <li>Per-person progress tracking</li>
         <li>Persistent watchroom chat that survives session gaps</li>
-        <li>$8/month — full refund guarantee</li>
+        <li>Free to join friends&apos; rooms; Plus from $7.99/mo to host — {PRICING_REFUND_NOTE.toLowerCase()}</li>
       </ul>
       <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> Long-distance couples on Crunchyroll with
