@@ -175,6 +175,52 @@ describe("Crunchyroll progress extraction", () => {
     });
   });
 
+  it("infers known Crunchyroll season metadata from the watch URL when page metadata is missing", () => {
+    mockLocation("https://www.crunchyroll.com/watch/GRP8P9XGR/lets-go-to-tokyo");
+    document.title = "E1 - Let's Go To Tokyo!! - Watch on Crunchyroll";
+    document.body.innerHTML = `<a href="/series/GYEXAMPLE/haikyu">Haikyu!!</a>`;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 456 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 1440 });
+
+    const entry = getCrunchyrollProgressEntry({
+      title: "E1 - Let's Go To Tokyo!!",
+      video,
+      watchedWithCount: 1,
+    });
+
+    expect(entry).toMatchObject({
+      itemTitle: "Haikyu!!",
+      episodeId: "GRP8P9XGR",
+      seasonId: "season-2",
+      seasonTitle: "Season 2",
+      seasonNumber: 2,
+    });
+  });
+
+  it("infers ordinal Crunchyroll season metadata from page titles", () => {
+    mockLocation("https://www.crunchyroll.com/watch/GUNKNOWN/lets-go-to-tokyo");
+    document.head.innerHTML = `
+      <meta property="og:title" content="HAIKYU!! 2nd Season Let's Go To Tokyo!! - Watch on Crunchyroll">
+    `;
+    document.body.innerHTML = `<a href="/series/GYEXAMPLE/haikyu">Haikyu!!</a>`;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 456 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 1440 });
+
+    const entry = getCrunchyrollProgressEntry({
+      title: "E1 - Let's Go To Tokyo!!",
+      video,
+      watchedWithCount: 1,
+    });
+
+    expect(entry).toMatchObject({
+      seasonId: "season-2",
+      seasonTitle: "Season 2",
+      seasonNumber: 2,
+    });
+  });
+
   it("uses breadcrumb titles instead of Crunchyroll series URLs", () => {
     mockLocation(
       "https://www.crunchyroll.com/ru/watch/GEVUZP0ZM/the-end-of-the-beginning-and-the-beginning-of-the-end",

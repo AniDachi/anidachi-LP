@@ -19,6 +19,7 @@ import {
   type ProfileRow,
   type PublicProfile,
 } from "./social";
+import { inferCrunchyrollSeasonFromSourceUrl } from "../watch-season-inference";
 
 export type WatchProvider = "crunchyroll" | "netflix" | "youtube" | "amazon";
 export type WatchItemKind = "series" | "movie";
@@ -258,14 +259,21 @@ export function cleanWatchProgressEntry(value: unknown): CleanWatchProgressEntry
         cleanString(input.contentId, 220) ??
         itemKey
       : itemKey;
-  const seasonNumber = normalizeSeasonNumber(input.seasonNumber);
+  const inferredSeason =
+    provider === "crunchyroll" && progressKind === "episode"
+      ? inferCrunchyrollSeasonFromSourceUrl(sourceUrl)
+      : null;
+  const seasonNumber = normalizeSeasonNumber(input.seasonNumber) ?? inferredSeason?.seasonNumber ?? null;
   const seasonTitle =
     progressKind === "episode"
-      ? cleanString(input.seasonTitle, 180) ?? (seasonNumber ? `Season ${seasonNumber}` : null)
+      ? cleanString(input.seasonTitle, 180) ??
+        inferredSeason?.seasonTitle ??
+        (seasonNumber ? `Season ${seasonNumber}` : null)
       : null;
   const seasonKey =
     progressKind === "episode"
       ? cleanString(input.seasonId, 220) ??
+        inferredSeason?.seasonId ??
         (seasonNumber ? `season-${seasonNumber}` : seasonTitle ? keyFromTitle(seasonTitle) : null)
       : null;
 
@@ -430,6 +438,37 @@ export async function listWatchLibrary(userId: string): Promise<WatchLibraryResp
       profiles,
     }),
   };
+}
+
+export async function clearWatchLibrary(userId: string): Promise<WatchLibraryResponse> {
+  const user = await getUserById(userId);
+  if (!user) throw new WatchLibraryApiError(404, "User not found");
+
+  const checkpointDelete = await db()
+    .from("watch_progress_checkpoints")
+    .delete()
+    .eq("user_id", userId);
+  if (checkpointDelete.error) {
+    throw new Error(`Failed to clear watch checkpoints: ${checkpointDelete.error.message}`);
+  }
+
+  const participantDelete = await db()
+    .from("watch_session_participants")
+    .delete()
+    .eq("user_id", userId);
+  if (participantDelete.error) {
+    throw new Error(`Failed to clear watch session participants: ${participantDelete.error.message}`);
+  }
+
+  const trackedDelete = await db()
+    .from("user_tracked_titles")
+    .delete()
+    .eq("user_id", userId);
+  if (trackedDelete.error) {
+    throw new Error(`Failed to clear tracked titles: ${trackedDelete.error.message}`);
+  }
+
+  return listWatchLibrary(userId);
 }
 
 export async function getWatchSessionRoomSourceForViewer(params: {
@@ -925,6 +964,7 @@ function buildWatchLibraryItems(params: {
     };
 
     const sessionParticipants = participantsBySessionId.get(session.id) ?? [];
+    const sessionSeason = sessionSeasonMetadata(session);
     const librarySession: WatchLibrarySession = {
       id: session.id,
       roomId: session.room_id,
@@ -959,18 +999,18 @@ function buildWatchLibraryItems(params: {
         episode.duration = session.duration_seconds;
         episode.progress = viewerParticipant.progress;
         episode.sourceUrl = session.source_url;
-        episode.seasonId = session.season_key;
-        episode.seasonTitle = session.season_title;
-        episode.seasonNumber = session.season_number;
+        episode.seasonId = sessionSeason.seasonId;
+        episode.seasonTitle = sessionSeason.seasonTitle;
+        episode.seasonNumber = sessionSeason.seasonNumber;
         episode.lastWatchedAt = viewerParticipant.updated_at;
       }
     } else {
       item.episodes.push({
         episodeKey: session.episode_key,
         episodeTitle: session.episode_title,
-        seasonId: session.season_key,
-        seasonTitle: session.season_title,
-        seasonNumber: session.season_number,
+        seasonId: sessionSeason.seasonId,
+        seasonTitle: sessionSeason.seasonTitle,
+        seasonNumber: sessionSeason.seasonNumber,
         sourceUrl: session.source_url,
         currentTime: viewerParticipant.current_time_seconds,
         duration: session.duration_seconds,
@@ -1005,6 +1045,22 @@ function buildWatchLibraryItems(params: {
 
 function itemMapKey(provider: WatchProvider, itemKey: string): string {
   return `${provider}:${itemKey}`;
+}
+
+function sessionSeasonMetadata(session: WatchSessionRow): {
+  seasonId: string | null;
+  seasonTitle: string | null;
+  seasonNumber: number | null;
+} {
+  const inferred =
+    session.provider === "crunchyroll"
+      ? inferCrunchyrollSeasonFromSourceUrl(session.source_url)
+      : null;
+  return {
+    seasonId: session.season_key ?? inferred?.seasonId ?? null,
+    seasonTitle: session.season_title ?? inferred?.seasonTitle ?? null,
+    seasonNumber: session.season_number ?? inferred?.seasonNumber ?? null,
+  };
 }
 
 function groupBy<T>(items: T[], keyForItem: (item: T) => string): Map<string, T[]> {

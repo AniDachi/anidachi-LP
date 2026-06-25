@@ -97,6 +97,11 @@ export type WatchLibraryHttpMessage =
     }
   | {
       type: typeof WATCH_LIBRARY_HTTP_MESSAGE_TYPE;
+      command: "clear-library";
+      accessToken: string;
+    }
+  | {
+      type: typeof WATCH_LIBRARY_HTTP_MESSAGE_TYPE;
       command: "reconcile-progress";
       accessToken: string;
       entries: WatchProgressReconcileEntry[];
@@ -118,6 +123,14 @@ export function listWatchLibraryHttpMessage(accessToken: string): WatchLibraryHt
   return {
     type: WATCH_LIBRARY_HTTP_MESSAGE_TYPE,
     command: "list-library",
+    accessToken,
+  };
+}
+
+export function clearWatchLibraryHttpMessage(accessToken: string): WatchLibraryHttpMessage {
+  return {
+    type: WATCH_LIBRARY_HTTP_MESSAGE_TYPE,
+    command: "clear-library",
     accessToken,
   };
 }
@@ -154,7 +167,7 @@ export function isWatchLibraryHttpMessage(value: unknown): value is WatchLibrary
   if (message.type !== WATCH_LIBRARY_HTTP_MESSAGE_TYPE || typeof message.accessToken !== "string") {
     return false;
   }
-  if (message.command === "list-library") return true;
+  if (message.command === "list-library" || message.command === "clear-library") return true;
   if (message.command === "create-room-from-session") {
     return (
       typeof message.sessionId === "string" &&
@@ -245,6 +258,10 @@ export async function setWatchLibrarySyncWatermark(
   } satisfies WatchLibrarySyncWatermark);
 }
 
+export async function clearWatchLibrarySyncWatermark(): Promise<void> {
+  await storage.removeItem(WATCH_LIBRARY_SYNC_WATERMARK_KEY);
+}
+
 export async function listWatchLibraryFromApi(accessToken: string): Promise<WatchLibraryResponse> {
   logDebug("watch-library.http", "list watch library request", {
     webHttpBase: WEB_HTTP_BASE,
@@ -254,6 +271,20 @@ export async function listWatchLibraryFromApi(accessToken: string): Promise<Watc
   });
   if (!response.ok) {
     throw await watchLibraryHttpError(response, "Failed to load watch library");
+  }
+  return normalizeWatchLibraryResponse(await response.json());
+}
+
+export async function clearWatchLibraryFromApi(accessToken: string): Promise<WatchLibraryResponse> {
+  logDebug("watch-library.http", "clear watch library request", {
+    webHttpBase: WEB_HTTP_BASE,
+  });
+  const response = await fetch(new URL("/api/watch-library", WEB_HTTP_BASE), {
+    method: "DELETE",
+    headers: createWebsiteRoomHeaders(accessToken),
+  });
+  if (!response.ok) {
+    throw await watchLibraryHttpError(response, "Failed to clear watch library");
   }
   return normalizeWatchLibraryResponse(await response.json());
 }
@@ -321,6 +352,12 @@ export async function handleWatchLibraryHttpMessage(
         library: await listWatchLibraryFromApi(message.accessToken),
       };
     }
+    if (message.command === "clear-library") {
+      return {
+        ok: true,
+        library: await clearWatchLibraryFromApi(message.accessToken),
+      };
+    }
     if (message.command === "reconcile-progress") {
       return {
         ok: true,
@@ -354,6 +391,17 @@ export async function handleWatchLibraryHttpMessage(
 export async function listWatchLibrary(accessToken: string): Promise<WatchLibraryResponse> {
   const response = assertWatchLibraryHttpResponse(
     await chrome.runtime.sendMessage(listWatchLibraryHttpMessage(accessToken)),
+  );
+  if (!response.ok) throw watchLibraryBridgeError(response);
+  if (!("library" in response)) {
+    throw new Error("Watch library bridge response is missing library");
+  }
+  return response.library;
+}
+
+export async function clearWatchLibrary(accessToken: string): Promise<WatchLibraryResponse> {
+  const response = assertWatchLibraryHttpResponse(
+    await chrome.runtime.sendMessage(clearWatchLibraryHttpMessage(accessToken)),
   );
   if (!response.ok) throw watchLibraryBridgeError(response);
   if (!("library" in response)) {
