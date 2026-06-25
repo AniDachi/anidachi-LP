@@ -26,9 +26,13 @@ export function getCrunchyrollProgressEntry(
   const duration = Number.isFinite(input.video.duration) ? input.video.duration : 0;
   const sourceUrl = `${url.origin}${url.pathname}`;
   const seriesInfo = getCrunchyrollSeriesInfo(title);
+  const seasonInfo = getCrunchyrollSeasonInfo(title);
   const isMovie = looksLikeMovie(title, duration);
   const isEpisode = !isMovie && (Boolean(seriesInfo.title) || looksLikeEpisode(title));
   const itemTitle = isEpisode ? (seriesInfo.title ?? toTitle(slug)) : title;
+  const seasonTitle = isEpisode
+    ? normalizeSeasonTitleForSeries(seasonInfo.title, itemTitle, seasonInfo.number)
+    : seasonInfo.title;
   const seriesKey = slugify(seriesInfo.slug || seriesInfo.title || slug) || slug;
 
   return {
@@ -38,6 +42,9 @@ export function getCrunchyrollProgressEntry(
     itemTitle,
     contentId: watchId,
     ...(isEpisode && seriesInfo.seriesId ? { seriesId: seriesInfo.seriesId } : {}),
+    ...(isEpisode && seasonInfo.seasonId ? { seasonId: seasonInfo.seasonId } : {}),
+    ...(isEpisode && seasonTitle ? { seasonTitle } : {}),
+    ...(isEpisode && seasonInfo.number ? { seasonNumber: seasonInfo.number } : {}),
     episodeId: watchId,
     episodeTitle: title,
     ...(isEpisode && seriesInfo.artworkUrl ? { artworkUrl: seriesInfo.artworkUrl } : {}),
@@ -56,10 +63,22 @@ interface CrunchyrollSeriesInfo {
   artworkUrl: string | null;
 }
 
+interface CrunchyrollSeasonInfo {
+  seasonId: string | null;
+  title: string | null;
+  number: number | null;
+}
+
 interface CrunchyrollSeriesCandidate {
   title?: string | null;
   url?: string | null;
   artworkUrl?: string | null;
+}
+
+interface CrunchyrollSeasonCandidate {
+  title?: string | null;
+  url?: string | null;
+  seasonNumber?: number | null;
 }
 
 function getCrunchyrollSeriesInfo(episodeTitle: string): CrunchyrollSeriesInfo {
@@ -109,6 +128,31 @@ function getCrunchyrollSeriesInfo(episodeTitle: string): CrunchyrollSeriesInfo {
     slug: urlInfo?.slug ?? null,
     seriesId: urlInfo?.seriesId ?? null,
     artworkUrl,
+  };
+}
+
+function getCrunchyrollSeasonInfo(episodeTitle: string): CrunchyrollSeasonInfo {
+  const candidates = [
+    ...getJsonLdSeasonCandidates(),
+    titleSeasonCandidate(episodeTitle),
+    titleSeasonCandidate(document.title),
+  ].filter((candidate): candidate is CrunchyrollSeasonCandidate => Boolean(candidate));
+  const normalized = candidates
+    .map((candidate) => normalizeSeasonCandidate(candidate))
+    .filter((candidate): candidate is Required<Pick<CrunchyrollSeasonCandidate, "title">> & CrunchyrollSeasonCandidate =>
+      Boolean(candidate.title || candidate.seasonNumber),
+    );
+  const best = normalized[0] ?? null;
+  const seasonNumber =
+    normalized.map((candidate) => candidate.seasonNumber).find((value): value is number => Boolean(value)) ??
+    null;
+  const title = best?.title ?? (seasonNumber ? `Season ${seasonNumber}` : null);
+  const seasonId = getSeasonId(best ?? { title, seasonNumber });
+
+  return {
+    seasonId,
+    title,
+    number: seasonNumber,
   };
 }
 
@@ -171,6 +215,19 @@ function getJsonLdSeriesCandidates(): CrunchyrollSeriesCandidate[] {
   return candidates;
 }
 
+function getJsonLdSeasonCandidates(): CrunchyrollSeasonCandidate[] {
+  const candidates: CrunchyrollSeasonCandidate[] = [];
+
+  for (const script of document.querySelectorAll<HTMLScriptElement>(
+    'script[type="application/ld+json"]',
+  )) {
+    const parsed = parseJson(script.textContent ?? "");
+    collectJsonLdSeasonCandidates(parsed, candidates, 0);
+  }
+
+  return candidates;
+}
+
 function cleanCrunchyrollTitle(title: string): string {
   return title
     .replace(/\s*-\s*Watch on Crunchyroll\s*$/i, "")
@@ -214,7 +271,8 @@ function isUsefulSeriesTitle(value: string, episodeTitle: string): boolean {
     normalized !== episodeTitle.toLowerCase() &&
     !/^https?:\/\//i.test(value) &&
     !value.includes("crunchyroll.com/") &&
-    !/^e\d+\b/i.test(value)
+    !/^e\d+\b/i.test(value) &&
+    !looksLikeSeasonTitle(value)
   );
 }
 
@@ -277,7 +335,7 @@ function collectJsonLdSeriesCandidates(
       const name = (nested as Record<string, unknown>).name;
       const id = (nested as Record<string, unknown>)["@id"];
       const url = (nested as Record<string, unknown>).url;
-      if (typeof name === "string") {
+      if (typeof name === "string" && key !== "partOfSeason") {
         output.push({
           title: name,
           url: typeof id === "string" ? id : typeof url === "string" ? url : null,
@@ -291,6 +349,145 @@ function collectJsonLdSeriesCandidates(
   if (graph) {
     collectJsonLdSeriesCandidates(graph, output, depth + 1);
   }
+}
+
+function collectJsonLdSeasonCandidates(
+  value: unknown,
+  output: CrunchyrollSeasonCandidate[],
+  depth: number,
+): void {
+  if (!value || depth > 8) {
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectJsonLdSeasonCandidates(item, output, depth + 1);
+    }
+    return;
+  }
+
+  if (typeof value !== "object") {
+    return;
+  }
+
+  const record = value as Record<string, unknown>;
+  const typeValue = Array.isArray(record["@type"]) ? record["@type"].join(" ") : record["@type"];
+  const type = typeof typeValue === "string" ? typeValue.toLowerCase() : "";
+
+  if (type.includes("tvseason") || type.includes("creativeworkseason")) {
+    output.push(seasonCandidateFromRecord(record));
+  }
+
+  for (const key of ["partOfSeason", "season"]) {
+    const nested = record[key];
+    if (nested && typeof nested === "object") {
+      output.push(seasonCandidateFromRecord(nested as Record<string, unknown>));
+      collectJsonLdSeasonCandidates(nested, output, depth + 1);
+    }
+  }
+
+  const graph = record["@graph"];
+  if (graph) {
+    collectJsonLdSeasonCandidates(graph, output, depth + 1);
+  }
+}
+
+function seasonCandidateFromRecord(record: Record<string, unknown>): CrunchyrollSeasonCandidate {
+  const id = record["@id"];
+  const url = record.url;
+  return {
+    title: typeof record.name === "string" ? record.name : null,
+    url: typeof id === "string" ? id : typeof url === "string" ? url : null,
+    seasonNumber:
+      normalizeSeasonNumber(record.seasonNumber) ??
+      normalizeSeasonNumber(record.position) ??
+      seasonNumberFromTitle(typeof record.name === "string" ? record.name : ""),
+  };
+}
+
+function titleSeasonCandidate(title: string | null | undefined): CrunchyrollSeasonCandidate | null {
+  const seasonNumber = seasonNumberFromTitle(title ?? "");
+  if (!seasonNumber) {
+    return null;
+  }
+
+  return {
+    title: `Season ${seasonNumber}`,
+    seasonNumber,
+  };
+}
+
+function normalizeSeasonCandidate(candidate: CrunchyrollSeasonCandidate): CrunchyrollSeasonCandidate {
+  const seasonNumber =
+    normalizeSeasonNumber(candidate.seasonNumber) ?? seasonNumberFromTitle(candidate.title ?? "");
+  const title = cleanSeasonTitle(candidate.title, seasonNumber);
+  return {
+    title,
+    url: typeof candidate.url === "string" ? candidate.url : null,
+    seasonNumber,
+  };
+}
+
+function cleanSeasonTitle(value: string | null | undefined, seasonNumber: number | null): string | null {
+  const cleaned = cleanCrunchyrollTitle(value ?? "");
+  if (!cleaned || cleaned.toLowerCase() === "crunchyroll") {
+    return seasonNumber ? `Season ${seasonNumber}` : null;
+  }
+  if (/^s\d+$/i.test(cleaned)) {
+    return seasonNumber ? `Season ${seasonNumber}` : cleaned.toUpperCase();
+  }
+  return cleaned;
+}
+
+function seasonNumberFromTitle(title: string): number | null {
+  const match =
+    title.match(/\bS(?:eason)?\s*(\d+)\s*E(?:pisode|p\.?)?\s*\d+/i) ??
+    title.match(/\bSeason\s*(\d+)\b/i) ??
+    title.match(/\bСезон\s*(\d+)\b/i) ??
+    title.match(/\b(\d+)\s*сезон\b/i);
+  return normalizeSeasonNumber(match?.[1]);
+}
+
+function normalizeSeasonNumber(value: unknown): number | null {
+  const number = typeof value === "number" ? value : Number.parseInt(String(value ?? ""), 10);
+  return Number.isFinite(number) && number > 0 && number <= 1000 ? Math.floor(number) : null;
+}
+
+function looksLikeSeasonTitle(value: string): boolean {
+  return Boolean(seasonNumberFromTitle(value) || /^s\d+$/i.test(value.trim()));
+}
+
+function getSeasonId(candidate: CrunchyrollSeasonCandidate): string | null {
+  if (candidate.seasonNumber) {
+    return `season-${candidate.seasonNumber}`;
+  }
+  const raw = candidate.url || candidate.title;
+  if (!raw) {
+    return null;
+  }
+  return slugify(raw) || null;
+}
+
+function normalizeSeasonTitleForSeries(
+  seasonTitle: string | null,
+  seriesTitle: string,
+  seasonNumber: number | null,
+): string | null {
+  if (!seasonTitle) {
+    return seasonNumber ? `Season ${seasonNumber}` : null;
+  }
+
+  const normalizedSeason = seasonTitle.toLowerCase();
+  const normalizedSeries = seriesTitle.toLowerCase();
+  if (normalizedSeries && normalizedSeason.startsWith(normalizedSeries)) {
+    const suffix = seasonTitle.slice(seriesTitle.length).replace(/^[-:–—\s]+/, "").trim();
+    if (suffix) {
+      return cleanSeasonTitle(suffix, seasonNumber);
+    }
+  }
+
+  return seasonTitle;
 }
 
 function parseJson(value: string): unknown {

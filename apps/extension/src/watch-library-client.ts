@@ -7,6 +7,7 @@ import type { ResourceProvider, StoredWatchItem, WatchProgressEntry, WatchProgre
 const WATCH_LIBRARY_HTTP_MESSAGE_TYPE = "ANIDACHI_WATCH_LIBRARY_HTTP";
 export const WATCH_LIBRARY_CACHE_STORAGE_KEY = "anidachi.watchLibraryCache.v1";
 export const WATCH_LIBRARY_CACHE_KEY = `local:${WATCH_LIBRARY_CACHE_STORAGE_KEY}` as const;
+export const WATCH_LIBRARY_CACHE_MAX_AGE_MS = 60_000;
 
 export type WatchCheckpointKind = "local" | "room" | "pause" | "seeked" | "ended" | "pagehide" | "reconcile" | "manual";
 
@@ -47,6 +48,9 @@ export interface WatchLibrarySession {
 export interface WatchLibraryEpisode {
   episodeKey: string;
   episodeTitle: string;
+  seasonId: string | null;
+  seasonTitle: string | null;
+  seasonNumber: number | null;
   sourceUrl: string;
   currentTime: number;
   duration: number;
@@ -184,6 +188,14 @@ export function watchProgressEntriesFromStore(
 export async function getCachedWatchLibraryForUser(userId: string): Promise<CachedWatchLibrary | null> {
   const cached = normalizeCachedWatchLibrary(await storage.getItem<unknown>(WATCH_LIBRARY_CACHE_KEY));
   return cached?.userId === userId ? cached : null;
+}
+
+export function isWatchLibraryCacheFresh(
+  cached: CachedWatchLibrary,
+  nowMs = Date.now(),
+): boolean {
+  const cachedAtMs = new Date(cached.cachedAt).getTime();
+  return Number.isFinite(cachedAtMs) && nowMs - cachedAtMs <= WATCH_LIBRARY_CACHE_MAX_AGE_MS;
 }
 
 export async function setCachedWatchLibraryForUser(userId: string, library: WatchLibraryResponse): Promise<void> {
@@ -391,6 +403,9 @@ function watchProgressEntriesFromItem(
       itemTitle: item.title,
       contentId: episode.id,
       seriesId: item.seriesId,
+      seasonId: episode.seasonId,
+      seasonTitle: episode.seasonTitle,
+      seasonNumber: episode.seasonNumber,
       episodeId: episode.id,
       episodeTitle: episode.title,
       artworkUrl: item.artworkUrl,

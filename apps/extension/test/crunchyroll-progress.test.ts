@@ -117,6 +117,64 @@ describe("Crunchyroll progress extraction", () => {
     });
   });
 
+  it("extracts Crunchyroll season metadata from JSON-LD", () => {
+    mockLocation("https://www.crunchyroll.com/watch/G8WUNS207/the-view-from-the-summit");
+    document.title = "S2 E7 - The View From the Summit - Watch on Crunchyroll";
+    document.body.innerHTML = `
+      <script type="application/ld+json">
+        {
+          "@type": "TVEpisode",
+          "name": "S2 E7 - The View From the Summit",
+          "partOfSeries": { "name": "Haikyu!!" },
+          "partOfSeason": {
+            "@type": "TVSeason",
+            "name": "Haikyu!! Season 2",
+            "seasonNumber": 2
+          }
+        }
+      </script>
+    `;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 600 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 1500 });
+
+    const entry = getCrunchyrollProgressEntry({
+      title: "S2 E7 - The View From the Summit",
+      video,
+      watchedWithCount: 1,
+    });
+
+    expect(entry).toMatchObject({
+      kind: "episode",
+      itemId: "crunchyroll-series:haikyu",
+      itemTitle: "Haikyu!!",
+      seasonId: "season-2",
+      seasonTitle: "Season 2",
+      seasonNumber: 2,
+      episodeId: "G8WUNS207",
+    });
+  });
+
+  it("falls back to title season markers when JSON-LD has no season object", () => {
+    mockLocation("https://www.crunchyroll.com/watch/G8WUNS207/the-view-from-the-summit");
+    document.body.innerHTML = `<a href="/series/GYEXAMPLE/haikyu">Haikyu!!</a>`;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 600 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 1500 });
+
+    const entry = getCrunchyrollProgressEntry({
+      title: "S2 E7 - The View From the Summit",
+      video,
+      watchedWithCount: 1,
+    });
+
+    expect(entry).toMatchObject({
+      seasonId: "season-2",
+      seasonTitle: "Season 2",
+      seasonNumber: 2,
+    });
+  });
+
   it("uses breadcrumb titles instead of Crunchyroll series URLs", () => {
     mockLocation(
       "https://www.crunchyroll.com/ru/watch/GEVUZP0ZM/the-end-of-the-beginning-and-the-beginning-of-the-end",

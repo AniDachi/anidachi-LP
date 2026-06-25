@@ -9,6 +9,9 @@ export interface WatchProgressEntry {
   itemTitle: string;
   contentId?: string;
   seriesId?: string;
+  seasonId?: string;
+  seasonTitle?: string;
+  seasonNumber?: number;
   episodeId?: string;
   episodeTitle?: string;
   artworkUrl?: string;
@@ -23,6 +26,9 @@ export interface StoredEpisodeProgress {
   id: string;
   title: string;
   sourceUrl: string;
+  seasonId?: string;
+  seasonTitle?: string;
+  seasonNumber?: number;
   currentTime: number;
   duration: number;
   progress: number;
@@ -126,10 +132,12 @@ export function recordWatchProgressInStore(
   if (entry.kind === "episode") {
     const episodeId = entry.episodeId ?? entry.itemId;
     const episodes = nextItem.episodes ?? {};
+    const previousEpisode = episodes[episodeId];
     episodes[episodeId] = {
       id: episodeId,
       title: entry.episodeTitle ?? entry.itemTitle,
       sourceUrl: entry.sourceUrl,
+      ...getSeasonForStoredEpisode(entry, previousEpisode),
       currentTime,
       duration,
       progress,
@@ -283,7 +291,7 @@ function normalizeStoredWatchItem(
 function mergeStoredWatchItems(first: StoredWatchItem, second: StoredWatchItem): StoredWatchItem {
   const newest = second.lastWatchedAt >= first.lastWatchedAt ? second : first;
   const oldest = newest === second ? first : second;
-  const episodes = { ...oldest.episodes, ...newest.episodes };
+  const episodes = mergeStoredEpisodeRecords(oldest.episodes, newest.episodes);
 
   return {
     ...oldest,
@@ -297,6 +305,60 @@ function mergeStoredWatchItems(first: StoredWatchItem, second: StoredWatchItem):
     ...getArtworkForMergedItem(newest.artworkUrl, oldest.artworkUrl),
     contentId: newest.contentId ?? oldest.contentId,
     seriesId: newest.seriesId ?? oldest.seriesId,
+  };
+}
+
+function mergeStoredEpisodeRecords(
+  first: Record<string, StoredEpisodeProgress> | undefined,
+  second: Record<string, StoredEpisodeProgress> | undefined,
+): Record<string, StoredEpisodeProgress> {
+  const episodes: Record<string, StoredEpisodeProgress> = { ...(first ?? {}) };
+  for (const [episodeId, episode] of Object.entries(second ?? {})) {
+    episodes[episodeId] = episodes[episodeId]
+      ? mergeStoredEpisodeProgress(episodes[episodeId], episode)
+      : episode;
+  }
+  return episodes;
+}
+
+function mergeStoredEpisodeProgress(
+  first: StoredEpisodeProgress,
+  second: StoredEpisodeProgress,
+): StoredEpisodeProgress {
+  const newest = second.lastWatchedAt >= first.lastWatchedAt ? second : first;
+  const oldest = newest === second ? first : second;
+  return {
+    ...oldest,
+    ...newest,
+    ...getSeasonForMergedEpisode(newest, oldest),
+  };
+}
+
+function getSeasonForStoredEpisode(
+  entry: WatchProgressEntry,
+  previous: StoredEpisodeProgress | undefined,
+): Pick<StoredEpisodeProgress, "seasonId" | "seasonTitle" | "seasonNumber"> {
+  return getSeasonForMergedEpisode(
+    {
+      seasonId: entry.seasonId,
+      seasonTitle: entry.seasonTitle,
+      seasonNumber: entry.seasonNumber,
+    },
+    previous,
+  );
+}
+
+function getSeasonForMergedEpisode(
+  primary: Pick<StoredEpisodeProgress, "seasonId" | "seasonTitle" | "seasonNumber">,
+  fallback: Pick<StoredEpisodeProgress, "seasonId" | "seasonTitle" | "seasonNumber"> | undefined,
+): Pick<StoredEpisodeProgress, "seasonId" | "seasonTitle" | "seasonNumber"> {
+  const seasonId = primary.seasonId ?? fallback?.seasonId;
+  const seasonTitle = primary.seasonTitle ?? fallback?.seasonTitle;
+  const seasonNumber = primary.seasonNumber ?? fallback?.seasonNumber;
+  return {
+    ...(seasonId ? { seasonId } : {}),
+    ...(seasonTitle ? { seasonTitle } : {}),
+    ...(Number.isFinite(seasonNumber) ? { seasonNumber } : {}),
   };
 }
 

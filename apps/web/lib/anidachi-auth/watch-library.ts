@@ -41,6 +41,9 @@ export type WatchProgressReconcileEntry = {
   itemTitle: string;
   contentId?: string;
   seriesId?: string;
+  seasonId?: string;
+  seasonTitle?: string;
+  seasonNumber?: number;
   episodeId?: string;
   episodeTitle?: string;
   artworkUrl?: string;
@@ -60,6 +63,9 @@ type CleanWatchProgressEntry = {
   itemTitle: string;
   contentId: string | null;
   seriesId: string | null;
+  seasonKey: string | null;
+  seasonTitle: string | null;
+  seasonNumber: number | null;
   episodeKey: string;
   episodeTitle: string;
   sourceUrl: string;
@@ -89,6 +95,9 @@ type WatchSessionRow = {
   item_title: string;
   content_id: string | null;
   series_id: string | null;
+  season_key: string | null;
+  season_title: string | null;
+  season_number: number | null;
   episode_key: string;
   episode_title: string;
   source_url: string;
@@ -156,6 +165,9 @@ export type WatchLibrarySession = {
 export type WatchLibraryEpisode = {
   episodeKey: string;
   episodeTitle: string;
+  seasonId: string | null;
+  seasonTitle: string | null;
+  seasonNumber: number | null;
   sourceUrl: string;
   currentTime: number;
   duration: number;
@@ -246,6 +258,16 @@ export function cleanWatchProgressEntry(value: unknown): CleanWatchProgressEntry
         cleanString(input.contentId, 220) ??
         itemKey
       : itemKey;
+  const seasonNumber = normalizeSeasonNumber(input.seasonNumber);
+  const seasonTitle =
+    progressKind === "episode"
+      ? cleanString(input.seasonTitle, 180) ?? (seasonNumber ? `Season ${seasonNumber}` : null)
+      : null;
+  const seasonKey =
+    progressKind === "episode"
+      ? cleanString(input.seasonId, 220) ??
+        (seasonNumber ? `season-${seasonNumber}` : seasonTitle ? keyFromTitle(seasonTitle) : null)
+      : null;
 
   return {
     provider,
@@ -254,6 +276,9 @@ export function cleanWatchProgressEntry(value: unknown): CleanWatchProgressEntry
     itemTitle,
     contentId: cleanString(input.contentId, 220) ?? null,
     seriesId: cleanString(input.seriesId, 220) ?? null,
+    seasonKey,
+    seasonTitle,
+    seasonNumber,
     episodeKey,
     episodeTitle:
       cleanString(input.episodeTitle, 240) ??
@@ -560,6 +585,9 @@ async function upsertWatchSession(params: {
     item_title: params.entry.itemTitle,
     content_id: params.entry.contentId,
     series_id: params.entry.seriesId,
+    season_key: params.entry.seasonKey,
+    season_title: params.entry.seasonTitle,
+    season_number: params.entry.seasonNumber,
     episode_key: params.entry.episodeKey,
     episode_title: params.entry.episodeTitle,
     source_url: params.entry.sourceUrl,
@@ -670,6 +698,9 @@ async function insertWatchCheckpoint(params: {
     user_id: params.userId,
     room_id: params.roomId,
     kind: params.entry.checkpointKind,
+    season_key: params.entry.seasonKey,
+    season_title: params.entry.seasonTitle,
+    season_number: params.entry.seasonNumber,
     current_time_seconds: params.entry.currentTimeSeconds,
     duration_seconds: params.entry.durationSeconds,
     progress: params.entry.progress,
@@ -928,12 +959,18 @@ function buildWatchLibraryItems(params: {
         episode.duration = session.duration_seconds;
         episode.progress = viewerParticipant.progress;
         episode.sourceUrl = session.source_url;
+        episode.seasonId = session.season_key;
+        episode.seasonTitle = session.season_title;
+        episode.seasonNumber = session.season_number;
         episode.lastWatchedAt = viewerParticipant.updated_at;
       }
     } else {
       item.episodes.push({
         episodeKey: session.episode_key,
         episodeTitle: session.episode_title,
+        seasonId: session.season_key,
+        seasonTitle: session.season_title,
+        seasonNumber: session.season_number,
         sourceUrl: session.source_url,
         currentTime: viewerParticipant.current_time_seconds,
         duration: session.duration_seconds,
@@ -1034,6 +1071,22 @@ function normalizeWatchedWithCount(value: unknown): number {
   const count = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(count)) return 1;
   return Math.max(1, Math.min(50, Math.floor(count)));
+}
+
+function normalizeSeasonNumber(value: unknown): number | null {
+  const count = typeof value === "number" ? value : Number.parseInt(String(value ?? ""), 10);
+  if (!Number.isFinite(count)) return null;
+  const normalized = Math.floor(count);
+  return normalized > 0 && normalized <= 1000 ? normalized : null;
+}
+
+function keyFromTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 }
 
 function cleanObservedAt(value: unknown): string {

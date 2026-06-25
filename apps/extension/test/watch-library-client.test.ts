@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   createRoomFromWatchSessionHttpMessage,
+  isWatchLibraryCacheFresh,
   isWatchLibraryHttpMessage,
   reconcileWatchProgressHttpMessage,
+  WATCH_LIBRARY_CACHE_MAX_AGE_MS,
   WATCH_LIBRARY_CACHE_KEY,
   WATCH_LIBRARY_CACHE_STORAGE_KEY,
   watchProgressEntriesFromStore,
+  type CachedWatchLibrary,
 } from "../src/watch-library-client";
 import type { WatchProgressStore } from "../src/watch-progress";
 
@@ -13,6 +16,28 @@ describe("extension watch library HTTP bridge", () => {
   it("keeps the watch library cache in extension-local storage", () => {
     expect(WATCH_LIBRARY_CACHE_STORAGE_KEY).toBe("anidachi.watchLibraryCache.v1");
     expect(WATCH_LIBRARY_CACHE_KEY).toBe("local:anidachi.watchLibraryCache.v1");
+    expect(WATCH_LIBRARY_CACHE_MAX_AGE_MS).toBe(60_000);
+  });
+
+  it("treats recent watch library cache as fresh", () => {
+    const cached: CachedWatchLibrary = {
+      userId: "user-1",
+      cachedAt: "2026-06-25T00:00:00.000Z",
+      library: {
+        generatedAt: "2026-06-25T00:00:00.000Z",
+        limits: {
+          planCode: "free",
+          maxActiveTrackedTitles: 3,
+          activeTrackedTitleCount: 0,
+          historyRetentionDays: 7,
+          retainedSince: "2026-06-18T00:00:00.000Z",
+        },
+        items: [],
+      },
+    };
+
+    expect(isWatchLibraryCacheFresh(cached, Date.parse("2026-06-25T00:00:59.000Z"))).toBe(true);
+    expect(isWatchLibraryCacheFresh(cached, Date.parse("2026-06-25T00:01:01.000Z"))).toBe(false);
   });
 
   it("accepts list, reconcile, and create-room messages", () => {
@@ -83,6 +108,9 @@ describe("extension watch library HTTP bridge", () => {
                 G31UXV53P: {
                   id: "G31UXV53P",
                   title: "E3 - Clean Up After Yourself",
+                  seasonId: "season-1",
+                  seasonTitle: "Season 1",
+                  seasonNumber: 1,
                   sourceUrl: "https://www.crunchyroll.com/watch/G31UXV53P/example",
                   currentTime: 90,
                   duration: 100,
@@ -123,6 +151,9 @@ describe("extension watch library HTTP bridge", () => {
       provider: "crunchyroll",
       kind: "episode",
       itemId: "series-1",
+      seasonId: "season-1",
+      seasonTitle: "Season 1",
+      seasonNumber: 1,
       episodeId: "G31UXV53P",
       roomId: "room-1",
       watchedWithCount: 4,
