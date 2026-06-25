@@ -15,6 +15,9 @@ test("watch progress entries normalize episode checkpoints into series items", (
     itemTitle: "Kill Blue",
     contentId: "G31UXV53P",
     seriesId: "GKILLBLUE",
+    seasonId: "season-1",
+    seasonTitle: "Season 1",
+    seasonNumber: 1,
     episodeId: "G31UXV53P",
     episodeTitle: "E3 - Clean Up After Yourself",
     sourceUrl: "https://www.crunchyroll.com/watch/G31UXV53P/clean-up-after-yourself",
@@ -30,6 +33,9 @@ test("watch progress entries normalize episode checkpoints into series items", (
   assert.equal(entry?.provider, "crunchyroll");
   assert.equal(entry?.itemKind, "series");
   assert.equal(entry?.episodeKey, "G31UXV53P");
+  assert.equal(entry?.seasonKey, "season-1");
+  assert.equal(entry?.seasonTitle, "Season 1");
+  assert.equal(entry?.seasonNumber, 1);
   assert.equal(entry?.currentTimeSeconds, 1440);
   assert.equal(entry?.durationSeconds, 1440);
   assert.equal(entry?.progress, 1);

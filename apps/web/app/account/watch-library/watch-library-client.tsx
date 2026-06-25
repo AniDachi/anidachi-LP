@@ -26,6 +26,15 @@ type CreatedRoomResponse = {
   shareableLink: string;
 };
 
+type EpisodeSeasonGroup = {
+  key: string;
+  title: string;
+  known: boolean;
+  sortNumber: number | null;
+  latestWatchedAt: string;
+  episodes: WatchLibraryEpisode[];
+};
+
 const PLAN_LABELS: Record<string, string> = {
   free: "Free",
   plus: "Plus",
@@ -203,6 +212,17 @@ function WatchItemCard({
   item: WatchLibraryItem;
   onCreateRoom: (session: WatchLibrarySession, sourceUrl: string) => void;
 }) {
+  const episodesByDisplayOrder = useMemo(
+    () => [...item.episodes].sort(compareEpisodesByDisplayOrder),
+    [item.episodes],
+  );
+  const seasonGroups = useMemo(
+    () => buildEpisodeSeasonGroups(episodesByDisplayOrder),
+    [episodesByDisplayOrder],
+  );
+  const showSeasonGroups =
+    item.itemKind === "series" && (seasonGroups.length > 1 || seasonGroups.some((group) => group.known));
+
   return (
     <section className="overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
       <div className="flex items-center gap-4 border-b border-brand-border p-4">
@@ -218,8 +238,54 @@ function WatchItemCard({
         </div>
       </div>
 
-      <div className="divide-y divide-[--brand-border]">
-        {item.episodes.map((episode) => (
+      {showSeasonGroups ? (
+        <div className="divide-y divide-brand-border/70">
+          {seasonGroups.map((group) => (
+            <SeasonGroup
+              busySessionId={busySessionId}
+              group={group}
+              key={group.key}
+              onCreateRoom={onCreateRoom}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="divide-y divide-brand-border/70">
+          {episodesByDisplayOrder.map((episode) => (
+            <EpisodeRow
+              busySessionId={busySessionId}
+              episode={episode}
+              key={episode.episodeKey}
+              onCreateRoom={onCreateRoom}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SeasonGroup({
+  busySessionId,
+  group,
+  onCreateRoom,
+}: {
+  busySessionId: string | null;
+  group: EpisodeSeasonGroup;
+  onCreateRoom: (session: WatchLibrarySession, sourceUrl: string) => void;
+}) {
+  return (
+    <section>
+      <div className="flex items-baseline justify-between gap-4 border-b border-brand-border/50 bg-white/[0.025] px-4 py-3">
+        <div className="min-w-0">
+          <h4 className="text-sm font-bold text-brand-orange">{group.title}</h4>
+          <p className="mt-0.5 text-xs text-foreground/45">
+            {formatEpisodeCount(group.episodes.length)} · latest {formatDate(group.latestWatchedAt)}
+          </p>
+        </div>
+      </div>
+      <div className="divide-y divide-brand-border/50">
+        {group.episodes.map((episode) => (
           <EpisodeRow
             busySessionId={busySessionId}
             episode={episode}
@@ -314,6 +380,115 @@ function providerLabel(provider: string): string {
   if (provider === "youtube") return "YouTube";
   if (provider === "amazon") return "Amazon";
   return provider;
+}
+
+function buildEpisodeSeasonGroups(episodes: WatchLibraryEpisode[]): EpisodeSeasonGroup[] {
+  const groups = new Map<string, EpisodeSeasonGroup>();
+  for (const episode of episodes) {
+    const key = episodeSeasonKey(episode);
+    const existing = groups.get(key);
+    if (existing) {
+      existing.episodes.push(episode);
+      if (episode.lastWatchedAt > existing.latestWatchedAt) {
+        existing.latestWatchedAt = episode.lastWatchedAt;
+      }
+      continue;
+    }
+
+    groups.set(key, {
+      key,
+      title: episodeSeasonTitle(episode),
+      known: hasEpisodeSeason(episode),
+      sortNumber: episode.seasonNumber ?? getEpisodeSeasonNumber(episode.episodeTitle),
+      latestWatchedAt: episode.lastWatchedAt,
+      episodes: [episode],
+    });
+  }
+
+  return Array.from(groups.values()).sort(compareSeasonGroups);
+}
+
+function compareSeasonGroups(a: EpisodeSeasonGroup, b: EpisodeSeasonGroup): number {
+  if (a.known !== b.known) return a.known ? -1 : 1;
+  if (a.sortNumber !== null && b.sortNumber !== null && a.sortNumber !== b.sortNumber) {
+    return a.sortNumber - b.sortNumber;
+  }
+  if (a.sortNumber !== null && b.sortNumber === null) return -1;
+  if (a.sortNumber === null && b.sortNumber !== null) return 1;
+  return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function compareEpisodesByDisplayOrder(a: WatchLibraryEpisode, b: WatchLibraryEpisode): number {
+  const aNumber = getEpisodeNumber(a.episodeTitle);
+  const bNumber = getEpisodeNumber(b.episodeTitle);
+  if (aNumber !== null && bNumber !== null && aNumber !== bNumber) return aNumber - bNumber;
+  if (aNumber !== null && bNumber === null) return -1;
+  if (aNumber === null && bNumber !== null) return 1;
+  return a.episodeTitle.localeCompare(b.episodeTitle, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
+function getEpisodeNumber(title: string): number | null {
+  const match =
+    title.match(/\bE\s?(\d+)\b/i) ??
+    title.match(/\bEpisode\s+(\d+)\b/i) ??
+    title.match(/\bСерия\s+(\d+)\b/i) ??
+    title.match(/^(\d+)[\s.:-]/);
+  if (!match) return null;
+  const value = Number.parseInt(match[1] ?? "", 10);
+  return Number.isFinite(value) ? value : null;
+}
+
+function episodeSeasonKey(episode: WatchLibraryEpisode): string {
+  if (episode.seasonId) return episode.seasonId;
+  if (episode.seasonNumber) return `season-${episode.seasonNumber}`;
+  const seasonNumber = getEpisodeSeasonNumber(episode.episodeTitle);
+  if (seasonNumber) return `season-${seasonNumber}`;
+  if (episode.seasonTitle) return `season:${slugKey(episode.seasonTitle)}`;
+  return "season:unknown";
+}
+
+function episodeSeasonTitle(episode: WatchLibraryEpisode): string {
+  if (episode.seasonTitle) return episode.seasonTitle;
+  if (episode.seasonNumber) return `Season ${episode.seasonNumber}`;
+  const seasonNumber = getEpisodeSeasonNumber(episode.episodeTitle);
+  if (seasonNumber) return `Season ${seasonNumber}`;
+  return "Other episodes";
+}
+
+function hasEpisodeSeason(episode: WatchLibraryEpisode): boolean {
+  return Boolean(
+    episode.seasonId ||
+      episode.seasonTitle ||
+      episode.seasonNumber ||
+      getEpisodeSeasonNumber(episode.episodeTitle),
+  );
+}
+
+function formatEpisodeCount(count: number): string {
+  return `${count} ${count === 1 ? "episode" : "episodes"}`;
+}
+
+function slugKey(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+function getEpisodeSeasonNumber(title: string): number | null {
+  const match =
+    title.match(/\bS(?:eason)?\s*(\d+)\s*E(?:pisode|p\.?)?\s*\d+/i) ??
+    title.match(/\bSeason\s*(\d+)\b/i) ??
+    title.match(/\bСезон\s*(\d+)\b/i) ??
+    title.match(/\b(\d+)\s*сезон\b/i);
+  if (!match) return null;
+  const value = Number.parseInt(match[1] ?? "", 10);
+  return Number.isFinite(value) && value > 0 ? value : null;
 }
 
 function formatDate(value: string): string {

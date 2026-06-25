@@ -176,6 +176,10 @@ export async function fetchAuthenticatedUser(accessToken: string): Promise<Authe
   return normalizeAuthenticatedUser(body?.user);
 }
 
+export async function getCachedExtensionSession(): Promise<ExtensionAuthTokens | null> {
+  return getStoredAuthTokens();
+}
+
 export async function getCurrentExtensionSession(): Promise<ExtensionAuthTokens | null> {
   const stored = await getStoredAuthTokens();
   if (!stored) return null;
