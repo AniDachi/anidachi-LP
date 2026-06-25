@@ -1,4 +1,10 @@
 import type { WatchProgressEntry } from "./watch-progress";
+import {
+  inferCrunchyrollSeasonFromSourceUrl,
+  inferCrunchyrollSeasonFromTitle,
+  normalizeSeasonTitle,
+  seasonNumberFromTitle,
+} from "./crunchyroll-season";
 
 interface CrunchyrollProgressInput {
   title: string | null;
@@ -26,7 +32,7 @@ export function getCrunchyrollProgressEntry(
   const duration = Number.isFinite(input.video.duration) ? input.video.duration : 0;
   const sourceUrl = `${url.origin}${url.pathname}`;
   const seriesInfo = getCrunchyrollSeriesInfo(title);
-  const seasonInfo = getCrunchyrollSeasonInfo(title);
+  const seasonInfo = getCrunchyrollSeasonInfo(title, sourceUrl);
   const isMovie = looksLikeMovie(title, duration);
   const isEpisode = !isMovie && (Boolean(seriesInfo.title) || looksLikeEpisode(title));
   const itemTitle = isEpisode ? (seriesInfo.title ?? toTitle(slug)) : title;
@@ -131,10 +137,12 @@ function getCrunchyrollSeriesInfo(episodeTitle: string): CrunchyrollSeriesInfo {
   };
 }
 
-function getCrunchyrollSeasonInfo(episodeTitle: string): CrunchyrollSeasonInfo {
+function getCrunchyrollSeasonInfo(episodeTitle: string, sourceUrl: string): CrunchyrollSeasonInfo {
   const candidates = [
     ...getJsonLdSeasonCandidates(),
+    sourceUrlSeasonCandidate(sourceUrl),
     titleSeasonCandidate(episodeTitle),
+    ...getMetaTitleSeasonCandidates(),
     titleSeasonCandidate(document.title),
   ].filter((candidate): candidate is CrunchyrollSeasonCandidate => Boolean(candidate));
   const normalized = candidates
@@ -406,47 +414,52 @@ function seasonCandidateFromRecord(record: Record<string, unknown>): Crunchyroll
   };
 }
 
-function titleSeasonCandidate(title: string | null | undefined): CrunchyrollSeasonCandidate | null {
-  const seasonNumber = seasonNumberFromTitle(title ?? "");
-  if (!seasonNumber) {
+function sourceUrlSeasonCandidate(sourceUrl: string): CrunchyrollSeasonCandidate | null {
+  const inferred = inferCrunchyrollSeasonFromSourceUrl(sourceUrl);
+  if (!inferred) {
     return null;
   }
 
   return {
-    title: `Season ${seasonNumber}`,
-    seasonNumber,
+    title: inferred.seasonTitle,
+    seasonNumber: inferred.seasonNumber,
   };
+}
+
+function titleSeasonCandidate(title: string | null | undefined): CrunchyrollSeasonCandidate | null {
+  const inferred = inferCrunchyrollSeasonFromTitle(title);
+  if (!inferred) {
+    return null;
+  }
+
+  return {
+    title: inferred.seasonTitle,
+    seasonNumber: inferred.seasonNumber,
+  };
+}
+
+function getMetaTitleSeasonCandidates(): CrunchyrollSeasonCandidate[] {
+  const selectors = [
+    'meta[property="og:title"]',
+    'meta[name="twitter:title"]',
+    'meta[name="title"]',
+    'meta[property="twitter:title"]',
+  ];
+
+  return selectors
+    .map((selector) => titleSeasonCandidate(document.querySelector<HTMLMetaElement>(selector)?.content))
+    .filter((candidate): candidate is CrunchyrollSeasonCandidate => Boolean(candidate));
 }
 
 function normalizeSeasonCandidate(candidate: CrunchyrollSeasonCandidate): CrunchyrollSeasonCandidate {
   const seasonNumber =
     normalizeSeasonNumber(candidate.seasonNumber) ?? seasonNumberFromTitle(candidate.title ?? "");
-  const title = cleanSeasonTitle(candidate.title, seasonNumber);
+  const title = normalizeSeasonTitle(candidate.title, seasonNumber);
   return {
     title,
     url: typeof candidate.url === "string" ? candidate.url : null,
     seasonNumber,
   };
-}
-
-function cleanSeasonTitle(value: string | null | undefined, seasonNumber: number | null): string | null {
-  const cleaned = cleanCrunchyrollTitle(value ?? "");
-  if (!cleaned || cleaned.toLowerCase() === "crunchyroll") {
-    return seasonNumber ? `Season ${seasonNumber}` : null;
-  }
-  if (/^s\d+$/i.test(cleaned)) {
-    return seasonNumber ? `Season ${seasonNumber}` : cleaned.toUpperCase();
-  }
-  return cleaned;
-}
-
-function seasonNumberFromTitle(title: string): number | null {
-  const match =
-    title.match(/\bS(?:eason)?\s*(\d+)\s*E(?:pisode|p\.?)?\s*\d+/i) ??
-    title.match(/\bSeason\s*(\d+)\b/i) ??
-    title.match(/\bСезон\s*(\d+)\b/i) ??
-    title.match(/\b(\d+)\s*сезон\b/i);
-  return normalizeSeasonNumber(match?.[1]);
 }
 
 function normalizeSeasonNumber(value: unknown): number | null {
@@ -483,7 +496,7 @@ function normalizeSeasonTitleForSeries(
   if (normalizedSeries && normalizedSeason.startsWith(normalizedSeries)) {
     const suffix = seasonTitle.slice(seriesTitle.length).replace(/^[-:–—\s]+/, "").trim();
     if (suffix) {
-      return cleanSeasonTitle(suffix, seasonNumber);
+      return normalizeSeasonTitle(suffix, seasonNumber);
     }
   }
 

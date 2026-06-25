@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  clearWatchLibraryHttpMessage,
   createRoomFromWatchSessionHttpMessage,
   isWatchLibraryCacheFresh,
   isWatchLibraryHttpMessage,
@@ -40,7 +41,7 @@ describe("extension watch library HTTP bridge", () => {
     expect(isWatchLibraryCacheFresh(cached, Date.parse("2026-06-25T00:01:01.000Z"))).toBe(false);
   });
 
-  it("accepts list, reconcile, and create-room messages", () => {
+  it("accepts list, clear, reconcile, and create-room messages", () => {
     expect(
       isWatchLibraryHttpMessage({
         type: "ANIDACHI_WATCH_LIBRARY_HTTP",
@@ -48,6 +49,7 @@ describe("extension watch library HTTP bridge", () => {
         accessToken: "access-1",
       }),
     ).toBe(true);
+    expect(isWatchLibraryHttpMessage(clearWatchLibraryHttpMessage("access-1"))).toBe(true);
     expect(
       isWatchLibraryHttpMessage(
         reconcileWatchProgressHttpMessage("access-1", [

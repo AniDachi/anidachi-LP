@@ -5,6 +5,7 @@ import {
   Film,
   Play,
   RefreshCw,
+  Trash2,
   Users,
 } from "lucide-react";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
@@ -15,6 +16,10 @@ import type {
   WatchLibrarySession,
 } from "@/lib/anidachi-auth/watch-library";
 import { api } from "@/lib/client-api";
+import {
+  inferCrunchyrollSeasonFromSourceUrl,
+  inferSeasonNumberFromTitle,
+} from "@/lib/watch-season-inference";
 
 type Notice = {
   tone: "success" | "error";
@@ -49,6 +54,7 @@ export function WatchLibraryClient({
   const [library, setLibrary] = useState(initialLibrary);
   const [busySessionId, setBusySessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const episodeCount = useMemo(
     () => library.items.reduce((sum, item) => sum + item.episodes.length, 0),
@@ -83,6 +89,26 @@ export function WatchLibraryClient({
       setLoading(false);
     }
   }, []);
+
+  const clearHistory = useCallback(async () => {
+    if (!library.items.length || clearing) return;
+    const confirmed = window.confirm("Clear your AniDachi watch history?");
+    if (!confirmed) return;
+
+    setClearing(true);
+    setNotice(null);
+    try {
+      setLibrary(await api<WatchLibraryResponse>("/api/watch-library", { method: "DELETE" }));
+      setNotice({ tone: "success", text: "Watch history cleared." });
+    } catch (error) {
+      setNotice({
+        tone: "error",
+        text: error instanceof Error ? error.message : "Could not clear watch library",
+      });
+    } finally {
+      setClearing(false);
+    }
+  }, [clearing, library.items.length]);
 
   const createRoom = useCallback(async (session: WatchLibrarySession, sourceUrl: string) => {
     setBusySessionId(session.id);
@@ -135,15 +161,26 @@ export function WatchLibraryClient({
               {library.limits.historyRetentionDays} days of history.
             </p>
           </div>
-          <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-4 text-sm font-semibold text-foreground transition hover:bg-brand-orange/20 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={loading}
-            onClick={() => void refresh()}
-            type="button"
-          >
-            <RefreshCw className="h-4 w-4" aria-hidden />
-            Refresh
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-4 text-sm font-semibold text-foreground transition hover:bg-brand-orange/20 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={loading || clearing}
+              onClick={() => void refresh()}
+              type="button"
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden />
+              Refresh
+            </button>
+            <button
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-400/25 bg-red-500/10 px-4 text-sm font-semibold text-red-100 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={clearing || !library.items.length}
+              onClick={() => void clearHistory()}
+              type="button"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              {clearing ? "Clearing..." : "Clear history"}
+            </button>
+          </div>
         </div>
       </section>
 
@@ -399,7 +436,10 @@ function buildEpisodeSeasonGroups(episodes: WatchLibraryEpisode[]): EpisodeSeaso
       key,
       title: episodeSeasonTitle(episode),
       known: hasEpisodeSeason(episode),
-      sortNumber: episode.seasonNumber ?? getEpisodeSeasonNumber(episode.episodeTitle),
+      sortNumber:
+        episode.seasonNumber ??
+        inferredEpisodeSeason(episode)?.seasonNumber ??
+        getEpisodeSeasonNumber(episode.episodeTitle),
       latestWatchedAt: episode.lastWatchedAt,
       episodes: [episode],
     });
@@ -444,6 +484,8 @@ function getEpisodeNumber(title: string): number | null {
 function episodeSeasonKey(episode: WatchLibraryEpisode): string {
   if (episode.seasonId) return episode.seasonId;
   if (episode.seasonNumber) return `season-${episode.seasonNumber}`;
+  const inferred = inferredEpisodeSeason(episode);
+  if (inferred) return inferred.seasonId;
   const seasonNumber = getEpisodeSeasonNumber(episode.episodeTitle);
   if (seasonNumber) return `season-${seasonNumber}`;
   if (episode.seasonTitle) return `season:${slugKey(episode.seasonTitle)}`;
@@ -453,6 +495,8 @@ function episodeSeasonKey(episode: WatchLibraryEpisode): string {
 function episodeSeasonTitle(episode: WatchLibraryEpisode): string {
   if (episode.seasonTitle) return episode.seasonTitle;
   if (episode.seasonNumber) return `Season ${episode.seasonNumber}`;
+  const inferred = inferredEpisodeSeason(episode);
+  if (inferred) return inferred.seasonTitle;
   const seasonNumber = getEpisodeSeasonNumber(episode.episodeTitle);
   if (seasonNumber) return `Season ${seasonNumber}`;
   return "Other episodes";
@@ -463,8 +507,13 @@ function hasEpisodeSeason(episode: WatchLibraryEpisode): boolean {
     episode.seasonId ||
       episode.seasonTitle ||
       episode.seasonNumber ||
+      inferredEpisodeSeason(episode) ||
       getEpisodeSeasonNumber(episode.episodeTitle),
   );
+}
+
+function inferredEpisodeSeason(episode: WatchLibraryEpisode) {
+  return inferCrunchyrollSeasonFromSourceUrl(episode.sourceUrl);
 }
 
 function formatEpisodeCount(count: number): string {
@@ -481,14 +530,7 @@ function slugKey(value: string): string {
 }
 
 function getEpisodeSeasonNumber(title: string): number | null {
-  const match =
-    title.match(/\bS(?:eason)?\s*(\d+)\s*E(?:pisode|p\.?)?\s*\d+/i) ??
-    title.match(/\bSeason\s*(\d+)\b/i) ??
-    title.match(/\bСезон\s*(\d+)\b/i) ??
-    title.match(/\b(\d+)\s*сезон\b/i);
-  if (!match) return null;
-  const value = Number.parseInt(match[1] ?? "", 10);
-  return Number.isFinite(value) && value > 0 ? value : null;
+  return inferSeasonNumberFromTitle(title);
 }
 
 function formatDate(value: string): string {

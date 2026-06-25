@@ -22,6 +22,10 @@ import { getCachedExtensionSession, getCurrentExtensionSession, signInWithWebsit
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
+import {
+  inferCrunchyrollSeasonFromSourceUrl,
+  seasonNumberFromTitle,
+} from "./crunchyroll-season";
 import { popupStyles } from "./popup-styles";
 import {
   acceptRoomInvite,
@@ -53,6 +57,9 @@ import {
   type WatchProgressStore,
 } from "./watch-progress";
 import {
+  clearCachedWatchLibrary,
+  clearWatchLibrary,
+  clearWatchLibrarySyncWatermark,
   createRoomFromWatchSession,
   getCachedWatchLibraryForUser,
   getWatchLibrarySyncWatermark,
@@ -146,6 +153,7 @@ export function PopupApp() {
   const [busySocialAction, setBusySocialAction] = useState<string | null>(null);
   const [socialNotice, setSocialNotice] = useState<PopupNotice | null>(null);
   const [busyWatchSessionId, setBusyWatchSessionId] = useState<string | null>(null);
+  const [clearingHistory, setClearingHistory] = useState(false);
   const [libraryActivityFilter, setLibraryActivityFilter] = useState<LibraryActivityFilter>("solo");
   const [libraryPersonFilter, setLibraryPersonFilter] = useState<LibraryPersonFilter>("all");
   const [openProviders, setOpenProviders] = useState<Record<string, boolean>>({
@@ -687,6 +695,8 @@ export function PopupApp() {
     () => buildProviderFolders(store).reduce((sum, folder) => sum + folder.items.length, 0),
     [store],
   );
+  const serverItemsCount = watchLibraryState.data?.items.length ?? 0;
+  const canClearHistory = localItemsCount > 0 || serverItemsCount > 0;
   useEffect(() => {
     const missingPosters = folders
       .flatMap((folder) => folder.items)
@@ -736,8 +746,43 @@ export function PopupApp() {
   }, [folders]);
 
   const clearHistory = async () => {
-    await chrome.storage.local.remove(WATCH_PROGRESS_STORAGE_KEY);
-    setStore(createEmptyWatchProgressStore());
+    if (clearingHistory || !canClearHistory) return;
+    const confirmed = window.confirm(
+      "Clear watch history for this AniDachi account and this browser?",
+    );
+    if (!confirmed) return;
+
+    setClearingHistory(true);
+    setWatchLibraryState((current) =>
+      current.data ? { status: "loading", data: current.data, error: null } : current,
+    );
+    try {
+      const tokens = authSession.status === "ready" ? authSession.tokens : await getCachedExtensionSession();
+      const clearedLibrary = tokens ? await clearWatchLibrary(tokens.accessToken) : null;
+
+      await Promise.all([
+        chrome.storage.local.remove(WATCH_PROGRESS_STORAGE_KEY),
+        clearCachedWatchLibrary(),
+        clearWatchLibrarySyncWatermark(),
+      ]);
+
+      const emptyStore = createEmptyWatchProgressStore();
+      setStore(emptyStore);
+      if (tokens && clearedLibrary) {
+        await setCachedWatchLibraryForUser(tokens.user.id, clearedLibrary);
+        setWatchLibraryState({ status: "ready", data: clearedLibrary, error: null });
+      } else {
+        setWatchLibraryState({ status: "signed-out", data: null, error: null });
+      }
+    } catch (error) {
+      setWatchLibraryState((current) => ({
+        status: "error",
+        data: current.data,
+        error: error instanceof Error ? error.message : "Could not clear watch history",
+      }));
+    } finally {
+      setClearingHistory(false);
+    }
   };
 
   const openAccount = async () => {
@@ -922,15 +967,15 @@ export function PopupApp() {
             </div>
           )}
           <button
-            aria-label="Clear local progress cache"
+            aria-label="Clear watch history"
             className="popup-quiet-danger"
-            disabled={!localItemsCount}
-            title="Clear local progress cache"
+            disabled={!canClearHistory || clearingHistory}
+            title="Clear watch history"
             type="button"
             onClick={clearHistory}
           >
             <Trash2 size={13} />
-            Clear local cache
+            {clearingHistory ? "Clearing..." : "Clear watch history"}
           </button>
         </section>
       ) : activeTab === "friends" ? (
@@ -2799,7 +2844,10 @@ function buildEpisodeSeasonGroups(episodes: StoredEpisodeProgress[]): EpisodeSea
       key,
       title: episodeSeasonTitle(episode),
       known: hasEpisodeSeason(episode),
-      sortNumber: episode.seasonNumber ?? getEpisodeSeasonNumber(episode.title),
+      sortNumber:
+        episode.seasonNumber ??
+        inferredEpisodeSeason(episode)?.seasonNumber ??
+        getEpisodeSeasonNumber(episode.title),
       latestWatchedAt: episode.lastWatchedAt,
       episodes: [episode],
     });
@@ -2831,6 +2879,10 @@ function episodeSeasonKey(episode: StoredEpisodeProgress): string {
   if (episode.seasonNumber) {
     return `season-${episode.seasonNumber}`;
   }
+  const inferred = inferredEpisodeSeason(episode);
+  if (inferred) {
+    return inferred.seasonId;
+  }
   const seasonNumber = getEpisodeSeasonNumber(episode.title);
   if (seasonNumber) {
     return `season-${seasonNumber}`;
@@ -2848,6 +2900,10 @@ function episodeSeasonTitle(episode: StoredEpisodeProgress): string {
   if (episode.seasonNumber) {
     return `Season ${episode.seasonNumber}`;
   }
+  const inferred = inferredEpisodeSeason(episode);
+  if (inferred) {
+    return inferred.seasonTitle;
+  }
   const seasonNumber = getEpisodeSeasonNumber(episode.title);
   if (seasonNumber) {
     return `Season ${seasonNumber}`;
@@ -2860,8 +2916,13 @@ function hasEpisodeSeason(episode: StoredEpisodeProgress): boolean {
     episode.seasonId ||
       episode.seasonTitle ||
       episode.seasonNumber ||
+      inferredEpisodeSeason(episode) ||
       getEpisodeSeasonNumber(episode.title),
   );
+}
+
+function inferredEpisodeSeason(episode: StoredEpisodeProgress) {
+  return inferCrunchyrollSeasonFromSourceUrl(episode.sourceUrl);
 }
 
 function formatEpisodeCount(count: number): string {
@@ -2878,16 +2939,7 @@ function getEpisodeNumber(title: string): number | null {
 }
 
 function getEpisodeSeasonNumber(title: string): number | null {
-  const match =
-    title.match(/\bS(?:eason)?\s*(\d+)\s*E(?:pisode|p\.?)?\s*\d+/i) ??
-    title.match(/\bSeason\s*(\d+)\b/i) ??
-    title.match(/\bСезон\s*(\d+)\b/i) ??
-    title.match(/\b(\d+)\s*сезон\b/i);
-  if (!match) {
-    return null;
-  }
-  const value = Number.parseInt(match[1] ?? "", 10);
-  return Number.isFinite(value) && value > 0 ? value : null;
+  return seasonNumberFromTitle(title);
 }
 
 function stripEpisodePrefix(title: string): string {

@@ -43,6 +43,25 @@ test("watch progress entries normalize episode checkpoints into series items", (
   assert.equal(entry?.observedAt, "2027-01-15T08:00:00.000Z");
 });
 
+test("watch progress entries infer known Crunchyroll seasons from source URLs", () => {
+  const entry = cleanWatchProgressEntry({
+    provider: "crunchyroll",
+    kind: "episode",
+    itemId: "crunchyroll-series:haikyu",
+    itemTitle: "Haikyu!!",
+    contentId: "GRP8P9XGR",
+    episodeId: "GRP8P9XGR",
+    episodeTitle: "E1 - Let's Go To Tokyo!!",
+    sourceUrl: "https://www.crunchyroll.com/watch/GRP8P9XGR/lets-go-to-tokyo",
+    currentTime: 456,
+    duration: 1440,
+  });
+
+  assert.equal(entry?.seasonKey, "season-2");
+  assert.equal(entry?.seasonTitle, "Season 2");
+  assert.equal(entry?.seasonNumber, 2);
+});
+
 test("watch progress entries reject unsupported providers and unsafe URLs", () => {
   assert.equal(
     cleanWatchProgressEntry({
