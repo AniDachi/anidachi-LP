@@ -2,7 +2,13 @@ import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
 import { createWebsiteRoomHeaders, RoomApiError, type CreatedRoom } from "./room-client";
 import { storage } from "wxt/utils/storage";
-import type { ResourceProvider, StoredWatchItem, WatchProgressEntry, WatchProgressStore } from "./watch-progress";
+import {
+  recordWatchProgressInStore,
+  type ResourceProvider,
+  type StoredWatchItem,
+  type WatchProgressEntry,
+  type WatchProgressStore,
+} from "./watch-progress";
 
 const WATCH_LIBRARY_HTTP_MESSAGE_TYPE = "ANIDACHI_WATCH_LIBRARY_HTTP";
 export const WATCH_LIBRARY_CACHE_STORAGE_KEY = "anidachi.watchLibraryCache.v1";
@@ -88,6 +94,8 @@ export interface CachedWatchLibrary {
   cachedAt: string;
   library: WatchLibraryResponse;
 }
+
+export type WatchLibrarySyncLedger = Record<string, number>;
 
 export type WatchLibraryHttpMessage =
   | {
@@ -186,21 +194,117 @@ export function watchProgressEntriesFromStore(
   checkpointKind: WatchCheckpointKind = "reconcile",
   sinceMs = 0,
 ): WatchProgressReconcileEntry[] {
+  return collectWatchProgressEntriesFromStore(store, checkpointKind)
+    .filter((entry) => Number(entry.observedAt ?? 0) > sinceMs)
+    .sort((a, b) => Number(b.observedAt ?? 0) - Number(a.observedAt ?? 0))
+    .slice(0, 100);
+}
+
+function collectWatchProgressEntriesFromStore(
+  store: WatchProgressStore,
+  checkpointKind: WatchCheckpointKind,
+): WatchProgressReconcileEntry[] {
   const entries: WatchProgressReconcileEntry[] = [];
   for (const provider of Object.keys(store.providers) as ResourceProvider[]) {
     for (const item of Object.values(store.providers[provider]?.items ?? {})) {
       entries.push(...watchProgressEntriesFromItem(item, checkpointKind));
     }
   }
-  return entries
-    .filter((entry) => Number(entry.observedAt ?? 0) > sinceMs)
+  return entries;
+}
+
+export function watchProgressEntriesFromStoreForSync(
+  store: WatchProgressStore,
+  checkpointKind: WatchCheckpointKind,
+  ledger: WatchLibrarySyncLedger,
+): WatchProgressReconcileEntry[] {
+  return collectWatchProgressEntriesFromStore(store, checkpointKind)
+    .filter(
+      (entry) =>
+        Number(entry.observedAt ?? 0) > (ledger[watchProgressSyncEntryKey(entry)] ?? 0),
+    )
     .sort((a, b) => Number(b.observedAt ?? 0) - Number(a.observedAt ?? 0))
     .slice(0, 100);
 }
 
+export function watchProgressSyncEntryKey(
+  entry: Pick<
+    WatchProgressReconcileEntry,
+    "provider" | "itemId" | "episodeId" | "contentId" | "kind"
+  >,
+): string {
+  const leafId =
+    entry.kind === "movie" ? entry.itemId : entry.episodeId ?? entry.contentId ?? entry.itemId;
+  return `${entry.provider}:${entry.itemId}:${leafId}`;
+}
+
+export function watchProgressEntriesFromWatchLibrary(
+  library: WatchLibraryResponse | null,
+  checkpointKind: WatchCheckpointKind = "reconcile",
+): WatchProgressReconcileEntry[] {
+  const entries: WatchProgressReconcileEntry[] = [];
+  for (const item of library?.items ?? []) {
+    for (const episode of item.episodes) {
+      const observedAt = new Date(episode.lastWatchedAt).getTime();
+      if (!Number.isFinite(observedAt)) {
+        continue;
+      }
+
+      const latestSession = episode.sessions[0] ?? null;
+      entries.push({
+        provider: item.provider,
+        kind: item.itemKind === "series" ? "episode" : "movie",
+        itemId: item.itemKey,
+        itemTitle: item.itemTitle,
+        contentId: episode.episodeKey,
+        seasonId: episode.seasonId ?? undefined,
+        seasonTitle: episode.seasonTitle ?? undefined,
+        seasonNumber: episode.seasonNumber ?? undefined,
+        episodeId: episode.episodeKey,
+        episodeTitle: episode.episodeTitle,
+        artworkUrl: item.artworkUrl ?? undefined,
+        sourceUrl: episode.sourceUrl,
+        currentTime: episode.currentTime,
+        duration: episode.duration,
+        roomId: latestSession?.roomId ?? undefined,
+        watchedWithCount: Math.max(1, latestSession?.participants.length ?? 1),
+        checkpointKind,
+        observedAt,
+      });
+    }
+  }
+  return entries.sort((a, b) => Number(b.observedAt ?? 0) - Number(a.observedAt ?? 0));
+}
+
+export function mergeWatchLibraryIntoProgressStore(
+  localStore: WatchProgressStore,
+  library: WatchLibraryResponse | null,
+): WatchProgressStore {
+  let nextStore = localStore;
+  for (const entry of watchProgressEntriesFromWatchLibrary(library)) {
+    const observedAt = Number(entry.observedAt ?? 0);
+    const existingItem = nextStore.providers[entry.provider]?.items[entry.itemId];
+    const existingEntry =
+      entry.kind === "episode" ? existingItem?.episodes?.[entry.episodeId ?? entry.itemId] : existingItem;
+    if (existingEntry && existingEntry.lastWatchedAt >= observedAt) {
+      continue;
+    }
+
+    nextStore = recordWatchProgressInStore(nextStore, entry, observedAt);
+  }
+  return nextStore;
+}
+
 export async function getCachedWatchLibraryForUser(userId: string): Promise<CachedWatchLibrary | null> {
-  const cached = normalizeCachedWatchLibrary(await storage.getItem<unknown>(WATCH_LIBRARY_CACHE_KEY));
-  return cached?.userId === userId ? cached : null;
+  const cached = normalizeCachedWatchLibrary(
+    await storage.getItem<unknown>(watchLibraryCacheKeyForUser(userId)),
+  );
+  if (cached?.userId === userId) {
+    return cached;
+  }
+
+  const legacyCached = normalizeCachedWatchLibrary(await storage.getItem<unknown>(WATCH_LIBRARY_CACHE_KEY));
+  return legacyCached?.userId === userId ? legacyCached : null;
 }
 
 export function isWatchLibraryCacheFresh(
@@ -212,7 +316,7 @@ export function isWatchLibraryCacheFresh(
 }
 
 export async function setCachedWatchLibraryForUser(userId: string, library: WatchLibraryResponse): Promise<void> {
-  await storage.setItem(WATCH_LIBRARY_CACHE_KEY, {
+  await storage.setItem(watchLibraryCacheKeyForUser(userId), {
     userId,
     cachedAt: new Date().toISOString(),
     library: normalizeWatchLibraryResponse(library),
@@ -221,6 +325,19 @@ export async function setCachedWatchLibraryForUser(userId: string, library: Watc
 
 export async function clearCachedWatchLibrary(): Promise<void> {
   await storage.removeItem(WATCH_LIBRARY_CACHE_KEY);
+}
+
+export async function clearCachedWatchLibraryForUser(
+  userId: string | null | undefined,
+): Promise<void> {
+  await Promise.all([
+    storage.removeItem(WATCH_LIBRARY_CACHE_KEY),
+    userId ? storage.removeItem(watchLibraryCacheKeyForUser(userId)) : Promise.resolve(),
+  ]);
+}
+
+export function watchLibraryCacheKeyForUser(userId: string): `local:${string}` {
+  return `local:${WATCH_LIBRARY_CACHE_STORAGE_KEY}.${encodeURIComponent(userId)}`;
 }
 
 const WATCH_LIBRARY_SYNC_WATERMARK_STORAGE_KEY = "anidachi.watchLibrarySync.v1";
@@ -232,14 +349,17 @@ interface WatchLibrarySyncWatermark {
   lastObservedAtMs: number;
 }
 
-/**
- * Highest `observedAt` (epoch ms) already reconciled to the server for a user.
- * The popup uses this to push only newly-watched local progress instead of
- * re-sending the entire local store on every open — the overlay already
- * reconciles live during playback, so the popup only needs to backfill what was
- * watched while it could not (e.g. signed out). Scoped by user id so switching
- * accounts resets to a full backfill.
- */
+const WATCH_LIBRARY_SYNC_LEDGER_STORAGE_KEY = "anidachi.watchLibrarySyncLedger.v1";
+export const WATCH_LIBRARY_SYNC_LEDGER_KEY =
+  `local:${WATCH_LIBRARY_SYNC_LEDGER_STORAGE_KEY}` as const;
+
+interface WatchLibrarySyncLedgerRecord {
+  userId: string;
+  entries: WatchLibrarySyncLedger;
+}
+
+// Legacy global watermark kept for older data/tests. New sync uses the
+// per-entry ledger below so server snapshots do not hide unsynced local entries.
 export async function getWatchLibrarySyncWatermark(userId: string): Promise<number> {
   const stored = normalizeSyncWatermark(
     await storage.getItem<unknown>(WATCH_LIBRARY_SYNC_WATERMARK_KEY),
@@ -259,7 +379,57 @@ export async function setWatchLibrarySyncWatermark(
 }
 
 export async function clearWatchLibrarySyncWatermark(): Promise<void> {
-  await storage.removeItem(WATCH_LIBRARY_SYNC_WATERMARK_KEY);
+  await clearWatchLibrarySyncStateForUser(null);
+}
+
+export async function clearWatchLibrarySyncStateForUser(
+  userId: string | null | undefined,
+): Promise<void> {
+  await Promise.all([
+    storage.removeItem(WATCH_LIBRARY_SYNC_WATERMARK_KEY),
+    storage.removeItem(WATCH_LIBRARY_SYNC_LEDGER_KEY),
+    userId ? storage.removeItem(watchLibrarySyncLedgerKeyForUser(userId)) : Promise.resolve(),
+  ]);
+}
+
+export async function getWatchLibrarySyncLedger(userId: string): Promise<WatchLibrarySyncLedger> {
+  const stored = normalizeSyncLedger(
+    await storage.getItem<unknown>(watchLibrarySyncLedgerKeyForUser(userId)),
+  );
+  if (stored && stored.userId === userId) {
+    return stored.entries;
+  }
+
+  const legacyStored = normalizeSyncLedger(
+    await storage.getItem<unknown>(WATCH_LIBRARY_SYNC_LEDGER_KEY),
+  );
+  return legacyStored && legacyStored.userId === userId ? legacyStored.entries : {};
+}
+
+export async function markWatchLibraryEntriesSynced(
+  userId: string,
+  entries: WatchProgressReconcileEntry[],
+): Promise<WatchLibrarySyncLedger> {
+  const ledger = await getWatchLibrarySyncLedger(userId);
+  const nextLedger: WatchLibrarySyncLedger = { ...ledger };
+  for (const entry of entries) {
+    const observedAt = Number(entry.observedAt ?? 0);
+    if (!Number.isFinite(observedAt) || observedAt <= 0) {
+      continue;
+    }
+    const key = watchProgressSyncEntryKey(entry);
+    nextLedger[key] = Math.max(nextLedger[key] ?? 0, observedAt);
+  }
+
+  await storage.setItem(watchLibrarySyncLedgerKeyForUser(userId), {
+    userId,
+    entries: nextLedger,
+  } satisfies WatchLibrarySyncLedgerRecord);
+  return nextLedger;
+}
+
+export function watchLibrarySyncLedgerKeyForUser(userId: string): `local:${string}` {
+  return `local:${WATCH_LIBRARY_SYNC_LEDGER_STORAGE_KEY}.${encodeURIComponent(userId)}`;
 }
 
 export async function listWatchLibraryFromApi(accessToken: string): Promise<WatchLibraryResponse> {
@@ -439,7 +609,7 @@ export async function createRoomFromWatchSession(params: {
   return response.room;
 }
 
-function watchProgressEntriesFromItem(
+export function watchProgressEntriesFromItem(
   item: StoredWatchItem,
   checkpointKind: WatchCheckpointKind,
 ): WatchProgressReconcileEntry[] {
@@ -549,6 +719,22 @@ function normalizeSyncWatermark(value: unknown): WatchLibrarySyncWatermark | nul
       ? payload.lastObservedAtMs
       : 0;
   return { userId: payload.userId, lastObservedAtMs };
+}
+
+function normalizeSyncLedger(value: unknown): WatchLibrarySyncLedgerRecord | null {
+  if (!value || typeof value !== "object") return null;
+  const payload = value as Partial<WatchLibrarySyncLedgerRecord>;
+  if (typeof payload.userId !== "string" || !payload.entries || typeof payload.entries !== "object") {
+    return null;
+  }
+
+  const entries: WatchLibrarySyncLedger = {};
+  for (const [key, observedAt] of Object.entries(payload.entries)) {
+    if (typeof observedAt === "number" && Number.isFinite(observedAt) && observedAt > 0) {
+      entries[key] = observedAt;
+    }
+  }
+  return { userId: payload.userId, entries };
 }
 
 function assertWatchLibraryHttpResponse(

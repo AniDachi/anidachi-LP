@@ -13,7 +13,9 @@ import {
   endWebsiteRoomFromApi,
   handleRoomHttpMessage,
   isQuotaExhaustedError,
+  isTerminalRoomJoinError,
   isRoomHttpMessage,
+  RoomApiError,
   RoomClient,
 } from "../src/room-client";
 
@@ -159,6 +161,7 @@ describe("authenticated room client", () => {
       error: "Daily free watch-party time is used up (403)",
       code: "QUOTA_EXHAUSTED",
       resetAt: "2026-06-14T00:00:00.000Z",
+      status: 403,
     });
   });
 
@@ -168,12 +171,36 @@ describe("authenticated room client", () => {
       error: "Daily free watch-party time is used up (403)",
       code: "QUOTA_EXHAUSTED",
       resetAt: "2026-06-14T00:00:00.000Z",
+      status: 403,
     });
     vi.stubGlobal("chrome", { runtime: { sendMessage } });
 
     const error = await createRoom("access-1").catch((caught) => caught);
     expect(isQuotaExhaustedError(error)).toBe(true);
     expect(error.resetAt).toBe("2026-06-14T00:00:00.000Z");
+    expect(error.status).toBe(403);
+  });
+
+  it("classifies forbidden or missing room joins as terminal unless they are quota errors", () => {
+    expect(isTerminalRoomJoinError(new RoomApiError("Forbidden", undefined, undefined, 403))).toBe(
+      true,
+    );
+    expect(isTerminalRoomJoinError(new RoomApiError("Missing", undefined, undefined, 404))).toBe(
+      true,
+    );
+    expect(
+      isTerminalRoomJoinError(
+        new RoomApiError(
+          "Daily free watch-party time is used up",
+          "QUOTA_EXHAUSTED",
+          "2026-06-14T00:00:00.000Z",
+          403,
+        ),
+      ),
+    ).toBe(false);
+    expect(isTerminalRoomJoinError(new RoomApiError("Server error", undefined, undefined, 500))).toBe(
+      false,
+    );
   });
 
   it("ends rooms through the api helper and runtime bridge", async () => {
@@ -270,9 +297,7 @@ describe("authenticated room client", () => {
         this.dispatch("close", { code: 1000, reason: "client close", wasClean: true });
       }
 
-      send(): void {
-        return undefined;
-      }
+      send(): void {}
 
       open(): void {
         this.readyState = FakeWebSocket.OPEN;
@@ -435,9 +460,7 @@ describe("authenticated room client", () => {
         this.dispatch("close", { code, reason, wasClean: code === 1000 });
       }
 
-      send(): void {
-        return undefined;
-      }
+      send(): void {}
 
       open(): void {
         this.readyState = FakeWebSocket.OPEN;

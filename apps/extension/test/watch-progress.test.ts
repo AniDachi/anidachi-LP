@@ -5,10 +5,22 @@ import {
   formatProgressClock,
   normalizeWatchProgressStore,
   recordWatchProgressInStore,
+  WATCH_PROGRESS_STORAGE_KEY,
+  watchProgressOwnerForUser,
+  watchProgressStorageKeyForUser,
   type WatchProgressEntry,
 } from "../src/watch-progress";
 
 describe("watch progress store", () => {
+  it("scopes local watch progress storage by signed-in user", () => {
+    expect(watchProgressOwnerForUser(null)).toBe("guest");
+    expect(watchProgressStorageKeyForUser(null)).toBe(WATCH_PROGRESS_STORAGE_KEY);
+    expect(watchProgressStorageKeyForUser("user-a")).not.toBe(
+      watchProgressStorageKeyForUser("user-b"),
+    );
+    expect(watchProgressStorageKeyForUser("user-a")).toContain(encodeURIComponent("user:user-a"));
+  });
+
   it("clamps and upserts Crunchyroll episode progress", () => {
     const store = createEmptyWatchProgressStore();
     const entry: WatchProgressEntry = {

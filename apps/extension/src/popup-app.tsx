@@ -18,7 +18,12 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { getCachedExtensionSession, getCurrentExtensionSession, signInWithWebsite } from "./auth-client";
+import {
+  getCachedExtensionSession,
+  getCurrentExtensionSession,
+  signInWithWebsite,
+  signInWithWebsiteSilently,
+} from "./auth-client";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
@@ -45,30 +50,34 @@ import {
 } from "./social-client";
 import {
   buildProviderFolders,
+  clearWatchProgressStoreForUser,
   createEmptyWatchProgressStore,
   formatProgressClock,
-  loadWatchProgressStore,
+  loadWatchProgressStoreForUser,
   normalizeWatchProgressStore,
-  recordWatchProgressInStore,
-  WATCH_PROGRESS_STORAGE_KEY,
+  saveWatchProgressStoreForUser,
+  watchProgressStorageKeyForUser,
   type ProviderFolder,
   type StoredEpisodeProgress,
   type StoredWatchItem,
   type WatchProgressStore,
 } from "./watch-progress";
 import {
-  clearCachedWatchLibrary,
+  clearCachedWatchLibraryForUser,
   clearWatchLibrary,
-  clearWatchLibrarySyncWatermark,
+  clearWatchLibrarySyncStateForUser,
   createRoomFromWatchSession,
   getCachedWatchLibraryForUser,
-  getWatchLibrarySyncWatermark,
+  getWatchLibrarySyncLedger,
   isWatchLibraryCacheFresh,
   listWatchLibrary,
+  markWatchLibraryEntriesSynced,
+  mergeWatchLibraryIntoProgressStore,
   reconcileWatchProgress,
   setCachedWatchLibraryForUser,
-  setWatchLibrarySyncWatermark,
-  watchProgressEntriesFromStore,
+  watchProgressEntriesFromItem,
+  watchProgressEntriesFromStoreForSync,
+  watchProgressEntriesFromWatchLibrary,
   type WatchLibraryEpisode,
   type WatchLibraryResponse,
   type WatchLibrarySession,
@@ -161,12 +170,10 @@ export function PopupApp() {
   });
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const posterRequestsRef = useRef<Record<string, boolean>>({});
+  const storeUserIdRef = useRef<string | null>(null);
+  const watchLibraryUserIdRef = useRef<string | null>(null);
   const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
-  const displayStore = useMemo(
-    () => mergeWatchLibraryIntoStore(store, watchLibraryState.data),
-    [store, watchLibraryState.data],
-  );
-  const folders = useMemo(() => buildProviderFolders(displayStore), [displayStore]);
+  const folders = useMemo(() => buildProviderFolders(store), [store]);
   const libraryEpisodesByKey = useMemo(
     () => buildLibraryEpisodeIndex(watchLibraryState.data),
     [watchLibraryState.data],
@@ -217,6 +224,23 @@ export function PopupApp() {
   const pendingInviteCount =
     socialState.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)).length ?? 0;
 
+  const ensureStoreForUser = useCallback(
+    async (
+      userId: string | null,
+      currentStore: WatchProgressStore,
+    ): Promise<WatchProgressStore> => {
+      if (storeUserIdRef.current === userId) {
+        return currentStore;
+      }
+
+      const scopedStore = await loadWatchProgressStoreForUser(userId);
+      storeUserIdRef.current = userId;
+      setStore(scopedStore);
+      return scopedStore;
+    },
+    [],
+  );
+
   const loadSocialForTokens = useCallback(async (tokens: ExtensionAuthTokens) => {
     setSocialState((current) => ({
       status: "loading",
@@ -242,30 +266,69 @@ export function PopupApp() {
     }
   }, []);
 
+  const applyWatchLibraryToLocalStore = useCallback(
+    async (
+      userId: string,
+      library: WatchLibraryResponse,
+      baseStore?: WatchProgressStore,
+    ): Promise<WatchProgressStore> => {
+      if (storeUserIdRef.current !== userId) {
+        return baseStore ?? createEmptyWatchProgressStore();
+      }
+
+      const latestStore = baseStore ?? (await loadWatchProgressStoreForUser(userId));
+      const mergedStore = mergeWatchLibraryIntoProgressStore(latestStore, library);
+      if (storeUserIdRef.current !== userId) {
+        return latestStore;
+      }
+
+      if (mergedStore !== latestStore) {
+        await saveWatchProgressStoreForUser(userId, mergedStore);
+      }
+      if (storeUserIdRef.current === userId) {
+        setStore(mergedStore);
+      }
+      return mergedStore;
+    },
+    [],
+  );
+
   const loadWatchLibraryForTokens = useCallback(
     async (tokens: ExtensionAuthTokens, localStore: WatchProgressStore, useCachedSnapshot = true) => {
       try {
         const cached = useCachedSnapshot
           ? await getCachedWatchLibraryForUser(tokens.user.id)
           : null;
+        const freshCached = cached && isWatchLibraryCacheFresh(cached) ? cached : null;
+        const syncLedger = await getWatchLibrarySyncLedger(tokens.user.id);
+        const outboundEntries = watchProgressEntriesFromStoreForSync(localStore, "reconcile", syncLedger);
         if (useCachedSnapshot) {
           if (cached) {
+            await applyWatchLibraryToLocalStore(tokens.user.id, cached.library, localStore);
+            await markWatchLibraryEntriesSynced(
+              tokens.user.id,
+              watchProgressEntriesFromWatchLibrary(cached.library),
+            );
+            if (storeUserIdRef.current !== tokens.user.id) {
+              return;
+            }
+            watchLibraryUserIdRef.current = tokens.user.id;
             setWatchLibraryState({
-              status: "ready",
+              status: freshCached ? "ready" : "loading",
               data: cached.library,
               error: null,
             });
           } else {
             setWatchLibraryState((current) => ({
               status: "loading",
-              data: current.data,
+              data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
               error: null,
             }));
           }
         } else {
           setWatchLibraryState((current) => ({
             status: "loading",
-            data: current.data,
+            data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
             error: null,
           }));
         }
@@ -273,33 +336,33 @@ export function PopupApp() {
         // The overlay reconciles progress live during playback, so the popup
         // only needs to backfill local progress newer than our last successful
         // sync instead of re-sending the entire local store on every open.
-        const watermark = await getWatchLibrarySyncWatermark(tokens.user.id);
-        const entries = watchProgressEntriesFromStore(localStore, "reconcile", watermark);
-        if (cached && entries.length === 0 && isWatchLibraryCacheFresh(cached)) {
+        if (freshCached && outboundEntries.length === 0) {
           return;
         }
 
-        const library = entries.length
-          ? await reconcileWatchProgress(tokens.accessToken, entries)
+        const library = outboundEntries.length
+          ? await reconcileWatchProgress(tokens.accessToken, outboundEntries)
           : await listWatchLibrary(tokens.accessToken);
-        if (entries.length) {
-          const latestObservedAt = entries.reduce(
-            (max, entry) => Math.max(max, Number(entry.observedAt ?? 0)),
-            watermark,
-          );
-          await setWatchLibrarySyncWatermark(tokens.user.id, latestObservedAt);
-        }
+        await markWatchLibraryEntriesSynced(tokens.user.id, [
+          ...outboundEntries,
+          ...watchProgressEntriesFromWatchLibrary(library),
+        ]);
         await setCachedWatchLibraryForUser(tokens.user.id, library);
+        await applyWatchLibraryToLocalStore(tokens.user.id, library);
+        if (storeUserIdRef.current !== tokens.user.id) {
+          return;
+        }
+        watchLibraryUserIdRef.current = tokens.user.id;
         setWatchLibraryState({ status: "ready", data: library, error: null });
       } catch (error) {
         setWatchLibraryState((current) => ({
           status: "error",
-          data: current.data,
+          data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
           error: error instanceof Error ? error.message : "Could not sync watch history",
         }));
       }
     },
-    [],
+    [applyWatchLibraryToLocalStore],
   );
 
   const syncPopupData = useCallback(
@@ -312,26 +375,24 @@ export function PopupApp() {
       } = {},
     ): Promise<ExtensionAuthTokens | null> => {
       try {
+        let currentStore = localStore;
         if (!options.tokens && !options.interactive) {
           const cachedTokens = await getCachedExtensionSession();
           if (cachedTokens) {
+            currentStore = await ensureStoreForUser(cachedTokens.user.id, localStore);
             setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
-            if (options.useCachedSnapshot ?? true) {
-              const cachedLibrary = await getCachedWatchLibraryForUser(cachedTokens.user.id);
-              if (cachedLibrary) {
-                setWatchLibraryState({
-                  status: "ready",
-                  data: cachedLibrary.library,
-                  error: null,
-                });
-              }
-            }
           }
         }
 
         const tokens =
-          options.tokens ?? (options.interactive ? await signInWithWebsite() : await getCurrentExtensionSession());
+          options.tokens ??
+          (options.interactive
+            ? await signInWithWebsite()
+            : (await getCurrentExtensionSession({ validateWebsiteSession: true })) ??
+              (await signInWithWebsiteSilently()));
         if (!tokens) {
+          await ensureStoreForUser(null, localStore);
+          watchLibraryUserIdRef.current = null;
           setAuthSession({ status: "signed-out", tokens: null, error: null });
           setSocialState({ status: "signed-out", data: null, error: null });
           setWatchLibraryState({
@@ -342,14 +403,16 @@ export function PopupApp() {
           return null;
         }
 
+        const scopedStore = await ensureStoreForUser(tokens.user.id, currentStore);
         setAuthSession({ status: "ready", tokens, error: null });
         await Promise.all([
-          loadWatchLibraryForTokens(tokens, localStore, options.useCachedSnapshot ?? true),
+          loadWatchLibraryForTokens(tokens, scopedStore, options.useCachedSnapshot ?? true),
           loadSocialForTokens(tokens),
         ]);
         return tokens;
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not sync account";
+        watchLibraryUserIdRef.current = null;
         setAuthSession({ status: "error", tokens: null, error: message });
         setSocialState((current) => ({
           status: "error",
@@ -364,7 +427,7 @@ export function PopupApp() {
         return null;
       }
     },
-    [loadSocialForTokens, loadWatchLibraryForTokens],
+    [ensureStoreForUser, loadSocialForTokens, loadWatchLibraryForTokens],
   );
 
   const acceptInvite = useCallback(
@@ -621,6 +684,7 @@ export function PopupApp() {
     try {
       const tokens = await getCurrentExtensionSession();
       if (!tokens) {
+        watchLibraryUserIdRef.current = null;
         setWatchLibraryState({
           status: "signed-out",
           data: null,
@@ -652,26 +716,45 @@ export function PopupApp() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadWatchProgressStore().then((loadedStore) => {
+    void (async () => {
+      const cachedTokens = await getCachedExtensionSession();
+      const initialUserId = cachedTokens?.user.id ?? null;
+      const loadedStore = await loadWatchProgressStoreForUser(initialUserId);
       if (cancelled) return;
+      storeUserIdRef.current = initialUserId;
       setStore(loadedStore);
-      void syncPopupData(loadedStore, { useCachedSnapshot: true });
-    });
+      if (cachedTokens) {
+        setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
+      }
+      void syncPopupData(loadedStore, {
+        useCachedSnapshot: true,
+      });
+    })();
 
+    return () => {
+      cancelled = true;
+    };
+  }, [syncPopupData]);
+
+  useEffect(() => {
+    const expectedUserId = accountUser?.id ?? null;
+    const storageKey = watchProgressStorageKeyForUser(accountUser?.id ?? null);
     const handleStorageChange = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
-      if (areaName !== "local" || !changes[WATCH_PROGRESS_STORAGE_KEY]) {
+      if (areaName !== "local" || !changes[storageKey]) {
+        return;
+      }
+      if (storeUserIdRef.current !== expectedUserId) {
         return;
       }
 
-      setStore(normalizeWatchProgressStore(changes[WATCH_PROGRESS_STORAGE_KEY].newValue));
+      setStore(normalizeWatchProgressStore(changes[storageKey].newValue));
     };
 
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => {
-      cancelled = true;
       chrome.storage.onChanged.removeListener(handleStorageChange);
     };
-  }, [syncPopupData]);
+  }, [accountUser?.id]);
 
   useEffect(() => {
     if (libraryActivityFilter !== "together" && libraryPersonFilter !== "all") {
@@ -697,7 +780,18 @@ export function PopupApp() {
   );
   const serverItemsCount = watchLibraryState.data?.items.length ?? 0;
   const canClearHistory = localItemsCount > 0 || serverItemsCount > 0;
+  const authChecking = authSession.status === "loading";
+  const watchLibraryFirstPaintPending =
+    totalItems === 0 &&
+    (authChecking ||
+      (authSession.status === "ready" &&
+        watchLibraryState.status === "loading" &&
+        watchLibraryState.data === null));
   useEffect(() => {
+    if (watchLibraryFirstPaintPending) {
+      return;
+    }
+
     const missingPosters = folders
       .flatMap((folder) => folder.items)
       .filter(
@@ -724,26 +818,50 @@ export function PopupApp() {
           return;
         }
 
-        const latestStore = await loadWatchProgressStore();
+        const currentUserId = storeUserIdRef.current;
+        const latestStore = await loadWatchProgressStoreForUser(currentUserId);
         const latestItem = latestStore.providers.crunchyroll.items[item.id];
-        if (!latestItem || latestItem.artworkUrl) {
+        if (latestItem?.artworkUrl) {
           return;
         }
 
         const nextStore = structuredClone(latestStore);
-        const nextItem = nextStore.providers.crunchyroll.items[item.id];
-        if (!nextItem) {
+        const nextItem = structuredClone(latestItem ?? item);
+        nextItem.artworkUrl = posterUrl;
+        nextStore.providers.crunchyroll.items[item.id] = nextItem;
+        await saveWatchProgressStoreForUser(currentUserId, nextStore);
+        if (storeUserIdRef.current !== currentUserId) {
+          return;
+        }
+        setStore(nextStore);
+
+        const tokens = authSession.status === "ready" ? authSession.tokens : null;
+        if (tokens?.user.id !== currentUserId) {
+          return;
+        }
+        const entries = tokens ? watchProgressEntriesFromItem(nextItem, "reconcile") : [];
+        if (!tokens || entries.length === 0) {
           return;
         }
 
-        nextItem.artworkUrl = posterUrl;
-        await chrome.storage.local.set({
-          [WATCH_PROGRESS_STORAGE_KEY]: nextStore,
-        });
-        setStore(nextStore);
+        try {
+          const library = await reconcileWatchProgress(tokens.accessToken, entries);
+          await markWatchLibraryEntriesSynced(tokens.user.id, [
+            ...entries,
+            ...watchProgressEntriesFromWatchLibrary(library),
+          ]);
+          await setCachedWatchLibraryForUser(tokens.user.id, library);
+          if (storeUserIdRef.current !== tokens.user.id) {
+            return;
+          }
+          watchLibraryUserIdRef.current = tokens.user.id;
+          setWatchLibraryState({ status: "ready", data: library, error: null });
+        } catch {
+          // Local artwork is already cached; the next normal sync can retry the server update.
+        }
       });
     }
-  }, [folders]);
+  }, [authSession, folders, watchLibraryFirstPaintPending]);
 
   const clearHistory = async () => {
     if (clearingHistory || !canClearHistory) return;
@@ -758,20 +876,24 @@ export function PopupApp() {
     );
     try {
       const tokens = authSession.status === "ready" ? authSession.tokens : await getCachedExtensionSession();
+      const currentUserId = tokens?.user.id ?? storeUserIdRef.current;
       const clearedLibrary = tokens ? await clearWatchLibrary(tokens.accessToken) : null;
 
       await Promise.all([
-        chrome.storage.local.remove(WATCH_PROGRESS_STORAGE_KEY),
-        clearCachedWatchLibrary(),
-        clearWatchLibrarySyncWatermark(),
+        clearWatchProgressStoreForUser(currentUserId),
+        clearCachedWatchLibraryForUser(currentUserId),
+        clearWatchLibrarySyncStateForUser(currentUserId),
       ]);
 
       const emptyStore = createEmptyWatchProgressStore();
+      storeUserIdRef.current = currentUserId;
       setStore(emptyStore);
       if (tokens && clearedLibrary) {
         await setCachedWatchLibraryForUser(tokens.user.id, clearedLibrary);
+        watchLibraryUserIdRef.current = tokens.user.id;
         setWatchLibraryState({ status: "ready", data: clearedLibrary, error: null });
       } else {
+        watchLibraryUserIdRef.current = null;
         setWatchLibraryState({ status: "signed-out", data: null, error: null });
       }
     } catch (error) {
@@ -804,14 +926,17 @@ export function PopupApp() {
       <style>{popupStyles}</style>
       <header className="popup-topbar">
         <button
-          aria-label={accountUser ? "Open account dashboard" : "Sign in"}
+          aria-label={accountUser ? "Open account dashboard" : authChecking ? "Checking account" : "Sign in"}
           className="popup-profile-button"
           type="button"
+          disabled={authChecking}
           onClick={() => void openAccount()}
         >
           <span className="popup-profile-avatar" data-signed-in={Boolean(accountUser)}>
             {accountUser ? (
               <ProfileAvatar avatarUrl={accountUser.avatarUrl} displayName={accountUser.displayName} />
+            ) : authChecking ? (
+              <RefreshCw size={18} />
             ) : (
               <LogIn size={18} />
             )}
@@ -824,6 +949,8 @@ export function PopupApp() {
                 <>
                   Signed in <span>·</span> <strong>{planLabel(accountUser.plan)}</strong>
                 </>
+              ) : authChecking ? (
+                "Checking account..."
               ) : (
                 "Sign in to sync progress"
               )}
@@ -933,7 +1060,12 @@ export function PopupApp() {
               </button>
             </div>
           ) : null}
-          {watchLibraryState.status === "loading" && !totalItems ? (
+          {watchLibraryFirstPaintPending ? (
+            <div className="popup-empty popup-empty-syncing">
+              <RefreshCw size={14} />
+              <span>Syncing watch history...</span>
+            </div>
+          ) : watchLibraryState.status === "loading" && !totalItems ? (
             <div className="popup-empty">Loading watch library...</div>
           ) : !filteredItemsCount ? (
             <LibraryEmptyState activity={libraryActivityFilter} personFilter={libraryPersonFilter} />
@@ -1095,9 +1227,9 @@ function TogetherFilterBar({
         <strong>{selectedCount}</strong>
       </button>
       {open ? (
-        <div className="popup-filter-menu" role="listbox" aria-label="Together filters">
+        <div className="popup-filter-menu" role="group" aria-label="Together filters">
           <button
-            aria-selected={selectedValue === "all"}
+            aria-pressed={selectedValue === "all"}
             className="popup-filter-option"
             data-active={selectedValue === "all"}
             type="button"
@@ -1118,7 +1250,7 @@ function TogetherFilterBar({
             {companions.length ? (
               companions.map((companion) => (
                 <button
-                  aria-selected={selectedValue === companion.value}
+                  aria-pressed={selectedValue === companion.value}
                   className="popup-filter-option"
                   data-active={selectedValue === companion.value}
                   key={companion.userId}
@@ -1146,7 +1278,7 @@ function TogetherFilterBar({
             {groups.length ? (
               groups.map((group) => (
                 <button
-                  aria-selected={selectedValue === `group:${group.id}`}
+                  aria-pressed={selectedValue === `group:${group.id}`}
                   className="popup-filter-option"
                   data-active={selectedValue === `group:${group.id}`}
                   key={group.id}
@@ -1805,51 +1937,6 @@ function libraryEpisodeKey(provider: string, itemKey: string, episodeKey: string
   return `${provider}:${itemKey}:${episodeKey}`;
 }
 
-function mergeWatchLibraryIntoStore(
-  localStore: WatchProgressStore,
-  library: WatchLibraryResponse | null,
-): WatchProgressStore {
-  let nextStore = localStore;
-  for (const item of library?.items ?? []) {
-    for (const episode of item.episodes) {
-      const observedAt = new Date(episode.lastWatchedAt).getTime();
-      if (!Number.isFinite(observedAt)) {
-        continue;
-      }
-      const existingItem = nextStore.providers[item.provider]?.items[item.itemKey];
-      const existingEpisode = item.itemKind === "series" ? existingItem?.episodes?.[episode.episodeKey] : existingItem;
-      if (existingEpisode && existingEpisode.lastWatchedAt >= observedAt) {
-        continue;
-      }
-
-      const latestSession = episode.sessions[0] ?? null;
-      nextStore = recordWatchProgressInStore(
-        nextStore,
-        {
-          provider: item.provider,
-          kind: item.itemKind === "series" ? "episode" : "movie",
-          itemId: item.itemKey,
-          itemTitle: item.itemTitle,
-          contentId: episode.episodeKey,
-          seasonId: episode.seasonId ?? undefined,
-          seasonTitle: episode.seasonTitle ?? undefined,
-          seasonNumber: episode.seasonNumber ?? undefined,
-          episodeId: episode.episodeKey,
-          episodeTitle: episode.episodeTitle,
-          artworkUrl: item.artworkUrl ?? undefined,
-          sourceUrl: episode.sourceUrl,
-          currentTime: episode.currentTime,
-          duration: episode.duration,
-          roomId: latestSession?.roomId ?? undefined,
-          watchedWithCount: Math.max(1, latestSession?.participants.length ?? 1),
-        },
-        observedAt,
-      );
-    }
-  }
-  return nextStore;
-}
-
 function CompanionFilterBar({
   companions,
   onSelect,
@@ -1862,9 +1949,9 @@ function CompanionFilterBar({
   return (
     <div className="popup-companion-filter">
       <span className="popup-companion-filter-label">With</span>
-      <div className="popup-companion-scroll" role="listbox" aria-label="People watched with">
+      <div className="popup-companion-scroll" role="group" aria-label="People watched with">
         <button
-          aria-selected={selectedValue === "all"}
+          aria-pressed={selectedValue === "all"}
           className="popup-companion-chip"
           data-active={selectedValue === "all"}
           type="button"
@@ -1874,7 +1961,7 @@ function CompanionFilterBar({
         </button>
         {companions.map((companion) => (
           <button
-            aria-selected={selectedValue === companion.value}
+            aria-pressed={selectedValue === companion.value}
             className="popup-companion-chip"
             data-active={selectedValue === companion.value}
             key={companion.userId}

@@ -39,10 +39,12 @@ function participantFromTokens(tokens: ExtensionAuthTokens): Participant {
   };
 }
 
-export async function createCurrentParticipant(): Promise<CurrentParticipantResult> {
+export async function createCurrentParticipant(
+  options: { fast?: boolean } = {},
+): Promise<CurrentParticipantResult> {
   let response;
   try {
-    response = await sendAuthCommand("get-session");
+    response = await sendAuthCommand(options.fast ? "get-session-fast" : "get-session");
   } catch (error) {
     if (isExtensionContextInvalidatedError(error)) {
       return {

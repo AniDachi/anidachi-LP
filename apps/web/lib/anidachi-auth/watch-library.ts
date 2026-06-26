@@ -580,7 +580,6 @@ async function reconcileWatchProgressEntry(
         role: participant.role,
         joinedAt: participant.joinedAt,
         entry,
-        now,
       })
     ),
     insertWatchCheckpoint({
@@ -638,7 +637,7 @@ async function upsertWatchSession(params: {
     episode_key: params.entry.episodeKey,
     episode_title: params.entry.episodeTitle,
     source_url: params.entry.sourceUrl,
-    artwork_url: params.entry.artworkUrl,
+    artwork_url: resolveWatchArtworkUrlForWrite(params.entry.artworkUrl, existing?.artwork_url),
     duration_seconds: params.entry.durationSeconds,
     current_time_seconds: params.entry.currentTimeSeconds,
     progress: params.entry.progress,
@@ -714,7 +713,6 @@ async function upsertWatchSessionParticipant(params: {
   role: "host" | "viewer";
   joinedAt: string;
   entry: CleanWatchProgressEntry;
-  now: string;
 }): Promise<void> {
   const { error } = await db()
     .from("watch_session_participants")
@@ -727,7 +725,7 @@ async function upsertWatchSessionParticipant(params: {
         left_at: null,
         current_time_seconds: params.entry.currentTimeSeconds,
         progress: params.entry.progress,
-        updated_at: params.now,
+        updated_at: params.entry.observedAt,
       },
       { onConflict: "session_id,user_id" }
     );
@@ -777,16 +775,26 @@ async function upsertTrackedTitle(params: {
         item_kind: params.entry.itemKind,
         item_title: params.entry.itemTitle,
         source_url: params.entry.sourceUrl,
-        artwork_url: params.entry.artworkUrl,
+        artwork_url: resolveWatchArtworkUrlForWrite(
+          params.entry.artworkUrl,
+          existing?.artwork_url
+        ),
         active: true,
         archived_reason: null,
         latest_session_id: params.sessionId,
-        last_watched_at: params.now,
+        last_watched_at: params.entry.observedAt,
         updated_at: params.now,
       },
       { onConflict: "user_id,provider,title_key" }
     );
   if (error) throw new Error(`Failed to upsert tracked title: ${error.message}`);
+}
+
+export function resolveWatchArtworkUrlForWrite(
+  incomingArtworkUrl: string | null,
+  existingArtworkUrl: string | null | undefined
+): string | null {
+  return incomingArtworkUrl ?? existingArtworkUrl ?? null;
 }
 
 async function getTrackedTitle(

@@ -1,5 +1,9 @@
 import { defineBackground } from "wxt/utils/define-background";
-import { handleAuthMessage, isAuthMessage } from "../src/auth-client";
+import {
+  handleAuthMessage,
+  handleWebsiteAuthCookieChange,
+  isAuthMessage,
+} from "../src/auth-client";
 import { handleRoomHttpMessage, isRoomHttpMessage } from "../src/room-client";
 import { handleSocialHttpMessage, isSocialHttpMessage } from "../src/social-client";
 import {
@@ -30,5 +34,9 @@ export default defineBackground(() => {
     }
 
     return false;
+  });
+
+  chrome.cookies?.onChanged?.addListener((changeInfo) => {
+    void handleWebsiteAuthCookieChange(changeInfo);
   });
 });
