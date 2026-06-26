@@ -273,11 +273,12 @@ export function PopupApp() {
         const cached = useCachedSnapshot
           ? await getCachedWatchLibraryForUser(tokens.user.id)
           : null;
+        const freshCached = cached && isWatchLibraryCacheFresh(cached) ? cached : null;
         if (useCachedSnapshot) {
-          if (cached) {
+          if (freshCached) {
             setWatchLibraryState({
               status: "ready",
-              data: cached.library,
+              data: freshCached.library,
               error: null,
             });
           } else {
@@ -300,7 +301,7 @@ export function PopupApp() {
         // sync instead of re-sending the entire local store on every open.
         const watermark = await getWatchLibrarySyncWatermark(tokens.user.id);
         const entries = watchProgressEntriesFromStore(localStore, "reconcile", watermark);
-        if (cached && entries.length === 0 && isWatchLibraryCacheFresh(cached)) {
+        if (freshCached && entries.length === 0) {
           return;
         }
 
@@ -337,13 +338,15 @@ export function PopupApp() {
       } = {},
     ): Promise<ExtensionAuthTokens | null> => {
       try {
+        let currentStore = localStore;
         if (!options.tokens && !options.interactive) {
           const cachedTokens = await getCachedExtensionSession();
           if (cachedTokens) {
+            currentStore = await ensureStoreForUser(cachedTokens.user.id, localStore);
             setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
             if (options.useCachedSnapshot ?? true) {
               const cachedLibrary = await getCachedWatchLibraryForUser(cachedTokens.user.id);
-              if (cachedLibrary) {
+              if (cachedLibrary && isWatchLibraryCacheFresh(cachedLibrary)) {
                 setWatchLibraryState({
                   status: "ready",
                   data: cachedLibrary.library,
@@ -372,7 +375,7 @@ export function PopupApp() {
           return null;
         }
 
-        const scopedStore = await ensureStoreForUser(tokens.user.id, localStore);
+        const scopedStore = await ensureStoreForUser(tokens.user.id, currentStore);
         setAuthSession({ status: "ready", tokens, error: null });
         await Promise.all([
           loadWatchLibraryForTokens(tokens, scopedStore, options.useCachedSnapshot ?? true),
