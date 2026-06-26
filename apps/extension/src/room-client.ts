@@ -79,6 +79,8 @@ export function isTerminalRoomJoinError(error: unknown): error is RoomApiError {
 const ROOM_HTTP_MESSAGE_TYPE = "ANIDACHI_ROOM_HTTP";
 const ROOM_KEEPALIVE_INTERVAL_MS = 20_000;
 const ROOM_KEEPALIVE_TIMEOUT_MS = 45_000;
+const HIBERNATION_KEEPALIVE_PING = "ping";
+const HIBERNATION_KEEPALIVE_PONG = "pong";
 
 export type RoomHttpCommand = "create-room" | "connect-room" | "end-room";
 
@@ -484,6 +486,10 @@ export class RoomClient {
       }
 
       try {
+        if (String(message.data) === HIBERNATION_KEEPALIVE_PONG) {
+          this.clearPongTimeout();
+          return;
+        }
         const event = ServerEventSchema.parse(JSON.parse(String(message.data)));
         if (event.type === "PONG") {
           this.clearPongTimeout();
@@ -585,12 +591,8 @@ export class RoomClient {
       return;
     }
 
-    const event: ClientEvent = {
-      type: "PING",
-      roomId,
-      sentAt: Date.now(),
-    };
-    ws.send(JSON.stringify(ClientEventSchema.parse(event)));
+    logDebug("room.send", "PING", { hibernationSafe: true, roomId });
+    ws.send(HIBERNATION_KEEPALIVE_PING);
 
     if (this.pongTimeout !== null) {
       return;

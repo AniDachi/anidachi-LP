@@ -160,6 +160,35 @@ describe("RoomState", () => {
     expect(afterJoin.serverSeq).toBeGreaterThan(initial.serverSeq);
   });
 
+  it("restores durable snapshots without losing host/source/camera state", () => {
+    const room = new RoomState("room-1", {
+      hostPlanCode: "plus",
+      maxParticipants: 6,
+      maxMediaSeats: 4,
+      canNameRoom: true,
+      canSendPushInvites: true,
+    });
+    room.join(participant("host", "host"));
+    room.join(participant("viewer"));
+    room.setCamera("viewer", true);
+    const state = playbackState("crunchyroll|series-a|s1|e7", "https://crunchyroll.com/watch/e7");
+    room.updateHostState("host", state, sourceDescriptor(state, "Episode 7"));
+
+    const restored = new RoomState("room-1", undefined, room.toSnapshot(1234));
+    const snapshot = restored.snapshot;
+
+    expect(snapshot.type).toBe("ROOM_SNAPSHOT");
+    if (snapshot.type !== "ROOM_SNAPSHOT") {
+      throw new Error("Expected room snapshot");
+    }
+    expect(snapshot.capabilities?.hostPlanCode).toBe("plus");
+    expect(snapshot.participants).toHaveLength(2);
+    expect(snapshot.participants.find((item) => item.id === "viewer")?.cameraEnabled).toBe(true);
+    expect(snapshot.hostState?.videoFingerprint).toBe(state.videoFingerprint);
+    expect(snapshot.source?.title).toBe("Episode 7");
+    expect(restored.currentHostId).toBe("host");
+  });
+
   it("caps the room at four participants but admits reconnecting members", () => {
     const room = new RoomState("room-1");
     room.join(participant("u1", "host"));

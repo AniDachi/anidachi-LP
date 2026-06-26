@@ -9,7 +9,27 @@ import { cors } from "hono/cors";
 import { verifyRoomToken, type VerifiedRoomToken } from "./auth";
 import { createIceServersPayload } from "./ice-servers";
 import { createLiveKitToken } from "./livekit-token";
-import { RecentP2PSignalBuffer, type BufferedP2PSignalEvent } from "./p2p-signal-buffer";
+import {
+  getP2PSignalDedupeKey,
+  RecentP2PSignalBuffer,
+  type BufferedP2PSignalEvent,
+} from "./p2p-signal-buffer";
+import {
+  initializeRoomStorage,
+  readNextP2PServerSeq,
+  readStoredP2PReplay,
+  readStoredRoomState,
+  writeNextP2PServerSeq,
+  writeStoredP2PReplayEvent,
+  writeStoredRoomState,
+} from "./room-persistence";
+import {
+  attachmentToVerifiedRoomToken,
+  createRoomSocketAttachment,
+  parseRoomSocketAttachment,
+  updateRoomSocketAttachment,
+  type RoomSocketAttachment,
+} from "./room-socket-attachment";
 import { RoomState } from "./room-state";
 import {
   emitRoomTelemetry,
@@ -118,6 +138,9 @@ function encode(event: ServerEvent): string {
   return JSON.stringify(event);
 }
 
+const HIBERNATION_KEEPALIVE_PING = "ping";
+const HIBERNATION_KEEPALIVE_PONG = "pong";
+
 export class RoomDurableObject {
   private readonly room: RoomState;
   private readonly participantsBySocket = new Map<WebSocket, string>();
@@ -131,7 +154,21 @@ export class RoomDurableObject {
     private readonly state: DurableObjectState,
     private readonly env: Env,
   ) {
-    this.room = new RoomState(state.id.name ?? "room");
+    initializeRoomStorage(state.storage);
+    state.setWebSocketAutoResponse(
+      new WebSocketRequestResponsePair(HIBERNATION_KEEPALIVE_PING, HIBERNATION_KEEPALIVE_PONG),
+    );
+
+    const roomId = state.id.name ?? "room";
+    this.room = new RoomState(roomId, undefined, readStoredRoomState(state.storage) ?? undefined);
+    this.p2pSignalBuffer.hydrate(readStoredP2PReplay(state.storage));
+    const replaySnapshot = this.p2pSignalBuffer.snapshot();
+    const latestStoredSeq = replaySnapshot.at(-1)?.serverSeq ?? 0;
+    this.nextP2PServerSeq = Math.max(
+      readNextP2PServerSeq(state.storage) ?? 1,
+      latestStoredSeq + 1,
+    );
+    this.restoreWebSocketsFromAttachments();
   }
 
   private get telemetryContext(): RoomTelemetryContext {
@@ -140,6 +177,75 @@ export class RoomDurableObject {
 
   private track(name: Parameters<typeof emitRoomTelemetry>[2]["name"], extra?: { role?: string; value?: number }): void {
     emitRoomTelemetry(this.env.ROOM_ANALYTICS, this.telemetryContext, { name, ...extra });
+  }
+
+  private restoreWebSocketsFromAttachments(): void {
+    for (const socket of this.state.getWebSockets()) {
+      const attachment = parseRoomSocketAttachment(
+        socket.deserializeAttachment(),
+        this.room.roomId,
+      );
+      if (!attachment) {
+        socket.close(4000, "Invalid Anidachi socket state");
+        continue;
+      }
+
+      this.verifiedBySocket.set(socket, attachmentToVerifiedRoomToken(attachment));
+      if (attachment.verified.capabilities) {
+        this.room.setCapabilities(attachment.verified.capabilities);
+      }
+      if (!attachment.participant) {
+        continue;
+      }
+
+      const existingSocket = this.socketsByParticipant.get(attachment.participant.id);
+      if (existingSocket && existingSocket !== socket) {
+        const existingAttachment = this.getSocketAttachment(existingSocket);
+        const keepExisting =
+          (existingAttachment?.lastSeenAt ?? 0) >= attachment.lastSeenAt ||
+          (existingAttachment?.connectedAt ?? 0) >= attachment.connectedAt;
+        if (keepExisting) {
+          socket.close(4000, "Duplicate stale Anidachi session");
+          continue;
+        }
+
+        this.participantsBySocket.delete(existingSocket);
+        this.verifiedBySocket.delete(existingSocket);
+        this.sessionIdBySocket.delete(existingSocket);
+        existingSocket.close(4000, "Duplicate stale Anidachi session");
+      }
+
+      if (!this.room.hasParticipant(attachment.participant.id)) {
+        this.room.join(attachment.participant);
+      }
+      this.participantsBySocket.set(socket, attachment.participant.id);
+      this.socketsByParticipant.set(attachment.participant.id, socket);
+      this.sessionIdBySocket.set(socket, attachment.participantSessionId);
+    }
+  }
+
+  private getSocketAttachment(socket: WebSocket): RoomSocketAttachment | null {
+    return parseRoomSocketAttachment(socket.deserializeAttachment(), this.room.roomId);
+  }
+
+  private writeSocketAttachment(socket: WebSocket, attachment: RoomSocketAttachment): void {
+    socket.serializeAttachment(attachment);
+  }
+
+  private touchSocketAttachment(socket: WebSocket): void {
+    const attachment = this.getSocketAttachment(socket);
+    if (!attachment) {
+      return;
+    }
+    this.writeSocketAttachment(socket, updateRoomSocketAttachment(attachment, { lastSeenAt: Date.now() }));
+  }
+
+  private persistRoomState(): void {
+    writeStoredRoomState(this.state.storage, this.room.toSnapshot());
+  }
+
+  private persistP2PState(): void {
+    writeNextP2PServerSeq(this.state.storage, this.nextP2PServerSeq);
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -167,15 +273,33 @@ export class RoomDurableObject {
     const pair = new WebSocketPair();
     const client = pair[0];
     const server = pair[1];
-    server.accept();
+    this.state.acceptWebSocket(server);
+    this.writeSocketAttachment(
+      server,
+      createRoomSocketAttachment(this.room.roomId, verified),
+    );
     this.verifiedBySocket.set(server, verified);
     this.track("ws_open", { role: verified.role });
 
-    server.addEventListener("message", (event) => this.handleMessage(server, event.data));
-    server.addEventListener("close", () => this.handleClose(server));
-    server.addEventListener("error", () => this.handleClose(server));
-
     return new Response(null, { status: 101, webSocket: client });
+  }
+
+  webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer): void {
+    this.handleMessage(socket, raw);
+  }
+
+  webSocketClose(socket: WebSocket, code: number, reason: string, _wasClean: boolean): void {
+    this.handleClose(socket);
+    try {
+      socket.close(code, reason);
+    } catch {
+      /* already closed */
+    }
+  }
+
+  webSocketError(socket: WebSocket, error: unknown): void {
+    console.error("[Anidachi] Room WebSocket error", error);
+    this.handleClose(socket);
   }
 
   private handleMessage(socket: WebSocket, raw: string | ArrayBuffer): void {
@@ -187,6 +311,11 @@ export class RoomDurableObject {
       });
       return;
     }
+    if (raw === HIBERNATION_KEEPALIVE_PING) {
+      socket.send(HIBERNATION_KEEPALIVE_PONG);
+      this.touchSocketAttachment(socket);
+      return;
+    }
 
     let event: ClientEvent;
     try {
@@ -195,6 +324,7 @@ export class RoomDurableObject {
       this.send(socket, { type: "ERROR", code: "INVALID_EVENT", message: "Invalid room event" });
       return;
     }
+    this.touchSocketAttachment(socket);
 
     switch (event.type) {
       case "PING":
@@ -299,6 +429,18 @@ export class RoomDurableObject {
     this.participantsBySocket.set(socket, joined.id);
     this.socketsByParticipant.set(joined.id, socket);
     this.sessionIdBySocket.set(socket, event.participantSessionId);
+    const attachment = this.getSocketAttachment(socket);
+    if (attachment) {
+      const patch: Parameters<typeof updateRoomSocketAttachment>[1] = {
+        lastSeenAt: Date.now(),
+        participant: joined,
+      };
+      if (event.participantSessionId !== undefined) {
+        patch.participantSessionId = event.participantSessionId;
+      }
+      this.writeSocketAttachment(socket, updateRoomSocketAttachment(attachment, patch));
+    }
+    this.persistRoomState();
     this.send(socket, this.room.snapshot);
     this.replayP2PSignals(socket, joined.id, event.lastSeenP2PServerSeq ?? 0);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
@@ -338,6 +480,7 @@ export class RoomDurableObject {
       });
       return;
     }
+    this.persistRoomState();
 
     if (result.sourceChanged && result.source) {
       this.broadcast({
@@ -409,6 +552,17 @@ export class RoomDurableObject {
       return;
     }
 
+    const attachment = this.getSocketAttachment(socket);
+    if (attachment) {
+      this.writeSocketAttachment(
+        socket,
+        updateRoomSocketAttachment(attachment, {
+          lastSeenAt: Date.now(),
+          participant,
+        }),
+      );
+    }
+    this.persistRoomState();
     this.broadcast(this.room.snapshot);
   }
 
@@ -439,6 +593,15 @@ export class RoomDurableObject {
     };
 
     const buffered = this.p2pSignalBuffer.add(forwarded, forwarded.serverReceivedAt);
+    if (!buffered.duplicate) {
+      writeStoredP2PReplayEvent(
+        this.state.storage,
+        buffered.event,
+        getP2PSignalDedupeKey(buffered.event),
+        forwarded.serverReceivedAt,
+      );
+    }
+    this.persistP2PState();
     const target = this.socketsByParticipant.get(event.toUserId);
     if (!target) {
       console.log(
@@ -490,8 +653,11 @@ export class RoomDurableObject {
     }
 
     this.participantsBySocket.delete(socket);
-    this.socketsByParticipant.delete(participantId);
+    if (this.socketsByParticipant.get(participantId) === socket) {
+      this.socketsByParticipant.delete(participantId);
+    }
     const participant = this.room.leave(participantId);
+    this.persistRoomState();
     this.track("ws_close", { value: this.room.participants.length });
 
     if (participant) {

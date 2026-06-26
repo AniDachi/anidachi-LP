@@ -16,6 +16,19 @@ export const LEGACY_ROOM_CAPABILITIES: RoomCapabilities = {
   canSendPushInvites: false,
 };
 
+export interface RoomStateSnapshot {
+  schemaVersion: 1;
+  capabilities: RoomCapabilities;
+  hostId: string | null;
+  hostState?: PlaybackState;
+  participants: Participant[];
+  roomGeneration: number;
+  serverSeq: number;
+  source?: WatchSourceDescriptor;
+  sourceGeneration: number;
+  updatedAt: number;
+}
+
 export class RoomState {
   readonly roomId: string;
   private capabilities: RoomCapabilities;
@@ -27,9 +40,28 @@ export class RoomState {
   private source: WatchSourceDescriptor | undefined;
   private sourceGenerationValue = 1;
 
-  constructor(roomId: string, capabilities: RoomCapabilities = LEGACY_ROOM_CAPABILITIES) {
+  constructor(
+    roomId: string,
+    capabilities: RoomCapabilities = LEGACY_ROOM_CAPABILITIES,
+    snapshot?: RoomStateSnapshot,
+  ) {
     this.roomId = roomId;
-    this.capabilities = capabilities;
+    this.capabilities = snapshot?.capabilities ?? capabilities;
+    if (snapshot) {
+      for (const participant of snapshot.participants) {
+        this.participantsById.set(participant.id, participant);
+      }
+      this.hostId = snapshot.hostId;
+      this.roomGenerationValue = snapshot.roomGeneration;
+      this.serverSeqValue = snapshot.serverSeq;
+      this.sourceGenerationValue = snapshot.sourceGeneration;
+      if (snapshot.hostState) {
+        this.hostState = snapshot.hostState;
+      }
+      if (snapshot.source) {
+        this.source = snapshot.source;
+      }
+    }
   }
 
   /**
@@ -212,6 +244,26 @@ export class RoomState {
     this.participantsById.set(userId, updated);
     this.bumpServerSeq();
     return updated;
+  }
+
+  toSnapshot(updatedAt = Date.now()): RoomStateSnapshot {
+    const snapshot: RoomStateSnapshot = {
+      schemaVersion: 1,
+      capabilities: this.capabilities,
+      hostId: this.hostId,
+      participants: this.participants,
+      roomGeneration: this.roomGenerationValue,
+      serverSeq: this.serverSeqValue,
+      sourceGeneration: this.sourceGenerationValue,
+      updatedAt,
+    };
+    if (this.hostState) {
+      snapshot.hostState = this.hostState;
+    }
+    if (this.source) {
+      snapshot.source = this.source;
+    }
+    return snapshot;
   }
 
   private bumpServerSeq(): void {

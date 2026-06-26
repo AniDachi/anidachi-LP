@@ -256,6 +256,10 @@ The extension currently supports:
 - P2P signaling replay fenced by current room/source generation;
 - live `SOURCE_CHANGED` handling: the Worker increments `sourceGeneration` on
   host source changes and the extension resets stale P2P queues;
+- Cloudflare Durable Object WebSocket Hibernation core for room sockets:
+  versioned socket attachments, constructor rebuild from `getWebSockets()`,
+  SQLite-backed room snapshot and P2P replay/sequence state, raw `ping`/`pong`
+  auto-response keepalive, and JSON `PING` compatibility for old clients;
 - debug export from the extension panel.
 
 The extension still does not host, proxy, record, or distribute source video.
@@ -266,6 +270,9 @@ These are intentionally not treated as solved:
 
 - P2P media reconnect and asymmetric join timing still require staging/manual
   acceptance beyond the local harness.
+- Hibernation forced-wake behavior still needs explicit Workers-runtime
+  integration tests and staging idle-session acceptance; the core migration is
+  implemented, but room-end alarms and precise quota metering are still pending.
 - Source switching is not complete: live `SOURCE_CHANGED` and
   `sourceGeneration` bumps are implemented, but durable Supabase source
   persistence, room-create source descriptor plumbing, and explicit

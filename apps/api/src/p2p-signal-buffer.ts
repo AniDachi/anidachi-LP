@@ -27,8 +27,8 @@ export class RecentP2PSignalBuffer {
   add(event: BufferedP2PSignalEvent, now = Date.now()): AddP2PSignalResult {
     this.prune(now);
 
-    const key = getDedupeKey(event);
-    const existing = this.events.find((item) => getDedupeKey(item) === key);
+    const key = getP2PSignalDedupeKey(event);
+    const existing = this.events.find((item) => getP2PSignalDedupeKey(item) === key);
     if (existing) {
       return { duplicate: true, event: existing };
     }
@@ -38,7 +38,7 @@ export class RecentP2PSignalBuffer {
     while (this.events.length > this.maxEvents) {
       const removed = this.events.shift();
       if (removed) {
-        this.seenKeys.delete(getDedupeKey(removed));
+        this.seenKeys.delete(getP2PSignalDedupeKey(removed));
       }
     }
 
@@ -69,7 +69,7 @@ export class RecentP2PSignalBuffer {
       }
 
       this.events.shift();
-      this.seenKeys.delete(getDedupeKey(first));
+      this.seenKeys.delete(getP2PSignalDedupeKey(first));
       removed = true;
     }
 
@@ -79,22 +79,37 @@ export class RecentP2PSignalBuffer {
   }
 
   hasSeen(event: Pick<BufferedP2PSignalEvent, "clientSignalId" | "fromUserId" | "roomId" | "toUserId">): boolean {
-    return this.seenKeys.has(getDedupeKey(event));
+    return this.seenKeys.has(getP2PSignalDedupeKey(event));
   }
 
   get size(): number {
     return this.events.length;
   }
 
+  hydrate(events: BufferedP2PSignalEvent[], now = Date.now()): void {
+    this.events.length = 0;
+    this.seenKeys.clear();
+    const sorted = [...events].sort((a, b) => a.serverSeq - b.serverSeq);
+    for (const event of sorted) {
+      this.add(event, now);
+    }
+    this.prune(now);
+  }
+
+  snapshot(now = Date.now()): BufferedP2PSignalEvent[] {
+    this.prune(now);
+    return [...this.events];
+  }
+
   private rebuildDedupeKeys(): void {
     this.seenKeys.clear();
     for (const event of this.events) {
-      this.seenKeys.add(getDedupeKey(event));
+      this.seenKeys.add(getP2PSignalDedupeKey(event));
     }
   }
 }
 
-function getDedupeKey(
+export function getP2PSignalDedupeKey(
   event: Pick<BufferedP2PSignalEvent, "clientSignalId" | "fromUserId" | "roomId" | "toUserId">,
 ): string {
   return `${event.roomId}:${event.fromUserId}:${event.toUserId}:${event.clientSignalId}`;

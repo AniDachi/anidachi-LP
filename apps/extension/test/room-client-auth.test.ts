@@ -408,21 +408,16 @@ describe("authenticated room client", () => {
     });
 
     sockets[0]?.open();
-    const firstPing = JSON.parse(sockets[0]?.sent[1] ?? "{}") as { type?: string; sentAt?: number };
+    const firstPing = sockets[0]?.sent[1];
 
     expect(JSON.parse(sockets[0]?.sent[0] ?? "{}")).toMatchObject({ type: "JOIN" });
-    expect(firstPing.type).toBe("PING");
+    expect(firstPing).toBe("ping");
 
-    sockets[0]?.message({
-      type: "PONG",
-      roomId: "room-1",
-      sentAt: firstPing.sentAt,
-      serverTime: Number(firstPing.sentAt) + 1,
-    });
+    sockets[0]?.dispatch("message", { data: "pong" });
     vi.advanceTimersByTime(20_000);
 
     expect(onEvent).not.toHaveBeenCalled();
-    expect(JSON.parse(sockets[0]?.sent.at(-1) ?? "{}")).toMatchObject({ type: "PING" });
+    expect(sockets[0]?.sent.at(-1)).toBe("ping");
 
     client.close();
     vi.useRealTimers();
