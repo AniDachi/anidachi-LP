@@ -39,6 +39,7 @@
 - [x] 2026-06-27: Started the remaining contract hardening on branch `codex/p2p-production-hardening`: `ROOM_SNAPSHOT` now carries generation/sequence fields, server-relayed `P2P_SIGNAL` now carries required authoritative `roomGeneration/sourceGeneration/serverSeq/serverReceivedAt`, P2P replay is scoped by generation, and the extension drops stale-generation P2P media signals. Verified locally with protocol/API/extension checks and tests, room-signaling harness 29/29, and real-WebRTC harness 8/8. Remaining for full Task 3/5: current source descriptor + actual `SOURCE_CHANGED`/`sourceGeneration` bump.
 - [x] 2026-06-27: Continued Task 5 on branch `codex/p2p-source-generation`: added `WatchSourceDescriptor`, optional source descriptors on host state and snapshots, `SOURCE_CHANGED`, Worker-owned source-generation increments on host fingerprint changes, and extension-side stale P2P reset on source change. The room-signaling harness now asserts that reconnect replay returns only active-source P2P signals and skips stale-source signals. Verified: protocol/API/extension checks and tests, room-signaling harness 34/34, real-WebRTC harness 8/8, staging extension build + validation. Remaining for Task 5: durable Supabase source fields, room-create source response plumbing, and explicit source-switch UI/commands.
 - [x] 2026-06-27: Started Task 6 on branch `codex/p2p-hibernation-core`: Worker room sockets now use Cloudflare WebSocket Hibernation (`state.acceptWebSocket`, `webSocketMessage/Close/Error`), versioned per-socket attachments, constructor rebuild via `getWebSockets()`, SQLite-backed room snapshot + P2P replay/sequence storage, stale-socket close protection, and raw `ping`/`pong` auto-response keepalive with JSON `PING` compatibility for old clients. Verified: API/protocol/extension checks and tests, room-signaling harness twice in a row (35/35 + 35/35, proving durable harness isolation), `pnpm dev:check -- --profile rooms`, and real-WebRTC harness 8/8. Remaining for Task 6: forced hibernation wake tests in the Workers runtime, DO alarm room end, precise quota metering, and staging two-profile acceptance.
+- [x] 2026-06-27: Continued Task 6 on branch `codex/p2p-product-hardening-next`: added `@cloudflare/vitest-pool-workers` runtime coverage for forced Durable Object WebSocket hibernation wake via `evictDurableObject(..., { webSockets: "hibernate" })`. The test proves existing sockets still handle raw `ping`/`pong`, `HOST_STATE`, `CAMERA_ON/OFF`, and `P2P_SIGNAL` after forced wake; host state/source survive into snapshots; P2P `serverSeq` remains monotonic; and replay after a second forced wake honors `lastSeenP2PServerSeq`. Verified: `pnpm check`, `pnpm test`, `pnpm --filter @anidachi/api test:runtime`, `pnpm harness:rooms` (35/35), and `npm --prefix tests/e2e run harness:p2p` (8/8). Remaining for Task 6: staging two-profile idle acceptance, DO alarm room end, and precise quota metering.
 
 ## Current Reality Check
 
@@ -68,7 +69,7 @@
 - [ ] Worker socket replacement is by user id, not by participant session.
 - [x] P2P replay scope filters by the Worker-owned current room/source generation.
 - [x] New extension builds use raw `ping`/`pong` keepalive with Cloudflare `setWebSocketAutoResponse`; JSON `PING`/`PONG` remains only for compatibility with old clients.
-- [~] Durable Object room sockets use Cloudflare WebSocket Hibernation APIs and rebuild from attachments/storage; forced wake integration tests and alarm/quota behavior are still pending.
+- [~] Durable Object room sockets use Cloudflare WebSocket Hibernation APIs and rebuild from attachments/storage; forced wake is covered by Workers-runtime tests, while alarm/quota behavior and staging idle acceptance are still pending.
 
 ### Not Done Yet
 
@@ -76,7 +77,7 @@
 - [ ] Durable shared watch progress backend.
 - [x] Hibernation-safe room state rebuild core.
 - [x] SQLite-backed P2P replay state in the Durable Object.
-- [ ] Hibernation-aware integration tests.
+- [~] Hibernation-aware integration tests cover forced wake/replay; alarm/quota/staging idle acceptance is still pending.
 - [ ] Release gates that require manual two-browser room/P2P acceptance before marking P2P work complete.
 
 ## Non-Negotiable Order
@@ -404,15 +405,15 @@ Do not store raw room tokens in attachments.
 - [x] Keep an in-memory hot cache loaded from storage for active operation.
 - [x] Replace JSON keepalive with hibernation-safe keepalive.
 - [x] Keep compatibility with existing JSON `PING`/`PONG` only if it does not defeat hibernation in normal operation.
-- [ ] Add Workers-runtime integration tests, preferably using `@cloudflare/vitest-pool-workers`.
+- [x] Add Workers-runtime integration tests, preferably using `@cloudflare/vitest-pool-workers`.
 
 **Required Tests:**
 
 - [x] Missing/invalid room token is rejected before WebSocket accept.
-- [~] Existing socket can send `HOST_STATE`, `CAMERA_ON/OFF`, and `P2P_SIGNAL` after rebuild. Covered by current harness and storage tests, but not by a forced hibernation wake test yet.
+- [x] Existing socket can send `HOST_STATE`, `CAMERA_ON/OFF`, and `P2P_SIGNAL` after forced hibernation wake.
 - [x] Constructor rebuilds participants and socket maps from attachments.
 - [x] Duplicate same-session socket replacement closes the stale socket.
-- [~] Host state survives rebuild and appears in `ROOM_SNAPSHOT`. Covered by storage/unit tests; forced wake test still pending.
+- [x] Host state survives forced hibernation wake and appears in `ROOM_SNAPSHOT`.
 - [x] P2P `serverSeq` remains monotonic across stored state.
 - [x] P2P replay honors `lastSeenP2PServerSeq`, `roomGeneration`, and `sourceGeneration`.
 - [x] Raw keepalive does not go through normal JSON parsing.
