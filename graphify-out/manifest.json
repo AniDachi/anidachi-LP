@@ -215,8 +215,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1782486657.9624844,
-    "ast_hash": "441d032cc198b0b7712e1f68cbc0420b",
+    "mtime": 1782488447.9819338,
+    "ast_hash": "b39f2ff115245795c54dd8f24d002e96",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-mount.ts": {
@@ -2010,22 +2010,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1782486802.355766,
+    "mtime": 1782488529.9507737,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1782486802.3227038,
+    "mtime": 1782488529.916802,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1782486802.3287148,
+    "mtime": 1782488529.9226627,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1782486802.3314273,
+    "mtime": 1782488529.9255116,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },
@@ -2712,6 +2712,16 @@
   "scripts/seo-cta-cleanup.py": {
     "mtime": 1782325949.7845144,
     "ast_hash": "7111f1819b7d5f6bb54f14e194520847",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/room-session-storage.ts": {
+    "mtime": 1782487741.8666139,
+    "ast_hash": "ea64c518b8c173e0b63fb38eb13cc690",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/room-session-storage.test.ts": {
+    "mtime": 1782488315.2294014,
+    "ast_hash": "e7aed2b589f4c311ee81e56f6e0de4cd",
     "semantic_hash": ""
   }
 }
