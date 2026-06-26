@@ -104,19 +104,11 @@ function matchesGenerationScope(
   event: BufferedP2PSignalEvent,
   scope: P2PSignalReplayScope,
 ): boolean {
-  if (
-    scope.roomGeneration !== undefined &&
-    event.roomGeneration !== undefined &&
-    event.roomGeneration !== scope.roomGeneration
-  ) {
+  if (scope.roomGeneration !== undefined && event.roomGeneration !== scope.roomGeneration) {
     return false;
   }
 
-  if (
-    scope.sourceGeneration !== undefined &&
-    event.sourceGeneration !== undefined &&
-    event.sourceGeneration !== scope.sourceGeneration
-  ) {
+  if (scope.sourceGeneration !== undefined && event.sourceGeneration !== scope.sourceGeneration) {
     return false;
   }
 

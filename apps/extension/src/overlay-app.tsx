@@ -1,6 +1,7 @@
 import {
   getSyncCorrection,
   normalizeRemotePlaybackState,
+  type ClientEvent,
   type P2PSignal,
   type Participant,
   type PlaybackState,
@@ -280,6 +281,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const handledP2PSignalIdsRef = useRef(new Set<string>());
   const lastSeenP2PServerSeqRef = useRef(0);
   const p2pSignalSequenceRef = useRef(0);
+  const roomGenerationRef = useRef(0);
+  const sourceGenerationRef = useRef(0);
   const roomReconnectAttemptRef = useRef(0);
   const roomReconnectInFlightRef = useRef(false);
   const roomReconnectSuppressedRef = useRef(false);
@@ -349,6 +352,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [liveChatMessages, setLiveChatMessages] = useState<LiveChatMessage[]>([]);
   const [chatHistoryMessages, setChatHistoryMessages] = useState<LiveChatMessage[]>([]);
   const [incomingP2PSignals, setIncomingP2PSignals] = useState<IncomingP2PSignal[]>([]);
+  const [roomGeneration, setRoomGeneration] = useState(0);
+  const [sourceGeneration, setSourceGeneration] = useState(0);
   const [roomSnapshotReady, setRoomSnapshotReady] = useState(false);
   const [fireCharge, setFireCharge] = useState<FireChargeState | null>(null);
   const [flamingParticipantIds, setFlamingParticipantIds] = useState<string[]>([]);
@@ -396,6 +401,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     handledP2PSignalIdsRef.current.clear();
     lastSeenP2PServerSeqRef.current = 0;
     p2pSignalSequenceRef.current = 0;
+    roomGenerationRef.current = 0;
+    sourceGenerationRef.current = 0;
+    setRoomGeneration(0);
+    setSourceGeneration(0);
     setRoomSnapshotReady(false);
     setIncomingP2PSignals([]);
   }, [roomId]);
@@ -1195,7 +1204,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       return;
     }
 
-    clientRef.current.send({
+    const event: ClientEvent = {
       type: "P2P_SIGNAL",
       clientSignalId: createClientSignalId(),
       roomId: activeRoomId,
@@ -1203,7 +1212,15 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       senderConnectionId: clientRef.current.senderConnectionId,
       toUserId,
       signal,
-    });
+    };
+    if (roomGenerationRef.current > 0) {
+      event.roomGeneration = roomGenerationRef.current;
+    }
+    if (sourceGenerationRef.current > 0) {
+      event.sourceGeneration = sourceGenerationRef.current;
+    }
+
+    clientRef.current.send(event);
   }, []);
 
   const handleGhostCamToggle = useCallback(() => {
@@ -1240,6 +1257,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     participants: visibleParticipants,
     roomId,
     roomToken,
+    roomGeneration,
+    sourceGeneration,
     participant,
     onCameraStatus: sendCameraStatus,
     sendP2PSignal,
@@ -1900,6 +1919,26 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
       switch (event.type) {
         case "ROOM_SNAPSHOT":
+          if (
+            roomGenerationRef.current > 0 &&
+            (roomGenerationRef.current !== event.roomGeneration ||
+              sourceGenerationRef.current !== event.sourceGeneration)
+          ) {
+            handledP2PSignalIdsRef.current.clear();
+            lastSeenP2PServerSeqRef.current = 0;
+            p2pSignalSequenceRef.current = 0;
+            setIncomingP2PSignals([]);
+            logDebug("p2p.signal", "reset on generation change", {
+              fromRoomGeneration: roomGenerationRef.current,
+              fromSourceGeneration: sourceGenerationRef.current,
+              toRoomGeneration: event.roomGeneration,
+              toSourceGeneration: event.sourceGeneration,
+            });
+          }
+          roomGenerationRef.current = event.roomGeneration;
+          sourceGenerationRef.current = event.sourceGeneration;
+          setRoomGeneration(event.roomGeneration);
+          setSourceGeneration(event.sourceGeneration);
           setParticipants(event.participants);
           if (event.capabilities) {
             setRoomCapabilities(event.capabilities);
@@ -1943,6 +1982,21 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             event.toUserId !== participantRef.current?.id ||
             event.fromUserId === participantRef.current?.id
           ) {
+            return;
+          }
+
+          if (
+            (roomGenerationRef.current > 0 && event.roomGeneration !== roomGenerationRef.current) ||
+            (sourceGenerationRef.current > 0 &&
+              event.sourceGeneration !== sourceGenerationRef.current)
+          ) {
+            logDebug("p2p.signal", "drop stale generation", {
+              clientSignalId: event.clientSignalId,
+              eventRoomGeneration: event.roomGeneration,
+              eventSourceGeneration: event.sourceGeneration,
+              roomGeneration: roomGenerationRef.current,
+              sourceGeneration: sourceGenerationRef.current,
+            });
             return;
           }
 

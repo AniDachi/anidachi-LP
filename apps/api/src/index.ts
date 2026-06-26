@@ -411,8 +411,10 @@ export class RoomDurableObject {
 
     const forwarded: BufferedP2PSignalEvent = {
       ...event,
+      roomGeneration: this.room.roomGeneration,
       serverReceivedAt: Date.now(),
       serverSeq: this.nextP2PServerSeq++,
+      sourceGeneration: this.room.sourceGeneration,
     };
 
     const buffered = this.p2pSignalBuffer.add(forwarded, forwarded.serverReceivedAt);
@@ -436,7 +438,10 @@ export class RoomDurableObject {
   }
 
   private replayP2PSignals(socket: WebSocket, participantId: string, afterServerSeq: number): void {
-    const replay = this.p2pSignalBuffer.replayFor(participantId, afterServerSeq);
+    const replay = this.p2pSignalBuffer.replayFor(participantId, afterServerSeq, Date.now(), {
+      roomGeneration: this.room.roomGeneration,
+      sourceGeneration: this.room.sourceGeneration,
+    });
     for (const event of replay) {
       this.send(socket, event);
     }

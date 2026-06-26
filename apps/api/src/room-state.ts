@@ -21,6 +21,9 @@ export class RoomState {
   private readonly participantsById = new Map<string, Participant>();
   private hostId: string | null = null;
   private hostState: PlaybackState | undefined;
+  private roomGenerationValue = 1;
+  private serverSeqValue = 0;
+  private sourceGenerationValue = 1;
 
   constructor(roomId: string, capabilities: RoomCapabilities = LEGACY_ROOM_CAPABILITIES) {
     this.roomId = roomId;
@@ -51,14 +54,38 @@ export class RoomState {
     return this.capabilities;
   }
 
+  get roomGeneration(): number {
+    return this.roomGenerationValue;
+  }
+
+  get serverSeq(): number {
+    return this.serverSeqValue;
+  }
+
+  get sourceGeneration(): number {
+    return this.sourceGenerationValue;
+  }
+
   setCapabilities(capabilities: RoomCapabilities): void {
+    const changed =
+      this.capabilities.hostPlanCode !== capabilities.hostPlanCode ||
+      this.capabilities.maxParticipants !== capabilities.maxParticipants ||
+      this.capabilities.maxMediaSeats !== capabilities.maxMediaSeats ||
+      this.capabilities.canNameRoom !== capabilities.canNameRoom ||
+      this.capabilities.canSendPushInvites !== capabilities.canSendPushInvites;
     this.capabilities = capabilities;
+    if (changed) {
+      this.bumpServerSeq();
+    }
   }
 
   get snapshot(): ServerEvent {
     const base = {
       type: "ROOM_SNAPSHOT" as const,
       roomId: this.roomId,
+      roomGeneration: this.roomGenerationValue,
+      serverSeq: this.serverSeqValue,
+      sourceGeneration: this.sourceGenerationValue,
       capabilities: this.capabilities,
       participants: this.participants,
     };
@@ -87,6 +114,7 @@ export class RoomState {
     };
 
     this.participantsById.set(joined.id, joined);
+    this.bumpServerSeq();
     return joined;
   }
 
@@ -107,6 +135,7 @@ export class RoomState {
       }
     }
 
+    this.bumpServerSeq();
     return leaving;
   }
 
@@ -116,6 +145,7 @@ export class RoomState {
     }
 
     this.hostState = state;
+    this.bumpServerSeq();
     return true;
   }
 
@@ -157,6 +187,11 @@ export class RoomState {
       lastSeenAt: Date.now(),
     };
     this.participantsById.set(userId, updated);
+    this.bumpServerSeq();
     return updated;
+  }
+
+  private bumpServerSeq(): void {
+    this.serverSeqValue += 1;
   }
 }

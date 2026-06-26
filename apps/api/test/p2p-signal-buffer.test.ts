@@ -10,10 +10,12 @@ function p2pEvent(overrides: Partial<BufferedP2PSignalEvent> = {}): BufferedP2PS
     clientSignalId: "signal-1",
     fromUserId: "host",
     roomId: "room-1",
+    roomGeneration: 1,
     senderConnectionId: "connection-1",
     serverReceivedAt: 1_000,
     serverSeq: 1,
     signal: { kind: "renegotiate" },
+    sourceGeneration: 1,
     toUserId: "viewer",
     ...overrides,
   };

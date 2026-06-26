@@ -36,6 +36,7 @@
 - [x] 2026-06-07: Ran two focused research passes: one repo-local audit for plan/task ordering and one Cloudflare Hibernation migration audit.
 - [x] 2026-06-07: Checked current Cloudflare and WebRTC primary docs and folded the findings into this roadmap.
 - [x] 2026-06-12: Full code audit of the end-to-end room flow confirmed the Task 2 premise plus two release-blocking defects (immortal rooms break plan limits; non-idempotent create). Created the execution program for this roadmap with SLOs, a two-browser Playwright harness, and fixed product defaults: `docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md`. Roadmap ordering remains authoritative.
+- [x] 2026-06-27: Started the remaining contract hardening on branch `codex/p2p-production-hardening`: `ROOM_SNAPSHOT` now carries generation/sequence fields, server-relayed `P2P_SIGNAL` now carries required authoritative `roomGeneration/sourceGeneration/serverSeq/serverReceivedAt`, P2P replay is scoped by generation, and the extension drops stale-generation P2P media signals. Verified locally with protocol/API/extension checks and tests, room-signaling harness 29/29, and real-WebRTC harness 8/8. Remaining for full Task 3/5: current source descriptor + actual `SOURCE_CHANGED`/`sourceGeneration` bump.
 
 ## Current Reality Check
 
@@ -235,11 +236,11 @@ interface RoomEventEnvelope<TPayload> {
 
 **Practical near-term target:**
 
-- [ ] `ROOM_SNAPSHOT` includes `roomGeneration`, `sourceGeneration`, `serverSeq`, and current source descriptor.
-- [ ] `P2P_SIGNAL` generation fields become required after extension and Worker both send them.
+- [~] `ROOM_SNAPSHOT` includes `roomGeneration`, `sourceGeneration`, `serverSeq`, and current source descriptor. Generation/sequence fields are implemented; current source descriptor remains.
+- [x] `P2P_SIGNAL` generation fields become required after extension and Worker both send them.
 - [ ] `JOIN` stops trusting a full client-provided participant object. It may send local capabilities, but identity comes from token claims.
 - [ ] Every room-scoped event is rejected if top-level `roomId` does not match the Durable Object room id.
-- [ ] Server-generated events include enough sequence/generation data for the extension to drop stale events.
+- [~] Server-generated events include enough sequence/generation data for the extension to drop stale events. Implemented for P2P media signaling; source/playback events remain tied to Task 5.
 
 **Acceptance Criteria:**
 
