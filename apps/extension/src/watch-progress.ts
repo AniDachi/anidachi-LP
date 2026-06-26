@@ -67,6 +67,8 @@ export interface ProviderFolder {
 }
 
 export const WATCH_PROGRESS_STORAGE_KEY = "anidachi.watchProgress.v1";
+export const WATCH_PROGRESS_GUEST_OWNER_ID = "guest";
+export const WATCH_PROGRESS_ACTIVE_OWNER_STORAGE_KEY = "anidachi.watchProgress.activeOwner.v1";
 const WATCH_PROGRESS_RESET_STORAGE_KEY = "anidachi.watchProgress.reset.crunchyroll-regroup.v1";
 
 export const RESOURCE_PROVIDER_LABELS: Record<ResourceProvider, string> = {
@@ -185,20 +187,75 @@ export function buildProviderFolders(store: WatchProgressStore): ProviderFolder[
 }
 
 export async function loadWatchProgressStore(): Promise<WatchProgressStore> {
+  return loadWatchProgressStoreForUser(null);
+}
+
+export async function loadWatchProgressStoreForUser(
+  userId: string | null | undefined,
+): Promise<WatchProgressStore> {
   await clearLegacyWatchProgressIfNeeded();
-  const raw = await chrome.storage.local.get(WATCH_PROGRESS_STORAGE_KEY);
-  return normalizeWatchProgressStore(raw[WATCH_PROGRESS_STORAGE_KEY]);
+  const key = watchProgressStorageKeyForUser(userId);
+  await setActiveWatchProgressOwner(userId);
+  const raw = await chrome.storage.local.get(key);
+  return normalizeWatchProgressStore(raw[key]);
 }
 
 export async function saveWatchProgressStore(store: WatchProgressStore): Promise<void> {
-  await chrome.storage.local.set({ [WATCH_PROGRESS_STORAGE_KEY]: store });
+  await saveWatchProgressStoreForUser(null, store);
+}
+
+export async function saveWatchProgressStoreForUser(
+  userId: string | null | undefined,
+  store: WatchProgressStore,
+): Promise<void> {
+  const key = watchProgressStorageKeyForUser(userId);
+  await setActiveWatchProgressOwner(userId);
+  await chrome.storage.local.set({ [key]: store });
+}
+
+export async function clearWatchProgressStoreForUser(
+  userId: string | null | undefined,
+): Promise<void> {
+  const key = watchProgressStorageKeyForUser(userId);
+  await chrome.storage.local.remove(key);
+  if (!userId) {
+    await chrome.storage.local.remove(WATCH_PROGRESS_STORAGE_KEY);
+  }
+}
+
+export async function setActiveWatchProgressOwner(
+  userId: string | null | undefined,
+): Promise<void> {
+  await chrome.storage.local.set({
+    [WATCH_PROGRESS_ACTIVE_OWNER_STORAGE_KEY]: watchProgressOwnerForUser(userId),
+  });
 }
 
 export async function recordWatchProgress(entry: WatchProgressEntry): Promise<WatchProgressStore> {
-  const store = await loadWatchProgressStore();
+  return recordWatchProgressForUser(null, entry);
+}
+
+export async function recordWatchProgressForUser(
+  userId: string | null | undefined,
+  entry: WatchProgressEntry,
+): Promise<WatchProgressStore> {
+  const store = await loadWatchProgressStoreForUser(userId);
   const next = recordWatchProgressInStore(store, entry);
-  await saveWatchProgressStore(next);
+  await saveWatchProgressStoreForUser(userId, next);
   return next;
+}
+
+export function watchProgressOwnerForUser(userId: string | null | undefined): string {
+  const normalized = userId?.trim();
+  return normalized ? `user:${normalized}` : WATCH_PROGRESS_GUEST_OWNER_ID;
+}
+
+export function watchProgressStorageKeyForUser(userId: string | null | undefined): string {
+  const owner = watchProgressOwnerForUser(userId);
+  if (owner === WATCH_PROGRESS_GUEST_OWNER_ID) {
+    return WATCH_PROGRESS_STORAGE_KEY;
+  }
+  return `${WATCH_PROGRESS_STORAGE_KEY}.${encodeURIComponent(owner)}`;
 }
 
 export function normalizeWatchProgressStore(value: unknown): WatchProgressStore {

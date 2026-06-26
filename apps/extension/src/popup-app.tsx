@@ -45,12 +45,14 @@ import {
 } from "./social-client";
 import {
   buildProviderFolders,
+  clearWatchProgressStoreForUser,
   createEmptyWatchProgressStore,
   formatProgressClock,
-  loadWatchProgressStore,
+  loadWatchProgressStoreForUser,
   normalizeWatchProgressStore,
   recordWatchProgressInStore,
-  WATCH_PROGRESS_STORAGE_KEY,
+  saveWatchProgressStoreForUser,
+  watchProgressStorageKeyForUser,
   type ProviderFolder,
   type StoredEpisodeProgress,
   type StoredWatchItem,
@@ -161,6 +163,7 @@ export function PopupApp() {
   });
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const posterRequestsRef = useRef<Record<string, boolean>>({});
+  const storeUserIdRef = useRef<string | null>(null);
   const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
   const displayStore = useMemo(
     () => mergeWatchLibraryIntoStore(store, watchLibraryState.data),
@@ -216,6 +219,23 @@ export function PopupApp() {
     : 0;
   const pendingInviteCount =
     socialState.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)).length ?? 0;
+
+  const ensureStoreForUser = useCallback(
+    async (
+      userId: string | null,
+      currentStore: WatchProgressStore,
+    ): Promise<WatchProgressStore> => {
+      if (storeUserIdRef.current === userId) {
+        return currentStore;
+      }
+
+      const scopedStore = await loadWatchProgressStoreForUser(userId);
+      storeUserIdRef.current = userId;
+      setStore(scopedStore);
+      return scopedStore;
+    },
+    [],
+  );
 
   const loadSocialForTokens = useCallback(async (tokens: ExtensionAuthTokens) => {
     setSocialState((current) => ({
@@ -332,6 +352,7 @@ export function PopupApp() {
         const tokens =
           options.tokens ?? (options.interactive ? await signInWithWebsite() : await getCurrentExtensionSession());
         if (!tokens) {
+          await ensureStoreForUser(null, localStore);
           setAuthSession({ status: "signed-out", tokens: null, error: null });
           setSocialState({ status: "signed-out", data: null, error: null });
           setWatchLibraryState({
@@ -342,9 +363,10 @@ export function PopupApp() {
           return null;
         }
 
+        const scopedStore = await ensureStoreForUser(tokens.user.id, localStore);
         setAuthSession({ status: "ready", tokens, error: null });
         await Promise.all([
-          loadWatchLibraryForTokens(tokens, localStore, options.useCachedSnapshot ?? true),
+          loadWatchLibraryForTokens(tokens, scopedStore, options.useCachedSnapshot ?? true),
           loadSocialForTokens(tokens),
         ]);
         return tokens;
@@ -364,7 +386,7 @@ export function PopupApp() {
         return null;
       }
     },
-    [loadSocialForTokens, loadWatchLibraryForTokens],
+    [ensureStoreForUser, loadSocialForTokens, loadWatchLibraryForTokens],
   );
 
   const acceptInvite = useCallback(
@@ -652,26 +674,38 @@ export function PopupApp() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadWatchProgressStore().then((loadedStore) => {
+    void (async () => {
+      const cachedTokens = await getCachedExtensionSession();
+      const initialUserId = cachedTokens?.user.id ?? null;
+      const loadedStore = await loadWatchProgressStoreForUser(initialUserId);
       if (cancelled) return;
+      storeUserIdRef.current = initialUserId;
       setStore(loadedStore);
-      void syncPopupData(loadedStore, { useCachedSnapshot: true });
-    });
+      void syncPopupData(loadedStore, {
+        useCachedSnapshot: true,
+      });
+    })();
 
+    return () => {
+      cancelled = true;
+    };
+  }, [syncPopupData]);
+
+  useEffect(() => {
+    const storageKey = watchProgressStorageKeyForUser(accountUser?.id ?? null);
     const handleStorageChange = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
-      if (areaName !== "local" || !changes[WATCH_PROGRESS_STORAGE_KEY]) {
+      if (areaName !== "local" || !changes[storageKey]) {
         return;
       }
 
-      setStore(normalizeWatchProgressStore(changes[WATCH_PROGRESS_STORAGE_KEY].newValue));
+      setStore(normalizeWatchProgressStore(changes[storageKey].newValue));
     };
 
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => {
-      cancelled = true;
       chrome.storage.onChanged.removeListener(handleStorageChange);
     };
-  }, [syncPopupData]);
+  }, [accountUser?.id]);
 
   useEffect(() => {
     if (libraryActivityFilter !== "together" && libraryPersonFilter !== "all") {
@@ -724,7 +758,8 @@ export function PopupApp() {
           return;
         }
 
-        const latestStore = await loadWatchProgressStore();
+        const currentUserId = storeUserIdRef.current;
+        const latestStore = await loadWatchProgressStoreForUser(currentUserId);
         const latestItem = latestStore.providers.crunchyroll.items[item.id];
         if (!latestItem || latestItem.artworkUrl) {
           return;
@@ -737,9 +772,7 @@ export function PopupApp() {
         }
 
         nextItem.artworkUrl = posterUrl;
-        await chrome.storage.local.set({
-          [WATCH_PROGRESS_STORAGE_KEY]: nextStore,
-        });
+        await saveWatchProgressStoreForUser(currentUserId, nextStore);
         setStore(nextStore);
       });
     }
@@ -758,15 +791,17 @@ export function PopupApp() {
     );
     try {
       const tokens = authSession.status === "ready" ? authSession.tokens : await getCachedExtensionSession();
+      const currentUserId = tokens?.user.id ?? storeUserIdRef.current;
       const clearedLibrary = tokens ? await clearWatchLibrary(tokens.accessToken) : null;
 
       await Promise.all([
-        chrome.storage.local.remove(WATCH_PROGRESS_STORAGE_KEY),
+        clearWatchProgressStoreForUser(currentUserId),
         clearCachedWatchLibrary(),
         clearWatchLibrarySyncWatermark(),
       ]);
 
       const emptyStore = createEmptyWatchProgressStore();
+      storeUserIdRef.current = currentUserId;
       setStore(emptyStore);
       if (tokens && clearedLibrary) {
         await setCachedWatchLibraryForUser(tokens.user.id, clearedLibrary);

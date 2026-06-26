@@ -53,17 +53,27 @@ export interface CreateRoomInput {
 export class RoomApiError extends Error {
   readonly code?: string;
   readonly resetAt?: string;
+  readonly status?: number;
 
-  constructor(message: string, code?: string, resetAt?: string) {
+  constructor(message: string, code?: string, resetAt?: string, status?: number) {
     super(message);
     this.name = "RoomApiError";
     this.code = code;
     this.resetAt = resetAt;
+    this.status = status;
   }
 }
 
 export function isQuotaExhaustedError(error: unknown): error is RoomApiError {
   return error instanceof RoomApiError && error.code === "QUOTA_EXHAUSTED";
+}
+
+export function isTerminalRoomJoinError(error: unknown): error is RoomApiError {
+  return (
+    error instanceof RoomApiError &&
+    error.code !== "QUOTA_EXHAUSTED" &&
+    (error.status === 403 || error.status === 404)
+  );
 }
 
 const ROOM_HTTP_MESSAGE_TYPE = "ANIDACHI_ROOM_HTTP";
@@ -103,7 +113,7 @@ export type RoomHttpMessageResponse =
       };
     }
   | { ok: true; ended: { endedAt: string | null } }
-  | { ok: false; error: string; code?: string; resetAt?: string };
+  | { ok: false; error: string; code?: string; resetAt?: string; status?: number };
 
 export function buildRoomWebSocketUrl(roomId: string, roomToken: string): string {
   const url = new URL(`${API_WS_BASE}/ws/${encodeURIComponent(roomId)}`);
@@ -135,6 +145,7 @@ async function websiteRoomHttpError(response: Response, fallback: string): Promi
     `${detail} (${response.status})`,
     typeof body?.code === "string" ? body.code : undefined,
     typeof body?.resetAt === "string" ? body.resetAt : undefined,
+    response.status,
   );
 }
 
@@ -334,7 +345,13 @@ export async function handleRoomHttpMessage(
     };
   } catch (error) {
     if (error instanceof RoomApiError) {
-      return { ok: false, error: error.message, code: error.code, resetAt: error.resetAt };
+      return {
+        ok: false,
+        error: error.message,
+        code: error.code,
+        resetAt: error.resetAt,
+        status: error.status,
+      };
     }
     return {
       ok: false,
@@ -357,7 +374,7 @@ function assertRoomHttpResponse(
 }
 
 function bridgeError(response: Extract<RoomHttpMessageResponse, { ok: false }>): RoomApiError {
-  return new RoomApiError(response.error, response.code, response.resetAt);
+  return new RoomApiError(response.error, response.code, response.resetAt, response.status);
 }
 
 export async function createRoom(accessToken: string, input?: CreateRoomInput): Promise<CreatedRoom> {
