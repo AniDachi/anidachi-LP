@@ -198,6 +198,46 @@ describe("Crunchyroll progress extraction", () => {
     });
   });
 
+  it("prefers known watch URL seasons over ambiguous Crunchyroll JSON-LD placeholders", () => {
+    mockLocation(
+      "https://www.crunchyroll.com/watch/GEVUZGE02/kaguya-wants-to-know--kaguya-wants-to-give-a-gift--chika-fujiwara-wants-to-confirm-it",
+    );
+    document.title =
+      "E2 - Kaguya Wants to Know / Kaguya Wants to Give a Gift / Chika Fujiwara Wants to Confirm It - Watch on Crunchyroll";
+    document.body.innerHTML = `
+      <a href="/series/GRJ0J828Y/kaguya-sama-love-is-war">Kaguya-sama: Love Is War</a>
+      <script type="application/ld+json">
+        {
+          "@type": "TVEpisode",
+          "name": "E2 - Kaguya Wants to Know / Kaguya Wants to Give a Gift / Chika Fujiwara Wants to Confirm It",
+          "partOfSeries": { "name": "Kaguya-sama: Love Is War" },
+          "partOfSeason": {
+            "@type": "TVSeason",
+            "name": "?",
+            "position": 2
+          }
+        }
+      </script>
+    `;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 42 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 1440 });
+
+    const entry = getCrunchyrollProgressEntry({
+      title: "E2 - Kaguya Wants to Know / Kaguya Wants to Give a Gift / Chika Fujiwara Wants to Confirm It",
+      video,
+      watchedWithCount: 1,
+    });
+
+    expect(entry).toMatchObject({
+      itemTitle: "Kaguya-sama: Love Is War",
+      episodeId: "GEVUZGE02",
+      seasonId: "season-1",
+      seasonTitle: "Season 1",
+      seasonNumber: 1,
+    });
+  });
+
   it("infers ordinal Crunchyroll season metadata from page titles", () => {
     mockLocation("https://www.crunchyroll.com/watch/GUNKNOWN/lets-go-to-tokyo");
     document.head.innerHTML = `
