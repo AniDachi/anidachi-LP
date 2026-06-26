@@ -638,7 +638,7 @@ async function upsertWatchSession(params: {
     episode_key: params.entry.episodeKey,
     episode_title: params.entry.episodeTitle,
     source_url: params.entry.sourceUrl,
-    artwork_url: params.entry.artworkUrl,
+    artwork_url: resolveWatchArtworkUrlForWrite(params.entry.artworkUrl, existing?.artwork_url),
     duration_seconds: params.entry.durationSeconds,
     current_time_seconds: params.entry.currentTimeSeconds,
     progress: params.entry.progress,
@@ -777,7 +777,10 @@ async function upsertTrackedTitle(params: {
         item_kind: params.entry.itemKind,
         item_title: params.entry.itemTitle,
         source_url: params.entry.sourceUrl,
-        artwork_url: params.entry.artworkUrl,
+        artwork_url: resolveWatchArtworkUrlForWrite(
+          params.entry.artworkUrl,
+          existing?.artwork_url
+        ),
         active: true,
         archived_reason: null,
         latest_session_id: params.sessionId,
@@ -787,6 +790,13 @@ async function upsertTrackedTitle(params: {
       { onConflict: "user_id,provider,title_key" }
     );
   if (error) throw new Error(`Failed to upsert tracked title: ${error.message}`);
+}
+
+export function resolveWatchArtworkUrlForWrite(
+  incomingArtworkUrl: string | null,
+  existingArtworkUrl: string | null | undefined
+): string | null {
+  return incomingArtworkUrl ?? existingArtworkUrl ?? null;
 }
 
 async function getTrackedTitle(

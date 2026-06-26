@@ -4,6 +4,7 @@ import {
   cleanWatchProgressEntries,
   cleanWatchProgressEntry,
   historyRetentionCutoff,
+  resolveWatchArtworkUrlForWrite,
   roomWatchParticipantTargets,
 } from "./watch-library";
 
@@ -84,6 +85,21 @@ test("watch progress entries repair ambiguous Crunchyroll season placeholders fr
   assert.equal(entry?.seasonKey, "season-1");
   assert.equal(entry?.seasonTitle, "Season 1");
   assert.equal(entry?.seasonNumber, 1);
+});
+
+test("watch progress writes keep existing artwork when a checkpoint has no poster", () => {
+  assert.equal(
+    resolveWatchArtworkUrlForWrite(null, "https://imgsrv.crunchyroll.com/poster.png"),
+    "https://imgsrv.crunchyroll.com/poster.png"
+  );
+  assert.equal(
+    resolveWatchArtworkUrlForWrite(
+      "https://imgsrv.crunchyroll.com/new-poster.png",
+      "https://imgsrv.crunchyroll.com/old-poster.png"
+    ),
+    "https://imgsrv.crunchyroll.com/new-poster.png"
+  );
+  assert.equal(resolveWatchArtworkUrlForWrite(null, null), null);
 });
 
 test("watch progress entries reject unsupported providers and unsafe URLs", () => {

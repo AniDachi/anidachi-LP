@@ -75,6 +75,7 @@ import {
   reconcileWatchProgress,
   setCachedWatchLibraryForUser,
   setWatchLibrarySyncWatermark,
+  watchProgressEntriesFromItem,
   watchProgressEntriesFromStore,
   type WatchLibraryEpisode,
   type WatchLibraryResponse,
@@ -772,22 +773,33 @@ export function PopupApp() {
         const currentUserId = storeUserIdRef.current;
         const latestStore = await loadWatchProgressStoreForUser(currentUserId);
         const latestItem = latestStore.providers.crunchyroll.items[item.id];
-        if (!latestItem || latestItem.artworkUrl) {
+        if (latestItem?.artworkUrl) {
           return;
         }
 
         const nextStore = structuredClone(latestStore);
-        const nextItem = nextStore.providers.crunchyroll.items[item.id];
-        if (!nextItem) {
+        const nextItem = structuredClone(latestItem ?? item);
+        nextItem.artworkUrl = posterUrl;
+        nextStore.providers.crunchyroll.items[item.id] = nextItem;
+        await saveWatchProgressStoreForUser(currentUserId, nextStore);
+        setStore(nextStore);
+
+        const tokens = authSession.status === "ready" ? authSession.tokens : null;
+        const entries = tokens ? watchProgressEntriesFromItem(nextItem, "reconcile") : [];
+        if (!tokens || entries.length === 0) {
           return;
         }
 
-        nextItem.artworkUrl = posterUrl;
-        await saveWatchProgressStoreForUser(currentUserId, nextStore);
-        setStore(nextStore);
+        try {
+          const library = await reconcileWatchProgress(tokens.accessToken, entries);
+          await setCachedWatchLibraryForUser(tokens.user.id, library);
+          setWatchLibraryState({ status: "ready", data: library, error: null });
+        } catch {
+          // Local artwork is already cached; the next normal sync can retry the server update.
+        }
       });
     }
-  }, [folders]);
+  }, [authSession, folders]);
 
   const clearHistory = async () => {
     if (clearingHistory || !canClearHistory) return;

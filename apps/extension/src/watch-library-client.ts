@@ -439,7 +439,7 @@ export async function createRoomFromWatchSession(params: {
   return response.room;
 }
 
-function watchProgressEntriesFromItem(
+export function watchProgressEntriesFromItem(
   item: StoredWatchItem,
   checkpointKind: WatchCheckpointKind,
 ): WatchProgressReconcileEntry[] {
