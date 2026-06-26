@@ -3,6 +3,7 @@ import type {
   PlaybackState,
   RoomCapabilities,
   ServerEvent,
+  WatchSourceDescriptor,
 } from "@anidachi/protocol";
 
 export const LEGACY_ROOM_CAPABILITIES: RoomCapabilities = {
@@ -23,6 +24,7 @@ export class RoomState {
   private hostState: PlaybackState | undefined;
   private roomGenerationValue = 1;
   private serverSeqValue = 0;
+  private source: WatchSourceDescriptor | undefined;
   private sourceGenerationValue = 1;
 
   constructor(roomId: string, capabilities: RoomCapabilities = LEGACY_ROOM_CAPABILITIES) {
@@ -90,11 +92,13 @@ export class RoomState {
       participants: this.participants,
     };
 
+    const withSource = this.source ? { ...base, source: this.source } : base;
+
     if (this.hostState) {
-      return { ...base, hostState: this.hostState };
+      return { ...withSource, hostState: this.hostState };
     }
 
-    return base;
+    return withSource;
   }
 
   join(participant: Participant): Participant {
@@ -139,14 +143,33 @@ export class RoomState {
     return leaving;
   }
 
-  updateHostState(byUserId: string, state: PlaybackState): boolean {
+  updateHostState(
+    byUserId: string,
+    state: PlaybackState,
+    source?: WatchSourceDescriptor,
+  ): HostStateUpdateResult {
     if (this.hostId !== byUserId || !this.participantsById.has(byUserId)) {
-      return false;
+      return { accepted: false, sourceChanged: false };
     }
 
+    const previousSource = this.source;
+    const previousFingerprint = this.hostState?.videoFingerprint ?? previousSource?.videoFingerprint;
+    const nextSource = normalizeWatchSourceDescriptor(state, source ?? previousSource);
+    const sourceChanged =
+      previousFingerprint !== undefined && previousFingerprint !== state.videoFingerprint;
+
     this.hostState = state;
+    this.source = nextSource;
+    if (sourceChanged) {
+      this.sourceGenerationValue += 1;
+    }
     this.bumpServerSeq();
-    return true;
+    return {
+      accepted: true,
+      sourceChanged,
+      ...(nextSource ? { source: nextSource } : {}),
+      ...(previousSource ? { previousSource } : {}),
+    };
   }
 
   canControlPlayback(userId: string): boolean {
@@ -194,4 +217,40 @@ export class RoomState {
   private bumpServerSeq(): void {
     this.serverSeqValue += 1;
   }
+}
+
+export interface HostStateUpdateResult {
+  accepted: boolean;
+  sourceChanged: boolean;
+  source?: WatchSourceDescriptor;
+  previousSource?: WatchSourceDescriptor;
+}
+
+function normalizeWatchSourceDescriptor(
+  state: PlaybackState,
+  source?: WatchSourceDescriptor,
+): WatchSourceDescriptor | undefined {
+  const sourceUrl = source?.sourceUrl ?? state.sourceUrl;
+  if (!sourceUrl) {
+    return undefined;
+  }
+
+  return {
+    ...source,
+    provider: source?.provider ?? providerFromFingerprint(state.videoFingerprint),
+    sourceUrl,
+    canonicalUrl: source?.canonicalUrl ?? sourceUrl,
+    videoFingerprint: state.videoFingerprint,
+    title: source?.title?.trim() || "Untitled source",
+  };
+}
+
+function providerFromFingerprint(fingerprint: string): WatchSourceDescriptor["provider"] {
+  if (fingerprint.startsWith("crunchyroll|")) {
+    return "crunchyroll";
+  }
+  if (fingerprint.startsWith("youtube|")) {
+    return "youtube";
+  }
+  return "generic";
 }

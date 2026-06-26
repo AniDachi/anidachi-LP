@@ -327,13 +327,34 @@ export class RoomDurableObject {
     event: Extract<ClientEvent, { type: "HOST_STATE" }>,
   ): void {
     const userId = this.participantsBySocket.get(socket);
-    if (!userId || !this.room.updateHostState(userId, event.state)) {
+    const result = userId
+      ? this.room.updateHostState(userId, event.state, event.source)
+      : { accepted: false, sourceChanged: false };
+    if (!userId || !result.accepted) {
       this.send(socket, {
         type: "ERROR",
         code: "NOT_HOST",
         message: "Only joined room participants can update playback state",
       });
       return;
+    }
+
+    if (result.sourceChanged && result.source) {
+      this.broadcast({
+        type: "SOURCE_CHANGED",
+        roomId: this.room.roomId,
+        roomGeneration: this.room.roomGeneration,
+        sourceGeneration: this.room.sourceGeneration,
+        serverSeq: this.room.serverSeq,
+        serverReceivedAt: Date.now(),
+        source: result.source,
+        ...(result.previousSource ? { previousSource: result.previousSource } : {}),
+        hostState: event.state,
+      });
+    } else if (result.sourceChanged) {
+      // If an old client sends a source-changing host state without a
+      // descriptor, still publish the generation bump so clients can fence P2P.
+      this.broadcast(this.room.snapshot);
     }
 
     this.broadcast({ type: "HOST_STATE", state: event.state }, socket);

@@ -5,6 +5,7 @@ import {
   ReactionEventSchema,
   RoomCapabilitiesSchema,
   ServerEventSchema,
+  WatchSourceDescriptorSchema,
   getExpectedHostTime,
   normalizeRemotePlaybackState,
   getSyncCorrection,
@@ -173,6 +174,59 @@ describe("room protocol schemas", () => {
         },
       }),
     ).toThrow();
+  });
+
+  it("accepts source descriptors and source change events", () => {
+    const source = WatchSourceDescriptorSchema.parse({
+      provider: "crunchyroll",
+      sourceUrl: "https://www.crunchyroll.com/watch/episode-2",
+      canonicalUrl: "https://www.crunchyroll.com/watch/episode-2",
+      videoFingerprint: "crunchyroll|series-a|s1|e2",
+      title: "Episode 2",
+      seriesTitle: "Series A",
+      episodeTitle: "Episode 2",
+      seasonNumber: 1,
+      episodeNumber: 2,
+      duration: 1440,
+      posterUrl: "https://static.example.com/poster.jpg",
+    });
+
+    expect(source.provider).toBe("crunchyroll");
+    expect(source.episodeNumber).toBe(2);
+
+    const event = ServerEventSchema.parse({
+      type: "SOURCE_CHANGED",
+      roomId: "room-1",
+      roomGeneration: 1,
+      sourceGeneration: 2,
+      serverSeq: 12,
+      serverReceivedAt: 1_000,
+      source,
+      previousSource: {
+        ...source,
+        sourceUrl: "https://www.crunchyroll.com/watch/episode-1",
+        canonicalUrl: "https://www.crunchyroll.com/watch/episode-1",
+        videoFingerprint: "crunchyroll|series-a|s1|e1",
+        title: "Episode 1",
+        episodeTitle: "Episode 1",
+        episodeNumber: 1,
+      },
+      hostState: {
+        videoFingerprint: source.videoFingerprint,
+        sourceUrl: source.sourceUrl,
+        playing: true,
+        hostTime: 10,
+        updatedAt: 1_000,
+        playbackRate: 1,
+      },
+    });
+
+    expect(event.type).toBe("SOURCE_CHANGED");
+    if (event.type !== "SOURCE_CHANGED") {
+      throw new Error("Expected SOURCE_CHANGED");
+    }
+    expect(event.sourceGeneration).toBe(2);
+    expect(event.previousSource?.episodeNumber).toBe(1);
   });
 
   it("accepts explicit playback command server events", () => {

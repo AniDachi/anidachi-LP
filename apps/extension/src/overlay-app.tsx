@@ -8,6 +8,7 @@ import {
   type ReactionEvent,
   type RoomCapabilities,
   type ServerEvent,
+  type WatchSourceDescriptor,
 } from "@anidachi/protocol";
 import { Mic, MicOff, SendHorizontal, SmilePlus, X } from "lucide-react";
 import type {
@@ -1948,6 +1949,33 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             void applyHostState(event.hostState);
           }
           return;
+        case "SOURCE_CHANGED":
+          if (
+            roomGenerationRef.current > 0 &&
+            (roomGenerationRef.current !== event.roomGeneration ||
+              sourceGenerationRef.current !== event.sourceGeneration)
+          ) {
+            handledP2PSignalIdsRef.current.clear();
+            lastSeenP2PServerSeqRef.current = 0;
+            p2pSignalSequenceRef.current = 0;
+            setIncomingP2PSignals([]);
+            logDebug("p2p.signal", "reset on source change", {
+              fromRoomGeneration: roomGenerationRef.current,
+              fromSourceGeneration: sourceGenerationRef.current,
+              toRoomGeneration: event.roomGeneration,
+              toSourceGeneration: event.sourceGeneration,
+              source: event.source,
+              previousSource: event.previousSource,
+            });
+          }
+          roomGenerationRef.current = event.roomGeneration;
+          sourceGenerationRef.current = event.sourceGeneration;
+          setRoomGeneration(event.roomGeneration);
+          setSourceGeneration(event.sourceGeneration);
+          if (!isCurrentHost()) {
+            void applyHostState(event.hostState);
+          }
+          return;
         case "PARTICIPANT_JOINED":
           setParticipants((current) => [
             ...current.filter((item) => item.id !== event.participant.id),
@@ -2823,6 +2851,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         type: "HOST_STATE",
         roomId: activeRoomId,
         state,
+        source: buildWatchSourceDescriptor(adapter, state),
       });
     },
     [adapter, isCurrentHost],
@@ -4736,6 +4765,49 @@ function buildCurrentSourceUrlForInvite(): string {
   params.delete("anidachiRoom");
   url.hash = params.toString();
   return url.toString();
+}
+
+function buildWatchSourceDescriptor(
+  adapter: VideoAdapter,
+  state: PlaybackState,
+): WatchSourceDescriptor | undefined {
+  const sourceUrl = canonicalWatchSourceUrl(state.sourceUrl ?? location.href);
+  if (!sourceUrl) {
+    return undefined;
+  }
+
+  const title = adapter.getTitle()?.trim() || document.title?.trim() || adapter.name;
+  const duration = Number.isFinite(adapter.video.duration) ? adapter.video.duration : undefined;
+  return {
+    provider: watchProviderFromAdapterId(adapter.id),
+    sourceUrl,
+    canonicalUrl: sourceUrl,
+    videoFingerprint: state.videoFingerprint,
+    title,
+    ...(duration !== undefined ? { duration } : {}),
+  };
+}
+
+function canonicalWatchSourceUrl(value: string): string | null {
+  try {
+    const url = new URL(value, location.href);
+    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
+    params.delete("anidachiRoom");
+    url.hash = params.toString();
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function watchProviderFromAdapterId(adapterId: string): WatchSourceDescriptor["provider"] {
+  if (adapterId === "crunchyroll") {
+    return "crunchyroll";
+  }
+  if (adapterId === "youtube") {
+    return "youtube";
+  }
+  return "generic";
 }
 
 function buildSourceUrlWithRoom(sourceUrl: string, roomId: string | null): URL | null {

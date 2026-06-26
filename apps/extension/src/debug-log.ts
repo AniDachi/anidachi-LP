@@ -149,6 +149,9 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
       return {
         type: event.type,
         roomId: event.roomId,
+        roomGeneration: event.roomGeneration,
+        sourceGeneration: event.sourceGeneration,
+        serverSeq: event.serverSeq,
         participants: event.participants.map((participant) => ({
           id: participant.id,
           role: participant.role,
@@ -156,12 +159,56 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
           syncStatus: participant.syncStatus,
         })),
         hostState: event.hostState ? playbackStateDebugSnapshot(event.hostState) : undefined,
+        source: event.source
+          ? {
+              provider: event.source.provider,
+              videoFingerprint: event.source.videoFingerprint,
+              sourceUrl: redactUrl(event.source.sourceUrl),
+              canonicalUrl: redactUrl(event.source.canonicalUrl),
+              title: event.source.title,
+            }
+          : undefined,
+      };
+    case "SOURCE_CHANGED":
+      return {
+        type: event.type,
+        roomId: event.roomId,
+        roomGeneration: event.roomGeneration,
+        sourceGeneration: event.sourceGeneration,
+        serverSeq: event.serverSeq,
+        source: {
+          provider: event.source.provider,
+          videoFingerprint: event.source.videoFingerprint,
+          sourceUrl: redactUrl(event.source.sourceUrl),
+          canonicalUrl: redactUrl(event.source.canonicalUrl),
+          title: event.source.title,
+        },
+        previousSource: event.previousSource
+          ? {
+              provider: event.previousSource.provider,
+              videoFingerprint: event.previousSource.videoFingerprint,
+              sourceUrl: redactUrl(event.previousSource.sourceUrl),
+              canonicalUrl: redactUrl(event.previousSource.canonicalUrl),
+              title: event.previousSource.title,
+            }
+          : undefined,
+        hostState: playbackStateDebugSnapshot(event.hostState),
       };
     case "HOST_STATE":
       return {
         type: event.type,
         roomId: "roomId" in event ? event.roomId : undefined,
         state: playbackStateDebugSnapshot(event.state),
+        source:
+          "source" in event && event.source
+            ? {
+                provider: event.source.provider,
+                videoFingerprint: event.source.videoFingerprint,
+                sourceUrl: redactUrl(event.source.sourceUrl),
+                canonicalUrl: redactUrl(event.source.canonicalUrl),
+                title: event.source.title,
+              }
+            : undefined,
       };
     case "PLAY":
       return {
