@@ -720,6 +720,7 @@ export function PopupApp() {
   );
   const serverItemsCount = watchLibraryState.data?.items.length ?? 0;
   const canClearHistory = localItemsCount > 0 || serverItemsCount > 0;
+  const authChecking = authSession.status === "loading";
   useEffect(() => {
     const missingPosters = folders
       .flatMap((folder) => folder.items)
@@ -828,14 +829,17 @@ export function PopupApp() {
       <style>{popupStyles}</style>
       <header className="popup-topbar">
         <button
-          aria-label={accountUser ? "Open account dashboard" : "Sign in"}
+          aria-label={accountUser ? "Open account dashboard" : authChecking ? "Checking account" : "Sign in"}
           className="popup-profile-button"
           type="button"
+          disabled={authChecking}
           onClick={() => void openAccount()}
         >
           <span className="popup-profile-avatar" data-signed-in={Boolean(accountUser)}>
             {accountUser ? (
               <ProfileAvatar avatarUrl={accountUser.avatarUrl} displayName={accountUser.displayName} />
+            ) : authChecking ? (
+              <RefreshCw size={18} />
             ) : (
               <LogIn size={18} />
             )}
@@ -848,6 +852,8 @@ export function PopupApp() {
                 <>
                   Signed in <span>·</span> <strong>{planLabel(accountUser.plan)}</strong>
                 </>
+              ) : authChecking ? (
+                "Checking account..."
               ) : (
                 "Sign in to sync progress"
               )}

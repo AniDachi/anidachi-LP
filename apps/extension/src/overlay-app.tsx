@@ -3691,7 +3691,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             <div>
               <h2 className="panel-title">Anidachi</h2>
               <div className="panel-subtitle">
-                {roomId ? `${title} · ${status}` : "Sign in to create a watch room"}
+                {roomId
+                  ? `${title} · ${status}`
+                  : identityLoaded
+                    ? "Sign in to create a watch room"
+                    : "Checking account..."}
               </div>
             </div>
             <button className="icon-button" type="button" onClick={() => setPanelOpen(false)}>
@@ -3806,18 +3810,18 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           ) : null}
 
           <div className="auth-card">
-            <span className="mini-avatar">{initials(participant?.displayName ?? "AN")}</span>
+            <span className="mini-avatar">{initials(participant?.displayName ?? (identityLoaded ? "AN" : "..."))}</span>
             <div className="auth-copy">
-              <strong>{participant?.displayName ?? "Not signed in"}</strong>
-              <span>{authAuthenticated ? "Signed in" : "Sign in required"}</span>
+              <strong>{participant?.displayName ?? (identityLoaded ? "Not signed in" : "Checking account")}</strong>
+              <span>{authAuthenticated ? "Signed in" : identityLoaded ? "Sign in required" : "Please wait"}</span>
             </div>
             <button
               className="button"
               type="button"
               onClick={authAuthenticated ? handleSignOut : handleSignIn}
-              disabled={authBusy || extensionContextInvalidated}
+              disabled={authBusy || !identityLoaded || extensionContextInvalidated}
             >
-              {authBusy ? "Wait" : authAuthenticated ? "Sign out" : "Sign in"}
+              {authBusy || !identityLoaded ? "Wait" : authAuthenticated ? "Sign out" : "Sign in"}
             </button>
           </div>
           {authMessage ? (
