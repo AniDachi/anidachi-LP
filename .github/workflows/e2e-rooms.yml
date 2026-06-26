@@ -47,5 +47,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run API Workers runtime tests
+        run: pnpm --filter @anidachi/api test:runtime
+
       - name: Run room signaling harness
         run: pnpm harness:rooms

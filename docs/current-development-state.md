@@ -259,7 +259,9 @@ The extension currently supports:
 - Cloudflare Durable Object WebSocket Hibernation core for room sockets:
   versioned socket attachments, constructor rebuild from `getWebSockets()`,
   SQLite-backed room snapshot and P2P replay/sequence state, raw `ping`/`pong`
-  auto-response keepalive, and JSON `PING` compatibility for old clients;
+  auto-response keepalive, JSON `PING` compatibility for old clients, and a
+  Workers-runtime forced wake test for existing sockets, host state/source
+  snapshots, camera state, raw keepalive, and P2P replay;
 - debug export from the extension panel.
 
 The extension still does not host, proxy, record, or distribute source video.
@@ -270,14 +272,14 @@ These are intentionally not treated as solved:
 
 - P2P media reconnect and asymmetric join timing still require staging/manual
   acceptance beyond the local harness.
-- Hibernation forced-wake behavior still needs explicit Workers-runtime
-  integration tests and staging idle-session acceptance; the core migration is
-  implemented, but room-end alarms and precise quota metering are still pending.
+- Hibernation forced-wake behavior now has explicit Workers-runtime coverage,
+  but staging idle-session acceptance, room-end alarms, and precise quota
+  metering are still pending.
 - Source switching is not complete: live `SOURCE_CHANGED` and
   `sourceGeneration` bumps are implemented, but durable Supabase source
   persistence, room-create source descriptor plumbing, and explicit
   source-switch UI/commands are still pending.
-- Durable Object hibernation and room-end alarms are still pending.
+- Durable Object room-end alarms are still pending.
 - Watch progress persistence now has a backend-backed watch-library foundation
   on the Phase 6 branch, but staging acceptance across real browser profiles is
   still required before treating it as finished product behavior.
