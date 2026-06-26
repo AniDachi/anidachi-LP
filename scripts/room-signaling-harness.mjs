@@ -131,6 +131,29 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+function playbackStateFor(videoFingerprint, sourceUrl) {
+  return {
+    videoFingerprint,
+    sourceUrl,
+    playing: true,
+    hostTime: 12,
+    updatedAt: Date.now(),
+    playbackRate: 1,
+  };
+}
+
+function sourceFor(videoFingerprint, title, sourceUrl) {
+  return {
+    provider: "crunchyroll",
+    sourceUrl,
+    canonicalUrl: sourceUrl,
+    videoFingerprint,
+    title,
+    seriesTitle: "Harness Series",
+    episodeTitle: title,
+  };
+}
+
 const results = [];
 function record(name, ok, detail = "") {
   results.push({ name, ok });
@@ -228,16 +251,91 @@ async function runScenarios() {
     `roomGeneration=${relayed.roomGeneration} sourceGeneration=${relayed.sourceGeneration}`,
   );
 
+  // 3b. Source switch: the host first establishes the current source, then
+  //     navigates to a different source. The Worker must own the source
+  //     generation bump and announce it before any new P2P signaling is used.
+  const sourceOneFingerprint = "crunchyroll|harness-series|s1|e1";
+  const sourceOneUrl = "https://www.crunchyroll.com/watch/source-one";
+  host.send({
+    type: "HOST_STATE",
+    roomId: room,
+    state: playbackStateFor(sourceOneFingerprint, sourceOneUrl),
+    source: sourceFor(sourceOneFingerprint, "Harness Episode 1", sourceOneUrl),
+  });
+  const initialHostState = await guest.waitFor(
+    (e) => e.type === "HOST_STATE" && e.state.videoFingerprint === sourceOneFingerprint,
+    "guest receives initial host source",
+  );
+  record("initial host source state broadcast", Boolean(initialHostState));
+
+  const sourceTwoFingerprint = "crunchyroll|harness-series|s1|e2";
+  const sourceTwoUrl = "https://www.crunchyroll.com/watch/source-two";
+  host.send({
+    type: "HOST_STATE",
+    roomId: room,
+    state: playbackStateFor(sourceTwoFingerprint, sourceTwoUrl),
+    source: sourceFor(sourceTwoFingerprint, "Harness Episode 2", sourceTwoUrl),
+  });
+  const sourceChanged = await guest.waitFor(
+    (e) => e.type === "SOURCE_CHANGED" && e.source.videoFingerprint === sourceTwoFingerprint,
+    "guest receives source change",
+  );
+  const hostSourceChanged = await host.waitFor(
+    (e) => e.type === "SOURCE_CHANGED" && e.source.videoFingerprint === sourceTwoFingerprint,
+    "host receives source change",
+  );
+  record(
+    "source change increments source generation",
+    sourceChanged.sourceGeneration === 2 &&
+      hostSourceChanged.sourceGeneration === 2 &&
+      sourceChanged.previousSource?.videoFingerprint === sourceOneFingerprint,
+    `sourceGeneration=${sourceChanged.sourceGeneration}`,
+  );
+  const changedHostState = await guest.waitFor(
+    (e) => e.type === "HOST_STATE" && e.state.videoFingerprint === sourceTwoFingerprint,
+    "guest receives post-source-change host state",
+  );
+  record("post-source-change host state broadcast", Boolean(changedHostState));
+
+  host.send({
+    type: "P2P_SIGNAL",
+    roomId: room,
+    fromUserId: "user-host",
+    toUserId: "user-guest",
+    clientSignalId: "sig-2",
+    senderConnectionId: "conn-host-2",
+    signal: { kind: "offer", sdp: { type: "offer", sdp: "v=0 harness source two" } },
+  });
+  const relayedAfterSourceChange = await guest.waitFor(
+    (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "sig-2",
+    "guest receives signal after source change",
+  );
+  record(
+    "new p2p signal carries new source generation",
+    relayedAfterSourceChange.sourceGeneration === 2,
+    `sourceGeneration=${relayedAfterSourceChange.sourceGeneration}`,
+  );
+
   // 4. Reconnect/resume: the guest reconnects (same user) with
-  //    lastSeenP2PServerSeq=0 and replays signals it missed (S5), while the
-  //    stale socket is force-closed so no ghost participant remains (S8).
+  //    lastSeenP2PServerSeq=0 and replays signals it missed (S5), but only for
+  //    the active source generation; stale source-generation signals are
+  //    ignored. The stale socket is force-closed so no ghost participant remains
+  //    (S8).
   const guestB = new Client(room, "user-guest", "member");
   await guestB.connect(0, "guest-sess");
   const replayed = await guestB.waitFor(
-    (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "sig-1",
+    (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "sig-2",
     "guest reconnect replay",
   );
-  record("missed signal replayed on reconnect (S5)", Boolean(replayed));
+  record(
+    "missed active-source signal replayed on reconnect (S5)",
+    replayed.sourceGeneration === 2,
+    `sourceGeneration=${replayed.sourceGeneration}`,
+  );
+  const staleSourceReplay = guestB.events.some(
+    (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "sig-1",
+  );
+  record("stale source-generation signal not replayed", !staleSourceReplay);
   await sleep(300);
   record(
     "stale duplicate socket force-closed (4000)",

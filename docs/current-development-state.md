@@ -254,6 +254,8 @@ The extension currently supports:
 - push-to-talk audio;
 - WebRTC P2P media with Cloudflare TURN fallback;
 - P2P signaling replay fenced by current room/source generation;
+- live `SOURCE_CHANGED` handling: the Worker increments `sourceGeneration` on
+  host source changes and the extension resets stale P2P queues;
 - debug export from the extension panel.
 
 The extension still does not host, proxy, record, or distribute source video.
@@ -264,8 +266,10 @@ These are intentionally not treated as solved:
 
 - P2P media reconnect and asymmetric join timing still require staging/manual
   acceptance beyond the local harness.
-- Source switching is not complete: `SOURCE_CHANGED`, current source
-  descriptors, and real `sourceGeneration` bumps are still pending.
+- Source switching is not complete: live `SOURCE_CHANGED` and
+  `sourceGeneration` bumps are implemented, but durable Supabase source
+  persistence, room-create source descriptor plumbing, and explicit
+  source-switch UI/commands are still pending.
 - Durable Object hibernation and room-end alarms are still pending.
 - Watch progress persistence now has a backend-backed watch-library foundation
   on the Phase 6 branch, but staging acceptance across real browser profiles is

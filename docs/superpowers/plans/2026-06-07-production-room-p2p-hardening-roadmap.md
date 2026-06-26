@@ -37,6 +37,7 @@
 - [x] 2026-06-07: Checked current Cloudflare and WebRTC primary docs and folded the findings into this roadmap.
 - [x] 2026-06-12: Full code audit of the end-to-end room flow confirmed the Task 2 premise plus two release-blocking defects (immortal rooms break plan limits; non-idempotent create). Created the execution program for this roadmap with SLOs, a two-browser Playwright harness, and fixed product defaults: `docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md`. Roadmap ordering remains authoritative.
 - [x] 2026-06-27: Started the remaining contract hardening on branch `codex/p2p-production-hardening`: `ROOM_SNAPSHOT` now carries generation/sequence fields, server-relayed `P2P_SIGNAL` now carries required authoritative `roomGeneration/sourceGeneration/serverSeq/serverReceivedAt`, P2P replay is scoped by generation, and the extension drops stale-generation P2P media signals. Verified locally with protocol/API/extension checks and tests, room-signaling harness 29/29, and real-WebRTC harness 8/8. Remaining for full Task 3/5: current source descriptor + actual `SOURCE_CHANGED`/`sourceGeneration` bump.
+- [x] 2026-06-27: Continued Task 5 on branch `codex/p2p-source-generation`: added `WatchSourceDescriptor`, optional source descriptors on host state and snapshots, `SOURCE_CHANGED`, Worker-owned source-generation increments on host fingerprint changes, and extension-side stale P2P reset on source change. The room-signaling harness now asserts that reconnect replay returns only active-source P2P signals and skips stale-source signals. Verified: protocol/API/extension checks and tests, room-signaling harness 34/34, real-WebRTC harness 8/8, staging extension build + validation. Remaining for Task 5: durable Supabase source fields, room-create source response plumbing, and explicit source-switch UI/commands.
 
 ## Current Reality Check
 
@@ -59,18 +60,18 @@
 
 - [ ] Room creation is durable, but not idempotent and not lifecycle-complete.
 - [ ] Room status exists, but does not have complete draft/lobby/live/stale/ended semantics.
-- [ ] `roomGeneration` and `sourceGeneration` exist only as optional P2P fields, not as first-class room snapshot/source state.
-- [ ] `ROOM_SNAPSHOT` does not include generation fields, current source descriptor, or current server sequence.
+- [~] `roomGeneration` and `sourceGeneration` are first-class room snapshot/source state in the live Worker; durable Supabase source persistence is still pending.
+- [~] `ROOM_SNAPSHOT` includes generation fields, current server sequence, and the current source descriptor once the host has reported it; initial room-create source descriptor plumbing is still pending.
 - [ ] `JOIN` still sends a full client-provided participant object even though the Worker derives identity from verified token claims.
 - [ ] Reconnect exists, but there is no stable `participantSessionId`.
 - [ ] Worker socket replacement is by user id, not by participant session.
-- [ ] P2P replay scope can filter by generation, but the Worker does not yet have authoritative room/source generation to pass into it.
+- [x] P2P replay scope filters by the Worker-owned current room/source generation.
 - [ ] WebSocket keepalive currently uses JSON `PING`/`PONG` every 20 seconds. That helps current stability, but would wake a hibernated Durable Object unless changed.
 - [ ] Durable Object currently uses `server.accept()` and event listeners, not the Cloudflare WebSocket Hibernation API.
 
 ### Not Done Yet
 
-- [ ] First-class source switching protocol.
+- [ ] First-class source switching UI/commands and durable source persistence.
 - [ ] Durable shared watch progress backend.
 - [ ] Hibernation-safe room state rebuild.
 - [ ] SQLite-backed P2P replay state in the Durable Object.
@@ -236,11 +237,11 @@ interface RoomEventEnvelope<TPayload> {
 
 **Practical near-term target:**
 
-- [~] `ROOM_SNAPSHOT` includes `roomGeneration`, `sourceGeneration`, `serverSeq`, and current source descriptor. Generation/sequence fields are implemented; current source descriptor remains.
+- [~] `ROOM_SNAPSHOT` includes `roomGeneration`, `sourceGeneration`, `serverSeq`, and current source descriptor when the host has reported it. Remaining: source descriptor from room create/durable DB state before first host tick.
 - [x] `P2P_SIGNAL` generation fields become required after extension and Worker both send them.
 - [ ] `JOIN` stops trusting a full client-provided participant object. It may send local capabilities, but identity comes from token claims.
 - [ ] Every room-scoped event is rejected if top-level `roomId` does not match the Durable Object room id.
-- [~] Server-generated events include enough sequence/generation data for the extension to drop stale events. Implemented for P2P media signaling; source/playback events remain tied to Task 5.
+- [~] Server-generated events include enough sequence/generation data for the extension to drop stale P2P media events and reset on `SOURCE_CHANGED`. Remaining: broaden generation fencing to source/playback command events.
 
 **Acceptance Criteria:**
 
@@ -318,13 +319,13 @@ interface WatchSourceDescriptor {
 
 **Steps:**
 
-- [ ] Add protocol schema for `WatchSourceDescriptor`.
-- [ ] Add `SOURCE_CHANGED` server event and host-only source change client event.
-- [ ] Increment `sourceGeneration` on source change.
-- [ ] Add source descriptor to room create response/snapshot.
+- [x] Add protocol schema for `WatchSourceDescriptor`.
+- [~] Add `SOURCE_CHANGED` server event and host-only source change client event. Implemented via host-only `HOST_STATE` carrying `source`; a dedicated source-change command/UI remains pending.
+- [x] Increment `sourceGeneration` on source change.
+- [~] Add source descriptor to room create response/snapshot. Implemented for live `ROOM_SNAPSHOT` after host state; room-create response and durable source fields remain pending.
 - [ ] Persist normalized source fields in Supabase.
 - [ ] Extension applies source changes through adapter navigation only after validating provider/fingerprint.
-- [ ] P2P replay only replays signals from the current room/source generation.
+- [x] P2P replay only replays signals from the current room/source generation.
 
 **Acceptance Criteria:**
 
@@ -354,7 +355,7 @@ interface WatchSourceDescriptor {
 - Expect in-memory state to be reset after hibernation.
 - Use `serializeAttachment()` and `deserializeAttachment()` for small per-socket connection state.
 - Use `getWebSockets()` in the constructor to rebuild in-memory maps.
-- Keep serialized WebSocket attachments below Cloudflare's 2,048 byte limit.
+- Keep serialized WebSocket attachments below Cloudflare's current 16,384 byte limit (Cloudflare docs re-checked 2026-06-27).
 - Use `state.setWebSocketAutoResponse()` for static app-level keepalive if browser WebSocket protocol ping frames are not available.
 - Avoid frequent app-level JSON pings that wake the Durable Object.
 - Use WebSocket protocol ping/pong or Cloudflare auto-response behavior where practical.
@@ -478,11 +479,11 @@ Do not store raw room tokens in attachments.
 
 - [ ] Add host source switch UI or internal command path.
 - [ ] Host emits source change request with normalized descriptor.
-- [ ] Worker validates host role and increments `sourceGeneration`.
-- [ ] Worker broadcasts `SOURCE_CHANGED`.
+- [x] Worker validates host role and increments `sourceGeneration`.
+- [x] Worker broadcasts `SOURCE_CHANGED`.
 - [ ] Extension navigates or prompts safely according to provider adapter.
 - [ ] Reset or fence host playback state on source change.
-- [ ] Drop stale P2P/media signals from previous source generation.
+- [x] Drop stale P2P/media signals from previous source generation.
 
 **Acceptance Criteria:**
 

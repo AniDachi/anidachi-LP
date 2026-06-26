@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Participant, PlaybackState } from "@anidachi/protocol";
+import type { Participant, PlaybackState, WatchSourceDescriptor } from "@anidachi/protocol";
 import { RoomState } from "../src/room-state";
 
 function participant(id: string, role: Participant["role"] = "viewer"): Participant {
@@ -46,9 +46,54 @@ describe("RoomState", () => {
       playbackRate: 1,
     };
 
-    expect(room.updateHostState("viewer", state)).toBe(false);
-    expect(room.updateHostState("host", state)).toBe(true);
-    expect(room.updateHostState("missing", state)).toBe(false);
+    expect(room.updateHostState("viewer", state).accepted).toBe(false);
+    expect(room.updateHostState("host", state).accepted).toBe(true);
+    expect(room.updateHostState("missing", state).accepted).toBe(false);
+  });
+
+  it("tracks source descriptors and increments source generation only on source changes", () => {
+    const room = new RoomState("room-1");
+    room.join(participant("host", "host"));
+
+    const firstState = playbackState("crunchyroll|series-a|s1|e1", "https://crunchyroll.com/watch/one");
+    const firstUpdate = room.updateHostState("host", firstState, sourceDescriptor(firstState, "Episode 1"));
+
+    expect(firstUpdate.accepted).toBe(true);
+    expect(firstUpdate.sourceChanged).toBe(false);
+    expect(room.sourceGeneration).toBe(1);
+
+    const initialSnapshot = room.snapshot;
+    expect(initialSnapshot.type).toBe("ROOM_SNAPSHOT");
+    if (initialSnapshot.type !== "ROOM_SNAPSHOT") {
+      throw new Error("Expected room snapshot");
+    }
+    expect(initialSnapshot.source?.videoFingerprint).toBe(firstState.videoFingerprint);
+    expect(initialSnapshot.source?.title).toBe("Episode 1");
+
+    const repeatedUpdate = room.updateHostState(
+      "host",
+      { ...firstState, hostTime: 42, updatedAt: 2000 },
+      sourceDescriptor(firstState, "Episode 1"),
+    );
+    expect(repeatedUpdate.sourceChanged).toBe(false);
+    expect(room.sourceGeneration).toBe(1);
+
+    const nextState = playbackState("crunchyroll|series-a|s1|e2", "https://crunchyroll.com/watch/two");
+    const changedUpdate = room.updateHostState("host", nextState, sourceDescriptor(nextState, "Episode 2"));
+
+    expect(changedUpdate.accepted).toBe(true);
+    expect(changedUpdate.sourceChanged).toBe(true);
+    expect(changedUpdate.previousSource?.videoFingerprint).toBe(firstState.videoFingerprint);
+    expect(changedUpdate.source?.videoFingerprint).toBe(nextState.videoFingerprint);
+    expect(room.sourceGeneration).toBe(2);
+
+    const changedSnapshot = room.snapshot;
+    expect(changedSnapshot.type).toBe("ROOM_SNAPSHOT");
+    if (changedSnapshot.type !== "ROOM_SNAPSHOT") {
+      throw new Error("Expected room snapshot");
+    }
+    expect(changedSnapshot.sourceGeneration).toBe(2);
+    expect(changedSnapshot.source?.title).toBe("Episode 2");
   });
 
   it("allows only the host to control playback", () => {
@@ -177,3 +222,31 @@ describe("RoomState", () => {
     expect(room.canEnableCamera("u3")).toBe(true);
   });
 });
+
+function playbackState(videoFingerprint: string, sourceUrl: string): PlaybackState {
+  return {
+    videoFingerprint,
+    sourceUrl,
+    playing: true,
+    hostTime: 10,
+    updatedAt: 1000,
+    playbackRate: 1,
+  };
+}
+
+function sourceDescriptor(state: PlaybackState, title: string): WatchSourceDescriptor {
+  if (!state.sourceUrl) {
+    throw new Error("Expected sourceUrl");
+  }
+
+  return {
+    provider: "crunchyroll",
+    sourceUrl: state.sourceUrl,
+    canonicalUrl: state.sourceUrl,
+    videoFingerprint: state.videoFingerprint,
+    title,
+    seriesTitle: "Series A",
+    episodeTitle: title,
+    episodeNumber: title === "Episode 1" ? 1 : 2,
+  };
+}
