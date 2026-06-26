@@ -96,17 +96,24 @@ export const P2PSignalSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 
-const P2PSignalEnvelopeSchema = RoomScopedSchema.extend({
+const ClientP2PSignalEnvelopeSchema = RoomScopedSchema.extend({
   type: z.literal("P2P_SIGNAL"),
   clientSignalId: z.string().min(1),
   fromUserId: z.string().min(1),
+  // Compatibility bridge: clients may send their current generation hints, but
+  // the Worker owns the authoritative values and rewrites them on relay.
   roomGeneration: z.number().int().nonnegative().optional(),
   senderConnectionId: z.string().min(1),
-  serverReceivedAt: z.number().int().nonnegative().optional(),
-  serverSeq: z.number().int().nonnegative().optional(),
   sourceGeneration: z.number().int().nonnegative().optional(),
   toUserId: z.string().min(1),
   signal: P2PSignalSchema,
+});
+
+const ServerP2PSignalEnvelopeSchema = ClientP2PSignalEnvelopeSchema.extend({
+  roomGeneration: z.number().int().nonnegative(),
+  serverReceivedAt: z.number().int().nonnegative(),
+  serverSeq: z.number().int().nonnegative(),
+  sourceGeneration: z.number().int().nonnegative(),
 });
 
 export const ClientEventSchema = z.discriminatedUnion("type", [
@@ -155,7 +162,7 @@ export const ClientEventSchema = z.discriminatedUnion("type", [
     type: z.literal("CAMERA_OFF"),
     userId: z.string().min(1),
   }),
-  P2PSignalEnvelopeSchema,
+  ClientP2PSignalEnvelopeSchema,
 ]);
 
 export const ServerEventSchema = z.discriminatedUnion("type", [
@@ -166,6 +173,9 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
   }),
   RoomScopedSchema.extend({
     type: z.literal("ROOM_SNAPSHOT"),
+    roomGeneration: z.number().int().nonnegative(),
+    serverSeq: z.number().int().nonnegative(),
+    sourceGeneration: z.number().int().nonnegative(),
     participants: z.array(ParticipantSchema),
     capabilities: RoomCapabilitiesSchema.optional(),
     hostState: PlaybackStateSchema.optional(),
@@ -206,7 +216,7 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
     code: z.string().min(1),
     message: z.string().min(1),
   }),
-  P2PSignalEnvelopeSchema,
+  ServerP2PSignalEnvelopeSchema,
 ]);
 
 export type Participant = z.infer<typeof ParticipantSchema>;

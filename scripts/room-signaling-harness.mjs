@@ -185,6 +185,16 @@ async function runScenarios() {
     "guest snapshot includes host",
     guestSnap.participants.some((p) => p.id === "user-host" && p.role === "host"),
   );
+  record(
+    "room snapshot carries room/source generation",
+    guestSnap.roomGeneration === 1 && guestSnap.sourceGeneration === 1,
+    `roomGeneration=${guestSnap.roomGeneration} sourceGeneration=${guestSnap.sourceGeneration}`,
+  );
+  record(
+    "room snapshot carries a room serverSeq",
+    Number.isInteger(guestSnap.serverSeq) && guestSnap.serverSeq >= 0,
+    `serverSeq=${guestSnap.serverSeq}`,
+  );
   const hostSawGuest = await host.waitFor(
     (e) => e.type === "PARTICIPANT_JOINED" && e.participant.id === "user-guest",
     "host sees guest join",
@@ -211,6 +221,12 @@ async function runScenarios() {
   );
   record("p2p signal relayed to target", relayed.fromUserId === "user-host");
   record("relayed signal carries a serverSeq", typeof relayed.serverSeq === "number");
+  record(
+    "relayed signal carries authoritative generations",
+    relayed.roomGeneration === guestSnap.roomGeneration &&
+      relayed.sourceGeneration === guestSnap.sourceGeneration,
+    `roomGeneration=${relayed.roomGeneration} sourceGeneration=${relayed.sourceGeneration}`,
+  );
 
   // 4. Reconnect/resume: the guest reconnects (same user) with
   //    lastSeenP2PServerSeq=0 and replays signals it missed (S5), while the

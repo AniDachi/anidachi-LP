@@ -91,6 +91,30 @@ describe("RoomState", () => {
     expect(room.snapshot.type).toBe("ROOM_SNAPSHOT");
   });
 
+  it("includes room generations and a monotonic room sequence in snapshots", () => {
+    const room = new RoomState("room-1");
+    const initial = room.snapshot;
+    expect(initial.type).toBe("ROOM_SNAPSHOT");
+    if (initial.type !== "ROOM_SNAPSHOT") {
+      throw new Error("Expected room snapshot");
+    }
+
+    expect(initial.roomGeneration).toBe(1);
+    expect(initial.sourceGeneration).toBe(1);
+    expect(initial.serverSeq).toBe(0);
+
+    room.join(participant("host", "host"));
+    const afterJoin = room.snapshot;
+    expect(afterJoin.type).toBe("ROOM_SNAPSHOT");
+    if (afterJoin.type !== "ROOM_SNAPSHOT") {
+      throw new Error("Expected room snapshot");
+    }
+
+    expect(afterJoin.roomGeneration).toBe(1);
+    expect(afterJoin.sourceGeneration).toBe(1);
+    expect(afterJoin.serverSeq).toBeGreaterThan(initial.serverSeq);
+  });
+
   it("caps the room at four participants but admits reconnecting members", () => {
     const room = new RoomState("room-1");
     room.join(participant("u1", "host"));

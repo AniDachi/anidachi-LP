@@ -43,6 +43,9 @@ describe("room protocol schemas", () => {
     const snapshot = ServerEventSchema.parse({
       type: "ROOM_SNAPSHOT",
       roomId: "room-1",
+      roomGeneration: 1,
+      serverSeq: 0,
+      sourceGeneration: 1,
       capabilities: {
         hostPlanCode: "pro",
         maxParticipants: 15,
@@ -64,6 +67,9 @@ describe("room protocol schemas", () => {
       ServerEventSchema.parse({
         type: "ROOM_SNAPSHOT",
         roomId: "room-1",
+        roomGeneration: 1,
+        serverSeq: 0,
+        sourceGeneration: 1,
         capabilities: {
           hostPlanCode: "pro",
           maxParticipants: 0,
@@ -204,9 +210,11 @@ describe("room protocol schemas", () => {
       clientSignalId: "signal-2",
       roomId: "room-1",
       fromUserId: "user-2",
+      roomGeneration: 1,
       senderConnectionId: "connection-2",
       serverReceivedAt: 1_000,
       serverSeq: 3,
+      sourceGeneration: 1,
       toUserId: "user-1",
       signal: {
         kind: "ice",
@@ -224,7 +232,9 @@ describe("room protocol schemas", () => {
       throw new Error("Expected P2P signal");
     }
     expect(candidate.signal.kind).toBe("ice");
+    expect(candidate.roomGeneration).toBe(1);
     expect(candidate.serverSeq).toBe(3);
+    expect(candidate.sourceGeneration).toBe(1);
   });
 
   it("accepts lightweight P2P renegotiation requests", () => {

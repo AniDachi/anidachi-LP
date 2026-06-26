@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-06-17.
+Last updated: 2026-06-27.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -253,6 +253,7 @@ The extension currently supports:
 - Ghost Cam camera bubbles;
 - push-to-talk audio;
 - WebRTC P2P media with Cloudflare TURN fallback;
+- P2P signaling replay fenced by current room/source generation;
 - debug export from the extension panel.
 
 The extension still does not host, proxy, record, or distribute source video.
@@ -261,9 +262,11 @@ The extension still does not host, proxy, record, or distribute source video.
 
 These are intentionally not treated as solved:
 
-- P2P media reconnect and asymmetric join timing can still be fragile.
-- Room lifecycle and P2P source-generation hardening are planned but not fully
-  complete.
+- P2P media reconnect and asymmetric join timing still require staging/manual
+  acceptance beyond the local harness.
+- Source switching is not complete: `SOURCE_CHANGED`, current source
+  descriptors, and real `sourceGeneration` bumps are still pending.
+- Durable Object hibernation and room-end alarms are still pending.
 - Watch progress persistence now has a backend-backed watch-library foundation
   on the Phase 6 branch, but staging acceptance across real browser profiles is
   still required before treating it as finished product behavior.
