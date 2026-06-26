@@ -223,6 +223,7 @@ const LIVE_CHAT_MAX_MESSAGES = 6;
 const CHAT_HISTORY_MAX_MESSAGES = 80;
 const MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS = 180;
 const WATCH_LIBRARY_REMOTE_RECONCILE_INTERVAL_MS = 60_000;
+const SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS = 15_000;
 const LIVE_CHAT_NAME_COLORS = [
   "#c4a7ff",
   "#7dd3fc",
@@ -289,6 +290,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const messageComposerShieldReleasePointerRef = useRef<PointerWakePoint | null>(null);
   const authUserIdRef = useRef<string | null>(null);
   const authUserIdInitializedRef = useRef(false);
+  const suppressSilentSignInUntilRef = useRef(0);
   const [participant, setParticipant] = useState<Participant | null>(null);
   const [identityLoaded, setIdentityLoaded] = useState(false);
   const [authAuthenticated, setAuthAuthenticated] = useState(false);
@@ -2397,6 +2399,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const handleSignIn = useCallback(async () => {
     setAuthBusy(true);
     setAuthMessage(null);
+    suppressSilentSignInUntilRef.current = 0;
     try {
       applyParticipantIdentity(await signInAndCreateParticipant(), "sign-in", true);
     } catch (error) {
@@ -2410,6 +2413,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const handleSignOut = useCallback(async () => {
     setAuthBusy(true);
     setAuthMessage(null);
+    suppressSilentSignInUntilRef.current =
+      Date.now() + SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS;
     try {
       roomReconnectSuppressedRef.current = true;
       clearRoomReconnectTimer();
@@ -2497,6 +2502,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
       applyParticipantIdentityRef.current(result, "panel-open", true);
       if (result.authenticated || result.requiresPageReload) {
+        return;
+      }
+      if (Date.now() < suppressSilentSignInUntilRef.current) {
+        logDebug("identity", "panel-open silent sign-in suppressed after explicit sign-out", {
+          retryAfterMs: suppressSilentSignInUntilRef.current - Date.now(),
+        });
         return;
       }
 
@@ -2592,6 +2603,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       // account (and auto-joins a pending invite) without a manual "Sign in"
       // click or a page reload.
       if (result.authenticated || result.requiresPageReload) {
+        return;
+      }
+      if (Date.now() < suppressSilentSignInUntilRef.current) {
+        logDebug("identity", "initial silent sign-in suppressed after explicit sign-out", {
+          retryAfterMs: suppressSilentSignInUntilRef.current - Date.now(),
+        });
         return;
       }
 

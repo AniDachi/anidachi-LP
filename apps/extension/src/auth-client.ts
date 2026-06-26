@@ -360,14 +360,32 @@ export async function signInWithWebsiteSilently(): Promise<ExtensionAuthTokens |
   }
 }
 
-export async function signOutWithWebsite(): Promise<void> {
-  const stored = await getStoredAuthTokens();
+interface WebsiteSignOutSequenceActions {
+  getStoredTokens: () => Promise<ExtensionAuthTokens | null>;
+  revokeRefreshToken: (refreshToken: string) => Promise<void>;
+  attemptWebsiteLogout: () => Promise<void>;
+  clearTokens: () => Promise<void>;
+}
+
+export async function runWebsiteSignOutSequence({
+  getStoredTokens,
+  revokeRefreshToken,
+  attemptWebsiteLogout,
+  clearTokens,
+}: WebsiteSignOutSequenceActions): Promise<void> {
+  const stored = await getStoredTokens();
   if (stored) {
-    await revokeExtensionRefreshToken(stored.refreshToken).catch(() => undefined);
+    await revokeRefreshToken(stored.refreshToken).catch(() => undefined);
   }
 
-  await clearStoredAuthTokens();
+  try {
+    await attemptWebsiteLogout();
+  } finally {
+    await clearTokens();
+  }
+}
 
+async function attemptWebsiteLogoutFlow(): Promise<void> {
   if (!chrome.identity?.getRedirectURL || !chrome.identity?.launchWebAuthFlow) {
     return;
   }
@@ -381,6 +399,15 @@ export async function signOutWithWebsite(): Promise<void> {
   if (redirectUrl) {
     assertExtensionLogoutRedirect(redirectUrl, state);
   }
+}
+
+export async function signOutWithWebsite(): Promise<void> {
+  await runWebsiteSignOutSequence({
+    getStoredTokens: getStoredAuthTokens,
+    revokeRefreshToken: revokeExtensionRefreshToken,
+    attemptWebsiteLogout: attemptWebsiteLogoutFlow,
+    clearTokens: clearStoredAuthTokens,
+  });
 }
 
 export async function handleWebsiteAuthCookieChange(

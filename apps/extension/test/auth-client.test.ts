@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   assertExtensionLogoutRedirect,
   buildExtensionConnectUrl,
@@ -7,6 +7,7 @@ import {
   isAuthMessage,
   normalizeExtensionRefreshResponse,
   parseExtensionAuthRedirect,
+  runWebsiteSignOutSequence,
   shouldClearExtensionSessionForWebsiteProbe,
   shouldClearExtensionSessionForWebsiteCookieChange,
   shouldSyncExtensionSessionForWebsiteCookieChange,
@@ -210,6 +211,50 @@ describe("extension auth client", () => {
   it("keeps the WXT auth key and raw storage key aligned", () => {
     expect(AUTH_TOKENS_STORAGE_KEY).toBe("authTokens");
     expect(AUTH_TOKENS_KEY).toBe("local:authTokens");
+  });
+
+  it("clears extension tokens only after attempting website logout", async () => {
+    const events: string[] = [];
+
+    await runWebsiteSignOutSequence({
+      getStoredTokens: async () => {
+        events.push("read-stored");
+        return storedTokens;
+      },
+      revokeRefreshToken: vi.fn(async () => {
+        events.push("revoke");
+      }),
+      attemptWebsiteLogout: vi.fn(async () => {
+        events.push("logout-flow");
+      }),
+      clearTokens: vi.fn(async () => {
+        events.push("clear");
+      }),
+    });
+
+    expect(events).toEqual(["read-stored", "revoke", "logout-flow", "clear"]);
+  });
+
+  it("clears extension tokens even when website logout fails", async () => {
+    const events: string[] = [];
+
+    await expect(
+      runWebsiteSignOutSequence({
+        getStoredTokens: async () => storedTokens,
+        revokeRefreshToken: vi.fn(async () => {
+          events.push("revoke");
+        }),
+        attemptWebsiteLogout: vi.fn(async () => {
+          events.push("logout-flow");
+          throw new Error("Invalid extension logout state");
+        }),
+        clearTokens: vi.fn(async () => {
+          events.push("clear");
+        }),
+      }),
+    ).rejects.toThrow("Invalid extension logout state");
+
+    expect(events).toEqual(["revoke", "logout-flow", "clear"]);
   });
 
   it("normalizes valid token responses", () => {
