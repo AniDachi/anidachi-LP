@@ -83,7 +83,7 @@ import {
   trySilentSignIn,
   type CurrentParticipantResult,
 } from "./user-identity";
-import { AUTH_TOKENS_KEY } from "./auth-tokens";
+import { AUTH_TOKENS_KEY, AUTH_TOKENS_STORAGE_KEY } from "./auth-tokens";
 import {
   getRemotePlayReadyTimeoutMs,
   isMediaSettling,
@@ -2451,6 +2451,16 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     const unwatch = storage.watch(AUTH_TOKENS_KEY, () => {
       refreshIdentityFromStorage("auth-storage");
     });
+    const handleRawAuthStorageChange = (
+      changes: Record<string, chrome.storage.StorageChange>,
+      areaName: string,
+    ) => {
+      if (areaName !== "local" || !changes[AUTH_TOKENS_STORAGE_KEY]) {
+        return;
+      }
+
+      refreshIdentityFromStorage("auth-storage-raw");
+    };
     const refreshFocusedIdentity = () => {
       if (document.visibilityState === "hidden") {
         return;
@@ -2462,15 +2472,46 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         refreshIdentityFromStorage("visibility");
       }
     };
+    chrome.storage?.onChanged?.addListener(handleRawAuthStorageChange);
     window.addEventListener("focus", refreshFocusedIdentity);
     document.addEventListener("visibilitychange", refreshVisibleIdentity);
     return () => {
       disposed = true;
+      chrome.storage?.onChanged?.removeListener(handleRawAuthStorageChange);
       window.removeEventListener("focus", refreshFocusedIdentity);
       document.removeEventListener("visibilitychange", refreshVisibleIdentity);
       unwatch();
     };
   }, []);
+
+  useEffect(() => {
+    if (!panelOpen || !identityLoaded) {
+      return;
+    }
+
+    let cancelled = false;
+    void createCurrentParticipant().then(async (result) => {
+      if (cancelled) {
+        return;
+      }
+
+      applyParticipantIdentityRef.current(result, "panel-open", true);
+      if (result.authenticated || result.requiresPageReload) {
+        return;
+      }
+
+      const silent = await trySilentSignIn();
+      if (cancelled || !silent?.authenticated) {
+        return;
+      }
+
+      applyParticipantIdentityRef.current(silent, "panel-open-silent-sign-in", true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [identityLoaded, panelOpen]);
 
   const createAndConnectRoom = useCallback(
     async (reason: string) => {
