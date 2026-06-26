@@ -89,6 +89,8 @@ describe("Crunchyroll progress extraction", () => {
   });
 
   it("uses JSON-LD series metadata when visible links are missing", () => {
+    const artworkUrl =
+      "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/rezero.png";
     mockLocation("https://www.crunchyroll.com/ru/watch/GEVUZP0ZM/the-end");
     document.title = "The End of the Beginning - Watch on Crunchyroll";
     document.body.innerHTML = `
@@ -96,7 +98,13 @@ describe("Crunchyroll progress extraction", () => {
         {
           "@type": "TVEpisode",
           "name": "The End of the Beginning",
-          "partOfSeries": { "name": "Re:ZERO -Starting Life in Another World-" }
+          "partOfSeries": {
+            "name": "Re:ZERO -Starting Life in Another World-",
+            "image": {
+              "@type": "ImageObject",
+              "url": "${artworkUrl}"
+            }
+          }
         }
       </script>
     `;
@@ -115,6 +123,7 @@ describe("Crunchyroll progress extraction", () => {
       itemId: "crunchyroll-series:re-zero-starting-life-in-another-world",
       itemTitle: "Re:ZERO -Starting Life in Another World-",
     });
+    expect(entry?.artworkUrl).toBe(artworkUrl);
   });
 
   it("extracts Crunchyroll season metadata from JSON-LD", () => {

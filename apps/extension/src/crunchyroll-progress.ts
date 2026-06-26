@@ -321,9 +321,17 @@ function collectJsonLdSeriesCandidates(
       }
 
       const listItem = item as Record<string, unknown>;
+      const listItemRecord =
+        listItem.item && typeof listItem.item === "object"
+          ? (listItem.item as Record<string, unknown>)
+          : null;
       const itemUrl =
         typeof listItem.item === "string"
           ? listItem.item
+          : typeof listItemRecord?.["@id"] === "string"
+            ? listItemRecord["@id"]
+            : typeof listItemRecord?.url === "string"
+              ? listItemRecord.url
           : typeof listItem.url === "string"
             ? listItem.url
             : null;
@@ -332,7 +340,13 @@ function collectJsonLdSeriesCandidates(
       }
 
       output.push({
-        title: typeof listItem.name === "string" ? listItem.name : null,
+        title:
+          typeof listItem.name === "string"
+            ? listItem.name
+            : typeof listItemRecord?.name === "string"
+              ? listItemRecord.name
+              : null,
+        artworkUrl: getJsonLdImageUrl(listItemRecord ?? listItem),
         url: itemUrl,
       });
     }
@@ -347,6 +361,7 @@ function collectJsonLdSeriesCandidates(
       if (typeof name === "string" && key !== "partOfSeason") {
         output.push({
           title: name,
+          artworkUrl: getJsonLdImageUrl(nested),
           url: typeof id === "string" ? id : typeof url === "string" ? url : null,
         });
       }
@@ -358,6 +373,51 @@ function collectJsonLdSeriesCandidates(
   if (graph) {
     collectJsonLdSeriesCandidates(graph, output, depth + 1);
   }
+}
+
+function getJsonLdImageUrl(value: unknown): string | null {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = getJsonLdImageUrl(item);
+      if (found) {
+        return found;
+      }
+    }
+    return null;
+  }
+
+  if (typeof value !== "object") {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const direct = readJsonLdString(record.image) ?? readJsonLdString(record.thumbnailUrl);
+  if (direct) {
+    return direct;
+  }
+
+  const typeValue = Array.isArray(record["@type"]) ? record["@type"].join(" ") : record["@type"];
+  const type = typeof typeValue === "string" ? typeValue.toLowerCase() : "";
+  if (type.includes("imageobject")) {
+    const imageObjectUrl = readJsonLdString(record.contentUrl) ?? readJsonLdString(record.url);
+    if (imageObjectUrl) {
+      return imageObjectUrl;
+    }
+  }
+
+  return getJsonLdImageUrl(record.image) ?? getJsonLdImageUrl(record.thumbnail);
+}
+
+function readJsonLdString(value: unknown): string | null {
+  return typeof value === "string" && value ? value : null;
 }
 
 function collectJsonLdSeasonCandidates(
