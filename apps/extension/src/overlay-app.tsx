@@ -2537,7 +2537,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   useEffect(() => {
     let cancelled = false;
-    void createCurrentParticipant().then(async (result) => {
+    void createCurrentParticipant({ fast: true }).then(async (result) => {
       if (cancelled) {
         return;
       }

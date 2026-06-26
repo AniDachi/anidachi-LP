@@ -12,8 +12,15 @@ import {
 const AUTH_CALLBACK_PATH = "auth";
 const LOGOUT_CALLBACK_PATH = "logout";
 const AUTH_MESSAGE_TYPE = "ANIDACHI_AUTH";
+const WEB_REFRESH_TOKEN_COOKIE = "anidachi_refresh_token";
 
-export type AuthCommand = "sign-in" | "sign-in-silent" | "sign-out" | "refresh" | "get-session";
+export type AuthCommand =
+  | "sign-in"
+  | "sign-in-silent"
+  | "sign-out"
+  | "refresh"
+  | "get-session"
+  | "get-session-fast";
 
 export interface AuthMessage {
   type: typeof AUTH_MESSAGE_TYPE;
@@ -28,6 +35,15 @@ export type WebsiteSessionProbe =
   | { status: "authenticated"; user: AuthenticatedUser }
   | { status: "signed-out" }
   | { status: "unknown" };
+
+export type WebAuthCookieChange = {
+  removed: boolean;
+  cause?: string;
+  cookie: {
+    name: string;
+    domain: string;
+  };
+};
 
 export interface ExtensionAuthRedirect {
   code: string;
@@ -57,8 +73,41 @@ export function isAuthMessage(value: unknown): value is AuthMessage {
       message.command === "sign-in-silent" ||
       message.command === "sign-out" ||
       message.command === "refresh" ||
-      message.command === "get-session")
+      message.command === "get-session" ||
+      message.command === "get-session-fast")
   );
+}
+
+function configuredWebHost(): string | null {
+  try {
+    return new URL(WEB_HTTP_BASE).hostname;
+  } catch {
+    return null;
+  }
+}
+
+export function isConfiguredWebsiteCookie(cookie: WebAuthCookieChange["cookie"]): boolean {
+  if (cookie.name !== WEB_REFRESH_TOKEN_COOKIE) return false;
+  const webHost = configuredWebHost();
+  if (!webHost) return false;
+  const cookieDomain = cookie.domain.startsWith(".") ? cookie.domain.slice(1) : cookie.domain;
+  return webHost === cookieDomain || webHost.endsWith(`.${cookieDomain}`);
+}
+
+export function shouldClearExtensionSessionForWebsiteCookieChange(
+  changeInfo: WebAuthCookieChange,
+): boolean {
+  return (
+    isConfiguredWebsiteCookie(changeInfo.cookie) &&
+    changeInfo.removed &&
+    changeInfo.cause !== "overwrite"
+  );
+}
+
+export function shouldSyncExtensionSessionForWebsiteCookieChange(
+  changeInfo: WebAuthCookieChange,
+): boolean {
+  return isConfiguredWebsiteCookie(changeInfo.cookie) && !changeInfo.removed;
 }
 
 export function buildExtensionConnectUrl(redirectUri: string, state: string): string {
@@ -229,11 +278,13 @@ export async function getCachedExtensionSession(): Promise<ExtensionAuthTokens |
   return getStoredAuthTokens();
 }
 
-export async function getCurrentExtensionSession(): Promise<ExtensionAuthTokens | null> {
+export async function getCurrentExtensionSession(
+  options: { validateWebsiteSession?: boolean } = {},
+): Promise<ExtensionAuthTokens | null> {
   const stored = await getStoredAuthTokens();
   if (!stored) return null;
 
-  if (!(await ensureWebsiteSessionStillMatches(stored))) {
+  if (options.validateWebsiteSession && !(await ensureWebsiteSessionStillMatches(stored))) {
     return null;
   }
 
@@ -256,6 +307,17 @@ export async function getCurrentExtensionSession(): Promise<ExtensionAuthTokens 
   const tokens = { ...refreshed, user: refreshedUser };
   await setStoredAuthTokens(tokens);
   return tokens;
+}
+
+export async function validateExtensionSessionAgainstWebsite(): Promise<ExtensionAuthTokens | null> {
+  const stored = await getStoredAuthTokens();
+  if (!stored) return signInWithWebsiteSilently();
+
+  if (!(await ensureWebsiteSessionStillMatches(stored))) {
+    return signInWithWebsiteSilently();
+  }
+
+  return getCurrentExtensionSession({ validateWebsiteSession: false });
 }
 
 async function runWebsiteAuthFlow(interactive: boolean): Promise<ExtensionAuthTokens | null> {
@@ -321,6 +383,23 @@ export async function signOutWithWebsite(): Promise<void> {
   }
 }
 
+export async function handleWebsiteAuthCookieChange(
+  changeInfo: WebAuthCookieChange,
+): Promise<void> {
+  if (shouldClearExtensionSessionForWebsiteCookieChange(changeInfo)) {
+    const stored = await getStoredAuthTokens();
+    if (stored) {
+      await revokeExtensionRefreshToken(stored.refreshToken).catch(() => undefined);
+    }
+    await clearStoredAuthTokens();
+    return;
+  }
+
+  if (shouldSyncExtensionSessionForWebsiteCookieChange(changeInfo)) {
+    await validateExtensionSessionAgainstWebsite().catch(() => undefined);
+  }
+}
+
 export async function handleAuthMessage(message: AuthMessage): Promise<AuthMessageResponse> {
   try {
     if (message.command === "sign-in") {
@@ -336,7 +415,12 @@ export async function handleAuthMessage(message: AuthMessage): Promise<AuthMessa
     if (message.command === "refresh") {
       return { ok: true, tokens: await refreshExtensionSession() };
     }
-    return { ok: true, tokens: await getCurrentExtensionSession() };
+    return {
+      ok: true,
+      tokens: await getCurrentExtensionSession({
+        validateWebsiteSession: message.command !== "get-session-fast",
+      }),
+    };
   } catch (error) {
     return {
       ok: false,

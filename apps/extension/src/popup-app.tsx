@@ -337,11 +337,29 @@ export function PopupApp() {
       } = {},
     ): Promise<ExtensionAuthTokens | null> => {
       try {
+        if (!options.tokens && !options.interactive) {
+          const cachedTokens = await getCachedExtensionSession();
+          if (cachedTokens) {
+            setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
+            if (options.useCachedSnapshot ?? true) {
+              const cachedLibrary = await getCachedWatchLibraryForUser(cachedTokens.user.id);
+              if (cachedLibrary) {
+                setWatchLibraryState({
+                  status: "ready",
+                  data: cachedLibrary.library,
+                  error: null,
+                });
+              }
+            }
+          }
+        }
+
         const tokens =
           options.tokens ??
           (options.interactive
             ? await signInWithWebsite()
-            : (await getCurrentExtensionSession()) ?? (await signInWithWebsiteSilently()));
+            : (await getCurrentExtensionSession({ validateWebsiteSession: true })) ??
+              (await signInWithWebsiteSilently()));
         if (!tokens) {
           await ensureStoreForUser(null, localStore);
           setAuthSession({ status: "signed-out", tokens: null, error: null });

@@ -8,6 +8,8 @@ import {
   normalizeExtensionRefreshResponse,
   parseExtensionAuthRedirect,
   shouldClearExtensionSessionForWebsiteProbe,
+  shouldClearExtensionSessionForWebsiteCookieChange,
+  shouldSyncExtensionSessionForWebsiteCookieChange,
 } from "../src/auth-client";
 import {
   AUTH_TOKENS_KEY,
@@ -83,6 +85,7 @@ describe("extension auth client", () => {
 
   it("validates auth runtime messages", () => {
     expect(isAuthMessage(createAuthMessage("sign-in"))).toBe(true);
+    expect(isAuthMessage(createAuthMessage("get-session-fast"))).toBe(true);
     expect(isAuthMessage({ type: "ANIDACHI_AUTH", command: "unknown" })).toBe(false);
     expect(isAuthMessage({ command: "sign-in" })).toBe(false);
   });
@@ -141,6 +144,65 @@ describe("extension auth client", () => {
     expect(
       shouldClearExtensionSessionForWebsiteProbe(storedTokens, {
         status: "unknown",
+      }),
+    ).toBe(false);
+  });
+
+  it("clears extension auth only for configured website refresh cookie removals", () => {
+    expect(
+      shouldClearExtensionSessionForWebsiteCookieChange({
+        removed: true,
+        cause: "explicit",
+        cookie: {
+          name: "anidachi_refresh_token",
+          domain: "localhost",
+        },
+      }),
+    ).toBe(true);
+
+    expect(
+      shouldClearExtensionSessionForWebsiteCookieChange({
+        removed: true,
+        cause: "overwrite",
+        cookie: {
+          name: "anidachi_refresh_token",
+          domain: "localhost",
+        },
+      }),
+    ).toBe(false);
+
+    expect(
+      shouldClearExtensionSessionForWebsiteCookieChange({
+        removed: true,
+        cause: "explicit",
+        cookie: {
+          name: "other_cookie",
+          domain: "localhost",
+        },
+      }),
+    ).toBe(false);
+  });
+
+  it("syncs extension auth when the configured website refresh cookie is set", () => {
+    expect(
+      shouldSyncExtensionSessionForWebsiteCookieChange({
+        removed: false,
+        cause: "explicit",
+        cookie: {
+          name: "anidachi_refresh_token",
+          domain: "localhost",
+        },
+      }),
+    ).toBe(true);
+
+    expect(
+      shouldSyncExtensionSessionForWebsiteCookieChange({
+        removed: false,
+        cause: "explicit",
+        cookie: {
+          name: "anidachi_refresh_token",
+          domain: "example.com",
+        },
       }),
     ).toBe(false);
   });
