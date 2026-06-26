@@ -18,7 +18,12 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { getCachedExtensionSession, getCurrentExtensionSession, signInWithWebsite } from "./auth-client";
+import {
+  getCachedExtensionSession,
+  getCurrentExtensionSession,
+  signInWithWebsite,
+  signInWithWebsiteSilently,
+} from "./auth-client";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
@@ -332,25 +337,11 @@ export function PopupApp() {
       } = {},
     ): Promise<ExtensionAuthTokens | null> => {
       try {
-        if (!options.tokens && !options.interactive) {
-          const cachedTokens = await getCachedExtensionSession();
-          if (cachedTokens) {
-            setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
-            if (options.useCachedSnapshot ?? true) {
-              const cachedLibrary = await getCachedWatchLibraryForUser(cachedTokens.user.id);
-              if (cachedLibrary) {
-                setWatchLibraryState({
-                  status: "ready",
-                  data: cachedLibrary.library,
-                  error: null,
-                });
-              }
-            }
-          }
-        }
-
         const tokens =
-          options.tokens ?? (options.interactive ? await signInWithWebsite() : await getCurrentExtensionSession());
+          options.tokens ??
+          (options.interactive
+            ? await signInWithWebsite()
+            : (await getCurrentExtensionSession()) ?? (await signInWithWebsiteSilently()));
         if (!tokens) {
           await ensureStoreForUser(null, localStore);
           setAuthSession({ status: "signed-out", tokens: null, error: null });
@@ -675,11 +666,9 @@ export function PopupApp() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const cachedTokens = await getCachedExtensionSession();
-      const initialUserId = cachedTokens?.user.id ?? null;
-      const loadedStore = await loadWatchProgressStoreForUser(initialUserId);
+      const loadedStore = await loadWatchProgressStoreForUser(null);
       if (cancelled) return;
-      storeUserIdRef.current = initialUserId;
+      storeUserIdRef.current = null;
       setStore(loadedStore);
       void syncPopupData(loadedStore, {
         useCachedSnapshot: true,

@@ -24,6 +24,11 @@ export type AuthMessageResponse =
   | { ok: true; tokens: ExtensionAuthTokens | null }
   | { ok: false; error: string };
 
+export type WebsiteSessionProbe =
+  | { status: "authenticated"; user: AuthenticatedUser }
+  | { status: "signed-out" }
+  | { status: "unknown" };
+
 export interface ExtensionAuthRedirect {
   code: string;
   state: string;
@@ -176,6 +181,50 @@ export async function fetchAuthenticatedUser(accessToken: string): Promise<Authe
   return normalizeAuthenticatedUser(body?.user);
 }
 
+async function fetchWebsiteSessionProbe(): Promise<WebsiteSessionProbe> {
+  let response: Response;
+  try {
+    response = await fetch(buildWebUrl("/api/me"), {
+      cache: "no-store",
+      credentials: "include",
+    });
+  } catch {
+    return { status: "unknown" };
+  }
+
+  if (response.status === 401) {
+    return { status: "signed-out" };
+  }
+
+  if (!response.ok) {
+    return { status: "unknown" };
+  }
+
+  const body = (await response.json().catch(() => null)) as { user?: unknown } | null;
+  const user = normalizeAuthenticatedUser(body?.user);
+  return user ? { status: "authenticated", user } : { status: "unknown" };
+}
+
+export function shouldClearExtensionSessionForWebsiteProbe(
+  stored: ExtensionAuthTokens,
+  probe: WebsiteSessionProbe,
+): boolean {
+  if (probe.status === "unknown") return false;
+  if (probe.status === "signed-out") return true;
+  return probe.user.id !== stored.user.id;
+}
+
+async function ensureWebsiteSessionStillMatches(stored: ExtensionAuthTokens): Promise<boolean> {
+  const probe = await fetchWebsiteSessionProbe();
+  if (!shouldClearExtensionSessionForWebsiteProbe(stored, probe)) {
+    return true;
+  }
+
+  await revokeExtensionRefreshToken(stored.refreshToken).catch(() => undefined);
+  await clearStoredAuthTokens();
+  return false;
+}
+
 export async function getCachedExtensionSession(): Promise<ExtensionAuthTokens | null> {
   return getStoredAuthTokens();
 }
@@ -183,6 +232,10 @@ export async function getCachedExtensionSession(): Promise<ExtensionAuthTokens |
 export async function getCurrentExtensionSession(): Promise<ExtensionAuthTokens | null> {
   const stored = await getStoredAuthTokens();
   if (!stored) return null;
+
+  if (!(await ensureWebsiteSessionStillMatches(stored))) {
+    return null;
+  }
 
   const user = await fetchAuthenticatedUser(stored.accessToken);
   if (user) {

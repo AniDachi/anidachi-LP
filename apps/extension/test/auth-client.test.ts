@@ -7,13 +7,27 @@ import {
   isAuthMessage,
   normalizeExtensionRefreshResponse,
   parseExtensionAuthRedirect,
+  shouldClearExtensionSessionForWebsiteProbe,
 } from "../src/auth-client";
 import {
   AUTH_TOKENS_KEY,
   AUTH_TOKENS_STORAGE_KEY,
+  type ExtensionAuthTokens,
   normalizeAuthenticatedUser,
   normalizeExtensionAuthTokens,
 } from "../src/auth-tokens";
+
+const storedTokens: ExtensionAuthTokens = {
+  accessToken: "access",
+  refreshToken: "refresh",
+  user: {
+    id: "user-1",
+    email: "user@example.com",
+    displayName: "Alina",
+    avatarUrl: null,
+    plan: "plus",
+  },
+};
 
 describe("extension auth client", () => {
   it("builds the website extension connect URL", () => {
@@ -93,6 +107,42 @@ describe("extension auth client", () => {
         refreshToken: 123,
       }),
     ).toBeNull();
+  });
+
+  it("clears extension auth when the website session is signed out or belongs to another user", () => {
+    expect(
+      shouldClearExtensionSessionForWebsiteProbe(storedTokens, {
+        status: "signed-out",
+      }),
+    ).toBe(true);
+
+    expect(
+      shouldClearExtensionSessionForWebsiteProbe(storedTokens, {
+        status: "authenticated",
+        user: {
+          id: "user-2",
+          email: "other@example.com",
+          displayName: "Other",
+          avatarUrl: null,
+          plan: "free",
+        },
+      }),
+    ).toBe(true);
+  });
+
+  it("keeps extension auth when the website session still matches or cannot be checked", () => {
+    expect(
+      shouldClearExtensionSessionForWebsiteProbe(storedTokens, {
+        status: "authenticated",
+        user: storedTokens.user,
+      }),
+    ).toBe(false);
+
+    expect(
+      shouldClearExtensionSessionForWebsiteProbe(storedTokens, {
+        status: "unknown",
+      }),
+    ).toBe(false);
   });
 
   it("keeps the WXT auth key and raw storage key aligned", () => {

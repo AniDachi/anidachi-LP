@@ -2451,8 +2451,23 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     const unwatch = storage.watch(AUTH_TOKENS_KEY, () => {
       refreshIdentityFromStorage("auth-storage");
     });
+    const refreshFocusedIdentity = () => {
+      if (document.visibilityState === "hidden") {
+        return;
+      }
+      refreshIdentityFromStorage("window-focus");
+    };
+    const refreshVisibleIdentity = () => {
+      if (document.visibilityState === "visible") {
+        refreshIdentityFromStorage("visibility");
+      }
+    };
+    window.addEventListener("focus", refreshFocusedIdentity);
+    document.addEventListener("visibilitychange", refreshVisibleIdentity);
     return () => {
       disposed = true;
+      window.removeEventListener("focus", refreshFocusedIdentity);
+      document.removeEventListener("visibilitychange", refreshVisibleIdentity);
       unwatch();
     };
   }, []);
