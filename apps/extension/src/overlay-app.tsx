@@ -128,6 +128,7 @@ import {
   type WatchProgressStore,
 } from "./watch-progress";
 import {
+  markWatchLibraryEntriesSynced,
   reconcileWatchProgress,
   type WatchCheckpointKind,
 } from "./watch-library-client";
@@ -1103,20 +1104,21 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
       lastRemoteReconcileAt = now;
       void (async () => {
+        const userId = authUserIdRef.current;
         const accessToken = await getFreshAuthAccessToken(
           `watch-library:${checkpointKind}`,
         );
-        if (!accessToken) {
+        if (!accessToken || !userId) {
           return;
         }
 
-        await reconcileWatchProgress(accessToken, [
-          {
-            ...entry,
-            checkpointKind,
-            observedAt: now,
-          },
-        ]);
+        const reconcileEntry = {
+          ...entry,
+          checkpointKind,
+          observedAt: now,
+        };
+        await reconcileWatchProgress(accessToken, [reconcileEntry]);
+        await markWatchLibraryEntriesSynced(userId, [reconcileEntry]);
       })().catch((error: unknown) => {
         logDebug("watch-library.reconcile", "remote reconcile failed", {
           checkpointKind,

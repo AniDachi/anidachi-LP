@@ -838,6 +838,24 @@ export const popupStyles = `
     font-size: 12px;
   }
 
+  .popup-empty-syncing {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+  }
+
+  .popup-empty-syncing svg {
+    color: #ffbf5f;
+    animation: popup-spin 900ms linear infinite;
+  }
+
+  @keyframes popup-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   .popup-session-summary {
     min-width: 0;
     display: grid;

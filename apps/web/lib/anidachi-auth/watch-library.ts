@@ -580,7 +580,6 @@ async function reconcileWatchProgressEntry(
         role: participant.role,
         joinedAt: participant.joinedAt,
         entry,
-        now,
       })
     ),
     insertWatchCheckpoint({
@@ -714,7 +713,6 @@ async function upsertWatchSessionParticipant(params: {
   role: "host" | "viewer";
   joinedAt: string;
   entry: CleanWatchProgressEntry;
-  now: string;
 }): Promise<void> {
   const { error } = await db()
     .from("watch_session_participants")
@@ -727,7 +725,7 @@ async function upsertWatchSessionParticipant(params: {
         left_at: null,
         current_time_seconds: params.entry.currentTimeSeconds,
         progress: params.entry.progress,
-        updated_at: params.now,
+        updated_at: params.entry.observedAt,
       },
       { onConflict: "session_id,user_id" }
     );
@@ -784,7 +782,7 @@ async function upsertTrackedTitle(params: {
         active: true,
         archived_reason: null,
         latest_session_id: params.sessionId,
-        last_watched_at: params.now,
+        last_watched_at: params.entry.observedAt,
         updated_at: params.now,
       },
       { onConflict: "user_id,provider,title_key" }

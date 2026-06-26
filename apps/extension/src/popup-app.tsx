@@ -55,7 +55,6 @@ import {
   formatProgressClock,
   loadWatchProgressStoreForUser,
   normalizeWatchProgressStore,
-  recordWatchProgressInStore,
   saveWatchProgressStoreForUser,
   watchProgressStorageKeyForUser,
   type ProviderFolder,
@@ -64,19 +63,21 @@ import {
   type WatchProgressStore,
 } from "./watch-progress";
 import {
-  clearCachedWatchLibrary,
+  clearCachedWatchLibraryForUser,
   clearWatchLibrary,
-  clearWatchLibrarySyncWatermark,
+  clearWatchLibrarySyncStateForUser,
   createRoomFromWatchSession,
   getCachedWatchLibraryForUser,
-  getWatchLibrarySyncWatermark,
+  getWatchLibrarySyncLedger,
   isWatchLibraryCacheFresh,
   listWatchLibrary,
+  markWatchLibraryEntriesSynced,
+  mergeWatchLibraryIntoProgressStore,
   reconcileWatchProgress,
   setCachedWatchLibraryForUser,
-  setWatchLibrarySyncWatermark,
   watchProgressEntriesFromItem,
-  watchProgressEntriesFromStore,
+  watchProgressEntriesFromStoreForSync,
+  watchProgressEntriesFromWatchLibrary,
   type WatchLibraryEpisode,
   type WatchLibraryResponse,
   type WatchLibrarySession,
@@ -170,12 +171,9 @@ export function PopupApp() {
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const posterRequestsRef = useRef<Record<string, boolean>>({});
   const storeUserIdRef = useRef<string | null>(null);
+  const watchLibraryUserIdRef = useRef<string | null>(null);
   const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
-  const displayStore = useMemo(
-    () => mergeWatchLibraryIntoStore(store, watchLibraryState.data),
-    [store, watchLibraryState.data],
-  );
-  const folders = useMemo(() => buildProviderFolders(displayStore), [displayStore]);
+  const folders = useMemo(() => buildProviderFolders(store), [store]);
   const libraryEpisodesByKey = useMemo(
     () => buildLibraryEpisodeIndex(watchLibraryState.data),
     [watchLibraryState.data],
@@ -268,6 +266,33 @@ export function PopupApp() {
     }
   }, []);
 
+  const applyWatchLibraryToLocalStore = useCallback(
+    async (
+      userId: string,
+      library: WatchLibraryResponse,
+      baseStore?: WatchProgressStore,
+    ): Promise<WatchProgressStore> => {
+      if (storeUserIdRef.current !== userId) {
+        return baseStore ?? createEmptyWatchProgressStore();
+      }
+
+      const latestStore = baseStore ?? (await loadWatchProgressStoreForUser(userId));
+      const mergedStore = mergeWatchLibraryIntoProgressStore(latestStore, library);
+      if (storeUserIdRef.current !== userId) {
+        return latestStore;
+      }
+
+      if (mergedStore !== latestStore) {
+        await saveWatchProgressStoreForUser(userId, mergedStore);
+      }
+      if (storeUserIdRef.current === userId) {
+        setStore(mergedStore);
+      }
+      return mergedStore;
+    },
+    [],
+  );
+
   const loadWatchLibraryForTokens = useCallback(
     async (tokens: ExtensionAuthTokens, localStore: WatchProgressStore, useCachedSnapshot = true) => {
       try {
@@ -275,24 +300,35 @@ export function PopupApp() {
           ? await getCachedWatchLibraryForUser(tokens.user.id)
           : null;
         const freshCached = cached && isWatchLibraryCacheFresh(cached) ? cached : null;
+        const syncLedger = await getWatchLibrarySyncLedger(tokens.user.id);
+        const outboundEntries = watchProgressEntriesFromStoreForSync(localStore, "reconcile", syncLedger);
         if (useCachedSnapshot) {
-          if (freshCached) {
+          if (cached) {
+            await applyWatchLibraryToLocalStore(tokens.user.id, cached.library, localStore);
+            await markWatchLibraryEntriesSynced(
+              tokens.user.id,
+              watchProgressEntriesFromWatchLibrary(cached.library),
+            );
+            if (storeUserIdRef.current !== tokens.user.id) {
+              return;
+            }
+            watchLibraryUserIdRef.current = tokens.user.id;
             setWatchLibraryState({
-              status: "ready",
-              data: freshCached.library,
+              status: freshCached ? "ready" : "loading",
+              data: cached.library,
               error: null,
             });
           } else {
             setWatchLibraryState((current) => ({
               status: "loading",
-              data: current.data,
+              data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
               error: null,
             }));
           }
         } else {
           setWatchLibraryState((current) => ({
             status: "loading",
-            data: current.data,
+            data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
             error: null,
           }));
         }
@@ -300,33 +336,33 @@ export function PopupApp() {
         // The overlay reconciles progress live during playback, so the popup
         // only needs to backfill local progress newer than our last successful
         // sync instead of re-sending the entire local store on every open.
-        const watermark = await getWatchLibrarySyncWatermark(tokens.user.id);
-        const entries = watchProgressEntriesFromStore(localStore, "reconcile", watermark);
-        if (freshCached && entries.length === 0) {
+        if (freshCached && outboundEntries.length === 0) {
           return;
         }
 
-        const library = entries.length
-          ? await reconcileWatchProgress(tokens.accessToken, entries)
+        const library = outboundEntries.length
+          ? await reconcileWatchProgress(tokens.accessToken, outboundEntries)
           : await listWatchLibrary(tokens.accessToken);
-        if (entries.length) {
-          const latestObservedAt = entries.reduce(
-            (max, entry) => Math.max(max, Number(entry.observedAt ?? 0)),
-            watermark,
-          );
-          await setWatchLibrarySyncWatermark(tokens.user.id, latestObservedAt);
-        }
+        await markWatchLibraryEntriesSynced(tokens.user.id, [
+          ...outboundEntries,
+          ...watchProgressEntriesFromWatchLibrary(library),
+        ]);
         await setCachedWatchLibraryForUser(tokens.user.id, library);
+        await applyWatchLibraryToLocalStore(tokens.user.id, library);
+        if (storeUserIdRef.current !== tokens.user.id) {
+          return;
+        }
+        watchLibraryUserIdRef.current = tokens.user.id;
         setWatchLibraryState({ status: "ready", data: library, error: null });
       } catch (error) {
         setWatchLibraryState((current) => ({
           status: "error",
-          data: current.data,
+          data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
           error: error instanceof Error ? error.message : "Could not sync watch history",
         }));
       }
     },
-    [],
+    [applyWatchLibraryToLocalStore],
   );
 
   const syncPopupData = useCallback(
@@ -345,16 +381,6 @@ export function PopupApp() {
           if (cachedTokens) {
             currentStore = await ensureStoreForUser(cachedTokens.user.id, localStore);
             setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
-            if (options.useCachedSnapshot ?? true) {
-              const cachedLibrary = await getCachedWatchLibraryForUser(cachedTokens.user.id);
-              if (cachedLibrary && isWatchLibraryCacheFresh(cachedLibrary)) {
-                setWatchLibraryState({
-                  status: "ready",
-                  data: cachedLibrary.library,
-                  error: null,
-                });
-              }
-            }
           }
         }
 
@@ -366,6 +392,7 @@ export function PopupApp() {
               (await signInWithWebsiteSilently()));
         if (!tokens) {
           await ensureStoreForUser(null, localStore);
+          watchLibraryUserIdRef.current = null;
           setAuthSession({ status: "signed-out", tokens: null, error: null });
           setSocialState({ status: "signed-out", data: null, error: null });
           setWatchLibraryState({
@@ -385,6 +412,7 @@ export function PopupApp() {
         return tokens;
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not sync account";
+        watchLibraryUserIdRef.current = null;
         setAuthSession({ status: "error", tokens: null, error: message });
         setSocialState((current) => ({
           status: "error",
@@ -656,6 +684,7 @@ export function PopupApp() {
     try {
       const tokens = await getCurrentExtensionSession();
       if (!tokens) {
+        watchLibraryUserIdRef.current = null;
         setWatchLibraryState({
           status: "signed-out",
           data: null,
@@ -688,10 +717,15 @@ export function PopupApp() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const loadedStore = await loadWatchProgressStoreForUser(null);
+      const cachedTokens = await getCachedExtensionSession();
+      const initialUserId = cachedTokens?.user.id ?? null;
+      const loadedStore = await loadWatchProgressStoreForUser(initialUserId);
       if (cancelled) return;
-      storeUserIdRef.current = null;
+      storeUserIdRef.current = initialUserId;
       setStore(loadedStore);
+      if (cachedTokens) {
+        setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
+      }
       void syncPopupData(loadedStore, {
         useCachedSnapshot: true,
       });
@@ -703,9 +737,13 @@ export function PopupApp() {
   }, [syncPopupData]);
 
   useEffect(() => {
+    const expectedUserId = accountUser?.id ?? null;
     const storageKey = watchProgressStorageKeyForUser(accountUser?.id ?? null);
     const handleStorageChange = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
       if (areaName !== "local" || !changes[storageKey]) {
+        return;
+      }
+      if (storeUserIdRef.current !== expectedUserId) {
         return;
       }
 
@@ -743,7 +781,17 @@ export function PopupApp() {
   const serverItemsCount = watchLibraryState.data?.items.length ?? 0;
   const canClearHistory = localItemsCount > 0 || serverItemsCount > 0;
   const authChecking = authSession.status === "loading";
+  const watchLibraryFirstPaintPending =
+    totalItems === 0 &&
+    (authChecking ||
+      (authSession.status === "ready" &&
+        watchLibraryState.status === "loading" &&
+        watchLibraryState.data === null));
   useEffect(() => {
+    if (watchLibraryFirstPaintPending) {
+      return;
+    }
+
     const missingPosters = folders
       .flatMap((folder) => folder.items)
       .filter(
@@ -782,9 +830,15 @@ export function PopupApp() {
         nextItem.artworkUrl = posterUrl;
         nextStore.providers.crunchyroll.items[item.id] = nextItem;
         await saveWatchProgressStoreForUser(currentUserId, nextStore);
+        if (storeUserIdRef.current !== currentUserId) {
+          return;
+        }
         setStore(nextStore);
 
         const tokens = authSession.status === "ready" ? authSession.tokens : null;
+        if (tokens?.user.id !== currentUserId) {
+          return;
+        }
         const entries = tokens ? watchProgressEntriesFromItem(nextItem, "reconcile") : [];
         if (!tokens || entries.length === 0) {
           return;
@@ -792,14 +846,22 @@ export function PopupApp() {
 
         try {
           const library = await reconcileWatchProgress(tokens.accessToken, entries);
+          await markWatchLibraryEntriesSynced(tokens.user.id, [
+            ...entries,
+            ...watchProgressEntriesFromWatchLibrary(library),
+          ]);
           await setCachedWatchLibraryForUser(tokens.user.id, library);
+          if (storeUserIdRef.current !== tokens.user.id) {
+            return;
+          }
+          watchLibraryUserIdRef.current = tokens.user.id;
           setWatchLibraryState({ status: "ready", data: library, error: null });
         } catch {
           // Local artwork is already cached; the next normal sync can retry the server update.
         }
       });
     }
-  }, [authSession, folders]);
+  }, [authSession, folders, watchLibraryFirstPaintPending]);
 
   const clearHistory = async () => {
     if (clearingHistory || !canClearHistory) return;
@@ -819,8 +881,8 @@ export function PopupApp() {
 
       await Promise.all([
         clearWatchProgressStoreForUser(currentUserId),
-        clearCachedWatchLibrary(),
-        clearWatchLibrarySyncWatermark(),
+        clearCachedWatchLibraryForUser(currentUserId),
+        clearWatchLibrarySyncStateForUser(currentUserId),
       ]);
 
       const emptyStore = createEmptyWatchProgressStore();
@@ -828,8 +890,10 @@ export function PopupApp() {
       setStore(emptyStore);
       if (tokens && clearedLibrary) {
         await setCachedWatchLibraryForUser(tokens.user.id, clearedLibrary);
+        watchLibraryUserIdRef.current = tokens.user.id;
         setWatchLibraryState({ status: "ready", data: clearedLibrary, error: null });
       } else {
+        watchLibraryUserIdRef.current = null;
         setWatchLibraryState({ status: "signed-out", data: null, error: null });
       }
     } catch (error) {
@@ -996,7 +1060,12 @@ export function PopupApp() {
               </button>
             </div>
           ) : null}
-          {watchLibraryState.status === "loading" && !totalItems ? (
+          {watchLibraryFirstPaintPending ? (
+            <div className="popup-empty popup-empty-syncing">
+              <RefreshCw size={14} />
+              <span>Syncing watch history...</span>
+            </div>
+          ) : watchLibraryState.status === "loading" && !totalItems ? (
             <div className="popup-empty">Loading watch library...</div>
           ) : !filteredItemsCount ? (
             <LibraryEmptyState activity={libraryActivityFilter} personFilter={libraryPersonFilter} />
@@ -1866,51 +1935,6 @@ function buildLibraryEpisodeIndex(library: WatchLibraryResponse | null): Map<str
 
 function libraryEpisodeKey(provider: string, itemKey: string, episodeKey: string): string {
   return `${provider}:${itemKey}:${episodeKey}`;
-}
-
-function mergeWatchLibraryIntoStore(
-  localStore: WatchProgressStore,
-  library: WatchLibraryResponse | null,
-): WatchProgressStore {
-  let nextStore = localStore;
-  for (const item of library?.items ?? []) {
-    for (const episode of item.episodes) {
-      const observedAt = new Date(episode.lastWatchedAt).getTime();
-      if (!Number.isFinite(observedAt)) {
-        continue;
-      }
-      const existingItem = nextStore.providers[item.provider]?.items[item.itemKey];
-      const existingEpisode = item.itemKind === "series" ? existingItem?.episodes?.[episode.episodeKey] : existingItem;
-      if (existingEpisode && existingEpisode.lastWatchedAt >= observedAt) {
-        continue;
-      }
-
-      const latestSession = episode.sessions[0] ?? null;
-      nextStore = recordWatchProgressInStore(
-        nextStore,
-        {
-          provider: item.provider,
-          kind: item.itemKind === "series" ? "episode" : "movie",
-          itemId: item.itemKey,
-          itemTitle: item.itemTitle,
-          contentId: episode.episodeKey,
-          seasonId: episode.seasonId ?? undefined,
-          seasonTitle: episode.seasonTitle ?? undefined,
-          seasonNumber: episode.seasonNumber ?? undefined,
-          episodeId: episode.episodeKey,
-          episodeTitle: episode.episodeTitle,
-          artworkUrl: item.artworkUrl ?? undefined,
-          sourceUrl: episode.sourceUrl,
-          currentTime: episode.currentTime,
-          duration: episode.duration,
-          roomId: latestSession?.roomId ?? undefined,
-          watchedWithCount: Math.max(1, latestSession?.participants.length ?? 1),
-        },
-        observedAt,
-      );
-    }
-  }
-  return nextStore;
 }
 
 function CompanionFilterBar({
