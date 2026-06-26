@@ -39,6 +39,7 @@ export function getCrunchyrollProgressEntry(
   const seasonTitle = isEpisode
     ? normalizeSeasonTitleForSeries(seasonInfo.title, itemTitle, seasonInfo.number)
     : seasonInfo.title;
+  const seasonId = isEpisode && (seasonTitle || seasonInfo.number) ? seasonInfo.seasonId : null;
   const seriesKey = slugify(seriesInfo.slug || seriesInfo.title || slug) || slug;
 
   return {
@@ -48,7 +49,7 @@ export function getCrunchyrollProgressEntry(
     itemTitle,
     contentId: watchId,
     ...(isEpisode && seriesInfo.seriesId ? { seriesId: seriesInfo.seriesId } : {}),
-    ...(isEpisode && seasonInfo.seasonId ? { seasonId: seasonInfo.seasonId } : {}),
+    ...(isEpisode && seasonId ? { seasonId } : {}),
     ...(isEpisode && seasonTitle ? { seasonTitle } : {}),
     ...(isEpisode && seasonInfo.number ? { seasonNumber: seasonInfo.number } : {}),
     episodeId: watchId,
@@ -150,7 +151,7 @@ function getCrunchyrollSeasonInfo(episodeTitle: string, sourceUrl: string): Crun
     .filter((candidate): candidate is Required<Pick<CrunchyrollSeasonCandidate, "title">> & CrunchyrollSeasonCandidate =>
       Boolean(candidate.title || candidate.seasonNumber),
     );
-  const best = normalized[0] ?? null;
+  const best = normalized.find((candidate) => candidate.seasonNumber) ?? normalized[0] ?? null;
   const seasonNumber =
     normalized.map((candidate) => candidate.seasonNumber).find((value): value is number => Boolean(value)) ??
     null;
@@ -409,7 +410,6 @@ function seasonCandidateFromRecord(record: Record<string, unknown>): Crunchyroll
     url: typeof id === "string" ? id : typeof url === "string" ? url : null,
     seasonNumber:
       normalizeSeasonNumber(record.seasonNumber) ??
-      normalizeSeasonNumber(record.position) ??
       seasonNumberFromTitle(typeof record.name === "string" ? record.name : ""),
   };
 }
@@ -498,6 +498,7 @@ function normalizeSeasonTitleForSeries(
     if (suffix) {
       return normalizeSeasonTitle(suffix, seasonNumber);
     }
+    return seasonNumber ? `Season ${seasonNumber}` : null;
   }
 
   return seasonTitle;

@@ -254,8 +254,8 @@ function WatchItemCard({
     [item.episodes],
   );
   const seasonGroups = useMemo(
-    () => buildEpisodeSeasonGroups(episodesByDisplayOrder),
-    [episodesByDisplayOrder],
+    () => buildEpisodeSeasonGroups(episodesByDisplayOrder, item.itemTitle),
+    [episodesByDisplayOrder, item.itemTitle],
   );
   const showSeasonGroups =
     item.itemKind === "series" && (seasonGroups.length > 1 || seasonGroups.some((group) => group.known));
@@ -419,10 +419,10 @@ function providerLabel(provider: string): string {
   return provider;
 }
 
-function buildEpisodeSeasonGroups(episodes: WatchLibraryEpisode[]): EpisodeSeasonGroup[] {
+function buildEpisodeSeasonGroups(episodes: WatchLibraryEpisode[], itemTitle: string): EpisodeSeasonGroup[] {
   const groups = new Map<string, EpisodeSeasonGroup>();
   for (const episode of episodes) {
-    const key = episodeSeasonKey(episode);
+    const key = episodeSeasonKey(episode, itemTitle);
     const existing = groups.get(key);
     if (existing) {
       existing.episodes.push(episode);
@@ -434,11 +434,11 @@ function buildEpisodeSeasonGroups(episodes: WatchLibraryEpisode[]): EpisodeSeaso
 
     groups.set(key, {
       key,
-      title: episodeSeasonTitle(episode),
-      known: hasEpisodeSeason(episode),
+      title: episodeSeasonTitle(episode, itemTitle),
+      known: hasEpisodeSeason(episode, itemTitle),
       sortNumber:
-        episode.seasonNumber ??
-        inferredEpisodeSeason(episode)?.seasonNumber ??
+        preferredEpisodeSeason(episode, itemTitle)?.seasonNumber ??
+        normalizedEpisodeSeasonNumber(episode, itemTitle) ??
         getEpisodeSeasonNumber(episode.episodeTitle),
       latestWatchedAt: episode.lastWatchedAt,
       episodes: [episode],
@@ -481,39 +481,85 @@ function getEpisodeNumber(title: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-function episodeSeasonKey(episode: WatchLibraryEpisode): string {
+function episodeSeasonKey(episode: WatchLibraryEpisode, itemTitle: string): string {
+  const preferred = preferredEpisodeSeason(episode, itemTitle);
+  if (preferred) return preferred.seasonId;
   if (episode.seasonId) return episode.seasonId;
-  if (episode.seasonNumber) return `season-${episode.seasonNumber}`;
-  const inferred = inferredEpisodeSeason(episode);
-  if (inferred) return inferred.seasonId;
-  const seasonNumber = getEpisodeSeasonNumber(episode.episodeTitle);
-  if (seasonNumber) return `season-${seasonNumber}`;
-  if (episode.seasonTitle) return `season:${slugKey(episode.seasonTitle)}`;
+  const normalizedSeasonNumber = normalizedEpisodeSeasonNumber(episode, itemTitle);
+  if (normalizedSeasonNumber) return `season-${normalizedSeasonNumber}`;
+  const titleSeasonNumber = getEpisodeSeasonNumber(episode.episodeTitle);
+  if (titleSeasonNumber) return `season-${titleSeasonNumber}`;
+  const normalizedSeasonTitle = normalizedEpisodeSeasonTitle(episode, itemTitle);
+  if (normalizedSeasonTitle) return `season:${slugKey(normalizedSeasonTitle)}`;
   return "season:unknown";
 }
 
-function episodeSeasonTitle(episode: WatchLibraryEpisode): string {
-  if (episode.seasonTitle) return episode.seasonTitle;
-  if (episode.seasonNumber) return `Season ${episode.seasonNumber}`;
-  const inferred = inferredEpisodeSeason(episode);
-  if (inferred) return inferred.seasonTitle;
-  const seasonNumber = getEpisodeSeasonNumber(episode.episodeTitle);
-  if (seasonNumber) return `Season ${seasonNumber}`;
+function episodeSeasonTitle(episode: WatchLibraryEpisode, itemTitle: string): string {
+  const preferred = preferredEpisodeSeason(episode, itemTitle);
+  if (preferred) return preferred.seasonTitle;
+  const normalizedSeasonTitle = normalizedEpisodeSeasonTitle(episode, itemTitle);
+  if (normalizedSeasonTitle) return normalizedSeasonTitle;
+  const normalizedSeasonNumber = normalizedEpisodeSeasonNumber(episode, itemTitle);
+  if (normalizedSeasonNumber) return `Season ${normalizedSeasonNumber}`;
+  const titleSeasonNumber = getEpisodeSeasonNumber(episode.episodeTitle);
+  if (titleSeasonNumber) return `Season ${titleSeasonNumber}`;
   return "Other episodes";
 }
 
-function hasEpisodeSeason(episode: WatchLibraryEpisode): boolean {
+function hasEpisodeSeason(episode: WatchLibraryEpisode, itemTitle: string): boolean {
   return Boolean(
-    episode.seasonId ||
-      episode.seasonTitle ||
-      episode.seasonNumber ||
-      inferredEpisodeSeason(episode) ||
+    preferredEpisodeSeason(episode, itemTitle) ||
+      episode.seasonId ||
+      normalizedEpisodeSeasonTitle(episode, itemTitle) ||
+      normalizedEpisodeSeasonNumber(episode, itemTitle) ||
       getEpisodeSeasonNumber(episode.episodeTitle),
   );
 }
 
+function preferredEpisodeSeason(episode: WatchLibraryEpisode, itemTitle: string) {
+  const inferred = inferredEpisodeSeason(episode);
+  if (!inferred) return null;
+  const seasonTitle = episode.seasonTitle ?? null;
+  if (!seasonTitle || isPlaceholderSeasonTitle(seasonTitle) || sameNormalizedTitle(seasonTitle, itemTitle)) {
+    return inferred;
+  }
+  return null;
+}
+
+function normalizedEpisodeSeasonTitle(episode: WatchLibraryEpisode, itemTitle: string): string | null {
+  const seasonTitle = episode.seasonTitle?.trim() || null;
+  if (!seasonTitle || isPlaceholderSeasonTitle(seasonTitle) || sameNormalizedTitle(seasonTitle, itemTitle)) {
+    return null;
+  }
+  return seasonTitle;
+}
+
+function normalizedEpisodeSeasonNumber(episode: WatchLibraryEpisode, itemTitle: string): number | null {
+  const seasonTitle = episode.seasonTitle ?? null;
+  if (seasonTitle && (isPlaceholderSeasonTitle(seasonTitle) || sameNormalizedTitle(seasonTitle, itemTitle))) {
+    return null;
+  }
+  return episode.seasonNumber ?? null;
+}
+
 function inferredEpisodeSeason(episode: WatchLibraryEpisode) {
   return inferCrunchyrollSeasonFromSourceUrl(episode.sourceUrl);
+}
+
+function isPlaceholderSeasonTitle(title: string): boolean {
+  const normalized = title.trim().toLowerCase();
+  return normalized === "?" || normalized === "unknown" || normalized === "n/a" || normalized === "na";
+}
+
+function sameNormalizedTitle(a: string, b: string): boolean {
+  return normalizeComparableTitle(a) === normalizeComparableTitle(b);
+}
+
+function normalizeComparableTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[\W_]+/g, " ")
+    .trim();
 }
 
 function formatEpisodeCount(count: number): string {

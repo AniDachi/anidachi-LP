@@ -62,6 +62,30 @@ test("watch progress entries infer known Crunchyroll seasons from source URLs", 
   assert.equal(entry?.seasonNumber, 2);
 });
 
+test("watch progress entries repair ambiguous Crunchyroll season placeholders from known source URLs", () => {
+  const entry = cleanWatchProgressEntry({
+    provider: "crunchyroll",
+    kind: "episode",
+    itemId: "crunchyroll-series:kaguya-sama-love-is-war",
+    itemTitle: "Kaguya-sama: Love Is War",
+    contentId: "GEVUZGE02",
+    seasonId: "season-2",
+    seasonTitle: "?",
+    seasonNumber: 2,
+    episodeId: "GEVUZGE02",
+    episodeTitle:
+      "E2 - Kaguya Wants to Know / Kaguya Wants to Give a Gift / Chika Fujiwara Wants to Confirm It",
+    sourceUrl:
+      "https://www.crunchyroll.com/watch/GEVUZGE02/kaguya-wants-to-know--kaguya-wants-to-give-a-gift--chika-fujiwara-wants-to-confirm-it",
+    currentTime: 42,
+    duration: 1440,
+  });
+
+  assert.equal(entry?.seasonKey, "season-1");
+  assert.equal(entry?.seasonTitle, "Season 1");
+  assert.equal(entry?.seasonNumber, 1);
+});
+
 test("watch progress entries reject unsupported providers and unsafe URLs", () => {
   assert.equal(
     cleanWatchProgressEntry({

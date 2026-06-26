@@ -24,6 +24,9 @@ const KNOWN_CRUNCHYROLL_SEASONS_BY_WATCH_ID: Record<string, CrunchyrollSeasonMet
   GPWU8KEQG: season(1),
   G2XUN0J2D: season(1),
   G8WU7NEDG: season(1),
+  GRKE28PWR: season(1),
+  GEVUZGE02: season(1),
+  GJWU2XVK0: season(1),
   GRP8P9XGR: season(2),
   GWDU78GG3: season(2),
   G68VM8X86: season(2),
@@ -67,13 +70,18 @@ export function normalizeSeasonTitle(
   seasonNumber: number | null,
 ): string | null {
   const cleaned = cleanCrunchyrollTitle(title ?? "");
-  if (!cleaned || cleaned.toLowerCase() === "crunchyroll") {
+  if (!cleaned || cleaned.toLowerCase() === "crunchyroll" || isPlaceholderSeasonTitle(cleaned)) {
     return seasonNumber ? season(seasonNumber).seasonTitle : null;
   }
   if (/^s\d+$/i.test(cleaned) || seasonNumberFromTitle(cleaned)) {
     return seasonNumber ? season(seasonNumber).seasonTitle : cleaned.toUpperCase();
   }
   return cleaned;
+}
+
+function isPlaceholderSeasonTitle(title: string): boolean {
+  const normalized = title.trim().toLowerCase();
+  return normalized === "?" || normalized === "unknown" || normalized === "n/a" || normalized === "na";
 }
 
 function season(seasonNumber: number): CrunchyrollSeasonMetadata {

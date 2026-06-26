@@ -263,17 +263,25 @@ export function cleanWatchProgressEntry(value: unknown): CleanWatchProgressEntry
     provider === "crunchyroll" && progressKind === "episode"
       ? inferCrunchyrollSeasonFromSourceUrl(sourceUrl)
       : null;
-  const seasonNumber = normalizeSeasonNumber(input.seasonNumber) ?? inferredSeason?.seasonNumber ?? null;
+  const rawSeasonTitle = cleanSeasonTitle(input.seasonTitle);
+  const rawSeasonIsInvalid =
+    isPlaceholderSeasonTitle(input.seasonTitle) ||
+    Boolean(rawSeasonTitle && sameNormalizedTitle(rawSeasonTitle, itemTitle));
+  const rawSeasonNumber = rawSeasonIsInvalid ? null : normalizeSeasonNumber(input.seasonNumber);
+  const shouldPreferInferredSeason = Boolean(inferredSeason && (rawSeasonIsInvalid || !rawSeasonTitle));
+  const seasonNumber = shouldPreferInferredSeason
+    ? inferredSeason?.seasonNumber ?? rawSeasonNumber ?? null
+    : rawSeasonNumber ?? inferredSeason?.seasonNumber ?? null;
   const seasonTitle =
     progressKind === "episode"
-      ? cleanString(input.seasonTitle, 180) ??
-        inferredSeason?.seasonTitle ??
+      ? (shouldPreferInferredSeason ? inferredSeason?.seasonTitle : rawSeasonTitle) ??
+        (rawSeasonIsInvalid ? null : inferredSeason?.seasonTitle) ??
         (seasonNumber ? `Season ${seasonNumber}` : null)
       : null;
   const seasonKey =
     progressKind === "episode"
-      ? cleanString(input.seasonId, 220) ??
-        inferredSeason?.seasonId ??
+      ? (shouldPreferInferredSeason ? inferredSeason?.seasonId : cleanString(input.seasonId, 220)) ??
+        (rawSeasonIsInvalid ? null : inferredSeason?.seasonId) ??
         (seasonNumber ? `season-${seasonNumber}` : seasonTitle ? keyFromTitle(seasonTitle) : null)
       : null;
 
@@ -1056,10 +1064,25 @@ function sessionSeasonMetadata(session: WatchSessionRow): {
     session.provider === "crunchyroll"
       ? inferCrunchyrollSeasonFromSourceUrl(session.source_url)
       : null;
+  const storedSeasonTitle = cleanSeasonTitle(session.season_title);
+  const storedSeasonIsInvalid =
+    isPlaceholderSeasonTitle(session.season_title) ||
+    Boolean(storedSeasonTitle && sameNormalizedTitle(storedSeasonTitle, session.item_title));
+  const storedSeasonNumber = storedSeasonIsInvalid ? null : session.season_number;
+  const shouldPreferInferredSeason = Boolean(inferred && (storedSeasonIsInvalid || !storedSeasonTitle));
+  const seasonNumber = shouldPreferInferredSeason
+    ? inferred?.seasonNumber ?? storedSeasonNumber ?? null
+    : storedSeasonNumber ?? inferred?.seasonNumber ?? null;
   return {
-    seasonId: session.season_key ?? inferred?.seasonId ?? null,
-    seasonTitle: session.season_title ?? inferred?.seasonTitle ?? null,
-    seasonNumber: session.season_number ?? inferred?.seasonNumber ?? null,
+    seasonId:
+      (shouldPreferInferredSeason ? inferred?.seasonId : session.season_key) ??
+      (storedSeasonIsInvalid ? null : inferred?.seasonId) ??
+      (seasonNumber ? `season-${seasonNumber}` : null),
+    seasonTitle:
+      (shouldPreferInferredSeason ? inferred?.seasonTitle : storedSeasonTitle) ??
+      (storedSeasonIsInvalid ? null : inferred?.seasonTitle) ??
+      (seasonNumber ? `Season ${seasonNumber}` : null),
+    seasonNumber,
   };
 }
 
@@ -1091,6 +1114,28 @@ function cleanString(value: unknown, maxLength: number): string | null {
   const cleaned = value.trim().replace(/\s+/g, " ");
   if (!cleaned) return null;
   return cleaned.slice(0, maxLength);
+}
+
+function cleanSeasonTitle(value: unknown): string | null {
+  const cleaned = cleanString(value, 180);
+  return cleaned && !isPlaceholderSeasonTitle(cleaned) ? cleaned : null;
+}
+
+function isPlaceholderSeasonTitle(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "?" || normalized === "unknown" || normalized === "n/a" || normalized === "na";
+}
+
+function sameNormalizedTitle(a: string, b: string): boolean {
+  return normalizeComparableTitle(a) === normalizeComparableTitle(b);
+}
+
+function normalizeComparableTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[\W_]+/g, " ")
+    .trim();
 }
 
 function cleanHttpUrl(value: unknown, maxLength: number): string | null {
