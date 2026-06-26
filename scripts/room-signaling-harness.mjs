@@ -62,6 +62,7 @@ class Client {
     this.role = role;
     this.capabilities = capabilities;
     this.events = [];
+    this.rawMessages = [];
     this.closeInfo = null;
   }
 
@@ -75,6 +76,7 @@ class Client {
     const url = `${WS_BASE}/ws/${this.roomId}?roomToken=${encodeURIComponent(token)}`;
     this.ws = new WebSocket(url);
     this.ws.addEventListener("message", (event) => {
+      this.rawMessages.push(event.data);
       try {
         this.events.push(JSON.parse(event.data));
       } catch {
@@ -112,6 +114,10 @@ class Client {
     this.ws.send(JSON.stringify(event));
   }
 
+  sendRaw(message) {
+    this.ws.send(message);
+  }
+
   close() {
     this.ws?.close();
   }
@@ -120,6 +126,16 @@ class Client {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
       const match = this.events.find(predicate);
+      if (match) return match;
+      await sleep(40);
+    }
+    throw new Error(`timeout waiting for ${label} (${this.sub})`);
+  }
+
+  async waitForRaw(predicate, label, timeoutMs = 3000) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const match = this.rawMessages.find(predicate);
       if (match) return match;
       await sleep(40);
     }
@@ -170,6 +186,9 @@ async function rawConnect(roomId, token) {
 }
 
 async function runScenarios() {
+  const runId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const roomName = (base) => `${base}-${runId}`;
+
   // 1. Token rejection.
   const noToken = await rawConnect("reject-room", "");
   record("missing token rejected", noToken.opened === false);
@@ -195,7 +214,7 @@ async function runScenarios() {
   record("ice-servers rejects token for a different room (401)", iceWrongRoom.status === 401, `status=${iceWrongRoom.status}`);
 
   // 2. Two participants see each other.
-  const room = "harness-room";
+  const room = roomName("harness-room");
   const host = new Client(room, "user-host", "host");
   const guest = new Client(room, "user-guest", "member");
   await host.connect();
@@ -352,6 +371,9 @@ async function runScenarios() {
   guestB.send({ type: "PING", roomId: room, sentAt: Date.now() });
   const pong = await guestB.waitFor((e) => e.type === "PONG", "pong");
   record("ping answered with pong", typeof pong.serverTime === "number");
+  guestB.sendRaw("ping");
+  const rawPong = await guestB.waitForRaw((message) => message === "pong", "hibernation pong");
+  record("hibernation-safe ping answered with raw pong", rawPong === "pong");
 
   // 5b. Clean leave: closing the socket (what the extension does on pagehide,
   //     Block 4.4) makes the Worker drop the participant promptly and broadcast
@@ -370,7 +392,7 @@ async function runScenarios() {
 
   // 6. Participant cap (PD3): 4 distinct users admitted, the 5th rejected with
   //    ROOM_FULL + close 4003, while a reconnect of an existing member is fine.
-  const capRoom = "cap-room";
+  const capRoom = roomName("cap-room");
   const capped = [];
   for (let i = 1; i <= 4; i++) {
     const member = new Client(capRoom, `cap-${i}`, i === 1 ? "host" : "member");
@@ -404,7 +426,7 @@ async function runScenarios() {
     canNameRoom: true,
     canSendPushInvites: true,
   };
-  const plusRoom = "plus-cap-room";
+  const plusRoom = roomName("plus-cap-room");
   const plusMembers = [];
   for (let i = 1; i <= 6; i++) {
     const member = new Client(
@@ -445,7 +467,7 @@ async function runScenarios() {
     canNameRoom: true,
     canSendPushInvites: true,
   };
-  const mediaRoom = "media-seat-room";
+  const mediaRoom = roomName("media-seat-room");
   const mediaHost = new Client(mediaRoom, "media-host", "host", mediaCapabilities);
   const mediaGuest = new Client(mediaRoom, "media-guest", "member", mediaCapabilities);
   await mediaHost.connect();
@@ -486,7 +508,7 @@ async function runScenarios() {
   // 7. One active session (Block 4): a different session id for the same user
   //    takes the session over (displaced tab gets SESSION_TAKEN_OVER + 4002),
   //    while a reconnect with the SAME session id is a silent 4000 replace.
-  const sessionRoom = "session-room";
+  const sessionRoom = roomName("session-room");
   const tabA = new Client(sessionRoom, "user-tabs", "host");
   await tabA.connect(undefined, "sess-A");
   await tabA.waitFor((e) => e.type === "ROOM_SNAPSHOT", "tab A snapshot");

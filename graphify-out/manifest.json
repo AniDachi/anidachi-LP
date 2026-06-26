@@ -20,18 +20,18 @@
     "semantic_hash": ""
   },
   "apps/api/src/index.ts": {
-    "mtime": 1782508056.9306147,
-    "ast_hash": "c7d55511169c0f310306837e04077006",
+    "mtime": 1782510695.0482311,
+    "ast_hash": "8e5b1863f946af8f3deacced61964486",
     "semantic_hash": ""
   },
   "apps/api/src/p2p-signal-buffer.ts": {
-    "mtime": 1782506335.9947896,
-    "ast_hash": "4723880119c0c55bd6b0f6d67c7ec6c0",
+    "mtime": 1782510154.8870788,
+    "ast_hash": "872394d7f8216b6d96c9a6c325d84224",
     "semantic_hash": ""
   },
   "apps/api/src/room-state.ts": {
-    "mtime": 1782508044.8454943,
-    "ast_hash": "d95f95e251a9d90d77da87f485862d84",
+    "mtime": 1782510043.875742,
+    "ast_hash": "2c46974c674f962b7cb645abd2ced714",
     "semantic_hash": ""
   },
   "apps/api/src/telemetry.ts": {
@@ -50,13 +50,13 @@
     "semantic_hash": ""
   },
   "apps/api/test/p2p-signal-buffer.test.ts": {
-    "mtime": 1782506260.7364616,
-    "ast_hash": "8f2643d2f928a9d33258169cf6d7a6b7",
+    "mtime": 1782510398.0879486,
+    "ast_hash": "2b4bc11e49690ffba239476f86edacff",
     "semantic_hash": ""
   },
   "apps/api/test/room-state.test.ts": {
-    "mtime": 1782508087.755009,
-    "ast_hash": "717f05707c66f396d3911f21ab6fac3f",
+    "mtime": 1782510380.8806314,
+    "ast_hash": "28d75a62736df0381c8ec84d1f78a889",
     "semantic_hash": ""
   },
   "apps/api/test/telemetry.test.ts": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/room-client.ts": {
-    "mtime": 1782485962.84129,
-    "ast_hash": "9948e2234985792cf403a5fc360d3a8a",
+    "mtime": 1782510461.166631,
+    "ast_hash": "bdf95d320045933d1be9e36fcbb5df00",
     "semantic_hash": ""
   },
   "apps/extension/src/room-reconnect.ts": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/room-client-auth.test.ts": {
-    "mtime": 1782491239.2675824,
-    "ast_hash": "f241153a62d0441dce970f1c7dfd2d78",
+    "mtime": 1782510498.8524084,
+    "ast_hash": "9a97bbfea22b0ed55e9cbb2485723d72",
     "semantic_hash": ""
   },
   "apps/extension/test/room-reconnect.test.ts": {
@@ -1725,8 +1725,8 @@
     "semantic_hash": ""
   },
   "scripts/room-signaling-harness.mjs": {
-    "mtime": 1782508201.7982223,
-    "ast_hash": "096b64f2e6bc950a7121ee175f1c425c",
+    "mtime": 1782510848.4083223,
+    "ast_hash": "7a07449729ef95bc836ebd6e61a95758",
     "semantic_hash": ""
   },
   "scripts/smoke-staging-web.mjs": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1782508535.5767822,
-    "ast_hash": "84ebfd43638172199b42ab20518c2db0",
+    "mtime": 1782511155.9562504,
+    "ast_hash": "3abb3167089b2086c191b9ac1f42e2a0",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -1975,13 +1975,13 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": {
-    "mtime": 1782508520.0034237,
-    "ast_hash": "4d1cac11be16401a1aa62ee896ee99cb",
+    "mtime": 1782511100.6183403,
+    "ast_hash": "21a826105671b9e64fe27365686e7535",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1782508450.235454,
-    "ast_hash": "8a51d8cffa640627f04b05e7b4a7d1e4",
+    "mtime": 1782511138.9605415,
+    "ast_hash": "21e5687deace921aafd19ab67a6eda20",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
@@ -2010,22 +2010,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1782508307.7753725,
+    "mtime": 1782511173.1927032,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1782508307.741514,
+    "mtime": 1782511173.1568747,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1782508307.7474186,
+    "mtime": 1782511173.1644125,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1782508307.7503088,
+    "mtime": 1782511173.167342,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },
@@ -2742,6 +2742,21 @@
   "scripts/linkedin/README.md": {
     "mtime": 1782505397.4040806,
     "ast_hash": "51d1692816260864b9a8b9f9dc96af49",
+    "semantic_hash": ""
+  },
+  "apps/api/src/room-persistence.ts": {
+    "mtime": 1782510677.1772065,
+    "ast_hash": "d4fa90f40027621c0915349c7a0e4d2d",
+    "semantic_hash": ""
+  },
+  "apps/api/src/room-socket-attachment.ts": {
+    "mtime": 1782510080.8447592,
+    "ast_hash": "2b6adb75a517434374da44d8cc1d565c",
+    "semantic_hash": ""
+  },
+  "apps/api/test/room-socket-attachment.test.ts": {
+    "mtime": 1782510422.129236,
+    "ast_hash": "096aef3e7ab7c89a0f85e89767c8ee06",
     "semantic_hash": ""
   }
 }
