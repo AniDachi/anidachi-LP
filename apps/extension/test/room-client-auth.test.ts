@@ -297,9 +297,7 @@ describe("authenticated room client", () => {
         this.dispatch("close", { code: 1000, reason: "client close", wasClean: true });
       }
 
-      send(): void {
-        return undefined;
-      }
+      send(): void {}
 
       open(): void {
         this.readyState = FakeWebSocket.OPEN;
@@ -462,9 +460,7 @@ describe("authenticated room client", () => {
         this.dispatch("close", { code, reason, wasClean: code === 1000 });
       }
 
-      send(): void {
-        return undefined;
-      }
+      send(): void {}
 
       open(): void {
         this.readyState = FakeWebSocket.OPEN;

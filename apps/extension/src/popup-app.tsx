@@ -1130,9 +1130,9 @@ function TogetherFilterBar({
         <strong>{selectedCount}</strong>
       </button>
       {open ? (
-        <div className="popup-filter-menu" role="listbox" aria-label="Together filters">
+        <div className="popup-filter-menu" role="group" aria-label="Together filters">
           <button
-            aria-selected={selectedValue === "all"}
+            aria-pressed={selectedValue === "all"}
             className="popup-filter-option"
             data-active={selectedValue === "all"}
             type="button"
@@ -1153,7 +1153,7 @@ function TogetherFilterBar({
             {companions.length ? (
               companions.map((companion) => (
                 <button
-                  aria-selected={selectedValue === companion.value}
+                  aria-pressed={selectedValue === companion.value}
                   className="popup-filter-option"
                   data-active={selectedValue === companion.value}
                   key={companion.userId}
@@ -1181,7 +1181,7 @@ function TogetherFilterBar({
             {groups.length ? (
               groups.map((group) => (
                 <button
-                  aria-selected={selectedValue === `group:${group.id}`}
+                  aria-pressed={selectedValue === `group:${group.id}`}
                   className="popup-filter-option"
                   data-active={selectedValue === `group:${group.id}`}
                   key={group.id}
@@ -1897,9 +1897,9 @@ function CompanionFilterBar({
   return (
     <div className="popup-companion-filter">
       <span className="popup-companion-filter-label">With</span>
-      <div className="popup-companion-scroll" role="listbox" aria-label="People watched with">
+      <div className="popup-companion-scroll" role="group" aria-label="People watched with">
         <button
-          aria-selected={selectedValue === "all"}
+          aria-pressed={selectedValue === "all"}
           className="popup-companion-chip"
           data-active={selectedValue === "all"}
           type="button"
@@ -1909,7 +1909,7 @@ function CompanionFilterBar({
         </button>
         {companions.map((companion) => (
           <button
-            aria-selected={selectedValue === companion.value}
+            aria-pressed={selectedValue === companion.value}
             className="popup-companion-chip"
             data-active={selectedValue === companion.value}
             key={companion.userId}

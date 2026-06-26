@@ -1934,7 +1934,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             applyRemoteSeek(event.byUserId, event.to);
           }
           return;
-        case "P2P_SIGNAL":
+        case "P2P_SIGNAL": {
           if (
             event.toUserId !== participantRef.current?.id ||
             event.fromUserId === participantRef.current?.id
@@ -1973,6 +1973,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             ].slice(-120),
           );
           return;
+        }
         case "REACTION":
           if (!reactionsEnabled) {
             return;
