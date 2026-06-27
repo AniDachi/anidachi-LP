@@ -253,7 +253,34 @@ The extension currently supports:
 - Ghost Cam camera bubbles;
 - push-to-talk audio;
 - WebRTC P2P media with Cloudflare TURN fallback;
+- `/ice-servers` relay readiness diagnostics: Worker responses expose safe
+  STUN/TURN URL counts plus `hasTurn`/`hasTurns443`, and configured Cloudflare
+  TURN responses fail closed if they collapse to STUN-only after browser-blocked
+  TURN URLs are filtered;
+- debug SDP summaries now record negotiated codec/FEC/RTX signals so Teleparty-
+  style production A/V choices can be compared against actual AniDachi browser
+  behavior before changing topology;
+- WebRTC codec preferences are now applied before offer/answer creation:
+  audio prefers browser-supported RED first, then Opus fallback; video keeps
+  lightweight broadly-supported codecs first while preserving RTX/FEC entries
+  when the browser exposes them;
+- stats-backed remote voice activity: inbound WebRTC audio bytes/packets/level
+  can publish or clear active-speaker state instead of relying only on
+  `voice-start`/`voice-stop`;
+- automatic remote-audio stall recovery: while remote voice is expected,
+  connected inbound audio with missing or stalled packet/byte flow is
+  classified from WebRTC stats and triggers throttled ICE recovery without a
+  user-facing reconnect button;
+- proactive P2P ICE recovery on browser `online` and Network Information
+  `change` signals, covered by the real-WebRTC short network-loss harness;
+- automatic remote-video stall recovery: expected connected remote video is
+  checked through inbound WebRTC `framesDecoded`/`bytesReceived`; missing or
+  stalled flow triggers throttled ICE recovery without a manual reconnect
+  button;
 - P2P signaling replay fenced by current room/source generation;
+- controller-level duplicate SDP/ICE protection in the extension media engine:
+  exact repeated `offer`/`answer` SDP and ICE candidates are fingerprinted and
+  dropped before being applied, while voice/control signals remain live;
 - live `SOURCE_CHANGED` handling: the Worker increments `sourceGeneration` on
   host source changes and the extension resets stale P2P queues;
 - Cloudflare Durable Object WebSocket Hibernation core for room sockets:
@@ -272,6 +299,17 @@ These are intentionally not treated as solved:
 
 - P2P media reconnect and asymmetric join timing still require staging/manual
   acceptance beyond the local harness.
+- The local real-WebRTC harness usually selects same-machine `host/host`
+  candidate pairs. Relay-only TURN harness mode exists and can use either
+  explicit short-lived ICE JSON or the real Worker `/ice-servers` path, but a
+  successful Cloudflare TURN relay run (`provider=cloudflare`,
+  `configured=true`, `turns:443` present, selected pair is `relay`) plus
+  two-network/two-profile staging acceptance are still required before treating
+  P2P as proven for users in different networks or countries.
+- A market-readiness claim for video/audio additionally requires a real remote
+  participant outside the local network/ISP path, with candidate type, TTFM,
+  reconnect, audio, and push-to-talk results recorded. Same-network local tests
+  are smoke tests only.
 - Hibernation forced-wake behavior now has explicit Workers-runtime coverage,
   but staging idle-session acceptance, room-end alarms, and precise quota
   metering are still pending.
