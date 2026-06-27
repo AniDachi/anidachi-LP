@@ -64,7 +64,9 @@ Existing extension state:
 
 Existing Worker state:
 
-- `apps/api/src/index.ts` exposes unauthenticated `POST /rooms`, `GET /ws/:roomId`, `/livekit/token`, and `/ice-servers`.
+- Historical note: this plan originally recorded unauthenticated `POST /rooms`,
+  `GET /ws/:roomId`, `/livekit/token`, and `/ice-servers`. The legacy
+  `/livekit/token` route has since been removed.
 - `RoomDurableObject` trusts `JOIN.participant`.
 - `RoomState` chooses host based on first joined client.
 
@@ -260,7 +262,7 @@ If the website will be merged into the monorepo, do it in a dedicated commit bef
 ### Worker/API Files to Modify
 
 - `apps/api/src/index.ts`
-  - Verify auth on `/rooms`, `/ws/:roomId`, and `/livekit/token` in authenticated mode.
+  - Verify auth on `/rooms` and `/ws/:roomId` in authenticated mode.
   - Keep an explicit dev fallback env flag for local prototype.
 
 - `apps/api/src/room-state.ts`

@@ -31,19 +31,17 @@ atomic animation runs.
 
 ## P2P Media Transport
 
-Status: experimental, enabled by default in local/public extension builds as of the P2P media test
-branch.
+Status: active media path.
 
-Purpose: test whether Anidachi can avoid LiveKit/SFU media costs for the intended small-room case
-of up to 4 participants. Playback sync, reactions, rooms, and signaling still use the Cloudflare
-Durable Object. Camera and push-to-talk audio are exchanged directly between browsers through
-WebRTC peer connections.
+Purpose: support the intended small-room case without SFU infrastructure. Playback sync,
+reactions, rooms, and signaling use the Cloudflare Durable Object. Camera and push-to-talk audio
+are exchanged directly between browsers through WebRTC peer connections, with Cloudflare TURN as
+fallback.
 
 Implementation:
 
-- Config lives in `apps/extension/src/experiments.ts`.
 - P2P media controller lives in `apps/extension/src/p2p-media.ts`.
-- `apps/extension/src/ghost-cam.ts` chooses between `p2p` and `livekit`.
+- `apps/extension/src/ghost-cam.ts` is P2P-only.
 - Targeted signaling is typed in `packages/protocol/src/types.ts` as `P2P_SIGNAL`.
 - Durable Object forwards `P2P_SIGNAL` only between joined participants, assigns `serverSeq`, and
   keeps a bounded short-lived replay buffer for reload/rejoin timing.
@@ -79,10 +77,8 @@ Implementation:
   back to build-time `WXT_P2P_ICE_SERVERS_JSON`, then direct STUN-only defaults. OpenRelay TURN is
   opt-in only for local diagnostics and is not a production fallback.
 
-Disable options:
+Diagnostic options:
 
-- Build-time default: set `WXT_MEDIA_TRANSPORT=livekit` before building the extension.
-- Runtime/internal override: set WXT storage key `local:experiment:mediaTransport` to `livekit`.
 - Enable the bundled best-effort OpenRelay TURN attempt only for local diagnostics with
   `WXT_P2P_ENABLE_OPEN_RELAY_TURN=true`.
 - Force all P2P media through TURN during diagnostics with `WXT_P2P_FORCE_RELAY=true`.

@@ -51,7 +51,7 @@ import {
 } from "./ghost-cam-size";
 import { useGhostCam, type GhostVideo, type LiveVoiceStatus } from "./ghost-cam";
 import { getHotkeyAction } from "./hotkeys";
-import type { IncomingP2PSignal, MediaTransportName } from "./media-types";
+import type { IncomingP2PSignal } from "./media-types";
 import { selectP2PMediaParticipants } from "./p2p-media";
 import {
   createRoomInvite,
@@ -69,9 +69,7 @@ import {
 } from "./message-composer-events";
 import {
   HOLD_FIRE_SUPER_REACTION_EXPERIMENT,
-  P2P_MEDIA_TRANSPORT_EXPERIMENT,
   normalizeExperimentFlag,
-  normalizeMediaTransportExperiment,
 } from "./experiments";
 import {
   EXTENSION_CONTEXT_INVALIDATED_MESSAGE,
@@ -205,7 +203,6 @@ const ROOM_SESSION_STORAGE_KEY = "anidachi:room-id";
 const GHOST_CAM_SIZE_STORAGE_KEY = "local:ghostCamSizeStep";
 const MESSAGE_DISPLAY_MODE_STORAGE_KEY = "local:messageDisplayMode";
 const CHAT_DISPLAY_MODE_STORAGE_KEY = "local:chatDisplayMode";
-const MEDIA_TRANSPORT_STORAGE_KEY = P2P_MEDIA_TRANSPORT_EXPERIMENT.storageKey;
 const DEFAULT_MESSAGE_DISPLAY_MODE: MessageDisplayMode = "chat";
 const DEFAULT_CHAT_DISPLAY_MODE: ChatDisplayMode = "live";
 const LIVE_CHAT_MESSAGE_TTL_MS = 9000;
@@ -321,9 +318,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   );
   const [chatDisplayMode, setChatDisplayMode] =
     useState<ChatDisplayMode>(DEFAULT_CHAT_DISPLAY_MODE);
-  const [mediaTransport, setMediaTransport] = useState<MediaTransportName>(
-    P2P_MEDIA_TRANSPORT_EXPERIMENT.defaultTransport,
-  );
   const [socialVisible, setSocialVisible] = useState(true);
   const [crunchyrollPlayerChrome, setCrunchyrollPlayerChrome] =
     useState<CrunchyrollPlayerChromeState>(DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE);
@@ -697,22 +691,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           );
         }
       });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void storage.getItem<MediaTransportName | string>(MEDIA_TRANSPORT_STORAGE_KEY).then((value) => {
-      if (!cancelled && value !== null) {
-        setMediaTransport(
-          normalizeMediaTransportExperiment(value, P2P_MEDIA_TRANSPORT_EXPERIMENT.defaultTransport),
-        );
-      }
-    });
 
     return () => {
       cancelled = true;
@@ -1127,7 +1105,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     participant,
     onCameraStatus: sendCameraStatus,
     sendP2PSignal,
-    transport: mediaTransport,
     voiceTalkActive: liveVoiceTalking,
   });
   const ghostVideos = ghostCamSession.videos;
@@ -3828,7 +3805,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             </div>
             <div className="debug-line">
               <span>Media</span>
-              <strong>{mediaTransport}</strong>
+              <strong>P2P</strong>
             </div>
             <div className="debug-line">
               <span>Seats</span>
