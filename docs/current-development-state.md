@@ -270,7 +270,9 @@ The extension currently supports:
 - WebRTC codec preferences are now applied before offer/answer creation:
   audio prefers browser-supported RED first, then Opus fallback; video keeps
   lightweight broadly-supported codecs first while preserving RTX/FEC entries
-  when the browser exposes them;
+  when the browser exposes them. Local offer/answer SDP is then narrowly
+  normalized for the negotiated audio/Opus payload so `useinbandfec=1` and
+  `usedtx=1` are present for lower-bandwidth push-to-talk and ambient silence;
 - stats-backed remote voice activity: inbound WebRTC audio bytes/packets/level
   can publish or clear active-speaker state instead of relying only on
   `voice-start`/`voice-stop`;
