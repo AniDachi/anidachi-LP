@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-06-17.
+Last updated: 2026-06-28.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -256,6 +256,9 @@ The extension currently supports:
 - debug export from the extension panel.
 
 The extension still does not host, proxy, record, or distribute source video.
+There is no active LiveKit/SFU media path: the extension transport switch,
+Worker `/livekit/token` route, local `infra/livekit` helper, LiveKit token
+generator, LiveKit env vars, and `livekit-client` dependency have been removed.
 
 ## Known Fragile Areas
 

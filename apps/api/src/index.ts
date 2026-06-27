@@ -8,7 +8,6 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { verifyRoomToken, type VerifiedRoomToken } from "./auth";
 import { createIceServersPayload } from "./ice-servers";
-import { createLiveKitToken } from "./livekit-token";
 import { RecentP2PSignalBuffer, type BufferedP2PSignalEvent } from "./p2p-signal-buffer";
 import { RoomState } from "./room-state";
 import {
@@ -19,9 +18,6 @@ import {
 
 export interface Env {
   ROOMS: DurableObjectNamespace;
-  LIVEKIT_URL?: string;
-  LIVEKIT_API_KEY?: string;
-  LIVEKIT_API_SECRET?: string;
   CLOUDFLARE_TURN_KEY_ID?: string;
   CLOUDFLARE_TURN_KEY_API_TOKEN?: string;
   CLOUDFLARE_TURN_TTL_SECONDS?: string;
@@ -87,31 +83,6 @@ app.get("/ws/:roomId", (c) => {
   const id = c.env.ROOMS.idFromName(roomId);
   const stub = c.env.ROOMS.get(id);
   return stub.fetch(c.req.raw);
-});
-
-app.post("/livekit/token", async (c) => {
-  const body = (await c.req.json().catch(() => null)) as {
-    roomId?: string;
-    identity?: string;
-    name?: string;
-  } | null;
-
-  if (!body?.roomId || !body.identity || !body.name) {
-    return c.json({ error: "roomId, identity and name are required" }, 400);
-  }
-
-  const apiKey = c.env.LIVEKIT_API_KEY ?? "devkey";
-  const apiSecret = c.env.LIVEKIT_API_SECRET ?? "secret";
-  const serverUrl = c.env.LIVEKIT_URL ?? "ws://localhost:7880";
-  const token = await createLiveKitToken({
-    apiKey,
-    apiSecret,
-    roomId: body.roomId,
-    identity: body.identity,
-    name: body.name,
-  });
-
-  return c.json({ serverUrl, token });
 });
 
 function encode(event: ServerEvent): string {

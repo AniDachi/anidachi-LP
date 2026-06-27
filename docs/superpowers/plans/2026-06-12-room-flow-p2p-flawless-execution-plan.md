@@ -46,7 +46,7 @@ Confirmed defects:
 2. **CRITICAL — room create is not idempotent.** Double-click or network retry creates duplicate rooms that all count against the limit.
 3. Host loss leaves an orphan room: `hostId` becomes null in `apps/api/src/room-state.ts`, nobody can control playback, no UI explains it, nothing ends the room.
 4. Invite dead-ends: a room without `source_url` leaves the guest stranded on the landing page after join.
-5. `GET /ice-servers` is unauthenticated (anyone can mint Cloudflare TURN credentials at project cost); CORS is `*`; legacy `/livekit/token` is still exposed.
+5. `GET /ice-servers` was originally unauthenticated (anyone could mint Cloudflare TURN credentials at project cost); this is now fixed by room-token auth. CORS is still `*` and needs the separate 7.2b origin audit. Legacy `/livekit/token` has been removed.
 6. As recorded in the roadmap: no `participantSessionId`, no generations in `ROOM_SNAPSHOT`, Durable Object does not use Hibernation.
 
 ## Product Decisions Fixed By This Plan
@@ -178,7 +178,8 @@ Follow the roadmap's task lists verbatim; additions:
 ## Block 7 — Network, Security, Cost Guardrails
 
 - [x] 7.1 `GET /ice-servers` requires `roomToken` + `roomId` and verifies them with `verifyRoomToken` (closes defect 5 — no anonymous minting of Cloudflare TURN credentials). The extension threads the current room token/id from `useGhostCam` → `loadP2PIceServers`/`refreshP2PIceServers` (read from a ref so token rotation doesn't churn the P2P connect). Backward compatible: an old extension (no token) gets 401 and falls back to default STUN — graceful, not a hard break. Verified: harness asserts no-token→401, valid-token→200 with iceServers, wrong-room→401; api/extension typecheck.
-- [ ] 7.2 Remove legacy `/livekit/token` (LiveKit stays historical per project docs); tighten CORS to channel web origins + extension origin.
+- [x] 7.2a Remove legacy LiveKit runtime path: extension transport switch removed; `useGhostCam` is P2P-only; Worker `/livekit/token`, LiveKit token generator, LiveKit env vars, local `infra/livekit`, and the `livekit-client` dependency are removed. Verified by API route regression test, source grep, package-lock cleanup, extension/api checks, room harness, and staging extension validation.
+- [ ] 7.2b Tighten Worker CORS to channel web origins + extension origin after a separate exact-origin audit.
 - [ ] 7.3 Verify `turns:443` is present in returned ICE servers (restrictive-network fallback); confirm relay-only diagnostic mode stays dev-only.
 - [ ] 7.4 Proactive `restartIce` on network change (`navigator.connection` change listener) in addition to existing state-based restarts.
 - [ ] 7.5 Cost guardrails: Analytics Engine alert query for abnormal TURN/signal volume; document budget math (TURN free tier 1TB/month; ~150kbps relay leg ≈ 67MB/hour).

@@ -67,7 +67,6 @@ Engine is enabled and the GitHub token has the current scopes.
 | Analytics Engine binding | `ROOM_ANALYTICS` | `ROOM_ANALYTICS` | Dataset names differ by environment |
 | Analytics dataset | `anidachi_room_events_staging` | `anidachi_room_events_production` | Appears after binding and first writes |
 | Worker env var | `ANIDACHI_ENV=staging` | `ANIDACHI_ENV=production` | Used in telemetry/debugging |
-| LiveKit URL | same configured URL | same configured URL | Legacy/historical until cleanup |
 
 Worker secrets are managed with Wrangler/GitHub Actions. Do not store them in
 repo docs. Expected categories:
