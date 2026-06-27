@@ -23,6 +23,43 @@ const PLAN_LABELS: Record<string, string> = {
   pro: "Pro",
 };
 
+type MeResponse = {
+  user?: {
+    email?: string;
+    displayName?: string;
+    avatarUrl?: string | null;
+    plan?: string;
+  };
+};
+
+async function fetchNavUser(): Promise<NavUser | null> {
+  let response = await fetch("/api/me");
+  if (response.status === 401) {
+    const refreshResponse = await fetch("/api/auth/refresh", { method: "POST" });
+    if (!refreshResponse.ok) return null;
+    response = await fetch("/api/me");
+  }
+  if (!response.ok) return null;
+
+  const data = (await response.json().catch(() => null)) as MeResponse | null;
+  const user = data?.user;
+  if (
+    !user ||
+    typeof user.email !== "string" ||
+    typeof user.displayName !== "string" ||
+    typeof user.plan !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    displayName: user.displayName,
+    avatarUrl: user.avatarUrl ?? null,
+    email: user.email,
+    plan: user.plan,
+  };
+}
+
 function UserMenu({ user }: { user: NavUser }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -159,9 +196,25 @@ function isExternalNavLink(href: string) {
   return href.startsWith("mailto:") || href.startsWith("http");
 }
 
-export function NavBarClient({ user }: { user?: NavUser | null }) {
+export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<NavUser | null>(initialUser ?? null);
   const { isOpen: surveyOpen } = usePlanSurvey();
+
+  useEffect(() => {
+    if (initialUser !== undefined) {
+      setUser(initialUser);
+      return;
+    }
+
+    let cancelled = false;
+    void fetchNavUser().then((nextUser) => {
+      if (!cancelled) setUser(nextUser);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialUser]);
 
   useEffect(() => {
     if (surveyOpen) setMenuOpen(false);

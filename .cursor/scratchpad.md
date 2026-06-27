@@ -529,3 +529,14 @@ The survey should do more than “collect answers” — it should:
 
 - Please submit a test email in the hero survey and confirm the contact appears at `/kreatli-email-crm` with segment `survey_lead`.
 - Production needs `BLOB_READ_WRITE_TOKEN` set (same as Gmail tokens) for CRM writes on Vercel.
+
+### Vercel Fluid Active CPU optimization (2026-06-27)
+
+- [x] Skip JWT middleware on public marketing routes (`lib/middleware-routes.ts`, `middleware.ts`)
+- [x] Static homepage — waitlist count via client `/api/waitlist-stats` only (`app/page.tsx`)
+- [x] Room waiting poll uses `GET /api/rooms/[roomId]` instead of full `router.refresh()` every 5s
+- [x] Watch pages use build cache only at runtime + `force-static` (`jikan-for-watch-page.ts`, `watch/[slug]/page.tsx`)
+- [x] `pnpm --filter @anidachi/web check`, `test`, and `build` pass
+- [x] Nav session moved client-side (`NavBarClient` → `/api/me`); marketing routes now static (○) in build
+- [x] Room waiting poll refreshes on 404 (ended/missing room)
+- **Post-deploy:** confirm Vercel Usage → Active CPU drops within 48–72h (rolling 30-day window).

@@ -128,7 +128,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
           </span>
         </div>
         <ExtensionCheck />
-        <WaitingRefresh />
+        <WaitingRefresh roomId={roomId} />
       </Shell>
     );
   }

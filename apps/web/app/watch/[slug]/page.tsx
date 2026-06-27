@@ -71,6 +71,8 @@ export async function generateStaticParams() {
   }));
 }
 
+export const dynamic = "force-static";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug: rawSlug } = await params;
   const anime = getAnimeBySlug(rawSlug);
