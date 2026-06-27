@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
-    "mtime": 1782559388.9460027,
-    "ast_hash": "346b4a61f0604fb4d8f6ff6513b9f3c5",
+    "mtime": 1782583633.1237912,
+    "ast_hash": "a949a2e722cc3614a26e7b6801cde0d3",
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
-    "mtime": 1782559417.4896307,
-    "ast_hash": "e9a2cd38a3033de796bb839367555adf",
+    "mtime": 1782584395.1983721,
+    "ast_hash": "91f19f4380935fe8506d14d6efcc861a",
     "semantic_hash": ""
   },
   "apps/extension/test/playback-control.test.ts": {
@@ -1980,8 +1980,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1782554831.4510524,
-    "ast_hash": "5042b8a82a6c6e5e0dddadd924de6289",
+    "mtime": 1782584533.6780105,
+    "ast_hash": "8a6a93aeb36fe8b7bdb49833f7f1ad9a",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
@@ -2010,22 +2010,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1782559478.0764997,
+    "mtime": 1782584493.744246,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1782559478.040099,
+    "mtime": 1782584493.7109241,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1782559478.0466015,
+    "mtime": 1782584493.7169719,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1782559478.0494668,
+    "mtime": 1782584493.7196817,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },

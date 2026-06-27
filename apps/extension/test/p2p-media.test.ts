@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   canReceiveP2PSignalFromParticipant,
   classifyRemoteAudioActivity,
   classifyRemoteAudioFlowActivity,
   classifyRemoteVideoActivity,
   classifyPeerHealth,
+  P2PMediaController,
   createP2PRtcConfiguration,
   createP2PMediaSignalDedupeKey,
   decideP2PIceRestart,
@@ -24,6 +25,7 @@ import {
   summarizeP2PSdp,
 } from "../src/p2p-media";
 import type { P2PSignal, Participant } from "@anidachi/protocol";
+import type { GhostVideo, LiveVoiceStatus } from "../src/media-types";
 
 function participant(id: string, cameraEnabled = false): Participant {
   return {
@@ -39,6 +41,185 @@ function participant(id: string, cameraEnabled = false): Participant {
 function statsReportFrom(stats: Array<{ id: string } & Record<string, unknown>>): RTCStatsReport {
   return new Map(stats.map((stat) => [stat.id, stat])) as unknown as RTCStatsReport;
 }
+
+class FakeVideoTrack extends EventTarget {
+  contentHint = "";
+  enabled = true;
+  readonly id: string;
+  readonly kind = "video";
+  readyState: MediaStreamTrackState = "live";
+
+  constructor(id: string) {
+    super();
+    this.id = id;
+  }
+
+  end(): void {
+    this.readyState = "ended";
+    this.dispatchEvent(new Event("ended"));
+  }
+
+  getSettings(): MediaTrackSettings {
+    return { frameRate: 10, height: 180, width: 320 };
+  }
+
+  stop(): void {
+    this.readyState = "ended";
+  }
+}
+
+function fakeVideoStream(track: FakeVideoTrack): MediaStream {
+  const stream = new MediaStream();
+  Object.defineProperties(stream, {
+    getAudioTracks: { value: () => [] },
+    getTracks: { value: () => [track] },
+    getVideoTracks: { value: () => [track] },
+    id: { value: `stream-${track.id}` },
+  });
+  return stream;
+}
+
+function installFakeMediaDevices(mediaDevices: MediaDevices): void {
+  Object.defineProperty(navigator, "mediaDevices", {
+    configurable: true,
+    value: mediaDevices,
+  });
+}
+
+function createP2PControllerHarness() {
+  const activeSpeakerChanges: string[][] = [];
+  const cameraStatuses: boolean[] = [];
+  const messages: Array<string | null> = [];
+  const videos: GhostVideo[][] = [];
+  const voiceStatuses: LiveVoiceStatus[] = [];
+  const signals: Array<{ signal: P2PSignal; toUserId: string }> = [];
+  const controller = new P2PMediaController({
+    iceServers: [],
+    localParticipant: participant("host", false),
+    onActiveSpeakerIdsChange: (ids) => activeSpeakerChanges.push(ids),
+    onCameraStatus: (enabled) => cameraStatuses.push(enabled),
+    onVideosChange: (items) => videos.push(items),
+    onVoiceMessageChange: (message) => messages.push(message),
+    onVoiceStatusChange: (status) => voiceStatuses.push(status),
+    sendSignal: (toUserId, signal) => signals.push({ signal, toUserId }),
+  });
+
+  return {
+    activeSpeakerChanges,
+    cameraStatuses,
+    controller,
+    messages,
+    signals,
+    videos,
+    voiceStatuses,
+  };
+}
+
+describe("P2P camera local-track recovery", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("keeps the public camera status on while scheduling delayed re-acquire after a local track ends", async () => {
+    const firstTrack = new FakeVideoTrack("camera-1");
+    const secondTrack = new FakeVideoTrack("camera-2");
+    const getUserMedia = vi
+      .fn()
+      .mockResolvedValueOnce(fakeVideoStream(firstTrack))
+      .mockResolvedValueOnce(fakeVideoStream(secondTrack));
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia,
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const { cameraStatuses, controller } = createP2PControllerHarness();
+
+    await controller.setCameraEnabled(true);
+    expect(cameraStatuses).toEqual([true]);
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+
+    firstTrack.end();
+
+    expect(cameraStatuses).toEqual([true]);
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(999);
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    expect(cameraStatuses).toEqual([true]);
+
+    controller.disconnect();
+  });
+
+  it("cancels delayed camera recovery when the user turns the camera off", async () => {
+    const firstTrack = new FakeVideoTrack("camera-1");
+    const secondTrack = new FakeVideoTrack("camera-2");
+    const getUserMedia = vi
+      .fn()
+      .mockResolvedValueOnce(fakeVideoStream(firstTrack))
+      .mockResolvedValueOnce(fakeVideoStream(secondTrack));
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia,
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const { cameraStatuses, controller } = createP2PControllerHarness();
+
+    await controller.setCameraEnabled(true);
+    firstTrack.end();
+    await controller.setCameraEnabled(false);
+
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    expect(cameraStatuses).toEqual([true, false]);
+
+    controller.disconnect();
+  });
+
+  it("gives up after repeated rapid local track endings and publishes one camera off status", async () => {
+    const tracks = [
+      new FakeVideoTrack("camera-1"),
+      new FakeVideoTrack("camera-2"),
+      new FakeVideoTrack("camera-3"),
+    ];
+    const getUserMedia = vi
+      .fn()
+      .mockResolvedValueOnce(fakeVideoStream(tracks[0]))
+      .mockResolvedValueOnce(fakeVideoStream(tracks[1]))
+      .mockResolvedValueOnce(fakeVideoStream(tracks[2]));
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia,
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const { cameraStatuses, controller, messages } = createP2PControllerHarness();
+
+    await controller.setCameraEnabled(true);
+    tracks[0].end();
+    await vi.advanceTimersByTimeAsync(1_000);
+    tracks[1].end();
+    await vi.advanceTimersByTimeAsync(2_000);
+    tracks[2].end();
+
+    expect(getUserMedia).toHaveBeenCalledTimes(3);
+    expect(cameraStatuses).toEqual([true, false]);
+    expect(messages.at(-1)).toContain("Camera is unavailable");
+
+    await vi.advanceTimersByTimeAsync(8_000);
+    expect(getUserMedia).toHaveBeenCalledTimes(3);
+    expect(cameraStatuses).toEqual([true, false]);
+
+    controller.disconnect();
+  });
+});
 
 describe("P2P perfect negotiation role helpers", () => {
   it("uses the lower deterministic participant id as the offer initiator", () => {
