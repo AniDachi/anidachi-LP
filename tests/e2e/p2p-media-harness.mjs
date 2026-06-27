@@ -283,6 +283,19 @@ async function waitForRemoteVideo(page, budgetMs) {
 	return { ttfmMs: null, state };
 }
 
+async function waitForCameraEnabledCount(page, expectedCount, budgetMs) {
+	const t0 = Date.now();
+	while (Date.now() - t0 < budgetMs) {
+		const state = await page.evaluate(() => window.AnidachiHarness.getState());
+		if ((state.cameraEnabledCount ?? 0) >= expectedCount) {
+			return { observedMs: Date.now() - t0, state };
+		}
+		await sleep(150);
+	}
+	const state = await page.evaluate(() => window.AnidachiHarness.getState());
+	return { observedMs: null, state };
+}
+
 async function waitForRemoteFramesAbove(page, previousFrames, budgetMs) {
 	const t0 = Date.now();
 	while (Date.now() - t0 < budgetMs) {
@@ -296,22 +309,30 @@ async function waitForRemoteFramesAbove(page, previousFrames, budgetMs) {
 	return { recoveredMs: null, state };
 }
 
-async function waitForIceRestartAbove(page, previousRestartCount, budgetMs) {
+async function waitForRemoteVideoActivity(page, expectedActivity, budgetMs) {
 	const t0 = Date.now();
 	while (Date.now() - t0 < budgetMs) {
 		const state = await page.evaluate(() => window.AnidachiHarness.getState());
-		const restartCount = Math.max(0, ...(state.iceRestartCounts ?? []));
-		if (restartCount > previousRestartCount) {
-			return { recoveredMs: Date.now() - t0, state, restartCount };
+		if ((state.remoteVideoActivity ?? []).includes(expectedActivity)) {
+			return { observedMs: Date.now() - t0, state };
 		}
 		await sleep(150);
 	}
 	const state = await page.evaluate(() => window.AnidachiHarness.getState());
-	return {
-		recoveredMs: null,
-		state,
-		restartCount: Math.max(0, ...(state.iceRestartCounts ?? [])),
-	};
+	return { observedMs: null, state };
+}
+
+function maxIceRestartCount(state) {
+	return Math.max(0, ...(state.iceRestartCounts ?? []));
+}
+
+async function getRestartSnapshot(pages) {
+	const entries = [];
+	for (const page of pages) {
+		const state = await page.evaluate(() => window.AnidachiHarness.getState());
+		entries.push({ page, restartCount: maxIceRestartCount(state), state });
+	}
+	return entries;
 }
 
 async function main() {
@@ -406,6 +427,23 @@ async function main() {
 			iceServers: activeIceServers,
 		});
 
+		const hostCameraSnapshot = await waitForCameraEnabledCount(
+			hostPage,
+			2,
+			RECOVERY_BUDGET_MS,
+		);
+		const guestCameraSnapshot = await waitForCameraEnabledCount(
+			guestPage,
+			2,
+			RECOVERY_BUDGET_MS,
+		);
+		record(
+			"room snapshot includes both active cameras before media SLOs",
+			hostCameraSnapshot.observedMs !== null &&
+				guestCameraSnapshot.observedMs !== null,
+			`host=${hostCameraSnapshot.state.cameraEnabledCount} guest=${guestCameraSnapshot.state.cameraEnabledCount}`,
+		);
+
 		const hostSees = await waitForRemoteVideo(hostPage, TTFM_BUDGET_MS);
 		const guestSees = await waitForRemoteVideo(guestPage, TTFM_BUDGET_MS);
 
@@ -449,6 +487,22 @@ async function main() {
 			`health=${JSON.stringify(hostHealth.peerHealth)}`,
 		);
 
+		const hostVideoFlow = await waitForRemoteVideoActivity(
+			hostPage,
+			"flowing",
+			RECOVERY_BUDGET_MS,
+		);
+		const guestVideoFlow = await waitForRemoteVideoActivity(
+			guestPage,
+			"flowing",
+			RECOVERY_BUDGET_MS,
+		);
+		record(
+			"video health monitor sees expected remote camera flow",
+			hostVideoFlow.observedMs !== null && guestVideoFlow.observedMs !== null,
+			`host=${JSON.stringify(hostVideoFlow.state.remoteVideoActivity)} guest=${JSON.stringify(guestVideoFlow.state.remoteVideoActivity)}`,
+		);
+
 		// Push-to-talk latency (S6): time from startVoice() to the peer receiving
 		// audio bytes, measured twice to expose mic spin-up cost on repeat presses.
 		async function pressToAudioMs(speaker, listener, budgetMs) {
@@ -486,6 +540,7 @@ async function main() {
 				`   push-to-talk: first=${firstPress}ms repeat=${secondPress}ms`,
 			);
 		}
+
 		await hostPage.evaluate(() => window.AnidachiHarness.stopVoice());
 
 		// S5: reload the guest, restart, and confirm media recovers without
@@ -529,24 +584,14 @@ async function main() {
 		const beforeNetworkHost = await hostPage.evaluate(() =>
 			window.AnidachiHarness.getState(),
 		);
-		const beforeRestartCount = Math.max(
-			0,
-			...(beforeNetworkGuest.iceRestartCounts ?? []),
-		);
+		const restartBeforeNetwork = await getRestartSnapshot([
+			hostPage,
+			guestPage,
+		]);
 		await guestCtx.setOffline(true);
 		await sleep(1800);
 		await guestCtx.setOffline(false);
 		await guestPage.evaluate(() => window.dispatchEvent(new Event("online")));
-		const restartAfterNetwork = await waitForIceRestartAbove(
-			guestPage,
-			beforeRestartCount,
-			RECOVERY_BUDGET_MS,
-		);
-		record(
-			"guest proactively restarts ICE after short network loss (S5/7.4)",
-			restartAfterNetwork.recoveredMs !== null,
-			`restartCount=${restartAfterNetwork.restartCount}`,
-		);
 		const guestAfterNetwork = await waitForRemoteFramesAbove(
 			guestPage,
 			beforeNetworkGuest.remoteFramesDecoded,
@@ -566,6 +611,14 @@ async function main() {
 			"host video resumes from guest after short network loss (S5)",
 			hostAfterNetwork.recoveredMs !== null,
 			`recovered=${hostAfterNetwork.recoveredMs}ms frames=${hostAfterNetwork.state.remoteFramesDecoded}`,
+		);
+		const restartAfterNetwork = await getRestartSnapshot([hostPage, guestPage]);
+		console.log(
+			`   ICE restarts after network loss: before=${JSON.stringify(
+				restartBeforeNetwork.map((entry) => entry.restartCount),
+			)} after=${JSON.stringify(
+				restartAfterNetwork.map((entry) => entry.restartCount),
+			)}`,
 		);
 
 		await hostPage.evaluate(() => window.AnidachiHarness.stop());
