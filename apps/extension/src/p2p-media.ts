@@ -27,10 +27,16 @@ const P2P_VIDEO_ACTIVITY_MIN_FRAME_DELTA = 1;
 const P2P_VIDEO_ACTIVITY_MIN_BYTE_DELTA = 1024;
 const P2P_VIDEO_STALL_SAMPLES_BEFORE_RECOVERY = 2;
 const P2P_MEDIA_STALL_RECOVERY_COOLDOWN_MS = 12_000;
+const P2P_CAMERA_REACQUIRE_BASE_DELAY_MS = 1_000;
+const P2P_CAMERA_REACQUIRE_MAX_DELAY_MS = 8_000;
+const P2P_CAMERA_REACQUIRE_FAILURE_WINDOW_MS = 15_000;
+const P2P_CAMERA_REACQUIRE_MAX_FAILURES = 3;
+const P2P_CAMERA_STABLE_RESET_MS = 30_000;
 const P2P_SIGNAL_DEDUPE_TTL_MS = 30_000;
 const P2P_SIGNAL_DEDUPE_CAP = 240;
 
 type P2PMediaKind = "audio" | "video";
+type P2PCameraState = "off" | "starting" | "live" | "recovering" | "unavailable";
 
 interface P2PCodecPreferenceResult {
   codecs?: string[];
@@ -513,12 +519,17 @@ export class P2PMediaController {
     string,
     VideoActivityStats
   >();
+  private cameraFailureTimestamps: number[] = [];
+  private cameraReacquireTimerId: number | null = null;
+  private cameraStableTimerId: number | null = null;
   private cameraStarting = false;
+  private cameraState: P2PCameraState = "off";
   private disposed = false;
   private localAudioStream: MediaStream | null = null;
   private localAudioTrack: MediaStreamTrack | null = null;
   private localVideoStream: MediaStream | null = null;
   private localVideoTrack: MediaStreamTrack | null = null;
+  private publicCameraEnabled = false;
   private wantsCamera = false;
   private wantsVoiceTalk = false;
   private voiceStarting = false;
@@ -553,6 +564,7 @@ export class P2PMediaController {
     this.onVoiceStatusChange = options.onVoiceStatusChange;
     this.refreshIceServers = options.refreshIceServers;
     this.sendSignal = options.sendSignal;
+    this.publicCameraEnabled = options.localParticipant.cameraEnabled;
     this.reconcileTimerId = window.setInterval(() => {
       this.reconcile("interval");
       void this.samplePeerHealth();
@@ -590,9 +602,12 @@ export class P2PMediaController {
       localParticipantId: this.localParticipant.id,
       trackState: this.localVideoTrack?.readyState ?? "none",
     });
+    if (this.cameraState === "unavailable") {
+      this.cameraFailureTimestamps = [];
+    }
     this.localVideoStream = null;
     this.localVideoTrack = null;
-    void this.setCameraEnabled(true);
+    this.scheduleCameraReacquire("device-change");
   }
 
   /**
@@ -689,15 +704,25 @@ export class P2PMediaController {
       return;
     }
 
-    this.wantsCamera = enabled;
-
     if (!enabled) {
+      this.wantsCamera = false;
       await this.stopCamera();
       return;
     }
 
-    if (this.localVideoTrack) {
-      this.onCameraStatus(true);
+    this.wantsCamera = true;
+    this.onVoiceMessageChange(null);
+    await this.acquireCamera("user-request");
+  }
+
+  private async acquireCamera(reason: string): Promise<void> {
+    if (this.disposed || !this.wantsCamera) {
+      return;
+    }
+
+    if (this.localVideoTrack?.readyState === "live") {
+      this.cameraState = "live";
+      this.setPublicCameraEnabled(true, reason);
       return;
     }
 
@@ -705,10 +730,15 @@ export class P2PMediaController {
       return;
     }
 
+    this.clearCameraReacquireTimer();
+    this.clearCameraStableTimer();
     this.cameraStarting = true;
+    this.cameraState = this.publicCameraEnabled ? "recovering" : "starting";
     logDebug("p2p.camera", "getUserMedia start", {
       localParticipantId: this.localParticipant.id,
       peerCount: this.peers.size,
+      reason,
+      state: this.cameraState,
     });
 
     try {
@@ -717,7 +747,8 @@ export class P2PMediaController {
       );
       if (this.disposed || !this.wantsCamera) {
         stopStream(stream);
-        this.onCameraStatus(false);
+        this.cameraState = "off";
+        this.setPublicCameraEnabled(false, "camera-aborted");
         return;
       }
 
@@ -730,32 +761,19 @@ export class P2PMediaController {
       track.contentHint = "motion";
       track.addEventListener(
         "ended",
-        () => {
-          logDebug("p2p.camera", "local track ended", {
-            localParticipantId: this.localParticipant.id,
-            wantsCamera: this.wantsCamera,
-          });
-          if (this.localVideoTrack !== track) {
-            return;
-          }
-
-          this.localVideoStream = null;
-          this.localVideoTrack = null;
-          this.removeVideo(this.localParticipant.id);
-          this.onCameraStatus(false);
-          if (this.wantsCamera && !this.disposed) {
-            void this.setCameraEnabled(true);
-          }
-        },
+        () => this.handleLocalVideoTrackEnded(track),
         { once: true },
       );
       this.localVideoStream = stream;
       this.localVideoTrack = track;
+      this.cameraState = "live";
       logDebug("p2p.camera", "local track ready", {
         localParticipantId: this.localParticipant.id,
         trackState: track.readyState,
         settings: track.getSettings(),
+        reason,
       });
+      this.scheduleCameraStableReset();
       this.upsertVideo({
         participantId: this.localParticipant.id,
         element: createVideoElement(stream, true),
@@ -769,20 +787,153 @@ export class P2PMediaController {
         }
       }
 
-      this.onCameraStatus(true);
+      this.setPublicCameraEnabled(true, "track-ready");
     } catch (error) {
       console.warn("[Anidachi] P2P camera failed", error);
       logDebug("p2p.camera", "failed", {
         localParticipantId: this.localParticipant.id,
         error: error instanceof Error ? error.message : String(error),
+        reason,
+        state: this.cameraState,
       });
-      this.onCameraStatus(false);
-      this.onVoiceMessageChange(
-        error instanceof Error ? error.message : "P2P camera failed.",
-      );
+      if (this.wantsCamera && this.publicCameraEnabled && !this.disposed) {
+        this.scheduleCameraReacquire("get-user-media-failed", error);
+      } else {
+        this.cameraState = "unavailable";
+        this.setPublicCameraEnabled(false, "camera-failed");
+        this.onVoiceMessageChange(formatCameraErrorMessage(error));
+      }
     } finally {
       this.cameraStarting = false;
     }
+  }
+
+  private handleLocalVideoTrackEnded(track: MediaStreamTrack): void {
+    logDebug("p2p.camera", "local track ended", {
+      localParticipantId: this.localParticipant.id,
+      state: this.cameraState,
+      wantsCamera: this.wantsCamera,
+    });
+    if (this.localVideoTrack !== track) {
+      return;
+    }
+
+    this.clearCameraStableTimer();
+    this.localVideoStream = null;
+    this.localVideoTrack = null;
+    this.removeVideo(this.localParticipant.id);
+
+    if (this.wantsCamera && !this.disposed) {
+      this.cameraState = "recovering";
+      this.scheduleCameraReacquire("track-ended");
+      return;
+    }
+
+    this.cameraState = "off";
+    this.setPublicCameraEnabled(false, "track-ended");
+  }
+
+  private scheduleCameraReacquire(reason: string, error?: unknown): void {
+    if (this.disposed || !this.wantsCamera) {
+      return;
+    }
+    if (this.cameraReacquireTimerId !== null) {
+      return;
+    }
+
+    const now = Date.now();
+    this.cameraFailureTimestamps = [
+      ...this.cameraFailureTimestamps.filter(
+        (timestamp) => now - timestamp <= P2P_CAMERA_REACQUIRE_FAILURE_WINDOW_MS,
+      ),
+      now,
+    ];
+
+    if (
+      this.cameraFailureTimestamps.length >= P2P_CAMERA_REACQUIRE_MAX_FAILURES
+    ) {
+      this.giveUpCameraRecovery(reason, error);
+      return;
+    }
+
+    const delay = Math.min(
+      P2P_CAMERA_REACQUIRE_BASE_DELAY_MS *
+        2 ** Math.max(0, this.cameraFailureTimestamps.length - 1),
+      P2P_CAMERA_REACQUIRE_MAX_DELAY_MS,
+    );
+    this.cameraState = "recovering";
+    logDebug("p2p.camera", "schedule re-acquire", {
+      delay,
+      failures: this.cameraFailureTimestamps.length,
+      localParticipantId: this.localParticipant.id,
+      reason,
+    });
+    this.cameraReacquireTimerId = window.setTimeout(() => {
+      this.cameraReacquireTimerId = null;
+      if (this.disposed || !this.wantsCamera) {
+        return;
+      }
+      void this.acquireCamera(`reacquire:${reason}`);
+    }, delay);
+  }
+
+  private giveUpCameraRecovery(reason: string, error?: unknown): void {
+    this.clearCameraReacquireTimer();
+    this.clearCameraStableTimer();
+    this.cameraState = "unavailable";
+    this.localVideoStream = null;
+    this.localVideoTrack = null;
+    this.removeVideo(this.localParticipant.id);
+    logDebug("p2p.camera", "recovery give up", {
+      failures: this.cameraFailureTimestamps.length,
+      localParticipantId: this.localParticipant.id,
+      reason,
+    });
+    this.setPublicCameraEnabled(false, "recovery-give-up");
+    this.onVoiceMessageChange(formatCameraErrorMessage(error));
+  }
+
+  private setPublicCameraEnabled(enabled: boolean, reason: string): void {
+    if (this.publicCameraEnabled === enabled) {
+      return;
+    }
+
+    this.publicCameraEnabled = enabled;
+    logDebug("p2p.camera", "public status", {
+      enabled,
+      localParticipantId: this.localParticipant.id,
+      reason,
+    });
+    this.onCameraStatus(enabled);
+  }
+
+  private scheduleCameraStableReset(): void {
+    this.clearCameraStableTimer();
+    this.cameraStableTimerId = window.setTimeout(() => {
+      this.cameraStableTimerId = null;
+      this.cameraFailureTimestamps = [];
+      logDebug("p2p.camera", "stable reset", {
+        localParticipantId: this.localParticipant.id,
+      });
+    }, P2P_CAMERA_STABLE_RESET_MS);
+  }
+
+  private clearCameraReacquireTimer(): void {
+    if (this.cameraReacquireTimerId === null) {
+      return;
+    }
+
+    window.clearTimeout(this.cameraReacquireTimerId);
+    this.cameraReacquireTimerId = null;
+  }
+
+  private clearCameraStableTimer(): void {
+    if (this.cameraStableTimerId === null) {
+      return;
+    }
+
+    window.clearTimeout(this.cameraStableTimerId);
+    this.cameraStableTimerId = null;
   }
 
   async startVoiceTalk(): Promise<void> {
@@ -1447,6 +1598,8 @@ export class P2PMediaController {
     this.disposed = true;
     this.wantsCamera = false;
     this.wantsVoiceTalk = false;
+    this.clearCameraReacquireTimer();
+    this.clearCameraStableTimer();
     this.clearMicReleaseTimer();
     if (this.reconcileTimerId !== null) {
       window.clearInterval(this.reconcileTimerId);
@@ -1491,7 +1644,8 @@ export class P2PMediaController {
     this.remoteVideoStatsByPeer.clear();
     this.onVideosChange([]);
     this.publishActiveSpeakerIds();
-    this.onCameraStatus(false);
+    this.cameraState = "off";
+    this.setPublicCameraEnabled(false, "disconnect");
     this.onVoiceStatusChange("idle");
     this.onVoiceMessageChange(null);
   }
@@ -2073,6 +2227,10 @@ export class P2PMediaController {
 
   private async stopCamera(): Promise<void> {
     this.wantsCamera = false;
+    this.clearCameraReacquireTimer();
+    this.clearCameraStableTimer();
+    this.cameraFailureTimestamps = [];
+    this.cameraState = "off";
     logDebug("p2p.camera", "stop", {
       localParticipantId: this.localParticipant.id,
       peerCount: this.peers.size,
@@ -2092,7 +2250,7 @@ export class P2PMediaController {
       this.queueNegotiation(peer, "camera-stop");
     }
 
-    this.onCameraStatus(false);
+    this.setPublicCameraEnabled(false, "camera-stop");
   }
 
   private upsertVideo(video: GhostVideo): void {
@@ -2753,6 +2911,27 @@ function stopStream(stream: MediaStream | null): void {
   for (const track of stream.getTracks()) {
     track.stop();
   }
+}
+
+function formatCameraErrorMessage(error: unknown): string {
+  const name =
+    error && typeof error === "object" && "name" in error
+      ? String((error as { name?: unknown }).name)
+      : "";
+  if (
+    name === "NotAllowedError" ||
+    name === "PermissionDeniedError" ||
+    name === "SecurityError"
+  ) {
+    return "Camera access is blocked. Allow camera permission and try again.";
+  }
+  if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+    return "Camera not found. Connect a camera and try again.";
+  }
+  if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") {
+    return "Camera settings are not supported by this device.";
+  }
+  return "Camera is unavailable. Close other apps using it and try again.";
 }
 
 function toP2PIceCandidate(
