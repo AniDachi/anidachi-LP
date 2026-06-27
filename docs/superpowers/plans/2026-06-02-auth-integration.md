@@ -62,9 +62,12 @@ Existing extension state:
 - Overlay connects to unauthenticated Worker rooms in `apps/extension/src/overlay-app.tsx`.
 - WXT manifest currently lacks `identity` permission and `externally_connectable`.
 
-Existing Worker state:
+Existing Worker state at the time this historical plan was written:
 
-- `apps/api/src/index.ts` exposes unauthenticated `POST /rooms`, `GET /ws/:roomId`, `/livekit/token`, and `/ice-servers`.
+- `apps/api/src/index.ts` exposed unauthenticated `POST /rooms`, `GET /ws/:roomId`, `/livekit/token`, and `/ice-servers`.
+- Superseded current state: commercial room creation, room-token WebSocket
+  joins, authenticated `/ice-servers`, and P2P-only media are now the active
+  paths; legacy `/livekit/token` has been removed.
 - `RoomDurableObject` trusts `JOIN.participant`.
 - `RoomState` chooses host based on first joined client.
 
@@ -78,7 +81,8 @@ Official docs checked:
 ## Non-Negotiable Safety Rules
 
 - Do not mix auth work into the current dirty P2P branch.
-- Do not expose `SUPABASE_SERVICE_ROLE_KEY`, `ANIDACHI_JWT_SECRET`, LiveKit secrets, or Cloudflare TURN credentials to the extension.
+- Do not expose `SUPABASE_SERVICE_ROLE_KEY`, `ANIDACHI_JWT_SECRET`, TURN
+  provider credentials, or other server-side secrets to the extension.
 - Do not read website HttpOnly cookies from content scripts.
 - Do not make the Worker trust `participant.id`, `displayName`, `avatarUrl`, or role from the extension in authenticated mode.
 - Do not keep guest/local prototype mode in the authenticated commercial path.
@@ -260,7 +264,9 @@ If the website will be merged into the monorepo, do it in a dedicated commit bef
 ### Worker/API Files to Modify
 
 - `apps/api/src/index.ts`
-  - Verify auth on `/rooms`, `/ws/:roomId`, and `/livekit/token` in authenticated mode.
+  - Historical note: this plan originally included `/livekit/token`; that route
+    has since been removed. Current media auth goes through room-token-protected
+    `/ice-servers`.
   - Keep an explicit dev fallback env flag for local prototype.
 
 - `apps/api/src/room-state.ts`

@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-06-27.
+Last updated: 2026-06-28.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -253,6 +253,9 @@ The extension currently supports:
 - Ghost Cam camera bubbles;
 - push-to-talk audio;
 - WebRTC P2P media with Cloudflare TURN fallback;
+- no active LiveKit/SFU media path: the legacy extension transport, Worker
+  `/livekit/token` route, local `infra/livekit` helper, and `livekit-client`
+  dependency have been removed;
 - local extension ICE fallback now includes Cloudflare STUN
   (`stun.cloudflare.com:3478` and `:53`) before Google STUN, so the
   unauthenticated/no-room-token path no longer depends on Google-only STUN;

@@ -31,8 +31,6 @@ apps/
   web/          Next.js site, auth, billing, room invite pages
 packages/
   protocol/     Shared Zod protocol, types, sync math
-infra/
-  livekit/      Historical local LiveKit helper, not the default media path
 docs/
   architecture.md
   experimental-features.md
@@ -73,9 +71,8 @@ Room creation is auth-only for the commercial product:
 
 ### Ghost Cam And Audio
 
-Ghost Cam and push-to-talk audio currently use WebRTC P2P with Cloudflare TURN
-fallback. LiveKit remains as historical/experimental fallback code, not the
-default commercial media path.
+Ghost Cam and push-to-talk audio use WebRTC P2P with Cloudflare TURN fallback.
+There is no active LiveKit/SFU fallback path in the current product.
 
 Ghost Cam publishes camera video:
 
@@ -127,8 +124,9 @@ API: https://anidachi-api-production.vladislav-gul7.workers.dev
 WS:  wss://anidachi-api-production.vladislav-gul7.workers.dev
 ```
 
-Current media transport is WebRTC P2P with Cloudflare TURN fallback. Old LiveKit
-notes are historical only; do not add new LiveKit credentials to the extension.
+Current media transport is WebRTC P2P with Cloudflare TURN fallback. Do not add
+LiveKit credentials, LiveKit token endpoints, or a second media transport unless
+the architecture is intentionally changed.
 
 The short operational source of truth for current URLs and release state is
 `docs/current-development-state.md`.
@@ -232,14 +230,6 @@ The Worker config lives at:
 
 ```txt
 apps/api/wrangler.toml
-```
-
-It contains public/non-secret config. Any LiveKit URL in this file is legacy
-fallback configuration and is not the default media path:
-
-```toml
-[vars]
-LIVEKIT_URL = "wss://anidachi-1vnsspf7.livekit.cloud"
 ```
 
 Secrets are set with Wrangler:
@@ -484,6 +474,5 @@ apps/extension/src/room-client.ts         WebSocket room client
 apps/api/src/index.ts                     Worker routes and Durable Object
 apps/api/src/room-state.ts                Room state and host assignment
 apps/api/src/ice-servers.ts               Cloudflare TURN credential generation
-apps/api/src/livekit-token.ts             Historical LiveKit token generation
 packages/protocol/src                     Shared room protocol and sync math
 ```

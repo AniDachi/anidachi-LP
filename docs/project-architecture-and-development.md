@@ -33,8 +33,6 @@ Read domain-specific documents when the task touches that area:
   behavior.
 - `docs/shared-watch-progress-tracker.md` for the planned watch progress model.
 - `apps/web/docs/seo-content-guidelines.md` for SEO/content pages.
-- `docs/livekit-aws-infrastructure-notes.md` only for historical LiveKit
-  research. LiveKit is not the current default media path.
 
 Historical execution plans live in `docs/superpowers/plans/`. They explain why
 some decisions happened, but they are not current instructions. They may contain
@@ -104,11 +102,6 @@ packages/
   protocol/
     Shared TypeScript and Zod schemas for room events, playback state, sync math,
     and cross-app data contracts.
-
-infra/
-  livekit/
-    Historical local LiveKit helper. Keep for reference only unless a future
-    decision explicitly reintroduces LiveKit.
 
 docs/
   Current architecture, release process, operational state, and historical plans.
@@ -372,12 +365,12 @@ Known media risk:
 - Do not treat P2P as fully finished until reconnect and failure handling are
   hardened.
 
-LiveKit:
+Media transport:
 
-- LiveKit was researched and used earlier for local/prototype media.
-- It is not the current default commercial media path.
-- Keep LiveKit notes as historical/fallback context unless the architecture is
-  intentionally changed.
+- Ghost Cam and push-to-talk audio use WebRTC P2P with Cloudflare TURN fallback.
+- Legacy LiveKit runtime code and local infrastructure have been removed.
+- Do not reintroduce LiveKit/SFU paths without an explicit product and
+  infrastructure decision.
 
 ## Watch Progress Direction
 

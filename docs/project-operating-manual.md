@@ -309,9 +309,9 @@ P2P is intended for small rooms, currently around 2-4 people. Do not raise the
 camera/audio room size without revisiting bandwidth, mesh topology, reconnection,
 and TURN cost.
 
-There is still historical LiveKit-related code and documentation in places. Do
-not build new work around LiveKit unless a deliberate product/infra decision
-brings it back.
+Legacy LiveKit runtime code has been removed. Do not reintroduce LiveKit or any
+SFU/media-server path unless a deliberate product/infra decision changes the
+current small-room P2P architecture.
 
 ## Extension Channels
 

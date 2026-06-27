@@ -8,8 +8,6 @@ export interface GhostVideo {
 
 export type LiveVoiceStatus = "idle" | "connecting" | "talking" | "error";
 
-export type MediaTransportName = "livekit" | "p2p";
-
 export interface IncomingP2PSignal {
   clientSignalId: string;
   fromUserId: string;
