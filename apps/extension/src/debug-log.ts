@@ -523,6 +523,7 @@ function compactDebugData(value: unknown): unknown {
     "remoteRelayProtocol",
     "direct",
     "usedTurn",
+    "roundTripTime",
     "iceRestartCount",
     "queued",
     "peerCount",

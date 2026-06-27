@@ -428,6 +428,7 @@ interface P2PPeer {
   ignoreOffer: boolean;
   isSettingRemoteAnswerPending: boolean;
   iceRestartCount: number;
+  lastCandidatePairLogKey: string | null;
   lastAudioStallRecoveryAt: number;
   lastIceRestartAt: number;
   lastIceRestartRequestAt: number;
@@ -1494,6 +1495,7 @@ export class P2PMediaController {
       ignoreOffer: false,
       isSettingRemoteAnswerPending: false,
       iceRestartCount: 0,
+      lastCandidatePairLogKey: null,
       lastAudioStallRecoveryAt: 0,
       lastIceRestartAt: 0,
       lastIceRestartRequestAt: 0,
@@ -2421,10 +2423,29 @@ export class P2PMediaController {
     }
 
     const summary = summarizeStats(report);
-    logDebug("p2p.stats", "connected candidate pair", {
-      localParticipantId: this.localParticipant.id,
-      remoteUserId: peer.remoteUserId,
-      summary,
+    const candidatePair = summarizeP2PCandidatePairTelemetry(summary);
+    if (!candidatePair) {
+      return;
+    }
+
+    const logKey = JSON.stringify({
+      iceRestartCount: peer.iceRestartCount,
+      direct: candidatePair.direct,
+      localCandidateType: candidatePair.localCandidateType,
+      remoteCandidateType: candidatePair.remoteCandidateType,
+      localProtocol: candidatePair.localProtocol,
+      remoteProtocol: candidatePair.remoteProtocol,
+      localRelayProtocol: candidatePair.localRelayProtocol,
+      remoteRelayProtocol: candidatePair.remoteRelayProtocol,
+    });
+    if (peer.lastCandidatePairLogKey === logKey) {
+      return;
+    }
+    peer.lastCandidatePairLogKey = logKey;
+
+    logDebug("p2p.ice", "selected candidate pair", {
+      iceRestartCount: peer.iceRestartCount,
+      ...candidatePair,
     });
   }
 }
@@ -2454,11 +2475,12 @@ function summarizeNetworkInformation(
   };
 }
 
-function createP2PRtcConfiguration(
+export function createP2PRtcConfiguration(
   iceServers: RTCIceServer[],
 ): RTCConfiguration {
   return {
     bundlePolicy: "max-bundle",
+    iceCandidatePoolSize: 2,
     iceTransportPolicy:
       import.meta.env.WXT_P2P_FORCE_RELAY === "true" ? "relay" : "all",
     iceServers,
@@ -2742,6 +2764,65 @@ function summarizeIceServers(
     hasUsername: Boolean(server.username),
     hasCredential: Boolean(server.credential),
   }));
+}
+
+export function summarizeP2PCandidatePairTelemetry(
+  statsSummary: Record<string, unknown>,
+): Record<string, unknown> | null {
+  const candidatePair = statsSummary.candidatePair;
+  if (!candidatePair || typeof candidatePair !== "object") {
+    return null;
+  }
+
+  const pair = candidatePair as Record<string, unknown>;
+  const localCandidateType = readStringStat(pair.localCandidateType);
+  const remoteCandidateType = readStringStat(pair.remoteCandidateType);
+  const usedTurn =
+    localCandidateType === "relay" || remoteCandidateType === "relay";
+  const hasCandidateType = Boolean(localCandidateType || remoteCandidateType);
+
+  const telemetry: Record<string, unknown> = {
+    usedTurn,
+  };
+  copyDefinedStat(telemetry, "direct", hasCandidateType ? !usedTurn : undefined);
+  copyDefinedStat(telemetry, "localCandidateType", localCandidateType);
+  copyDefinedStat(telemetry, "remoteCandidateType", remoteCandidateType);
+  copyDefinedStat(telemetry, "localProtocol", readStringStat(pair.localProtocol));
+  copyDefinedStat(telemetry, "remoteProtocol", readStringStat(pair.remoteProtocol));
+  copyDefinedStat(
+    telemetry,
+    "localRelayProtocol",
+    readStringStat(pair.localRelayProtocol),
+  );
+  copyDefinedStat(
+    telemetry,
+    "remoteRelayProtocol",
+    readStringStat(pair.remoteRelayProtocol),
+  );
+  copyDefinedStat(
+    telemetry,
+    "roundTripTime",
+    readNumberStat(pair.currentRoundTripTime),
+  );
+  return telemetry;
+}
+
+function copyDefinedStat(
+  target: Record<string, unknown>,
+  key: string,
+  value: unknown,
+): void {
+  if (value !== undefined) {
+    target[key] = value;
+  }
+}
+
+function readStringStat(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function readNumberStat(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function summarizeSignal(signal: P2PSignal): Record<string, unknown> {

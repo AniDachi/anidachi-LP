@@ -165,8 +165,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/debug-log.ts": {
-    "mtime": 1782507855.9190316,
-    "ast_hash": "5236275c44b08140221454d813ac61cb",
+    "mtime": 1782554627.978159,
+    "ast_hash": "8ad90cba3238af9e7c80604518f6fb63",
     "semantic_hash": ""
   },
   "apps/extension/src/debug-probe.ts": {
@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
-    "mtime": 1782553084.1899192,
-    "ast_hash": "14b48caf5716bef9aa76707db63b7838",
+    "mtime": 1782554723.243371,
+    "ast_hash": "6319be1118f2d3848864e6973ec30003",
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
-    "mtime": 1782549692.3611097,
-    "ast_hash": "a92fcd90e75d3135f23511f16e2d8acc",
+    "mtime": 1782554697.6546142,
+    "ast_hash": "aea9b13d1aa7cc7c785a494117306f3c",
     "semantic_hash": ""
   },
   "apps/extension/test/playback-control.test.ts": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1782553128.5140607,
-    "ast_hash": "a0c962b33f4701b668e84f63e10e4281",
+    "mtime": 1782554777.8334363,
+    "ast_hash": "6cc04fb5a8adb95bfae091c9be449360",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -1975,13 +1975,13 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": {
-    "mtime": 1782553150.2507203,
-    "ast_hash": "f2adcdec560ff9c9f73a5cb48ab90b53",
+    "mtime": 1782554803.1913579,
+    "ast_hash": "0a642406d5af9e294eca6489ebd98a15",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1782553178.920441,
-    "ast_hash": "c87b79000a0851f3f5a54ceb8f3e3949",
+    "mtime": 1782554831.4510524,
+    "ast_hash": "5042b8a82a6c6e5e0dddadd924de6289",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
@@ -2010,22 +2010,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1782553210.0235412,
+    "mtime": 1782554866.4887033,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1782553209.9879248,
+    "mtime": 1782554866.4542174,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1782553209.994001,
+    "mtime": 1782554866.4603164,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1782553209.9966671,
+    "mtime": 1782554866.46338,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },
