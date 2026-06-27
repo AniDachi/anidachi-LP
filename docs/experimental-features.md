@@ -75,9 +75,14 @@ Implementation:
 - Before ICE restart, the extension force-refreshes `/ice-servers`, applies the refreshed config
   with `RTCPeerConnection.setConfiguration()`, then renegotiates through the existing signaling
   path.
-- If Cloudflare TURN secrets are not configured or the endpoint is unreachable, the extension falls
-  back to build-time `WXT_P2P_ICE_SERVERS_JSON`, then direct STUN-only defaults. OpenRelay TURN is
-  opt-in only for local diagnostics and is not a production fallback.
+- If Cloudflare TURN secrets are not configured, local/non-relay development can
+  still use the direct STUN fallback. For authenticated room media with a
+  configured Cloudflare TURN Worker, transient Cloudflare credential-API
+  failures should be absorbed by the Worker hot cache or the extension's last
+  valid relay cache. The extension must not silently replace authenticated room
+  media with STUN-only defaults after a relay fetch failure unless the
+  build-time fallback itself includes TURN. OpenRelay TURN is opt-in only for
+  local diagnostics and is not a production fallback.
 
 Disable options:
 

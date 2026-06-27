@@ -257,6 +257,13 @@ The extension currently supports:
   STUN/TURN URL counts plus `hasTurn`/`hasTurns443`, and configured Cloudflare
   TURN responses fail closed if they collapse to STUN-only after browser-blocked
   TURN URLs are filtered;
+- Cloudflare TURN credential resilience: configured Workers keep a hot
+  module-level cache of the last valid short-lived Cloudflare ICE payload.
+  Fresh cached credentials are served without refetching, and a still-valid
+  cached relay payload is served if Cloudflare's credential API is temporarily
+  unavailable. Authenticated extension media setup no longer silently replaces a
+  failed relay fetch with STUN-only defaults unless a build-time fallback also
+  contains TURN;
 - debug SDP summaries now record negotiated codec/FEC/RTX signals so Teleparty-
   style production A/V choices can be compared against actual AniDachi browser
   behavior before changing topology;
@@ -308,7 +315,9 @@ These are intentionally not treated as solved:
   successful Cloudflare TURN relay run (`provider=cloudflare`,
   `configured=true`, `turns:443` present, selected pair is `relay`) plus
   two-network/two-profile staging acceptance are still required before treating
-  P2P as proven for users in different networks or countries.
+  P2P as proven for users in different networks or countries. The latest
+  server/client cache hardening removes one transient Cloudflare API failure
+  path, but it is not a substitute for a real relay run.
 - A market-readiness claim for video/audio additionally requires a real remote
   participant outside the local network/ISP path, with candidate type, TTFM,
   reconnect, audio, and push-to-talk results recorded. Same-network local tests

@@ -11,6 +11,7 @@ export interface IceServerEnv {
 }
 
 export interface IceServersPayload {
+  cache?: "fresh" | "stale-if-error";
   configured: boolean;
   iceServers: IceServer[];
   provider: "cloudflare" | "fallback";
@@ -31,6 +32,7 @@ const CLOUDFLARE_TURN_ENDPOINT = "https://rtc.live.cloudflare.com/v1/turn/keys";
 const DEFAULT_TURN_TTL_SECONDS = 12 * 60 * 60;
 const MIN_TURN_TTL_SECONDS = 10 * 60;
 const MAX_TURN_TTL_SECONDS = 24 * 60 * 60;
+const TURN_CACHE_SAFETY_MS = 5 * 60 * 1000;
 
 const FALLBACK_ICE_SERVERS: IceServer[] = [
   {
@@ -38,9 +40,18 @@ const FALLBACK_ICE_SERVERS: IceServer[] = [
   },
 ];
 
+interface CachedCloudflareIceServers {
+  expiresAtMs: number;
+  freshUntilMs: number;
+  keyId: string;
+  payload: IceServersPayload;
+}
+
 interface CloudflareIceServersResponse {
   iceServers?: unknown;
 }
+
+let cachedCloudflareIceServers: CachedCloudflareIceServers | null = null;
 
 export async function createIceServersPayload(
   env: IceServerEnv,
@@ -58,41 +69,66 @@ export async function createIceServersPayload(
     };
   }
 
-  const response = await fetcher(
-    `${CLOUDFLARE_TURN_ENDPOINT}/${env.CLOUDFLARE_TURN_KEY_ID}/credentials/generate-ice-servers`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${env.CLOUDFLARE_TURN_KEY_API_TOKEN}`,
-        "Content-Type": "application/json",
+  const now = Date.now();
+  const freshCachedPayload = readCachedCloudflarePayload(
+    env.CLOUDFLARE_TURN_KEY_ID,
+    now,
+    "fresh",
+  );
+  if (freshCachedPayload) {
+    return { ...freshCachedPayload, cache: "fresh" };
+  }
+
+  try {
+    const response = await fetcher(
+      `${CLOUDFLARE_TURN_ENDPOINT}/${env.CLOUDFLARE_TURN_KEY_ID}/credentials/generate-ice-servers`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${env.CLOUDFLARE_TURN_KEY_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ttl: ttlSeconds }),
       },
-      body: JSON.stringify({ ttl: ttlSeconds }),
-    },
-  );
+    );
 
-  if (!response.ok) {
-    throw new Error(`Cloudflare TURN credentials failed: ${response.status}`);
-  }
+    if (!response.ok) {
+      throw new Error(`Cloudflare TURN credentials failed: ${response.status}`);
+    }
 
-  const payload = (await response.json()) as CloudflareIceServersResponse;
-  const iceServers = dropEmptyIceServers(
-    filterBrowserBlockedTurnUrls(normalizeIceServers(payload.iceServers)),
-  );
-  if (!iceServers.length) {
-    throw new Error("Cloudflare TURN response did not include usable iceServers.");
-  }
-  const relay = summarizeIceServersRelay(iceServers);
-  if (!relay.hasTurn) {
-    throw new Error("Cloudflare TURN response did not include usable TURN URLs after filtering.");
-  }
+    const payload = (await response.json()) as CloudflareIceServersResponse;
+    const iceServers = dropEmptyIceServers(
+      filterBrowserBlockedTurnUrls(normalizeIceServers(payload.iceServers)),
+    );
+    if (!iceServers.length) {
+      throw new Error("Cloudflare TURN response did not include usable iceServers.");
+    }
+    const relay = summarizeIceServersRelay(iceServers);
+    if (!relay.hasTurn) {
+      throw new Error("Cloudflare TURN response did not include usable TURN URLs after filtering.");
+    }
 
-  return {
-    configured: true,
-    iceServers,
-    provider: "cloudflare",
-    relay,
-    ttlSeconds,
-  };
+    const iceServersPayload = {
+      configured: true,
+      iceServers,
+      provider: "cloudflare" as const,
+      relay,
+      ttlSeconds,
+    };
+    writeCachedCloudflarePayload(env.CLOUDFLARE_TURN_KEY_ID, iceServersPayload, now);
+    return iceServersPayload;
+  } catch (error) {
+    const validCachedPayload = readCachedCloudflarePayload(
+      env.CLOUDFLARE_TURN_KEY_ID,
+      now,
+      "valid",
+    );
+    if (validCachedPayload) {
+      return { ...validCachedPayload, cache: "stale-if-error" };
+    }
+
+    throw error;
+  }
 }
 
 export function parseTurnTtlSeconds(value: string | undefined): number {
@@ -192,4 +228,53 @@ export function summarizeIceServersRelay(servers: IceServer[]): IceServersRelayS
 
 function getIceServerUrls(server: IceServer): string[] {
   return Array.isArray(server.urls) ? server.urls : [server.urls];
+}
+
+function readCachedCloudflarePayload(
+  keyId: string,
+  nowMs: number,
+  mode: "fresh" | "valid",
+): IceServersPayload | null {
+  if (!cachedCloudflareIceServers || cachedCloudflareIceServers.keyId !== keyId) {
+    return null;
+  }
+
+  const validUntilMs =
+    mode === "fresh"
+      ? cachedCloudflareIceServers.freshUntilMs
+      : cachedCloudflareIceServers.expiresAtMs;
+  if (validUntilMs <= nowMs) {
+    return null;
+  }
+
+  return cloneIceServersPayload(cachedCloudflareIceServers.payload);
+}
+
+function writeCachedCloudflarePayload(
+  keyId: string,
+  payload: IceServersPayload,
+  nowMs: number,
+): void {
+  const expiresAtMs = nowMs + payload.ttlSeconds * 1000;
+  cachedCloudflareIceServers = {
+    expiresAtMs,
+    freshUntilMs: Math.max(nowMs, expiresAtMs - TURN_CACHE_SAFETY_MS),
+    keyId,
+    payload: cloneIceServersPayload(payload),
+  };
+}
+
+function cloneIceServersPayload(payload: IceServersPayload): IceServersPayload {
+  return {
+    ...payload,
+    iceServers: payload.iceServers.map((server) => ({
+      ...server,
+      urls: Array.isArray(server.urls) ? [...server.urls] : server.urls,
+    })),
+    relay: { ...payload.relay },
+  };
+}
+
+export function clearIceServersCacheForTest(): void {
+  cachedCloudflareIceServers = null;
 }
