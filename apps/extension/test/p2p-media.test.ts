@@ -18,6 +18,7 @@ import {
   selectP2PMediaParticipants,
   shouldProactivelyRestartIceForNetworkSignal,
   shouldInitiateP2POffers,
+  summarizeStats,
   summarizeP2PCandidatePairTelemetry,
   summarizeP2PCodecPreferenceOrder,
   summarizeP2PSdp,
@@ -33,6 +34,10 @@ function participant(id: string, cameraEnabled = false): Participant {
     syncStatus: "unknown",
     lastSeenAt: 1,
   };
+}
+
+function statsReportFrom(stats: Array<{ id: string } & Record<string, unknown>>): RTCStatsReport {
+  return new Map(stats.map((stat) => [stat.id, stat])) as unknown as RTCStatsReport;
 }
 
 describe("P2P perfect negotiation role helpers", () => {
@@ -549,7 +554,7 @@ describe("P2P remote video activity classification", () => {
     ).toBe("missing");
   });
 
-  it("uses decoded frames as the authoritative remote-video flow signal when available", () => {
+  it("uses decoded frames as a remote-video flow signal when available", () => {
     expect(
       classifyRemoteVideoActivity(
         { framesDecoded: 10, bytesReceived: 10_000 },
@@ -558,6 +563,9 @@ describe("P2P remote video activity classification", () => {
         "connected",
       ),
     ).toBe("flowing");
+  });
+
+  it("treats byte movement as flowing when the frame counter is temporarily stale", () => {
     expect(
       classifyRemoteVideoActivity(
         { framesDecoded: 10, bytesReceived: 10_000 },
@@ -565,7 +573,7 @@ describe("P2P remote video activity classification", () => {
         true,
         "connected",
       ),
-    ).toBe("stalled");
+    ).toBe("flowing");
   });
 
   it("falls back to bytes when decoded frame counters are unavailable", () => {
@@ -588,6 +596,35 @@ describe("P2P remote video activity classification", () => {
         "connected",
       ),
     ).toBe("stalled");
+  });
+
+  it("aggregates multiple inbound video RTP stats instead of letting a stale stat hide flow", () => {
+    const summary = summarizeStats(
+      statsReportFrom([
+        {
+          id: "active-video",
+          type: "inbound-rtp",
+          kind: "video",
+          bytesReceived: 5_000,
+          framesDecoded: 12,
+          framesPerSecond: 10,
+        },
+        {
+          id: "stale-video",
+          type: "inbound-rtp",
+          kind: "video",
+          bytesReceived: 200,
+          framesDecoded: 0,
+          framesPerSecond: 0,
+        },
+      ]),
+    );
+
+    expect(summary.videoInbound).toEqual({
+      bytesReceived: 5_200,
+      framesDecoded: 12,
+      framesPerSecond: 10,
+    });
   });
 });
 

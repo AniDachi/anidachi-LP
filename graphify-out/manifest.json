@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
-    "mtime": 1782554723.243371,
-    "ast_hash": "6319be1118f2d3848864e6973ec30003",
+    "mtime": 1782559388.9460027,
+    "ast_hash": "346b4a61f0604fb4d8f6ff6513b9f3c5",
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
-    "mtime": 1782554697.6546142,
-    "ast_hash": "aea9b13d1aa7cc7c785a494117306f3c",
+    "mtime": 1782559417.4896307,
+    "ast_hash": "e9a2cd38a3033de796bb839367555adf",
     "semantic_hash": ""
   },
   "apps/extension/test/playback-control.test.ts": {
@@ -1975,8 +1975,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": {
-    "mtime": 1782554803.1913579,
-    "ast_hash": "0a642406d5af9e294eca6489ebd98a15",
+    "mtime": 1782559664.5943825,
+    "ast_hash": "21f3de844b9f56e40951939c297b5732",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
@@ -2010,22 +2010,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1782554866.4887033,
+    "mtime": 1782559478.0764997,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1782554866.4542174,
+    "mtime": 1782559478.040099,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1782554866.4603164,
+    "mtime": 1782559478.0466015,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1782554866.46338,
+    "mtime": 1782559478.0494668,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },
