@@ -31,19 +31,17 @@ atomic animation runs.
 
 ## P2P Media Transport
 
-Status: experimental, enabled by default in local/public extension builds as of the P2P media test
-branch.
+Status: active media path for room Ghost Cam and push-to-talk audio.
 
-Purpose: test whether Anidachi can avoid LiveKit/SFU media costs for the intended small-room case
-of up to 4 participants. Playback sync, reactions, rooms, and signaling still use the Cloudflare
-Durable Object. Camera and push-to-talk audio are exchanged directly between browsers through
-WebRTC peer connections.
+Purpose: keep AniDachi media lightweight for the intended small-room case of up to 4 participants.
+Playback sync, reactions, rooms, and signaling use the Cloudflare Durable Object. Camera and
+push-to-talk audio are exchanged directly between browsers through WebRTC peer connections, with
+Cloudflare TURN as the fallback when direct connectivity fails.
 
 Implementation:
 
-- Config lives in `apps/extension/src/experiments.ts`.
 - P2P media controller lives in `apps/extension/src/p2p-media.ts`.
-- `apps/extension/src/ghost-cam.ts` chooses between `p2p` and `livekit`.
+- `apps/extension/src/ghost-cam.ts` owns the P2P media session lifecycle.
 - Targeted signaling is typed in `packages/protocol/src/types.ts` as `P2P_SIGNAL`.
 - Durable Object forwards `P2P_SIGNAL` only between joined participants, assigns `serverSeq`, and
   keeps a bounded short-lived replay buffer for reload/rejoin timing.
@@ -84,10 +82,8 @@ Implementation:
   build-time fallback itself includes TURN. OpenRelay TURN is opt-in only for
   local diagnostics and is not a production fallback.
 
-Disable options:
+Diagnostic options:
 
-- Build-time default: set `WXT_MEDIA_TRANSPORT=livekit` before building the extension.
-- Runtime/internal override: set WXT storage key `local:experiment:mediaTransport` to `livekit`.
 - Enable the bundled best-effort OpenRelay TURN attempt only for local diagnostics with
   `WXT_P2P_ENABLE_OPEN_RELAY_TURN=true`.
 - Force all P2P media through TURN during diagnostics with `WXT_P2P_FORCE_RELAY=true`.

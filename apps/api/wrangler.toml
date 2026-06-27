@@ -4,7 +4,6 @@ compatibility_date = "2026-05-23"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-LIVEKIT_URL = "wss://anidachi-1vnsspf7.livekit.cloud"
 ANIDACHI_ENV = "local"
 
 [[durable_objects.bindings]]
@@ -24,7 +23,6 @@ name = "anidachi-api-staging"
 workers_dev = true
 
 [env.staging.vars]
-LIVEKIT_URL = "wss://anidachi-1vnsspf7.livekit.cloud"
 ANIDACHI_ENV = "staging"
 
 [[env.staging.durable_objects.bindings]]
@@ -40,7 +38,6 @@ name = "anidachi-api-production"
 workers_dev = true
 
 [env.production.vars]
-LIVEKIT_URL = "wss://anidachi-1vnsspf7.livekit.cloud"
 ANIDACHI_ENV = "production"
 
 [[env.production.durable_objects.bindings]]

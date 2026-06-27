@@ -90,7 +90,6 @@ function GhostCamHarness({
     roomToken: "token-1",
     sendP2PSignal: noopSendP2PSignal,
     sourceGeneration: 1,
-    transport: "p2p",
     voiceTalkActive: false,
   });
   return null;

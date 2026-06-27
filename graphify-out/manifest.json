@@ -20,8 +20,8 @@
     "semantic_hash": ""
   },
   "apps/api/src/index.ts": {
-    "mtime": 1782510695.0482311,
-    "ast_hash": "8e5b1863f946af8f3deacced61964486",
+    "mtime": 1782588983.185563,
+    "ast_hash": "1bf550e1c79d0dff3f77b7a1bf7bd6eb",
     "semantic_hash": ""
   },
   "apps/api/src/p2p-signal-buffer.ts": {
@@ -110,8 +110,8 @@
     "semantic_hash": ""
   },
   "apps/extension/package.json": {
-    "mtime": 1782166634.675679,
-    "ast_hash": "420469eb662a3ae31b532343e7161b38",
+    "mtime": 1782589082.7762938,
+    "ast_hash": "89400352814b99065146e8759922c109",
     "semantic_hash": ""
   },
   "apps/extension/src/anidachi-launch-intent.ts": {
@@ -175,13 +175,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/env.d.ts": {
-    "mtime": 1780569657.3915632,
-    "ast_hash": "556e71ca442dd2bd60372a87b0c516d2",
+    "mtime": 1782588941.753343,
+    "ast_hash": "988b0e2b710d0f7bc7db9954ce31a24b",
     "semantic_hash": ""
   },
   "apps/extension/src/experiments.ts": {
-    "mtime": 1780509466.0715637,
-    "ast_hash": "f36bd03e9edd807d5ad2feb6767eeb2e",
+    "mtime": 1782588775.7748394,
+    "ast_hash": "704e09dde5d4a179bebf32d06f356c67",
     "semantic_hash": ""
   },
   "apps/extension/src/ghost-cam-size.ts": {
@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/ghost-cam.ts": {
-    "mtime": 1782587299.5476692,
-    "ast_hash": "1456ccb702a7d093ca1acfe53954652c",
+    "mtime": 1782588693.5253053,
+    "ast_hash": "cb920b25dcb64ffd3217a7cd630c1bd5",
     "semantic_hash": ""
   },
   "apps/extension/src/hotkeys.ts": {
@@ -205,8 +205,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/media-types.ts": {
-    "mtime": 1782526508.848558,
-    "ast_hash": "1482372038f17ad1b869f29a3f898813",
+    "mtime": 1782588739.071162,
+    "ast_hash": "f109b886d49cf9ef01d32da91f6748dd",
     "semantic_hash": ""
   },
   "apps/extension/src/message-composer-events.ts": {
@@ -215,8 +215,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1782507832.880463,
-    "ast_hash": "9758cca9ee5f85eaf2813921f4551ec7",
+    "mtime": 1782588891.129739,
+    "ast_hash": "d0980654bf96ebcc474aeb86c8198104",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-mount.ts": {
@@ -1875,8 +1875,8 @@
     "semantic_hash": ""
   },
   "docs/architecture.md": {
-    "mtime": 1780761017.5869126,
-    "ast_hash": "0152b76d0ae693aa5969d13e1c2072dd",
+    "mtime": 1782589275.8105512,
+    "ast_hash": "cfdbf85c58d6ec8902249199c83d9087",
     "semantic_hash": ""
   },
   "docs/crunchyroll-adapter-notes.md": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1782554777.8334363,
-    "ast_hash": "6cc04fb5a8adb95bfae091c9be449360",
+    "mtime": 1782589667.1365275,
+    "ast_hash": "ac3ca125dd8be9a3efbc7845a92b90d9",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -1895,13 +1895,13 @@
     "semantic_hash": ""
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1782160784.8544586,
-    "ast_hash": "19692350849b2199e5a365812a5594db",
+    "mtime": 1782589233.0291245,
+    "ast_hash": "a44671ca47636ff4ae9f6e464f529468",
     "semantic_hash": ""
   },
   "docs/experimental-features.md": {
-    "mtime": 1782546325.6238914,
-    "ast_hash": "0227e1e705fce80bf46365496591a179",
+    "mtime": 1782589433.47026,
+    "ast_hash": "349c1f6db9421f91fba5dc7888d11ed5",
     "semantic_hash": ""
   },
   "docs/extension-release-channels.md": {
@@ -1909,14 +1909,9 @@
     "ast_hash": "0f833f7c1920523780a9310e762b10e8",
     "semantic_hash": ""
   },
-  "docs/livekit-aws-infrastructure-notes.md": {
-    "mtime": 1780761021.8488677,
-    "ast_hash": "0056ebf8805947965f116099ddfa8484",
-    "semantic_hash": ""
-  },
   "docs/project-architecture-and-development.md": {
-    "mtime": 1782226129.6365156,
-    "ast_hash": "599cce1099fa240a5c9bf2a19af006da",
+    "mtime": 1782589310.3568418,
+    "ast_hash": "9dbc7efb2e2b0f314fbd16d839be0e00",
     "semantic_hash": ""
   },
   "docs/project-knowledge-map.md": {
@@ -1925,8 +1920,8 @@
     "semantic_hash": ""
   },
   "docs/project-operating-manual.md": {
-    "mtime": 1782160784.854905,
-    "ast_hash": "9eaddb08c0b45549044d5d3323c565c3",
+    "mtime": 1782589253.1511161,
+    "ast_hash": "64d594a62c7a94616b318fee774833c1",
     "semantic_hash": ""
   },
   "docs/release-and-rollback-runbook.md": {
@@ -1940,8 +1935,8 @@
     "semantic_hash": ""
   },
   "docs/site-extension-integration-notes.md": {
-    "mtime": 1782160784.8552446,
-    "ast_hash": "48ce4601efe8405dea228148cbe4f06f",
+    "mtime": 1782589408.2521272,
+    "ast_hash": "0480ca8510b6decd0f2274e6eeffb1f6",
     "semantic_hash": ""
   },
   "docs/staging-acceptance-checklist.md": {
@@ -1955,13 +1950,13 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-02-auth-integration.md": {
-    "mtime": 1780509466.0991488,
-    "ast_hash": "1e2762cc3839a5bea516d24722957dab",
+    "mtime": 1782589899.6680822,
+    "ast_hash": "46c5574b569ba12944ca126f5da99332",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md": {
-    "mtime": 1782160784.8555257,
-    "ast_hash": "f1cd99304bdd7d262bf785f0b573c07f",
+    "mtime": 1782589959.555395,
+    "ast_hash": "2a0ce05128805b0fe268edf71e7136a0",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-03-main-repository-monorepo-migration.md": {
@@ -1980,8 +1975,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1782587439.4343274,
-    "ast_hash": "261b7dd6307d28d91d32f2e2e0ed0eb7",
+    "mtime": 1782589791.2591677,
+    "ast_hash": "3b3839d082e7272a478c345d0294efbb",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
@@ -1992,11 +1987,6 @@
   "docs/superpowers/plans/README.md": {
     "mtime": 1782160784.8569417,
     "ast_hash": "fba61065576adeeb1f3af000925ebc62",
-    "semantic_hash": ""
-  },
-  "infra/livekit/docker-compose.yml": {
-    "mtime": 1780509466.0997133,
-    "ast_hash": "ccadc42648685f52df333cc4733409bc",
     "semantic_hash": ""
   },
   "pnpm-workspace.yaml": {
@@ -2010,22 +2000,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1782587479.1050594,
+    "mtime": 1782590491.9589238,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1782587479.071763,
+    "mtime": 1782590491.9260743,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1782587479.0776863,
+    "mtime": 1782590491.9318893,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1782587479.080442,
+    "mtime": 1782590491.934588,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },
@@ -2770,8 +2760,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/ghost-cam.test.tsx": {
-    "mtime": 1782587342.1574702,
-    "ast_hash": "9542890e3c314c5dda595808bd97e3bd",
+    "mtime": 1782590192.656474,
+    "ast_hash": "f8ffb24baa855c5640c3e845f00d5847",
     "semantic_hash": ""
   },
   "apps/web/lib/middleware-routes.test.ts": {
@@ -2782,6 +2772,11 @@
   "apps/web/lib/middleware-routes.ts": {
     "mtime": 1782585173.5518804,
     "ast_hash": "bc67451d619f6b28d60fa96a70857968",
+    "semantic_hash": ""
+  },
+  "apps/api/test/routes.test.ts": {
+    "mtime": 1782589576.3232052,
+    "ast_hash": "9409712c7d51c1b5c48a0a010dde214a",
     "semantic_hash": ""
   }
 }

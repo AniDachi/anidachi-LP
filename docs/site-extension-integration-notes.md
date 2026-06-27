@@ -162,13 +162,10 @@ apps/extension
 
 apps/api
   Cloudflare Worker, Durable Objects, WebSocket realtime room engine,
-  LiveKit token endpoint
+  P2P signaling, room presence, and authenticated ICE/TURN access
 
 Supabase Postgres
   durable user/profile/room/friend/session data
-
-LiveKit
-  camera and optional push-to-talk audio tracks only
 ```
 
 Recommended repo direction:
@@ -223,8 +220,7 @@ Needed changes:
 - Verify JWTs in the Worker.
 - Build the `Participant` server-side from the verified user.
 - Never trust `participant.id`, `displayName`, or `avatarUrl` from the client.
-- Require room membership before issuing LiveKit tokens.
-- Use verified `userId` as LiveKit identity.
+- Require a valid room token before issuing ICE/TURN credentials.
 - Link every Worker room to a Supabase `rooms.room_id`.
 
 Current MVP path:
@@ -290,8 +286,8 @@ Security rules:
 Important:
 
 - The extension must never contain Supabase service-role credentials.
-- The extension must never contain LiveKit API secrets.
-- LiveKit tokens must be generated server-side.
+- The extension must never contain TURN provider secrets, service-role
+  credentials, or server-side signing secrets.
 - Room WebSocket joins must verify room membership.
 - Extension auth codes must be one-time and short-lived.
 - Access tokens should stay short-lived.
@@ -327,11 +323,11 @@ Phase 3: authenticated rooms
 - Add room token verification for WebSocket connect.
 - Make Durable Object derive participant identity from verified token.
 
-Phase 4: LiveKit protection
+Phase 4: Media transport protection
 
-- Require auth and membership on `/livekit/token`.
-- Use verified user id as LiveKit identity.
-- Include display name/avatar metadata from profile.
+- Require a valid room token and room id on `/ice-servers`.
+- Keep WebRTC P2P as the only active Ghost Cam / push-to-talk media path.
+- Keep TURN credentials short-lived and generated server-side.
 
 Phase 5: social product layer
 
