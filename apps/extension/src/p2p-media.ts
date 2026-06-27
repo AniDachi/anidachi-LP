@@ -328,6 +328,10 @@ interface VideoActivityStats {
   framesDecoded?: number;
 }
 
+interface VideoInboundStats extends VideoActivityStats {
+  framesPerSecond?: number;
+}
+
 export type RemoteVideoActivity =
   | "flowing"
   | "missing"
@@ -368,14 +372,15 @@ export function classifyRemoteVideoActivity(
       ? current.bytesReceived - previous.bytesReceived
       : undefined;
 
-  if (typeof frameDelta === "number") {
-    return frameDelta >= P2P_VIDEO_ACTIVITY_MIN_FRAME_DELTA
-      ? "flowing"
-      : "stalled";
+  if (
+    typeof byteDelta === "number" &&
+    byteDelta >= P2P_VIDEO_ACTIVITY_MIN_BYTE_DELTA
+  ) {
+    return "flowing";
   }
 
-  if (typeof byteDelta === "number") {
-    return byteDelta >= P2P_VIDEO_ACTIVITY_MIN_BYTE_DELTA
+  if (typeof frameDelta === "number") {
+    return frameDelta >= P2P_VIDEO_ACTIVITY_MIN_FRAME_DELTA
       ? "flowing"
       : "stalled";
   }
@@ -1236,6 +1241,18 @@ export class P2PMediaController {
       return;
     }
 
+    if (activity === "stalled") {
+      logDebug("p2p.video", "remote video stalled without transport recovery", {
+        localParticipantId: this.localParticipant.id,
+        remoteUserId: peer.remoteUserId,
+        expected: peer.remoteVideoExpected,
+        connectionState: peer.pc.connectionState,
+        iceConnectionState: peer.pc.iceConnectionState,
+        stats: current ?? null,
+      });
+      return;
+    }
+
     peer.remoteVideoStallSamples += 1;
     logDebug("p2p.video", "remote video not flowing", {
       localParticipantId: this.localParticipant.id,
@@ -1264,13 +1281,13 @@ export class P2PMediaController {
 
     peer.lastMediaStallRecoveryAt = now;
     peer.remoteVideoStallSamples = 0;
-    logDebug("p2p.video", "recover stalled remote video", {
+    logDebug("p2p.video", "recover missing remote video", {
       localParticipantId: this.localParticipant.id,
       remoteUserId: peer.remoteUserId,
       activity,
-      reason: "video-stall",
+      reason: "video-missing",
     });
-    void this.restartPeerIce(peer, `media-stall:${activity}`);
+    this.queueNegotiation(peer, `media-missing:${activity}`);
   }
 
   private updateRemoteAudioActivityFromStats(
@@ -1653,6 +1670,9 @@ export class P2PMediaController {
       });
 
       if (event.track.kind === "video") {
+        peer.remoteVideoStallSamples = 0;
+        this.remoteVideoActivityByPeer.set(remoteUserId, "unknown");
+        this.remoteVideoStatsByPeer.delete(remoteUserId);
         this.upsertVideo({
           participantId: remoteUserId,
           element: createVideoElement(stream, false),
@@ -3070,7 +3090,41 @@ async function configureSender(
   await sender.setParameters(parameters).catch(() => undefined);
 }
 
-function summarizeStats(report: RTCStatsReport): Record<string, unknown> {
+function addOptionalNumbers(
+  left: number | undefined,
+  right: number | undefined,
+): number | undefined {
+  if (typeof left === "number" && typeof right === "number") {
+    return left + right;
+  }
+  return typeof left === "number" ? left : right;
+}
+
+function maxOptionalNumbers(
+  left: number | undefined,
+  right: number | undefined,
+): number | undefined {
+  if (typeof left === "number" && typeof right === "number") {
+    return Math.max(left, right);
+  }
+  return typeof left === "number" ? left : right;
+}
+
+function mergeVideoInboundStats(
+  current: VideoInboundStats | undefined,
+  next: VideoInboundStats,
+): VideoInboundStats {
+  return {
+    bytesReceived: addOptionalNumbers(current?.bytesReceived, next.bytesReceived),
+    framesDecoded: addOptionalNumbers(current?.framesDecoded, next.framesDecoded),
+    framesPerSecond: maxOptionalNumbers(
+      current?.framesPerSecond,
+      next.framesPerSecond,
+    ),
+  };
+}
+
+export function summarizeStats(report: RTCStatsReport): Record<string, unknown> {
   const summary: Record<string, unknown> = {};
   for (const stat of report.values()) {
     if (stat.type === "candidate-pair" && stat.state === "succeeded") {
@@ -3109,11 +3163,14 @@ function summarizeStats(report: RTCStatsReport): Record<string, unknown> {
     }
 
     if (stat.type === "inbound-rtp" && stat.kind === "video") {
-      summary.videoInbound = {
-        bytesReceived: stat.bytesReceived,
-        framesPerSecond: stat.framesPerSecond,
-        framesDecoded: stat.framesDecoded,
-      };
+      summary.videoInbound = mergeVideoInboundStats(
+        summary.videoInbound as VideoInboundStats | undefined,
+        {
+          bytesReceived: stat.bytesReceived,
+          framesPerSecond: stat.framesPerSecond,
+          framesDecoded: stat.framesDecoded,
+        },
+      );
     }
 
     if (stat.type === "outbound-rtp" && stat.kind === "audio") {
