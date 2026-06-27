@@ -253,6 +253,9 @@ The extension currently supports:
 - Ghost Cam camera bubbles;
 - push-to-talk audio;
 - WebRTC P2P media with Cloudflare TURN fallback;
+- local extension ICE fallback now includes Cloudflare STUN
+  (`stun.cloudflare.com:3478` and `:53`) before Google STUN, so the
+  unauthenticated/no-room-token path no longer depends on Google-only STUN;
 - `/ice-servers` relay readiness diagnostics: Worker responses expose safe
   STUN/TURN URL counts plus `hasTurn`/`hasTurns443`, and configured Cloudflare
   TURN responses fail closed if they collapse to STUN-only after browser-blocked

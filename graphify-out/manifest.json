@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
-    "mtime": 1782549754.7591999,
-    "ast_hash": "33efc1f1969f3dd78aa8cf728fc3dc9f",
+    "mtime": 1782553084.1899192,
+    "ast_hash": "14b48caf5716bef9aa76707db63b7838",
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
@@ -330,8 +330,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-ice.test.ts": {
-    "mtime": 1782546027.7390401,
-    "ast_hash": "c962c6a8d4efdac115124224d28c1d8f",
+    "mtime": 1782553098.695496,
+    "ast_hash": "d742d00d9d111645b0dfd541e17d572f",
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1782549879.6861694,
-    "ast_hash": "fa18acd6ddd6af138e35d6512af50f67",
+    "mtime": 1782553128.5140607,
+    "ast_hash": "a0c962b33f4701b668e84f63e10e4281",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -1975,13 +1975,13 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": {
-    "mtime": 1782549940.4104497,
-    "ast_hash": "cd9f2ee02f80d1922f98871699593ec2",
+    "mtime": 1782553150.2507203,
+    "ast_hash": "f2adcdec560ff9c9f73a5cb48ab90b53",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1782549916.2456615,
-    "ast_hash": "29de01ca464fc562ddf0512961901761",
+    "mtime": 1782553178.920441,
+    "ast_hash": "c87b79000a0851f3f5a54ceb8f3e3949",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
@@ -2010,22 +2010,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1782550039.3217862,
+    "mtime": 1782553210.0235412,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1782550039.289707,
+    "mtime": 1782553209.9879248,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1782550039.295286,
+    "mtime": 1782553209.994001,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1782550039.2977822,
+    "mtime": 1782553209.9966671,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },
