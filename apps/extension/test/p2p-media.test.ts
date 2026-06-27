@@ -5,6 +5,7 @@ import {
   classifyRemoteAudioFlowActivity,
   classifyRemoteVideoActivity,
   classifyPeerHealth,
+  createP2PRtcConfiguration,
   createP2PMediaSignalDedupeKey,
   decideP2PIceRestart,
   enableP2POpusDtxAndInbandFec,
@@ -17,6 +18,7 @@ import {
   selectP2PMediaParticipants,
   shouldProactivelyRestartIceForNetworkSignal,
   shouldInitiateP2POffers,
+  summarizeP2PCandidatePairTelemetry,
   summarizeP2PCodecPreferenceOrder,
   summarizeP2PSdp,
 } from "../src/p2p-media";
@@ -105,6 +107,74 @@ describe("P2P network recovery decision", () => {
     expect(
       shouldProactivelyRestartIceForNetworkSignal("connection-change", false),
     ).toBe(false);
+  });
+});
+
+describe("P2P RTC configuration", () => {
+  it("keeps normal ICE policy direct-first while pre-gathering candidates", () => {
+    const iceServers = [{ urls: "stun:stun.cloudflare.com:3478" }];
+
+    expect(createP2PRtcConfiguration(iceServers)).toEqual({
+      bundlePolicy: "max-bundle",
+      iceCandidatePoolSize: 2,
+      iceTransportPolicy: "all",
+      iceServers,
+      rtcpMuxPolicy: "require",
+    });
+  });
+});
+
+describe("P2P candidate pair telemetry", () => {
+  it("summarizes direct candidate pairs without network addresses", () => {
+    expect(
+      summarizeP2PCandidatePairTelemetry({
+        candidatePair: {
+          currentRoundTripTime: 0.042,
+          localCandidateType: "host",
+          localProtocol: "udp",
+          remoteCandidateType: "srflx",
+          remoteProtocol: "udp",
+        },
+      }),
+    ).toEqual({
+      direct: true,
+      usedTurn: false,
+      localCandidateType: "host",
+      remoteCandidateType: "srflx",
+      localProtocol: "udp",
+      remoteProtocol: "udp",
+      roundTripTime: 0.042,
+    });
+  });
+
+  it("marks relay candidate pairs as TURN-backed without exposing candidates", () => {
+    expect(
+      summarizeP2PCandidatePairTelemetry({
+        candidatePair: {
+          currentRoundTripTime: 0.12,
+          localCandidateType: "relay",
+          localProtocol: "tcp",
+          localRelayProtocol: "tls",
+          remoteCandidateType: "relay",
+          remoteProtocol: "tcp",
+          remoteRelayProtocol: "tls",
+        },
+      }),
+    ).toEqual({
+      direct: false,
+      usedTurn: true,
+      localCandidateType: "relay",
+      remoteCandidateType: "relay",
+      localProtocol: "tcp",
+      remoteProtocol: "tcp",
+      localRelayProtocol: "tls",
+      remoteRelayProtocol: "tls",
+      roundTripTime: 0.12,
+    });
+  });
+
+  it("returns null until WebRTC exposes a selected candidate pair", () => {
+    expect(summarizeP2PCandidatePairTelemetry({})).toBeNull();
   });
 });
 

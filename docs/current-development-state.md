@@ -256,6 +256,10 @@ The extension currently supports:
 - local extension ICE fallback now includes Cloudflare STUN
   (`stun.cloudflare.com:3478` and `:53`) before Google STUN, so the
   unauthenticated/no-room-token path no longer depends on Google-only STUN;
+- P2P peer connections use `iceCandidatePoolSize: 2` with normal
+  `iceTransportPolicy: "all"` outside explicit relay diagnostics, and the
+  selected candidate pair is logged as compact direct-vs-relay telemetry without
+  candidate strings, IPs, URLs, or participant ids;
 - `/ice-servers` relay readiness diagnostics: Worker responses expose safe
   STUN/TURN URL counts plus `hasTurn`/`hasTurns443`, and configured Cloudflare
   TURN responses fail closed if they collapse to STUN-only after browser-blocked
