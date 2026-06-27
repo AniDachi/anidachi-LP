@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
-    "mtime": 1782534081.8720617,
-    "ast_hash": "8b3b2f3570de321f7cb6f565eafdef46",
+    "mtime": 1782537375.9909935,
+    "ast_hash": "67bf410fae73646fb9a6494d94df9b3c",
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
-    "mtime": 1782534206.0478878,
-    "ast_hash": "b5edb1b25040c1a544b1ecf73a28e100",
+    "mtime": 1782537396.4578004,
+    "ast_hash": "bcbd547272a025660d8782d74789fabf",
     "semantic_hash": ""
   },
   "apps/extension/test/playback-control.test.ts": {
@@ -1745,13 +1745,13 @@
     "semantic_hash": ""
   },
   "tests/e2e/harness-entry.ts": {
-    "mtime": 1782515169.05494,
-    "ast_hash": "4a11344998f1912f3654a48c38d28deb",
+    "mtime": 1782537807.5187404,
+    "ast_hash": "86adbc176a65824f5562c493d339293b",
     "semantic_hash": ""
   },
   "tests/e2e/p2p-media-harness.mjs": {
-    "mtime": 1782527933.4860864,
-    "ast_hash": "b1e79506df123b1f0270e15f3451aa52",
+    "mtime": 1782537237.9679413,
+    "ast_hash": "3e068712f9473c1f2910d49f41dd65e7",
     "semantic_hash": ""
   },
   "tests/e2e/package.json": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1782534678.1306708,
-    "ast_hash": "31163f534caff14a31d5272d4f89e128",
+    "mtime": 1782537581.8278632,
+    "ast_hash": "4721269d2699d2a24e3f0ac29bcf7748",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -1975,13 +1975,13 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": {
-    "mtime": 1782534705.3387058,
-    "ast_hash": "84d3b83732a1c1952216992f319b1ab4",
+    "mtime": 1782538019.8838716,
+    "ast_hash": "6da2f2500fecc418f100dfbde6559ae0",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1782534737.4840758,
-    "ast_hash": "944dcb01219cb822c3084aea1f1b56cc",
+    "mtime": 1782538048.5545192,
+    "ast_hash": "51a8014cc85d418b8dc9fbb84c29b65e",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {

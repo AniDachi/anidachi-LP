@@ -274,9 +274,10 @@ The extension currently supports:
 - proactive P2P ICE recovery on browser `online` and Network Information
   `change` signals, covered by the real-WebRTC short network-loss harness;
 - automatic remote-video stall recovery: expected connected remote video is
-  checked through inbound WebRTC `framesDecoded`/`bytesReceived`; missing or
-  stalled flow triggers throttled ICE recovery without a manual reconnect
-  button;
+  checked through inbound WebRTC stats; when `framesDecoded` is available it is
+  the authoritative health signal, with `bytesReceived` used only as a fallback
+  for browsers that omit decoded-frame counters. Missing or stalled decoded
+  frame flow triggers throttled ICE recovery without a manual reconnect button;
 - P2P signaling replay fenced by current room/source generation;
 - controller-level duplicate SDP/ICE protection in the extension media engine:
   exact repeated `offer`/`answer` SDP and ICE candidates are fingerprinted and
@@ -298,7 +299,9 @@ The extension still does not host, proxy, record, or distribute source video.
 These are intentionally not treated as solved:
 
 - P2P media reconnect and asymmetric join timing still require staging/manual
-  acceptance beyond the local harness.
+  acceptance beyond the local harness. The local harness now waits until both
+  peers have received a room snapshot with both cameras enabled before measuring
+  TTFM, which removes one false-start class but is not a real-network proof.
 - The local real-WebRTC harness usually selects same-machine `host/host`
   candidate pairs. Relay-only TURN harness mode exists and can use either
   explicit short-lived ICE JSON or the real Worker `/ice-servers` path, but a

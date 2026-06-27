@@ -358,18 +358,23 @@ export function classifyRemoteVideoActivity(
     typeof current.framesDecoded === "number" &&
     typeof previous.framesDecoded === "number"
       ? current.framesDecoded - previous.framesDecoded
-      : 0;
+      : undefined;
   const byteDelta =
     typeof current.bytesReceived === "number" &&
     typeof previous.bytesReceived === "number"
       ? current.bytesReceived - previous.bytesReceived
-      : 0;
+      : undefined;
 
-  if (
-    frameDelta >= P2P_VIDEO_ACTIVITY_MIN_FRAME_DELTA ||
-    byteDelta >= P2P_VIDEO_ACTIVITY_MIN_BYTE_DELTA
-  ) {
-    return "flowing";
+  if (typeof frameDelta === "number") {
+    return frameDelta >= P2P_VIDEO_ACTIVITY_MIN_FRAME_DELTA
+      ? "flowing"
+      : "stalled";
+  }
+
+  if (typeof byteDelta === "number") {
+    return byteDelta >= P2P_VIDEO_ACTIVITY_MIN_BYTE_DELTA
+      ? "flowing"
+      : "stalled";
   }
 
   return "stalled";

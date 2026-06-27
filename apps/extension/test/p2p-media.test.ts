@@ -427,7 +427,7 @@ describe("P2P remote video activity classification", () => {
     ).toBe("missing");
   });
 
-  it("uses frames and bytes as real remote-video flow signals", () => {
+  it("uses decoded frames as the authoritative remote-video flow signal when available", () => {
     expect(
       classifyRemoteVideoActivity(
         { framesDecoded: 10, bytesReceived: 10_000 },
@@ -440,6 +440,17 @@ describe("P2P remote video activity classification", () => {
       classifyRemoteVideoActivity(
         { framesDecoded: 10, bytesReceived: 10_000 },
         { framesDecoded: 10, bytesReceived: 12_000 },
+        true,
+        "connected",
+      ),
+    ).toBe("stalled");
+  });
+
+  it("falls back to bytes when decoded frame counters are unavailable", () => {
+    expect(
+      classifyRemoteVideoActivity(
+        { bytesReceived: 10_000 },
+        { bytesReceived: 12_000 },
         true,
         "connected",
       ),

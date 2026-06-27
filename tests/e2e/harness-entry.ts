@@ -23,11 +23,14 @@ interface StartOptions {
 interface HarnessState {
   status: RoomConnectionStatus;
   participantCount: number;
+  cameraEnabledCount: number;
   remoteVideoCount: number;
   remoteFramesDecoded: number;
   candidatePairTypes: string[];
   iceRestartCounts: number[];
   peerHealth: string[];
+  remoteAudioFlowActivity: string[];
+  remoteVideoActivity: string[];
 }
 
 class Harness {
@@ -63,6 +66,12 @@ class Harness {
     this.connectClient(options, self);
     await this.waitForStatus("connected", 8000);
     await this.controller?.setCameraEnabled(true);
+    self.cameraEnabled = true;
+    this.client?.send({
+      type: "CAMERA_ON",
+      roomId: options.roomId,
+      userId: self.id,
+    });
   }
 
   private connectClient(options: StartOptions, self: Participant): void {
@@ -179,9 +188,17 @@ class Harness {
     const candidatePairTypes: string[] = [];
     const iceRestartCounts: number[] = [];
     const peerHealth: string[] = [];
+    const remoteAudioFlowActivity: string[] = [];
+    const remoteVideoActivity: string[] = [];
     if (this.controller) {
       const stats = (await this.controller.getStats()) as {
-        peers?: Array<{ iceRestartCount?: number; stats?: Record<string, unknown>; health?: string }>;
+        peers?: Array<{
+          iceRestartCount?: number;
+          stats?: Record<string, unknown>;
+          health?: string;
+          remoteAudioFlowActivity?: string;
+          remoteVideoActivity?: string;
+        }>;
       };
       for (const peer of stats.peers ?? []) {
         const inbound = peer.stats?.videoInbound as { framesDecoded?: number } | undefined;
@@ -196,16 +213,27 @@ class Harness {
         }
         if (typeof peer.iceRestartCount === "number") iceRestartCounts.push(peer.iceRestartCount);
         if (peer.health) peerHealth.push(peer.health);
+        if (peer.remoteAudioFlowActivity) {
+          remoteAudioFlowActivity.push(peer.remoteAudioFlowActivity);
+        }
+        if (peer.remoteVideoActivity) {
+          remoteVideoActivity.push(peer.remoteVideoActivity);
+        }
       }
     }
     return {
       status: this.status,
       participantCount: this.participants.length,
+      cameraEnabledCount: this.participants.filter(
+        (participant) => participant.cameraEnabled,
+      ).length,
       remoteVideoCount: this.remoteVideos.size,
       remoteFramesDecoded,
       candidatePairTypes,
       iceRestartCounts,
       peerHealth,
+      remoteAudioFlowActivity,
+      remoteVideoActivity,
     };
   }
 
