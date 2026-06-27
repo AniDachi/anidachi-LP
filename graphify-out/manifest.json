@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "apps/api/src/ice-servers.ts": {
-    "mtime": 1782527859.2928176,
-    "ast_hash": "98e7ab7354643e1557081ae4c7e6cfc7",
+    "mtime": 1782545908.9512763,
+    "ast_hash": "52c483e661085bced06a6ea83644cd1e",
     "semantic_hash": ""
   },
   "apps/api/src/index.ts": {
@@ -45,8 +45,8 @@
     "semantic_hash": ""
   },
   "apps/api/test/ice-servers.test.ts": {
-    "mtime": 1782527887.278313,
-    "ast_hash": "b7726f242bfd4b1cd2ce8158a13f1491",
+    "mtime": 1782545944.9500594,
+    "ast_hash": "f3ff0a504e0259e9c7294a027d30c050",
     "semantic_hash": ""
   },
   "apps/api/test/p2p-signal-buffer.test.ts": {
@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/ghost-cam.ts": {
-    "mtime": 1782506223.782294,
-    "ast_hash": "3ded44b14c3c2ea248f3dd61ad3723df",
+    "mtime": 1782545996.0783062,
+    "ast_hash": "306e833f172ff18f3604430d3b07cd51",
     "semantic_hash": ""
   },
   "apps/extension/src/hotkeys.ts": {
@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-ice.ts": {
-    "mtime": 1782527980.0503712,
-    "ast_hash": "a0979ea6e8e6d185fa697e80690f54c3",
+    "mtime": 1782545977.1654854,
+    "ast_hash": "c388ac49cccafe9fd3ea9ae0b38040c5",
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
@@ -330,8 +330,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-ice.test.ts": {
-    "mtime": 1782160784.8266895,
-    "ast_hash": "c04aaf2be9fb441111d77c27e9c59f79",
+    "mtime": 1782546027.7390401,
+    "ast_hash": "c962c6a8d4efdac115124224d28c1d8f",
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1782537581.8278632,
-    "ast_hash": "4721269d2699d2a24e3f0ac29bcf7748",
+    "mtime": 1782546253.022191,
+    "ast_hash": "740123de59f51be8b1adc81afb8acb98",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -1900,8 +1900,8 @@
     "semantic_hash": ""
   },
   "docs/experimental-features.md": {
-    "mtime": 1782160784.854552,
-    "ast_hash": "443ef7b2eab60c7f0a11deed83927ad4",
+    "mtime": 1782546325.6238914,
+    "ast_hash": "0227e1e705fce80bf46365496591a179",
     "semantic_hash": ""
   },
   "docs/extension-release-channels.md": {
@@ -1975,13 +1975,13 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": {
-    "mtime": 1782538019.8838716,
-    "ast_hash": "6da2f2500fecc418f100dfbde6559ae0",
+    "mtime": 1782546387.0483818,
+    "ast_hash": "03ec4835a6d65ce50f4e030efeb6d180",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1782538048.5545192,
-    "ast_hash": "51a8014cc85d418b8dc9fbb84c29b65e",
+    "mtime": 1782546417.4373353,
+    "ast_hash": "8d92e173cdc61f71c1baf2843435a9d6",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
@@ -2010,22 +2010,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1782534786.9564743,
+    "mtime": 1782546502.1418629,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1782534786.9145908,
+    "mtime": 1782546502.1065457,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1782534786.922775,
+    "mtime": 1782546502.1140678,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1782534786.9259274,
+    "mtime": 1782546502.1169024,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },

@@ -535,7 +535,20 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     setVoiceStatus("connecting");
 
     async function connectP2P() {
-      const iceServers = await loadP2PIceServers(iceAuthRef.current ?? undefined);
+      let iceServers: RTCIceServer[];
+      try {
+        iceServers = await loadP2PIceServers(iceAuthRef.current ?? undefined);
+      } catch (error) {
+        if (disposed) {
+          return;
+        }
+
+        console.warn("[Anidachi] P2P ICE setup failed", error);
+        setVoiceStatus("error");
+        setVoiceMessage("Media relay is temporarily unavailable.");
+        return;
+      }
+
       if (disposed) {
         return;
       }

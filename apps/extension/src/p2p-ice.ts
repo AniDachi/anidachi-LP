@@ -50,7 +50,12 @@ async function loadP2PIceServersWithCache(
   auth?: IceServersAuth,
 ): Promise<RTCIceServer[]> {
   const now = Date.now();
-  if (!forceRefresh && cachedIceServers?.length && cachedUntilMs > now) {
+  if (
+    !forceRefresh &&
+    cachedIceServers?.length &&
+    cachedUntilMs > now &&
+    (!auth || hasTurnServer(cachedIceServers))
+  ) {
     return cachedIceServers;
   }
 
@@ -89,7 +94,25 @@ async function loadP2PIceServersWithCache(
     });
     return iceServers;
   } catch (error) {
+    if (cachedIceServers?.length && cachedUntilMs > now && hasTurnServer(cachedIceServers)) {
+      logDebug("p2p.ice-config", "cached relay fallback", {
+        error: error instanceof Error ? error.message : String(error),
+        forceRefresh,
+        iceServers: summarizeIceServers(cachedIceServers),
+      });
+      return cachedIceServers;
+    }
+
     const fallback = getDefaultP2PIceServers();
+    if (auth && !hasTurnServer(fallback)) {
+      logDebug("p2p.ice-config", "relay unavailable", {
+        error: error instanceof Error ? error.message : String(error),
+        forceRefresh,
+        iceServers: summarizeIceServers(fallback),
+      });
+      throw error;
+    }
+
     cachedIceServers = fallback;
     cachedUntilMs = now + 60_000;
     logDebug("p2p.ice-config", "fallback", {
@@ -196,10 +219,19 @@ function isIceServer(value: unknown): value is RTCIceServer {
   );
 }
 
+function hasTurnServer(servers: RTCIceServer[]): boolean {
+  return servers.some((server) => getIceServerUrls(server).some((url) => /^turns?:/i.test(url)));
+}
+
 function summarizeIceServers(servers: RTCIceServer[]): Array<Record<string, unknown>> {
   return servers.map((server) => ({
     urls: server.urls,
     hasUsername: Boolean(server.username),
     hasCredential: Boolean(server.credential),
   }));
+}
+
+export function clearP2PIceServersCacheForTest(): void {
+  cachedIceServers = null;
+  cachedUntilMs = 0;
 }
