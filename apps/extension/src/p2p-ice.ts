@@ -6,6 +6,14 @@ interface IceServersPayload {
   configured?: boolean;
   iceServers?: unknown;
   provider?: string;
+  relay?: {
+    hasStun?: boolean;
+    hasTurn?: boolean;
+    hasTurns443?: boolean;
+    stunUrlCount?: number;
+    turnUrlCount?: number;
+    turnsUrlCount?: number;
+  };
   ttlSeconds?: number;
 }
 
@@ -75,6 +83,7 @@ async function loadP2PIceServersWithCache(
       configured: payload.configured,
       forceRefresh,
       provider: payload.provider,
+      relay: payload.relay,
       ttlSeconds,
       iceServers: summarizeIceServers(iceServers),
     });

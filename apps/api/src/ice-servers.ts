@@ -14,7 +14,17 @@ export interface IceServersPayload {
   configured: boolean;
   iceServers: IceServer[];
   provider: "cloudflare" | "fallback";
+  relay: IceServersRelaySummary;
   ttlSeconds: number;
+}
+
+export interface IceServersRelaySummary {
+  hasStun: boolean;
+  hasTurn: boolean;
+  hasTurns443: boolean;
+  stunUrlCount: number;
+  turnUrlCount: number;
+  turnsUrlCount: number;
 }
 
 const CLOUDFLARE_TURN_ENDPOINT = "https://rtc.live.cloudflare.com/v1/turn/keys";
@@ -43,6 +53,7 @@ export async function createIceServersPayload(
       configured: false,
       iceServers: FALLBACK_ICE_SERVERS,
       provider: "fallback",
+      relay: summarizeIceServersRelay(FALLBACK_ICE_SERVERS),
       ttlSeconds,
     };
   }
@@ -64,15 +75,22 @@ export async function createIceServersPayload(
   }
 
   const payload = (await response.json()) as CloudflareIceServersResponse;
-  const iceServers = normalizeIceServers(payload.iceServers);
+  const iceServers = dropEmptyIceServers(
+    filterBrowserBlockedTurnUrls(normalizeIceServers(payload.iceServers)),
+  );
   if (!iceServers.length) {
     throw new Error("Cloudflare TURN response did not include usable iceServers.");
+  }
+  const relay = summarizeIceServersRelay(iceServers);
+  if (!relay.hasTurn) {
+    throw new Error("Cloudflare TURN response did not include usable TURN URLs after filtering.");
   }
 
   return {
     configured: true,
-    iceServers: filterBrowserBlockedTurnUrls(iceServers),
+    iceServers,
     provider: "cloudflare",
+    relay,
     ttlSeconds,
   };
 }
@@ -132,6 +150,46 @@ function filterBrowserBlockedTurnUrls(servers: IceServer[]): IceServer[] {
   });
 }
 
+function dropEmptyIceServers(servers: IceServer[]): IceServer[] {
+  return servers.filter((server) => {
+    const urls = Array.isArray(server.urls) ? server.urls : [server.urls];
+    return urls.some(Boolean);
+  });
+}
+
 function isBrowserBlockedTurnUrl(url: string): boolean {
   return /^turns?:[^?]+:53(?:\?|$)/i.test(url);
+}
+
+export function summarizeIceServersRelay(servers: IceServer[]): IceServersRelaySummary {
+  let stunUrlCount = 0;
+  let turnUrlCount = 0;
+  let turnsUrlCount = 0;
+  let hasTurns443 = false;
+
+  for (const server of servers) {
+    for (const url of getIceServerUrls(server)) {
+      if (/^stuns?:/i.test(url)) {
+        stunUrlCount += 1;
+      } else if (/^turn:/i.test(url)) {
+        turnUrlCount += 1;
+      } else if (/^turns:/i.test(url)) {
+        turnsUrlCount += 1;
+        hasTurns443 ||= /^turns:[^?]+:443(?:\?|$)/i.test(url);
+      }
+    }
+  }
+
+  return {
+    hasStun: stunUrlCount > 0,
+    hasTurn: turnUrlCount + turnsUrlCount > 0,
+    hasTurns443,
+    stunUrlCount,
+    turnUrlCount,
+    turnsUrlCount,
+  };
+}
+
+function getIceServerUrls(server: IceServer): string[] {
+  return Array.isArray(server.urls) ? server.urls : [server.urls];
 }

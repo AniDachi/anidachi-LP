@@ -8,6 +8,14 @@ describe("ICE servers", () => {
     expect(payload.configured).toBe(false);
     expect(payload.provider).toBe("fallback");
     expect(payload.iceServers[0]?.urls).toContain("stun:stun.cloudflare.com:3478");
+    expect(payload.relay).toEqual({
+      hasStun: true,
+      hasTurn: false,
+      hasTurns443: false,
+      stunUrlCount: 2,
+      turnUrlCount: 0,
+      turnsUrlCount: 0,
+    });
   });
 
   it("generates short-lived Cloudflare TURN credentials server-side", async () => {
@@ -49,10 +57,46 @@ describe("ICE servers", () => {
     );
     expect(payload.configured).toBe(true);
     expect(payload.provider).toBe("cloudflare");
+    expect(payload.relay).toEqual({
+      hasStun: true,
+      hasTurn: true,
+      hasTurns443: true,
+      stunUrlCount: 2,
+      turnUrlCount: 1,
+      turnsUrlCount: 1,
+    });
     expect(payload.iceServers[1]?.urls).toEqual([
       "turn:turn.cloudflare.com:3478?transport=udp",
       "turns:turn.cloudflare.com:443?transport=tcp",
     ]);
+  });
+
+  it("fails closed when configured TURN credentials return no browser-usable TURN URLs", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          iceServers: [
+            { urls: ["stun:stun.cloudflare.com:3478"] },
+            {
+              urls: ["turn:turn.cloudflare.com:53?transport=udp"],
+              username: "temporary-user",
+              credential: "temporary-credential",
+            },
+          ],
+        }),
+        { status: 201 },
+      ),
+    );
+
+    await expect(
+      createIceServersPayload(
+        {
+          CLOUDFLARE_TURN_KEY_ID: "turn-key-id",
+          CLOUDFLARE_TURN_KEY_API_TOKEN: "turn-token",
+        },
+        fetcher,
+      ),
+    ).rejects.toThrow("usable TURN URLs");
   });
 
   it("clamps TURN credential TTL to a safe range", () => {
