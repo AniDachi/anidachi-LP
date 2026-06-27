@@ -7,6 +7,7 @@ import {
   classifyPeerHealth,
   createP2PMediaSignalDedupeKey,
   decideP2PIceRestart,
+  enableP2POpusDtxAndInbandFec,
   getP2PAudioTransceiverDirection,
   isPoliteP2PPeer,
   p2pAudioTrackSwapNeedsNegotiation,
@@ -17,6 +18,7 @@ import {
   shouldProactivelyRestartIceForNetworkSignal,
   shouldInitiateP2POffers,
   summarizeP2PCodecPreferenceOrder,
+  summarizeP2PSdp,
 } from "../src/p2p-media";
 import type { P2PSignal, Participant } from "@anidachi/protocol";
 
@@ -405,6 +407,56 @@ describe("P2P codec preferences", () => {
       "video/rtx",
       "video/ulpfec",
     ]);
+  });
+});
+
+describe("P2P Opus SDP hardening", () => {
+  it("enables Opus in-band FEC and DTX while preserving unrelated fmtp lines", () => {
+    const sdp = [
+      "v=0",
+      "m=audio 9 UDP/TLS/RTP/SAVPF 111 63",
+      "a=rtpmap:111 opus/48000/2",
+      "a=fmtp:111 minptime=10;useinbandfec=0;stereo=1;usedtx=0",
+      "m=video 9 UDP/TLS/RTP/SAVPF 96",
+      "a=rtpmap:96 VP8/90000",
+      "a=fmtp:96 useinbandfec=0;usedtx=0",
+      "",
+    ].join("\r\n");
+
+    const patched = enableP2POpusDtxAndInbandFec(sdp);
+
+    expect(patched).toContain(
+      "a=fmtp:111 minptime=10;stereo=1;useinbandfec=1;usedtx=1",
+    );
+    expect(patched).toContain("a=fmtp:96 useinbandfec=0;usedtx=0");
+
+    const summary = summarizeP2PSdp(patched);
+    expect(summary.audioOpusInbandFec).toBe(true);
+    expect(summary.audioOpusDtx).toBe(true);
+  });
+
+  it("adds an Opus fmtp line when the negotiated audio payload is missing one", () => {
+    const sdp = [
+      "v=0",
+      "m=audio 9 UDP/TLS/RTP/SAVPF 109 0",
+      "a=rtpmap:109 opus/48000/2",
+      "a=rtpmap:0 PCMU/8000",
+      "",
+    ].join("\r\n");
+
+    const patched = enableP2POpusDtxAndInbandFec(sdp);
+
+    expect(patched).toContain(
+      [
+        "a=rtpmap:109 opus/48000/2",
+        "a=fmtp:109 useinbandfec=1;usedtx=1",
+        "a=rtpmap:0 PCMU/8000",
+      ].join("\r\n"),
+    );
+
+    const summary = summarizeP2PSdp(patched);
+    expect(summary.audioOpusInbandFec).toBe(true);
+    expect(summary.audioOpusDtx).toBe(true);
   });
 });
 

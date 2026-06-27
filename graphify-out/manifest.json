@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
-    "mtime": 1782537375.9909935,
-    "ast_hash": "67bf410fae73646fb9a6494d94df9b3c",
+    "mtime": 1782549754.7591999,
+    "ast_hash": "33efc1f1969f3dd78aa8cf728fc3dc9f",
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
-    "mtime": 1782537396.4578004,
-    "ast_hash": "bcbd547272a025660d8782d74789fabf",
+    "mtime": 1782549692.3611097,
+    "ast_hash": "a92fcd90e75d3135f23511f16e2d8acc",
     "semantic_hash": ""
   },
   "apps/extension/test/playback-control.test.ts": {
@@ -1885,8 +1885,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1782546253.022191,
-    "ast_hash": "740123de59f51be8b1adc81afb8acb98",
+    "mtime": 1782549879.6861694,
+    "ast_hash": "fa18acd6ddd6af138e35d6512af50f67",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -1975,13 +1975,13 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md": {
-    "mtime": 1782546387.0483818,
-    "ast_hash": "03ec4835a6d65ce50f4e030efeb6d180",
+    "mtime": 1782549940.4104497,
+    "ast_hash": "cd9f2ee02f80d1922f98871699593ec2",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md": {
-    "mtime": 1782546417.4373353,
-    "ast_hash": "8d92e173cdc61f71c1baf2843435a9d6",
+    "mtime": 1782549916.2456615,
+    "ast_hash": "29de01ca464fc562ddf0512961901761",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
@@ -2010,22 +2010,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1782546502.1418629,
+    "mtime": 1782550039.3217862,
     "ast_hash": "30c37602232733f527706cc80e995704",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1782546502.1065457,
+    "mtime": 1782550039.289707,
     "ast_hash": "0da224e057e84f642dfbe7e1a5bb9b78",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1782546502.1140678,
+    "mtime": 1782550039.295286,
     "ast_hash": "c4e5fcd7642f5d951e7a06f2acbe4423",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1782546502.1169024,
+    "mtime": 1782550039.2977822,
     "ast_hash": "725f9c2c025e4fe0437cd59ac889c7e7",
     "semantic_hash": ""
   },

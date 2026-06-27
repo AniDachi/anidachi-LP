@@ -1095,7 +1095,7 @@ export class P2PMediaController {
           localParticipantId: this.localParticipant.id,
           remoteUserId: fromUserId,
           type: description.type,
-          summary: summarizeSdp(description.sdp ?? ""),
+          summary: summarizeP2PSdp(description.sdp ?? ""),
         });
         await this.flushPendingIceCandidates(peer);
       } finally {
@@ -1104,11 +1104,14 @@ export class P2PMediaController {
 
       if (description.type === "offer") {
         await this.syncPeerMedia(peer);
-        await peer.pc.setLocalDescription();
+        const answer = await peer.pc.createAnswer();
+        await peer.pc.setLocalDescription(
+          prepareP2PLocalDescription(answer),
+        );
         logDebug("p2p.sdp", "created answer", {
           localParticipantId: this.localParticipant.id,
           remoteUserId: fromUserId,
-          summary: summarizeSdp(peer.pc.localDescription?.sdp ?? ""),
+          summary: summarizeP2PSdp(peer.pc.localDescription?.sdp ?? ""),
         });
         this.sendLocalDescription(peer);
       }
@@ -1985,12 +1988,13 @@ export class P2PMediaController {
     peer.makingOffer = true;
 
     try {
-      await peer.pc.setLocalDescription();
+      const offer = await peer.pc.createOffer();
+      await peer.pc.setLocalDescription(prepareP2PLocalDescription(offer));
       logDebug("p2p.sdp", "created local description", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: peer.remoteUserId,
         type: peer.pc.localDescription?.type,
-        summary: summarizeSdp(peer.pc.localDescription?.sdp ?? ""),
+        summary: summarizeP2PSdp(peer.pc.localDescription?.sdp ?? ""),
       });
       this.sendLocalDescription(peer);
     } catch (error) {
@@ -2022,7 +2026,7 @@ export class P2PMediaController {
       logDebug("p2p.signal", "send offer", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: peer.remoteUserId,
-        summary: summarizeSdp(description.sdp),
+        summary: summarizeP2PSdp(description.sdp),
       });
       this.sendSignal(peer.remoteUserId, {
         kind: "offer",
@@ -2034,7 +2038,7 @@ export class P2PMediaController {
     logDebug("p2p.signal", "send answer", {
       localParticipantId: this.localParticipant.id,
       remoteUserId: peer.remoteUserId,
-      summary: summarizeSdp(description.sdp),
+      summary: summarizeP2PSdp(description.sdp),
     });
     this.sendSignal(peer.remoteUserId, {
       kind: "answer",
@@ -2741,7 +2745,7 @@ function summarizeSignal(signal: P2PSignal): Record<string, unknown> {
   if (signal.kind === "offer" || signal.kind === "answer") {
     return {
       type: signal.sdp.type,
-      ...summarizeSdp(signal.sdp.sdp),
+      ...summarizeP2PSdp(signal.sdp.sdp),
     };
   }
 
@@ -2757,7 +2761,129 @@ function summarizeSignal(signal: P2PSignal): Record<string, unknown> {
   return {};
 }
 
-function summarizeSdp(sdp: string): Record<string, unknown> {
+function prepareP2PLocalDescription(
+  description: RTCSessionDescriptionInit,
+): RTCSessionDescriptionInit {
+  if (
+    !description.sdp ||
+    (description.type !== "offer" && description.type !== "answer")
+  ) {
+    return description;
+  }
+
+  const sdp = enableP2POpusDtxAndInbandFec(description.sdp);
+  return sdp === description.sdp ? description : { ...description, sdp };
+}
+
+export function enableP2POpusDtxAndInbandFec(sdp: string): string {
+  const lineBreak = sdp.includes("\r\n") ? "\r\n" : "\n";
+  const hasTrailingLineBreak = /\r?\n$/.test(sdp);
+  const lines = sdp.replace(/\r?\n$/, "").split(/\r\n|\n/);
+  const audioOpusPayloadTypes = getAudioOpusPayloadTypes(lines);
+  if (!audioOpusPayloadTypes.size) {
+    return sdp;
+  }
+
+  const existingOpusFmtpPayloadTypes = new Set(
+    lines
+      .map((line) => line.match(/^a=fmtp:(\d+)(?:\s+.*)?$/i)?.[1])
+      .filter(
+        (payloadType): payloadType is string =>
+          payloadType !== undefined && audioOpusPayloadTypes.has(payloadType),
+      ),
+  );
+  const patchedLines: string[] = [];
+  const insertedOpusFmtpPayloadTypes = new Set<string>();
+
+  for (const line of lines) {
+    const fmtpMatch = line.match(/^a=fmtp:(\d+)(?:\s+(.*))?$/i);
+    if (fmtpMatch && audioOpusPayloadTypes.has(fmtpMatch[1] ?? "")) {
+      const payloadType = fmtpMatch[1] ?? "";
+      patchedLines.push(
+        formatOpusFmtpLine(payloadType, fmtpMatch[2] ?? ""),
+      );
+      continue;
+    }
+
+    patchedLines.push(line);
+
+    const rtpmapMatch = line.match(/^a=rtpmap:(\d+)\s+opus\/48000(?:\/2)?/i);
+    if (rtpmapMatch && audioOpusPayloadTypes.has(rtpmapMatch[1] ?? "")) {
+      const payloadType = rtpmapMatch[1] ?? "";
+      if (
+        !existingOpusFmtpPayloadTypes.has(payloadType) &&
+        !insertedOpusFmtpPayloadTypes.has(payloadType)
+      ) {
+        patchedLines.push(formatOpusFmtpLine(payloadType, ""));
+        insertedOpusFmtpPayloadTypes.add(payloadType);
+      }
+    }
+  }
+
+  return patchedLines.join(lineBreak) + (hasTrailingLineBreak ? lineBreak : "");
+}
+
+function formatOpusFmtpLine(payloadType: string, rawParams: string): string {
+  const params = rawParams
+    .split(";")
+    .map((param) => param.trim())
+    .filter(
+      (param) =>
+        param &&
+        !/^useinbandfec\s*=/i.test(param) &&
+        !/^usedtx\s*=/i.test(param),
+    );
+
+  params.push("useinbandfec=1", "usedtx=1");
+  return `a=fmtp:${payloadType} ${params.join(";")}`;
+}
+
+function getAudioOpusPayloadTypes(lines: string[]): Set<string> {
+  const payloadTypes = new Set<string>();
+  let inAudioSection = false;
+
+  for (const line of lines) {
+    if (line.startsWith("m=")) {
+      inAudioSection = line.startsWith("m=audio");
+      continue;
+    }
+
+    if (!inAudioSection) {
+      continue;
+    }
+
+    const match = line.match(/^a=rtpmap:(\d+)\s+opus\/48000(?:\/2)?/i);
+    if (match?.[1]) {
+      payloadTypes.add(match[1]);
+    }
+  }
+
+  return payloadTypes;
+}
+
+function hasOpusFmtpParam(
+  sdp: string,
+  name: "useinbandfec" | "usedtx",
+): boolean {
+  const lines = sdp.replace(/\r?\n$/, "").split(/\r\n|\n/);
+  const audioOpusPayloadTypes = getAudioOpusPayloadTypes(lines);
+  if (!audioOpusPayloadTypes.size) {
+    return false;
+  }
+
+  return lines.some((line) => {
+    const fmtpMatch = line.match(/^a=fmtp:(\d+)(?:\s+(.*))?$/i);
+    return (
+      Boolean(fmtpMatch?.[1]) &&
+      audioOpusPayloadTypes.has(fmtpMatch?.[1] ?? "") &&
+      new RegExp(`(?:^|;)\\s*${name}\\s*=\\s*1(?:\\s*;|$)`, "i").test(
+        fmtpMatch?.[2] ?? "",
+      )
+    );
+  });
+}
+
+export function summarizeP2PSdp(sdp: string): Record<string, unknown> {
   const codecs = Array.from(
     sdp.matchAll(/^a=rtpmap:\d+ ([^/\r\n]+)/gim),
     (match) => match[1]?.toLowerCase(),
@@ -2768,7 +2894,8 @@ function summarizeSdp(sdp: string): Record<string, unknown> {
     audioMLine: /m=audio/.test(sdp),
     videoMLine: /m=video/.test(sdp),
     codecs: Array.from(new Set(codecs)),
-    audioOpusInbandFec: /a=fmtp:\d+ .*useinbandfec=1/i.test(sdp),
+    audioOpusInbandFec: hasOpusFmtpParam(sdp, "useinbandfec"),
+    audioOpusDtx: hasOpusFmtpParam(sdp, "usedtx"),
     audioRed:
       codecs.includes("red") &&
       /m=audio[\s\S]*a=rtpmap:\d+ red\/48000/i.test(sdp),
