@@ -19,6 +19,7 @@ import {
   type ProfileRow,
   type PublicProfile,
 } from "./social";
+import { inferCrunchyrollSeasonFromSourceUrl } from "../watch-season-inference";
 
 export type WatchProvider = "crunchyroll" | "netflix" | "youtube" | "amazon";
 export type WatchItemKind = "series" | "movie";
@@ -41,6 +42,9 @@ export type WatchProgressReconcileEntry = {
   itemTitle: string;
   contentId?: string;
   seriesId?: string;
+  seasonId?: string;
+  seasonTitle?: string;
+  seasonNumber?: number;
   episodeId?: string;
   episodeTitle?: string;
   artworkUrl?: string;
@@ -60,6 +64,9 @@ type CleanWatchProgressEntry = {
   itemTitle: string;
   contentId: string | null;
   seriesId: string | null;
+  seasonKey: string | null;
+  seasonTitle: string | null;
+  seasonNumber: number | null;
   episodeKey: string;
   episodeTitle: string;
   sourceUrl: string;
@@ -89,6 +96,9 @@ type WatchSessionRow = {
   item_title: string;
   content_id: string | null;
   series_id: string | null;
+  season_key: string | null;
+  season_title: string | null;
+  season_number: number | null;
   episode_key: string;
   episode_title: string;
   source_url: string;
@@ -156,6 +166,9 @@ export type WatchLibrarySession = {
 export type WatchLibraryEpisode = {
   episodeKey: string;
   episodeTitle: string;
+  seasonId: string | null;
+  seasonTitle: string | null;
+  seasonNumber: number | null;
   sourceUrl: string;
   currentTime: number;
   duration: number;
@@ -246,6 +259,31 @@ export function cleanWatchProgressEntry(value: unknown): CleanWatchProgressEntry
         cleanString(input.contentId, 220) ??
         itemKey
       : itemKey;
+  const inferredSeason =
+    provider === "crunchyroll" && progressKind === "episode"
+      ? inferCrunchyrollSeasonFromSourceUrl(sourceUrl)
+      : null;
+  const rawSeasonTitle = cleanSeasonTitle(input.seasonTitle);
+  const rawSeasonIsInvalid =
+    isPlaceholderSeasonTitle(input.seasonTitle) ||
+    Boolean(rawSeasonTitle && sameNormalizedTitle(rawSeasonTitle, itemTitle));
+  const rawSeasonNumber = rawSeasonIsInvalid ? null : normalizeSeasonNumber(input.seasonNumber);
+  const shouldPreferInferredSeason = Boolean(inferredSeason && (rawSeasonIsInvalid || !rawSeasonTitle));
+  const seasonNumber = shouldPreferInferredSeason
+    ? inferredSeason?.seasonNumber ?? rawSeasonNumber ?? null
+    : rawSeasonNumber ?? inferredSeason?.seasonNumber ?? null;
+  const seasonTitle =
+    progressKind === "episode"
+      ? (shouldPreferInferredSeason ? inferredSeason?.seasonTitle : rawSeasonTitle) ??
+        (rawSeasonIsInvalid ? null : inferredSeason?.seasonTitle) ??
+        (seasonNumber ? `Season ${seasonNumber}` : null)
+      : null;
+  const seasonKey =
+    progressKind === "episode"
+      ? (shouldPreferInferredSeason ? inferredSeason?.seasonId : cleanString(input.seasonId, 220)) ??
+        (rawSeasonIsInvalid ? null : inferredSeason?.seasonId) ??
+        (seasonNumber ? `season-${seasonNumber}` : seasonTitle ? keyFromTitle(seasonTitle) : null)
+      : null;
 
   return {
     provider,
@@ -254,6 +292,9 @@ export function cleanWatchProgressEntry(value: unknown): CleanWatchProgressEntry
     itemTitle,
     contentId: cleanString(input.contentId, 220) ?? null,
     seriesId: cleanString(input.seriesId, 220) ?? null,
+    seasonKey,
+    seasonTitle,
+    seasonNumber,
     episodeKey,
     episodeTitle:
       cleanString(input.episodeTitle, 240) ??
@@ -407,6 +448,37 @@ export async function listWatchLibrary(userId: string): Promise<WatchLibraryResp
   };
 }
 
+export async function clearWatchLibrary(userId: string): Promise<WatchLibraryResponse> {
+  const user = await getUserById(userId);
+  if (!user) throw new WatchLibraryApiError(404, "User not found");
+
+  const checkpointDelete = await db()
+    .from("watch_progress_checkpoints")
+    .delete()
+    .eq("user_id", userId);
+  if (checkpointDelete.error) {
+    throw new Error(`Failed to clear watch checkpoints: ${checkpointDelete.error.message}`);
+  }
+
+  const participantDelete = await db()
+    .from("watch_session_participants")
+    .delete()
+    .eq("user_id", userId);
+  if (participantDelete.error) {
+    throw new Error(`Failed to clear watch session participants: ${participantDelete.error.message}`);
+  }
+
+  const trackedDelete = await db()
+    .from("user_tracked_titles")
+    .delete()
+    .eq("user_id", userId);
+  if (trackedDelete.error) {
+    throw new Error(`Failed to clear tracked titles: ${trackedDelete.error.message}`);
+  }
+
+  return listWatchLibrary(userId);
+}
+
 export async function getWatchSessionRoomSourceForViewer(params: {
   userId: string;
   sessionId: string;
@@ -508,7 +580,6 @@ async function reconcileWatchProgressEntry(
         role: participant.role,
         joinedAt: participant.joinedAt,
         entry,
-        now,
       })
     ),
     insertWatchCheckpoint({
@@ -560,10 +631,13 @@ async function upsertWatchSession(params: {
     item_title: params.entry.itemTitle,
     content_id: params.entry.contentId,
     series_id: params.entry.seriesId,
+    season_key: params.entry.seasonKey,
+    season_title: params.entry.seasonTitle,
+    season_number: params.entry.seasonNumber,
     episode_key: params.entry.episodeKey,
     episode_title: params.entry.episodeTitle,
     source_url: params.entry.sourceUrl,
-    artwork_url: params.entry.artworkUrl,
+    artwork_url: resolveWatchArtworkUrlForWrite(params.entry.artworkUrl, existing?.artwork_url),
     duration_seconds: params.entry.durationSeconds,
     current_time_seconds: params.entry.currentTimeSeconds,
     progress: params.entry.progress,
@@ -639,7 +713,6 @@ async function upsertWatchSessionParticipant(params: {
   role: "host" | "viewer";
   joinedAt: string;
   entry: CleanWatchProgressEntry;
-  now: string;
 }): Promise<void> {
   const { error } = await db()
     .from("watch_session_participants")
@@ -652,7 +725,7 @@ async function upsertWatchSessionParticipant(params: {
         left_at: null,
         current_time_seconds: params.entry.currentTimeSeconds,
         progress: params.entry.progress,
-        updated_at: params.now,
+        updated_at: params.entry.observedAt,
       },
       { onConflict: "session_id,user_id" }
     );
@@ -670,6 +743,9 @@ async function insertWatchCheckpoint(params: {
     user_id: params.userId,
     room_id: params.roomId,
     kind: params.entry.checkpointKind,
+    season_key: params.entry.seasonKey,
+    season_title: params.entry.seasonTitle,
+    season_number: params.entry.seasonNumber,
     current_time_seconds: params.entry.currentTimeSeconds,
     duration_seconds: params.entry.durationSeconds,
     progress: params.entry.progress,
@@ -699,16 +775,26 @@ async function upsertTrackedTitle(params: {
         item_kind: params.entry.itemKind,
         item_title: params.entry.itemTitle,
         source_url: params.entry.sourceUrl,
-        artwork_url: params.entry.artworkUrl,
+        artwork_url: resolveWatchArtworkUrlForWrite(
+          params.entry.artworkUrl,
+          existing?.artwork_url
+        ),
         active: true,
         archived_reason: null,
         latest_session_id: params.sessionId,
-        last_watched_at: params.now,
+        last_watched_at: params.entry.observedAt,
         updated_at: params.now,
       },
       { onConflict: "user_id,provider,title_key" }
     );
   if (error) throw new Error(`Failed to upsert tracked title: ${error.message}`);
+}
+
+export function resolveWatchArtworkUrlForWrite(
+  incomingArtworkUrl: string | null,
+  existingArtworkUrl: string | null | undefined
+): string | null {
+  return incomingArtworkUrl ?? existingArtworkUrl ?? null;
 }
 
 async function getTrackedTitle(
@@ -894,6 +980,7 @@ function buildWatchLibraryItems(params: {
     };
 
     const sessionParticipants = participantsBySessionId.get(session.id) ?? [];
+    const sessionSeason = sessionSeasonMetadata(session);
     const librarySession: WatchLibrarySession = {
       id: session.id,
       roomId: session.room_id,
@@ -928,12 +1015,18 @@ function buildWatchLibraryItems(params: {
         episode.duration = session.duration_seconds;
         episode.progress = viewerParticipant.progress;
         episode.sourceUrl = session.source_url;
+        episode.seasonId = sessionSeason.seasonId;
+        episode.seasonTitle = sessionSeason.seasonTitle;
+        episode.seasonNumber = sessionSeason.seasonNumber;
         episode.lastWatchedAt = viewerParticipant.updated_at;
       }
     } else {
       item.episodes.push({
         episodeKey: session.episode_key,
         episodeTitle: session.episode_title,
+        seasonId: sessionSeason.seasonId,
+        seasonTitle: sessionSeason.seasonTitle,
+        seasonNumber: sessionSeason.seasonNumber,
         sourceUrl: session.source_url,
         currentTime: viewerParticipant.current_time_seconds,
         duration: session.duration_seconds,
@@ -970,6 +1063,37 @@ function itemMapKey(provider: WatchProvider, itemKey: string): string {
   return `${provider}:${itemKey}`;
 }
 
+function sessionSeasonMetadata(session: WatchSessionRow): {
+  seasonId: string | null;
+  seasonTitle: string | null;
+  seasonNumber: number | null;
+} {
+  const inferred =
+    session.provider === "crunchyroll"
+      ? inferCrunchyrollSeasonFromSourceUrl(session.source_url)
+      : null;
+  const storedSeasonTitle = cleanSeasonTitle(session.season_title);
+  const storedSeasonIsInvalid =
+    isPlaceholderSeasonTitle(session.season_title) ||
+    Boolean(storedSeasonTitle && sameNormalizedTitle(storedSeasonTitle, session.item_title));
+  const storedSeasonNumber = storedSeasonIsInvalid ? null : session.season_number;
+  const shouldPreferInferredSeason = Boolean(inferred && (storedSeasonIsInvalid || !storedSeasonTitle));
+  const seasonNumber = shouldPreferInferredSeason
+    ? inferred?.seasonNumber ?? storedSeasonNumber ?? null
+    : storedSeasonNumber ?? inferred?.seasonNumber ?? null;
+  return {
+    seasonId:
+      (shouldPreferInferredSeason ? inferred?.seasonId : session.season_key) ??
+      (storedSeasonIsInvalid ? null : inferred?.seasonId) ??
+      (seasonNumber ? `season-${seasonNumber}` : null),
+    seasonTitle:
+      (shouldPreferInferredSeason ? inferred?.seasonTitle : storedSeasonTitle) ??
+      (storedSeasonIsInvalid ? null : inferred?.seasonTitle) ??
+      (seasonNumber ? `Season ${seasonNumber}` : null),
+    seasonNumber,
+  };
+}
+
 function groupBy<T>(items: T[], keyForItem: (item: T) => string): Map<string, T[]> {
   const groups = new Map<string, T[]>();
   for (const item of items) {
@@ -998,6 +1122,28 @@ function cleanString(value: unknown, maxLength: number): string | null {
   const cleaned = value.trim().replace(/\s+/g, " ");
   if (!cleaned) return null;
   return cleaned.slice(0, maxLength);
+}
+
+function cleanSeasonTitle(value: unknown): string | null {
+  const cleaned = cleanString(value, 180);
+  return cleaned && !isPlaceholderSeasonTitle(cleaned) ? cleaned : null;
+}
+
+function isPlaceholderSeasonTitle(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "?" || normalized === "unknown" || normalized === "n/a" || normalized === "na";
+}
+
+function sameNormalizedTitle(a: string, b: string): boolean {
+  return normalizeComparableTitle(a) === normalizeComparableTitle(b);
+}
+
+function normalizeComparableTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[\W_]+/g, " ")
+    .trim();
 }
 
 function cleanHttpUrl(value: unknown, maxLength: number): string | null {
@@ -1034,6 +1180,22 @@ function normalizeWatchedWithCount(value: unknown): number {
   const count = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(count)) return 1;
   return Math.max(1, Math.min(50, Math.floor(count)));
+}
+
+function normalizeSeasonNumber(value: unknown): number | null {
+  const count = typeof value === "number" ? value : Number.parseInt(String(value ?? ""), 10);
+  if (!Number.isFinite(count)) return null;
+  const normalized = Math.floor(count);
+  return normalized > 0 && normalized <= 1000 ? normalized : null;
+}
+
+function keyFromTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 }
 
 function cleanObservedAt(value: unknown): string {

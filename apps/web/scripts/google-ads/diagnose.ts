@@ -9,7 +9,7 @@ import { createGoogleAdsOAuth2, normalizeCustomerId } from "../../lib/google-ads
 import { readGoogleAdsTokens } from "../../lib/google-ads/tokens";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const API_VERSION = "v20";
+const API_VERSION = "v24";
 
 function loadEnvLocal() {
   const envPath = path.join(__dirname, "../../.env.local");

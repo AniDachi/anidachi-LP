@@ -8,7 +8,11 @@ describe("worker routes", () => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId: "room-1", identity: "user-1", name: "AniDachi user" }),
+        body: JSON.stringify({
+          roomId: "room-1",
+          identity: "user-1",
+          name: "AniDachi user",
+        }),
       },
       {},
     );

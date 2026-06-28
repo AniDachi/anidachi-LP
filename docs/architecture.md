@@ -72,7 +72,7 @@ Room creation is auth-only for the commercial product:
 ### Ghost Cam And Audio
 
 Ghost Cam and push-to-talk audio use WebRTC P2P with Cloudflare TURN fallback.
-There is no active LiveKit/SFU runtime path.
+There is no active LiveKit/SFU fallback path in the current product.
 
 Ghost Cam publishes camera video:
 
@@ -124,8 +124,9 @@ API: https://anidachi-api-production.vladislav-gul7.workers.dev
 WS:  wss://anidachi-api-production.vladislav-gul7.workers.dev
 ```
 
-Current media transport is WebRTC P2P with Cloudflare TURN fallback. Old LiveKit
-notes are historical only; do not add new LiveKit credentials to the extension.
+Current media transport is WebRTC P2P with Cloudflare TURN fallback. Do not add
+LiveKit credentials, LiveKit token endpoints, or a second media transport unless
+the architecture is intentionally changed.
 
 The short operational source of truth for current URLs and release state is
 `docs/current-development-state.md`.
@@ -230,9 +231,6 @@ The Worker config lives at:
 ```txt
 apps/api/wrangler.toml
 ```
-
-It contains public/non-secret config. Media relay credentials are minted
-server-side from Cloudflare TURN secrets; no LiveKit URL belongs in this file.
 
 Secrets are set with Wrangler:
 

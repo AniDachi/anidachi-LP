@@ -163,20 +163,14 @@ async function syncProfileFromUserRow(user: UserRow): Promise<void> {
     return;
   }
 
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    const { error } = await client.from("profiles").insert({
-      user_id: user.id,
-      display_name: user.display_name,
-      avatar_url: user.avatar_url,
-    });
-    if (!error) return;
-    if (error.code !== UNIQUE_VIOLATION) {
-      throw new Error(`Failed to sync profile: ${error.message}`);
-    }
-    return;
-  }
+  const { error } = await client.from("profiles").insert({
+    user_id: user.id,
+    display_name: user.display_name,
+    avatar_url: user.avatar_url,
+  });
+  if (!error || error.code === UNIQUE_VIOLATION) return;
 
-  throw new Error("Failed to sync profile");
+  throw new Error(`Failed to sync profile: ${error.message}`);
 }
 
 export async function getUserById(userId: string): Promise<UserRow | null> {

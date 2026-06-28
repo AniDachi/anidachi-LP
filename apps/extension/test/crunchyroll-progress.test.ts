@@ -89,6 +89,8 @@ describe("Crunchyroll progress extraction", () => {
   });
 
   it("uses JSON-LD series metadata when visible links are missing", () => {
+    const artworkUrl =
+      "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/rezero.png";
     mockLocation("https://www.crunchyroll.com/ru/watch/GEVUZP0ZM/the-end");
     document.title = "The End of the Beginning - Watch on Crunchyroll";
     document.body.innerHTML = `
@@ -96,7 +98,13 @@ describe("Crunchyroll progress extraction", () => {
         {
           "@type": "TVEpisode",
           "name": "The End of the Beginning",
-          "partOfSeries": { "name": "Re:ZERO -Starting Life in Another World-" }
+          "partOfSeries": {
+            "name": "Re:ZERO -Starting Life in Another World-",
+            "image": {
+              "@type": "ImageObject",
+              "url": "${artworkUrl}"
+            }
+          }
         }
       </script>
     `;
@@ -114,6 +122,151 @@ describe("Crunchyroll progress extraction", () => {
       kind: "episode",
       itemId: "crunchyroll-series:re-zero-starting-life-in-another-world",
       itemTitle: "Re:ZERO -Starting Life in Another World-",
+    });
+    expect(entry?.artworkUrl).toBe(artworkUrl);
+  });
+
+  it("extracts Crunchyroll season metadata from JSON-LD", () => {
+    mockLocation("https://www.crunchyroll.com/watch/G8WUNS207/the-view-from-the-summit");
+    document.title = "S2 E7 - The View From the Summit - Watch on Crunchyroll";
+    document.body.innerHTML = `
+      <script type="application/ld+json">
+        {
+          "@type": "TVEpisode",
+          "name": "S2 E7 - The View From the Summit",
+          "partOfSeries": { "name": "Haikyu!!" },
+          "partOfSeason": {
+            "@type": "TVSeason",
+            "name": "Haikyu!! Season 2",
+            "seasonNumber": 2
+          }
+        }
+      </script>
+    `;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 600 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 1500 });
+
+    const entry = getCrunchyrollProgressEntry({
+      title: "S2 E7 - The View From the Summit",
+      video,
+      watchedWithCount: 1,
+    });
+
+    expect(entry).toMatchObject({
+      kind: "episode",
+      itemId: "crunchyroll-series:haikyu",
+      itemTitle: "Haikyu!!",
+      seasonId: "season-2",
+      seasonTitle: "Season 2",
+      seasonNumber: 2,
+      episodeId: "G8WUNS207",
+    });
+  });
+
+  it("falls back to title season markers when JSON-LD has no season object", () => {
+    mockLocation("https://www.crunchyroll.com/watch/G8WUNS207/the-view-from-the-summit");
+    document.body.innerHTML = `<a href="/series/GYEXAMPLE/haikyu">Haikyu!!</a>`;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 600 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 1500 });
+
+    const entry = getCrunchyrollProgressEntry({
+      title: "S2 E7 - The View From the Summit",
+      video,
+      watchedWithCount: 1,
+    });
+
+    expect(entry).toMatchObject({
+      seasonId: "season-2",
+      seasonTitle: "Season 2",
+      seasonNumber: 2,
+    });
+  });
+
+  it("infers known Crunchyroll season metadata from the watch URL when page metadata is missing", () => {
+    mockLocation("https://www.crunchyroll.com/watch/GRP8P9XGR/lets-go-to-tokyo");
+    document.title = "E1 - Let's Go To Tokyo!! - Watch on Crunchyroll";
+    document.body.innerHTML = `<a href="/series/GYEXAMPLE/haikyu">Haikyu!!</a>`;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 456 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 1440 });
+
+    const entry = getCrunchyrollProgressEntry({
+      title: "E1 - Let's Go To Tokyo!!",
+      video,
+      watchedWithCount: 1,
+    });
+
+    expect(entry).toMatchObject({
+      itemTitle: "Haikyu!!",
+      episodeId: "GRP8P9XGR",
+      seasonId: "season-2",
+      seasonTitle: "Season 2",
+      seasonNumber: 2,
+    });
+  });
+
+  it("prefers known watch URL seasons over ambiguous Crunchyroll JSON-LD placeholders", () => {
+    mockLocation(
+      "https://www.crunchyroll.com/watch/GEVUZGE02/kaguya-wants-to-know--kaguya-wants-to-give-a-gift--chika-fujiwara-wants-to-confirm-it",
+    );
+    document.title =
+      "E2 - Kaguya Wants to Know / Kaguya Wants to Give a Gift / Chika Fujiwara Wants to Confirm It - Watch on Crunchyroll";
+    document.body.innerHTML = `
+      <a href="/series/GRJ0J828Y/kaguya-sama-love-is-war">Kaguya-sama: Love Is War</a>
+      <script type="application/ld+json">
+        {
+          "@type": "TVEpisode",
+          "name": "E2 - Kaguya Wants to Know / Kaguya Wants to Give a Gift / Chika Fujiwara Wants to Confirm It",
+          "partOfSeries": { "name": "Kaguya-sama: Love Is War" },
+          "partOfSeason": {
+            "@type": "TVSeason",
+            "name": "?",
+            "position": 2
+          }
+        }
+      </script>
+    `;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 42 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 1440 });
+
+    const entry = getCrunchyrollProgressEntry({
+      title: "E2 - Kaguya Wants to Know / Kaguya Wants to Give a Gift / Chika Fujiwara Wants to Confirm It",
+      video,
+      watchedWithCount: 1,
+    });
+
+    expect(entry).toMatchObject({
+      itemTitle: "Kaguya-sama: Love Is War",
+      episodeId: "GEVUZGE02",
+      seasonId: "season-1",
+      seasonTitle: "Season 1",
+      seasonNumber: 1,
+    });
+  });
+
+  it("infers ordinal Crunchyroll season metadata from page titles", () => {
+    mockLocation("https://www.crunchyroll.com/watch/GUNKNOWN/lets-go-to-tokyo");
+    document.head.innerHTML = `
+      <meta property="og:title" content="HAIKYU!! 2nd Season Let's Go To Tokyo!! - Watch on Crunchyroll">
+    `;
+    document.body.innerHTML = `<a href="/series/GYEXAMPLE/haikyu">Haikyu!!</a>`;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 456 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 1440 });
+
+    const entry = getCrunchyrollProgressEntry({
+      title: "E1 - Let's Go To Tokyo!!",
+      video,
+      watchedWithCount: 1,
+    });
+
+    expect(entry).toMatchObject({
+      seasonId: "season-2",
+      seasonTitle: "Season 2",
+      seasonNumber: 2,
     });
   });
 

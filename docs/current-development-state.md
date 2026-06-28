@@ -253,20 +253,95 @@ The extension currently supports:
 - Ghost Cam camera bubbles;
 - push-to-talk audio;
 - WebRTC P2P media with Cloudflare TURN fallback;
+- no active LiveKit/SFU media path: the legacy extension transport, Worker
+  `/livekit/token` route, local `infra/livekit` helper, and `livekit-client`
+  dependency have been removed;
+- local extension ICE fallback now includes Cloudflare STUN
+  (`stun.cloudflare.com:3478` and `:53`) before Google STUN, so the
+  unauthenticated/no-room-token path no longer depends on Google-only STUN;
+- P2P peer connections use `iceCandidatePoolSize: 2` with normal
+  `iceTransportPolicy: "all"` outside explicit relay diagnostics, and the
+  selected candidate pair is logged as compact direct-vs-relay telemetry without
+  candidate strings, IPs, URLs, or participant ids;
+- `/ice-servers` relay readiness diagnostics: Worker responses expose safe
+  STUN/TURN URL counts plus `hasTurn`/`hasTurns443`, and configured Cloudflare
+  TURN responses fail closed if they collapse to STUN-only after browser-blocked
+  TURN URLs are filtered;
+- Cloudflare TURN credential resilience: configured Workers keep a hot
+  module-level cache of the last valid short-lived Cloudflare ICE payload.
+  Fresh cached credentials are served without refetching, and a still-valid
+  cached relay payload is served if Cloudflare's credential API is temporarily
+  unavailable. Authenticated extension media setup no longer silently replaces a
+  failed relay fetch with STUN-only defaults unless a build-time fallback also
+  contains TURN;
+- debug SDP summaries now record negotiated codec/FEC/RTX signals so Teleparty-
+  style production A/V choices can be compared against actual AniDachi browser
+  behavior before changing topology;
+- WebRTC codec preferences are now applied before offer/answer creation:
+  audio prefers browser-supported RED first, then Opus fallback; video keeps
+  lightweight broadly-supported codecs first while preserving RTX/FEC entries
+  when the browser exposes them. Local offer/answer SDP is then narrowly
+  normalized for the negotiated audio/Opus payload so `useinbandfec=1` and
+  `usedtx=1` are present for lower-bandwidth push-to-talk and ambient silence;
+- stats-backed remote voice activity: inbound WebRTC audio bytes/packets/level
+  can publish or clear active-speaker state instead of relying only on
+  `voice-start`/`voice-stop`;
+- automatic remote-audio stall recovery: while remote voice is expected,
+  connected inbound audio with missing or stalled packet/byte flow is
+  classified from WebRTC stats and triggers throttled ICE recovery without a
+  user-facing reconnect button;
+- proactive P2P ICE recovery on browser `online` and Network Information
+  `change` signals, covered by the real-WebRTC short network-loss harness;
+- automatic remote-video stall recovery: expected connected remote video is
+  checked through inbound WebRTC stats; when `framesDecoded` is available it is
+  the authoritative health signal, with `bytesReceived` used only as a fallback
+  for browsers that omit decoded-frame counters. Missing or stalled decoded
+  frame flow triggers throttled ICE recovery without a manual reconnect button;
+- P2P signaling replay fenced by current room/source generation;
+- controller-level duplicate SDP/ICE protection in the extension media engine:
+  exact repeated `offer`/`answer` SDP and ICE candidates are fingerprinted and
+  dropped before being applied, while voice/control signals remain live;
+- live `SOURCE_CHANGED` handling: the Worker increments `sourceGeneration` on
+  host source changes and the extension resets stale P2P queues;
+- Cloudflare Durable Object WebSocket Hibernation core for room sockets:
+  versioned socket attachments, constructor rebuild from `getWebSockets()`,
+  SQLite-backed room snapshot and P2P replay/sequence state, raw `ping`/`pong`
+  auto-response keepalive, JSON `PING` compatibility for old clients, and a
+  Workers-runtime forced wake test for existing sockets, host state/source
+  snapshots, camera state, raw keepalive, and P2P replay;
 - debug export from the extension panel.
 
 The extension still does not host, proxy, record, or distribute source video.
-There is no active LiveKit/SFU media path: the extension transport switch,
-Worker `/livekit/token` route, local `infra/livekit` helper, LiveKit token
-generator, LiveKit env vars, and `livekit-client` dependency have been removed.
 
 ## Known Fragile Areas
 
 These are intentionally not treated as solved:
 
-- P2P media reconnect and asymmetric join timing can still be fragile.
-- Room lifecycle and P2P source-generation hardening are planned but not fully
-  complete.
+- P2P media reconnect and asymmetric join timing still require staging/manual
+  acceptance beyond the local harness. The local harness now waits until both
+  peers have received a room snapshot with both cameras enabled before measuring
+  TTFM, which removes one false-start class but is not a real-network proof.
+- The local real-WebRTC harness usually selects same-machine `host/host`
+  candidate pairs. Relay-only TURN harness mode exists and can use either
+  explicit short-lived ICE JSON or the real Worker `/ice-servers` path, but a
+  successful Cloudflare TURN relay run (`provider=cloudflare`,
+  `configured=true`, `turns:443` present, selected pair is `relay`) plus
+  two-network/two-profile staging acceptance are still required before treating
+  P2P as proven for users in different networks or countries. The latest
+  server/client cache hardening removes one transient Cloudflare API failure
+  path, but it is not a substitute for a real relay run.
+- A market-readiness claim for video/audio additionally requires a real remote
+  participant outside the local network/ISP path, with candidate type, TTFM,
+  reconnect, audio, and push-to-talk results recorded. Same-network local tests
+  are smoke tests only.
+- Hibernation forced-wake behavior now has explicit Workers-runtime coverage,
+  but staging idle-session acceptance, room-end alarms, and precise quota
+  metering are still pending.
+- Source switching is not complete: live `SOURCE_CHANGED` and
+  `sourceGeneration` bumps are implemented, but durable Supabase source
+  persistence, room-create source descriptor plumbing, and explicit
+  source-switch UI/commands are still pending.
+- Durable Object room-end alarms are still pending.
 - Watch progress persistence now has a backend-backed watch-library foundation
   on the Phase 6 branch, but staging acceptance across real browser profiles is
   still required before treating it as finished product behavior.

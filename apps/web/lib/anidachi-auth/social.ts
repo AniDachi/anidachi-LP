@@ -943,6 +943,39 @@ export async function listFriendGroups(ownerUserId: string): Promise<FriendGroup
   }));
 }
 
+async function friendGroupViewFromRow(group: FriendGroupRow): Promise<FriendGroup> {
+  const { data: memberData, error: memberError } = await db()
+    .from("friend_group_members")
+    .select("*")
+    .eq("group_id", group.id);
+  if (memberError) throw new Error(`Failed to list group members: ${memberError.message}`);
+
+  const members = (memberData as FriendGroupMemberRow[] | null) ?? [];
+  const memberUserIds = members.map((member) => member.friend_user_id);
+  const [profiles, users] = await Promise.all([
+    getProfilesByUserIds(memberUserIds),
+    getUsersByIds(memberUserIds),
+  ]);
+
+  return {
+    id: group.id,
+    name: group.name,
+    archivedAt: group.archived_at,
+    createdAt: group.created_at,
+    updatedAt: group.updated_at,
+    members: members
+      .map((member) => ({
+        user: publicProfileFromRows(
+          member.friend_user_id,
+          profiles.get(member.friend_user_id),
+          users.get(member.friend_user_id)
+        ),
+        addedAt: member.added_at,
+      }))
+      .sort((a, b) => a.user.displayName.localeCompare(b.user.displayName)),
+  };
+}
+
 export async function createFriendGroup(params: {
   ownerUserId: string;
   name: string;
@@ -990,20 +1023,18 @@ export async function updateFriendGroup(params: {
   if (!group) throw new SocialApiError(404, "Group not found");
   if (group.archived_at) throw new SocialApiError(409, "Archived groups cannot be edited");
 
-  const { error } = await db()
+  const { data: updatedData, error } = await db()
     .from("friend_groups")
     .update({
       name: params.name,
       updated_at: new Date().toISOString(),
     })
     .eq("id", params.groupId)
-    .eq("owner_user_id", params.ownerUserId);
+    .eq("owner_user_id", params.ownerUserId)
+    .select("*")
+    .single();
   if (error) throw new Error(`Failed to update group: ${error.message}`);
-
-  const groups = await listFriendGroups(params.ownerUserId);
-  const updated = groups.find((item) => item.id === params.groupId);
-  if (!updated) throw new Error("Updated group disappeared");
-  return updated;
+  return friendGroupViewFromRow(updatedData as FriendGroupRow);
 }
 
 export async function archiveFriendGroup(
@@ -1057,10 +1088,9 @@ export async function addFriendGroupMember(params: {
     );
   if (error) throw new Error(`Failed to add group member: ${error.message}`);
 
-  const groups = await listFriendGroups(params.ownerUserId);
-  const updated = groups.find((item) => item.id === params.groupId);
-  if (!updated) throw new Error("Updated group disappeared");
-  return updated;
+  return friendGroupViewFromRow(
+    await touchFriendGroupUpdatedAt(params.ownerUserId, params.groupId)
+  );
 }
 
 export async function removeFriendGroupMember(params: {
@@ -1083,10 +1113,9 @@ export async function removeFriendGroupMember(params: {
     .eq("friend_user_id", params.friendUserId);
   if (error) throw new Error(`Failed to remove group member: ${error.message}`);
 
-  const groups = await listFriendGroups(params.ownerUserId);
-  const updated = groups.find((item) => item.id === params.groupId);
-  if (!updated) throw new Error("Updated group disappeared");
-  return updated;
+  return friendGroupViewFromRow(
+    await touchFriendGroupUpdatedAt(params.ownerUserId, params.groupId)
+  );
 }
 
 export async function createRoomInvite(params: {
@@ -1456,6 +1485,21 @@ async function getOwnedGroup(
     .maybeSingle();
   if (error) throw new Error(`Failed to load group: ${error.message}`);
   return (data as FriendGroupRow | null) ?? null;
+}
+
+async function touchFriendGroupUpdatedAt(
+  ownerUserId: string,
+  groupId: string
+): Promise<FriendGroupRow> {
+  const { data, error } = await db()
+    .from("friend_groups")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", groupId)
+    .eq("owner_user_id", ownerUserId)
+    .select("*")
+    .single();
+  if (error) throw new Error(`Failed to update group timestamp: ${error.message}`);
+  return data as FriendGroupRow;
 }
 
 async function countActiveGroups(ownerUserId: string): Promise<number> {

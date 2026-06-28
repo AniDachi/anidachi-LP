@@ -31,17 +31,17 @@ atomic animation runs.
 
 ## P2P Media Transport
 
-Status: active media path.
+Status: active media path for room Ghost Cam and push-to-talk audio.
 
-Purpose: support the intended small-room case without SFU infrastructure. Playback sync,
-reactions, rooms, and signaling use the Cloudflare Durable Object. Camera and push-to-talk audio
-are exchanged directly between browsers through WebRTC peer connections, with Cloudflare TURN as
-fallback.
+Purpose: keep AniDachi media lightweight for the intended small-room case of up to 4 participants.
+Playback sync, reactions, rooms, and signaling use the Cloudflare Durable Object. Camera and
+push-to-talk audio are exchanged directly between browsers through WebRTC peer connections, with
+Cloudflare TURN as the fallback when direct connectivity fails.
 
 Implementation:
 
 - P2P media controller lives in `apps/extension/src/p2p-media.ts`.
-- `apps/extension/src/ghost-cam.ts` is P2P-only.
+- `apps/extension/src/ghost-cam.ts` owns the P2P media session lifecycle.
 - Targeted signaling is typed in `packages/protocol/src/types.ts` as `P2P_SIGNAL`.
 - Durable Object forwards `P2P_SIGNAL` only between joined participants, assigns `serverSeq`, and
   keeps a bounded short-lived replay buffer for reload/rejoin timing.
@@ -73,9 +73,14 @@ Implementation:
 - Before ICE restart, the extension force-refreshes `/ice-servers`, applies the refreshed config
   with `RTCPeerConnection.setConfiguration()`, then renegotiates through the existing signaling
   path.
-- If Cloudflare TURN secrets are not configured or the endpoint is unreachable, the extension falls
-  back to build-time `WXT_P2P_ICE_SERVERS_JSON`, then direct STUN-only defaults. OpenRelay TURN is
-  opt-in only for local diagnostics and is not a production fallback.
+- If Cloudflare TURN secrets are not configured, local/non-relay development can
+  still use the direct STUN fallback. For authenticated room media with a
+  configured Cloudflare TURN Worker, transient Cloudflare credential-API
+  failures should be absorbed by the Worker hot cache or the extension's last
+  valid relay cache. The extension must not silently replace authenticated room
+  media with STUN-only defaults after a relay fetch failure unless the
+  build-time fallback itself includes TURN. OpenRelay TURN is opt-in only for
+  local diagnostics and is not a production fallback.
 
 Diagnostic options:
 

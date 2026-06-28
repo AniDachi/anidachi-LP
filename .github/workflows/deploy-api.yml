@@ -56,6 +56,9 @@ jobs:
       - name: Test API
         run: pnpm --filter @anidachi/api test
 
+      - name: Test API Workers runtime
+        run: pnpm --filter @anidachi/api test:runtime
+
       - name: Dry-run Worker deploy
         working-directory: apps/api
         run: pnpm exec wrangler deploy --env "$DEPLOY_ENV" --dry-run --outdir /tmp/anidachi-worker-dry-run

@@ -5,10 +5,22 @@ import {
   formatProgressClock,
   normalizeWatchProgressStore,
   recordWatchProgressInStore,
+  WATCH_PROGRESS_STORAGE_KEY,
+  watchProgressOwnerForUser,
+  watchProgressStorageKeyForUser,
   type WatchProgressEntry,
 } from "../src/watch-progress";
 
 describe("watch progress store", () => {
+  it("scopes local watch progress storage by signed-in user", () => {
+    expect(watchProgressOwnerForUser(null)).toBe("guest");
+    expect(watchProgressStorageKeyForUser(null)).toBe(WATCH_PROGRESS_STORAGE_KEY);
+    expect(watchProgressStorageKeyForUser("user-a")).not.toBe(
+      watchProgressStorageKeyForUser("user-b"),
+    );
+    expect(watchProgressStorageKeyForUser("user-a")).toContain(encodeURIComponent("user:user-a"));
+  });
+
   it("clamps and upserts Crunchyroll episode progress", () => {
     const store = createEmptyWatchProgressStore();
     const entry: WatchProgressEntry = {
@@ -18,6 +30,9 @@ describe("watch progress store", () => {
       itemTitle: "Chainsaw Man",
       contentId: "GMEE00351495ENUS",
       seriesId: "GCHAINSAW",
+      seasonId: "season-1",
+      seasonTitle: "Season 1",
+      seasonNumber: 1,
       episodeId: "GMEE00351495ENUS",
       episodeTitle: "E1 - Reze Arc",
       artworkUrl: "https://imgsrv.crunchyroll.com/keyart/example-backdrop_wide",
@@ -40,6 +55,9 @@ describe("watch progress store", () => {
       updated.providers.crunchyroll.items["series:chainsaw-man"]?.episodes?.GMEE00351495ENUS;
 
     expect(episode?.currentTime).toBe(1800);
+    expect(episode?.seasonId).toBe("season-1");
+    expect(episode?.seasonTitle).toBe("Season 1");
+    expect(episode?.seasonNumber).toBe(1);
     expect(episode?.duration).toBe(1800);
     expect(episode?.progress).toBe(1);
     expect(episode?.lastWatchedAt).toBe(2_000);
@@ -84,6 +102,47 @@ describe("watch progress store", () => {
       "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/d1c2ab296014342d154f8467628ad323.png",
     );
   });
+
+  it("preserves episode season metadata when a later update omits it", () => {
+    const entry: WatchProgressEntry = {
+      provider: "crunchyroll",
+      kind: "episode",
+      itemId: "crunchyroll-series:haikyu",
+      itemTitle: "Haikyu!!",
+      seasonId: "season-2",
+      seasonTitle: "Season 2",
+      seasonNumber: 2,
+      episodeId: "G8WUNS207",
+      episodeTitle: "S2 E7 - The View From the Summit",
+      sourceUrl: "https://www.crunchyroll.com/watch/G8WUNS207/the-view-from-the-summit",
+      currentTime: 600,
+      duration: 1500,
+      watchedWithCount: 1,
+    };
+
+    const withSeason = recordWatchProgressInStore(createEmptyWatchProgressStore(), entry, 1_000);
+    const withoutSeason = recordWatchProgressInStore(
+      withSeason,
+      {
+        ...entry,
+        seasonId: undefined,
+        seasonTitle: undefined,
+        seasonNumber: undefined,
+        currentTime: 720,
+      },
+      2_000,
+    );
+
+    expect(
+      withoutSeason.providers.crunchyroll.items["crunchyroll-series:haikyu"]?.episodes?.G8WUNS207,
+    ).toMatchObject({
+      seasonId: "season-2",
+      seasonTitle: "Season 2",
+      seasonNumber: 2,
+      currentTime: 720,
+    });
+  });
+
 
   it("does not preserve generated Crunchyroll backdrop artwork", () => {
     const entry: WatchProgressEntry = {

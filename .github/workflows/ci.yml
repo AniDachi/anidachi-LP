@@ -47,6 +47,9 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Test API Workers runtime
+        run: pnpm --filter @anidachi/api test:runtime
+
       - name: Lint web (matches Vercel build lint gate)
         run: pnpm --filter @anidachi/web lint
 

@@ -25,7 +25,7 @@
 - [x] Website repo `George-Kreatli/anidachi-LP` was inspected.
 - [x] Auth integration worktree exists at `/Users/vladyslavhulyi/anidachi/.worktrees/auth-integration`.
 - [x] Website auth bridge work exists in `apps/web` inside the auth integration worktree.
-- [x] Existing docs cover MVP architecture, site/extension integration, LiveKit/AWS notes, and shared watch progress.
+- [x] Existing docs cover MVP architecture, site/extension integration, and shared watch progress. Historical LiveKit/AWS notes were later removed when the active media path became P2P-only with TURN fallback.
 - [x] Baseline tests were previously checked for protocol, api, extension, and web.
 - [ ] Current working state is not yet locked with a clean branch/tag/commit for the commercial architecture work.
 - [ ] Website repo and monorepo are not yet fully synchronized as one source of truth.

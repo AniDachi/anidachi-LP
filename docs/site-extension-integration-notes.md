@@ -162,13 +162,10 @@ apps/extension
 
 apps/api
   Cloudflare Worker, Durable Objects, WebSocket realtime room engine,
-  P2P signaling, authenticated ICE/TURN access
+  P2P signaling, room presence, and authenticated ICE/TURN access
 
 Supabase Postgres
   durable user/profile/room/friend/session data
-
-WebRTC P2P
-  camera and optional push-to-talk audio tracks only
 ```
 
 Recommended repo direction:
@@ -223,7 +220,7 @@ Needed changes:
 - Verify JWTs in the Worker.
 - Build the `Participant` server-side from the verified user.
 - Never trust `participant.id`, `displayName`, or `avatarUrl` from the client.
-- Require a valid room token before minting Cloudflare TURN credentials.
+- Require a valid room token before issuing ICE/TURN credentials.
 - Link every Worker room to a Supabase `rooms.room_id`.
 
 Current MVP path:
@@ -289,10 +286,8 @@ Security rules:
 Important:
 
 - The extension must never contain Supabase service-role credentials.
-- The extension must never contain TURN provider secrets or server signing
-  secrets.
-- Browser-safe ICE/TURN credentials must be short-lived and generated
-  server-side.
+- The extension must never contain TURN provider secrets, service-role
+  credentials, or server-side signing secrets.
 - Room WebSocket joins must verify room membership.
 - Extension auth codes must be one-time and short-lived.
 - Access tokens should stay short-lived.
@@ -328,11 +323,11 @@ Phase 3: authenticated rooms
 - Add room token verification for WebSocket connect.
 - Make Durable Object derive participant identity from verified token.
 
-Phase 4: media transport protection
+Phase 4: Media transport protection
 
-- Require a valid room token on `/ice-servers`.
-- Return browser-safe, short-lived ICE/TURN credentials only.
-- Keep Cloudflare TURN key material server-side only.
+- Require a valid room token and room id on `/ice-servers`.
+- Keep WebRTC P2P as the only active Ghost Cam / push-to-talk media path.
+- Keep TURN credentials short-lived and generated server-side.
 
 Phase 5: social product layer
 

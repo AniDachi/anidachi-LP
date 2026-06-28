@@ -62,6 +62,7 @@ class Client {
     this.role = role;
     this.capabilities = capabilities;
     this.events = [];
+    this.rawMessages = [];
     this.closeInfo = null;
   }
 
@@ -75,6 +76,7 @@ class Client {
     const url = `${WS_BASE}/ws/${this.roomId}?roomToken=${encodeURIComponent(token)}`;
     this.ws = new WebSocket(url);
     this.ws.addEventListener("message", (event) => {
+      this.rawMessages.push(event.data);
       try {
         this.events.push(JSON.parse(event.data));
       } catch {
@@ -112,6 +114,10 @@ class Client {
     this.ws.send(JSON.stringify(event));
   }
 
+  sendRaw(message) {
+    this.ws.send(message);
+  }
+
   close() {
     this.ws?.close();
   }
@@ -125,10 +131,43 @@ class Client {
     }
     throw new Error(`timeout waiting for ${label} (${this.sub})`);
   }
+
+  async waitForRaw(predicate, label, timeoutMs = 3000) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const match = this.rawMessages.find(predicate);
+      if (match) return match;
+      await sleep(40);
+    }
+    throw new Error(`timeout waiting for ${label} (${this.sub})`);
+  }
 }
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+function playbackStateFor(videoFingerprint, sourceUrl) {
+  return {
+    videoFingerprint,
+    sourceUrl,
+    playing: true,
+    hostTime: 12,
+    updatedAt: Date.now(),
+    playbackRate: 1,
+  };
+}
+
+function sourceFor(videoFingerprint, title, sourceUrl) {
+  return {
+    provider: "crunchyroll",
+    sourceUrl,
+    canonicalUrl: sourceUrl,
+    videoFingerprint,
+    title,
+    seriesTitle: "Harness Series",
+    episodeTitle: title,
+  };
 }
 
 const results = [];
@@ -147,6 +186,9 @@ async function rawConnect(roomId, token) {
 }
 
 async function runScenarios() {
+  const runId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const roomName = (base) => `${base}-${runId}`;
+
   // 1. Token rejection.
   const noToken = await rawConnect("reject-room", "");
   record("missing token rejected", noToken.opened === false);
@@ -172,7 +214,7 @@ async function runScenarios() {
   record("ice-servers rejects token for a different room (401)", iceWrongRoom.status === 401, `status=${iceWrongRoom.status}`);
 
   // 2. Two participants see each other.
-  const room = "harness-room";
+  const room = roomName("harness-room");
   const host = new Client(room, "user-host", "host");
   const guest = new Client(room, "user-guest", "member");
   await host.connect();
@@ -184,6 +226,16 @@ async function runScenarios() {
   record(
     "guest snapshot includes host",
     guestSnap.participants.some((p) => p.id === "user-host" && p.role === "host"),
+  );
+  record(
+    "room snapshot carries room/source generation",
+    guestSnap.roomGeneration === 1 && guestSnap.sourceGeneration === 1,
+    `roomGeneration=${guestSnap.roomGeneration} sourceGeneration=${guestSnap.sourceGeneration}`,
+  );
+  record(
+    "room snapshot carries a room serverSeq",
+    Number.isInteger(guestSnap.serverSeq) && guestSnap.serverSeq >= 0,
+    `serverSeq=${guestSnap.serverSeq}`,
   );
   const hostSawGuest = await host.waitFor(
     (e) => e.type === "PARTICIPANT_JOINED" && e.participant.id === "user-guest",
@@ -211,17 +263,98 @@ async function runScenarios() {
   );
   record("p2p signal relayed to target", relayed.fromUserId === "user-host");
   record("relayed signal carries a serverSeq", typeof relayed.serverSeq === "number");
+  record(
+    "relayed signal carries authoritative generations",
+    relayed.roomGeneration === guestSnap.roomGeneration &&
+      relayed.sourceGeneration === guestSnap.sourceGeneration,
+    `roomGeneration=${relayed.roomGeneration} sourceGeneration=${relayed.sourceGeneration}`,
+  );
+
+  // 3b. Source switch: the host first establishes the current source, then
+  //     navigates to a different source. The Worker must own the source
+  //     generation bump and announce it before any new P2P signaling is used.
+  const sourceOneFingerprint = "crunchyroll|harness-series|s1|e1";
+  const sourceOneUrl = "https://www.crunchyroll.com/watch/source-one";
+  host.send({
+    type: "HOST_STATE",
+    roomId: room,
+    state: playbackStateFor(sourceOneFingerprint, sourceOneUrl),
+    source: sourceFor(sourceOneFingerprint, "Harness Episode 1", sourceOneUrl),
+  });
+  const initialHostState = await guest.waitFor(
+    (e) => e.type === "HOST_STATE" && e.state.videoFingerprint === sourceOneFingerprint,
+    "guest receives initial host source",
+  );
+  record("initial host source state broadcast", Boolean(initialHostState));
+
+  const sourceTwoFingerprint = "crunchyroll|harness-series|s1|e2";
+  const sourceTwoUrl = "https://www.crunchyroll.com/watch/source-two";
+  host.send({
+    type: "HOST_STATE",
+    roomId: room,
+    state: playbackStateFor(sourceTwoFingerprint, sourceTwoUrl),
+    source: sourceFor(sourceTwoFingerprint, "Harness Episode 2", sourceTwoUrl),
+  });
+  const sourceChanged = await guest.waitFor(
+    (e) => e.type === "SOURCE_CHANGED" && e.source.videoFingerprint === sourceTwoFingerprint,
+    "guest receives source change",
+  );
+  const hostSourceChanged = await host.waitFor(
+    (e) => e.type === "SOURCE_CHANGED" && e.source.videoFingerprint === sourceTwoFingerprint,
+    "host receives source change",
+  );
+  record(
+    "source change increments source generation",
+    sourceChanged.sourceGeneration === 2 &&
+      hostSourceChanged.sourceGeneration === 2 &&
+      sourceChanged.previousSource?.videoFingerprint === sourceOneFingerprint,
+    `sourceGeneration=${sourceChanged.sourceGeneration}`,
+  );
+  const changedHostState = await guest.waitFor(
+    (e) => e.type === "HOST_STATE" && e.state.videoFingerprint === sourceTwoFingerprint,
+    "guest receives post-source-change host state",
+  );
+  record("post-source-change host state broadcast", Boolean(changedHostState));
+
+  host.send({
+    type: "P2P_SIGNAL",
+    roomId: room,
+    fromUserId: "user-host",
+    toUserId: "user-guest",
+    clientSignalId: "sig-2",
+    senderConnectionId: "conn-host-2",
+    signal: { kind: "offer", sdp: { type: "offer", sdp: "v=0 harness source two" } },
+  });
+  const relayedAfterSourceChange = await guest.waitFor(
+    (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "sig-2",
+    "guest receives signal after source change",
+  );
+  record(
+    "new p2p signal carries new source generation",
+    relayedAfterSourceChange.sourceGeneration === 2,
+    `sourceGeneration=${relayedAfterSourceChange.sourceGeneration}`,
+  );
 
   // 4. Reconnect/resume: the guest reconnects (same user) with
-  //    lastSeenP2PServerSeq=0 and replays signals it missed (S5), while the
-  //    stale socket is force-closed so no ghost participant remains (S8).
+  //    lastSeenP2PServerSeq=0 and replays signals it missed (S5), but only for
+  //    the active source generation; stale source-generation signals are
+  //    ignored. The stale socket is force-closed so no ghost participant remains
+  //    (S8).
   const guestB = new Client(room, "user-guest", "member");
   await guestB.connect(0, "guest-sess");
   const replayed = await guestB.waitFor(
-    (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "sig-1",
+    (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "sig-2",
     "guest reconnect replay",
   );
-  record("missed signal replayed on reconnect (S5)", Boolean(replayed));
+  record(
+    "missed active-source signal replayed on reconnect (S5)",
+    replayed.sourceGeneration === 2,
+    `sourceGeneration=${replayed.sourceGeneration}`,
+  );
+  const staleSourceReplay = guestB.events.some(
+    (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "sig-1",
+  );
+  record("stale source-generation signal not replayed", !staleSourceReplay);
   await sleep(300);
   record(
     "stale duplicate socket force-closed (4000)",
@@ -238,6 +371,9 @@ async function runScenarios() {
   guestB.send({ type: "PING", roomId: room, sentAt: Date.now() });
   const pong = await guestB.waitFor((e) => e.type === "PONG", "pong");
   record("ping answered with pong", typeof pong.serverTime === "number");
+  guestB.sendRaw("ping");
+  const rawPong = await guestB.waitForRaw((message) => message === "pong", "hibernation pong");
+  record("hibernation-safe ping answered with raw pong", rawPong === "pong");
 
   // 5b. Clean leave: closing the socket (what the extension does on pagehide,
   //     Block 4.4) makes the Worker drop the participant promptly and broadcast
@@ -256,7 +392,7 @@ async function runScenarios() {
 
   // 6. Participant cap (PD3): 4 distinct users admitted, the 5th rejected with
   //    ROOM_FULL + close 4003, while a reconnect of an existing member is fine.
-  const capRoom = "cap-room";
+  const capRoom = roomName("cap-room");
   const capped = [];
   for (let i = 1; i <= 4; i++) {
     const member = new Client(capRoom, `cap-${i}`, i === 1 ? "host" : "member");
@@ -290,7 +426,7 @@ async function runScenarios() {
     canNameRoom: true,
     canSendPushInvites: true,
   };
-  const plusRoom = "plus-cap-room";
+  const plusRoom = roomName("plus-cap-room");
   const plusMembers = [];
   for (let i = 1; i <= 6; i++) {
     const member = new Client(
@@ -331,7 +467,7 @@ async function runScenarios() {
     canNameRoom: true,
     canSendPushInvites: true,
   };
-  const mediaRoom = "media-seat-room";
+  const mediaRoom = roomName("media-seat-room");
   const mediaHost = new Client(mediaRoom, "media-host", "host", mediaCapabilities);
   const mediaGuest = new Client(mediaRoom, "media-guest", "member", mediaCapabilities);
   await mediaHost.connect();
@@ -372,7 +508,7 @@ async function runScenarios() {
   // 7. One active session (Block 4): a different session id for the same user
   //    takes the session over (displaced tab gets SESSION_TAKEN_OVER + 4002),
   //    while a reconnect with the SAME session id is a silent 4000 replace.
-  const sessionRoom = "session-room";
+  const sessionRoom = roomName("session-room");
   const tabA = new Client(sessionRoom, "user-tabs", "host");
   await tabA.connect(undefined, "sess-A");
   await tabA.waitFor((e) => e.type === "ROOM_SNAPSHOT", "tab A snapshot");

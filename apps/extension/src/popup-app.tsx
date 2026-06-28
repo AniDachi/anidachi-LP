@@ -1,67 +1,125 @@
 import {
   Check,
   ChevronDown,
+  Filter,
   Film,
   Folder,
+  Grid2X2,
   Inbox,
-  Link2,
   LogIn,
+  Mail,
+  Play,
+  Pencil,
   RefreshCw,
-  RotateCcw,
+  Settings,
   Trash2,
   UserPlus,
   Users,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getCurrentExtensionSession, signInWithWebsite } from "./auth-client";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  getCachedExtensionSession,
+  getCurrentExtensionSession,
+  signInWithWebsite,
+  signInWithWebsiteSilently,
+} from "./auth-client";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
+import {
+  inferCrunchyrollSeasonFromSourceUrl,
+  seasonNumberFromTitle,
+} from "./crunchyroll-season";
 import { popupStyles } from "./popup-styles";
 import {
   acceptRoomInvite,
+  addFriendGroupMember,
+  archiveFriendGroup,
+  createFriendGroup,
   declineRoomInvite,
   listInviteTargets,
   listRoomInvites,
+  removeFriendGroupMember,
   type FriendGroup,
   type FriendListItem,
   type InviteTargets,
   type RoomInvite,
   type RoomInvitesResponse,
+  updateFriendGroup,
 } from "./social-client";
 import {
   buildProviderFolders,
+  clearWatchProgressStoreForUser,
   createEmptyWatchProgressStore,
   formatProgressClock,
-  loadWatchProgressStore,
+  loadWatchProgressStoreForUser,
   normalizeWatchProgressStore,
-  recordWatchProgressInStore,
-  WATCH_PROGRESS_STORAGE_KEY,
+  saveWatchProgressStoreForUser,
+  watchProgressStorageKeyForUser,
   type ProviderFolder,
   type StoredEpisodeProgress,
   type StoredWatchItem,
   type WatchProgressStore,
 } from "./watch-progress";
 import {
+  clearCachedWatchLibraryForUser,
+  clearWatchLibrary,
+  clearWatchLibrarySyncStateForUser,
   createRoomFromWatchSession,
   getCachedWatchLibraryForUser,
-  getWatchLibrarySyncWatermark,
+  getWatchLibrarySyncLedger,
+  isWatchLibraryCacheFresh,
   listWatchLibrary,
+  markWatchLibraryEntriesSynced,
+  mergeWatchLibraryIntoProgressStore,
   reconcileWatchProgress,
   setCachedWatchLibraryForUser,
-  setWatchLibrarySyncWatermark,
-  watchProgressEntriesFromStore,
+  watchProgressEntriesFromItem,
+  watchProgressEntriesFromStoreForSync,
+  watchProgressEntriesFromWatchLibrary,
   type WatchLibraryEpisode,
   type WatchLibraryResponse,
   type WatchLibrarySession,
 } from "./watch-library-client";
 
 type PopupTab = "resources" | "friends" | "inbox";
+type LibraryActivityFilter = "all" | "solo" | "together";
+type LibraryPersonFilter = "all" | `user:${string}` | `group:${string}`;
+
+type LibraryCompanionFilter = {
+  value: LibraryPersonFilter;
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  sessionCount: number;
+};
+
+type LibraryFilterOptions = {
+  activity: LibraryActivityFilter;
+  person: LibraryPersonFilter;
+  groupMemberUserIds?: Set<string>;
+};
 
 type SocialPanelData = {
   targets: InviteTargets;
   invites: RoomInvitesResponse;
+};
+
+type PopupNotice = {
+  tone: "success" | "error";
+  text: string;
+};
+
+type ContinueRowMode = "solo" | "together" | "group";
+
+type EpisodeSeasonGroup = {
+  key: string;
+  title: string;
+  known: boolean;
+  sortNumber: number | null;
+  latestWatchedAt: number;
+  episodes: StoredEpisodeProgress[];
 };
 
 type SocialPanelState =
@@ -101,27 +159,87 @@ export function PopupApp() {
     error: null,
   });
   const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
+  const [busySocialAction, setBusySocialAction] = useState<string | null>(null);
+  const [socialNotice, setSocialNotice] = useState<PopupNotice | null>(null);
   const [busyWatchSessionId, setBusyWatchSessionId] = useState<string | null>(null);
+  const [clearingHistory, setClearingHistory] = useState(false);
+  const [libraryActivityFilter, setLibraryActivityFilter] = useState<LibraryActivityFilter>("solo");
+  const [libraryPersonFilter, setLibraryPersonFilter] = useState<LibraryPersonFilter>("all");
   const [openProviders, setOpenProviders] = useState<Record<string, boolean>>({
     crunchyroll: true,
   });
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const posterRequestsRef = useRef<Record<string, boolean>>({});
-  const displayStore = useMemo(
-    () => mergeWatchLibraryIntoStore(store, watchLibraryState.data),
-    [store, watchLibraryState.data],
-  );
-  const folders = useMemo(() => buildProviderFolders(displayStore), [displayStore]);
+  const storeUserIdRef = useRef<string | null>(null);
+  const watchLibraryUserIdRef = useRef<string | null>(null);
+  const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
+  const folders = useMemo(() => buildProviderFolders(store), [store]);
   const libraryEpisodesByKey = useMemo(
     () => buildLibraryEpisodeIndex(watchLibraryState.data),
     [watchLibraryState.data],
+  );
+  const libraryFilterOptions = useMemo<LibraryFilterOptions>(() => {
+    const person = libraryActivityFilter === "together" ? libraryPersonFilter : "all";
+    const selectedGroupId = person.startsWith("group:") ? person.slice("group:".length) : null;
+    const selectedGroup = selectedGroupId
+      ? socialState.data?.targets.groups.find((group) => group.id === selectedGroupId)
+      : null;
+    return {
+      activity: libraryActivityFilter,
+      person,
+      ...(selectedGroup
+        ? { groupMemberUserIds: new Set(selectedGroup.members.map((member) => member.user.userId)) }
+        : {}),
+    };
+  }, [libraryActivityFilter, libraryPersonFilter, socialState.data?.targets.groups]);
+  const filteredFolders = useMemo(
+    () => filterProviderFolders(folders, libraryEpisodesByKey, libraryFilterOptions),
+    [folders, libraryEpisodesByKey, libraryFilterOptions],
+  );
+  const companionFilters = useMemo(
+    () => buildCompanionFilters(watchLibraryState.data, accountUser?.id ?? null),
+    [watchLibraryState.data, accountUser?.id],
+  );
+  const libraryFilterCounts = useMemo(
+    () => ({
+      all: countProviderItems(folders),
+      solo: countProviderItems(
+        filterProviderFolders(folders, libraryEpisodesByKey, {
+          activity: "solo",
+          person: "all",
+        }),
+      ),
+      together: countProviderItems(
+        filterProviderFolders(folders, libraryEpisodesByKey, {
+          activity: "together",
+          person: "all",
+        }),
+      ),
+    }),
+    [folders, libraryEpisodesByKey],
   );
   const socialCount = socialState.data
     ? socialState.data.targets.friends.length + socialState.data.targets.groups.length
     : 0;
   const pendingInviteCount =
     socialState.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)).length ?? 0;
-  const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
+
+  const ensureStoreForUser = useCallback(
+    async (
+      userId: string | null,
+      currentStore: WatchProgressStore,
+    ): Promise<WatchProgressStore> => {
+      if (storeUserIdRef.current === userId) {
+        return currentStore;
+      }
+
+      const scopedStore = await loadWatchProgressStoreForUser(userId);
+      storeUserIdRef.current = userId;
+      setStore(scopedStore);
+      return scopedStore;
+    },
+    [],
+  );
 
   const loadSocialForTokens = useCallback(async (tokens: ExtensionAuthTokens) => {
     setSocialState((current) => ({
@@ -148,51 +266,103 @@ export function PopupApp() {
     }
   }, []);
 
+  const applyWatchLibraryToLocalStore = useCallback(
+    async (
+      userId: string,
+      library: WatchLibraryResponse,
+      baseStore?: WatchProgressStore,
+    ): Promise<WatchProgressStore> => {
+      if (storeUserIdRef.current !== userId) {
+        return baseStore ?? createEmptyWatchProgressStore();
+      }
+
+      const latestStore = baseStore ?? (await loadWatchProgressStoreForUser(userId));
+      const mergedStore = mergeWatchLibraryIntoProgressStore(latestStore, library);
+      if (storeUserIdRef.current !== userId) {
+        return latestStore;
+      }
+
+      if (mergedStore !== latestStore) {
+        await saveWatchProgressStoreForUser(userId, mergedStore);
+      }
+      if (storeUserIdRef.current === userId) {
+        setStore(mergedStore);
+      }
+      return mergedStore;
+    },
+    [],
+  );
+
   const loadWatchLibraryForTokens = useCallback(
     async (tokens: ExtensionAuthTokens, localStore: WatchProgressStore, useCachedSnapshot = true) => {
-      setWatchLibraryState((current) => ({
-        status: "loading",
-        data: current.data,
-        error: null,
-      }));
       try {
+        const cached = useCachedSnapshot
+          ? await getCachedWatchLibraryForUser(tokens.user.id)
+          : null;
+        const freshCached = cached && isWatchLibraryCacheFresh(cached) ? cached : null;
+        const syncLedger = await getWatchLibrarySyncLedger(tokens.user.id);
+        const outboundEntries = watchProgressEntriesFromStoreForSync(localStore, "reconcile", syncLedger);
         if (useCachedSnapshot) {
-          const cached = await getCachedWatchLibraryForUser(tokens.user.id);
           if (cached) {
+            await applyWatchLibraryToLocalStore(tokens.user.id, cached.library, localStore);
+            await markWatchLibraryEntriesSynced(
+              tokens.user.id,
+              watchProgressEntriesFromWatchLibrary(cached.library),
+            );
+            if (storeUserIdRef.current !== tokens.user.id) {
+              return;
+            }
+            watchLibraryUserIdRef.current = tokens.user.id;
             setWatchLibraryState({
-              status: "ready",
+              status: freshCached ? "ready" : "loading",
               data: cached.library,
               error: null,
             });
+          } else {
+            setWatchLibraryState((current) => ({
+              status: "loading",
+              data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
+              error: null,
+            }));
           }
+        } else {
+          setWatchLibraryState((current) => ({
+            status: "loading",
+            data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
+            error: null,
+          }));
         }
 
         // The overlay reconciles progress live during playback, so the popup
         // only needs to backfill local progress newer than our last successful
         // sync instead of re-sending the entire local store on every open.
-        const watermark = await getWatchLibrarySyncWatermark(tokens.user.id);
-        const entries = watchProgressEntriesFromStore(localStore, "reconcile", watermark);
-        const library = entries.length
-          ? await reconcileWatchProgress(tokens.accessToken, entries)
-          : await listWatchLibrary(tokens.accessToken);
-        if (entries.length) {
-          const latestObservedAt = entries.reduce(
-            (max, entry) => Math.max(max, Number(entry.observedAt ?? 0)),
-            watermark,
-          );
-          await setWatchLibrarySyncWatermark(tokens.user.id, latestObservedAt);
+        if (freshCached && outboundEntries.length === 0) {
+          return;
         }
+
+        const library = outboundEntries.length
+          ? await reconcileWatchProgress(tokens.accessToken, outboundEntries)
+          : await listWatchLibrary(tokens.accessToken);
+        await markWatchLibraryEntriesSynced(tokens.user.id, [
+          ...outboundEntries,
+          ...watchProgressEntriesFromWatchLibrary(library),
+        ]);
         await setCachedWatchLibraryForUser(tokens.user.id, library);
+        await applyWatchLibraryToLocalStore(tokens.user.id, library);
+        if (storeUserIdRef.current !== tokens.user.id) {
+          return;
+        }
+        watchLibraryUserIdRef.current = tokens.user.id;
         setWatchLibraryState({ status: "ready", data: library, error: null });
       } catch (error) {
         setWatchLibraryState((current) => ({
           status: "error",
-          data: current.data,
+          data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
           error: error instanceof Error ? error.message : "Could not sync watch history",
         }));
       }
     },
-    [],
+    [applyWatchLibraryToLocalStore],
   );
 
   const syncPopupData = useCallback(
@@ -205,9 +375,24 @@ export function PopupApp() {
       } = {},
     ): Promise<ExtensionAuthTokens | null> => {
       try {
+        let currentStore = localStore;
+        if (!options.tokens && !options.interactive) {
+          const cachedTokens = await getCachedExtensionSession();
+          if (cachedTokens) {
+            currentStore = await ensureStoreForUser(cachedTokens.user.id, localStore);
+            setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
+          }
+        }
+
         const tokens =
-          options.tokens ?? (options.interactive ? await signInWithWebsite() : await getCurrentExtensionSession());
+          options.tokens ??
+          (options.interactive
+            ? await signInWithWebsite()
+            : (await getCurrentExtensionSession({ validateWebsiteSession: true })) ??
+              (await signInWithWebsiteSilently()));
         if (!tokens) {
+          await ensureStoreForUser(null, localStore);
+          watchLibraryUserIdRef.current = null;
           setAuthSession({ status: "signed-out", tokens: null, error: null });
           setSocialState({ status: "signed-out", data: null, error: null });
           setWatchLibraryState({
@@ -218,14 +403,16 @@ export function PopupApp() {
           return null;
         }
 
+        const scopedStore = await ensureStoreForUser(tokens.user.id, currentStore);
         setAuthSession({ status: "ready", tokens, error: null });
         await Promise.all([
-          loadWatchLibraryForTokens(tokens, localStore, options.useCachedSnapshot ?? true),
+          loadWatchLibraryForTokens(tokens, scopedStore, options.useCachedSnapshot ?? true),
           loadSocialForTokens(tokens),
         ]);
         return tokens;
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not sync account";
+        watchLibraryUserIdRef.current = null;
         setAuthSession({ status: "error", tokens: null, error: message });
         setSocialState((current) => ({
           status: "error",
@@ -240,7 +427,7 @@ export function PopupApp() {
         return null;
       }
     },
-    [loadSocialForTokens, loadWatchLibraryForTokens],
+    [ensureStoreForUser, loadSocialForTokens, loadWatchLibraryForTokens],
   );
 
   const acceptInvite = useCallback(
@@ -294,11 +481,210 @@ export function PopupApp() {
     [loadSocialForTokens],
   );
 
+  const upsertSocialGroup = useCallback((group: FriendGroup) => {
+    setSocialState((current) => {
+      if (!current.data) return current;
+      const groups = current.data.targets.groups.some((item) => item.id === group.id)
+        ? current.data.targets.groups.map((item) => (item.id === group.id ? group : item))
+        : [group, ...current.data.targets.groups];
+      return {
+        ...current,
+        data: {
+          ...current.data,
+          targets: {
+            ...current.data.targets,
+            groups: groups.filter((item) => !item.archivedAt),
+          },
+        },
+      };
+    });
+  }, []);
+
+  const patchSocialGroup = useCallback((groupId: string, updater: (group: FriendGroup) => FriendGroup) => {
+    let previous: FriendGroup | null = null;
+    setSocialState((current) => {
+      if (!current.data) return current;
+      return {
+        ...current,
+        data: {
+          ...current.data,
+          targets: {
+            ...current.data.targets,
+            groups: current.data.targets.groups.map((group) => {
+              if (group.id !== groupId) return group;
+              previous = group;
+              return updater(group);
+            }),
+          },
+        },
+      };
+    });
+    return previous;
+  }, []);
+
+  const runSocialAction = useCallback(
+    async (
+      key: string,
+      action: (accessToken: string) => Promise<unknown>,
+      success: string,
+      fallbackError: string,
+    ): Promise<boolean> => {
+      setBusySocialAction(key);
+      setSocialNotice(null);
+      try {
+        const tokens = await getCurrentExtensionSession();
+        if (!tokens) {
+          setSocialState({ status: "signed-out", data: null, error: null });
+          return false;
+        }
+
+        setAuthSession({ status: "ready", tokens, error: null });
+        await action(tokens.accessToken);
+        setSocialNotice({ tone: "success", text: success });
+        return true;
+      } catch (error) {
+        setSocialNotice({
+          tone: "error",
+          text: error instanceof Error ? error.message : fallbackError,
+        });
+        return false;
+      } finally {
+        setBusySocialAction(null);
+      }
+    },
+    [],
+  );
+
+  const createGroup = useCallback(
+    async (name: string) =>
+      runSocialAction(
+        "create-group",
+        async (accessToken) => {
+          const group = await createFriendGroup(accessToken, { name });
+          upsertSocialGroup(group);
+        },
+        "Group created.",
+        "Could not create group",
+      ),
+    [runSocialAction, upsertSocialGroup],
+  );
+
+  const renameGroup = useCallback(
+    async (groupId: string, name: string) =>
+      runSocialAction(
+        `rename-group:${groupId}`,
+        async (accessToken) => {
+          const updatedAt = new Date().toISOString();
+          const previous = patchSocialGroup(groupId, (group) => ({
+            ...group,
+            name,
+            updatedAt,
+          }));
+          try {
+            const group = await updateFriendGroup(accessToken, { groupId, name });
+            upsertSocialGroup(group);
+          } catch (error) {
+            if (previous) upsertSocialGroup(previous);
+            throw error;
+          }
+        },
+        "Group renamed.",
+        "Could not rename group",
+      ),
+    [patchSocialGroup, runSocialAction, upsertSocialGroup],
+  );
+
+  const archiveGroup = useCallback(
+    async (groupId: string) =>
+      runSocialAction(
+        `archive-group:${groupId}`,
+        async (accessToken) => {
+          let previous: FriendGroup | null = null;
+          setSocialState((current) => {
+            if (!current.data) return current;
+            return {
+              ...current,
+              data: {
+                ...current.data,
+                targets: {
+                  ...current.data.targets,
+                  groups: current.data.targets.groups.filter((group) => {
+                    if (group.id !== groupId) return true;
+                    previous = group;
+                    return false;
+                  }),
+                },
+              },
+            };
+          });
+          try {
+            await archiveFriendGroup(accessToken, groupId);
+          } catch (error) {
+            if (previous) upsertSocialGroup(previous);
+            throw error;
+          }
+        },
+        "Group archived.",
+        "Could not archive group",
+      ),
+    [runSocialAction, upsertSocialGroup],
+  );
+
+  const addGroupMember = useCallback(
+    async (groupId: string, userId: string) =>
+      runSocialAction(
+        `add-member:${groupId}:${userId}`,
+        async (accessToken) => {
+          const friend = socialState.data?.targets.friends.find(
+            (item) => item.user.userId === userId,
+          );
+          const previous = friend
+            ? patchSocialGroup(groupId, (group) =>
+                addOptimisticMember(group, friend, new Date().toISOString()),
+              )
+            : null;
+          try {
+            const group = await addFriendGroupMember(accessToken, { groupId, userId });
+            upsertSocialGroup(group);
+          } catch (error) {
+            if (previous) upsertSocialGroup(previous);
+            throw error;
+          }
+        },
+        "Friend added.",
+        "Could not add friend",
+      ),
+    [patchSocialGroup, runSocialAction, socialState.data?.targets.friends, upsertSocialGroup],
+  );
+
+  const removeGroupMember = useCallback(
+    async (groupId: string, userId: string) =>
+      runSocialAction(
+        `remove-member:${groupId}:${userId}`,
+        async (accessToken) => {
+          const previous = patchSocialGroup(groupId, (group) =>
+            removeOptimisticMember(group, userId, new Date().toISOString()),
+          );
+          try {
+            const group = await removeFriendGroupMember(accessToken, { groupId, userId });
+            upsertSocialGroup(group);
+          } catch (error) {
+            if (previous) upsertSocialGroup(previous);
+            throw error;
+          }
+        },
+        "Member removed.",
+        "Could not remove member",
+      ),
+    [patchSocialGroup, runSocialAction, upsertSocialGroup],
+  );
+
   const createRoomFromSession = useCallback(async (session: WatchLibrarySession, sourceUrl: string) => {
     setBusyWatchSessionId(session.id);
     try {
       const tokens = await getCurrentExtensionSession();
       if (!tokens) {
+        watchLibraryUserIdRef.current = null;
         setWatchLibraryState({
           status: "signed-out",
           data: null,
@@ -330,33 +716,82 @@ export function PopupApp() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadWatchProgressStore().then((loadedStore) => {
+    void (async () => {
+      const cachedTokens = await getCachedExtensionSession();
+      const initialUserId = cachedTokens?.user.id ?? null;
+      const loadedStore = await loadWatchProgressStoreForUser(initialUserId);
       if (cancelled) return;
+      storeUserIdRef.current = initialUserId;
       setStore(loadedStore);
-      void syncPopupData(loadedStore, { useCachedSnapshot: true });
-    });
+      if (cachedTokens) {
+        setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
+      }
+      void syncPopupData(loadedStore, {
+        useCachedSnapshot: true,
+      });
+    })();
 
+    return () => {
+      cancelled = true;
+    };
+  }, [syncPopupData]);
+
+  useEffect(() => {
+    const expectedUserId = accountUser?.id ?? null;
+    const storageKey = watchProgressStorageKeyForUser(accountUser?.id ?? null);
     const handleStorageChange = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
-      if (areaName !== "local" || !changes[WATCH_PROGRESS_STORAGE_KEY]) {
+      if (areaName !== "local" || !changes[storageKey]) {
+        return;
+      }
+      if (storeUserIdRef.current !== expectedUserId) {
         return;
       }
 
-      setStore(normalizeWatchProgressStore(changes[WATCH_PROGRESS_STORAGE_KEY].newValue));
+      setStore(normalizeWatchProgressStore(changes[storageKey].newValue));
     };
 
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => {
-      cancelled = true;
       chrome.storage.onChanged.removeListener(handleStorageChange);
     };
-  }, [syncPopupData]);
+  }, [accountUser?.id]);
+
+  useEffect(() => {
+    if (libraryActivityFilter !== "together" && libraryPersonFilter !== "all") {
+      setLibraryPersonFilter("all");
+    }
+  }, [libraryActivityFilter, libraryPersonFilter]);
+
+  useEffect(() => {
+    if (
+      libraryPersonFilter !== "all" &&
+      !companionFilters.some((filter) => filter.value === libraryPersonFilter) &&
+      !socialState.data?.targets.groups.some((group) => `group:${group.id}` === libraryPersonFilter)
+    ) {
+      setLibraryPersonFilter("all");
+    }
+  }, [companionFilters, libraryPersonFilter, socialState.data?.targets.groups]);
 
   const totalItems = folders.reduce((sum, folder) => sum + folder.items.length, 0);
+  const filteredItemsCount = filteredFolders.reduce((sum, folder) => sum + folder.items.length, 0);
   const localItemsCount = useMemo(
     () => buildProviderFolders(store).reduce((sum, folder) => sum + folder.items.length, 0),
     [store],
   );
+  const serverItemsCount = watchLibraryState.data?.items.length ?? 0;
+  const canClearHistory = localItemsCount > 0 || serverItemsCount > 0;
+  const authChecking = authSession.status === "loading";
+  const watchLibraryFirstPaintPending =
+    totalItems === 0 &&
+    (authChecking ||
+      (authSession.status === "ready" &&
+        watchLibraryState.status === "loading" &&
+        watchLibraryState.data === null));
   useEffect(() => {
+    if (watchLibraryFirstPaintPending) {
+      return;
+    }
+
     const missingPosters = folders
       .flatMap((folder) => folder.items)
       .filter(
@@ -383,30 +818,93 @@ export function PopupApp() {
           return;
         }
 
-        const latestStore = await loadWatchProgressStore();
+        const currentUserId = storeUserIdRef.current;
+        const latestStore = await loadWatchProgressStoreForUser(currentUserId);
         const latestItem = latestStore.providers.crunchyroll.items[item.id];
-        if (!latestItem || latestItem.artworkUrl) {
+        if (latestItem?.artworkUrl) {
           return;
         }
 
         const nextStore = structuredClone(latestStore);
-        const nextItem = nextStore.providers.crunchyroll.items[item.id];
-        if (!nextItem) {
+        const nextItem = structuredClone(latestItem ?? item);
+        nextItem.artworkUrl = posterUrl;
+        nextStore.providers.crunchyroll.items[item.id] = nextItem;
+        await saveWatchProgressStoreForUser(currentUserId, nextStore);
+        if (storeUserIdRef.current !== currentUserId) {
+          return;
+        }
+        setStore(nextStore);
+
+        const tokens = authSession.status === "ready" ? authSession.tokens : null;
+        if (tokens?.user.id !== currentUserId) {
+          return;
+        }
+        const entries = tokens ? watchProgressEntriesFromItem(nextItem, "reconcile") : [];
+        if (!tokens || entries.length === 0) {
           return;
         }
 
-        nextItem.artworkUrl = posterUrl;
-        await chrome.storage.local.set({
-          [WATCH_PROGRESS_STORAGE_KEY]: nextStore,
-        });
-        setStore(nextStore);
+        try {
+          const library = await reconcileWatchProgress(tokens.accessToken, entries);
+          await markWatchLibraryEntriesSynced(tokens.user.id, [
+            ...entries,
+            ...watchProgressEntriesFromWatchLibrary(library),
+          ]);
+          await setCachedWatchLibraryForUser(tokens.user.id, library);
+          if (storeUserIdRef.current !== tokens.user.id) {
+            return;
+          }
+          watchLibraryUserIdRef.current = tokens.user.id;
+          setWatchLibraryState({ status: "ready", data: library, error: null });
+        } catch {
+          // Local artwork is already cached; the next normal sync can retry the server update.
+        }
       });
     }
-  }, [folders]);
+  }, [authSession, folders, watchLibraryFirstPaintPending]);
 
   const clearHistory = async () => {
-    await chrome.storage.local.remove(WATCH_PROGRESS_STORAGE_KEY);
-    setStore(createEmptyWatchProgressStore());
+    if (clearingHistory || !canClearHistory) return;
+    const confirmed = window.confirm(
+      "Clear watch history for this AniDachi account and this browser?",
+    );
+    if (!confirmed) return;
+
+    setClearingHistory(true);
+    setWatchLibraryState((current) =>
+      current.data ? { status: "loading", data: current.data, error: null } : current,
+    );
+    try {
+      const tokens = authSession.status === "ready" ? authSession.tokens : await getCachedExtensionSession();
+      const currentUserId = tokens?.user.id ?? storeUserIdRef.current;
+      const clearedLibrary = tokens ? await clearWatchLibrary(tokens.accessToken) : null;
+
+      await Promise.all([
+        clearWatchProgressStoreForUser(currentUserId),
+        clearCachedWatchLibraryForUser(currentUserId),
+        clearWatchLibrarySyncStateForUser(currentUserId),
+      ]);
+
+      const emptyStore = createEmptyWatchProgressStore();
+      storeUserIdRef.current = currentUserId;
+      setStore(emptyStore);
+      if (tokens && clearedLibrary) {
+        await setCachedWatchLibraryForUser(tokens.user.id, clearedLibrary);
+        watchLibraryUserIdRef.current = tokens.user.id;
+        setWatchLibraryState({ status: "ready", data: clearedLibrary, error: null });
+      } else {
+        watchLibraryUserIdRef.current = null;
+        setWatchLibraryState({ status: "signed-out", data: null, error: null });
+      }
+    } catch (error) {
+      setWatchLibraryState((current) => ({
+        status: "error",
+        data: current.data,
+        error: error instanceof Error ? error.message : "Could not clear watch history",
+      }));
+    } finally {
+      setClearingHistory(false);
+    }
   };
 
   const openAccount = async () => {
@@ -426,47 +924,67 @@ export function PopupApp() {
   return (
     <main className="popup-shell">
       <style>{popupStyles}</style>
-      <header className="popup-header">
-        <div>
-          <div className="popup-brand">Anidachi</div>
-          <div className="popup-subtitle">
-            {accountUser
-              ? `${totalItems ? `${totalItems} saved items` : "No saved progress yet"} · ${accountUser.displayName}`
-              : "Sign in to sync progress"}
-          </div>
-        </div>
+      <header className="popup-topbar">
+        <button
+          aria-label={accountUser ? "Open account dashboard" : authChecking ? "Checking account" : "Sign in"}
+          className="popup-profile-button"
+          type="button"
+          disabled={authChecking}
+          onClick={() => void openAccount()}
+        >
+          <span className="popup-profile-avatar" data-signed-in={Boolean(accountUser)}>
+            {accountUser ? (
+              <ProfileAvatar avatarUrl={accountUser.avatarUrl} displayName={accountUser.displayName} />
+            ) : authChecking ? (
+              <RefreshCw size={18} />
+            ) : (
+              <LogIn size={18} />
+            )}
+            <span className="popup-presence-dot" />
+          </span>
+          <span className="popup-profile-copy">
+            <span className="popup-brand">AniDachi</span>
+            <span className="popup-subtitle">
+              {accountUser ? (
+                <>
+                  Signed in <span>·</span> <strong>{planLabel(accountUser.plan)}</strong>
+                </>
+              ) : authChecking ? (
+                "Checking account..."
+              ) : (
+                "Sign in to sync progress"
+              )}
+            </span>
+          </span>
+        </button>
         <div className="popup-header-actions">
           <button
-            aria-label={accountUser ? "Open account dashboard" : "Sign in and open account"}
-            className="popup-account-button"
-            title={accountUser ? `${accountUser.displayName} · ${planLabel(accountUser.plan)}` : "Sign in"}
+            aria-label="Open account dashboard"
+            className="popup-command-button"
             type="button"
             onClick={() => void openAccount()}
           >
-            {accountUser ? (
-              <ProfileAvatar avatarUrl={accountUser.avatarUrl} displayName={accountUser.displayName} />
-            ) : (
-              <LogIn size={15} />
-            )}
+            <Grid2X2 size={18} />
+            <span>Dashboard</span>
           </button>
           <button
-            aria-label="Clear local progress cache"
-            className="popup-icon-button"
-            disabled={!localItemsCount}
-            title="Clear local progress cache"
+            aria-label="Sync popup data"
+            className="popup-command-button"
+            disabled={watchLibraryState.status === "loading"}
             type="button"
-            onClick={clearHistory}
+            onClick={() => void syncPopupData(store, { useCachedSnapshot: false })}
           >
-            <Trash2 size={14} />
+            <RefreshCw size={18} />
+            <span>Sync</span>
           </button>
           <button
-            aria-label="Reload popup"
-            className="popup-icon-button"
-            title="Reload popup"
+            aria-label="Open settings"
+            className="popup-command-button"
             type="button"
-            onClick={() => location.reload()}
+            onClick={() => void openAccount()}
           >
-            <RotateCcw size={14} />
+            <Settings size={18} />
+            <span>Settings</span>
           </button>
         </div>
       </header>
@@ -480,7 +998,8 @@ export function PopupApp() {
           aria-selected={activeTab === "resources"}
           onClick={() => setActiveTab("resources")}
         >
-          Resources <span>{totalItems}</span>
+          <Play size={15} />
+          Watch <span>{totalItems}</span>
         </button>
         <button
           className="popup-tab"
@@ -490,7 +1009,8 @@ export function PopupApp() {
           aria-selected={activeTab === "friends"}
           onClick={() => setActiveTab("friends")}
         >
-          Friends <span>{socialCount}</span>
+          <Users size={15} />
+          People <span>{socialCount}</span>
         </button>
         <button
           className="popup-tab"
@@ -500,25 +1020,34 @@ export function PopupApp() {
           aria-selected={activeTab === "inbox"}
           onClick={() => setActiveTab("inbox")}
         >
-          Inbox <span>{pendingInviteCount}</span>
+          <Mail size={15} />
+          Invites <span>{pendingInviteCount}</span>
         </button>
       </div>
 
       {activeTab === "resources" ? (
-        <section className="popup-section">
-          <div className="popup-section-header">
-            <div className="popup-section-title">Resources</div>
-            <button
-              aria-label="Sync watch library"
-              className="popup-mini-button"
-              disabled={watchLibraryState.status === "loading"}
-              title="Sync watch library"
-              type="button"
-              onClick={() => void syncPopupData(store, { useCachedSnapshot: false })}
-            >
-              <RefreshCw size={13} />
-            </button>
+        <section className="popup-watch-screen">
+          <div className="popup-watch-controls">
+            <WatchModeBar
+              activity={libraryActivityFilter}
+              counts={libraryFilterCounts}
+              onSelectActivity={(activity) => {
+                setLibraryActivityFilter(activity);
+                if (activity !== "together") {
+                  setLibraryPersonFilter("all");
+                }
+              }}
+            />
+            {libraryActivityFilter === "together" ? (
+              <TogetherFilterBar
+                companions={companionFilters}
+                groups={socialState.data?.targets.groups ?? []}
+                selectedValue={libraryPersonFilter}
+                onSelect={setLibraryPersonFilter}
+              />
+            ) : null}
           </div>
+
           {watchLibraryState.status === "error" ? (
             <div className="popup-social-empty" data-tone="error">
               <span>{watchLibraryState.error}</span>
@@ -531,36 +1060,67 @@ export function PopupApp() {
               </button>
             </div>
           ) : null}
-          <div className="popup-resource-list">
-            {folders.map((folder) => (
-              <ProviderRow
-                key={folder.provider}
-                folder={folder}
-                busyWatchSessionId={busyWatchSessionId}
-                libraryEpisodesByKey={libraryEpisodesByKey}
-                open={Boolean(openProviders[folder.provider])}
-                onCreateRoomFromSession={(session, sourceUrl) => void createRoomFromSession(session, sourceUrl)}
-                onToggle={() =>
-                  setOpenProviders((current) => ({
-                    ...current,
-                    [folder.provider]: !current[folder.provider],
-                  }))
-                }
-                openItems={openItems}
-                onToggleItem={(itemId) =>
-                  setOpenItems((current) => ({
-                    ...current,
-                    [itemId]: !current[itemId],
-                  }))
-                }
-              />
-            ))}
-          </div>
+          {watchLibraryFirstPaintPending ? (
+            <div className="popup-empty popup-empty-syncing">
+              <RefreshCw size={14} />
+              <span>Syncing watch history...</span>
+            </div>
+          ) : watchLibraryState.status === "loading" && !totalItems ? (
+            <div className="popup-empty">Loading watch library...</div>
+          ) : !filteredItemsCount ? (
+            <LibraryEmptyState activity={libraryActivityFilter} personFilter={libraryPersonFilter} />
+          ) : (
+            <div className="popup-resource-list">
+              {filteredFolders.map((folder) => (
+                <ProviderRow
+                  key={folder.provider}
+                  folder={folder}
+                  busyWatchSessionId={busyWatchSessionId}
+                  filters={libraryFilterOptions}
+                  libraryEpisodesByKey={libraryEpisodesByKey}
+                  open={Boolean(openProviders[folder.provider])}
+                  onCreateRoomFromSession={(session, sourceUrl) => void createRoomFromSession(session, sourceUrl)}
+                  viewerUserId={accountUser?.id ?? null}
+                  onToggle={() =>
+                    setOpenProviders((current) => ({
+                      ...current,
+                      [folder.provider]: !current[folder.provider],
+                    }))
+                  }
+                  openItems={openItems}
+                  onToggleItem={(itemId) =>
+                    setOpenItems((current) => ({
+                      ...current,
+                      [itemId]: !current[itemId],
+                    }))
+                  }
+                />
+              ))}
+            </div>
+          )}
+          <button
+            aria-label="Clear watch history"
+            className="popup-quiet-danger"
+            disabled={!canClearHistory || clearingHistory}
+            title="Clear watch history"
+            type="button"
+            onClick={clearHistory}
+          >
+            <Trash2 size={13} />
+            {clearingHistory ? "Clearing..." : "Clear watch history"}
+          </button>
         </section>
       ) : activeTab === "friends" ? (
         <SocialPanel
+          busyAction={busySocialAction}
+          notice={socialNotice}
+          onAddGroupMember={addGroupMember}
+          onArchiveGroup={archiveGroup}
+          onCreateGroup={createGroup}
           state={socialState}
           onRefresh={() => void syncPopupData(store, { useCachedSnapshot: true })}
+          onRemoveGroupMember={removeGroupMember}
+          onRenameGroup={renameGroup}
           onSignIn={() =>
             void syncPopupData(store, {
               interactive: true,
@@ -587,16 +1147,237 @@ export function PopupApp() {
   );
 }
 
+function WatchModeBar({
+  activity,
+  counts,
+  onSelectActivity,
+}: {
+  activity: LibraryActivityFilter;
+  counts: Record<LibraryActivityFilter, number>;
+  onSelectActivity: (activity: LibraryActivityFilter) => void;
+}) {
+  return (
+    <div className="popup-watch-mode-switch" role="tablist" aria-label="Watch history scope">
+      <button
+        aria-selected={activity === "solo"}
+        data-active={activity === "solo"}
+        role="tab"
+        type="button"
+        onClick={() => onSelectActivity("solo")}
+      >
+        <span>Mine</span>
+        <strong>{counts.solo}</strong>
+      </button>
+      <button
+        aria-selected={activity === "together"}
+        data-active={activity === "together"}
+        role="tab"
+        type="button"
+        onClick={() => onSelectActivity("together")}
+      >
+        <span>Together</span>
+        <strong>{counts.together}</strong>
+      </button>
+    </div>
+  );
+}
+
+function TogetherFilterBar({
+  companions,
+  groups,
+  onSelect,
+  selectedValue,
+}: {
+  companions: LibraryCompanionFilter[];
+  groups: FriendGroup[];
+  onSelect: (value: LibraryPersonFilter) => void;
+  selectedValue: LibraryPersonFilter;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedLabel = getTogetherFilterLabel(selectedValue, companions, groups);
+  const selectedCount =
+    selectedValue === "all"
+      ? companions.length + groups.length
+      : selectedValue.startsWith("group:")
+        ? (groups.find((group) => `group:${group.id}` === selectedValue)?.members.length ?? 0)
+        : (companions.find((companion) => companion.value === selectedValue)?.sessionCount ?? 0);
+
+  const selectFilter = (value: LibraryPersonFilter) => {
+    onSelect(value);
+    setOpen(false);
+  };
+
+  return (
+    <div className="popup-together-filter">
+      <button
+        aria-label={`Filter shared watch history: ${selectedLabel}`}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        className="popup-filter-trigger"
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setOpen(false);
+          }
+        }}
+      >
+        <Filter size={15} />
+        <span>{selectedLabel}</span>
+        <strong>{selectedCount}</strong>
+      </button>
+      {open ? (
+        <div className="popup-filter-menu" role="group" aria-label="Together filters">
+          <button
+            aria-pressed={selectedValue === "all"}
+            className="popup-filter-option"
+            data-active={selectedValue === "all"}
+            type="button"
+            onClick={() => selectFilter("all")}
+          >
+            <span className="popup-filter-option-icon">
+              <Users size={14} />
+            </span>
+            <span className="popup-filter-option-copy">
+              <span>All shared</span>
+              <small>Every shared session</small>
+            </span>
+            <Check size={14} />
+          </button>
+
+          <div className="popup-filter-section">
+            <div className="popup-filter-section-title">People</div>
+            {companions.length ? (
+              companions.map((companion) => (
+                <button
+                  aria-pressed={selectedValue === companion.value}
+                  className="popup-filter-option"
+                  data-active={selectedValue === companion.value}
+                  key={companion.userId}
+                  title={companion.displayName}
+                  type="button"
+                  onClick={() => selectFilter(companion.value)}
+                >
+                  <span className="popup-companion-avatar" style={{ background: avatarGradient(companion.userId) }}>
+                    {getInitials(companion.displayName)}
+                  </span>
+                  <span className="popup-filter-option-copy">
+                    <span>{companion.displayName}</span>
+                    <small>{companion.sessionCount} shared sessions</small>
+                  </span>
+                  <Check size={14} />
+                </button>
+              ))
+            ) : (
+              <div className="popup-filter-empty">No shared people yet.</div>
+            )}
+          </div>
+
+          <div className="popup-filter-section">
+            <div className="popup-filter-section-title">Groups</div>
+            {groups.length ? (
+              groups.map((group) => (
+                <button
+                  aria-pressed={selectedValue === `group:${group.id}`}
+                  className="popup-filter-option"
+                  data-active={selectedValue === `group:${group.id}`}
+                  key={group.id}
+                  title={group.name}
+                  type="button"
+                  onClick={() => selectFilter(`group:${group.id}`)}
+                >
+                  <span className="popup-filter-option-icon">
+                    <Users size={14} />
+                  </span>
+                  <span className="popup-filter-option-copy">
+                    <span>{group.name}</span>
+                    <small>{group.members.length} members</small>
+                  </span>
+                  <Check size={14} />
+                </button>
+              ))
+            ) : (
+              <div className="popup-filter-empty">No groups yet.</div>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function getTogetherFilterLabel(
+  selectedValue: LibraryPersonFilter,
+  companions: LibraryCompanionFilter[],
+  groups: FriendGroup[],
+): string {
+  if (selectedValue === "all") {
+    return "All";
+  }
+  if (selectedValue.startsWith("group:")) {
+    const group = groups.find((item) => `group:${item.id}` === selectedValue);
+    return group?.name ?? "Group";
+  }
+  const companion = companions.find((item) => item.value === selectedValue);
+  return companion?.displayName ?? "Person";
+}
+
+function continueCompanionLabel(
+  participants: WatchLibraryParticipantLike[],
+  viewerUserId: string | null,
+): string {
+  const names = participants
+    .filter((participant) => !viewerUserId || participant.user.userId !== viewerUserId)
+    .map((participant) => participant.user.displayName)
+    .filter(Boolean);
+  if (!names.length) {
+    return "Together";
+  }
+  const first = names[0] ?? "friend";
+  return names.length > 1 ? `with ${first} +${names.length - 1}` : `with ${first}`;
+}
+
+function continueModeLabel(mode: ContinueRowMode): string {
+  if (mode === "group") return "Group";
+  if (mode === "together") return "Together";
+  return "Mine";
+}
+
 function SocialPanel({
+  busyAction,
+  notice,
+  onAddGroupMember,
+  onArchiveGroup,
+  onCreateGroup,
   onRefresh,
+  onRemoveGroupMember,
+  onRenameGroup,
   onSignIn,
   state,
 }: {
+  busyAction: string | null;
+  notice: PopupNotice | null;
+  onAddGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onArchiveGroup: (groupId: string) => Promise<boolean>;
+  onCreateGroup: (name: string) => Promise<boolean>;
   onRefresh: () => void;
+  onRemoveGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onRenameGroup: (groupId: string, name: string) => Promise<boolean>;
   onSignIn: () => void;
   state: SocialPanelState;
 }) {
   const data = state.data;
+  const [groupName, setGroupName] = useState("");
+  const createDisabled = !groupName.trim() || busyAction !== null;
+
+  const submitCreateGroup = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const name = groupName.trim();
+    if (!name || busyAction) return;
+    void onCreateGroup(name).then((ok) => {
+      if (ok) setGroupName("");
+    });
+  };
 
   return (
     <section className="popup-section">
@@ -635,7 +1416,28 @@ function SocialPanel({
 
       {state.status === "loading" && !data ? <div className="popup-empty">Loading friends...</div> : null}
 
-      {data ? <SocialTargets targets={data.targets} /> : null}
+      <div className="popup-social-notice-slot" aria-live="polite">
+        {notice ? (
+          <div className="popup-social-notice" data-tone={notice.tone} role="status">
+            {notice.text}
+          </div>
+        ) : null}
+      </div>
+
+      {data ? (
+        <SocialTargets
+          busyAction={busyAction}
+          createDisabled={createDisabled}
+          groupName={groupName}
+          onAddGroupMember={onAddGroupMember}
+          onArchiveGroup={onArchiveGroup}
+          onCreateGroupNameChange={setGroupName}
+          onRemoveGroupMember={onRemoveGroupMember}
+          onRenameGroup={onRenameGroup}
+          onSubmitCreateGroup={submitCreateGroup}
+          targets={data.targets}
+        />
+      ) : null}
     </section>
   );
 }
@@ -767,7 +1569,29 @@ function InviteInboxRow({
   );
 }
 
-function SocialTargets({ targets }: { targets: InviteTargets }) {
+function SocialTargets({
+  busyAction,
+  createDisabled,
+  groupName,
+  onAddGroupMember,
+  onArchiveGroup,
+  onCreateGroupNameChange,
+  onRemoveGroupMember,
+  onRenameGroup,
+  onSubmitCreateGroup,
+  targets,
+}: {
+  busyAction: string | null;
+  createDisabled: boolean;
+  groupName: string;
+  onAddGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onArchiveGroup: (groupId: string) => Promise<boolean>;
+  onCreateGroupNameChange: (name: string) => void;
+  onRemoveGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onRenameGroup: (groupId: string, name: string) => Promise<boolean>;
+  onSubmitCreateGroup: (event: FormEvent<HTMLFormElement>) => void;
+  targets: InviteTargets;
+}) {
   return (
     <div className="popup-social-list">
       <div className="popup-social-block">
@@ -787,8 +1611,38 @@ function SocialTargets({ targets }: { targets: InviteTargets }) {
           <span>Groups</span>
           <span>{targets.groups.length}</span>
         </div>
+        <form className="popup-group-create-form" onSubmit={onSubmitCreateGroup}>
+          <input
+            className="popup-group-name-input"
+            disabled={busyAction !== null}
+            maxLength={80}
+            onChange={(event) => onCreateGroupNameChange(event.target.value)}
+            placeholder="New group"
+            value={groupName}
+          />
+          <button
+            aria-label="Create group"
+            className="popup-primary-button"
+            disabled={createDisabled}
+            type="submit"
+          >
+            <UserPlus size={13} />
+            Create
+          </button>
+        </form>
         {targets.groups.length ? (
-          targets.groups.map((group) => <SocialGroupRow group={group} key={group.id} />)
+          targets.groups.map((group) => (
+            <SocialGroupRow
+              busyAction={busyAction}
+              friends={targets.friends}
+              group={group}
+              key={group.id}
+              onAddGroupMember={onAddGroupMember}
+              onArchiveGroup={onArchiveGroup}
+              onRemoveGroupMember={onRemoveGroupMember}
+              onRenameGroup={onRenameGroup}
+            />
+          ))
         ) : (
           <div className="popup-empty">No groups yet.</div>
         )}
@@ -821,16 +1675,167 @@ function SocialFriendRow({ friend }: { friend: FriendListItem }) {
   );
 }
 
-function SocialGroupRow({ group }: { group: FriendGroup }) {
+function SocialGroupRow({
+  busyAction,
+  friends,
+  group,
+  onAddGroupMember,
+  onArchiveGroup,
+  onRemoveGroupMember,
+  onRenameGroup,
+}: {
+  busyAction: string | null;
+  friends: FriendListItem[];
+  group: FriendGroup;
+  onAddGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onArchiveGroup: (groupId: string) => Promise<boolean>;
+  onRemoveGroupMember: (groupId: string, userId: string) => Promise<boolean>;
+  onRenameGroup: (groupId: string, name: string) => Promise<boolean>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(group.name);
+  const memberIds = useMemo(
+    () => new Set(group.members.map((member) => member.user.userId)),
+    [group.members],
+  );
+  const addableFriends = friends.filter((friend) => !memberIds.has(friend.user.userId));
+  const renameBusy = busyAction === `rename-group:${group.id}`;
+  const archiveBusy = busyAction === `archive-group:${group.id}`;
+  const canSaveName = name.trim().length > 0 && name.trim() !== group.name && busyAction === null;
+
+  useEffect(() => {
+    if (!editing) setName(group.name);
+  }, [editing, group.name]);
+
+  const submitRename = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextName = name.trim();
+    if (!nextName || nextName === group.name || busyAction !== null) return;
+    void onRenameGroup(group.id, nextName).then((ok) => {
+      if (ok) setEditing(false);
+    });
+  };
+
   return (
-    <div className="popup-social-row">
-      <span className="popup-social-group-icon">
-        <Users size={15} />
-      </span>
-      <span className="popup-social-main">
-        <span>{group.name}</span>
-        <span>{group.members.length} members</span>
-      </span>
+    <div className="popup-group-card">
+      <div className="popup-group-header">
+        <span className="popup-social-group-icon">
+          <Users size={15} />
+        </span>
+        <div className="popup-social-main">
+          {editing ? (
+            <form className="popup-group-edit-form" onSubmit={submitRename}>
+              <input
+                className="popup-group-name-input"
+                disabled={busyAction !== null}
+                maxLength={80}
+                onChange={(event) => setName(event.target.value)}
+                value={name}
+              />
+              <button
+                aria-label="Save group name"
+                className="popup-mini-button"
+                disabled={!canSaveName || renameBusy}
+                title="Save group name"
+                type="submit"
+              >
+                <Check size={13} />
+              </button>
+              <button
+                aria-label="Cancel rename"
+                className="popup-mini-button"
+                disabled={renameBusy}
+                title="Cancel rename"
+                type="button"
+                onClick={() => setEditing(false)}
+              >
+                <X size={13} />
+              </button>
+            </form>
+          ) : (
+            <>
+              <span>{group.name}</span>
+              <span>{group.members.length} members</span>
+            </>
+          )}
+        </div>
+        {!editing ? (
+          <div className="popup-group-actions">
+            <button
+              aria-label={`Rename ${group.name}`}
+              className="popup-mini-button"
+              disabled={busyAction !== null}
+              title="Rename group"
+              type="button"
+              onClick={() => setEditing(true)}
+            >
+              <Pencil size={13} />
+            </button>
+            <button
+              aria-label={`Archive ${group.name}`}
+              className="popup-mini-button popup-mini-button-danger"
+              disabled={busyAction !== null}
+              title="Archive group"
+              type="button"
+              onClick={() => {
+                if (archiveBusy) return;
+                const confirmed = window.confirm(`Archive "${group.name}"?`);
+                if (confirmed) void onArchiveGroup(group.id);
+              }}
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="popup-group-member-list">
+        {group.members.length ? (
+          group.members.map((member) => {
+            const removeKey = `remove-member:${group.id}:${member.user.userId}`;
+            return (
+              <div className="popup-group-member-row" key={member.user.userId}>
+                <ProfileAvatar
+                  avatarUrl={member.user.avatarUrl}
+                  displayName={member.user.displayName}
+                />
+                <span>{member.user.displayName}</span>
+                <button
+                  aria-label={`Remove ${member.user.displayName}`}
+                  className="popup-mini-button"
+                  disabled={busyAction !== null}
+                  title="Remove member"
+                  type="button"
+                  onClick={() => void onRemoveGroupMember(group.id, member.user.userId)}
+                >
+                  {busyAction === removeKey ? <RefreshCw size={13} /> : <X size={13} />}
+                </button>
+              </div>
+            );
+          })
+        ) : (
+          <div className="popup-group-empty">No members yet.</div>
+        )}
+      </div>
+
+      <div className="popup-group-add-row">
+        <select
+          className="popup-group-select"
+          disabled={!addableFriends.length || busyAction !== null}
+          value=""
+          onChange={(event) => {
+            const userId = event.target.value;
+            if (userId) void onAddGroupMember(group.id, userId);
+          }}
+        >
+          <option value="">{addableFriends.length ? "Add friend" : "No friends to add"}</option>
+          {addableFriends.map((friend) => (
+            <option key={friend.user.userId} value={friend.user.userId}>
+              {friend.user.displayName}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }
@@ -857,6 +1862,40 @@ function formatInviteExpiry(expiresAt: string): string {
   if (hours < 24) return `${hours}h left`;
   const days = Math.ceil(hours / 24);
   return `${days}d left`;
+}
+
+function sortGroupMembers(members: FriendGroup["members"]): FriendGroup["members"] {
+  return [...members].sort((a, b) => a.user.displayName.localeCompare(b.user.displayName));
+}
+
+function addOptimisticMember(
+  group: FriendGroup,
+  friend: FriendListItem,
+  addedAt: string,
+): FriendGroup {
+  if (group.members.some((member) => member.user.userId === friend.user.userId)) {
+    return group;
+  }
+
+  return {
+    ...group,
+    updatedAt: addedAt,
+    members: sortGroupMembers([
+      ...group.members,
+      {
+        user: friend.user,
+        addedAt,
+      },
+    ]),
+  };
+}
+
+function removeOptimisticMember(group: FriendGroup, userId: string, updatedAt: string): FriendGroup {
+  return {
+    ...group,
+    updatedAt,
+    members: group.members.filter((member) => member.user.userId !== userId),
+  };
 }
 
 function ProfileAvatar({ avatarUrl, displayName }: { avatarUrl: string | null; displayName: string }) {
@@ -898,50 +1937,302 @@ function libraryEpisodeKey(provider: string, itemKey: string, episodeKey: string
   return `${provider}:${itemKey}:${episodeKey}`;
 }
 
-function mergeWatchLibraryIntoStore(
-  localStore: WatchProgressStore,
-  library: WatchLibraryResponse | null,
-): WatchProgressStore {
-  let nextStore = localStore;
-  for (const item of library?.items ?? []) {
-    for (const episode of item.episodes) {
-      const observedAt = new Date(episode.lastWatchedAt).getTime();
-      if (!Number.isFinite(observedAt)) {
-        continue;
-      }
-      const existingItem = nextStore.providers[item.provider]?.items[item.itemKey];
-      const existingEpisode = item.itemKind === "series" ? existingItem?.episodes?.[episode.episodeKey] : existingItem;
-      if (existingEpisode && existingEpisode.lastWatchedAt >= observedAt) {
-        continue;
-      }
+function CompanionFilterBar({
+  companions,
+  onSelect,
+  selectedValue,
+}: {
+  companions: LibraryCompanionFilter[];
+  onSelect: (value: LibraryPersonFilter) => void;
+  selectedValue: LibraryPersonFilter;
+}) {
+  return (
+    <div className="popup-companion-filter">
+      <span className="popup-companion-filter-label">With</span>
+      <div className="popup-companion-scroll" role="group" aria-label="People watched with">
+        <button
+          aria-pressed={selectedValue === "all"}
+          className="popup-companion-chip"
+          data-active={selectedValue === "all"}
+          type="button"
+          onClick={() => onSelect("all")}
+        >
+          All people
+        </button>
+        {companions.map((companion) => (
+          <button
+            aria-pressed={selectedValue === companion.value}
+            className="popup-companion-chip"
+            data-active={selectedValue === companion.value}
+            key={companion.userId}
+            title={companion.displayName}
+            type="button"
+            onClick={() => onSelect(companion.value)}
+          >
+            <span className="popup-companion-avatar" style={{ background: avatarGradient(companion.userId) }}>
+              {getInitials(companion.displayName)}
+            </span>
+            <span>{companion.displayName}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-      const latestSession = episode.sessions[0] ?? null;
-      nextStore = recordWatchProgressInStore(
-        nextStore,
-        {
-          provider: item.provider,
-          kind: item.itemKind === "series" ? "episode" : "movie",
-          itemId: item.itemKey,
-          itemTitle: item.itemTitle,
-          contentId: episode.episodeKey,
-          episodeId: episode.episodeKey,
-          episodeTitle: episode.episodeTitle,
-          artworkUrl: item.artworkUrl ?? undefined,
-          sourceUrl: episode.sourceUrl,
-          currentTime: episode.currentTime,
-          duration: episode.duration,
-          roomId: latestSession?.roomId ?? undefined,
-          watchedWithCount: Math.max(1, latestSession?.participants.length ?? 1),
-        },
-        observedAt,
+function LibraryEmptyState({
+  activity,
+  personFilter,
+}: {
+  activity: LibraryActivityFilter;
+  personFilter: LibraryPersonFilter;
+}) {
+  const message =
+    activity === "together"
+      ? personFilter === "all"
+      ? "No shared watch history yet."
+      : "No shared sessions with this person yet."
+      : activity === "solo"
+        ? "No personal watch progress yet."
+        : "Progress will appear here after watching.";
+
+  return <div className="popup-empty">{message}</div>;
+}
+
+function filterProviderFolders(
+  folders: ProviderFolder[],
+  libraryEpisodesByKey: Map<string, WatchLibraryEpisode>,
+  filters: LibraryFilterOptions,
+): ProviderFolder[] {
+  const keepEmptyProviders = filters.activity === "all" && filters.person === "all";
+  return folders
+    .map((folder) => {
+      const items = folder.items
+        .map((item) => filterStoredWatchItem(item, libraryEpisodesByKey, filters))
+        .filter((item): item is StoredWatchItem => item !== null)
+        .sort(
+          (a, b) =>
+            getFilteredWatchItemLastWatchedAt(b, libraryEpisodesByKey, filters) -
+            getFilteredWatchItemLastWatchedAt(a, libraryEpisodesByKey, filters),
+        );
+
+      return {
+        ...folder,
+        items,
+      };
+    })
+    .filter((folder) => keepEmptyProviders || folder.items.length > 0);
+}
+
+function filterStoredWatchItem(
+  item: StoredWatchItem,
+  libraryEpisodesByKey: Map<string, WatchLibraryEpisode>,
+  filters: LibraryFilterOptions,
+): StoredWatchItem | null {
+  if (item.kind === "movie") {
+    const libraryEpisode = libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, item.id));
+    return watchEntryMatchesFilters(item, libraryEpisode, filters) ? item : null;
+  }
+
+  const episodes = Object.values(item.episodes ?? {});
+  if (!episodes.length) {
+    return null;
+  }
+
+  const filteredEpisodes = episodes.filter((episode) =>
+    watchEntryMatchesFilters(
+      episode,
+      libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, episode.id)),
+      filters,
+    ),
+  );
+
+  if (!filteredEpisodes.length) {
+    return null;
+  }
+
+  return {
+    ...item,
+    episodes: Object.fromEntries(filteredEpisodes.map((episode) => [episode.id, episode])),
+  };
+}
+
+function getFilteredWatchItemLastWatchedAt(
+  item: StoredWatchItem,
+  libraryEpisodesByKey: Map<string, WatchLibraryEpisode>,
+  filters: LibraryFilterOptions,
+): number {
+  if (item.kind === "movie") {
+    const libraryEpisode = libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, item.id));
+    return (
+      getFilteredLibraryEpisodeLastWatchedAt(libraryEpisode, filters) ||
+      item.lastWatchedAt
+    );
+  }
+
+  const episodeTimes = Object.values(item.episodes ?? {}).map((episode) => {
+    const libraryEpisode = libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, episode.id));
+    return getFilteredLibraryEpisodeLastWatchedAt(libraryEpisode, filters) || episode.lastWatchedAt;
+  });
+  return Math.max(item.lastWatchedAt, 0, ...episodeTimes);
+}
+
+function getFilteredLibraryEpisodeLastWatchedAt(
+  libraryEpisode: WatchLibraryEpisode | undefined,
+  filters: LibraryFilterOptions,
+): number {
+  const displayEpisode = getDisplayLibraryEpisode(libraryEpisode, filters);
+  return Math.max(0, ...(displayEpisode?.sessions ?? []).map((session) => watchedAtMs(session.lastWatchedAt)));
+}
+
+function watchEntryMatchesFilters(
+  entry: StoredEpisodeProgress | StoredWatchItem,
+  libraryEpisode: WatchLibraryEpisode | undefined,
+  filters: LibraryFilterOptions,
+): boolean {
+  if (filters.activity === "all" && filters.person === "all") {
+    return true;
+  }
+
+  const sessions = libraryEpisode?.sessions ?? [];
+  if (filters.activity === "together" || filters.person !== "all") {
+    const sharedSessions = sessions.filter((session) => session.kind === "shared");
+    if (!sharedSessions.length) {
+      return false;
+    }
+
+    if (filters.person === "all") {
+      return true;
+    }
+
+    if (filters.person.startsWith("user:")) {
+      const userId = filters.person.slice("user:".length);
+      return sharedSessions.some((session) =>
+        session.participants.some((participant) => participant.user.userId === userId),
+      );
+    }
+
+    if (filters.person.startsWith("group:")) {
+      return sharedSessions.some((session) =>
+        session.participants.some((participant) => filters.groupMemberUserIds?.has(participant.user.userId)),
       );
     }
   }
-  return nextStore;
+
+  if (filters.activity === "solo") {
+    if (sessions.length) {
+      return sessions.some((session) => session.kind === "solo");
+    }
+    return !entry.lastRoomId && entry.watchedWithCount <= 1;
+  }
+
+  return true;
+}
+
+function getDisplayLibraryEpisode(
+  libraryEpisode: WatchLibraryEpisode | undefined,
+  filters: LibraryFilterOptions,
+): WatchLibraryEpisode | undefined {
+  if (!libraryEpisode) {
+    return undefined;
+  }
+
+  if (filters.activity === "solo") {
+    return {
+      ...libraryEpisode,
+      sessions: libraryEpisode.sessions.filter((session) => session.kind === "solo"),
+    };
+  }
+
+  if (filters.activity !== "together") {
+    return libraryEpisode;
+  }
+
+  const sessions = libraryEpisode.sessions.filter((session) => {
+    if (session.kind !== "shared") {
+      return false;
+    }
+    if (filters.person === "all") {
+      return true;
+    }
+    if (filters.person.startsWith("user:")) {
+      const userId = filters.person.slice("user:".length);
+      return session.participants.some((participant) => participant.user.userId === userId);
+    }
+    if (filters.person.startsWith("group:")) {
+      return session.participants.some((participant) =>
+        filters.groupMemberUserIds?.has(participant.user.userId),
+      );
+    }
+    return false;
+  });
+
+  return {
+    ...libraryEpisode,
+    sessions,
+  };
+}
+
+function buildCompanionFilters(
+  library: WatchLibraryResponse | null,
+  viewerUserId: string | null,
+): LibraryCompanionFilter[] {
+  const companionsByUserId = new Map<
+    string,
+    {
+      displayName: string;
+      avatarUrl: string | null;
+      sessionIds: Set<string>;
+    }
+  >();
+
+  for (const item of library?.items ?? []) {
+    for (const episode of item.episodes) {
+      for (const session of episode.sessions) {
+        if (session.kind !== "shared") {
+          continue;
+        }
+
+        for (const participant of session.participants) {
+          if (viewerUserId && participant.user.userId === viewerUserId) {
+            continue;
+          }
+
+          const existing = companionsByUserId.get(participant.user.userId) ?? {
+            displayName: participant.user.displayName,
+            avatarUrl: participant.user.avatarUrl,
+            sessionIds: new Set<string>(),
+          };
+          existing.sessionIds.add(session.id);
+          companionsByUserId.set(participant.user.userId, existing);
+        }
+      }
+    }
+  }
+
+  return Array.from(companionsByUserId.entries())
+    .map(([userId, companion]) => ({
+      value: `user:${userId}` as const,
+      userId,
+      displayName: companion.displayName,
+      avatarUrl: companion.avatarUrl,
+      sessionCount: companion.sessionIds.size,
+    }))
+    .sort(
+      (a, b) =>
+        b.sessionCount - a.sessionCount ||
+        a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }),
+    )
+    .slice(0, 12);
+}
+
+function countProviderItems(folders: ProviderFolder[]): number {
+  return folders.reduce((sum, folder) => sum + folder.items.length, 0);
 }
 
 function ProviderRow({
   busyWatchSessionId,
+  filters,
   folder,
   libraryEpisodesByKey,
   open,
@@ -949,8 +2240,10 @@ function ProviderRow({
   onToggle,
   openItems,
   onToggleItem,
+  viewerUserId,
 }: {
   busyWatchSessionId: string | null;
+  filters: LibraryFilterOptions;
   folder: ProviderFolder;
   libraryEpisodesByKey: Map<string, WatchLibraryEpisode>;
   open: boolean;
@@ -958,6 +2251,7 @@ function ProviderRow({
   onToggle: () => void;
   openItems: Record<string, boolean>;
   onToggleItem: (itemId: string) => void;
+  viewerUserId: string | null;
 }) {
   const [activeKind, setActiveKind] = useState<"series" | "movie">("series");
   const seriesCount = folder.items.filter((item) => item.kind === "series").length;
@@ -1021,18 +2315,19 @@ function ProviderRow({
             visibleItems.map((item) => (
               <WatchItemRow
                 busyWatchSessionId={busyWatchSessionId}
+                filters={filters}
                 key={item.id}
                 item={item}
                 libraryEpisodesByKey={libraryEpisodesByKey}
                 open={Boolean(openItems[item.id])}
                 onCreateRoomFromSession={onCreateRoomFromSession}
                 onToggle={() => onToggleItem(item.id)}
+                viewerUserId={viewerUserId}
               />
             ))
           ) : (
             <div className="popup-empty">Progress will appear here after watching together.</div>
           )}
-          {folder.provider === "crunchyroll" && folder.items.length ? <InviteFooter /> : null}
         </div>
       ) : null}
     </div>
@@ -1041,20 +2336,38 @@ function ProviderRow({
 
 function WatchItemRow({
   busyWatchSessionId,
+  filters,
   item,
   libraryEpisodesByKey,
   open,
   onCreateRoomFromSession,
   onToggle,
+  viewerUserId,
 }: {
   busyWatchSessionId: string | null;
+  filters: LibraryFilterOptions;
   item: StoredWatchItem;
   libraryEpisodesByKey: Map<string, WatchLibraryEpisode>;
   open: boolean;
   onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
   onToggle: () => void;
+  viewerUserId: string | null;
 }) {
-  const episodes = Object.values(item.episodes ?? {}).sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
+  const episodesByLatest = Object.values(item.episodes ?? {}).sort((a, b) => b.lastWatchedAt - a.lastWatchedAt);
+  const episodesByOrder = Object.values(item.episodes ?? {}).sort(compareEpisodesByDisplayOrder);
+  const latestEpisode = episodesByLatest[0] ?? null;
+  const episodeGroups = useMemo(
+    () => buildEpisodeSeasonGroups(episodesByOrder, item.title),
+    [episodesByOrder, item.title],
+  );
+  const latestSeasonKey = latestEpisode ? episodeSeasonKey(latestEpisode, item.title) : null;
+  const showSeasonGroups = episodeGroups.length > 1 || episodeGroups.some((group) => group.known);
+  const latestLibraryEpisode = latestEpisode
+    ? getDisplayLibraryEpisode(
+        libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, latestEpisode.id)),
+        filters,
+      )
+    : undefined;
   const isSeries = item.kind === "series";
 
   if (!isSeries) {
@@ -1062,8 +2375,12 @@ function WatchItemRow({
       <MovieRow
         busyWatchSessionId={busyWatchSessionId}
         item={item}
-        libraryEpisode={libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, item.id))}
+        libraryEpisode={getDisplayLibraryEpisode(
+          libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, item.id)),
+          filters,
+        )}
         onCreateRoomFromSession={onCreateRoomFromSession}
+        viewerUserId={viewerUserId}
       />
     );
   }
@@ -1076,7 +2393,22 @@ function WatchItemRow({
         </span>
         <span className="popup-watch-main">
           <span className="popup-watch-title">{item.title}</span>
-          <span className="popup-watch-meta">{episodes.length} episodes</span>
+          <span className="popup-watch-meta">
+            {latestEpisode ? (
+              <>
+                {getEpisodeLabel(latestEpisode.title, 0)} · {stripEpisodePrefix(latestEpisode.title)}
+              </>
+            ) : (
+              `${episodesByOrder.length} episodes`
+            )}
+          </span>
+          {latestEpisode ? (
+            <SeriesLatestSummary
+              episode={latestEpisode}
+              libraryEpisode={latestLibraryEpisode}
+              viewerUserId={viewerUserId}
+            />
+          ) : null}
         </span>
         <span className="popup-watch-chevron" data-open={open}>
           <ChevronDown size={16} />
@@ -1084,15 +2416,114 @@ function WatchItemRow({
       </button>
 
       {open ? (
+        showSeasonGroups ? (
+          <div className="popup-season-list">
+            {episodeGroups.map((group) => (
+              <SeasonGroup
+                busyWatchSessionId={busyWatchSessionId}
+                defaultOpen={episodeGroups.length <= 2 || group.key === latestSeasonKey}
+                group={group}
+                key={group.key}
+                latestEpisodeId={latestEpisode?.id ?? null}
+                libraryEpisodesByKey={libraryEpisodesByKey}
+                filters={filters}
+                item={item}
+                onCreateRoomFromSession={onCreateRoomFromSession}
+                viewerUserId={viewerUserId}
+              />
+            ))}
+          </div>
+        ) : (
         <div className="popup-episode-list">
-          {episodes.map((episode, index) => (
+          {episodesByOrder.map((episode, index) => (
             <EpisodeRow
               busyWatchSessionId={busyWatchSessionId}
               episode={episode}
               episodeIndex={index}
+              selected={episode.id === latestEpisode?.id}
               key={episode.id}
-              libraryEpisode={libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, episode.id))}
+              libraryEpisode={getDisplayLibraryEpisode(
+                libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, episode.id)),
+                filters,
+              )}
               onCreateRoomFromSession={onCreateRoomFromSession}
+              viewerUserId={viewerUserId}
+            />
+          ))}
+        </div>
+        )
+      ) : null}
+    </div>
+  );
+}
+
+function SeasonGroup({
+  busyWatchSessionId,
+  defaultOpen,
+  filters,
+  group,
+  item,
+  latestEpisodeId,
+  libraryEpisodesByKey,
+  onCreateRoomFromSession,
+  viewerUserId,
+}: {
+  busyWatchSessionId: string | null;
+  defaultOpen: boolean;
+  filters: LibraryFilterOptions;
+  group: EpisodeSeasonGroup;
+  item: StoredWatchItem;
+  latestEpisodeId: string | null;
+  libraryEpisodesByKey: Map<string, WatchLibraryEpisode>;
+  onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
+  viewerUserId: string | null;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const latestEpisode = group.episodes.reduce<StoredEpisodeProgress | null>(
+    (latest, episode) => (!latest || episode.lastWatchedAt > latest.lastWatchedAt ? episode : latest),
+    null,
+  );
+  const latestEpisodeIndex = latestEpisode ? group.episodes.findIndex((episode) => episode.id === latestEpisode.id) : -1;
+
+  useEffect(() => {
+    setOpen(defaultOpen);
+  }, [defaultOpen, group.key]);
+
+  return (
+    <div className="popup-season-group" data-open={open}>
+      <button
+        className="popup-season-header"
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span className="popup-season-main">
+          <span className="popup-season-title">{group.title}</span>
+          <span className="popup-season-meta">
+            {formatEpisodeCount(group.episodes.length)}
+            {latestEpisode ? ` · latest ${getEpisodeLabel(latestEpisode.title, latestEpisodeIndex)}` : ""}
+          </span>
+        </span>
+        <span className="popup-season-chevron" data-open={open}>
+          <ChevronDown size={14} />
+        </span>
+      </button>
+
+      {open ? (
+        <div className="popup-season-episode-list">
+          {group.episodes.map((episode, index) => (
+            <EpisodeRow
+              busyWatchSessionId={busyWatchSessionId}
+              episode={episode}
+              episodeIndex={index}
+              selected={episode.id === latestEpisodeId}
+              key={episode.id}
+              libraryEpisode={getDisplayLibraryEpisode(
+                libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, episode.id)),
+                filters,
+              )}
+              onCreateRoomFromSession={onCreateRoomFromSession}
+              viewerUserId={viewerUserId}
             />
           ))}
         </div>
@@ -1106,11 +2537,13 @@ function MovieRow({
   item,
   libraryEpisode,
   onCreateRoomFromSession,
+  viewerUserId,
 }: {
   busyWatchSessionId: string | null;
   item: StoredWatchItem;
   libraryEpisode?: WatchLibraryEpisode;
   onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
+  viewerUserId: string | null;
 }) {
   const movieEpisode = getMovieEpisodeProgress(item);
 
@@ -1142,9 +2575,51 @@ function MovieRow({
             onCreateRoomFromSession={onCreateRoomFromSession}
             compact
           />
+          <SharedSessionSummary
+            busySessionId={busyWatchSessionId}
+            libraryEpisode={libraryEpisode}
+            onCreateRoomFromSession={onCreateRoomFromSession}
+            sourceUrl={item.sourceUrl}
+            viewerUserId={viewerUserId}
+          />
         </span>
       </div>
     </div>
+  );
+}
+
+function SeriesLatestSummary({
+  episode,
+  libraryEpisode,
+  viewerUserId,
+}: {
+  episode: StoredEpisodeProgress;
+  libraryEpisode?: WatchLibraryEpisode;
+  viewerUserId: string | null;
+}) {
+  const shared = latestSharedSession(libraryEpisode);
+  const progress = toPercent(libraryEpisode?.progress ?? episode.progress);
+  const mode = shared ? (shared.participants.length > 2 ? "group" : "together") : "solo";
+  return (
+    <span className="popup-series-summary">
+      <span className="popup-series-progress">
+        <span className="popup-progress-track">
+          <span style={{ width: `${progress}%` }} />
+        </span>
+        <span>{Math.round(progress)}%</span>
+      </span>
+      <span className="popup-series-context">
+        <span className="popup-mode-badge" data-mode={mode}>
+          {continueModeLabel(mode)}
+        </span>
+        {shared ? (
+          <>
+            <AvatarStack participants={shared.participants} compact />
+            <span>{continueCompanionLabel(shared.participants, viewerUserId)}</span>
+          </>
+        ) : null}
+      </span>
+    </span>
   );
 }
 
@@ -1154,15 +2629,17 @@ function EpisodeRow({
   episodeIndex,
   libraryEpisode,
   onCreateRoomFromSession,
+  selected,
+  viewerUserId,
 }: {
   busyWatchSessionId: string | null;
   episode: StoredEpisodeProgress;
   episodeIndex: number;
   libraryEpisode?: WatchLibraryEpisode;
   onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
+  selected: boolean;
+  viewerUserId: string | null;
 }) {
-  const selected = episodeIndex === 0;
-
   return (
     <div className="popup-episode-row" data-selected={selected}>
       <button
@@ -1183,8 +2660,54 @@ function EpisodeRow({
           onCreateRoomFromSession={onCreateRoomFromSession}
           compact
         />
+        <SharedSessionSummary
+          busySessionId={busyWatchSessionId}
+          libraryEpisode={libraryEpisode}
+          onCreateRoomFromSession={onCreateRoomFromSession}
+          sourceUrl={episode.sourceUrl}
+          viewerUserId={viewerUserId}
+        />
       </span>
     </div>
+  );
+}
+
+function SharedSessionSummary({
+  busySessionId,
+  libraryEpisode,
+  onCreateRoomFromSession,
+  sourceUrl,
+  viewerUserId,
+}: {
+  busySessionId: string | null;
+  libraryEpisode?: WatchLibraryEpisode;
+  onCreateRoomFromSession: (session: WatchLibrarySession, sourceUrl: string) => void;
+  sourceUrl: string;
+  viewerUserId: string | null;
+}) {
+  const session = latestSharedSession(libraryEpisode);
+  if (!session) {
+    return null;
+  }
+
+  return (
+    <span className="popup-session-summary">
+      <span className="popup-session-summary-main">
+        <AvatarStack participants={session.participants} compact />
+        <span>{sharedParticipantSummary(session.participants, viewerUserId)}</span>
+      </span>
+      <button
+        className="popup-session-summary-action"
+        disabled={busySessionId === session.id}
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onCreateRoomFromSession(session, libraryEpisode?.sourceUrl ?? sourceUrl);
+        }}
+      >
+        {busySessionId === session.id ? "Creating..." : "Continue"}
+      </button>
+    </span>
   );
 }
 
@@ -1276,24 +2799,6 @@ function SharedProgressTracker({
   );
 }
 
-function InviteFooter() {
-  return (
-    <footer className="popup-invite-footer">
-      <span className="popup-invite-icon">
-        <UserPlus size={17} />
-      </span>
-      <span className="popup-invite-copy">
-        <span>Invite friends</span>
-        <span>Share the link and watch together</span>
-      </span>
-      <button className="popup-copy-button" type="button">
-        <Link2 size={13} />
-        Copy link
-      </button>
-    </footer>
-  );
-}
-
 function AvatarStack({ participants, compact }: { participants: WatchLibraryParticipantLike[]; compact?: boolean }) {
   const visible = participants.slice(0, 5);
   return (
@@ -1336,6 +2841,34 @@ function sessionLabel(session: WatchLibrarySession): string {
   return "Your progress";
 }
 
+function latestSharedSession(libraryEpisode?: WatchLibraryEpisode): WatchLibrarySession | null {
+  return (
+    [...(libraryEpisode?.sessions ?? [])]
+      .filter((session) => session.kind === "shared")
+      .sort((a, b) => watchedAtMs(b.lastWatchedAt) - watchedAtMs(a.lastWatchedAt))[0] ?? null
+  );
+}
+
+function sharedParticipantSummary(participants: WatchLibraryParticipantLike[], viewerUserId: string | null): string {
+  const names = participants
+    .filter((participant) => !viewerUserId || participant.user.userId !== viewerUserId)
+    .map((participant) => participant.user.displayName)
+    .filter(Boolean);
+  if (!names.length) {
+    return "Watched together";
+  }
+
+  const visibleNames = names.slice(0, 2);
+  const remainingCount = names.length - visibleNames.length;
+  const people = remainingCount > 0 ? `${visibleNames.join(", ")} +${remainingCount}` : visibleNames.join(", ");
+  return `Watched with ${people}`;
+}
+
+function watchedAtMs(value: string): number {
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
 function sessionVisualKind(session: WatchLibrarySession): "friends" | "solo" {
   return session.kind === "shared" ? "friends" : "solo";
 }
@@ -1371,11 +2904,195 @@ function getEpisodeLabel(title: string, fallbackIndex: number): string {
   return match ? `E${match[1]}` : `E${fallbackIndex + 1}`;
 }
 
+function compareEpisodesByDisplayOrder(a: StoredEpisodeProgress, b: StoredEpisodeProgress): number {
+  const aNumber = getEpisodeNumber(a.title);
+  const bNumber = getEpisodeNumber(b.title);
+  if (aNumber !== null && bNumber !== null && aNumber !== bNumber) {
+    return aNumber - bNumber;
+  }
+  if (aNumber !== null && bNumber === null) {
+    return -1;
+  }
+  if (aNumber === null && bNumber !== null) {
+    return 1;
+  }
+  return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function buildEpisodeSeasonGroups(episodes: StoredEpisodeProgress[], itemTitle: string): EpisodeSeasonGroup[] {
+  const groups = new Map<string, EpisodeSeasonGroup>();
+  for (const episode of episodes) {
+    const key = episodeSeasonKey(episode, itemTitle);
+    const existing = groups.get(key);
+    if (existing) {
+      existing.episodes.push(episode);
+      existing.latestWatchedAt = Math.max(existing.latestWatchedAt, episode.lastWatchedAt);
+      continue;
+    }
+
+    groups.set(key, {
+      key,
+      title: episodeSeasonTitle(episode, itemTitle),
+      known: hasEpisodeSeason(episode, itemTitle),
+      sortNumber:
+        preferredEpisodeSeason(episode, itemTitle)?.seasonNumber ??
+        normalizedEpisodeSeasonNumber(episode, itemTitle) ??
+        getEpisodeSeasonNumber(episode.title),
+      latestWatchedAt: episode.lastWatchedAt,
+      episodes: [episode],
+    });
+  }
+
+  return Array.from(groups.values()).sort(compareSeasonGroups);
+}
+
+function compareSeasonGroups(a: EpisodeSeasonGroup, b: EpisodeSeasonGroup): number {
+  if (a.known !== b.known) {
+    return a.known ? -1 : 1;
+  }
+  if (a.sortNumber !== null && b.sortNumber !== null && a.sortNumber !== b.sortNumber) {
+    return a.sortNumber - b.sortNumber;
+  }
+  if (a.sortNumber !== null && b.sortNumber === null) {
+    return -1;
+  }
+  if (a.sortNumber === null && b.sortNumber !== null) {
+    return 1;
+  }
+  return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function episodeSeasonKey(episode: StoredEpisodeProgress, itemTitle: string): string {
+  const preferred = preferredEpisodeSeason(episode, itemTitle);
+  if (preferred) {
+    return preferred.seasonId;
+  }
+  if (episode.seasonId) {
+    return episode.seasonId;
+  }
+  const seasonNumber = normalizedEpisodeSeasonNumber(episode, itemTitle);
+  if (seasonNumber) {
+    return `season-${seasonNumber}`;
+  }
+  const seasonTitle = normalizedEpisodeSeasonTitle(episode, itemTitle);
+  if (seasonTitle) {
+    return `season:${slugKey(seasonTitle)}`;
+  }
+  return "season:unknown";
+}
+
+function episodeSeasonTitle(episode: StoredEpisodeProgress, itemTitle: string): string {
+  const preferred = preferredEpisodeSeason(episode, itemTitle);
+  if (preferred) {
+    return preferred.seasonTitle;
+  }
+  const seasonTitle = normalizedEpisodeSeasonTitle(episode, itemTitle);
+  if (seasonTitle) {
+    return seasonTitle;
+  }
+  const seasonNumber = normalizedEpisodeSeasonNumber(episode, itemTitle);
+  if (seasonNumber) {
+    return `Season ${seasonNumber}`;
+  }
+  const titleSeasonNumber = getEpisodeSeasonNumber(episode.title);
+  if (titleSeasonNumber) {
+    return `Season ${titleSeasonNumber}`;
+  }
+  return "Other episodes";
+}
+
+function hasEpisodeSeason(episode: StoredEpisodeProgress, itemTitle: string): boolean {
+  return Boolean(
+    preferredEpisodeSeason(episode, itemTitle) ||
+      episode.seasonId ||
+      normalizedEpisodeSeasonTitle(episode, itemTitle) ||
+      normalizedEpisodeSeasonNumber(episode, itemTitle) ||
+      getEpisodeSeasonNumber(episode.title),
+  );
+}
+
+function preferredEpisodeSeason(episode: StoredEpisodeProgress, itemTitle: string) {
+  const inferred = inferredEpisodeSeason(episode);
+  if (!inferred) {
+    return null;
+  }
+  const seasonTitle = episode.seasonTitle ?? null;
+  if (!seasonTitle || isPlaceholderSeasonTitle(seasonTitle) || sameNormalizedTitle(seasonTitle, itemTitle)) {
+    return inferred;
+  }
+  return null;
+}
+
+function normalizedEpisodeSeasonTitle(episode: StoredEpisodeProgress, itemTitle: string): string | null {
+  const seasonTitle = episode.seasonTitle?.trim() || null;
+  if (!seasonTitle || isPlaceholderSeasonTitle(seasonTitle) || sameNormalizedTitle(seasonTitle, itemTitle)) {
+    return null;
+  }
+  return seasonTitle;
+}
+
+function normalizedEpisodeSeasonNumber(episode: StoredEpisodeProgress, itemTitle: string): number | null {
+  const seasonTitle = episode.seasonTitle ?? null;
+  if (seasonTitle && (isPlaceholderSeasonTitle(seasonTitle) || sameNormalizedTitle(seasonTitle, itemTitle))) {
+    return null;
+  }
+  return episode.seasonNumber ?? null;
+}
+
+function inferredEpisodeSeason(episode: StoredEpisodeProgress) {
+  return inferCrunchyrollSeasonFromSourceUrl(episode.sourceUrl);
+}
+
+function isPlaceholderSeasonTitle(title: string): boolean {
+  const normalized = title.trim().toLowerCase();
+  return normalized === "?" || normalized === "unknown" || normalized === "n/a" || normalized === "na";
+}
+
+function sameNormalizedTitle(a: string, b: string): boolean {
+  return normalizeComparableTitle(a) === normalizeComparableTitle(b);
+}
+
+function normalizeComparableTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[\W_]+/g, " ")
+    .trim();
+}
+
+function formatEpisodeCount(count: number): string {
+  return `${count} ${count === 1 ? "episode" : "episodes"}`;
+}
+
+function getEpisodeNumber(title: string): number | null {
+  const match = title.match(/\bE\s?(\d+)\b/i) ?? title.match(/^(\d+)[\s.:-]/);
+  if (!match) {
+    return null;
+  }
+  const value = Number.parseInt(match[1] ?? "", 10);
+  return Number.isFinite(value) ? value : null;
+}
+
+function getEpisodeSeasonNumber(title: string): number | null {
+  return seasonNumberFromTitle(title);
+}
+
 function stripEpisodePrefix(title: string): string {
   return title
+    .replace(/^\s*S\s?\d+\s*E\s?\d+\s*[-:–—]\s*/i, "")
+    .replace(/^\s*Season\s+\d+\s+Episode\s+\d+\s*[-:–—]\s*/i, "")
+    .replace(/^\s*Сезон\s+\d+\s+Серия\s+\d+\s*[-:–—]\s*/i, "")
     .replace(/^\s*E\s?\d+\s*[-:–—]\s*/i, "")
     .replace(/^\s*\d+\s*[-:–—.]\s*/, "")
     .trim();
+}
+
+function slugKey(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 }
 
 function getSegmentLayer(progress: number): number {

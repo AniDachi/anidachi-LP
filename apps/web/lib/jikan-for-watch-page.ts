@@ -12,15 +12,29 @@ import {
 import { animeList, type AnimeEntry } from "@/lib/anime-data";
 import { getSlugByMalIdMap } from "@/lib/anime-mal-ids";
 
-/** Cached for the RSC so metadata + page body can share one Jikan round-trip per slug. */
+function loadJikanFromBuildCache(slug: string) {
+  const cached = getCachedJikanEntry(slug);
+  if (!cached) return null;
+  return {
+    jikanAnime: jikanAnimeFromCache(cached),
+    recs: [] as JikanRecommendation[],
+  } as const;
+}
+
+/** Cached for the RSC so metadata + page body share one lookup per slug. */
 export const fetchJikanForWatchPage = cache(
   async (malId: number, slug: string) => {
+    const fromBuildCache = loadJikanFromBuildCache(slug);
+    if (fromBuildCache) return fromBuildCache;
+
+    // Local dev only: allow live Jikan when the build cache snapshot is missing.
+    if (process.env.NODE_ENV !== "development") return null;
+
     let jikanAnime: JikanAnime | null = null;
     try {
       jikanAnime = await getAnimeById(malId);
     } catch {
-      const cached = getCachedJikanEntry(slug);
-      if (cached) jikanAnime = jikanAnimeFromCache(cached);
+      return null;
     }
 
     if (!jikanAnime) return null;

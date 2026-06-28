@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   assertExtensionLogoutRedirect,
   buildExtensionConnectUrl,
@@ -7,13 +7,30 @@ import {
   isAuthMessage,
   normalizeExtensionRefreshResponse,
   parseExtensionAuthRedirect,
+  runWebsiteSignOutSequence,
+  shouldClearExtensionSessionForWebsiteProbe,
+  shouldClearExtensionSessionForWebsiteCookieChange,
+  shouldSyncExtensionSessionForWebsiteCookieChange,
 } from "../src/auth-client";
 import {
   AUTH_TOKENS_KEY,
   AUTH_TOKENS_STORAGE_KEY,
+  type ExtensionAuthTokens,
   normalizeAuthenticatedUser,
   normalizeExtensionAuthTokens,
 } from "../src/auth-tokens";
+
+const storedTokens: ExtensionAuthTokens = {
+  accessToken: "access",
+  refreshToken: "refresh",
+  user: {
+    id: "user-1",
+    email: "user@example.com",
+    displayName: "Alina",
+    avatarUrl: null,
+    plan: "plus",
+  },
+};
 
 describe("extension auth client", () => {
   it("builds the website extension connect URL", () => {
@@ -69,6 +86,7 @@ describe("extension auth client", () => {
 
   it("validates auth runtime messages", () => {
     expect(isAuthMessage(createAuthMessage("sign-in"))).toBe(true);
+    expect(isAuthMessage(createAuthMessage("get-session-fast"))).toBe(true);
     expect(isAuthMessage({ type: "ANIDACHI_AUTH", command: "unknown" })).toBe(false);
     expect(isAuthMessage({ command: "sign-in" })).toBe(false);
   });
@@ -95,9 +113,148 @@ describe("extension auth client", () => {
     ).toBeNull();
   });
 
+  it("clears extension auth when the website session is signed out or belongs to another user", () => {
+    expect(
+      shouldClearExtensionSessionForWebsiteProbe(storedTokens, {
+        status: "signed-out",
+      }),
+    ).toBe(true);
+
+    expect(
+      shouldClearExtensionSessionForWebsiteProbe(storedTokens, {
+        status: "authenticated",
+        user: {
+          id: "user-2",
+          email: "other@example.com",
+          displayName: "Other",
+          avatarUrl: null,
+          plan: "free",
+        },
+      }),
+    ).toBe(true);
+  });
+
+  it("keeps extension auth when the website session still matches or cannot be checked", () => {
+    expect(
+      shouldClearExtensionSessionForWebsiteProbe(storedTokens, {
+        status: "authenticated",
+        user: storedTokens.user,
+      }),
+    ).toBe(false);
+
+    expect(
+      shouldClearExtensionSessionForWebsiteProbe(storedTokens, {
+        status: "unknown",
+      }),
+    ).toBe(false);
+  });
+
+  it("clears extension auth only for configured website refresh cookie removals", () => {
+    expect(
+      shouldClearExtensionSessionForWebsiteCookieChange({
+        removed: true,
+        cause: "explicit",
+        cookie: {
+          name: "anidachi_refresh_token",
+          domain: "localhost",
+        },
+      }),
+    ).toBe(true);
+
+    expect(
+      shouldClearExtensionSessionForWebsiteCookieChange({
+        removed: true,
+        cause: "overwrite",
+        cookie: {
+          name: "anidachi_refresh_token",
+          domain: "localhost",
+        },
+      }),
+    ).toBe(false);
+
+    expect(
+      shouldClearExtensionSessionForWebsiteCookieChange({
+        removed: true,
+        cause: "explicit",
+        cookie: {
+          name: "other_cookie",
+          domain: "localhost",
+        },
+      }),
+    ).toBe(false);
+  });
+
+  it("syncs extension auth when the configured website refresh cookie is set", () => {
+    expect(
+      shouldSyncExtensionSessionForWebsiteCookieChange({
+        removed: false,
+        cause: "explicit",
+        cookie: {
+          name: "anidachi_refresh_token",
+          domain: "localhost",
+        },
+      }),
+    ).toBe(true);
+
+    expect(
+      shouldSyncExtensionSessionForWebsiteCookieChange({
+        removed: false,
+        cause: "explicit",
+        cookie: {
+          name: "anidachi_refresh_token",
+          domain: "example.com",
+        },
+      }),
+    ).toBe(false);
+  });
+
   it("keeps the WXT auth key and raw storage key aligned", () => {
     expect(AUTH_TOKENS_STORAGE_KEY).toBe("authTokens");
     expect(AUTH_TOKENS_KEY).toBe("local:authTokens");
+  });
+
+  it("clears extension tokens only after attempting website logout", async () => {
+    const events: string[] = [];
+
+    await runWebsiteSignOutSequence({
+      getStoredTokens: async () => {
+        events.push("read-stored");
+        return storedTokens;
+      },
+      revokeRefreshToken: vi.fn(async () => {
+        events.push("revoke");
+      }),
+      attemptWebsiteLogout: vi.fn(async () => {
+        events.push("logout-flow");
+      }),
+      clearTokens: vi.fn(async () => {
+        events.push("clear");
+      }),
+    });
+
+    expect(events).toEqual(["read-stored", "revoke", "logout-flow", "clear"]);
+  });
+
+  it("clears extension tokens even when website logout fails", async () => {
+    const events: string[] = [];
+
+    await expect(
+      runWebsiteSignOutSequence({
+        getStoredTokens: async () => storedTokens,
+        revokeRefreshToken: vi.fn(async () => {
+          events.push("revoke");
+        }),
+        attemptWebsiteLogout: vi.fn(async () => {
+          events.push("logout-flow");
+          throw new Error("Invalid extension logout state");
+        }),
+        clearTokens: vi.fn(async () => {
+          events.push("clear");
+        }),
+      }),
+    ).rejects.toThrow("Invalid extension logout state");
+
+    expect(events).toEqual(["revoke", "logout-flow", "clear"]);
   });
 
   it("normalizes valid token responses", () => {

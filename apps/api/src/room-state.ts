@@ -3,6 +3,7 @@ import type {
   PlaybackState,
   RoomCapabilities,
   ServerEvent,
+  WatchSourceDescriptor,
 } from "@anidachi/protocol";
 
 export const LEGACY_ROOM_CAPABILITIES: RoomCapabilities = {
@@ -15,16 +16,52 @@ export const LEGACY_ROOM_CAPABILITIES: RoomCapabilities = {
   canSendPushInvites: false,
 };
 
+export interface RoomStateSnapshot {
+  schemaVersion: 1;
+  capabilities: RoomCapabilities;
+  hostId: string | null;
+  hostState?: PlaybackState;
+  participants: Participant[];
+  roomGeneration: number;
+  serverSeq: number;
+  source?: WatchSourceDescriptor;
+  sourceGeneration: number;
+  updatedAt: number;
+}
+
 export class RoomState {
   readonly roomId: string;
   private capabilities: RoomCapabilities;
   private readonly participantsById = new Map<string, Participant>();
   private hostId: string | null = null;
   private hostState: PlaybackState | undefined;
+  private roomGenerationValue = 1;
+  private serverSeqValue = 0;
+  private source: WatchSourceDescriptor | undefined;
+  private sourceGenerationValue = 1;
 
-  constructor(roomId: string, capabilities: RoomCapabilities = LEGACY_ROOM_CAPABILITIES) {
+  constructor(
+    roomId: string,
+    capabilities: RoomCapabilities = LEGACY_ROOM_CAPABILITIES,
+    snapshot?: RoomStateSnapshot,
+  ) {
     this.roomId = roomId;
-    this.capabilities = capabilities;
+    this.capabilities = snapshot?.capabilities ?? capabilities;
+    if (snapshot) {
+      for (const participant of snapshot.participants) {
+        this.participantsById.set(participant.id, participant);
+      }
+      this.hostId = snapshot.hostId;
+      this.roomGenerationValue = snapshot.roomGeneration;
+      this.serverSeqValue = snapshot.serverSeq;
+      this.sourceGenerationValue = snapshot.sourceGeneration;
+      if (snapshot.hostState) {
+        this.hostState = snapshot.hostState;
+      }
+      if (snapshot.source) {
+        this.source = snapshot.source;
+      }
+    }
   }
 
   /**
@@ -51,23 +88,49 @@ export class RoomState {
     return this.capabilities;
   }
 
+  get roomGeneration(): number {
+    return this.roomGenerationValue;
+  }
+
+  get serverSeq(): number {
+    return this.serverSeqValue;
+  }
+
+  get sourceGeneration(): number {
+    return this.sourceGenerationValue;
+  }
+
   setCapabilities(capabilities: RoomCapabilities): void {
+    const changed =
+      this.capabilities.hostPlanCode !== capabilities.hostPlanCode ||
+      this.capabilities.maxParticipants !== capabilities.maxParticipants ||
+      this.capabilities.maxMediaSeats !== capabilities.maxMediaSeats ||
+      this.capabilities.canNameRoom !== capabilities.canNameRoom ||
+      this.capabilities.canSendPushInvites !== capabilities.canSendPushInvites;
     this.capabilities = capabilities;
+    if (changed) {
+      this.bumpServerSeq();
+    }
   }
 
   get snapshot(): ServerEvent {
     const base = {
       type: "ROOM_SNAPSHOT" as const,
       roomId: this.roomId,
+      roomGeneration: this.roomGenerationValue,
+      serverSeq: this.serverSeqValue,
+      sourceGeneration: this.sourceGenerationValue,
       capabilities: this.capabilities,
       participants: this.participants,
     };
 
+    const withSource = this.source ? { ...base, source: this.source } : base;
+
     if (this.hostState) {
-      return { ...base, hostState: this.hostState };
+      return { ...withSource, hostState: this.hostState };
     }
 
-    return base;
+    return withSource;
   }
 
   join(participant: Participant): Participant {
@@ -87,6 +150,7 @@ export class RoomState {
     };
 
     this.participantsById.set(joined.id, joined);
+    this.bumpServerSeq();
     return joined;
   }
 
@@ -107,16 +171,37 @@ export class RoomState {
       }
     }
 
+    this.bumpServerSeq();
     return leaving;
   }
 
-  updateHostState(byUserId: string, state: PlaybackState): boolean {
+  updateHostState(
+    byUserId: string,
+    state: PlaybackState,
+    source?: WatchSourceDescriptor,
+  ): HostStateUpdateResult {
     if (this.hostId !== byUserId || !this.participantsById.has(byUserId)) {
-      return false;
+      return { accepted: false, sourceChanged: false };
     }
 
+    const previousSource = this.source;
+    const previousFingerprint = this.hostState?.videoFingerprint ?? previousSource?.videoFingerprint;
+    const nextSource = normalizeWatchSourceDescriptor(state, source ?? previousSource);
+    const sourceChanged =
+      previousFingerprint !== undefined && previousFingerprint !== state.videoFingerprint;
+
     this.hostState = state;
-    return true;
+    this.source = nextSource;
+    if (sourceChanged) {
+      this.sourceGenerationValue += 1;
+    }
+    this.bumpServerSeq();
+    return {
+      accepted: true,
+      sourceChanged,
+      ...(nextSource ? { source: nextSource } : {}),
+      ...(previousSource ? { previousSource } : {}),
+    };
   }
 
   canControlPlayback(userId: string): boolean {
@@ -157,6 +242,67 @@ export class RoomState {
       lastSeenAt: Date.now(),
     };
     this.participantsById.set(userId, updated);
+    this.bumpServerSeq();
     return updated;
   }
+
+  toSnapshot(updatedAt = Date.now()): RoomStateSnapshot {
+    const snapshot: RoomStateSnapshot = {
+      schemaVersion: 1,
+      capabilities: this.capabilities,
+      hostId: this.hostId,
+      participants: this.participants,
+      roomGeneration: this.roomGenerationValue,
+      serverSeq: this.serverSeqValue,
+      sourceGeneration: this.sourceGenerationValue,
+      updatedAt,
+    };
+    if (this.hostState) {
+      snapshot.hostState = this.hostState;
+    }
+    if (this.source) {
+      snapshot.source = this.source;
+    }
+    return snapshot;
+  }
+
+  private bumpServerSeq(): void {
+    this.serverSeqValue += 1;
+  }
+}
+
+export interface HostStateUpdateResult {
+  accepted: boolean;
+  sourceChanged: boolean;
+  source?: WatchSourceDescriptor;
+  previousSource?: WatchSourceDescriptor;
+}
+
+function normalizeWatchSourceDescriptor(
+  state: PlaybackState,
+  source?: WatchSourceDescriptor,
+): WatchSourceDescriptor | undefined {
+  const sourceUrl = source?.sourceUrl ?? state.sourceUrl;
+  if (!sourceUrl) {
+    return undefined;
+  }
+
+  return {
+    ...source,
+    provider: source?.provider ?? providerFromFingerprint(state.videoFingerprint),
+    sourceUrl,
+    canonicalUrl: source?.canonicalUrl ?? sourceUrl,
+    videoFingerprint: state.videoFingerprint,
+    title: source?.title?.trim() || "Untitled source",
+  };
+}
+
+function providerFromFingerprint(fingerprint: string): WatchSourceDescriptor["provider"] {
+  if (fingerprint.startsWith("crunchyroll|")) {
+    return "crunchyroll";
+  }
+  if (fingerprint.startsWith("youtube|")) {
+    return "youtube";
+  }
+  return "generic";
 }

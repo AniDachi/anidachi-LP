@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getP2PSignalDedupeKey,
   type BufferedP2PSignalEvent,
   RecentP2PSignalBuffer,
 } from "../src/p2p-signal-buffer";
@@ -10,10 +11,12 @@ function p2pEvent(overrides: Partial<BufferedP2PSignalEvent> = {}): BufferedP2PS
     clientSignalId: "signal-1",
     fromUserId: "host",
     roomId: "room-1",
+    roomGeneration: 1,
     senderConnectionId: "connection-1",
     serverReceivedAt: 1_000,
     serverSeq: 1,
     signal: { kind: "renegotiate" },
+    sourceGeneration: 1,
     toUserId: "viewer",
     ...overrides,
   };
@@ -94,5 +97,21 @@ describe("RecentP2PSignalBuffer", () => {
         sourceGeneration: 5,
       }),
     ).toEqual([active]);
+  });
+
+  it("hydrates a persisted replay buffer and rebuilds dedupe state", () => {
+    const buffer = new RecentP2PSignalBuffer();
+    const first = p2pEvent({ clientSignalId: "first", serverSeq: 1 });
+    const second = p2pEvent({ clientSignalId: "second", serverSeq: 2 });
+
+    buffer.hydrate([second, first], 1_002);
+
+    expect(buffer.replayFor("viewer", 0, 1_002)).toEqual([first, second]);
+    expect(buffer.hasSeen(first)).toBe(true);
+    expect(buffer.add({ ...first, serverSeq: 9 }, 1_003)).toEqual({
+      duplicate: true,
+      event: first,
+    });
+    expect(getP2PSignalDedupeKey(first)).toBe("room-1:host:viewer:first");
   });
 });

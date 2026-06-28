@@ -9,6 +9,9 @@ export interface WatchProgressEntry {
   itemTitle: string;
   contentId?: string;
   seriesId?: string;
+  seasonId?: string;
+  seasonTitle?: string;
+  seasonNumber?: number;
   episodeId?: string;
   episodeTitle?: string;
   artworkUrl?: string;
@@ -23,6 +26,9 @@ export interface StoredEpisodeProgress {
   id: string;
   title: string;
   sourceUrl: string;
+  seasonId?: string;
+  seasonTitle?: string;
+  seasonNumber?: number;
   currentTime: number;
   duration: number;
   progress: number;
@@ -61,6 +67,8 @@ export interface ProviderFolder {
 }
 
 export const WATCH_PROGRESS_STORAGE_KEY = "anidachi.watchProgress.v1";
+export const WATCH_PROGRESS_GUEST_OWNER_ID = "guest";
+export const WATCH_PROGRESS_ACTIVE_OWNER_STORAGE_KEY = "anidachi.watchProgress.activeOwner.v1";
 const WATCH_PROGRESS_RESET_STORAGE_KEY = "anidachi.watchProgress.reset.crunchyroll-regroup.v1";
 
 export const RESOURCE_PROVIDER_LABELS: Record<ResourceProvider, string> = {
@@ -126,10 +134,12 @@ export function recordWatchProgressInStore(
   if (entry.kind === "episode") {
     const episodeId = entry.episodeId ?? entry.itemId;
     const episodes = nextItem.episodes ?? {};
+    const previousEpisode = episodes[episodeId];
     episodes[episodeId] = {
       id: episodeId,
       title: entry.episodeTitle ?? entry.itemTitle,
       sourceUrl: entry.sourceUrl,
+      ...getSeasonForStoredEpisode(entry, previousEpisode),
       currentTime,
       duration,
       progress,
@@ -177,20 +187,75 @@ export function buildProviderFolders(store: WatchProgressStore): ProviderFolder[
 }
 
 export async function loadWatchProgressStore(): Promise<WatchProgressStore> {
+  return loadWatchProgressStoreForUser(null);
+}
+
+export async function loadWatchProgressStoreForUser(
+  userId: string | null | undefined,
+): Promise<WatchProgressStore> {
   await clearLegacyWatchProgressIfNeeded();
-  const raw = await chrome.storage.local.get(WATCH_PROGRESS_STORAGE_KEY);
-  return normalizeWatchProgressStore(raw[WATCH_PROGRESS_STORAGE_KEY]);
+  const key = watchProgressStorageKeyForUser(userId);
+  await setActiveWatchProgressOwner(userId);
+  const raw = await chrome.storage.local.get(key);
+  return normalizeWatchProgressStore(raw[key]);
 }
 
 export async function saveWatchProgressStore(store: WatchProgressStore): Promise<void> {
-  await chrome.storage.local.set({ [WATCH_PROGRESS_STORAGE_KEY]: store });
+  await saveWatchProgressStoreForUser(null, store);
+}
+
+export async function saveWatchProgressStoreForUser(
+  userId: string | null | undefined,
+  store: WatchProgressStore,
+): Promise<void> {
+  const key = watchProgressStorageKeyForUser(userId);
+  await setActiveWatchProgressOwner(userId);
+  await chrome.storage.local.set({ [key]: store });
+}
+
+export async function clearWatchProgressStoreForUser(
+  userId: string | null | undefined,
+): Promise<void> {
+  const key = watchProgressStorageKeyForUser(userId);
+  await chrome.storage.local.remove(key);
+  if (!userId) {
+    await chrome.storage.local.remove(WATCH_PROGRESS_STORAGE_KEY);
+  }
+}
+
+export async function setActiveWatchProgressOwner(
+  userId: string | null | undefined,
+): Promise<void> {
+  await chrome.storage.local.set({
+    [WATCH_PROGRESS_ACTIVE_OWNER_STORAGE_KEY]: watchProgressOwnerForUser(userId),
+  });
 }
 
 export async function recordWatchProgress(entry: WatchProgressEntry): Promise<WatchProgressStore> {
-  const store = await loadWatchProgressStore();
+  return recordWatchProgressForUser(null, entry);
+}
+
+export async function recordWatchProgressForUser(
+  userId: string | null | undefined,
+  entry: WatchProgressEntry,
+): Promise<WatchProgressStore> {
+  const store = await loadWatchProgressStoreForUser(userId);
   const next = recordWatchProgressInStore(store, entry);
-  await saveWatchProgressStore(next);
+  await saveWatchProgressStoreForUser(userId, next);
   return next;
+}
+
+export function watchProgressOwnerForUser(userId: string | null | undefined): string {
+  const normalized = userId?.trim();
+  return normalized ? `user:${normalized}` : WATCH_PROGRESS_GUEST_OWNER_ID;
+}
+
+export function watchProgressStorageKeyForUser(userId: string | null | undefined): string {
+  const owner = watchProgressOwnerForUser(userId);
+  if (owner === WATCH_PROGRESS_GUEST_OWNER_ID) {
+    return WATCH_PROGRESS_STORAGE_KEY;
+  }
+  return `${WATCH_PROGRESS_STORAGE_KEY}.${encodeURIComponent(owner)}`;
 }
 
 export function normalizeWatchProgressStore(value: unknown): WatchProgressStore {
@@ -283,7 +348,7 @@ function normalizeStoredWatchItem(
 function mergeStoredWatchItems(first: StoredWatchItem, second: StoredWatchItem): StoredWatchItem {
   const newest = second.lastWatchedAt >= first.lastWatchedAt ? second : first;
   const oldest = newest === second ? first : second;
-  const episodes = { ...oldest.episodes, ...newest.episodes };
+  const episodes = mergeStoredEpisodeRecords(oldest.episodes, newest.episodes);
 
   return {
     ...oldest,
@@ -297,6 +362,60 @@ function mergeStoredWatchItems(first: StoredWatchItem, second: StoredWatchItem):
     ...getArtworkForMergedItem(newest.artworkUrl, oldest.artworkUrl),
     contentId: newest.contentId ?? oldest.contentId,
     seriesId: newest.seriesId ?? oldest.seriesId,
+  };
+}
+
+function mergeStoredEpisodeRecords(
+  first: Record<string, StoredEpisodeProgress> | undefined,
+  second: Record<string, StoredEpisodeProgress> | undefined,
+): Record<string, StoredEpisodeProgress> {
+  const episodes: Record<string, StoredEpisodeProgress> = { ...(first ?? {}) };
+  for (const [episodeId, episode] of Object.entries(second ?? {})) {
+    episodes[episodeId] = episodes[episodeId]
+      ? mergeStoredEpisodeProgress(episodes[episodeId], episode)
+      : episode;
+  }
+  return episodes;
+}
+
+function mergeStoredEpisodeProgress(
+  first: StoredEpisodeProgress,
+  second: StoredEpisodeProgress,
+): StoredEpisodeProgress {
+  const newest = second.lastWatchedAt >= first.lastWatchedAt ? second : first;
+  const oldest = newest === second ? first : second;
+  return {
+    ...oldest,
+    ...newest,
+    ...getSeasonForMergedEpisode(newest, oldest),
+  };
+}
+
+function getSeasonForStoredEpisode(
+  entry: WatchProgressEntry,
+  previous: StoredEpisodeProgress | undefined,
+): Pick<StoredEpisodeProgress, "seasonId" | "seasonTitle" | "seasonNumber"> {
+  return getSeasonForMergedEpisode(
+    {
+      seasonId: entry.seasonId,
+      seasonTitle: entry.seasonTitle,
+      seasonNumber: entry.seasonNumber,
+    },
+    previous,
+  );
+}
+
+function getSeasonForMergedEpisode(
+  primary: Pick<StoredEpisodeProgress, "seasonId" | "seasonTitle" | "seasonNumber">,
+  fallback: Pick<StoredEpisodeProgress, "seasonId" | "seasonTitle" | "seasonNumber"> | undefined,
+): Pick<StoredEpisodeProgress, "seasonId" | "seasonTitle" | "seasonNumber"> {
+  const seasonId = primary.seasonId ?? fallback?.seasonId;
+  const seasonTitle = primary.seasonTitle ?? fallback?.seasonTitle;
+  const seasonNumber = primary.seasonNumber ?? fallback?.seasonNumber;
+  return {
+    ...(seasonId ? { seasonId } : {}),
+    ...(seasonTitle ? { seasonTitle } : {}),
+    ...(Number.isFinite(seasonNumber) ? { seasonNumber } : {}),
   };
 }
 

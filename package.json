@@ -31,6 +31,8 @@
     "graph:update": "graphify update . --no-cluster",
     "graph:watch": "graphify watch .",
     "harness:rooms": "node scripts/room-signaling-harness.mjs",
+    "linkedin:chrome": "npm --prefix scripts/linkedin run chrome",
+    "linkedin:connect": "npm --prefix scripts/linkedin run send",
     "format": "biome format .",
     "lint": "biome lint .",
     "smoke:worker:staging": "WORKER_HTTP_BASE=https://anidachi-api-staging.vladislav-gul7.workers.dev WORKER_EXPECTED_ENV=staging node scripts/smoke-worker.mjs",

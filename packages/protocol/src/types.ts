@@ -35,6 +35,22 @@ export const PlaybackStateSchema = z.object({
   playbackRate: z.number().positive(),
 });
 
+export const WatchSourceProviderSchema = z.enum(["crunchyroll", "youtube", "generic"]);
+
+export const WatchSourceDescriptorSchema = z.object({
+  provider: WatchSourceProviderSchema,
+  sourceUrl: z.string().url(),
+  canonicalUrl: z.string().url(),
+  videoFingerprint: z.string().min(1),
+  title: z.string().min(1).max(300),
+  seriesTitle: z.string().min(1).max(300).optional(),
+  episodeTitle: z.string().min(1).max(300).optional(),
+  seasonNumber: z.number().int().positive().optional(),
+  episodeNumber: z.number().int().nonnegative().optional(),
+  duration: z.number().nonnegative().optional(),
+  posterUrl: z.string().url().optional(),
+});
+
 export const ReactionEventSchema = z
   .object({
     id: z.string().min(1),
@@ -96,17 +112,24 @@ export const P2PSignalSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 
-const P2PSignalEnvelopeSchema = RoomScopedSchema.extend({
+const ClientP2PSignalEnvelopeSchema = RoomScopedSchema.extend({
   type: z.literal("P2P_SIGNAL"),
   clientSignalId: z.string().min(1),
   fromUserId: z.string().min(1),
+  // Compatibility bridge: clients may send their current generation hints, but
+  // the Worker owns the authoritative values and rewrites them on relay.
   roomGeneration: z.number().int().nonnegative().optional(),
   senderConnectionId: z.string().min(1),
-  serverReceivedAt: z.number().int().nonnegative().optional(),
-  serverSeq: z.number().int().nonnegative().optional(),
   sourceGeneration: z.number().int().nonnegative().optional(),
   toUserId: z.string().min(1),
   signal: P2PSignalSchema,
+});
+
+const ServerP2PSignalEnvelopeSchema = ClientP2PSignalEnvelopeSchema.extend({
+  roomGeneration: z.number().int().nonnegative(),
+  serverReceivedAt: z.number().int().nonnegative(),
+  serverSeq: z.number().int().nonnegative(),
+  sourceGeneration: z.number().int().nonnegative(),
 });
 
 export const ClientEventSchema = z.discriminatedUnion("type", [
@@ -127,6 +150,7 @@ export const ClientEventSchema = z.discriminatedUnion("type", [
   RoomScopedSchema.extend({
     type: z.literal("HOST_STATE"),
     state: PlaybackStateSchema,
+    source: WatchSourceDescriptorSchema.optional(),
   }),
   RoomScopedSchema.extend({
     type: z.literal("PLAY"),
@@ -155,7 +179,7 @@ export const ClientEventSchema = z.discriminatedUnion("type", [
     type: z.literal("CAMERA_OFF"),
     userId: z.string().min(1),
   }),
-  P2PSignalEnvelopeSchema,
+  ClientP2PSignalEnvelopeSchema,
 ]);
 
 export const ServerEventSchema = z.discriminatedUnion("type", [
@@ -166,9 +190,23 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
   }),
   RoomScopedSchema.extend({
     type: z.literal("ROOM_SNAPSHOT"),
+    roomGeneration: z.number().int().nonnegative(),
+    serverSeq: z.number().int().nonnegative(),
+    sourceGeneration: z.number().int().nonnegative(),
     participants: z.array(ParticipantSchema),
     capabilities: RoomCapabilitiesSchema.optional(),
     hostState: PlaybackStateSchema.optional(),
+    source: WatchSourceDescriptorSchema.optional(),
+  }),
+  RoomScopedSchema.extend({
+    type: z.literal("SOURCE_CHANGED"),
+    roomGeneration: z.number().int().nonnegative(),
+    sourceGeneration: z.number().int().nonnegative(),
+    serverSeq: z.number().int().nonnegative(),
+    serverReceivedAt: z.number().int().nonnegative(),
+    source: WatchSourceDescriptorSchema,
+    previousSource: WatchSourceDescriptorSchema.optional(),
+    hostState: PlaybackStateSchema,
   }),
   z.object({
     type: z.literal("PARTICIPANT_JOINED"),
@@ -206,12 +244,13 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
     code: z.string().min(1),
     message: z.string().min(1),
   }),
-  P2PSignalEnvelopeSchema,
+  ServerP2PSignalEnvelopeSchema,
 ]);
 
 export type Participant = z.infer<typeof ParticipantSchema>;
 export type RoomCapabilities = z.infer<typeof RoomCapabilitiesSchema>;
 export type PlaybackState = z.infer<typeof PlaybackStateSchema>;
+export type WatchSourceDescriptor = z.infer<typeof WatchSourceDescriptorSchema>;
 export type ReactionEvent = z.infer<typeof ReactionEventSchema>;
 export type P2PSessionDescription = z.infer<typeof P2PSessionDescriptionSchema>;
 export type P2PIceCandidate = z.infer<typeof P2PIceCandidateSchema>;

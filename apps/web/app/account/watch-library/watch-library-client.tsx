@@ -5,6 +5,7 @@ import {
   Film,
   Play,
   RefreshCw,
+  Trash2,
   Users,
 } from "lucide-react";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
@@ -15,6 +16,10 @@ import type {
   WatchLibrarySession,
 } from "@/lib/anidachi-auth/watch-library";
 import { api } from "@/lib/client-api";
+import {
+  inferCrunchyrollSeasonFromSourceUrl,
+  inferSeasonNumberFromTitle,
+} from "@/lib/watch-season-inference";
 
 type Notice = {
   tone: "success" | "error";
@@ -24,6 +29,15 @@ type Notice = {
 type CreatedRoomResponse = {
   roomId: string;
   shareableLink: string;
+};
+
+type EpisodeSeasonGroup = {
+  key: string;
+  title: string;
+  known: boolean;
+  sortNumber: number | null;
+  latestWatchedAt: string;
+  episodes: WatchLibraryEpisode[];
 };
 
 const PLAN_LABELS: Record<string, string> = {
@@ -40,6 +54,7 @@ export function WatchLibraryClient({
   const [library, setLibrary] = useState(initialLibrary);
   const [busySessionId, setBusySessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const episodeCount = useMemo(
     () => library.items.reduce((sum, item) => sum + item.episodes.length, 0),
@@ -74,6 +89,26 @@ export function WatchLibraryClient({
       setLoading(false);
     }
   }, []);
+
+  const clearHistory = useCallback(async () => {
+    if (!library.items.length || clearing) return;
+    const confirmed = window.confirm("Clear your AniDachi watch history?");
+    if (!confirmed) return;
+
+    setClearing(true);
+    setNotice(null);
+    try {
+      setLibrary(await api<WatchLibraryResponse>("/api/watch-library", { method: "DELETE" }));
+      setNotice({ tone: "success", text: "Watch history cleared." });
+    } catch (error) {
+      setNotice({
+        tone: "error",
+        text: error instanceof Error ? error.message : "Could not clear watch library",
+      });
+    } finally {
+      setClearing(false);
+    }
+  }, [clearing, library.items.length]);
 
   const createRoom = useCallback(async (session: WatchLibrarySession, sourceUrl: string) => {
     setBusySessionId(session.id);
@@ -126,15 +161,26 @@ export function WatchLibraryClient({
               {library.limits.historyRetentionDays} days of history.
             </p>
           </div>
-          <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-4 text-sm font-semibold text-foreground transition hover:bg-brand-orange/20 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={loading}
-            onClick={() => void refresh()}
-            type="button"
-          >
-            <RefreshCw className="h-4 w-4" aria-hidden />
-            Refresh
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-4 text-sm font-semibold text-foreground transition hover:bg-brand-orange/20 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={loading || clearing}
+              onClick={() => void refresh()}
+              type="button"
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden />
+              Refresh
+            </button>
+            <button
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-400/25 bg-red-500/10 px-4 text-sm font-semibold text-red-100 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={clearing || !library.items.length}
+              onClick={() => void clearHistory()}
+              type="button"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              {clearing ? "Clearing..." : "Clear history"}
+            </button>
+          </div>
         </div>
       </section>
 
@@ -203,6 +249,17 @@ function WatchItemCard({
   item: WatchLibraryItem;
   onCreateRoom: (session: WatchLibrarySession, sourceUrl: string) => void;
 }) {
+  const episodesByDisplayOrder = useMemo(
+    () => [...item.episodes].sort(compareEpisodesByDisplayOrder),
+    [item.episodes],
+  );
+  const seasonGroups = useMemo(
+    () => buildEpisodeSeasonGroups(episodesByDisplayOrder, item.itemTitle),
+    [episodesByDisplayOrder, item.itemTitle],
+  );
+  const showSeasonGroups =
+    item.itemKind === "series" && (seasonGroups.length > 1 || seasonGroups.some((group) => group.known));
+
   return (
     <section className="overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
       <div className="flex items-center gap-4 border-b border-brand-border p-4">
@@ -218,8 +275,54 @@ function WatchItemCard({
         </div>
       </div>
 
-      <div className="divide-y divide-[--brand-border]">
-        {item.episodes.map((episode) => (
+      {showSeasonGroups ? (
+        <div className="divide-y divide-brand-border/70">
+          {seasonGroups.map((group) => (
+            <SeasonGroup
+              busySessionId={busySessionId}
+              group={group}
+              key={group.key}
+              onCreateRoom={onCreateRoom}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="divide-y divide-brand-border/70">
+          {episodesByDisplayOrder.map((episode) => (
+            <EpisodeRow
+              busySessionId={busySessionId}
+              episode={episode}
+              key={episode.episodeKey}
+              onCreateRoom={onCreateRoom}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SeasonGroup({
+  busySessionId,
+  group,
+  onCreateRoom,
+}: {
+  busySessionId: string | null;
+  group: EpisodeSeasonGroup;
+  onCreateRoom: (session: WatchLibrarySession, sourceUrl: string) => void;
+}) {
+  return (
+    <section>
+      <div className="flex items-baseline justify-between gap-4 border-b border-brand-border/50 bg-white/[0.025] px-4 py-3">
+        <div className="min-w-0">
+          <h4 className="text-sm font-bold text-brand-orange">{group.title}</h4>
+          <p className="mt-0.5 text-xs text-foreground/45">
+            {formatEpisodeCount(group.episodes.length)} · latest {formatDate(group.latestWatchedAt)}
+          </p>
+        </div>
+      </div>
+      <div className="divide-y divide-brand-border/50">
+        {group.episodes.map((episode) => (
           <EpisodeRow
             busySessionId={busySessionId}
             episode={episode}
@@ -314,6 +417,166 @@ function providerLabel(provider: string): string {
   if (provider === "youtube") return "YouTube";
   if (provider === "amazon") return "Amazon";
   return provider;
+}
+
+function buildEpisodeSeasonGroups(episodes: WatchLibraryEpisode[], itemTitle: string): EpisodeSeasonGroup[] {
+  const groups = new Map<string, EpisodeSeasonGroup>();
+  for (const episode of episodes) {
+    const key = episodeSeasonKey(episode, itemTitle);
+    const existing = groups.get(key);
+    if (existing) {
+      existing.episodes.push(episode);
+      if (episode.lastWatchedAt > existing.latestWatchedAt) {
+        existing.latestWatchedAt = episode.lastWatchedAt;
+      }
+      continue;
+    }
+
+    groups.set(key, {
+      key,
+      title: episodeSeasonTitle(episode, itemTitle),
+      known: hasEpisodeSeason(episode, itemTitle),
+      sortNumber:
+        preferredEpisodeSeason(episode, itemTitle)?.seasonNumber ??
+        normalizedEpisodeSeasonNumber(episode, itemTitle) ??
+        getEpisodeSeasonNumber(episode.episodeTitle),
+      latestWatchedAt: episode.lastWatchedAt,
+      episodes: [episode],
+    });
+  }
+
+  return Array.from(groups.values()).sort(compareSeasonGroups);
+}
+
+function compareSeasonGroups(a: EpisodeSeasonGroup, b: EpisodeSeasonGroup): number {
+  if (a.known !== b.known) return a.known ? -1 : 1;
+  if (a.sortNumber !== null && b.sortNumber !== null && a.sortNumber !== b.sortNumber) {
+    return a.sortNumber - b.sortNumber;
+  }
+  if (a.sortNumber !== null && b.sortNumber === null) return -1;
+  if (a.sortNumber === null && b.sortNumber !== null) return 1;
+  return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function compareEpisodesByDisplayOrder(a: WatchLibraryEpisode, b: WatchLibraryEpisode): number {
+  const aNumber = getEpisodeNumber(a.episodeTitle);
+  const bNumber = getEpisodeNumber(b.episodeTitle);
+  if (aNumber !== null && bNumber !== null && aNumber !== bNumber) return aNumber - bNumber;
+  if (aNumber !== null && bNumber === null) return -1;
+  if (aNumber === null && bNumber !== null) return 1;
+  return a.episodeTitle.localeCompare(b.episodeTitle, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
+function getEpisodeNumber(title: string): number | null {
+  const match =
+    title.match(/\bE\s?(\d+)\b/i) ??
+    title.match(/\bEpisode\s+(\d+)\b/i) ??
+    title.match(/\bСерия\s+(\d+)\b/i) ??
+    title.match(/^(\d+)[\s.:-]/);
+  if (!match) return null;
+  const value = Number.parseInt(match[1] ?? "", 10);
+  return Number.isFinite(value) ? value : null;
+}
+
+function episodeSeasonKey(episode: WatchLibraryEpisode, itemTitle: string): string {
+  const preferred = preferredEpisodeSeason(episode, itemTitle);
+  if (preferred) return preferred.seasonId;
+  if (episode.seasonId) return episode.seasonId;
+  const normalizedSeasonNumber = normalizedEpisodeSeasonNumber(episode, itemTitle);
+  if (normalizedSeasonNumber) return `season-${normalizedSeasonNumber}`;
+  const titleSeasonNumber = getEpisodeSeasonNumber(episode.episodeTitle);
+  if (titleSeasonNumber) return `season-${titleSeasonNumber}`;
+  const normalizedSeasonTitle = normalizedEpisodeSeasonTitle(episode, itemTitle);
+  if (normalizedSeasonTitle) return `season:${slugKey(normalizedSeasonTitle)}`;
+  return "season:unknown";
+}
+
+function episodeSeasonTitle(episode: WatchLibraryEpisode, itemTitle: string): string {
+  const preferred = preferredEpisodeSeason(episode, itemTitle);
+  if (preferred) return preferred.seasonTitle;
+  const normalizedSeasonTitle = normalizedEpisodeSeasonTitle(episode, itemTitle);
+  if (normalizedSeasonTitle) return normalizedSeasonTitle;
+  const normalizedSeasonNumber = normalizedEpisodeSeasonNumber(episode, itemTitle);
+  if (normalizedSeasonNumber) return `Season ${normalizedSeasonNumber}`;
+  const titleSeasonNumber = getEpisodeSeasonNumber(episode.episodeTitle);
+  if (titleSeasonNumber) return `Season ${titleSeasonNumber}`;
+  return "Other episodes";
+}
+
+function hasEpisodeSeason(episode: WatchLibraryEpisode, itemTitle: string): boolean {
+  return Boolean(
+    preferredEpisodeSeason(episode, itemTitle) ||
+      episode.seasonId ||
+      normalizedEpisodeSeasonTitle(episode, itemTitle) ||
+      normalizedEpisodeSeasonNumber(episode, itemTitle) ||
+      getEpisodeSeasonNumber(episode.episodeTitle),
+  );
+}
+
+function preferredEpisodeSeason(episode: WatchLibraryEpisode, itemTitle: string) {
+  const inferred = inferredEpisodeSeason(episode);
+  if (!inferred) return null;
+  const seasonTitle = episode.seasonTitle ?? null;
+  if (!seasonTitle || isPlaceholderSeasonTitle(seasonTitle) || sameNormalizedTitle(seasonTitle, itemTitle)) {
+    return inferred;
+  }
+  return null;
+}
+
+function normalizedEpisodeSeasonTitle(episode: WatchLibraryEpisode, itemTitle: string): string | null {
+  const seasonTitle = episode.seasonTitle?.trim() || null;
+  if (!seasonTitle || isPlaceholderSeasonTitle(seasonTitle) || sameNormalizedTitle(seasonTitle, itemTitle)) {
+    return null;
+  }
+  return seasonTitle;
+}
+
+function normalizedEpisodeSeasonNumber(episode: WatchLibraryEpisode, itemTitle: string): number | null {
+  const seasonTitle = episode.seasonTitle ?? null;
+  if (seasonTitle && (isPlaceholderSeasonTitle(seasonTitle) || sameNormalizedTitle(seasonTitle, itemTitle))) {
+    return null;
+  }
+  return episode.seasonNumber ?? null;
+}
+
+function inferredEpisodeSeason(episode: WatchLibraryEpisode) {
+  return inferCrunchyrollSeasonFromSourceUrl(episode.sourceUrl);
+}
+
+function isPlaceholderSeasonTitle(title: string): boolean {
+  const normalized = title.trim().toLowerCase();
+  return normalized === "?" || normalized === "unknown" || normalized === "n/a" || normalized === "na";
+}
+
+function sameNormalizedTitle(a: string, b: string): boolean {
+  return normalizeComparableTitle(a) === normalizeComparableTitle(b);
+}
+
+function normalizeComparableTitle(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[\W_]+/g, " ")
+    .trim();
+}
+
+function formatEpisodeCount(count: number): string {
+  return `${count} ${count === 1 ? "episode" : "episodes"}`;
+}
+
+function slugKey(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+function getEpisodeSeasonNumber(title: string): number | null {
+  return inferSeasonNumberFromTitle(title);
 }
 
 function formatDate(value: string): string {

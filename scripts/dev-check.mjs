@@ -11,6 +11,7 @@ const PROFILE_COMMANDS = {
 	api: [
 		"pnpm --filter @anidachi/api check",
 		"pnpm --filter @anidachi/api test",
+		"pnpm --filter @anidachi/api test:runtime",
 	],
 	extension: [
 		"pnpm --filter @anidachi/extension check",
@@ -21,6 +22,7 @@ const PROFILE_COMMANDS = {
 	rooms: [
 		"pnpm --filter @anidachi/api check",
 		"pnpm --filter @anidachi/api test",
+		"pnpm --filter @anidachi/api test:runtime",
 		"pnpm harness:rooms",
 		"npm --prefix tests/e2e install",
 		"npm --prefix tests/e2e exec playwright install chromium",

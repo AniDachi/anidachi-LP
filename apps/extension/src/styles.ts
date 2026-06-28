@@ -39,8 +39,6 @@ export const overlayStyles = `
     transition:
       background 180ms ease,
       opacity 180ms ease,
-      right 180ms ease,
-      top 180ms ease,
       transform 180ms ease;
   }
 

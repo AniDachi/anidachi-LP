@@ -36,6 +36,24 @@
 - [x] 2026-06-07: Ran two focused research passes: one repo-local audit for plan/task ordering and one Cloudflare Hibernation migration audit.
 - [x] 2026-06-07: Checked current Cloudflare and WebRTC primary docs and folded the findings into this roadmap.
 - [x] 2026-06-12: Full code audit of the end-to-end room flow confirmed the Task 2 premise plus two release-blocking defects (immortal rooms break plan limits; non-idempotent create). Created the execution program for this roadmap with SLOs, a two-browser Playwright harness, and fixed product defaults: `docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md`. Roadmap ordering remains authoritative.
+- [x] 2026-06-27: Started the remaining contract hardening on branch `codex/p2p-production-hardening`: `ROOM_SNAPSHOT` now carries generation/sequence fields, server-relayed `P2P_SIGNAL` now carries required authoritative `roomGeneration/sourceGeneration/serverSeq/serverReceivedAt`, P2P replay is scoped by generation, and the extension drops stale-generation P2P media signals. Verified locally with protocol/API/extension checks and tests, room-signaling harness 29/29, and real-WebRTC harness 8/8. Remaining for full Task 3/5: current source descriptor + actual `SOURCE_CHANGED`/`sourceGeneration` bump.
+- [x] 2026-06-27: Continued Task 5 on branch `codex/p2p-source-generation`: added `WatchSourceDescriptor`, optional source descriptors on host state and snapshots, `SOURCE_CHANGED`, Worker-owned source-generation increments on host fingerprint changes, and extension-side stale P2P reset on source change. The room-signaling harness now asserts that reconnect replay returns only active-source P2P signals and skips stale-source signals. Verified: protocol/API/extension checks and tests, room-signaling harness 34/34, real-WebRTC harness 8/8, staging extension build + validation. Remaining for Task 5: durable Supabase source fields, room-create source response plumbing, and explicit source-switch UI/commands.
+- [x] 2026-06-27: Started Task 6 on branch `codex/p2p-hibernation-core`: Worker room sockets now use Cloudflare WebSocket Hibernation (`state.acceptWebSocket`, `webSocketMessage/Close/Error`), versioned per-socket attachments, constructor rebuild via `getWebSockets()`, SQLite-backed room snapshot + P2P replay/sequence storage, stale-socket close protection, and raw `ping`/`pong` auto-response keepalive with JSON `PING` compatibility for old clients. Verified: API/protocol/extension checks and tests, room-signaling harness twice in a row (35/35 + 35/35, proving durable harness isolation), `pnpm dev:check -- --profile rooms`, and real-WebRTC harness 8/8. Remaining for Task 6: forced hibernation wake tests in the Workers runtime, DO alarm room end, precise quota metering, and staging two-profile acceptance.
+- [x] 2026-06-27: Continued Task 6 on branch `codex/p2p-product-hardening-next`: added `@cloudflare/vitest-pool-workers` runtime coverage for forced Durable Object WebSocket hibernation wake via `evictDurableObject(..., { webSockets: "hibernate" })`. The test proves existing sockets still handle raw `ping`/`pong`, `HOST_STATE`, `CAMERA_ON/OFF`, and `P2P_SIGNAL` after forced wake; host state/source survive into snapshots; P2P `serverSeq` remains monotonic; and replay after a second forced wake honors `lastSeenP2PServerSeq`. Verified: `pnpm check`, `pnpm test`, `pnpm --filter @anidachi/api test:runtime`, `pnpm harness:rooms` (35/35), and `npm --prefix tests/e2e run harness:p2p` (8/8). Remaining for Task 6: staging two-profile idle acceptance, DO alarm room end, and precise quota metering.
+- [x] 2026-06-27: Continued Task 7 on branch `codex/p2p-product-hardening-followup`: `P2PMediaController` now proactively restarts ICE on `online` and Network Information `change` signals, while skipping ICE churn during offline. The real-WebRTC harness now covers a short Playwright offline/online guest network loss and asserts a real ICE restart plus decoded video recovery in both directions. The harness also supports a relay-only diagnostic mode (`HARNESS_FORCE_RELAY=true`) with explicit `HARNESS_ICE_SERVERS_JSON` or the real Worker-backed `/ice-servers` path (`HARNESS_USE_WORKER_ICE_SERVERS=true`), so real TURN candidate selection can be tested instead of relying only on same-machine `host/host` pairs. Verified: extension check/test, `npm --prefix tests/e2e run harness:p2p` (11/11), full repo check/test, API runtime test, room harness, staging extension build, and staging artifact validation. Remaining real-world risk: run relay mode with short-lived Cloudflare TURN credentials and complete staging two-profile/two-network acceptance.
+- [~] 2026-06-27: Relay-only Worker-backed harness was attempted locally after current Cloudflare Realtime TURN + WebRTC doc review. It correctly failed because local Worker `/ice-servers` returned fallback STUN only (`provider=fallback configured=false`, no TURN URLs). This confirms the harness will not falsely pass same-network conditions; next acceptance needs real Cloudflare TURN bindings and a two-network/two-profile staging run.
+- [x] 2026-06-27: Continued Task 7 audio hardening on branch `codex/p2p-product-hardening-followup`: remote voice activity now uses WebRTC inbound audio stats (`bytesReceived`, `packetsReceived`, `audioLevel`) to publish/clear active speaker state in addition to `voice-start`/`voice-stop`; `getStats()` exposes `remoteAudioActivity`; and stale audio state is cleared on track end/peer close/disconnect. Verified: extension check/test (155 tests) and real-WebRTC harness 11/11. Remaining: clearer user-facing recovery/status affordance for failed media.
+- [x] 2026-06-27: Reviewed `/Users/vladyslavhulyi/Downloads/teleparty-av-teardown.md` and folded the useful findings into this roadmap without changing the MVP topology: Teleparty's production A/V is SFU + hosted media iframe + multi-node TURN, while AniDachi deliberately stays mesh for <=4 lightweight video seats. Borrowed now: stricter TURN/relay acceptance, SDP codec/FEC/RTX observability in debug summaries, and explicit ICE restart throttle tests. Strategic follow-up: SFU/hosted-media is a future paid-scale path, not the current MVP rewrite.
+- [x] 2026-06-27: Added controller-level SDP/ICE signal dedupe on branch `codex/p2p-product-hardening-followup`: `P2PMediaController` now fingerprints exact `offer`/`answer` SDP and ICE candidates per sender with TTL/cap bounds and drops duplicate media replays before applying them, while intentionally leaving `voice-start`/`voice-stop`, `restart-ice`, `renegotiate`, and `bye` un-deduped. Verified: extension check/test (164 tests). Remaining: real TURN relay and multi-network acceptance; same-machine harnesses remain smoke tests only.
+- [x] 2026-06-27: Tightened TURN readiness on branch `codex/p2p-product-hardening-followup` after current Cloudflare Realtime TURN docs review: Worker `/ice-servers` now returns safe relay diagnostics (`hasTurn`, `hasTurns443`, URL counts), fails closed if configured Cloudflare credentials produce no browser-usable TURN URL after filtering, and the relay-only harness requires a Cloudflare-configured Worker response with `turns:443` instead of accepting STUN-only fallback as proof.
+- [x] 2026-06-27: Added WebRTC codec preference hardening on branch `codex/p2p-product-hardening-followup`: audio/video transceivers now apply browser-native `setCodecPreferences()` before offer/answer creation. Audio prefers supported RED first, then Opus fallback; video keeps lightweight stable codecs first and preserves RTX/FEC repair entries when Chrome exposes them. Verified: extension check/test (171 tests). Remaining proof: real TURN/multi-network acceptance must confirm the negotiated SDP and stats under bad-network conditions.
+- [x] 2026-06-27: Added automatic remote-audio stall recovery on branch `codex/p2p-product-hardening-followup`: expected remote voice now keeps a separate media-flow state (`not-expected`/`unknown`/`flowing`/`missing`/`stalled`) from inbound WebRTC audio stats; two consecutive missing/stalled samples trigger throttled ICE recovery with a `media-stall:audio-*` reason and no user-facing reconnect button. Verified: extension check/test (177 tests), API check/test/runtime test, room-signaling harness 35/35, and real-WebRTC harness 11/11. Remaining proof: real TURN/multi-network acceptance.
+- [x] 2026-06-27: Tightened remote-video health semantics on branch `codex/p2p-media-recovery-harness`: when WebRTC exposes `framesDecoded`, decoded-frame movement is now the authoritative remote-video flow signal; `bytesReceived` only remains a fallback for browsers without frame counters. This prevents "bytes moving but no picture" from being marked healthy and lets automatic media-stall recovery act. The real-WebRTC harness now waits for both peers to see both cameras enabled in the room snapshot before measuring media SLOs, checks camera-flow state, and treats ICE restart counters as diagnostics while asserting the real product outcome: decoded video resumes after reload and short network loss without room recreation. Verified: extension check/test (178 tests), API check/test/runtime test, room-signaling harness 35/35, and real-WebRTC harness twice (12/12 + 12/12). Remaining proof: real TURN relay and multi-network staging acceptance.
+- [x] 2026-06-27: Hardened Cloudflare TURN credential resilience on branch `codex/turn-cache-hardening` after current Cloudflare Realtime TURN docs review: configured Workers keep a module-level hot cache of the last valid Cloudflare ICE payload, serve fresh cached credentials without refetching, and serve still-valid cached relay credentials if the Cloudflare credential API temporarily fails. Authenticated extension media setup now reuses its last valid relay cache on refresh failure and no longer silently replaces a failed relay fetch with STUN-only defaults unless the build-time fallback itself contains TURN. Verified: API check/test/runtime test (39 tests), extension check/test (180 tests), room-signaling harness 35/35, and real-WebRTC harness 12/12. Remaining proof: real Cloudflare TURN relay run and two-network staging acceptance.
+- [x] 2026-06-27: Added Opus DTX/FEC SDP hardening on branch `codex/opus-dtx-fec`: local P2P offers/answers now guarantee `useinbandfec=1` and `usedtx=1` on the negotiated audio/Opus payload before `setLocalDescription()`, with unit coverage for existing and missing Opus fmtp lines. Verified: extension check/test (182 tests) and real-WebRTC harness 12/12. Remaining proof: real TURN relay and multi-network staging acceptance.
+- [x] 2026-06-27: Added Cloudflare STUN to the extension's local unauthenticated ICE fallback on branch `codex/cloudflare-stun-fallback`: `getDefaultP2PIceServers()` now mirrors the documented Cloudflare STUN pair (`stun.cloudflare.com:3478` and `:53`) before Google STUN, while existing ICE prioritization/deduping keeps endpoint STUN before TURN and avoids duplicate URLs when Worker `/ice-servers` already returned Cloudflare STUN. Remaining proof is still the real TURN relay and two-network staging acceptance.
+- [x] 2026-06-27: Added direct-connect polish on branch `codex/p2p-ice-direct-telemetry`: `RTCPeerConnection` configs now pre-gather with `iceCandidatePoolSize: 2` while keeping the default production policy `iceTransportPolicy: "all"`, and selected candidate-pair debug telemetry now records only direct/relay, candidate types/protocols, relay protocol, RTT, and ICE restart count. The event intentionally omits raw candidate strings, IPs, URLs, and participant ids. Remaining proof is still real TURN relay plus two-network staging acceptance.
+- [x] 2026-06-27: Fixed a P2P video flicker/disappear regression on branch `codex/p2p-video-flicker-fix`: remote video inbound stats now aggregate all video RTP receivers so stale stats cannot hide an active stream; byte movement prevents false `stalled` classification when Chrome's frame counter is temporarily stale; connected/stalled video no longer triggers disruptive ICE restarts; and missing expected video uses a softer renegotiation recovery. Verified: extension check/test (189 tests), direct-first real-WebRTC harness 12/12, staging extension build + validation. Remaining proof: reload the new staging artifact in both browsers and repeat two-network/VPN manual acceptance with debug export scorecard.
 
 ## Current Reality Check
 
@@ -58,22 +76,22 @@
 
 - [ ] Room creation is durable, but not idempotent and not lifecycle-complete.
 - [ ] Room status exists, but does not have complete draft/lobby/live/stale/ended semantics.
-- [ ] `roomGeneration` and `sourceGeneration` exist only as optional P2P fields, not as first-class room snapshot/source state.
-- [ ] `ROOM_SNAPSHOT` does not include generation fields, current source descriptor, or current server sequence.
+- [~] `roomGeneration` and `sourceGeneration` are first-class room snapshot/source state in the live Worker; durable Supabase source persistence is still pending.
+- [~] `ROOM_SNAPSHOT` includes generation fields, current server sequence, and the current source descriptor once the host has reported it; initial room-create source descriptor plumbing is still pending.
 - [ ] `JOIN` still sends a full client-provided participant object even though the Worker derives identity from verified token claims.
 - [ ] Reconnect exists, but there is no stable `participantSessionId`.
 - [ ] Worker socket replacement is by user id, not by participant session.
-- [ ] P2P replay scope can filter by generation, but the Worker does not yet have authoritative room/source generation to pass into it.
-- [ ] WebSocket keepalive currently uses JSON `PING`/`PONG` every 20 seconds. That helps current stability, but would wake a hibernated Durable Object unless changed.
-- [ ] Durable Object currently uses `server.accept()` and event listeners, not the Cloudflare WebSocket Hibernation API.
+- [x] P2P replay scope filters by the Worker-owned current room/source generation.
+- [x] New extension builds use raw `ping`/`pong` keepalive with Cloudflare `setWebSocketAutoResponse`; JSON `PING`/`PONG` remains only for compatibility with old clients.
+- [~] Durable Object room sockets use Cloudflare WebSocket Hibernation APIs and rebuild from attachments/storage; forced wake is covered by Workers-runtime tests, while alarm/quota behavior and staging idle acceptance are still pending.
 
 ### Not Done Yet
 
-- [ ] First-class source switching protocol.
+- [ ] First-class source switching UI/commands and durable source persistence.
 - [ ] Durable shared watch progress backend.
-- [ ] Hibernation-safe room state rebuild.
-- [ ] SQLite-backed P2P replay state in the Durable Object.
-- [ ] Hibernation-aware integration tests.
+- [x] Hibernation-safe room state rebuild core.
+- [x] SQLite-backed P2P replay state in the Durable Object.
+- [~] Hibernation-aware integration tests cover forced wake/replay; alarm/quota/staging idle acceptance is still pending.
 - [ ] Release gates that require manual two-browser room/P2P acceptance before marking P2P work complete.
 
 ## Non-Negotiable Order
@@ -235,11 +253,11 @@ interface RoomEventEnvelope<TPayload> {
 
 **Practical near-term target:**
 
-- [ ] `ROOM_SNAPSHOT` includes `roomGeneration`, `sourceGeneration`, `serverSeq`, and current source descriptor.
-- [ ] `P2P_SIGNAL` generation fields become required after extension and Worker both send them.
+- [~] `ROOM_SNAPSHOT` includes `roomGeneration`, `sourceGeneration`, `serverSeq`, and current source descriptor when the host has reported it. Remaining: source descriptor from room create/durable DB state before first host tick.
+- [x] `P2P_SIGNAL` generation fields become required after extension and Worker both send them.
 - [ ] `JOIN` stops trusting a full client-provided participant object. It may send local capabilities, but identity comes from token claims.
 - [ ] Every room-scoped event is rejected if top-level `roomId` does not match the Durable Object room id.
-- [ ] Server-generated events include enough sequence/generation data for the extension to drop stale events.
+- [~] Server-generated events include enough sequence/generation data for the extension to drop stale P2P media events and reset on `SOURCE_CHANGED`. Remaining: broaden generation fencing to source/playback command events.
 
 **Acceptance Criteria:**
 
@@ -317,13 +335,13 @@ interface WatchSourceDescriptor {
 
 **Steps:**
 
-- [ ] Add protocol schema for `WatchSourceDescriptor`.
-- [ ] Add `SOURCE_CHANGED` server event and host-only source change client event.
-- [ ] Increment `sourceGeneration` on source change.
-- [ ] Add source descriptor to room create response/snapshot.
+- [x] Add protocol schema for `WatchSourceDescriptor`.
+- [~] Add `SOURCE_CHANGED` server event and host-only source change client event. Implemented via host-only `HOST_STATE` carrying `source`; a dedicated source-change command/UI remains pending.
+- [x] Increment `sourceGeneration` on source change.
+- [~] Add source descriptor to room create response/snapshot. Implemented for live `ROOM_SNAPSHOT` after host state; room-create response and durable source fields remain pending.
 - [ ] Persist normalized source fields in Supabase.
 - [ ] Extension applies source changes through adapter navigation only after validating provider/fingerprint.
-- [ ] P2P replay only replays signals from the current room/source generation.
+- [x] P2P replay only replays signals from the current room/source generation.
 
 **Acceptance Criteria:**
 
@@ -353,7 +371,7 @@ interface WatchSourceDescriptor {
 - Expect in-memory state to be reset after hibernation.
 - Use `serializeAttachment()` and `deserializeAttachment()` for small per-socket connection state.
 - Use `getWebSockets()` in the constructor to rebuild in-memory maps.
-- Keep serialized WebSocket attachments below Cloudflare's 2,048 byte limit.
+- Keep serialized WebSocket attachments below Cloudflare's current 16,384 byte limit (Cloudflare docs re-checked 2026-06-27).
 - Use `state.setWebSocketAutoResponse()` for static app-level keepalive if browser WebSocket protocol ping frames are not available.
 - Avoid frequent app-level JSON pings that wake the Durable Object.
 - Use WebSocket protocol ping/pong or Cloudflare auto-response behavior where practical.
@@ -392,34 +410,34 @@ Do not store raw room tokens in attachments.
 
 **Steps:**
 
-- [ ] Introduce versioned attachment schema and validators.
-- [ ] Convert upgrade path to `state.acceptWebSocket(server)`.
-- [ ] Move message/close/error handling to hibernation handlers.
-- [ ] Rebuild `verifiedBySocket`, `participantsBySocket`, `socketsByParticipant`, and `RoomState` from attachments in constructor.
-- [ ] Deterministically close duplicate stale sockets after rebuild.
-- [ ] Persist P2P server sequence and replay buffer in Durable Object SQLite storage.
-- [ ] Keep an in-memory hot cache loaded from storage for active operation.
-- [ ] Replace JSON keepalive with hibernation-safe keepalive.
-- [ ] Keep compatibility with existing JSON `PING`/`PONG` only if it does not defeat hibernation in normal operation.
-- [ ] Add Workers-runtime integration tests, preferably using `@cloudflare/vitest-pool-workers`.
+- [x] Introduce versioned attachment schema and validators.
+- [x] Convert upgrade path to `state.acceptWebSocket(server)`.
+- [x] Move message/close/error handling to hibernation handlers.
+- [x] Rebuild `verifiedBySocket`, `participantsBySocket`, `socketsByParticipant`, and `RoomState` from attachments in constructor.
+- [x] Deterministically close duplicate stale sockets after rebuild.
+- [x] Persist P2P server sequence and replay buffer in Durable Object SQLite storage.
+- [x] Keep an in-memory hot cache loaded from storage for active operation.
+- [x] Replace JSON keepalive with hibernation-safe keepalive.
+- [x] Keep compatibility with existing JSON `PING`/`PONG` only if it does not defeat hibernation in normal operation.
+- [x] Add Workers-runtime integration tests, preferably using `@cloudflare/vitest-pool-workers`.
 
 **Required Tests:**
 
-- [ ] Missing/invalid room token is rejected before WebSocket accept.
-- [ ] Existing socket can send `HOST_STATE`, `CAMERA_ON/OFF`, and `P2P_SIGNAL` after simulated wake/rebuild.
-- [ ] Constructor rebuilds participants and socket maps from attachments.
-- [ ] Duplicate same-session socket replacement closes the stale socket.
-- [ ] Host state survives wake and appears in `ROOM_SNAPSHOT`.
-- [ ] P2P `serverSeq` remains monotonic after wake.
-- [ ] P2P replay honors `lastSeenP2PServerSeq`, `roomGeneration`, and `sourceGeneration`.
-- [ ] Raw keepalive does not go through normal JSON parsing.
-- [ ] Corrupt attachment is ignored or closed safely.
+- [x] Missing/invalid room token is rejected before WebSocket accept.
+- [x] Existing socket can send `HOST_STATE`, `CAMERA_ON/OFF`, and `P2P_SIGNAL` after forced hibernation wake.
+- [x] Constructor rebuilds participants and socket maps from attachments.
+- [x] Duplicate same-session socket replacement closes the stale socket.
+- [x] Host state survives forced hibernation wake and appears in `ROOM_SNAPSHOT`.
+- [x] P2P `serverSeq` remains monotonic across stored state.
+- [x] P2P replay honors `lastSeenP2PServerSeq`, `roomGeneration`, and `sourceGeneration`.
+- [x] Raw keepalive does not go through normal JSON parsing.
+- [x] Corrupt attachment is ignored or closed safely.
 
 **Acceptance Criteria:**
 
 - Idle connected rooms can hibernate without disconnecting clients.
 - The first message after idle does not lose participants, host state, P2P sequence, or current source.
-- Frequent app-level keepalive no longer wakes the object every 20 seconds in normal operation.
+- Frequent app-level keepalive no longer wakes the object every 20 seconds in normal operation for new extension builds.
 
 ## Task 7: Ultra-Light P2P Reliability Polish
 
@@ -447,13 +465,17 @@ Do not store raw room tokens in attachments.
 **Steps:**
 
 - [ ] Keep current low video constraints unless real staging logs prove they are too high.
-- [ ] Add explicit local/remote audio state machine so delayed or missing audio is diagnosable.
-- [ ] Use WebRTC `getStats()` for actual audio packet/activity state where it helps debug real failures.
-- [ ] Keep voice UI tied to real track/connection state, not only local button events.
-- [ ] Add ICE restart counters and reason codes to debug export.
-- [ ] Add a user-visible lightweight recovery path when P2P fails, such as reconnect media without recreating the room.
-- [ ] Verify relay-only diagnostic mode remains dev-only.
-- [ ] Add tests around perfect negotiation helpers, ICE restart request throttling, and signal dedupe.
+- [~] Add explicit local/remote audio state machine so delayed or missing audio is diagnosable. Remote voice activity now self-corrects from WebRTC `audioInbound` stats, expected remote voice has a media-flow state (`not-expected`/`unknown`/`flowing`/`missing`/`stalled`) exposed in `getStats()`, and audio codec preferences also prefer browser-supported RED before Opus fallback. Remaining polish is richer local/remote status presentation in the overlay.
+- [x] Use WebRTC `getStats()` for actual audio packet/activity state where it helps debug real failures.
+- [~] Keep voice UI tied to real track/connection state, not only local button events. Active speaker state now clears/updates from inbound audio stats in addition to `voice-start`/`voice-stop`; a clearer user-facing recovery/status affordance remains.
+- [x] Add ICE restart counters and reason codes to debug export.
+- [x] Add an automatic lightweight recovery path when P2P media stalls without recreating the room. Manual "reconnect media" buttons are deliberately not part of the product UX; the controller detects expected remote video/audio state from WebRTC inbound stats. ICE restart is reserved for real disconnected/failed transport states and expected remote-audio stall recovery; connected remote-video stalls are logged without transport churn, while missing expected video uses throttled renegotiation recovery instead of disruptive ICE restart.
+- [x] Prefer robust browser-supported codecs without SDP munging. The extension applies `setCodecPreferences()` to audio/video transceivers and logs the actual SDP codec/FEC/RTX summary for verification.
+- [~] Verify relay-only diagnostic mode remains dev-only. Harness support exists and fails fast without TURN credentials from either explicit JSON or the Worker `/ice-servers` path; Worker-backed relay mode now also requires a Cloudflare-configured response with `turns:443`. Real Cloudflare TURN relay run still pending.
+- [x] Cache last valid Cloudflare TURN credentials so transient credential-API failures do not degrade authenticated room media to STUN-only. Worker hot-cache covers server-side generation failures inside credential TTL; extension relay-cache covers client refresh failures before ICE restart.
+- [x] Keep the local unauthenticated STUN fallback aligned with Cloudflare Realtime docs instead of Google-only STUN.
+- [x] Pre-gather a small ICE candidate pool and emit compact direct-vs-relay candidate-pair telemetry without private network identifiers.
+- [x] Add tests around perfect negotiation helpers, ICE restart request throttling, signal dedupe, and media-flow classification. Perfect negotiation helpers, network-triggered ICE restart, restart-throttling decisions, SDP/ICE media-signal dedupe, and decoded-frame-first remote-video health are covered by unit tests.
 
 **Acceptance Criteria:**
 
@@ -477,11 +499,11 @@ Do not store raw room tokens in attachments.
 
 - [ ] Add host source switch UI or internal command path.
 - [ ] Host emits source change request with normalized descriptor.
-- [ ] Worker validates host role and increments `sourceGeneration`.
-- [ ] Worker broadcasts `SOURCE_CHANGED`.
+- [x] Worker validates host role and increments `sourceGeneration`.
+- [x] Worker broadcasts `SOURCE_CHANGED`.
 - [ ] Extension navigates or prompts safely according to provider adapter.
 - [ ] Reset or fence host playback state on source change.
-- [ ] Drop stale P2P/media signals from previous source generation.
+- [x] Drop stale P2P/media signals from previous source generation.
 
 **Acceptance Criteria:**
 

@@ -23,21 +23,36 @@ interface StartOptions {
 interface HarnessState {
   status: RoomConnectionStatus;
   participantCount: number;
+  cameraEnabledCount: number;
   remoteVideoCount: number;
   remoteFramesDecoded: number;
   candidatePairTypes: string[];
+  iceRestartCounts: number[];
   peerHealth: string[];
+  remoteAudioFlowActivity: string[];
+  remoteVideoActivity: string[];
 }
 
 class Harness {
   private client: RoomClient | null = null;
   private controller: P2PMediaController | null = null;
+  private options: StartOptions | null = null;
   private status: RoomConnectionStatus = "idle";
   private participants: Participant[] = [];
+  private self: Participant | null = null;
+  private lastSeenP2PServerSeq = 0;
   private readonly seenSignals = new Set<string>();
   private readonly remoteVideos = new Map<string, HTMLVideoElement>();
 
+  constructor() {
+    window.addEventListener("online", () => {
+      void this.reconnect("online");
+      this.controller?.recoverDisconnectedPeers("online");
+    });
+  }
+
   async start(options: StartOptions): Promise<void> {
+    this.options = options;
     const self: Participant = {
       id: options.sub,
       displayName: options.sub,
@@ -46,45 +61,62 @@ class Harness {
       syncStatus: "unknown",
       lastSeenAt: 0,
     };
+    this.self = self;
 
+    this.connectClient(options, self);
+    await this.waitForStatus("connected", 8000);
+    await this.controller?.setCameraEnabled(true);
+    self.cameraEnabled = true;
+    this.client?.send({
+      type: "CAMERA_ON",
+      roomId: options.roomId,
+      userId: self.id,
+    });
+  }
+
+  private connectClient(options: StartOptions, self: Participant): void {
     const client = new RoomClient();
     this.client = client;
 
-    this.controller = new P2PMediaController({
-      iceServers: options.iceServers ?? [{ urls: "stun:stun.l.google.com:19302" }],
-      localParticipant: self,
-      onActiveSpeakerIdsChange: () => undefined,
-      onCameraStatus: () => undefined,
-      onVoiceMessageChange: () => undefined,
-      onVoiceStatusChange: () => undefined,
-      onVideosChange: (videos) => {
-        // Attach remote video elements to the DOM so the browser decodes
-        // incoming frames (the metric the TTFM assertion reads).
-        for (const video of videos) {
-          if (video.local) continue;
-          if (!this.remoteVideos.has(video.participantId)) {
-            video.element.style.width = "120px";
-            video.element.muted = true;
-            video.element.playsInline = true;
-            document.body.appendChild(video.element);
-            this.remoteVideos.set(video.participantId, video.element);
-            void video.element.play().catch(() => undefined);
+    if (!this.controller) {
+      this.controller = new P2PMediaController({
+        iceServers: options.iceServers ?? [{ urls: "stun:stun.l.google.com:19302" }],
+        localParticipant: self,
+        onActiveSpeakerIdsChange: () => undefined,
+        onCameraStatus: () => undefined,
+        onVoiceMessageChange: () => undefined,
+        onVoiceStatusChange: () => undefined,
+        onVideosChange: (videos) => {
+          // Attach remote video elements to the DOM so the browser decodes
+          // incoming frames (the metric the TTFM assertion reads).
+          for (const video of videos) {
+            if (video.local) continue;
+            if (!this.remoteVideos.has(video.participantId)) {
+              video.element.style.width = "120px";
+              video.element.muted = true;
+              video.element.playsInline = true;
+              document.body.appendChild(video.element);
+              this.remoteVideos.set(video.participantId, video.element);
+              void video.element.play().catch(() => undefined);
+            }
           }
-        }
-      },
-      sendSignal: (toUserId: string, signal: P2PSignal) => {
-        if (toUserId === self.id) return;
-        client.send({
-          type: "P2P_SIGNAL",
-          clientSignalId: crypto.randomUUID(),
-          roomId: options.roomId,
-          fromUserId: self.id,
-          senderConnectionId: client.senderConnectionId,
-          toUserId,
-          signal,
-        });
-      },
-    });
+        },
+        sendSignal: (toUserId: string, signal: P2PSignal) => {
+          if (toUserId === self.id) return;
+          const currentClient = this.client;
+          if (!currentClient) return;
+          currentClient.send({
+            type: "P2P_SIGNAL",
+            clientSignalId: crypto.randomUUID(),
+            roomId: options.roomId,
+            fromUserId: self.id,
+            senderConnectionId: currentClient.senderConnectionId,
+            toUserId,
+            signal,
+          });
+        },
+      });
+    }
 
     client.connect({
       roomId: options.roomId,
@@ -92,14 +124,24 @@ class Harness {
       participant: self,
       videoFingerprint: "harness",
       participantSessionId: options.sessionId,
+      lastSeenP2PServerSeq: this.lastSeenP2PServerSeq,
       onStatus: (status) => {
         this.status = status;
       },
       onEvent: (event) => this.onServerEvent(self.id, event),
     });
+  }
 
+  async reconnect(reason: string): Promise<void> {
+    if (!this.options || !this.self) {
+      return;
+    }
+
+    this.client?.close();
+    this.status = "connecting";
+    this.connectClient(this.options, this.self);
     await this.waitForStatus("connected", 8000);
-    await this.controller.setCameraEnabled(true);
+    this.controller?.recoverDisconnectedPeers(reason);
   }
 
   private onServerEvent(selfId: string, event: ServerEvent): void {
@@ -122,6 +164,9 @@ class Harness {
       return;
     }
     if (event.type === "P2P_SIGNAL" && event.toUserId === selfId) {
+      if (event.serverSeq !== undefined) {
+        this.lastSeenP2PServerSeq = Math.max(this.lastSeenP2PServerSeq, event.serverSeq);
+      }
       const key = `${event.fromUserId}:${event.senderConnectionId}:${event.clientSignalId}`;
       if (this.seenSignals.has(key)) return;
       this.seenSignals.add(key);
@@ -141,10 +186,19 @@ class Harness {
   async getState(): Promise<HarnessState> {
     let remoteFramesDecoded = 0;
     const candidatePairTypes: string[] = [];
+    const iceRestartCounts: number[] = [];
     const peerHealth: string[] = [];
+    const remoteAudioFlowActivity: string[] = [];
+    const remoteVideoActivity: string[] = [];
     if (this.controller) {
       const stats = (await this.controller.getStats()) as {
-        peers?: Array<{ stats?: Record<string, unknown>; health?: string }>;
+        peers?: Array<{
+          iceRestartCount?: number;
+          stats?: Record<string, unknown>;
+          health?: string;
+          remoteAudioFlowActivity?: string;
+          remoteVideoActivity?: string;
+        }>;
       };
       for (const peer of stats.peers ?? []) {
         const inbound = peer.stats?.videoInbound as { framesDecoded?: number } | undefined;
@@ -157,16 +211,29 @@ class Harness {
         if (pair?.localCandidateType) {
           candidatePairTypes.push(`${pair.localCandidateType}/${pair.remoteCandidateType ?? "?"}`);
         }
+        if (typeof peer.iceRestartCount === "number") iceRestartCounts.push(peer.iceRestartCount);
         if (peer.health) peerHealth.push(peer.health);
+        if (peer.remoteAudioFlowActivity) {
+          remoteAudioFlowActivity.push(peer.remoteAudioFlowActivity);
+        }
+        if (peer.remoteVideoActivity) {
+          remoteVideoActivity.push(peer.remoteVideoActivity);
+        }
       }
     }
     return {
       status: this.status,
       participantCount: this.participants.length,
+      cameraEnabledCount: this.participants.filter(
+        (participant) => participant.cameraEnabled,
+      ).length,
       remoteVideoCount: this.remoteVideos.size,
       remoteFramesDecoded,
       candidatePairTypes,
+      iceRestartCounts,
       peerHealth,
+      remoteAudioFlowActivity,
+      remoteVideoActivity,
     };
   }
 

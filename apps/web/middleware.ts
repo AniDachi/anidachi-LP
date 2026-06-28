@@ -9,6 +9,8 @@ import {
   shouldAutoRefreshWebsiteSession,
 } from "./lib/anidachi-auth/session-refresh";
 import { sanitizeAuthReturnTo } from "./lib/anidachi-auth/return-to";
+import { isInternalToolPath } from "./lib/internal-tool-routes";
+import { isPublicMarketingPath } from "./lib/middleware-routes";
 import {
   STAGING_ACCESS_COOKIE,
   STAGING_ACCESS_PATH,
@@ -155,38 +157,59 @@ function isApiPath(pathname: string): boolean {
   return pathname.startsWith("/api/");
 }
 
+function withNoindexHeaders(response: NextResponse): NextResponse {
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
+}
+
 function withStagingNoindexHeaders(response: NextResponse): NextResponse {
   response.headers.set("Cache-Control", "no-store");
-  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return withNoindexHeaders(response);
+}
+
+function nextWithOptionalInternalToolNoindex(pathname: string): NextResponse {
+  const response = NextResponse.next();
+  if (isInternalToolPath(pathname)) {
+    return withNoindexHeaders(response);
+  }
   return response;
 }
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const currentPath = `${pathname}${request.nextUrl.search}`;
-  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
-  const hasValidAccessToken = accessToken
-    ? Boolean(await verifyAccessToken(accessToken))
-    : false;
+  const config = await getStagingAccessConfig();
+  const isPublic = isPublicMarketingPath(pathname);
 
-  if (
-    shouldAutoRefreshWebsiteSession({
-      method: request.method,
-      pathname,
-      hasValidAccessToken,
-      hasRefreshToken: Boolean(request.cookies.get(REFRESH_TOKEN_COOKIE)?.value),
-    })
-  ) {
-    const nextPath = sanitizeAuthReturnTo(currentPath);
-    if (nextPath) {
-      const refreshUrl = new URL(AUTH_REFRESH_PATH, request.url);
-      refreshUrl.searchParams.set("next", nextPath);
-      return NextResponse.redirect(refreshUrl);
+  // Public SEO/marketing pages on production skip JWT verify and auth-refresh redirects.
+  if (isPublic && !config.enabled) {
+    return nextWithOptionalInternalToolNoindex(pathname);
+  }
+
+  if (!isPublic) {
+    const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+    const hasValidAccessToken = accessToken
+      ? Boolean(await verifyAccessToken(accessToken))
+      : false;
+
+    if (
+      shouldAutoRefreshWebsiteSession({
+        method: request.method,
+        pathname,
+        hasValidAccessToken,
+        hasRefreshToken: Boolean(request.cookies.get(REFRESH_TOKEN_COOKIE)?.value),
+      })
+    ) {
+      const nextPath = sanitizeAuthReturnTo(currentPath);
+      if (nextPath) {
+        const refreshUrl = new URL(AUTH_REFRESH_PATH, request.url);
+        refreshUrl.searchParams.set("next", nextPath);
+        return NextResponse.redirect(refreshUrl);
+      }
     }
   }
 
-  const config = await getStagingAccessConfig();
-  if (!config.enabled) return NextResponse.next();
+  if (!config.enabled) return nextWithOptionalInternalToolNoindex(pathname);
 
   const nextPath = sanitizeStagingAccessNextPath(
     currentPath,
@@ -263,5 +286,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest).*)",
+  ],
 };

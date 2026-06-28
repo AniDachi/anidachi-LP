@@ -4,6 +4,7 @@ import {
   cleanWatchProgressEntries,
   cleanWatchProgressEntry,
   historyRetentionCutoff,
+  resolveWatchArtworkUrlForWrite,
   roomWatchParticipantTargets,
 } from "./watch-library";
 
@@ -15,6 +16,9 @@ test("watch progress entries normalize episode checkpoints into series items", (
     itemTitle: "Kill Blue",
     contentId: "G31UXV53P",
     seriesId: "GKILLBLUE",
+    seasonId: "season-1",
+    seasonTitle: "Season 1",
+    seasonNumber: 1,
     episodeId: "G31UXV53P",
     episodeTitle: "E3 - Clean Up After Yourself",
     sourceUrl: "https://www.crunchyroll.com/watch/G31UXV53P/clean-up-after-yourself",
@@ -30,11 +34,72 @@ test("watch progress entries normalize episode checkpoints into series items", (
   assert.equal(entry?.provider, "crunchyroll");
   assert.equal(entry?.itemKind, "series");
   assert.equal(entry?.episodeKey, "G31UXV53P");
+  assert.equal(entry?.seasonKey, "season-1");
+  assert.equal(entry?.seasonTitle, "Season 1");
+  assert.equal(entry?.seasonNumber, 1);
   assert.equal(entry?.currentTimeSeconds, 1440);
   assert.equal(entry?.durationSeconds, 1440);
   assert.equal(entry?.progress, 1);
   assert.equal(entry?.checkpointKind, "pause");
   assert.equal(entry?.observedAt, "2027-01-15T08:00:00.000Z");
+});
+
+test("watch progress entries infer known Crunchyroll seasons from source URLs", () => {
+  const entry = cleanWatchProgressEntry({
+    provider: "crunchyroll",
+    kind: "episode",
+    itemId: "crunchyroll-series:haikyu",
+    itemTitle: "Haikyu!!",
+    contentId: "GRP8P9XGR",
+    episodeId: "GRP8P9XGR",
+    episodeTitle: "E1 - Let's Go To Tokyo!!",
+    sourceUrl: "https://www.crunchyroll.com/watch/GRP8P9XGR/lets-go-to-tokyo",
+    currentTime: 456,
+    duration: 1440,
+  });
+
+  assert.equal(entry?.seasonKey, "season-2");
+  assert.equal(entry?.seasonTitle, "Season 2");
+  assert.equal(entry?.seasonNumber, 2);
+});
+
+test("watch progress entries repair ambiguous Crunchyroll season placeholders from known source URLs", () => {
+  const entry = cleanWatchProgressEntry({
+    provider: "crunchyroll",
+    kind: "episode",
+    itemId: "crunchyroll-series:kaguya-sama-love-is-war",
+    itemTitle: "Kaguya-sama: Love Is War",
+    contentId: "GEVUZGE02",
+    seasonId: "season-2",
+    seasonTitle: "?",
+    seasonNumber: 2,
+    episodeId: "GEVUZGE02",
+    episodeTitle:
+      "E2 - Kaguya Wants to Know / Kaguya Wants to Give a Gift / Chika Fujiwara Wants to Confirm It",
+    sourceUrl:
+      "https://www.crunchyroll.com/watch/GEVUZGE02/kaguya-wants-to-know--kaguya-wants-to-give-a-gift--chika-fujiwara-wants-to-confirm-it",
+    currentTime: 42,
+    duration: 1440,
+  });
+
+  assert.equal(entry?.seasonKey, "season-1");
+  assert.equal(entry?.seasonTitle, "Season 1");
+  assert.equal(entry?.seasonNumber, 1);
+});
+
+test("watch progress writes keep existing artwork when a checkpoint has no poster", () => {
+  assert.equal(
+    resolveWatchArtworkUrlForWrite(null, "https://imgsrv.crunchyroll.com/poster.png"),
+    "https://imgsrv.crunchyroll.com/poster.png"
+  );
+  assert.equal(
+    resolveWatchArtworkUrlForWrite(
+      "https://imgsrv.crunchyroll.com/new-poster.png",
+      "https://imgsrv.crunchyroll.com/old-poster.png"
+    ),
+    "https://imgsrv.crunchyroll.com/new-poster.png"
+  );
+  assert.equal(resolveWatchArtworkUrlForWrite(null, null), null);
 });
 
 test("watch progress entries reject unsupported providers and unsafe URLs", () => {

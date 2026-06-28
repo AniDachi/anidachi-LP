@@ -113,7 +113,7 @@ export default defineConfig({
     description: extensionDescription,
     version: extensionVersion,
     ...(buildId ? { version_name: buildId } : {}),
-    permissions: ["storage", "clipboardWrite", "identity"],
+    permissions: ["storage", "clipboardWrite", "identity", "cookies"],
     host_permissions: hostPermissions,
     icons: extensionIcons,
     action: {

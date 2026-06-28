@@ -365,12 +365,12 @@ Known media risk:
 - Do not treat P2P as fully finished until reconnect and failure handling are
   hardened.
 
-SFU/LiveKit:
+Media transport:
 
-- No SFU/LiveKit runtime is active today.
-- The current media architecture is small-room WebRTC P2P with Cloudflare TURN
-  fallback.
-- Reintroduce an SFU only through a deliberate product/infra decision.
+- Ghost Cam and push-to-talk audio use WebRTC P2P with Cloudflare TURN fallback.
+- Legacy LiveKit runtime code and local infrastructure have been removed.
+- Do not reintroduce LiveKit/SFU paths without an explicit product and
+  infrastructure decision.
 
 ## Watch Progress Direction
 
