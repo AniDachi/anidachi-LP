@@ -1,6 +1,8 @@
 import { google } from "googleapis";
 
-export const GOOGLE_ADS_SCOPE = "https://www.googleapis.com/auth/adwords";
+import { GOOGLE_MARKETING_SCOPES } from "@/lib/google-marketing/oauth";
+
+export const GOOGLE_ADS_SCOPE = GOOGLE_MARKETING_SCOPES[0];
 
 export function normalizeCustomerId(id: string): string {
   return id.replace(/\D/g, "");
@@ -46,7 +48,7 @@ export function googleAdsAuthUrl(
   return oauth2.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
-    scope: [GOOGLE_ADS_SCOPE],
+    scope: [...GOOGLE_MARKETING_SCOPES],
     state,
   });
 }
