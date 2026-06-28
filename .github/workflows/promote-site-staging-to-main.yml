@@ -34,12 +34,12 @@ jobs:
           git diff --name-only origin/main origin/staging > /tmp/anidachi-staging-main-files.txt
 
           if [[ ! -s /tmp/anidachi-staging-main-files.txt ]]; then
-            echo "should_promote=false" >> "$GITHUB_OUTPUT"
+            echo "promotion_mode=none" >> "$GITHUB_OUTPUT"
             echo "No diff between main and staging." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          is_blocked_path() {
+          is_manual_review_path() {
             case "$1" in
               .github/*) return 0 ;;
               apps/api/*) return 0 ;;
@@ -58,6 +58,8 @@ jobs:
               apps/web/app/kreatli-email-crm/*) return 0 ;;
               apps/web/lib/anidachi-auth/*) return 0 ;;
               apps/web/lib/kreatli-crm/*) return 0 ;;
+              apps/web/lib/google-ads/*) return 0 ;;
+              apps/web/lib/google-marketing/*) return 0 ;;
               apps/web/lib/instagram/*) return 0 ;;
               apps/web/lib/tiktok/*) return 0 ;;
               apps/web/lib/blou-access.ts) return 0 ;;
@@ -68,7 +70,7 @@ jobs:
             return 1
           }
 
-          is_allowed_site_path() {
+          is_safe_auto_merge_path() {
             case "$1" in
               README.md) return 0 ;;
               docs/*) return 0 ;;
@@ -82,18 +84,18 @@ jobs:
             return 1
           }
 
-          blocked=0
-          : > /tmp/anidachi-promotion-blocked.txt
+          manual_review=0
+          : > /tmp/anidachi-promotion-manual-review.txt
           while IFS= read -r file; do
-            if is_blocked_path "$file"; then
-              echo "$file" >> /tmp/anidachi-promotion-blocked.txt
-              blocked=1
+            if is_manual_review_path "$file"; then
+              echo "$file" >> /tmp/anidachi-promotion-manual-review.txt
+              manual_review=1
               continue
             fi
 
-            if ! is_allowed_site_path "$file"; then
-              echo "$file" >> /tmp/anidachi-promotion-blocked.txt
-              blocked=1
+            if ! is_safe_auto_merge_path "$file"; then
+              echo "$file" >> /tmp/anidachi-promotion-manual-review.txt
+              manual_review=1
             fi
           done < /tmp/anidachi-staging-main-files.txt
 
@@ -102,18 +104,19 @@ jobs:
             sed 's/^/- `/' /tmp/anidachi-staging-main-files.txt | sed 's/$/`/'
           } >> "$GITHUB_STEP_SUMMARY"
 
-          if [[ "$blocked" -ne 0 ]]; then
-            echo "should_promote=false" >> "$GITHUB_OUTPUT"
+          if [[ "$manual_review" -ne 0 ]]; then
+            echo "promotion_mode=manual_pr" >> "$GITHUB_OUTPUT"
             {
               echo ""
-              echo "## Auto-promotion skipped"
-              echo "The diff contains files outside the safe site/docs allowlist:"
-              sed 's/^/- `/' /tmp/anidachi-promotion-blocked.txt | sed 's/$/`/'
+              echo "## Manual promotion PR required"
+              echo "The diff contains files outside the safe site/docs auto-merge allowlist."
+              echo "A promotion PR will be created or updated, but auto-merge will not be enabled:"
+              sed 's/^/- `/' /tmp/anidachi-promotion-manual-review.txt | sed 's/$/`/'
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          echo "should_promote=true" >> "$GITHUB_OUTPUT"
+          echo "promotion_mode=auto_merge" >> "$GITHUB_OUTPUT"
           {
             echo ""
             echo "## Auto-promotion allowed"
@@ -121,7 +124,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create or update promotion PR
-        if: steps.classify.outputs.should_promote == 'true'
+        if: steps.classify.outputs.promotion_mode != 'none'
         id: promotion_pr
         env:
           GH_TOKEN: ${{ github.token }}
@@ -136,11 +139,21 @@ jobs:
             --json url \
             --jq '.[0].url // ""')"
 
+          if [[ "${{ steps.classify.outputs.promotion_mode }}" == "auto_merge" ]]; then
+            pr_title="Promote site-only staging changes to main"
+            mode_summary="This PR was created because the full \`main..staging\` diff only contains safe site/docs paths. Auto-merge will be enabled after required checks pass."
+          else
+            pr_title="Review staging promotion to main"
+            mode_summary="This PR was created automatically because \`staging\` is ahead of \`main\`, but the diff includes files that need manual review. Auto-merge is intentionally disabled."
+          fi
+
           body_file="$(mktemp)"
           {
             echo "Automated promotion from \`staging\` to \`main\`."
             echo ""
-            echo "This PR was created because the full \`main..staging\` diff only contains safe site/docs paths."
+            echo "$mode_summary"
+            echo ""
+            echo "Promotion mode: \`${{ steps.classify.outputs.promotion_mode }}\`"
             echo ""
             echo "Changed files:"
             sed 's/^/- `/' /tmp/anidachi-staging-main-files.txt | sed 's/$/`/'
@@ -151,20 +164,31 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --base main \
               --head staging \
-              --title "Promote site-only staging changes to main" \
+              --title "$pr_title" \
               --body-file "$body_file")"
           else
             gh pr edit "$pr_url" \
               --repo "$GITHUB_REPOSITORY" \
-              --title "Promote site-only staging changes to main" \
+              --title "$pr_title" \
               --body-file "$body_file"
           fi
 
           echo "url=$pr_url" >> "$GITHUB_OUTPUT"
           echo "Promotion PR: $pr_url" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Ensure manual promotion stays manual
+        if: steps.classify.outputs.promotion_mode == 'manual_pr'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh pr merge "${{ steps.promotion_pr.outputs.url }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --disable-auto || true
+          echo "Auto-merge is disabled for this manual promotion PR." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Enable auto-merge
-        if: steps.classify.outputs.should_promote == 'true'
+        if: steps.classify.outputs.promotion_mode == 'auto_merge'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
