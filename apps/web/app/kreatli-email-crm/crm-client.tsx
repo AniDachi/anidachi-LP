@@ -193,11 +193,12 @@ function GoogleAdsBanner() {
         id="google-ads-connect-heading"
         className="mb-2 text-base font-semibold text-foreground"
       >
-        Google Ads (Keyword Planner)
+        Google Marketing (Ads + Search Console + Analytics)
       </h2>
       <p className="mb-3 text-foreground/80">
-        Connect once to store a refresh token for Keyword Planner API calls.
-        Sign in with the Google account that has access to customer ID{" "}
+        Connect once to store a refresh token for Keyword Planner, Search
+        Console, and GA4 read access. Sign in with the Google account that owns
+        customer ID{" "}
         <code className="rounded bg-brand-surface px-1">572-335-2650</code>.
       </p>
       <div className="flex flex-wrap items-center gap-3">
@@ -207,9 +208,11 @@ function GoogleAdsBanner() {
       </div>
       <p className="mt-3 text-xs text-foreground/70">
         Add this redirect URI in Google Cloud (same AniDachi OAuth client) and
-        enable scope{" "}
-        <code className="rounded bg-white/70 px-1">.../auth/adwords</code> on
-        the consent screen:{" "}
+        enable scopes{" "}
+        <code className="rounded bg-white/70 px-1">.../auth/adwords</code>,{" "}
+        <code className="rounded bg-white/70 px-1">.../webmasters.readonly</code>,{" "}
+        <code className="rounded bg-white/70 px-1">.../analytics.readonly</code>{" "}
+        on the consent screen:{" "}
         <code className="break-all rounded bg-white/70 px-1 py-0.5">
           {oauthCallbackUrl}
         </code>
