@@ -1,7 +1,7 @@
 import { createGoogleAdsOAuth2, normalizeCustomerId } from "./oauth";
 import { readGoogleAdsTokens } from "./tokens";
 
-const GOOGLE_ADS_API_VERSION = "v20";
+const GOOGLE_ADS_API_VERSION = "v24";
 
 export type KeywordIdeaResult = {
   text: string;
