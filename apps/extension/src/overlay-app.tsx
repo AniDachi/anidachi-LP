@@ -26,7 +26,6 @@ import {
   ANIDACHI_BUILD_ID,
   COMPOSER_EMOJI_PACK,
   EMOJI_PALETTE,
-  WEB_HTTP_BASE,
 } from "./constants";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
@@ -117,6 +116,7 @@ import {
   type RoomSessionNamespace,
 } from "./room-session-storage";
 import { acquireRoomTabLock, releaseRoomTabLock } from "./room-tab-lock";
+import { buildRoomShareableUrl } from "./room-url";
 import { overlayStyles } from "./styles";
 import { runCrunchyrollMainCommand, type PlayerEvent, type VideoAdapter } from "./video-adapter";
 import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
@@ -2188,8 +2188,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       setRoomToken(connected.roomToken);
       setRoomCapabilities(connected.capabilities ?? null);
       setRoomQuota(connected.quota ?? null);
-      const shareableLink = new URL(`/room/${encodeURIComponent(nextRoomId)}`, WEB_HTTP_BASE)
-        .toString();
+      const shareableLink = buildRoomShareableUrl(nextRoomId);
       roomShareableLinkRef.current = shareableLink;
       setRoomShareableLink(shareableLink);
       connectToRoomAsParticipant(nextRoomId, activeParticipant, connected.roomToken);
@@ -2629,7 +2628,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       const nextRoomToken = created.roomToken;
-      const nextShareableLink = created.shareableLink;
+      const nextShareableLink = created.shareableLink || buildRoomShareableUrl(created.roomId);
       roomTokenRef.current = nextRoomToken;
       roomShareableLinkRef.current = nextShareableLink;
       setRoomToken(nextRoomToken);
@@ -3118,7 +3117,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       return;
     }
 
-    const invite = roomShareableLinkRef.current ?? buildInviteUrl(roomId);
+    const invite = roomShareableLinkRef.current ?? buildRoomShareableUrl(roomId);
     await navigator.clipboard.writeText(invite).catch(() => fallbackCopy(invite));
     logDebug("overlay.invite", "copied", { roomId, invite });
   };
@@ -4726,14 +4725,6 @@ function setRoomHash(roomId: string): void {
   const params = new URLSearchParams(location.hash.replace(/^#/, ""));
   params.set("anidachiRoom", roomId);
   history.replaceState(null, "", `${location.pathname}${location.search}#${params.toString()}`);
-}
-
-function buildInviteUrl(roomId: string): string {
-  const url = new URL(location.href);
-  const params = new URLSearchParams(url.hash.replace(/^#/, ""));
-  params.set("anidachiRoom", roomId);
-  url.hash = params.toString();
-  return url.toString();
 }
 
 function buildCurrentSourceUrlForInvite(): string {
