@@ -1,11 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { MetadataRoute } from "next";
+import { INTERNAL_TOOL_APP_SEGMENTS } from "@/lib/internal-tool-routes";
 
 const APP_DIR = path.join(process.cwd(), "app");
 
 /** Top-level `app/` segments to omit entirely (internal / non-marketing). */
-const EXCLUDED_TOP_LEVEL = new Set(["blou", "kreatli-email-crm", "api"]);
+const EXCLUDED_TOP_LEVEL = new Set<string>(INTERNAL_TOOL_APP_SEGMENTS);
 
 /** URL paths that must not appear in the sitemap (e.g. `noindex` pages). */
 const EXCLUDED_URL_PATHS = new Set(["/success"]);

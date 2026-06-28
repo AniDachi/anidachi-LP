@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { INTERNAL_TOOL_ROBOTS_DISALLOW } from "@/lib/internal-tool-routes";
 import {
   getResolvedSiteOrigin,
   isAiTrainingCrawlerBlockEnabled,
@@ -26,7 +27,7 @@ export default function robots(): MetadataRoute.Robots {
     {
       userAgent: "*",
       allow: ["/"],
-      disallow: ["/blou", "/kreatli-email-crm"],
+      disallow: [...INTERNAL_TOOL_ROBOTS_DISALLOW],
     },
   ];
 

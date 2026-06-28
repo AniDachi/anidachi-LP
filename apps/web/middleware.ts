@@ -9,6 +9,7 @@ import {
   shouldAutoRefreshWebsiteSession,
 } from "./lib/anidachi-auth/session-refresh";
 import { sanitizeAuthReturnTo } from "./lib/anidachi-auth/return-to";
+import { isInternalToolPath } from "./lib/internal-tool-routes";
 import { isPublicMarketingPath } from "./lib/middleware-routes";
 import {
   STAGING_ACCESS_COOKIE,
@@ -156,9 +157,21 @@ function isApiPath(pathname: string): boolean {
   return pathname.startsWith("/api/");
 }
 
+function withNoindexHeaders(response: NextResponse): NextResponse {
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
+}
+
 function withStagingNoindexHeaders(response: NextResponse): NextResponse {
   response.headers.set("Cache-Control", "no-store");
-  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return withNoindexHeaders(response);
+}
+
+function nextWithOptionalInternalToolNoindex(pathname: string): NextResponse {
+  const response = NextResponse.next();
+  if (isInternalToolPath(pathname)) {
+    return withNoindexHeaders(response);
+  }
   return response;
 }
 
@@ -170,7 +183,7 @@ export async function middleware(request: NextRequest) {
 
   // Public SEO/marketing pages on production skip JWT verify and auth-refresh redirects.
   if (isPublic && !config.enabled) {
-    return NextResponse.next();
+    return nextWithOptionalInternalToolNoindex(pathname);
   }
 
   if (!isPublic) {
@@ -196,7 +209,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (!config.enabled) return NextResponse.next();
+  if (!config.enabled) return nextWithOptionalInternalToolNoindex(pathname);
 
   const nextPath = sanitizeStagingAccessNextPath(
     currentPath,
