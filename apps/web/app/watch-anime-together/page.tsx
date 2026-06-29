@@ -41,7 +41,7 @@ const faq = [
   {
     question: "Can you watch anime together long distance for free?",
     answer:
-      "Yes — for free, Discord screen sharing works over any distance. For a more polished long-distance anime watch party, Crunchyroll Party (free) or AniDachi (Free to join; Plus to host) give everyone full-quality streams and proper sync. AniDachi also supports async watching, so long-distance friends in different time zones never need to schedule.",
+      "Yes — for free, Discord screen sharing works over any distance. For a more polished long-distance anime watch party, Crunchyroll Party (free) or AniDachi (Free limited hosting; Plus for unlimited hosting) give everyone full-quality streams and proper sync. AniDachi also supports async watching, so long-distance friends in different time zones never need to schedule.",
   },
   {
     question: "How do you stream anime together online?",
@@ -132,7 +132,7 @@ export default function WatchAnimeTogetherPage() {
       <p className="text-foreground/80 mb-8">
         Ready to try the Crunchyroll-first option?{" "}
         <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
-          See AniDachi pricing — Free to join, Plus to host
+          See AniDachi pricing — Free limited hosting, Plus unlimited
         </Link>{" "}
         — early-access pricing with a clear refund path, then create your first
         watchroom in minutes.
