@@ -2,14 +2,15 @@ import {
   computeQuotaView,
   isMeteredPlan,
   isSegmentStale,
+  meteredSegmentStartedAt,
   settledSegmentSeconds,
   utcDayOf,
   type HostSegment,
   type QuotaView,
 } from "@/lib/room-quota";
 import {
+  getFirstRoomMemberJoinedAt,
   getOpenHostSegmentRooms,
-  getRoomMemberCount,
   getUsageSecondsForDay,
   incrementUsageSeconds,
   updateRoom,
@@ -21,16 +22,23 @@ import {
  * (v1 approximation — precise Durable Object metering replaces this in
  * Block 6.6 of the 2026-06-12 execution plan).
  *
- * A host "segment" is the span since `rooms.host_connected_at`. Segments are
- * metered only when the room has at least one joined guest member, charged to
- * the UTC day they started on, and can never exceed one room-token life.
+ * A host "segment" is open while `rooms.host_connected_at` is set. Metered
+ * time starts at the later of host connect and the first guest join, charged to
+ * that UTC day, and can never exceed one room-token life.
  */
 
 async function roomSegment(room: RoomRow): Promise<HostSegment | null> {
   if (!room.host_connected_at) return null;
+  const firstGuestJoinedAt = await getFirstRoomMemberJoinedAt(room.room_id);
+  const startedAt = meteredSegmentStartedAt(
+    new Date(room.host_connected_at),
+    firstGuestJoinedAt ? new Date(firstGuestJoinedAt) : null
+  );
+  if (!startedAt) return null;
+
   return {
-    startedAt: new Date(room.host_connected_at),
-    guestHasJoined: (await getRoomMemberCount(room.room_id)) >= 1,
+    startedAt,
+    guestHasJoined: true,
   };
 }
 

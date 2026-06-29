@@ -9,6 +9,7 @@ import {
   hostRoomTokenTtlSeconds,
   isMeteredPlan,
   isSegmentStale,
+  meteredSegmentStartedAt,
   nextUtcMidnight,
   openSegmentSeconds,
   planDailyHostSeconds,
@@ -42,6 +43,27 @@ test("solo host segments (no joined guest) never burn quota", () => {
   assert.equal(
     openSegmentSeconds(segmentStartedSecondsAgo(600, false), NOW),
     0
+  );
+});
+
+test("metered segment starts only after the first guest joins", () => {
+  const hostConnectedAt = new Date(NOW.getTime() - 10 * 60 * 1000);
+  const firstGuestJoinedAt = new Date(NOW.getTime() - 2 * 60 * 1000);
+
+  assert.equal(meteredSegmentStartedAt(hostConnectedAt, null), null);
+  assert.equal(
+    meteredSegmentStartedAt(hostConnectedAt, firstGuestJoinedAt)?.toISOString(),
+    firstGuestJoinedAt.toISOString()
+  );
+});
+
+test("metered segment starts at reconnect when a guest was already a member", () => {
+  const firstGuestJoinedAt = new Date(NOW.getTime() - 10 * 60 * 1000);
+  const hostReconnectedAt = new Date(NOW.getTime() - 2 * 60 * 1000);
+
+  assert.equal(
+    meteredSegmentStartedAt(hostReconnectedAt, firstGuestJoinedAt)?.toISOString(),
+    hostReconnectedAt.toISOString()
   );
 });
 
@@ -90,7 +112,7 @@ test("quota view for paid plans reports infinite remaining", () => {
   assert.equal(canStartHostSession(view), true);
 });
 
-test("a session can start only with at least one minimum slice remaining", () => {
+test("a session can start with any positive remaining quota", () => {
   const base = {
     plan: "free",
     openSegments: [],
@@ -98,11 +120,11 @@ test("a session can start only with at least one minimum slice remaining", () =>
   };
   const blocked = computeQuotaView({
     ...base,
-    persistedSecondsToday: 30 * 60 - MIN_SESSION_START_SECONDS + 1,
+    persistedSecondsToday: 30 * 60,
   });
   const allowed = computeQuotaView({
     ...base,
-    persistedSecondsToday: 30 * 60 - MIN_SESSION_START_SECONDS,
+    persistedSecondsToday: 30 * 60 - 1,
   });
   assert.equal(canStartHostSession(blocked), false);
   assert.equal(canStartHostSession(allowed), true);
@@ -124,6 +146,14 @@ test("free host tokens are capped to remaining quota with a floor", () => {
     now: NOW,
   });
   assert.equal(hostRoomTokenTtlSeconds(nineHundredLeft), 900);
+
+  const oneSecondLeft = computeQuotaView({
+    plan: "free",
+    persistedSecondsToday: 30 * 60 - 1,
+    openSegments: [],
+    now: NOW,
+  });
+  assert.equal(hostRoomTokenTtlSeconds(oneSecondLeft), MIN_SESSION_START_SECONDS);
 
   const paid = computeQuotaView({
     plan: "plus",
