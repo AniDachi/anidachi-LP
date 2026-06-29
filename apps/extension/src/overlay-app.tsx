@@ -459,6 +459,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     roomShareableLinkRef.current = null;
     setRoomToken(null);
     setRoomShareableLink(null);
+    setRoomQuota(null);
     setRoomCapabilities(null);
     clearLegacyRoomSessionStorage();
     if (roomSessionNamespace) {
@@ -2413,11 +2414,44 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     }
 
     quotaEndTriggeredRef.current = true;
+    const exhaustedRoomId = roomIdRef.current;
+    const cachedAccessToken = authAccessTokenRef.current;
     logDebug("overlay.room", "free host quota exhausted; ending session", {
       resetAt: roomQuota?.resetAt ?? null,
+      roomId: exhaustedRoomId,
     });
+    if (exhaustedRoomId) {
+      void (async () => {
+        const accessToken =
+          (await getFreshAuthAccessToken("quota-exhausted")) ?? cachedAccessToken;
+        if (!accessToken) {
+          logDebug("overlay.room", "quota exhausted end skipped without access token", {
+            roomId: exhaustedRoomId,
+          });
+          return;
+        }
+
+        try {
+          await endRoom(exhaustedRoomId, accessToken);
+          logDebug("overlay.room", "quota exhausted room ended on server", {
+            roomId: exhaustedRoomId,
+          });
+        } catch (error) {
+          logDebug("overlay.room", "quota exhausted server end failed", {
+            roomId: exhaustedRoomId,
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
+      })();
+    }
     terminateRoomSession(quotaExhaustedMessage(roomQuota?.resetAt));
-  }, [quotaMeteringActive, quotaRemainingSeconds, roomQuota, terminateRoomSession]);
+  }, [
+    getFreshAuthAccessToken,
+    quotaMeteringActive,
+    quotaRemainingSeconds,
+    roomQuota,
+    terminateRoomSession,
+  ]);
 
   const applyParticipantIdentity = useCallback(
     (result: CurrentParticipantResult, reason: string, reconnectActiveRoom: boolean) => {
