@@ -4,8 +4,8 @@
  *
  * Semantics (Zoom-style):
  *   - only the host's own room burns quota, guests always join free;
- *   - a host "segment" starts when the host connects to their room and is
- *     metered only once at least one guest has joined the room;
+ *   - a host "segment" starts when the host connects to their room, but
+ *     metered time starts only once the first guest has joined the room;
  *   - one segment can never charge more than HOST_SEGMENT_CAP_SECONDS because
  *     room tokens expire after that long (v1 approximation — precise
  *     DO-reported metering replaces this in Block 6.6);
@@ -47,6 +47,26 @@ export interface HostSegment {
   startedAt: Date;
   /** v1 metering proxy: the room has at least one joined guest member. */
   guestHasJoined: boolean;
+}
+
+/**
+ * v1 Free-plan metering starts at the later of host connect and first guest join.
+ * This keeps solo setup/testing free and avoids retroactively charging the host
+ * for time spent waiting alone before a guest accepted the invite.
+ */
+export function meteredSegmentStartedAt(
+  hostConnectedAt: Date,
+  firstGuestJoinedAt: Date | null
+): Date | null {
+  if (
+    !firstGuestJoinedAt ||
+    !Number.isFinite(hostConnectedAt.getTime()) ||
+    !Number.isFinite(firstGuestJoinedAt.getTime())
+  ) {
+    return null;
+  }
+
+  return new Date(Math.max(hostConnectedAt.getTime(), firstGuestJoinedAt.getTime()));
 }
 
 /** Seconds an open host segment counts toward quota right now. */
@@ -107,9 +127,9 @@ export function computeQuotaView(params: {
   };
 }
 
-/** Starting a host session needs a minimum slice so tokens are never absurdly short. */
+/** Starting a host session only requires some positive Free quota remaining. */
 export function canStartHostSession(view: QuotaView): boolean {
-  return view.remainingSeconds >= MIN_SESSION_START_SECONDS;
+  return view.remainingSeconds > 0;
 }
 
 /** Free hosts get room tokens capped to their remaining quota. */

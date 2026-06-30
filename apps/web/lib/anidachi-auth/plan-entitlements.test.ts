@@ -14,7 +14,7 @@ test("plan entitlements match the approved MVP pricing matrix", () => {
   assert.equal(free.label, "Free");
   assert.equal(free.room.dailyHostSeconds, 30 * 60);
   assert.equal(free.room.maxParticipants, 4);
-  assert.equal(free.room.maxMediaSeats, 0);
+  assert.equal(free.room.maxMediaSeats, 4);
   assert.equal(free.account.maxOwnedGroups, 1);
   assert.equal(free.account.maxActiveTrackedTitles, 3);
   assert.equal(free.account.historyRetentionDays, 7);
@@ -49,7 +49,7 @@ test("room capabilities are derived from host plan entitlements", () => {
   assert.deepEqual(roomCapabilitiesForPlan("free"), {
     hostPlanCode: "free",
     maxParticipants: 4,
-    maxMediaSeats: 0,
+    maxMediaSeats: 4,
     canNameRoom: false,
     canSendPushInvites: false,
   });

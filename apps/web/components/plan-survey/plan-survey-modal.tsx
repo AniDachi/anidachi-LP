@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { PrePurchaseDiscordWalkthrough } from "@/components/pre-purchase-discord-walkthrough";
-import { FOUNDER_DISCORD_USERNAME } from "@/lib/founder-discord";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import {
   Check,
@@ -23,6 +22,8 @@ import {
   PRICING_PRO_LABEL,
 } from "@/lib/pricing-tiers";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
+import { isValidEmail } from "@/lib/kreatli-crm/validation";
+import { WaitlistReferralCard } from "@/components/plan-survey/waitlist-referral-card";
 
 export type PlanSurveyOpenContext = {
   placement: string;
@@ -33,8 +34,6 @@ export type PlanSurveyOpenContext = {
 type SurveyStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 const TOTAL_STEPS = 6; // denominator for the progress bar (max questions)
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function PlanSurveyModal({
   isOpen,
@@ -60,13 +59,16 @@ export function PlanSurveyModal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Email capture state (step 5)
+  // Lead capture state (step 5)
+  const [nameInput, setNameInput] = useState("");
   const [emailInput, setEmailInput] = useState("");
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailSubmitting, setEmailSubmitting] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
-
+  const [referralLink, setReferralLink] = useState<string | null>(null);
+  const [referralCount, setReferralCount] = useState(0);
+  const router = useRouter();
 
   useBodyScrollLock(isOpen);
 
@@ -109,11 +111,14 @@ export function PlanSurveyModal({
     if (!isOpen) return;
     setStep(1);
     setCheckoutError(null);
+    setNameInput("");
     setEmailInput("");
     setEmailSubmitted(false);
     setEmailSubmitting(false);
     setEmailError(null);
     setWaitlistPosition(null);
+    setReferralLink(null);
+    setReferralCount(0);
     completedEventFired.current = false;
     const pagePath = typeof window !== "undefined" ? window.location.pathname : "/";
     const pageTemplate = inferPageTemplateFromPath(pagePath);
@@ -127,14 +132,17 @@ export function PlanSurveyModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Step 7: recover position if email submit did not return one (e.g. blob write misconfig).
+  // Step 7: recover waitlist details if email submit did not return them.
   useEffect(() => {
-    if (!isOpen || step !== 7 || waitlistPosition !== null || !emailInput.trim()) {
+    if (!isOpen || step !== 7 || !emailInput.trim()) {
+      return;
+    }
+    if (waitlistPosition !== null && referralLink) {
       return;
     }
     void resolveWaitlistPosition(emailInput);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, step, waitlistPosition, emailInput]);
+  }, [isOpen, step, waitlistPosition, referralLink, emailInput]);
 
   // Track step views
   useEffect(() => {
@@ -326,9 +334,19 @@ export function PlanSurveyModal({
         `/api/waitlist-position?email=${encodeURIComponent(trimmed)}`,
       );
       if (!res.ok) return;
-      const data = (await res.json()) as { waitlistPosition?: number | null };
+      const data = (await res.json()) as {
+        waitlistPosition?: number | null;
+        referralLink?: string | null;
+        referralCount?: number;
+      };
       if (typeof data.waitlistPosition === "number" && data.waitlistPosition > 0) {
         setWaitlistPosition(data.waitlistPosition);
+      }
+      if (typeof data.referralLink === "string" && data.referralLink) {
+        setReferralLink(data.referralLink);
+      }
+      if (typeof data.referralCount === "number") {
+        setReferralCount(data.referralCount);
       }
     } catch {
       // Keep fallback copy if position lookup fails.
@@ -336,13 +354,18 @@ export function PlanSurveyModal({
   };
 
   const submitEmail = async () => {
+    const trimmedName = nameInput.trim();
     const trimmed = emailInput.trim();
+    if (!trimmedName) {
+      setEmailError("Name is required to continue.");
+      return;
+    }
     if (!trimmed) {
       setEmailError("Email is required to continue.");
       return;
     }
-    if (!EMAIL_RE.test(trimmed)) {
-      setEmailError("Enter a valid email address.");
+    if (!isValidEmail(trimmed)) {
+      setEmailError("Enter a valid email address (e.g. you@example.com).");
       return;
     }
     setEmailError(null);
@@ -351,13 +374,29 @@ export function PlanSurveyModal({
       const res = await fetch("/api/subscribe-interest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed, survey }),
+        body: JSON.stringify({ name: trimmedName, email: trimmed, survey }),
       });
-      const data = (await res.json()) as { ok?: boolean; waitlistPosition?: number | null };
+      const data = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        waitlistPosition?: number | null;
+        referralLink?: string | null;
+        referralCount?: number;
+      };
+      if (!res.ok) {
+        setEmailError(data.error ?? "Could not save — please try again.");
+        return;
+      }
       if (typeof data.waitlistPosition === "number" && data.waitlistPosition > 0) {
         setWaitlistPosition(data.waitlistPosition);
-      } else if (res.ok) {
+      } else {
         void resolveWaitlistPosition(trimmed);
+      }
+      if (typeof data.referralLink === "string" && data.referralLink) {
+        setReferralLink(data.referralLink);
+      }
+      if (typeof data.referralCount === "number") {
+        setReferralCount(data.referralCount);
       }
       setEmailSubmitted(true);
       setTimeout(() => setStep(6), 1200);
@@ -593,25 +632,57 @@ export function PlanSurveyModal({
               ) : (
                 <div className="space-y-3">
                   <input
+                    type="text"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    placeholder="Your name"
+                    autoComplete="name"
+                    required
+                    aria-required="true"
+                    className="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-foreground placeholder:text-foreground/40 focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                  />
+                  <input
                     type="email"
                     value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
+                    onChange={(e) => {
+                      setEmailInput(e.target.value);
+                      if (emailError) setEmailError(null);
+                    }}
+                    onBlur={() => {
+                      const trimmed = emailInput.trim();
+                      if (trimmed && !isValidEmail(trimmed)) {
+                        setEmailError("Enter a valid email address (e.g. you@example.com).");
+                      }
+                    }}
                     onKeyDown={(e) => { if (e.key === "Enter") submitEmail(); }}
                     placeholder="Your email address"
                     autoComplete="email"
                     inputMode="email"
                     required
                     aria-required="true"
-                    className="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-foreground placeholder:text-foreground/40 focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                    aria-invalid={emailError ? true : undefined}
+                    aria-describedby={emailError ? "plan-survey-email-error" : undefined}
+                    className={`w-full rounded-lg border bg-brand-surface px-3 py-2 text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 ${
+                      emailError
+                        ? "border-destructive focus:border-destructive"
+                        : "border-brand-border focus:border-brand-orange"
+                    }`}
                   />
                   {emailError && (
-                    <p className="text-xs text-destructive">{emailError}</p>
+                    <p id="plan-survey-email-error" className="text-xs text-destructive" role="alert">
+                      {emailError}
+                    </p>
                   )}
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
                       className="bg-brand-orange hover:bg-brand-orange-deep text-primary-foreground font-semibold"
-                      disabled={emailSubmitting || !emailInput.trim()}
+                      disabled={
+                        emailSubmitting ||
+                        !nameInput.trim() ||
+                        !emailInput.trim() ||
+                        !isValidEmail(emailInput)
+                      }
                       onClick={submitEmail}
                     >
                       {emailSubmitting ? "Saving…" : "Claim my spot"}
@@ -669,11 +740,11 @@ export function PlanSurveyModal({
             <div>
               {/* Victory banner */}
               <div className="mb-4 overflow-hidden rounded-xl border border-brand-orange/35 bg-brand-orange/10 px-4 py-4">
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
                   <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-orange/20">
                     <Check className="h-5 w-5 text-brand-orange" aria-hidden="true" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold text-foreground">You&apos;re on the list!</p>
                     {waitlistPosition !== null ? (
                       <p className="mt-0.5 text-sm text-foreground/70">
@@ -687,6 +758,17 @@ export function PlanSurveyModal({
                       </p>
                     )}
                   </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="shrink-0 bg-brand-orange font-semibold text-primary-foreground hover:bg-brand-orange-deep"
+                    onClick={() => {
+                      closeSurvey("close_button");
+                      router.push("/join");
+                    }}
+                  >
+                    Sign up
+                  </Button>
                 </div>
               </div>
 
@@ -715,7 +797,15 @@ export function PlanSurveyModal({
                 </ul>
               </div>
 
-              {/* Optional pre-launch pricing lock */}
+              {/* Referral strip + optional pre-launch pricing lock */}
+              <div className="space-y-3">
+                {referralLink ? (
+                  <WaitlistReferralCard
+                    referralLink={referralLink}
+                    referralCount={referralCount}
+                  />
+                ) : null}
+
               <div className="overflow-hidden rounded-xl p-[2px] animated-gradient-border">
                 <div className="rounded-[10px] bg-brand-surface p-4">
                 <p className="mb-0.5 text-sm font-semibold text-foreground">
@@ -799,11 +889,7 @@ export function PlanSurveyModal({
                 </div>
                 </div>
               </div>
-
-              <PrePurchaseDiscordWalkthrough
-                className="mt-5"
-                username={FOUNDER_DISCORD_USERNAME}
-              />
+              </div>
 
               <div className="mt-4 flex flex-col items-center gap-3">
                 <button

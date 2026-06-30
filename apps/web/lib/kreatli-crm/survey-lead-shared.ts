@@ -5,6 +5,114 @@ import {
 import type { Contact } from "./types";
 
 export const SURVEY_LEAD_SEGMENT = "survey_lead";
+export const REFERRAL_BUMP_SPOTS = 10;
+
+const REF_CODE_PREFIX = "ref_code:";
+const REFERRALS_PREFIX = "referrals:";
+const REFERRED_BY_PREFIX = "referred_by:";
+
+export function generateRefCode(contactId: string): string {
+  return contactId.replace(/-/g, "").slice(0, 8).toLowerCase();
+}
+
+export function parseRefCode(segments: string[]): string | null {
+  for (const s of segments) {
+    if (s.startsWith(REF_CODE_PREFIX)) {
+      return s.slice(REF_CODE_PREFIX.length);
+    }
+  }
+  return null;
+}
+
+export function getReferralCount(segments: string[]): number {
+  for (const s of segments) {
+    const m = s.match(/^referrals:(\d+)$/);
+    if (m) return Number.parseInt(m[1]!, 10);
+  }
+  return 0;
+}
+
+export function setReferralCount(segments: string[], count: number): string[] {
+  const next = segments.filter((s) => !s.startsWith(REFERRALS_PREFIX));
+  if (count > 0) next.push(`${REFERRALS_PREFIX}${count}`);
+  return next;
+}
+
+export function withRefCodeSegment(segments: string[], contactId: string): string[] {
+  if (parseRefCode(segments)) return segments;
+  return [...segments, `${REF_CODE_PREFIX}${generateRefCode(contactId)}`];
+}
+
+export function findContactByRefCode(
+  contacts: Contact[],
+  code: string,
+): Contact | null {
+  const normalized = code.trim().toLowerCase();
+  if (!normalized) return null;
+  return (
+    contacts.find(
+      (c) => parseRefCode(c.segments)?.toLowerCase() === normalized,
+    ) ?? null
+  );
+}
+
+export function findSurveyLeadByEmail(
+  contacts: Contact[],
+  email: string,
+): Contact | null {
+  const normalized = email.trim().toLowerCase();
+  return (
+    contacts.find(
+      (c) =>
+        isSurveyLead(c) && c.email.trim().toLowerCase() === normalized,
+    ) ?? null
+  );
+}
+
+export function buildReferralJoinUrl(origin: string, refCode: string): string {
+  const base = origin.replace(/\/+$/, "");
+  return `${base}/join?ref=${encodeURIComponent(refCode)}`;
+}
+
+export function effectiveWaitlistPositionForEmail(
+  contacts: Contact[],
+  email: string,
+): number | null {
+  const base = waitlistPositionForEmail(contacts, email);
+  if (base === null) return null;
+  const contact = findSurveyLeadByEmail(contacts, email);
+  if (!contact) return base;
+  const bump = getReferralCount(contact.segments) * REFERRAL_BUMP_SPOTS;
+  return Math.max(1, base - bump);
+}
+
+export function waitlistLeadSummary(
+  contacts: Contact[],
+  email: string,
+  siteOrigin: string,
+): {
+  baseWaitlistPosition: number | null;
+  waitlistPosition: number | null;
+  referralCode: string | null;
+  referralLink: string | null;
+  referralCount: number;
+} {
+  const contact = findSurveyLeadByEmail(contacts, email);
+  const baseWaitlistPosition = waitlistPositionForEmail(contacts, email);
+  const waitlistPosition = effectiveWaitlistPositionForEmail(contacts, email);
+  const referralCode = contact ? parseRefCode(contact.segments) : null;
+  const referralCount = contact ? getReferralCount(contact.segments) : 0;
+  const referralLink = referralCode
+    ? buildReferralJoinUrl(siteOrigin, referralCode)
+    : null;
+  return {
+    baseWaitlistPosition,
+    waitlistPosition,
+    referralCode,
+    referralLink,
+    referralCount,
+  };
+}
 
 export function isSurveyLead(contact: Contact): boolean {
   return contact.segments.includes(SURVEY_LEAD_SEGMENT);

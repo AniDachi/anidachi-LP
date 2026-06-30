@@ -546,6 +546,20 @@ export async function getRoomMemberCount(roomId: string): Promise<number> {
   return count ?? 0;
 }
 
+export async function getFirstRoomMemberJoinedAt(
+  roomId: string
+): Promise<string | null> {
+  const { data, error } = await db()
+    .from("room_members")
+    .select("joined_at")
+    .eq("room_id", roomId)
+    .order("joined_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(`Failed to get first room member: ${error.message}`);
+  return typeof data?.joined_at === "string" ? data.joined_at : null;
+}
+
 export async function listRoomMembers(roomId: string): Promise<RoomMemberRow[]> {
   const { data, error } = await db()
     .from("room_members")

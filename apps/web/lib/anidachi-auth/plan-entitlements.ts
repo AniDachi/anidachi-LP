@@ -53,7 +53,7 @@ export const PLAN_ENTITLEMENTS: Record<PlanCode, PlanEntitlements> = {
     room: {
       dailyHostSeconds: 30 * 60,
       maxParticipants: 4,
-      maxMediaSeats: 0,
+      maxMediaSeats: 4,
       canNameRoom: false,
       canSendPushInvites: false,
     },

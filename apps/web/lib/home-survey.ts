@@ -29,7 +29,7 @@ export type HomeSurveyCurrentSolution =
   | "other";
 
 export type HomeSurveyAnswers = {
-  segment: HomeSurveySegment;
+  segment?: HomeSurveySegment;
   priority?: HomeSurveyPriority;
   discovery?: HomeSurveyDiscovery;
   timing?: HomeSurveyTiming;
@@ -40,7 +40,7 @@ export type HomeSurveyAnswers = {
 export type CheckoutTier = "plus" | "pro";
 
 export function defaultHomeSurveyAnswers(): HomeSurveyAnswers {
-  return { segment: "Friend_group_host" };
+  return {};
 }
 
 export function recommendedTierForSurvey(a: HomeSurveyAnswers): CheckoutTier {

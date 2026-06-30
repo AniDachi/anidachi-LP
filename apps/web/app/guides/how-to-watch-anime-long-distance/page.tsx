@@ -47,7 +47,7 @@ const faq = [
   {
     question: "Can long-distance couples watch anime together for free?",
     answer:
-      `Yes — for free, Discord screen share works over any distance. For full video quality without one person's stream limiting the other, Crunchyroll Party (free) or AniDachi (Free to join; Plus to host) give everyone independent full-quality streams. ${PRICING_COMPARE_OVERVIEW} AniDachi is the only option with async support when schedules don't align.`,
+      `Yes — for free, Discord screen share works over any distance. For full video quality without one person's stream limiting the other, Crunchyroll Party (free) or AniDachi (Free limited hosting; Plus for unlimited hosting) give everyone independent full-quality streams. ${PRICING_COMPARE_OVERVIEW} AniDachi is the only option with async support when schedules don't align.`,
   },
 ];
 

@@ -312,7 +312,7 @@ must emit `free`, `plus`, and `pro`.
 | Who pays | Nobody | Host | Host |
 | Host daily room time | 30 host-min/day | Unlimited | Unlimited |
 | Total participants in own room | 4 | 6 | 15 |
-| Media seats in own room | 0 | 4 | 4 |
+| Media seats in own room | 4 | 4 | 4 |
 | Chat/sync/reactions | Yes | Yes | Yes |
 | Invite link | Yes | Yes | Yes |
 | Friends | Unlimited | Unlimited | Unlimited |
@@ -880,7 +880,8 @@ Worker changes:
 - Keep reconnecting existing participants admitted even when the room is at cap.
 - Enforce total participant cap on new distinct users.
 - Enforce media seat cap on `CAMERA_ON` or future `MEDIA_JOIN`.
-- If `maxMediaSeats = 0`, reject media with `MEDIA_DISABLED`.
+- If `maxMediaSeats = 0` for a future plan or compatibility case, reject media
+  with `MEDIA_DISABLED`.
 - If media seats are full, reject with `MEDIA_SEATS_FULL`.
 - P2P media negotiation must only happen among active media participants.
 - Chat-only participants must not join the media mesh.
@@ -1291,8 +1292,8 @@ system.
 
 - [x] Create this plan.
 - [x] Update pricing doc to reflect Pro 15 total participants and 4 media seats.
-- [ ] Decide whether Free gets any one-time video preview. Default: no preview
-  in MVP.
+- [x] Free rooms have media seats in MVP: Free keeps the 30 host-min/day and
+  4-participant limits, but can use up to 4 media seats.
 
 ### Phase 1 - Billing Entitlements Foundation
 
@@ -1350,7 +1351,7 @@ Acceptance:
 
 Acceptance:
 
-- Free host: 4 total, 0 media.
+- Free host: 4 total, 4 media.
 - Plus host: 6 total, 4 media.
 - Pro host: 15 total, 4 media.
 - 5th media participant in Plus/Pro gets `MEDIA_SEATS_FULL`.

@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { ArrowRight, Bell, UserRoundPlus, Users } from "lucide-react";
+import { AccountWaitlistCard } from "@/components/account/account-waitlist-card";
 import { getSession } from "@/lib/anidachi-auth/session";
+import { getAccountWaitlistStatus } from "@/lib/kreatli-crm/survey-lead";
 import {
   listFriendGroups,
   listFriends,
@@ -45,10 +47,11 @@ export default async function AccountOverviewPage() {
   const session = await getSession();
   if (!session) redirect("/login?next=%2Faccount");
 
-  const [friends, groups, invites] = await Promise.all([
+  const [friends, groups, invites, waitlist] = await Promise.all([
     listFriends(session.userId),
     listFriendGroups(session.userId),
     listRoomInvites(session.userId),
+    getAccountWaitlistStatus(session.email),
   ]);
   const activeGroups = groups.filter((group) => !group.archivedAt);
   const pendingInvites = invites.inbox.filter((invite) =>
@@ -59,6 +62,31 @@ export default async function AccountOverviewPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {waitlist ? (
+        <AccountWaitlistCard
+          waitlistPosition={waitlist.waitlistPosition}
+          referralLink={waitlist.referralLink}
+          referralCount={waitlist.referralCount}
+        />
+      ) : (
+        <section className="rounded-lg border border-brand-border bg-brand-surface p-5">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Join the waitlist</h2>
+              <p className="mt-1 text-sm text-foreground/50">
+                Sign up to get early access and see your place in line.
+              </p>
+            </div>
+            <Link
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-brand-orange px-4 text-sm font-semibold text-primary-foreground transition hover:bg-brand-orange-deep"
+              href="/join"
+            >
+              Sign up
+            </Link>
+          </div>
+        </section>
+      )}
+
       <section className="grid gap-4 md:grid-cols-3">
         <StatPanel
           icon={<UserRoundPlus className="h-5 w-5" aria-hidden />}
