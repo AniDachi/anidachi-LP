@@ -19,27 +19,47 @@ import { PlanSurveyModal, type PlanSurveyOpenContext } from "./plan-survey-modal
 
 const LS_KEY = "anidachi_home_survey_v2";
 
+function isValidSegment(
+  segment: unknown,
+): segment is HomeSurveyAnswers["segment"] {
+  return (
+    segment === "Friend_group_host" ||
+    segment === "Long_distance_watch" ||
+    segment === "Community_mod"
+  );
+}
+
+/** Ignore legacy localStorage entries that only stored the old default segment. */
+function isStaleDefaultSurvey(survey: HomeSurveyAnswers): boolean {
+  return (
+    survey.segment === "Friend_group_host" &&
+    !survey.priority &&
+    !survey.discovery &&
+    !survey.timing &&
+    !survey.group_size &&
+    !survey.current_solution
+  );
+}
+
 function safeParseSurvey(raw: string | null): HomeSurveyAnswers | null {
   if (!raw) return null;
   try {
     const v = JSON.parse(raw) as unknown;
     if (!v || typeof v !== "object") return null;
     const anyV = v as Partial<HomeSurveyAnswers>;
-    if (
-      anyV.segment !== "Friend_group_host" &&
-      anyV.segment !== "Long_distance_watch" &&
-      anyV.segment !== "Community_mod"
-    ) {
-      return null;
-    }
-    return {
-      segment: anyV.segment,
+    const parsed: HomeSurveyAnswers = {
+      segment: isValidSegment(anyV.segment) ? anyV.segment : undefined,
       priority: anyV.priority,
       discovery: anyV.discovery,
       timing: anyV.timing,
       group_size: anyV.group_size,
       current_solution: anyV.current_solution,
     };
+    if (!parsed.segment && !parsed.priority && !parsed.timing && !parsed.group_size && !parsed.current_solution) {
+      return null;
+    }
+    if (isStaleDefaultSurvey(parsed)) return null;
+    return parsed;
   } catch {
     return null;
   }
@@ -99,6 +119,7 @@ export function PlanSurveyProvider({ children }: { children: React.ReactNode }) 
   );
 
   const openSurvey = useCallback((args: OpenSurveyArgs) => {
+    setSurvey(defaultHomeSurveyAnswers());
     setOpenContext({ placement: args.placement, cta_variant: args.ctaVariant });
     setIsOpen(true);
   }, []);

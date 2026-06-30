@@ -23,6 +23,7 @@ import {
   PRICING_PRO_LABEL,
 } from "@/lib/pricing-tiers";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
+import { isValidEmail } from "@/lib/kreatli-crm/validation";
 
 export type PlanSurveyOpenContext = {
   placement: string;
@@ -33,8 +34,6 @@ export type PlanSurveyOpenContext = {
 type SurveyStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 const TOTAL_STEPS = 6; // denominator for the progress bar (max questions)
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function PlanSurveyModal({
   isOpen,
@@ -60,7 +59,8 @@ export function PlanSurveyModal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Email capture state (step 5)
+  // Lead capture state (step 5)
+  const [nameInput, setNameInput] = useState("");
   const [emailInput, setEmailInput] = useState("");
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailSubmitting, setEmailSubmitting] = useState(false);
@@ -109,6 +109,7 @@ export function PlanSurveyModal({
     if (!isOpen) return;
     setStep(1);
     setCheckoutError(null);
+    setNameInput("");
     setEmailInput("");
     setEmailSubmitted(false);
     setEmailSubmitting(false);
@@ -336,13 +337,18 @@ export function PlanSurveyModal({
   };
 
   const submitEmail = async () => {
+    const trimmedName = nameInput.trim();
     const trimmed = emailInput.trim();
+    if (!trimmedName) {
+      setEmailError("Name is required to continue.");
+      return;
+    }
     if (!trimmed) {
       setEmailError("Email is required to continue.");
       return;
     }
-    if (!EMAIL_RE.test(trimmed)) {
-      setEmailError("Enter a valid email address.");
+    if (!isValidEmail(trimmed)) {
+      setEmailError("Enter a valid email address (e.g. you@example.com).");
       return;
     }
     setEmailError(null);
@@ -351,12 +357,20 @@ export function PlanSurveyModal({
       const res = await fetch("/api/subscribe-interest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed, survey }),
+        body: JSON.stringify({ name: trimmedName, email: trimmed, survey }),
       });
-      const data = (await res.json()) as { ok?: boolean; waitlistPosition?: number | null };
+      const data = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        waitlistPosition?: number | null;
+      };
+      if (!res.ok) {
+        setEmailError(data.error ?? "Could not save — please try again.");
+        return;
+      }
       if (typeof data.waitlistPosition === "number" && data.waitlistPosition > 0) {
         setWaitlistPosition(data.waitlistPosition);
-      } else if (res.ok) {
+      } else {
         void resolveWaitlistPosition(trimmed);
       }
       setEmailSubmitted(true);
@@ -593,25 +607,57 @@ export function PlanSurveyModal({
               ) : (
                 <div className="space-y-3">
                   <input
+                    type="text"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    placeholder="Your name"
+                    autoComplete="name"
+                    required
+                    aria-required="true"
+                    className="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-foreground placeholder:text-foreground/40 focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                  />
+                  <input
                     type="email"
                     value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
+                    onChange={(e) => {
+                      setEmailInput(e.target.value);
+                      if (emailError) setEmailError(null);
+                    }}
+                    onBlur={() => {
+                      const trimmed = emailInput.trim();
+                      if (trimmed && !isValidEmail(trimmed)) {
+                        setEmailError("Enter a valid email address (e.g. you@example.com).");
+                      }
+                    }}
                     onKeyDown={(e) => { if (e.key === "Enter") submitEmail(); }}
                     placeholder="Your email address"
                     autoComplete="email"
                     inputMode="email"
                     required
                     aria-required="true"
-                    className="w-full rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-base text-foreground placeholder:text-foreground/40 focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                    aria-invalid={emailError ? true : undefined}
+                    aria-describedby={emailError ? "plan-survey-email-error" : undefined}
+                    className={`w-full rounded-lg border bg-brand-surface px-3 py-2 text-base text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 ${
+                      emailError
+                        ? "border-destructive focus:border-destructive"
+                        : "border-brand-border focus:border-brand-orange"
+                    }`}
                   />
                   {emailError && (
-                    <p className="text-xs text-destructive">{emailError}</p>
+                    <p id="plan-survey-email-error" className="text-xs text-destructive" role="alert">
+                      {emailError}
+                    </p>
                   )}
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
                       className="bg-brand-orange hover:bg-brand-orange-deep text-primary-foreground font-semibold"
-                      disabled={emailSubmitting || !emailInput.trim()}
+                      disabled={
+                        emailSubmitting ||
+                        !nameInput.trim() ||
+                        !emailInput.trim() ||
+                        !isValidEmail(emailInput)
+                      }
                       onClick={submitEmail}
                     >
                       {emailSubmitting ? "Saving…" : "Claim my spot"}

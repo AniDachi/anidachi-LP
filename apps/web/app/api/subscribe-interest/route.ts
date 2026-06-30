@@ -4,18 +4,20 @@ import { readGmailTokens } from "@/lib/kreatli-crm/gmail-tokens";
 import { upsertSurveyLead } from "@/lib/kreatli-crm/survey-lead";
 import { waitlistPositionForEmail } from "@/lib/kreatli-crm/survey-lead-shared";
 import { readContacts } from "@/lib/kreatli-crm/store";
-import { normalizeEmail } from "@/lib/kreatli-crm/validation";
+import { isValidEmail, normalizeEmail } from "@/lib/kreatli-crm/validation";
 import type { HomeSurveyAnswers } from "@/lib/home-survey";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 function buildInterestEmail(
+  name: string,
   email: string,
   survey: Partial<HomeSurveyAnswers>,
 ): { subject: string; body: string } {
-  const subject = `AniDachi interest lead: ${email}`;
+  const subject = `AniDachi interest lead: ${name} <${email}>`;
   const body = [
     "A user saved their plan recommendation but has not subscribed yet.",
     "",
+    `Name: ${name}`,
     `Email: ${email}`,
     `Segment: ${survey.segment ?? "—"}`,
     `Priority: ${survey.priority ?? "—"}`,
@@ -27,15 +29,27 @@ function buildInterestEmail(
 }
 
 export async function POST(request: NextRequest) {
+  let name: string;
   let email: string;
   let survey: Partial<HomeSurveyAnswers>;
 
   try {
-    const body = (await request.json()) as { email?: unknown; survey?: unknown };
+    const body = (await request.json()) as {
+      name?: unknown;
+      email?: unknown;
+      survey?: unknown;
+    };
+    if (typeof body.name !== "string" || !body.name.trim()) {
+      return NextResponse.json({ error: "Missing name" }, { status: 400 });
+    }
     if (typeof body.email !== "string" || !body.email.trim()) {
       return NextResponse.json({ error: "Missing email" }, { status: 400 });
     }
+    name = body.name.trim();
     email = body.email.trim();
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+    }
     survey = (typeof body.survey === "object" && body.survey !== null
       ? body.survey
       : {}) as Partial<HomeSurveyAnswers>;
@@ -43,11 +57,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  console.info("[subscribe-interest] New lead:", email, survey);
+  console.info("[subscribe-interest] New lead:", name, email, survey);
 
   let waitlistPosition: number | null = null;
   try {
-    const crmResult = await upsertSurveyLead(email, survey);
+    const crmResult = await upsertSurveyLead(email, survey, name);
     waitlistPosition = crmResult.waitlistPosition;
     if (crmResult.saved) {
       console.info("[subscribe-interest] Saved to CRM:", email, "waitlist position:", waitlistPosition);
@@ -83,7 +97,7 @@ export async function POST(request: NextRequest) {
   }
 
   const redirectUri = getGmailRedirectUri(getResolvedSiteOrigin());
-  const { subject, body: emailBody } = buildInterestEmail(email, survey);
+  const { subject, body: emailBody } = buildInterestEmail(name, email, survey);
 
   for (const address of to) {
     try {

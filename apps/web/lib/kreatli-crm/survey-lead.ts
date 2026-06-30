@@ -25,9 +25,13 @@ function buildSurveySegments(survey: Partial<HomeSurveyAnswers>): string[] {
   return segments;
 }
 
-function buildSurveyNote(survey: Partial<HomeSurveyAnswers>): string {
+function buildSurveyNote(
+  survey: Partial<HomeSurveyAnswers>,
+  name?: string,
+): string {
   return [
     "Saved plan recommendation from homepage survey.",
+    `Name: ${name?.trim() || "—"}`,
     `Segment: ${survey.segment ?? "—"}`,
     `Priority: ${survey.priority ?? "—"}`,
     `Group size: ${survey.group_size ?? "—"}`,
@@ -42,6 +46,7 @@ function buildSurveyNote(survey: Partial<HomeSurveyAnswers>): string {
 export async function upsertSurveyLead(
   email: string,
   survey: Partial<HomeSurveyAnswers>,
+  name?: string,
 ): Promise<{
   saved: boolean;
   reason?: string;
@@ -65,7 +70,8 @@ export async function upsertSurveyLead(
   );
   const now = new Date().toISOString();
   const segments = buildSurveySegments(survey);
-  const surveyNote = buildSurveyNote(survey);
+  const trimmedName = name?.trim() ?? "";
+  const surveyNote = buildSurveyNote(survey, trimmedName);
 
   const wasExistingLead = idx !== -1;
 
@@ -74,7 +80,7 @@ export async function upsertSurveyLead(
       id: randomUUID(),
       email: normalized,
       company: "",
-      first_name: "",
+      first_name: trimmedName,
       segments,
       notes: surveyNote,
       status: "active",
@@ -90,6 +96,7 @@ export async function upsertSurveyLead(
       : surveyNote;
     contacts[idx] = {
       ...cur,
+      first_name: trimmedName || cur.first_name,
       segments: mergeSegments(cur.segments, segments),
       notes: mergedNotes,
       updated_at: now,
