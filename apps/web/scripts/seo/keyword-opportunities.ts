@@ -25,14 +25,16 @@ type CombinedPage = {
 };
 
 function loadEnvLocal() {
-  const envPath = path.join(__dirname, "../../.env.local");
-  if (!fs.existsSync(envPath)) return;
-  for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
-    const t = line.trim();
-    if (!t || t.startsWith("#")) continue;
-    const i = t.indexOf("=");
-    if (i > 0 && process.env[t.slice(0, i)] === undefined) {
-      process.env[t.slice(0, i)] = t.slice(i + 1);
+  for (const rel of ["../../.env.local", "../../../.env.local"]) {
+    const envPath = path.join(__dirname, rel);
+    if (!fs.existsSync(envPath)) continue;
+    for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
+      const t = line.trim();
+      if (!t || t.startsWith("#")) continue;
+      const i = t.indexOf("=");
+      if (i > 0 && process.env[t.slice(0, i)] === undefined) {
+        process.env[t.slice(0, i)] = t.slice(i + 1);
+      }
     }
   }
 }
