@@ -132,6 +132,11 @@ export default function AnimeWatchPartyToolkitPage() {
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
         <li>
+          <Link href="/anime-watch-party" className="hover:underline">
+            Anime watch party — quick start
+          </Link>
+        </li>
+        <li>
           <Link href="/watch-anime-together" className="hover:underline">
             Watch Anime Together — complete online guide
           </Link>
@@ -153,6 +158,11 @@ export default function AnimeWatchPartyToolkitPage() {
         Genre hubs group the best Crunchyroll titles for group watchrooms — each links to a dedicated watch page with setup steps and spoiler tips.
       </p>
       <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link href="/watch-shonen-anime-with-friends" className="hover:underline">
+            Watch shonen anime with friends
+          </Link>
+        </li>
         <li>
           <Link href="/watch-action-anime-with-friends" className="hover:underline">
             Watch action anime with friends
@@ -260,6 +270,11 @@ export default function AnimeWatchPartyToolkitPage() {
             className="hover:underline"
           >
             AniDachi vs Anime Watch Parties extension
+          </Link>
+        </li>
+        <li>
+          <Link href="/compare/anidachi-vs-netflix-watch-party" className="hover:underline">
+            AniDachi vs Netflix Watch Party
           </Link>
         </li>
         <li>

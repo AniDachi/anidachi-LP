@@ -17,6 +17,51 @@ export const guideLinks: GuideLinkItem[] = [
     ],
   },
   {
+    href: "/anime-watch-party",
+    label: "Anime Watch Party",
+    tags: ["how-to-core", "watch-party", "pillar-watch-anime", "pillar-watch-crunchyroll"],
+  },
+  {
+    href: "/guides/best-anime-to-watch-asynchronously",
+    label: "Best Anime to Watch Asynchronously",
+    tags: ["template-d", "listicle", "async", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-action-anime-to-watch-with-friends",
+    label: "Best Action Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-fantasy-anime-to-watch-with-friends",
+    label: "Best Fantasy Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-anime-to-watch-in-a-watch-party",
+    label: "Best Anime to Watch in a Watch Party",
+    tags: ["template-d", "listicle", "watch-party", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/best-sci-fi-anime-to-watch-with-friends",
+    label: "Best Sci-Fi Anime to Watch With Friends",
+    tags: ["template-d", "listicle", "pillar-watch-anime"],
+  },
+  {
+    href: "/guides/how-to-sync-crunchyroll-with-friends",
+    label: "How to Sync Crunchyroll With Friends",
+    tags: ["template-c", "how-to-core", "crunchyroll", "pillar-watch-crunchyroll"],
+  },
+  {
+    href: "/guides/how-to-watch-crunchyroll-on-two-screens",
+    label: "How to Watch Crunchyroll on Two Screens",
+    tags: ["template-c", "how-to-core", "crunchyroll", "pillar-watch-crunchyroll"],
+  },
+  {
+    href: "/compare/anidachi-vs-netflix-watch-party",
+    label: "AniDachi vs Netflix Watch Party",
+    tags: ["compare", "pillar-watch-anime"],
+  },
+  {
     href: "/anime-watch-party-toolkit",
     label: "Anime Watch Party Toolkit",
     tags: ["how-to-core", "pillar-watch-anime", "pillar-watch-crunchyroll"],

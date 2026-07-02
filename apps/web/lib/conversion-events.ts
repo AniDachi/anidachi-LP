@@ -48,7 +48,8 @@ export function inferPageTemplateFromPath(path: string): PageTemplateId {
   if (
     path === "/watch-anime-together" ||
     path === "/watch-crunchyroll-together" ||
-    path === "/anime-watch-party-toolkit"
+    path === "/anime-watch-party-toolkit" ||
+    path === "/anime-watch-party"
   ) {
     return "pillar";
   }

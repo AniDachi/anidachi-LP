@@ -5,6 +5,10 @@ export const GENRE_HUB_LINKS = [
     label: "Watch action anime with friends",
   },
   {
+    href: "/watch-shonen-anime-with-friends",
+    label: "Watch shonen anime with friends",
+  },
+  {
     href: "/watch-romance-anime-with-friends",
     label: "Watch romance anime with friends",
   },

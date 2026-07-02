@@ -102,7 +102,7 @@ export default function WatchAnimeTogetherPage() {
       description="Watch anime with friends online — live sync, async, or long-distance. Free and paid options compared."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-06-08"
+      dateModified="2026-07-02"
       faq={faq}
       headings={tocHeadings}
       itemList={genreHubItemList(1)}
@@ -316,12 +316,14 @@ export default function WatchAnimeTogetherPage() {
         Genre hubs group the best titles for group watchrooms — each links to a dedicated watch page with setup steps, spoiler tips, and pacing advice:
       </p>
       <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-brand-orange mb-4">
+        <li><Link href="/watch-shonen-anime-with-friends" className="hover:underline font-medium">Shonen anime with friends →</Link></li>
         <li><Link href="/watch-action-anime-with-friends" className="hover:underline font-medium">Action anime with friends →</Link></li>
         <li><Link href="/watch-romance-anime-with-friends" className="hover:underline font-medium">Romance anime with friends →</Link></li>
         <li><Link href="/watch-comedy-anime-with-friends" className="hover:underline font-medium">Comedy anime with friends →</Link></li>
         <li><Link href="/watch-sports-anime-with-friends" className="hover:underline font-medium">Sports anime with friends →</Link></li>
         <li><Link href="/watch-mystery-anime-with-friends" className="hover:underline font-medium">Mystery &amp; psychological anime →</Link></li>
         <li><Link href="/guides/best-isekai-anime-to-watch-with-friends" className="hover:underline font-medium">Best isekai anime to watch with friends →</Link></li>
+        <li><Link href="/guides/best-anime-to-watch-asynchronously" className="hover:underline font-medium">Best anime to watch asynchronously →</Link></li>
       </ul>
 
       <h2
