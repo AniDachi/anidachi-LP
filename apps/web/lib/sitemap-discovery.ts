@@ -70,7 +70,8 @@ function inferSitemapMeta(urlPath: string): {
   if (
     urlPath === "/watch-anime-together" ||
     urlPath === "/watch-crunchyroll-together" ||
-    urlPath === "/anime-watch-party-toolkit"
+    urlPath === "/anime-watch-party-toolkit" ||
+    urlPath === "/anime-watch-party"
   ) {
     return { changeFrequency: "weekly", priority: 0.9 };
   }
@@ -79,6 +80,7 @@ function inferSitemapMeta(urlPath: string): {
   }
   if (
     urlPath === "/watch-action-anime-with-friends" ||
+    urlPath === "/watch-shonen-anime-with-friends" ||
     urlPath === "/watch-romance-anime-with-friends" ||
     urlPath === "/watch-comedy-anime-with-friends" ||
     urlPath === "/watch-sports-anime-with-friends" ||
