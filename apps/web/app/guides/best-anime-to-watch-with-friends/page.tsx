@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { ResponsiveDataTable } from "@/components/responsive-data-table";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 export const metadata: Metadata = {
@@ -161,49 +162,22 @@ export default function BestAnimeWithFriendsPage() {
       >
         Quick Picks — Best Anime to Watch with Friends by Mood
       </h2>
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-brand-border rounded-lg">
-          <thead>
-            <tr className="bg-brand-surface">
-              <th className="border border-brand-border px-4 py-2 text-left">Mood</th>
-              <th className="border border-brand-border px-4 py-2 text-left">Top picks</th>
-              <th className="border border-brand-border px-4 py-2 text-left">Length</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border border-brand-border px-4 py-2 font-medium">Big reactions</td>
-              <td className="border border-brand-border px-4 py-2">Attack on Titan, Jujutsu Kaisen, Demon Slayer</td>
-              <td className="border border-brand-border px-4 py-2">Medium (25–75 ep)</td>
-            </tr>
-            <tr className="bg-brand-surface">
-              <td className="border border-brand-border px-4 py-2 font-medium">Comedy night</td>
-              <td className="border border-brand-border px-4 py-2">Spy x Family, KonoSuba, One Punch Man</td>
-              <td className="border border-brand-border px-4 py-2">Short–medium</td>
-            </tr>
-            <tr>
-              <td className="border border-brand-border px-4 py-2 font-medium">Theory &amp; debate</td>
-              <td className="border border-brand-border px-4 py-2">Death Note, Steins;Gate, Frieren</td>
-              <td className="border border-brand-border px-4 py-2">Medium</td>
-            </tr>
-            <tr className="bg-brand-surface">
-              <td className="border border-brand-border px-4 py-2 font-medium">One night (film)</td>
-              <td className="border border-brand-border px-4 py-2">Your Name., A Silent Voice, Spirited Away</td>
-              <td className="border border-brand-border px-4 py-2">~2 hours</td>
-            </tr>
-            <tr>
-              <td className="border border-brand-border px-4 py-2 font-medium">Long marathon</td>
-              <td className="border border-brand-border px-4 py-2">One Piece, Hunter x Hunter, Naruto</td>
-              <td className="border border-brand-border px-4 py-2">Long (100+ ep)</td>
-            </tr>
-            <tr className="bg-brand-surface">
-              <td className="border border-brand-border px-4 py-2 font-medium">Non-anime fans</td>
-              <td className="border border-brand-border px-4 py-2">My Neighbor Totoro, Spy x Family, Demon Slayer</td>
-              <td className="border border-brand-border px-4 py-2">Short</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ResponsiveDataTable
+        titleKey="mood"
+        columns={[
+          { key: "mood", label: "Mood" },
+          { key: "picks", label: "Top picks" },
+          { key: "length", label: "Length" },
+        ]}
+        rows={[
+          { mood: "Big reactions", picks: "Attack on Titan, Jujutsu Kaisen, Demon Slayer", length: "Medium (25–75 ep)" },
+          { mood: "Comedy night", picks: "Spy x Family, KonoSuba, One Punch Man", length: "Short–medium" },
+          { mood: "Theory & debate", picks: "Death Note, Steins;Gate, Frieren", length: "Medium" },
+          { mood: "One night (film)", picks: "Your Name., A Silent Voice, Spirited Away", length: "~2 hours" },
+          { mood: "Long marathon", picks: "One Piece, Hunter x Hunter, Naruto", length: "Long (100+ ep)" },
+          { mood: "Non-anime fans", picks: "My Neighbor Totoro, Spy x Family, Demon Slayer", length: "Short" },
+        ]}
+      />
 
       <h2
         id="reactions"

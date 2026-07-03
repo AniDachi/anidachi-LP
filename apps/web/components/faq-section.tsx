@@ -52,7 +52,7 @@ function FAQAccordion({
   return (
     <div className="overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
       <button
-        className={`group flex w-full items-center justify-between px-5 py-3.5 text-left font-medium text-foreground transition-colors hover:bg-brand-orange hover:text-primary-foreground ${
+        className={`group flex min-h-11 w-full items-center justify-between px-5 py-3.5 text-left font-medium text-foreground transition-colors hover:bg-brand-orange hover:text-primary-foreground ${
           open ? "rounded-t-lg" : "rounded-lg"
         }`}
         onClick={() => setOpen(!open)}

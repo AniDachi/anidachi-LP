@@ -114,7 +114,7 @@ function IconButton({
   return (
     <button
       aria-label={title}
-      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${toneClass}`}
+      className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-0 ${toneClass}`}
       disabled={disabled}
       onClick={onClick}
       title={title}
@@ -392,7 +392,7 @@ function InboxInviteRow({
             ) : null}
           </div>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
           <IconButton
             disabled={disabled}
             icon={<Check className="h-4 w-4" aria-hidden />}
@@ -407,7 +407,9 @@ function InboxInviteRow({
             icon={<X className="h-4 w-4" aria-hidden />}
             onClick={onDecline}
             title="Decline invite"
-          />
+          >
+            Decline
+          </IconButton>
         </div>
       </div>
     </div>

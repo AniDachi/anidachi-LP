@@ -98,6 +98,11 @@
   --brand-orange-deep: oklch(0.60 0.22 42);
   --brand-surface: oklch(0.12 0.010 38);
   --brand-border: oklch(0.22 0.018 42);
+
+  /* Mobile safe areas and sticky chrome offsets */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --mobile-sticky-bar-h: 4.5rem;
 }
 
 /* .dark mirrors :root — the site is permanently dark */
@@ -202,6 +207,18 @@
   .animate-fade-in-up {
     animation: fade-in-up 0.6s ease-out forwards;
     opacity: 0;
+  }
+
+  .pt-safe-top {
+    padding-top: var(--safe-top);
+  }
+
+  .pb-safe-bottom {
+    padding-bottom: var(--safe-bottom);
+  }
+
+  .pb-mobile-sticky-bar {
+    padding-bottom: calc(var(--mobile-sticky-bar-h) + var(--safe-bottom));
   }
 
   .animated-gradient-border {

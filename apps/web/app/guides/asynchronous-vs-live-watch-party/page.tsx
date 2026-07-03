@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
 
 export const metadata: Metadata = {
@@ -108,25 +109,20 @@ export default function AsyncVsLivePage() {
       >
         Comparison
       </h2>
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-brand-border">
-          <thead>
-            <tr className="bg-brand-surface">
-              <th className="border border-brand-border px-4 py-2 text-left">Aspect</th>
-              <th className="border border-brand-border px-4 py-2 text-left">Live</th>
-              <th className="border border-brand-border px-4 py-2 text-left">Async</th>
-            </tr>
-          </thead>
-          <tbody className="text-foreground/80">
-            <tr><td className="border border-brand-border px-4 py-2">Scheduling</td><td className="border border-brand-border px-4 py-2">Everyone must be free</td><td className="border border-brand-border px-4 py-2">Watch anytime</td></tr>
-            <tr className="bg-brand-surface"><td className="border border-brand-border px-4 py-2">Real-time reactions</td><td className="border border-brand-border px-4 py-2">Yes</td><td className="border border-brand-border px-4 py-2">Delayed but preserved</td></tr>
-            <tr><td className="border border-brand-border px-4 py-2">Time zones</td><td className="border border-brand-border px-4 py-2">Painful</td><td className="border border-brand-border px-4 py-2">No problem</td></tr>
-            <tr className="bg-brand-surface"><td className="border border-brand-border px-4 py-2">Progress tracking</td><td className="border border-brand-border px-4 py-2">No</td><td className="border border-brand-border px-4 py-2">Per-user</td></tr>
-            <tr><td className="border border-brand-border px-4 py-2">Spoiler risk</td><td className="border border-brand-border px-4 py-2">None</td><td className="border border-brand-border px-4 py-2">Managed by tool</td></tr>
-            <tr className="bg-brand-surface"><td className="border border-brand-border px-4 py-2">Best for</td><td className="border border-brand-border px-4 py-2">Premieres, finales</td><td className="border border-brand-border px-4 py-2">Ongoing series, marathons</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <ResponsiveCompareTable
+        columns={[
+          { id: "live", label: "Live" },
+          { id: "async", label: "Async", highlight: true },
+        ]}
+        rows={[
+          { feature: "Scheduling", values: { live: "Everyone must be free", async: "Watch anytime" } },
+          { feature: "Real-time reactions", values: { live: "yes", async: "Delayed but preserved" } },
+          { feature: "Time zones", values: { live: "Painful", async: "No problem" } },
+          { feature: "Progress tracking", values: { live: "no", async: "Per-user" } },
+          { feature: "Spoiler risk", values: { live: "None", async: "Managed by tool" } },
+          { feature: "Best for", values: { live: "Premieres, finales", async: "Ongoing series, marathons" } },
+        ]}
+      />
 
       <h2
         id="when-live"

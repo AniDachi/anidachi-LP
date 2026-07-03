@@ -96,7 +96,7 @@ export function TableOfContents({ headings }: { headings: TocHeading[] }) {
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left font-medium text-foreground"
+          className="flex min-h-11 w-full items-center justify-between gap-2 px-4 py-3 text-left font-medium text-foreground"
           aria-expanded={open}
         >
           <span className="inline-flex items-center gap-2">

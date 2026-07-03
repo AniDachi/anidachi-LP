@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
 import {
@@ -195,49 +196,37 @@ export default function WatchCrunchyrollTogetherPage() {
         Here are the most popular methods for watching Crunchyroll anime
         together, ranked by feature richness:
       </p>
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-brand-border rounded-lg">
-          <thead>
-            <tr className="bg-brand-surface">
-              <th className="border border-brand-border px-4 py-2 text-left">Method</th>
-              <th className="border border-brand-border px-4 py-2 text-left">Sync</th>
-              <th className="border border-brand-border px-4 py-2 text-left">Async</th>
-              <th className="border border-brand-border px-4 py-2 text-left">Chat</th>
-              <th className="border border-brand-border px-4 py-2 text-left">Free</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border border-brand-border px-4 py-2 font-medium">AniDachi</td>
-              <td className="border border-brand-border px-4 py-2">Yes</td>
-              <td className="border border-brand-border px-4 py-2">Yes</td>
-              <td className="border border-brand-border px-4 py-2">Yes</td>
-              <td className="border border-brand-border px-4 py-2">{PRICING_EARLY_ACCESS_PRICE}</td>
-            </tr>
-            <tr className="bg-brand-surface">
-              <td className="border border-brand-border px-4 py-2 font-medium">Crunchyroll Party</td>
-              <td className="border border-brand-border px-4 py-2">Yes</td>
-              <td className="border border-brand-border px-4 py-2">No</td>
-              <td className="border border-brand-border px-4 py-2">Yes</td>
-              <td className="border border-brand-border px-4 py-2">Free</td>
-            </tr>
-            <tr>
-              <td className="border border-brand-border px-4 py-2 font-medium">Teleparty</td>
-              <td className="border border-brand-border px-4 py-2">Yes</td>
-              <td className="border border-brand-border px-4 py-2">No</td>
-              <td className="border border-brand-border px-4 py-2">Yes</td>
-              <td className="border border-brand-border px-4 py-2">Freemium</td>
-            </tr>
-            <tr className="bg-brand-surface">
-              <td className="border border-brand-border px-4 py-2 font-medium">Discord</td>
-              <td className="border border-brand-border px-4 py-2">Manual</td>
-              <td className="border border-brand-border px-4 py-2">No</td>
-              <td className="border border-brand-border px-4 py-2">Voice/Text</td>
-              <td className="border border-brand-border px-4 py-2">Free</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ResponsiveCompareTable
+        columns={[
+          { id: "anidachi", label: "AniDachi", highlight: true },
+          { id: "crunchyroll-party", label: "Crunchyroll Party" },
+          { id: "teleparty", label: "Teleparty" },
+          { id: "discord", label: "Discord" },
+        ]}
+        rows={[
+          {
+            feature: "Sync",
+            values: { anidachi: "yes", "crunchyroll-party": "yes", teleparty: "yes", discord: "Manual" },
+          },
+          {
+            feature: "Async",
+            values: { anidachi: "yes", "crunchyroll-party": "no", teleparty: "no", discord: "no" },
+          },
+          {
+            feature: "Chat",
+            values: { anidachi: "yes", "crunchyroll-party": "yes", teleparty: "yes", discord: "Voice/Text" },
+          },
+          {
+            feature: "Free",
+            values: {
+              anidachi: PRICING_EARLY_ACCESS_PRICE,
+              "crunchyroll-party": "Free",
+              teleparty: "Freemium",
+              discord: "Free",
+            },
+          },
+        ]}
+      />
 
       <h2
         id="group-watch"

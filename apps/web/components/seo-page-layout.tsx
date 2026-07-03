@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { FAQSection, type FAQItem } from "@/components/faq-section";
 import {
   BreadcrumbJsonLd,
@@ -82,7 +83,13 @@ export function SeoPageLayout({
 
   return (
     <>
-      <main id="main-content" className="min-h-screen bg-background">
+      <main
+        id="main-content"
+        className={cn(
+          "min-h-screen bg-background",
+          showStickyBar && "pb-mobile-sticky-bar md:pb-0",
+        )}
+      >
         <nav aria-label="Breadcrumb" className="border-b border-brand-border bg-brand-surface">
           <div className="container mx-auto px-4 py-3">
             <ol className="flex flex-wrap items-center gap-2 text-sm text-foreground/50">
@@ -97,7 +104,7 @@ export function SeoPageLayout({
                       {crumb.name}
                     </Link>
                   ) : (
-                    <span className="font-medium text-foreground">
+                    <span className="max-w-[min(100%,12rem)] truncate font-medium text-foreground sm:max-w-xs md:max-w-md">
                       {crumb.name}
                     </span>
                   )}

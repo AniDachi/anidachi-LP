@@ -9,6 +9,7 @@ import {
 import { AuthPageCard, AuthPageShell } from "@/components/auth-page-shell";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { ExtensionCheck } from "./extension-check";
+import { RoomMobileHandoff } from "./room-mobile-handoff";
 import { WaitingRefresh } from "./waiting-refresh";
 
 export const dynamic = "force-dynamic";
@@ -78,7 +79,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
         </p>
         <a
           href="https://www.anidachi.app"
-          className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-brand-surface px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-brand-orange/20"
+          className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-surface px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-brand-orange/20"
         >
           Back to AniDachi
         </a>
@@ -128,6 +129,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
           </span>
         </div>
         <ExtensionCheck />
+        <RoomMobileHandoff variant="waiting" />
         <WaitingRefresh roomId={roomId} />
       </Shell>
     );
@@ -165,11 +167,13 @@ export default async function RoomPage({ params, searchParams }: Props) {
       <form action={`/api/rooms/${roomId}/join`} method="POST" className="mt-6">
         <button
           type="submit"
-          className="w-full rounded-xl bg-brand-orange px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-brand-orange-deep active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange"
+          className="min-h-11 w-full rounded-xl bg-brand-orange px-5 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:bg-brand-orange-deep active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange"
         >
           {ctaLabel}
         </button>
       </form>
+
+      <RoomMobileHandoff variant={isParticipant && launchUrl ? "joined" : "ready"} />
 
       {isParticipant && launchUrl && (
         <p className="mt-3 text-center text-xs text-foreground/45">

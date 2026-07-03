@@ -19,20 +19,23 @@ export function StickyMobileCheckoutBar({
 
   useEffect(() => {
     const onScroll = () => {
-      setVisible(window.scrollY > 480);
+      const threshold = Math.min(480, Math.max(200, window.innerHeight * 0.2));
+      setVisible(window.scrollY > threshold);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  if (surveyOpen || !visible) return null;
+  if (surveyOpen) return null;
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-border bg-background/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] backdrop-blur-xl md:hidden pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-border bg-background/95 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] backdrop-blur-xl md:hidden pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-transform duration-200"
       role="region"
       aria-label="Quick checkout"
+      aria-hidden={!visible}
+      style={{ transform: visible ? "translateY(0)" : "translateY(100%)" }}
     >
       <Link
         href="/#pricing"

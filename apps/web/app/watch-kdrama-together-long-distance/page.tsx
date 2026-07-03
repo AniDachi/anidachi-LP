@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { ResponsiveDataTable } from "@/components/responsive-data-table";
 
 export const metadata: Metadata = {
   title: "How to Watch K-Dramas Together Long Distance (2026) | AniDachi",
@@ -99,44 +100,21 @@ export default function WatchKdramaTogetherLongDistancePage() {
       >
         K-Drama Platforms and Watch Party Tools
       </h2>
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-brand-border rounded-lg">
-          <thead>
-            <tr className="bg-brand-surface">
-              <th className="border border-brand-border px-4 py-2 text-left">Platform</th>
-              <th className="border border-brand-border px-4 py-2 text-left">Best watch party tool</th>
-              <th className="border border-brand-border px-4 py-2 text-left">Async option</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border border-brand-border px-4 py-2">Netflix</td>
-              <td className="border border-brand-border px-4 py-2">Teleparty or Rave</td>
-              <td className="border border-brand-border px-4 py-2">None (watch separately, discuss later)</td>
-            </tr>
-            <tr className="bg-brand-surface">
-              <td className="border border-brand-border px-4 py-2">Viki</td>
-              <td className="border border-brand-border px-4 py-2">Check Viki&apos;s current support or Rave</td>
-              <td className="border border-brand-border px-4 py-2">None</td>
-            </tr>
-            <tr>
-              <td className="border border-brand-border px-4 py-2">YouTube</td>
-              <td className="border border-brand-border px-4 py-2">Watch2Gether</td>
-              <td className="border border-brand-border px-4 py-2">None</td>
-            </tr>
-            <tr className="bg-brand-surface">
-              <td className="border border-brand-border px-4 py-2">Crunchyroll (anime)</td>
-              <td className="border border-brand-border px-4 py-2 text-brand-orange font-medium">AniDachi</td>
-              <td className="border border-brand-border px-4 py-2 text-brand-orange">Yes — async mode built in</td>
-            </tr>
-            <tr>
-              <td className="border border-brand-border px-4 py-2">Any platform</td>
-              <td className="border border-brand-border px-4 py-2">Discord (screen share) or press-play-together</td>
-              <td className="border border-brand-border px-4 py-2">None</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ResponsiveDataTable
+        titleKey="platform"
+        columns={[
+          { key: "platform", label: "Platform" },
+          { key: "tool", label: "Best watch party tool" },
+          { key: "async", label: "Async option" },
+        ]}
+        rows={[
+          { platform: "Netflix", tool: "Teleparty or Rave", async: "None (watch separately, discuss later)" },
+          { platform: "Viki", tool: "Check Viki's current support or Rave", async: "None" },
+          { platform: "YouTube", tool: "Watch2Gether", async: "None" },
+          { platform: "Crunchyroll (anime)", tool: "AniDachi", async: "Yes — async mode built in" },
+          { platform: "Any platform", tool: "Discord (screen share) or press-play-together", async: "None" },
+        ]}
+      />
 
       <h2
         id="netflix"
