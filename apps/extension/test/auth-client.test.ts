@@ -4,6 +4,7 @@ import {
   buildExtensionConnectUrl,
   buildExtensionLogoutUrl,
   createAuthMessage,
+  getFastSessionAndRefreshInBackground,
   isAuthMessage,
   normalizeExtensionRefreshResponse,
   parseExtensionAuthRedirect,
@@ -211,6 +212,21 @@ describe("extension auth client", () => {
   it("keeps the WXT auth key and raw storage key aligned", () => {
     expect(AUTH_TOKENS_STORAGE_KEY).toBe("authTokens");
     expect(AUTH_TOKENS_KEY).toBe("local:authTokens");
+  });
+
+  it("returns cached tokens for the fast session path while refreshing in the background", async () => {
+    const refresh = vi.fn().mockRejectedValue(new Error("offline"));
+
+    const tokens = await getFastSessionAndRefreshInBackground({
+      getCached: async () => storedTokens,
+      refresh,
+    });
+
+    expect(tokens).toBe(storedTokens);
+    expect(refresh).toHaveBeenCalledTimes(1);
+
+    await Promise.resolve();
+    await Promise.resolve();
   });
 
   it("clears extension tokens only after attempting website logout", async () => {

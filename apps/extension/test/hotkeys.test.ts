@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { getHotkeyAction } from "../src/hotkeys";
+import {
+  getHotkeyAction,
+  shouldStopVoiceTalkOnWindowBlur,
+} from "../src/hotkeys";
 
 const activeState = {
   roomActive: true,
@@ -81,6 +84,59 @@ describe("Anidachi hotkeys", () => {
     ).toEqual({ type: "reaction", emoji: "😱" });
   });
 
+  it("opens the message composer on a plain Enter keydown", () => {
+    expect(
+      getHotkeyAction(keyEvent({ code: "Enter", key: "Enter", type: "keydown" }), activeState),
+    ).toEqual({ type: "message-composer-open" });
+  });
+
+  it("does not open the message composer outside a room", () => {
+    expect(
+      getHotkeyAction(keyEvent({ code: "Enter", key: "Enter", type: "keydown" }), {
+        ...activeState,
+        roomActive: false,
+      }),
+    ).toBeNull();
+  });
+
+  it("ignores repeated Enter keydown events", () => {
+    expect(
+      getHotkeyAction(
+        keyEvent({ code: "Enter", key: "Enter", repeat: true, type: "keydown" }),
+        activeState,
+      ),
+    ).toBeNull();
+  });
+
+  it("ignores Shift+Enter so the composer can own multiline-style behavior later", () => {
+    expect(
+      getHotkeyAction(
+        keyEvent({ code: "Enter", key: "Enter", shiftKey: true, type: "keydown" }),
+        activeState,
+      ),
+    ).toBeNull();
+  });
+
+  it("ignores Enter while IME composition is active", () => {
+    expect(
+      getHotkeyAction(
+        keyEvent({ code: "Enter", isComposing: true, key: "Enter", type: "keydown" }),
+        activeState,
+      ),
+    ).toBeNull();
+  });
+
+  it("ignores Enter inside editable elements", () => {
+    const input = document.createElement("input");
+
+    expect(
+      getHotkeyAction(
+        keyEvent({ code: "Enter", key: "Enter", target: input, type: "keydown" }),
+        activeState,
+      ),
+    ).toBeNull();
+  });
+
   it("ignores repeated reaction keydown events", () => {
     expect(
       getHotkeyAction(
@@ -116,6 +172,30 @@ describe("Anidachi hotkeys", () => {
       }),
     ).toBeNull();
   });
+
+  it("keeps push-to-talk alive across a visible window blur while the voice key is still held", () => {
+    expect(
+      shouldStopVoiceTalkOnWindowBlur({
+        documentVisibilityState: "visible",
+        voiceKeyDown: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("stops push-to-talk on blur when the voice key is not held or the document is hidden", () => {
+    expect(
+      shouldStopVoiceTalkOnWindowBlur({
+        documentVisibilityState: "visible",
+        voiceKeyDown: false,
+      }),
+    ).toBe(true);
+    expect(
+      shouldStopVoiceTalkOnWindowBlur({
+        documentVisibilityState: "hidden",
+        voiceKeyDown: true,
+      }),
+    ).toBe(true);
+  });
 });
 
 function keyEvent(overrides: Partial<KeyboardEvent> = {}) {
@@ -123,6 +203,7 @@ function keyEvent(overrides: Partial<KeyboardEvent> = {}) {
     altKey: false,
     code: "",
     ctrlKey: false,
+    isComposing: false,
     key: "",
     metaKey: false,
     repeat: false,

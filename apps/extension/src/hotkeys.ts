@@ -3,6 +3,7 @@ import { EMOJI_PALETTE } from "./constants";
 export type HotkeyAction =
   | { type: "fire-start" }
   | { type: "fire-stop" }
+  | { type: "message-composer-open" }
   | { type: "voice-start" }
   | { type: "voice-stop" }
   | { type: "reaction"; emoji: string };
@@ -14,9 +15,23 @@ export interface HotkeyState {
   experimentalSuperReactionsEnabled?: boolean;
 }
 
+interface VoiceBlurState {
+  documentVisibilityState: DocumentVisibilityState;
+  voiceKeyDown: boolean;
+}
+
 export type HotkeyEventLike = Pick<
   KeyboardEvent,
-  "altKey" | "code" | "ctrlKey" | "key" | "metaKey" | "repeat" | "shiftKey" | "target" | "type"
+  | "altKey"
+  | "code"
+  | "ctrlKey"
+  | "isComposing"
+  | "key"
+  | "metaKey"
+  | "repeat"
+  | "shiftKey"
+  | "target"
+  | "type"
 > & {
   composedPath?: () => EventTarget[];
 };
@@ -24,6 +39,10 @@ export type HotkeyEventLike = Pick<
 export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): HotkeyAction | null {
   if (!state.roomActive || hasBlockedModifier(event) || isEditableEventTarget(event)) {
     return null;
+  }
+
+  if (isMessageComposerOpenKey(event)) {
+    return { type: "message-composer-open" };
   }
 
   if (!event.shiftKey && isVoiceKey(event)) {
@@ -60,12 +79,30 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
   return null;
 }
 
+export function shouldStopVoiceTalkOnWindowBlur(state: VoiceBlurState): boolean {
+  if (state.documentVisibilityState !== "visible") {
+    return true;
+  }
+
+  return !state.voiceKeyDown;
+}
+
 function hasBlockedModifier(event: HotkeyEventLike): boolean {
   return event.altKey || event.ctrlKey || event.metaKey;
 }
 
 function isVoiceKey(event: HotkeyEventLike): boolean {
   return event.code === "KeyV" || event.key.toLowerCase() === "v";
+}
+
+function isMessageComposerOpenKey(event: HotkeyEventLike): boolean {
+  return (
+    event.type === "keydown" &&
+    event.key === "Enter" &&
+    !event.shiftKey &&
+    !event.repeat &&
+    !event.isComposing
+  );
 }
 
 function getEmojiHotkey(event: HotkeyEventLike): string | null {

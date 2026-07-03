@@ -1,6 +1,5 @@
 import { createRoot, type Root } from "react-dom/client";
 import { defineContentScript } from "wxt/utils/define-content-script";
-import { startCrunchyrollLauncher } from "../src/crunchyroll-launcher";
 import { startCrunchyrollStudyIfEnabled } from "../src/crunchyroll-study";
 import { startDebugProbe } from "../src/debug-probe";
 import { elementDebugSnapshot, logDebug, videoDebugSnapshot } from "../src/debug-log";
@@ -10,7 +9,7 @@ import {
   ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
   isMessageComposerShortcutEvent,
 } from "../src/message-composer-events";
-import { getOverlayMountDecision } from "../src/overlay-mount";
+import { getOverlayMountDecision, shouldRefreshSameVideoAdapter } from "../src/overlay-mount";
 import { OverlayApp } from "../src/overlay-app";
 import { findBestVideoAdapter, type VideoAdapter } from "../src/video-adapter";
 
@@ -59,7 +58,6 @@ export default defineContentScript({
   main() {
     let mounted: MountedOverlay | null = null;
     const stopKeyboardGuard = installMessageComposerKeyboardGuard();
-    const stopCrunchyrollLauncher = startCrunchyrollLauncher();
     const stopCrunchyrollStudy = startCrunchyrollStudyIfEnabled();
     ensurePageStyles();
 
@@ -141,6 +139,11 @@ export default defineContentScript({
     // SPA episode switches with no poll latency. Cheap: batches with no added
     // <video> are skipped, and the scan is bypassed entirely when a check is
     // already queued for the frame.
+    const handleVideoLifecycleEvent = (event: Event) => {
+      if (event.target instanceof HTMLVideoElement) {
+        scheduleMountCheck();
+      }
+    };
     const videoObserver = new MutationObserver((mutations) => {
       if (mountCheckScheduled) {
         return;
@@ -151,6 +154,9 @@ export default defineContentScript({
       }
     });
     videoObserver.observe(document.documentElement, { childList: true, subtree: true });
+    document.addEventListener("loadstart", handleVideoLifecycleEvent, true);
+    document.addEventListener("loadedmetadata", handleVideoLifecycleEvent, true);
+    document.addEventListener("emptied", handleVideoLifecycleEvent, true);
 
     document.addEventListener("fullscreenchange", () => mounted?.relocate());
     window.addEventListener("pagehide", () => {
@@ -159,8 +165,10 @@ export default defineContentScript({
         mountPollTimer = null;
       }
       videoObserver.disconnect();
+      document.removeEventListener("loadstart", handleVideoLifecycleEvent, true);
+      document.removeEventListener("loadedmetadata", handleVideoLifecycleEvent, true);
+      document.removeEventListener("emptied", handleVideoLifecycleEvent, true);
       stopKeyboardGuard();
-      stopCrunchyrollLauncher?.();
       stopCrunchyrollStudy?.();
       mounted?.dispose();
     });
@@ -265,6 +273,7 @@ function mountOverlay(initialAdapter: VideoAdapter): MountedOverlay {
   const root = createRoot(appRoot);
 
   let animationFrame = 0;
+  let adapterFingerprint = adapter.getFingerprint();
   const resizeObserver =
     typeof ResizeObserver === "undefined"
       ? null
@@ -355,7 +364,25 @@ function mountOverlay(initialAdapter: VideoAdapter): MountedOverlay {
     },
     relocate: scheduleRelocate,
     updateAdapter(nextAdapter: VideoAdapter) {
+      const nextFingerprint = nextAdapter.getFingerprint();
       if (adapter.video === nextAdapter.video) {
+        if (
+          shouldRefreshSameVideoAdapter(
+            { id: adapter.id, fingerprint: adapterFingerprint },
+            { id: nextAdapter.id, fingerprint: nextFingerprint },
+          )
+        ) {
+          logDebug("content", "refresh adapter for same video", {
+            adapterId: nextAdapter.id,
+            previousAdapterId: adapter.id,
+            previousFingerprint: adapterFingerprint,
+            nextFingerprint,
+            video: videoDebugSnapshot(nextAdapter.video),
+          });
+          adapter = nextAdapter;
+          adapterFingerprint = nextFingerprint;
+          renderOverlay();
+        }
         scheduleRelocate();
         return;
       }
@@ -367,6 +394,7 @@ function mountOverlay(initialAdapter: VideoAdapter): MountedOverlay {
       stopDebugProbe();
 
       adapter = nextAdapter;
+      adapterFingerprint = nextFingerprint;
       markAdapter(adapter);
       startAdapterDebugProbe();
       renderOverlay();
@@ -452,13 +480,6 @@ function ensurePageStyles(): void {
       inset: 0 !important;
       z-index: 2147483647 !important;
       pointer-events: none !important;
-    }
-
-    [data-anidachi-adapter="crunchyroll"] [data-testid="settings-button"],
-    [data-anidachi-adapter="crunchyroll"] [data-testid="player-settings-menu-button"],
-    [data-anidachi-adapter="crunchyroll"] [data-testid="fullscreen-button"] {
-      translate: -92px 0 !important;
-      transition: translate 180ms ease !important;
     }
 
     html[data-anidachi-composer-open] [data-anidachi-adapter="crunchyroll"] [data-testid="player-controls-root"],
