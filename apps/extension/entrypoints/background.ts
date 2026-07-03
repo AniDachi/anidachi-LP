@@ -5,6 +5,10 @@ import {
   isAuthMessage,
 } from "../src/auth-client";
 import { handleRoomHttpMessage, isRoomHttpMessage } from "../src/room-client";
+import {
+  handleDiagnosticMessage,
+  isDiagnosticMessage,
+} from "../src/diagnostic-log";
 import { handleSocialHttpMessage, isSocialHttpMessage } from "../src/social-client";
 import {
   handleWatchLibraryHttpMessage,
@@ -30,6 +34,11 @@ export default defineBackground(() => {
 
     if (isWatchLibraryHttpMessage(message)) {
       void handleWatchLibraryHttpMessage(message).then(sendResponse);
+      return true;
+    }
+
+    if (isDiagnosticMessage(message)) {
+      void handleDiagnosticMessage(message).then(sendResponse);
       return true;
     }
 
