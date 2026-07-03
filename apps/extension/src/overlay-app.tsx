@@ -31,14 +31,17 @@ import { CurrentResourcePanel } from "./current-resource-panel";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
 import {
   clearDebugLog,
-  getCompactDebugLogText,
   getDebugEntries,
-  getDebugLogText,
   logDebug,
   playbackStateDebugSnapshot,
   roomEventDebugSnapshot,
   videoDebugSnapshot,
 } from "./debug-log";
+import {
+  clearDiagnosticsFromPage,
+  saveDiagnosticsFromPage,
+  type DiagnosticMode,
+} from "./diagnostic-log";
 import {
   DEFAULT_GHOST_CAM_SIZE_STEP,
   GHOST_CAM_SIZE_MAX_STEP,
@@ -357,6 +360,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [voiceListening, setVoiceListening] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
   const [debugEntriesCount, setDebugEntriesCount] = useState(() => getDebugEntries().length);
+  const [diagnosticStatus, setDiagnosticStatus] = useState<string | null>(null);
   const [watchProgressStore, setWatchProgressStore] = useState<WatchProgressStore>(() =>
     createEmptyWatchProgressStore(),
   );
@@ -3246,20 +3250,44 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     [sendInviteToTarget],
   );
 
-  const copyDebugLog = async (mode: "compact" | "full" = "compact") => {
-    logDebug("debug", "copy requested", {
+  const saveDiagnostics = async (mode: DiagnosticMode) => {
+    setDiagnosticStatus(`Saving ${mode}...`);
+    logDebug("debug", "diagnostics save requested", {
       mode,
       entries: getDebugEntries().length,
+      roomId,
+      status,
       video: videoDebugSnapshot(adapter.video),
     });
-    const text = mode === "compact" ? getCompactDebugLogText() : getDebugLogText();
-    await navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+
+    const response = await saveDiagnosticsFromPage(mode, {
+      mode,
+      url: location.href,
+      title: document.title,
+      visibilityState: document.visibilityState,
+      adapterId: adapter.id,
+      roomId,
+      status,
+      hasParticipant: Boolean(participant),
+      participantId: participant?.id,
+      video: videoDebugSnapshot(adapter.video),
+      pageDebug: { entries: getDebugEntries() },
+    });
+
+    if (!response.ok) {
+      setDiagnosticStatus(response.error);
+      return;
+    }
+
     setDebugEntriesCount(getDebugEntries().length);
+    setDiagnosticStatus(`Save dialog opened for ${response.filename ?? `${mode} diagnostics`}`);
   };
 
-  const clearDebug = () => {
+  const clearDebug = async () => {
     clearDebugLog();
+    await clearDiagnosticsFromPage().catch(() => undefined);
     setDebugEntriesCount(getDebugEntries().length);
+    setDiagnosticStatus("Logs cleared");
   };
 
   const sendReaction = useCallback(
@@ -4185,16 +4213,21 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
               <strong>{debugEntriesCount}</strong>
             </div>
             <div className="debug-actions">
-              <button className="button" type="button" onClick={() => copyDebugLog("compact")}>
-                Copy compact
+              <button className="button" type="button" onClick={() => saveDiagnostics("light")}>
+                Save light
               </button>
-              <button className="button" type="button" onClick={() => copyDebugLog("full")}>
-                Copy full
+              <button className="button" type="button" onClick={() => saveDiagnostics("full")}>
+                Save full
               </button>
               <button className="button" type="button" onClick={clearDebug}>
                 Clear
               </button>
             </div>
+            {diagnosticStatus ? (
+              <div className="debug-status" title={diagnosticStatus}>
+                {diagnosticStatus}
+              </div>
+            ) : null}
           </div>
 
           <div className="footnote">

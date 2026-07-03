@@ -257,8 +257,10 @@ The extension currently supports:
   `/livekit/token` route, local `infra/livekit` helper, and `livekit-client`
   dependency have been removed;
 - local extension ICE fallback now includes Cloudflare STUN
-  (`stun.cloudflare.com:3478` and `:53`) before Google STUN, so the
-  unauthenticated/no-room-token path no longer depends on Google-only STUN;
+  (`stun.cloudflare.com:3478`) before Google STUN, so the
+  unauthenticated/no-room-token path no longer depends on Google-only STUN.
+  `stun.cloudflare.com:53` was removed after real logs showed repeated Chrome
+  701 timeouts on that candidate;
 - P2P peer connections use `iceCandidatePoolSize: 2` with normal
   `iceTransportPolicy: "all"` outside explicit relay diagnostics, and the
   selected candidate pair is logged as compact direct-vs-relay telemetry without
@@ -284,8 +286,13 @@ The extension currently supports:
   normalized for the negotiated audio/Opus payload so `useinbandfec=1` and
   `usedtx=1` are present for lower-bandwidth push-to-talk and ambient silence;
 - stats-backed remote voice activity: inbound WebRTC audio bytes/packets/level
-  can publish or clear active-speaker state instead of relying only on
-  `voice-start`/`voice-stop`;
+  can confirm or clear active-speaker state while a remote peer is expected to
+  be talking after `voice-start`; after `voice-stop`, residual RTP/DTX movement
+  cannot relight the mic badge by itself;
+- push-to-talk audio is no longer coupled to camera visibility: voice-only room
+  participants can enter or remain in the P2P media mesh without requiring
+  `cameraEnabled`, so turning a camera off does not tear down the peer connection
+  that carries audio;
 - automatic remote-audio stall recovery: while remote voice is expected,
   connected inbound audio with missing or stalled packet/byte flow is
   classified from WebRTC stats and triggers throttled ICE recovery without a
@@ -309,7 +316,10 @@ The extension currently supports:
   auto-response keepalive, JSON `PING` compatibility for old clients, and a
   Workers-runtime forced wake test for existing sockets, host state/source
   snapshots, camera state, raw keepalive, and P2P replay;
-- debug export from the extension panel.
+- debug export from the extension panel. Current diagnostic bundles include a
+  unified top-level timeline that merges background diagnostics with page debug
+  entries, while still keeping the split `diagnosticEntries` and
+  `pageDebugEntries` for deeper inspection.
 
 The extension still does not host, proxy, record, or distribute source video.
 

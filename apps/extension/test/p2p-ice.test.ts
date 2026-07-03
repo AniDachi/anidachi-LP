@@ -26,7 +26,7 @@ describe("P2P ICE server prioritization", () => {
 
   it("uses Cloudflare STUN in the local unauthenticated fallback", () => {
     expect(getDefaultP2PIceServers()).toEqual([
-      { urls: ["stun:stun.cloudflare.com:3478", "stun:stun.cloudflare.com:53"] },
+      { urls: "stun:stun.cloudflare.com:3478" },
       { urls: "stun:stun.l.google.com:19302" },
       { urls: "stun:stun1.l.google.com:19302" },
     ]);

@@ -1,0 +1,417 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  handleDiagnosticMessage,
+  recordDiagnosticEvent,
+  type DiagnosticMessage,
+} from "../src/diagnostic-log";
+
+const DIAGNOSTIC_STORAGE_KEY = "anidachi:diagnostic-log:v1";
+
+function installChromeMock(options: { downloads?: boolean } = { downloads: true }) {
+  const storage = new Map<string, unknown>();
+  const download = vi.fn(async () => 42);
+  const clipboard = {
+    writeText: vi.fn(async () => undefined),
+  };
+
+  vi.stubGlobal("chrome", {
+    storage: {
+      local: {
+        async get(key: string | null) {
+          if (key === null) {
+            return Object.fromEntries(storage);
+          }
+          return { [key]: storage.get(key) };
+        },
+        async set(values: Record<string, unknown>) {
+          for (const [key, value] of Object.entries(values)) {
+            storage.set(key, value);
+          }
+        },
+        async remove(key: string) {
+          storage.delete(key);
+        },
+      },
+    },
+    downloads: options.downloads ? { download } : undefined,
+    runtime: {
+      sendMessage: vi.fn(),
+    },
+  });
+  vi.stubGlobal("navigator", {
+    ...navigator,
+    clipboard,
+    userAgent: "vitest",
+  });
+
+  return { storage, download, clipboard };
+}
+
+function parseDownloadedBundle(download: ReturnType<typeof vi.fn>) {
+  const [options] = download.mock.calls.at(-1) ?? [];
+  if (!options || typeof options.url !== "string") {
+    throw new Error("Missing download URL");
+  }
+
+  const prefix = "data:application/json;charset=utf-8,";
+  if (!options.url.startsWith(prefix)) {
+    throw new Error(`Unexpected download URL: ${options.url.slice(0, 40)}`);
+  }
+
+  return JSON.parse(decodeURIComponent(options.url.slice(prefix.length))) as unknown;
+}
+
+describe("diagnostic log", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("stores only sanitized diagnostic events", async () => {
+    const { storage } = installChromeMock();
+
+    recordDiagnosticEvent(
+      "auth.refresh",
+      "failed",
+      {
+        userId: "user-secret-id",
+        refreshToken: "refresh-secret",
+        url: "https://staging.anidachi.app/room?token=secret",
+      },
+      "warn",
+    );
+
+    await vi.waitFor(() => {
+      expect(storage.get(DIAGNOSTIC_STORAGE_KEY)).toEqual([
+        expect.objectContaining({
+          scope: "auth.refresh",
+          event: "failed",
+          severity: "warn",
+          data: {
+            userId: expect.stringMatching(/^id_[a-z0-9]+$/),
+            refreshToken: "<redacted>",
+            url: "https://staging.anidachi.app/room?<redacted>",
+          },
+        }),
+      ]);
+    });
+  });
+
+  it("downloads a compact diagnostics bundle without raw tokens", async () => {
+    const { storage, download } = installChromeMock();
+    storage.set("authTokens", {
+      accessToken: "access-secret",
+      refreshToken: "refresh-secret",
+      user: {
+        id: "user-1",
+        displayName: "Alina",
+        plan: "plus",
+        avatarUrl: "https://example.com/avatar.png",
+      },
+    });
+
+    const pageDebug = {
+      entries: Array.from({ length: 620 }, (_, index) => ({
+        id: index + 1,
+        scope: "identity",
+        message: `entry-${index + 1}`,
+      })),
+    };
+    const message: DiagnosticMessage = {
+      type: "ANIDACHI_DIAGNOSTICS",
+      command: "save",
+      mode: "full",
+      page: {
+        mode: "full",
+        url: "https://www.crunchyroll.com/watch?token=secret",
+        participantId: "user-1",
+        pageDebug,
+      },
+    };
+
+    const response = await handleDiagnosticMessage(message);
+
+    expect(response).toEqual(
+      expect.objectContaining({
+        ok: true,
+        action: "downloaded",
+        downloadId: 42,
+      }),
+    );
+    expect(download).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: expect.stringMatching(/^data:application\/json;charset=utf-8,/),
+        filename: expect.stringMatching(/^anidachi-logs\/anidachi-diagnostics-full-/),
+        conflictAction: "uniquify",
+        saveAs: true,
+      }),
+    );
+    const bundle = parseDownloadedBundle(download) as {
+      format: string;
+      mode: string;
+      page: { url: string; participantId: string; pageDebug: { entries: unknown[] } };
+      storage: {
+        auth: {
+          hasAccessToken: boolean;
+          hasRefreshToken: boolean;
+          user: { id: string; displayName: string; plan: string };
+        };
+      };
+    };
+    const bundleText = JSON.stringify(bundle);
+    expect(bundle.format).toBe("diagnostics");
+    expect(bundle.mode).toBe("full");
+    expect(bundle.page.url).toBe("https://www.crunchyroll.com/watch?<redacted>");
+    expect(bundle.page.participantId).toMatch(/^id_[a-z0-9]+$/);
+    expect(bundle.page.pageDebug.entries).toHaveLength(500);
+    expect(bundle.storage.auth.hasAccessToken).toBe(true);
+    expect(bundle.storage.auth.hasRefreshToken).toBe(true);
+    expect(bundle.storage.auth.user).toEqual({
+      id: expect.stringMatching(/^id_[a-z0-9]+$/),
+      displayName: "Alina",
+      hasAvatar: true,
+      plan: "plus",
+    });
+    expect(bundleText).not.toContain("access-secret");
+    expect(bundleText).not.toContain("refresh-secret");
+    expect(bundleText).not.toContain("user-1");
+    expect(bundleText).not.toContain("token=secret");
+  });
+
+  it("returns an error when downloads permission is unavailable", async () => {
+    const { clipboard } = installChromeMock({ downloads: false });
+
+    const response = await handleDiagnosticMessage({
+      type: "ANIDACHI_DIAGNOSTICS",
+      command: "save",
+      mode: "light",
+      page: { mode: "light", url: "https://example.com/watch" },
+    });
+
+    expect(response).toEqual({
+      ok: false,
+      error: "Chrome downloads permission is unavailable",
+    });
+    expect(clipboard.writeText).not.toHaveBeenCalled();
+  });
+
+  it("downloads via a data URL when blob object URLs are unavailable", async () => {
+    const { clipboard, download } = installChromeMock();
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: undefined,
+    });
+
+    const response = await handleDiagnosticMessage({
+      type: "ANIDACHI_DIAGNOSTICS",
+      command: "save",
+      mode: "full",
+      page: { mode: "full", url: "https://example.com/watch" },
+    });
+
+    expect(response).toEqual(
+      expect.objectContaining({
+        ok: true,
+        action: "downloaded",
+      }),
+    );
+    expect(download).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: expect.stringMatching(/^data:application\/json;charset=utf-8,/),
+        saveAs: true,
+      }),
+    );
+    expect(clipboard.writeText).not.toHaveBeenCalled();
+  });
+
+  it("exports light diagnostics from the last two minutes only", async () => {
+    const { storage, download } = installChromeMock();
+    const now = Date.now();
+    storage.set(DIAGNOSTIC_STORAGE_KEY, [
+      {
+        at: new Date(now - 3 * 60_000).toISOString(),
+        elapsedMs: 1,
+        scope: "auth",
+        event: "too old",
+        severity: "warn",
+      },
+      {
+        at: new Date(now - 30_000).toISOString(),
+        elapsedMs: 2,
+        scope: "auth",
+        event: "recent",
+        severity: "warn",
+      },
+    ]);
+
+    const response = await handleDiagnosticMessage({
+      type: "ANIDACHI_DIAGNOSTICS",
+      command: "save",
+      mode: "light",
+      page: {
+        mode: "light",
+        pageDebug: {
+          entries: [
+            {
+              id: 1,
+              at: new Date(now - 3 * 60_000).toISOString(),
+              scope: "room.ws",
+              message: "old closed",
+            },
+            {
+              id: 2,
+              at: new Date(now - 30_000).toISOString(),
+              scope: "room.ws",
+              message: "recent closed",
+            },
+          ],
+        },
+      },
+    });
+
+    expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
+    const bundle = parseDownloadedBundle(download) as {
+      limits: { windowSeconds: number };
+      entries: Array<{ event: string }>;
+      page: { pageDebug: { entries: Array<{ id: number }> } };
+    };
+    expect(bundle.limits.windowSeconds).toBe(120);
+    expect(bundle.entries.map((entry) => entry.event)).toEqual([
+      "recent closed",
+      "recent",
+    ]);
+    expect(bundle.page.pageDebug.entries.map((entry) => entry.id)).toEqual([2]);
+  });
+
+  it("exports full diagnostics from the last two minutes only", async () => {
+    const { storage, download } = installChromeMock();
+    const now = Date.now();
+    storage.set(DIAGNOSTIC_STORAGE_KEY, [
+      {
+        at: new Date(now - 3 * 60_000).toISOString(),
+        elapsedMs: 1,
+        scope: "p2p",
+        event: "too old",
+        severity: "warn",
+      },
+      {
+        at: new Date(now - 30_000).toISOString(),
+        elapsedMs: 2,
+        scope: "p2p",
+        event: "recent enough",
+        severity: "warn",
+      },
+    ]);
+
+    const response = await handleDiagnosticMessage({
+      type: "ANIDACHI_DIAGNOSTICS",
+      command: "save",
+      mode: "full",
+      page: {
+        mode: "full",
+        pageDebug: {
+          entries: [
+            {
+              id: 1,
+              at: new Date(now - 3 * 60_000).toISOString(),
+              scope: "p2p.state",
+              message: "old connection",
+            },
+            {
+              id: 2,
+              at: new Date(now - 30_000).toISOString(),
+              scope: "p2p.state",
+              message: "recent connection",
+            },
+          ],
+        },
+      },
+    });
+
+    expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
+    const bundle = parseDownloadedBundle(download) as {
+      limits: { windowSeconds: number };
+      entries: Array<{ event: string }>;
+      page: { pageDebug: { entries: Array<{ id: number }> } };
+    };
+    expect(bundle.limits.windowSeconds).toBe(120);
+    expect(bundle.entries.map((entry) => entry.event)).toEqual([
+      "recent connection",
+      "recent enough",
+    ]);
+    expect(bundle.page.pageDebug.entries.map((entry) => entry.id)).toEqual([2]);
+  });
+
+  it("prunes old stored diagnostic entries while appending", async () => {
+    const { storage } = installChromeMock();
+    const now = Date.now();
+    storage.set(DIAGNOSTIC_STORAGE_KEY, [
+      {
+        at: new Date(now - 20 * 60_000).toISOString(),
+        elapsedMs: 1,
+        scope: "auth",
+        event: "stale",
+        severity: "warn",
+      },
+    ]);
+
+    recordDiagnosticEvent("auth", "fresh", undefined, "info");
+
+    await vi.waitFor(() => {
+      const entries = storage.get(DIAGNOSTIC_STORAGE_KEY) as Array<{ event: string }>;
+      expect(entries.map((entry) => entry.event)).toEqual(["fresh"]);
+    });
+  });
+
+  it("keeps light diagnostics focused and filters noisy page debug events", async () => {
+    const { download } = installChromeMock();
+
+    const response = await handleDiagnosticMessage({
+      type: "ANIDACHI_DIAGNOSTICS",
+      command: "save",
+      mode: "light",
+      page: {
+        mode: "light",
+        pageDebug: {
+          entries: [
+            { id: 1, scope: "probe", message: "interval", data: { noise: true } },
+            { id: 2, scope: "video.event", message: "timeupdate", data: { currentTime: 10 } },
+            {
+              id: 3,
+              scope: "identity",
+              message: "website session mismatch; clearing extension session",
+              data: {
+                userId: "user-1",
+                refreshToken: "secret-refresh",
+                status: "signed-out",
+                extra: "ignored in light",
+              },
+            },
+            {
+              id: 4,
+              scope: "room.ws",
+              message: "closed",
+              data: { code: 1006, roomId: "room-1" },
+            },
+          ],
+        },
+      },
+    });
+
+    expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
+    expect(download).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filename: expect.stringMatching(/^anidachi-logs\/anidachi-diagnostics-light-/),
+        saveAs: true,
+      }),
+    );
+    const bundle = parseDownloadedBundle(download) as {
+      mode: string;
+      page: { pageDebug: { entries: Array<{ id: number; data?: unknown }> } };
+    };
+    expect(bundle.mode).toBe("light");
+    expect(bundle.page.pageDebug.entries.map((entry) => entry.id)).toEqual([3, 4]);
+    expect(JSON.stringify(bundle)).not.toContain("secret-refresh");
+    expect(JSON.stringify(bundle)).not.toContain("ignored in light");
+  });
+});

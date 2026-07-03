@@ -767,6 +767,17 @@ export const overlayStyles = `
     margin-top: 3px;
   }
 
+  .debug-status {
+    min-width: 0;
+    margin-top: 2px;
+    color: rgba(255, 255, 255, 0.56);
+    font-size: 11px;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .cam-stack {
     position: absolute;
     right: 12px;
