@@ -8,6 +8,7 @@ import {
   type AuthenticatedUser,
   type ExtensionAuthTokens,
 } from "./auth-tokens";
+import { recordDiagnosticEvent } from "./diagnostic-log";
 
 const AUTH_CALLBACK_PATH = "auth";
 const LOGOUT_CALLBACK_PATH = "logout";
@@ -169,18 +170,31 @@ export async function exchangeExtensionAuthCode(
   });
 
   if (!response.ok) {
+    recordDiagnosticEvent(
+      "auth.exchange",
+      "failed",
+      { status: response.status },
+      "warn",
+    );
     throw new Error(`Extension auth exchange failed: ${response.status}`);
   }
 
   const tokens = normalizeExtensionAuthTokens(await response.json());
   if (!tokens) throw new Error("Extension auth exchange returned malformed tokens");
   await setStoredAuthTokens(tokens);
+  recordDiagnosticEvent("auth.exchange", "succeeded", {
+    userId: tokens.user.id,
+    plan: tokens.user.plan,
+  });
   return tokens;
 }
 
 export async function refreshExtensionSession(): Promise<ExtensionAuthTokens | null> {
   const stored = await getStoredAuthTokens();
-  if (!stored) return null;
+  if (!stored) {
+    recordDiagnosticEvent("auth.refresh", "skipped without stored session", undefined, "warn");
+    return null;
+  }
 
   const response = await fetch(buildWebUrl("/api/extension/auth/refresh"), {
     method: "POST",
@@ -189,12 +203,24 @@ export async function refreshExtensionSession(): Promise<ExtensionAuthTokens | n
   });
 
   if (!response.ok) {
+    recordDiagnosticEvent(
+      "auth.refresh",
+      "failed; clearing stored session",
+      { status: response.status, userId: stored.user.id },
+      "warn",
+    );
     await clearStoredAuthTokens();
     return null;
   }
 
   const body = normalizeExtensionRefreshResponse(await response.json().catch(() => null));
   if (!body) {
+    recordDiagnosticEvent(
+      "auth.refresh",
+      "malformed response; clearing stored session",
+      { userId: stored.user.id },
+      "warn",
+    );
     await clearStoredAuthTokens();
     return null;
   }
@@ -209,6 +235,11 @@ export async function refreshExtensionSession(): Promise<ExtensionAuthTokens | n
     tokens.user = freshUser;
   }
   await setStoredAuthTokens(tokens);
+  recordDiagnosticEvent("auth.refresh", "succeeded", {
+    userId: tokens.user.id,
+    plan: tokens.user.plan,
+    rotatedRefreshToken: Boolean(body.refreshToken),
+  });
   return tokens;
 }
 
@@ -224,7 +255,10 @@ export async function fetchAuthenticatedUser(accessToken: string): Promise<Authe
   const response = await fetch(buildWebUrl("/api/me"), {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  if (!response.ok) return null;
+  if (!response.ok) {
+    recordDiagnosticEvent("auth.me", "failed with bearer token", { status: response.status }, "warn");
+    return null;
+  }
 
   const body = (await response.json().catch(() => null)) as { user?: unknown } | null;
   return normalizeAuthenticatedUser(body?.user);
@@ -238,20 +272,28 @@ async function fetchWebsiteSessionProbe(): Promise<WebsiteSessionProbe> {
       credentials: "include",
     });
   } catch {
+    recordDiagnosticEvent("auth.website-probe", "network error", undefined, "warn");
     return { status: "unknown" };
   }
 
   if (response.status === 401) {
+    recordDiagnosticEvent("auth.website-probe", "signed out", { status: response.status }, "warn");
     return { status: "signed-out" };
   }
 
   if (!response.ok) {
+    recordDiagnosticEvent("auth.website-probe", "unexpected status", { status: response.status }, "warn");
     return { status: "unknown" };
   }
 
   const body = (await response.json().catch(() => null)) as { user?: unknown } | null;
   const user = normalizeAuthenticatedUser(body?.user);
-  return user ? { status: "authenticated", user } : { status: "unknown" };
+  if (!user) {
+    recordDiagnosticEvent("auth.website-probe", "malformed user", undefined, "warn");
+    return { status: "unknown" };
+  }
+
+  return { status: "authenticated", user };
 }
 
 export function shouldClearExtensionSessionForWebsiteProbe(
@@ -269,6 +311,16 @@ async function ensureWebsiteSessionStillMatches(stored: ExtensionAuthTokens): Pr
     return true;
   }
 
+  recordDiagnosticEvent(
+    "auth.session",
+    "website session mismatch; clearing extension session",
+    {
+      storedUserId: stored.user.id,
+      probeStatus: probe.status,
+      probeUserId: probe.status === "authenticated" ? probe.user.id : undefined,
+    },
+    "warn",
+  );
   await revokeExtensionRefreshToken(stored.refreshToken).catch(() => undefined);
   await clearStoredAuthTokens();
   return false;
@@ -300,6 +352,12 @@ export async function getCurrentExtensionSession(
 
   const refreshedUser = await fetchAuthenticatedUser(refreshed.accessToken);
   if (!refreshedUser) {
+    recordDiagnosticEvent(
+      "auth.session",
+      "refreshed token did not resolve user; clearing extension session",
+      { userId: refreshed.user.id },
+      "warn",
+    );
     await clearStoredAuthTokens();
     return null;
   }
@@ -354,8 +412,16 @@ export async function signInWithWebsite(): Promise<ExtensionAuthTokens> {
  */
 export async function signInWithWebsiteSilently(): Promise<ExtensionAuthTokens | null> {
   try {
-    return await runWebsiteAuthFlow(false);
+    const tokens = await runWebsiteAuthFlow(false);
+    recordDiagnosticEvent(
+      "auth.silent",
+      tokens ? "succeeded" : "no website session",
+      tokens ? { userId: tokens.user.id, plan: tokens.user.plan } : undefined,
+      tokens ? "info" : "warn",
+    );
+    return tokens;
   } catch {
+    recordDiagnosticEvent("auth.silent", "failed", undefined, "warn");
     return null;
   }
 }
@@ -410,10 +476,33 @@ export async function signOutWithWebsite(): Promise<void> {
   });
 }
 
+export async function getFastSessionAndRefreshInBackground({
+  getCached = getCachedExtensionSession,
+  refresh = () => getCurrentExtensionSession({ validateWebsiteSession: false }),
+}: {
+  getCached?: () => Promise<ExtensionAuthTokens | null>;
+  refresh?: () => Promise<ExtensionAuthTokens | null>;
+} = {}): Promise<ExtensionAuthTokens | null> {
+  const cached = await getCached();
+  if (cached) {
+    void refresh().catch(() => undefined);
+  }
+  return cached;
+}
+
 export async function handleWebsiteAuthCookieChange(
   changeInfo: WebAuthCookieChange,
 ): Promise<void> {
   if (shouldClearExtensionSessionForWebsiteCookieChange(changeInfo)) {
+    recordDiagnosticEvent(
+      "auth.cookie",
+      "website refresh cookie removed; clearing extension session",
+      {
+        cause: changeInfo.cause,
+        domain: changeInfo.cookie.domain,
+      },
+      "warn",
+    );
     const stored = await getStoredAuthTokens();
     if (stored) {
       await revokeExtensionRefreshToken(stored.refreshToken).catch(() => undefined);
@@ -423,6 +512,10 @@ export async function handleWebsiteAuthCookieChange(
   }
 
   if (shouldSyncExtensionSessionForWebsiteCookieChange(changeInfo)) {
+    recordDiagnosticEvent("auth.cookie", "website refresh cookie changed; syncing extension session", {
+      cause: changeInfo.cause,
+      domain: changeInfo.cookie.domain,
+    });
     await validateExtensionSessionAgainstWebsite().catch(() => undefined);
   }
 }
@@ -442,13 +535,25 @@ export async function handleAuthMessage(message: AuthMessage): Promise<AuthMessa
     if (message.command === "refresh") {
       return { ok: true, tokens: await refreshExtensionSession() };
     }
+    if (message.command === "get-session-fast") {
+      return { ok: true, tokens: await getFastSessionAndRefreshInBackground() };
+    }
     return {
       ok: true,
       tokens: await getCurrentExtensionSession({
-        validateWebsiteSession: message.command !== "get-session-fast",
+        validateWebsiteSession: true,
       }),
     };
   } catch (error) {
+    recordDiagnosticEvent(
+      "auth.command",
+      "failed",
+      {
+        command: message.command,
+        message: error instanceof Error ? error.message : "Extension auth failed",
+      },
+      "error",
+    );
     return {
       ok: false,
       error: error instanceof Error ? error.message : "Extension auth failed",

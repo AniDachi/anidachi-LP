@@ -21,7 +21,6 @@ import type {
 } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { storage } from "wxt/utils/storage";
-import { consumeAnidachiLaunchIntent } from "./anidachi-launch-intent";
 import {
   ANIDACHI_BUILD_ID,
   COMPOSER_EMOJI_PACK,
@@ -31,7 +30,9 @@ import { CurrentResourcePanel } from "./current-resource-panel";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
 import {
   clearDebugLog,
+  getCompactDebugLogText,
   getDebugEntries,
+  getDebugLogText,
   logDebug,
   playbackStateDebugSnapshot,
   roomEventDebugSnapshot,
@@ -50,12 +51,27 @@ import {
   getGhostCamGapPx,
   getGhostCamSizeLabel,
   getGhostCamSizePx,
+  getResponsiveGhostCamSizePx,
   normalizeGhostCamSizeStep,
   type GhostCamSizeStep,
 } from "./ghost-cam-size";
 import { useGhostCam, type GhostVideo, type LiveVoiceStatus } from "./ghost-cam";
-import { getHotkeyAction } from "./hotkeys";
+import {
+  getHotkeyAction,
+  shouldStopVoiceTalkOnWindowBlur,
+} from "./hotkeys";
 import type { IncomingP2PSignal } from "./media-types";
+import {
+  DEFAULT_CAM_STACK_BOTTOM_PX,
+  DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE,
+  DEFAULT_MINI_PANEL_RIGHT_PX,
+  DEFAULT_MINI_PANEL_TOP_PX,
+  DEFAULT_TOP_BUBBLE_RIGHT_PX,
+  DEFAULT_TOP_BUBBLE_TOP_PX,
+  getMiniPanelBottomReservePx,
+  type CrunchyrollPlayerChromeState,
+} from "./overlay-layout";
+import { selectP2PMediaParticipants } from "./p2p-media";
 import {
   createRoomInvite,
   listInviteTargets,
@@ -64,6 +80,7 @@ import {
   type FriendListItem,
   type InviteTargets,
 } from "./social-client";
+import { adoptWebsiteSessionWithRetry } from "./silent-session-adoption";
 import {
   ANIDACHI_COMPOSER_OPEN_ATTR,
   ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
@@ -120,6 +137,7 @@ import {
 import { acquireRoomTabLock, releaseRoomTabLock } from "./room-tab-lock";
 import { buildRoomShareableUrl } from "./room-url";
 import { overlayStyles } from "./styles";
+import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
 import { runCrunchyrollMainCommand, type PlayerEvent, type VideoAdapter } from "./video-adapter";
 import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
 import {
@@ -134,6 +152,7 @@ import {
   reconcileWatchProgress,
   type WatchCheckpointKind,
 } from "./watch-library-client";
+import { resolveWatchLibraryReconcileAuth } from "./watch-library-auth";
 import { getWatchProgressEntryForAdapter } from "./watch-progress-entry";
 
 interface OverlayAppProps {
@@ -194,16 +213,6 @@ interface PointerWakePoint {
   screenY: number;
 }
 
-interface CrunchyrollPlayerChromeState {
-  controlsVisible: boolean;
-  camStackBottomPx: number;
-  containerHeightPx: number;
-  miniPanelRightPx: number;
-  miniPanelTopPx: number;
-  topBubbleRightPx: number;
-  topBubbleTopPx: number;
-}
-
 const REMOTE_EVENT_SUPPRESSION_MS = 1800;
 const REMOTE_COMMAND_DEDUPE_MS = 800;
 const CRUNCHYROLL_REMOTE_SEEK_GUARD_MS = 15_000;
@@ -241,27 +250,11 @@ const FIRE_SUPER_DELAY_MS = HOLD_FIRE_SUPER_REACTION_EXPERIMENT.revealDelayMs;
 const FIRE_SUPER_CHARGE_MS = HOLD_FIRE_SUPER_REACTION_EXPERIMENT.chargeMs;
 const FIRE_SUPER_TOTAL_MS = FIRE_SUPER_DELAY_MS + FIRE_SUPER_CHARGE_MS;
 const NUKE_SPARKS = Array.from({ length: 12 }, (_, index) => index);
-const DEFAULT_CAM_STACK_BOTTOM_PX = 54;
-const DEFAULT_TOP_BUBBLE_TOP_PX = 10;
-const DEFAULT_TOP_BUBBLE_RIGHT_PX = 10;
-const DEFAULT_MINI_PANEL_TOP_PX = 48;
-const DEFAULT_MINI_PANEL_RIGHT_PX = 10;
-const DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE: CrunchyrollPlayerChromeState = {
-  controlsVisible: false,
-  camStackBottomPx: DEFAULT_CAM_STACK_BOTTOM_PX,
-  containerHeightPx: 0,
-  miniPanelRightPx: DEFAULT_MINI_PANEL_RIGHT_PX,
-  miniPanelTopPx: DEFAULT_MINI_PANEL_TOP_PX,
-  topBubbleRightPx: DEFAULT_TOP_BUBBLE_RIGHT_PX,
-  topBubbleTopPx: DEFAULT_TOP_BUBBLE_TOP_PX,
-};
-
 export function OverlayApp({ adapter }: OverlayAppProps) {
   const clientRef = useRef(new RoomClient());
   const suppressLocalEventsUntilRef = useRef(0);
   const remotePlaybackTokenRef = useRef(0);
   const pendingPlayWaitRef = useRef(false);
-  const consumedLaunchIntentRef = useRef(false);
   const lastRemoteCommandRef = useRef<{ key: string; receivedAt: number } | null>(null);
   const lastRemoteSeekAttemptRef = useRef<RemoteSeekAttempt | null>(null);
   const pendingRemoteSeekRef = useRef<PendingRemoteSeek | null>(null);
@@ -371,6 +364,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const participantRef = useRef<Participant | null>(null);
   const authAccessTokenRef = useRef<string | null>(null);
   const roomIdRef = useRef<string | null>(null);
+  const liveVoiceKeyDownRef = useRef(false);
   const roomTokenRef = useRef<string | null>(null);
   const roomShareableLinkRef = useRef<string | null>(null);
   const statusRef = useRef<RoomConnectionStatus>("idle");
@@ -552,6 +546,29 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     [refreshRoomActionIdentity],
   );
 
+  const getWatchLibraryReconcileAccessToken = useCallback(
+    async (reason: string, currentUserId: string | null): Promise<string | null> => {
+      const result = await createCurrentParticipant({ fast: true });
+      const decision = resolveWatchLibraryReconcileAuth(currentUserId, result);
+
+      if (decision.reason !== "ok") {
+        logDebug("watch-library.reconcile", "background auth unavailable; keeping room session", {
+          reason,
+          decision: decision.reason,
+          currentUserId: decision.currentUserId,
+          tokenUserId: decision.tokenUserId,
+          activeRoomId: roomIdRef.current,
+        });
+        return null;
+      }
+
+      authAccessTokenRef.current = decision.accessToken;
+      setAuthAccessToken(decision.accessToken);
+      return decision.accessToken;
+    },
+    [],
+  );
+
   const setMessageComposerDomGuard = useCallback(
     (active: boolean) => {
       if (active) {
@@ -586,16 +603,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, [clearMessageComposerShieldReleaseTimer, setMessageComposerDomGuard]);
 
   const activateMessageComposerGuard = useCallback(() => {
-    clearMessageComposerShieldReleaseTimer();
-    resetComposerShieldInlineStyles(messageComposerShieldRef.current);
-    messageComposerShieldReleasePointerRef.current = null;
-    setMessageComposerShieldActive(true);
-    setMessageComposerShieldReleasing(false);
-    setMessageComposerGuardActive(true);
-    setMessageComposerDomGuard(true);
-  }, [clearMessageComposerShieldReleaseTimer, setMessageComposerDomGuard]);
-
-  const releaseMessageComposerGuard = useCallback(() => {
     clearMessageComposerShieldReleaseTimer();
     resetComposerShieldInlineStyles(messageComposerShieldRef.current);
     messageComposerShieldReleasePointerRef.current = null;
@@ -691,10 +698,15 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     // countdown re-renders even though the elapsed time lives in a ref.
     return Math.max(0, Math.floor(roomQuota.remainingSeconds - quotaMeteredMsRef.current / 1000));
   }, [roomQuota, quotaDisplayTick]);
-  const ghostCamSizePx = getGhostCamSizePx(ghostCamSizeStep);
+  const isCrunchyroll = adapter.id === "crunchyroll";
+  const cameraStackVisible = p2pReady && camsEnabled && displayedCameraParticipants.length > 0;
+  const ghostCamSizePx = getResponsiveGhostCamSizePx(ghostCamSizeStep, {
+    cameraCount: displayedCameraParticipants.length || 1,
+    containerHeightPx: isCrunchyroll ? crunchyrollPlayerChrome.containerHeightPx : 0,
+    containerWidthPx: isCrunchyroll ? crunchyrollPlayerChrome.containerWidthPx : 0,
+  });
   const ghostCamGapPx = getGhostCamGapPx(ghostCamSizeStep);
   const ghostCamSizeLabel = getGhostCamSizeLabel(ghostCamSizeStep);
-  const isCrunchyroll = adapter.id === "crunchyroll";
   const camStackBottomPx = isCrunchyroll
     ? crunchyrollPlayerChrome.camStackBottomPx
     : DEFAULT_CAM_STACK_BOTTOM_PX;
@@ -702,15 +714,20 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     camsEnabled && displayedCameraParticipants.length
       ? camStackBottomPx + ghostCamSizePx + Math.max(12, Math.round(ghostCamSizePx * 0.16))
       : Math.max(32, camStackBottomPx);
-  const miniPanelMaxHeightPx = isCrunchyroll
-    ? getCrunchyrollMiniPanelMaxHeightPx(crunchyrollPlayerChrome, camStackBottomPx, ghostCamSizePx)
-    : null;
+  const miniPanelBottomReservePx = isCrunchyroll
+    ? getMiniPanelBottomReservePx({
+        cameraStackVisible,
+        camStackBottomPx,
+        controlsVisible: crunchyrollPlayerChrome.controlsVisible,
+        ghostCamSizePx,
+      })
+    : 10;
   const overlayCssVariables = {
     "--cam-bubble-gap": `${ghostCamGapPx}px`,
     "--cam-bubble-size": `${ghostCamSizePx}px`,
     "--cam-stack-bottom": `${camStackBottomPx}px`,
     "--live-chat-bottom": `${liveChatBottomPx}px`,
-    "--mini-panel-max-height": miniPanelMaxHeightPx ? `${miniPanelMaxHeightPx}px` : undefined,
+    "--mini-panel-bottom-reserve": `${miniPanelBottomReservePx}px`,
     "--mini-panel-right": `${
       isCrunchyroll ? crunchyrollPlayerChrome.miniPanelRightPx : DEFAULT_MINI_PANEL_RIGHT_PX
     }px`,
@@ -878,9 +895,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       setCrunchyrollPlayerChrome(DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE);
       return;
     }
-    if (panelOpen) {
-      return;
-    }
 
     let disposed = false;
     let frameId = 0;
@@ -931,7 +945,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       adapter.container.removeEventListener("pointerleave", scheduleApplyState, true);
       document.removeEventListener("fullscreenchange", scheduleApplyState, true);
     };
-  }, [adapter, panelOpen]);
+  }, [adapter]);
 
   useEffect(() => {
     setMessageComposerDomGuard(messageComposerOpen || messageComposerGuardActive);
@@ -1103,8 +1117,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       lastRemoteReconcileAt = now;
       void (async () => {
         const userId = authUserIdRef.current;
-        const accessToken = await getFreshAuthAccessToken(
+        const accessToken = await getWatchLibraryReconcileAccessToken(
           `watch-library:${checkpointKind}`,
+          userId,
         );
         if (!accessToken || !userId) {
           return;
@@ -1170,7 +1185,13 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       adapter.video.removeEventListener("ended", persistEnded);
       window.removeEventListener("pagehide", persistPagehide);
     };
-  }, [adapter, getFreshAuthAccessToken, roomId, participantCount, loadPosterArtwork]);
+  }, [
+    adapter,
+    getWatchLibraryReconcileAccessToken,
+    roomId,
+    participantCount,
+    loadPosterArtwork,
+  ]);
 
   const sendCameraStatus = useCallback((enabled: boolean) => {
     const activeRoomId = roomIdRef.current;
@@ -1254,6 +1275,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     voiceTalkActive: liveVoiceTalking,
   });
   const ghostVideos = ghostCamSession.videos;
+  const cameraVideoByParticipantId = useMemo(
+    () => new Map(ghostVideos.map((video) => [video.participantId, video])),
+    [ghostVideos],
+  );
+  const renderableCameraParticipants = useMemo(
+    () => displayedCameraParticipants.filter((item) => cameraVideoByParticipantId.has(item.id)),
+    [cameraVideoByParticipantId, displayedCameraParticipants],
+  );
   const liveVoiceActiveSpeakerIds = ghostCamSession.activeSpeakerIds;
   const remoteLiveVoiceActive = liveVoiceActiveSpeakerIds.some((id) => id !== participant?.id);
   const liveVoiceStatusText = getLiveVoiceStatusText(ghostCamSession.voiceStatus, liveVoiceTalking);
@@ -2614,18 +2643,40 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         return;
       }
 
-      const silent = await trySilentSignIn();
-      if (cancelled || !silent?.authenticated) {
+      const adopted = await adoptWebsiteSessionWithRetry({
+        initialResult: result,
+        readCurrentIdentity: () => createCurrentParticipant(),
+        trySilentSignIn,
+        shouldContinue: () =>
+          !cancelled &&
+          document.visibilityState !== "hidden" &&
+          Date.now() >= suppressSilentSignInUntilRef.current,
+        onAttempt: (attempt) => {
+          if (attempt.reason === "silent-miss" || attempt.reason === "current-miss") {
+            logDebug("identity", "panel-open silent adoption retry", {
+              reason: attempt.reason,
+            });
+          }
+        },
+      });
+      if (
+        cancelled ||
+        (!adopted.result?.authenticated && !adopted.result?.requiresPageReload)
+      ) {
         return;
       }
 
-      applyParticipantIdentityRef.current(silent, "panel-open-silent-sign-in", true);
+      applyParticipantIdentityRef.current(
+        adopted.result,
+        `panel-open-${adopted.reason}`,
+        true,
+      );
     });
 
     return () => {
       cancelled = true;
     };
-  }, [identityLoaded, panelOpen]);
+  }, [adapter, identityLoaded, panelOpen]);
 
   const createAndConnectRoom = useCallback(
     async (reason: string) => {
@@ -2715,15 +2766,34 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         return;
       }
 
-      const silent = await trySilentSignIn();
-      if (cancelled || !silent?.authenticated) {
+      const adopted = await adoptWebsiteSessionWithRetry({
+        initialResult: result,
+        readCurrentIdentity: () => createCurrentParticipant(),
+        trySilentSignIn,
+        shouldContinue: () =>
+          !cancelled &&
+          document.visibilityState !== "hidden" &&
+          Date.now() >= suppressSilentSignInUntilRef.current,
+        onAttempt: (attempt) => {
+          if (attempt.reason === "silent-miss" || attempt.reason === "current-miss") {
+            logDebug("identity", "initial silent adoption retry", {
+              reason: attempt.reason,
+            });
+          }
+        },
+      });
+      if (
+        cancelled ||
+        (!adopted.result?.authenticated && !adopted.result?.requiresPageReload)
+      ) {
         return;
       }
 
       logDebug("identity", "silent website session adopted", {
-        participantId: silent.participant?.id ?? null,
+        participantId: adopted.result.participant?.id ?? null,
+        reason: adopted.reason,
       });
-      applyParticipantIdentityRef.current(silent, "silent-sign-in", true);
+      applyParticipantIdentityRef.current(adopted.result, adopted.reason, true);
       setIdentityLoaded(true);
     });
     return () => {
@@ -2792,39 +2862,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       setPanelOpen(shouldOpenPanelForInitialRoom(hashRoomId, persistedRoomId));
     }
   }, [connectToExistingWebsiteRoom, identityLoaded, participant, roomId, roomSessionNamespace]);
-
-  useEffect(() => {
-    if (!participant || !roomSessionNamespace || consumedLaunchIntentRef.current) {
-      return;
-    }
-
-    const intent = consumeAnidachiLaunchIntent();
-    if (!intent) {
-      return;
-    }
-
-    consumedLaunchIntentRef.current = true;
-    setPanelOpen(true);
-    logDebug("overlay.launch", "consumed launch intent", {
-      autoCreateRoom: intent.autoCreateRoom,
-      source: intent.source,
-      video: videoDebugSnapshot(adapter.video),
-    });
-
-    const activeRoomId =
-      roomIdRef.current ??
-      getRoomIdFromHash() ??
-      getPersistedRoomIdForUser(roomSessionNamespace, participant.id);
-    if (!intent.autoCreateRoom || activeRoomId) {
-      return;
-    }
-
-    void createAndConnectRoom("launch-intent").catch((error) => {
-      const message = error instanceof Error ? error.message : "Failed to create room";
-      logDebug("overlay.room", "launch create failed", { message });
-      setAuthMessage(message);
-    });
-  }, [adapter.video, createAndConnectRoom, participant, roomSessionNamespace]);
 
   const sendHostState = useCallback(
     (allowController = false, stateOverride?: Partial<PlaybackState>) => {
@@ -3265,6 +3302,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       video: videoDebugSnapshot(adapter.video),
     });
 
+    const pageDebugText = mode === "light" ? getCompactDebugLogText() : getDebugLogText();
+    const pageDebug = JSON.parse(pageDebugText) as unknown;
     const response = await saveDiagnosticsFromPage(mode, {
       mode,
       url: location.href,
@@ -3276,7 +3315,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       hasParticipant: Boolean(participant),
       participantId: participant?.id,
       video: videoDebugSnapshot(adapter.video),
-      pageDebug: { entries: getDebugEntries() },
+      pageDebug,
     });
 
     if (!response.ok) {
@@ -3285,12 +3324,15 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     }
 
     setDebugEntriesCount(getDebugEntries().length);
-    setDiagnosticStatus(`Save dialog opened for ${response.filename ?? `${mode} diagnostics`}`);
+    setDiagnosticStatus(
+      `Save dialog opened for ${response.filename ?? `${mode} diagnostics`}`,
+    );
   };
 
   const clearDebug = async () => {
     clearDebugLog();
     await clearDiagnosticsFromPage().catch(() => undefined);
+    setDiagnosticStatus(null);
     setDebugEntriesCount(getDebugEntries().length);
     setDiagnosticStatus("Logs cleared");
   };
@@ -3496,12 +3538,19 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       return;
     }
 
+    liveVoiceKeyDownRef.current = true;
     setLiveVoiceTalking(true);
     void ghostCamSession.startVoiceTalk();
   }, [ghostCamSession.startVoiceTalk, roomId]);
 
   const stopLiveVoiceTalk = useCallback(() => {
+    liveVoiceKeyDownRef.current = false;
     setLiveVoiceTalking(false);
+    void ghostCamSession.stopVoiceTalk();
+  }, [ghostCamSession.stopVoiceTalk]);
+
+  const stopLiveVoiceTalkForUnmount = useCallback(() => {
+    liveVoiceKeyDownRef.current = false;
     void ghostCamSession.stopVoiceTalk();
   }, [ghostCamSession.stopVoiceTalk]);
 
@@ -3612,12 +3661,20 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     });
   }, [activateMessageComposerGuard, deactivateMessageComposerGuard, roomId]);
 
+  const blurMessageComposerInput = useCallback(() => {
+    const input = messageComposerInputRef.current;
+    if (input && document.activeElement === input) {
+      input.blur();
+    }
+  }, []);
+
   const closeMessageComposer = useCallback(() => {
+    blurMessageComposerInput();
     setMessageComposerOpen(false);
     setMessageComposerEmojiOpen(false);
     setMessageComposerText("");
-    releaseMessageComposerGuard();
-  }, [releaseMessageComposerGuard]);
+    deactivateMessageComposerGuard();
+  }, [blurMessageComposerInput, deactivateMessageComposerGuard]);
 
   const insertComposerEmoji = useCallback(
     (emoji: string) => {
@@ -3655,12 +3712,19 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       sendReaction("", text);
+      blurMessageComposerInput();
       setMessageComposerText("");
       setMessageComposerOpen(false);
       setMessageComposerEmojiOpen(false);
-      releaseMessageComposerGuard();
+      deactivateMessageComposerGuard();
     },
-    [messageComposerText, releaseMessageComposerGuard, roomId, sendReaction],
+    [
+      blurMessageComposerInput,
+      deactivateMessageComposerGuard,
+      messageComposerText,
+      roomId,
+      sendReaction,
+    ],
   );
 
   const handleMessageComposerKeyDown = useCallback(
@@ -3790,7 +3854,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
       if (action.type === "fire-start") {
         beginFireHold("hotkey");
+      } else if (action.type === "message-composer-open") {
+        openMessageComposer();
       } else if (action.type === "voice-start") {
+        liveVoiceKeyDownRef.current = true;
         startLiveVoiceTalk();
       } else if (action.type === "reaction") {
         sendReaction(action.emoji);
@@ -3814,13 +3881,21 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       if (action.type === "fire-stop") {
         finishFireHold("hotkey-up");
       } else {
+        liveVoiceKeyDownRef.current = false;
         stopLiveVoiceTalk();
       }
     };
 
     const handleBlur = () => {
       cancelFireHold("window-blur");
-      stopLiveVoiceTalk();
+      if (
+        shouldStopVoiceTalkOnWindowBlur({
+          documentVisibilityState: document.visibilityState,
+          voiceKeyDown: liveVoiceKeyDownRef.current,
+        })
+      ) {
+        stopLiveVoiceTalk();
+      }
       stopVoiceCapture(true);
     };
 
@@ -3850,13 +3925,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     stopVoiceCapture,
   ]);
 
-  useEffect(
-    () => () => {
-      stopLiveVoiceTalk();
-      stopVoiceCapture(false);
-    },
-    [stopLiveVoiceTalk, stopVoiceCapture],
-  );
+  useOverlayUnmountCleanup({
+    stopLiveVoiceTalk: stopLiveVoiceTalkForUnmount,
+    stopVoiceCapture,
+  });
 
   return (
     <div
@@ -4315,19 +4387,28 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
       {socialVisible ? (
         <>
-          {camsEnabled && displayedCameraParticipants.length ? (
+          {cameraStackVisible && renderableCameraParticipants.length ? (
             <div className="cam-stack">
-              {displayedCameraParticipants.map((item) => (
-                <CameraBubble
-                  key={item.id}
-                  participant={item}
-                  video={ghostVideos.find((video) => video.participantId === item.id)}
-                  active={item.id === participant?.id}
-                  fireChargePhase={fireCharge?.participantId === item.id ? fireCharge.phase : null}
-                  flaming={flamingParticipantIds.includes(item.id)}
-                  speaking={liveVoiceActiveSpeakerIds.includes(item.id)}
-                />
-              ))}
+              {renderableCameraParticipants.map((item) => {
+                const video = cameraVideoByParticipantId.get(item.id);
+                if (!video) {
+                  return null;
+                }
+
+                return (
+                  <CameraBubble
+                    key={item.id}
+                    participant={item}
+                    video={video}
+                    active={item.id === participant?.id}
+                    fireChargePhase={
+                      fireCharge?.participantId === item.id ? fireCharge.phase : null
+                    }
+                    flaming={flamingParticipantIds.includes(item.id)}
+                    speaking={liveVoiceActiveSpeakerIds.includes(item.id)}
+                  />
+                );
+              })}
             </div>
           ) : null}
 
@@ -4387,7 +4468,7 @@ function CameraBubble({
   speaking,
 }: {
   participant: Participant;
-  video: GhostVideo | undefined;
+  video: GhostVideo;
   active: boolean;
   fireChargePhase: FireChargePhase | null;
   flaming: boolean;
@@ -4397,11 +4478,6 @@ function CameraBubble({
 
   useEffect(() => {
     if (!ref.current) {
-      return;
-    }
-
-    if (!video) {
-      ref.current.replaceChildren();
       return;
     }
 
@@ -4416,7 +4492,6 @@ function CameraBubble({
       title={participant.displayName}
     >
       <div className="cam-media" ref={ref} />
-      {!video ? <div className="fallback-face">{initials(participant.displayName)}</div> : null}
       {flaming ? (
         <svg aria-hidden="true" className="nuke-burst" focusable="false" viewBox="0 0 120 150">
           <g className="nuke-shockwave">
@@ -4467,10 +4542,9 @@ function CameraBubble({
           <circle className="super-ring-progress" cx="50" cy="50" r="46" pathLength={100} />
         </svg>
       ) : null}
-      {video && !speaking ? <span className="live-dot" /> : null}
       {speaking ? (
         <span className="mic-dot" aria-hidden="true">
-          <Mic size={10} strokeWidth={2.5} />
+          <Mic size={11} strokeWidth={2.5} />
         </span>
       ) : null}
     </div>
@@ -4952,6 +5026,7 @@ function getCrunchyrollPlayerChromeState(container: HTMLElement): CrunchyrollPla
       ? getCrunchyrollCamStackBottom(containerRect, timelineRect, controlRects)
       : DEFAULT_CAM_STACK_BOTTOM_PX,
     containerHeightPx: Math.round(containerRect.height),
+    containerWidthPx: Math.round(containerRect.width),
     ...topPosition,
   };
 }
@@ -5175,16 +5250,16 @@ function wakePlayerAfterComposerShieldRelease(point: PointerWakePoint, shield: H
 }
 
 function getLiveVoiceStatusText(status: LiveVoiceStatus, talking: boolean): string {
-  if (talking || status === "talking") {
-    return "Talking";
+  if (status === "error") {
+    return "Mic blocked";
   }
 
   if (status === "connecting") {
     return "Connecting";
   }
 
-  if (status === "error") {
-    return "Mic blocked";
+  if (talking || status === "talking") {
+    return "Talking";
   }
 
   return "Hold V";
@@ -5263,22 +5338,6 @@ function clampNumber(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-function getCrunchyrollMiniPanelMaxHeightPx(
-  playerChrome: CrunchyrollPlayerChromeState,
-  camStackBottomPx: number,
-  ghostCamSizePx: number,
-): number | null {
-  if (playerChrome.containerHeightPx <= 0) {
-    return null;
-  }
-
-  const avatarReserveBottomPx = camStackBottomPx + ghostCamSizePx + 18;
-  const availableHeight =
-    playerChrome.containerHeightPx - playerChrome.miniPanelTopPx - avatarReserveBottomPx;
-  const hardMaxHeight = Math.max(96, playerChrome.containerHeightPx - 64);
-  return Math.round(Math.min(Math.max(96, availableHeight), hardMaxHeight));
-}
-
 function areCrunchyrollPlayerChromeStatesEqual(
   left: CrunchyrollPlayerChromeState,
   right: CrunchyrollPlayerChromeState,
@@ -5287,6 +5346,7 @@ function areCrunchyrollPlayerChromeStatesEqual(
     left.controlsVisible === right.controlsVisible &&
     left.camStackBottomPx === right.camStackBottomPx &&
     left.containerHeightPx === right.containerHeightPx &&
+    left.containerWidthPx === right.containerWidthPx &&
     left.miniPanelRightPx === right.miniPanelRightPx &&
     left.miniPanelTopPx === right.miniPanelTopPx &&
     left.topBubbleRightPx === right.topBubbleRightPx &&

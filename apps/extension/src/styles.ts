@@ -80,11 +80,17 @@ export const overlayStyles = `
 
   .mini-panel {
     position: absolute;
-    top: var(--mini-panel-top, 48px);
+    top: min(var(--mini-panel-top, 48px), calc(100% - 28px));
     right: var(--mini-panel-right, 10px);
-    width: min(300px, calc(100% - 20px));
-    max-height: var(--mini-panel-max-height, calc(100% - 58px));
+    width: min(300px, calc(100% - var(--mini-panel-right, 10px) - 10px));
+    max-height: max(
+      0px,
+      calc(
+        100% - var(--mini-panel-top, 48px) - var(--mini-panel-bottom-reserve, 10px)
+      )
+    );
     overflow: auto;
+    overscroll-behavior: contain;
     padding: 14px;
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.14);
@@ -761,17 +767,23 @@ export const overlayStyles = `
   }
 
   .debug-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
     margin-top: 3px;
+  }
+
+  .debug-actions .button {
+    justify-content: center;
+    min-width: 0;
+    padding: 0 8px;
   }
 
   .debug-status {
     min-width: 0;
     margin-top: 2px;
-    color: rgba(255, 255, 255, 0.56);
-    font-size: 11px;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 10px;
     line-height: 1.35;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -896,16 +908,20 @@ export const overlayStyles = `
     border-radius: 999px;
     position: relative;
     overflow: visible;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(15, 15, 28, 0.54);
-    opacity: 0.54;
-    transition: opacity 180ms ease, transform 180ms ease;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: rgba(15, 15, 28, 0.82);
+    opacity: 1;
+    transition:
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease;
+    box-shadow:
+      0 0 0 1px rgba(8, 10, 18, 0.5),
+      0 10px 28px rgba(0, 0, 0, 0.34);
     isolation: isolate;
   }
 
   .cam-bubble.flame-active {
-    opacity: 1;
     box-shadow:
       0 0 18px rgba(255, 241, 138, 0.64),
       0 0 46px rgba(249, 115, 22, 0.42),
@@ -914,10 +930,9 @@ export const overlayStyles = `
   }
 
   .cam-bubble.speaking {
-    opacity: 1;
+    border-color: rgba(125, 255, 202, 0.92);
     box-shadow:
-      0 0 0 1px rgba(125, 211, 167, 0.72),
-      0 0 14px rgba(125, 211, 167, 0.22),
+      0 0 18px rgba(52, 211, 153, 0.34),
       0 10px 28px rgba(0, 0, 0, 0.3);
   }
 
@@ -1042,8 +1057,46 @@ export const overlayStyles = `
 
   .cam-bubble:hover,
   .cam-bubble.active {
-    opacity: 1;
-    transform: scale(1.08);
+    border-color: rgba(255, 255, 255, 0.36);
+    transform: scale(1.04);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08),
+      0 12px 30px rgba(0, 0, 0, 0.38);
+  }
+
+  .cam-bubble.speaking,
+  .cam-bubble.speaking:hover,
+  .cam-bubble.speaking.active {
+    border-color: rgba(125, 255, 202, 0.94);
+    box-shadow:
+      0 0 18px rgba(52, 211, 153, 0.34),
+      0 12px 30px rgba(0, 0, 0, 0.38);
+  }
+
+  .mic-dot {
+    position: absolute;
+    right: calc(var(--cam-bubble-size, 44px) * 0.04);
+    bottom: calc(var(--cam-bubble-size, 44px) * 0.04);
+    width: calc(var(--cam-bubble-size, 44px) * 0.22);
+    height: calc(var(--cam-bubble-size, 44px) * 0.22);
+    min-width: 13px;
+    min-height: 13px;
+    max-width: 18px;
+    max-height: 18px;
+    color: rgba(125, 255, 202, 0.98);
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    z-index: 5;
+    filter:
+      drop-shadow(0 0 2px rgba(4, 10, 8, 0.95))
+      drop-shadow(0 0 8px rgba(52, 211, 153, 0.78));
+    animation: anidachi-mic-dot-pulse 900ms ease-in-out infinite;
+  }
+
+  .mic-dot svg {
+    width: 100%;
+    height: 100%;
   }
 
   .cam-media,
@@ -1052,8 +1105,7 @@ export const overlayStyles = `
     height: 100%;
   }
 
-  .cam-media,
-  .fallback-face {
+  .cam-media {
     position: absolute;
     inset: 0;
     border-radius: inherit;
@@ -1065,13 +1117,6 @@ export const overlayStyles = `
   .cam-bubble video {
     object-fit: cover;
     transform: scaleX(-1);
-  }
-
-  .fallback-face {
-    display: grid;
-    place-items: center;
-    font-weight: 800;
-    font-size: calc(var(--cam-bubble-size, 44px) * 0.3);
   }
 
   .super-ring {
@@ -1110,43 +1155,6 @@ export const overlayStyles = `
   .super-ring.ready .super-ring-progress {
     stroke: rgba(255, 218, 92, 1);
     stroke-dashoffset: 0;
-  }
-
-  .live-dot {
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
-    width: 8px;
-    height: 8px;
-    border: 2px solid rgba(10, 10, 18, 0.9);
-    border-radius: 999px;
-    background: #7dd3a7;
-    z-index: 3;
-  }
-
-  .mic-dot {
-    position: absolute;
-    right: calc(var(--cam-bubble-size, 44px) * 0.04);
-    bottom: calc(var(--cam-bubble-size, 44px) * 0.04);
-    width: calc(var(--cam-bubble-size, 44px) * 0.22);
-    height: calc(var(--cam-bubble-size, 44px) * 0.22);
-    min-width: 13px;
-    min-height: 13px;
-    max-width: 18px;
-    max-height: 18px;
-    color: rgba(125, 255, 202, 0.98);
-    display: grid;
-    place-items: center;
-    z-index: 5;
-    filter:
-      drop-shadow(0 0 2px rgba(4, 10, 8, 0.95))
-      drop-shadow(0 0 8px rgba(52, 211, 153, 0.78));
-    animation: anidachi-mic-dot-pulse 900ms ease-in-out infinite;
-  }
-
-  .mic-dot svg {
-    width: 100%;
-    height: 100%;
   }
 
   .reaction-pop {
@@ -1317,17 +1325,6 @@ export const overlayStyles = `
     }
   }
 
-  @keyframes anidachi-composer-in {
-    from {
-      opacity: 0;
-      translate: 0 8px;
-    }
-    to {
-      opacity: 1;
-      translate: 0 0;
-    }
-  }
-
   @keyframes anidachi-mic-dot-pulse {
     0% {
       transform: scale(0.96);
@@ -1349,6 +1346,17 @@ export const overlayStyles = `
       filter:
         drop-shadow(0 0 2px rgba(4, 10, 8, 0.95))
         drop-shadow(0 0 6px rgba(52, 211, 153, 0.58));
+    }
+  }
+
+  @keyframes anidachi-composer-in {
+    from {
+      opacity: 0;
+      translate: 0 8px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
     }
   }
 
