@@ -8,6 +8,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import {
   Check,
   Copy,
@@ -15,6 +16,7 @@ import {
   Link2,
   Pencil,
   RefreshCw,
+  Share2,
   Trash2,
   UserMinus,
   UserPlus,
@@ -238,7 +240,7 @@ function IconButton({
   return (
     <button
       aria-label={title}
-      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${toneClass}`}
+      className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-0 ${toneClass}`}
       disabled={disabled}
       onClick={onClick}
       title={title}
@@ -251,6 +253,8 @@ function IconButton({
 }
 
 export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
+  const pathname = usePathname();
+  const embeddedInAccount = pathname.startsWith("/account/friends");
   const [friendsData, setFriendsData] = useState<FriendsResponse>(EMPTY_FRIENDS);
   const [groups, setGroups] = useState<FriendGroup[]>([]);
   const [recentPeople, setRecentPeople] = useState<RecentPerson[]>([]);
@@ -379,9 +383,26 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
         const payload = await api<FriendInviteLinkResponse>("/api/friends/invite-links", {
           method: "POST",
         });
-        await navigator.clipboard.writeText(payload.inviteLink.url);
+        const url = payload.inviteLink.url;
+        if (typeof navigator.share === "function") {
+          try {
+            await navigator.share({
+              title: "AniDachi friend invite",
+              text: "Add me on AniDachi",
+              url,
+            });
+            return;
+          } catch (error) {
+            if (error instanceof Error && error.name === "AbortError") {
+              throw error;
+            }
+          }
+        }
+        await navigator.clipboard.writeText(url);
       },
-      "Friend invite link copied.",
+      typeof navigator.share === "function"
+        ? "Friend invite link sent."
+        : "Friend invite link copied.",
     );
   }, [runAction]);
 
@@ -462,6 +483,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
 
   return (
     <div className="flex w-full flex-col gap-6">
+        {!embeddedInAccount ? (
         <header className="flex flex-col justify-between gap-4 border-b border-brand-border pb-6 md:flex-row md:items-end">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
@@ -482,10 +504,21 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
             Refresh
           </IconButton>
         </header>
+        ) : (
+          <div className="flex justify-end">
+            <IconButton
+              icon={<RefreshCw className="h-4 w-4" aria-hidden />}
+              onClick={() => void refresh()}
+              title="Refresh"
+            >
+              Refresh
+            </IconButton>
+          </div>
+        )}
 
         {notice ? (
           <div
-            className={`fixed right-4 top-4 z-50 max-w-[min(24rem,calc(100vw-2rem))] rounded-lg border px-4 py-3 text-sm shadow-2xl ${
+            className={`fixed right-4 top-[calc(1rem+env(safe-area-inset-top,0px))] z-50 max-w-[min(24rem,calc(100vw-2rem))] rounded-lg border px-4 py-3 text-sm shadow-2xl ${
               notice.tone === "success"
                 ? "border-brand-orange/30 bg-brand-orange/10 text-brand-orange"
                 : "border-red-400/30 bg-red-500/10 text-red-200"
@@ -512,12 +545,24 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
               </div>
               <IconButton
                 disabled={busyKey !== null}
-                icon={<Copy className="h-4 w-4" aria-hidden />}
+                icon={
+                  typeof navigator !== "undefined" && typeof navigator.share === "function" ? (
+                    <Share2 className="h-4 w-4" aria-hidden />
+                  ) : (
+                    <Copy className="h-4 w-4" aria-hidden />
+                  )
+                }
                 onClick={() => void copyFriendInviteLink()}
-                title="Copy friend invite link"
+                title={
+                  typeof navigator !== "undefined" && typeof navigator.share === "function"
+                    ? "Share friend invite link"
+                    : "Copy friend invite link"
+                }
                 tone="primary"
               >
-                Copy link
+                {typeof navigator !== "undefined" && typeof navigator.share === "function"
+                  ? "Share link"
+                  : "Copy link"}
               </IconButton>
             </div>
           </div>

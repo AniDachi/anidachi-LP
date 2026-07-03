@@ -1,9 +1,12 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import {
   createExtensionAuthCode,
   isSafeExtensionRedirectUri,
 } from "@/lib/anidachi-auth/extension-codes";
 import { getSession } from "@/lib/anidachi-auth/session";
+import { isMobileUserAgent } from "@/lib/mobile-user-agent";
+import { ExtensionConnectMobileConfirm } from "./extension-connect-mobile-confirm";
 
 export const dynamic = "force-dynamic";
 
@@ -40,5 +43,11 @@ export default async function ExtensionConnectPage({ searchParams }: Props) {
   const callback = new URL(redirectUri);
   callback.searchParams.set("code", code);
   callback.searchParams.set("state", state);
+
+  const userAgent = (await headers()).get("user-agent");
+  if (isMobileUserAgent(userAgent)) {
+    return <ExtensionConnectMobileConfirm callbackUrl={callback.toString()} />;
+  }
+
   redirect(callback.toString());
 }

@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { AuthPageCard, AuthPageShell } from "@/components/auth-page-shell";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { getSession } from "@/lib/anidachi-auth/session";
 import { sanitizeAuthReturnTo } from "@/lib/anidachi-auth/return-to";
 import { getLoginContext } from "@/lib/login-context";
+import { isMobileUserAgent } from "@/lib/mobile-user-agent";
 import { LoginOAuthButtons } from "./login-oauth-buttons";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +36,10 @@ export default async function LoginPage({ searchParams }: Props) {
   if (session) redirect(sanitizedNext || "/account");
 
   const safeNext = sanitizedNext ? encodeURIComponent(sanitizedNext) : "";
-  const loginContext = getLoginContext(sanitizedNext);
+  const userAgent = (await headers()).get("user-agent");
+  const loginContext = getLoginContext(sanitizedNext, {
+    isMobile: isMobileUserAgent(userAgent),
+  });
 
   const errorMessage = error
     ? (ERROR_MESSAGES[error] ?? "An error occurred. Please try again.")

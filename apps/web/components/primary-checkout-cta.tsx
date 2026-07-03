@@ -125,7 +125,8 @@ export function PrimaryCheckoutCta({
         </div>
 
         <Button
-          className="h-10 w-full shrink-0 bg-brand-orange px-5 text-sm font-semibold text-primary-foreground glow-orange-sm transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange sm:w-auto"
+          size="touch"
+          className="w-full shrink-0 bg-brand-orange px-5 text-sm font-semibold text-primary-foreground glow-orange-sm transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange sm:w-auto"
           asChild
         >
           <Link

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { HowToJsonLd } from "@/components/json-ld";
 import { PRICING_EARLY_ACCESS_PRICE } from "@/lib/pricing-copy";
 
@@ -238,49 +239,37 @@ export default function WatchCrunchyrollTogetherLongDistancePage() {
         >
           AniDachi vs Other Methods for Long-Distance Crunchyroll
         </h2>
-        <div className="overflow-x-auto mb-8">
-          <table className="w-full text-sm border-collapse border border-brand-border rounded-lg">
-            <thead>
-              <tr className="bg-brand-surface">
-                <th className="border border-brand-border px-4 py-2 text-left">Method</th>
-                <th className="border border-brand-border px-4 py-2 text-left">Crunchyroll</th>
-                <th className="border border-brand-border px-4 py-2 text-left">Async</th>
-                <th className="border border-brand-border px-4 py-2 text-left">Spoiler control</th>
-                <th className="border border-brand-border px-4 py-2 text-left">Cost</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-brand-border px-4 py-2 font-medium text-brand-orange">AniDachi</td>
-                <td className="border border-brand-border px-4 py-2">Yes</td>
-                <td className="border border-brand-border px-4 py-2">Yes</td>
-                <td className="border border-brand-border px-4 py-2">Episode-level</td>
-                <td className="border border-brand-border px-4 py-2">{PRICING_EARLY_ACCESS_PRICE}</td>
-              </tr>
-              <tr className="bg-brand-surface">
-                <td className="border border-brand-border px-4 py-2 font-medium">Teleparty</td>
-                <td className="border border-brand-border px-4 py-2">Yes</td>
-                <td className="border border-brand-border px-4 py-2">No</td>
-                <td className="border border-brand-border px-4 py-2">None</td>
-                <td className="border border-brand-border px-4 py-2">Freemium</td>
-              </tr>
-              <tr>
-                <td className="border border-brand-border px-4 py-2 font-medium">Discord screen share</td>
-                <td className="border border-brand-border px-4 py-2">One device only</td>
-                <td className="border border-brand-border px-4 py-2">No</td>
-                <td className="border border-brand-border px-4 py-2">None</td>
-                <td className="border border-brand-border px-4 py-2">Free</td>
-              </tr>
-              <tr className="bg-brand-surface">
-                <td className="border border-brand-border px-4 py-2 font-medium">Press play together</td>
-                <td className="border border-brand-border px-4 py-2">Yes</td>
-                <td className="border border-brand-border px-4 py-2">No</td>
-                <td className="border border-brand-border px-4 py-2">None</td>
-                <td className="border border-brand-border px-4 py-2">Free</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <ResponsiveCompareTable
+          columns={[
+            { id: "anidachi", label: "AniDachi", highlight: true },
+            { id: "teleparty", label: "Teleparty" },
+            { id: "discord", label: "Discord screen share" },
+            { id: "press-play", label: "Press play together" },
+          ]}
+          rows={[
+            {
+              feature: "Crunchyroll",
+              values: { anidachi: "yes", teleparty: "yes", discord: "One device only", "press-play": "yes" },
+            },
+            {
+              feature: "Async",
+              values: { anidachi: "yes", teleparty: "no", discord: "no", "press-play": "no" },
+            },
+            {
+              feature: "Spoiler control",
+              values: { anidachi: "Episode-level", teleparty: "None", discord: "None", "press-play": "None" },
+            },
+            {
+              feature: "Cost",
+              values: {
+                anidachi: PRICING_EARLY_ACCESS_PRICE,
+                teleparty: "Freemium",
+                discord: "Free",
+                "press-play": "Free",
+              },
+            },
+          ]}
+        />
 
         <h2
           id="related"

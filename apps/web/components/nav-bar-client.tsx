@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { AnidachiLogoLink } from "@/components/anidachi-logo";
-import { Menu, X, LogOut, ChevronDown, Users } from "lucide-react";
+import { Menu, X, LogOut, ChevronDown, Users, User } from "lucide-react";
 import { NavPricingButton } from "@/components/nav-pricing-button";
 import { NavPricingLink } from "@/components/nav-pricing-link";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 import { cn } from "@/lib/utils";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 
 type NavUser = {
   displayName: string;
@@ -229,11 +230,13 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
+  useBodyScrollLock(menuOpen);
+
   return (
     <nav
       aria-label="Main navigation"
       className={cn(
-        "top-0 z-[90] flex min-h-14 w-full items-center border-b border-brand-border bg-background/80 backdrop-blur-xl",
+        "top-0 z-[90] flex min-h-14 w-full items-center border-b border-brand-border bg-background/80 pt-safe-top backdrop-blur-xl",
         surveyOpen ? "fixed left-0 right-0" : "sticky",
       )}
     >
@@ -283,11 +286,19 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           </li>
         </ul>
 
-        {/* Mobile: pricing + menu */}
+        {/* Mobile: pricing + sign in + menu */}
         <div className="flex items-center gap-1 md:hidden">
           <span className="inline-flex min-h-11 min-w-11 items-center justify-center sm:hidden">
             <NavPricingLink className="inline-flex min-h-11 items-center rounded-full bg-brand-orange/15 border border-brand-orange/30 px-3 text-sm font-semibold text-brand-orange-bright transition-colors hover:bg-brand-orange" />
           </span>
+          {!user ? (
+            <Link
+              href="/login"
+              className="inline-flex min-h-11 items-center rounded-full border border-brand-border px-3 text-xs font-semibold text-foreground transition-colors hover:border-brand-orange/50 hover:text-brand-orange-bright sm:hidden"
+            >
+              Sign in
+            </Link>
+          ) : null}
           <button
             type="button"
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-foreground transition-colors hover:bg-brand-orange hover:text-primary-foreground"
@@ -319,6 +330,16 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           <li className="hidden sm:block">
             <NavPricingLink className="inline-flex min-h-11 items-center font-semibold text-brand-orange-bright transition-colors hover:text-brand-orange" />
           </li>
+          {!user ? (
+            <li>
+              <Link
+                href="/login"
+                className="inline-flex min-h-11 items-center rounded-full border border-brand-border px-4 text-sm font-semibold text-foreground transition-colors hover:border-brand-orange/50 hover:text-brand-orange-bright"
+              >
+                Sign in
+              </Link>
+            </li>
+          ) : null}
         </ul>
       </div>
 
@@ -333,7 +354,8 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           />
           <div
             id="mobile-nav-menu"
-            className="fixed inset-x-0 top-14 z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem))] overflow-y-auto overscroll-contain border-b border-brand-border bg-background/95 backdrop-blur-xl px-4 py-4 shadow-lg md:hidden"
+            data-scroll-lock-scrollable
+            className="fixed inset-x-0 top-[calc(3.5rem+var(--safe-top))] z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem-var(--safe-top)))] overflow-y-auto overscroll-contain border-b border-brand-border bg-background/95 backdrop-blur-xl px-4 py-4 shadow-lg md:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile navigation menu"
@@ -394,6 +416,16 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
                         <p className="truncate text-xs text-foreground/50">{user.email}</p>
                       </div>
                     </div>
+                  </li>
+                  <li>
+                    <Link
+                      href="/account"
+                      className="flex min-h-11 items-center gap-2.5 rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <User className="h-4 w-4" aria-hidden />
+                      Account
+                    </Link>
                   </li>
                   <li>
                     <Link

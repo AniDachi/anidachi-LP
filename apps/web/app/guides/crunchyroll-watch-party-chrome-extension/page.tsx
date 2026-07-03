@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
 import {
   PRICING_ASYNC_HOST_SNIPPET,
@@ -145,25 +146,28 @@ export default function CrunchyrollExtensionsPage() {
       >
         Quick Comparison
       </h2>
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-brand-border">
-          <thead>
-            <tr className="bg-brand-surface">
-              <th className="border border-brand-border px-3 py-2 text-left">Extension</th>
-              <th className="border border-brand-border px-3 py-2 text-left">Async</th>
-              <th className="border border-brand-border px-3 py-2 text-left">Auto-detect</th>
-              <th className="border border-brand-border px-3 py-2 text-left">Progress</th>
-              <th className="border border-brand-border px-3 py-2 text-left">Price</th>
-            </tr>
-          </thead>
-          <tbody className="text-foreground/80">
-            <tr><td className="border border-brand-border px-3 py-2 font-medium">AniDachi</td><td className="border border-brand-border px-3 py-2">Yes</td><td className="border border-brand-border px-3 py-2">Yes</td><td className="border border-brand-border px-3 py-2">Yes</td><td className="border border-brand-border px-3 py-2">{PRICING_EARLY_ACCESS_PRICE}</td></tr>
-            <tr className="bg-brand-surface"><td className="border border-brand-border px-3 py-2 font-medium">CR Party</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">Free</td></tr>
-            <tr><td className="border border-brand-border px-3 py-2 font-medium">Teleparty</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">Freemium</td></tr>
-            <tr className="bg-brand-surface"><td className="border border-brand-border px-3 py-2 font-medium">Roll Together</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">No</td><td className="border border-brand-border px-3 py-2">Free</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <ResponsiveCompareTable
+        columns={[
+          { id: "anidachi", label: "AniDachi", highlight: true },
+          { id: "cr-party", label: "CR Party" },
+          { id: "teleparty", label: "Teleparty" },
+          { id: "roll-together", label: "Roll Together" },
+        ]}
+        rows={[
+          { feature: "Async", values: { anidachi: "yes", "cr-party": "no", teleparty: "no", "roll-together": "no" } },
+          { feature: "Auto-detect", values: { anidachi: "yes", "cr-party": "no", teleparty: "no", "roll-together": "no" } },
+          { feature: "Progress", values: { anidachi: "yes", "cr-party": "no", teleparty: "no", "roll-together": "no" } },
+          {
+            feature: "Price",
+            values: {
+              anidachi: PRICING_EARLY_ACCESS_PRICE,
+              "cr-party": "Free",
+              teleparty: "Freemium",
+              "roll-together": "Free",
+            },
+          },
+        ]}
+      />
 
       <h2
         id="related"

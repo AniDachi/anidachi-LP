@@ -103,10 +103,13 @@ export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: n
             Watch anime with friends on Crunchyroll — synced, in chat, across
             time zones.
           </p>
+          <p className="mx-auto mb-6 max-w-xl text-sm text-foreground/45 md:hidden">
+            Watch parties run in desktop Chrome — manage invites and your account here on mobile.
+          </p>
 
           <div className="mb-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
-              size="lg"
+              size="touch"
               className="w-full bg-brand-orange px-8 text-base font-semibold text-primary-foreground glow-orange transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange-lg sm:w-auto"
               onClick={() => {
                 trackConversion("cta_click", {
@@ -129,7 +132,7 @@ export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: n
             </Button>
             <Button
               asChild
-              size="lg"
+              size="touch"
               variant="ghost"
               className="w-full border border-brand-border bg-transparent px-8 text-base font-semibold text-foreground/70 transition-all duration-300 hover:bg-brand-orange hover:text-primary-foreground sm:w-auto"
             >
