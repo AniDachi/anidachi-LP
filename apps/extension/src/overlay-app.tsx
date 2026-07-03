@@ -56,7 +56,6 @@ import {
 import { useGhostCam, type GhostVideo, type LiveVoiceStatus } from "./ghost-cam";
 import { getHotkeyAction } from "./hotkeys";
 import type { IncomingP2PSignal } from "./media-types";
-import { selectP2PMediaParticipants } from "./p2p-media";
 import {
   createRoomInvite,
   listInviteTargets,
@@ -646,10 +645,16 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       visibleParticipants.find((item) => item.id === currentParticipant.id)?.cameraEnabled,
   );
   const localTryingMedia = Boolean(camsEnabled && currentParticipant && roomMediaSeatLimit > 0);
-  const mediaParticipants = currentParticipant
-    ? selectP2PMediaParticipants(visibleParticipants, currentParticipant.id, localTryingMedia)
+  // Camera bubbles show camera publishers (plus the local placeholder while
+  // the camera is starting). Voice-only mesh members deliberately get no
+  // bubble — P2P membership lives in useGhostCam, not here.
+  const displayedCameraParticipants = currentParticipant
+    ? visibleParticipants.filter(
+        (item) =>
+          item.cameraEnabled ||
+          (localTryingMedia && item.id === currentParticipant.id),
+      )
     : [];
-  const displayedCameraParticipants = mediaParticipants.length ? mediaParticipants : [];
   const liveMediaAvailable =
     roomMediaSeatLimit > 0 &&
     (localHasMediaSeat || occupiedMediaSeatCount < roomMediaSeatLimit);

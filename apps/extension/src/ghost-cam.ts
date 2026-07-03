@@ -78,18 +78,14 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const iceAuthRef = useRef<{ roomId: string; roomToken: string } | null>(null);
   iceAuthRef.current = roomId && roomToken ? { roomId, roomToken } : null;
 
+  // Live-voice participants: remotes that announced voice-start, plus the
+  // local user while push-to-talk is held. selectP2PMediaParticipants pairs a
+  // talking participant with everyone in the room, so nobody else needs to be
+  // force-added here.
   const getVoiceParticipantIds = useCallback((activeParticipant: Participant) => {
     const voiceParticipantIds = new Set(remoteVoiceParticipantIdsRef.current);
     if (voiceTalkActiveRef.current) {
       voiceParticipantIds.add(activeParticipant.id);
-      const sourceParticipants = participantsRef.current.length
-        ? participantsRef.current
-        : [activeParticipant];
-      for (const item of sourceParticipants) {
-        if (item.id !== activeParticipant.id) {
-          voiceParticipantIds.add(item.id);
-        }
-      }
     }
     return voiceParticipantIds;
   }, []);
