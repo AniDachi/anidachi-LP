@@ -70,6 +70,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const sendP2PSignalRef = useRef(sendP2PSignal);
   const sourceGenerationRef = useRef(sourceGeneration);
   const voiceTalkActiveRef = useRef(voiceTalkActive);
+  const remoteVoiceParticipantIdsRef = useRef<Set<string>>(new Set());
   const lastSignalSequenceRef = useRef(0);
   const participantId = participant?.id ?? null;
   // Read at fetch time so ICE refreshes use the current room token without
@@ -77,14 +78,38 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const iceAuthRef = useRef<{ roomId: string; roomToken: string } | null>(null);
   iceAuthRef.current = roomId && roomToken ? { roomId, roomToken } : null;
 
+  // Live-voice participants: remotes that announced voice-start, plus the
+  // local user while push-to-talk is held. selectP2PMediaParticipants pairs a
+  // talking participant with everyone in the room, so nobody else needs to be
+  // force-added here.
+  const getVoiceParticipantIds = useCallback((activeParticipant: Participant) => {
+    const voiceParticipantIds = new Set(remoteVoiceParticipantIdsRef.current);
+    if (voiceTalkActiveRef.current) {
+      voiceParticipantIds.add(activeParticipant.id);
+    }
+    return voiceParticipantIds;
+  }, []);
+
   const getMediaParticipants = useCallback(
     (activeParticipant: Participant) =>
       selectP2PMediaParticipants(
         participantsRef.current.length ? participantsRef.current : [activeParticipant],
         activeParticipant.id,
         cameraEnabledRef.current,
+        getVoiceParticipantIds(activeParticipant),
       ),
-    [],
+    [getVoiceParticipantIds],
+  );
+
+  const updateControllerParticipants = useCallback(
+    (activeParticipant: Participant | null = participantRef.current) => {
+      if (!activeParticipant) {
+        controllerRef.current?.updateParticipants([]);
+        return;
+      }
+      controllerRef.current?.updateParticipants(getMediaParticipants(activeParticipant));
+    },
+    [getMediaParticipants],
   );
 
   useEffect(() => {
@@ -130,6 +155,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     if (!shouldConnect || !roomId || !participantId) {
       controllerRef.current?.disconnect();
       controllerRef.current = null;
+      remoteVoiceParticipantIdsRef.current.clear();
       setVideos([]);
       setActiveSpeakerIds([]);
       setVoiceStatus("idle");
@@ -144,6 +170,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
       return;
     }
     const sessionParticipant: Participant = activeParticipant;
+    remoteVoiceParticipantIdsRef.current.clear();
     setVoiceStatus("connecting");
 
     async function connectP2P() {
@@ -178,6 +205,14 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
       });
 
       controllerRef.current = controller;
+      rememberPendingVoiceParticipants(
+        incomingP2PSignalsRef.current,
+        remoteVoiceParticipantIdsRef.current,
+        participantsRef.current.length ? participantsRef.current : [sessionParticipant],
+        sessionParticipant.id,
+        roomGeneration,
+        sourceGeneration,
+      );
       controller.updateParticipants(getMediaParticipants(sessionParticipant));
       replayPendingP2PSignals(
         controller,
@@ -222,14 +257,8 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
       return;
     }
 
-    controllerRef.current?.updateParticipants(
-      selectP2PMediaParticipants(
-        participants.length ? participants : [activeParticipant],
-        activeParticipant.id,
-        cameraEnabledRef.current,
-      ),
-    );
-  }, [participantId, participants]);
+    updateControllerParticipants(activeParticipant);
+  }, [participantId, participants, updateControllerParticipants]);
 
   useEffect(() => {
     void controllerRef.current?.setCameraEnabled(cameraEnabled);
@@ -242,23 +271,21 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
       return;
     }
 
-    controllerRef.current?.updateParticipants(
-      selectP2PMediaParticipants(
-        participantsRef.current.length ? participantsRef.current : [activeParticipant],
-        activeParticipant.id,
-        cameraEnabled,
-      ),
-    );
-  }, [cameraEnabled, participantId]);
+    updateControllerParticipants(activeParticipant);
+  }, [cameraEnabled, participantId, updateControllerParticipants]);
 
   useEffect(() => {
     if (!voiceTalkActive) {
-      void controllerRef.current?.stopVoiceTalk();
+      void (async () => {
+        await controllerRef.current?.stopVoiceTalk();
+        updateControllerParticipants();
+      })();
       return;
     }
 
+    updateControllerParticipants();
     void controllerRef.current?.startVoiceTalk();
-  }, [voiceTalkActive]);
+  }, [updateControllerParticipants, voiceTalkActive]);
 
   useEffect(() => {
     const controller = controllerRef.current;
@@ -282,17 +309,41 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         continue;
       }
 
+      const activeParticipant = participantRef.current;
+      const activeParticipants = participantsRef.current.length
+        ? participantsRef.current
+        : activeParticipant
+          ? [activeParticipant]
+          : [];
+      if (!participantId || !activeParticipant) {
+        continue;
+      }
+
+      if (!activeParticipants.some((participant) => participant.id === item.fromUserId)) {
+        continue;
+      }
+
+      if (item.signal.kind === "voice-start") {
+        remoteVoiceParticipantIdsRef.current.add(item.fromUserId);
+        updateControllerParticipants(activeParticipant);
+        void controller.handleSignal(item.fromUserId, item.signal);
+        continue;
+      }
+
+      if (item.signal.kind === "voice-stop") {
+        void controller.handleSignal(item.fromUserId, item.signal);
+        remoteVoiceParticipantIdsRef.current.delete(item.fromUserId);
+        updateControllerParticipants(activeParticipant);
+        continue;
+      }
+
       if (
-        participantId &&
         !canReceiveP2PSignalFromParticipant(
-          participantsRef.current.length
-            ? participantsRef.current
-            : participantRef.current
-              ? [participantRef.current]
-              : [],
+          activeParticipants,
           participantId,
           item.fromUserId,
           cameraEnabledRef.current,
+          getVoiceParticipantIds(activeParticipant),
         )
       ) {
         continue;
@@ -300,7 +351,12 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
 
       void controller.handleSignal(item.fromUserId, item.signal);
     }
-  }, [incomingP2PSignals, participantId]);
+  }, [
+    getVoiceParticipantIds,
+    incomingP2PSignals,
+    participantId,
+    updateControllerParticipants,
+  ]);
 
   useEffect(() => {
     if (!shouldConnect) {
@@ -354,6 +410,30 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     voiceMessage,
     voiceStatus,
   };
+}
+
+function rememberPendingVoiceParticipants(
+  incomingP2PSignals: IncomingP2PSignal[],
+  remoteVoiceParticipantIds: Set<string>,
+  participants: Participant[],
+  localParticipantId: string,
+  roomGeneration: number,
+  sourceGeneration: number,
+): void {
+  const participantIds = new Set(participants.map((participant) => participant.id));
+  for (const item of incomingP2PSignals) {
+    if (!p2pSignalMatchesActiveGeneration(item, roomGeneration, sourceGeneration)) {
+      continue;
+    }
+    if (item.fromUserId === localParticipantId || !participantIds.has(item.fromUserId)) {
+      continue;
+    }
+    if (item.signal.kind === "voice-start") {
+      remoteVoiceParticipantIds.add(item.fromUserId);
+    } else if (item.signal.kind === "voice-stop") {
+      remoteVoiceParticipantIds.delete(item.fromUserId);
+    }
+  }
 }
 
 function replayPendingP2PSignals(

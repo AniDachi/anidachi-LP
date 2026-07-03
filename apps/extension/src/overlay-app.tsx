@@ -31,14 +31,17 @@ import { CurrentResourcePanel } from "./current-resource-panel";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
 import {
   clearDebugLog,
-  getCompactDebugLogText,
   getDebugEntries,
-  getDebugLogText,
   logDebug,
   playbackStateDebugSnapshot,
   roomEventDebugSnapshot,
   videoDebugSnapshot,
 } from "./debug-log";
+import {
+  clearDiagnosticsFromPage,
+  saveDiagnosticsFromPage,
+  type DiagnosticMode,
+} from "./diagnostic-log";
 import {
   DEFAULT_GHOST_CAM_SIZE_STEP,
   GHOST_CAM_SIZE_MAX_STEP,
@@ -53,7 +56,6 @@ import {
 import { useGhostCam, type GhostVideo, type LiveVoiceStatus } from "./ghost-cam";
 import { getHotkeyAction } from "./hotkeys";
 import type { IncomingP2PSignal } from "./media-types";
-import { selectP2PMediaParticipants } from "./p2p-media";
 import {
   createRoomInvite,
   listInviteTargets,
@@ -357,6 +359,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [voiceListening, setVoiceListening] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
   const [debugEntriesCount, setDebugEntriesCount] = useState(() => getDebugEntries().length);
+  const [diagnosticStatus, setDiagnosticStatus] = useState<string | null>(null);
   const [watchProgressStore, setWatchProgressStore] = useState<WatchProgressStore>(() =>
     createEmptyWatchProgressStore(),
   );
@@ -642,10 +645,16 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       visibleParticipants.find((item) => item.id === currentParticipant.id)?.cameraEnabled,
   );
   const localTryingMedia = Boolean(camsEnabled && currentParticipant && roomMediaSeatLimit > 0);
-  const mediaParticipants = currentParticipant
-    ? selectP2PMediaParticipants(visibleParticipants, currentParticipant.id, localTryingMedia)
+  // Camera bubbles show camera publishers (plus the local placeholder while
+  // the camera is starting). Voice-only mesh members deliberately get no
+  // bubble — P2P membership lives in useGhostCam, not here.
+  const displayedCameraParticipants = currentParticipant
+    ? visibleParticipants.filter(
+        (item) =>
+          item.cameraEnabled ||
+          (localTryingMedia && item.id === currentParticipant.id),
+      )
     : [];
-  const displayedCameraParticipants = mediaParticipants.length ? mediaParticipants : [];
   const liveMediaAvailable =
     roomMediaSeatLimit > 0 &&
     (localHasMediaSeat || occupiedMediaSeatCount < roomMediaSeatLimit);
@@ -3246,20 +3255,44 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     [sendInviteToTarget],
   );
 
-  const copyDebugLog = async (mode: "compact" | "full" = "compact") => {
-    logDebug("debug", "copy requested", {
+  const saveDiagnostics = async (mode: DiagnosticMode) => {
+    setDiagnosticStatus(`Saving ${mode}...`);
+    logDebug("debug", "diagnostics save requested", {
       mode,
       entries: getDebugEntries().length,
+      roomId,
+      status,
       video: videoDebugSnapshot(adapter.video),
     });
-    const text = mode === "compact" ? getCompactDebugLogText() : getDebugLogText();
-    await navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+
+    const response = await saveDiagnosticsFromPage(mode, {
+      mode,
+      url: location.href,
+      title: document.title,
+      visibilityState: document.visibilityState,
+      adapterId: adapter.id,
+      roomId,
+      status,
+      hasParticipant: Boolean(participant),
+      participantId: participant?.id,
+      video: videoDebugSnapshot(adapter.video),
+      pageDebug: { entries: getDebugEntries() },
+    });
+
+    if (!response.ok) {
+      setDiagnosticStatus(response.error);
+      return;
+    }
+
     setDebugEntriesCount(getDebugEntries().length);
+    setDiagnosticStatus(`Save dialog opened for ${response.filename ?? `${mode} diagnostics`}`);
   };
 
-  const clearDebug = () => {
+  const clearDebug = async () => {
     clearDebugLog();
+    await clearDiagnosticsFromPage().catch(() => undefined);
     setDebugEntriesCount(getDebugEntries().length);
+    setDiagnosticStatus("Logs cleared");
   };
 
   const sendReaction = useCallback(
@@ -4185,16 +4218,21 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
               <strong>{debugEntriesCount}</strong>
             </div>
             <div className="debug-actions">
-              <button className="button" type="button" onClick={() => copyDebugLog("compact")}>
-                Copy compact
+              <button className="button" type="button" onClick={() => saveDiagnostics("light")}>
+                Save light
               </button>
-              <button className="button" type="button" onClick={() => copyDebugLog("full")}>
-                Copy full
+              <button className="button" type="button" onClick={() => saveDiagnostics("full")}>
+                Save full
               </button>
               <button className="button" type="button" onClick={clearDebug}>
                 Clear
               </button>
             </div>
+            {diagnosticStatus ? (
+              <div className="debug-status" title={diagnosticStatus}>
+                {diagnosticStatus}
+              </div>
+            ) : null}
           </div>
 
           <div className="footnote">

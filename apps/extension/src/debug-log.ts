@@ -15,6 +15,7 @@ const CONSOLE_DEBUG_STORAGE_KEY = "anidachi:debug-console";
 const MAX_ENTRIES = 1200;
 const COMPACT_ENTRIES = 350;
 const PERSIST_DEBOUNCE_MS = 2000;
+const MAX_ENTRY_AGE_MS = 15 * 60_000;
 const STARTED_AT = performance.now();
 
 let sequence = 0;
@@ -33,9 +34,7 @@ export function logDebug(scope: string, message: string, data?: unknown): void {
   };
 
   entries.push(entry);
-  if (entries.length > MAX_ENTRIES) {
-    entries = entries.slice(entries.length - MAX_ENTRIES);
-  }
+  pruneEntries();
 
   persistEntries();
   if (shouldPrintDebugToConsole()) {
@@ -359,10 +358,22 @@ function loadEntries(): DebugEntry[] {
     }
 
     sequence = parsed.reduce((max, entry) => Math.max(max, entry.id), 0);
-    return parsed.slice(-MAX_ENTRIES);
+    return pruneDebugEntries(parsed).slice(-MAX_ENTRIES);
   } catch {
     return [];
   }
+}
+
+function pruneEntries(): void {
+  entries = pruneDebugEntries(entries).slice(-MAX_ENTRIES);
+}
+
+function pruneDebugEntries(source: DebugEntry[]): DebugEntry[] {
+  const cutoff = Date.now() - MAX_ENTRY_AGE_MS;
+  return source.filter((entry) => {
+    const timestamp = Date.parse(entry.at);
+    return Number.isNaN(timestamp) || timestamp >= cutoff;
+  });
 }
 
 function writeEntriesToStorage(): void {
@@ -469,9 +480,13 @@ function isUsefulCompactEntry(entry: DebugEntry): boolean {
     entry.scope.startsWith("room.") ||
     entry.scope.startsWith("sync.") ||
     entry.scope.startsWith("p2p.") ||
+    entry.scope.startsWith("identity") ||
+    entry.scope.startsWith("overlay.room") ||
     entry.scope.startsWith("overlay.server") ||
+    entry.scope.startsWith("overlay.status") ||
     entry.scope.startsWith("adapter.") ||
     entry.scope.startsWith("video.event") ||
+    entry.scope.startsWith("watch-library.") ||
     entry.scope.startsWith("main.media-method") ||
     entry.scope.startsWith("main.video-event") ||
     entry.scope.startsWith("debug")
