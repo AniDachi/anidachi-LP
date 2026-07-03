@@ -71,6 +71,7 @@ import {
   getMiniPanelBottomReservePx,
   type CrunchyrollPlayerChromeState,
 } from "./overlay-layout";
+import { getP2PMediaSessionState } from "./overlay-media-session";
 import { selectP2PMediaParticipants } from "./p2p-media";
 import {
   createRoomInvite,
@@ -672,9 +673,13 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const participantLimitText = `${participantCount}/${roomParticipantLimit} people`;
   const isHost = currentParticipant?.role === "host";
   const isConnected = status === "connected";
-  const p2pReady = Boolean(
-    roomId && isConnected && roomSnapshotReady && roomMediaSeatLimit > 0,
-  );
+  const { p2pReady, p2pSessionActive } = getP2PMediaSessionState({
+    participantId: currentParticipant?.id ?? null,
+    roomId,
+    roomMediaSeatLimit,
+    roomSnapshotReady,
+    status,
+  });
   const title = adapter.getTitle() ?? "HTML5 video";
   const messageComposerShieldVisible = messageComposerOpen || messageComposerShieldActive;
   const messageComposerShieldLatched = messageComposerShieldActive && !messageComposerOpen;
@@ -699,7 +704,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     return Math.max(0, Math.floor(roomQuota.remainingSeconds - quotaMeteredMsRef.current / 1000));
   }, [roomQuota, quotaDisplayTick]);
   const isCrunchyroll = adapter.id === "crunchyroll";
-  const cameraStackVisible = p2pReady && camsEnabled && displayedCameraParticipants.length > 0;
+  const cameraStackVisible =
+    p2pSessionActive && camsEnabled && displayedCameraParticipants.length > 0;
   const ghostCamSizePx = getResponsiveGhostCamSizePx(ghostCamSizeStep, {
     cameraCount: displayedCameraParticipants.length || 1,
     containerHeightPx: isCrunchyroll ? crunchyrollPlayerChrome.containerHeightPx : 0,
@@ -1262,7 +1268,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const ghostCamSession = useGhostCam({
     cameraEnabled: camsEnabled,
-    connected: p2pReady,
+    connected: p2pSessionActive,
     incomingP2PSignals,
     participants: visibleParticipants,
     roomId,
