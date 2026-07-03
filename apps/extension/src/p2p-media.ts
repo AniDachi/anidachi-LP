@@ -40,6 +40,14 @@ const P2P_VOICE_REACQUIRE_MAX_FAILURES = 3;
 const P2P_VOICE_STABLE_RESET_MS = 20_000;
 const P2P_SIGNAL_DEDUPE_TTL_MS = 30_000;
 const P2P_SIGNAL_DEDUPE_CAP = 240;
+/**
+ * When a participant stops publishing (camera off, voice released) keep the
+ * peer connection warm for this long instead of tearing it down. A camera
+ * re-toggle or the next push-to-talk then reuses the connected pair instead
+ * of paying a full ICE setup, and rapid camera flapping no longer churns the
+ * remote side. "bye" and disconnect still close immediately.
+ */
+const P2P_IDLE_PEER_LINGER_MS = 30_000;
 
 type P2PMediaKind = "audio" | "video";
 type P2PCameraState = "off" | "starting" | "live" | "recovering" | "unavailable";
@@ -431,20 +439,46 @@ export function classifyRemoteVideoActivity(
   return "stalled";
 }
 
+/**
+ * Publishing media is opt-in (camera seat, push-to-talk); receiving is not.
+ * A peer pair exists when media flows in at least one direction:
+ *  - video: the local side is in cam mode (wants/sends a camera) and the
+ *    remote camera is on — the reverse direction is evaluated symmetrically
+ *    on the remote's own side;
+ *  - voice: either side is a live-voice participant. Listeners without a
+ *    camera or cam mode must still get a connection to hear the talker.
+ * The local participant is part of the media set whenever it has at least
+ * one pair or publishes anything itself.
+ */
 export function selectP2PMediaParticipants(
   participants: Participant[],
   localParticipantId: string,
   localMediaWanted: boolean,
   voiceParticipantIds: ReadonlySet<string> = new Set(),
 ): Participant[] {
-  return participants.filter((participant) => {
-    const voiceParticipant = voiceParticipantIds.has(participant.id);
-    if (participant.id === localParticipantId) {
-      return localMediaWanted || participant.cameraEnabled || voiceParticipant;
-    }
+  const local = participants.find(
+    (participant) => participant.id === localParticipantId,
+  );
+  const localVoice = voiceParticipantIds.has(localParticipantId);
+  const localVideo = localMediaWanted || Boolean(local?.cameraEnabled);
+  const pairedRemoteIds = new Set(
+    participants
+      .filter(
+        (participant) =>
+          participant.id !== localParticipantId &&
+          ((localVideo && participant.cameraEnabled) ||
+            localVoice ||
+            voiceParticipantIds.has(participant.id)),
+      )
+      .map((participant) => participant.id),
+  );
+  const localIncluded = pairedRemoteIds.size > 0 || localVideo || localVoice;
 
-    return participant.cameraEnabled || voiceParticipant;
-  });
+  return participants.filter((participant) =>
+    participant.id === localParticipantId
+      ? localIncluded
+      : pairedRemoteIds.has(participant.id),
+  );
 }
 
 export function canReceiveP2PSignalFromParticipant(
@@ -491,6 +525,7 @@ interface P2PPeer {
   mediaSyncing: boolean;
   negotiationQueued: boolean;
   needsNegotiation: boolean;
+  pendingCloseTimerId: number | null;
   pendingIceCandidates: P2PIceCandidate[];
   pc: RTCPeerConnection;
   polite: boolean;
@@ -671,6 +706,14 @@ export class P2PMediaController {
         continue;
       }
 
+      // A peer awaiting its linger close is on the way out; restarting its
+      // ICE or renegotiating would just churn a connection nobody publishes
+      // on. If the participant returns, ensurePeer cancels the close and the
+      // next reconcile tick picks the peer up again.
+      if (peer.pendingCloseTimerId !== null) {
+        continue;
+      }
+
       const action = reconcilePeerAction(
         peer.pc.connectionState,
         peer.pc.iceConnectionState,
@@ -703,13 +746,9 @@ export class P2PMediaController {
       existingPeerIds: Array.from(this.peers.keys()),
     });
 
-    for (const [remoteId] of this.peers) {
+    for (const [remoteId, peer] of this.peers) {
       if (!remoteIdSet.has(remoteId)) {
-        logDebug("p2p.peer", "close missing participant", {
-          localParticipantId: this.localParticipant.id,
-          remoteUserId: remoteId,
-        });
-        this.closePeer(remoteId, false);
+        this.schedulePeerLingerClose(peer);
       }
     }
 
@@ -1948,6 +1987,9 @@ export class P2PMediaController {
   private ensurePeer(remoteUserId: string): P2PPeer {
     const existing = this.peers.get(remoteUserId);
     if (existing) {
+      // Any renewed use of the peer (participant re-published, signal arrived)
+      // aborts a pending linger close.
+      this.clearPeerLingerTimer(existing);
       return existing;
     }
 
@@ -1972,6 +2014,7 @@ export class P2PMediaController {
       mediaSyncing: false,
       negotiationQueued: false,
       needsNegotiation: false,
+      pendingCloseTimerId: null,
       pendingIceCandidates: [],
       pc,
       polite: isPoliteP2PPeer(this.localParticipant.id, remoteUserId),
@@ -2647,6 +2690,56 @@ export class P2PMediaController {
     ]);
   }
 
+  /**
+   * The participant stopped publishing toward us (camera off, voice released)
+   * or silently left. Stop expecting/rendering their video right away, but
+   * keep the connection warm for the linger window so the next camera toggle
+   * or push-to-talk reuses it. The remote's own audio element stays — a
+   * re-talk within the window flows into it without a new ontrack.
+   */
+  private schedulePeerLingerClose(peer: P2PPeer): void {
+    if (
+      this.disposed ||
+      this.peers.get(peer.remoteUserId) !== peer ||
+      peer.pc.signalingState === "closed" ||
+      peer.pendingCloseTimerId !== null
+    ) {
+      return;
+    }
+
+    peer.remoteVideoExpected = false;
+    peer.remoteVideoStallSamples = 0;
+    this.remoteVideoActivityByPeer.set(peer.remoteUserId, "not-expected");
+    this.remoteVideoStatsByPeer.delete(peer.remoteUserId);
+    this.removeVideo(peer.remoteUserId);
+    logDebug("p2p.peer", "schedule linger close", {
+      localParticipantId: this.localParticipant.id,
+      remoteUserId: peer.remoteUserId,
+      lingerMs: P2P_IDLE_PEER_LINGER_MS,
+    });
+    peer.pendingCloseTimerId = window.setTimeout(() => {
+      peer.pendingCloseTimerId = null;
+      if (this.disposed || this.peers.get(peer.remoteUserId) !== peer) {
+        return;
+      }
+
+      logDebug("p2p.peer", "close idle participant after linger", {
+        localParticipantId: this.localParticipant.id,
+        remoteUserId: peer.remoteUserId,
+      });
+      this.closePeer(peer.remoteUserId, false);
+    }, P2P_IDLE_PEER_LINGER_MS);
+  }
+
+  private clearPeerLingerTimer(peer: P2PPeer): void {
+    if (peer.pendingCloseTimerId === null) {
+      return;
+    }
+
+    window.clearTimeout(peer.pendingCloseTimerId);
+    peer.pendingCloseTimerId = null;
+  }
+
   private closePeer(remoteUserId: string, notifyRemote: boolean): void {
     const peer = this.peers.get(remoteUserId);
     if (!peer) {
@@ -2659,6 +2752,7 @@ export class P2PMediaController {
 
     this.peers.delete(remoteUserId);
     this.clearPeerDisconnectTimer(peer);
+    this.clearPeerLingerTimer(peer);
     peer.pc.close();
     this.removeVideo(remoteUserId);
     this.removeAudio(remoteUserId);

@@ -189,6 +189,7 @@ function installStatsPeer(
       iceConnectionState: "connected",
       signalingState: "stable",
     },
+    pendingCloseTimerId: null,
     pendingIceCandidates: [],
     polite: true,
     recentSignalFingerprints: new Map(),
@@ -1103,11 +1104,14 @@ describe("P2P media participant selection", () => {
       participant("viewer-c", false),
     ];
 
+    // A chat-only local (no cam mode, no voice) publishes nothing and — per
+    // the cam-mode UI — renders no camera bubbles either, so it needs no
+    // peers at all.
     expect(
       selectP2PMediaParticipants(participants, "viewer-c", false).map(
         (item) => item.id,
       ),
-    ).toEqual(["host", "viewer-a"]);
+    ).toEqual([]);
   });
 
   it("includes the local participant while they are trying to take a media seat", () => {
@@ -1123,13 +1127,15 @@ describe("P2P media participant selection", () => {
     ).toEqual(["host", "viewer"]);
   });
 
-  it("includes voice-only participants without requiring their camera", () => {
+  it("pairs a talking participant with everyone in the room", () => {
     const participants = [
       participant("host", false),
       participant("viewer-a", false),
       participant("viewer-b", false),
     ];
 
+    // Voice is room-wide: while the local user talks, every participant must
+    // get a peer to hear them — cameras and cam seats are not required.
     expect(
       selectP2PMediaParticipants(
         participants,
@@ -1137,7 +1143,26 @@ describe("P2P media participant selection", () => {
         false,
         new Set(["host", "viewer-a"]),
       ).map((item) => item.id),
-    ).toEqual(["host", "viewer-a"]);
+    ).toEqual(["host", "viewer-a", "viewer-b"]);
+  });
+
+  it("pairs a silent cam-less listener only with the talker", () => {
+    const participants = [
+      participant("host", false),
+      participant("viewer-a", true),
+      participant("viewer-b", false),
+    ];
+
+    // The listener connects to the talker to hear them, but does not pick up
+    // camera publishers: seeing cams still requires being in cam mode.
+    expect(
+      selectP2PMediaParticipants(
+        participants,
+        "viewer-b",
+        false,
+        new Set(["host"]),
+      ).map((item) => item.id),
+    ).toEqual(["host", "viewer-b"]);
   });
 
   it("drops incoming P2P signals from chat-only participants", () => {
@@ -1189,5 +1214,172 @@ describe("P2P media participant selection", () => {
         voiceParticipantIds,
       ),
     ).toBe(true);
+  });
+
+  it("delivers talker signals to a cam-less listener in both directions", () => {
+    const participants = [
+      participant("host", false),
+      participant("viewer", false),
+    ];
+    const onlyHostTalks = new Set(["host"]);
+
+    // The listener holds no camera, no cam seat, and is not talking — they
+    // must still complete the handshake with the talker to hear them.
+    expect(
+      canReceiveP2PSignalFromParticipant(
+        participants,
+        "viewer",
+        "host",
+        false,
+        onlyHostTalks,
+      ),
+    ).toBe(true);
+    expect(
+      canReceiveP2PSignalFromParticipant(
+        participants,
+        "host",
+        "viewer",
+        false,
+        onlyHostTalks,
+      ),
+    ).toBe(true);
+  });
+});
+
+class FakeRtcTransceiver {
+  currentDirection: RTCRtpTransceiverDirection | null = null;
+  direction: RTCRtpTransceiverDirection;
+  mid: string | null = null;
+  readonly receiver: { track: { kind: string } };
+  readonly sender: {
+    replaceTrack: ReturnType<typeof vi.fn>;
+    track: MediaStreamTrack | null;
+  };
+
+  constructor(kind: "audio" | "video", direction: RTCRtpTransceiverDirection) {
+    this.direction = direction;
+    this.receiver = { track: { kind } };
+    this.sender = { replaceTrack: vi.fn(async () => undefined), track: null };
+  }
+}
+
+class FakeRtcPeerConnection extends EventTarget {
+  static instances: FakeRtcPeerConnection[] = [];
+
+  connectionState: RTCPeerConnectionState = "new";
+  iceConnectionState: RTCIceConnectionState = "new";
+  localDescription: RTCSessionDescription | null = null;
+  remoteDescription: RTCSessionDescription | null = null;
+  signalingState: RTCSignalingState = "stable";
+  readonly close = vi.fn(() => {
+    this.signalingState = "closed";
+  });
+  readonly restartIce = vi.fn();
+  readonly setConfiguration = vi.fn();
+  private readonly transceivers: FakeRtcTransceiver[] = [];
+
+  constructor() {
+    super();
+    FakeRtcPeerConnection.instances.push(this);
+  }
+
+  addTransceiver(
+    kind: "audio" | "video",
+    init?: RTCRtpTransceiverInit,
+  ): FakeRtcTransceiver {
+    const transceiver = new FakeRtcTransceiver(kind, init?.direction ?? "sendrecv");
+    this.transceivers.push(transceiver);
+    return transceiver;
+  }
+
+  async createOffer(): Promise<RTCSessionDescriptionInit> {
+    return { type: "offer", sdp: "v=0\r\n" };
+  }
+
+  async getStats(): Promise<RTCStatsReport> {
+    return statsReportFrom([]);
+  }
+
+  getTransceivers(): FakeRtcTransceiver[] {
+    return this.transceivers;
+  }
+
+  async setLocalDescription(description: RTCSessionDescriptionInit): Promise<void> {
+    this.localDescription = description as RTCSessionDescription;
+  }
+}
+
+describe("P2P idle peer linger", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    FakeRtcPeerConnection.instances = [];
+    vi.stubGlobal("RTCPeerConnection", FakeRtcPeerConnection);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("keeps an idle peer warm for the linger window before closing it", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    expect(pc).toBeDefined();
+
+    harness.controller.updateParticipants([]);
+    await vi.advanceTimersByTimeAsync(0);
+    // The peer survives the publish stop; only the video expectation drops.
+    expect(pc?.close).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(29_000);
+    expect(pc?.close).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(pc?.close).toHaveBeenCalledTimes(1);
+
+    harness.controller.disconnect();
+  });
+
+  it("cancels the linger close when the participant publishes again", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    harness.controller.updateParticipants([]);
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    // The camera re-toggle reused the existing connection: no close and no
+    // second RTCPeerConnection.
+    expect(pc?.close).not.toHaveBeenCalled();
+    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
+
+    harness.controller.disconnect();
+  });
+
+  it("still closes a lingering peer immediately on bye", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    harness.controller.updateParticipants([]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    await harness.controller.handleSignal("viewer", { kind: "bye" });
+    expect(pc?.close).toHaveBeenCalledTimes(1);
+
+    // The cleared linger timer must not fire against a recreated peer later.
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(pc?.close).toHaveBeenCalledTimes(1);
+
+    harness.controller.disconnect();
   });
 });
