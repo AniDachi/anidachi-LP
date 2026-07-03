@@ -2692,10 +2692,12 @@ export class P2PMediaController {
 
   /**
    * The participant stopped publishing toward us (camera off, voice released)
-   * or silently left. Stop expecting/rendering their video right away, but
-   * keep the connection warm for the linger window so the next camera toggle
-   * or push-to-talk reuses it. The remote's own audio element stays — a
-   * re-talk within the window flows into it without a new ontrack.
+   * or silently left. Stop expecting their video right away, but keep the
+   * connection warm for the linger window so the next camera toggle or
+   * push-to-talk reuses it. The media elements stay too: a reused peer never
+   * re-fires ontrack, so removing them here would orphan resumed media — the
+   * UI already hides the bubble via the participant's cameraEnabled flag, and
+   * closePeer cleans the elements up when the linger expires.
    */
   private schedulePeerLingerClose(peer: P2PPeer): void {
     if (
@@ -2711,7 +2713,6 @@ export class P2PMediaController {
     peer.remoteVideoStallSamples = 0;
     this.remoteVideoActivityByPeer.set(peer.remoteUserId, "not-expected");
     this.remoteVideoStatsByPeer.delete(peer.remoteUserId);
-    this.removeVideo(peer.remoteUserId);
     logDebug("p2p.peer", "schedule linger close", {
       localParticipantId: this.localParticipant.id,
       remoteUserId: peer.remoteUserId,
