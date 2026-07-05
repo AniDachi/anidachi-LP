@@ -165,6 +165,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     }
 
     let disposed = false;
+    let ownedController: P2PMediaController | null = null;
     const activeParticipant = participantRef.current;
     if (!activeParticipant || activeParticipant.id !== participantId) {
       return;
@@ -204,6 +205,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         sendSignal: (toUserId, signal) => sendP2PSignalRef.current(toUserId, signal),
       });
 
+      ownedController = controller;
       controllerRef.current = controller;
       rememberPendingVoiceParticipants(
         incomingP2PSignalsRef.current,
@@ -233,8 +235,10 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
 
     return () => {
       disposed = true;
-      controllerRef.current?.disconnect();
-      controllerRef.current = null;
+      if (ownedController && controllerRef.current === ownedController) {
+        ownedController.disconnect();
+        controllerRef.current = null;
+      }
     };
   }, [
     getMediaParticipants,

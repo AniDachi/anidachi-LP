@@ -10,3 +10,10 @@ export function getOverlayMountDecision(
 
   return mountedVideo === nextVideo ? "relocate" : "update";
 }
+
+export function shouldRefreshSameVideoAdapter(
+  previous: { id: string; fingerprint: string },
+  next: { id: string; fingerprint: string },
+): boolean {
+  return previous.id !== next.id || previous.fingerprint !== next.fingerprint;
+}

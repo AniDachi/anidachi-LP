@@ -22,14 +22,23 @@ import {
   parseAccountFilterFromJson,
   filterIgCredentials,
   filterTtCredentials,
+  filterYtCredentials,
   validateFilteredIds,
 } from "@/lib/account-selection";
+import { getAllCredentials as getAllYtCredentials } from "@/lib/youtube/storage";
+import {
+  uploadShortVideoFromUrl,
+  type YouTubeCredentials,
+} from "@/lib/youtube/api";
+import { adaptCaptionForYouTube } from "@/lib/youtube/caption";
+
+export const maxDuration = 300;
 
 const TT_POLL_INTERVAL_MS = 3000;
 const TT_POLL_TIMEOUT_MS = 2 * 60 * 1000;
 
 interface AccountResult {
-  platform: "instagram" | "tiktok";
+  platform: "instagram" | "tiktok" | "youtube";
   accountId: string;
   username: string;
   success: boolean;
@@ -138,6 +147,40 @@ async function publishToTtAccount(
   }
 }
 
+async function publishToYtAccount(
+  creds: YouTubeCredentials,
+  videoUrl: string,
+  caption: string,
+): Promise<AccountResult> {
+  try {
+    const { title, description } = adaptCaptionForYouTube(caption);
+    const result = await uploadShortVideoFromUrl(
+      creds,
+      videoUrl,
+      title,
+      description,
+    );
+    return {
+      platform: "youtube",
+      accountId: creds.channelId,
+      username: creds.channelTitle,
+      success: true,
+      mediaId: result.videoId,
+      status: result.status,
+    };
+  } catch (err) {
+    const e = err as Error & { status?: number };
+    return {
+      platform: "youtube",
+      accountId: creds.channelId,
+      username: creds.channelTitle,
+      success: false,
+      error: e.message || "Failed to publish to YouTube",
+      needsReconnect: e.status === 401,
+    };
+  }
+}
+
 function blobUrlToProxyUrl(blobUrl: string, origin: string): string {
   try {
     const parsed = new URL(blobUrl);
@@ -154,13 +197,15 @@ export async function POST(request: NextRequest) {
 
   let igCreds: InstagramCredentials[] = [];
   let ttCreds: TikTokCredentials[] = [];
+  let ytCreds: YouTubeCredentials[] = [];
   const ttCredsConnected: TikTokCredentials[] = [];
 
   try { igCreds = await ensureAllIg(); } catch { /* none */ }
   try { ttCreds = await getAllTtCredentials(); } catch { /* none */ }
+  try { ytCreds = await getAllYtCredentials(); } catch { /* none */ }
   ttCredsConnected.push(...ttCreds);
 
-  if (igCreds.length === 0 && ttCreds.length === 0) {
+  if (igCreds.length === 0 && ttCreds.length === 0 && ytCreds.length === 0) {
     return NextResponse.json(
       { error: "No accounts connected", code: "RECONNECT" },
       { status: 401 },
@@ -172,6 +217,7 @@ export async function POST(request: NextRequest) {
     caption: string;
     instagramAccountIds?: string[];
     tiktokAccountIds?: string[];
+    youtubeChannelIds?: string[];
   };
   try {
     body = await request.json();
@@ -188,6 +234,7 @@ export async function POST(request: NextRequest) {
   if (accountFilter.hasAccountFilter) {
     const filteredIg = filterIgCredentials(igCreds, accountFilter.instagramAccountIds);
     const filteredTt = filterTtCredentials(ttCreds, accountFilter.tiktokAccountIds);
+    const filteredYt = filterYtCredentials(ytCreds, accountFilter.youtubeChannelIds);
 
     const unknownIg = validateFilteredIds(
       accountFilter.instagramAccountIds,
@@ -197,14 +244,18 @@ export async function POST(request: NextRequest) {
       accountFilter.tiktokAccountIds,
       filteredTt.map((c) => c.openId),
     );
-    if (unknownIg.length > 0 || unknownTt.length > 0) {
+    const unknownYt = validateFilteredIds(
+      accountFilter.youtubeChannelIds,
+      filteredYt.map((c) => c.channelId),
+    );
+    if (unknownIg.length > 0 || unknownTt.length > 0 || unknownYt.length > 0) {
       return NextResponse.json(
-        { error: `Unknown account IDs: ${[...unknownIg, ...unknownTt].join(", ")}`, code: "INVALID_INPUT" },
+        { error: `Unknown account IDs: ${[...unknownIg, ...unknownTt, ...unknownYt].join(", ")}`, code: "INVALID_INPUT" },
         { status: 400 },
       );
     }
 
-    if (filteredIg.length === 0 && filteredTt.length === 0) {
+    if (filteredIg.length === 0 && filteredTt.length === 0 && filteredYt.length === 0) {
       return NextResponse.json(
         { error: "No accounts selected", code: "INVALID_INPUT" },
         { status: 400 },
@@ -213,6 +264,7 @@ export async function POST(request: NextRequest) {
 
     igCreds = filteredIg;
     ttCreds = filteredTt;
+    ytCreds = filteredYt;
   }
 
   if (
@@ -274,6 +326,7 @@ export async function POST(request: NextRequest) {
   const allResults = await Promise.all([
     ...igCreds.map((creds) => publishToIgAccount(creds, videoUrl, trimmedCaption)),
     ...ttCreds.map((creds) => publishToTtAccount(creds, proxyUrl, trimmedCaption)),
+    ...ytCreds.map((creds) => publishToYtAccount(creds, videoUrl, trimmedCaption)),
   ]);
 
   const allFailed = allResults.every((r) => !r.success);

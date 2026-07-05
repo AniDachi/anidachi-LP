@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
       status: a.status,
       step: a.step,
       mediaId: a.mediaId,
+      videoId: a.videoId,
       error: a.error,
     })),
   });

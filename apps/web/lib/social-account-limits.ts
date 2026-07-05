@@ -4,3 +4,4 @@
  */
 export const MAX_INSTAGRAM_ACCOUNTS = 5;
 export const MAX_TIKTOK_ACCOUNTS = 5;
+export const MAX_YOUTUBE_ACCOUNTS = 5;
