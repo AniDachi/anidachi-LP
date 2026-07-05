@@ -94,10 +94,10 @@ export default function TermsPage() {
                 . All subscriptions are refundable — if you want a refund or to
                 cancel, email us at{" "}
                 <a
-                  href="mailto:goshan.tolochko@gmail.com"
+                  href="mailto:anidachi.app@gmail.com"
                   className="text-brand-orange hover:underline"
                 >
-                  goshan.tolochko@gmail.com
+                  anidachi.app@gmail.com
                 </a>{" "}
                 and we will process it promptly.
               </p>
@@ -197,10 +197,10 @@ export default function TermsPage() {
                 If you have questions about these Terms of Service, contact us
                 at{" "}
                 <a
-                  href="mailto:goshan.tolochko@gmail.com"
+                  href="mailto:anidachi.app@gmail.com"
                   className="text-brand-orange hover:underline"
                 >
-                  goshan.tolochko@gmail.com
+                  anidachi.app@gmail.com
                 </a>
                 .
               </p>

@@ -115,12 +115,14 @@ export interface UploadShortVideoInput {
   mimeType: string;
   title: string;
   description: string;
+  privacyStatus?: "private";
 }
 
 export async function uploadShortVideo(
   creds: YouTubeCredentials,
   input: UploadShortVideoInput,
-): Promise<{ videoId: string; status: "published" }> {
+): Promise<{ videoId: string; status: "private" }> {
+  const privacyStatus = "private" as const;
   try {
     const { oauth2 } = await ensureAuthClient(creds);
     const youtube = google.youtube({ version: "v3", auth: oauth2 });
@@ -134,7 +136,7 @@ export async function uploadShortVideo(
           categoryId: "22",
         },
         status: {
-          privacyStatus: "public",
+          privacyStatus,
         },
       },
       media: {
@@ -148,7 +150,7 @@ export async function uploadShortVideo(
       throw new YouTubeApiError("YouTube upload succeeded but no video ID returned", 500);
     }
 
-    return { videoId, status: "published" };
+    return { videoId, status: privacyStatus };
   } catch (err) {
     if (isInvalidGrant(err)) {
       throw new YouTubeApiError("YouTube token expired — reconnect account", 401);
@@ -167,7 +169,7 @@ export async function uploadShortVideoFromUrl(
   videoUrl: string,
   title: string,
   description: string,
-): Promise<{ videoId: string; status: "published" }> {
+): Promise<{ videoId: string; status: "private" }> {
   const response = await fetch(videoUrl);
   if (!response.ok) {
     throw new YouTubeApiError(`Failed to fetch video from storage (${response.status})`, 500);

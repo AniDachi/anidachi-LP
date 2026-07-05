@@ -150,10 +150,10 @@ export default function PrivacyPage() {
                 correct, delete, or export your personal data. To exercise any of
                 these rights, email us at{" "}
                 <a
-                  href="mailto:goshan.tolochko@gmail.com"
+                  href="mailto:anidachi.app@gmail.com"
                   className="text-brand-orange hover:underline"
                 >
-                  goshan.tolochko@gmail.com
+                  anidachi.app@gmail.com
                 </a>
                 .
               </p>
@@ -201,10 +201,10 @@ export default function PrivacyPage() {
               <p>
                 If you have questions about this Privacy Policy, contact us at{" "}
                 <a
-                  href="mailto:goshan.tolochko@gmail.com"
+                  href="mailto:anidachi.app@gmail.com"
                   className="text-brand-orange hover:underline"
                 >
-                  goshan.tolochko@gmail.com
+                  anidachi.app@gmail.com
                 </a>
                 .
               </p>

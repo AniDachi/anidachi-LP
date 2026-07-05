@@ -214,7 +214,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:goshan.tolochko@gmail.com"
+                  href="mailto:anidachi.app@gmail.com"
                   className="hover:text-brand-orange-bright transition-colors"
                 >
                   Contact Us

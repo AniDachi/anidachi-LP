@@ -29,7 +29,7 @@ export function OrganizationJsonLd() {
       sameAs: [DISCORD_SERVER_INVITE_URL],
       contactPoint: {
         "@type": "ContactPoint",
-        email: "goshan.tolochko@gmail.com",
+        email: "anidachi.app@gmail.com",
         contactType: "customer support",
       },
     },
