@@ -10,6 +10,8 @@
  *   - tiktokAccountIds    (optional)  Restrict to specific TT accounts (openId values)
  *   - youtubeChannelIds   (optional)  Restrict to specific YouTube channels (channelId values)
  *
+ * YouTube Shorts are always uploaded **private** (never public via API).
+ *
  * Account IDs are available from GET /api/openclaw/health (accountId field).
  *
  * Examples:
@@ -62,6 +64,7 @@ import {
   type YouTubeCredentials,
 } from "@/lib/youtube/api";
 import { adaptCaptionForYouTube } from "@/lib/youtube/caption";
+import { youtubeUploadStepLabel } from "@/lib/youtube/privacy";
 import {
   adaptCaptionForTikTok,
   summarizeTikTokCaptionTransform,
@@ -362,7 +365,7 @@ export async function POST(request: NextRequest) {
           acct.videoId = result.videoId;
           acct.mediaId = result.videoId;
           acct.status = "complete";
-          acct.step = "Published on YouTube";
+          acct.step = youtubeUploadStepLabel();
         } catch (err) {
           const e = err as Error & { status?: number };
           acct.status = "failed";

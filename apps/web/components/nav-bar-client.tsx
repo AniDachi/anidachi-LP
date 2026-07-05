@@ -191,7 +191,7 @@ function MobileSignOut({ onDone }: { onDone: () => void }) {
 const navLinks = [
   { href: "/#how-it-works", label: "How It Works" },
   { href: "/watch-anime-together", label: "Watch" },
-  { href: "mailto:goshan.tolochko@gmail.com", label: "Contact" },
+  { href: "mailto:anidachi.app@gmail.com", label: "Contact" },
 ] as const;
 
 function isExternalNavLink(href: string) {

@@ -106,10 +106,10 @@ export default async function SuccessPage({
             <p>
               Changed your mind? No worries — email{" "}
               <a
-                href="mailto:goshan.tolochko@gmail.com"
+                href="mailto:anidachi.app@gmail.com"
                 className="text-brand-orange hover:underline"
               >
-                goshan.tolochko@gmail.com
+                anidachi.app@gmail.com
               </a>{" "}
               anytime and we&apos;ll cancel your subscription and refund you
               promptly. No questions asked.

@@ -7,7 +7,7 @@ Instructions for automated agents (OpenClaw) posting short-form video to YouTube
 YouTube Shorts are posted through the same OpenClaw **video** pipeline as Instagram Reels and TikTok videos:
 
 - **Endpoint:** `POST /api/openclaw/post/video/prepare`
-- **Unlike TikTok** (inbox draft), YouTube uploads are **published directly as public videos** on the connected channel.
+- **Unlike TikTok** (inbox draft), YouTube uploads are **always private** on the connected channel — publish manually in the YouTube app.
 - **Unlike Instagram**, YouTube upload completes **synchronously during prepare** (no long async poll loop for YouTube-only jobs).
 
 OpenClaw **cannot connect** YouTube accounts. A human must connect channels once in **Blou manager** (`/blou/manager`) via Google OAuth. After that, OpenClaw uses stored refresh tokens on the server (Vercel Blob: `youtube/credentials.json`).
@@ -183,7 +183,7 @@ For YouTube-only jobs, you can often skip polling if prepare already returned `c
 3. Per selected channel:
    - Refresh Google OAuth access token if expired.
    - Stream video from Blob → YouTube Data API `videos.insert` (resumable upload).
-   - `privacyStatus`: **public**
+   - `privacyStatus`: **private** (always — never public via API)
    - `categoryId`: **22** (People & Blogs)
 4. On success: `videoId` stored on job account progress; status `complete`.
 5. On token failure: status `failed`, error suggests reconnect in Blou.
@@ -218,7 +218,7 @@ TikTok caption validation (too short / hashtag-only) applies only when TikTok ac
 |----------|------------------|-------------------------|
 | Instagram | Direct Reel publish | Poll container → publish via `/video/status` |
 | TikTok | Creator inbox (draft) | Poll until `sent_to_inbox` |
-| YouTube | Direct public Short | **Completes in prepare**; `videoId` on success |
+| YouTube | Always private Short | **Completes in prepare**; `videoId` on success; publish in YouTube app |
 
 ## Error codes
 
