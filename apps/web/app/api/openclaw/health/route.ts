@@ -5,7 +5,9 @@ import {
 } from "@/lib/openclaw-auth";
 import { getAllCredentials as getAllIg } from "@/lib/instagram/storage";
 import { getAllCredentials as getAllTt } from "@/lib/tiktok/storage";
+import { getAllCredentials as getAllYt } from "@/lib/youtube/storage";
 import { refreshIfNeeded } from "@/lib/tiktok/api";
+import { probeChannelHealth } from "@/lib/youtube/api";
 
 const IG_GRAPH_BASE = "https://graph.instagram.com/v21.0";
 const TT_API_BASE = "https://open.tiktokapis.com";
@@ -30,10 +32,12 @@ export async function GET(request: NextRequest) {
 
   let igAccounts: Awaited<ReturnType<typeof getAllIg>>;
   let ttAccounts: Awaited<ReturnType<typeof getAllTt>>;
+  let ytAccounts: Awaited<ReturnType<typeof getAllYt>>;
   try {
-    [igAccounts, ttAccounts] = await Promise.all([
+    [igAccounts, ttAccounts, ytAccounts] = await Promise.all([
       getAllIg(),
       getAllTt(),
+      getAllYt(),
     ]);
   } catch (err) {
     console.error("[openclaw/health] Storage error:", err);
@@ -44,17 +48,19 @@ export async function GET(request: NextRequest) {
         message: "Failed to load connected accounts",
         instagram: [],
         tiktok: [],
+        youtube: [],
       },
       { status: 503 },
     );
   }
 
-  if (igAccounts.length === 0 && ttAccounts.length === 0) {
+  if (igAccounts.length === 0 && ttAccounts.length === 0 && ytAccounts.length === 0) {
     return NextResponse.json({
       healthy: false,
       reason: "no_accounts_connected",
       instagram: [],
       tiktok: [],
+      youtube: [],
     });
   }
 
@@ -118,12 +124,25 @@ export async function GET(request: NextRequest) {
       }),
     );
 
-    const allHealthy = [...igResults, ...ttResults].every((r) => r.healthy);
+    const ytResults = await Promise.all(
+      ytAccounts.map(async (creds) => {
+        const healthy = await probeChannelHealth(creds);
+        return {
+          accountId: creds.channelId,
+          username: creds.channelTitle,
+          healthy,
+          reason: healthy ? undefined : "token_expired_or_invalid",
+        };
+      }),
+    );
+
+    const allHealthy = [...igResults, ...ttResults, ...ytResults].every((r) => r.healthy);
 
     return NextResponse.json({
       healthy: allHealthy,
       instagram: igResults,
       tiktok: ttResults,
+      youtube: ytResults,
     });
   } catch (err) {
     console.error("[openclaw/health] Health check error:", err);
@@ -134,6 +153,7 @@ export async function GET(request: NextRequest) {
         message: err instanceof Error ? err.message : "Unknown error",
         instagram: [],
         tiktok: [],
+        youtube: [],
       },
       { status: 500 },
     );

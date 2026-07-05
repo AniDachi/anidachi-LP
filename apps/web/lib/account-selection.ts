@@ -8,10 +8,12 @@
 
 import type { InstagramCredentials } from "@/lib/instagram/storage";
 import type { TikTokCredentials } from "@/lib/tiktok/storage";
+import type { YouTubeCredentials } from "@/lib/youtube/storage";
 
 export interface AccountFilter {
   instagramAccountIds?: string[];
   tiktokAccountIds?: string[];
+  youtubeChannelIds?: string[];
   hasAccountFilter: boolean;
 }
 
@@ -31,6 +33,15 @@ export function filterTtCredentials(
   if (!requestedIds) return creds;
   const idSet = new Set(requestedIds);
   return creds.filter((c) => idSet.has(c.openId));
+}
+
+export function filterYtCredentials(
+  creds: YouTubeCredentials[],
+  requestedIds: string[] | undefined,
+): YouTubeCredentials[] {
+  if (!requestedIds) return creds;
+  const idSet = new Set(requestedIds);
+  return creds.filter((c) => idSet.has(c.channelId));
 }
 
 export function validateFilteredIds(
@@ -53,11 +64,15 @@ export function parseAccountFilterFromJson(body: Record<string, unknown>): Accou
   const tt = Array.isArray(body.tiktokAccountIds)
     ? (body.tiktokAccountIds as unknown[]).filter((v): v is string => typeof v === "string")
     : undefined;
+  const yt = Array.isArray(body.youtubeChannelIds)
+    ? (body.youtubeChannelIds as unknown[]).filter((v): v is string => typeof v === "string")
+    : undefined;
 
   return {
     instagramAccountIds: ig,
     tiktokAccountIds: tt,
-    hasAccountFilter: ig !== undefined || tt !== undefined,
+    youtubeChannelIds: yt,
+    hasAccountFilter: ig !== undefined || tt !== undefined || yt !== undefined,
   };
 }
 
@@ -87,21 +102,25 @@ function formDataStringList(formData: FormData, keys: string[]): string[] {
  *
  * Accepts both `instagramAccountIds[]` (curl -F style) and plain `instagramAccountIds`
  * (repeated fields or single value — common in Python requests and other HTTP clients).
- * Same for TikTok (`tiktokAccountIds[]` / `tiktokAccountIds`).
+ * Same for TikTok (`tiktokAccountIds[]` / `tiktokAccountIds`) and YouTube.
  */
 export function parseAccountFilterFromFormData(formData: FormData): AccountFilter {
   const igKeys = ["instagramAccountIds[]", "instagramAccountIds"];
   const ttKeys = ["tiktokAccountIds[]", "tiktokAccountIds"];
+  const ytKeys = ["youtubeChannelIds[]", "youtubeChannelIds"];
 
   const hasIg = igKeys.some((k) => formData.has(k));
   const hasTt = ttKeys.some((k) => formData.has(k));
+  const hasYt = ytKeys.some((k) => formData.has(k));
 
   const ig = hasIg ? formDataStringList(formData, igKeys) : undefined;
   const tt = hasTt ? formDataStringList(formData, ttKeys) : undefined;
+  const yt = hasYt ? formDataStringList(formData, ytKeys) : undefined;
 
   return {
     instagramAccountIds: ig,
     tiktokAccountIds: tt,
-    hasAccountFilter: hasIg || hasTt,
+    youtubeChannelIds: yt,
+    hasAccountFilter: hasIg || hasTt || hasYt,
   };
 }

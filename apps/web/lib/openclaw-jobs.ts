@@ -10,20 +10,22 @@ import {
 // ---------------------------------------------------------------------------
 
 export interface AccountProgress {
-  platform: "instagram" | "tiktok";
-  accountId: string;   // igUserId or openId
+  platform: "instagram" | "tiktok" | "youtube";
+  accountId: string;   // igUserId, openId, or channelId
   username: string;
   childContainerIds: string[];  // Instagram carousel only
   childrenReady: number;        // Instagram carousel only
   parentContainerId?: string;   // Instagram carousel only
   reelContainerId?: string;     // Instagram video (Reel) only
   publishId?: string;           // TikTok only
+  videoId?: string;             // YouTube only
   mediaId?: string;
   status:
     | "polling_children"
     | "creating_parent"
     | "polling_reel"
     | "publishing"
+    | "uploading_to_youtube"
     | "sent_to_inbox"
     | "complete"
     | "failed";
@@ -128,7 +130,7 @@ async function writeToFile(job: CarouselJob): Promise<void> {
 export async function createJob(
   caption: string,
   totalChildren: number,
-  accounts: { platform: "instagram" | "tiktok"; accountId: string; username: string }[],
+  accounts: { platform: "instagram" | "tiktok" | "youtube"; accountId: string; username: string }[],
   type: "carousel" | "video" = "carousel",
 ): Promise<CarouselJob> {
   const id = crypto.randomUUID();
@@ -150,7 +152,12 @@ export async function createJob(
       username: a.username,
       childContainerIds: [],
       childrenReady: 0,
-      status: a.platform === "instagram" ? igInitialStatus : "publishing",
+      status:
+        a.platform === "instagram"
+          ? igInitialStatus
+          : a.platform === "youtube"
+            ? "uploading_to_youtube"
+            : "publishing",
       step: "Waiting",
     })),
     createdAt: Date.now(),

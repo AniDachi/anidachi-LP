@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Blou Content Manager",
-  description: "Internal tool to publish reels and carousels to Instagram and TikTok.",
+  description: "Internal tool to publish reels and carousels to Instagram, TikTok, and YouTube Shorts.",
   robots: { index: false, follow: false },
 };
 

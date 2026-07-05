@@ -12,10 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Instagram, Loader2, Music2 } from "lucide-react";
+import { Instagram, Loader2, Music2, Youtube } from "lucide-react";
 import {
   MAX_INSTAGRAM_ACCOUNTS,
   MAX_TIKTOK_ACCOUNTS,
+  MAX_YOUTUBE_ACCOUNTS,
 } from "@/lib/social-account-limits";
 
 interface IgAccount {
@@ -41,14 +42,32 @@ interface TtStatus {
   accounts: TtAccount[];
 }
 
+interface YtAccount {
+  channelId: string;
+  channelTitle: string;
+  thumbnailUrl?: string;
+  connected: boolean;
+}
+
+interface YtStatus {
+  connected: boolean;
+  accounts: YtAccount[];
+}
+
 const MAX_IG_ACCOUNTS = MAX_INSTAGRAM_ACCOUNTS;
 const MAX_TT_ACCOUNTS = MAX_TIKTOK_ACCOUNTS;
+const MAX_YT_ACCOUNTS = MAX_YOUTUBE_ACCOUNTS;
 
 const ERROR_MESSAGES: Record<string, string> = {
   no_pages: "No Facebook Page found. Link a Page to your account.",
   no_instagram_account: "No Instagram Business account linked to your Page.",
   config: "Server configuration error (INSTAGRAM_APP_ID / INSTAGRAM_APP_SECRET).",
   tiktok_config: "Server configuration error (TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET).",
+  youtube_config: "Server configuration error (YOUTUBE_CLIENT_ID / YOUTUBE_CLIENT_SECRET).",
+  youtube_invalid_state: "YouTube OAuth session expired. Please try again.",
+  youtube_no_channel: "No YouTube channel found for this Google account.",
+  youtube_missing_refresh_token: "YouTube did not return a refresh token. Try connecting again.",
+  max_youtube_accounts: `Maximum of ${MAX_YT_ACCOUNTS} YouTube channels can be connected. Disconnect one to add another.`,
   missing_code: "OAuth callback missing code.",
   missing_or_invalid_state: "OAuth session expired or was tampered with. Please try again.",
   tiktok_invalid_state: "TikTok OAuth session expired. Please try again.",
@@ -61,9 +80,11 @@ export function ConnectClient() {
   const searchParams = useSearchParams();
   const [igStatus, setIgStatus] = useState<IgStatus | null>(null);
   const [ttStatus, setTtStatus] = useState<TtStatus | null>(null);
+  const [ytStatus, setYtStatus] = useState<YtStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [connectingIg, setConnectingIg] = useState(false);
   const [connectingTt, setConnectingTt] = useState(false);
+  const [connectingYt, setConnectingYt] = useState(false);
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -74,6 +95,8 @@ export function ConnectClient() {
       setSuccessMessage("Instagram account connected.");
     } else if (searchParams.get("tiktok_connected") === "1") {
       setSuccessMessage("TikTok account connected.");
+    } else if (searchParams.get("youtube_connected") === "1") {
+      setSuccessMessage("YouTube channel connected.");
     }
   }, [searchParams]);
 
@@ -87,6 +110,10 @@ export function ConnectClient() {
         .then((r) => r.json())
         .then((d: TtStatus) => setTtStatus(d))
         .catch(() => setTtStatus({ connected: false, accounts: [] })),
+      fetch("/api/auth/youtube/status")
+        .then((r) => r.json())
+        .then((d: YtStatus) => setYtStatus(d))
+        .catch(() => setYtStatus({ connected: false, accounts: [] })),
     ]).finally(() => setLoading(false));
   }, []);
 
@@ -120,6 +147,19 @@ export function ConnectClient() {
       setError(data.error || "Could not get OAuth URL");
     } catch { setError("Network error"); }
     finally { setConnectingTt(false); }
+  };
+
+  const startYtConnect = async () => {
+    setConnectingYt(true);
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const res = await fetch("/api/auth/youtube/connect");
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; return; }
+      setError(data.error || "Could not get OAuth URL");
+    } catch { setError("Network error"); }
+    finally { setConnectingYt(false); }
   };
 
   const handleDisconnectIg = async (igUserId: string) => {
@@ -158,6 +198,24 @@ export function ConnectClient() {
     finally { setDisconnectingId(null); }
   };
 
+  const handleDisconnectYt = async (channelId: string) => {
+    setDisconnectingId(channelId);
+    setError(null);
+    try {
+      await fetch("/api/auth/youtube/disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channelId }),
+      });
+      setYtStatus((prev) => {
+        if (!prev) return prev;
+        const accounts = prev.accounts.filter((a) => a.channelId !== channelId);
+        return { connected: accounts.length > 0, accounts };
+      });
+    } catch { setError("Failed to disconnect"); }
+    finally { setDisconnectingId(null); }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -168,9 +226,11 @@ export function ConnectClient() {
 
   const igAccounts = igStatus?.accounts ?? [];
   const ttAccounts = ttStatus?.accounts ?? [];
+  const ytAccounts = ytStatus?.accounts ?? [];
   const canAddIg = igAccounts.length < MAX_IG_ACCOUNTS;
   const canAddTt = ttAccounts.length < MAX_TT_ACCOUNTS;
-  const hasAnyAccount = igAccounts.length > 0 || ttAccounts.length > 0;
+  const canAddYt = ytAccounts.length < MAX_YT_ACCOUNTS;
+  const hasAnyAccount = igAccounts.length > 0 || ttAccounts.length > 0 || ytAccounts.length > 0;
 
   return (
     <div className="max-w-md mx-auto space-y-6">
@@ -333,6 +393,69 @@ export function ConnectClient() {
                 </button>
               )}
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* YouTube Card */}
+      <Card className="border-teal-100 bg-background shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-teal-800">
+            <Youtube className="h-5 w-5" />
+            YouTube Shorts
+          </CardTitle>
+          <CardDescription>
+            Connect up to {MAX_YT_ACCOUNTS} YouTube channels.
+            Shorts publish directly as public videos.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {ytAccounts.length > 0 && (
+            <div className="space-y-3">
+              {ytAccounts.map((account) => (
+                <div
+                  key={account.channelId}
+                  className="flex items-center justify-between p-3 rounded-lg bg-teal-50/50 border border-teal-100"
+                >
+                  <div className="flex items-center gap-2">
+                    {account.thumbnailUrl && (
+                      <Image
+                        src={account.thumbnailUrl}
+                        alt=""
+                        width={24}
+                        height={24}
+                        className="h-6 w-6 rounded-full"
+                      />
+                    )}
+                    <p className="text-sm text-stone-600">
+                      <strong className="text-teal-700">{account.channelTitle}</strong>
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                    onClick={() => handleDisconnectYt(account.channelId)}
+                    disabled={disconnectingId === account.channelId}
+                  >
+                    {disconnectingId === account.channelId ? "Disconnecting\u2026" : "Disconnect"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          {canAddYt && (
+            <Button
+              className="w-full bg-teal-600 hover:bg-teal-700"
+              onClick={() => startYtConnect()}
+              disabled={connectingYt}
+            >
+              {connectingYt ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Connecting&hellip;</>
+              ) : (
+                <><Youtube className="h-4 w-4" /> {ytAccounts.length === 0 ? "Connect YouTube" : "Connect Another"}</>
+              )}
+            </Button>
           )}
         </CardContent>
       </Card>
