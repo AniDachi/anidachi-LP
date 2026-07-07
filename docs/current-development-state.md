@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-06-28.
+Last updated: 2026-07-07.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -78,6 +78,15 @@ Site-only auto-promotion:
 
 Every contributor and AI worker should start from root `AGENTS.md`. It points to
 the required docs, the active plan, the git flow, and the verification commands.
+Plane-specific instructions now live in:
+
+- `apps/web/AGENTS.md`
+- `apps/api/AGENTS.md`
+- `apps/extension/AGENTS.md`
+- `packages/protocol/AGENTS.md`
+
+Use `docs/development-quality-gates.md` as the central map from change type to
+required checks, staging evidence, docs updates, Graphify updates, and PR notes.
 
 Before opening a PR, run:
 
@@ -94,7 +103,7 @@ Project-aware review is configured in `.coderabbit.yaml`. CodeRabbit is
 advisory: it should catch Anidachi-specific risks, but it does not replace CI,
 staging acceptance, or human/agent review. PRs should use the root
 `.github/pull_request_template.md` and include verification, staging impact,
-security/env impact, and rollback notes.
+security/env impact, docs status, Graphify status, and rollback notes.
 
 CI uses Node 22 and `pnpm install --frozen-lockfile`. Do not churn
 `pnpm-lock.yaml` unless dependency changes are intentional and reviewed.

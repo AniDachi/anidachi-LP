@@ -1,4 +1,5 @@
 import type { Participant } from "@anidachi/protocol";
+import type { IncomingP2PSignal } from "../src/media-types";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -9,6 +10,7 @@ const mockP2PMedia = vi.hoisted(() => {
   const controllers: Array<{
     disconnect: ReturnType<typeof vi.fn>;
     handleSignal: ReturnType<typeof vi.fn>;
+    hasPeer: ReturnType<typeof vi.fn>;
     setCameraEnabled: ReturnType<typeof vi.fn>;
     startVoiceTalk: ReturnType<typeof vi.fn>;
     stopVoiceTalk: ReturnType<typeof vi.fn>;
@@ -20,6 +22,7 @@ const mockP2PMedia = vi.hoisted(() => {
     const controller = {
       disconnect: vi.fn(),
       handleSignal: vi.fn(),
+      hasPeer: vi.fn(() => false),
       setCameraEnabled: vi.fn(() => Promise.resolve()),
       startVoiceTalk: vi.fn(() => Promise.resolve()),
       stopVoiceTalk: vi.fn(() => Promise.resolve()),
@@ -49,15 +52,22 @@ vi.mock("../src/p2p-media", () => ({
   ),
 }));
 
+import { canReceiveP2PSignalFromParticipant } from "../src/p2p-media";
 import { useGhostCam } from "../src/ghost-cam";
 
-function participant(id: string, displayName = "Host"): Participant {
+function participant(
+  id: string,
+  displayName = "Host",
+  role: Participant["role"] = "host",
+): Participant {
   return {
     cameraEnabled: false,
     displayName,
     id,
     lastSeenAt: 1,
-    role: "host",
+    mediaSeat: "joined",
+    mediaSeatSource: "auto",
+    role,
     syncStatus: "synced",
   };
 }
@@ -72,16 +82,18 @@ const noopCameraStatus = vi.fn();
 const noopSendP2PSignal = vi.fn();
 
 function GhostCamHarness({
+  incomingP2PSignals = [],
   participant: activeParticipant,
   participants,
 }: {
+  incomingP2PSignals?: IncomingP2PSignal[];
   participant: Participant;
   participants: Participant[];
 }) {
   useGhostCam({
     cameraEnabled: true,
     connected: true,
-    incomingP2PSignals: [],
+    incomingP2PSignals,
     onCameraStatus: noopCameraStatus,
     participant: activeParticipant,
     participants,
@@ -100,6 +112,8 @@ describe("useGhostCam P2P session lifecycle", () => {
     vi.restoreAllMocks();
     noopCameraStatus.mockClear();
     noopSendP2PSignal.mockClear();
+    vi.mocked(canReceiveP2PSignalFromParticipant).mockReset();
+    vi.mocked(canReceiveP2PSignalFromParticipant).mockReturnValue(true);
     mockP2PMedia.controllers.length = 0;
     mockP2PMedia.P2PMediaController.mockClear();
     document.body.replaceChildren();
@@ -125,6 +139,58 @@ describe("useGhostCam P2P session lifecycle", () => {
 
     expect(mockP2PMedia.controllers).toHaveLength(1);
     expect(firstController.disconnect).not.toHaveBeenCalled();
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("delivers a signal from an existing peer even if the latest snapshot is temporarily inactive", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    const viewer = participant("viewer", "Viewer", "viewer");
+    const signal: IncomingP2PSignal = {
+      clientSignalId: "signal-1",
+      fromUserId: "viewer",
+      roomGeneration: 1,
+      senderConnectionId: "connection-viewer",
+      sequence: 1,
+      signal: { kind: "renegotiate" },
+      sourceGeneration: 1,
+    };
+
+    vi.mocked(canReceiveP2PSignalFromParticipant).mockReturnValue(false);
+
+    await act(async () => {
+      root.render(<GhostCamHarness participant={host} participants={[host, viewer]} />);
+    });
+    await act(async () => undefined);
+
+    const controller = mockP2PMedia.controllers[0];
+    controller.hasPeer.mockReturnValue(true);
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          incomingP2PSignals={[signal]}
+          participant={host}
+          participants={[host, viewer]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    expect(controller.handleSignal).toHaveBeenCalledWith(
+      "viewer",
+      {
+        kind: "renegotiate",
+      },
+      {
+        senderConnectionId: "connection-viewer",
+      },
+    );
 
     await act(async () => {
       root.unmount();

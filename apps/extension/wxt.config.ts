@@ -1,4 +1,5 @@
 import { defineConfig } from "wxt";
+import extensionPackage from "./package.json";
 
 type ExtensionChannel = "local" | "staging" | "production";
 
@@ -68,7 +69,7 @@ const extensionDescription =
     : extensionChannel === "staging"
       ? "Internal Anidachi staging build for testing watch rooms before production."
       : "Ambient watch-party overlay for local Anidachi MVP testing.";
-const extensionVersion = process.env.WXT_EXTENSION_VERSION ?? "0.1.0";
+const extensionVersion = process.env.WXT_EXTENSION_VERSION ?? extensionPackage.version;
 const buildId = process.env.WXT_BUILD_ID?.trim();
 const chromeProfileDir = process.env.WXT_CHROME_PROFILE_DIR?.trim() ?? "./.wxt/chrome-data";
 const disableAutoBrowser = process.env.WXT_DISABLE_WEB_EXT === "true";
@@ -122,6 +123,12 @@ export default defineConfig({
     ]),
     host_permissions: hostPermissions,
     icons: extensionIcons,
+    web_accessible_resources: [
+      {
+        resources: ["Anidachi_logo.png"],
+        matches: ["*://*/*"],
+      },
+    ],
     action: {
       default_title: extensionName,
       default_icon: extensionIcons,

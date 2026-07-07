@@ -183,7 +183,7 @@ function writeMeta(storage: DurableObjectStorage, key: string, value: unknown, u
   );
 }
 
-function parseRoomStateSnapshot(value: unknown): RoomStateSnapshot | null {
+export function parseRoomStateSnapshot(value: unknown): RoomStateSnapshot | null {
   if (!isRecord(value)) {
     return null;
   }
@@ -211,14 +211,49 @@ function parseRoomStateSnapshot(value: unknown): RoomStateSnapshot | null {
   if (!Array.isArray(value.participants)) {
     return null;
   }
-  const participants: Participant[] = [];
+  const parsedParticipants: { hadMediaSeat: boolean; participant: Participant }[] = [];
   for (const participantValue of value.participants) {
+    if (!isRecord(participantValue)) {
+      return null;
+    }
+    const hadMediaSeat = "mediaSeat" in participantValue;
     const participant = ParticipantSchema.safeParse(participantValue);
     if (!participant.success) {
       return null;
     }
-    participants.push(participant.data);
+    parsedParticipants.push({ hadMediaSeat, participant: participant.data });
   }
+
+  let occupiedMediaSeats = parsedParticipants.filter(
+    ({ hadMediaSeat, participant }) => hadMediaSeat && participant.mediaSeat === "joined",
+  ).length;
+  const participants = parsedParticipants.map(({ hadMediaSeat, participant }) => {
+    if (hadMediaSeat) {
+      return participant;
+    }
+
+    const canMigrateToJoined =
+      capabilities.data.maxMediaSeats > 0 &&
+      occupiedMediaSeats < capabilities.data.maxMediaSeats &&
+      (parsedParticipants.length <= capabilities.data.maxMediaSeats ||
+        participant.cameraEnabled);
+    if (canMigrateToJoined) {
+      occupiedMediaSeats += 1;
+      return {
+        ...participant,
+        mediaSeat: "joined" as const,
+        mediaSeatSource: "auto" as const,
+      };
+    }
+
+    return {
+      ...participant,
+      cameraEnabled: false,
+      mediaSeat: "none" as const,
+      mediaSeatSource: undefined,
+    };
+  });
+
   if (
     value.hostId !== null &&
     !participants.some((participant) => participant.id === value.hostId)

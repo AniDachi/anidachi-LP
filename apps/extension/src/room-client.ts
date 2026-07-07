@@ -437,7 +437,7 @@ export class RoomClient {
   }
 
   connect(options: RoomClientOptions): void {
-    this.close();
+    this.close("reconnect");
     this.currentSenderConnectionId = createRoomConnectionId();
     this.pendingEvents = [];
     options.onStatus("connecting");
@@ -446,6 +446,7 @@ export class RoomClient {
       senderConnectionId: this.currentSenderConnectionId,
       roomId: options.roomId,
       participantId: options.participant.id,
+      participantSessionId: options.participantSessionId,
       videoFingerprint: options.videoFingerprint,
     });
 
@@ -460,6 +461,7 @@ export class RoomClient {
       logDebug("room.ws", "open", {
         roomId: options.roomId,
         participantId: options.participant.id,
+        participantSessionId: options.participantSessionId,
         senderConnectionId: this.currentSenderConnectionId,
       });
       options.onStatus("connected");
@@ -514,7 +516,11 @@ export class RoomClient {
 
       logDebug("room.ws", "closed", {
         code: event.code,
+        participantId: options.participant.id,
+        participantSessionId: options.participantSessionId,
         reason: event.reason,
+        roomId: options.roomId,
+        senderConnectionId: this.currentSenderConnectionId,
         wasClean: event.wasClean,
       });
       this.stopKeepalive();
@@ -554,9 +560,16 @@ export class RoomClient {
     );
   }
 
-  close(): void {
+  close(reason = "manual"): void {
     this.stopKeepalive();
     const ws = this.ws;
+    if (ws) {
+      logDebug("room.ws", "closing", {
+        reason,
+        readyState: ws.readyState,
+        senderConnectionId: this.currentSenderConnectionId,
+      });
+    }
     this.ws = null;
     ws?.close();
     this.pendingEvents = [];

@@ -8,6 +8,7 @@ function participant(id: string, role: Participant["role"] = "viewer"): Particip
     displayName: id,
     role,
     cameraEnabled: false,
+    mediaSeat: "none",
     syncStatus: "unknown",
     lastSeenAt: 0,
   };
@@ -228,7 +229,31 @@ describe("RoomState", () => {
     expect(snapshot.capabilities?.maxParticipants).toBe(6);
   });
 
-  it("caps camera/media seats independently from participant count", () => {
+  it("auto-assigns media seats up to the signed media limit and leaves overflow chat-only", () => {
+    const room = new RoomState("room-1", {
+      hostPlanCode: "pro",
+      maxParticipants: 15,
+      maxMediaSeats: 2,
+      canNameRoom: true,
+      canSendPushInvites: true,
+    });
+    const host = room.join(participant("u1", "host"));
+    const viewer = room.join(participant("u2"));
+    const overflow = room.join(participant("u3"));
+
+    expect(host.mediaSeat).toBe("joined");
+    expect(host.mediaSeatSource).toBe("auto");
+    expect(viewer.mediaSeat).toBe("joined");
+    expect(viewer.mediaSeatSource).toBe("auto");
+    expect(overflow.mediaSeat).toBe("none");
+    expect(room.occupiedMediaSeats).toBe(2);
+
+    expect(room.canEnableCamera("u1")).toBe(true);
+    expect(room.canEnableCamera("u2")).toBe(true);
+    expect(room.canEnableCamera("u3")).toBe(false);
+  });
+
+  it("treats camera as an option inside a media seat instead of the media seat itself", () => {
     const room = new RoomState("room-1", {
       hostPlanCode: "pro",
       maxParticipants: 15,
@@ -248,7 +273,87 @@ describe("RoomState", () => {
     expect(room.canEnableCamera("missing")).toBe(false);
 
     room.setCamera("u2", false);
-    expect(room.canEnableCamera("u3")).toBe(true);
+    expect(room.canEnableCamera("u3")).toBe(false);
+    expect(room.participants.find((item) => item.id === "u2")?.mediaSeat).toBe("joined");
+  });
+
+  it("lets the host grant and revoke media seats without controlling user camera or mic", () => {
+    const room = new RoomState("room-1", {
+      hostPlanCode: "pro",
+      maxParticipants: 15,
+      maxMediaSeats: 2,
+      canNameRoom: true,
+      canSendPushInvites: true,
+    });
+    room.join(participant("host", "host"));
+    room.join(participant("viewer-a"));
+    room.join(participant("viewer-b"));
+
+    expect(room.requestMediaSeat("viewer-b")?.mediaSeat).toBe("requested");
+    expect(room.grantMediaSeat("viewer-b", "viewer-a")).toEqual({
+      accepted: false,
+      code: "NOT_HOST",
+    });
+    expect(room.grantMediaSeat("viewer-b", "host")).toEqual({
+      accepted: false,
+      code: "MEDIA_SEATS_FULL",
+    });
+
+    const revoked = room.revokeMediaSeat("viewer-a", "host");
+    expect(revoked.accepted).toBe(true);
+    expect(room.participants.find((item) => item.id === "viewer-a")?.mediaSeat).toBe("none");
+    expect(room.participants.find((item) => item.id === "viewer-a")?.cameraEnabled).toBe(false);
+
+    const granted = room.grantMediaSeat("viewer-b", "host");
+    expect(granted.accepted).toBe(true);
+    expect(room.participants.find((item) => item.id === "viewer-b")?.mediaSeat).toBe("joined");
+    expect(room.participants.find((item) => item.id === "viewer-b")?.mediaSeatSource).toBe("host");
+    expect(room.canEnableCamera("viewer-b")).toBe(true);
+  });
+
+  it("preserves explicit media-seat removal across unrelated leave and restore", () => {
+    const room = new RoomState("room-1", {
+      hostPlanCode: "pro",
+      maxParticipants: 15,
+      maxMediaSeats: 3,
+      canNameRoom: true,
+      canSendPushInvites: true,
+    });
+    room.join(participant("host", "host"));
+    room.join(participant("viewer-a"));
+    room.join(participant("viewer-b"));
+
+    room.revokeMediaSeat("viewer-a", "host");
+    expect(room.participants.find((item) => item.id === "viewer-a")?.mediaSeat).toBe("none");
+
+    room.leave("viewer-b");
+    expect(room.participants.find((item) => item.id === "viewer-a")?.mediaSeat).toBe("none");
+
+    const restored = new RoomState("room-1", undefined, room.toSnapshot(1234));
+    expect(restored.participants.find((item) => item.id === "viewer-a")?.mediaSeat).toBe("none");
+    expect(restored.canEnableCamera("viewer-a")).toBe(false);
+  });
+
+  it("allows P2P signaling only between joined media-seat participants", () => {
+    const room = new RoomState("room-1", {
+      hostPlanCode: "pro",
+      maxParticipants: 15,
+      maxMediaSeats: 2,
+      canNameRoom: true,
+      canSendPushInvites: true,
+    });
+    room.join(participant("host", "host"));
+    room.join(participant("viewer-a"));
+    room.join(participant("viewer-b"));
+
+    expect(room.canSignal("host", "viewer-a")).toBe(true);
+    expect(room.canSignal("host", "viewer-b")).toBe(false);
+
+    room.revokeMediaSeat("viewer-a", "host");
+    room.grantMediaSeat("viewer-b", "host");
+
+    expect(room.canSignal("host", "viewer-a")).toBe(false);
+    expect(room.canSignal("host", "viewer-b")).toBe(true);
   });
 });
 

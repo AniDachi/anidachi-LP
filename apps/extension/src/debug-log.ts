@@ -141,6 +141,7 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
         roomId: event.roomId,
         lastSeenP2PServerSeq: event.lastSeenP2PServerSeq,
         participantId: event.participant.id,
+        participantSessionId: event.participantSessionId,
         role: event.participant.role,
         videoFingerprint: event.videoFingerprint,
       };
@@ -155,6 +156,7 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
           id: participant.id,
           role: participant.role,
           cameraEnabled: participant.cameraEnabled,
+          mediaSeat: participant.mediaSeat,
           syncStatus: participant.syncStatus,
         })),
         hostState: event.hostState ? playbackStateDebugSnapshot(event.hostState) : undefined,
@@ -248,10 +250,22 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
         participantId: event.participant.id,
         role: event.participant.role,
         cameraEnabled: event.participant.cameraEnabled,
+        mediaSeat: event.participant.mediaSeat,
       };
     case "CAMERA_ON":
     case "CAMERA_OFF":
       return { type: event.type, roomId: event.roomId, userId: event.userId };
+    case "MEDIA_JOIN_REQUEST":
+    case "MEDIA_JOIN_CANCEL":
+    case "MEDIA_SEAT_LEAVE":
+      return { type: event.type, roomId: event.roomId, userId: event.userId };
+    case "MEDIA_SEAT_GRANT":
+    case "MEDIA_SEAT_REVOKE":
+      return {
+        type: event.type,
+        roomId: event.roomId,
+        targetUserId: event.targetUserId,
+      };
     case "P2P_SIGNAL":
       return {
         type: event.type,
@@ -428,10 +442,14 @@ function shouldPrintDebugToConsole(): boolean {
 const P2P_IDENTIFIER_FIELDS = new Set([
   "localParticipantId",
   "participantId",
+  "participantSessionId",
   "remoteUserId",
+  "sessionId",
   "fromUserId",
   "toUserId",
 ]);
+
+const DEBUG_IDENTIFIER_FIELDS = new Set(["participantSessionId", "sessionId"]);
 
 const P2P_IDENTIFIER_ARRAY_FIELDS = new Set([
   "activeSpeakerIds",
@@ -443,6 +461,10 @@ function sanitizeDebugData(value: unknown, scope: string): unknown {
   const sanitizeP2P = scope.startsWith("p2p.");
   return JSON.parse(
     JSON.stringify(value, (_key, item) => {
+      if (DEBUG_IDENTIFIER_FIELDS.has(_key) && typeof item === "string") {
+        return hashDebugId(item);
+      }
+
       if (sanitizeP2P && P2P_IDENTIFIER_FIELDS.has(_key) && typeof item === "string") {
         return hashDebugId(item);
       }

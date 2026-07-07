@@ -567,15 +567,17 @@ Before making changes:
 2. Check the current branch and git state.
 3. Read `docs/current-development-state.md` for current endpoints and known
    fragile areas.
-4. Read the relevant domain document:
+4. Read `docs/development-quality-gates.md` to choose the required check,
+   staging, docs, Graphify, and PR evidence profile.
+5. Read the relevant domain document:
    - extension release: `docs/extension-release-channels.md`;
    - auth/rooms/site-extension flow: `docs/site-extension-integration-notes.md`;
    - P2P experiments: `docs/experimental-features.md`;
    - watch progress: `docs/shared-watch-progress-tracker.md`.
-5. Inspect the actual source files before assuming behavior.
-6. Keep the change scoped.
-7. Run at least `pnpm check`; run `pnpm test` when behavior or protocol changes.
-8. Update docs when endpoints, release flow, protocol, or ownership changes.
+6. Inspect the actual source files before assuming behavior.
+7. Keep the change scoped.
+8. Run at least `pnpm check`; run `pnpm test` when behavior or protocol changes.
+9. Update docs when endpoints, release flow, protocol, or ownership changes.
 
 If the task touches production or secrets, stop and verify the environment before
 editing. Do not guess production values from old plans.
@@ -595,14 +597,16 @@ Read in this order before changing the project:
    development should move.
 4. `docs/current-development-state.md` for current endpoints, branch protection,
    build artifacts, and known fragile areas.
-5. `docs/extension-release-channels.md` for staging/public extension builds.
-6. `docs/site-extension-integration-notes.md` for auth, website, extension, and
+5. `docs/development-quality-gates.md` for change-type verification,
+   staging evidence, docs, Graphify, and PR expectations.
+6. `docs/extension-release-channels.md` for staging/public extension builds.
+7. `docs/site-extension-integration-notes.md` for auth, website, extension, and
    database integration details.
-7. `docs/experimental-features.md` for P2P and experimental feature status.
-8. `docs/architecture.md` for broader architecture notes.
-9. `docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`
+8. `docs/experimental-features.md` for P2P and experimental feature status.
+9. `docs/architecture.md` for broader architecture notes.
+10. `docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`
    for the longer future plan around rooms, P2P, and watch progress.
-10. `docs/superpowers/plans/2026-06-03-main-repository-monorepo-migration.md`
+11. `docs/superpowers/plans/2026-06-03-main-repository-monorepo-migration.md`
    only as migration history. It may include old paths and historical decisions.
 
 When documents conflict, prefer:

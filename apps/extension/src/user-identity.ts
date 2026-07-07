@@ -34,6 +34,7 @@ function participantFromTokens(tokens: ExtensionAuthTokens): Participant {
     avatarUrl: tokens.user.avatarUrl ?? undefined,
     role: "viewer",
     cameraEnabled: false,
+    mediaSeat: "none",
     syncStatus: "unknown",
     lastSeenAt: Date.now(),
   };
