@@ -9,6 +9,7 @@ import {
   planP2PVideoSenderSync,
   createP2PRtcConfiguration,
   createP2PMediaSignalDedupeKey,
+  decideP2PSignalConnection,
   decideP2PIceRestart,
   enableP2POpusDtxAndInbandFec,
   getP2PAudioTransceiverDirection,
@@ -169,6 +170,20 @@ function installStatsPeer(
     reportIndex += 1;
     return report ?? statsReportFrom([]);
   });
+  const pc = {
+    close: vi.fn(),
+    connectionState: "connected" as RTCPeerConnectionState,
+    createOffer: vi.fn(async () => ({ type: "offer", sdp: "v=0\r\n" })),
+    getStats,
+    iceConnectionState: "connected" as RTCIceConnectionState,
+    localDescription: null as RTCSessionDescription | null,
+    restartIce: vi.fn(),
+    setConfiguration: vi.fn(),
+    setLocalDescription: vi.fn(async (description: RTCSessionDescriptionInit) => {
+      pc.localDescription = description as RTCSessionDescription;
+    }),
+    signalingState: "stable" as RTCSignalingState,
+  };
 
   const peer = {
     audioCodecPreferencesKey: null,
@@ -188,13 +203,7 @@ function installStatsPeer(
     mediaSyncing: false,
     needsNegotiation: false,
     negotiationQueued: false,
-    pc: {
-      close: vi.fn(),
-      connectionState: "connected",
-      getStats,
-      iceConnectionState: "connected",
-      signalingState: "stable",
-    },
+    pc,
     pendingCloseTimerId: null,
     pendingIceCandidates: [],
     polite: true,
@@ -212,7 +221,7 @@ function installStatsPeer(
     }
   ).peers.set(remoteUserId, peer);
 
-  return { getStats };
+  return { getStats, pc };
 }
 
 async function sampleP2PPeerHealth(
@@ -547,6 +556,40 @@ describe("P2P network recovery decision", () => {
     expect(
       shouldProactivelyRestartIceForNetworkSignal("connection-change", false),
     ).toBe(false);
+  });
+});
+
+describe("P2P sender connection generation", () => {
+  it("accepts the first connection-bearing signal", () => {
+    expect(decideP2PSignalConnection(null, "conn-a", "offer")).toEqual({
+      accept: true,
+      nextSenderConnectionId: "conn-a",
+      reason: "first-connection",
+    });
+  });
+
+  it("drops stale lifecycle signals from an older sender connection", () => {
+    expect(decideP2PSignalConnection("conn-new", "conn-old", "bye")).toEqual({
+      accept: false,
+      nextSenderConnectionId: "conn-new",
+      reason: "stale-connection",
+    });
+  });
+
+  it("switches to a newer publisher connection on a fresh offer", () => {
+    expect(decideP2PSignalConnection("conn-old", "conn-new", "offer")).toEqual({
+      accept: true,
+      nextSenderConnectionId: "conn-new",
+      reason: "new-publisher-connection",
+    });
+  });
+
+  it("keeps the current connection when old ICE arrives after a reconnect", () => {
+    expect(decideP2PSignalConnection("conn-new", "conn-old", "ice")).toEqual({
+      accept: false,
+      nextSenderConnectionId: "conn-new",
+      reason: "stale-connection",
+    });
   });
 });
 
@@ -1099,6 +1142,41 @@ describe("P2P remote video activity classification", () => {
       framesPerSecond: 10,
     });
   });
+
+  it("restarts ICE after consecutive stalled remote video samples", async () => {
+    const { controller } = createP2PControllerHarness();
+    const stalledStats = statsReportFrom([
+      {
+        id: "viewer-video",
+        type: "inbound-rtp",
+        kind: "video",
+        bytesReceived: 10_000,
+        framesDecoded: 10,
+        framesPerSecond: 0,
+      },
+    ]);
+    const { pc } = installStatsPeer(controller, "viewer", [
+      stalledStats,
+      stalledStats,
+      stalledStats,
+    ]);
+    const peer = (
+      controller as unknown as {
+        peers: Map<string, { remoteVideoExpected: boolean }>;
+      }
+    ).peers.get("viewer");
+    if (peer) {
+      peer.remoteVideoExpected = true;
+    }
+
+    await sampleP2PPeerHealth(controller);
+    await sampleP2PPeerHealth(controller);
+    await sampleP2PPeerHealth(controller);
+
+    await vi.waitFor(() => expect(pc.restartIce).toHaveBeenCalledTimes(1));
+
+    controller.disconnect();
+  });
 });
 
 describe("P2P media participant selection", () => {
@@ -1389,6 +1467,14 @@ class FakeRtcPeerConnection extends EventTarget {
   async setLocalDescription(description: RTCSessionDescriptionInit): Promise<void> {
     this.localDescription = description as RTCSessionDescription;
   }
+
+  readonly setRemoteDescription = vi.fn(
+    async (description: RTCSessionDescriptionInit) => {
+      this.remoteDescription = description as RTCSessionDescription;
+      this.signalingState =
+        description.type === "offer" ? "have-remote-offer" : "stable";
+    },
+  );
 }
 
 describe("P2P idle peer linger", () => {
@@ -1464,6 +1550,24 @@ describe("P2P idle peer linger", () => {
     // The cleared linger timer must not fire against a recreated peer later.
     await vi.advanceTimersByTimeAsync(60_000);
     expect(pc?.close).toHaveBeenCalledTimes(1);
+
+    harness.controller.disconnect();
+  });
+
+  it("drops stale answers that arrive after the offerer returned to stable", async () => {
+    const harness = createP2PControllerHarness();
+
+    await harness.controller.handleSignal(
+      "viewer",
+      {
+        kind: "answer",
+        sdp: { type: "answer", sdp: "v=0\r\n" },
+      },
+      { senderConnectionId: "viewer-connection" },
+    );
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    expect(pc?.setRemoteDescription).not.toHaveBeenCalled();
 
     harness.controller.disconnect();
   });

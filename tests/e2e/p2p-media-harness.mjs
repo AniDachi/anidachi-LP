@@ -13,7 +13,7 @@
  * `npx playwright install chromium`).
  */
 import { spawn } from "node:child_process";
-import { createHmac } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 import { createServer } from "node:http";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,7 +25,7 @@ const REPO = resolve(__dirname, "../..");
 const API_DIR = resolve(REPO, "apps/api");
 const SECRET = "local-harness-secret";
 const WORKER_PORT = 8787; // matches the constants.ts fallback ws base
-const ROOM_ID = "media-harness-room";
+const ROOM_ID = `media-harness-room-${randomUUID()}`;
 const TTFM_BUDGET_MS = 8000;
 const RECOVERY_BUDGET_MS = 12000;
 const HARNESS_FORCE_RELAY = parseBooleanEnv(process.env.HARNESS_FORCE_RELAY);
@@ -281,6 +281,19 @@ async function waitForRemoteVideo(page, budgetMs) {
 	}
 	const state = await page.evaluate(() => window.AnidachiHarness.getState());
 	return { ttfmMs: null, state };
+}
+
+async function waitForRemoteVideoCount(page, expectedCount, budgetMs) {
+	const t0 = Date.now();
+	while (Date.now() - t0 < budgetMs) {
+		const state = await page.evaluate(() => window.AnidachiHarness.getState());
+		if (state.remoteVideoCount === expectedCount) {
+			return { observedMs: Date.now() - t0, state };
+		}
+		await sleep(150);
+	}
+	const state = await page.evaluate(() => window.AnidachiHarness.getState());
+	return { observedMs: null, state };
 }
 
 async function waitForCameraEnabledCount(page, expectedCount, budgetMs) {
@@ -546,6 +559,11 @@ async function main() {
 		// S5: reload the guest, restart, and confirm media recovers without
 		// recreating the room.
 		await guestPage.evaluate(() => window.AnidachiHarness.stop());
+		const hostClearedOldGuestVideo = await waitForRemoteVideoCount(
+			hostPage,
+			0,
+			RECOVERY_BUDGET_MS,
+		);
 		await guestPage.reload();
 		await guestPage.goto(pageUrl);
 		await startPeer(guestPage, {
@@ -563,6 +581,11 @@ async function main() {
 			RECOVERY_BUDGET_MS,
 		);
 		record(
+			"host clears stale guest video before reload recovery (S5)",
+			hostClearedOldGuestVideo.observedMs !== null,
+			`remoteVideos=${hostClearedOldGuestVideo.state.remoteVideoCount}`,
+		);
+		record(
 			"guest recovers video after reload (S5)",
 			guestRecovered.ttfmMs !== null,
 			`ttfm=${guestRecovered.ttfmMs}ms`,
@@ -570,7 +593,7 @@ async function main() {
 		record(
 			"host re-establishes video to reloaded guest (S5)",
 			hostStillSees.ttfmMs !== null,
-			`frames=${hostStillSees.state.remoteFramesDecoded}`,
+			`ttfm=${hostStillSees.ttfmMs}ms frames=${hostStillSees.state.remoteFramesDecoded}`,
 		);
 
 		// S5 network-loss recovery: a short offline/online transition should

@@ -216,6 +216,10 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         roomGeneration,
         sourceGeneration,
       );
+      await controller.setCameraEnabled(cameraEnabledRef.current);
+      if (disposed) {
+        return;
+      }
       controller.updateParticipants(getMediaParticipants(sessionParticipant));
       replayPendingP2PSignals(
         controller,
@@ -224,7 +228,6 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         roomGeneration,
         sourceGeneration,
       );
-      void controller.setCameraEnabled(cameraEnabledRef.current);
       if (voiceTalkActiveRef.current) {
         void controller.startVoiceTalk();
       } else {
@@ -331,12 +334,20 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
       if (item.signal.kind === "voice-start") {
         remoteVoiceParticipantIdsRef.current.add(item.fromUserId);
         updateControllerParticipants(activeParticipant);
-        void controller.handleSignal(item.fromUserId, item.signal);
+        void controller.handleSignal(
+          item.fromUserId,
+          item.signal,
+          p2pSignalMetadata(item),
+        );
         continue;
       }
 
       if (item.signal.kind === "voice-stop") {
-        void controller.handleSignal(item.fromUserId, item.signal);
+        void controller.handleSignal(
+          item.fromUserId,
+          item.signal,
+          p2pSignalMetadata(item),
+        );
         remoteVoiceParticipantIdsRef.current.delete(item.fromUserId);
         updateControllerParticipants(activeParticipant);
         continue;
@@ -369,7 +380,11 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         continue;
       }
 
-      void controller.handleSignal(item.fromUserId, item.signal);
+      void controller.handleSignal(
+        item.fromUserId,
+        item.signal,
+        p2pSignalMetadata(item),
+      );
     }
   }, [
     getVoiceParticipantIds,
@@ -473,8 +488,16 @@ function replayPendingP2PSignals(
       continue;
     }
 
-    void controller.handleSignal(item.fromUserId, item.signal);
+    void controller.handleSignal(item.fromUserId, item.signal, {
+      senderConnectionId: item.senderConnectionId,
+    });
   }
+}
+
+function p2pSignalMetadata(item: IncomingP2PSignal) {
+  return {
+    senderConnectionId: item.senderConnectionId,
+  };
 }
 
 function p2pSignalMatchesActiveGeneration(

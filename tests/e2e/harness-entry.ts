@@ -64,10 +64,11 @@ class Harness {
     };
     this.self = self;
 
-    this.connectClient(options, self);
-    await this.waitForStatus("connected", 8000);
+    this.ensureController(options, self);
     await this.controller?.setCameraEnabled(true);
     self.cameraEnabled = true;
+    this.connectClient(options, self);
+    await this.waitForStatus("connected", 8000);
     this.client?.send({
       type: "CAMERA_ON",
       roomId: options.roomId,
@@ -75,10 +76,7 @@ class Harness {
     });
   }
 
-  private connectClient(options: StartOptions, self: Participant): void {
-    const client = new RoomClient();
-    this.client = client;
-
+  private ensureController(options: StartOptions, self: Participant): P2PMediaController {
     if (!this.controller) {
       this.controller = new P2PMediaController({
         iceServers: options.iceServers ?? [{ urls: "stun:stun.l.google.com:19302" }],
@@ -90,9 +88,21 @@ class Harness {
         onVideosChange: (videos) => {
           // Attach remote video elements to the DOM so the browser decodes
           // incoming frames (the metric the TTFM assertion reads).
+          const nextRemoteIds = new Set(
+            videos.filter((video) => !video.local).map((video) => video.participantId),
+          );
+          for (const [participantId, element] of this.remoteVideos) {
+            if (nextRemoteIds.has(participantId)) continue;
+            element.remove();
+            element.srcObject = null;
+            this.remoteVideos.delete(participantId);
+          }
           for (const video of videos) {
             if (video.local) continue;
-            if (!this.remoteVideos.has(video.participantId)) {
+            if (this.remoteVideos.get(video.participantId) !== video.element) {
+              const existing = this.remoteVideos.get(video.participantId);
+              existing?.remove();
+              if (existing) existing.srcObject = null;
               video.element.style.width = "120px";
               video.element.muted = true;
               video.element.playsInline = true;
@@ -118,6 +128,14 @@ class Harness {
         },
       });
     }
+
+    return this.controller;
+  }
+
+  private connectClient(options: StartOptions, self: Participant): void {
+    const client = new RoomClient();
+    this.client = client;
+    this.ensureController(options, self);
 
     client.connect({
       roomId: options.roomId,
@@ -171,7 +189,9 @@ class Harness {
       const key = `${event.fromUserId}:${event.senderConnectionId}:${event.clientSignalId}`;
       if (this.seenSignals.has(key)) return;
       this.seenSignals.add(key);
-      void this.controller?.handleSignal(event.fromUserId, event.signal);
+      void this.controller?.handleSignal(event.fromUserId, event.signal, {
+        senderConnectionId: event.senderConnectionId,
+      });
     }
   }
 

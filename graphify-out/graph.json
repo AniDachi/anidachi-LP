@@ -5056,7 +5056,7 @@
       "label": "rememberPendingVoiceParticipants()",
       "file_type": "code",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L435",
+      "source_location": "L450",
       "_origin": "ast"
     },
     {
@@ -5064,7 +5064,15 @@
       "label": "replayPendingP2PSignals()",
       "file_type": "code",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L459",
+      "source_location": "L474",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_ghost_cam_p2psignalmetadata",
+      "label": "p2pSignalMetadata()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/ghost-cam.ts",
+      "source_location": "L497",
       "_origin": "ast"
     },
     {
@@ -5072,7 +5080,7 @@
       "label": "p2pSignalMatchesActiveGeneration()",
       "file_type": "code",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L480",
+      "source_location": "L503",
       "_origin": "ast"
     },
     {
@@ -6212,11 +6220,35 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_extension_src_p2p_media_p2psignalconnectiondecision",
+      "label": "P2PSignalConnectionDecision",
+      "file_type": "code",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L162",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_p2p_media_p2psignalmetadata",
+      "label": "P2PSignalMetadata",
+      "file_type": "code",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L173",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_extension_src_p2p_media_decidep2picerestart",
       "label": "decideP2PIceRestart()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L162",
+      "source_location": "L177",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_p2p_media_decidep2psignalconnection",
+      "label": "decideP2PSignalConnection()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L199",
       "_origin": "ast"
     },
     {
@@ -6224,7 +6256,7 @@
       "label": "createP2PMediaSignalDedupeKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L184",
+      "source_location": "L245",
       "_origin": "ast"
     },
     {
@@ -6232,7 +6264,7 @@
       "label": "rememberP2PMediaSignalFingerprint()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L206",
+      "source_location": "L267",
       "_origin": "ast"
     },
     {
@@ -6240,7 +6272,7 @@
       "label": "DEFAULT_STUN_SERVERS",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L228",
+      "source_location": "L289",
       "_origin": "ast"
     },
     {
@@ -6248,7 +6280,7 @@
       "label": "OPEN_RELAY_TURN_SERVERS",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L234",
+      "source_location": "L295",
       "_origin": "ast"
     },
     {
@@ -6256,7 +6288,7 @@
       "label": "P2P_VIDEO_CONSTRAINTS",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L246",
+      "source_location": "L307",
       "_origin": "ast"
     },
     {
@@ -6264,7 +6296,7 @@
       "label": "P2P_AUDIO_CONSTRAINTS",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L255",
+      "source_location": "L316",
       "_origin": "ast"
     },
     {
@@ -6272,7 +6304,7 @@
       "label": "getP2PAudioTransceiverDirection()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L265",
+      "source_location": "L326",
       "_origin": "ast"
     },
     {
@@ -6280,7 +6312,7 @@
       "label": "p2pAudioTrackSwapNeedsNegotiation()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L269",
+      "source_location": "L330",
       "_origin": "ast"
     },
     {
@@ -6288,7 +6320,7 @@
       "label": "selectPreferredP2PCodecCapabilities()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L275",
+      "source_location": "L336",
       "_origin": "ast"
     },
     {
@@ -6296,7 +6328,7 @@
       "label": "summarizeP2PCodecPreferenceOrder()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L289",
+      "source_location": "L350",
       "_origin": "ast"
     },
     {
@@ -6304,7 +6336,7 @@
       "label": "AudioActivityStats",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L295",
+      "source_location": "L356",
       "_origin": "ast"
     },
     {
@@ -6312,7 +6344,7 @@
       "label": "RemoteAudioActivity",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L302",
+      "source_location": "L363",
       "_origin": "ast"
     },
     {
@@ -6320,7 +6352,7 @@
       "label": "RemoteAudioFlowActivity",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L303",
+      "source_location": "L364",
       "_origin": "ast"
     },
     {
@@ -6328,7 +6360,7 @@
       "label": "classifyRemoteAudioActivity()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L310",
+      "source_location": "L371",
       "_origin": "ast"
     },
     {
@@ -6336,7 +6368,7 @@
       "label": "classifyRemoteAudioFlowActivity()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L350",
+      "source_location": "L411",
       "_origin": "ast"
     },
     {
@@ -6344,7 +6376,7 @@
       "label": "VideoActivityStats",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L377",
+      "source_location": "L438",
       "_origin": "ast"
     },
     {
@@ -6352,7 +6384,7 @@
       "label": "VideoInboundStats",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L382",
+      "source_location": "L443",
       "_origin": "ast"
     },
     {
@@ -6360,7 +6392,7 @@
       "label": "RemoteVideoActivity",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L386",
+      "source_location": "L447",
       "_origin": "ast"
     },
     {
@@ -6368,7 +6400,7 @@
       "label": "classifyRemoteVideoActivity()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L393",
+      "source_location": "L454",
       "_origin": "ast"
     },
     {
@@ -6376,7 +6408,7 @@
       "label": "selectP2PMediaParticipants()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L454",
+      "source_location": "L515",
       "_origin": "ast"
     },
     {
@@ -6384,7 +6416,7 @@
       "label": "canReceiveP2PSignalFromParticipant()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L491",
+      "source_location": "L552",
       "_origin": "ast"
     },
     {
@@ -6392,7 +6424,7 @@
       "label": "P2PPeer",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L517",
+      "source_location": "L578",
       "_origin": "ast"
     },
     {
@@ -6400,7 +6432,7 @@
       "label": "P2PMediaControllerOptions",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L547",
+      "source_location": "L608",
       "_origin": "ast"
     },
     {
@@ -6408,7 +6440,7 @@
       "label": "IceCandidateStatsSnapshot",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L559",
+      "source_location": "L620",
       "_origin": "ast"
     },
     {
@@ -6416,7 +6448,7 @@
       "label": "P2PMediaController",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L566",
+      "source_location": "L627",
       "_origin": "ast"
     },
     {
@@ -6424,7 +6456,7 @@
       "label": ".onDeviceChange()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L635",
+      "source_location": "L697",
       "_origin": "ast"
     },
     {
@@ -6432,7 +6464,7 @@
       "label": ".onWindowOnline()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L637",
+      "source_location": "L699",
       "_origin": "ast"
     },
     {
@@ -6440,7 +6472,7 @@
       "label": ".onWindowOffline()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L638",
+      "source_location": "L700",
       "_origin": "ast"
     },
     {
@@ -6448,7 +6480,7 @@
       "label": ".onNetworkInformationChange()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L639",
+      "source_location": "L701",
       "_origin": "ast"
     },
     {
@@ -6456,7 +6488,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L642",
+      "source_location": "L704",
       "_origin": "ast"
     },
     {
@@ -6464,7 +6496,7 @@
       "label": ".handleDeviceChange()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L680",
+      "source_location": "L742",
       "_origin": "ast"
     },
     {
@@ -6472,7 +6504,7 @@
       "label": ".reconcile()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L706",
+      "source_location": "L768",
       "_origin": "ast"
     },
     {
@@ -6480,7 +6512,7 @@
       "label": ".updateParticipants()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L736",
+      "source_location": "L798",
       "_origin": "ast"
     },
     {
@@ -6488,7 +6520,7 @@
       "label": ".setCameraEnabled()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L793",
+      "source_location": "L855",
       "_origin": "ast"
     },
     {
@@ -6496,7 +6528,7 @@
       "label": ".acquireCamera()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L809",
+      "source_location": "L871",
       "_origin": "ast"
     },
     {
@@ -6504,7 +6536,7 @@
       "label": ".handleLocalVideoTrackEnded()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L902",
+      "source_location": "L964",
       "_origin": "ast"
     },
     {
@@ -6512,7 +6544,7 @@
       "label": ".scheduleCameraReacquire()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L927",
+      "source_location": "L989",
       "_origin": "ast"
     },
     {
@@ -6520,7 +6552,7 @@
       "label": ".giveUpCameraRecovery()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L971",
+      "source_location": "L1033",
       "_origin": "ast"
     },
     {
@@ -6528,7 +6560,7 @@
       "label": ".setPublicCameraEnabled()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L987",
+      "source_location": "L1049",
       "_origin": "ast"
     },
     {
@@ -6536,7 +6568,7 @@
       "label": ".scheduleCameraStableReset()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1001",
+      "source_location": "L1063",
       "_origin": "ast"
     },
     {
@@ -6544,7 +6576,7 @@
       "label": ".clearCameraReacquireTimer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1012",
+      "source_location": "L1074",
       "_origin": "ast"
     },
     {
@@ -6552,7 +6584,7 @@
       "label": ".clearCameraStableTimer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1021",
+      "source_location": "L1083",
       "_origin": "ast"
     },
     {
@@ -6560,7 +6592,7 @@
       "label": ".startVoiceTalk()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1030",
+      "source_location": "L1092",
       "_origin": "ast"
     },
     {
@@ -6568,7 +6600,7 @@
       "label": ".acquireVoiceTrack()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1075",
+      "source_location": "L1137",
       "_origin": "ast"
     },
     {
@@ -6576,7 +6608,7 @@
       "label": ".stopVoiceTalk()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1164",
+      "source_location": "L1226",
       "_origin": "ast"
     },
     {
@@ -6584,7 +6616,7 @@
       "label": ".unlockAudio()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1208",
+      "source_location": "L1270",
       "_origin": "ast"
     },
     {
@@ -6592,7 +6624,7 @@
       "label": ".scheduleMicRelease()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1214",
+      "source_location": "L1276",
       "_origin": "ast"
     },
     {
@@ -6600,7 +6632,7 @@
       "label": ".clearMicReleaseTimer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1224",
+      "source_location": "L1286",
       "_origin": "ast"
     },
     {
@@ -6608,7 +6640,7 @@
       "label": ".handleLocalAudioTrackEnded()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1231",
+      "source_location": "L1293",
       "_origin": "ast"
     },
     {
@@ -6616,7 +6648,7 @@
       "label": ".scheduleVoiceReacquire()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1266",
+      "source_location": "L1328",
       "_origin": "ast"
     },
     {
@@ -6624,7 +6656,7 @@
       "label": ".giveUpVoiceRecovery()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1308",
+      "source_location": "L1370",
       "_origin": "ast"
     },
     {
@@ -6632,7 +6664,7 @@
       "label": ".scheduleVoiceStableReset()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1333",
+      "source_location": "L1395",
       "_origin": "ast"
     },
     {
@@ -6640,7 +6672,7 @@
       "label": ".clearVoiceReacquireTimer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1344",
+      "source_location": "L1406",
       "_origin": "ast"
     },
     {
@@ -6648,7 +6680,7 @@
       "label": ".clearVoiceStableTimer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1353",
+      "source_location": "L1415",
       "_origin": "ast"
     },
     {
@@ -6656,7 +6688,7 @@
       "label": ".releaseMic()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1362",
+      "source_location": "L1424",
       "_origin": "ast"
     },
     {
@@ -6664,7 +6696,7 @@
       "label": ".handleSignal()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1376",
+      "source_location": "L1438",
       "_origin": "ast"
     },
     {
@@ -6672,7 +6704,7 @@
       "label": ".getStats()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1588",
+      "source_location": "L1724",
       "_origin": "ast"
     },
     {
@@ -6680,7 +6712,7 @@
       "label": ".samplePeerHealth()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1618",
+      "source_location": "L1754",
       "_origin": "ast"
     },
     {
@@ -6688,7 +6720,7 @@
       "label": ".updateRemoteVideoActivityFromStats()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1659",
+      "source_location": "L1795",
       "_origin": "ast"
     },
     {
@@ -6696,7 +6728,7 @@
       "label": ".updateRemoteAudioActivityFromStats()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1739",
+      "source_location": "L1902",
       "_origin": "ast"
     },
     {
@@ -6704,7 +6736,7 @@
       "label": ".updateRemoteAudioFlowActivityFromStats()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1815",
+      "source_location": "L1978",
       "_origin": "ast"
     },
     {
@@ -6712,7 +6744,7 @@
       "label": ".notifyPageLeaving()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1898",
+      "source_location": "L2061",
       "_origin": "ast"
     },
     {
@@ -6720,7 +6752,7 @@
       "label": ".recoverDisconnectedPeers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1913",
+      "source_location": "L2076",
       "_origin": "ast"
     },
     {
@@ -6728,7 +6760,7 @@
       "label": ".hasPeer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1932",
+      "source_location": "L2095",
       "_origin": "ast"
     },
     {
@@ -6736,7 +6768,7 @@
       "label": ".disconnect()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1937",
+      "source_location": "L2100",
       "_origin": "ast"
     },
     {
@@ -6744,7 +6776,7 @@
       "label": ".ensurePeer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1999",
+      "source_location": "L2162",
       "_origin": "ast"
     },
     {
@@ -6752,7 +6784,7 @@
       "label": ".syncPeerMediaAndNegotiate()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2246",
+      "source_location": "L2409",
       "_origin": "ast"
     },
     {
@@ -6760,7 +6792,7 @@
       "label": ".syncPeerMedia()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2267",
+      "source_location": "L2430",
       "_origin": "ast"
     },
     {
@@ -6768,7 +6800,7 @@
       "label": ".refreshPeerTransceivers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2352",
+      "source_location": "L2515",
       "_origin": "ast"
     },
     {
@@ -6776,7 +6808,7 @@
       "label": ".ensureOffererTransceivers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2366",
+      "source_location": "L2529",
       "_origin": "ast"
     },
     {
@@ -6784,7 +6816,7 @@
       "label": ".applyPeerCodecPreferences()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2397",
+      "source_location": "L2560",
       "_origin": "ast"
     },
     {
@@ -6792,7 +6824,7 @@
       "label": ".applyPeerCodecPreference()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2417",
+      "source_location": "L2580",
       "_origin": "ast"
     },
     {
@@ -6800,7 +6832,7 @@
       "label": ".peerNeedsMediaOffer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2452",
+      "source_location": "L2615",
       "_origin": "ast"
     },
     {
@@ -6808,7 +6840,7 @@
       "label": ".queueNegotiation()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2461",
+      "source_location": "L2624",
       "_origin": "ast"
     },
     {
@@ -6816,7 +6848,7 @@
       "label": ".createAndSendOffer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2518",
+      "source_location": "L2681",
       "_origin": "ast"
     },
     {
@@ -6824,7 +6856,7 @@
       "label": ".sendLocalDescription()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2561",
+      "source_location": "L2724",
       "_origin": "ast"
     },
     {
@@ -6832,7 +6864,7 @@
       "label": ".stopCamera()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2598",
+      "source_location": "L2761",
       "_origin": "ast"
     },
     {
@@ -6840,7 +6872,7 @@
       "label": ".upsertVideo()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2626",
+      "source_location": "L2789",
       "_origin": "ast"
     },
     {
@@ -6848,7 +6880,7 @@
       "label": ".removeVideo()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2639",
+      "source_location": "L2802",
       "_origin": "ast"
     },
     {
@@ -6856,7 +6888,7 @@
       "label": ".removeAudio()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2656",
+      "source_location": "L2819",
       "_origin": "ast"
     },
     {
@@ -6864,7 +6896,7 @@
       "label": ".videoElementUsesTrack()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2676",
+      "source_location": "L2839",
       "_origin": "ast"
     },
     {
@@ -6872,7 +6904,7 @@
       "label": ".audioElementUsesTrack()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2684",
+      "source_location": "L2847",
       "_origin": "ast"
     },
     {
@@ -6880,7 +6912,7 @@
       "label": ".publishVideos()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2694",
+      "source_location": "L2857",
       "_origin": "ast"
     },
     {
@@ -6888,7 +6920,7 @@
       "label": ".publishActiveSpeakerIds()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2698",
+      "source_location": "L2861",
       "_origin": "ast"
     },
     {
@@ -6896,7 +6928,7 @@
       "label": ".schedulePeerLingerClose()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2714",
+      "source_location": "L2877",
       "_origin": "ast"
     },
     {
@@ -6904,7 +6936,7 @@
       "label": ".clearPeerLingerTimer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2747",
+      "source_location": "L2910",
       "_origin": "ast"
     },
     {
@@ -6912,7 +6944,7 @@
       "label": ".closePeer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2756",
+      "source_location": "L2919",
       "_origin": "ast"
     },
     {
@@ -6920,7 +6952,7 @@
       "label": ".flushPendingIceCandidates()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2784",
+      "source_location": "L2948",
       "_origin": "ast"
     },
     {
@@ -6928,7 +6960,7 @@
       "label": ".handleNetworkSignal()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2798",
+      "source_location": "L2962",
       "_origin": "ast"
     },
     {
@@ -6936,7 +6968,7 @@
       "label": ".restartAllPeerIce()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2820",
+      "source_location": "L2984",
       "_origin": "ast"
     },
     {
@@ -6944,7 +6976,7 @@
       "label": ".restartPeerIce()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2833",
+      "source_location": "L2997",
       "_origin": "ast"
     },
     {
@@ -6952,7 +6984,7 @@
       "label": ".refreshPeerIceServers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2887",
+      "source_location": "L3051",
       "_origin": "ast"
     },
     {
@@ -6960,7 +6992,7 @@
       "label": ".schedulePeerIceRestart()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2923",
+      "source_location": "L3087",
       "_origin": "ast"
     },
     {
@@ -6968,7 +7000,7 @@
       "label": ".clearPeerDisconnectTimer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2954",
+      "source_location": "L3118",
       "_origin": "ast"
     },
     {
@@ -6976,7 +7008,7 @@
       "label": ".requestRemoteRenegotiation()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2963",
+      "source_location": "L3127",
       "_origin": "ast"
     },
     {
@@ -6984,7 +7016,7 @@
       "label": ".requestRemoteIceRestart()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2989",
+      "source_location": "L3153",
       "_origin": "ast"
     },
     {
@@ -6992,7 +7024,7 @@
       "label": ".shouldInitiateOffers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3015",
+      "source_location": "L3179",
       "_origin": "ast"
     },
     {
@@ -7000,7 +7032,7 @@
       "label": ".logSelectedCandidatePair()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3019",
+      "source_location": "L3183",
       "_origin": "ast"
     },
     {
@@ -7008,7 +7040,7 @@
       "label": "getNetworkInformation()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3053",
+      "source_location": "L3217",
       "_origin": "ast"
     },
     {
@@ -7016,7 +7048,7 @@
       "label": "summarizeNetworkInformation()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3062",
+      "source_location": "L3226",
       "_origin": "ast"
     },
     {
@@ -7024,7 +7056,7 @@
       "label": "createP2PRtcConfiguration()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3078",
+      "source_location": "L3242",
       "_origin": "ast"
     },
     {
@@ -7032,7 +7064,7 @@
       "label": "applyP2PCodecPreferences()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3091",
+      "source_location": "L3255",
       "_origin": "ast"
     },
     {
@@ -7040,7 +7072,7 @@
       "label": "getP2PCodecCapabilities()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3122",
+      "source_location": "L3286",
       "_origin": "ast"
     },
     {
@@ -7048,7 +7080,7 @@
       "label": "p2pCodecPreferenceRank()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3138",
+      "source_location": "L3302",
       "_origin": "ast"
     },
     {
@@ -7056,7 +7088,7 @@
       "label": "summarizeP2PCodecCapability()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3187",
+      "source_location": "L3351",
       "_origin": "ast"
     },
     {
@@ -7064,7 +7096,7 @@
       "label": "getDefaultP2PIceServers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3198",
+      "source_location": "L3362",
       "_origin": "ast"
     },
     {
@@ -7072,7 +7104,7 @@
       "label": "getDirectP2PStunServers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3211",
+      "source_location": "L3375",
       "_origin": "ast"
     },
     {
@@ -7080,7 +7112,7 @@
       "label": "isPoliteP2PPeer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3215",
+      "source_location": "L3379",
       "_origin": "ast"
     },
     {
@@ -7088,7 +7120,7 @@
       "label": "shouldInitiateP2POffers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3226",
+      "source_location": "L3390",
       "_origin": "ast"
     },
     {
@@ -7096,7 +7128,7 @@
       "label": "parseIceServers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3235",
+      "source_location": "L3399",
       "_origin": "ast"
     },
     {
@@ -7104,7 +7136,7 @@
       "label": "isIceServer()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3252",
+      "source_location": "L3416",
       "_origin": "ast"
     },
     {
@@ -7112,7 +7144,7 @@
       "label": "createVideoElement()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3264",
+      "source_location": "L3428",
       "_origin": "ast"
     },
     {
@@ -7120,7 +7152,7 @@
       "label": "mediaElementUsesTrack()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3276",
+      "source_location": "L3440",
       "_origin": "ast"
     },
     {
@@ -7128,7 +7160,7 @@
       "label": "findMediaTransceiver()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3287",
+      "source_location": "L3451",
       "_origin": "ast"
     },
     {
@@ -7136,7 +7168,7 @@
       "label": "transceiverKind()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3303",
+      "source_location": "L3467",
       "_origin": "ast"
     },
     {
@@ -7144,7 +7176,7 @@
       "label": "summarizeTransceivers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3315",
+      "source_location": "L3479",
       "_origin": "ast"
     },
     {
@@ -7152,7 +7184,7 @@
       "label": "stopStream()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3328",
+      "source_location": "L3492",
       "_origin": "ast"
     },
     {
@@ -7160,7 +7192,7 @@
       "label": "formatCameraErrorMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3338",
+      "source_location": "L3502",
       "_origin": "ast"
     },
     {
@@ -7168,7 +7200,7 @@
       "label": "formatVoiceErrorMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3359",
+      "source_location": "L3523",
       "_origin": "ast"
     },
     {
@@ -7176,7 +7208,7 @@
       "label": "toP2PIceCandidate()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3383",
+      "source_location": "L3547",
       "_origin": "ast"
     },
     {
@@ -7184,7 +7216,7 @@
       "label": "summarizeIceServers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3404",
+      "source_location": "L3568",
       "_origin": "ast"
     },
     {
@@ -7192,7 +7224,7 @@
       "label": "summarizeP2PCandidatePairTelemetry()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3414",
+      "source_location": "L3578",
       "_origin": "ast"
     },
     {
@@ -7200,7 +7232,7 @@
       "label": "copyDefinedStat()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3455",
+      "source_location": "L3619",
       "_origin": "ast"
     },
     {
@@ -7208,7 +7240,7 @@
       "label": "readStringStat()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3465",
+      "source_location": "L3629",
       "_origin": "ast"
     },
     {
@@ -7216,7 +7248,7 @@
       "label": "readNumberStat()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3469",
+      "source_location": "L3633",
       "_origin": "ast"
     },
     {
@@ -7224,7 +7256,7 @@
       "label": "summarizeSignal()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3473",
+      "source_location": "L3637",
       "_origin": "ast"
     },
     {
@@ -7232,7 +7264,7 @@
       "label": "prepareP2PLocalDescription()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3493",
+      "source_location": "L3657",
       "_origin": "ast"
     },
     {
@@ -7240,7 +7272,7 @@
       "label": "enableP2POpusDtxAndInbandFec()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3507",
+      "source_location": "L3671",
       "_origin": "ast"
     },
     {
@@ -7248,7 +7280,7 @@
       "label": "formatOpusFmtpLine()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3555",
+      "source_location": "L3719",
       "_origin": "ast"
     },
     {
@@ -7256,7 +7288,7 @@
       "label": "getAudioOpusPayloadTypes()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3570",
+      "source_location": "L3734",
       "_origin": "ast"
     },
     {
@@ -7264,7 +7296,7 @@
       "label": "hasOpusFmtpParam()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3593",
+      "source_location": "L3757",
       "_origin": "ast"
     },
     {
@@ -7272,7 +7304,7 @@
       "label": "summarizeP2PSdp()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3615",
+      "source_location": "L3779",
       "_origin": "ast"
     },
     {
@@ -7280,7 +7312,7 @@
       "label": "countMatches()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3644",
+      "source_location": "L3808",
       "_origin": "ast"
     },
     {
@@ -7288,7 +7320,7 @@
       "label": "pruneRecentP2PSignalFingerprints()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3648",
+      "source_location": "L3812",
       "_origin": "ast"
     },
     {
@@ -7296,7 +7328,7 @@
       "label": "hashString()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3670",
+      "source_location": "L3834",
       "_origin": "ast"
     },
     {
@@ -7304,7 +7336,7 @@
       "label": "getCandidateType()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3679",
+      "source_location": "L3843",
       "_origin": "ast"
     },
     {
@@ -7312,7 +7344,7 @@
       "label": "getCandidateProtocol()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3683",
+      "source_location": "L3847",
       "_origin": "ast"
     },
     {
@@ -7320,7 +7352,7 @@
       "label": "configureSender()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3689",
+      "source_location": "L3853",
       "_origin": "ast"
     },
     {
@@ -7328,7 +7360,7 @@
       "label": "addOptionalNumbers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3718",
+      "source_location": "L3882",
       "_origin": "ast"
     },
     {
@@ -7336,7 +7368,7 @@
       "label": "maxOptionalNumbers()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3728",
+      "source_location": "L3892",
       "_origin": "ast"
     },
     {
@@ -7344,7 +7376,7 @@
       "label": "mergeVideoInboundStats()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3738",
+      "source_location": "L3902",
       "_origin": "ast"
     },
     {
@@ -7352,7 +7384,7 @@
       "label": "summarizeStats()",
       "file_type": "code",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3752",
+      "source_location": "L3916",
       "_origin": "ast"
     },
     {
@@ -11104,7 +11136,7 @@
       "label": "participant()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "_origin": "ast"
     },
     {
@@ -11112,7 +11144,7 @@
       "label": "statsReportFrom()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L48",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -11120,7 +11152,7 @@
       "label": "FakeVideoTrack",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L52",
+      "source_location": "L53",
       "_origin": "ast"
     },
     {
@@ -11128,7 +11160,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L59",
+      "source_location": "L60",
       "_origin": "ast"
     },
     {
@@ -11136,7 +11168,7 @@
       "label": ".end()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L64",
+      "source_location": "L65",
       "_origin": "ast"
     },
     {
@@ -11144,7 +11176,7 @@
       "label": ".getSettings()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L69",
+      "source_location": "L70",
       "_origin": "ast"
     },
     {
@@ -11152,7 +11184,7 @@
       "label": ".stop()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L73",
+      "source_location": "L74",
       "_origin": "ast"
     },
     {
@@ -11160,7 +11192,7 @@
       "label": "FakeAudioTrack",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L78",
+      "source_location": "L79",
       "_origin": "ast"
     },
     {
@@ -11168,7 +11200,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L84",
+      "source_location": "L85",
       "_origin": "ast"
     },
     {
@@ -11176,7 +11208,7 @@
       "label": ".end()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L89",
+      "source_location": "L90",
       "_origin": "ast"
     },
     {
@@ -11184,7 +11216,7 @@
       "label": ".getSettings()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L94",
+      "source_location": "L95",
       "_origin": "ast"
     },
     {
@@ -11192,7 +11224,7 @@
       "label": ".stop()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L98",
+      "source_location": "L99",
       "_origin": "ast"
     },
     {
@@ -11200,7 +11232,7 @@
       "label": "fakeVideoStream()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L103",
+      "source_location": "L104",
       "_origin": "ast"
     },
     {
@@ -11208,7 +11240,7 @@
       "label": "fakeAudioStream()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L114",
+      "source_location": "L115",
       "_origin": "ast"
     },
     {
@@ -11216,7 +11248,7 @@
       "label": "installFakeMediaDevices()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L125",
+      "source_location": "L126",
       "_origin": "ast"
     },
     {
@@ -11224,7 +11256,7 @@
       "label": "createP2PControllerHarness()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L132",
+      "source_location": "L133",
       "_origin": "ast"
     },
     {
@@ -11232,7 +11264,7 @@
       "label": "installStatsPeer()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L161",
+      "source_location": "L162",
       "_origin": "ast"
     },
     {
@@ -11240,7 +11272,7 @@
       "label": "sampleP2PPeerHealth()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L218",
+      "source_location": "L227",
       "_origin": "ast"
     },
     {
@@ -11248,7 +11280,7 @@
       "label": "FakeRtcTransceiver",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1331",
+      "source_location": "L1409",
       "_origin": "ast"
     },
     {
@@ -11256,7 +11288,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1341",
+      "source_location": "L1419",
       "_origin": "ast"
     },
     {
@@ -11264,7 +11296,7 @@
       "label": "FakeRtcPeerConnection",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1348",
+      "source_location": "L1426",
       "_origin": "ast"
     },
     {
@@ -11272,7 +11304,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1363",
+      "source_location": "L1441",
       "_origin": "ast"
     },
     {
@@ -11280,7 +11312,7 @@
       "label": ".addTransceiver()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1368",
+      "source_location": "L1446",
       "_origin": "ast"
     },
     {
@@ -11288,7 +11320,7 @@
       "label": ".createOffer()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1377",
+      "source_location": "L1455",
       "_origin": "ast"
     },
     {
@@ -11296,7 +11328,7 @@
       "label": ".getStats()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1381",
+      "source_location": "L1459",
       "_origin": "ast"
     },
     {
@@ -11304,7 +11336,7 @@
       "label": ".getTransceivers()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1385",
+      "source_location": "L1463",
       "_origin": "ast"
     },
     {
@@ -11312,7 +11344,7 @@
       "label": ".setLocalDescription()",
       "file_type": "code",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1389",
+      "source_location": "L1467",
       "_origin": "ast"
     },
     {
@@ -32120,11 +32152,19 @@
       "_origin": "ast"
     },
     {
+      "id": "tests_e2e_harness_entry_harness_ensurecontroller",
+      "label": ".ensureController()",
+      "file_type": "code",
+      "source_file": "tests/e2e/harness-entry.ts",
+      "source_location": "L79",
+      "_origin": "ast"
+    },
+    {
       "id": "tests_e2e_harness_entry_harness_connectclient",
       "label": ".connectClient()",
       "file_type": "code",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L78",
+      "source_location": "L135",
       "_origin": "ast"
     },
     {
@@ -32132,7 +32172,7 @@
       "label": ".reconnect()",
       "file_type": "code",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L136",
+      "source_location": "L154",
       "_origin": "ast"
     },
     {
@@ -32140,7 +32180,7 @@
       "label": ".onServerEvent()",
       "file_type": "code",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L148",
+      "source_location": "L166",
       "_origin": "ast"
     },
     {
@@ -32148,7 +32188,7 @@
       "label": ".waitForStatus()",
       "file_type": "code",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L178",
+      "source_location": "L198",
       "_origin": "ast"
     },
     {
@@ -32156,7 +32196,7 @@
       "label": ".getState()",
       "file_type": "code",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L187",
+      "source_location": "L207",
       "_origin": "ast"
     },
     {
@@ -32164,7 +32204,7 @@
       "label": ".startVoice()",
       "file_type": "code",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L241",
+      "source_location": "L261",
       "_origin": "ast"
     },
     {
@@ -32172,7 +32212,7 @@
       "label": ".stopVoice()",
       "file_type": "code",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L245",
+      "source_location": "L265",
       "_origin": "ast"
     },
     {
@@ -32180,7 +32220,7 @@
       "label": ".remoteAudioBytes()",
       "file_type": "code",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L250",
+      "source_location": "L270",
       "_origin": "ast"
     },
     {
@@ -32188,7 +32228,7 @@
       "label": ".stop()",
       "file_type": "code",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L264",
+      "source_location": "L284",
       "_origin": "ast"
     },
     {
@@ -32196,7 +32236,7 @@
       "label": "Window",
       "file_type": "code",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L271",
+      "source_location": "L291",
       "_origin": "ast"
     },
     {
@@ -32408,11 +32448,19 @@
       "_origin": "ast"
     },
     {
+      "id": "tests_e2e_p2p_media_harness_waitforremotevideocount",
+      "label": "waitForRemoteVideoCount()",
+      "file_type": "code",
+      "source_file": "tests/e2e/p2p-media-harness.mjs",
+      "source_location": "L286",
+      "_origin": "ast"
+    },
+    {
       "id": "tests_e2e_p2p_media_harness_waitforcameraenabledcount",
       "label": "waitForCameraEnabledCount()",
       "file_type": "code",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L286",
+      "source_location": "L299",
       "_origin": "ast"
     },
     {
@@ -32420,7 +32468,7 @@
       "label": "waitForRemoteFramesAbove()",
       "file_type": "code",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L299",
+      "source_location": "L312",
       "_origin": "ast"
     },
     {
@@ -32428,7 +32476,7 @@
       "label": "waitForRemoteVideoActivity()",
       "file_type": "code",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L312",
+      "source_location": "L325",
       "_origin": "ast"
     },
     {
@@ -32436,7 +32484,7 @@
       "label": "maxIceRestartCount()",
       "file_type": "code",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L325",
+      "source_location": "L338",
       "_origin": "ast"
     },
     {
@@ -32444,7 +32492,7 @@
       "label": "getRestartSnapshot()",
       "file_type": "code",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L329",
+      "source_location": "L342",
       "_origin": "ast"
     },
     {
@@ -32452,7 +32500,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L338",
+      "source_location": "L351",
       "_origin": "ast"
     },
     {
@@ -57102,7 +57150,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L435",
+      "source_location": "L450",
       "weight": 1.0
     },
     {
@@ -57111,7 +57159,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L459",
+      "source_location": "L474",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_ghost_cam",
+      "target": "apps_extension_src_ghost_cam_p2psignalmetadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/ghost-cam.ts",
+      "source_location": "L497",
       "weight": 1.0
     },
     {
@@ -57120,7 +57177,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L480",
+      "source_location": "L503",
       "weight": 1.0
     },
     {
@@ -57140,7 +57197,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L308",
+      "source_location": "L311",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_ghost_cam_usep2pghostcam",
+      "target": "apps_extension_src_ghost_cam_p2psignalmetadata",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/ghost-cam.ts",
+      "source_location": "L340",
       "weight": 1.0
     },
     {
@@ -57150,7 +57217,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L445",
+      "source_location": "L460",
       "weight": 1.0
     },
     {
@@ -57160,7 +57227,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L472",
+      "source_location": "L487",
       "weight": 1.0
     },
     {
@@ -61014,7 +61081,7 @@
     },
     {
       "source": "apps_extension_src_p2p_media",
-      "target": "apps_extension_src_p2p_media_decidep2picerestart",
+      "target": "apps_extension_src_p2p_media_p2psignalconnectiondecision",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
@@ -61023,11 +61090,38 @@
     },
     {
       "source": "apps_extension_src_p2p_media",
+      "target": "apps_extension_src_p2p_media_p2psignalmetadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L173",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media",
+      "target": "apps_extension_src_p2p_media_decidep2picerestart",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L177",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media",
+      "target": "apps_extension_src_p2p_media_decidep2psignalconnection",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L199",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media",
       "target": "apps_extension_src_p2p_media_createp2pmediasignaldedupekey",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L184",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -61036,7 +61130,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L206",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -61045,7 +61139,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L228",
+      "source_location": "L289",
       "weight": 1.0
     },
     {
@@ -61054,7 +61148,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L234",
+      "source_location": "L295",
       "weight": 1.0
     },
     {
@@ -61063,7 +61157,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L246",
+      "source_location": "L307",
       "weight": 1.0
     },
     {
@@ -61072,7 +61166,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L255",
+      "source_location": "L316",
       "weight": 1.0
     },
     {
@@ -61081,7 +61175,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L265",
+      "source_location": "L326",
       "weight": 1.0
     },
     {
@@ -61090,7 +61184,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L269",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -61099,7 +61193,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L275",
+      "source_location": "L336",
       "weight": 1.0
     },
     {
@@ -61108,7 +61202,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L289",
+      "source_location": "L350",
       "weight": 1.0
     },
     {
@@ -61117,7 +61211,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L295",
+      "source_location": "L356",
       "weight": 1.0
     },
     {
@@ -61126,7 +61220,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L302",
+      "source_location": "L363",
       "weight": 1.0
     },
     {
@@ -61135,7 +61229,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L303",
+      "source_location": "L364",
       "weight": 1.0
     },
     {
@@ -61144,7 +61238,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L310",
+      "source_location": "L371",
       "weight": 1.0
     },
     {
@@ -61153,7 +61247,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L350",
+      "source_location": "L411",
       "weight": 1.0
     },
     {
@@ -61162,7 +61256,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L377",
+      "source_location": "L438",
       "weight": 1.0
     },
     {
@@ -61171,7 +61265,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L382",
+      "source_location": "L443",
       "weight": 1.0
     },
     {
@@ -61180,7 +61274,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L386",
+      "source_location": "L447",
       "weight": 1.0
     },
     {
@@ -61189,7 +61283,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L393",
+      "source_location": "L454",
       "weight": 1.0
     },
     {
@@ -61198,7 +61292,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L454",
+      "source_location": "L515",
       "weight": 1.0
     },
     {
@@ -61207,7 +61301,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L491",
+      "source_location": "L552",
       "weight": 1.0
     },
     {
@@ -61216,7 +61310,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L517",
+      "source_location": "L578",
       "weight": 1.0
     },
     {
@@ -61225,7 +61319,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L547",
+      "source_location": "L608",
       "weight": 1.0
     },
     {
@@ -61234,7 +61328,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L559",
+      "source_location": "L620",
       "weight": 1.0
     },
     {
@@ -61243,7 +61337,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L566",
+      "source_location": "L627",
       "weight": 1.0
     },
     {
@@ -61252,7 +61346,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L635",
+      "source_location": "L697",
       "weight": 1.0
     },
     {
@@ -61261,7 +61355,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L637",
+      "source_location": "L699",
       "weight": 1.0
     },
     {
@@ -61270,7 +61364,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L638",
+      "source_location": "L700",
       "weight": 1.0
     },
     {
@@ -61279,7 +61373,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L639",
+      "source_location": "L701",
       "weight": 1.0
     },
     {
@@ -61288,7 +61382,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L642",
+      "source_location": "L704",
       "weight": 1.0
     },
     {
@@ -61297,7 +61391,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L680",
+      "source_location": "L742",
       "weight": 1.0
     },
     {
@@ -61306,7 +61400,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L706",
+      "source_location": "L768",
       "weight": 1.0
     },
     {
@@ -61315,7 +61409,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L736",
+      "source_location": "L798",
       "weight": 1.0
     },
     {
@@ -61324,7 +61418,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L793",
+      "source_location": "L855",
       "weight": 1.0
     },
     {
@@ -61333,7 +61427,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L809",
+      "source_location": "L871",
       "weight": 1.0
     },
     {
@@ -61342,7 +61436,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L902",
+      "source_location": "L964",
       "weight": 1.0
     },
     {
@@ -61351,7 +61445,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L927",
+      "source_location": "L989",
       "weight": 1.0
     },
     {
@@ -61360,7 +61454,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L971",
+      "source_location": "L1033",
       "weight": 1.0
     },
     {
@@ -61369,7 +61463,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L987",
+      "source_location": "L1049",
       "weight": 1.0
     },
     {
@@ -61378,7 +61472,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1001",
+      "source_location": "L1063",
       "weight": 1.0
     },
     {
@@ -61387,7 +61481,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1012",
+      "source_location": "L1074",
       "weight": 1.0
     },
     {
@@ -61396,7 +61490,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1021",
+      "source_location": "L1083",
       "weight": 1.0
     },
     {
@@ -61405,7 +61499,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1030",
+      "source_location": "L1092",
       "weight": 1.0
     },
     {
@@ -61414,7 +61508,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1075",
+      "source_location": "L1137",
       "weight": 1.0
     },
     {
@@ -61423,7 +61517,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1164",
+      "source_location": "L1226",
       "weight": 1.0
     },
     {
@@ -61432,7 +61526,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1208",
+      "source_location": "L1270",
       "weight": 1.0
     },
     {
@@ -61441,7 +61535,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1214",
+      "source_location": "L1276",
       "weight": 1.0
     },
     {
@@ -61450,7 +61544,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1224",
+      "source_location": "L1286",
       "weight": 1.0
     },
     {
@@ -61459,7 +61553,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1231",
+      "source_location": "L1293",
       "weight": 1.0
     },
     {
@@ -61468,7 +61562,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1266",
+      "source_location": "L1328",
       "weight": 1.0
     },
     {
@@ -61477,7 +61571,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1308",
+      "source_location": "L1370",
       "weight": 1.0
     },
     {
@@ -61486,7 +61580,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1333",
+      "source_location": "L1395",
       "weight": 1.0
     },
     {
@@ -61495,7 +61589,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1344",
+      "source_location": "L1406",
       "weight": 1.0
     },
     {
@@ -61504,7 +61598,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1353",
+      "source_location": "L1415",
       "weight": 1.0
     },
     {
@@ -61513,7 +61607,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1362",
+      "source_location": "L1424",
       "weight": 1.0
     },
     {
@@ -61522,7 +61616,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1376",
+      "source_location": "L1438",
       "weight": 1.0
     },
     {
@@ -61531,7 +61625,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1588",
+      "source_location": "L1724",
       "weight": 1.0
     },
     {
@@ -61540,7 +61634,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1618",
+      "source_location": "L1754",
       "weight": 1.0
     },
     {
@@ -61549,7 +61643,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1659",
+      "source_location": "L1795",
       "weight": 1.0
     },
     {
@@ -61558,7 +61652,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1739",
+      "source_location": "L1902",
       "weight": 1.0
     },
     {
@@ -61567,7 +61661,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1815",
+      "source_location": "L1978",
       "weight": 1.0
     },
     {
@@ -61576,7 +61670,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1898",
+      "source_location": "L2061",
       "weight": 1.0
     },
     {
@@ -61585,7 +61679,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1913",
+      "source_location": "L2076",
       "weight": 1.0
     },
     {
@@ -61594,7 +61688,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1932",
+      "source_location": "L2095",
       "weight": 1.0
     },
     {
@@ -61603,7 +61697,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1937",
+      "source_location": "L2100",
       "weight": 1.0
     },
     {
@@ -61612,7 +61706,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1999",
+      "source_location": "L2162",
       "weight": 1.0
     },
     {
@@ -61621,7 +61715,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2246",
+      "source_location": "L2409",
       "weight": 1.0
     },
     {
@@ -61630,7 +61724,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2267",
+      "source_location": "L2430",
       "weight": 1.0
     },
     {
@@ -61639,7 +61733,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2352",
+      "source_location": "L2515",
       "weight": 1.0
     },
     {
@@ -61648,7 +61742,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2366",
+      "source_location": "L2529",
       "weight": 1.0
     },
     {
@@ -61657,7 +61751,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2397",
+      "source_location": "L2560",
       "weight": 1.0
     },
     {
@@ -61666,7 +61760,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2417",
+      "source_location": "L2580",
       "weight": 1.0
     },
     {
@@ -61675,7 +61769,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2452",
+      "source_location": "L2615",
       "weight": 1.0
     },
     {
@@ -61684,7 +61778,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2461",
+      "source_location": "L2624",
       "weight": 1.0
     },
     {
@@ -61693,7 +61787,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2518",
+      "source_location": "L2681",
       "weight": 1.0
     },
     {
@@ -61702,7 +61796,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2561",
+      "source_location": "L2724",
       "weight": 1.0
     },
     {
@@ -61711,7 +61805,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2598",
+      "source_location": "L2761",
       "weight": 1.0
     },
     {
@@ -61720,7 +61814,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2626",
+      "source_location": "L2789",
       "weight": 1.0
     },
     {
@@ -61729,7 +61823,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2639",
+      "source_location": "L2802",
       "weight": 1.0
     },
     {
@@ -61738,7 +61832,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2656",
+      "source_location": "L2819",
       "weight": 1.0
     },
     {
@@ -61747,7 +61841,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2676",
+      "source_location": "L2839",
       "weight": 1.0
     },
     {
@@ -61756,7 +61850,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2684",
+      "source_location": "L2847",
       "weight": 1.0
     },
     {
@@ -61765,7 +61859,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2694",
+      "source_location": "L2857",
       "weight": 1.0
     },
     {
@@ -61774,7 +61868,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2698",
+      "source_location": "L2861",
       "weight": 1.0
     },
     {
@@ -61783,7 +61877,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2714",
+      "source_location": "L2877",
       "weight": 1.0
     },
     {
@@ -61792,7 +61886,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2747",
+      "source_location": "L2910",
       "weight": 1.0
     },
     {
@@ -61801,7 +61895,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2756",
+      "source_location": "L2919",
       "weight": 1.0
     },
     {
@@ -61810,7 +61904,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2784",
+      "source_location": "L2948",
       "weight": 1.0
     },
     {
@@ -61819,7 +61913,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2798",
+      "source_location": "L2962",
       "weight": 1.0
     },
     {
@@ -61828,7 +61922,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2820",
+      "source_location": "L2984",
       "weight": 1.0
     },
     {
@@ -61837,7 +61931,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2833",
+      "source_location": "L2997",
       "weight": 1.0
     },
     {
@@ -61846,7 +61940,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2887",
+      "source_location": "L3051",
       "weight": 1.0
     },
     {
@@ -61855,7 +61949,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2923",
+      "source_location": "L3087",
       "weight": 1.0
     },
     {
@@ -61864,7 +61958,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2954",
+      "source_location": "L3118",
       "weight": 1.0
     },
     {
@@ -61873,7 +61967,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2963",
+      "source_location": "L3127",
       "weight": 1.0
     },
     {
@@ -61882,7 +61976,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2989",
+      "source_location": "L3153",
       "weight": 1.0
     },
     {
@@ -61891,7 +61985,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3015",
+      "source_location": "L3179",
       "weight": 1.0
     },
     {
@@ -61900,7 +61994,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3019",
+      "source_location": "L3183",
       "weight": 1.0
     },
     {
@@ -61909,7 +62003,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3053",
+      "source_location": "L3217",
       "weight": 1.0
     },
     {
@@ -61918,7 +62012,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3062",
+      "source_location": "L3226",
       "weight": 1.0
     },
     {
@@ -61927,7 +62021,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3078",
+      "source_location": "L3242",
       "weight": 1.0
     },
     {
@@ -61936,7 +62030,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3091",
+      "source_location": "L3255",
       "weight": 1.0
     },
     {
@@ -61945,7 +62039,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3122",
+      "source_location": "L3286",
       "weight": 1.0
     },
     {
@@ -61954,7 +62048,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3138",
+      "source_location": "L3302",
       "weight": 1.0
     },
     {
@@ -61963,7 +62057,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3187",
+      "source_location": "L3351",
       "weight": 1.0
     },
     {
@@ -61972,7 +62066,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3198",
+      "source_location": "L3362",
       "weight": 1.0
     },
     {
@@ -61981,7 +62075,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3211",
+      "source_location": "L3375",
       "weight": 1.0
     },
     {
@@ -61990,7 +62084,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3215",
+      "source_location": "L3379",
       "weight": 1.0
     },
     {
@@ -61999,7 +62093,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3226",
+      "source_location": "L3390",
       "weight": 1.0
     },
     {
@@ -62008,7 +62102,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3235",
+      "source_location": "L3399",
       "weight": 1.0
     },
     {
@@ -62017,7 +62111,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3252",
+      "source_location": "L3416",
       "weight": 1.0
     },
     {
@@ -62026,7 +62120,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3264",
+      "source_location": "L3428",
       "weight": 1.0
     },
     {
@@ -62035,7 +62129,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3276",
+      "source_location": "L3440",
       "weight": 1.0
     },
     {
@@ -62044,7 +62138,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3287",
+      "source_location": "L3451",
       "weight": 1.0
     },
     {
@@ -62053,7 +62147,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3303",
+      "source_location": "L3467",
       "weight": 1.0
     },
     {
@@ -62062,7 +62156,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3315",
+      "source_location": "L3479",
       "weight": 1.0
     },
     {
@@ -62071,7 +62165,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3328",
+      "source_location": "L3492",
       "weight": 1.0
     },
     {
@@ -62080,7 +62174,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3338",
+      "source_location": "L3502",
       "weight": 1.0
     },
     {
@@ -62089,7 +62183,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3359",
+      "source_location": "L3523",
       "weight": 1.0
     },
     {
@@ -62098,7 +62192,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3383",
+      "source_location": "L3547",
       "weight": 1.0
     },
     {
@@ -62107,7 +62201,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3404",
+      "source_location": "L3568",
       "weight": 1.0
     },
     {
@@ -62116,7 +62210,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3414",
+      "source_location": "L3578",
       "weight": 1.0
     },
     {
@@ -62125,7 +62219,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3455",
+      "source_location": "L3619",
       "weight": 1.0
     },
     {
@@ -62134,7 +62228,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3465",
+      "source_location": "L3629",
       "weight": 1.0
     },
     {
@@ -62143,7 +62237,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3469",
+      "source_location": "L3633",
       "weight": 1.0
     },
     {
@@ -62152,7 +62246,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3473",
+      "source_location": "L3637",
       "weight": 1.0
     },
     {
@@ -62161,7 +62255,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3493",
+      "source_location": "L3657",
       "weight": 1.0
     },
     {
@@ -62170,7 +62264,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3507",
+      "source_location": "L3671",
       "weight": 1.0
     },
     {
@@ -62179,7 +62273,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3555",
+      "source_location": "L3719",
       "weight": 1.0
     },
     {
@@ -62188,7 +62282,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3570",
+      "source_location": "L3734",
       "weight": 1.0
     },
     {
@@ -62197,7 +62291,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3593",
+      "source_location": "L3757",
       "weight": 1.0
     },
     {
@@ -62206,7 +62300,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3615",
+      "source_location": "L3779",
       "weight": 1.0
     },
     {
@@ -62215,7 +62309,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3644",
+      "source_location": "L3808",
       "weight": 1.0
     },
     {
@@ -62224,7 +62318,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3648",
+      "source_location": "L3812",
       "weight": 1.0
     },
     {
@@ -62233,7 +62327,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3670",
+      "source_location": "L3834",
       "weight": 1.0
     },
     {
@@ -62242,7 +62336,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3679",
+      "source_location": "L3843",
       "weight": 1.0
     },
     {
@@ -62251,7 +62345,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3683",
+      "source_location": "L3847",
       "weight": 1.0
     },
     {
@@ -62260,7 +62354,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3689",
+      "source_location": "L3853",
       "weight": 1.0
     },
     {
@@ -62269,7 +62363,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3718",
+      "source_location": "L3882",
       "weight": 1.0
     },
     {
@@ -62278,7 +62372,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3728",
+      "source_location": "L3892",
       "weight": 1.0
     },
     {
@@ -62287,7 +62381,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3738",
+      "source_location": "L3902",
       "weight": 1.0
     },
     {
@@ -62296,7 +62390,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3752",
+      "source_location": "L3916",
       "weight": 1.0
     },
     {
@@ -62306,7 +62400,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L189",
+      "source_location": "L250",
       "weight": 1.0
     },
     {
@@ -62316,7 +62410,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L217",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -62326,7 +62420,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L283",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -62336,7 +62430,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L292",
+      "source_location": "L353",
       "weight": 1.0
     },
     {
@@ -62346,7 +62440,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L372",
+      "source_location": "L433",
       "weight": 1.0
     },
     {
@@ -62356,7 +62450,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L502",
+      "source_location": "L563",
       "weight": 1.0
     },
     {
@@ -62366,7 +62460,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L635",
+      "source_location": "L697",
       "weight": 1.0
     },
     {
@@ -62376,7 +62470,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L637",
+      "source_location": "L699",
       "weight": 1.0
     },
     {
@@ -62386,7 +62480,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L638",
+      "source_location": "L700",
       "weight": 1.0
     },
     {
@@ -62396,7 +62490,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L640",
+      "source_location": "L702",
       "weight": 1.0
     },
     {
@@ -62406,7 +62500,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L645",
+      "source_location": "L707",
       "weight": 1.0
     },
     {
@@ -62416,7 +62510,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L656",
+      "source_location": "L718",
       "weight": 1.0
     },
     {
@@ -62426,7 +62520,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L657",
+      "source_location": "L719",
       "weight": 1.0
     },
     {
@@ -62436,7 +62530,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L671",
+      "source_location": "L733",
       "weight": 1.0
     },
     {
@@ -62446,7 +62540,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L697",
+      "source_location": "L759",
       "weight": 1.0
     },
     {
@@ -62456,7 +62550,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L724",
+      "source_location": "L786",
       "weight": 1.0
     },
     {
@@ -62466,7 +62560,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L729",
+      "source_location": "L791",
       "weight": 1.0
     },
     {
@@ -62476,7 +62570,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L731",
+      "source_location": "L793",
       "weight": 1.0
     },
     {
@@ -62486,7 +62580,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L758",
+      "source_location": "L820",
       "weight": 1.0
     },
     {
@@ -62496,7 +62590,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L764",
+      "source_location": "L826",
       "weight": 1.0
     },
     {
@@ -62506,7 +62600,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L782",
+      "source_location": "L844",
       "weight": 1.0
     },
     {
@@ -62516,7 +62610,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L800",
+      "source_location": "L862",
       "weight": 1.0
     },
     {
@@ -62526,7 +62620,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L806",
+      "source_location": "L868",
       "weight": 1.0
     },
     {
@@ -62536,7 +62630,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L816",
+      "source_location": "L878",
       "weight": 1.0
     },
     {
@@ -62546,7 +62640,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L824",
+      "source_location": "L886",
       "weight": 1.0
     },
     {
@@ -62556,7 +62650,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L825",
+      "source_location": "L887",
       "weight": 1.0
     },
     {
@@ -62566,7 +62660,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L840",
+      "source_location": "L902",
       "weight": 1.0
     },
     {
@@ -62576,7 +62670,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L855",
+      "source_location": "L917",
       "weight": 1.0
     },
     {
@@ -62586,7 +62680,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L867",
+      "source_location": "L929",
       "weight": 1.0
     },
     {
@@ -62596,7 +62690,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L868",
+      "source_location": "L930",
       "weight": 1.0
     },
     {
@@ -62606,7 +62700,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L870",
+      "source_location": "L932",
       "weight": 1.0
     },
     {
@@ -62616,7 +62710,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L875",
+      "source_location": "L937",
       "weight": 1.0
     },
     {
@@ -62626,7 +62720,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L876",
+      "source_location": "L938",
       "weight": 1.0
     },
     {
@@ -62636,7 +62730,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L877",
+      "source_location": "L939",
       "weight": 1.0
     },
     {
@@ -62646,7 +62740,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L891",
+      "source_location": "L953",
       "weight": 1.0
     },
     {
@@ -62656,7 +62750,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L895",
+      "source_location": "L957",
       "weight": 1.0
     },
     {
@@ -62666,81 +62760,11 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L912",
+      "source_location": "L974",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlelocalvideotrackended",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_removevideo",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L915",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlelocalvideotrackended",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_schedulecamerareacquire",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L919",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlelocalvideotrackended",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_setpubliccameraenabled",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L924",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_schedulecamerareacquire",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_giveupcamerarecovery",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L946",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_schedulecamerareacquire",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_acquirecamera",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L967",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_giveupcamerarecovery",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_clearcamerareacquiretimer",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L972",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_giveupcamerarecovery",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_clearcamerastabletimer",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L973",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_giveupcamerarecovery",
       "target": "apps_extension_src_p2p_media_p2pmediacontroller_removevideo",
       "relation": "calls",
       "context": "call",
@@ -62750,13 +62774,83 @@
       "weight": 1.0
     },
     {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlelocalvideotrackended",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_schedulecamerareacquire",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L981",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlelocalvideotrackended",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_setpubliccameraenabled",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L986",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_schedulecamerareacquire",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_giveupcamerarecovery",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1008",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_schedulecamerareacquire",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_acquirecamera",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1029",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_giveupcamerarecovery",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_clearcamerareacquiretimer",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1034",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_giveupcamerarecovery",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_clearcamerastabletimer",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1035",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_giveupcamerarecovery",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_removevideo",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1039",
+      "weight": 1.0
+    },
+    {
       "source": "apps_extension_src_p2p_media_p2pmediacontroller_giveupcamerarecovery",
       "target": "apps_extension_src_p2p_media_p2pmediacontroller_setpubliccameraenabled",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L983",
+      "source_location": "L1045",
       "weight": 1.0
     },
     {
@@ -62766,7 +62860,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L984",
+      "source_location": "L1046",
       "weight": 1.0
     },
     {
@@ -62776,7 +62870,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1002",
+      "source_location": "L1064",
       "weight": 1.0
     },
     {
@@ -62786,7 +62880,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1036",
+      "source_location": "L1098",
       "weight": 1.0
     },
     {
@@ -62796,7 +62890,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1037",
+      "source_location": "L1099",
       "weight": 1.0
     },
     {
@@ -62806,7 +62900,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1056",
+      "source_location": "L1118",
       "weight": 1.0
     },
     {
@@ -62816,7 +62910,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1057",
+      "source_location": "L1119",
       "weight": 1.0
     },
     {
@@ -62826,7 +62920,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1059",
+      "source_location": "L1121",
       "weight": 1.0
     },
     {
@@ -62836,7 +62930,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1063",
+      "source_location": "L1125",
       "weight": 1.0
     },
     {
@@ -62846,7 +62940,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1072",
+      "source_location": "L1134",
       "weight": 1.0
     },
     {
@@ -62856,7 +62950,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1083",
+      "source_location": "L1145",
       "weight": 1.0
     },
     {
@@ -62866,7 +62960,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1107",
+      "source_location": "L1169",
       "weight": 1.0
     },
     {
@@ -62876,7 +62970,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1120",
+      "source_location": "L1182",
       "weight": 1.0
     },
     {
@@ -62886,7 +62980,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1126",
+      "source_location": "L1188",
       "weight": 1.0
     },
     {
@@ -62896,7 +62990,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1135",
+      "source_location": "L1197",
       "weight": 1.0
     },
     {
@@ -62906,7 +63000,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1136",
+      "source_location": "L1198",
       "weight": 1.0
     },
     {
@@ -62916,7 +63010,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1138",
+      "source_location": "L1200",
       "weight": 1.0
     },
     {
@@ -62926,7 +63020,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1153",
+      "source_location": "L1215",
       "weight": 1.0
     },
     {
@@ -62936,7 +63030,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1157",
+      "source_location": "L1219",
       "weight": 1.0
     },
     {
@@ -62946,7 +63040,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1188",
+      "source_location": "L1250",
       "weight": 1.0
     },
     {
@@ -62956,7 +63050,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1189",
+      "source_location": "L1251",
       "weight": 1.0
     },
     {
@@ -62966,7 +63060,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1197",
+      "source_location": "L1259",
       "weight": 1.0
     },
     {
@@ -62976,7 +63070,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1204",
+      "source_location": "L1266",
       "weight": 1.0
     },
     {
@@ -62986,7 +63080,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1215",
+      "source_location": "L1277",
       "weight": 1.0
     },
     {
@@ -62996,7 +63090,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1219",
+      "source_location": "L1281",
       "weight": 1.0
     },
     {
@@ -63006,7 +63100,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1241",
+      "source_location": "L1303",
       "weight": 1.0
     },
     {
@@ -63016,7 +63110,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1255",
+      "source_location": "L1317",
       "weight": 1.0
     },
     {
@@ -63026,7 +63120,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1257",
+      "source_location": "L1319",
       "weight": 1.0
     },
     {
@@ -63036,7 +63130,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1283",
+      "source_location": "L1345",
       "weight": 1.0
     },
     {
@@ -63046,7 +63140,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1304",
+      "source_location": "L1366",
       "weight": 1.0
     },
     {
@@ -63056,7 +63150,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1309",
+      "source_location": "L1371",
       "weight": 1.0
     },
     {
@@ -63066,7 +63160,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1310",
+      "source_location": "L1372",
       "weight": 1.0
     },
     {
@@ -63076,7 +63170,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1314",
+      "source_location": "L1376",
       "weight": 1.0
     },
     {
@@ -63086,7 +63180,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1328",
+      "source_location": "L1390",
       "weight": 1.0
     },
     {
@@ -63096,7 +63190,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1330",
+      "source_location": "L1392",
       "weight": 1.0
     },
     {
@@ -63106,7 +63200,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1334",
+      "source_location": "L1396",
       "weight": 1.0
     },
     {
@@ -63116,7 +63210,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1363",
+      "source_location": "L1425",
       "weight": 1.0
     },
     {
@@ -63126,62 +63220,12 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1385",
+      "source_location": "L1452",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_ensurepeer",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1398",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_syncpeermediaandnegotiate",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1400",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_publishactivespeakerids",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1414",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_closepeer",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1449",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_shouldinitiateoffers",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1456",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
-      "target": "apps_extension_src_p2p_media_p2pmediacontroller_restartpeerice",
+      "target": "apps_extension_src_p2p_media_decidep2psignalconnection",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -63191,27 +63235,27 @@
     },
     {
       "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
-      "target": "apps_extension_src_p2p_media_createp2pmediasignaldedupekey",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_closepeer",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1483",
+      "source_location": "L1489",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
-      "target": "apps_extension_src_p2p_media_rememberp2pmediasignalfingerprint",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_ensurepeer",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1485",
+      "source_location": "L1511",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
-      "target": "apps_extension_src_p2p_media_getcandidatetype",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_syncpeermediaandnegotiate",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -63221,12 +63265,72 @@
     },
     {
       "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_publishactivespeakerids",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1527",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_shouldinitiateoffers",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1581",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_restartpeerice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1582",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
+      "target": "apps_extension_src_p2p_media_createp2pmediasignaldedupekey",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1608",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
+      "target": "apps_extension_src_p2p_media_rememberp2pmediasignalfingerprint",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1610",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
+      "target": "apps_extension_src_p2p_media_getcandidatetype",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1638",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_handlesignal",
       "target": "apps_extension_src_p2p_media_summarizep2psdp",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1553",
+      "source_location": "L1689",
       "weight": 1.0
     },
     {
@@ -63236,7 +63340,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1555",
+      "source_location": "L1691",
       "weight": 1.0
     },
     {
@@ -63246,7 +63350,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1561",
+      "source_location": "L1697",
       "weight": 1.0
     },
     {
@@ -63256,7 +63360,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1564",
+      "source_location": "L1700",
       "weight": 1.0
     },
     {
@@ -63266,7 +63370,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1571",
+      "source_location": "L1707",
       "weight": 1.0
     },
     {
@@ -63276,7 +63380,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1591",
+      "source_location": "L1727",
       "weight": 1.0
     },
     {
@@ -63286,7 +63390,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1601",
+      "source_location": "L1737",
       "weight": 1.0
     },
     {
@@ -63296,7 +63400,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1627",
+      "source_location": "L1763",
       "weight": 1.0
     },
     {
@@ -63306,7 +63410,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1627",
+      "source_location": "L1763",
       "weight": 1.0
     },
     {
@@ -63316,7 +63420,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1636",
+      "source_location": "L1772",
       "weight": 1.0
     },
     {
@@ -63326,7 +63430,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1637",
+      "source_location": "L1773",
       "weight": 1.0
     },
     {
@@ -63336,7 +63440,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1640",
+      "source_location": "L1776",
       "weight": 1.0
     },
     {
@@ -63346,7 +63450,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1665",
+      "source_location": "L1801",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_p2p_media_p2pmediacontroller_updateremotevideoactivityfromstats",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller_restartpeerice",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/p2p-media.ts",
+      "source_location": "L1861",
       "weight": 1.0
     },
     {
@@ -63356,7 +63470,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1736",
+      "source_location": "L1899",
       "weight": 1.0
     },
     {
@@ -63366,7 +63480,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1745",
+      "source_location": "L1908",
       "weight": 1.0
     },
     {
@@ -63376,7 +63490,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1746",
+      "source_location": "L1909",
       "weight": 1.0
     },
     {
@@ -63386,7 +63500,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1772",
+      "source_location": "L1935",
       "weight": 1.0
     },
     {
@@ -63396,7 +63510,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1822",
+      "source_location": "L1985",
       "weight": 1.0
     },
     {
@@ -63406,7 +63520,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1895",
+      "source_location": "L2058",
       "weight": 1.0
     },
     {
@@ -63416,7 +63530,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1924",
+      "source_location": "L2087",
       "weight": 1.0
     },
     {
@@ -63426,7 +63540,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1929",
+      "source_location": "L2092",
       "weight": 1.0
     },
     {
@@ -63436,7 +63550,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1945",
+      "source_location": "L2108",
       "weight": 1.0
     },
     {
@@ -63446,7 +63560,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1946",
+      "source_location": "L2109",
       "weight": 1.0
     },
     {
@@ -63456,7 +63570,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1947",
+      "source_location": "L2110",
       "weight": 1.0
     },
     {
@@ -63466,7 +63580,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1948",
+      "source_location": "L2111",
       "weight": 1.0
     },
     {
@@ -63476,7 +63590,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1949",
+      "source_location": "L2112",
       "weight": 1.0
     },
     {
@@ -63486,7 +63600,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1968",
+      "source_location": "L2131",
       "weight": 1.0
     },
     {
@@ -63496,7 +63610,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1971",
+      "source_location": "L2134",
       "weight": 1.0
     },
     {
@@ -63506,7 +63620,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1992",
+      "source_location": "L2155",
       "weight": 1.0
     },
     {
@@ -63516,7 +63630,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1994",
+      "source_location": "L2157",
       "weight": 1.0
     },
     {
@@ -63526,7 +63640,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2004",
+      "source_location": "L2167",
       "weight": 1.0
     },
     {
@@ -63536,7 +63650,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2009",
+      "source_location": "L2172",
       "weight": 1.0
     },
     {
@@ -63546,7 +63660,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2032",
+      "source_location": "L2195",
       "weight": 1.0
     },
     {
@@ -63556,7 +63670,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2044",
+      "source_location": "L2207",
       "weight": 1.0
     },
     {
@@ -63566,7 +63680,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2048",
+      "source_location": "L2211",
       "weight": 1.0
     },
     {
@@ -63576,7 +63690,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2061",
+      "source_location": "L2224",
       "weight": 1.0
     },
     {
@@ -63586,7 +63700,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2064",
+      "source_location": "L2227",
       "weight": 1.0
     },
     {
@@ -63596,7 +63710,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2074",
+      "source_location": "L2237",
       "weight": 1.0
     },
     {
@@ -63606,7 +63720,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2105",
+      "source_location": "L2268",
       "weight": 1.0
     },
     {
@@ -63616,7 +63730,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2109",
+      "source_location": "L2272",
       "weight": 1.0
     },
     {
@@ -63626,7 +63740,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2113",
+      "source_location": "L2276",
       "weight": 1.0
     },
     {
@@ -63636,7 +63750,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2121",
+      "source_location": "L2284",
       "weight": 1.0
     },
     {
@@ -63646,7 +63760,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2133",
+      "source_location": "L2296",
       "weight": 1.0
     },
     {
@@ -63656,7 +63770,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2181",
+      "source_location": "L2344",
       "weight": 1.0
     },
     {
@@ -63666,7 +63780,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2183",
+      "source_location": "L2346",
       "weight": 1.0
     },
     {
@@ -63676,7 +63790,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2200",
+      "source_location": "L2363",
       "weight": 1.0
     },
     {
@@ -63686,7 +63800,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2201",
+      "source_location": "L2364",
       "weight": 1.0
     },
     {
@@ -63696,7 +63810,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2210",
+      "source_location": "L2373",
       "weight": 1.0
     },
     {
@@ -63706,7 +63820,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2233",
+      "source_location": "L2396",
       "weight": 1.0
     },
     {
@@ -63716,7 +63830,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2258",
+      "source_location": "L2421",
       "weight": 1.0
     },
     {
@@ -63726,7 +63840,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2263",
+      "source_location": "L2426",
       "weight": 1.0
     },
     {
@@ -63736,7 +63850,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2276",
+      "source_location": "L2439",
       "weight": 1.0
     },
     {
@@ -63746,7 +63860,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2279",
+      "source_location": "L2442",
       "weight": 1.0
     },
     {
@@ -63756,7 +63870,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2290",
+      "source_location": "L2453",
       "weight": 1.0
     },
     {
@@ -63766,7 +63880,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2299",
+      "source_location": "L2462",
       "weight": 1.0
     },
     {
@@ -63776,7 +63890,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2319",
+      "source_location": "L2482",
       "weight": 1.0
     },
     {
@@ -63786,7 +63900,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2345",
+      "source_location": "L2508",
       "weight": 1.0
     },
     {
@@ -63796,7 +63910,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2353",
+      "source_location": "L2516",
       "weight": 1.0
     },
     {
@@ -63806,7 +63920,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2363",
+      "source_location": "L2526",
       "weight": 1.0
     },
     {
@@ -63816,7 +63930,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2377",
+      "source_location": "L2540",
       "weight": 1.0
     },
     {
@@ -63826,7 +63940,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2393",
+      "source_location": "L2556",
       "weight": 1.0
     },
     {
@@ -63836,7 +63950,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2399",
+      "source_location": "L2562",
       "weight": 1.0
     },
     {
@@ -63846,7 +63960,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2423",
+      "source_location": "L2586",
       "weight": 1.0
     },
     {
@@ -63856,7 +63970,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2453",
+      "source_location": "L2616",
       "weight": 1.0
     },
     {
@@ -63866,7 +63980,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2457",
+      "source_location": "L2620",
       "weight": 1.0
     },
     {
@@ -63876,7 +63990,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2492",
+      "source_location": "L2655",
       "weight": 1.0
     },
     {
@@ -63886,7 +64000,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2494",
+      "source_location": "L2657",
       "weight": 1.0
     },
     {
@@ -63896,7 +64010,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2514",
+      "source_location": "L2677",
       "weight": 1.0
     },
     {
@@ -63906,7 +64020,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2519",
+      "source_location": "L2682",
       "weight": 1.0
     },
     {
@@ -63916,7 +64030,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2521",
+      "source_location": "L2684",
       "weight": 1.0
     },
     {
@@ -63926,7 +64040,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2541",
+      "source_location": "L2704",
       "weight": 1.0
     },
     {
@@ -63936,7 +64050,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2546",
+      "source_location": "L2709",
       "weight": 1.0
     },
     {
@@ -63946,7 +64060,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2548",
+      "source_location": "L2711",
       "weight": 1.0
     },
     {
@@ -63956,7 +64070,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2578",
+      "source_location": "L2741",
       "weight": 1.0
     },
     {
@@ -63966,7 +64080,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2600",
+      "source_location": "L2763",
       "weight": 1.0
     },
     {
@@ -63976,7 +64090,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2601",
+      "source_location": "L2764",
       "weight": 1.0
     },
     {
@@ -63986,7 +64100,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2608",
+      "source_location": "L2771",
       "weight": 1.0
     },
     {
@@ -63996,7 +64110,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2611",
+      "source_location": "L2774",
       "weight": 1.0
     },
     {
@@ -64006,7 +64120,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2620",
+      "source_location": "L2783",
       "weight": 1.0
     },
     {
@@ -64016,7 +64130,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2623",
+      "source_location": "L2786",
       "weight": 1.0
     },
     {
@@ -64026,7 +64140,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2627",
+      "source_location": "L2790",
       "weight": 1.0
     },
     {
@@ -64036,7 +64150,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2636",
+      "source_location": "L2799",
       "weight": 1.0
     },
     {
@@ -64046,7 +64160,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2653",
+      "source_location": "L2816",
       "weight": 1.0
     },
     {
@@ -64056,7 +64170,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2672",
+      "source_location": "L2835",
       "weight": 1.0
     },
     {
@@ -64066,7 +64180,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2681",
+      "source_location": "L2844",
       "weight": 1.0
     },
     {
@@ -64076,7 +64190,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2688",
+      "source_location": "L2851",
       "weight": 1.0
     },
     {
@@ -64086,7 +64200,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2743",
+      "source_location": "L2906",
       "weight": 1.0
     },
     {
@@ -64096,7 +64210,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2767",
+      "source_location": "L2930",
       "weight": 1.0
     },
     {
@@ -64106,7 +64220,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2768",
+      "source_location": "L2931",
       "weight": 1.0
     },
     {
@@ -64116,7 +64230,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2770",
+      "source_location": "L2934",
       "weight": 1.0
     },
     {
@@ -64126,7 +64240,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2771",
+      "source_location": "L2935",
       "weight": 1.0
     },
     {
@@ -64136,7 +64250,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2781",
+      "source_location": "L2945",
       "weight": 1.0
     },
     {
@@ -64146,7 +64260,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2801",
+      "source_location": "L2965",
       "weight": 1.0
     },
     {
@@ -64156,7 +64270,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2806",
+      "source_location": "L2970",
       "weight": 1.0
     },
     {
@@ -64166,7 +64280,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2812",
+      "source_location": "L2976",
       "weight": 1.0
     },
     {
@@ -64176,7 +64290,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2817",
+      "source_location": "L2981",
       "weight": 1.0
     },
     {
@@ -64186,7 +64300,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2829",
+      "source_location": "L2993",
       "weight": 1.0
     },
     {
@@ -64196,7 +64310,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2843",
+      "source_location": "L3007",
       "weight": 1.0
     },
     {
@@ -64206,7 +64320,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2844",
+      "source_location": "L3008",
       "weight": 1.0
     },
     {
@@ -64216,7 +64330,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2851",
+      "source_location": "L3015",
       "weight": 1.0
     },
     {
@@ -64226,7 +64340,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2875",
+      "source_location": "L3039",
       "weight": 1.0
     },
     {
@@ -64236,7 +64350,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2876",
+      "source_location": "L3040",
       "weight": 1.0
     },
     {
@@ -64246,7 +64360,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2884",
+      "source_location": "L3048",
       "weight": 1.0
     },
     {
@@ -64256,7 +64370,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2906",
+      "source_location": "L3070",
       "weight": 1.0
     },
     {
@@ -64266,7 +64380,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2911",
+      "source_location": "L3075",
       "weight": 1.0
     },
     {
@@ -64276,7 +64390,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2949",
+      "source_location": "L3113",
       "weight": 1.0
     },
     {
@@ -64286,7 +64400,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3016",
+      "source_location": "L3180",
       "weight": 1.0
     },
     {
@@ -64296,7 +64410,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3020",
+      "source_location": "L3184",
       "weight": 1.0
     },
     {
@@ -64306,7 +64420,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3025",
+      "source_location": "L3189",
       "weight": 1.0
     },
     {
@@ -64316,7 +64430,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3026",
+      "source_location": "L3190",
       "weight": 1.0
     },
     {
@@ -64326,7 +64440,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3099",
+      "source_location": "L3263",
       "weight": 1.0
     },
     {
@@ -64336,7 +64450,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3104",
+      "source_location": "L3268",
       "weight": 1.0
     },
     {
@@ -64346,7 +64460,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3105",
+      "source_location": "L3269",
       "weight": 1.0
     },
     {
@@ -64356,7 +64470,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3199",
+      "source_location": "L3363",
       "weight": 1.0
     },
     {
@@ -64366,7 +64480,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3231",
+      "source_location": "L3395",
       "weight": 1.0
     },
     {
@@ -64376,7 +64490,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3246",
+      "source_location": "L3410",
       "weight": 1.0
     },
     {
@@ -64386,7 +64500,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3292",
+      "source_location": "L3456",
       "weight": 1.0
     },
     {
@@ -64396,7 +64510,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3321",
+      "source_location": "L3485",
       "weight": 1.0
     },
     {
@@ -64406,7 +64520,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3423",
+      "source_location": "L3587",
       "weight": 1.0
     },
     {
@@ -64416,7 +64530,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3432",
+      "source_location": "L3596",
       "weight": 1.0
     },
     {
@@ -64426,7 +64540,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3450",
+      "source_location": "L3614",
       "weight": 1.0
     },
     {
@@ -64436,7 +64550,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3477",
+      "source_location": "L3641",
       "weight": 1.0
     },
     {
@@ -64446,7 +64560,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3483",
+      "source_location": "L3647",
       "weight": 1.0
     },
     {
@@ -64456,7 +64570,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3484",
+      "source_location": "L3648",
       "weight": 1.0
     },
     {
@@ -64466,7 +64580,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3503",
+      "source_location": "L3667",
       "weight": 1.0
     },
     {
@@ -64476,7 +64590,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3511",
+      "source_location": "L3675",
       "weight": 1.0
     },
     {
@@ -64486,7 +64600,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3532",
+      "source_location": "L3696",
       "weight": 1.0
     },
     {
@@ -64496,7 +64610,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3598",
+      "source_location": "L3762",
       "weight": 1.0
     },
     {
@@ -64506,7 +64620,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3626",
+      "source_location": "L3790",
       "weight": 1.0
     },
     {
@@ -64516,7 +64630,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3634",
+      "source_location": "L3798",
       "weight": 1.0
     },
     {
@@ -64526,7 +64640,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3743",
+      "source_location": "L3907",
       "weight": 1.0
     },
     {
@@ -64536,7 +64650,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3745",
+      "source_location": "L3909",
       "weight": 1.0
     },
     {
@@ -64546,7 +64660,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3791",
+      "source_location": "L3955",
       "weight": 1.0
     },
     {
@@ -74196,6 +74310,16 @@
     },
     {
       "source": "apps_extension_test_p2p_media_test",
+      "target": "apps_extension_src_p2p_media_decidep2psignalconnection",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/p2p-media.test.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_p2p_media_test",
       "target": "apps_extension_src_p2p_media_decidep2picerestart",
       "relation": "imports",
       "context": "import",
@@ -74351,7 +74475,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -74361,7 +74485,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -74371,7 +74495,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -74381,7 +74505,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -74391,7 +74515,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -74401,7 +74525,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -74410,7 +74534,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -74419,7 +74543,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -74428,7 +74552,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L52",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -74437,7 +74561,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L59",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -74446,7 +74570,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L64",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -74455,7 +74579,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L69",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -74464,7 +74588,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L73",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -74473,7 +74597,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L78",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -74482,7 +74606,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L84",
+      "source_location": "L85",
       "weight": 1.0
     },
     {
@@ -74491,7 +74615,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L89",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -74500,7 +74624,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L94",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -74509,7 +74633,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L98",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -74518,7 +74642,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L103",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -74527,7 +74651,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L114",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -74536,7 +74660,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L125",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
@@ -74545,7 +74669,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L132",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
@@ -74554,7 +74678,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L161",
+      "source_location": "L162",
       "weight": 1.0
     },
     {
@@ -74563,7 +74687,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L218",
+      "source_location": "L227",
       "weight": 1.0
     },
     {
@@ -74572,7 +74696,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1331",
+      "source_location": "L1409",
       "weight": 1.0
     },
     {
@@ -74581,7 +74705,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1341",
+      "source_location": "L1419",
       "weight": 1.0
     },
     {
@@ -74590,7 +74714,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1348",
+      "source_location": "L1426",
       "weight": 1.0
     },
     {
@@ -74599,7 +74723,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1363",
+      "source_location": "L1441",
       "weight": 1.0
     },
     {
@@ -74608,7 +74732,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1368",
+      "source_location": "L1446",
       "weight": 1.0
     },
     {
@@ -74617,7 +74741,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1377",
+      "source_location": "L1455",
       "weight": 1.0
     },
     {
@@ -74626,7 +74750,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1381",
+      "source_location": "L1459",
       "weight": 1.0
     },
     {
@@ -74635,7 +74759,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1385",
+      "source_location": "L1463",
       "weight": 1.0
     },
     {
@@ -74644,7 +74768,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1389",
+      "source_location": "L1467",
       "weight": 1.0
     },
     {
@@ -74654,7 +74778,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L141",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
@@ -74664,7 +74788,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L170",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -74674,7 +74798,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L1382",
+      "source_location": "L1460",
       "weight": 1.0
     },
     {
@@ -133348,11 +133472,20 @@
     },
     {
       "source": "tests_e2e_harness_entry_harness",
+      "target": "tests_e2e_harness_entry_harness_ensurecontroller",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/e2e/harness-entry.ts",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_e2e_harness_entry_harness",
       "target": "tests_e2e_harness_entry_harness_connectclient",
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L78",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -133361,7 +133494,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L136",
+      "source_location": "L154",
       "weight": 1.0
     },
     {
@@ -133370,7 +133503,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L148",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -133379,7 +133512,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L178",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -133388,7 +133521,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L187",
+      "source_location": "L207",
       "weight": 1.0
     },
     {
@@ -133397,7 +133530,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L241",
+      "source_location": "L261",
       "weight": 1.0
     },
     {
@@ -133406,7 +133539,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L245",
+      "source_location": "L265",
       "weight": 1.0
     },
     {
@@ -133415,7 +133548,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L250",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
@@ -133424,7 +133557,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L264",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -133433,7 +133566,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L271",
+      "source_location": "L291",
       "weight": 1.0
     },
     {
@@ -133448,7 +133581,7 @@
     },
     {
       "source": "tests_e2e_harness_entry_harness_start",
-      "target": "tests_e2e_harness_entry_harness_connectclient",
+      "target": "tests_e2e_harness_entry_harness_ensurecontroller",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -133458,12 +133591,32 @@
     },
     {
       "source": "tests_e2e_harness_entry_harness_start",
+      "target": "tests_e2e_harness_entry_harness_connectclient",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/e2e/harness-entry.ts",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_e2e_harness_entry_harness_start",
       "target": "tests_e2e_harness_entry_harness_waitforstatus",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L68",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_e2e_harness_entry_harness_connectclient",
+      "target": "tests_e2e_harness_entry_harness_ensurecontroller",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/e2e/harness-entry.ts",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -133473,7 +133626,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L132",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -133483,7 +133636,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L143",
+      "source_location": "L161",
       "weight": 1.0
     },
     {
@@ -133493,7 +133646,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L144",
+      "source_location": "L162",
       "weight": 1.0
     },
     {
@@ -133793,7 +133946,7 @@
     },
     {
       "source": "tests_e2e_p2p_media_harness",
-      "target": "tests_e2e_p2p_media_harness_waitforcameraenabledcount",
+      "target": "tests_e2e_p2p_media_harness_waitforremotevideocount",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
@@ -133802,7 +133955,7 @@
     },
     {
       "source": "tests_e2e_p2p_media_harness",
-      "target": "tests_e2e_p2p_media_harness_waitforremoteframesabove",
+      "target": "tests_e2e_p2p_media_harness_waitforcameraenabledcount",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
@@ -133811,7 +133964,7 @@
     },
     {
       "source": "tests_e2e_p2p_media_harness",
-      "target": "tests_e2e_p2p_media_harness_waitforremotevideoactivity",
+      "target": "tests_e2e_p2p_media_harness_waitforremoteframesabove",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
@@ -133820,7 +133973,7 @@
     },
     {
       "source": "tests_e2e_p2p_media_harness",
-      "target": "tests_e2e_p2p_media_harness_maxicerestartcount",
+      "target": "tests_e2e_p2p_media_harness_waitforremotevideoactivity",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
@@ -133829,11 +133982,20 @@
     },
     {
       "source": "tests_e2e_p2p_media_harness",
+      "target": "tests_e2e_p2p_media_harness_maxicerestartcount",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/e2e/p2p-media-harness.mjs",
+      "source_location": "L338",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_e2e_p2p_media_harness",
       "target": "tests_e2e_p2p_media_harness_getrestartsnapshot",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L329",
+      "source_location": "L342",
       "weight": 1.0
     },
     {
@@ -133842,7 +134004,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L338",
+      "source_location": "L351",
       "weight": 1.0
     },
     {
@@ -133956,7 +134118,7 @@
       "weight": 1.0
     },
     {
-      "source": "tests_e2e_p2p_media_harness_waitforcameraenabledcount",
+      "source": "tests_e2e_p2p_media_harness_waitforremotevideocount",
       "target": "tests_e2e_p2p_media_harness_sleep",
       "relation": "calls",
       "context": "call",
@@ -133966,7 +134128,7 @@
       "weight": 1.0
     },
     {
-      "source": "tests_e2e_p2p_media_harness_waitforremoteframesabove",
+      "source": "tests_e2e_p2p_media_harness_waitforcameraenabledcount",
       "target": "tests_e2e_p2p_media_harness_sleep",
       "relation": "calls",
       "context": "call",
@@ -133976,7 +134138,7 @@
       "weight": 1.0
     },
     {
-      "source": "tests_e2e_p2p_media_harness_waitforremotevideoactivity",
+      "source": "tests_e2e_p2p_media_harness_waitforremoteframesabove",
       "target": "tests_e2e_p2p_media_harness_sleep",
       "relation": "calls",
       "context": "call",
@@ -133986,13 +134148,23 @@
       "weight": 1.0
     },
     {
+      "source": "tests_e2e_p2p_media_harness_waitforremotevideoactivity",
+      "target": "tests_e2e_p2p_media_harness_sleep",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/e2e/p2p-media-harness.mjs",
+      "source_location": "L332",
+      "weight": 1.0
+    },
+    {
       "source": "tests_e2e_p2p_media_harness_getrestartsnapshot",
       "target": "tests_e2e_p2p_media_harness_maxicerestartcount",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L333",
+      "source_location": "L346",
       "weight": 1.0
     },
     {
@@ -134002,7 +134174,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L342",
+      "source_location": "L355",
       "weight": 1.0
     },
     {
@@ -134012,7 +134184,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L349",
+      "source_location": "L362",
       "weight": 1.0
     },
     {
@@ -134022,7 +134194,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L361",
+      "source_location": "L374",
       "weight": 1.0
     },
     {
@@ -134032,7 +134204,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L369",
+      "source_location": "L382",
       "weight": 1.0
     },
     {
@@ -134042,7 +134214,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L379",
+      "source_location": "L392",
       "weight": 1.0
     },
     {
@@ -134052,7 +134224,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L380",
+      "source_location": "L393",
       "weight": 1.0
     },
     {
@@ -134062,7 +134234,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L417",
+      "source_location": "L430",
       "weight": 1.0
     },
     {
@@ -134072,7 +134244,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L430",
+      "source_location": "L443",
       "weight": 1.0
     },
     {
@@ -134082,7 +134254,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L440",
+      "source_location": "L453",
       "weight": 1.0
     },
     {
@@ -134092,7 +134264,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L447",
+      "source_location": "L460",
       "weight": 1.0
     },
     {
@@ -134102,7 +134274,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L473",
+      "source_location": "L486",
       "weight": 1.0
     },
     {
@@ -134112,7 +134284,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L490",
+      "source_location": "L503",
       "weight": 1.0
     },
     {
@@ -134122,7 +134294,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L531",
+      "source_location": "L544",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_e2e_p2p_media_harness_main",
+      "target": "tests_e2e_p2p_media_harness_waitforremotevideocount",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/e2e/p2p-media-harness.mjs",
+      "source_location": "L562",
       "weight": 1.0
     },
     {
@@ -134132,7 +134314,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L587",
+      "source_location": "L610",
       "weight": 1.0
     },
     {
@@ -134142,7 +134324,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L595",
+      "source_location": "L618",
       "weight": 1.0
     },
     {
@@ -142040,7 +142222,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -142050,7 +142232,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -143830,7 +144012,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L349",
+      "source_location": "L360",
       "weight": 1.0
     },
     {
@@ -143840,7 +144022,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L357",
+      "source_location": "L368",
       "weight": 1.0
     },
     {
@@ -146310,7 +146492,7 @@
       "context": "type",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L382",
+      "source_location": "L443",
       "weight": 1.0
     },
     {
@@ -146320,7 +146502,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L536",
+      "source_location": "L597",
       "weight": 1.0
     },
     {
@@ -146330,7 +146512,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L549",
+      "source_location": "L610",
       "weight": 1.0
     },
     {
@@ -146340,7 +146522,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L552",
+      "source_location": "L613",
       "weight": 1.0
     },
     {
@@ -146350,7 +146532,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L554",
+      "source_location": "L615",
       "weight": 1.0
     },
     {
@@ -146360,7 +146542,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L556",
+      "source_location": "L617",
       "weight": 1.0
     },
     {
@@ -146370,7 +146552,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L568",
+      "source_location": "L629",
       "weight": 1.0
     },
     {
@@ -146380,7 +146562,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L571",
+      "source_location": "L632",
       "weight": 1.0
     },
     {
@@ -146390,7 +146572,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L573",
+      "source_location": "L634",
       "weight": 1.0
     },
     {
@@ -146400,7 +146582,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L575",
+      "source_location": "L636",
       "weight": 1.0
     },
     {
@@ -146410,7 +146592,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L736",
+      "source_location": "L798",
       "weight": 1.0
     },
     {
@@ -146420,7 +146602,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1376",
+      "source_location": "L1438",
       "weight": 1.0
     },
     {
@@ -146430,7 +146612,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2626",
+      "source_location": "L2789",
       "weight": 1.0
     },
     {
@@ -146684,13 +146866,33 @@
       "weight": 1.0
     },
     {
+      "source": "tests_e2e_harness_entry_harness_ensurecontroller",
+      "target": "packages_protocol_src_types_participant",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/e2e/harness-entry.ts",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_e2e_harness_entry_harness_ensurecontroller",
+      "target": "apps_extension_src_p2p_media_p2pmediacontroller",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/e2e/harness-entry.ts",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
       "source": "tests_e2e_harness_entry_harness_connectclient",
       "target": "packages_protocol_src_types_participant",
       "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L78",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -146700,7 +146902,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L148",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -146710,7 +146912,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L178",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -148118,7 +148320,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L669",
+      "source_location": "L731",
       "weight": 1.0
     },
     {
@@ -148129,7 +148331,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L688",
+      "source_location": "L750",
       "weight": 1.0
     },
     {
@@ -148140,7 +148342,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L749",
+      "source_location": "L811",
       "weight": 1.0
     },
     {
@@ -148151,7 +148353,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L828",
+      "source_location": "L890",
       "weight": 1.0
     },
     {
@@ -148162,7 +148364,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L903",
+      "source_location": "L965",
       "weight": 1.0
     },
     {
@@ -148173,7 +148375,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L956",
+      "source_location": "L1018",
       "weight": 1.0
     },
     {
@@ -148184,7 +148386,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L978",
+      "source_location": "L1040",
       "weight": 1.0
     },
     {
@@ -148195,7 +148397,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L993",
+      "source_location": "L1055",
       "weight": 1.0
     },
     {
@@ -148206,7 +148408,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1006",
+      "source_location": "L1068",
       "weight": 1.0
     },
     {
@@ -148217,7 +148419,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1065",
+      "source_location": "L1127",
       "weight": 1.0
     },
     {
@@ -148228,7 +148430,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1096",
+      "source_location": "L1158",
       "weight": 1.0
     },
     {
@@ -148239,7 +148441,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1172",
+      "source_location": "L1234",
       "weight": 1.0
     },
     {
@@ -148250,7 +148452,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1232",
+      "source_location": "L1294",
       "weight": 1.0
     },
     {
@@ -148261,7 +148463,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1293",
+      "source_location": "L1355",
       "weight": 1.0
     },
     {
@@ -148272,7 +148474,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1317",
+      "source_location": "L1379",
       "weight": 1.0
     },
     {
@@ -148283,7 +148485,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1338",
+      "source_location": "L1400",
       "weight": 1.0
     },
     {
@@ -148294,7 +148496,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1371",
+      "source_location": "L1433",
       "weight": 1.0
     },
     {
@@ -148305,7 +148507,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1381",
+      "source_location": "L1447",
       "weight": 1.0
     },
     {
@@ -148316,7 +148518,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1643",
+      "source_location": "L1779",
       "weight": 1.0
     },
     {
@@ -148327,7 +148529,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1691",
+      "source_location": "L1828",
       "weight": 1.0
     },
     {
@@ -148338,7 +148540,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1766",
+      "source_location": "L1929",
       "weight": 1.0
     },
     {
@@ -148349,7 +148551,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1841",
+      "source_location": "L2004",
       "weight": 1.0
     },
     {
@@ -148360,7 +148562,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1903",
+      "source_location": "L2066",
       "weight": 1.0
     },
     {
@@ -148371,7 +148573,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L1918",
+      "source_location": "L2081",
       "weight": 1.0
     },
     {
@@ -148382,7 +148584,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2040",
+      "source_location": "L2203",
       "weight": 1.0
     },
     {
@@ -148393,7 +148595,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2280",
+      "source_location": "L2443",
       "weight": 1.0
     },
     {
@@ -148404,7 +148606,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2374",
+      "source_location": "L2537",
       "weight": 1.0
     },
     {
@@ -148415,7 +148617,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2430",
+      "source_location": "L2593",
       "weight": 1.0
     },
     {
@@ -148426,7 +148628,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2467",
+      "source_location": "L2630",
       "weight": 1.0
     },
     {
@@ -148437,7 +148639,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2542",
+      "source_location": "L2705",
       "weight": 1.0
     },
     {
@@ -148448,7 +148650,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2575",
+      "source_location": "L2738",
       "weight": 1.0
     },
     {
@@ -148459,7 +148661,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2604",
+      "source_location": "L2767",
       "weight": 1.0
     },
     {
@@ -148470,7 +148672,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2629",
+      "source_location": "L2792",
       "weight": 1.0
     },
     {
@@ -148481,7 +148683,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2648",
+      "source_location": "L2811",
       "weight": 1.0
     },
     {
@@ -148492,7 +148694,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2728",
+      "source_location": "L2891",
       "weight": 1.0
     },
     {
@@ -148503,7 +148705,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2802",
+      "source_location": "L2966",
       "weight": 1.0
     },
     {
@@ -148514,7 +148716,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2856",
+      "source_location": "L3020",
       "weight": 1.0
     },
     {
@@ -148525,7 +148727,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2907",
+      "source_location": "L3071",
       "weight": 1.0
     },
     {
@@ -148536,7 +148738,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L2981",
+      "source_location": "L3145",
       "weight": 1.0
     },
     {
@@ -148547,7 +148749,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3007",
+      "source_location": "L3171",
       "weight": 1.0
     },
     {
@@ -148558,7 +148760,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/p2p-media.ts",
-      "source_location": "L3046",
+      "source_location": "L3210",
       "weight": 1.0
     },
     {
@@ -149768,7 +149970,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/test/p2p-media.test.ts",
-      "source_location": "L145",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -157864,7 +158066,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L334",
+      "source_location": "L337",
       "weight": 1.0
     },
     {
@@ -157875,7 +158077,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L346",
+      "source_location": "L357",
       "weight": 1.0
     },
     {
@@ -157886,7 +158088,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/ghost-cam.ts",
-      "source_location": "L476",
+      "source_location": "L491",
       "weight": 1.0
     },
     {
@@ -158326,7 +158528,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L71",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -158337,7 +158539,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L122",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -158348,7 +158550,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L141",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -158359,7 +158561,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tests/e2e/harness-entry.ts",
-      "source_location": "L266",
+      "source_location": "L286",
       "weight": 1.0
     },
     {

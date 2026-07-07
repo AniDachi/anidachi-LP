@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/ghost-cam.ts": {
-    "mtime": 1783441216.7603052,
-    "ast_hash": "76cf43728c513543c267352b8b173a69",
+    "mtime": 1783448246.2276134,
+    "ast_hash": "98db9631fe9593ec2e4da6409e708823",
     "semantic_hash": ""
   },
   "apps/extension/src/hotkeys.ts": {
@@ -220,8 +220,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
-    "mtime": 1783444251.4660733,
-    "ast_hash": "d46896fb12dbacc32a5ebe6ff34275eb",
+    "mtime": 1783448153.7659836,
+    "ast_hash": "3213161da7ef00c4391084ab4a414770",
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
-    "mtime": 1783443921.746891,
-    "ast_hash": "61b8d7d9f86169828b6d5ccfe71cc381",
+    "mtime": 1783448182.5329883,
+    "ast_hash": "eb002a62ae46a4f38cfe80e97a0642d4",
     "semantic_hash": ""
   },
   "apps/extension/test/playback-control.test.ts": {
@@ -1735,13 +1735,13 @@
     "semantic_hash": ""
   },
   "tests/e2e/harness-entry.ts": {
-    "mtime": 1783444224.6452446,
-    "ast_hash": "78c42a6e5304ec6b11d0968203914ba4",
+    "mtime": 1783448260.052981,
+    "ast_hash": "7b6ec253121ccda4245fa12f7b014283",
     "semantic_hash": ""
   },
   "tests/e2e/p2p-media-harness.mjs": {
-    "mtime": 1782636247.080253,
-    "ast_hash": "3e068712f9473c1f2910d49f41dd65e7",
+    "mtime": 1783447973.4367695,
+    "ast_hash": "b1f408f19500a7d0f18322350a355b83",
     "semantic_hash": ""
   },
   "tests/e2e/package.json": {
@@ -1990,22 +1990,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1783446801.661659,
+    "mtime": 1783448356.2608101,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1783446801.6470075,
+    "mtime": 1783448356.2428281,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1783446801.6503165,
+    "mtime": 1783448356.2459188,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1783446801.6516778,
+    "mtime": 1783448356.2471795,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -2750,8 +2750,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/ghost-cam.test.tsx": {
-    "mtime": 1783444174.263939,
-    "ast_hash": "a1ab8684e73bf906b9be39ba368cf08a",
+    "mtime": 1783447418.5633404,
+    "ast_hash": "65d5c4389e5a81b22f27db58421fe3c1",
     "semantic_hash": ""
   },
   "apps/web/lib/middleware-routes.test.ts": {

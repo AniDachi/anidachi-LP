@@ -182,9 +182,15 @@ describe("useGhostCam P2P session lifecycle", () => {
     });
     await act(async () => undefined);
 
-    expect(controller.handleSignal).toHaveBeenCalledWith("viewer", {
-      kind: "renegotiate",
-    });
+    expect(controller.handleSignal).toHaveBeenCalledWith(
+      "viewer",
+      {
+        kind: "renegotiate",
+      },
+      {
+        senderConnectionId: "connection-viewer",
+      },
+    );
 
     await act(async () => {
       root.unmount();
