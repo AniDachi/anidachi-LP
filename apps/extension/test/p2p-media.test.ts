@@ -1139,20 +1139,20 @@ describe("P2P media participant selection", () => {
     ).toEqual(["host", "viewer"]);
   });
 
-  it("keeps non-camera remotes paired while local camera is being published", () => {
+  it("does not pair chat-only remotes solely because local camera is being published", () => {
     const participants = [
       participant("host", false),
       participant("viewer-a", false),
       participant("viewer-b", false),
     ];
 
-    // Publishing local camera is one-way media too: subscribers still need a
-    // peer so they can receive video and send answer/ICE/renegotiate signals.
+    // Larger rooms can have chat-only participants. They should not enter the
+    // WebRTC mesh only because another participant is publishing camera.
     expect(
       selectP2PMediaParticipants(participants, "host", true).map(
         (item) => item.id,
       ),
-    ).toEqual(["host", "viewer-a", "viewer-b"]);
+    ).toEqual(["host"]);
   });
 
   it("pairs a talking participant with everyone in the room", () => {
@@ -1193,7 +1193,7 @@ describe("P2P media participant selection", () => {
     ).toEqual(["host", "viewer-a", "viewer-b"]);
   });
 
-  it("allows subscriber signals and drops only fully idle participant pairs", () => {
+  it("drops incoming P2P signals from chat-only participants", () => {
     const participants = [
       participant("host", true),
       participant("viewer-a", true),
@@ -1215,7 +1215,7 @@ describe("P2P media participant selection", () => {
         "viewer-b",
         false,
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       canReceiveP2PSignalFromParticipant(
         participants,
@@ -1224,20 +1224,6 @@ describe("P2P media participant selection", () => {
         false,
       ),
     ).toBe(true);
-
-    const idleParticipants = [
-      participant("host", false),
-      participant("viewer-a", false),
-      participant("viewer-b", false),
-    ];
-    expect(
-      canReceiveP2PSignalFromParticipant(
-        idleParticipants,
-        "viewer-a",
-        "viewer-b",
-        false,
-      ),
-    ).toBe(false);
   });
 
   it("allows camera publisher signals while the local camera is off", () => {
@@ -1256,7 +1242,7 @@ describe("P2P media participant selection", () => {
     ).toBe(true);
   });
 
-  it("allows subscriber renegotiate while local camera is starting", () => {
+  it("does not allow a new chat-only renegotiate solely from local camera intent", () => {
     const participants = [
       participant("host", false),
       participant("viewer", false),
@@ -1269,7 +1255,7 @@ describe("P2P media participant selection", () => {
         "viewer",
         true,
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("allows P2P signals for a voice-only peer while cameras are off", () => {
@@ -1403,17 +1389,20 @@ describe("P2P idle peer linger", () => {
 
     const pc = FakeRtcPeerConnection.instances[0];
     expect(pc).toBeDefined();
+    expect(harness.controller.hasPeer("viewer")).toBe(true);
 
     harness.controller.updateParticipants([]);
     await vi.advanceTimersByTimeAsync(0);
     // The peer survives the publish stop; only the video expectation drops.
     expect(pc?.close).not.toHaveBeenCalled();
+    expect(harness.controller.hasPeer("viewer")).toBe(true);
 
     await vi.advanceTimersByTimeAsync(29_000);
     expect(pc?.close).not.toHaveBeenCalled();
 
     await vi.advanceTimersByTimeAsync(1_000);
     expect(pc?.close).toHaveBeenCalledTimes(1);
+    expect(harness.controller.hasPeer("viewer")).toBe(false);
 
     harness.controller.disconnect();
   });

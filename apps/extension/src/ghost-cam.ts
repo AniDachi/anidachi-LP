@@ -343,7 +343,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
       }
 
       const voiceParticipantIds = getVoiceParticipantIds(activeParticipant);
+      const hasExistingPeer = controller.hasPeer(item.fromUserId);
       if (
+        !hasExistingPeer &&
         !canReceiveP2PSignalFromParticipant(
           activeParticipants,
           participantId,
@@ -355,6 +357,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         logDebug("p2p.signal", "drop inactive media participant", {
           localParticipantId: participantId,
           fromUserId: item.fromUserId,
+          hasExistingPeer,
           kind: item.signal.kind,
           localCameraWanted: cameraEnabledRef.current,
           localCameraEnabled: activeParticipant.cameraEnabled,
