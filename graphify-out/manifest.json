@@ -460,8 +460,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/blou/publish/reel/route.ts": {
-    "mtime": 1780509466.077283,
-    "ast_hash": "1f63072c77e33a145dd362cf454e099d",
+    "mtime": 1783446739.3284824,
+    "ast_hash": "686a4d3ae7e0e77ef89ce12ff07c274d",
     "semantic_hash": ""
   },
   "apps/web/app/api/blou/upload/route.ts": {
@@ -540,8 +540,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/openclaw/health/route.ts": {
-    "mtime": 1780509466.0787702,
-    "ast_hash": "89cf8e2b72dc40add26788ab3da76314",
+    "mtime": 1783446739.32892,
+    "ast_hash": "7ce77092f83e054d2c8aeb3d416bede4",
     "semantic_hash": ""
   },
   "apps/web/app/api/openclaw/post/prepare/route.ts": {
@@ -555,13 +555,13 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/openclaw/post/video/prepare/route.ts": {
-    "mtime": 1780509466.07913,
-    "ast_hash": "3b7255e7b365c6326b884c6c36cf08d6",
+    "mtime": 1783446739.329259,
+    "ast_hash": "53e97aaaf6ae52e5d169f349ab3e2fd8",
     "semantic_hash": ""
   },
   "apps/web/app/api/openclaw/post/video/status/route.ts": {
-    "mtime": 1780509466.0792155,
-    "ast_hash": "66e6b716840b086d9895156b6ea33a77",
+    "mtime": 1783446739.3294153,
+    "ast_hash": "f2e002a04a7fdddafa5234226134c6da",
     "semantic_hash": ""
   },
   "apps/web/app/api/rooms/[roomId]/connect/route.ts": {
@@ -615,13 +615,13 @@
     "semantic_hash": ""
   },
   "apps/web/app/blou/manager/connect-client.tsx": {
-    "mtime": 1782593520.2120166,
-    "ast_hash": "fb7742cc9d9daaa2e5eab5ab87b3dace",
+    "mtime": 1783446739.3298502,
+    "ast_hash": "4065eb5c21f15028b20936d4c321a440",
     "semantic_hash": ""
   },
   "apps/web/app/blou/manager/layout.tsx": {
-    "mtime": 1780509466.080317,
-    "ast_hash": "bd6aa726bc2fa156b32c042a19bee49f",
+    "mtime": 1783446739.330232,
+    "ast_hash": "58b8c55550f5b17d531dbeba258b1e5f",
     "semantic_hash": ""
   },
   "apps/web/app/blou/manager/logout-button.tsx": {
@@ -640,8 +640,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/blou/manager/publish/publish-client.tsx": {
-    "mtime": 1782593520.2121608,
-    "ast_hash": "71d7c07defcd60ee79c9b75b30a8c820",
+    "mtime": 1783446739.330461,
+    "ast_hash": "9a4ad501fbe4aa928fc3bc8a240f5996",
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-anime-watch-parties-extension/page.tsx": {
@@ -955,8 +955,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/privacy/page.tsx": {
-    "mtime": 1782593520.2242632,
-    "ast_hash": "c9156fa13ba5433bd85dab8055ae5be4",
+    "mtime": 1783446739.330723,
+    "ast_hash": "8f4f40656f7e35cd423989567d5f8ba2",
     "semantic_hash": ""
   },
   "apps/web/app/resources/group-watch-onboarding/page.tsx": {
@@ -990,13 +990,13 @@
     "semantic_hash": ""
   },
   "apps/web/app/success/page.tsx": {
-    "mtime": 1782593520.2250779,
-    "ast_hash": "c905fb13b6ee25ad605d536693aa9042",
+    "mtime": 1783446739.331051,
+    "ast_hash": "b21aac873a948222e7b2ccf9e7c367b6",
     "semantic_hash": ""
   },
   "apps/web/app/terms/page.tsx": {
-    "mtime": 1782593520.2252254,
-    "ast_hash": "2bd3fb823a8fab61ee9bb14bd6bef599",
+    "mtime": 1783446739.3311994,
+    "ast_hash": "ed97b80e53d0201c350e1f6b36efaffd",
     "semantic_hash": ""
   },
   "apps/web/app/watch-action-anime-with-friends/page.tsx": {
@@ -1130,13 +1130,13 @@
     "semantic_hash": ""
   },
   "apps/web/components/footer.tsx": {
-    "mtime": 1783077941.4662611,
-    "ast_hash": "adf1820ff2f0200e1f91403ad803442a",
+    "mtime": 1783446739.3314357,
+    "ast_hash": "6fb83b33fed175d66b5a67aaed96d539",
     "semantic_hash": ""
   },
   "apps/web/components/hero.tsx": {
-    "mtime": 1783085779.336437,
-    "ast_hash": "e8f4aeadf7c12b3ac5de3bbc0d04ba5f",
+    "mtime": 1783446739.3317559,
+    "ast_hash": "0eb45daee00b21e90eb9f15601b503b0",
     "semantic_hash": ""
   },
   "apps/web/components/home/home-client.tsx": {
@@ -1150,8 +1150,8 @@
     "semantic_hash": ""
   },
   "apps/web/components/json-ld.tsx": {
-    "mtime": 1782593520.2310994,
-    "ast_hash": "2a0f26d5f2039a1557b20f75d123579d",
+    "mtime": 1783446739.3320582,
+    "ast_hash": "03ffa07019bb35e0e5f4bb09b0845206",
     "semantic_hash": ""
   },
   "apps/web/components/main-app-features.tsx": {
@@ -1160,8 +1160,8 @@
     "semantic_hash": ""
   },
   "apps/web/components/nav-bar-client.tsx": {
-    "mtime": 1783085779.3367581,
-    "ast_hash": "44b82b6cfe8242fb0d3c2bf2bb10c166",
+    "mtime": 1783446739.3322983,
+    "ast_hash": "3e8c5ca6f392b9255444566f8935a8c8",
     "semantic_hash": ""
   },
   "apps/web/components/nav-bar.tsx": {
@@ -1180,8 +1180,8 @@
     "semantic_hash": ""
   },
   "apps/web/components/plan-survey/plan-survey-modal.tsx": {
-    "mtime": 1783077941.466664,
-    "ast_hash": "ad660ea0b1ceb683c6df00f763940503",
+    "mtime": 1783446739.332599,
+    "ast_hash": "bf0e11c21e57eb3ae74a6f191a262b31",
     "semantic_hash": ""
   },
   "apps/web/components/plan-survey/plan-survey-provider.tsx": {
@@ -1265,8 +1265,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/account-selection.ts": {
-    "mtime": 1780509466.091468,
-    "ast_hash": "b7c42a50e952d71dcf307e089adef159",
+    "mtime": 1783446739.3328373,
+    "ast_hash": "f23e9064120fc74799e71f34e99e1743",
     "semantic_hash": ""
   },
   "apps/web/lib/amplitude.ts": {
@@ -1485,8 +1485,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/openclaw-jobs.ts": {
-    "mtime": 1780509466.0948095,
-    "ast_hash": "96666c8bed577e8707e425caa4b35b54",
+    "mtime": 1783446739.3331468,
+    "ast_hash": "3ddc1c055aa3446a5c2315ddc9a9186a",
     "semantic_hash": ""
   },
   "apps/web/lib/public-origin.ts": {
@@ -1520,8 +1520,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/social-account-limits.ts": {
-    "mtime": 1780509466.0950959,
-    "ast_hash": "ebd607889092f36d3243cd1c3a9b672b",
+    "mtime": 1783446739.3333187,
+    "ast_hash": "2bd9076a26ba347c45d44e3606e7dc72",
     "semantic_hash": ""
   },
   "apps/web/lib/staging-access.test.ts": {
@@ -1580,8 +1580,8 @@
     "semantic_hash": ""
   },
   "apps/web/next.config.ts": {
-    "mtime": 1782160784.8522232,
-    "ast_hash": "537aa6a630ab729f493428150b60f04b",
+    "mtime": 1783446739.3341672,
+    "ast_hash": "a7d5c67a2b4bfce566561801c4100527",
     "semantic_hash": ""
   },
   "apps/web/package.json": {
@@ -1990,22 +1990,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1783445836.5581353,
+    "mtime": 1783446801.661659,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1783445836.5441823,
+    "mtime": 1783446801.6470075,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1783445836.5471494,
+    "mtime": 1783446801.6503165,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1783445836.5483694,
+    "mtime": 1783446801.6516778,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3082,6 +3082,76 @@
   "apps/web/lib/kreatli-crm/gmail-tokens.ts": {
     "mtime": 1780509466.0941374,
     "ast_hash": "0da4e11a8de7fe965edef4058e8579c1",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/auth/youtube/callback/route.ts": {
+    "mtime": 1783446739.3277566,
+    "ast_hash": "c4de6db23ceba6ca8901a52ce5ec15b7",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/auth/youtube/connect/route.ts": {
+    "mtime": 1783446739.3278549,
+    "ast_hash": "4a2b9c210ecd78be7812467cf44c9d79",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/auth/youtube/disconnect/route.ts": {
+    "mtime": 1783446739.3279665,
+    "ast_hash": "c6094856f930edab1bd313eb26c719e1",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/auth/youtube/status/route.ts": {
+    "mtime": 1783446739.3280602,
+    "ast_hash": "6e1407bcad0d7b37c4ffa0acb9678318",
+    "semantic_hash": ""
+  },
+  "apps/web/components/join-discord-button.tsx": {
+    "mtime": 1783446739.3318198,
+    "ast_hash": "187baa71c0242455a1f6e41951ca1fea",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/community-discord.ts": {
+    "mtime": 1783446739.3328934,
+    "ast_hash": "0a2dd22c6e5fe8b1d230a40194554958",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/youtube/api.ts": {
+    "mtime": 1783446739.3334546,
+    "ast_hash": "e015260ff4e9505e89f5cc468a996087",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/youtube/caption.test.ts": {
+    "mtime": 1783446739.3335192,
+    "ast_hash": "f968b3917445fa9e91726e53d8bba806",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/youtube/caption.ts": {
+    "mtime": 1783446739.3335836,
+    "ast_hash": "b2258ac392a6df8427e4bb3d175e35e5",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/youtube/oauth.ts": {
+    "mtime": 1783446739.3336465,
+    "ast_hash": "8a13c83b420271999e13020394092712",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/youtube/privacy.test.ts": {
+    "mtime": 1783446739.333716,
+    "ast_hash": "2ea771b2fbda5baaf74830156267c97b",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/youtube/privacy.ts": {
+    "mtime": 1783446739.3337996,
+    "ast_hash": "3800bfd30ad4e565554e96220a3ac9c3",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/youtube/storage.ts": {
+    "mtime": 1783446739.3339777,
+    "ast_hash": "1c881743d005cb35db165f0b5e2997a1",
+    "semantic_hash": ""
+  },
+  "docs/openclaw-youtube-shorts.md": {
+    "mtime": 1783446739.3342829,
+    "ast_hash": "816771011a43e6458031004aba8d35d6",
     "semantic_hash": ""
   }
 }

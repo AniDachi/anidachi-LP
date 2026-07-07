@@ -12796,6 +12796,86 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_app_api_auth_youtube_callback_route",
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_auth_youtube_callback_route_getorigin",
+      "label": "getOrigin()",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_auth_youtube_callback_route_clearstatecookie",
+      "label": "clearStateCookie()",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L20",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_auth_youtube_callback_route_get",
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L30",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_auth_youtube_connect_route",
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_auth_youtube_connect_route_get",
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_auth_youtube_disconnect_route",
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/auth/youtube/disconnect/route.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_auth_youtube_disconnect_route_post",
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/auth/youtube/disconnect/route.ts",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_auth_youtube_status_route",
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/auth/youtube/status/route.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_auth_youtube_status_route_get",
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/auth/youtube/status/route.ts",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_app_api_billing_sync_checkout_session_route",
       "label": "route.ts",
       "file_type": "code",
@@ -12888,7 +12968,7 @@
       "label": "AccountResult",
       "file_type": "code",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L31",
+      "source_location": "L40",
       "_origin": "ast"
     },
     {
@@ -12896,7 +12976,7 @@
       "label": "publishToIgAccount()",
       "file_type": "code",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L42",
+      "source_location": "L51",
       "_origin": "ast"
     },
     {
@@ -12904,7 +12984,15 @@
       "label": "publishToTtAccount()",
       "file_type": "code",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L72",
+      "source_location": "L81",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_api_blou_publish_reel_route_publishtoytaccount",
+      "label": "publishToYtAccount()",
+      "file_type": "code",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L150",
       "_origin": "ast"
     },
     {
@@ -12912,7 +13000,7 @@
       "label": "blobUrlToProxyUrl()",
       "file_type": "code",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L141",
+      "source_location": "L184",
       "_origin": "ast"
     },
     {
@@ -12920,7 +13008,7 @@
       "label": "POST()",
       "file_type": "code",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L151",
+      "source_location": "L194",
       "_origin": "ast"
     },
     {
@@ -13560,7 +13648,7 @@
       "label": "safeRefreshTiktok()",
       "file_type": "code",
       "source_file": "apps/web/app/api/openclaw/health/route.ts",
-      "source_location": "L16",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -13568,7 +13656,7 @@
       "label": "GET()",
       "file_type": "code",
       "source_file": "apps/web/app/api/openclaw/health/route.ts",
-      "source_location": "L26",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -13640,7 +13728,7 @@
       "label": "ALLOWED_VIDEO_TYPES",
       "file_type": "code",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L62",
+      "source_location": "L82",
       "_origin": "ast"
     },
     {
@@ -13648,7 +13736,7 @@
       "label": "POST()",
       "file_type": "code",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L65",
+      "source_location": "L85",
       "_origin": "ast"
     },
     {
@@ -13672,7 +13760,7 @@
       "label": "processInstagramReel()",
       "file_type": "code",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L109",
+      "source_location": "L110",
       "_origin": "ast"
     },
     {
@@ -13680,7 +13768,7 @@
       "label": "processTikTokVideo()",
       "file_type": "code",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L146",
+      "source_location": "L147",
       "_origin": "ast"
     },
     {
@@ -14176,7 +14264,7 @@
       "label": "IgAccount",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -14184,7 +14272,7 @@
       "label": "TtAccount",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -14192,7 +14280,7 @@
       "label": "IgStatus",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "_origin": "ast"
     },
     {
@@ -14200,7 +14288,23 @@
       "label": "TtStatus",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L39",
+      "source_location": "L40",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_blou_manager_connect_client_ytaccount",
+      "label": "YtAccount",
+      "file_type": "code",
+      "source_file": "apps/web/app/blou/manager/connect-client.tsx",
+      "source_location": "L45",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_blou_manager_connect_client_ytstatus",
+      "label": "YtStatus",
+      "file_type": "code",
+      "source_file": "apps/web/app/blou/manager/connect-client.tsx",
+      "source_location": "L52",
       "_origin": "ast"
     },
     {
@@ -14208,7 +14312,7 @@
       "label": "ERROR_MESSAGES",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L47",
+      "source_location": "L61",
       "_origin": "ast"
     },
     {
@@ -14216,7 +14320,7 @@
       "label": "ConnectClient()",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L60",
+      "source_location": "L79",
       "_origin": "ast"
     },
     {
@@ -14304,7 +14408,7 @@
       "label": "PublishStatus",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -14312,7 +14416,7 @@
       "label": "TabType",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "_origin": "ast"
     },
     {
@@ -14320,7 +14424,7 @@
       "label": "AccountResult",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -14328,7 +14432,7 @@
       "label": "IgAccount",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L47",
+      "source_location": "L48",
       "_origin": "ast"
     },
     {
@@ -14336,7 +14440,15 @@
       "label": "TtAccount",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L52",
+      "source_location": "L53",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_blou_manager_publish_publish_client_ytaccount",
+      "label": "YtAccount",
+      "file_type": "code",
+      "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
+      "source_location": "L58",
       "_origin": "ast"
     },
     {
@@ -14344,7 +14456,7 @@
       "label": "PublishClient()",
       "file_type": "code",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L63",
+      "source_location": "L69",
       "_origin": "ast"
     },
     {
@@ -20704,7 +20816,7 @@
       "label": "Footer()",
       "file_type": "code",
       "source_file": "apps/web/components/footer.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "_origin": "ast"
     },
     {
@@ -20720,7 +20832,7 @@
       "label": "WaitlistPillContent()",
       "file_type": "code",
       "source_file": "apps/web/components/hero.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast"
     },
     {
@@ -20728,7 +20840,7 @@
       "label": "Hero()",
       "file_type": "code",
       "source_file": "apps/web/components/hero.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -20788,6 +20900,38 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_components_join_discord_button",
+      "label": "join-discord-button.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_components_join_discord_button_joindiscordbuttonprops",
+      "label": "JoinDiscordButtonProps",
+      "file_type": "code",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_components_join_discord_button_trackdiscordclick",
+      "label": "trackDiscordClick()",
+      "file_type": "code",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L25",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_components_join_discord_button_joindiscordbutton",
+      "label": "JoinDiscordButton()",
+      "file_type": "code",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_components_json_ld",
       "label": "json-ld.tsx",
       "file_type": "code",
@@ -20800,7 +20944,7 @@
       "label": "JsonLdProps",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "_origin": "ast"
     },
     {
@@ -20808,7 +20952,7 @@
       "label": "JsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L10",
+      "source_location": "L11",
       "_origin": "ast"
     },
     {
@@ -20816,7 +20960,7 @@
       "label": "OrganizationJsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -20824,7 +20968,7 @@
       "label": "SoftwareApplicationJsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L53",
+      "source_location": "L54",
       "_origin": "ast"
     },
     {
@@ -20832,7 +20976,7 @@
       "label": "FAQPageJsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L103",
+      "source_location": "L104",
       "_origin": "ast"
     },
     {
@@ -20840,7 +20984,7 @@
       "label": "HowToJsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L123",
+      "source_location": "L124",
       "_origin": "ast"
     },
     {
@@ -20848,7 +20992,7 @@
       "label": "BreadcrumbJsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L147",
+      "source_location": "L148",
       "_origin": "ast"
     },
     {
@@ -20856,7 +21000,7 @@
       "label": "ArticleJsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L166",
+      "source_location": "L167",
       "_origin": "ast"
     },
     {
@@ -20864,7 +21008,7 @@
       "label": "MediaSchemaProps",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L214",
+      "source_location": "L215",
       "_origin": "ast"
     },
     {
@@ -20872,7 +21016,7 @@
       "label": "MediaJsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L231",
+      "source_location": "L232",
       "_origin": "ast"
     },
     {
@@ -20880,7 +21024,7 @@
       "label": "TvSeriesJsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L271",
+      "source_location": "L272",
       "_origin": "ast"
     },
     {
@@ -20888,7 +21032,7 @@
       "label": "MovieJsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L275",
+      "source_location": "L276",
       "_origin": "ast"
     },
     {
@@ -20896,7 +21040,7 @@
       "label": "ItemListJsonLd()",
       "file_type": "code",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L279",
+      "source_location": "L280",
       "_origin": "ast"
     },
     {
@@ -20928,7 +21072,7 @@
       "label": "NavUser",
       "file_type": "code",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "_origin": "ast"
     },
     {
@@ -20936,7 +21080,7 @@
       "label": "PLAN_LABELS",
       "file_type": "code",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -20944,7 +21088,7 @@
       "label": "MeResponse",
       "file_type": "code",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -20952,7 +21096,7 @@
       "label": "fetchNavUser()",
       "file_type": "code",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L36",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -20960,7 +21104,7 @@
       "label": "UserMenu()",
       "file_type": "code",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L64",
+      "source_location": "L65",
       "_origin": "ast"
     },
     {
@@ -20968,7 +21112,7 @@
       "label": "MobileSignOut()",
       "file_type": "code",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L172",
+      "source_location": "L173",
       "_origin": "ast"
     },
     {
@@ -20976,7 +21120,7 @@
       "label": "navLinks",
       "file_type": "code",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L190",
+      "source_location": "L191",
       "_origin": "ast"
     },
     {
@@ -20984,7 +21128,7 @@
       "label": "isExternalNavLink()",
       "file_type": "code",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L196",
+      "source_location": "L197",
       "_origin": "ast"
     },
     {
@@ -20992,7 +21136,7 @@
       "label": "NavBarClient()",
       "file_type": "code",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L200",
+      "source_location": "L201",
       "_origin": "ast"
     },
     {
@@ -21056,7 +21200,7 @@
       "label": "PlanSurveyOpenContext",
       "file_type": "code",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L28",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -21064,7 +21208,7 @@
       "label": "SurveyStep",
       "file_type": "code",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L34",
+      "source_location": "L36",
       "_origin": "ast"
     },
     {
@@ -21072,7 +21216,7 @@
       "label": "PlanSurveyModal()",
       "file_type": "code",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L38",
+      "source_location": "L40",
       "_origin": "ast"
     },
     {
@@ -21664,7 +21808,7 @@
       "label": "AccountFilter",
       "file_type": "code",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "_origin": "ast"
     },
     {
@@ -21672,7 +21816,7 @@
       "label": "filterIgCredentials()",
       "file_type": "code",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L18",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -21680,7 +21824,15 @@
       "label": "filterTtCredentials()",
       "file_type": "code",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L27",
+      "source_location": "L29",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_account_selection_filterytcredentials",
+      "label": "filterYtCredentials()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/account-selection.ts",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -21688,7 +21840,7 @@
       "label": "validateFilteredIds()",
       "file_type": "code",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L36",
+      "source_location": "L47",
       "_origin": "ast"
     },
     {
@@ -21696,7 +21848,7 @@
       "label": "parseAccountFilterFromJson()",
       "file_type": "code",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L49",
+      "source_location": "L60",
       "_origin": "ast"
     },
     {
@@ -21704,7 +21856,7 @@
       "label": "formDataStringList()",
       "file_type": "code",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L69",
+      "source_location": "L84",
       "_origin": "ast"
     },
     {
@@ -21712,7 +21864,7 @@
       "label": "parseAccountFilterFromFormData()",
       "file_type": "code",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L92",
+      "source_location": "L107",
       "_origin": "ast"
     },
     {
@@ -24692,6 +24844,14 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_lib_community_discord",
+      "label": "community-discord.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/community-discord.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_lib_conversion_events",
       "label": "conversion-events.ts",
       "file_type": "code",
@@ -26792,7 +26952,7 @@
       "label": "CarouselJob",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L34",
+      "source_location": "L36",
       "_origin": "ast"
     },
     {
@@ -26800,7 +26960,7 @@
       "label": "BLOB_ACCESS",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L62",
+      "source_location": "L64",
       "_origin": "ast"
     },
     {
@@ -26808,7 +26968,7 @@
       "label": "blobPath()",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L64",
+      "source_location": "L66",
       "_origin": "ast"
     },
     {
@@ -26816,7 +26976,7 @@
       "label": "localPath()",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L68",
+      "source_location": "L70",
       "_origin": "ast"
     },
     {
@@ -26824,7 +26984,7 @@
       "label": "readFromBlob()",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L76",
+      "source_location": "L78",
       "_origin": "ast"
     },
     {
@@ -26832,7 +26992,7 @@
       "label": "writeToBlob()",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L90",
+      "source_location": "L92",
       "_origin": "ast"
     },
     {
@@ -26840,7 +27000,7 @@
       "label": "readFromFile()",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L108",
+      "source_location": "L110",
       "_origin": "ast"
     },
     {
@@ -26848,7 +27008,7 @@
       "label": "writeToFile()",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L117",
+      "source_location": "L119",
       "_origin": "ast"
     },
     {
@@ -26856,7 +27016,7 @@
       "label": "createJob()",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L128",
+      "source_location": "L130",
       "_origin": "ast"
     },
     {
@@ -26864,7 +27024,7 @@
       "label": "getJob()",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L165",
+      "source_location": "L172",
       "_origin": "ast"
     },
     {
@@ -26872,7 +27032,7 @@
       "label": "saveJob()",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L175",
+      "source_location": "L182",
       "_origin": "ast"
     },
     {
@@ -26880,7 +27040,7 @@
       "label": "deriveOverallStatus()",
       "file_type": "code",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L185",
+      "source_location": "L192",
       "_origin": "ast"
     },
     {
@@ -27897,6 +28057,366 @@
       "file_type": "code",
       "source_file": "apps/web/lib/watch-season-inference.ts",
       "source_location": "L50",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api",
+      "label": "api.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api_youtubeapierror",
+      "label": "YouTubeApiError",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L14",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api_youtubeapierror_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L17",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api_isinvalidgrant",
+      "label": "isInvalidGrant()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L24",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api_ensureauthclient",
+      "label": "ensureAuthClient()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L33",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api_ensureallcredentials",
+      "label": "ensureAllCredentials()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L84",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api_probechannelhealth",
+      "label": "probeChannelHealth()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L97",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api_uploadshortvideoinput",
+      "label": "UploadShortVideoInput",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L113",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api_uploadshortvideo",
+      "label": "uploadShortVideo()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L121",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api_uploadshortvideofromurl",
+      "label": "uploadShortVideoFromUrl()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L167",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_api_getcredentialsforchannel",
+      "label": "getCredentialsForChannel()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L194",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_caption_test",
+      "label": "caption.test.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/caption.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_caption",
+      "label": "caption.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/caption.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_caption_hasshortstag",
+      "label": "hasShortsTag()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/caption.ts",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_caption_ensureshortstag",
+      "label": "ensureShortsTag()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/caption.ts",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_caption_adaptcaptionforyoutube",
+      "label": "adaptCaptionForYouTube()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/caption.ts",
+      "source_location": "L22",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_oauth",
+      "label": "oauth.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_oauth_youtube_scopes",
+      "label": "YOUTUBE_SCOPES",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L3",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_oauth_getyoutuberedirecturi",
+      "label": "getYouTubeRedirectUri()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_oauth_getyoutubeoauthcredentials",
+      "label": "getYouTubeOAuthCredentials()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L14",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_oauth_isyoutubeoauthconfigured",
+      "label": "isYouTubeOAuthConfigured()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L24",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_oauth_createyoutubeoauth2",
+      "label": "createYouTubeOAuth2()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L28",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_oauth_youtubeauthurl",
+      "label": "youtubeAuthUrl()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L38",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_oauth_exchangeyoutubecode",
+      "label": "exchangeYouTubeCode()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L50",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_oauth_youtubechannelinfo",
+      "label": "YouTubeChannelInfo",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L58",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_oauth_fetchchannelinfo",
+      "label": "fetchChannelInfo()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L64",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_privacy_test",
+      "label": "privacy.test.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/privacy.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_privacy",
+      "label": "privacy.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/privacy.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_privacy_youtube_shorts_privacy",
+      "label": "YOUTUBE_SHORTS_PRIVACY",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/privacy.ts",
+      "source_location": "L2",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_privacy_youtubeprivacystatus",
+      "label": "YouTubePrivacyStatus",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/privacy.ts",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_privacy_youtubeuploadsteplabel",
+      "label": "youtubeUploadStepLabel()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/privacy.ts",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage",
+      "label": "storage.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_blob_access",
+      "label": "BLOB_ACCESS",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L19",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_youtubecredentials",
+      "label": "YouTubeCredentials",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L23",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_getallfromblob",
+      "label": "getAllFromBlob()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_savealltoblob",
+      "label": "saveAllToBlob()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L58",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_clearblob",
+      "label": "clearBlob()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L70",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_credentialspath",
+      "label": "credentialsPath()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L86",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_getallfromfile",
+      "label": "getAllFromFile()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L90",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_savealltofile",
+      "label": "saveAllToFile()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L106",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_getallcredentials",
+      "label": "getAllCredentials()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L116",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_getcredentials",
+      "label": "getCredentials()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L121",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_getcredentialsbychannelid",
+      "label": "getCredentialsByChannelId()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L126",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_setcredentials",
+      "label": "setCredentials()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L133",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_youtube_storage_clearcredentials",
+      "label": "clearCredentials()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L151",
       "_origin": "ast"
     },
     {
@@ -35109,6 +35629,150 @@
       "file_type": "document",
       "source_file": "docs/new-chat-project-context.md",
       "source_location": "L505",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts",
+      "label": "openclaw-youtube-shorts.md",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "label": "OpenClaw: YouTube Shorts posting",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_overview",
+      "label": "Overview",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_prerequisites",
+      "label": "Prerequisites",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_authentication",
+      "label": "Authentication",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L28",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_step_1_check_connected_accounts",
+      "label": "Step 1 — Check connected accounts",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L38",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_step_2_prepare_video_post",
+      "label": "Step 2 — Prepare video post",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L70",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_form_fields",
+      "label": "Form fields",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L78",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_examples",
+      "label": "Examples",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L91",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_prepare_response",
+      "label": "Prepare response",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L130",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_step_3_poll_job_status_if_needed",
+      "label": "Step 3 — Poll job status (if needed)",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L152",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_server_side_flow_youtube",
+      "label": "Server-side flow (YouTube)",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L179",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_caption_rules_youtube",
+      "label": "Caption rules (YouTube)",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L193",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_platform_comparison_same_video_endpoint",
+      "label": "Platform comparison (same video endpoint)",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L215",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_error_codes",
+      "label": "Error codes",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L223",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_human_setup_one_time_not_via_openclaw",
+      "label": "Human setup (one-time, not via OpenClaw)",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L233",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_operational_notes",
+      "label": "Operational notes",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L240",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_openclaw_youtube_shorts_related_code",
+      "label": "Related code",
+      "file_type": "document",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L246",
       "_origin": "ast"
     },
     {
@@ -79001,6 +79665,370 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "ref_next_server",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_lib_youtube_oauth",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_lib_youtube_oauth_createyoutubeoauth2",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_lib_youtube_oauth_exchangeyoutubecode",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_lib_youtube_oauth_fetchchannelinfo",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_lib_youtube_oauth_getyoutuberedirecturi",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_lib_youtube_storage",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_lib_youtube_storage_setcredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_lib_social_account_limits",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_social_account_limits_max_youtube_accounts",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_app_api_auth_youtube_callback_route_getorigin",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_app_api_auth_youtube_callback_route_clearstatecookie",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route",
+      "target": "apps_web_app_api_auth_youtube_callback_route_get",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route_get",
+      "target": "apps_web_app_api_auth_youtube_callback_route_getorigin",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route_get",
+      "target": "apps_web_app_api_auth_youtube_callback_route_clearstatecookie",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route",
+      "target": "ref_next_server",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route",
+      "target": "apps_web_lib_blou_access",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route",
+      "target": "apps_web_lib_blou_access_jsonunauthorizedunlesskreatlisession",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route",
+      "target": "apps_web_lib_youtube_oauth",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route",
+      "target": "apps_web_lib_youtube_oauth_createyoutubeoauth2",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route",
+      "target": "apps_web_lib_youtube_oauth_getyoutuberedirecturi",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route",
+      "target": "apps_web_lib_youtube_oauth_isyoutubeoauthconfigured",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route",
+      "target": "apps_web_lib_youtube_oauth_youtubeauthurl",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route",
+      "target": "apps_web_app_api_auth_youtube_connect_route_get",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_disconnect_route",
+      "target": "ref_next_server",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/disconnect/route.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_disconnect_route",
+      "target": "apps_web_lib_blou_access",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/disconnect/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_disconnect_route",
+      "target": "apps_web_lib_blou_access_jsonunauthorizedunlesskreatlisession",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/disconnect/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_disconnect_route",
+      "target": "apps_web_lib_youtube_storage",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/disconnect/route.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_disconnect_route",
+      "target": "apps_web_lib_youtube_storage_clearcredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/disconnect/route.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_disconnect_route",
+      "target": "apps_web_app_api_auth_youtube_disconnect_route_post",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/disconnect/route.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_status_route",
+      "target": "ref_next_server",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/status/route.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_status_route",
+      "target": "apps_web_lib_blou_access",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/status/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_status_route",
+      "target": "apps_web_lib_blou_access_jsonunauthorizedunlesskreatlisession",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/status/route.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_status_route",
+      "target": "apps_web_lib_youtube_storage",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/status/route.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_status_route",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/status/route.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_status_route",
+      "target": "apps_web_app_api_auth_youtube_status_route_get",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/youtube/status/route.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_api_billing_sync_checkout_session_route",
       "target": "ref_next_server",
       "relation": "imports_from",
@@ -79794,6 +80822,16 @@
     },
     {
       "source": "apps_web_app_api_blou_publish_reel_route",
+      "target": "apps_web_lib_account_selection_filterytcredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route",
       "target": "apps_web_lib_account_selection_validatefilteredids",
       "relation": "imports",
       "context": "import",
@@ -79804,11 +80842,81 @@
     },
     {
       "source": "apps_web_app_api_blou_publish_reel_route",
+      "target": "apps_web_lib_youtube_storage",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route",
+      "target": "apps_web_lib_youtube_api",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route",
+      "target": "apps_web_lib_youtube_api_uploadshortvideofromurl",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route",
+      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_youtube_api_youtubecredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route",
+      "target": "apps_web_lib_youtube_caption",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route",
+      "target": "apps_web_lib_youtube_caption_adaptcaptionforyoutube",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route",
       "target": "apps_web_app_api_blou_publish_reel_route_accountresult",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L31",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -79817,7 +80925,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L42",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -79826,7 +80934,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L72",
+      "source_location": "L81",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route",
+      "target": "apps_web_app_api_blou_publish_reel_route_publishtoytaccount",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -79835,7 +80952,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L141",
+      "source_location": "L184",
       "weight": 1.0
     },
     {
@@ -79844,7 +80961,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L151",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -79854,7 +80971,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L272",
+      "source_location": "L324",
       "weight": 1.0
     },
     {
@@ -79864,7 +80981,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L275",
+      "source_location": "L327",
       "weight": 1.0
     },
     {
@@ -79874,7 +80991,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L276",
+      "source_location": "L328",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route_post",
+      "target": "apps_web_app_api_blou_publish_reel_route_publishtoytaccount",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L329",
       "weight": 1.0
     },
     {
@@ -82832,7 +83959,7 @@
     },
     {
       "source": "apps_web_app_api_openclaw_health_route",
-      "target": "apps_web_lib_tiktok_api",
+      "target": "apps_web_lib_youtube_storage",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -82842,7 +83969,7 @@
     },
     {
       "source": "apps_web_app_api_openclaw_health_route",
-      "target": "apps_web_lib_tiktok_api_refreshifneeded",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -82852,11 +83979,51 @@
     },
     {
       "source": "apps_web_app_api_openclaw_health_route",
+      "target": "apps_web_lib_tiktok_api",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/health/route.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_health_route",
+      "target": "apps_web_lib_tiktok_api_refreshifneeded",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/health/route.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_health_route",
+      "target": "apps_web_lib_youtube_api",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/health/route.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_health_route",
+      "target": "apps_web_lib_youtube_api_probechannelhealth",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/health/route.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_health_route",
       "target": "apps_web_app_api_openclaw_health_route_saferefreshtiktok",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/health/route.ts",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -82865,7 +84032,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/health/route.ts",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -82875,7 +84042,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/health/route.ts",
-      "source_location": "L88",
+      "source_location": "L94",
       "weight": 1.0
     },
     {
@@ -83460,7 +84627,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L35",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -83470,7 +84637,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L36",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -83480,7 +84647,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L37",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -83490,7 +84657,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L37",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -83500,7 +84667,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L37",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -83510,7 +84677,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L41",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -83520,7 +84687,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L41",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -83530,7 +84697,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L41",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_openclaw_jobs_deriveoverallstatus",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -83540,7 +84717,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L42",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -83550,7 +84727,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L42",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -83560,7 +84737,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L43",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -83570,7 +84747,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L44",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -83580,7 +84757,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L44",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -83590,7 +84767,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L44",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -83600,7 +84777,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L48",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -83610,7 +84787,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L49",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -83620,7 +84797,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L49",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -83630,7 +84807,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L50",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -83640,7 +84817,97 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L50",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_youtube_storage",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_youtube_api",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_youtube_api_uploadshortvideofromurl",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_youtube_api_youtubecredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_youtube_caption",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_youtube_caption_adaptcaptionforyoutube",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_youtube_privacy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_youtube_privacy_youtubeuploadsteplabel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -83650,7 +84917,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L51",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -83660,7 +84927,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L51",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -83670,7 +84937,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L51",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -83680,7 +84947,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L55",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -83690,7 +84957,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L55",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -83700,7 +84967,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L55",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -83710,7 +84977,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L55",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_account_selection_filterytcredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -83720,7 +84997,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L55",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -83729,7 +85006,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L62",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -83738,7 +85015,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L65",
+      "source_location": "L85",
       "weight": 1.0
     },
     {
@@ -83966,7 +85243,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L109",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -83975,7 +85252,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L146",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -83985,7 +85262,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L85",
+      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -83995,7 +85272,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L87",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
@@ -86751,11 +88028,21 @@
     },
     {
       "source": "apps_web_app_blou_manager_connect_client",
+      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_social_account_limits_max_youtube_accounts",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/blou/manager/connect-client.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_blou_manager_connect_client",
       "target": "apps_web_app_blou_manager_connect_client_igaccount",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -86764,7 +88051,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -86773,7 +88060,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -86782,7 +88069,25 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L39",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_blou_manager_connect_client",
+      "target": "apps_web_app_blou_manager_connect_client_ytaccount",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/blou/manager/connect-client.tsx",
+      "source_location": "L45",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_blou_manager_connect_client",
+      "target": "apps_web_app_blou_manager_connect_client_ytstatus",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/blou/manager/connect-client.tsx",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -86791,7 +88096,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L47",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -86800,7 +88105,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L60",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -87104,7 +88409,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -87113,7 +88418,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -87122,7 +88427,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -87131,7 +88436,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -87140,7 +88445,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L52",
+      "source_location": "L53",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_blou_manager_publish_publish_client",
+      "target": "apps_web_app_blou_manager_publish_publish_client_ytaccount",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -87149,7 +88463,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L63",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -104843,11 +106157,31 @@
     },
     {
       "source": "apps_web_components_footer",
+      "target": "apps_web_components_join_discord_button",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/footer.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_footer",
+      "target": "apps_web_components_join_discord_button_joindiscordbutton",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/footer.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_footer",
       "target": "apps_web_components_footer_footer",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/footer.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -104972,11 +106306,31 @@
     },
     {
       "source": "apps_web_components_hero",
+      "target": "apps_web_components_join_discord_button",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/hero.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_hero",
+      "target": "apps_web_components_join_discord_button_joindiscordbutton",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/hero.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_hero",
       "target": "apps_web_components_hero_waitlistpillcontent",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/hero.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -104985,7 +106339,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/hero.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -105284,6 +106638,173 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_components_join_discord_button",
+      "target": "ref_react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_components_ui_button",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_components_ui_button_button",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_components_discord_icon",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_components_discord_icon_discordicon",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_lib_community_discord",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_community_discord_discord_server_cta_label",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_community_discord_discord_server_invite_url",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_lib_conversion_events",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_lib_conversion_events_inferpagetemplatefrompath",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_lib_conversion_events_trackconversion",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_lib_utils",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_lib_utils_cn",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_components_join_discord_button_joindiscordbuttonprops",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_components_join_discord_button_trackdiscordclick",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button",
+      "target": "apps_web_components_join_discord_button_joindiscordbutton",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button_joindiscordbutton",
+      "target": "apps_web_components_join_discord_button_trackdiscordclick",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L56",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_components_json_ld",
       "target": "apps_web_lib_site_url",
       "relation": "imports_from",
@@ -105305,11 +106826,31 @@
     },
     {
       "source": "apps_web_components_json_ld",
+      "target": "apps_web_lib_community_discord",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/json-ld.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_json_ld",
+      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_community_discord_discord_server_invite_url",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/json-ld.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_json_ld",
       "target": "apps_web_components_json_ld_jsonldprops",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -105318,7 +106859,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -105327,7 +106868,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -105336,7 +106877,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -105345,7 +106886,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L103",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -105354,7 +106895,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L123",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
@@ -105363,7 +106904,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L147",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -105372,7 +106913,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L166",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -105381,7 +106922,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L214",
+      "source_location": "L215",
       "weight": 1.0
     },
     {
@@ -105390,7 +106931,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L231",
+      "source_location": "L232",
       "weight": 1.0
     },
     {
@@ -105399,7 +106940,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L271",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -105408,7 +106949,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L275",
+      "source_location": "L276",
       "weight": 1.0
     },
     {
@@ -105417,7 +106958,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L279",
+      "source_location": "L280",
       "weight": 1.0
     },
     {
@@ -105611,12 +107152,32 @@
     },
     {
       "source": "apps_web_components_nav_bar_client",
-      "target": "apps_web_components_plan_survey_use_plan_survey",
+      "target": "apps_web_components_join_discord_button",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
       "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_nav_bar_client",
+      "target": "apps_web_components_join_discord_button_joindiscordbutton",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/nav-bar-client.tsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_nav_bar_client",
+      "target": "apps_web_components_plan_survey_use_plan_survey",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/nav-bar-client.tsx",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -105626,7 +107187,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -105636,7 +107197,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -105646,7 +107207,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -105656,7 +107217,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -105666,7 +107227,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -105675,7 +107236,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -105684,7 +107245,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -105693,7 +107254,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -105702,7 +107263,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -105711,7 +107272,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L64",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -105720,7 +107281,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L172",
+      "source_location": "L173",
       "weight": 1.0
     },
     {
@@ -105729,7 +107290,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L190",
+      "source_location": "L191",
       "weight": 1.0
     },
     {
@@ -105738,7 +107299,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L196",
+      "source_location": "L197",
       "weight": 1.0
     },
     {
@@ -105747,7 +107308,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L200",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -105757,7 +107318,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L212",
+      "source_location": "L213",
       "weight": 1.0
     },
     {
@@ -105767,7 +107328,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L255",
+      "source_location": "L256",
       "weight": 1.0
     },
     {
@@ -106199,11 +107760,51 @@
     },
     {
       "source": "apps_web_components_plan_survey_plan_survey_modal",
+      "target": "apps_web_components_join_discord_button",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_plan_survey_plan_survey_modal",
+      "target": "apps_web_components_join_discord_button_joindiscordbutton",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_plan_survey_plan_survey_modal",
+      "target": "apps_web_components_discord_icon",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_plan_survey_plan_survey_modal",
+      "target": "apps_web_components_discord_icon_discordicon",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_plan_survey_plan_survey_modal",
       "target": "apps_web_components_plan_survey_plan_survey_modal_plansurveyopencontext",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L28",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -106212,7 +107813,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L34",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -106221,7 +107822,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L38",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -108152,11 +109753,31 @@
     },
     {
       "source": "apps_web_lib_account_selection",
+      "target": "apps_web_lib_youtube_storage",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/account-selection.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_account_selection",
+      "target": "apps_web_lib_youtube_storage_youtubecredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/account-selection.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_account_selection",
       "target": "apps_web_lib_account_selection_accountfilter",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -108165,7 +109786,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L18",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -108174,7 +109795,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L27",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_account_selection",
+      "target": "apps_web_lib_account_selection_filterytcredentials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/account-selection.ts",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -108183,7 +109813,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L36",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -108192,7 +109822,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L49",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -108201,7 +109831,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L69",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -108210,7 +109840,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L92",
+      "source_location": "L107",
       "weight": 1.0
     },
     {
@@ -108220,7 +109850,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/account-selection.ts",
-      "source_location": "L99",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
@@ -120929,7 +122559,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L34",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -120938,7 +122568,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L62",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -120947,7 +122577,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L64",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -120956,7 +122586,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L68",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -120965,7 +122595,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L76",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -120974,7 +122604,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L90",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -120983,7 +122613,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L108",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -120992,7 +122622,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L117",
+      "source_location": "L119",
       "weight": 1.0
     },
     {
@@ -121001,7 +122631,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L128",
+      "source_location": "L130",
       "weight": 1.0
     },
     {
@@ -121010,7 +122640,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L165",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -121019,7 +122649,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L175",
+      "source_location": "L182",
       "weight": 1.0
     },
     {
@@ -121028,7 +122658,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L185",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -121038,7 +122668,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L81",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -121048,7 +122678,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L94",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -121058,7 +122688,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L110",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -121068,7 +122698,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L120",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -121078,7 +122708,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L160",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -121088,7 +122718,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L167",
+      "source_location": "L174",
       "weight": 1.0
     },
     {
@@ -121098,7 +122728,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L167",
+      "source_location": "L174",
       "weight": 1.0
     },
     {
@@ -121108,7 +122738,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L178",
+      "source_location": "L185",
       "weight": 1.0
     },
     {
@@ -121118,7 +122748,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L180",
+      "source_location": "L187",
       "weight": 1.0
     },
     {
@@ -123544,6 +125174,841 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/watch-season-inference.ts",
       "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "ref_stream",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "ref_googleapis",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_oauth",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_oauth_createyoutubeoauth2",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_storage",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_storage_getcredentialsbychannelid",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_storage_setcredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_storage_youtubecredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_api_youtubeapierror",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_youtubeapierror",
+      "target": "apps_web_lib_youtube_api_youtubeapierror_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_api_isinvalidgrant",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_api_ensureauthclient",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_api_ensureallcredentials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_api_probechannelhealth",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L97",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_api_uploadshortvideoinput",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L113",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_api_uploadshortvideo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L121",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_api_uploadshortvideofromurl",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L167",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_api_getcredentialsforchannel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L194",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_ensureauthclient",
+      "target": "apps_web_lib_youtube_api_isinvalidgrant",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L77",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_ensureallcredentials",
+      "target": "apps_web_lib_youtube_storage",
+      "relation": "imports_from",
+      "context": "import",
+      "deferred": true,
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L85",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_ensureallcredentials",
+      "target": "apps_web_lib_youtube_api_ensureauthclient",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L90",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_probechannelhealth",
+      "target": "apps_web_lib_youtube_api_ensureauthclient",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_uploadshortvideo",
+      "target": "apps_web_lib_youtube_api_ensureauthclient",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L127",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_uploadshortvideo",
+      "target": "apps_web_lib_youtube_api_isinvalidgrant",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L155",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_uploadshortvideofromurl",
+      "target": "ref_stream_web",
+      "relation": "imports_from",
+      "context": "import",
+      "deferred": true,
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L184",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_uploadshortvideofromurl",
+      "target": "apps_web_lib_youtube_api_uploadshortvideo",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L186",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_caption_test",
+      "target": "ref_node_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/caption.test.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_caption_test",
+      "target": "ref_node_assert_strict",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/caption.test.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_caption_test",
+      "target": "apps_web_lib_youtube_caption",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/caption.test.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_caption_test",
+      "target": "apps_web_lib_youtube_caption_adaptcaptionforyoutube",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/caption.test.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_caption",
+      "target": "apps_web_lib_youtube_caption_hasshortstag",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/caption.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_caption",
+      "target": "apps_web_lib_youtube_caption_ensureshortstag",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/caption.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_caption",
+      "target": "apps_web_lib_youtube_caption_adaptcaptionforyoutube",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/caption.ts",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_caption_ensureshortstag",
+      "target": "apps_web_lib_youtube_caption_hasshortstag",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/caption.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_caption_adaptcaptionforyoutube",
+      "target": "apps_web_lib_youtube_caption_ensureshortstag",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/caption.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth",
+      "target": "ref_googleapis",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth",
+      "target": "apps_web_lib_youtube_oauth_youtube_scopes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth",
+      "target": "apps_web_lib_youtube_oauth_getyoutuberedirecturi",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth",
+      "target": "apps_web_lib_youtube_oauth_getyoutubeoauthcredentials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth",
+      "target": "apps_web_lib_youtube_oauth_isyoutubeoauthconfigured",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth",
+      "target": "apps_web_lib_youtube_oauth_createyoutubeoauth2",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth",
+      "target": "apps_web_lib_youtube_oauth_youtubeauthurl",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth",
+      "target": "apps_web_lib_youtube_oauth_exchangeyoutubecode",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth",
+      "target": "apps_web_lib_youtube_oauth_youtubechannelinfo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth",
+      "target": "apps_web_lib_youtube_oauth_fetchchannelinfo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth_isyoutubeoauthconfigured",
+      "target": "apps_web_lib_youtube_oauth_getyoutubeoauthcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth_createyoutubeoauth2",
+      "target": "apps_web_lib_youtube_oauth_getyoutubeoauthcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_oauth_fetchchannelinfo",
+      "target": "apps_web_lib_youtube_oauth_createyoutubeoauth2",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/oauth.ts",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_privacy_test",
+      "target": "ref_node_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/privacy.test.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_privacy_test",
+      "target": "ref_node_assert_strict",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/privacy.test.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_privacy_test",
+      "target": "apps_web_lib_youtube_privacy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/privacy.test.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_privacy_test",
+      "target": "apps_web_lib_youtube_privacy_youtube_shorts_privacy",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/privacy.test.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_privacy_test",
+      "target": "apps_web_lib_youtube_privacy_youtubeuploadsteplabel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/privacy.test.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_privacy",
+      "target": "apps_web_lib_youtube_privacy_youtube_shorts_privacy",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/privacy.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_privacy",
+      "target": "apps_web_lib_youtube_privacy_youtubeprivacystatus",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/privacy.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_privacy",
+      "target": "apps_web_lib_youtube_privacy_youtubeuploadsteplabel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/privacy.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "ref_fs_promises",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "ref_path",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "ref_vercel_blob",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_blob_access",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_youtubecredentials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_getallfromblob",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_savealltoblob",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_clearblob",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_credentialspath",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_getallfromfile",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L90",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_savealltofile",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L116",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_getcredentials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L121",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_getcredentialsbychannelid",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L126",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_setcredentials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L133",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage",
+      "target": "apps_web_lib_youtube_storage_clearcredentials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L151",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_getallfromfile",
+      "target": "apps_web_lib_youtube_storage_credentialspath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L92",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_savealltofile",
+      "target": "apps_web_lib_youtube_storage_credentialspath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_getallcredentials",
+      "target": "apps_web_lib_youtube_storage_getallfromblob",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_getallcredentials",
+      "target": "apps_web_lib_youtube_storage_getallfromfile",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_getcredentials",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L122",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_getcredentialsbychannelid",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L129",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_setcredentials",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_setcredentials",
+      "target": "apps_web_lib_youtube_storage_savealltoblob",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L145",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_setcredentials",
+      "target": "apps_web_lib_youtube_storage_savealltofile",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L147",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_clearcredentials",
+      "target": "apps_web_lib_youtube_storage_clearblob",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L154",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_clearcredentials",
+      "target": "ref_fs_promises",
+      "relation": "imports_from",
+      "context": "import",
+      "deferred": true,
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L157",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_clearcredentials",
+      "target": "apps_web_lib_youtube_storage_credentialspath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L158",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_clearcredentials",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L164",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_clearcredentials",
+      "target": "apps_web_lib_youtube_storage_savealltoblob",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L170",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_storage_clearcredentials",
+      "target": "apps_web_lib_youtube_storage_savealltofile",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/storage.ts",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -135122,6 +137587,159 @@
       "weight": 1.0
     },
     {
+      "source": "docs_openclaw_youtube_shorts",
+      "target": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_overview",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_prerequisites",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_authentication",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_step_1_check_connected_accounts",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_step_2_prepare_video_post",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_step_2_prepare_video_post",
+      "target": "docs_openclaw_youtube_shorts_form_fields",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_step_2_prepare_video_post",
+      "target": "docs_openclaw_youtube_shorts_examples",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L91",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_step_2_prepare_video_post",
+      "target": "docs_openclaw_youtube_shorts_prepare_response",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L130",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_step_3_poll_job_status_if_needed",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L152",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_server_side_flow_youtube",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L179",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_caption_rules_youtube",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L193",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_platform_comparison_same_video_endpoint",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L215",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_error_codes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L223",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_human_setup_one_time_not_via_openclaw",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L233",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_operational_notes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L240",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_openclaw_youtube_shorts_openclaw_youtube_shorts_posting",
+      "target": "docs_openclaw_youtube_shorts_related_code",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/openclaw-youtube-shorts.md",
+      "source_location": "L246",
+      "weight": 1.0
+    },
+    {
       "source": "docs_project_architecture_and_development",
       "target": "docs_project_architecture_and_development_anidachi_project_architecture_and_development",
       "relation": "contains",
@@ -138816,6 +141434,16 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_youtube_api",
+      "target": "apps_web_lib_youtube_storage",
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
       "source": "apps_api_src_auth",
       "target": "packages_protocol_src_types_roomcapabilitiesschema",
       "relation": "imports",
@@ -139486,6 +142114,16 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_api_blou_publish_reel_route",
+      "target": "apps_web_lib_youtube_storage_youtubecredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_api_create_checkout_session_route",
       "target": "apps_web_lib_anidachi_auth_plan_codes_checkoutinputtopaidplancode",
       "relation": "imports",
@@ -139562,7 +142200,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L43",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -139572,7 +142210,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L48",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route",
+      "target": "apps_web_lib_youtube_storage_youtubecredentials",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -140562,7 +143210,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -141622,7 +144270,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L48",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -141632,7 +144280,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L49",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -141642,7 +144290,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L50",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -141652,7 +144300,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L78",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -141662,7 +144310,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L79",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
@@ -141672,7 +144320,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L80",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -141682,7 +144330,27 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L90",
+      "source_location": "L99",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route_publishtoytaccount",
+      "target": "apps_web_lib_youtube_caption_adaptcaptionforyoutube",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L156",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route_publishtoytaccount",
+      "target": "apps_web_lib_youtube_api_uploadshortvideofromurl",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L157",
       "weight": 1.0
     },
     {
@@ -141712,7 +144380,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/health/route.ts",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -141792,7 +144460,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L110",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -141802,7 +144470,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L119",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -141812,7 +144480,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L124",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -141822,7 +144490,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L154",
+      "source_location": "L155",
       "weight": 1.0
     },
     {
@@ -141832,7 +144500,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L162",
+      "source_location": "L163",
       "weight": 1.0
     },
     {
@@ -141842,7 +144510,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L163",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -141936,13 +144604,33 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_components_join_discord_button_trackdiscordclick",
+      "target": "apps_web_lib_conversion_events_trackconversion",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button_trackdiscordclick",
+      "target": "apps_web_lib_conversion_events_inferpagetemplatefrompath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_components_json_ld_mediajsonld",
       "target": "apps_web_lib_site_url_getresolvedsiteorigin",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L245",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -141952,7 +144640,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L220",
+      "source_location": "L222",
       "weight": 1.0
     },
     {
@@ -141962,7 +144650,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L221",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -141972,7 +144660,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L242",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -141982,7 +144670,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L244",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -141992,7 +144680,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L367",
+      "source_location": "L369",
       "weight": 1.0
     },
     {
@@ -147667,6 +150355,171 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_api_auth_youtube_callback_route_get",
+      "target": "apps_web_lib_youtube_oauth_getyoutuberedirecturi",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route_get",
+      "target": "apps_web_lib_youtube_oauth_createyoutubeoauth2",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route_get",
+      "target": "apps_web_lib_youtube_oauth_exchangeyoutubecode",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route_get",
+      "target": "apps_web_lib_youtube_oauth_fetchchannelinfo",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L73",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route_get",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_callback_route_get",
+      "target": "apps_web_lib_youtube_storage_setcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/callback/route.ts",
+      "source_location": "L94",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route_get",
+      "target": "apps_web_lib_blou_access_jsonunauthorizedunlesskreatlisession",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route_get",
+      "target": "apps_web_lib_youtube_oauth_isyoutubeoauthconfigured",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route_get",
+      "target": "apps_web_lib_youtube_oauth_getyoutuberedirecturi",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route_get",
+      "target": "apps_web_lib_youtube_oauth_createyoutubeoauth2",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_connect_route_get",
+      "target": "apps_web_lib_youtube_oauth_youtubeauthurl",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/connect/route.ts",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_disconnect_route_post",
+      "target": "apps_web_lib_blou_access_jsonunauthorizedunlesskreatlisession",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/disconnect/route.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_disconnect_route_post",
+      "target": "apps_web_lib_youtube_storage_clearcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/disconnect/route.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_status_route_get",
+      "target": "apps_web_lib_blou_access_jsonunauthorizedunlesskreatlisession",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/status/route.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_youtube_status_route_get",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/youtube/status/route.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_api_billing_sync_checkout_session_route_post",
       "target": "apps_web_lib_anidachi_auth_session_getsession",
       "relation": "calls",
@@ -147817,7 +150670,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L152",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -147828,7 +150681,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L187",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -147839,7 +150692,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L189",
+      "source_location": "L235",
       "weight": 1.0
     },
     {
@@ -147850,7 +150703,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L190",
+      "source_location": "L236",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_blou_publish_reel_route_post",
+      "target": "apps_web_lib_account_selection_filterytcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -147861,7 +150725,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L192",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -147872,7 +150736,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/blou/publish/reel/route.ts",
-      "source_location": "L241",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
@@ -149170,7 +152034,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/health/route.ts",
-      "source_location": "L27",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -149181,7 +152045,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/health/route.ts",
-      "source_location": "L28",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_health_route_get",
+      "target": "apps_web_lib_youtube_api_probechannelhealth",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/openclaw/health/route.ts",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
@@ -149379,7 +152254,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L66",
+      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -149390,7 +152265,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L67",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -149401,7 +152276,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L165",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -149412,7 +152287,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L167",
+      "source_location": "L191",
       "weight": 1.0
     },
     {
@@ -149423,7 +152298,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L168",
+      "source_location": "L192",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route_post",
+      "target": "apps_web_lib_account_selection_filterytcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -149434,7 +152320,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L170",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -149445,7 +152331,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L210",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -149456,7 +152342,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L237",
+      "source_location": "L265",
       "weight": 1.0
     },
     {
@@ -149467,7 +152353,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L255",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -149478,7 +152364,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L256",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -149489,7 +152375,51 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L298",
+      "source_location": "L326",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route_post",
+      "target": "apps_web_lib_youtube_caption_adaptcaptionforyoutube",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L350",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route_post",
+      "target": "apps_web_lib_youtube_api_uploadshortvideofromurl",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L359",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route_post",
+      "target": "apps_web_lib_youtube_privacy_youtubeuploadsteplabel",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L368",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_openclaw_post_video_prepare_route_post",
+      "target": "apps_web_lib_openclaw_jobs_deriveoverallstatus",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
+      "source_location": "L378",
       "weight": 1.0
     },
     {
@@ -149500,7 +152430,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/prepare/route.ts",
-      "source_location": "L323",
+      "source_location": "L379",
       "weight": 1.0
     },
     {
@@ -149544,7 +152474,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L73",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -149555,7 +152485,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/video/status/route.ts",
-      "source_location": "L99",
+      "source_location": "L100",
       "weight": 1.0
     },
     {
@@ -152195,7 +155125,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/hero.tsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -152206,7 +155136,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/hero.tsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -152217,7 +155147,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/hero.tsx",
-      "source_location": "L142",
+      "source_location": "L143",
       "weight": 1.0
     },
     {
@@ -152243,6 +155173,39 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_components_join_discord_button_joindiscordbutton",
+      "target": "apps_web_lib_conversion_events_trackconversion",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button_joindiscordbutton",
+      "target": "apps_web_lib_conversion_events_inferpagetemplatefrompath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_components_join_discord_button_joindiscordbutton",
+      "target": "apps_web_lib_utils_cn",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/components/join-discord-button.tsx",
+      "source_location": "L66",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_components_json_ld_organizationjsonld",
       "target": "apps_web_lib_site_url_getresolvedsiteorigin",
       "relation": "calls",
@@ -152250,7 +155213,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -152261,7 +155224,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L54",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -152272,7 +155235,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L152",
+      "source_location": "L153",
       "weight": 1.0
     },
     {
@@ -152283,7 +155246,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L182",
+      "source_location": "L183",
       "weight": 1.0
     },
     {
@@ -152294,7 +155257,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/json-ld.tsx",
-      "source_location": "L286",
+      "source_location": "L287",
       "weight": 1.0
     },
     {
@@ -152305,7 +155268,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L114",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -152316,7 +155279,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L203",
+      "source_location": "L204",
       "weight": 1.0
     },
     {
@@ -152327,7 +155290,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L233",
+      "source_location": "L234",
       "weight": 1.0
     },
     {
@@ -152338,7 +155301,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L238",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -152415,7 +155378,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L73",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -152426,7 +155389,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L124",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
@@ -152437,7 +155400,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L125",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -152448,7 +155411,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L244",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -152459,7 +155422,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L285",
+      "source_location": "L287",
       "weight": 1.0
     },
     {
@@ -152470,7 +155433,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L367",
+      "source_location": "L369",
       "weight": 1.0
     },
     {
@@ -152481,7 +155444,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L845",
+      "source_location": "L858",
       "weight": 1.0
     },
     {
@@ -154363,6 +157326,50 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/watch-page-rich-content.ts",
       "source_location": "L364",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_ensureauthclient",
+      "target": "apps_web_lib_youtube_oauth_createyoutubeoauth2",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_ensureauthclient",
+      "target": "apps_web_lib_youtube_storage_setcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_ensureallcredentials",
+      "target": "apps_web_lib_youtube_storage_getallcredentials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_youtube_api_getcredentialsforchannel",
+      "target": "apps_web_lib_youtube_storage_getcredentialsbychannelid",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/youtube/api.ts",
+      "source_location": "L197",
       "weight": 1.0
     },
     {
