@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/debug-log.ts": {
-    "mtime": 1783078105.2559822,
-    "ast_hash": "46553e98cf04cd8ec55ac32f4dcc6ddf",
+    "mtime": 1783436184.898743,
+    "ast_hash": "4dabe2fa9644cb3dcf08b5f95fe9ed73",
     "semantic_hash": ""
   },
   "apps/extension/src/debug-probe.ts": {
@@ -205,8 +205,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1783363581.0381641,
-    "ast_hash": "c7cb1734aaf51d602d9cdef4ad8e282e",
+    "mtime": 1783436250.69193,
+    "ast_hash": "c62f80fdbc810f903a9041207981a7ba",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-mount.ts": {
@@ -220,8 +220,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
-    "mtime": 1783086975.5088918,
-    "ast_hash": "69f1952a7c55169642be7ffbf6b71f46",
+    "mtime": 1783431912.5039735,
+    "ast_hash": "a701810268e17b1228e28a1fd8aa1193",
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
@@ -240,8 +240,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/room-client.ts": {
-    "mtime": 1782636247.05717,
-    "ast_hash": "bdf95d320045933d1be9e36fcbb5df00",
+    "mtime": 1783436206.0016055,
+    "ast_hash": "1e617f8f2013f2aad14492f75fe84cbb",
     "semantic_hash": ""
   },
   "apps/extension/src/room-reconnect.ts": {
@@ -255,8 +255,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1783363591.0912294,
-    "ast_hash": "e67fe8429b580efc9b6491730a90c9e1",
+    "mtime": 1783426140.2362833,
+    "ast_hash": "7bc13747ecd4cb79d569f64ace11ac86",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -295,8 +295,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/debug-log.test.ts": {
-    "mtime": 1782160784.8265955,
-    "ast_hash": "36273e0516756f2b451a584b968fa5d3",
+    "mtime": 1783436272.5059268,
+    "ast_hash": "355d58c1e9173625b7afbeb4c7d91f32",
     "semantic_hash": ""
   },
   "apps/extension/test/ghost-cam-size.test.ts": {
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
-    "mtime": 1783086975.5090804,
-    "ast_hash": "946466df9470e74e845b36b15746cfa8",
+    "mtime": 1783431894.418746,
+    "ast_hash": "1812ea4c5c087d7ad1f3d6213e66699b",
     "semantic_hash": ""
   },
   "apps/extension/test/playback-control.test.ts": {
@@ -1775,8 +1775,8 @@
     "semantic_hash": ""
   },
   ".github/pull_request_template.md": {
-    "mtime": 1782160784.8208122,
-    "ast_hash": "b69f15b8ee0b9871ac73ed94d8be4bd4",
+    "mtime": 1783422411.309918,
+    "ast_hash": "30e85efe2b14ca01c8e770e600ef0d18",
     "semantic_hash": ""
   },
   ".github/workflows/build-extension.yml": {
@@ -1815,8 +1815,8 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1783253966.888679,
-    "ast_hash": "ef0cb7c9adad46fc61f3f9025ee85af8",
+    "mtime": 1783422411.3087454,
+    "ast_hash": "77ec4b3819b0f6e759a59f8cdf2fef10",
     "semantic_hash": ""
   },
   "README.md": {
@@ -1875,8 +1875,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1783078060.4947076,
-    "ast_hash": "95f09c21878cd22b132743e8a384da80",
+    "mtime": 1783422411.3108006,
+    "ast_hash": "1abaef60f368bc09aec93209c5b83373",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -1910,8 +1910,8 @@
     "semantic_hash": ""
   },
   "docs/project-operating-manual.md": {
-    "mtime": 1782654728.0409963,
-    "ast_hash": "64d594a62c7a94616b318fee774833c1",
+    "mtime": 1783422479.8957338,
+    "ast_hash": "b81d78b7455f5b3f7008f7ed12535184",
     "semantic_hash": ""
   },
   "docs/release-and-rollback-runbook.md": {
@@ -1970,8 +1970,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md": {
-    "mtime": 1782160784.856151,
-    "ast_hash": "751e25d353d64626da5dc8967bbd2e7f",
+    "mtime": 1783422442.208006,
+    "ast_hash": "245d3ea5b258c0c657d0b3bb16f241d0",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/README.md": {
@@ -1990,22 +1990,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1783363814.7398074,
+    "mtime": 1783436382.8530126,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1783363814.7250826,
+    "mtime": 1783436382.8391595,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1783363814.7284653,
+    "mtime": 1783436382.8421235,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1783363814.7297344,
+    "mtime": 1783436382.8434172,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -2770,8 +2770,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/diagnostic-log.ts": {
-    "mtime": 1783078105.2471213,
-    "ast_hash": "62edd61b9a0045e1106ec7f1ecd1ef84",
+    "mtime": 1783436192.3468382,
+    "ast_hash": "797c3374796cd5303d1f175171886a63",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -2805,8 +2805,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/diagnostic-log.test.ts": {
-    "mtime": 1783078105.2475493,
-    "ast_hash": "0b5030190276ac2898c2f8d4190dcfcd",
+    "mtime": 1783436347.7913642,
+    "ast_hash": "bb8e10dc407e02206cda866afce1fcd6",
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout.test.ts": {
@@ -3005,8 +3005,8 @@
     "semantic_hash": ""
   },
   "docs/new-chat-project-context.md": {
-    "mtime": 1783251368.106954,
-    "ast_hash": "6d069db3309e0c596628cdacecce9ed9",
+    "mtime": 1783422411.3113008,
+    "ast_hash": "4e22624ee2b7f665aa3429a9dd2df0b5",
     "semantic_hash": ""
   },
   "apps/web/public/demo/anidachi-demo-mobile-poster.jpg": {
@@ -3027,6 +3027,31 @@
   "apps/extension/public/Anidachi_logo.png": {
     "mtime": 1783363762.5293403,
     "ast_hash": "35d6d7533354230fd0db8942f85ed0f0",
+    "semantic_hash": ""
+  },
+  "apps/api/AGENTS.md": {
+    "mtime": 1783422366.4564018,
+    "ast_hash": "ab37eef40eeabd3b4ed2eceefe821c0a",
+    "semantic_hash": ""
+  },
+  "apps/extension/AGENTS.md": {
+    "mtime": 1783422366.457107,
+    "ast_hash": "a301eec25ca78bfd878083c7b797f7ab",
+    "semantic_hash": ""
+  },
+  "apps/web/AGENTS.md": {
+    "mtime": 1783422366.4559155,
+    "ast_hash": "44721ee0a106ff664e1534257598ad7e",
+    "semantic_hash": ""
+  },
+  "docs/development-quality-gates.md": {
+    "mtime": 1783422366.4577475,
+    "ast_hash": "ce5b665d2d9cce20969b813023e6bff2",
+    "semantic_hash": ""
+  },
+  "packages/protocol/AGENTS.md": {
+    "mtime": 1783422366.4574513,
+    "ast_hash": "2f36e7c90ed2f3feba037c1ef58fa2b2",
     "semantic_hash": ""
   }
 }
