@@ -141,6 +141,7 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
         roomId: event.roomId,
         lastSeenP2PServerSeq: event.lastSeenP2PServerSeq,
         participantId: event.participant.id,
+        participantSessionId: event.participantSessionId,
         role: event.participant.role,
         videoFingerprint: event.videoFingerprint,
       };
@@ -428,10 +429,14 @@ function shouldPrintDebugToConsole(): boolean {
 const P2P_IDENTIFIER_FIELDS = new Set([
   "localParticipantId",
   "participantId",
+  "participantSessionId",
   "remoteUserId",
+  "sessionId",
   "fromUserId",
   "toUserId",
 ]);
+
+const DEBUG_IDENTIFIER_FIELDS = new Set(["participantSessionId", "sessionId"]);
 
 const P2P_IDENTIFIER_ARRAY_FIELDS = new Set([
   "activeSpeakerIds",
@@ -443,6 +448,10 @@ function sanitizeDebugData(value: unknown, scope: string): unknown {
   const sanitizeP2P = scope.startsWith("p2p.");
   return JSON.parse(
     JSON.stringify(value, (_key, item) => {
+      if (DEBUG_IDENTIFIER_FIELDS.has(_key) && typeof item === "string") {
+        return hashDebugId(item);
+      }
+
       if (sanitizeP2P && P2P_IDENTIFIER_FIELDS.has(_key) && typeof item === "string") {
         return hashDebugId(item);
       }

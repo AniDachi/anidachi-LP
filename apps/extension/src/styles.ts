@@ -388,10 +388,9 @@ export const overlayStyles = `
     color: rgba(255, 255, 255, 0.68);
   }
 
-  .emoji-row,
   .toggle-list {
     display: flex;
-    gap: 8px;
+    gap: 7px;
     flex-wrap: wrap;
   }
 
@@ -449,6 +448,11 @@ export const overlayStyles = `
     cursor: not-allowed;
   }
 
+  .icon-button:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+  }
+
   .icon-button {
     width: 32px;
     padding: 0;
@@ -467,6 +471,192 @@ export const overlayStyles = `
   .section-title.compact {
     margin: 10px 0 4px;
     font-size: 10px;
+  }
+
+  .settings-shell {
+    display: grid;
+    gap: 9px;
+  }
+
+  .settings-category-rail {
+    position: relative;
+    min-width: 0;
+  }
+
+  .settings-category-rail::before,
+  .settings-category-rail::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    width: 22px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
+  }
+
+  .settings-category-rail::before {
+    left: -1px;
+    background: linear-gradient(90deg, rgba(10, 10, 12, 0.92), rgba(10, 10, 12, 0));
+  }
+
+  .settings-category-rail::after {
+    right: -1px;
+    background: linear-gradient(270deg, rgba(10, 10, 12, 0.92), rgba(10, 10, 12, 0));
+  }
+
+  .settings-category-rail.can-scroll-left::before,
+  .settings-category-rail.can-scroll-right::after {
+    opacity: 1;
+  }
+
+  .settings-category-scroll {
+    width: 100%;
+    margin: 0 -1px;
+    padding: 1px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    cursor: grab;
+    user-select: none;
+    touch-action: pan-x pan-y;
+  }
+
+  .settings-category-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .settings-category-rail.dragging .settings-category-scroll {
+    cursor: grabbing;
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+
+  .settings-category-pill {
+    height: 28px;
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 0 13px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.52);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 720;
+    line-height: 1;
+    scroll-snap-align: start;
+    transition:
+      background 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .settings-category-pill:focus-visible {
+    outline: 2px solid rgba(255, 184, 122, 0.66);
+    outline-offset: 2px;
+  }
+
+  .settings-category-pill:hover {
+    border-color: rgba(255, 138, 61, 0.2);
+    background: rgba(255, 255, 255, 0.065);
+    color: rgba(255, 229, 210, 0.86);
+  }
+
+  .settings-category-pill.active {
+    border-color: rgba(255, 138, 61, 0.26);
+    background: rgba(249, 115, 22, 0.16);
+    color: rgba(255, 224, 201, 0.96);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 8px 18px rgba(0, 0, 0, 0.16);
+  }
+
+  .settings-panel {
+    min-width: 0;
+  }
+
+  .settings-panel-stack {
+    display: grid;
+    gap: 7px;
+  }
+
+  .reaction-shortcut-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid var(--ad-border);
+    background: var(--ad-surface);
+  }
+
+  .reaction-shortcut {
+    min-width: 0;
+    height: 50px;
+    padding: 5px 3px 6px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--ad-text);
+    cursor: pointer;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 4px;
+    font: inherit;
+    transition:
+      background 160ms ease,
+      border-color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .reaction-shortcut:not(:disabled):hover {
+    border-color: rgba(255, 138, 61, 0.24);
+    background: rgba(255, 255, 255, 0.075);
+  }
+
+  .reaction-shortcut:not(:disabled):active {
+    transform: translateY(1px);
+  }
+
+  .reaction-shortcut:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+  }
+
+  .reaction-shortcut-key {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.2);
+    color: rgba(255, 255, 255, 0.5);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 760;
+    line-height: 1;
+  }
+
+  .reaction-shortcut-emoji {
+    font-size: 17px;
+    line-height: 1;
   }
 
   .message-composer-shield {
@@ -730,6 +920,81 @@ export const overlayStyles = `
     flex: 0 0 auto;
   }
 
+  .room-people-section {
+    margin-top: 12px;
+  }
+
+  .room-people-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .room-people-heading span:last-child {
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 10px;
+    font-weight: 720;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .room-people-list {
+    display: grid;
+    gap: 1px;
+    padding: 6px;
+    border-radius: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.065);
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .room-people-row {
+    min-width: 0;
+    min-height: 34px;
+    padding: 4px 6px 4px 4px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: rgba(255, 255, 255, 0.84);
+  }
+
+  .room-people-row.speaking {
+    background: rgba(97, 220, 154, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(97, 220, 154, 0.16);
+  }
+
+  .room-people-main {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .room-people-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+
+  .room-people-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 680;
+  }
+
+  .room-people-status {
+    flex: 0 0 auto;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 10.5px;
+    font-weight: 560;
+    white-space: nowrap;
+  }
+
   .toggle {
     align-items: center;
     border-radius: 12px;
@@ -760,6 +1025,13 @@ export const overlayStyles = `
   .toggle span:last-child {
     font-size: 12px;
     color: var(--ad-muted);
+  }
+
+  .toggle-label {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
   }
 
   .toggle:disabled {

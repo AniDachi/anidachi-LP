@@ -74,6 +74,9 @@ describe("diagnostic log", () => {
       "auth.refresh",
       "failed",
       {
+        candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+        participantSessionId: "session-secret-id",
+        reason: "join:hash",
         userId: "user-secret-id",
         refreshToken: "refresh-secret",
         url: "https://staging.anidachi.app/room?token=secret",
@@ -88,6 +91,9 @@ describe("diagnostic log", () => {
           event: "failed",
           severity: "warn",
           data: {
+            candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+            participantSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
+            reason: "join:hash",
             userId: expect.stringMatching(/^id_[a-z0-9]+$/),
             refreshToken: "<redacted>",
             url: "https://staging.anidachi.app/room?<redacted>",
@@ -95,6 +101,7 @@ describe("diagnostic log", () => {
         }),
       ]);
     });
+    expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toContain("session-secret-id");
   });
 
   it("downloads a compact diagnostics bundle without raw tokens", async () => {
@@ -222,6 +229,49 @@ describe("diagnostic log", () => {
       }),
     );
     expect(clipboard.writeText).not.toHaveBeenCalled();
+  });
+
+  it("keeps full page debug reasons and WebRTC candidate strings intact", async () => {
+    const { download } = installChromeMock();
+
+    const response = await handleDiagnosticMessage({
+      type: "ANIDACHI_DIAGNOSTICS",
+      command: "save",
+      mode: "full",
+      page: {
+        mode: "full",
+        pageDebug: {
+          entries: [
+            {
+              id: 1,
+              scope: "p2p.ice",
+              message: "local candidate",
+              data: {
+                candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+                participantSessionId: "session-debug-id",
+                reason: "join:hash",
+              },
+            },
+          ],
+        },
+      },
+    });
+
+    expect(response).toEqual(expect.objectContaining({ ok: true, action: "downloaded" }));
+    const bundle = parseDownloadedBundle(download) as {
+      page: {
+        pageDebug: {
+          entries: Array<{ data?: unknown }>;
+        };
+      };
+    };
+    expect(bundle.page.pageDebug.entries[0]?.data).toEqual({
+      candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+      participantSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      reason: "join:hash",
+    });
+    expect(JSON.stringify(bundle)).not.toContain("session-debug-id");
+    expect(JSON.stringify(bundle)).not.toContain("nullhash");
   });
 
   it("exports light diagnostics from the last two minutes only", async () => {
@@ -393,6 +443,17 @@ describe("diagnostic log", () => {
               message: "closed",
               data: { code: 1006, roomId: "room-1" },
             },
+            {
+              id: 5,
+              scope: "overlay.room",
+              message: "join skipped for in-flight room connection",
+              data: {
+                candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+                participantSessionId: "session-debug-id",
+                reason: "join:hash",
+                roomId: "room-1",
+              },
+            },
           ],
         },
       },
@@ -410,8 +471,14 @@ describe("diagnostic log", () => {
       page: { pageDebug: { entries: Array<{ id: number; data?: unknown }> } };
     };
     expect(bundle.mode).toBe("light");
-    expect(bundle.page.pageDebug.entries.map((entry) => entry.id)).toEqual([3, 4]);
+    expect(bundle.page.pageDebug.entries.map((entry) => entry.id)).toEqual([3, 4, 5]);
+    expect(bundle.page.pageDebug.entries.at(-1)?.data).toEqual({
+      participantSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      reason: "join:hash",
+      roomId: "room-1",
+    });
     expect(JSON.stringify(bundle)).not.toContain("secret-refresh");
+    expect(JSON.stringify(bundle)).not.toContain("session-debug-id");
     expect(JSON.stringify(bundle)).not.toContain("ignored in light");
   });
 });

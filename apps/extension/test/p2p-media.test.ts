@@ -1096,22 +1096,34 @@ describe("P2P remote video activity classification", () => {
 });
 
 describe("P2P media participant selection", () => {
-  it("keeps chat-only participants out of the WebRTC mesh", () => {
+  it("keeps idle participants out of the WebRTC mesh when nobody publishes media", () => {
     const participants = [
-      participant("host", true),
-      participant("viewer-a", true),
+      participant("host", false),
+      participant("viewer-a", false),
       participant("viewer-b", false),
       participant("viewer-c", false),
     ];
 
-    // A chat-only local (no cam mode, no voice) publishes nothing and — per
-    // the cam-mode UI — renders no camera bubbles either, so it needs no
-    // peers at all.
+    // A fully idle local participant publishes nothing and has no incoming
+    // media publishers to receive, so it needs no peers.
     expect(
       selectP2PMediaParticipants(participants, "viewer-c", false).map(
         (item) => item.id,
       ),
     ).toEqual([]);
+  });
+
+  it("keeps receiving remote camera publishers while the local camera is off", () => {
+    const participants = [
+      participant("host", true),
+      participant("viewer", false),
+    ];
+
+    expect(
+      selectP2PMediaParticipants(participants, "viewer", false).map(
+        (item) => item.id,
+      ),
+    ).toEqual(["host", "viewer"]);
   });
 
   it("includes the local participant while they are trying to take a media seat", () => {
@@ -1146,15 +1158,15 @@ describe("P2P media participant selection", () => {
     ).toEqual(["host", "viewer-a", "viewer-b"]);
   });
 
-  it("pairs a silent cam-less listener only with the talker", () => {
+  it("pairs a silent cam-less listener with talkers and camera publishers", () => {
     const participants = [
       participant("host", false),
       participant("viewer-a", true),
       participant("viewer-b", false),
     ];
 
-    // The listener connects to the talker to hear them, but does not pick up
-    // camera publishers: seeing cams still requires being in cam mode.
+    // Voice is joined for the talker, and remote camera publishers stay joined
+    // so receiving video does not depend on publishing local video.
     expect(
       selectP2PMediaParticipants(
         participants,
@@ -1162,7 +1174,7 @@ describe("P2P media participant selection", () => {
         false,
         new Set(["host"]),
       ).map((item) => item.id),
-    ).toEqual(["host", "viewer-b"]);
+    ).toEqual(["host", "viewer-a", "viewer-b"]);
   });
 
   it("drops incoming P2P signals from chat-only participants", () => {
@@ -1195,7 +1207,23 @@ describe("P2P media participant selection", () => {
         "host",
         false,
       ),
-    ).toBe(false);
+    ).toBe(true);
+  });
+
+  it("allows camera publisher signals while the local camera is off", () => {
+    const participants = [
+      participant("host", true),
+      participant("viewer", false),
+    ];
+
+    expect(
+      canReceiveP2PSignalFromParticipant(
+        participants,
+        "viewer",
+        "host",
+        false,
+      ),
+    ).toBe(true);
   });
 
   it("allows P2P signals for a voice-only peer while cameras are off", () => {

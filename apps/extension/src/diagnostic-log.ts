@@ -72,8 +72,10 @@ const SECRET_FIELD_RE = /token|secret|cookie|authorization|password/i;
 const HASH_ID_FIELDS = new Set([
   "userId",
   "participantId",
+  "participantSessionId",
   "localParticipantId",
   "remoteUserId",
+  "sessionId",
   "fromUserId",
   "toUserId",
   "byUserId",
@@ -478,7 +480,9 @@ function compactDiagnosticPageData(value: unknown): unknown {
     "localProtocol",
     "remoteProtocol",
     "iceRestartCount",
+    "participantSessionId",
     "reason",
+    "sessionId",
     "error",
   ]) {
     if (source[key] !== undefined) compact[key] = source[key];
@@ -522,6 +526,10 @@ function sanitizeDiagnosticData(value: unknown): unknown {
 }
 
 function redactUrl(value: string): string {
+  if (!/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
   try {
     const url = new URL(value);
     return `${url.origin}${url.pathname}${url.search ? "?<redacted>" : ""}${
