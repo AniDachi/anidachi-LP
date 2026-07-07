@@ -1,6 +1,6 @@
 # AniDachi New Chat Project Context
 
-Last updated: 2026-07-05.
+Last updated: 2026-07-07.
 
 Use this file as a quick handoff for a fresh AI chat or a new developer. It is
 not a replacement for the canonical docs; it is a map of what to read, how the
@@ -15,6 +15,7 @@ Read these before changing product code:
 3. `docs/current-development-state.md`
 4. `docs/project-architecture-and-development.md`
 5. The relevant active plan under `docs/superpowers/plans/`
+6. `docs/development-quality-gates.md` for required checks and evidence
 
 For room, realtime, extension media, or P2P work, also read:
 
@@ -34,6 +35,21 @@ For development-flow/process work, read:
 There is also `docs/ai-site-development-handoff.md`, but that document is
 site-page focused. Do not use it as the main source for extension, Worker,
 room, billing, or P2P decisions.
+
+## Development Quality System
+
+AniDachi uses layered agent instructions:
+
+- root `AGENTS.md` for project-wide rules;
+- `apps/web/AGENTS.md` for durable web/auth/billing/product state;
+- `apps/api/AGENTS.md` for Worker, Durable Objects, live rooms, and signaling;
+- `apps/extension/AGENTS.md` for WXT/MV3 runtime, overlay, providers, and P2P;
+- `packages/protocol/AGENTS.md` for shared schemas and event contracts.
+
+Use `docs/development-quality-gates.md` before opening PRs. It maps each change
+type to required checks, staging evidence, docs updates, Graphify updates, and
+PR notes. Do not rely on this handoff as the only rule source; it is a map to
+the canonical instructions and docs.
 
 ## What AniDachi Is
 
@@ -168,9 +184,12 @@ Before finishing, check branch and worktree cleanliness:
 git status --short --branch
 ```
 
-## Current Working Baseline
+## Historical Working Baseline
 
-As of this handoff, the local repo was on:
+This snapshot is historical context only. Re-check current branch, remote refs,
+and `docs/current-development-state.md` before treating any SHA as current.
+
+As of the original 2026-07-05 handoff, the local repo was on:
 
 ```txt
 branch: staging
@@ -317,6 +336,15 @@ Knowledge graph:
 - `graphify-out/graph.json`
 - `graphify-out/GRAPH_REPORT.md`
 - `graphify-out/manifest.json`
+
+Quality gates and agent rules:
+
+- `docs/development-quality-gates.md`
+- `AGENTS.md`
+- `apps/web/AGENTS.md`
+- `apps/api/AGENTS.md`
+- `apps/extension/AGENTS.md`
+- `packages/protocol/AGENTS.md`
 
 ## Verification Commands
 
@@ -498,5 +526,5 @@ secondary.
 7. Make a scoped branch.
 8. Run focused checks before claiming work is done.
 9. For extension/P2P changes, build and validate the staging artifact.
-10. Record important progress in the active plan.
-
+10. Record docs/Graphify/staging status in the PR template.
+11. Record important progress in the active plan.

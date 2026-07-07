@@ -14,7 +14,7 @@ predictable.
 
 **Created:** 2026-06-17.
 
-**Current observed baseline:**
+**Original observed baseline on 2026-06-17:**
 
 - Repository: `AniDachi/anidachi-LP`.
 - Local branch during planning: `staging`.
@@ -29,6 +29,17 @@ predictable.
 - The repo does not yet have root `AGENTS.md`, `CLAUDE.md`, or `CODEX.md`.
 - Main product work is currently queued on the room/P2P hardening plan, with
   Block 6 next.
+
+**Current process status as of 2026-07-07:**
+
+- Root `AGENTS.md`, `.coderabbit.yaml`, PR template, `pnpm dev:check`,
+  staging acceptance checklist, release/rollback runbook, env/secrets matrix,
+  and Graphify repo scripts exist.
+- `graphify-out/graph.json` exists and should be treated as navigation help, not
+  proof.
+- The next quality-system improvement is layering local Codex working
+  agreements, plane-specific `AGENTS.md` files, and a central
+  `docs/development-quality-gates.md` file over the already landed v1 process.
 
 **References checked during planning:**
 
@@ -510,6 +521,48 @@ that contains clear intent, verification, CodeRabbit feedback, and staging plan.
 
 ---
 
+## V2 Follow-up - Living Quality System
+
+**Why:** the v1 process added a good foundation, but a growing multi-plane
+project needs layered instructions and a durable quality-gate map that can evolve
+without turning root `AGENTS.md` into a large rule dump.
+
+**Files:**
+
+- Local only: `~/.codex/AGENTS.md`
+- Add: `apps/web/AGENTS.md`
+- Add: `apps/api/AGENTS.md`
+- Add: `apps/extension/AGENTS.md`
+- Add: `packages/protocol/AGENTS.md`
+- Add: `docs/development-quality-gates.md`
+- Update: `AGENTS.md`
+- Update: `.github/pull_request_template.md`
+- Update: `docs/current-development-state.md`
+- Update: `docs/new-chat-project-context.md`
+
+**Steps:**
+
+- [x] V2.1 Add local Codex working agreements for source-of-truth first,
+  think-vs-implement boundaries, git hygiene, validation honesty, and scope
+  control.
+- [x] V2.2 Add plane-specific `AGENTS.md` files for web, API, extension, and
+  protocol.
+- [x] V2.3 Add `docs/development-quality-gates.md` as the central change-type to
+  verification/staging/docs/Graphify matrix.
+- [x] V2.4 Tighten the PR template with affected planes, quality-gate profile,
+  docs status, and Graphify status.
+- [x] V2.5 Update new-chat/current-state docs so future agents start from the
+  layered system rather than historical chat state.
+- [x] V2.6 Keep Graphify manual and update-on-meaningful-change; do not make it
+  a hard CI gate.
+
+**Acceptance:** a new AI or human contributor can start from root `AGENTS.md`,
+follow plane-specific rules for the touched subsystem, choose checks from
+`docs/development-quality-gates.md`, and record docs/Graphify/staging evidence
+in the PR template.
+
+---
+
 ## Implementation Order
 
 ```txt
@@ -573,3 +626,7 @@ block urgent product hotfixes.
   `@coderabbitai configuration` on the PR, run a scoped Graphify graph before
   P2P Block 6, add workflow summary output if useful, and revisit process
   friction after two real PRs.
+- [x] 2026-07-07: V2 quality-system plan implemented on top of the existing
+  workflow: local Codex working agreements, plane-specific `AGENTS.md` files,
+  `docs/development-quality-gates.md`, tightened PR template, current-state
+  links, and new-chat routing.

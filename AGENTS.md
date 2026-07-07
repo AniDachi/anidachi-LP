@@ -21,6 +21,25 @@ For development-process work, read:
 
 - `docs/superpowers/plans/2026-06-17-development-flow-quality-system-plan.md`
 
+For quality-gate decisions, read:
+
+- `docs/development-quality-gates.md`
+
+## Instruction Layers
+
+This root file contains stable project-wide rules. Subdirectories can add
+tighter rules for their own plane:
+
+- `apps/web/AGENTS.md`
+- `apps/api/AGENTS.md`
+- `apps/extension/AGENTS.md`
+- `packages/protocol/AGENTS.md`
+
+Keep changing product facts in canonical docs such as
+`docs/current-development-state.md`, active plans, ADRs, or domain docs. If an
+existing rule blocks the right architecture, explain the conflict and update the
+rule/docs instead of bypassing it silently.
+
 ## Git Flow
 
 Normal flow:
@@ -60,7 +79,27 @@ pnpm install --frozen-lockfile
   adapters, WebRTC media, push-to-talk.
 - `packages/protocol`: shared room/event schemas and sync contracts.
 
-If behavior crosses planes, define the protocol/contract first.
+If behavior crosses planes, define the protocol/contract first. Changes to room
+events, snapshots, auth handoff, invite flow, playback sync, P2P signaling,
+subscription entitlements, or shared payloads usually require checking
+`packages/protocol` and all affected consumers before implementation is
+considered complete.
+
+## Quality Gates
+
+Use `docs/development-quality-gates.md` to decide which checks, staging evidence,
+docs updates, and Graphify updates are needed for a change.
+
+Before opening a PR, run:
+
+```bash
+pnpm dev:check
+```
+
+Record docs status, Graphify status, staging impact, and rollback notes in the
+PR template. Small docs-only changes should not trigger heavy runtime checks,
+but high-risk auth, billing, API, extension, protocol, room/P2P, deploy, or env
+exceptions must be documented.
 
 ## Commands
 
@@ -175,23 +214,27 @@ Docs-only:
 
 - Documentation links remain accurate.
 - Active docs do not contradict `docs/current-development-state.md`.
+- PR records whether Graphify/docs updates were needed.
 
 Site/UI:
 
 - Relevant web checks pass.
 - Visual behavior is inspected on the correct environment.
+- Screenshots or a short recording are attached when useful for review.
 
 Auth/API/payments:
 
 - Unit/API checks pass.
 - Env and secret impact is documented.
 - Staging smoke is run where applicable.
+- Protocol and runtime consumers are checked when payloads cross planes.
 
 Extension:
 
 - Extension check/test pass.
 - Staging artifact is built and validated if behavior changed.
 - Permissions remain channel-appropriate.
+- Loaded-artifact or browser verification is recorded for user-visible changes.
 
 Room/P2P/Worker:
 
