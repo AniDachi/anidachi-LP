@@ -24,6 +24,8 @@ import {
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { isValidEmail } from "@/lib/kreatli-crm/validation";
 import { WaitlistReferralCard } from "@/components/plan-survey/waitlist-referral-card";
+import { JoinDiscordButton } from "@/components/join-discord-button";
+import { DiscordIcon } from "@/components/discord-icon";
 
 export type PlanSurveyOpenContext = {
   placement: string;
@@ -795,6 +797,17 @@ export function PlanSurveyModal({
                     plan is ready for you
                   </li>
                 </ul>
+              </div>
+
+              <div className="mb-5 rounded-xl border border-[#5865F2]/25 bg-[#5865F2]/5 px-4 py-3">
+                <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <DiscordIcon className="h-4 w-4 shrink-0 text-[#5865F2]" aria-hidden="true" />
+                  Join the AniDachi community
+                </p>
+                <p className="mb-3 text-xs text-foreground/65">
+                  Get launch updates, setup help, and watch party tips in our Discord server.
+                </p>
+                <JoinDiscordButton variant="survey" placement="hero_survey_recommendation" />
               </div>
 
               {/* Referral strip + optional pre-launch pricing lock */}

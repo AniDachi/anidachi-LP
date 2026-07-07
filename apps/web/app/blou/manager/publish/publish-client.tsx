@@ -19,6 +19,7 @@ import {
   Upload,
   Instagram,
   Music2,
+  Youtube,
   CheckCircle2,
   XCircle,
   Inbox,
@@ -35,7 +36,7 @@ type PublishStatus =
 type TabType = "reel" | "carousel";
 
 interface AccountResult {
-  platform: "instagram" | "tiktok";
+  platform: "instagram" | "tiktok" | "youtube";
   accountId: string;
   username: string;
   success: boolean;
@@ -54,6 +55,11 @@ interface TtAccount {
   username: string;
 }
 
+interface YtAccount {
+  channelId: string;
+  channelTitle: string;
+}
+
 const REEL_MAX_DURATION_SEC = 90;
 const CAROUSEL_VIDEO_MAX_SEC = 60;
 const CAROUSEL_MIN_ITEMS = 2;
@@ -64,8 +70,10 @@ export function PublishClient() {
   const [tab, setTab] = useState<TabType>("reel");
   const [igAccounts, setIgAccounts] = useState<IgAccount[]>([]);
   const [ttAccounts, setTtAccounts] = useState<TtAccount[]>([]);
+  const [ytAccounts, setYtAccounts] = useState<YtAccount[]>([]);
   const [selectedIg, setSelectedIg] = useState<Set<string>>(new Set());
   const [selectedTt, setSelectedTt] = useState<Set<string>>(new Set());
+  const [selectedYt, setSelectedYt] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [reelFile, setReelFile] = useState<File | null>(null);
   const [reelDuration, setReelDuration] = useState<number | null>(null);
@@ -97,6 +105,14 @@ export function PublishClient() {
           setSelectedTt(new Set(accts.map((a) => a.openId)));
         })
         .catch(() => setTtAccounts([])),
+      fetch("/api/auth/youtube/status")
+        .then((r) => r.json())
+        .then((d: { accounts?: YtAccount[] }) => {
+          const accts = d.accounts ?? [];
+          setYtAccounts(accts);
+          setSelectedYt(new Set(accts.map((a) => a.channelId)));
+        })
+        .catch(() => setYtAccounts([])),
     ]).finally(() => setLoading(false));
   }, []);
 
@@ -116,11 +132,24 @@ export function PublishClient() {
     });
   };
 
+  const toggleYt = (id: string) => {
+    setSelectedYt((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
   const buildAccountPayload = (): Record<string, string[]> => {
     const payload: Record<string, string[]> = {};
-    if (selectedIg.size < igAccounts.length || selectedTt.size < ttAccounts.length) {
+    if (
+      selectedIg.size < igAccounts.length ||
+      selectedTt.size < ttAccounts.length ||
+      selectedYt.size < ytAccounts.length
+    ) {
       payload.instagramAccountIds = Array.from(selectedIg);
       payload.tiktokAccountIds = Array.from(selectedTt);
+      payload.youtubeChannelIds = Array.from(selectedYt);
     }
     return payload;
   };
@@ -272,7 +301,7 @@ export function PublishClient() {
       }
       const videoUrl = uploadData.url;
       setStatus("processing");
-      setStatusMessage(`Publishing to ${selectedIg.size + selectedTt.size} account(s)…`);
+      setStatusMessage(`Publishing to ${selectedIg.size + selectedTt.size + selectedYt.size} account(s)…`);
       const publishRes = await fetch("/api/blou/publish/reel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -354,7 +383,7 @@ export function PublishClient() {
     }
   };
 
-  const selectedCount = selectedIg.size + selectedTt.size;
+  const selectedCount = selectedIg.size + selectedTt.size + selectedYt.size;
   const canPublish =
     (status === "idle" ||
     status === "success" ||
@@ -369,7 +398,8 @@ export function PublishClient() {
 
   const igCount = igAccounts.length;
   const ttCount = ttAccounts.length;
-  const totalAccounts = igCount + ttCount;
+  const ytCount = ytAccounts.length;
+  const totalAccounts = igCount + ttCount + ytCount;
 
   if (loading) {
     return (
@@ -387,7 +417,7 @@ export function PublishClient() {
       <Card className="border-teal-100 bg-background shadow-sm">
         <CardContent className="pt-6">
           <p className="text-stone-600 mb-4">
-            Connect at least one Instagram or TikTok account to publish content.
+            Connect at least one Instagram, TikTok, or YouTube account to publish content.
           </p>
           <Button asChild className="bg-teal-600 hover:bg-teal-700">
             <Link href="/blou/manager">Connect Accounts</Link>
@@ -447,6 +477,27 @@ export function PublishClient() {
           </div>
         )}
 
+        {ytAccounts.length > 0 && (
+          <div className="space-y-1.5">
+            <span className="text-xs font-medium text-stone-500 uppercase tracking-wide">YouTube</span>
+            {ytAccounts.map((a) => (
+              <label
+                key={a.channelId}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-stone-50 hover:bg-teal-50 cursor-pointer transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedYt.has(a.channelId)}
+                  onChange={() => toggleYt(a.channelId)}
+                  className="rounded border-stone-300 text-teal-600 focus:ring-teal-500"
+                />
+                <Youtube className="h-3.5 w-3.5 text-stone-500" />
+                <span className="text-sm text-stone-700">{a.channelTitle}</span>
+              </label>
+            ))}
+          </div>
+        )}
+
         {selectedCount === 0 && (
           <p className="text-xs text-amber-600">Select at least one account to publish.</p>
         )}
@@ -486,7 +537,7 @@ export function PublishClient() {
           </CardTitle>
           <CardDescription>
             {tab === "reel"
-              ? "Upload a video (MP4/MOV, max 90 sec). Posts as Instagram Reel and TikTok video (draft)."
+              ? "Upload a video (MP4/MOV, max 90 sec). Posts as Instagram Reel, TikTok draft, and YouTube Short."
               : `Upload 2–10 images or videos. Posts as Instagram Carousel and TikTok photo post (draft).`}
           </CardDescription>
         </CardHeader>
@@ -513,13 +564,17 @@ export function PublishClient() {
               {accountResults.length > 0 && (
                 <ul className="mt-2 space-y-1">
                   {accountResults.map((r) => (
-                    <li key={`${r.platform}-${r.accountId}`} className="flex items-center gap-2">
+                    <li key={`${r.platform}-${r.accountId}`} className="flex items-center gap-2 flex-wrap">
                       {r.platform === "instagram" ? (
                         <Instagram className="h-3.5 w-3.5 shrink-0" />
+                      ) : r.platform === "youtube" ? (
+                        <Youtube className="h-3.5 w-3.5 shrink-0" />
                       ) : (
                         <Music2 className="h-3.5 w-3.5 shrink-0" />
                       )}
-                      <span className="font-medium">@{r.username}</span>
+                      <span className="font-medium">
+                        {r.platform === "youtube" ? r.username : `@${r.username}`}
+                      </span>
                       {r.success ? (
                         r.status === "sent_to_inbox" ? (
                           <span className="flex items-center gap-1 text-teal-600">
@@ -527,7 +582,19 @@ export function PublishClient() {
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 text-teal-600">
-                            <CheckCircle2 className="h-3.5 w-3.5" /> Published
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            {r.platform === "youtube" && r.mediaId ? (
+                              <a
+                                href={`https://youtube.com/shorts/${r.mediaId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline"
+                              >
+                                Published
+                              </a>
+                            ) : (
+                              "Published"
+                            )}
                           </span>
                         )
                       ) : (

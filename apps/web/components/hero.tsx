@@ -7,6 +7,7 @@ import { trackEvent } from "@/lib/gtag";
 import { trackConversion } from "@/lib/conversion-events";
 import { PRICING_CTA_LABEL } from "@/lib/home-survey";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
+import { JoinDiscordButton } from "@/components/join-discord-button";
 
 function WaitlistPillContent({ count }: { count: number | null }) {
   if (count === null) {
@@ -146,6 +147,7 @@ export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: n
                 See How It Works
               </a>
             </Button>
+            <JoinDiscordButton variant="hero" placement="hero" />
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-foreground/50">

@@ -7,6 +7,7 @@ import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { Menu, X, LogOut, ChevronDown, Users, User } from "lucide-react";
 import { NavPricingButton } from "@/components/nav-pricing-button";
 import { NavPricingLink } from "@/components/nav-pricing-link";
+import { JoinDiscordButton } from "@/components/join-discord-button";
 import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 import { cn } from "@/lib/utils";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
@@ -190,7 +191,7 @@ function MobileSignOut({ onDone }: { onDone: () => void }) {
 const navLinks = [
   { href: "/#how-it-works", label: "How It Works" },
   { href: "/watch-anime-together", label: "Watch" },
-  { href: "mailto:goshan.tolochko@gmail.com", label: "Contact" },
+  { href: "mailto:anidachi.app@gmail.com", label: "Contact" },
 ] as const;
 
 function isExternalNavLink(href: string) {
@@ -270,6 +271,9 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
             </li>
           ))}
           <li>
+            <JoinDiscordButton variant="nav" placement="nav" />
+          </li>
+          <li>
             <NavPricingButton />
           </li>
           <li>
@@ -327,6 +331,9 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
               </Link>
             </li>
           ))}
+          <li>
+            <JoinDiscordButton variant="nav" placement="nav_tablet" />
+          </li>
           <li className="hidden sm:block">
             <NavPricingLink className="inline-flex min-h-11 items-center font-semibold text-brand-orange-bright transition-colors hover:text-brand-orange" />
           </li>
@@ -382,6 +389,15 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
                   )}
                 </li>
               ))}
+              <li>
+                <JoinDiscordButton
+                  variant="nav"
+                  placement="nav_mobile"
+                  touchTarget
+                  className="w-full"
+                  onClick={() => setMenuOpen(false)}
+                />
+              </li>
               <li>
                   <Link
                   href="/#faq"

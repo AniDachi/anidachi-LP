@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { FooterPricingCta } from "@/components/footer-pricing-cta";
+import { JoinDiscordButton } from "@/components/join-discord-button";
 
 export function Footer() {
   return (
@@ -209,8 +210,11 @@ export function Footer() {
             <h4 className="font-semibold mb-4 text-sm">Company</h4>
             <ul className="space-y-2 text-foreground/50 text-sm">
               <li>
+                <JoinDiscordButton variant="footer" placement="footer" />
+              </li>
+              <li>
                 <a
-                  href="mailto:goshan.tolochko@gmail.com"
+                  href="mailto:anidachi.app@gmail.com"
                   className="hover:text-brand-orange-bright transition-colors"
                 >
                   Contact Us

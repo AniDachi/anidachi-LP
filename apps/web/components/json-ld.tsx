@@ -1,4 +1,5 @@
 import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { DISCORD_SERVER_INVITE_URL } from "@/lib/community-discord";
 
 interface JsonLdProps {
   data: Record<string, unknown> | Record<string, unknown>[];
@@ -25,10 +26,10 @@ export function OrganizationJsonLd() {
       name: "AniDachi",
       url: siteUrl,
       logo: `${siteUrl}/Anidachi_logo.png`,
-      sameAs: [],
+      sameAs: [DISCORD_SERVER_INVITE_URL],
       contactPoint: {
         "@type": "ContactPoint",
-        email: "goshan.tolochko@gmail.com",
+        email: "anidachi.app@gmail.com",
         contactType: "customer support",
       },
     },
