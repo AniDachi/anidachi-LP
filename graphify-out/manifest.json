@@ -1815,7 +1815,7 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1783422411.3087454,
+    "mtime": 1783446174.652772,
     "ast_hash": "77ec4b3819b0f6e759a59f8cdf2fef10",
     "semantic_hash": ""
   },
@@ -1990,22 +1990,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1783445140.053417,
+    "mtime": 1783445836.5581353,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1783445140.0379097,
+    "mtime": 1783445836.5441823,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1783445140.0414052,
+    "mtime": 1783445836.5471494,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1783445140.0429265,
+    "mtime": 1783445836.5483694,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -2050,52 +2050,52 @@
     "semantic_hash": ""
   },
   ".codex/hooks.json": {
-    "mtime": 1783253966.8892229,
+    "mtime": 1783446174.6536458,
     "ast_hash": "363c222f50e6f7b1e54d30457cf4c42b",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/SKILL.md": {
-    "mtime": 1783253782.3400502,
-    "ast_hash": "21f78a7f96e2f9aecc0f7afc053bd3cc",
+    "mtime": 1783446126.5921624,
+    "ast_hash": "fff1bf67d39d0852fd7fd884b77f4f45",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/add-watch.md": {
-    "mtime": 1783253748.8948383,
+    "mtime": 1783446023.2408965,
     "ast_hash": "d59d027fe449f06aa03905a01184e779",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/exports.md": {
-    "mtime": 1783253748.8949356,
+    "mtime": 1783446023.2410367,
     "ast_hash": "9da2a2152e60a22f07f05fed5158f287",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/extraction-spec.md": {
-    "mtime": 1783253748.8951,
+    "mtime": 1783446023.2412872,
     "ast_hash": "bf895ec4d4e40f5f66f7d31c2a9bd4a7",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/github-and-merge.md": {
-    "mtime": 1783253748.8952076,
+    "mtime": 1783446023.2414057,
     "ast_hash": "cde13df085e4c492aeb7ba298a996d0d",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/hooks.md": {
-    "mtime": 1783253748.8953004,
+    "mtime": 1783446023.2415106,
     "ast_hash": "3f545db6ce646650bb9de588f5512a27",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/query.md": {
-    "mtime": 1783253748.8954766,
+    "mtime": 1783446023.2417285,
     "ast_hash": "3c46f8ad006874260614ed8657d02307",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/transcribe.md": {
-    "mtime": 1783253748.8958445,
+    "mtime": 1783446023.241858,
     "ast_hash": "67b6a5fa6c0974e18f60db9f8932fbd8",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/references/update.md": {
-    "mtime": 1783253748.8960323,
+    "mtime": 1783446023.2421086,
     "ast_hash": "c698309979460d0f02ba616417844399",
     "semantic_hash": ""
   },
@@ -3057,6 +3057,31 @@
   "apps/api/test/room-persistence.test.ts": {
     "mtime": 1783445651.5638058,
     "ast_hash": "9d607c43964d68d1d6f06ec1311a2571",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/auth-tokens.ts": {
+    "mtime": 1782160784.8238852,
+    "ast_hash": "dd4c46a3522969f5520ec403b743a677",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/token-policy.ts": {
+    "mtime": 1782160784.848372,
+    "ast_hash": "0e11e0b20aff90c65d44695db7045500",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/tokens.ts": {
+    "mtime": 1782160784.8485792,
+    "ast_hash": "4046e0974c4fedcf88cbe48be3eefd4c",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/google-ads/tokens.ts": {
+    "mtime": 1782160784.85019,
+    "ast_hash": "7e841a57168d510e129424b47e510e9b",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/kreatli-crm/gmail-tokens.ts": {
+    "mtime": 1780509466.0941374,
+    "ast_hash": "0da4e11a8de7fe965edef4058e8579c1",
     "semantic_hash": ""
   }
 }

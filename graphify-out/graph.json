@@ -3212,6 +3212,102 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_extension_src_auth_tokens",
+      "label": "auth-tokens.ts",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_auth_tokens_key",
+      "label": "AUTH_TOKENS_KEY",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_authenticateduserplan",
+      "label": "AuthenticatedUserPlan",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_authenticateduser",
+      "label": "AuthenticatedUser",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_extensionauthtokens",
+      "label": "ExtensionAuthTokens",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_isrecord",
+      "label": "isRecord()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L22",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_normalizeplan",
+      "label": "normalizePlan()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L26",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_normalizeauthenticateduser",
+      "label": "normalizeAuthenticatedUser()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L33",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_normalizeextensionauthtokens",
+      "label": "normalizeExtensionAuthTokens()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L58",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_getstoredauthtokens",
+      "label": "getStoredAuthTokens()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L74",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_setstoredauthtokens",
+      "label": "setStoredAuthTokens()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L79",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_auth_tokens_clearstoredauthtokens",
+      "label": "clearStoredAuthTokens()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L83",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_extension_src_constants",
       "label": "constants.ts",
       "file_type": "code",
@@ -23764,6 +23860,86 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_lib_anidachi_auth_token_policy",
+      "label": "token-policy.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/token-policy.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_tokens",
+      "label": "tokens.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_tokens_tokenpair",
+      "label": "TokenPair",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_tokens_refreshtokenexpiresat",
+      "label": "refreshTokenExpiresAt()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L18",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_tokens_signaccesstokenforuser",
+      "label": "signAccessTokenForUser()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L24",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_tokens_issuetokenpair",
+      "label": "issueTokenPair()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L35",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "label": "refreshTokenPair()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L52",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_tokens_refreshaccesstoken",
+      "label": "refreshAccessToken()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L67",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
+      "label": "revokeRefreshToken()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L73",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_anidachi_auth_tokens_revokeallsessionsforuser",
+      "label": "revokeAllSessionsForUser()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L77",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_lib_anidachi_auth_watch_library_routes",
       "label": "watch-library-routes.ts",
       "file_type": "code",
@@ -24732,6 +24908,70 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_lib_google_ads_tokens",
+      "label": "tokens.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_google_ads_tokens_googleadsstoredtokens",
+      "label": "GoogleAdsStoredTokens",
+      "file_type": "code",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L11",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_google_ads_tokens_blob_access",
+      "label": "BLOB_ACCESS",
+      "file_type": "code",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L19",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_google_ads_tokens_tokenpath",
+      "label": "tokenPath()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L21",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "label": "readGoogleAdsTokens()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L25",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_google_ads_tokens_writegoogleadstokens",
+      "label": "writeGoogleAdsTokens()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L49",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_google_ads_tokens_mergegoogleadstokens",
+      "label": "mergeGoogleAdsTokens()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L68",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_google_ads_tokens_cleargoogleadstokens",
+      "label": "clearGoogleAdsTokens()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L81",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_lib_google_marketing_auth",
       "label": "auth.ts",
       "file_type": "code",
@@ -25548,6 +25788,78 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "label": "gmail-tokens.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_kreatli_crm_gmail_tokens_gmailstoredtokens",
+      "label": "GmailStoredTokens",
+      "file_type": "code",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_kreatli_crm_gmail_tokens_blob_access",
+      "label": "BLOB_ACCESS",
+      "file_type": "code",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_kreatli_crm_gmail_tokens_tokenpath",
+      "label": "tokenPath()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L17",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "label": "readGmailTokens()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L21",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_kreatli_crm_gmail_tokens_writegmailtokens",
+      "label": "writeGmailTokens()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L42",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_kreatli_crm_gmail_tokens_mergegmailtokens",
+      "label": "mergeGmailTokens()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L60",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_kreatli_crm_gmail_tokens_cleargmailtokens",
+      "label": "clearGmailTokens()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L71",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_lib_kreatli_crm_gmail_tokens_isgmailconnected",
+      "label": "isGmailConnected()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L87",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_lib_kreatli_crm_gmail_ui",
       "label": "gmail-ui.ts",
       "file_type": "code",
@@ -25673,6 +25985,22 @@
       "file_type": "code",
       "source_file": "apps/web/lib/kreatli-crm/gmail.ts",
       "source_location": "L121",
+      "_origin": "ast"
+    },
+    {
+      "id": "docref_rfc_5322",
+      "label": "RFC-5322",
+      "file_type": "doc_ref",
+      "source_file": "apps/web/lib/kreatli-crm/gmail.ts",
+      "source_location": "L67",
+      "_origin": "ast"
+    },
+    {
+      "id": "docref_rfc_2047",
+      "label": "RFC-2047",
+      "file_type": "doc_ref",
+      "source_file": "apps/web/lib/kreatli-crm/gmail.ts",
+      "source_location": "L67",
       "_origin": "ast"
     },
     {
@@ -51020,7 +51348,7 @@
     },
     {
       "source": "apps_extension_src_auth_client",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_ts",
+      "target": "apps_extension_src_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -51030,7 +51358,7 @@
     },
     {
       "source": "apps_extension_src_auth_client",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_clearstoredauthtokens",
+      "target": "apps_extension_src_auth_tokens_clearstoredauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -51040,7 +51368,7 @@
     },
     {
       "source": "apps_extension_src_auth_client",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_getstoredauthtokens",
+      "target": "apps_extension_src_auth_tokens_getstoredauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -51050,7 +51378,7 @@
     },
     {
       "source": "apps_extension_src_auth_client",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_normalizeauthenticateduser",
+      "target": "apps_extension_src_auth_tokens_normalizeauthenticateduser",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -51060,7 +51388,7 @@
     },
     {
       "source": "apps_extension_src_auth_client",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_normalizeextensionauthtokens",
+      "target": "apps_extension_src_auth_tokens_normalizeextensionauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -51070,7 +51398,7 @@
     },
     {
       "source": "apps_extension_src_auth_client",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_setstoredauthtokens",
+      "target": "apps_extension_src_auth_tokens_setstoredauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -51080,7 +51408,7 @@
     },
     {
       "source": "apps_extension_src_auth_client",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_authenticateduser",
+      "target": "apps_extension_src_auth_tokens_authenticateduser",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -51090,7 +51418,7 @@
     },
     {
       "source": "apps_extension_src_auth_client",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_extensionauthtokens",
+      "target": "apps_extension_src_auth_tokens_extensionauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -51896,6 +52224,165 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
       "source_location": "L565",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "ref_wxt_utils_storage",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_auth_tokens_key",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_authenticateduserplan",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_authenticateduser",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_extensionauthtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_isrecord",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_normalizeplan",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_normalizeauthenticateduser",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_normalizeextensionauthtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_getstoredauthtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_setstoredauthtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens",
+      "target": "apps_extension_src_auth_tokens_clearstoredauthtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens_normalizeauthenticateduser",
+      "target": "apps_extension_src_auth_tokens_isrecord",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens_normalizeauthenticateduser",
+      "target": "apps_extension_src_auth_tokens_normalizeplan",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens_normalizeextensionauthtokens",
+      "target": "apps_extension_src_auth_tokens_isrecord",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens_normalizeextensionauthtokens",
+      "target": "apps_extension_src_auth_tokens_normalizeauthenticateduser",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_tokens_getstoredauthtokens",
+      "target": "apps_extension_src_auth_tokens_normalizeextensionauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-tokens.ts",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -54827,7 +55314,7 @@
     },
     {
       "source": "apps_extension_src_diagnostic_log",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_ts",
+      "target": "apps_extension_src_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -57227,7 +57714,7 @@
     },
     {
       "source": "apps_extension_src_overlay_app",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_ts",
+      "target": "apps_extension_src_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -57237,7 +57724,7 @@
     },
     {
       "source": "apps_extension_src_overlay_app",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_auth_tokens_key",
+      "target": "apps_extension_src_auth_tokens_auth_tokens_key",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -57257,7 +57744,7 @@
     },
     {
       "source": "apps_extension_src_overlay_app",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_authenticateduser",
+      "target": "apps_extension_src_auth_tokens_authenticateduser",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -57267,7 +57754,7 @@
     },
     {
       "source": "apps_extension_src_overlay_app",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_authenticateduserplan",
+      "target": "apps_extension_src_auth_tokens_authenticateduserplan",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -63588,7 +64075,7 @@
     },
     {
       "source": "apps_extension_src_popup_app",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_ts",
+      "target": "apps_extension_src_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -63598,7 +64085,7 @@
     },
     {
       "source": "apps_extension_src_popup_app",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_extensionauthtokens",
+      "target": "apps_extension_src_auth_tokens_extensionauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -68591,7 +69078,7 @@
     },
     {
       "source": "apps_extension_src_user_identity",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_ts",
+      "target": "apps_extension_src_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -68601,7 +69088,7 @@
     },
     {
       "source": "apps_extension_src_user_identity",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_extensionauthtokens",
+      "target": "apps_extension_src_auth_tokens_extensionauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -69850,7 +70337,7 @@
     },
     {
       "source": "apps_extension_src_watch_library_auth",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_ts",
+      "target": "apps_extension_src_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -69860,7 +70347,7 @@
     },
     {
       "source": "apps_extension_src_watch_library_auth",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_extensionauthtokens",
+      "target": "apps_extension_src_auth_tokens_extensionauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -72099,7 +72586,7 @@
     },
     {
       "source": "apps_extension_test_auth_client_test",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_ts",
+      "target": "apps_extension_src_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -72109,7 +72596,7 @@
     },
     {
       "source": "apps_extension_test_auth_client_test",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_auth_tokens_key",
+      "target": "apps_extension_src_auth_tokens_auth_tokens_key",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -72129,7 +72616,7 @@
     },
     {
       "source": "apps_extension_test_auth_client_test",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_extensionauthtokens",
+      "target": "apps_extension_src_auth_tokens_extensionauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -72139,7 +72626,7 @@
     },
     {
       "source": "apps_extension_test_auth_client_test",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_normalizeauthenticateduser",
+      "target": "apps_extension_src_auth_tokens_normalizeauthenticateduser",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -72149,7 +72636,7 @@
     },
     {
       "source": "apps_extension_test_auth_client_test",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_normalizeextensionauthtokens",
+      "target": "apps_extension_src_auth_tokens_normalizeextensionauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -74519,7 +75006,7 @@
     },
     {
       "source": "apps_extension_test_watch_library_auth_test",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_ts",
+      "target": "apps_extension_src_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -74529,7 +75016,7 @@
     },
     {
       "source": "apps_extension_test_watch_library_auth_test",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_extension_src_auth_tokens_extensionauthtokens",
+      "target": "apps_extension_src_auth_tokens_extensionauthtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -78026,7 +78513,7 @@
     },
     {
       "source": "apps_web_app_api_auth_logout_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_ts",
+      "target": "apps_web_lib_anidachi_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -78036,7 +78523,7 @@
     },
     {
       "source": "apps_web_app_api_auth_logout_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
+      "target": "apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -78165,7 +78652,7 @@
     },
     {
       "source": "apps_web_app_api_auth_refresh_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_ts",
+      "target": "apps_web_lib_anidachi_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -78175,7 +78662,7 @@
     },
     {
       "source": "apps_web_app_api_auth_refresh_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "target": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -78655,7 +79142,7 @@
     },
     {
       "source": "apps_web_app_api_billing_sync_checkout_session_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_ts",
+      "target": "apps_web_lib_anidachi_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -78665,7 +79152,7 @@
     },
     {
       "source": "apps_web_app_api_billing_sync_checkout_session_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "target": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -79772,7 +80259,7 @@
     },
     {
       "source": "apps_web_app_api_extension_auth_logout_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_ts",
+      "target": "apps_web_lib_anidachi_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -79782,7 +80269,7 @@
     },
     {
       "source": "apps_web_app_api_extension_auth_logout_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
+      "target": "apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -80483,7 +80970,7 @@
     },
     {
       "source": "apps_web_app_api_google_ads_oauth_callback_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_google_ads_tokens_ts",
+      "target": "apps_web_lib_google_ads_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -80493,7 +80980,7 @@
     },
     {
       "source": "apps_web_app_api_google_ads_oauth_callback_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_google_ads_tokens_mergegoogleadstokens",
+      "target": "apps_web_lib_google_ads_tokens_mergegoogleadstokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -81430,7 +81917,7 @@
     },
     {
       "source": "apps_web_app_api_kreatli_crm_gmail_callback_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_ts",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -81440,7 +81927,7 @@
     },
     {
       "source": "apps_web_app_api_kreatli_crm_gmail_callback_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_mergegmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_mergegmailtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -81656,7 +82143,7 @@
     },
     {
       "source": "apps_web_app_api_kreatli_crm_gmail_disconnect_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_ts",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -81666,7 +82153,7 @@
     },
     {
       "source": "apps_web_app_api_kreatli_crm_gmail_disconnect_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_cleargmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_cleargmailtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -84779,7 +85266,7 @@
     },
     {
       "source": "apps_web_app_api_subscribe_interest_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_ts",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -84789,7 +85276,7 @@
     },
     {
       "source": "apps_web_app_api_subscribe_interest_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -88710,7 +89197,7 @@
     },
     {
       "source": "apps_web_app_extension_logout_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_ts",
+      "target": "apps_web_lib_anidachi_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -88720,7 +89207,7 @@
     },
     {
       "source": "apps_web_app_extension_logout_route",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
+      "target": "apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -107902,7 +108389,7 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_cookies",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_token_policy_ts",
+      "target": "apps_web_lib_anidachi_auth_token_policy",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -108917,7 +109404,7 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_extension_session",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_token_policy_ts",
+      "target": "apps_web_lib_anidachi_auth_token_policy",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -109147,7 +109634,7 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_handle_oauth_callback",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_ts",
+      "target": "apps_web_lib_anidachi_auth_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -109157,7 +109644,7 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_handle_oauth_callback",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_tokens_issuetokenpair",
+      "target": "apps_web_lib_anidachi_auth_tokens_issuetokenpair",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -109401,7 +109888,7 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_jwt",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_token_policy_ts",
+      "target": "apps_web_lib_anidachi_auth_token_policy",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -113819,6 +114306,238 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_jwt",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_jwt_signaccesstoken",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_db",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_db_generaterefreshtoken",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_db_storerefreshtoken",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_db_validaterefreshtoken",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_db_deleterefreshtoken",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_db_deleteallrefreshtokensforuser",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_db_getuserbyid",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_db_extendrefreshtoken",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_token_policy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_token_policy_refresh_token_ttl_days",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_tokens_tokenpair",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_tokens_refreshtokenexpiresat",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_tokens_signaccesstokenforuser",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_tokens_issuetokenpair",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_tokens_refreshaccesstoken",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L73",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens",
+      "target": "apps_web_lib_anidachi_auth_tokens_revokeallsessionsforuser",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L77",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_issuetokenpair",
+      "target": "apps_web_lib_anidachi_auth_tokens_refreshtokenexpiresat",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "target": "apps_web_lib_anidachi_auth_tokens_signaccesstokenforuser",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "target": "apps_web_lib_anidachi_auth_tokens_refreshtokenexpiresat",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_refreshaccesstoken",
+      "target": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_anidachi_auth_watch_library_routes",
       "target": "ref_next_server",
       "relation": "imports_from",
@@ -115648,7 +116367,7 @@
     },
     {
       "source": "apps_web_lib_google_ads_client",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_google_ads_tokens_ts",
+      "target": "apps_web_lib_google_ads_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -115658,7 +116377,7 @@
     },
     {
       "source": "apps_web_lib_google_ads_client",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "target": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -115883,6 +116602,169 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "ref_fs_promises",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "ref_path",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "ref_vercel_blob",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "apps_web_lib_kreatli_crm_store",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "apps_web_lib_kreatli_crm_store_getcrmdatadir",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "apps_web_lib_google_ads_tokens_googleadsstoredtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "apps_web_lib_google_ads_tokens_blob_access",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "apps_web_lib_google_ads_tokens_tokenpath",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "apps_web_lib_google_ads_tokens_writegoogleadstokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "apps_web_lib_google_ads_tokens_mergegoogleadstokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens",
+      "target": "apps_web_lib_google_ads_tokens_cleargoogleadstokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L81",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "target": "apps_web_lib_google_ads_tokens_tokenpath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens_writegoogleadstokens",
+      "target": "apps_web_lib_google_ads_tokens_tokenpath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens_mergegoogleadstokens",
+      "target": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens_mergegoogleadstokens",
+      "target": "apps_web_lib_google_ads_tokens_writegoogleadstokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L77",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens_cleargoogleadstokens",
+      "target": "apps_web_lib_google_ads_tokens_tokenpath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L98",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_google_marketing_auth",
       "target": "apps_web_lib_google_ads_oauth",
       "relation": "imports_from",
@@ -115904,7 +116786,7 @@
     },
     {
       "source": "apps_web_lib_google_marketing_auth",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_google_ads_tokens_ts",
+      "target": "apps_web_lib_google_ads_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -115914,7 +116796,7 @@
     },
     {
       "source": "apps_web_lib_google_marketing_auth",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "target": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -116124,6 +117006,7 @@
       "target": "apps_web_lib_amplitude",
       "relation": "imports_from",
       "context": "import",
+      "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/gtag.ts",
       "source_location": "L16",
@@ -116829,6 +117712,7 @@
       "target": "ref_fs_promises",
       "relation": "imports_from",
       "context": "import",
+      "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/instagram/storage.ts",
       "source_location": "L172",
@@ -117406,6 +118290,178 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "ref_fs_promises",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "ref_path",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "ref_vercel_blob",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "apps_web_lib_kreatli_crm_store",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "apps_web_lib_kreatli_crm_store_getcrmdatadir",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_gmailstoredtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_blob_access",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_tokenpath",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_writegmailtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_mergegmailtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_cleargmailtokens",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_isgmailconnected",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_tokenpath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens_writegmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_tokenpath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens_mergegmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens_mergegmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_writegmailtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens_cleargmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_tokenpath",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_kreatli_crm_gmail_ui",
       "target": "apps_web_lib_kreatli_crm_gmail",
       "relation": "imports_from",
@@ -117427,7 +118483,7 @@
     },
     {
       "source": "apps_web_lib_kreatli_crm_gmail_ui",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_ts",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -117437,7 +118493,7 @@
     },
     {
       "source": "apps_web_lib_kreatli_crm_gmail_ui",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_isgmailconnected",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_isgmailconnected",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -117447,7 +118503,7 @@
     },
     {
       "source": "apps_web_lib_kreatli_crm_gmail_ui",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -117495,7 +118551,7 @@
     },
     {
       "source": "apps_web_lib_kreatli_crm_gmail",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_ts",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -117505,7 +118561,7 @@
     },
     {
       "source": "apps_web_lib_kreatli_crm_gmail",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_mergegmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_mergegmailtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -117515,7 +118571,7 @@
     },
     {
       "source": "apps_web_lib_kreatli_crm_gmail",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -117689,6 +118745,24 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/kreatli-crm/gmail.ts",
       "source_location": "L149",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail",
+      "target": "docref_rfc_5322",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail.ts",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail",
+      "target": "docref_rfc_2047",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail.ts",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -120627,7 +121701,7 @@
     },
     {
       "source": "apps_web_lib_send_subscription_alert_email",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_ts",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -120637,7 +121711,7 @@
     },
     {
       "source": "apps_web_lib_send_subscription_alert_email",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -121979,6 +123053,7 @@
       "target": "ref_fs_promises",
       "relation": "imports_from",
       "context": "import",
+      "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/tiktok/storage.ts",
       "source_location": "L166",
@@ -124596,7 +125671,7 @@
     },
     {
       "source": "apps_web_scripts_google_ads_diagnose",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_google_ads_tokens_ts",
+      "target": "apps_web_lib_google_ads_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -124606,7 +125681,7 @@
     },
     {
       "source": "apps_web_scripts_google_ads_diagnose",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "target": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -124809,7 +125884,7 @@
     },
     {
       "source": "apps_web_scripts_seo_check_scopes",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_google_ads_tokens_ts",
+      "target": "apps_web_lib_google_ads_tokens",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -124819,7 +125894,7 @@
     },
     {
       "source": "apps_web_scripts_seo_check_scopes",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "target": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -137672,7 +138747,7 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_cookies",
-      "target": "users_vladyslavhulyi_anidachi_lp_monorepo_apps_web_lib_anidachi_auth_token_policy_ts",
+      "target": "apps_web_lib_anidachi_auth_token_policy",
       "relation": "re_exports",
       "context": "export",
       "confidence": "EXTRACTED",
@@ -139961,6 +141036,16 @@
       "weight": 1.0
     },
     {
+      "source": "apps_extension_src_auth_client_fetchwebsitesessionprobe",
+      "target": "apps_extension_src_auth_tokens_normalizeauthenticateduser",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L290",
+      "weight": 1.0
+    },
+    {
       "source": "apps_extension_src_auth_client_ensurewebsitesessionstillmatches",
       "target": "apps_extension_src_diagnostic_log_recorddiagnosticevent",
       "relation": "calls",
@@ -139968,6 +141053,16 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/auth-client.ts",
       "source_location": "L314",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_ensurewebsitesessionstillmatches",
+      "target": "apps_extension_src_auth_tokens_clearstoredauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L325",
       "weight": 1.0
     },
     {
@@ -140417,6 +141512,16 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-unmount-cleanup.test.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_refresh_route_refreshsessionfromcookie",
+      "target": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/api/auth/refresh/route.ts",
       "source_location": "L15",
       "weight": 1.0
     },
@@ -141121,6 +142226,26 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_anidachi_auth_tokens_signaccesstokenforuser",
+      "target": "apps_web_lib_anidachi_auth_db_getuserbyid",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_signaccesstokenforuser",
+      "target": "apps_web_lib_anidachi_auth_jwt_signaccesstoken",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_anidachi_auth_watch_library_reconcilewatchprogressentry",
       "target": "apps_web_lib_anidachi_auth_db_listroommembers",
       "relation": "calls",
@@ -141342,12 +142467,32 @@
     },
     {
       "source": "apps_web_lib_google_ads_client_getaccesstoken",
+      "target": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/client.ts",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_client_getaccesstoken",
       "target": "apps_web_lib_google_ads_oauth_creategoogleadsoauth2",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/google-ads/client.ts",
       "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_ads_tokens_tokenpath",
+      "target": "apps_web_lib_kreatli_crm_store_getcrmdatadir",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -141388,6 +142533,26 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/jikan-for-watch-page.ts",
       "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens_tokenpath",
+      "target": "apps_web_lib_kreatli_crm_store_getcrmdatadir",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_getgmailclient",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/kreatli-crm/gmail.ts",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -141762,6 +142927,16 @@
     },
     {
       "source": "apps_web_scripts_google_ads_diagnose_main",
+      "target": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/scripts/google-ads/diagnose.ts",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_scripts_google_ads_diagnose_main",
       "target": "apps_web_lib_google_ads_oauth_creategoogleadsoauth2",
       "relation": "calls",
       "context": "call",
@@ -141778,6 +142953,16 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/scripts/google-ads/keyword-ideas.ts",
       "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_scripts_seo_check_scopes_main",
+      "target": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/scripts/seo/check-scopes.ts",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -142311,6 +143496,16 @@
       "weight": 1.0
     },
     {
+      "source": "apps_extension_src_auth_client_websitesignoutsequenceactions",
+      "target": "apps_extension_src_auth_tokens_extensionauthtokens",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L430",
+      "weight": 1.0
+    },
+    {
       "source": "apps_extension_src_crunchyroll_study_studyvideosnapshot",
       "target": "apps_extension_src_crunchyroll_study_studyelement",
       "relation": "inherits",
@@ -142628,6 +143823,16 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/user-identity.ts",
       "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_user_identity_currentparticipantresult",
+      "target": "apps_extension_src_auth_tokens_extensionauthtokens",
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/user-identity.ts",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -143074,39 +144279,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_extension_entrypoints_crunchyroll_content_loadcrunchyrollcmsobject",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/entrypoints/crunchyroll.content.ts",
-      "source_location": "L326",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_entrypoints_crunchyroll_content_getcrunchyrollcontenttoken",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/entrypoints/crunchyroll.content.ts",
-      "source_location": "L352",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_auth_client_exchangeextensionauthcode",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L166",
-      "weight": 1.0
-    },
-    {
       "source": "apps_extension_src_auth_client_exchangeextensionauthcode",
       "target": "apps_extension_src_diagnostic_log_recorddiagnosticevent",
       "relation": "calls",
@@ -143115,6 +144287,39 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/auth-client.ts",
       "source_location": "L173",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_exchangeextensionauthcode",
+      "target": "apps_extension_src_auth_tokens_normalizeextensionauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L182",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_exchangeextensionauthcode",
+      "target": "apps_extension_src_auth_tokens_setstoredauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L184",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_refreshextensionsession",
+      "target": "apps_extension_src_auth_tokens_getstoredauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -143130,35 +144335,24 @@
     },
     {
       "source": "apps_extension_src_auth_client_refreshextensionsession",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
+      "target": "apps_extension_src_auth_tokens_clearstoredauthtokens",
       "relation": "calls",
       "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L199",
+      "source_location": "L212",
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_auth_client_revokeextensionrefreshtoken",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
+      "source": "apps_extension_src_auth_client_refreshextensionsession",
+      "target": "apps_extension_src_auth_tokens_setstoredauthtokens",
       "relation": "calls",
       "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L247",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_auth_client_fetchauthenticateduser",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L255",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -143173,14 +144367,47 @@
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_auth_client_fetchwebsitesessionprobe",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
+      "source": "apps_extension_src_auth_client_fetchauthenticateduser",
+      "target": "apps_extension_src_auth_tokens_normalizeauthenticateduser",
       "relation": "calls",
       "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "apps/extension/src/auth-client.ts",
-      "source_location": "L270",
+      "source_location": "L264",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_getcachedextensionsession",
+      "target": "apps_extension_src_auth_tokens_getstoredauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L330",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_getcurrentextensionsession",
+      "target": "apps_extension_src_auth_tokens_getstoredauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L336",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_getcurrentextensionsession",
+      "target": "apps_extension_src_auth_tokens_setstoredauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L346",
       "weight": 1.0
     },
     {
@@ -143195,6 +144422,28 @@
       "weight": 1.0
     },
     {
+      "source": "apps_extension_src_auth_client_getcurrentextensionsession",
+      "target": "apps_extension_src_auth_tokens_clearstoredauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L361",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_validateextensionsessionagainstwebsite",
+      "target": "apps_extension_src_auth_tokens_getstoredauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L371",
+      "weight": 1.0
+    },
+    {
       "source": "apps_extension_src_auth_client_signinwithwebsitesilently",
       "target": "apps_extension_src_diagnostic_log_recorddiagnosticevent",
       "relation": "calls",
@@ -143206,6 +144455,28 @@
       "weight": 1.0
     },
     {
+      "source": "apps_extension_src_auth_client_signoutwithwebsite",
+      "target": "apps_extension_src_auth_tokens_getstoredauthtokens",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L472",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_signoutwithwebsite",
+      "target": "apps_extension_src_auth_tokens_clearstoredauthtokens",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L475",
+      "weight": 1.0
+    },
+    {
       "source": "apps_extension_src_auth_client_handlewebsiteauthcookiechange",
       "target": "apps_extension_src_diagnostic_log_recorddiagnosticevent",
       "relation": "calls",
@@ -143214,6 +144485,28 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/auth-client.ts",
       "source_location": "L497",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_handlewebsiteauthcookiechange",
+      "target": "apps_extension_src_auth_tokens_getstoredauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L506",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_auth_client_handlewebsiteauthcookiechange",
+      "target": "apps_extension_src_auth_tokens_clearstoredauthtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/auth-client.ts",
+      "source_location": "L510",
       "weight": 1.0
     },
     {
@@ -143247,50 +144540,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/crunchyroll-artwork.ts",
       "source_location": "L46",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_crunchyroll_artwork_loadcrunchyrollcmsobject",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/crunchyroll-artwork.ts",
-      "source_location": "L85",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_crunchyroll_artwork_getcrunchyrollcontenttoken",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/crunchyroll-artwork.ts",
-      "source_location": "L107",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_crunchyroll_study_startcrunchyrollstudy",
-      "target": "scripts_room_signaling_harness_record",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/crunchyroll-study.ts",
-      "source_location": "L136",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_crunchyroll_study_startcrunchyrollstudy",
-      "target": "apps_extension_entrypoints_content_mountedoverlay_dispose",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/crunchyroll-study.ts",
-      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -143357,17 +144606,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/debug-probe.ts",
       "source_location": "L46",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_debug_probe_startdebugprobe",
-      "target": "apps_extension_entrypoints_content_mountedoverlay_dispose",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/debug-probe.ts",
-      "source_location": "L118",
       "weight": 1.0
     },
     {
@@ -144141,61 +145379,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_overlay_app_overlayapp",
-      "target": "apps_api_src_room_state_roomstate_leavemediaseat",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4658",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_overlay_app_overlayapp",
-      "target": "apps_api_src_room_state_roomstate_cancelmediaseatrequest",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4668",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_overlay_app_overlayapp",
-      "target": "apps_api_src_room_state_roomstate_requestmediaseat",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4679",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_overlay_app_overlayapp",
-      "target": "apps_api_src_room_state_roomstate_revokemediaseat",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4691",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_overlay_app_overlayapp",
-      "target": "apps_api_src_room_state_roomstate_grantmediaseat",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4702",
-      "weight": 1.0
-    },
-    {
       "source": "apps_extension_src_overlay_app_ismessagecomposershortcut",
       "target": "apps_extension_src_message_composer_events_ismessagecomposershortcutevent",
       "relation": "calls",
@@ -144237,17 +145420,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
       "source_location": "L5803",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_p2p_ice_loadp2piceserverswithcache",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/p2p-ice.ts",
-      "source_location": "L63",
       "weight": 1.0
     },
     {
@@ -144702,17 +145874,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_playback_control_waitformediaready",
-      "target": "scripts_dev_extension_staging_google_cleanup",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/playback-control.ts",
-      "source_location": "L121",
-      "weight": 1.0
-    },
-    {
       "source": "apps_extension_src_popup_app_popupapp",
       "target": "apps_extension_src_watch_progress_createemptywatchprogressstore",
       "relation": "calls",
@@ -145164,17 +146325,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_room_client_createwebsiteroomfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/room-client.ts",
-      "source_location": "L235",
-      "weight": 1.0
-    },
-    {
       "source": "apps_extension_src_room_client_connectwebsiteroomfromapi",
       "target": "apps_extension_src_debug_log_logdebug",
       "relation": "calls",
@@ -145186,17 +146336,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_room_client_connectwebsiteroomfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/room-client.ts",
-      "source_location": "L281",
-      "weight": 1.0
-    },
-    {
       "source": "apps_extension_src_room_client_endwebsiteroomfromapi",
       "target": "apps_extension_src_debug_log_logdebug",
       "relation": "calls",
@@ -145205,17 +146344,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/room-client.ts",
       "source_location": "L313",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_room_client_endwebsiteroomfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/room-client.ts",
-      "source_location": "L314",
       "weight": 1.0
     },
     {
@@ -145340,17 +146468,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_silent_session_adoption_adoptwebsitesessionwithretry",
-      "target": "apps_web_scripts_cache_jikan_posters_sleep",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/silent-session-adoption.ts",
-      "source_location": "L78",
-      "weight": 1.0
-    },
-    {
       "source": "apps_extension_src_social_client_listinvitetargetsfromapi",
       "target": "apps_extension_src_debug_log_logdebug",
       "relation": "calls",
@@ -145359,17 +146476,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
       "source_location": "L328",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_listinvitetargetsfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -145396,17 +146502,6 @@
     },
     {
       "source": "apps_extension_src_social_client_listroominvitesfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L360",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_listroominvitesfromapi",
       "target": "apps_extension_src_room_client_createwebsiteroomheaders",
       "relation": "calls",
       "context": "call",
@@ -145425,17 +146520,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
       "source_location": "L379",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_createroominvitefromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L385",
       "weight": 1.0
     },
     {
@@ -145462,17 +146546,6 @@
     },
     {
       "source": "apps_extension_src_social_client_createfriendgroupfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L407",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_createfriendgroupfromapi",
       "target": "apps_extension_src_room_client_createwebsiteroomheaders",
       "relation": "calls",
       "context": "call",
@@ -145491,17 +146564,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
       "source_location": "L428",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_updatefriendgroupfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L432",
       "weight": 1.0
     },
     {
@@ -145528,17 +146590,6 @@
     },
     {
       "source": "apps_extension_src_social_client_archivefriendgroupfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L457",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_archivefriendgroupfromapi",
       "target": "apps_extension_src_room_client_createwebsiteroomheaders",
       "relation": "calls",
       "context": "call",
@@ -145557,17 +146608,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
       "source_location": "L474",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_addfriendgroupmemberfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L478",
       "weight": 1.0
     },
     {
@@ -145594,17 +146634,6 @@
     },
     {
       "source": "apps_extension_src_social_client_removefriendgroupmemberfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L507",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_removefriendgroupmemberfromapi",
       "target": "apps_extension_src_room_client_createwebsiteroomheaders",
       "relation": "calls",
       "context": "call",
@@ -145627,17 +146656,6 @@
     },
     {
       "source": "apps_extension_src_social_client_acceptroominvitefromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L534",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_acceptroominvitefromapi",
       "target": "apps_extension_src_room_client_createwebsiteroomheaders",
       "relation": "calls",
       "context": "call",
@@ -145656,17 +146674,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
       "source_location": "L553",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_declineroominvitefromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L554",
       "weight": 1.0
     },
     {
@@ -145956,17 +146963,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_video_adapter_runcrunchyrollmaincommand",
-      "target": "scripts_dev_extension_staging_google_cleanup",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/video-adapter.ts",
-      "source_location": "L475",
-      "weight": 1.0
-    },
-    {
       "source": "apps_extension_src_watch_library_client_mergewatchlibraryintoprogressstore",
       "target": "apps_extension_src_watch_progress_recordwatchprogressinstore",
       "relation": "calls",
@@ -145986,17 +146982,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/watch-library-client.ts",
       "source_location": "L436",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_watch_library_client_listwatchlibraryfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/watch-library-client.ts",
-      "source_location": "L439",
       "weight": 1.0
     },
     {
@@ -146023,17 +147008,6 @@
     },
     {
       "source": "apps_extension_src_watch_library_client_clearwatchlibraryfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/watch-library-client.ts",
-      "source_location": "L452",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_watch_library_client_clearwatchlibraryfromapi",
       "target": "apps_extension_src_room_client_createwebsiteroomheaders",
       "relation": "calls",
       "context": "call",
@@ -146056,17 +147030,6 @@
     },
     {
       "source": "apps_extension_src_watch_library_client_reconcilewatchprogressfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/watch-library-client.ts",
-      "source_location": "L470",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_watch_library_client_reconcilewatchprogressfromapi",
       "target": "apps_extension_src_room_client_createwebsiteroomheaders",
       "relation": "calls",
       "context": "call",
@@ -146085,17 +147048,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/watch-library-client.ts",
       "source_location": "L486",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_watch_library_client_createroomfromwatchsessionfromapi",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/extension/src/watch-library-client.ts",
-      "source_location": "L490",
       "weight": 1.0
     },
     {
@@ -146474,17 +147426,6 @@
     },
     {
       "source": "apps_web_app_api_auth_instagram_callback_route_get",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/api/auth/instagram/callback/route.ts",
-      "source_location": "L86",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_api_auth_instagram_callback_route_get",
       "target": "apps_web_lib_instagram_storage_getallcredentials",
       "relation": "calls",
       "context": "call",
@@ -146573,6 +147514,17 @@
     },
     {
       "source": "apps_web_app_api_auth_logout_route_post",
+      "target": "apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/auth/logout/route.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_auth_logout_route_post",
       "target": "apps_web_lib_anidachi_auth_session_clearauthcookies",
       "relation": "calls",
       "context": "call",
@@ -146635,17 +147587,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/auth/refresh/route.ts",
       "source_location": "L53",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_api_auth_tiktok_callback_route_get",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/api/auth/tiktok/callback/route.ts",
-      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -146782,6 +147723,17 @@
     },
     {
       "source": "apps_web_app_api_billing_sync_checkout_session_route_post",
+      "target": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/billing/sync-checkout-session/route.ts",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_billing_sync_checkout_session_route_post",
       "target": "apps_web_lib_anidachi_auth_session_setauthcookies",
       "relation": "calls",
       "context": "call",
@@ -146789,28 +147741,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/billing/sync-checkout-session/route.ts",
       "source_location": "L77",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_api_blou_publish_carousel_route_preparetiktokimages",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/api/blou/publish/carousel/route.ts",
-      "source_location": "L40",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_api_blou_publish_carousel_route_preparetiktokimages",
-      "target": "apps_web_package_dependencies_sharp",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/api/blou/publish/carousel/route.ts",
-      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -147020,6 +147950,17 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/extension/auth/exchange/route.ts",
       "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_extension_auth_logout_route_post",
+      "target": "apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/extension/auth/logout/route.ts",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -147328,6 +148269,17 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/google-ads/oauth/callback/route.ts",
       "source_location": "L53",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_google_ads_oauth_callback_route_get",
+      "target": "apps_web_lib_google_ads_tokens_mergegoogleadstokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/google-ads/oauth/callback/route.ts",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -147860,6 +148812,17 @@
     },
     {
       "source": "apps_web_app_api_kreatli_crm_gmail_callback_route_get",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_mergegmailtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/kreatli-crm/gmail/callback/route.ts",
+      "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_kreatli_crm_gmail_callback_route_get",
       "target": "apps_web_lib_kreatli_crm_gmail_fetchgmailprofileemail",
       "relation": "calls",
       "context": "call",
@@ -147944,6 +148907,17 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/kreatli-crm/gmail/disconnect/route.ts",
       "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_kreatli_crm_gmail_disconnect_route_post",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_cleargmailtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/kreatli-crm/gmail/disconnect/route.ts",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -148211,17 +149185,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_app_api_openclaw_health_route_get",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/api/openclaw/health/route.ts",
-      "source_location": "L68",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_app_api_openclaw_post_prepare_route_post",
       "target": "apps_web_lib_openclaw_auth_validateopenclawsecret",
       "relation": "calls",
@@ -148296,28 +149259,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/api/openclaw/post/prepare/route.ts",
       "source_location": "L257",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_api_openclaw_post_prepare_route_post",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/api/openclaw/post/prepare/route.ts",
-      "source_location": "L285",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_api_openclaw_post_prepare_route_post",
-      "target": "apps_web_package_dependencies_sharp",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/api/openclaw/post/prepare/route.ts",
-      "source_location": "L287",
       "weight": 1.0
     },
     {
@@ -149334,6 +150275,17 @@
     },
     {
       "source": "apps_web_app_api_subscribe_interest_route_post",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/api/subscribe-interest/route.ts",
+      "source_location": "L113",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_api_subscribe_interest_route_post",
       "target": "apps_web_lib_kreatli_crm_gmail_getgmailredirecturi",
       "relation": "calls",
       "context": "call",
@@ -149740,17 +150692,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_app_blou_manager_connect_client_connectclient",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/blou/manager/connect-client.tsx",
-      "source_location": "L82",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_app_blou_manager_layout_managerlayout",
       "target": "apps_web_lib_blou_access_requireblouaccess",
       "relation": "calls",
@@ -149759,28 +150700,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/blou/manager/layout.tsx",
       "source_location": "L19",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_blou_manager_logout_button_bloumanagerlogoutbutton",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/blou/manager/logout-button.tsx",
-      "source_location": "L15",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_blou_manager_publish_publish_client_publishclient",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/blou/manager/publish/publish-client.tsx",
-      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -149873,6 +150792,17 @@
     },
     {
       "source": "apps_web_app_extension_logout_route_get",
+      "target": "apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/extension/logout/route.ts",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_extension_logout_route_get",
       "target": "apps_web_lib_anidachi_auth_session_clearauthcookies",
       "relation": "calls",
       "context": "call",
@@ -149880,17 +150810,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/extension/logout/route.ts",
       "source_location": "L29",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_friend_invite_token_friend_invite_client_friendinviteclient",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/friend/invite/[token]/friend-invite-client.tsx",
-      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -149924,17 +150843,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/friends/friends-client.tsx",
       "source_location": "L278",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_friends_friends_client_friendsclient",
-      "target": "apps_web_lib_anidachi_auth_social_sendfriendrequest",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/friends/friends-client.tsx",
-      "source_location": "L596",
       "weight": 1.0
     },
     {
@@ -150246,28 +151154,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_app_kreatli_email_crm_crm_client_logoutbutton",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/kreatli-email-crm/crm-client.tsx",
-      "source_location": "L155",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_kreatli_email_crm_crm_client_gmailbanner",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/kreatli-email-crm/crm-client.tsx",
-      "source_location": "L332",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_app_kreatli_email_crm_crm_client_crmclient",
       "target": "apps_web_lib_kreatli_crm_survey_lead_shared_issurveylead",
       "relation": "calls",
@@ -150540,17 +151426,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/login/page.tsx",
       "source_location": "L41",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_app_opengraph_image_ogimage",
-      "target": "apps_api_src_room_state_roomstate_join",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/app/opengraph-image.tsx",
-      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -151280,17 +152155,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_components_discord_credentials_form_discordcredentialsform",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/components/discord-credentials-form.tsx",
-      "source_location": "L40",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_components_footer_pricing_cta_footerpricingcta",
       "target": "apps_web_components_plan_survey_plan_survey_provider_useplansurvey",
       "relation": "calls",
@@ -151343,17 +152207,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/components/hero.tsx",
       "source_location": "L34",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_hero_hero",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/components/hero.tsx",
-      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -151442,17 +152295,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/components/json-ld.tsx",
       "source_location": "L286",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_nav_bar_client_fetchnavuser",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/components/nav-bar-client.tsx",
-      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -151578,17 +152420,6 @@
     },
     {
       "source": "apps_web_components_plan_survey_plan_survey_modal_plansurveymodal",
-      "target": "apps_web_lib_kreatli_crm_survey_lead_shared_setreferralcount",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L121",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_plan_survey_plan_survey_modal_plansurveymodal",
       "target": "apps_web_lib_conversion_events_inferpagetemplatefrompath",
       "relation": "calls",
       "context": "call",
@@ -151618,17 +152449,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
       "source_location": "L244",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_plan_survey_plan_survey_modal_plansurveymodal",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/components/plan-survey/plan-survey-modal.tsx",
-      "source_location": "L260",
       "weight": 1.0
     },
     {
@@ -151761,17 +152581,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/components/pricing.tsx",
       "source_location": "L67",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_components_pricing_pricing",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/components/pricing.tsx",
-      "source_location": "L116",
       "weight": 1.0
     },
     {
@@ -152095,6 +152904,17 @@
     },
     {
       "source": "apps_web_lib_anidachi_auth_handle_oauth_callback_handleoauthcallback",
+      "target": "apps_web_lib_anidachi_auth_tokens_issuetokenpair",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/handle-oauth-callback.ts",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_handle_oauth_callback_handleoauthcallback",
       "target": "apps_web_lib_anidachi_auth_return_to_sanitizeauthreturnto",
       "relation": "calls",
       "context": "call",
@@ -152146,28 +152966,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/jwt.ts",
       "source_location": "L102",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_oauth_discord_exchangediscordcode",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/anidachi-auth/oauth/discord.ts",
-      "source_location": "L50",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_oauth_google_exchangegooglecode",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/anidachi-auth/oauth/google.ts",
-      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -152776,6 +153574,94 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_lib_anidachi_auth_tokens_issuetokenpair",
+      "target": "apps_web_lib_anidachi_auth_db_getuserbyid",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_issuetokenpair",
+      "target": "apps_web_lib_anidachi_auth_jwt_signaccesstoken",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_issuetokenpair",
+      "target": "apps_web_lib_anidachi_auth_db_generaterefreshtoken",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L45",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_issuetokenpair",
+      "target": "apps_web_lib_anidachi_auth_db_storerefreshtoken",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "target": "apps_web_lib_anidachi_auth_db_validaterefreshtoken",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_refreshtokenpair",
+      "target": "apps_web_lib_anidachi_auth_db_extendrefreshtoken",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_revokerefreshtoken",
+      "target": "apps_web_lib_anidachi_auth_db_deleterefreshtoken",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_anidachi_auth_tokens_revokeallsessionsforuser",
+      "target": "apps_web_lib_anidachi_auth_db_deleteallrefreshtokensforuser",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/anidachi-auth/tokens.ts",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_lib_anidachi_auth_watch_library_cleanwatchprogressentry",
       "target": "apps_web_lib_watch_season_inference_infercrunchyrollseasonfromsourceurl",
       "relation": "calls",
@@ -152784,28 +153670,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/anidachi-auth/watch-library.ts",
       "source_location": "L264",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_watch_library_cleanwatchprogressentries",
-      "target": "apps_web_lib_anidachi_auth_watch_library_cleanwatchprogressentry",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/anidachi-auth/watch-library.ts",
-      "source_location": "L323",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_anidachi_auth_watch_library_roomwatchparticipanttargets",
-      "target": "apps_api_src_p2p_signal_buffer_recentp2psignalbuffer_add",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/anidachi-auth/watch-library.ts",
-      "source_location": "L341",
       "weight": 1.0
     },
     {
@@ -152952,17 +153816,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_lib_client_api_fetchwithsessionrefresh",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/client-api.ts",
-      "source_location": "L27",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_lib_conversion_events_trackconversion",
       "target": "apps_web_lib_gtag_trackevent",
       "relation": "calls",
@@ -152985,14 +153838,25 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_lib_google_ads_client_generatekeywordideas",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
+      "source": "apps_web_lib_google_ads_tokens_writegoogleadstokens",
+      "target": "apps_web_lib_kreatli_crm_store_getcrmdatadir",
       "relation": "calls",
       "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/google-ads/client.ts",
-      "source_location": "L115",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/google-ads/tokens.ts",
+      "source_location": "L63",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_google_marketing_auth_getgooglemarketingauthclient",
+      "target": "apps_web_lib_google_ads_tokens_readgoogleadstokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/google-marketing/auth.ts",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -153040,50 +153904,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_lib_instagram_graph_graphget",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/instagram/graph.ts",
-      "source_location": "L61",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_instagram_graph_graphpost",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/instagram/graph.ts",
-      "source_location": "L86",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_instagram_storage_credentialspath",
-      "target": "apps_api_src_room_state_roomstate_join",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/instagram/storage.ts",
-      "source_location": "L90",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_instagram_storage_savealltofile",
-      "target": "apps_api_src_room_state_roomstate_join",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/instagram/storage.ts",
-      "source_location": "L110",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_lib_jikan_for_watch_page_resolverelatedfromjikan",
       "target": "apps_web_lib_anime_mal_ids_getslugbymalidmap",
       "relation": "calls",
@@ -153106,14 +153926,14 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_lib_jikan_jikanget",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
+      "source": "apps_web_lib_kreatli_crm_gmail_tokens_writegmailtokens",
+      "target": "apps_web_lib_kreatli_crm_store_getcrmdatadir",
       "relation": "calls",
       "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/jikan.ts",
-      "source_location": "L50",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/kreatli-crm/gmail-tokens.ts",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -153125,6 +153945,50 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/kreatli-crm/gmail-ui.ts",
       "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_ui_getgmailuistatus",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/kreatli-crm/gmail-ui.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_ui_getgmailuistatus",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_isgmailconnected",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/kreatli-crm/gmail-ui.ts",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_sendplaintextemail",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/kreatli-crm/gmail.ts",
+      "source_location": "L133",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_kreatli_crm_gmail_sendplaintextemail",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_mergegmailtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/kreatli-crm/gmail.ts",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -153381,28 +154245,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_lib_openclaw_jobs_localpath",
-      "target": "apps_api_src_room_state_roomstate_join",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L69",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_openclaw_jobs_writetofile",
-      "target": "apps_api_src_room_state_roomstate_join",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/openclaw-jobs.ts",
-      "source_location": "L118",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_lib_room_quota_plandailyhostseconds",
       "target": "apps_web_lib_anidachi_auth_plan_entitlements_getplanentitlements",
       "relation": "calls",
@@ -153426,6 +154268,17 @@
     },
     {
       "source": "apps_web_lib_send_subscription_alert_email_sendsubscriptionalertemail",
+      "target": "apps_web_lib_kreatli_crm_gmail_tokens_readgmailtokens",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/lib/send-subscription-alert-email.ts",
+      "source_location": "L76",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_lib_send_subscription_alert_email_sendsubscriptionalertemail",
       "target": "apps_web_lib_kreatli_crm_gmail_getgmailredirecturi",
       "relation": "calls",
       "context": "call",
@@ -153444,17 +154297,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/send-subscription-alert-email.ts",
       "source_location": "L88",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tiktok_api_refreshifneeded",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/tiktok/api.ts",
-      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -153491,61 +154333,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_lib_tiktok_api_initinboxphotopost",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/tiktok/api.ts",
-      "source_location": "L156",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tiktok_api_initinboxvideopost",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/tiktok/api.ts",
-      "source_location": "L213",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tiktok_api_fetchpublishstatus",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/tiktok/api.ts",
-      "source_location": "L254",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tiktok_storage_credentialspath",
-      "target": "apps_api_src_room_state_roomstate_join",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/tiktok/storage.ts",
-      "source_location": "L89",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_tiktok_storage_savealltofile",
-      "target": "apps_api_src_room_state_roomstate_join",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/tiktok/storage.ts",
-      "source_location": "L109",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_lib_use_mobile_device_usemobiledevice",
       "target": "apps_web_lib_mobile_user_agent_ismobileuseragent",
       "relation": "calls",
@@ -153554,17 +154341,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/use-mobile-device.ts",
       "source_location": "L10",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_lib_utils_cn",
-      "target": "apps_web_package_dependencies_clsx",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/lib/utils.ts",
-      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -153700,17 +154476,6 @@
       "weight": 1.0
     },
     {
-      "source": "apps_web_scripts_cache_jikan_posters_fetchanime",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/scripts/cache-jikan-posters.ts",
-      "source_location": "L67",
-      "weight": 1.0
-    },
-    {
       "source": "apps_web_scripts_crm_cli_cmdqueue",
       "target": "apps_web_lib_kreatli_crm_queue_iscontactdue",
       "relation": "indirect_call",
@@ -153719,94 +154484,6 @@
       "confidence_score": 0.8,
       "source_file": "apps/web/scripts/crm/cli.ts",
       "source_location": "L62",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_scripts_google_ads_diagnose_googleadsfetch",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/scripts/google-ads/diagnose.ts",
-      "source_location": "L33",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_web_scripts_seo_check_scopes_main",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/web/scripts/seo/check-scopes.ts",
-      "source_location": "L35",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_room_signaling_harness_runscenarios",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "scripts/room-signaling-harness.mjs",
-      "source_location": "L199",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_room_signaling_harness_waitforready",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "scripts/room-signaling-harness.mjs",
-      "source_location": "L710",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_smoke_staging_web_fetchmanual",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "scripts/smoke-staging-web.mjs",
-      "source_location": "L70",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_smoke_worker_fetchjson",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "scripts/smoke-worker.mjs",
-      "source_location": "L18",
-      "weight": 1.0
-    },
-    {
-      "source": "tests_e2e_p2p_media_harness_loadiceserversfromworker",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L179",
-      "weight": 1.0
-    },
-    {
-      "source": "tests_e2e_p2p_media_harness_waitforworker",
-      "target": "apps_api_src_index_roomdurableobject_fetch",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "tests/e2e/p2p-media-harness.mjs",
-      "source_location": "L237",
       "weight": 1.0
     },
     {
