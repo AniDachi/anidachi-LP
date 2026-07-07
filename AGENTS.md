@@ -226,5 +226,7 @@ Rules:
   of raw source browsing.
 - Read `graphify-out/GRAPH_REPORT.md` only for broad architecture review or
   when query/path/explain do not surface enough context.
-- After meaningful code or architecture changes, run `pnpm graph:update`
-  manually. For docs/semantic changes, use `$graphify . --update` in Codex.
+- After modifying code, run `graphify update .` or `pnpm graph:update` to keep
+  the graph current. This is AST-only for code changes and has no API cost.
+- For docs, images, PDFs, video, or semantic corpus changes, use the Graphify
+  skill's full update flow so semantic extraction rules are followed.
