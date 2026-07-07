@@ -444,6 +444,9 @@ export function classifyRemoteVideoActivity(
  * A peer pair exists when media flows in at least one direction:
  *  - video: any remote camera publisher stays connected so local camera-off
  *    remains receive-only instead of dropping the remote track;
+ *  - local video: every remote stays connected so they can receive the local
+ *    publisher and send answer/ICE/renegotiate signals even before their own
+ *    camera status catches up in the room snapshot;
  *  - voice: either side is a live-voice participant. Listeners without a
  *    camera or cam mode must still get a connection to hear the talker.
  * The local participant is part of the media set whenever it has at least
@@ -460,14 +463,15 @@ export function selectP2PMediaParticipants(
   );
   const localVoice = voiceParticipantIds.has(localParticipantId);
   const localVideo = localMediaWanted || Boolean(local?.cameraEnabled);
+  const localPublishesMedia = localVideo || localVoice;
   const hasLocalParticipant = Boolean(local);
   const pairedRemoteIds = new Set(
     participants
       .filter(
         (participant) =>
           participant.id !== localParticipantId &&
-          (participant.cameraEnabled ||
-            localVoice ||
+          (localPublishesMedia ||
+            participant.cameraEnabled ||
             voiceParticipantIds.has(participant.id)),
       )
       .map((participant) => participant.id),

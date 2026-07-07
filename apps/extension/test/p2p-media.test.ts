@@ -1139,6 +1139,22 @@ describe("P2P media participant selection", () => {
     ).toEqual(["host", "viewer"]);
   });
 
+  it("keeps non-camera remotes paired while local camera is being published", () => {
+    const participants = [
+      participant("host", false),
+      participant("viewer-a", false),
+      participant("viewer-b", false),
+    ];
+
+    // Publishing local camera is one-way media too: subscribers still need a
+    // peer so they can receive video and send answer/ICE/renegotiate signals.
+    expect(
+      selectP2PMediaParticipants(participants, "host", true).map(
+        (item) => item.id,
+      ),
+    ).toEqual(["host", "viewer-a", "viewer-b"]);
+  });
+
   it("pairs a talking participant with everyone in the room", () => {
     const participants = [
       participant("host", false),
@@ -1177,7 +1193,7 @@ describe("P2P media participant selection", () => {
     ).toEqual(["host", "viewer-a", "viewer-b"]);
   });
 
-  it("drops incoming P2P signals from chat-only participants", () => {
+  it("allows subscriber signals and drops only fully idle participant pairs", () => {
     const participants = [
       participant("host", true),
       participant("viewer-a", true),
@@ -1199,7 +1215,7 @@ describe("P2P media participant selection", () => {
         "viewer-b",
         false,
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       canReceiveP2PSignalFromParticipant(
         participants,
@@ -1208,6 +1224,20 @@ describe("P2P media participant selection", () => {
         false,
       ),
     ).toBe(true);
+
+    const idleParticipants = [
+      participant("host", false),
+      participant("viewer-a", false),
+      participant("viewer-b", false),
+    ];
+    expect(
+      canReceiveP2PSignalFromParticipant(
+        idleParticipants,
+        "viewer-a",
+        "viewer-b",
+        false,
+      ),
+    ).toBe(false);
   });
 
   it("allows camera publisher signals while the local camera is off", () => {
@@ -1222,6 +1252,22 @@ describe("P2P media participant selection", () => {
         "viewer",
         "host",
         false,
+      ),
+    ).toBe(true);
+  });
+
+  it("allows subscriber renegotiate while local camera is starting", () => {
+    const participants = [
+      participant("host", false),
+      participant("viewer", false),
+    ];
+
+    expect(
+      canReceiveP2PSignalFromParticipant(
+        participants,
+        "host",
+        "viewer",
+        true,
       ),
     ).toBe(true);
   });

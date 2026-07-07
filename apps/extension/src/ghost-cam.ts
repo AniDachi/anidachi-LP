@@ -1,5 +1,6 @@
 import type { Participant } from "@anidachi/protocol";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { logDebug } from "./debug-log";
 import type { GhostVideo, IncomingP2PSignal, LiveVoiceStatus } from "./media-types";
 import { loadP2PIceServers, refreshP2PIceServers } from "./p2p-ice";
 import {
@@ -341,15 +342,27 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         continue;
       }
 
+      const voiceParticipantIds = getVoiceParticipantIds(activeParticipant);
       if (
         !canReceiveP2PSignalFromParticipant(
           activeParticipants,
           participantId,
           item.fromUserId,
           cameraEnabledRef.current,
-          getVoiceParticipantIds(activeParticipant),
+          voiceParticipantIds,
         )
       ) {
+        logDebug("p2p.signal", "drop inactive media participant", {
+          localParticipantId: participantId,
+          fromUserId: item.fromUserId,
+          kind: item.signal.kind,
+          localCameraWanted: cameraEnabledRef.current,
+          localCameraEnabled: activeParticipant.cameraEnabled,
+          remoteCameraEnabled:
+            activeParticipants.find((participant) => participant.id === item.fromUserId)
+              ?.cameraEnabled ?? null,
+          voiceParticipantIds: Array.from(voiceParticipantIds),
+        });
         continue;
       }
 
