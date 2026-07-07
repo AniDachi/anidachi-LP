@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_MINI_PANEL_BOTTOM_RESERVE_PX,
   getMiniPanelBottomReservePx,
+  shouldShowCameraStack,
 } from "../src/overlay-layout";
 
 describe("overlay layout", () => {
@@ -47,5 +48,23 @@ describe("overlay layout", () => {
         ghostCamSizePx: Number.POSITIVE_INFINITY,
       }),
     ).toBe(72);
+  });
+
+  it("keeps remote camera bubbles visible when the local camera toggle is off", () => {
+    expect(
+      shouldShowCameraStack({
+        cameraParticipantCount: 1,
+        p2pSessionActive: true,
+      }),
+    ).toBe(true);
+  });
+
+  it("hides camera bubbles when no participant is publishing camera", () => {
+    expect(
+      shouldShowCameraStack({
+        cameraParticipantCount: 0,
+        p2pSessionActive: true,
+      }),
+    ).toBe(false);
   });
 });

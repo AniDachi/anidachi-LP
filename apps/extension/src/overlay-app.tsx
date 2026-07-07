@@ -82,6 +82,7 @@ import {
   DEFAULT_TOP_BUBBLE_RIGHT_PX,
   DEFAULT_TOP_BUBBLE_TOP_PX,
   getMiniPanelBottomReservePx,
+  shouldShowCameraStack,
   type CrunchyrollPlayerChromeState,
 } from "./overlay-layout";
 import { getP2PMediaSessionState } from "./overlay-media-session";
@@ -949,8 +950,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     return Math.max(0, Math.floor(roomQuota.remainingSeconds - quotaMeteredMsRef.current / 1000));
   }, [roomQuota, quotaDisplayTick]);
   const isCrunchyroll = adapter.id === "crunchyroll";
-  const cameraStackVisible =
-    p2pSessionActive && camsEnabled && displayedCameraParticipants.length > 0;
+  const cameraStackVisible = shouldShowCameraStack({
+    cameraParticipantCount: displayedCameraParticipants.length,
+    p2pSessionActive,
+  });
   const ghostCamSizePx = getResponsiveGhostCamSizePx(ghostCamSizeStep, {
     cameraCount: displayedCameraParticipants.length || 1,
     containerHeightPx: isCrunchyroll ? crunchyrollPlayerChrome.containerHeightPx : 0,
@@ -962,7 +965,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     ? crunchyrollPlayerChrome.camStackBottomPx
     : DEFAULT_CAM_STACK_BOTTOM_PX;
   const liveChatBottomPx =
-    camsEnabled && displayedCameraParticipants.length
+    cameraStackVisible
       ? camStackBottomPx + ghostCamSizePx + Math.max(12, Math.round(ghostCamSizePx * 0.16))
       : Math.max(32, camStackBottomPx);
   const miniPanelBottomReservePx = isCrunchyroll
