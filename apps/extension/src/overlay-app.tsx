@@ -10,7 +10,17 @@ import {
   type ServerEvent,
   type WatchSourceDescriptor,
 } from "@anidachi/protocol";
-import { Mic, MicOff, SendHorizontal, SmilePlus, X } from "lucide-react";
+import {
+  Copy,
+  DoorOpen,
+  Mic,
+  MicOff,
+  RefreshCw,
+  SendHorizontal,
+  SmilePlus,
+  UserPlus,
+  X,
+} from "lucide-react";
 import type {
   ChangeEvent,
   CSSProperties,
@@ -26,6 +36,7 @@ import {
   COMPOSER_EMOJI_PACK,
   EMOJI_PALETTE,
 } from "./constants";
+import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
 import {
@@ -102,7 +113,12 @@ import {
   trySilentSignIn,
   type CurrentParticipantResult,
 } from "./user-identity";
-import { AUTH_TOKENS_KEY, AUTH_TOKENS_STORAGE_KEY } from "./auth-tokens";
+import {
+  AUTH_TOKENS_KEY,
+  AUTH_TOKENS_STORAGE_KEY,
+  type AuthenticatedUser,
+  type AuthenticatedUserPlan,
+} from "./auth-tokens";
 import {
   getRemotePlayReadyTimeoutMs,
   isMediaSettling,
@@ -293,6 +309,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [identityLoaded, setIdentityLoaded] = useState(false);
   const [authAuthenticated, setAuthAuthenticated] = useState(false);
   const [authAccessToken, setAuthAccessToken] = useState<string | null>(null);
+  const [accountUser, setAccountUser] = useState<AuthenticatedUser | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [extensionContextInvalidated, setExtensionContextInvalidated] = useState(false);
@@ -313,6 +330,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [status, setStatus] = useState<RoomConnectionStatus>("idle");
   const [panelOpen, setPanelOpen] = useState(false);
   const [messageComposerOpen, setMessageComposerOpen] = useState(false);
+  const [roomCreatePending, setRoomCreatePending] = useState(false);
+  const [roomEndPending, setRoomEndPending] = useState(false);
   const [invitePanelOpen, setInvitePanelOpen] = useState(false);
   const [inviteTargets, setInviteTargets] = useState<InviteTargets | null>(null);
   const [inviteTargetsLoading, setInviteTargetsLoading] = useState(false);
@@ -514,6 +533,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setParticipant(result.participant);
     setAuthAuthenticated(result.authenticated);
     setAuthAccessToken(result.tokens?.accessToken ?? null);
+    setAccountUser(result.tokens?.user ?? null);
     setExtensionContextInvalidated(Boolean(result.requiresPageReload));
     setAuthMessage(result.message ?? null);
 
@@ -680,7 +700,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     roomSnapshotReady,
     status,
   });
-  const title = adapter.getTitle() ?? "HTML5 video";
   const messageComposerShieldVisible = messageComposerOpen || messageComposerShieldActive;
   const messageComposerShieldLatched = messageComposerShieldActive && !messageComposerOpen;
   const messageComposerShieldClassName = [
@@ -1288,6 +1307,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const renderableCameraParticipants = useMemo(
     () => displayedCameraParticipants.filter((item) => cameraVideoByParticipantId.has(item.id)),
     [cameraVideoByParticipantId, displayedCameraParticipants],
+  );
+  const displayedCameraParticipantIds = useMemo(
+    () => new Set(displayedCameraParticipants.map((item) => item.id)),
+    [displayedCameraParticipants],
+  );
+  const voiceRailParticipants = useMemo(
+    () => visibleParticipants.filter((item) => !displayedCameraParticipantIds.has(item.id)),
+    [displayedCameraParticipantIds, visibleParticipants],
   );
   const liveVoiceActiveSpeakerIds = ghostCamSession.activeSpeakerIds;
   const remoteLiveVoiceActive = liveVoiceActiveSpeakerIds.some((id) => id !== participant?.id);
@@ -2506,6 +2533,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       setParticipant(result.participant);
       setAuthAuthenticated(result.authenticated);
       setAuthAccessToken(result.tokens?.accessToken ?? null);
+      setAccountUser(result.tokens?.user ?? null);
       setExtensionContextInvalidated(Boolean(result.requiresPageReload));
       setAuthMessage(result.message ?? null);
       if (result.authenticated) {
@@ -3131,6 +3159,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, [isHost, roomId, sendHostState]);
 
   const handleCreateRoom = async () => {
+    if (roomCreatePending) {
+      return;
+    }
+
     if (extensionContextInvalidated) {
       setAuthMessage(EXTENSION_CONTEXT_INVALIDATED_MESSAGE);
       return;
@@ -3141,6 +3173,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       return;
     }
 
+    setRoomCreatePending(true);
+    setAuthMessage(null);
     try {
       await createAndConnectRoom("manual");
     } catch (error) {
@@ -3154,17 +3188,24 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       logDebug("overlay.room", "manual create failed", { message });
       setExtensionContextInvalidated(isExtensionContextInvalidatedError(error));
       setAuthMessage(message);
+    } finally {
+      setRoomCreatePending(false);
     }
   };
 
   const handleEndRoom = async () => {
-    const activeRoomId = roomIdRef.current;
-    const accessToken = await getFreshAuthAccessToken("end-room");
-    if (!activeRoomId || !isHost || !accessToken) {
+    if (roomEndPending) {
       return;
     }
 
+    setRoomEndPending(true);
     try {
+      const activeRoomId = roomIdRef.current;
+      const accessToken = await getFreshAuthAccessToken("end-room");
+      if (!activeRoomId || !isHost || !accessToken) {
+        return;
+      }
+
       roomReconnectSuppressedRef.current = true;
       clearRoomReconnectTimer();
       await endRoom(activeRoomId, accessToken);
@@ -3188,8 +3229,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     } catch (error) {
       roomReconnectSuppressedRef.current = false;
       const message = error instanceof Error ? error.message : "Failed to end room";
-      logDebug("overlay.room", "end failed", { roomId: activeRoomId, message });
+      logDebug("overlay.room", "end failed", { roomId: roomIdRef.current, message });
       setAuthMessage(message);
+    } finally {
+      setRoomEndPending(false);
     }
   };
 
@@ -3936,6 +3979,31 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     stopVoiceCapture,
   });
 
+  const roomActionsClassName = [
+    "panel-actions",
+    roomId ? "room-active" : "room-empty",
+    roomCreatePending ? "creating" : "",
+    roomEndPending ? "ending" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const primaryRoomActionLabel = roomCreatePending
+    ? roomId
+      ? "Creating"
+      : "Creating room"
+    : roomId
+      ? "New room"
+      : "Create room";
+  const accountDisplayName =
+    accountUser?.displayName ??
+    participant?.displayName ??
+    (identityLoaded ? "Sign in to Anidachi" : "Checking account");
+  const accountAvatarLabel =
+    accountUser?.displayName ?? participant?.displayName ?? (identityLoaded ? "A" : "...");
+  const accountHelperText = identityLoaded
+    ? "Create rooms and invite friends"
+    : "Checking account...";
+
   return (
     <div
       className={overlayClassName}
@@ -3944,7 +4012,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     >
       <style>{overlayStyles}</style>
       <button className="top-bubble" type="button" onClick={() => setPanelOpen((value) => !value)}>
-        <span className="brand-dot">A</span>
+        <AnidachiLogoMark className="top-bubble-logo" size={24} />
         <span className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`} />
         <span className="bubble-count">{participantCount}</span>
       </button>
@@ -3952,63 +4020,133 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       {panelOpen ? (
         <section className="mini-panel" aria-label="Anidachi controls">
           <div className="panel-header">
-            <div>
-              <h2 className="panel-title">Anidachi</h2>
-              <div className="panel-subtitle">
-                {roomId
-                  ? `${title} · ${status}`
-                  : identityLoaded
-                    ? "Sign in to create a watch room"
-                    : "Checking account..."}
+            <div className="panel-account">
+              <span className="mini-avatar panel-account-avatar">{initials(accountAvatarLabel)}</span>
+              <div className="panel-account-copy">
+                <div className="panel-account-title-row">
+                  <strong className="panel-account-name">{accountDisplayName}</strong>
+                  {authAuthenticated && accountUser ? (
+                    <span className={`plan-badge ${accountUser.plan}`}>
+                      {planLabel(accountUser.plan)}
+                    </span>
+                  ) : null}
+                </div>
+                {roomId ? (
+                  <div className="panel-room-summary">
+                    <span
+                      aria-hidden="true"
+                      className={`panel-room-dot ${isConnected ? "connected" : ""}`}
+                    />
+                    <span>{status}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{participantLimitText}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{mediaSeatText}</span>
+                  </div>
+                ) : !authAuthenticated ? (
+                  <div className="panel-account-helper">{accountHelperText}</div>
+                ) : null}
               </div>
             </div>
-            <button className="icon-button" type="button" onClick={() => setPanelOpen(false)}>
-              <X size={15} />
-            </button>
+            <div className="panel-header-actions">
+              {!authAuthenticated ? (
+                <button
+                  className="button compact panel-sign-in-button"
+                  type="button"
+                  onClick={handleSignIn}
+                  disabled={authBusy || !identityLoaded || extensionContextInvalidated}
+                >
+                  {authBusy || !identityLoaded ? "Wait" : "Sign in"}
+                </button>
+              ) : null}
+              <button
+                aria-label="Close panel"
+                className="icon-button panel-close-button"
+                type="button"
+                onClick={() => setPanelOpen(false)}
+              >
+                <X size={15} />
+              </button>
+            </div>
           </div>
 
-          <div className="panel-actions">
+          <div className={roomActionsClassName}>
             <button
-              className="button primary"
+              className={`button primary panel-primary-action${roomCreatePending ? " loading" : ""}`}
               type="button"
               onClick={handleCreateRoom}
-              disabled={!participant || extensionContextInvalidated}
+              disabled={
+                !participant || extensionContextInvalidated || roomCreatePending || roomEndPending
+              }
             >
-              {roomId ? "New room" : "Create room"}
+              <span>{primaryRoomActionLabel}</span>
             </button>
-            <button className="button" type="button" onClick={copyInvite} disabled={!roomId}>
-              Copy invite
-            </button>
-            <button
-              className="button"
-              type="button"
-              onClick={toggleInvitePanel}
-              disabled={!roomId || !authAuthenticated || inviteTargetsLoading}
-            >
-              {inviteTargetsLoading ? "Loading" : "Invite"}
-            </button>
-            <button
-              className="button"
-              type="button"
-              onClick={() => sendHostState(true)}
-              disabled={!roomId || !isHost}
-            >
-              Sync now
-            </button>
-            {roomId && isHost ? (
-              <button className="button" type="button" onClick={handleEndRoom}>
-                End room
-              </button>
+            {roomId ? (
+              <div className="panel-action-icons" role="group" aria-label="Room actions">
+                <button
+                  aria-label="Copy invite"
+                  className="panel-icon-action reveal-action"
+                  title="Copy invite"
+                  type="button"
+                  onClick={copyInvite}
+                  disabled={roomCreatePending || roomEndPending}
+                  style={{ "--action-index": 0 } as CSSProperties}
+                >
+                  <Copy size={14} />
+                </button>
+                <button
+                  aria-label="Invite friends and groups"
+                  className="panel-icon-action reveal-action"
+                  title={inviteTargetsLoading ? "Loading invite targets" : "Invite friends and groups"}
+                  type="button"
+                  onClick={toggleInvitePanel}
+                  disabled={
+                    !authAuthenticated || inviteTargetsLoading || roomCreatePending || roomEndPending
+                  }
+                  style={{ "--action-index": 1 } as CSSProperties}
+                >
+                  <UserPlus size={14} />
+                </button>
+                <button
+                  aria-label="Sync now"
+                  className="panel-icon-action reveal-action"
+                  title={isHost ? "Sync now" : "Only the host can sync"}
+                  type="button"
+                  onClick={() => sendHostState(true)}
+                  disabled={!isHost || roomCreatePending || roomEndPending}
+                  style={{ "--action-index": 2 } as CSSProperties}
+                >
+                  <RefreshCw size={14} />
+                </button>
+                {isHost ? (
+                  <button
+                    aria-label={roomEndPending ? "Ending room" : "End room"}
+                    className={`panel-icon-action danger reveal-action${roomEndPending ? " loading" : ""}`}
+                    title={roomEndPending ? "Ending room" : "End room"}
+                    type="button"
+                    onClick={handleEndRoom}
+                    disabled={roomCreatePending || roomEndPending}
+                    style={{ "--action-index": 3 } as CSSProperties}
+                  >
+                    <DoorOpen size={14} />
+                  </button>
+                ) : null}
+              </div>
             ) : null}
           </div>
+          {authMessage ? (
+            <div className="auth-notice">
+              <span>{authMessage}</span>
+              {extensionContextInvalidated ? (
+                <button className="button compact" type="button" onClick={reloadPage}>
+                  Reload page
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           {roomQuota ? (
             <div className="quota-note">
               Free watch-party time today: {formatQuotaCountdown(quotaRemainingSeconds)} left
-            </div>
-          ) : null}
-          {roomId ? (
-            <div className="quota-note">
-              Room capacity: {participantLimitText} · {mediaSeatText}
             </div>
           ) : null}
           {invitePanelOpen ? (
@@ -4073,29 +4211,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             </div>
           ) : null}
 
-          <div className="auth-card">
-            <span className="mini-avatar">{initials(participant?.displayName ?? (identityLoaded ? "AN" : "..."))}</span>
-            <div className="auth-copy">
-              <strong>{participant?.displayName ?? (identityLoaded ? "Not signed in" : "Checking account")}</strong>
-              <span>{authAuthenticated ? "Signed in" : identityLoaded ? "Sign in required" : "Please wait"}</span>
-            </div>
-            <button
-              className="button"
-              type="button"
-              onClick={authAuthenticated ? handleSignOut : handleSignIn}
-              disabled={authBusy || !identityLoaded || extensionContextInvalidated}
-            >
-              {authBusy || !identityLoaded ? "Wait" : authAuthenticated ? "Sign out" : "Sign in"}
-            </button>
-          </div>
-          {authMessage ? (
-            <div className="auth-notice">
-              <span>{authMessage}</span>
-              {extensionContextInvalidated ? (
-                <button className="button compact" type="button" onClick={reloadPage}>
-                  Reload page
-                </button>
-              ) : null}
+          {currentResourceEntry ? (
+            <div className="panel-sync-card">
+              <CurrentResourcePanel entry={currentResourceEntry} store={watchProgressStore} />
             </div>
           ) : null}
 
@@ -4171,8 +4289,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
               </span>
             </div>
           ))}
-
-          <CurrentResourcePanel entry={currentResourceEntry} store={watchProgressStore} />
 
           <div className="section-title">Settings</div>
           <div className="toggle-list">
@@ -4316,6 +4432,16 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           <div className="footnote">
             Debug logging is temporarily always on. Media transport is P2P-only.
           </div>
+          {authAuthenticated ? (
+            <button
+              className="account-footer-action"
+              type="button"
+              onClick={handleSignOut}
+              disabled={authBusy || extensionContextInvalidated}
+            >
+              {authBusy ? "Signing out..." : "Sign out"}
+            </button>
+          ) : null}
         </section>
       ) : null}
 
@@ -4418,6 +4544,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             </div>
           ) : null}
 
+          {!panelOpen && voiceRailParticipants.length ? (
+            <RoomRail
+              activeParticipantId={participant?.id}
+              participants={voiceRailParticipants}
+              speakingParticipantIds={liveVoiceActiveSpeakerIds}
+            />
+          ) : null}
+
           {messageDisplayMode === "chat" && !panelOpen && displayedChatMessages.length ? (
             <LiveChatColumn
               mode={chatDisplayMode}
@@ -4462,6 +4596,141 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         </>
       ) : null}
     </div>
+  );
+}
+
+function RoomRail({
+  activeParticipantId,
+  participants,
+  speakingParticipantIds,
+}: {
+  activeParticipantId?: string;
+  participants: Participant[];
+  speakingParticipantIds: string[];
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const openTimerRef = useRef<number | undefined>(undefined);
+  const closeTimerRef = useRef<number | undefined>(undefined);
+  const visibleParticipants = participants.slice(0, 8);
+  const hiddenCount = Math.max(0, participants.length - visibleParticipants.length);
+
+  const clearOpenTimer = useCallback(() => {
+    if (openTimerRef.current !== undefined) {
+      window.clearTimeout(openTimerRef.current);
+      openTimerRef.current = undefined;
+    }
+  }, []);
+
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimerRef.current !== undefined) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = undefined;
+    }
+  }, []);
+
+  const openRail = useCallback(() => {
+    clearOpenTimer();
+    clearCloseTimer();
+    setExpanded(true);
+  }, [clearCloseTimer, clearOpenTimer]);
+
+  const scheduleOpen = useCallback(() => {
+    clearCloseTimer();
+    if (expanded || openTimerRef.current !== undefined) {
+      return;
+    }
+    openTimerRef.current = window.setTimeout(() => {
+      openTimerRef.current = undefined;
+      setExpanded(true);
+    }, 260);
+  }, [clearCloseTimer, expanded]);
+
+  const scheduleClose = useCallback(() => {
+    clearOpenTimer();
+    clearCloseTimer();
+    closeTimerRef.current = window.setTimeout(() => {
+      closeTimerRef.current = undefined;
+      setExpanded(false);
+    }, 340);
+  }, [clearCloseTimer, clearOpenTimer]);
+
+  const handleEdgePointerMove = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      const distanceToRightEdge = Math.max(0, window.innerWidth - event.clientX);
+      if (distanceToRightEdge <= 6) {
+        openRail();
+        return;
+      }
+      scheduleOpen();
+    },
+    [openRail, scheduleOpen],
+  );
+
+  const handleEdgePointerLeave = useCallback(() => {
+    if (expanded) {
+      scheduleClose();
+      return;
+    }
+    clearOpenTimer();
+  }, [clearOpenTimer, expanded, scheduleClose]);
+
+  useEffect(
+    () => () => {
+      clearOpenTimer();
+      clearCloseTimer();
+    },
+    [clearCloseTimer, clearOpenTimer],
+  );
+
+  return (
+    <aside className={`room-rail ${expanded ? "open" : ""}`} aria-label="Room participants">
+      <div
+        className="room-rail-edge"
+        onPointerEnter={scheduleOpen}
+        onPointerLeave={handleEdgePointerLeave}
+        onPointerMove={handleEdgePointerMove}
+      />
+      <div
+        className="room-rail-panel"
+        onPointerEnter={expanded ? clearCloseTimer : scheduleOpen}
+        onPointerLeave={scheduleClose}
+        onPointerMove={expanded ? clearCloseTimer : undefined}
+      >
+        <div className="room-rail-list">
+          {visibleParticipants.map((item) => {
+            const speaking = speakingParticipantIds.includes(item.id);
+            const active = item.id === activeParticipantId;
+            const roleLabel = item.role === "host" ? "host" : "guest";
+            const statusLabel = speaking ? `${roleLabel} · speaking` : roleLabel;
+
+            return (
+              <div
+                className={`room-rail-slot ${speaking ? "speaking" : ""} ${
+                  active ? "active" : ""
+                }`}
+                key={item.id}
+              >
+                <div className={`room-rail-pill ${speaking ? "speaking" : ""}`}>
+                  <span className="room-rail-avatar">{initials(item.displayName)}</span>
+                  <span className="room-rail-voice-bars" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span className="room-rail-copy">
+                    <span className="room-rail-name">{item.displayName}</span>
+                    <span className="room-rail-status">{statusLabel}</span>
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+          {hiddenCount ? (
+            <div className="room-rail-more">+{hiddenCount}</div>
+          ) : null}
+        </div>
+      </div>
+    </aside>
   );
 }
 
@@ -4999,6 +5268,12 @@ function initials(name: string): string {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+function planLabel(plan: AuthenticatedUserPlan): string {
+  if (plan === "plus") return "Plus";
+  if (plan === "pro") return "Pro";
+  return "Free";
 }
 
 function getCrunchyrollPlayerChromeState(container: HTMLElement): CrunchyrollPlayerChromeState {
