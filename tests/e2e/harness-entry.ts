@@ -58,6 +58,7 @@ class Harness {
       displayName: options.sub,
       role: options.role === "host" ? "host" : "viewer",
       cameraEnabled: false,
+      mediaSeat: "none",
       syncStatus: "unknown",
       lastSeenAt: 0,
     };

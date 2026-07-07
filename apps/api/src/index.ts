@@ -314,6 +314,13 @@ export class RoomDurableObject {
       case "CAMERA_OFF":
         this.handleCamera(socket, event);
         return;
+      case "MEDIA_JOIN_REQUEST":
+      case "MEDIA_JOIN_CANCEL":
+      case "MEDIA_SEAT_LEAVE":
+      case "MEDIA_SEAT_GRANT":
+      case "MEDIA_SEAT_REVOKE":
+        this.handleMediaSeat(socket, event);
+        return;
       case "P2P_SIGNAL":
         this.handleP2PSignal(socket, event);
         return;
@@ -351,6 +358,7 @@ export class RoomDurableObject {
       avatarUrl: verified.avatarUrl ?? undefined,
       role: verified.role === "host" ? "host" : "viewer",
       cameraEnabled: false,
+      mediaSeat: "none",
       syncStatus: "unknown",
       lastSeenAt: Date.now(),
     };
@@ -509,11 +517,14 @@ export class RoomDurableObject {
     if (wantsCamera && !this.room.canEnableCamera(userId)) {
       this.send(socket, {
         type: "ERROR",
-        code: "MEDIA_SEATS_FULL",
+        code:
+          this.room.roomCapabilities.maxMediaSeats === 0
+            ? "MEDIA_UNAVAILABLE"
+            : "MEDIA_SEAT_REQUIRED",
         message:
           this.room.roomCapabilities.maxMediaSeats === 0
             ? "This room does not include live media seats."
-            : `This room has no free media seats (max ${this.room.roomCapabilities.maxMediaSeats}).`,
+            : "Join live media before turning on camera.",
       });
       return;
     }
@@ -537,6 +548,96 @@ export class RoomDurableObject {
     this.broadcast(this.room.snapshot);
   }
 
+  private handleMediaSeat(
+    socket: WebSocket,
+    event: Extract<
+      ClientEvent,
+      {
+        type:
+          | "MEDIA_JOIN_REQUEST"
+          | "MEDIA_JOIN_CANCEL"
+          | "MEDIA_SEAT_LEAVE"
+          | "MEDIA_SEAT_GRANT"
+          | "MEDIA_SEAT_REVOKE";
+      }
+    >,
+  ): void {
+    const userId = this.participantsBySocket.get(socket);
+    if (!userId) {
+      this.send(socket, {
+        type: "ERROR",
+        code: "NOT_PARTICIPANT",
+        message: "Only joined room participants can update live media seats",
+      });
+      return;
+    }
+
+    if (event.type === "MEDIA_JOIN_REQUEST") {
+      if (event.userId !== userId) {
+        this.send(socket, {
+          type: "ERROR",
+          code: "NOT_PARTICIPANT",
+          message: "Participants can only request their own live media seat",
+        });
+        return;
+      }
+      const participant = this.room.requestMediaSeat(userId);
+      this.writeParticipantAttachment(socket, participant);
+      this.persistRoomState();
+      this.broadcast(this.room.snapshot);
+      return;
+    }
+
+    if (event.type === "MEDIA_JOIN_CANCEL") {
+      if (event.userId !== userId) {
+        this.send(socket, {
+          type: "ERROR",
+          code: "NOT_PARTICIPANT",
+          message: "Participants can only cancel their own live media request",
+        });
+        return;
+      }
+      const participant = this.room.cancelMediaSeatRequest(userId);
+      this.writeParticipantAttachment(socket, participant);
+      this.persistRoomState();
+      this.broadcast(this.room.snapshot);
+      return;
+    }
+
+    if (event.type === "MEDIA_SEAT_LEAVE") {
+      if (event.userId !== userId) {
+        this.send(socket, {
+          type: "ERROR",
+          code: "NOT_PARTICIPANT",
+          message: "Participants can only leave their own live media seat",
+        });
+        return;
+      }
+      const participant = this.room.leaveMediaSeat(userId);
+      this.writeParticipantAttachment(socket, participant);
+      this.persistRoomState();
+      this.broadcast(this.room.snapshot);
+      return;
+    }
+
+    const result =
+      event.type === "MEDIA_SEAT_GRANT"
+        ? this.room.grantMediaSeat(event.targetUserId, userId)
+        : this.room.revokeMediaSeat(event.targetUserId, userId);
+
+    if (!result.accepted) {
+      this.send(socket, mediaSeatError(result.code, this.room.roomCapabilities.maxMediaSeats));
+      return;
+    }
+
+    const targetSocket = this.socketsByParticipant.get(result.participant.id);
+    if (targetSocket) {
+      this.writeParticipantAttachment(targetSocket, result.participant);
+    }
+    this.persistRoomState();
+    this.broadcast(this.room.snapshot);
+  }
+
   private handleP2PSignal(
     socket: WebSocket,
     event: Extract<ClientEvent, { type: "P2P_SIGNAL" }>,
@@ -550,7 +651,7 @@ export class RoomDurableObject {
       this.send(socket, {
         type: "ERROR",
         code: "INVALID_P2P_SIGNAL",
-        message: "P2P signals can only be sent between joined room participants",
+        message: "P2P signals can only be sent between live media participants",
       });
       return;
     }
@@ -593,10 +694,12 @@ export class RoomDurableObject {
   }
 
   private replayP2PSignals(socket: WebSocket, participantId: string, afterServerSeq: number): void {
-    const replay = this.p2pSignalBuffer.replayFor(participantId, afterServerSeq, Date.now(), {
-      roomGeneration: this.room.roomGeneration,
-      sourceGeneration: this.room.sourceGeneration,
-    });
+    const replay = this.p2pSignalBuffer
+      .replayFor(participantId, afterServerSeq, Date.now(), {
+        roomGeneration: this.room.roomGeneration,
+        sourceGeneration: this.room.sourceGeneration,
+      })
+      .filter((event) => this.room.canSignal(event.fromUserId, participantId));
     for (const event of replay) {
       this.send(socket, event);
     }
@@ -652,6 +755,51 @@ export class RoomDurableObject {
       }
     }
   }
+
+  private writeParticipantAttachment(socket: WebSocket, participant: Participant | null): void {
+    if (!participant) {
+      return;
+    }
+    const attachment = this.getSocketAttachment(socket);
+    if (!attachment) {
+      return;
+    }
+    this.writeSocketAttachment(
+      socket,
+      updateRoomSocketAttachment(attachment, {
+        lastSeenAt: Date.now(),
+        participant,
+      }),
+    );
+  }
+}
+
+function mediaSeatError(
+  code: "MEDIA_SEATS_FULL" | "NOT_HOST" | "NOT_PARTICIPANT",
+  maxMediaSeats: number,
+): ServerEvent {
+  if (code === "NOT_HOST") {
+    return {
+      type: "ERROR",
+      code,
+      message: "Only the host can manage live media seats",
+    };
+  }
+  if (code === "NOT_PARTICIPANT") {
+    return {
+      type: "ERROR",
+      code,
+      message: "Live media participant was not found",
+    };
+  }
+  return {
+    type: "ERROR",
+    code,
+    message:
+      maxMediaSeats === 0
+        ? "This room does not include live media seats."
+        : `This room has no free live media seats (max ${maxMediaSeats}).`,
+  };
 }
 
 export default app;

@@ -65,6 +65,8 @@ function participant(
     displayName,
     id,
     lastSeenAt: 1,
+    mediaSeat: "joined",
+    mediaSeatSource: "auto",
     role,
     syncStatus: "synced",
   };

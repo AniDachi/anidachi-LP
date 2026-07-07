@@ -28,12 +28,18 @@ import {
 import type { P2PSignal, Participant } from "@anidachi/protocol";
 import type { GhostVideo, LiveVoiceStatus } from "../src/media-types";
 
-function participant(id: string, cameraEnabled = false): Participant {
+function participant(
+  id: string,
+  cameraEnabled = false,
+  mediaSeat: Participant["mediaSeat"] = "joined",
+): Participant {
   return {
     id,
     displayName: id,
     role: id === "host" ? "host" : "viewer",
     cameraEnabled,
+    mediaSeat,
+    mediaSeatSource: mediaSeat === "joined" ? "auto" : undefined,
     syncStatus: "unknown",
     lastSeenAt: 1,
   };
@@ -1113,6 +1119,22 @@ describe("P2P media participant selection", () => {
     ).toEqual([]);
   });
 
+  it("keeps chat-only participants out even if they try local camera or voice", () => {
+    const participants = [
+      participant("host", true),
+      participant("viewer", false, "none"),
+    ];
+
+    expect(
+      selectP2PMediaParticipants(
+        participants,
+        "viewer",
+        true,
+        new Set(["viewer"]),
+      ).map((item) => item.id),
+    ).toEqual([]);
+  });
+
   it("keeps receiving remote camera publishers while the local camera is off", () => {
     const participants = [
       participant("host", true),
@@ -1142,8 +1164,8 @@ describe("P2P media participant selection", () => {
   it("does not pair chat-only remotes solely because local camera is being published", () => {
     const participants = [
       participant("host", false),
-      participant("viewer-a", false),
-      participant("viewer-b", false),
+      participant("viewer-a", false, "none"),
+      participant("viewer-b", false, "none"),
     ];
 
     // Larger rooms can have chat-only participants. They should not enter the
@@ -1155,15 +1177,15 @@ describe("P2P media participant selection", () => {
     ).toEqual(["host"]);
   });
 
-  it("pairs a talking participant with everyone in the room", () => {
+  it("pairs a talking participant with every media-seat participant", () => {
     const participants = [
       participant("host", false),
       participant("viewer-a", false),
       participant("viewer-b", false),
     ];
 
-    // Voice is room-wide: while the local user talks, every participant must
-    // get a peer to hear them — cameras and cam seats are not required.
+    // Voice is media-wide: while the local user talks, every media-seat
+    // participant must get a peer to hear them.
     expect(
       selectP2PMediaParticipants(
         participants,
@@ -1197,7 +1219,7 @@ describe("P2P media participant selection", () => {
     const participants = [
       participant("host", true),
       participant("viewer-a", true),
-      participant("viewer-b", false),
+      participant("viewer-b", false, "none"),
     ];
 
     expect(
@@ -1223,7 +1245,7 @@ describe("P2P media participant selection", () => {
         "host",
         false,
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("allows camera publisher signals while the local camera is off", () => {
@@ -1245,7 +1267,7 @@ describe("P2P media participant selection", () => {
   it("does not allow a new chat-only renegotiate solely from local camera intent", () => {
     const participants = [
       participant("host", false),
-      participant("viewer", false),
+      participant("viewer", false, "none"),
     ];
 
     expect(

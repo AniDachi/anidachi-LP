@@ -5,6 +5,7 @@ describe("overlay P2P media session state", () => {
   it("keeps the media session active during a same-room websocket reconnect", () => {
     expect(
       getP2PMediaSessionState({
+        localHasMediaSeat: true,
         participantId: "user-1",
         roomId: "room-1",
         roomMediaSeatLimit: 4,
@@ -18,6 +19,7 @@ describe("overlay P2P media session state", () => {
 
     expect(
       getP2PMediaSessionState({
+        localHasMediaSeat: true,
         participantId: "user-1",
         roomId: "room-1",
         roomMediaSeatLimit: 4,
@@ -33,6 +35,7 @@ describe("overlay P2P media session state", () => {
   it("only reports ready once the room is connected and the snapshot is loaded", () => {
     expect(
       getP2PMediaSessionState({
+        localHasMediaSeat: true,
         participantId: "user-1",
         roomId: "room-1",
         roomMediaSeatLimit: 4,
@@ -48,6 +51,7 @@ describe("overlay P2P media session state", () => {
   it("disables media without a room, user, or media seats", () => {
     expect(
       getP2PMediaSessionState({
+        localHasMediaSeat: true,
         participantId: "user-1",
         roomId: "room-1",
         roomMediaSeatLimit: 4,
@@ -61,6 +65,7 @@ describe("overlay P2P media session state", () => {
 
     expect(
       getP2PMediaSessionState({
+        localHasMediaSeat: true,
         participantId: null,
         roomId: "room-1",
         roomMediaSeatLimit: 4,
@@ -74,9 +79,26 @@ describe("overlay P2P media session state", () => {
 
     expect(
       getP2PMediaSessionState({
+        localHasMediaSeat: true,
         participantId: "user-1",
         roomId: "room-1",
         roomMediaSeatLimit: 0,
+        roomSnapshotReady: true,
+        status: "connected",
+      }),
+    ).toEqual({
+      p2pReady: false,
+      p2pSessionActive: false,
+    });
+  });
+
+  it("disables media for chat-only participants", () => {
+    expect(
+      getP2PMediaSessionState({
+        localHasMediaSeat: false,
+        participantId: "user-1",
+        roomId: "room-1",
+        roomMediaSeatLimit: 4,
         roomSnapshotReady: true,
         status: "connected",
       }),

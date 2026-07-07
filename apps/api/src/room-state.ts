@@ -49,7 +49,7 @@ export class RoomState {
     this.capabilities = snapshot?.capabilities ?? capabilities;
     if (snapshot) {
       for (const participant of snapshot.participants) {
-        this.participantsById.set(participant.id, participant);
+        this.participantsById.set(participant.id, this.normalizePersistedParticipant(participant));
       }
       this.hostId = snapshot.hostId;
       this.roomGenerationValue = snapshot.roomGeneration;
@@ -78,6 +78,10 @@ export class RoomState {
 
   get participants(): Participant[] {
     return Array.from(this.participantsById.values());
+  }
+
+  get occupiedMediaSeats(): number {
+    return this.participants.filter((participant) => participant.mediaSeat === "joined").length;
   }
 
   get currentHostId(): string | null {
@@ -141,13 +145,22 @@ export class RoomState {
       this.hostId = participant.id;
     }
 
+    const nextMediaSeat =
+      existing?.mediaSeat ?? (this.canAutoAssignMediaSeat() ? "joined" : "none");
     const joined: Participant = {
       ...participant,
       cameraEnabled: existing?.cameraEnabled ?? participant.cameraEnabled,
+      mediaSeat: nextMediaSeat,
       role,
       syncStatus: existing?.syncStatus ?? participant.syncStatus,
       lastSeenAt: Date.now(),
     };
+    if (joined.mediaSeat === "joined") {
+      joined.mediaSeatSource = existing?.mediaSeatSource ?? "auto";
+    } else {
+      delete joined.mediaSeatSource;
+      joined.cameraEnabled = false;
+    }
 
     this.participantsById.set(joined.id, joined);
     this.bumpServerSeq();
@@ -213,8 +226,12 @@ export class RoomState {
   }
 
   canSignal(fromUserId: string, toUserId: string): boolean {
+    const from = this.participantsById.get(fromUserId);
+    const to = this.participantsById.get(toUserId);
     return (
-      fromUserId !== toUserId && this.hasParticipant(fromUserId) && this.hasParticipant(toUserId)
+      fromUserId !== toUserId &&
+      from?.mediaSeat === "joined" &&
+      to?.mediaSeat === "joined"
     );
   }
 
@@ -223,16 +240,15 @@ export class RoomState {
     if (!participant) {
       return false;
     }
-    if (participant.cameraEnabled) {
-      return true;
-    }
-    const activeMediaSeats = this.participants.filter((item) => item.cameraEnabled).length;
-    return activeMediaSeats < this.capabilities.maxMediaSeats;
+    return participant.mediaSeat === "joined";
   }
 
   setCamera(userId: string, cameraEnabled: boolean): Participant | null {
     const participant = this.participantsById.get(userId);
     if (!participant) {
+      return null;
+    }
+    if (cameraEnabled && !this.canEnableCamera(userId)) {
       return null;
     }
 
@@ -244,6 +260,111 @@ export class RoomState {
     this.participantsById.set(userId, updated);
     this.bumpServerSeq();
     return updated;
+  }
+
+  requestMediaSeat(userId: string): Participant | null {
+    const participant = this.participantsById.get(userId);
+    if (!participant) {
+      return null;
+    }
+    if (participant.mediaSeat === "joined") {
+      return participant;
+    }
+    const updated: Participant = {
+      ...participant,
+      cameraEnabled: false,
+      mediaSeat: "requested",
+      lastSeenAt: Date.now(),
+    };
+    delete updated.mediaSeatSource;
+    this.participantsById.set(userId, updated);
+    this.bumpServerSeq();
+    return updated;
+  }
+
+  cancelMediaSeatRequest(userId: string): Participant | null {
+    const participant = this.participantsById.get(userId);
+    if (!participant || participant.mediaSeat !== "requested") {
+      return participant ?? null;
+    }
+    const updated: Participant = {
+      ...participant,
+      cameraEnabled: false,
+      mediaSeat: "none",
+      lastSeenAt: Date.now(),
+    };
+    delete updated.mediaSeatSource;
+    this.participantsById.set(userId, updated);
+    this.bumpServerSeq();
+    return updated;
+  }
+
+  leaveMediaSeat(userId: string): Participant | null {
+    const participant = this.participantsById.get(userId);
+    if (!participant) {
+      return null;
+    }
+    if (participant.mediaSeat === "none") {
+      return participant;
+    }
+    const updated: Participant = {
+      ...participant,
+      cameraEnabled: false,
+      mediaSeat: "none",
+      lastSeenAt: Date.now(),
+    };
+    delete updated.mediaSeatSource;
+    this.participantsById.set(userId, updated);
+    this.bumpServerSeq();
+    return updated;
+  }
+
+  grantMediaSeat(targetUserId: string, byUserId: string): MediaSeatChangeResult {
+    if (!this.canManageMediaSeats(byUserId)) {
+      return { accepted: false, code: "NOT_HOST" };
+    }
+    const participant = this.participantsById.get(targetUserId);
+    if (!participant) {
+      return { accepted: false, code: "NOT_PARTICIPANT" };
+    }
+    if (participant.mediaSeat === "joined") {
+      return { accepted: true, participant };
+    }
+    if (this.occupiedMediaSeats >= this.capabilities.maxMediaSeats) {
+      return { accepted: false, code: "MEDIA_SEATS_FULL" };
+    }
+    const updated: Participant = {
+      ...participant,
+      mediaSeat: "joined",
+      mediaSeatSource: "host",
+      lastSeenAt: Date.now(),
+    };
+    this.participantsById.set(targetUserId, updated);
+    this.bumpServerSeq();
+    return { accepted: true, participant: updated };
+  }
+
+  revokeMediaSeat(targetUserId: string, byUserId: string): MediaSeatChangeResult {
+    if (!this.canManageMediaSeats(byUserId)) {
+      return { accepted: false, code: "NOT_HOST" };
+    }
+    const participant = this.participantsById.get(targetUserId);
+    if (!participant) {
+      return { accepted: false, code: "NOT_PARTICIPANT" };
+    }
+    if (participant.mediaSeat === "none" && !participant.cameraEnabled) {
+      return { accepted: true, participant };
+    }
+    const updated: Participant = {
+      ...participant,
+      cameraEnabled: false,
+      mediaSeat: "none",
+      lastSeenAt: Date.now(),
+    };
+    delete updated.mediaSeatSource;
+    this.participantsById.set(targetUserId, updated);
+    this.bumpServerSeq();
+    return { accepted: true, participant: updated };
   }
 
   toSnapshot(updatedAt = Date.now()): RoomStateSnapshot {
@@ -269,6 +390,32 @@ export class RoomState {
   private bumpServerSeq(): void {
     this.serverSeqValue += 1;
   }
+
+  private canAutoAssignMediaSeat(): boolean {
+    return (
+      this.capabilities.maxMediaSeats > 0 &&
+      this.occupiedMediaSeats < this.capabilities.maxMediaSeats
+    );
+  }
+
+  private canManageMediaSeats(userId: string): boolean {
+    return this.hostId === userId && this.participantsById.has(userId);
+  }
+
+  private normalizePersistedParticipant(participant: Participant): Participant {
+    if (participant.mediaSeat === "joined") {
+      return {
+        ...participant,
+        mediaSeatSource: participant.mediaSeatSource ?? "auto",
+      };
+    }
+    return {
+      ...participant,
+      cameraEnabled: false,
+      mediaSeat: participant.mediaSeat === "requested" ? "requested" : "none",
+      mediaSeatSource: undefined,
+    };
+  }
 }
 
 export interface HostStateUpdateResult {
@@ -277,6 +424,12 @@ export interface HostStateUpdateResult {
   source?: WatchSourceDescriptor;
   previousSource?: WatchSourceDescriptor;
 }
+
+export type MediaSeatChangeCode = "MEDIA_SEATS_FULL" | "NOT_HOST" | "NOT_PARTICIPANT";
+
+export type MediaSeatChangeResult =
+  | { accepted: true; participant: Participant }
+  | { accepted: false; code: MediaSeatChangeCode };
 
 function normalizeWatchSourceDescriptor(
   state: PlaybackState,

@@ -995,6 +995,45 @@ export const overlayStyles = `
     white-space: nowrap;
   }
 
+  .room-people-side {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    min-width: 0;
+  }
+
+  .room-people-action {
+    flex: 0 0 auto;
+    min-width: 54px;
+    min-height: 24px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 138, 61, 0.22);
+    background: rgba(255, 138, 61, 0.08);
+    color: rgba(255, 219, 194, 0.92);
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 720;
+    letter-spacing: 0;
+    transition:
+      background 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .room-people-action:hover {
+    border-color: rgba(255, 138, 61, 0.36);
+    background: rgba(255, 138, 61, 0.14);
+    color: #fff2e8;
+  }
+
+  .room-people-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+  }
+
   .toggle {
     align-items: center;
     border-radius: 12px;

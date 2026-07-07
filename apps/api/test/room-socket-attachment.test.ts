@@ -49,6 +49,8 @@ describe("room socket attachments", () => {
         displayName: "Host",
         role: "host",
         cameraEnabled: true,
+        mediaSeat: "joined",
+        mediaSeatSource: "auto",
         syncStatus: "synced",
         lastSeenAt: 2_000,
       },

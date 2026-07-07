@@ -27,6 +27,7 @@ import type {
   FormEvent,
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent,
+  ReactNode,
   SyntheticEvent,
   WheelEvent as ReactWheelEvent,
 } from "react";
@@ -893,25 +894,23 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const participantCount = participants.length || (participant ? 1 : 0);
   const roomParticipantLimit = roomCapabilities?.maxParticipants ?? 4;
   const roomMediaSeatLimit = roomCapabilities?.maxMediaSeats ?? 4;
-  const occupiedMediaSeatCount = visibleParticipants.filter((item) => item.cameraEnabled).length;
-  const localHasMediaSeat = Boolean(
-    currentParticipant &&
-      visibleParticipants.find((item) => item.id === currentParticipant.id)?.cameraEnabled,
-  );
-  const localTryingMedia = Boolean(camsEnabled && currentParticipant && roomMediaSeatLimit > 0);
+  const occupiedMediaSeatCount = visibleParticipants.filter(
+    (item) => item.mediaSeat === "joined",
+  ).length;
+  const localMediaSeatState = currentParticipant?.mediaSeat ?? "none";
+  const localHasMediaSeat = localMediaSeatState === "joined";
+  const localTryingMedia = Boolean(camsEnabled && currentParticipant && localHasMediaSeat);
   // Camera bubbles show camera publishers (plus the local placeholder while
   // the camera is starting). Voice-only mesh members deliberately get no
   // bubble — P2P membership lives in useGhostCam, not here.
   const displayedCameraParticipants = currentParticipant
     ? visibleParticipants.filter(
         (item) =>
-          item.cameraEnabled ||
+          (item.mediaSeat === "joined" && item.cameraEnabled) ||
           (localTryingMedia && item.id === currentParticipant.id),
       )
     : [];
-  const liveMediaAvailable =
-    roomMediaSeatLimit > 0 &&
-    (localHasMediaSeat || occupiedMediaSeatCount < roomMediaSeatLimit);
+  const liveMediaAvailable = roomMediaSeatLimit > 0 && localHasMediaSeat;
   const mediaSeatText =
     roomMediaSeatLimit > 0
       ? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
@@ -920,6 +919,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const isHost = currentParticipant?.role === "host";
   const isConnected = status === "connected";
   const { p2pReady, p2pSessionActive } = getP2PMediaSessionState({
+    localHasMediaSeat,
     participantId: currentParticipant?.id ?? null,
     roomId,
     roomMediaSeatLimit,
@@ -1012,13 +1012,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       return;
     }
 
-    if (!localHasMediaSeat && occupiedMediaSeatCount >= roomMediaSeatLimit) {
+    if (!localHasMediaSeat) {
       setCamsEnabled(false);
     }
   }, [
     camsEnabled,
     localHasMediaSeat,
-    occupiedMediaSeatCount,
     roomId,
     roomMediaSeatLimit,
     roomSnapshotReady,
@@ -1484,6 +1483,70 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     clientRef.current.send(event);
   }, []);
 
+  const sendMediaSeatEvent = useCallback((event: ClientEvent) => {
+    clientRef.current.send(event);
+  }, []);
+
+  const requestMediaSeat = useCallback((userId: string) => {
+    const activeRoomId = roomIdRef.current;
+    if (!activeRoomId) {
+      return;
+    }
+    sendMediaSeatEvent({
+      type: "MEDIA_JOIN_REQUEST",
+      roomId: activeRoomId,
+      userId,
+    });
+  }, [sendMediaSeatEvent]);
+
+  const cancelMediaSeatRequest = useCallback((userId: string) => {
+    const activeRoomId = roomIdRef.current;
+    if (!activeRoomId) {
+      return;
+    }
+    sendMediaSeatEvent({
+      type: "MEDIA_JOIN_CANCEL",
+      roomId: activeRoomId,
+      userId,
+    });
+  }, [sendMediaSeatEvent]);
+
+  const leaveMediaSeat = useCallback((userId: string) => {
+    const activeRoomId = roomIdRef.current;
+    if (!activeRoomId) {
+      return;
+    }
+    sendMediaSeatEvent({
+      type: "MEDIA_SEAT_LEAVE",
+      roomId: activeRoomId,
+      userId,
+    });
+  }, [sendMediaSeatEvent]);
+
+  const grantMediaSeat = useCallback((targetUserId: string) => {
+    const activeRoomId = roomIdRef.current;
+    if (!activeRoomId) {
+      return;
+    }
+    sendMediaSeatEvent({
+      type: "MEDIA_SEAT_GRANT",
+      roomId: activeRoomId,
+      targetUserId,
+    });
+  }, [sendMediaSeatEvent]);
+
+  const revokeMediaSeat = useCallback((targetUserId: string) => {
+    const activeRoomId = roomIdRef.current;
+    if (!activeRoomId) {
+      return;
+    }
+    sendMediaSeatEvent({
+      type: "MEDIA_SEAT_REVOKE",
+      roomId: activeRoomId,
+      targetUserId,
+    });
+  }, [sendMediaSeatEvent]);
+
   const handleGhostCamToggle = useCallback(() => {
     setCamsEnabled((current) => {
       const next = !current;
@@ -1497,19 +1560,19 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         return false;
       }
 
-      if (
-        roomIdRef.current &&
-        !localHasMediaSeat &&
-        occupiedMediaSeatCount >= roomMediaSeatLimit
-      ) {
-        setAuthMessage(`All ${roomMediaSeatLimit} live media seats are already in use.`);
+      if (roomIdRef.current && !localHasMediaSeat) {
+        setAuthMessage(
+          localMediaSeatState === "requested"
+            ? "Waiting for the host to approve live media."
+            : "Ask the host for a live media seat before turning on camera.",
+        );
         setPanelOpen(true);
         return false;
       }
 
       return true;
     });
-  }, [localHasMediaSeat, occupiedMediaSeatCount, roomMediaSeatLimit]);
+  }, [localHasMediaSeat, localMediaSeatState, roomMediaSeatLimit]);
 
   const ghostCamSession = useGhostCam({
     cameraEnabled: camsEnabled,
@@ -2365,7 +2428,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           return;
         case "ERROR":
           console.warn("[Anidachi] Room error", event.code, event.message);
-          if (event.code === "MEDIA_SEATS_FULL") {
+          if (
+            event.code === "MEDIA_SEATS_FULL" ||
+            event.code === "MEDIA_SEAT_REQUIRED" ||
+            event.code === "MEDIA_UNAVAILABLE"
+          ) {
             setCamsEnabled(false);
             setAuthMessage(event.message || "No live media seats are available in this room.");
             setPanelOpen(true);
@@ -3913,11 +3980,20 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     if (!roomId) {
       return;
     }
+    if (!localHasMediaSeat) {
+      setAuthMessage(
+        localMediaSeatState === "requested"
+          ? "Waiting for the host to approve live media."
+          : "Ask the host for a live media seat before using push to talk.",
+      );
+      setPanelOpen(true);
+      return;
+    }
 
     liveVoiceKeyDownRef.current = true;
     setLiveVoiceTalking(true);
     void ghostCamSession.startVoiceTalk();
-  }, [ghostCamSession.startVoiceTalk, roomId]);
+  }, [ghostCamSession.startVoiceTalk, localHasMediaSeat, localMediaSeatState, roomId]);
 
   const stopLiveVoiceTalk = useCallback(() => {
     liveVoiceKeyDownRef.current = false;
@@ -3929,6 +4005,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     liveVoiceKeyDownRef.current = false;
     void ghostCamSession.stopVoiceTalk();
   }, [ghostCamSession.stopVoiceTalk]);
+
+  useEffect(() => {
+    if (!localHasMediaSeat && liveVoiceTalking) {
+      stopLiveVoiceTalk();
+    }
+  }, [liveVoiceTalking, localHasMediaSeat, stopLiveVoiceTalk]);
 
   const unlockLiveVoicePlayback = useCallback(() => {
     void ghostCamSession.unlockAudio();
@@ -4553,11 +4635,78 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
               <div className="room-people-list">
                 {visibleParticipants.map((item) => {
                   const isSpeaking = liveVoiceActiveSpeakerIds.includes(item.id);
+                  const isSelf = item.id === currentParticipant?.id;
+                  const mediaLabel =
+                    item.mediaSeat === "joined"
+                      ? "media"
+                      : item.mediaSeat === "requested"
+                        ? "requested"
+                        : "chat";
                   const statusParts = [
                     item.role,
-                    item.cameraEnabled ? "media" : null,
+                    mediaLabel,
+                    item.cameraEnabled ? "cam" : null,
                     isSpeaking ? "speaking" : null,
                   ].filter(Boolean);
+                  const mediaSeatsFull = occupiedMediaSeatCount >= roomMediaSeatLimit;
+                  let mediaAction: ReactNode = null;
+                  if (isSelf) {
+                    if (item.mediaSeat === "joined") {
+                      mediaAction = (
+                        <button
+                          className="room-people-action"
+                          onClick={() => leaveMediaSeat(item.id)}
+                          type="button"
+                        >
+                          Leave
+                        </button>
+                      );
+                    } else if (item.mediaSeat === "requested") {
+                      mediaAction = (
+                        <button
+                          className="room-people-action"
+                          onClick={() => cancelMediaSeatRequest(item.id)}
+                          type="button"
+                        >
+                          Cancel
+                        </button>
+                      );
+                    } else {
+                      mediaAction = (
+                        <button
+                          className="room-people-action"
+                          disabled={roomMediaSeatLimit <= 0}
+                          onClick={() => requestMediaSeat(item.id)}
+                          type="button"
+                        >
+                          Request
+                        </button>
+                      );
+                    }
+                  } else if (isHost) {
+                    if (item.mediaSeat === "joined") {
+                      mediaAction = (
+                        <button
+                          className="room-people-action"
+                          onClick={() => revokeMediaSeat(item.id)}
+                          type="button"
+                        >
+                          Remove
+                        </button>
+                      );
+                    } else {
+                      mediaAction = (
+                        <button
+                          className="room-people-action"
+                          disabled={roomMediaSeatLimit <= 0 || mediaSeatsFull}
+                          onClick={() => grantMediaSeat(item.id)}
+                          type="button"
+                        >
+                          {item.mediaSeat === "requested" ? "Accept" : "Give"}
+                        </button>
+                      );
+                    }
+                  }
 
                   return (
                     <div
@@ -4570,7 +4719,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                         </span>
                         <span className="room-people-name">{item.displayName}</span>
                       </div>
-                      <span className="room-people-status">{statusParts.join(" · ")}</span>
+                      <div className="room-people-side">
+                        <span className="room-people-status">{statusParts.join(" · ")}</span>
+                        {mediaAction}
+                      </div>
                     </div>
                   );
                 })}
@@ -4636,8 +4788,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                     <span>
                       {roomId && roomMediaSeatLimit <= 0
                         ? "No seats"
-                        : roomId && !localHasMediaSeat && occupiedMediaSeatCount >= roomMediaSeatLimit
-                          ? "Full"
+                        : roomId && !localHasMediaSeat
+                          ? localMediaSeatState === "requested"
+                            ? "Requested"
+                            : "Chat"
                           : camsEnabled
                             ? "On"
                             : "Off"}
@@ -4785,7 +4939,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                     <div className="footnote">
                       {roomMediaSeatLimit <= 0
                         ? "Live media is not included in this room."
-                        : "All live media seats are in use. Sync, chat, and reactions still work."}
+                        : localMediaSeatState === "requested"
+                          ? "Waiting for the host to approve live media."
+                          : "Join a live media seat to use push to talk."}
                     </div>
                   ) : null}
                   {ghostCamSession.voiceMessage ? (

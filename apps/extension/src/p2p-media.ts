@@ -440,12 +440,14 @@ export function classifyRemoteVideoActivity(
 }
 
 /**
- * Publishing media is opt-in (camera seat, push-to-talk); receiving is not.
- * A peer pair exists when media flows in at least one direction:
+ * Live media is restricted to server-assigned media seats. A peer pair exists
+ * only among joined media-seat participants when media flows in at least one
+ * direction:
  *  - video: any remote camera publisher stays connected so local camera-off
  *    remains receive-only instead of dropping the remote track;
  *  - voice: either side is a live-voice participant. Listeners without a
- *    camera or cam mode must still get a connection to hear the talker.
+ *    camera must still get a connection to hear the talker when they hold a
+ *    media seat.
  * The local participant is part of the media set whenever it has at least
  * one pair or publishes anything itself.
  */
@@ -455,14 +457,19 @@ export function selectP2PMediaParticipants(
   localMediaWanted: boolean,
   voiceParticipantIds: ReadonlySet<string> = new Set(),
 ): Participant[] {
-  const local = participants.find(
+  const mediaParticipants = participants.filter(
+    (participant) => participant.mediaSeat === "joined",
+  );
+  const local = mediaParticipants.find(
     (participant) => participant.id === localParticipantId,
   );
+  if (!local) {
+    return [];
+  }
   const localVoice = voiceParticipantIds.has(localParticipantId);
   const localVideo = localMediaWanted || Boolean(local?.cameraEnabled);
-  const hasLocalParticipant = Boolean(local);
   const pairedRemoteIds = new Set(
-    participants
+    mediaParticipants
       .filter(
         (participant) =>
           participant.id !== localParticipantId &&
@@ -472,10 +479,9 @@ export function selectP2PMediaParticipants(
       )
       .map((participant) => participant.id),
   );
-  const localIncluded =
-    hasLocalParticipant && (pairedRemoteIds.size > 0 || localVideo || localVoice);
+  const localIncluded = pairedRemoteIds.size > 0 || localVideo || localVoice;
 
-  return participants.filter((participant) =>
+  return mediaParticipants.filter((participant) =>
     participant.id === localParticipantId
       ? localIncluded
       : pairedRemoteIds.has(participant.id),

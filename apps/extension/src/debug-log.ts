@@ -156,6 +156,7 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
           id: participant.id,
           role: participant.role,
           cameraEnabled: participant.cameraEnabled,
+          mediaSeat: participant.mediaSeat,
           syncStatus: participant.syncStatus,
         })),
         hostState: event.hostState ? playbackStateDebugSnapshot(event.hostState) : undefined,
@@ -249,10 +250,22 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
         participantId: event.participant.id,
         role: event.participant.role,
         cameraEnabled: event.participant.cameraEnabled,
+        mediaSeat: event.participant.mediaSeat,
       };
     case "CAMERA_ON":
     case "CAMERA_OFF":
       return { type: event.type, roomId: event.roomId, userId: event.userId };
+    case "MEDIA_JOIN_REQUEST":
+    case "MEDIA_JOIN_CANCEL":
+    case "MEDIA_SEAT_LEAVE":
+      return { type: event.type, roomId: event.roomId, userId: event.userId };
+    case "MEDIA_SEAT_GRANT":
+    case "MEDIA_SEAT_REVOKE":
+      return {
+        type: event.type,
+        roomId: event.roomId,
+        targetUserId: event.targetUserId,
+      };
     case "P2P_SIGNAL":
       return {
         type: event.type,
