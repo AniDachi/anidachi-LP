@@ -51,6 +51,16 @@ export function getMiniPanelBottomReservePx({
   );
 }
 
+export function shouldShowCameraStack({
+  cameraParticipantCount,
+  p2pSessionActive,
+}: {
+  cameraParticipantCount: number;
+  p2pSessionActive: boolean;
+}): boolean {
+  return p2pSessionActive && cameraParticipantCount > 0;
+}
+
 function normalizePixelValue(value: number, fallback: number): number {
   return Number.isFinite(value) && value >= 0 ? value : fallback;
 }

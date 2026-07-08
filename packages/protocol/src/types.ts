@@ -5,6 +5,8 @@ export const ParticipantSchema = z.object({
   displayName: z.string().min(1),
   avatarUrl: z.string().url().optional(),
   role: z.enum(["host", "viewer"]),
+  mediaSeat: z.enum(["none", "joined", "requested"]).default("none"),
+  mediaSeatSource: z.enum(["auto", "host"]).optional(),
   cameraEnabled: z.boolean(),
   syncStatus: z.enum(["synced", "behind", "buffering", "unknown"]),
   lastSeenAt: z.number().int().nonnegative(),
@@ -178,6 +180,26 @@ export const ClientEventSchema = z.discriminatedUnion("type", [
   RoomScopedSchema.extend({
     type: z.literal("CAMERA_OFF"),
     userId: z.string().min(1),
+  }),
+  RoomScopedSchema.extend({
+    type: z.literal("MEDIA_JOIN_REQUEST"),
+    userId: z.string().min(1),
+  }),
+  RoomScopedSchema.extend({
+    type: z.literal("MEDIA_JOIN_CANCEL"),
+    userId: z.string().min(1),
+  }),
+  RoomScopedSchema.extend({
+    type: z.literal("MEDIA_SEAT_LEAVE"),
+    userId: z.string().min(1),
+  }),
+  RoomScopedSchema.extend({
+    type: z.literal("MEDIA_SEAT_GRANT"),
+    targetUserId: z.string().min(1),
+  }),
+  RoomScopedSchema.extend({
+    type: z.literal("MEDIA_SEAT_REVOKE"),
+    targetUserId: z.string().min(1),
   }),
   ClientP2PSignalEnvelopeSchema,
 ]);

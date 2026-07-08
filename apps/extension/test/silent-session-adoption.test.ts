@@ -18,6 +18,7 @@ const signedIn: CurrentParticipantResult = {
     displayName: "Alina",
     role: "viewer",
     cameraEnabled: false,
+    mediaSeat: "none",
     syncStatus: "unknown",
     lastSeenAt: 1,
   },

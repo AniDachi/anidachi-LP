@@ -1757,3 +1757,17 @@ Acceptance:
   with `supabase db push --linked`; `supabase migration list --linked` is aligned
   through `20260624`, and `supabase db query` confirmed `room_invites` and
   `room_invite_recipients` exist with RLS enabled.
+- [x] 2026-07-07: Media seats are now first-class live room state on
+  `codex/room-rail` instead of being inferred from `cameraEnabled`. `Participant`
+  now carries `mediaSeat=none|joined|requested` plus optional
+  `mediaSeatSource=auto|host`; the Worker auto-assigns seats while a room has
+  no more participants than its media limit, keeps overflow participants
+  chat-only, lets the host grant/revoke seats, and lets participants
+  request/cancel/leave seats. Camera and push-to-talk are available only inside
+  `mediaSeat=joined`; turning camera off no longer frees the media seat. P2P
+  signaling and extension mesh selection now require joined media seats, while
+  chat-only participants keep sync/chat/reactions/presence. Snapshot migration
+  preserves explicit self-leave/host-revoke state, and P2P replay is
+  re-authorized against current media seats before delivery. Verified focused
+  protocol/API/extension tests plus `pnpm harness:rooms` (38/38) and
+  `npm --prefix tests/e2e run harness:p2p` (12/12).

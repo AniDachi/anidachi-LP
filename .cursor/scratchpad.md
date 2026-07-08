@@ -540,3 +540,16 @@ The survey should do more than “collect answers” — it should:
 - [x] Nav session moved client-side (`NavBarClient` → `/api/me`); marketing routes now static (○) in build
 - [x] Room waiting poll refreshes on 404 (ended/missing room)
 - **Post-deploy:** confirm Vercel Usage → Active CPU drops within 48–72h (rolling 30-day window).
+
+### Async Mode Demo — landing page (2026-07-07)
+
+- [x] Live/Async tab toggle in `chrome-extension-demo.tsx` (default Live)
+- [x] New `chrome-extension-demo-async-overlay.tsx` — 3-beat coded sequence (React → Later → Catch up)
+- [x] Desktop + mobile branches with async copy, pills, step indicators
+- [x] `demo_mode_selected` GA4 event on tab change
+- [x] `pnpm --filter @anidachi/web check` passes; browser verified on localhost:3003
+- [x] Fix duplicate "2 days later" title + double timeline dot (Async overlay)
+- [x] Improve step title visibility (longer + larger)
+- [x] Mobile overlay sizing pass: larger chip text/padding, clearer clock/progress bar, more readable pin card
+- [x] Fix mobile overlap: move reaction moment + timeline pin upward (compact offsets)
+- **Manual QA:** scroll to demo, toggle Async tab, confirm overlays read well on mobile (esp. chip/pin/clock) + timestamp pin + progress tracker animation.

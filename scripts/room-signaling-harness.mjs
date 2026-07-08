@@ -482,17 +482,61 @@ async function runScenarios() {
     "media host camera enabled",
   );
   mediaGuest.send({ type: "CAMERA_ON", roomId: mediaRoom, userId: "media-guest" });
-  const mediaSeatError = await mediaGuest.waitFor(
-    (e) => e.type === "ERROR" && e.code === "MEDIA_SEATS_FULL",
-    "media seat full error",
+  const mediaSeatRequiredError = await mediaGuest.waitFor(
+    (e) => e.type === "ERROR" && e.code === "MEDIA_SEAT_REQUIRED",
+    "camera requires media seat error",
   );
-  record("media seat cap rejects extra camera", Boolean(mediaSeatError));
-  mediaHost.send({ type: "CAMERA_OFF", roomId: mediaRoom, userId: "media-host" });
+  record("camera requires an assigned media seat", Boolean(mediaSeatRequiredError));
+  mediaGuest.send({ type: "MEDIA_JOIN_REQUEST", roomId: mediaRoom, userId: "media-guest" });
   await mediaGuest.waitFor(
     (e) =>
       e.type === "ROOM_SNAPSHOT" &&
-      e.participants.some((participant) => participant.id === "media-host" && !participant.cameraEnabled),
-    "media host camera disabled",
+      e.participants.some(
+        (participant) => participant.id === "media-guest" && participant.mediaSeat === "requested",
+      ),
+    "media guest requested seat",
+  );
+  mediaGuest.send({
+    type: "MEDIA_SEAT_GRANT",
+    roomId: mediaRoom,
+    targetUserId: "media-guest",
+  });
+  const nonHostGrantError = await mediaGuest.waitFor(
+    (e) => e.type === "ERROR" && e.code === "NOT_HOST",
+    "non-host media grant error",
+  );
+  record("non-host cannot grant media seats", Boolean(nonHostGrantError));
+  mediaHost.send({
+    type: "MEDIA_SEAT_GRANT",
+    roomId: mediaRoom,
+    targetUserId: "media-guest",
+  });
+  const mediaSeatFullError = await mediaHost.waitFor(
+    (e) => e.type === "ERROR" && e.code === "MEDIA_SEATS_FULL",
+    "media seat full error",
+  );
+  record("media seat cap rejects extra grant", Boolean(mediaSeatFullError));
+  mediaHost.send({ type: "MEDIA_SEAT_LEAVE", roomId: mediaRoom, userId: "media-host" });
+  await mediaGuest.waitFor(
+    (e) =>
+      e.type === "ROOM_SNAPSHOT" &&
+      e.participants.some(
+        (participant) => participant.id === "media-host" && participant.mediaSeat === "none",
+      ),
+    "media host left media seat",
+  );
+  mediaHost.send({
+    type: "MEDIA_SEAT_GRANT",
+    roomId: mediaRoom,
+    targetUserId: "media-guest",
+  });
+  await mediaGuest.waitFor(
+    (e) =>
+      e.type === "ROOM_SNAPSHOT" &&
+      e.participants.some(
+        (participant) => participant.id === "media-guest" && participant.mediaSeat === "joined",
+      ),
+    "media guest granted seat",
   );
   mediaGuest.send({ type: "CAMERA_ON", roomId: mediaRoom, userId: "media-guest" });
   const guestCameraSnapshot = await mediaHost.waitFor(
@@ -501,9 +545,72 @@ async function runScenarios() {
       e.participants.some((participant) => participant.id === "media-guest" && participant.cameraEnabled),
     "media guest camera enabled",
   );
-  record("media seat frees after camera off", Boolean(guestCameraSnapshot));
+  record("media seat frees after explicit leave and grant", Boolean(guestCameraSnapshot));
   mediaHost.close();
   mediaGuest.close();
+
+  // 6d. Buffered P2P replay is re-authorized against current media-seat state.
+  const replayMediaCapabilities = {
+    hostPlanCode: "pro",
+    maxParticipants: 4,
+    maxMediaSeats: 2,
+    canNameRoom: true,
+    canSendPushInvites: true,
+  };
+  const replayMediaRoom = roomName("media-replay-room");
+  const replayHost = new Client(replayMediaRoom, "replay-host", "host", replayMediaCapabilities);
+  const replayGuest = new Client(replayMediaRoom, "replay-guest", "member", replayMediaCapabilities);
+  await replayHost.connect();
+  await replayHost.waitFor((e) => e.type === "ROOM_SNAPSHOT", "replay host snapshot");
+  await replayGuest.connect(undefined, "replay-guest-sess");
+  await replayGuest.waitFor((e) => e.type === "ROOM_SNAPSHOT", "replay guest snapshot");
+  replayHost.send({
+    type: "P2P_SIGNAL",
+    roomId: replayMediaRoom,
+    fromUserId: "replay-host",
+    toUserId: "replay-guest",
+    clientSignalId: "media-replay-denied",
+    senderConnectionId: "replay-host-connection",
+    signal: { kind: "renegotiate" },
+  });
+  await replayGuest.waitFor(
+    (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "media-replay-denied",
+    "replay guest initial signal",
+  );
+  replayHost.send({
+    type: "MEDIA_SEAT_REVOKE",
+    roomId: replayMediaRoom,
+    targetUserId: "replay-guest",
+  });
+  await replayGuest.waitFor(
+    (e) =>
+      e.type === "ROOM_SNAPSHOT" &&
+      e.participants.some(
+        (participant) => participant.id === "replay-guest" && participant.mediaSeat === "none",
+      ),
+    "replay guest media seat revoked",
+  );
+  const replayGuestReconnect = new Client(
+    replayMediaRoom,
+    "replay-guest",
+    "member",
+    replayMediaCapabilities,
+  );
+  await replayGuestReconnect.connect(0, "replay-guest-sess");
+  await replayGuestReconnect.waitFor(
+    (e) => e.type === "ROOM_SNAPSHOT",
+    "replay guest reconnect snapshot",
+  );
+  await sleep(400);
+  record(
+    "media seat revoke blocks buffered p2p replay",
+    !replayGuestReconnect.events.some(
+      (e) => e.type === "P2P_SIGNAL" && e.clientSignalId === "media-replay-denied",
+    ),
+  );
+  replayHost.close();
+  replayGuest.close();
+  replayGuestReconnect.close();
 
   // 7. One active session (Block 4): a different session id for the same user
   //    takes the session over (displaced tab gets SESSION_TAKEN_OVER + 4002),

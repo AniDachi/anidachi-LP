@@ -103,6 +103,7 @@ describe("room protocol schemas", () => {
         displayName: "Max",
         role: "viewer",
         cameraEnabled: false,
+        mediaSeat: "none",
         syncStatus: "unknown",
         lastSeenAt: 1000,
       },
@@ -120,6 +121,73 @@ describe("room protocol schemas", () => {
 
     expect(joined.type).toBe("JOIN");
     expect(reaction.emoji).toBe("🔥");
+  });
+
+  it("accepts media seat state and host-controlled media seat events", () => {
+    const snapshot = ServerEventSchema.parse({
+      type: "ROOM_SNAPSHOT",
+      roomId: "room-1",
+      roomGeneration: 1,
+      serverSeq: 0,
+      sourceGeneration: 1,
+      participants: [
+        {
+          id: "host",
+          displayName: "Host",
+          role: "host",
+          cameraEnabled: false,
+          mediaSeat: "joined",
+          mediaSeatSource: "auto",
+          syncStatus: "unknown",
+          lastSeenAt: 1000,
+        },
+        {
+          id: "viewer",
+          displayName: "Viewer",
+          role: "viewer",
+          cameraEnabled: false,
+          mediaSeat: "requested",
+          syncStatus: "unknown",
+          lastSeenAt: 1000,
+        },
+      ],
+    });
+
+    expect(snapshot.type).toBe("ROOM_SNAPSHOT");
+    if (snapshot.type !== "ROOM_SNAPSHOT") {
+      throw new Error("Expected room snapshot");
+    }
+    expect(snapshot.participants[0]?.mediaSeat).toBe("joined");
+    expect(snapshot.participants[1]?.mediaSeat).toBe("requested");
+
+    expect(
+      ClientEventSchema.parse({
+        type: "MEDIA_JOIN_REQUEST",
+        roomId: "room-1",
+        userId: "viewer",
+      }),
+    ).toMatchObject({ type: "MEDIA_JOIN_REQUEST" });
+    expect(
+      ClientEventSchema.parse({
+        type: "MEDIA_SEAT_GRANT",
+        roomId: "room-1",
+        targetUserId: "viewer",
+      }),
+    ).toMatchObject({ type: "MEDIA_SEAT_GRANT" });
+    expect(
+      ClientEventSchema.parse({
+        type: "MEDIA_SEAT_REVOKE",
+        roomId: "room-1",
+        targetUserId: "viewer",
+      }),
+    ).toMatchObject({ type: "MEDIA_SEAT_REVOKE" });
+    expect(
+      ClientEventSchema.parse({
+        type: "MEDIA_SEAT_LEAVE",
+        roomId: "room-1",
+        userId: "viewer",
+      }),
+    ).toMatchObject({ type: "MEDIA_SEAT_LEAVE" });
   });
 
   it("accepts atomic fire reaction effect metadata", () => {

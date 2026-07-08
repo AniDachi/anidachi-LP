@@ -333,6 +333,7 @@ function participant(id: string, role: Participant["role"]): Participant {
 		displayName: id,
 		id,
 		lastSeenAt: 0,
+		mediaSeat: "none",
 		role,
 		syncStatus: "unknown",
 	};

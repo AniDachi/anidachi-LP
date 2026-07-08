@@ -10,14 +10,26 @@ import {
   type ServerEvent,
   type WatchSourceDescriptor,
 } from "@anidachi/protocol";
-import { Mic, MicOff, SendHorizontal, SmilePlus, X } from "lucide-react";
+import {
+  Copy,
+  DoorOpen,
+  Mic,
+  MicOff,
+  RefreshCw,
+  SendHorizontal,
+  SmilePlus,
+  UserPlus,
+  X,
+} from "lucide-react";
 import type {
   ChangeEvent,
   CSSProperties,
   FormEvent,
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent,
+  ReactNode,
   SyntheticEvent,
+  WheelEvent as ReactWheelEvent,
 } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { storage } from "wxt/utils/storage";
@@ -26,6 +38,7 @@ import {
   COMPOSER_EMOJI_PACK,
   EMOJI_PALETTE,
 } from "./constants";
+import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
 import {
@@ -69,6 +82,7 @@ import {
   DEFAULT_TOP_BUBBLE_RIGHT_PX,
   DEFAULT_TOP_BUBBLE_TOP_PX,
   getMiniPanelBottomReservePx,
+  shouldShowCameraStack,
   type CrunchyrollPlayerChromeState,
 } from "./overlay-layout";
 import { getP2PMediaSessionState } from "./overlay-media-session";
@@ -102,7 +116,12 @@ import {
   trySilentSignIn,
   type CurrentParticipantResult,
 } from "./user-identity";
-import { AUTH_TOKENS_KEY, AUTH_TOKENS_STORAGE_KEY } from "./auth-tokens";
+import {
+  AUTH_TOKENS_KEY,
+  AUTH_TOKENS_STORAGE_KEY,
+  type AuthenticatedUser,
+  type AuthenticatedUserPlan,
+} from "./auth-tokens";
 import {
   getRemotePlayReadyTimeoutMs,
   isMediaSettling,
@@ -201,6 +220,23 @@ interface FireHoldState {
 
 type MessageDisplayMode = "chat" | "bubble";
 type ChatDisplayMode = "live" | "history";
+type SettingsPanelCategory = "cam" | "chat" | "reactions" | "voice" | "debug";
+
+const SETTINGS_PANEL_CATEGORIES: Array<{ id: SettingsPanelCategory; label: string }> = [
+  { id: "cam", label: "Cam" },
+  { id: "chat", label: "Chat" },
+  { id: "reactions", label: "Reactions" },
+  { id: "voice", label: "Voice" },
+  { id: "debug", label: "Debug" },
+];
+
+interface SettingsRailDragState {
+  dragging: boolean;
+  pointerId: number;
+  startScrollLeft: number;
+  startX: number;
+  startY: number;
+}
 
 interface LiveChatMessage {
   id: string;
@@ -233,6 +269,8 @@ const DEFAULT_CHAT_DISPLAY_MODE: ChatDisplayMode = "live";
 const LIVE_CHAT_MESSAGE_TTL_MS = 9000;
 const LIVE_CHAT_MAX_MESSAGES = 6;
 const CHAT_HISTORY_MAX_MESSAGES = 80;
+const SETTINGS_RAIL_DRAG_THRESHOLD_PX = 9;
+const SETTINGS_RAIL_HORIZONTAL_INTENT_RATIO = 1.2;
 const MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS = 180;
 const WATCH_LIBRARY_REMOTE_RECONCILE_INTERVAL_MS = 60_000;
 const SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS = 15_000;
@@ -293,6 +331,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [identityLoaded, setIdentityLoaded] = useState(false);
   const [authAuthenticated, setAuthAuthenticated] = useState(false);
   const [authAccessToken, setAuthAccessToken] = useState<string | null>(null);
+  const [accountUser, setAccountUser] = useState<AuthenticatedUser | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [extensionContextInvalidated, setExtensionContextInvalidated] = useState(false);
@@ -313,6 +352,15 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [status, setStatus] = useState<RoomConnectionStatus>("idle");
   const [panelOpen, setPanelOpen] = useState(false);
   const [messageComposerOpen, setMessageComposerOpen] = useState(false);
+  const [roomCreatePending, setRoomCreatePending] = useState(false);
+  const [roomEndPending, setRoomEndPending] = useState(false);
+  const [settingsPanelCategory, setSettingsPanelCategory] =
+    useState<SettingsPanelCategory>("cam");
+  const [settingsRailDragging, setSettingsRailDragging] = useState(false);
+  const [settingsRailOverflow, setSettingsRailOverflow] = useState({
+    left: false,
+    right: false,
+  });
   const [invitePanelOpen, setInvitePanelOpen] = useState(false);
   const [inviteTargets, setInviteTargets] = useState<InviteTargets | null>(null);
   const [inviteTargetsLoading, setInviteTargetsLoading] = useState(false);
@@ -336,7 +384,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   );
   const [chatDisplayMode, setChatDisplayMode] =
     useState<ChatDisplayMode>(DEFAULT_CHAT_DISPLAY_MODE);
-  const [socialVisible, setSocialVisible] = useState(true);
+  const socialVisible = true;
   const [crunchyrollPlayerChrome, setCrunchyrollPlayerChrome] =
     useState<CrunchyrollPlayerChromeState>(DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE);
   const [reactions, setReactions] = useState<ReactionEvent[]>([]);
@@ -363,8 +411,20 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   );
 
   const participantRef = useRef<Participant | null>(null);
+  const settingsCategoryScrollRef = useRef<HTMLDivElement | null>(null);
+  const settingsCategoryButtonRefs = useRef<
+    Partial<Record<SettingsPanelCategory, HTMLButtonElement | null>>
+  >({});
+  const settingsRailDragRef = useRef<SettingsRailDragState | null>(null);
+  const settingsRailSuppressClickRef = useRef(false);
   const authAccessTokenRef = useRef<string | null>(null);
   const roomIdRef = useRef<string | null>(null);
+  const roomJoinSequenceRef = useRef(0);
+  const roomJoinInFlightRef = useRef<{
+    promise: Promise<void>;
+    roomId: string;
+    sequence: number;
+  } | null>(null);
   const liveVoiceKeyDownRef = useRef(false);
   const roomTokenRef = useRef<string | null>(null);
   const roomShareableLinkRef = useRef<string | null>(null);
@@ -374,6 +434,190 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const applyParticipantIdentityRef = useRef<
     (result: CurrentParticipantResult, reason: string, reconnectActiveRoom: boolean) => void
   >(() => undefined);
+
+  const updateSettingsRailOverflow = useCallback(() => {
+    const rail = settingsCategoryScrollRef.current;
+    if (!rail) {
+      setSettingsRailOverflow((previous) =>
+        previous.left || previous.right ? { left: false, right: false } : previous,
+      );
+      return;
+    }
+
+    const maxScrollLeft = Math.max(0, rail.scrollWidth - rail.clientWidth);
+    const next = {
+      left: rail.scrollLeft > 1,
+      right: rail.scrollLeft < maxScrollLeft - 1,
+    };
+
+    setSettingsRailOverflow((previous) =>
+      previous.left === next.left && previous.right === next.right ? previous : next,
+    );
+  }, []);
+
+  const handleSettingsCategoryWheel = useCallback(
+    (event: ReactWheelEvent<HTMLDivElement>) => {
+      const horizontalGesture =
+        event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);
+
+      if (horizontalGesture) {
+        window.requestAnimationFrame(updateSettingsRailOverflow);
+        return;
+      }
+
+      const panel = event.currentTarget.closest(".mini-panel");
+      if (!(panel instanceof HTMLElement)) {
+        return;
+      }
+
+      event.preventDefault();
+      panel.scrollTop += event.deltaY;
+    },
+    [updateSettingsRailOverflow],
+  );
+
+  const handleSettingsCategoryPointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      const rail = settingsCategoryScrollRef.current;
+      if (!rail || rail.scrollWidth <= rail.clientWidth) {
+        return;
+      }
+
+      settingsRailDragRef.current = {
+        dragging: false,
+        pointerId: event.pointerId,
+        startScrollLeft: rail.scrollLeft,
+        startX: event.clientX,
+        startY: event.clientY,
+      };
+    },
+    [],
+  );
+
+  const handleSettingsCategoryPointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const rail = settingsCategoryScrollRef.current;
+      const drag = settingsRailDragRef.current;
+      if (!rail || !drag || drag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const deltaX = event.clientX - drag.startX;
+      const deltaY = event.clientY - drag.startY;
+      const horizontalDistance = Math.abs(deltaX);
+      const verticalDistance = Math.abs(deltaY);
+
+      if (!drag.dragging) {
+        const hasDragDistance = horizontalDistance >= SETTINGS_RAIL_DRAG_THRESHOLD_PX;
+        const hasHorizontalIntent =
+          horizontalDistance > verticalDistance * SETTINGS_RAIL_HORIZONTAL_INTENT_RATIO;
+
+        if (!hasDragDistance || !hasHorizontalIntent) {
+          return;
+        }
+      }
+
+      if (!drag.dragging) {
+        drag.dragging = true;
+        setSettingsRailDragging(true);
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+
+      event.preventDefault();
+      rail.scrollLeft = drag.startScrollLeft - deltaX;
+      updateSettingsRailOverflow();
+    },
+    [updateSettingsRailOverflow],
+  );
+
+  const handleSettingsCategoryPointerEnd = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const drag = settingsRailDragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const wasDragging = drag.dragging;
+      settingsRailDragRef.current = null;
+      setSettingsRailDragging(false);
+
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+
+      if (wasDragging) {
+        settingsRailSuppressClickRef.current = true;
+        window.setTimeout(() => {
+          settingsRailSuppressClickRef.current = false;
+        }, 0);
+      }
+
+      window.requestAnimationFrame(updateSettingsRailOverflow);
+    },
+    [updateSettingsRailOverflow],
+  );
+
+  const handleSettingsCategoryClickCapture = useCallback(
+    (event: SyntheticEvent<HTMLDivElement>) => {
+      if (!settingsRailSuppressClickRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!panelOpen) {
+      return;
+    }
+
+    const rail = settingsCategoryScrollRef.current;
+    if (!rail) {
+      return;
+    }
+
+    const handleScroll = () => updateSettingsRailOverflow();
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(updateSettingsRailOverflow);
+
+    rail.addEventListener("scroll", handleScroll, { passive: true });
+    resizeObserver?.observe(rail);
+    window.addEventListener("resize", updateSettingsRailOverflow);
+
+    const frameId = window.requestAnimationFrame(updateSettingsRailOverflow);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      rail.removeEventListener("scroll", handleScroll);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", updateSettingsRailOverflow);
+    };
+  }, [panelOpen, updateSettingsRailOverflow]);
+
+  useEffect(() => {
+    if (!panelOpen) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      settingsCategoryButtonRefs.current[settingsPanelCategory]?.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+      });
+      updateSettingsRailOverflow();
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [panelOpen, settingsPanelCategory, updateSettingsRailOverflow]);
 
   useEffect(() => {
     participantRef.current = participant;
@@ -444,12 +688,15 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const resetLocalRoomSession = useCallback((message?: string, openPanel = false) => {
     roomReconnectSuppressedRef.current = true;
+    roomJoinSequenceRef.current += 1;
+    roomJoinInFlightRef.current = null;
     if (roomReconnectTimerRef.current !== null) {
       window.clearTimeout(roomReconnectTimerRef.current);
       roomReconnectTimerRef.current = null;
     }
     clientRef.current.close();
     releaseRoomTabLock();
+    roomIdRef.current = null;
     setRoomId(null);
     setParticipants([]);
     setRoomQuota(null);
@@ -514,6 +761,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setParticipant(result.participant);
     setAuthAuthenticated(result.authenticated);
     setAuthAccessToken(result.tokens?.accessToken ?? null);
+    setAccountUser(result.tokens?.user ?? null);
     setExtensionContextInvalidated(Boolean(result.requiresPageReload));
     setAuthMessage(result.message ?? null);
 
@@ -647,25 +895,23 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const participantCount = participants.length || (participant ? 1 : 0);
   const roomParticipantLimit = roomCapabilities?.maxParticipants ?? 4;
   const roomMediaSeatLimit = roomCapabilities?.maxMediaSeats ?? 4;
-  const occupiedMediaSeatCount = visibleParticipants.filter((item) => item.cameraEnabled).length;
-  const localHasMediaSeat = Boolean(
-    currentParticipant &&
-      visibleParticipants.find((item) => item.id === currentParticipant.id)?.cameraEnabled,
-  );
-  const localTryingMedia = Boolean(camsEnabled && currentParticipant && roomMediaSeatLimit > 0);
+  const occupiedMediaSeatCount = visibleParticipants.filter(
+    (item) => item.mediaSeat === "joined",
+  ).length;
+  const localMediaSeatState = currentParticipant?.mediaSeat ?? "none";
+  const localHasMediaSeat = localMediaSeatState === "joined";
+  const localTryingMedia = Boolean(camsEnabled && currentParticipant && localHasMediaSeat);
   // Camera bubbles show camera publishers (plus the local placeholder while
   // the camera is starting). Voice-only mesh members deliberately get no
   // bubble — P2P membership lives in useGhostCam, not here.
   const displayedCameraParticipants = currentParticipant
     ? visibleParticipants.filter(
         (item) =>
-          item.cameraEnabled ||
+          (item.mediaSeat === "joined" && item.cameraEnabled) ||
           (localTryingMedia && item.id === currentParticipant.id),
       )
     : [];
-  const liveMediaAvailable =
-    roomMediaSeatLimit > 0 &&
-    (localHasMediaSeat || occupiedMediaSeatCount < roomMediaSeatLimit);
+  const liveMediaAvailable = roomMediaSeatLimit > 0 && localHasMediaSeat;
   const mediaSeatText =
     roomMediaSeatLimit > 0
       ? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
@@ -674,13 +920,13 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const isHost = currentParticipant?.role === "host";
   const isConnected = status === "connected";
   const { p2pReady, p2pSessionActive } = getP2PMediaSessionState({
+    localHasMediaSeat,
     participantId: currentParticipant?.id ?? null,
     roomId,
     roomMediaSeatLimit,
     roomSnapshotReady,
     status,
   });
-  const title = adapter.getTitle() ?? "HTML5 video";
   const messageComposerShieldVisible = messageComposerOpen || messageComposerShieldActive;
   const messageComposerShieldLatched = messageComposerShieldActive && !messageComposerOpen;
   const messageComposerShieldClassName = [
@@ -704,8 +950,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     return Math.max(0, Math.floor(roomQuota.remainingSeconds - quotaMeteredMsRef.current / 1000));
   }, [roomQuota, quotaDisplayTick]);
   const isCrunchyroll = adapter.id === "crunchyroll";
-  const cameraStackVisible =
-    p2pSessionActive && camsEnabled && displayedCameraParticipants.length > 0;
+  const cameraStackVisible = shouldShowCameraStack({
+    cameraParticipantCount: displayedCameraParticipants.length,
+    p2pSessionActive,
+  });
   const ghostCamSizePx = getResponsiveGhostCamSizePx(ghostCamSizeStep, {
     cameraCount: displayedCameraParticipants.length || 1,
     containerHeightPx: isCrunchyroll ? crunchyrollPlayerChrome.containerHeightPx : 0,
@@ -717,7 +965,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     ? crunchyrollPlayerChrome.camStackBottomPx
     : DEFAULT_CAM_STACK_BOTTOM_PX;
   const liveChatBottomPx =
-    camsEnabled && displayedCameraParticipants.length
+    cameraStackVisible
       ? camStackBottomPx + ghostCamSizePx + Math.max(12, Math.round(ghostCamSizePx * 0.16))
       : Math.max(32, camStackBottomPx);
   const miniPanelBottomReservePx = isCrunchyroll
@@ -767,13 +1015,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       return;
     }
 
-    if (!localHasMediaSeat && occupiedMediaSeatCount >= roomMediaSeatLimit) {
+    if (!localHasMediaSeat) {
       setCamsEnabled(false);
     }
   }, [
     camsEnabled,
     localHasMediaSeat,
-    occupiedMediaSeatCount,
     roomId,
     roomMediaSeatLimit,
     roomSnapshotReady,
@@ -1239,6 +1486,70 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     clientRef.current.send(event);
   }, []);
 
+  const sendMediaSeatEvent = useCallback((event: ClientEvent) => {
+    clientRef.current.send(event);
+  }, []);
+
+  const requestMediaSeat = useCallback((userId: string) => {
+    const activeRoomId = roomIdRef.current;
+    if (!activeRoomId) {
+      return;
+    }
+    sendMediaSeatEvent({
+      type: "MEDIA_JOIN_REQUEST",
+      roomId: activeRoomId,
+      userId,
+    });
+  }, [sendMediaSeatEvent]);
+
+  const cancelMediaSeatRequest = useCallback((userId: string) => {
+    const activeRoomId = roomIdRef.current;
+    if (!activeRoomId) {
+      return;
+    }
+    sendMediaSeatEvent({
+      type: "MEDIA_JOIN_CANCEL",
+      roomId: activeRoomId,
+      userId,
+    });
+  }, [sendMediaSeatEvent]);
+
+  const leaveMediaSeat = useCallback((userId: string) => {
+    const activeRoomId = roomIdRef.current;
+    if (!activeRoomId) {
+      return;
+    }
+    sendMediaSeatEvent({
+      type: "MEDIA_SEAT_LEAVE",
+      roomId: activeRoomId,
+      userId,
+    });
+  }, [sendMediaSeatEvent]);
+
+  const grantMediaSeat = useCallback((targetUserId: string) => {
+    const activeRoomId = roomIdRef.current;
+    if (!activeRoomId) {
+      return;
+    }
+    sendMediaSeatEvent({
+      type: "MEDIA_SEAT_GRANT",
+      roomId: activeRoomId,
+      targetUserId,
+    });
+  }, [sendMediaSeatEvent]);
+
+  const revokeMediaSeat = useCallback((targetUserId: string) => {
+    const activeRoomId = roomIdRef.current;
+    if (!activeRoomId) {
+      return;
+    }
+    sendMediaSeatEvent({
+      type: "MEDIA_SEAT_REVOKE",
+      roomId: activeRoomId,
+      targetUserId,
+    });
+  }, [sendMediaSeatEvent]);
+
   const handleGhostCamToggle = useCallback(() => {
     setCamsEnabled((current) => {
       const next = !current;
@@ -1252,19 +1563,19 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         return false;
       }
 
-      if (
-        roomIdRef.current &&
-        !localHasMediaSeat &&
-        occupiedMediaSeatCount >= roomMediaSeatLimit
-      ) {
-        setAuthMessage(`All ${roomMediaSeatLimit} live media seats are already in use.`);
+      if (roomIdRef.current && !localHasMediaSeat) {
+        setAuthMessage(
+          localMediaSeatState === "requested"
+            ? "Waiting for the host to approve live media."
+            : "Ask the host for a live media seat before turning on camera.",
+        );
         setPanelOpen(true);
         return false;
       }
 
       return true;
     });
-  }, [localHasMediaSeat, occupiedMediaSeatCount, roomMediaSeatLimit]);
+  }, [localHasMediaSeat, localMediaSeatState, roomMediaSeatLimit]);
 
   const ghostCamSession = useGhostCam({
     cameraEnabled: camsEnabled,
@@ -1288,6 +1599,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const renderableCameraParticipants = useMemo(
     () => displayedCameraParticipants.filter((item) => cameraVideoByParticipantId.has(item.id)),
     [cameraVideoByParticipantId, displayedCameraParticipants],
+  );
+  const displayedCameraParticipantIds = useMemo(
+    () => new Set(displayedCameraParticipants.map((item) => item.id)),
+    [displayedCameraParticipants],
+  );
+  const voiceRailParticipants = useMemo(
+    () => visibleParticipants.filter((item) => !displayedCameraParticipantIds.has(item.id)),
+    [displayedCameraParticipantIds, visibleParticipants],
   );
   const liveVoiceActiveSpeakerIds = ghostCamSession.activeSpeakerIds;
   const remoteLiveVoiceActive = liveVoiceActiveSpeakerIds.some((id) => id !== participant?.id);
@@ -1915,6 +2234,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     }
     clientRef.current.close();
     releaseRoomTabLock();
+    roomIdRef.current = null;
     setRoomId(null);
     setParticipants([]);
     roomTokenRef.current = null;
@@ -2111,7 +2431,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           return;
         case "ERROR":
           console.warn("[Anidachi] Room error", event.code, event.message);
-          if (event.code === "MEDIA_SEATS_FULL") {
+          if (
+            event.code === "MEDIA_SEATS_FULL" ||
+            event.code === "MEDIA_SEAT_REQUIRED" ||
+            event.code === "MEDIA_UNAVAILABLE"
+          ) {
             setCamsEnabled(false);
             setAuthMessage(event.message || "No live media seats are available in this room.");
             setPanelOpen(true);
@@ -2170,6 +2494,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       setRoomSnapshotReady(false);
+      roomIdRef.current = nextRoomId;
       setRoomId(nextRoomId);
       if (roomSessionNamespace) {
         persistRoomId(roomSessionNamespace, nextRoomId, activeParticipant.id);
@@ -2198,48 +2523,144 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const connectToExistingWebsiteRoom = useCallback(
     async (nextRoomId: string, reason: string) => {
-      const refreshed = await refreshRoomActionIdentity(`join:${reason}`);
-      const activeParticipant = refreshed.participant;
-      const activeAccessToken = refreshed.accessToken;
-      if (!activeParticipant || !activeAccessToken) {
-        setPanelOpen(true);
-        setAuthMessage("Sign in to join Anidachi rooms.");
-        logDebug("overlay.room", "join skipped without auth", {
+      const skipActiveConnection = () => {
+        const activeRoomId = roomIdRef.current;
+        const activeStatus = statusRef.current;
+        if (
+          activeRoomId === nextRoomId &&
+          (activeStatus === "connected" || activeStatus === "connecting")
+        ) {
+          logDebug("overlay.room", "join skipped for active room connection", {
+            reason,
+            roomId: nextRoomId,
+            status: activeStatus,
+          });
+          return true;
+        }
+
+        return false;
+      };
+
+      if (skipActiveConnection()) {
+        return;
+      }
+
+      const existingJoin = roomJoinInFlightRef.current;
+      if (existingJoin?.roomId === nextRoomId) {
+        logDebug("overlay.room", "join skipped for in-flight room connection", {
           reason,
           roomId: nextRoomId,
-          hasParticipant: Boolean(activeParticipant),
-          hasAccessToken: Boolean(activeAccessToken),
         });
-        return;
+        return existingJoin.promise;
       }
 
-      // One active tab per browser (Block 4.3): a second tab can't take the
-      // room; a reconnect of the owning tab re-acquires instantly.
-      if (!(await acquireRoomTabLock())) {
-        setPanelOpen(true);
-        setAuthMessage("This room is already open in another tab.");
-        logDebug("overlay.room", "join blocked by tab lock", { roomId: nextRoomId, reason });
-        return;
-      }
+      const joinSequence = roomJoinSequenceRef.current + 1;
+      roomJoinSequenceRef.current = joinSequence;
+      logDebug("overlay.room", "join started", {
+        reason,
+        roomId: nextRoomId,
+        sequence: joinSequence,
+      });
 
-      let connected: Awaited<ReturnType<typeof connectWebsiteRoom>>;
+      const isCurrentJoin = () =>
+        roomJoinInFlightRef.current?.sequence === joinSequence &&
+        roomJoinInFlightRef.current.roomId === nextRoomId;
+
+      const skipStaleJoin = (stage: string) => {
+        if (isCurrentJoin()) {
+          return false;
+        }
+
+        logDebug("overlay.room", "join skipped for stale room connection", {
+          reason,
+          roomId: nextRoomId,
+          stage,
+        });
+        return true;
+      };
+
+      const joinPromise = (async () => {
+        const refreshed = await refreshRoomActionIdentity(`join:${reason}`);
+        if (skipStaleJoin("identity") || skipActiveConnection()) {
+          return;
+        }
+
+        const activeParticipant = refreshed.participant;
+        const activeAccessToken = refreshed.accessToken;
+        if (!activeParticipant || !activeAccessToken) {
+          setPanelOpen(true);
+          setAuthMessage("Sign in to join Anidachi rooms.");
+          logDebug("overlay.room", "join skipped without auth", {
+            reason,
+            roomId: nextRoomId,
+            hasParticipant: Boolean(activeParticipant),
+            hasAccessToken: Boolean(activeAccessToken),
+          });
+          return;
+        }
+
+        // One active tab per browser (Block 4.3): a second tab can't take the
+        // room; a reconnect of the owning tab re-acquires instantly.
+        if (!(await acquireRoomTabLock())) {
+          setPanelOpen(true);
+          setAuthMessage("This room is already open in another tab.");
+          logDebug("overlay.room", "join blocked by tab lock", { roomId: nextRoomId, reason });
+          return;
+        }
+
+        if (skipStaleJoin("tab-lock") || skipActiveConnection()) {
+          return;
+        }
+
+        let connected: Awaited<ReturnType<typeof connectWebsiteRoom>>;
+        try {
+          connected = await connectWebsiteRoom(nextRoomId, activeAccessToken);
+        } catch (error) {
+          if (isCurrentJoin()) {
+            releaseRoomTabLock();
+          }
+          throw error;
+        }
+
+        if (skipStaleJoin("room-token") || skipActiveConnection()) {
+          return;
+        }
+
+        roomTokenRef.current = connected.roomToken;
+        setRoomToken(connected.roomToken);
+        setRoomCapabilities(connected.capabilities ?? null);
+        setRoomQuota(connected.quota ?? null);
+        const shareableLink = buildRoomShareableUrl(nextRoomId);
+        roomShareableLinkRef.current = shareableLink;
+        setRoomShareableLink(shareableLink);
+        connectToRoomAsParticipant(nextRoomId, activeParticipant, connected.roomToken);
+      })();
+
+      roomJoinInFlightRef.current = {
+        promise: joinPromise,
+        roomId: nextRoomId,
+        sequence: joinSequence,
+      };
+
       try {
-        connected = await connectWebsiteRoom(nextRoomId, activeAccessToken);
-      } catch (error) {
-        releaseRoomTabLock();
-        throw error;
+        await joinPromise;
+      } finally {
+        if (roomJoinInFlightRef.current?.sequence === joinSequence) {
+          roomJoinInFlightRef.current = null;
+        }
       }
-      roomTokenRef.current = connected.roomToken;
-      setRoomToken(connected.roomToken);
-      setRoomCapabilities(connected.capabilities ?? null);
-      setRoomQuota(connected.quota ?? null);
-      const shareableLink = buildRoomShareableUrl(nextRoomId);
-      roomShareableLinkRef.current = shareableLink;
-      setRoomShareableLink(shareableLink);
-      connectToRoomAsParticipant(nextRoomId, activeParticipant, connected.roomToken);
     },
     [connectToRoomAsParticipant, refreshRoomActionIdentity],
   );
+
+  /*
+   * createAndConnectRoom owns the active room transition. If an invite auto-join
+   * is still resolving, invalidate it so it cannot connect after room creation.
+   */
+  const cancelPendingRoomJoin = useCallback(() => {
+    roomJoinSequenceRef.current += 1;
+    roomJoinInFlightRef.current = null;
+  }, []);
 
   const clearRoomReconnectTimer = useCallback(() => {
     if (roomReconnectTimerRef.current === null) {
@@ -2506,6 +2927,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       setParticipant(result.participant);
       setAuthAuthenticated(result.authenticated);
       setAuthAccessToken(result.tokens?.accessToken ?? null);
+      setAccountUser(result.tokens?.user ?? null);
       setExtensionContextInvalidated(Boolean(result.requiresPageReload));
       setAuthMessage(result.message ?? null);
       if (result.authenticated) {
@@ -2559,6 +2981,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       applyParticipantIdentity(await signOutAndClearParticipant(), "sign-out", false);
       clientRef.current.close();
       releaseRoomTabLock();
+      roomIdRef.current = null;
       setRoomId(null);
       setParticipants([]);
       setRoomQuota(null);
@@ -2686,6 +3109,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const createAndConnectRoom = useCallback(
     async (reason: string) => {
+      cancelPendingRoomJoin();
       const refreshed = await refreshRoomActionIdentity(`create:${reason}`);
       const activeParticipant = refreshed.participant;
       const activeAccessToken = refreshed.accessToken;
@@ -2744,7 +3168,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       connectToRoomAsParticipant(created.roomId, activeParticipant, nextRoomToken);
       return created;
     },
-    [adapter, connectToRoomAsParticipant, refreshRoomActionIdentity],
+    [adapter, cancelPendingRoomJoin, connectToRoomAsParticipant, refreshRoomActionIdentity],
   );
 
   useEffect(() => {
@@ -2810,7 +3234,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, []);
 
   useEffect(() => {
-    if (!identityLoaded || !roomSessionNamespace || roomId) {
+    if (!identityLoaded || !roomSessionNamespace || roomId || roomIdRef.current) {
       return;
     }
 
@@ -3131,6 +3555,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, [isHost, roomId, sendHostState]);
 
   const handleCreateRoom = async () => {
+    if (roomCreatePending) {
+      return;
+    }
+
     if (extensionContextInvalidated) {
       setAuthMessage(EXTENSION_CONTEXT_INVALIDATED_MESSAGE);
       return;
@@ -3141,6 +3569,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       return;
     }
 
+    setRoomCreatePending(true);
+    setAuthMessage(null);
     try {
       await createAndConnectRoom("manual");
     } catch (error) {
@@ -3154,22 +3584,30 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       logDebug("overlay.room", "manual create failed", { message });
       setExtensionContextInvalidated(isExtensionContextInvalidatedError(error));
       setAuthMessage(message);
+    } finally {
+      setRoomCreatePending(false);
     }
   };
 
   const handleEndRoom = async () => {
-    const activeRoomId = roomIdRef.current;
-    const accessToken = await getFreshAuthAccessToken("end-room");
-    if (!activeRoomId || !isHost || !accessToken) {
+    if (roomEndPending) {
       return;
     }
 
+    setRoomEndPending(true);
     try {
+      const activeRoomId = roomIdRef.current;
+      const accessToken = await getFreshAuthAccessToken("end-room");
+      if (!activeRoomId || !isHost || !accessToken) {
+        return;
+      }
+
       roomReconnectSuppressedRef.current = true;
       clearRoomReconnectTimer();
       await endRoom(activeRoomId, accessToken);
       clientRef.current.close();
       releaseRoomTabLock();
+      roomIdRef.current = null;
       setRoomId(null);
       setParticipants([]);
       setRoomQuota(null);
@@ -3188,8 +3626,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     } catch (error) {
       roomReconnectSuppressedRef.current = false;
       const message = error instanceof Error ? error.message : "Failed to end room";
-      logDebug("overlay.room", "end failed", { roomId: activeRoomId, message });
+      logDebug("overlay.room", "end failed", { roomId: roomIdRef.current, message });
       setAuthMessage(message);
+    } finally {
+      setRoomEndPending(false);
     }
   };
 
@@ -3543,11 +3983,20 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     if (!roomId) {
       return;
     }
+    if (!localHasMediaSeat) {
+      setAuthMessage(
+        localMediaSeatState === "requested"
+          ? "Waiting for the host to approve live media."
+          : "Ask the host for a live media seat before using push to talk.",
+      );
+      setPanelOpen(true);
+      return;
+    }
 
     liveVoiceKeyDownRef.current = true;
     setLiveVoiceTalking(true);
     void ghostCamSession.startVoiceTalk();
-  }, [ghostCamSession.startVoiceTalk, roomId]);
+  }, [ghostCamSession.startVoiceTalk, localHasMediaSeat, localMediaSeatState, roomId]);
 
   const stopLiveVoiceTalk = useCallback(() => {
     liveVoiceKeyDownRef.current = false;
@@ -3559,6 +4008,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     liveVoiceKeyDownRef.current = false;
     void ghostCamSession.stopVoiceTalk();
   }, [ghostCamSession.stopVoiceTalk]);
+
+  useEffect(() => {
+    if (!localHasMediaSeat && liveVoiceTalking) {
+      stopLiveVoiceTalk();
+    }
+  }, [liveVoiceTalking, localHasMediaSeat, stopLiveVoiceTalk]);
 
   const unlockLiveVoicePlayback = useCallback(() => {
     void ghostCamSession.unlockAudio();
@@ -3936,6 +4391,31 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     stopVoiceCapture,
   });
 
+  const roomActionsClassName = [
+    "panel-actions",
+    roomId ? "room-active" : "room-empty",
+    roomCreatePending ? "creating" : "",
+    roomEndPending ? "ending" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const primaryRoomActionLabel = roomCreatePending
+    ? roomId
+      ? "Creating"
+      : "Creating room"
+    : roomId
+      ? "New room"
+      : "Create room";
+  const accountDisplayName =
+    accountUser?.displayName ??
+    participant?.displayName ??
+    (identityLoaded ? "Sign in to Anidachi" : "Checking account");
+  const accountAvatarLabel =
+    accountUser?.displayName ?? participant?.displayName ?? (identityLoaded ? "A" : "...");
+  const accountHelperText = identityLoaded
+    ? "Create rooms and invite friends"
+    : "Checking account...";
+
   return (
     <div
       className={overlayClassName}
@@ -3944,7 +4424,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     >
       <style>{overlayStyles}</style>
       <button className="top-bubble" type="button" onClick={() => setPanelOpen((value) => !value)}>
-        <span className="brand-dot">A</span>
+        <AnidachiLogoMark className="top-bubble-logo" size={24} />
         <span className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`} />
         <span className="bubble-count">{participantCount}</span>
       </button>
@@ -3952,63 +4432,133 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       {panelOpen ? (
         <section className="mini-panel" aria-label="Anidachi controls">
           <div className="panel-header">
-            <div>
-              <h2 className="panel-title">Anidachi</h2>
-              <div className="panel-subtitle">
-                {roomId
-                  ? `${title} · ${status}`
-                  : identityLoaded
-                    ? "Sign in to create a watch room"
-                    : "Checking account..."}
+            <div className="panel-account">
+              <span className="mini-avatar panel-account-avatar">{initials(accountAvatarLabel)}</span>
+              <div className="panel-account-copy">
+                <div className="panel-account-title-row">
+                  <strong className="panel-account-name">{accountDisplayName}</strong>
+                  {authAuthenticated && accountUser ? (
+                    <span className={`plan-badge ${accountUser.plan}`}>
+                      {planLabel(accountUser.plan)}
+                    </span>
+                  ) : null}
+                </div>
+                {roomId ? (
+                  <div className="panel-room-summary">
+                    <span
+                      aria-hidden="true"
+                      className={`panel-room-dot ${isConnected ? "connected" : ""}`}
+                    />
+                    <span>{status}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{participantLimitText}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{mediaSeatText}</span>
+                  </div>
+                ) : !authAuthenticated ? (
+                  <div className="panel-account-helper">{accountHelperText}</div>
+                ) : null}
               </div>
             </div>
-            <button className="icon-button" type="button" onClick={() => setPanelOpen(false)}>
-              <X size={15} />
-            </button>
+            <div className="panel-header-actions">
+              {!authAuthenticated ? (
+                <button
+                  className="button compact panel-sign-in-button"
+                  type="button"
+                  onClick={handleSignIn}
+                  disabled={authBusy || !identityLoaded || extensionContextInvalidated}
+                >
+                  {authBusy || !identityLoaded ? "Wait" : "Sign in"}
+                </button>
+              ) : null}
+              <button
+                aria-label="Close panel"
+                className="icon-button panel-close-button"
+                type="button"
+                onClick={() => setPanelOpen(false)}
+              >
+                <X size={15} />
+              </button>
+            </div>
           </div>
 
-          <div className="panel-actions">
+          <div className={roomActionsClassName}>
             <button
-              className="button primary"
+              className={`button primary panel-primary-action${roomCreatePending ? " loading" : ""}`}
               type="button"
               onClick={handleCreateRoom}
-              disabled={!participant || extensionContextInvalidated}
+              disabled={
+                !participant || extensionContextInvalidated || roomCreatePending || roomEndPending
+              }
             >
-              {roomId ? "New room" : "Create room"}
+              <span>{primaryRoomActionLabel}</span>
             </button>
-            <button className="button" type="button" onClick={copyInvite} disabled={!roomId}>
-              Copy invite
-            </button>
-            <button
-              className="button"
-              type="button"
-              onClick={toggleInvitePanel}
-              disabled={!roomId || !authAuthenticated || inviteTargetsLoading}
-            >
-              {inviteTargetsLoading ? "Loading" : "Invite"}
-            </button>
-            <button
-              className="button"
-              type="button"
-              onClick={() => sendHostState(true)}
-              disabled={!roomId || !isHost}
-            >
-              Sync now
-            </button>
-            {roomId && isHost ? (
-              <button className="button" type="button" onClick={handleEndRoom}>
-                End room
-              </button>
+            {roomId ? (
+              <div className="panel-action-icons" role="group" aria-label="Room actions">
+                <button
+                  aria-label="Copy invite"
+                  className="panel-icon-action reveal-action"
+                  title="Copy invite"
+                  type="button"
+                  onClick={copyInvite}
+                  disabled={roomCreatePending || roomEndPending}
+                  style={{ "--action-index": 0 } as CSSProperties}
+                >
+                  <Copy size={14} />
+                </button>
+                <button
+                  aria-label="Invite friends and groups"
+                  className="panel-icon-action reveal-action"
+                  title={inviteTargetsLoading ? "Loading invite targets" : "Invite friends and groups"}
+                  type="button"
+                  onClick={toggleInvitePanel}
+                  disabled={
+                    !authAuthenticated || inviteTargetsLoading || roomCreatePending || roomEndPending
+                  }
+                  style={{ "--action-index": 1 } as CSSProperties}
+                >
+                  <UserPlus size={14} />
+                </button>
+                <button
+                  aria-label="Sync now"
+                  className="panel-icon-action reveal-action"
+                  title={isHost ? "Sync now" : "Only the host can sync"}
+                  type="button"
+                  onClick={() => sendHostState(true)}
+                  disabled={!isHost || roomCreatePending || roomEndPending}
+                  style={{ "--action-index": 2 } as CSSProperties}
+                >
+                  <RefreshCw size={14} />
+                </button>
+                {isHost ? (
+                  <button
+                    aria-label={roomEndPending ? "Ending room" : "End room"}
+                    className={`panel-icon-action danger reveal-action${roomEndPending ? " loading" : ""}`}
+                    title={roomEndPending ? "Ending room" : "End room"}
+                    type="button"
+                    onClick={handleEndRoom}
+                    disabled={roomCreatePending || roomEndPending}
+                    style={{ "--action-index": 3 } as CSSProperties}
+                  >
+                    <DoorOpen size={14} />
+                  </button>
+                ) : null}
+              </div>
             ) : null}
           </div>
+          {authMessage ? (
+            <div className="auth-notice">
+              <span>{authMessage}</span>
+              {extensionContextInvalidated ? (
+                <button className="button compact" type="button" onClick={reloadPage}>
+                  Reload page
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           {roomQuota ? (
             <div className="quota-note">
               Free watch-party time today: {formatQuotaCountdown(quotaRemainingSeconds)} left
-            </div>
-          ) : null}
-          {roomId ? (
-            <div className="quota-note">
-              Room capacity: {participantLimitText} · {mediaSeatText}
             </div>
           ) : null}
           {invitePanelOpen ? (
@@ -4073,249 +4623,394 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             </div>
           ) : null}
 
-          <div className="auth-card">
-            <span className="mini-avatar">{initials(participant?.displayName ?? (identityLoaded ? "AN" : "..."))}</span>
-            <div className="auth-copy">
-              <strong>{participant?.displayName ?? (identityLoaded ? "Not signed in" : "Checking account")}</strong>
-              <span>{authAuthenticated ? "Signed in" : identityLoaded ? "Sign in required" : "Please wait"}</span>
-            </div>
-            <button
-              className="button"
-              type="button"
-              onClick={authAuthenticated ? handleSignOut : handleSignIn}
-              disabled={authBusy || !identityLoaded || extensionContextInvalidated}
-            >
-              {authBusy || !identityLoaded ? "Wait" : authAuthenticated ? "Sign out" : "Sign in"}
-            </button>
-          </div>
-          {authMessage ? (
-            <div className="auth-notice">
-              <span>{authMessage}</span>
-              {extensionContextInvalidated ? (
-                <button className="button compact" type="button" onClick={reloadPage}>
-                  Reload page
-                </button>
-              ) : null}
+          {currentResourceEntry ? (
+            <div className="panel-sync-card">
+              <CurrentResourcePanel entry={currentResourceEntry} store={watchProgressStore} />
             </div>
           ) : null}
 
-          <div className="section-title">Reactions</div>
-          <div className="emoji-row">
-            {EMOJI_PALETTE.map((emoji) => (
-              <button
-                className="icon-button"
-                type="button"
-                key={emoji}
-                onClick={(event) => {
-                  if (emoji === FIRE_REACTION_EMOJI && experimentalSuperReactionsEnabled) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    return;
+          {roomId && visibleParticipants.length ? (
+            <section className="room-people-section" aria-label="Room participants">
+              <div className="section-title room-people-heading">
+                <span>Participants</span>
+                <span>{participantLimitText}</span>
+              </div>
+              <div className="room-people-list">
+                {visibleParticipants.map((item) => {
+                  const isSpeaking = liveVoiceActiveSpeakerIds.includes(item.id);
+                  const isSelf = item.id === currentParticipant?.id;
+                  const mediaLabel =
+                    item.mediaSeat === "joined"
+                      ? "media"
+                      : item.mediaSeat === "requested"
+                        ? "requested"
+                        : "chat";
+                  const statusParts = [
+                    item.role,
+                    mediaLabel,
+                    item.cameraEnabled ? "cam" : null,
+                    isSpeaking ? "speaking" : null,
+                  ].filter(Boolean);
+                  const mediaSeatsFull = occupiedMediaSeatCount >= roomMediaSeatLimit;
+                  let mediaAction: ReactNode = null;
+                  if (isSelf) {
+                    if (item.mediaSeat === "joined") {
+                      mediaAction = (
+                        <button
+                          className="room-people-action"
+                          onClick={() => leaveMediaSeat(item.id)}
+                          type="button"
+                        >
+                          Leave
+                        </button>
+                      );
+                    } else if (item.mediaSeat === "requested") {
+                      mediaAction = (
+                        <button
+                          className="room-people-action"
+                          onClick={() => cancelMediaSeatRequest(item.id)}
+                          type="button"
+                        >
+                          Cancel
+                        </button>
+                      );
+                    } else {
+                      mediaAction = (
+                        <button
+                          className="room-people-action"
+                          disabled={roomMediaSeatLimit <= 0}
+                          onClick={() => requestMediaSeat(item.id)}
+                          type="button"
+                        >
+                          Request
+                        </button>
+                      );
+                    }
+                  } else if (isHost) {
+                    if (item.mediaSeat === "joined") {
+                      mediaAction = (
+                        <button
+                          className="room-people-action"
+                          onClick={() => revokeMediaSeat(item.id)}
+                          type="button"
+                        >
+                          Remove
+                        </button>
+                      );
+                    } else {
+                      mediaAction = (
+                        <button
+                          className="room-people-action"
+                          disabled={roomMediaSeatLimit <= 0 || mediaSeatsFull}
+                          onClick={() => grantMediaSeat(item.id)}
+                          type="button"
+                        >
+                          {item.mediaSeat === "requested" ? "Accept" : "Give"}
+                        </button>
+                      );
+                    }
                   }
 
-                  sendReaction(emoji);
-                }}
-                onPointerDown={
-                  emoji === FIRE_REACTION_EMOJI && experimentalSuperReactionsEnabled
-                    ? (event) => startFireHold(event)
-                    : undefined
-                }
-                disabled={!roomId}
-              >
-                {emoji}
-              </button>
-            ))}
-            <button
-              className="button"
-              type="button"
-              disabled={!roomId || !isSpeechRecognitionSupported()}
-              onClick={toggleVoice}
-              title="Speech reaction"
-            >
-              {voiceListening ? <MicOff size={14} /> : <Mic size={14} />}
-              Dictate
-            </button>
-          </div>
-          {voiceMessage ? <div className="footnote">{voiceMessage}</div> : null}
-
-          <div className="section-title">Audio</div>
-          <div className={`live-voice-status ${liveVoiceTalking ? "talking" : ""}`}>
-            <span className="live-voice-label">
-              <Mic size={13} />
-              Push to talk
-            </span>
-            <span>{liveVoiceStatusText}</span>
-          </div>
-          {roomId && !liveMediaAvailable ? (
-            <div className="footnote">
-              {roomMediaSeatLimit <= 0
-                ? "Live media is not included in this room."
-                : "All live media seats are in use. Sync, chat, and reactions still work."}
-            </div>
-          ) : null}
-          {ghostCamSession.voiceMessage ? (
-            <div className="footnote">{ghostCamSession.voiceMessage}</div>
-          ) : null}
-
-          <div className="section-title">Participants</div>
-          {(participants.length ? participants : participant ? [participant] : []).map((item) => (
-            <div className="participant-row" key={item.id}>
-              <div className="participant-main">
-                <span className="mini-avatar">{initials(item.displayName)}</span>
-                <span className="participant-name">{item.displayName}</span>
+                  return (
+                    <div
+                      className={`room-people-row${isSpeaking ? " speaking" : ""}`}
+                      key={item.id}
+                    >
+                      <div className="room-people-main">
+                        <span className="mini-avatar room-people-avatar">
+                          {initials(item.displayName)}
+                        </span>
+                        <span className="room-people-name">{item.displayName}</span>
+                      </div>
+                      <div className="room-people-side">
+                        <span className="room-people-status">{statusParts.join(" · ")}</span>
+                        {mediaAction}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <span className="participant-status">
-                {item.role}
-                {item.cameraEnabled ? " · media" : ""}
-                {liveVoiceActiveSpeakerIds.includes(item.id) ? " · voice" : ""}
-              </span>
-            </div>
-          ))}
-
-          <CurrentResourcePanel entry={currentResourceEntry} store={watchProgressStore} />
+            </section>
+          ) : null}
 
           <div className="section-title">Settings</div>
-          <div className="toggle-list">
-            <button
-              className="toggle"
-              type="button"
-              onClick={handleGhostCamToggle}
+          <div className="settings-shell">
+            <div
+              className={[
+                "settings-category-rail",
+                settingsRailOverflow.left ? "can-scroll-left" : "",
+                settingsRailOverflow.right ? "can-scroll-right" : "",
+                settingsRailDragging ? "dragging" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
-              <span>Ghost Cam</span>
-              <span>
-                {roomId && roomMediaSeatLimit <= 0
-                  ? "No seats"
-                  : roomId && !localHasMediaSeat && occupiedMediaSeatCount >= roomMediaSeatLimit
-                    ? "Full"
-                    : camsEnabled
-                      ? "On"
-                      : "Off"}
-              </span>
-            </button>
-            <div className="size-control">
-              <div className="size-control-header">
-                <span>Cam size</span>
-                <strong>{ghostCamSizeLabel}</strong>
-              </div>
-              <input
-                aria-label="Ghost Cam bubble size"
-                className="size-slider"
-                max={GHOST_CAM_SIZE_MAX_STEP}
-                min={GHOST_CAM_SIZE_MIN_STEP}
-                onChange={handleGhostCamSizeChange}
-                step={1}
-                type="range"
-                value={ghostCamSizeStep}
-              />
-              <div className="size-ticks" aria-hidden="true">
-                {GHOST_CAM_SIZE_STEPS.map((step) => (
-                  <span key={step.step}>{step.label}</span>
+              <div
+                aria-label="Settings sections"
+                className="settings-category-scroll"
+                onClickCapture={handleSettingsCategoryClickCapture}
+                onLostPointerCapture={handleSettingsCategoryPointerEnd}
+                onPointerCancel={handleSettingsCategoryPointerEnd}
+                onPointerDown={handleSettingsCategoryPointerDown}
+                onPointerMove={handleSettingsCategoryPointerMove}
+                onPointerUp={handleSettingsCategoryPointerEnd}
+                onScroll={updateSettingsRailOverflow}
+                onWheel={handleSettingsCategoryWheel}
+                ref={settingsCategoryScrollRef}
+                role="tablist"
+              >
+                {SETTINGS_PANEL_CATEGORIES.map((category) => (
+                  <button
+                    aria-selected={settingsPanelCategory === category.id}
+                    className={`settings-category-pill${
+                      settingsPanelCategory === category.id ? " active" : ""
+                    }`}
+                    key={category.id}
+                    onClick={() => setSettingsPanelCategory(category.id)}
+                    ref={(node) => {
+                      settingsCategoryButtonRefs.current[category.id] = node;
+                    }}
+                    role="tab"
+                    type="button"
+                  >
+                    {category.label}
+                  </button>
                 ))}
               </div>
             </div>
-            <button
-              className="toggle"
-              type="button"
-              onClick={() => setReactionsEnabled((value) => !value)}
-            >
-              <span>Reactions</span>
-              <span>{reactionsEnabled ? "On" : "Off"}</span>
-            </button>
-            <div className="mode-control">
-              <span>Messages</span>
-              <fieldset className="segmented-control">
-                <legend className="sr-only">Message display mode</legend>
-                <button
-                  className={messageDisplayMode === "chat" ? "selected" : ""}
-                  type="button"
-                  onClick={() => handleMessageDisplayModeChange("chat")}
-                >
-                  Chat
-                </button>
-                <button
-                  className={messageDisplayMode === "bubble" ? "selected" : ""}
-                  type="button"
-                  onClick={() => handleMessageDisplayModeChange("bubble")}
-                >
-                  Bubbles
-                </button>
-              </fieldset>
+
+            <div className="settings-panel" role="tabpanel">
+              {settingsPanelCategory === "cam" ? (
+                <div className="settings-panel-stack">
+                  <button
+                    className="toggle"
+                    type="button"
+                    onClick={handleGhostCamToggle}
+                  >
+                    <span>Cam</span>
+                    <span>
+                      {roomId && roomMediaSeatLimit <= 0
+                        ? "No seats"
+                        : roomId && !localHasMediaSeat
+                          ? localMediaSeatState === "requested"
+                            ? "Requested"
+                            : "Chat"
+                          : camsEnabled
+                            ? "On"
+                            : "Off"}
+                    </span>
+                  </button>
+                  <div className="size-control">
+                    <div className="size-control-header">
+                      <span>Cam size</span>
+                      <strong>{ghostCamSizeLabel}</strong>
+                    </div>
+                    <input
+                      aria-label="Cam bubble size"
+                      className="size-slider"
+                      max={GHOST_CAM_SIZE_MAX_STEP}
+                      min={GHOST_CAM_SIZE_MIN_STEP}
+                      onChange={handleGhostCamSizeChange}
+                      step={1}
+                      type="range"
+                      value={ghostCamSizeStep}
+                    />
+                    <div className="size-ticks" aria-hidden="true">
+                      {GHOST_CAM_SIZE_STEPS.map((step) => (
+                        <span key={step.step}>{step.label}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {settingsPanelCategory === "chat" ? (
+                <div className="settings-panel-stack">
+                  <div className="mode-control">
+                    <span>Messages</span>
+                    <fieldset className="segmented-control">
+                      <legend className="sr-only">Message display mode</legend>
+                      <button
+                        className={messageDisplayMode === "chat" ? "selected" : ""}
+                        type="button"
+                        onClick={() => handleMessageDisplayModeChange("chat")}
+                      >
+                        Chat
+                      </button>
+                      <button
+                        className={messageDisplayMode === "bubble" ? "selected" : ""}
+                        type="button"
+                        onClick={() => handleMessageDisplayModeChange("bubble")}
+                      >
+                        Bubbles
+                      </button>
+                    </fieldset>
+                  </div>
+                  {messageDisplayMode === "chat" ? (
+                    <div className="mode-control">
+                      <span>Chat mode</span>
+                      <fieldset className="segmented-control">
+                        <legend className="sr-only">Chat display mode</legend>
+                        <button
+                          className={chatDisplayMode === "live" ? "selected" : ""}
+                          type="button"
+                          onClick={() => handleChatDisplayModeChange("live")}
+                        >
+                          Live
+                        </button>
+                        <button
+                          className={chatDisplayMode === "history" ? "selected" : ""}
+                          type="button"
+                          onClick={() => handleChatDisplayModeChange("history")}
+                        >
+                          History
+                        </button>
+                      </fieldset>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {settingsPanelCategory === "reactions" ? (
+                <div className="settings-panel-stack">
+                  <button
+                    aria-pressed={reactionsEnabled}
+                    className="toggle"
+                    onClick={() => setReactionsEnabled((value) => !value)}
+                    type="button"
+                  >
+                    <span>On-screen reactions</span>
+                    <span>{reactionsEnabled ? "On" : "Off"}</span>
+                  </button>
+                  <div className="reaction-shortcut-grid" aria-label="Reaction shortcuts">
+                    {EMOJI_PALETTE.map((emoji, index) => (
+                      <button
+                        aria-label={`Reaction ${index + 1}`}
+                        className="reaction-shortcut"
+                        disabled={!roomId || !reactionsEnabled}
+                        key={emoji}
+                        onClick={(event) => {
+                          if (emoji === FIRE_REACTION_EMOJI && experimentalSuperReactionsEnabled) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            return;
+                          }
+
+                          sendReaction(emoji);
+                        }}
+                        onPointerDown={
+                          emoji === FIRE_REACTION_EMOJI && experimentalSuperReactionsEnabled
+                            ? (event) => startFireHold(event)
+                            : undefined
+                        }
+                        type="button"
+                      >
+                        <span className="reaction-shortcut-key">{index + 1}</span>
+                        <span className="reaction-shortcut-emoji">{emoji}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {settingsPanelCategory === "voice" ? (
+                <div className="settings-panel-stack">
+                  <div className={`live-voice-status ${liveVoiceTalking ? "talking" : ""}`}>
+                    <span className="live-voice-label">
+                      <Mic size={13} />
+                      Push to talk
+                    </span>
+                    <span>{liveVoiceStatusText}</span>
+                  </div>
+                  {isSpeechRecognitionSupported() ? (
+                    <button
+                      className="toggle"
+                      disabled={!roomId || !reactionsEnabled}
+                      onClick={toggleVoice}
+                      title="Speech reaction"
+                      type="button"
+                    >
+                      <span className="toggle-label">
+                        {voiceListening ? <MicOff size={13} /> : <Mic size={13} />}
+                        Dictate reactions
+                      </span>
+                      <span>{voiceListening ? "Listening" : "Off"}</span>
+                    </button>
+                  ) : null}
+                  {voiceMessage ? <div className="footnote">{voiceMessage}</div> : null}
+                  {roomId && !liveMediaAvailable ? (
+                    <div className="footnote">
+                      {roomMediaSeatLimit <= 0
+                        ? "Live media is not included in this room."
+                        : localMediaSeatState === "requested"
+                          ? "Waiting for the host to approve live media."
+                          : "Join a live media seat to use push to talk."}
+                    </div>
+                  ) : null}
+                  {ghostCamSession.voiceMessage ? (
+                    <div className="footnote">{ghostCamSession.voiceMessage}</div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {settingsPanelCategory === "debug" ? (
+                <div className="settings-panel-stack">
+                  <div className="debug-box">
+                    <div className="debug-line">
+                      <span>Build</span>
+                      <strong>{ANIDACHI_BUILD_ID}</strong>
+                    </div>
+                    <div className="debug-line">
+                      <span>Adapter</span>
+                      <strong>{adapter.id}</strong>
+                    </div>
+                    <div className="debug-line">
+                      <span>Media</span>
+                      <strong>P2P</strong>
+                    </div>
+                    <div className="debug-line">
+                      <span>Seats</span>
+                      <strong>{mediaSeatText}</strong>
+                    </div>
+                    <div className="debug-line">
+                      <span>Logs</span>
+                      <strong>{debugEntriesCount}</strong>
+                    </div>
+                    <div className="debug-actions">
+                      <button className="button" type="button" onClick={() => saveDiagnostics("light")}>
+                        Save light
+                      </button>
+                      <button className="button" type="button" onClick={() => saveDiagnostics("full")}>
+                        Save full
+                      </button>
+                      <button className="button" type="button" onClick={clearDebug}>
+                        Clear
+                      </button>
+                    </div>
+                    {diagnosticStatus ? (
+                      <div className="debug-status" title={diagnosticStatus}>
+                        {diagnosticStatus}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="footnote">
+                    Debug logging is temporarily always on. Media transport is P2P-only.
+                  </div>
+                </div>
+              ) : null}
             </div>
-            {messageDisplayMode === "chat" ? (
-              <div className="mode-control">
-                <span>Chat mode</span>
-                <fieldset className="segmented-control">
-                  <legend className="sr-only">Chat display mode</legend>
-                  <button
-                    className={chatDisplayMode === "live" ? "selected" : ""}
-                    type="button"
-                    onClick={() => handleChatDisplayModeChange("live")}
-                  >
-                    Live
-                  </button>
-                  <button
-                    className={chatDisplayMode === "history" ? "selected" : ""}
-                    type="button"
-                    onClick={() => handleChatDisplayModeChange("history")}
-                  >
-                    History
-                  </button>
-                </fieldset>
-              </div>
-            ) : null}
-            <button
-              className="toggle"
-              type="button"
-              onClick={() => setSocialVisible((value) => !value)}
-            >
-              <span>Overlay</span>
-              <span>{socialVisible ? "Visible" : "Hidden"}</span>
-            </button>
           </div>
 
-          <div className="section-title">Debug</div>
-          <div className="debug-box">
-            <div className="debug-line">
-              <span>Build</span>
-              <strong>{ANIDACHI_BUILD_ID}</strong>
-            </div>
-            <div className="debug-line">
-              <span>Adapter</span>
-              <strong>{adapter.id}</strong>
-            </div>
-            <div className="debug-line">
-              <span>Media</span>
-              <strong>P2P</strong>
-            </div>
-            <div className="debug-line">
-              <span>Seats</span>
-              <strong>{mediaSeatText}</strong>
-            </div>
-            <div className="debug-line">
-              <span>Logs</span>
-              <strong>{debugEntriesCount}</strong>
-            </div>
-            <div className="debug-actions">
-              <button className="button" type="button" onClick={() => saveDiagnostics("light")}>
-                Save light
-              </button>
-              <button className="button" type="button" onClick={() => saveDiagnostics("full")}>
-                Save full
-              </button>
-              <button className="button" type="button" onClick={clearDebug}>
-                Clear
-              </button>
-            </div>
-            {diagnosticStatus ? (
-              <div className="debug-status" title={diagnosticStatus}>
-                {diagnosticStatus}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="footnote">
-            Debug logging is temporarily always on. Media transport is P2P-only.
-          </div>
+          {authAuthenticated ? (
+            <button
+              className="account-footer-action"
+              type="button"
+              onClick={handleSignOut}
+              disabled={authBusy || extensionContextInvalidated}
+            >
+              {authBusy ? "Signing out..." : "Sign out"}
+            </button>
+          ) : null}
         </section>
       ) : null}
 
@@ -4418,6 +5113,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             </div>
           ) : null}
 
+          {!panelOpen && voiceRailParticipants.length ? (
+            <RoomRail
+              activeParticipantId={participant?.id}
+              participants={voiceRailParticipants}
+              speakingParticipantIds={liveVoiceActiveSpeakerIds}
+            />
+          ) : null}
+
           {messageDisplayMode === "chat" && !panelOpen && displayedChatMessages.length ? (
             <LiveChatColumn
               mode={chatDisplayMode}
@@ -4462,6 +5165,141 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         </>
       ) : null}
     </div>
+  );
+}
+
+function RoomRail({
+  activeParticipantId,
+  participants,
+  speakingParticipantIds,
+}: {
+  activeParticipantId?: string;
+  participants: Participant[];
+  speakingParticipantIds: string[];
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const openTimerRef = useRef<number | undefined>(undefined);
+  const closeTimerRef = useRef<number | undefined>(undefined);
+  const visibleParticipants = participants.slice(0, 8);
+  const hiddenCount = Math.max(0, participants.length - visibleParticipants.length);
+
+  const clearOpenTimer = useCallback(() => {
+    if (openTimerRef.current !== undefined) {
+      window.clearTimeout(openTimerRef.current);
+      openTimerRef.current = undefined;
+    }
+  }, []);
+
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimerRef.current !== undefined) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = undefined;
+    }
+  }, []);
+
+  const openRail = useCallback(() => {
+    clearOpenTimer();
+    clearCloseTimer();
+    setExpanded(true);
+  }, [clearCloseTimer, clearOpenTimer]);
+
+  const scheduleOpen = useCallback(() => {
+    clearCloseTimer();
+    if (expanded || openTimerRef.current !== undefined) {
+      return;
+    }
+    openTimerRef.current = window.setTimeout(() => {
+      openTimerRef.current = undefined;
+      setExpanded(true);
+    }, 260);
+  }, [clearCloseTimer, expanded]);
+
+  const scheduleClose = useCallback(() => {
+    clearOpenTimer();
+    clearCloseTimer();
+    closeTimerRef.current = window.setTimeout(() => {
+      closeTimerRef.current = undefined;
+      setExpanded(false);
+    }, 340);
+  }, [clearCloseTimer, clearOpenTimer]);
+
+  const handleEdgePointerMove = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      const distanceToRightEdge = Math.max(0, window.innerWidth - event.clientX);
+      if (distanceToRightEdge <= 6) {
+        openRail();
+        return;
+      }
+      scheduleOpen();
+    },
+    [openRail, scheduleOpen],
+  );
+
+  const handleEdgePointerLeave = useCallback(() => {
+    if (expanded) {
+      scheduleClose();
+      return;
+    }
+    clearOpenTimer();
+  }, [clearOpenTimer, expanded, scheduleClose]);
+
+  useEffect(
+    () => () => {
+      clearOpenTimer();
+      clearCloseTimer();
+    },
+    [clearCloseTimer, clearOpenTimer],
+  );
+
+  return (
+    <aside className={`room-rail ${expanded ? "open" : ""}`} aria-label="Room participants">
+      <div
+        className="room-rail-edge"
+        onPointerEnter={scheduleOpen}
+        onPointerLeave={handleEdgePointerLeave}
+        onPointerMove={handleEdgePointerMove}
+      />
+      <div
+        className="room-rail-panel"
+        onPointerEnter={expanded ? clearCloseTimer : scheduleOpen}
+        onPointerLeave={scheduleClose}
+        onPointerMove={expanded ? clearCloseTimer : undefined}
+      >
+        <div className="room-rail-list">
+          {visibleParticipants.map((item) => {
+            const speaking = speakingParticipantIds.includes(item.id);
+            const active = item.id === activeParticipantId;
+            const roleLabel = item.role === "host" ? "host" : "guest";
+            const statusLabel = speaking ? `${roleLabel} · speaking` : roleLabel;
+
+            return (
+              <div
+                className={`room-rail-slot ${speaking ? "speaking" : ""} ${
+                  active ? "active" : ""
+                }`}
+                key={item.id}
+              >
+                <div className={`room-rail-pill ${speaking ? "speaking" : ""}`}>
+                  <span className="room-rail-avatar">{initials(item.displayName)}</span>
+                  <span className="room-rail-voice-bars" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span className="room-rail-copy">
+                    <span className="room-rail-name">{item.displayName}</span>
+                    <span className="room-rail-status">{statusLabel}</span>
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+          {hiddenCount ? (
+            <div className="room-rail-more">+{hiddenCount}</div>
+          ) : null}
+        </div>
+      </div>
+    </aside>
   );
 }
 
@@ -4999,6 +5837,12 @@ function initials(name: string): string {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+function planLabel(plan: AuthenticatedUserPlan): string {
+  if (plan === "plus") return "Plus";
+  if (plan === "pro") return "Pro";
+  return "Free";
 }
 
 function getCrunchyrollPlayerChromeState(container: HTMLElement): CrunchyrollPlayerChromeState {

@@ -101,4 +101,26 @@ describe("debug log", () => {
     expect(JSON.stringify(entry?.data)).not.toContain("192.168.1.20");
     expect(JSON.stringify(entry?.data)).not.toContain("10.0.0.2");
   });
+
+  it("keeps diagnostic reason labels readable and hashes room session ids", () => {
+    clearDebugLog();
+
+    logDebug("room.ws", "connecting", {
+      candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+      participantSessionId: "session-secret-value",
+      reason: "join:hash",
+      url: "https://staging.anidachi.app/room?token=secret",
+    });
+
+    const entry = getDebugEntries().find((item) => item.scope === "room.ws");
+    expect(entry?.data).toEqual(
+      expect.objectContaining({
+        candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+        participantSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
+        reason: "join:hash",
+        url: "https://staging.anidachi.app/room?<redacted>",
+      }),
+    );
+    expect(JSON.stringify(entry?.data)).not.toContain("session-secret-value");
+  });
 });
