@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { FooterPricingCta } from "@/components/footer-pricing-cta";
-import { JoinDiscordButton } from "@/components/join-discord-button";
+import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 
 export function Footer() {
   return (
@@ -11,7 +11,7 @@ export function Footer() {
         aria-hidden
       />
       <div className="container mx-auto px-4 relative">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
           <div className="col-span-2 lg:col-span-2 relative">
             <div
               className="pointer-events-none absolute -top-8 left-0 w-48 h-48 bg-brand-orange/5 blur-[80px] rounded-full"
@@ -210,9 +210,6 @@ export function Footer() {
             <h4 className="font-semibold mb-4 text-sm">Company</h4>
             <ul className="space-y-2 text-foreground/50 text-sm">
               <li>
-                <JoinDiscordButton variant="footer" placement="footer" />
-              </li>
-              <li>
                 <a
                   href="mailto:anidachi.app@gmail.com"
                   className="hover:text-brand-orange-bright transition-colors"
@@ -236,6 +233,24 @@ export function Footer() {
                   Terms of Service
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4 text-sm">Social</h4>
+            <ul className="space-y-2 text-foreground/50 text-sm">
+              {PUBLIC_SOCIAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-brand-orange-bright transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
