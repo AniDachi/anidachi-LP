@@ -4349,12 +4349,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
     const handleBlur = () => {
       cancelFireHold("window-blur");
-      if (
-        shouldStopVoiceTalkOnWindowBlur({
-          documentVisibilityState: document.visibilityState,
-          voiceKeyDown: liveVoiceKeyDownRef.current,
-        })
-      ) {
+      if (shouldStopVoiceTalkOnWindowBlur()) {
+        liveVoiceKeyDownRef.current = false;
         stopLiveVoiceTalk();
       }
       stopVoiceCapture(true);

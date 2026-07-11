@@ -130,6 +130,14 @@ function installFakeMediaDevices(mediaDevices: MediaDevices): void {
   });
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
+}
+
 function createP2PControllerHarness() {
   const activeSpeakerChanges: string[][] = [];
   const cameraStatuses: boolean[] = [];
@@ -243,6 +251,41 @@ describe("P2P camera local-track recovery", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+  });
+
+  it("rejects an old camera request that resolves after stop and restart", async () => {
+    const oldRequest = deferred<MediaStream>();
+    const currentRequest = deferred<MediaStream>();
+    const oldTrack = new FakeVideoTrack("camera-old");
+    const currentTrack = new FakeVideoTrack("camera-current");
+    const currentStream = fakeVideoStream(currentTrack);
+    const getUserMedia = vi
+      .fn()
+      .mockReturnValueOnce(oldRequest.promise)
+      .mockReturnValueOnce(currentRequest.promise);
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia,
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const { controller, videos } = createP2PControllerHarness();
+
+    const oldStart = controller.setCameraEnabled(true);
+    await Promise.resolve();
+    await controller.setCameraEnabled(false);
+    const currentStart = controller.setCameraEnabled(true);
+
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    currentRequest.resolve(currentStream);
+    await currentStart;
+    oldRequest.resolve(fakeVideoStream(oldTrack));
+    await oldStart;
+
+    expect(oldTrack.readyState).toBe("ended");
+    expect(currentTrack.readyState).toBe("live");
+    expect(videos.at(-1)?.[0]?.element.srcObject).toBe(currentStream);
+
+    controller.disconnect();
   });
 
   it("keeps the public camera status on while scheduling delayed re-acquire after a local track ends", async () => {
@@ -378,6 +421,49 @@ describe("P2P push-to-talk local-track recovery", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+  });
+
+  it("rejects an old microphone request that resolves after stop and restart", async () => {
+    const oldRequest = deferred<MediaStream>();
+    const currentRequest = deferred<MediaStream>();
+    const oldTrack = new FakeAudioTrack("mic-old");
+    const currentTrack = new FakeAudioTrack("mic-current");
+    const getUserMedia = vi
+      .fn()
+      .mockReturnValueOnce(oldRequest.promise)
+      .mockReturnValueOnce(currentRequest.promise);
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia,
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const { activeSpeakerChanges, controller, voiceStatuses } =
+      createP2PControllerHarness();
+
+    const oldStart = controller.startVoiceTalk();
+    await Promise.resolve();
+    await controller.stopVoiceTalk();
+    const currentStart = controller.startVoiceTalk();
+
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    currentRequest.resolve(fakeAudioStream(currentTrack));
+    await currentStart;
+    oldRequest.resolve(fakeAudioStream(oldTrack));
+    await oldStart;
+
+    expect(oldTrack.readyState).toBe("ended");
+    expect(currentTrack.readyState).toBe("live");
+    expect(
+      (
+        controller as unknown as {
+          localAudioTrack: MediaStreamTrack | null;
+        }
+      ).localAudioTrack,
+    ).toBe(currentTrack);
+    expect(activeSpeakerChanges.at(-1)).toEqual(["host"]);
+    expect(voiceStatuses.at(-1)).toBe("talking");
+
+    controller.disconnect();
   });
 
   it("re-acquires the mic after a transient local track end without publishing voice-stop", async () => {

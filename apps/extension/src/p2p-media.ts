@@ -666,14 +666,16 @@ export class P2PMediaController {
     VideoActivityStats
   >();
   private cameraFailureTimestamps: number[] = [];
+  private cameraIntentGeneration = 0;
   private cameraReacquireTimerId: number | null = null;
   private cameraStableTimerId: number | null = null;
-  private cameraStarting = false;
+  private cameraStartingGeneration: number | null = null;
   private cameraState: P2PCameraState = "off";
   private disposed = false;
   private localAudioStream: MediaStream | null = null;
   private localAudioTrack: MediaStreamTrack | null = null;
   private voiceFailureTimestamps: number[] = [];
+  private voiceIntentGeneration = 0;
   private voiceReacquireTimerId: number | null = null;
   private voiceStableTimerId: number | null = null;
   private localVideoStream: MediaStream | null = null;
@@ -681,7 +683,7 @@ export class P2PMediaController {
   private publicCameraEnabled = false;
   private wantsCamera = false;
   private wantsVoiceTalk = false;
-  private voiceStarting = false;
+  private voiceStartingGeneration: number | null = null;
   private voiceTalking = false;
   // The mic track is kept warm between presses (track.enabled toggled) so
   // repeat push-to-talk is instant, then released after an idle timeout for
@@ -858,18 +860,24 @@ export class P2PMediaController {
     }
 
     if (!enabled) {
-      this.wantsCamera = false;
       await this.stopCamera();
       return;
     }
 
+    if (!this.wantsCamera) {
+      this.cameraIntentGeneration += 1;
+    }
     this.wantsCamera = true;
     this.onVoiceMessageChange(null);
-    await this.acquireCamera("user-request");
+    await this.acquireCamera("user-request", this.cameraIntentGeneration);
   }
 
-  private async acquireCamera(reason: string): Promise<void> {
-    if (this.disposed || !this.wantsCamera) {
+  private async acquireCamera(reason: string, intentGeneration: number): Promise<void> {
+    if (
+      this.disposed ||
+      !this.wantsCamera ||
+      intentGeneration !== this.cameraIntentGeneration
+    ) {
       return;
     }
 
@@ -879,13 +887,13 @@ export class P2PMediaController {
       return;
     }
 
-    if (this.cameraStarting) {
+    if (this.cameraStartingGeneration === intentGeneration) {
       return;
     }
 
     this.clearCameraReacquireTimer();
     this.clearCameraStableTimer();
-    this.cameraStarting = true;
+    this.cameraStartingGeneration = intentGeneration;
     this.cameraState = this.publicCameraEnabled ? "recovering" : "starting";
     logDebug("p2p.camera", "getUserMedia start", {
       localParticipantId: this.localParticipant.id,
@@ -898,10 +906,12 @@ export class P2PMediaController {
       const stream = await navigator.mediaDevices.getUserMedia(
         P2P_VIDEO_CONSTRAINTS,
       );
-      if (this.disposed || !this.wantsCamera) {
+      if (
+        this.disposed ||
+        !this.wantsCamera ||
+        intentGeneration !== this.cameraIntentGeneration
+      ) {
         stopStream(stream);
-        this.cameraState = "off";
-        this.setPublicCameraEnabled(false, "camera-aborted");
         return;
       }
 
@@ -942,6 +952,9 @@ export class P2PMediaController {
 
       this.setPublicCameraEnabled(true, "track-ready");
     } catch (error) {
+      if (intentGeneration !== this.cameraIntentGeneration) {
+        return;
+      }
       console.warn("[Anidachi] P2P camera failed", error);
       logDebug("p2p.camera", "failed", {
         localParticipantId: this.localParticipant.id,
@@ -957,7 +970,9 @@ export class P2PMediaController {
         this.onVoiceMessageChange(formatCameraErrorMessage(error));
       }
     } finally {
-      this.cameraStarting = false;
+      if (this.cameraStartingGeneration === intentGeneration) {
+        this.cameraStartingGeneration = null;
+      }
     }
   }
 
@@ -1026,7 +1041,10 @@ export class P2PMediaController {
       if (this.disposed || !this.wantsCamera) {
         return;
       }
-      void this.acquireCamera(`reacquire:${reason}`);
+      void this.acquireCamera(
+        `reacquire:${reason}`,
+        this.cameraIntentGeneration,
+      );
     }, delay);
   }
 
@@ -1094,6 +1112,9 @@ export class P2PMediaController {
       return;
     }
 
+    if (!this.wantsVoiceTalk) {
+      this.voiceIntentGeneration += 1;
+    }
     this.wantsVoiceTalk = true;
     this.clearVoiceReacquireTimer();
     this.clearMicReleaseTimer();
@@ -1103,7 +1124,7 @@ export class P2PMediaController {
       return;
     }
 
-    if (this.voiceStarting) {
+    if (this.voiceStartingGeneration === this.voiceIntentGeneration) {
       this.onVoiceStatusChange("connecting");
       return;
     }
@@ -1131,11 +1152,15 @@ export class P2PMediaController {
       return;
     }
 
-    await this.acquireVoiceTrack("user-request");
+    await this.acquireVoiceTrack("user-request", this.voiceIntentGeneration);
   }
 
-  private async acquireVoiceTrack(reason: string): Promise<void> {
-    if (this.disposed || !this.wantsVoiceTalk) {
+  private async acquireVoiceTrack(reason: string, intentGeneration: number): Promise<void> {
+    if (
+      this.disposed ||
+      !this.wantsVoiceTalk ||
+      intentGeneration !== this.voiceIntentGeneration
+    ) {
       return;
     }
 
@@ -1147,12 +1172,12 @@ export class P2PMediaController {
       return;
     }
 
-    if (this.voiceStarting) {
+    if (this.voiceStartingGeneration === intentGeneration) {
       this.onVoiceStatusChange("connecting");
       return;
     }
 
-    this.voiceStarting = true;
+    this.voiceStartingGeneration = intentGeneration;
     this.onVoiceStatusChange("connecting");
     this.onVoiceMessageChange(null);
     logDebug("p2p.voice", "getUserMedia start", {
@@ -1165,9 +1190,12 @@ export class P2PMediaController {
       const stream = await navigator.mediaDevices.getUserMedia(
         P2P_AUDIO_CONSTRAINTS,
       );
-      if (this.disposed || !this.wantsVoiceTalk) {
+      if (
+        this.disposed ||
+        !this.wantsVoiceTalk ||
+        intentGeneration !== this.voiceIntentGeneration
+      ) {
         stopStream(stream);
-        this.onVoiceStatusChange("idle");
         return;
       }
 
@@ -1205,6 +1233,9 @@ export class P2PMediaController {
       this.publishActiveSpeakerIds();
       this.onVoiceStatusChange("talking");
     } catch (error) {
+      if (intentGeneration !== this.voiceIntentGeneration) {
+        return;
+      }
       console.warn("[Anidachi] P2P voice failed", error);
       logDebug("p2p.voice", "failed", {
         localParticipantId: this.localParticipant.id,
@@ -1219,14 +1250,16 @@ export class P2PMediaController {
         this.onVoiceMessageChange(formatVoiceErrorMessage(error));
       }
     } finally {
-      this.voiceStarting = false;
+      if (this.voiceStartingGeneration === intentGeneration) {
+        this.voiceStartingGeneration = null;
+      }
     }
   }
 
   async stopVoiceTalk(): Promise<void> {
     const wasVoiceActive =
       this.wantsVoiceTalk ||
-      this.voiceStarting ||
+      this.voiceStartingGeneration !== null ||
       this.voiceTalking ||
       Boolean(this.localAudioTrack?.enabled);
 
@@ -1244,8 +1277,9 @@ export class P2PMediaController {
       localParticipantId: this.localParticipant.id,
       peerCount: this.peers.size,
     });
+    this.voiceIntentGeneration += 1;
     this.wantsVoiceTalk = false;
-    this.voiceStarting = false;
+    this.voiceStartingGeneration = null;
     this.voiceTalking = false;
     this.clearVoiceReacquireTimer();
     this.clearVoiceStableTimer();
@@ -1363,7 +1397,10 @@ export class P2PMediaController {
       if (this.disposed || !this.wantsVoiceTalk) {
         return;
       }
-      void this.acquireVoiceTrack(`reacquire:${reason}`);
+      void this.acquireVoiceTrack(
+        `reacquire:${reason}`,
+        this.voiceIntentGeneration,
+      );
     }, delay);
   }
 
@@ -1371,7 +1408,8 @@ export class P2PMediaController {
     this.clearVoiceReacquireTimer();
     this.clearVoiceStableTimer();
     this.wantsVoiceTalk = false;
-    this.voiceStarting = false;
+    this.voiceIntentGeneration += 1;
+    this.voiceStartingGeneration = null;
     this.voiceTalking = false;
     stopStream(this.localAudioStream);
     this.localAudioStream = null;
@@ -2103,8 +2141,12 @@ export class P2PMediaController {
     }
 
     this.disposed = true;
+    this.cameraIntentGeneration += 1;
+    this.voiceIntentGeneration += 1;
     this.wantsCamera = false;
     this.wantsVoiceTalk = false;
+    this.cameraStartingGeneration = null;
+    this.voiceStartingGeneration = null;
     this.clearCameraReacquireTimer();
     this.clearCameraStableTimer();
     this.clearVoiceReacquireTimer();
@@ -2759,7 +2801,9 @@ export class P2PMediaController {
   }
 
   private async stopCamera(): Promise<void> {
+    this.cameraIntentGeneration += 1;
     this.wantsCamera = false;
+    this.cameraStartingGeneration = null;
     this.clearCameraReacquireTimer();
     this.clearCameraStableTimer();
     this.cameraFailureTimestamps = [];
