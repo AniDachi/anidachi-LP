@@ -4,6 +4,7 @@ import {
   type BufferedP2PSignalEvent,
   RecentP2PSignalBuffer,
 } from "../src/p2p-signal-buffer";
+import { addP2PSignalForDispatch } from "../src/index";
 
 function p2pEvent(overrides: Partial<BufferedP2PSignalEvent> = {}): BufferedP2PSignalEvent {
   return {
@@ -23,6 +24,16 @@ function p2pEvent(overrides: Partial<BufferedP2PSignalEvent> = {}): BufferedP2PS
 }
 
 describe("RecentP2PSignalBuffer", () => {
+  it("returns no dispatch payload for a duplicate client signal id", () => {
+    const buffer = new RecentP2PSignalBuffer();
+    const first = p2pEvent({ serverSeq: 1 });
+    const duplicate = p2pEvent({ serverSeq: 2 });
+
+    expect(addP2PSignalForDispatch(buffer, first, 1_000)).toBe(first);
+    expect(addP2PSignalForDispatch(buffer, duplicate, 1_001)).toBeNull();
+    expect(buffer.replayFor("viewer", 0, 1_001)).toEqual([first]);
+  });
+
   it("dedupes repeated sender signal ids without replacing the original event", () => {
     const buffer = new RecentP2PSignalBuffer();
     const first = p2pEvent({ serverSeq: 1 });

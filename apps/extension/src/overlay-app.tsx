@@ -8,7 +8,6 @@ import {
   type ReactionEvent,
   type RoomCapabilities,
   type ServerEvent,
-  type WatchSourceDescriptor,
 } from "@anidachi/protocol";
 import {
   Copy,
@@ -158,7 +157,12 @@ import { acquireRoomTabLock, releaseRoomTabLock } from "./room-tab-lock";
 import { buildRoomShareableUrl } from "./room-url";
 import { overlayStyles } from "./styles";
 import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
-import { runCrunchyrollMainCommand, type PlayerEvent, type VideoAdapter } from "./video-adapter";
+import {
+  buildWatchSourceDescriptor,
+  runCrunchyrollMainCommand,
+  type PlayerEvent,
+  type VideoAdapter,
+} from "./video-adapter";
 import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
 import {
   createEmptyWatchProgressStore,
@@ -5719,49 +5723,6 @@ function buildCurrentSourceUrlForInvite(): string {
   params.delete("anidachiRoom");
   url.hash = params.toString();
   return url.toString();
-}
-
-function buildWatchSourceDescriptor(
-  adapter: VideoAdapter,
-  state: PlaybackState,
-): WatchSourceDescriptor | undefined {
-  const sourceUrl = canonicalWatchSourceUrl(state.sourceUrl ?? location.href);
-  if (!sourceUrl) {
-    return undefined;
-  }
-
-  const title = adapter.getTitle()?.trim() || document.title?.trim() || adapter.name;
-  const duration = Number.isFinite(adapter.video.duration) ? adapter.video.duration : undefined;
-  return {
-    provider: watchProviderFromAdapterId(adapter.id),
-    sourceUrl,
-    canonicalUrl: sourceUrl,
-    videoFingerprint: state.videoFingerprint,
-    title,
-    ...(duration !== undefined ? { duration } : {}),
-  };
-}
-
-function canonicalWatchSourceUrl(value: string): string | null {
-  try {
-    const url = new URL(value, location.href);
-    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
-    params.delete("anidachiRoom");
-    url.hash = params.toString();
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
-function watchProviderFromAdapterId(adapterId: string): WatchSourceDescriptor["provider"] {
-  if (adapterId === "crunchyroll") {
-    return "crunchyroll";
-  }
-  if (adapterId === "youtube") {
-    return "youtube";
-  }
-  return "generic";
 }
 
 function buildSourceUrlWithRoom(sourceUrl: string, roomId: string | null): URL | null {

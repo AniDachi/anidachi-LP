@@ -1,5 +1,7 @@
 import {
   ClientEventSchema,
+  MAX_ROOM_FRAME_BYTES,
+  MAX_ROOM_ID_CHARS,
   type ClientEvent,
   type Participant,
   type ServerEvent,
@@ -29,6 +31,11 @@ import {
   updateRoomSocketAttachment,
   type RoomSocketAttachment,
 } from "./room-socket-attachment";
+import {
+  RoomRateLimiter,
+  type RoomEventClass,
+  type RoomRateLimitDecision,
+} from "./room-rate-limit";
 import { RoomState } from "./room-state";
 import {
   emitRoomTelemetry,
@@ -98,8 +105,22 @@ app.get("/ice-servers", async (c) => {
   }
 });
 
-app.get("/ws/:roomId", (c) => {
+app.get("/ws/:roomId", async (c) => {
   const roomId = c.req.param("roomId");
+  if (roomId.length === 0 || roomId.length > MAX_ROOM_ID_CHARS) {
+    return c.json({ error: "INVALID_ROOM_ID", message: "Invalid room id" }, 400);
+  }
+
+  const roomToken = c.req.query("roomToken");
+  if (!roomToken) {
+    return c.json({ error: "ROOM_TOKEN_REQUIRED", message: "Room token is required" }, 401);
+  }
+
+  const verified = await verifyRoomToken(roomToken, roomId, c.env);
+  if (!verified) {
+    return c.json({ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" }, 401);
+  }
+
   const id = c.env.ROOMS.idFromName(roomId);
   const stub = c.env.ROOMS.get(id);
   return stub.fetch(c.req.raw);
@@ -112,6 +133,67 @@ function encode(event: ServerEvent): string {
 const HIBERNATION_KEEPALIVE_PING = "ping";
 const HIBERNATION_KEEPALIVE_PONG = "pong";
 
+export function closeInvalidRoomFrame(socket: WebSocket, raw: string | ArrayBuffer): boolean {
+  const frameBytes = typeof raw === "string" ? new TextEncoder().encode(raw).byteLength : raw.byteLength;
+  if (typeof raw === "string" && frameBytes <= MAX_ROOM_FRAME_BYTES) {
+    return false;
+  }
+
+  socket.close(1009, "Room frame exceeds supported size");
+  return true;
+}
+
+export function isRoomEventInScope(event: ClientEvent, roomId: string): boolean {
+  return event.roomId === roomId && (event.type !== "REACTION" || event.reaction.roomId === roomId);
+}
+
+export function consumeRoomFrameBoundary(
+  socket: WebSocket,
+  limiter: RoomRateLimiter,
+  raw: string | ArrayBuffer,
+  now = Date.now(),
+): RoomRateLimitDecision | null {
+  return closeInvalidRoomFrame(socket, raw) ? null : limiter.consumeTotal(now);
+}
+
+function getRoomEventClass(event: ClientEvent): RoomEventClass {
+  if (event.type !== "P2P_SIGNAL") return "control";
+  if (event.signal.kind === "ice") return "ice";
+  if (event.signal.kind === "offer" || event.signal.kind === "answer") return "sdp";
+  return "control";
+}
+
+export function consumeParsedRoomEventBoundary(
+  limiter: RoomRateLimiter,
+  event: ClientEvent,
+  roomId: string,
+  now = Date.now(),
+): { rateLimit: RoomRateLimitDecision; inScope: boolean } {
+  const rateLimit = limiter.consumeClass(getRoomEventClass(event), now);
+  return {
+    rateLimit,
+    inScope: rateLimit.allowed && isRoomEventInScope(event, roomId),
+  };
+}
+
+export function closeRoomRateLimitedSocket(
+  socket: WebSocket,
+  decision: RoomRateLimitDecision,
+): void {
+  if (decision.close) {
+    socket.close(1008, "Room event rate exceeded");
+  }
+}
+
+export function addP2PSignalForDispatch(
+  buffer: RecentP2PSignalBuffer,
+  event: BufferedP2PSignalEvent,
+  now = Date.now(),
+): BufferedP2PSignalEvent | null {
+  const result = buffer.add(event, now);
+  return result.duplicate ? null : result.event;
+}
+
 export class RoomDurableObject {
   private readonly room: RoomState;
   private readonly participantsBySocket = new Map<WebSocket, string>();
@@ -119,6 +201,7 @@ export class RoomDurableObject {
   private readonly socketsByParticipant = new Map<string, WebSocket>();
   private readonly verifiedBySocket = new Map<WebSocket, VerifiedRoomToken>();
   private readonly sessionIdBySocket = new Map<WebSocket, string | undefined>();
+  private readonly rateLimiterBySocket = new Map<WebSocket, RoomRateLimiter>();
   private nextP2PServerSeq = 1;
 
   constructor(
@@ -274,12 +357,14 @@ export class RoomDurableObject {
   }
 
   private handleMessage(socket: WebSocket, raw: string | ArrayBuffer): void {
+    const limiter = this.rateLimiterBySocket.get(socket) ?? new RoomRateLimiter();
+    this.rateLimiterBySocket.set(socket, limiter);
+    const frameRateLimit = consumeRoomFrameBoundary(socket, limiter, raw);
+    if (!frameRateLimit) {
+      return;
+    }
+    if (this.rejectRateLimitedEvent(socket, frameRateLimit)) return;
     if (typeof raw !== "string") {
-      this.send(socket, {
-        type: "ERROR",
-        code: "INVALID_PAYLOAD",
-        message: "Expected JSON string",
-      });
       return;
     }
     if (raw === HIBERNATION_KEEPALIVE_PING) {
@@ -295,6 +380,18 @@ export class RoomDurableObject {
       this.send(socket, { type: "ERROR", code: "INVALID_EVENT", message: "Invalid room event" });
       return;
     }
+
+    const parsedBoundary = consumeParsedRoomEventBoundary(limiter, event, this.room.roomId);
+    if (this.rejectRateLimitedEvent(socket, parsedBoundary.rateLimit)) return;
+    if (!parsedBoundary.inScope) {
+      this.send(socket, {
+        type: "ERROR",
+        code: "ROOM_SCOPE_MISMATCH",
+        message: "Room event does not match this room",
+      });
+      return;
+    }
+
     this.touchSocketAttachment(socket);
 
     switch (event.type) {
@@ -330,6 +427,19 @@ export class RoomDurableObject {
         this.handlePlaybackCommand(socket, event);
         return;
     }
+  }
+
+  private rejectRateLimitedEvent(socket: WebSocket, rateLimit: RoomRateLimitDecision): boolean {
+    if (!rateLimit.allowed) {
+      this.send(socket, {
+        type: "ERROR",
+        code: "RATE_LIMITED",
+        message: `Room event rate exceeded; retry in ${rateLimit.retryAfterMs}ms`,
+      });
+      closeRoomRateLimitedSocket(socket, rateLimit);
+      return true;
+    }
+    return false;
   }
 
   private handlePing(socket: WebSocket, event: Extract<ClientEvent, { type: "PING" }>): void {
@@ -656,23 +766,34 @@ export class RoomDurableObject {
       return;
     }
 
+    const serverReceivedAt = Date.now();
+    this.p2pSignalBuffer.prune(serverReceivedAt);
+    if (this.p2pSignalBuffer.hasSeen(event)) {
+      return;
+    }
+
     const forwarded: BufferedP2PSignalEvent = {
       ...event,
       roomGeneration: this.room.roomGeneration,
-      serverReceivedAt: Date.now(),
+      serverReceivedAt,
       serverSeq: this.nextP2PServerSeq++,
       sourceGeneration: this.room.sourceGeneration,
     };
 
-    const buffered = this.p2pSignalBuffer.add(forwarded, forwarded.serverReceivedAt);
-    if (!buffered.duplicate) {
-      writeStoredP2PReplayEvent(
-        this.state.storage,
-        buffered.event,
-        getP2PSignalDedupeKey(buffered.event),
-        forwarded.serverReceivedAt,
-      );
+    const buffered = addP2PSignalForDispatch(
+      this.p2pSignalBuffer,
+      forwarded,
+      forwarded.serverReceivedAt,
+    );
+    if (!buffered) {
+      return;
     }
+    writeStoredP2PReplayEvent(
+      this.state.storage,
+      buffered,
+      getP2PSignalDedupeKey(buffered),
+      forwarded.serverReceivedAt,
+    );
     this.persistP2PState();
     const target = this.socketsByParticipant.get(event.toUserId);
     if (!target) {
@@ -681,7 +802,7 @@ export class RoomDurableObject {
           event: "p2p.signal.buffered_offline_target",
           fromUserId: event.fromUserId,
           roomId: event.roomId,
-          serverSeq: buffered.event.serverSeq,
+          serverSeq: buffered.serverSeq,
           signalKind: event.signal.kind,
           toUserId: event.toUserId,
         }),
@@ -690,7 +811,7 @@ export class RoomDurableObject {
     }
 
     this.track("p2p_signal");
-    this.send(target, buffered.event);
+    this.send(target, buffered);
   }
 
   private replayP2PSignals(socket: WebSocket, participantId: string, afterServerSeq: number): void {
@@ -722,6 +843,7 @@ export class RoomDurableObject {
     const participantId = this.participantsBySocket.get(socket);
     this.verifiedBySocket.delete(socket);
     this.sessionIdBySocket.delete(socket);
+    this.rateLimiterBySocket.delete(socket);
     if (!participantId) {
       return;
     }

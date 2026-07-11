@@ -1,0 +1,11 @@
+export const MAX_ROOM_FRAME_BYTES = 64 * 1024;
+export const MAX_SDP_BYTES = 48 * 1024;
+export const MAX_ICE_CANDIDATE_BYTES = 2 * 1024;
+export const MAX_ROOM_ID_CHARS = 128;
+export const MAX_PARTICIPANT_ID_CHARS = 128;
+export const MAX_SESSION_ID_CHARS = 128;
+export const MAX_VIDEO_FINGERPRINT_CHARS = 400;
+export const MAX_DISPLAY_NAME_CHARS = 120;
+export const MAX_URL_CHARS = 2048;
+export const MAX_REACTION_EMOJI_CHARS = 64;
+export const MAX_WATCH_TITLE_CHARS = 300;

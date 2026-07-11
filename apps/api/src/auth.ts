@@ -1,5 +1,12 @@
 import { SignJWT, jwtVerify } from "jose";
-import { RoomCapabilitiesSchema, type RoomCapabilities } from "@anidachi/protocol";
+import {
+  MAX_DISPLAY_NAME_CHARS,
+  MAX_PARTICIPANT_ID_CHARS,
+  MAX_ROOM_ID_CHARS,
+  MAX_URL_CHARS,
+  RoomCapabilitiesSchema,
+  type RoomCapabilities,
+} from "@anidachi/protocol";
 
 export interface WorkerAuthEnv {
   ANIDACHI_JWT_SECRET?: string;
@@ -26,23 +33,32 @@ export async function verifyRoomToken(
   env: WorkerAuthEnv,
 ): Promise<VerifiedRoomToken | null> {
   try {
+    if (!isBoundedId(expectedRoomId, MAX_ROOM_ID_CHARS)) return null;
     const { payload } = await jwtVerify(token, getSecret(env), {
+      algorithms: ["HS256"],
       audience: "anidachi-worker",
     });
     if (payload.typ !== "room") return null;
-    if (!payload.sub || typeof payload.sub !== "string") return null;
-    if (payload.roomId !== expectedRoomId) return null;
+    if (!isBoundedId(payload.sub, MAX_PARTICIPANT_ID_CHARS)) return null;
+    if (!isBoundedId(payload.roomId, MAX_ROOM_ID_CHARS) || payload.roomId !== expectedRoomId) {
+      return null;
+    }
     if (payload.role !== "host" && payload.role !== "member") return null;
     const capabilities =
       payload.capabilities === undefined
         ? undefined
         : RoomCapabilitiesSchema.safeParse(payload.capabilities);
     if (capabilities !== undefined && !capabilities.success) return null;
-    if (payload.displayName !== undefined && typeof payload.displayName !== "string") return null;
+    if (
+      payload.displayName !== undefined &&
+      !isBoundedId(payload.displayName, MAX_DISPLAY_NAME_CHARS)
+    ) {
+      return null;
+    }
     if (
       payload.avatarUrl !== null &&
       payload.avatarUrl !== undefined &&
-      typeof payload.avatarUrl !== "string"
+      !isBoundedUrl(payload.avatarUrl)
     ) {
       return null;
     }
@@ -64,6 +80,18 @@ export async function verifyRoomToken(
   } catch {
     return null;
   }
+}
+
+function isBoundedId(value: unknown, maxChars: number): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= maxChars;
+}
+
+function isBoundedUrl(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length <= MAX_URL_CHARS &&
+    URL.canParse(value)
+  );
 }
 
 export async function signRoomTokenForTest(
