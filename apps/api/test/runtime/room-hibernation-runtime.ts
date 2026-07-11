@@ -1,4 +1,4 @@
-import { evictDurableObject, reset } from "cloudflare:test";
+import { evictDurableObject, reset, runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import {
 	type Participant,
@@ -9,12 +9,119 @@ import { afterEach, describe, expect, it } from "vitest";
 import { signRoomTokenForTest } from "../../src/auth";
 
 const TEST_SECRET_ENV = { ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret" };
+const INTERNAL_SECRET = "anidachi-runtime-internal-secret";
 
 afterEach(async () => {
 	await reset();
 });
 
 describe("RoomDurableObject WebSocket hibernation", () => {
+	it("ends terminally once, closes every socket, and rejects reconnect after hibernation", async () => {
+		const roomId = `runtime-ended-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-session", userId: "guest-user",
+		});
+		const preJoin = await openRoomSocket(stub, {
+			roomId, role: "member", userId: "prejoin-user",
+		});
+		await host.waitFor((event) => event.type === "ROOM_SNAPSHOT", "host snapshot");
+		await guest.waitFor((event) => event.type === "ROOM_SNAPSHOT", "guest snapshot");
+		host.send({
+			type: "P2P_SIGNAL", roomId, clientSignalId: "before-end",
+			fromUserId: "host-user", senderConnectionId: "host-connection",
+			signal: { kind: "renegotiate" }, toUserId: "guest-user",
+		});
+		await guest.waitFor(
+			(event) => event.type === "P2P_SIGNAL" && event.clientSignalId === "before-end",
+			"buffered signal before end",
+		);
+
+		const command = { endedAt: 1_000, reason: "host_ended" } as const;
+		const unauthorized = await stub.fetch("https://room.test/internal/end", {
+			method: "POST", body: JSON.stringify(command),
+		});
+		expect(unauthorized.status).toBe(401);
+
+		const first = await endRoom(stub, command);
+		expect(first.status).toBe(200);
+		expect(await first.json()).toMatchObject({ ok: true, alreadyEnded: false });
+		await host.waitFor(
+			(event) => event.type === "ROOM_ENDED" && event.endedAt === 1_000,
+			"terminal room event",
+		);
+		await host.waitForClose(4004, "host terminal close");
+		await guest.waitForClose(4004, "guest terminal close");
+		await preJoin.waitForClose(4004, "pre-JOIN terminal close");
+
+		const repeated = await endRoom(stub, { endedAt: 2_000, reason: "quota_exhausted" });
+		expect(await repeated.json()).toMatchObject({
+			ok: true, alreadyEnded: true, endedAt: 1_000, reason: "host_ended",
+		});
+	});
+
+	it("rejects valid-token reconnect after the ended tombstone is persisted", async () => {
+		const roomId = `runtime-ended-reconnect-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const ended = await endRoom(stub, { endedAt: 1_000, reason: "host_ended" });
+		expect(ended.status).toBe(200);
+
+		const token = await roomToken(roomId, "member", "reconnect-user");
+		const reconnect = await stub.fetch(
+			`https://room.test/?roomToken=${encodeURIComponent(token)}`,
+			{ headers: { Upgrade: "websocket" } },
+		);
+		expect(reconnect.status).toBe(410);
+	});
+
+	it("cleans stale runtime storage again on an idempotent end retry", async () => {
+		const roomId = `runtime-ended-retry-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const first = await endRoom(stub, { endedAt: 1_000, reason: "host_ended" });
+		expect(first.status).toBe(200);
+		expect(
+			await runInDurableObject(stub, (_instance, state) => state.getWebSocketAutoResponse()),
+		).toBeNull();
+
+		await runInDurableObject(stub, (_instance, state) => {
+			state.storage.sql.exec(
+				"INSERT OR REPLACE INTO room_meta (key, value_json, updated_at) VALUES (?, ?, ?)",
+				"room_state", JSON.stringify({ stale: true }), 2_000,
+			);
+			state.storage.sql.exec(
+				"INSERT OR REPLACE INTO room_meta (key, value_json, updated_at) VALUES (?, ?, ?)",
+				"next_p2p_server_seq", "99", 2_000,
+			);
+			state.storage.sql.exec(
+				`INSERT INTO p2p_replay (
+					server_seq, dedupe_key, to_user_id, room_generation,
+					source_generation, server_received_at, event_json
+				) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+				99, "stale", "guest-user", 1, 1, 2_000, "{}",
+			);
+		});
+
+		const repeated = await endRoom(stub, { endedAt: 2_000, reason: "quota_exhausted" });
+		expect(await repeated.json()).toMatchObject({
+			ok: true, alreadyEnded: true, endedAt: 1_000, reason: "host_ended",
+		});
+		const persisted = await runInDurableObject(stub, (_instance, state) => ({
+			keys: state.storage.sql
+				.exec<{ key: string }>("SELECT key FROM room_meta ORDER BY key")
+				.toArray().map((row) => row.key),
+			replayCount: state.storage.sql
+				.exec<{ count: number }>("SELECT COUNT(*) AS count FROM p2p_replay")
+				.toArray()[0]?.count,
+		}));
+		expect(persisted).toEqual({ keys: ["room_ended"], replayCount: 0 });
+	});
+
 	it("wakes from hibernation with participants, host state, camera state, and P2P replay intact", async () => {
 		const roomId = `runtime-hibernation-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace })
@@ -202,6 +309,17 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 	});
 });
 
+async function endRoom(
+	stub: DurableObjectStub,
+	command: { endedAt: number; reason: "host_ended" | "quota_exhausted" },
+): Promise<Response> {
+	return stub.fetch("https://room.test/internal/end", {
+		method: "POST",
+		headers: { Authorization: `Bearer ${INTERNAL_SECRET}` },
+		body: JSON.stringify(command),
+	});
+}
+
 interface ConnectParams {
 	lastSeenP2PServerSeq?: number;
 	role: "host" | "member";
@@ -214,16 +332,31 @@ async function connectRoomClient(
 	stub: DurableObjectStub,
 	params: ConnectParams,
 ): Promise<RuntimeRoomClient> {
-	const token = await signRoomTokenForTest(
-		{
-			avatarUrl: null,
-			displayName: params.userId,
-			role: params.role,
-			roomId: params.roomId,
-			sub: params.userId,
-		},
-		TEST_SECRET_ENV,
-	);
+	const client = await openRoomSocket(stub, params);
+	client.send({
+		type: "JOIN",
+		roomId: params.roomId,
+		participant: participant(params.userId, params.role === "host" ? "host" : "viewer"),
+		participantSessionId: params.sessionId,
+		videoFingerprint: "runtime-initial",
+		...(typeof params.lastSeenP2PServerSeq === "number"
+			? { lastSeenP2PServerSeq: params.lastSeenP2PServerSeq }
+			: {}),
+	});
+	return client;
+}
+
+async function roomToken(roomId: string, role: "host" | "member", userId: string): Promise<string> {
+	return signRoomTokenForTest({
+		avatarUrl: null, displayName: userId, role, roomId, sub: userId,
+	}, TEST_SECRET_ENV);
+}
+
+async function openRoomSocket(
+	stub: DurableObjectStub,
+	params: Pick<ConnectParams, "role" | "roomId" | "userId">,
+): Promise<RuntimeRoomClient> {
+	const token = await roomToken(params.roomId, params.role, params.userId);
 	const response = await stub.fetch(
 		`https://room.test/?roomToken=${encodeURIComponent(token)}`,
 		{ headers: { Upgrade: "websocket" } },
@@ -238,25 +371,13 @@ async function connectRoomClient(
 
 	const client = new RuntimeRoomClient(webSocket);
 	client.accept();
-	client.send({
-		type: "JOIN",
-		roomId: params.roomId,
-		participant: participant(
-			params.userId,
-			params.role === "host" ? "host" : "viewer",
-		),
-		participantSessionId: params.sessionId,
-		videoFingerprint: "runtime-initial",
-		...(typeof params.lastSeenP2PServerSeq === "number"
-			? { lastSeenP2PServerSeq: params.lastSeenP2PServerSeq }
-			: {}),
-	});
 	return client;
 }
 
 class RuntimeRoomClient {
 	private readonly events: ServerEvent[] = [];
 	private readonly rawMessages: string[] = [];
+	private readonly closeCodes: number[] = [];
 
 	constructor(private readonly webSocket: WebSocket) {}
 
@@ -275,6 +396,9 @@ class RuntimeRoomClient {
 			} catch {
 				/* raw hibernation keepalive */
 			}
+		});
+		this.webSocket.addEventListener("close", (event) => {
+			this.closeCodes.push(event.code);
 		});
 	}
 
@@ -324,6 +448,15 @@ class RuntimeRoomClient {
 		throw new Error(
 			`Timed out waiting for ${label}. Raw: ${JSON.stringify(this.rawMessages)}`,
 		);
+	}
+
+	async waitForClose(code: number, label: string, timeoutMs = 3_000): Promise<void> {
+		const deadline = Date.now() + timeoutMs;
+		while (Date.now() < deadline) {
+			if (this.closeCodes.includes(code)) return;
+			await sleep(20);
+		}
+		throw new Error(`Timed out waiting for ${label}. Close codes: ${JSON.stringify(this.closeCodes)}`);
 	}
 }
 

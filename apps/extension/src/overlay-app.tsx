@@ -2241,6 +2241,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     roomIdRef.current = null;
     setRoomId(null);
     setParticipants([]);
+    setCamsEnabled(false);
+    setIncomingP2PSignals([]);
+    setRoomQuota(null);
+    setRoomSnapshotReady(false);
     roomTokenRef.current = null;
     roomShareableLinkRef.current = null;
     setRoomToken(null);
@@ -2265,6 +2269,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       });
 
       switch (event.type) {
+        case "ROOM_ENDED":
+          terminateRoomSession("Watch room ended.");
+          return;
         case "ROOM_SNAPSHOT":
           if (
             roomGenerationRef.current > 0 &&
@@ -2520,9 +2527,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         videoFingerprint: adapter.getFingerprint(),
         onEvent: (event) => handleServerEventRef.current(event),
         onStatus: setRoomStatus,
+        onTerminalClose: () => terminateRoomSession("Watch room ended."),
       });
     },
-    [adapter, roomSessionNamespace, setRoomStatus],
+    [adapter, roomSessionNamespace, setRoomStatus, terminateRoomSession],
   );
 
   const connectToExistingWebsiteRoom = useCallback(

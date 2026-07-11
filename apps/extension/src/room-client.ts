@@ -21,6 +21,7 @@ export interface RoomClientOptions {
   participantSessionId?: string;
   onEvent: (event: ServerEvent) => void;
   onStatus: (status: RoomConnectionStatus) => void;
+  onTerminalClose?: () => void;
 }
 
 /** Free-plan daily quota summary attached to room API responses (PD2). */
@@ -81,6 +82,11 @@ const ROOM_KEEPALIVE_INTERVAL_MS = 20_000;
 const ROOM_KEEPALIVE_TIMEOUT_MS = 45_000;
 const HIBERNATION_KEEPALIVE_PING = "ping";
 const HIBERNATION_KEEPALIVE_PONG = "pong";
+export const ROOM_ENDED_CLOSE_CODE = 4004;
+
+export function isTerminalRoomCloseCode(code: number): boolean {
+  return code === ROOM_ENDED_CLOSE_CODE;
+}
 
 export type RoomHttpCommand = "create-room" | "connect-room" | "end-room";
 
@@ -524,6 +530,9 @@ export class RoomClient {
         wasClean: event.wasClean,
       });
       this.stopKeepalive();
+      if (isTerminalRoomCloseCode(event.code)) {
+        options.onTerminalClose?.();
+      }
       options.onStatus("closed");
     });
     ws.addEventListener("error", () => {

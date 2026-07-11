@@ -3,6 +3,11 @@ import { getSession } from "@/lib/anidachi-auth/session";
 import { getRoomById, updateRoom } from "@/lib/anidachi-auth/db";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
 import { settleHostSegment } from "@/lib/anidachi-auth/room-usage";
+import {
+  completeHostRoomEnd,
+  RoomLifecycleSyncError,
+  syncRoomEndToWorker,
+} from "@/lib/anidachi-auth/room-lifecycle";
 
 export const dynamic = "force-dynamic";
 
@@ -45,26 +50,39 @@ export async function POST(
     );
   }
 
-  if (room.status === "ended") {
-    return NextResponse.json({
-      ok: true,
-      alreadyEnded: true,
-      endedAt: room.ended_at,
-    });
-  }
-
   const now = new Date();
-  await settleHostSegment(room, session.plan, now);
-  await updateRoom(roomId, {
-    status: "ended",
-    ended_at: now.toISOString(),
-    host_connected_at: null,
-    last_active_at: now.toISOString(),
-  });
+  const alreadyEnded = room.status === "ended";
+  const endedAt = alreadyEnded && room.ended_at ? room.ended_at : now.toISOString();
+  try {
+    await completeHostRoomEnd({
+      alreadyEnded,
+      dependencies: {
+        settle: () => settleHostSegment(room, session.plan, now),
+        transition: () => updateRoom(roomId, {
+          status: "ended",
+          ended_at: endedAt,
+          host_connected_at: null,
+          last_active_at: endedAt,
+        }),
+        syncWorker: () => syncRoomEndToWorker(roomId, {
+          endedAt: Date.parse(endedAt),
+          reason: "host_ended",
+        }),
+      },
+    });
+  } catch (error) {
+    if (error instanceof RoomLifecycleSyncError) {
+      return NextResponse.json(
+        { error: "ROOM_END_SYNC_FAILED", message: error.message, retryable: true },
+        { status: error.status },
+      );
+    }
+    throw error;
+  }
 
   return NextResponse.json({
     ok: true,
-    alreadyEnded: false,
-    endedAt: now.toISOString(),
+    alreadyEnded,
+    endedAt,
   });
 }

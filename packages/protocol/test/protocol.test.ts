@@ -14,6 +14,7 @@ import {
   type PlaybackState,
   ReactionEventSchema,
   RoomCapabilitiesSchema,
+  RoomEndReasonSchema,
   ServerEventSchema,
   WatchSourceDescriptorSchema,
   getExpectedHostTime,
@@ -22,6 +23,26 @@ import {
 } from "../src";
 
 describe("room protocol schemas", () => {
+  it("accepts one terminal room-ended event with a bounded reason", () => {
+    expect(RoomEndReasonSchema.options).toEqual([
+      "host_ended",
+      "empty_timeout",
+      "quota_exhausted",
+    ]);
+    expect(
+      ServerEventSchema.parse({
+        type: "ROOM_ENDED",
+        roomId: "room-1",
+        endedAt: 1_000,
+        reason: "host_ended",
+      }),
+    ).toEqual({
+      type: "ROOM_ENDED",
+      roomId: "room-1",
+      endedAt: 1_000,
+      reason: "host_ended",
+    });
+  });
   it("exports the canonical room signaling limits", () => {
     expect(MAX_ROOM_ID_CHARS).toBe(128);
     expect(MAX_PARTICIPANT_ID_CHARS).toBe(128);

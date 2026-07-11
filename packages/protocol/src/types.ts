@@ -101,6 +101,12 @@ const RoomScopedSchema = z.object({
   roomId: RoomIdSchema,
 });
 
+export const RoomEndReasonSchema = z.enum([
+  "host_ended",
+  "empty_timeout",
+  "quota_exhausted",
+]);
+
 export const P2PSessionDescriptionSchema = z.object({
   type: z.enum(["offer", "answer"]),
   sdp: boundedUtf8String(MAX_SDP_BYTES),
@@ -243,6 +249,11 @@ export const ClientEventSchema = z.discriminatedUnion("type", [
 
 export const ServerEventSchema = z.discriminatedUnion("type", [
   RoomScopedSchema.extend({
+    type: z.literal("ROOM_ENDED"),
+    endedAt: z.number().int().nonnegative(),
+    reason: RoomEndReasonSchema,
+  }),
+  RoomScopedSchema.extend({
     type: z.literal("PONG"),
     sentAt: z.number().int().nonnegative(),
     serverTime: z.number().int().nonnegative(),
@@ -316,6 +327,8 @@ export type P2PIceCandidate = z.infer<typeof P2PIceCandidateSchema>;
 export type P2PSignal = z.infer<typeof P2PSignalSchema>;
 export type ClientEvent = z.infer<typeof ClientEventSchema>;
 export type ServerEvent = z.infer<typeof ServerEventSchema>;
+export type RoomEndReason = z.infer<typeof RoomEndReasonSchema>;
+export type RoomEndedEvent = Extract<ServerEvent, { type: "ROOM_ENDED" }>;
 
 export function parseClientEvent(value: unknown): ClientEvent {
   return ClientEventSchema.parse(value);

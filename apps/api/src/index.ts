@@ -10,6 +10,13 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { verifyRoomToken, type VerifiedRoomToken } from "./auth";
 import { createIceServersPayload } from "./ice-servers";
+import { hasValidInternalAuthorization } from "./internal-auth";
+import {
+  endedRoomTombstone,
+  parseEndRoomCommand,
+  type EndedRoomTombstone,
+  type EndRoomCommand,
+} from "./room-lifecycle";
 import {
   getP2PSignalDedupeKey,
   RecentP2PSignalBuffer,
@@ -17,6 +24,8 @@ import {
 } from "./p2p-signal-buffer";
 import {
   initializeRoomStorage,
+  persistEndedRoomTombstoneAndClearRuntime,
+  readEndedRoomTombstone,
   readNextP2PServerSeq,
   readStoredP2PReplay,
   readStoredRoomState,
@@ -50,6 +59,7 @@ export interface Env {
   CLOUDFLARE_TURN_TTL_SECONDS?: string;
   ANIDACHI_JWT_SECRET?: string;
   ANIDACHI_ENV?: string;
+  ANIDACHI_INTERNAL_API_SECRET?: string;
   ROOM_ANALYTICS?: AnalyticsEngineDataset;
 }
 
@@ -65,6 +75,35 @@ app.use(
 );
 
 app.get("/", (c) => c.json({ ok: true, service: "anidachi-api" }));
+
+app.post("/internal/rooms/:roomId/end", async (c) => {
+  const authorization = c.req.header("authorization") ?? null;
+  if (!hasValidInternalAuthorization(
+    authorization,
+    c.env.ANIDACHI_INTERNAL_API_SECRET,
+  )) {
+    return c.json({ error: "UNAUTHORIZED", message: "Invalid internal authorization" }, 401);
+  }
+  const roomId = c.req.param("roomId");
+  if (roomId.length === 0 || roomId.length > MAX_ROOM_ID_CHARS) {
+    return c.json({ error: "INVALID_ROOM_ID", message: "Invalid room id" }, 400);
+  }
+  const body = await c.req.json().catch(() => null);
+  const command = parseEndRoomCommand(body);
+  if (!command) {
+    return c.json({ error: "INVALID_END_COMMAND", message: "Invalid room end command" }, 400);
+  }
+  const id = c.env.ROOMS.idFromName(roomId);
+  const stub = c.env.ROOMS.get(id);
+  return stub.fetch(new Request(`https://room.internal/internal/end`, {
+    method: "POST",
+    headers: {
+      Authorization: authorization!,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(command),
+  }));
+});
 
 app.post("/rooms", (c) => {
   return c.json(
@@ -194,8 +233,63 @@ export function addP2PSignalForDispatch(
   return result.duplicate ? null : result.event;
 }
 
+export function sendAndCloseEndedRoomSockets(
+  sockets: Iterable<WebSocket>,
+  event: Extract<ServerEvent, { type: "ROOM_ENDED" }>,
+): void {
+  const encoded = encode(event);
+  for (const socket of sockets) {
+    try {
+      socket.send(encoded);
+    } catch {
+      /* stale socket */
+    }
+  }
+  for (const socket of sockets) {
+    try {
+      socket.close(4004, "Room ended");
+    } catch {
+      /* stale socket */
+    }
+  }
+}
+
+function roomEndedEvent(
+  roomId: string,
+  tombstone: EndedRoomTombstone,
+): Extract<ServerEvent, { type: "ROOM_ENDED" }> {
+  return {
+    type: "ROOM_ENDED",
+    roomId,
+    endedAt: tombstone.endedAt,
+    reason: tombstone.reason,
+  };
+}
+
+export function handleRoomWebSocketMessageBoundary(
+  socket: WebSocket,
+  roomId: string,
+  tombstone: EndedRoomTombstone | null,
+  dispatch: () => void,
+): boolean {
+  if (tombstone) {
+    sendAndCloseEndedRoomSockets([socket], roomEndedEvent(roomId, tombstone));
+    return false;
+  }
+  dispatch();
+  return true;
+}
+
+export function persistRoomEndAfterDisablingAutoResponse(
+  state: Pick<DurableObjectState, "setWebSocketAutoResponse">,
+  persist: () => void,
+): void {
+  state.setWebSocketAutoResponse();
+  persist();
+}
+
 export class RoomDurableObject {
-  private readonly room: RoomState;
+  private room: RoomState;
   private readonly participantsBySocket = new Map<WebSocket, string>();
   private readonly p2pSignalBuffer = new RecentP2PSignalBuffer();
   private readonly socketsByParticipant = new Map<string, WebSocket>();
@@ -203,26 +297,39 @@ export class RoomDurableObject {
   private readonly sessionIdBySocket = new Map<WebSocket, string | undefined>();
   private readonly rateLimiterBySocket = new Map<WebSocket, RoomRateLimiter>();
   private nextP2PServerSeq = 1;
+  private endedTombstone: ReturnType<typeof endedRoomTombstone> | null;
 
   constructor(
     private readonly state: DurableObjectState,
     private readonly env: Env,
   ) {
     initializeRoomStorage(state.storage);
-    state.setWebSocketAutoResponse(
-      new WebSocketRequestResponsePair(HIBERNATION_KEEPALIVE_PING, HIBERNATION_KEEPALIVE_PONG),
-    );
 
     const roomId = state.id.name ?? "room";
+    this.endedTombstone = readEndedRoomTombstone(state.storage);
     this.room = new RoomState(roomId, undefined, readStoredRoomState(state.storage) ?? undefined);
-    this.p2pSignalBuffer.hydrate(readStoredP2PReplay(state.storage));
+    if (!this.endedTombstone) {
+      this.p2pSignalBuffer.hydrate(readStoredP2PReplay(state.storage));
+    }
     const replaySnapshot = this.p2pSignalBuffer.snapshot();
     const latestStoredSeq = replaySnapshot.at(-1)?.serverSeq ?? 0;
     this.nextP2PServerSeq = Math.max(
       readNextP2PServerSeq(state.storage) ?? 1,
       latestStoredSeq + 1,
     );
-    this.restoreWebSocketsFromAttachments();
+    if (!this.endedTombstone) {
+      state.setWebSocketAutoResponse(
+        new WebSocketRequestResponsePair(HIBERNATION_KEEPALIVE_PING, HIBERNATION_KEEPALIVE_PONG),
+      );
+      this.restoreWebSocketsFromAttachments();
+    } else {
+      state.setWebSocketAutoResponse();
+      this.clearTerminalRuntimeState();
+      sendAndCloseEndedRoomSockets(
+        this.state.getWebSockets(),
+        roomEndedEvent(this.room.roomId, this.endedTombstone),
+      );
+    }
   }
 
   private get telemetryContext(): RoomTelemetryContext {
@@ -303,12 +410,31 @@ export class RoomDurableObject {
   }
 
   async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    if (request.method === "POST" && url.pathname === "/internal/end") {
+      if (!hasValidInternalAuthorization(
+        request.headers.get("authorization"),
+        this.env.ANIDACHI_INTERNAL_API_SECRET,
+      )) {
+        return Response.json({ error: "UNAUTHORIZED" }, { status: 401 });
+      }
+      const command = parseEndRoomCommand(await request.json().catch(() => null));
+      if (!command) return Response.json({ error: "INVALID_END_COMMAND" }, { status: 400 });
+      return this.endRoom(command);
+    }
+    if (this.endedTombstone) {
+      this.clearTerminalRuntimeState();
+      sendAndCloseEndedRoomSockets(
+        this.state.getWebSockets(),
+        roomEndedEvent(this.room.roomId, this.endedTombstone),
+      );
+      return Response.json({ error: "ROOM_ENDED", endedAt: this.endedTombstone.endedAt }, { status: 410 });
+    }
     const upgradeHeader = request.headers.get("Upgrade");
     if (upgradeHeader !== "websocket") {
       return new Response("Expected WebSocket", { status: 426 });
     }
 
-    const url = new URL(request.url);
     const roomToken = url.searchParams.get("roomToken");
     if (!roomToken) {
       this.track("ws_token_reject");
@@ -338,8 +464,46 @@ export class RoomDurableObject {
     return new Response(null, { status: 101, webSocket: client });
   }
 
+  private async endRoom(command: EndRoomCommand): Promise<Response> {
+    const alreadyEnded = this.endedTombstone !== null;
+    const tombstone = this.endedTombstone ?? endedRoomTombstone(command);
+    await this.applyTerminalRoomState(tombstone);
+    return Response.json({ ok: true, alreadyEnded, ...tombstone });
+  }
+
+  private async applyTerminalRoomState(
+    tombstone: ReturnType<typeof endedRoomTombstone>,
+  ): Promise<void> {
+    persistRoomEndAfterDisablingAutoResponse(this.state, () => {
+      persistEndedRoomTombstoneAndClearRuntime(this.state.storage, tombstone);
+    });
+    await this.state.storage.sync();
+    this.endedTombstone = tombstone;
+
+    const event = roomEndedEvent(this.room.roomId, tombstone);
+    const sockets = this.state.getWebSockets();
+    this.clearTerminalRuntimeState();
+    sendAndCloseEndedRoomSockets(sockets, event);
+  }
+
+  private clearTerminalRuntimeState(): void {
+    this.p2pSignalBuffer.clear();
+    this.nextP2PServerSeq = 1;
+    this.room = new RoomState(this.room.roomId);
+    this.participantsBySocket.clear();
+    this.socketsByParticipant.clear();
+    this.verifiedBySocket.clear();
+    this.sessionIdBySocket.clear();
+    this.rateLimiterBySocket.clear();
+  }
+
   webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer): void {
-    this.handleMessage(socket, raw);
+    handleRoomWebSocketMessageBoundary(
+      socket,
+      this.room.roomId,
+      this.endedTombstone,
+      () => this.handleMessage(socket, raw),
+    );
   }
 
   webSocketClose(socket: WebSocket, code: number, reason: string, _wasClean: boolean): void {

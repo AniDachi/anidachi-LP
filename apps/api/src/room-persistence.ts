@@ -8,9 +8,11 @@ import {
 } from "@anidachi/protocol";
 import type { BufferedP2PSignalEvent } from "./p2p-signal-buffer";
 import type { RoomStateSnapshot } from "./room-state";
+import { parseEndRoomCommand, type EndedRoomTombstone } from "./room-lifecycle";
 
 export const ROOM_STATE_META_KEY = "room_state";
 export const NEXT_P2P_SERVER_SEQ_META_KEY = "next_p2p_server_seq";
+export const ROOM_ENDED_META_KEY = "room_ended";
 export const P2P_REPLAY_TTL_MS = 45_000;
 export const P2P_REPLAY_MAX_EVENTS = 80;
 
@@ -97,6 +99,37 @@ export function readNextP2PServerSeq(storage: DurableObjectStorage): number | nu
 
 export function writeNextP2PServerSeq(storage: DurableObjectStorage, nextSeq: number): void {
   writeMeta(storage, NEXT_P2P_SERVER_SEQ_META_KEY, nextSeq, Date.now());
+}
+
+export function readEndedRoomTombstone(storage: DurableObjectStorage): EndedRoomTombstone | null {
+  const row = storage.sql
+    .exec<RoomMetaRow>("SELECT value_json, updated_at, key FROM room_meta WHERE key = ?", ROOM_ENDED_META_KEY)
+    .toArray()[0];
+  if (!row) return null;
+  try {
+    const value = JSON.parse(row.value_json) as Record<string, unknown>;
+    const command = parseEndRoomCommand(value);
+    return value.schemaVersion === 1 && command
+      ? { schemaVersion: 1, ...command }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function persistEndedRoomTombstoneAndClearRuntime(
+  storage: DurableObjectStorage,
+  tombstone: EndedRoomTombstone,
+): void {
+  storage.transactionSync(() => {
+    writeMeta(storage, ROOM_ENDED_META_KEY, tombstone, tombstone.endedAt);
+    storage.sql.exec("DELETE FROM p2p_replay");
+    storage.sql.exec(
+      "DELETE FROM room_meta WHERE key IN (?, ?)",
+      ROOM_STATE_META_KEY,
+      NEXT_P2P_SERVER_SEQ_META_KEY,
+    );
+  });
 }
 
 export function readStoredP2PReplay(

@@ -7,10 +7,16 @@ import app, {
   consumeRoomFrameBoundary,
   closeRoomRateLimitedSocket,
   isRoomEventInScope,
+  handleRoomWebSocketMessageBoundary,
+  persistRoomEndAfterDisablingAutoResponse,
+  sendAndCloseEndedRoomSockets,
 } from "../src/index";
 import { RoomRateLimiter } from "../src/room-rate-limit";
 
 const authEnv = { ANIDACHI_JWT_SECRET: "test-secret-at-least-32-characters-long" };
+const internalEnv = {
+  ANIDACHI_INTERNAL_API_SECRET: "internal-secret",
+};
 
 function trackingRooms() {
   const calls: string[] = [];
@@ -29,6 +35,119 @@ function trackingRooms() {
 }
 
 describe("worker routes", () => {
+  it("rejects missing and wrong internal room lifecycle secrets", async () => {
+    const rooms = trackingRooms();
+    for (const authorization of [undefined, "Bearer wrong-secret"]) {
+      const response = await app.request(
+        "/internal/rooms/room-1/end",
+        {
+          method: "POST",
+          ...(authorization ? { headers: { Authorization: authorization } } : {}),
+          body: JSON.stringify({ endedAt: 1_000, reason: "host_ended" }),
+        },
+        { ...internalEnv, ROOMS: rooms.namespace },
+      );
+      expect(response.status).toBe(401);
+    }
+    expect(rooms.calls).toEqual([]);
+  });
+
+  it("rejects malformed internal room end commands before Durable Object lookup", async () => {
+    const rooms = trackingRooms();
+    const response = await app.request(
+      "/internal/rooms/room-1/end",
+      {
+        method: "POST",
+        headers: { Authorization: "Bearer internal-secret", "Content-Type": "application/json" },
+        body: JSON.stringify({ endedAt: -1, reason: "unknown" }),
+      },
+      { ...internalEnv, ROOMS: rooms.namespace },
+    );
+
+    expect(response.status).toBe(400);
+    expect(rooms.calls).toEqual([]);
+  });
+
+  it("forwards authenticated room end commands to the named Durable Object", async () => {
+    const requests: Request[] = [];
+    const response = await app.request(
+      "/internal/rooms/room-1/end",
+      {
+        method: "POST",
+        headers: { Authorization: "Bearer internal-secret", "Content-Type": "application/json" },
+        body: JSON.stringify({ endedAt: 1_000, reason: "host_ended" }),
+      },
+      {
+        ...internalEnv,
+        ROOMS: {
+          idFromName: (roomId: string) => roomId,
+          get: () => ({
+            fetch: async (request: Request) => {
+              requests.push(request);
+              return Response.json({ ok: true });
+            },
+          }),
+        },
+      },
+    );
+
+    expect(response.status).toBe(200);
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.headers.get("Authorization")).toBe("Bearer internal-secret");
+    expect(await requests[0]?.json()).toEqual({ endedAt: 1_000, reason: "host_ended" });
+  });
+
+  it("continues terminal delivery and closure when one socket throws", () => {
+    const calls: string[] = [];
+    const stale = {
+      send() { throw new Error("stale send"); },
+      close() { throw new Error("stale close"); },
+    } as unknown as WebSocket;
+    const healthy = {
+      send(value: string) { calls.push(`send:${JSON.parse(value).type}`); },
+      close(code: number) { calls.push(`close:${code}`); },
+    } as unknown as WebSocket;
+
+    expect(() => sendAndCloseEndedRoomSockets([stale, healthy], {
+      type: "ROOM_ENDED",
+      roomId: "room-1",
+      endedAt: 1_000,
+      reason: "host_ended",
+    })).not.toThrow();
+    expect(calls).toEqual(["send:ROOM_ENDED", "close:4004"]);
+  });
+
+  it("does not dispatch websocket messages after a room tombstone", () => {
+    const calls: string[] = [];
+    const socket = {
+      send(value: string) { calls.push(`send:${JSON.parse(value).type}`); },
+      close(code: number) { calls.push(`close:${code}`); },
+    } as unknown as WebSocket;
+    const dispatch = () => calls.push("dispatch");
+
+    expect(handleRoomWebSocketMessageBoundary(
+      socket,
+      "room-1",
+      { schemaVersion: 1, endedAt: 1_000, reason: "host_ended" },
+      dispatch,
+    )).toBe(false);
+    expect(calls).toEqual(["send:ROOM_ENDED", "close:4004"]);
+  });
+
+  it("disables hibernation auto-response before persisting a tombstone", () => {
+    const calls: string[] = [];
+    const state = {
+      setWebSocketAutoResponse(pair?: WebSocketRequestResponsePair) {
+        calls.push(pair ? "enable" : "disable");
+      },
+    };
+
+    persistRoomEndAfterDisablingAutoResponse(
+      state,
+      () => calls.push("persist"),
+    );
+    expect(calls).toEqual(["disable", "persist"]);
+  });
   it("does not expose the legacy LiveKit token endpoint", async () => {
     const response = await app.request(
       "/livekit/token",

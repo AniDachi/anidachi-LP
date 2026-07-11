@@ -101,6 +101,11 @@ export class RecentP2PSignalBuffer {
     return [...this.events];
   }
 
+  clear(): void {
+    this.events.length = 0;
+    this.seenKeys.clear();
+  }
+
   private rebuildDedupeKeys(): void {
     this.seenKeys.clear();
     for (const event of this.events) {
