@@ -330,8 +330,9 @@ The extension currently supports:
   are joined. `ROOM_SNAPSHOT` carries the cumulative value for reconnect-safe
   countdown display. Worker waits for the existing internal Web callback to
   acknowledge one service-role-only RPC that atomically applies usage and ends
-  the room before it persists the terminal tombstone. The migration and
-  matching Web/Worker code are not deployed to staging yet;
+  the room before it persists the terminal tombstone. The additive staging
+  migration and shared staging callback secret were installed on 2026-07-13;
+  matching Web/Worker rollout and staging acceptance remain required;
 - debug export from the extension panel. Current diagnostic bundles include a
   unified top-level timeline that merges background diagnostics with page debug
   entries, while still keeping the split `diagnosticEntries` and
