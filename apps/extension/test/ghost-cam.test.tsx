@@ -1,5 +1,8 @@
 import type { Participant } from "@anidachi/protocol";
-import type { IncomingP2PSignal } from "../src/media-types";
+import type {
+  IncomingP2PSignal,
+  SignalingTransportReady,
+} from "../src/media-types";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -7,9 +10,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const mockP2PMedia = vi.hoisted(() => {
+  const options: Array<{
+    sendSignal: (
+      toUserId: string,
+      signal: IncomingP2PSignal["signal"],
+      metadata: { senderMediaSessionId: string },
+    ) => "sent" | "queued" | "dropped";
+  }> = [];
   const controllers: Array<{
     disconnect: ReturnType<typeof vi.fn>;
     handleSignal: ReturnType<typeof vi.fn>;
+    handleSignalingTransportReady: ReturnType<typeof vi.fn>;
     hasPeer: ReturnType<typeof vi.fn>;
     setCameraEnabled: ReturnType<typeof vi.fn>;
     startVoiceTalk: ReturnType<typeof vi.fn>;
@@ -18,10 +29,14 @@ const mockP2PMedia = vi.hoisted(() => {
     updateParticipants: ReturnType<typeof vi.fn>;
   }> = [];
 
-  const P2PMediaController = vi.fn(function MockP2PMediaController() {
+  const P2PMediaController = vi.fn(function MockP2PMediaController(
+    controllerOptions: (typeof options)[number],
+  ) {
+    options.push(controllerOptions);
     const controller = {
       disconnect: vi.fn(),
       handleSignal: vi.fn(),
+      handleSignalingTransportReady: vi.fn(() => Promise.resolve()),
       hasPeer: vi.fn(() => false),
       setCameraEnabled: vi.fn(() => Promise.resolve()),
       startVoiceTalk: vi.fn(() => Promise.resolve()),
@@ -33,7 +48,7 @@ const mockP2PMedia = vi.hoisted(() => {
     return controller;
   });
 
-  return { controllers, P2PMediaController };
+  return { controllers, options, P2PMediaController };
 });
 
 vi.mock("../src/p2p-ice", () => ({
@@ -85,10 +100,12 @@ function GhostCamHarness({
   incomingP2PSignals = [],
   participant: activeParticipant,
   participants,
+  signalingTransportReady = null,
 }: {
   incomingP2PSignals?: IncomingP2PSignal[];
   participant: Participant;
   participants: Participant[];
+  signalingTransportReady?: SignalingTransportReady | null;
 }) {
   useGhostCam({
     cameraEnabled: true,
@@ -101,6 +118,7 @@ function GhostCamHarness({
     roomId: "room-1",
     roomToken: "token-1",
     sendP2PSignal: noopSendP2PSignal,
+    signalingTransportReady,
     sourceGeneration: 1,
     voiceTalkActive: false,
   });
@@ -115,6 +133,7 @@ describe("useGhostCam P2P session lifecycle", () => {
     vi.mocked(canReceiveP2PSignalFromParticipant).mockReset();
     vi.mocked(canReceiveP2PSignalFromParticipant).mockReturnValue(true);
     mockP2PMedia.controllers.length = 0;
+    mockP2PMedia.options.length = 0;
     mockP2PMedia.P2PMediaController.mockClear();
     document.body.replaceChildren();
   });
@@ -195,5 +214,113 @@ describe("useGhostCam P2P session lifecycle", () => {
     await act(async () => {
       root.unmount();
     });
+  });
+
+  it("preserves media-session metadata on incoming signals", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    const viewer = participant("viewer", "Viewer", "viewer");
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness participant={host} participants={[host, viewer]} />,
+      );
+    });
+    await act(async () => undefined);
+
+    const controller = mockP2PMedia.controllers[0];
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          incomingP2PSignals={[
+            {
+              clientSignalId: "signal-media-session",
+              fromUserId: "viewer",
+              roomGeneration: 1,
+              senderConnectionId: "viewer-connection-b",
+              senderMediaSessionId: "viewer-media-a",
+              sequence: 1,
+              signal: { kind: "renegotiate" },
+              sourceGeneration: 1,
+            },
+          ]}
+          participant={host}
+          participants={[host, viewer]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    expect(controller.handleSignal).toHaveBeenCalledWith(
+      "viewer",
+      { kind: "renegotiate" },
+      {
+        senderConnectionId: "viewer-connection-b",
+        senderMediaSessionId: "viewer-media-a",
+      },
+    );
+
+    await act(async () => root.unmount());
+  });
+
+  it("delivers snapshot readiness after the async controller is available", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    const ready = {
+      reconnect: true,
+      senderConnectionId: "host-connection-b",
+    } satisfies SignalingTransportReady;
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          participant={host}
+          participants={[host]}
+          signalingTransportReady={ready}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    expect(
+      mockP2PMedia.controllers[0].handleSignalingTransportReady,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      mockP2PMedia.controllers[0].handleSignalingTransportReady,
+    ).toHaveBeenCalledWith(ready);
+
+    await act(async () => root.unmount());
+  });
+
+  it("forwards the controller media-session id to the room sender", async () => {
+    noopSendP2PSignal.mockReturnValue("sent");
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+
+    await act(async () => {
+      root.render(<GhostCamHarness participant={host} participants={[host]} />);
+    });
+    await act(async () => undefined);
+
+    const disposition = mockP2PMedia.options[0].sendSignal(
+      "viewer",
+      { kind: "bye" },
+      { senderMediaSessionId: "host-media-a" },
+    );
+
+    expect(disposition).toBe("sent");
+    expect(noopSendP2PSignal).toHaveBeenCalledWith(
+      "viewer",
+      { kind: "bye" },
+      "host-media-a",
+    );
+
+    await act(async () => root.unmount());
   });
 });

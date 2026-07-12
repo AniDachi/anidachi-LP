@@ -157,6 +157,7 @@ const ClientP2PSignalEnvelopeSchema = RoomScopedSchema.extend({
   // the Worker owns the authoritative values and rewrites them on relay.
   roomGeneration: z.number().int().nonnegative().optional(),
   senderConnectionId: SessionIdSchema,
+  senderMediaSessionId: SessionIdSchema.optional(),
   sourceGeneration: z.number().int().nonnegative().optional(),
   toUserId: ParticipantIdSchema,
   signal: P2PSignalSchema,

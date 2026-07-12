@@ -615,6 +615,80 @@ describe("room protocol schemas", () => {
     expect(candidate.sourceGeneration).toBe(1);
   });
 
+  it("accepts bounded media-session identities without breaking legacy P2P envelopes", () => {
+    const legacyClientEvent = ClientEventSchema.parse({
+      type: "P2P_SIGNAL",
+      clientSignalId: "signal-legacy",
+      roomId: "room-1",
+      fromUserId: "user-1",
+      senderConnectionId: "connection-1",
+      toUserId: "user-2",
+      signal: { kind: "voice-start" },
+    });
+    const currentClientEvent = ClientEventSchema.parse({
+      type: "P2P_SIGNAL",
+      clientSignalId: "signal-current",
+      roomId: "room-1",
+      fromUserId: "user-1",
+      senderConnectionId: "connection-1",
+      senderMediaSessionId: "media-session-1",
+      toUserId: "user-2",
+      signal: { kind: "voice-start" },
+    });
+    const currentServerEvent = ServerEventSchema.parse({
+      type: "P2P_SIGNAL",
+      clientSignalId: "signal-server",
+      roomId: "room-1",
+      fromUserId: "user-1",
+      roomGeneration: 1,
+      senderConnectionId: "connection-1",
+      senderMediaSessionId: "media-session-1",
+      serverReceivedAt: 1_000,
+      serverSeq: 3,
+      sourceGeneration: 1,
+      toUserId: "user-2",
+      signal: { kind: "voice-start" },
+    });
+
+    expect(legacyClientEvent).not.toHaveProperty("senderMediaSessionId");
+    expect(currentClientEvent).toMatchObject({
+      senderMediaSessionId: "media-session-1",
+    });
+    expect(currentServerEvent).toMatchObject({
+      senderMediaSessionId: "media-session-1",
+    });
+
+    const oversizedMediaSessionId = "m".repeat(MAX_SESSION_ID_CHARS + 1);
+    expect(() =>
+      ClientEventSchema.parse({
+        type: "P2P_SIGNAL",
+        clientSignalId: "signal-oversized-client",
+        roomId: "room-1",
+        fromUserId: "user-1",
+        senderConnectionId: "connection-1",
+        senderMediaSessionId: oversizedMediaSessionId,
+        toUserId: "user-2",
+        signal: { kind: "voice-start" },
+      }),
+    ).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({
+        type: "P2P_SIGNAL",
+        clientSignalId: "signal-oversized-server",
+        roomId: "room-1",
+        fromUserId: "user-1",
+        roomGeneration: 1,
+        senderConnectionId: "connection-1",
+        senderMediaSessionId: oversizedMediaSessionId,
+        serverReceivedAt: 1_000,
+        serverSeq: 3,
+        sourceGeneration: 1,
+        toUserId: "user-2",
+        signal: { kind: "voice-start" },
+      }),
+    ).toThrow();
+  });
+
   it("accepts lightweight P2P renegotiation requests", () => {
     const renegotiate = ClientEventSchema.parse({
       type: "P2P_SIGNAL",

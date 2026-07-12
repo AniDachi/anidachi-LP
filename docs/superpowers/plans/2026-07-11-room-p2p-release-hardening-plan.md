@@ -238,21 +238,21 @@ export interface SignalingTransportReady {
   compatibility. It is created with the media controller, survives WebSocket
   reconnect, and changes on controller/reload replacement.
 
-- [ ] Add failing tests for stable media-session identity across transport
+- [x] Add failing tests for stable media-session identity across transport
   reconnect, camera/voice republish, dropped offer, dropped answer, rollback,
   and healthy-peer no-churn.
-- [ ] Make `RoomClient.send()` return a disposition and expose one ready callback
+- [x] Make `RoomClient.send()` return a disposition and expose one ready callback
   per socket after its first authoritative snapshot.
-- [ ] Republish current camera and voice intent after transport ready.
-- [ ] Serialize incoming signaling per peer and only retain SDP/ICE dedupe
+- [x] Republish current camera and voice intent after transport ready.
+- [x] Serialize incoming signaling per peer and only retain SDP/ICE dedupe
   fingerprints after WebRTC accepts the corresponding operation.
-- [ ] Recover a stale `have-local-offer` with rollback and bounded fresh offer;
+- [x] Recover a stale `have-local-offer` with rollback and bounded fresh offer;
   replace the peer only if rollback fails.
-- [ ] Publish an explicit closed transport status so page lifecycle restoration
+- [x] Publish an explicit closed transport status so page lifecycle restoration
   cannot retain a stale connected state.
-- [ ] Extend real-WebRTC harness with dropped-offer/answer and reconnect cases.
-- [ ] Run extension/protocol/API tests and real-WebRTC harness.
-- [ ] Commit as `fix(extension): recover media sessions across signaling loss`.
+- [x] Extend real-WebRTC harness with dropped-offer/answer and reconnect cases.
+- [x] Run extension/protocol/API tests and real-WebRTC harness.
+- [x] Commit as `fix(extension): recover media sessions across signaling loss`.
 
 ### Task 6: Privacy-Safe Storage, Replay, Logs, And TURN
 

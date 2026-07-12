@@ -27,7 +27,11 @@ import {
   summarizeP2PSdp,
 } from "../src/p2p-media";
 import type { P2PSignal, Participant } from "@anidachi/protocol";
-import type { GhostVideo, LiveVoiceStatus } from "../src/media-types";
+import type {
+  GhostVideo,
+  LiveVoiceStatus,
+  RoomSendDisposition,
+} from "../src/media-types";
 
 function participant(
   id: string,
@@ -138,22 +142,32 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-function createP2PControllerHarness() {
+function createP2PControllerHarness(
+  localParticipant = participant("host", false),
+  sendDisposition: RoomSendDisposition = "sent",
+) {
   const activeSpeakerChanges: string[][] = [];
   const cameraStatuses: boolean[] = [];
   const messages: Array<string | null> = [];
   const videos: GhostVideo[][] = [];
   const voiceStatuses: LiveVoiceStatus[] = [];
-  const signals: Array<{ signal: P2PSignal; toUserId: string }> = [];
+  const signals: Array<{
+    metadata: { senderMediaSessionId: string };
+    signal: P2PSignal;
+    toUserId: string;
+  }> = [];
   const controller = new P2PMediaController({
     iceServers: [],
-    localParticipant: participant("host", false),
+    localParticipant,
     onActiveSpeakerIdsChange: (ids) => activeSpeakerChanges.push(ids),
     onCameraStatus: (enabled) => cameraStatuses.push(enabled),
     onVideosChange: (items) => videos.push(items),
     onVoiceMessageChange: (message) => messages.push(message),
     onVoiceStatusChange: (status) => voiceStatuses.push(status),
-    sendSignal: (toUserId, signal) => signals.push({ signal, toUserId }),
+    sendSignal: (toUserId, signal, metadata) => {
+      signals.push({ metadata, signal, toUserId });
+      return sendDisposition;
+    },
   });
 
   return {
@@ -600,6 +614,34 @@ describe("P2P perfect negotiation role helpers", () => {
   });
 });
 
+describe("P2P initial negotiation ownership", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    FakeRtcPeerConnection.instances = [];
+    vi.stubGlobal("RTCPeerConnection", FakeRtcPeerConnection);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("does not let the deterministic answerer race the offerer on peer creation", async () => {
+    const harness = createP2PControllerHarness(participant("viewer"));
+
+    harness.controller.updateParticipants([participant("host", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(
+      harness.signals.some((item) => item.signal.kind === "renegotiate"),
+    ).toBe(false);
+    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
+
+    harness.controller.disconnect();
+  });
+});
+
 describe("P2P reconciliation decision", () => {
   it("restarts ICE when the connection or ICE transport is down", () => {
     expect(reconcilePeerAction("failed", "connected")).toBe("restart-ice");
@@ -677,6 +719,74 @@ describe("P2P sender connection generation", () => {
       reason: "stale-connection",
     });
   });
+
+  it("accepts answers from a new transport in the same media session", () => {
+    expect(
+      decideP2PSignalConnection(
+        "conn-old",
+        "conn-new",
+        "answer",
+        "media-session-a",
+        "media-session-a",
+      ),
+    ).toEqual({
+      accept: true,
+      nextSenderConnectionId: "conn-new",
+      nextSenderMediaSessionId: "media-session-a",
+      reason: "current-media-session",
+    });
+  });
+
+  it("adopts a replacement media session without treating it as stale transport", () => {
+    expect(
+      decideP2PSignalConnection(
+        "conn-old",
+        "conn-new",
+        "offer",
+        "media-session-a",
+        "media-session-b",
+      ),
+    ).toEqual({
+      accept: true,
+      nextSenderConnectionId: "conn-new",
+      nextSenderMediaSessionId: "media-session-b",
+      reason: "new-media-session",
+    });
+  });
+
+  it("does not let an unseen transport close the current media session", () => {
+    expect(
+      decideP2PSignalConnection(
+        "conn-current",
+        "conn-unknown",
+        "bye",
+        "media-session-a",
+        "media-session-a",
+      ),
+    ).toEqual({
+      accept: false,
+      nextSenderConnectionId: "conn-current",
+      nextSenderMediaSessionId: "media-session-a",
+      reason: "stale-connection",
+    });
+  });
+
+  it("does not let a legacy replay replace an established media session", () => {
+    expect(
+      decideP2PSignalConnection(
+        "conn-current",
+        "conn-legacy",
+        "offer",
+        "media-session-a",
+        null,
+      ),
+    ).toEqual({
+      accept: false,
+      nextSenderConnectionId: "conn-current",
+      nextSenderMediaSessionId: "media-session-a",
+      reason: "stale-connection",
+    });
+  });
 });
 
 describe("P2P RTC configuration", () => {
@@ -690,6 +800,17 @@ describe("P2P RTC configuration", () => {
       iceServers,
       rtcpMuxPolicy: "require",
     });
+  });
+
+  it("honors an explicit empty ICE server list for host-only local tests", () => {
+    const harness = createP2PControllerHarness();
+
+    expect(
+      (harness.controller as unknown as { iceServers: RTCIceServer[] })
+        .iceServers,
+    ).toEqual([]);
+
+    harness.controller.disconnect();
   });
 });
 
@@ -1498,14 +1619,23 @@ class FakeRtcTransceiver {
   mid: string | null = null;
   readonly receiver: { track: { kind: string } };
   readonly sender: {
+    getParameters: ReturnType<typeof vi.fn>;
     replaceTrack: ReturnType<typeof vi.fn>;
+    setParameters: ReturnType<typeof vi.fn>;
     track: MediaStreamTrack | null;
   };
 
   constructor(kind: "audio" | "video", direction: RTCRtpTransceiverDirection) {
     this.direction = direction;
     this.receiver = { track: { kind } };
-    this.sender = { replaceTrack: vi.fn(async () => undefined), track: null };
+    this.sender = {
+      getParameters: vi.fn(() => ({ encodings: [{}] })),
+      replaceTrack: vi.fn(async (track: MediaStreamTrack | null) => {
+        this.sender.track = track;
+      }),
+      setParameters: vi.fn(async () => undefined),
+      track: null,
+    };
   }
 }
 
@@ -1517,11 +1647,37 @@ class FakeRtcPeerConnection extends EventTarget {
   localDescription: RTCSessionDescription | null = null;
   remoteDescription: RTCSessionDescription | null = null;
   signalingState: RTCSignalingState = "stable";
+  failRollback = false;
+  readonly addIceCandidate = vi.fn(async () => undefined);
   readonly close = vi.fn(() => {
     this.signalingState = "closed";
   });
+  readonly createAnswer = vi.fn(async () => ({
+    type: "answer" as const,
+    sdp: "v=0\r\no=answer\r\n",
+  }));
+  readonly createOffer = vi.fn(async () => ({
+    type: "offer" as const,
+    sdp: "v=0\r\no=offer\r\n",
+  }));
   readonly restartIce = vi.fn();
   readonly setConfiguration = vi.fn();
+  readonly setLocalDescription = vi.fn(
+    async (description: RTCSessionDescriptionInit) => {
+      if (description.type === "rollback") {
+        if (this.failRollback) {
+          throw new Error("rollback failed");
+        }
+        this.localDescription = null;
+        this.signalingState = "stable";
+        return;
+      }
+
+      this.localDescription = description as RTCSessionDescription;
+      this.signalingState =
+        description.type === "offer" ? "have-local-offer" : "stable";
+    },
+  );
   private readonly transceivers: FakeRtcTransceiver[] = [];
 
   constructor() {
@@ -1538,20 +1694,12 @@ class FakeRtcPeerConnection extends EventTarget {
     return transceiver;
   }
 
-  async createOffer(): Promise<RTCSessionDescriptionInit> {
-    return { type: "offer", sdp: "v=0\r\n" };
-  }
-
   async getStats(): Promise<RTCStatsReport> {
     return statsReportFrom([]);
   }
 
   getTransceivers(): FakeRtcTransceiver[] {
     return this.transceivers;
-  }
-
-  async setLocalDescription(description: RTCSessionDescriptionInit): Promise<void> {
-    this.localDescription = description as RTCSessionDescription;
   }
 
   readonly setRemoteDescription = vi.fn(
@@ -1654,6 +1802,362 @@ describe("P2P idle peer linger", () => {
 
     const pc = FakeRtcPeerConnection.instances[0];
     expect(pc?.setRemoteDescription).not.toHaveBeenCalled();
+
+    harness.controller.disconnect();
+  });
+
+  it("uses one stable media-session id for every controller signal", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    harness.controller.notifyPageLeaving("test");
+
+    expect(harness.signals.length).toBeGreaterThan(1);
+    const mediaSessionIds = new Set(
+      harness.signals.map((item) => item.metadata.senderMediaSessionId),
+    );
+    expect(mediaSessionIds.size).toBe(1);
+    expect(Array.from(mediaSessionIds)[0]).toMatch(/^media-/);
+
+    harness.controller.disconnect();
+  });
+
+  it("republishes camera and voice intent once per ready transport", async () => {
+    const harness = createP2PControllerHarness(participant("host", true));
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    pc.connectionState = "connected";
+    pc.iceConnectionState = "connected";
+    pc.signalingState = "stable";
+    harness.cameraStatuses.length = 0;
+    harness.signals.length = 0;
+    (
+      harness.controller as unknown as {
+        voiceTalking: boolean;
+        wantsVoiceTalk: boolean;
+      }
+    ).voiceTalking = true;
+    (
+      harness.controller as unknown as {
+        voiceTalking: boolean;
+        wantsVoiceTalk: boolean;
+      }
+    ).wantsVoiceTalk = true;
+
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "local-connection-b",
+    });
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "local-connection-b",
+    });
+
+    expect(harness.cameraStatuses).toEqual([true]);
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "voice-start"),
+    ).toHaveLength(1);
+    expect(pc.close).not.toHaveBeenCalled();
+
+    harness.controller.disconnect();
+  });
+
+  it("rolls back and sends one fresh offer after a dropped offer reconnect", async () => {
+    const harness = createP2PControllerHarness(participant("host"), "dropped");
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    expect(pc.signalingState).toBe("have-local-offer");
+    expect(pc.createOffer).toHaveBeenCalledTimes(1);
+
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "local-connection-b",
+    });
+
+    expect(pc.setLocalDescription).toHaveBeenCalledWith({ type: "rollback" });
+    expect(pc.createOffer).toHaveBeenCalledTimes(2);
+    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
+    expect(pc.close).not.toHaveBeenCalled();
+
+    harness.controller.disconnect();
+  });
+
+  it("replaces the peer only when stale-offer rollback fails", async () => {
+    const harness = createP2PControllerHarness(participant("host"), "dropped");
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const failedPeer = FakeRtcPeerConnection.instances[0];
+    failedPeer.failRollback = true;
+
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "local-connection-b",
+    });
+
+    expect(failedPeer.close).toHaveBeenCalledTimes(1);
+    expect(FakeRtcPeerConnection.instances).toHaveLength(2);
+
+    harness.controller.disconnect();
+  });
+
+  it("does not renegotiate or recreate a healthy peer on transport ready", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    pc.connectionState = "connected";
+    pc.iceConnectionState = "connected";
+    pc.signalingState = "stable";
+    pc.createOffer.mockClear();
+    pc.close.mockClear();
+
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "local-connection-b",
+    });
+
+    expect(pc.createOffer).not.toHaveBeenCalled();
+    expect(pc.close).not.toHaveBeenCalled();
+    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
+
+    harness.controller.disconnect();
+  });
+
+  it("requests renegotiation after a dropped answer reconnect", async () => {
+    const harness = createP2PControllerHarness(
+      participant("viewer"),
+      "dropped",
+    );
+
+    await harness.controller.handleSignal(
+      "host",
+      {
+        kind: "offer",
+        sdp: { type: "offer", sdp: "v=0\r\no=remote-offer\r\n" },
+      },
+      {
+        senderConnectionId: "host-connection-a",
+        senderMediaSessionId: "host-media-a",
+      },
+    );
+    expect(harness.signals.some((item) => item.signal.kind === "answer")).toBe(
+      true,
+    );
+    const pc = FakeRtcPeerConnection.instances[0];
+    pc.connectionState = "connected";
+    pc.iceConnectionState = "connected";
+
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "viewer-connection-b",
+    });
+
+    expect(
+      harness.signals.some((item) => item.signal.kind === "renegotiate"),
+    ).toBe(true);
+
+    harness.controller.disconnect();
+  });
+
+  it("requests renegotiation when a queued answer may have been lost with its transport", async () => {
+    const harness = createP2PControllerHarness(participant("viewer"), "queued");
+
+    await harness.controller.handleSignal(
+      "host",
+      {
+        kind: "offer",
+        sdp: { type: "offer", sdp: "v=0\r\no=queued-answer-offer\r\n" },
+      },
+      {
+        senderConnectionId: "host-connection-a",
+        senderMediaSessionId: "host-media-a",
+      },
+    );
+    const pc = FakeRtcPeerConnection.instances[0];
+    pc.connectionState = "connected";
+    pc.iceConnectionState = "connected";
+
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "viewer-connection-b",
+    });
+
+    expect(
+      harness.signals.some((item) => item.signal.kind === "renegotiate"),
+    ).toBe(true);
+
+    harness.controller.disconnect();
+  });
+
+  it("retries answer creation after WebRTC accepted the remote offer", async () => {
+    const harness = createP2PControllerHarness(participant("viewer"));
+    harness.controller.updateParticipants([participant("host", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    const pc = FakeRtcPeerConnection.instances[0];
+    pc.createAnswer.mockRejectedValueOnce(
+      new Error("temporary answer failure"),
+    );
+
+    await harness.controller.handleSignal(
+      "host",
+      {
+        kind: "offer",
+        sdp: { type: "offer", sdp: "v=0\r\no=answer-retry-offer\r\n" },
+      },
+      {
+        senderConnectionId: "host-connection-a",
+        senderMediaSessionId: "host-media-a",
+      },
+    );
+    expect(pc.signalingState).toBe("have-remote-offer");
+    expect(harness.signals.some((item) => item.signal.kind === "answer")).toBe(
+      false,
+    );
+    pc.connectionState = "connected";
+    pc.iceConnectionState = "connected";
+
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "viewer-connection-b",
+    });
+
+    expect(pc.createAnswer).toHaveBeenCalledTimes(2);
+    expect(harness.signals.some((item) => item.signal.kind === "answer")).toBe(
+      true,
+    );
+    expect(pc.close).not.toHaveBeenCalled();
+
+    harness.controller.disconnect();
+  });
+
+  it("keeps the peer when an answer arrives on a new transport in the same media session", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    await harness.controller.handleSignal(
+      "viewer",
+      {
+        candidate: {
+          candidate: "candidate:1 1 udp 1 192.0.2.1 10000 typ host",
+          sdpMid: "0",
+          sdpMLineIndex: 0,
+        },
+        kind: "ice",
+      },
+      {
+        senderConnectionId: "viewer-connection-a",
+        senderMediaSessionId: "viewer-media-a",
+      },
+    );
+    pc.signalingState = "have-local-offer";
+
+    await harness.controller.handleSignal(
+      "viewer",
+      {
+        kind: "answer",
+        sdp: { type: "answer", sdp: "v=0\r\no=remote-answer\r\n" },
+      },
+      {
+        senderConnectionId: "viewer-connection-b",
+        senderMediaSessionId: "viewer-media-a",
+      },
+    );
+
+    expect(pc.setRemoteDescription).toHaveBeenCalledWith({
+      type: "answer",
+      sdp: "v=0\r\no=remote-answer\r\n",
+    });
+    expect(pc.close).not.toHaveBeenCalled();
+    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
+
+    harness.controller.disconnect();
+  });
+
+  it("retries the same SDP after WebRTC rejects the first application", async () => {
+    const harness = createP2PControllerHarness(participant("viewer"));
+    harness.controller.updateParticipants([participant("host", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    const pc = FakeRtcPeerConnection.instances[0];
+    pc.setRemoteDescription.mockRejectedValueOnce(
+      new Error("temporary failure"),
+    );
+    const signal: P2PSignal = {
+      kind: "offer",
+      sdp: { type: "offer", sdp: "v=0\r\no=retry-offer\r\n" },
+    };
+
+    await harness.controller.handleSignal("host", signal, {
+      senderConnectionId: "host-connection-a",
+      senderMediaSessionId: "host-media-a",
+    });
+
+    await harness.controller.handleSignal("host", signal, {
+      senderConnectionId: "host-connection-a",
+      senderMediaSessionId: "host-media-a",
+    });
+
+    expect(pc.setRemoteDescription).toHaveBeenCalledTimes(2);
+
+    harness.controller.disconnect();
+  });
+
+  it("serializes SDP application for each remote peer", async () => {
+    const harness = createP2PControllerHarness(participant("viewer"));
+    harness.controller.updateParticipants([participant("host", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    const pc = FakeRtcPeerConnection.instances[0];
+    const gate = deferred<void>();
+    let remoteDescriptionCalls = 0;
+    pc.setRemoteDescription.mockImplementation(
+      async (description: RTCSessionDescriptionInit) => {
+        remoteDescriptionCalls += 1;
+        if (remoteDescriptionCalls === 1) {
+          await gate.promise;
+        }
+        pc.remoteDescription = description as RTCSessionDescription;
+        pc.signalingState =
+          description.type === "offer" ? "have-remote-offer" : "stable";
+      },
+    );
+    const first = harness.controller.handleSignal(
+      "host",
+      {
+        kind: "offer",
+        sdp: { type: "offer", sdp: "v=0\r\no=offer-one\r\n" },
+      },
+      {
+        senderConnectionId: "host-connection-a",
+        senderMediaSessionId: "host-media-a",
+      },
+    );
+    const second = harness.controller.handleSignal(
+      "host",
+      {
+        kind: "offer",
+        sdp: { type: "offer", sdp: "v=0\r\no=offer-two\r\n" },
+      },
+      {
+        senderConnectionId: "host-connection-a",
+        senderMediaSessionId: "host-media-a",
+      },
+    );
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(pc.setRemoteDescription).toHaveBeenCalledTimes(1);
+
+    gate.resolve();
+    await Promise.all([first, second]);
+    expect(pc.setRemoteDescription).toHaveBeenCalledTimes(2);
 
     harness.controller.disconnect();
   });

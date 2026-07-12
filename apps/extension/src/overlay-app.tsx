@@ -72,7 +72,11 @@ import {
   getHotkeyAction,
   shouldStopVoiceTalkOnWindowBlur,
 } from "./hotkeys";
-import type { IncomingP2PSignal } from "./media-types";
+import type {
+  IncomingP2PSignal,
+  RoomSendDisposition,
+  SignalingTransportReady,
+} from "./media-types";
 import {
   DEFAULT_CAM_STACK_BOTTOM_PX,
   DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE,
@@ -398,6 +402,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [roomGeneration, setRoomGeneration] = useState(0);
   const [sourceGeneration, setSourceGeneration] = useState(0);
   const [roomSnapshotReady, setRoomSnapshotReady] = useState(false);
+  const [signalingTransportReady, setSignalingTransportReady] =
+    useState<SignalingTransportReady | null>(null);
   const [fireCharge, setFireCharge] = useState<FireChargeState | null>(null);
   const [flamingParticipantIds, setFlamingParticipantIds] = useState<string[]>([]);
   const [catchUp, setCatchUp] = useState<CatchUpState | null>(null);
@@ -647,6 +653,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setRoomGeneration(0);
     setSourceGeneration(0);
     setRoomSnapshotReady(false);
+    setSignalingTransportReady(null);
     setIncomingP2PSignals([]);
   }, [roomId]);
 
@@ -1464,31 +1471,39 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     });
   }, []);
 
-  const sendP2PSignal = useCallback((toUserId: string, signal: P2PSignal) => {
-    const activeRoomId = roomIdRef.current;
-    const activeParticipant = participantRef.current;
-    if (!activeRoomId || !activeParticipant || toUserId === activeParticipant.id) {
-      return;
-    }
+  const sendP2PSignal = useCallback(
+    (
+      toUserId: string,
+      signal: P2PSignal,
+      senderMediaSessionId: string,
+    ): RoomSendDisposition => {
+      const activeRoomId = roomIdRef.current;
+      const activeParticipant = participantRef.current;
+      if (!activeRoomId || !activeParticipant || toUserId === activeParticipant.id) {
+        return "dropped";
+      }
 
-    const event: ClientEvent = {
-      type: "P2P_SIGNAL",
-      clientSignalId: createClientSignalId(),
-      roomId: activeRoomId,
-      fromUserId: activeParticipant.id,
-      senderConnectionId: clientRef.current.senderConnectionId,
-      toUserId,
-      signal,
-    };
-    if (roomGenerationRef.current > 0) {
-      event.roomGeneration = roomGenerationRef.current;
-    }
-    if (sourceGenerationRef.current > 0) {
-      event.sourceGeneration = sourceGenerationRef.current;
-    }
+      const event: ClientEvent = {
+        type: "P2P_SIGNAL",
+        clientSignalId: createClientSignalId(),
+        roomId: activeRoomId,
+        fromUserId: activeParticipant.id,
+        senderConnectionId: clientRef.current.senderConnectionId,
+        senderMediaSessionId,
+        toUserId,
+        signal,
+      };
+      if (roomGenerationRef.current > 0) {
+        event.roomGeneration = roomGenerationRef.current;
+      }
+      if (sourceGenerationRef.current > 0) {
+        event.sourceGeneration = sourceGenerationRef.current;
+      }
 
-    clientRef.current.send(event);
-  }, []);
+      return clientRef.current.send(event);
+    },
+    [],
+  );
 
   const sendMediaSeatEvent = useCallback((event: ClientEvent) => {
     clientRef.current.send(event);
@@ -1593,6 +1608,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     participant,
     onCameraStatus: sendCameraStatus,
     sendP2PSignal,
+    signalingTransportReady,
     voiceTalkActive: liveVoiceTalking,
   });
   const ghostVideos = ghostCamSession.videos;
@@ -2245,6 +2261,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setIncomingP2PSignals([]);
     setRoomQuota(null);
     setRoomSnapshotReady(false);
+    setSignalingTransportReady(null);
     roomTokenRef.current = null;
     roomShareableLinkRef.current = null;
     setRoomToken(null);
@@ -2505,6 +2522,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       setRoomSnapshotReady(false);
+      setSignalingTransportReady(null);
       roomIdRef.current = nextRoomId;
       setRoomId(nextRoomId);
       if (roomSessionNamespace) {
@@ -2521,6 +2539,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       clientRef.current.connect({
         lastSeenP2PServerSeq: sameRoomReconnect ? lastSeenP2PServerSeqRef.current : 0,
         participantSessionId: getParticipantSessionId(roomSessionNamespace),
+        reconnect: sameRoomReconnect,
         roomId: nextRoomId,
         roomToken: nextRoomToken,
         participant: activeParticipant,
@@ -2528,6 +2547,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         onEvent: (event) => handleServerEventRef.current(event),
         onStatus: setRoomStatus,
         onTerminalClose: () => terminateRoomSession("Watch room ended."),
+        onTransportReady: setSignalingTransportReady,
       });
     },
     [adapter, roomSessionNamespace, setRoomStatus, terminateRoomSession],
@@ -5575,6 +5595,9 @@ function toIncomingP2PSignal(
     clientSignalId: event.clientSignalId,
     fromUserId: event.fromUserId,
     senderConnectionId: event.senderConnectionId,
+    ...(event.senderMediaSessionId
+      ? { senderMediaSessionId: event.senderMediaSessionId }
+      : {}),
     sequence,
     signal: event.signal,
   };
