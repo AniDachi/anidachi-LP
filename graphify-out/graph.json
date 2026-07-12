@@ -37772,7 +37772,7 @@
       "label": "Known Fragile Areas",
       "file_type": "document",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L343",
+      "source_location": "L345",
       "_origin": "ast"
     },
     {
@@ -37780,7 +37780,7 @@
       "label": "Documentation Map",
       "file_type": "document",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L383",
+      "source_location": "L387",
       "_origin": "ast"
     },
     {
@@ -148601,7 +148601,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L343",
+      "source_location": "L345",
       "weight": 1.0
     },
     {
@@ -148610,7 +148610,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L383",
+      "source_location": "L387",
       "weight": 1.0
     },
     {
