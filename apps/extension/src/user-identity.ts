@@ -64,11 +64,12 @@ export async function createCurrentParticipant(
     };
   }
 
-  if (response?.ok && response.tokens) {
+  if (response?.tokens) {
     return {
       participant: participantFromTokens(response.tokens),
       authenticated: true,
       tokens: response.tokens,
+      ...(!response.ok ? { message: response.error } : {}),
     };
   }
 

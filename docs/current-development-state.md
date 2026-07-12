@@ -141,6 +141,26 @@ the bridge window for old tokens, old Stripe metadata, and old database rows,
 but new UI, APIs, protocol payloads, Stripe metadata, database writes, and docs
 must emit `free`, `plus`, and `pro`.
 
+## Extension Session Ownership
+
+The extension background service worker is the single coordinator for extension
+sign-in, access-token refresh, and website-account reconciliation. Content
+scripts and the popup request auth operations through runtime messages and may
+read cached identity for immediate rendering, but they do not own refresh.
+
+Website and extension access tokens expire independently. A stale website access
+cookie is not evidence that the extension signed out. The extension uses
+`/api/extension/auth/website-session` to validate the long-lived website refresh
+cookie for explicit logout and account-switch synchronization. Temporary HTTP or
+network failures preserve the cached extension session; a confirmed invalid
+extension refresh token remains the terminal server-side sign-out signal.
+Cached identity may remain visible during a temporary outage, but authenticated
+actions fail with a retryable error until a usable access token is available.
+Supabase query failures propagate as server errors and must never be collapsed
+into an invalid-token response. Startup reconciliation and cookie-change events
+are coalesced by the background worker; strict cookie policies use the existing
+silent browser flow as a fallback.
+
 ## Runtime Environments
 
 Local development:

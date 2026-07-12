@@ -114,10 +114,17 @@ Current auth flow:
 - `apps/web/app/extension/connect/page.tsx`
 - `apps/web/app/api/extension/auth/exchange/route.ts`
 - `apps/web/app/api/extension/auth/refresh/route.ts`
+- `apps/web/app/api/extension/auth/website-session/route.ts`
 - `apps/web/app/api/me/route.ts`
 - `apps/extension/entrypoints/background.ts`
 - `apps/extension/src/auth-client.ts`
 - `apps/extension/src/user-identity.ts`
+
+The extension session is independent after the one-time website exchange. Its
+background service worker serializes refresh requests and keeps cached identity
+during temporary failures. Website logout and account switching are reconciled
+against the website refresh cookie through the dedicated website-session route;
+the short-lived website access cookie is not used as a sign-out signal.
 
 Current room flow:
 

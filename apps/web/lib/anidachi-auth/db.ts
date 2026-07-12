@@ -4,6 +4,16 @@ import type { PlanCode, RoomCapabilities } from "./plan-entitlements";
 
 const UNIQUE_VIOLATION = "23505";
 
+export function databaseResultOrThrow<T>(
+  operation: string,
+  result: { data: T | null; error: { message: string } | null },
+): T | null {
+  if (result.error) {
+    throw new Error(`Failed to ${operation}: ${result.error.message}`);
+  }
+  return result.data;
+}
+
 function getSupabaseServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -175,12 +185,15 @@ async function syncProfileFromUserRow(user: UserRow): Promise<void> {
 }
 
 export async function getUserById(userId: string): Promise<UserRow | null> {
-  const { data } = await db()
+  const result = await db()
     .from("users")
     .select("*")
     .eq("id", userId)
     .maybeSingle();
-  return (data as UserRow | null) ?? null;
+  return databaseResultOrThrow("load user", {
+    data: (result.data as UserRow | null) ?? null,
+    error: result.error,
+  });
 }
 
 // ---------- Refresh token helpers ----------
@@ -212,11 +225,12 @@ export async function validateRefreshToken(
   token: string
 ): Promise<string | null> {
   const hash = hashToken(token);
-  const { data } = await db()
+  const result = await db()
     .from("refresh_tokens")
     .select("user_id, expires_at")
     .eq("token_hash", hash)
     .maybeSingle();
+  const data = databaseResultOrThrow("validate refresh token", result);
   if (!data) return null;
   if (new Date(data.expires_at) < new Date()) return null;
   return data.user_id as string;
@@ -234,16 +248,18 @@ export async function extendRefreshToken(
 }
 
 export async function deleteRefreshToken(token: string): Promise<void> {
-  await db()
+  const { error } = await db()
     .from("refresh_tokens")
     .delete()
     .eq("token_hash", hashToken(token));
+  if (error) throw new Error(`Failed to delete refresh token: ${error.message}`);
 }
 
 export async function deleteAllRefreshTokensForUser(
   userId: string
 ): Promise<void> {
-  await db().from("refresh_tokens").delete().eq("user_id", userId);
+  const { error } = await db().from("refresh_tokens").delete().eq("user_id", userId);
+  if (error) throw new Error(`Failed to delete user refresh tokens: ${error.message}`);
 }
 
 // ---------- Billing helpers ----------

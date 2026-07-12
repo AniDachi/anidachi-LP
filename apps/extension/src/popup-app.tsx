@@ -20,9 +20,9 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   getCachedExtensionSession,
-  getCurrentExtensionSession,
-  signInWithWebsite,
-  signInWithWebsiteSilently,
+  requestCurrentExtensionSession,
+  requestSilentWebsiteSignIn,
+  requestWebsiteSignIn,
 } from "./auth-client";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
@@ -387,9 +387,9 @@ export function PopupApp() {
         const tokens =
           options.tokens ??
           (options.interactive
-            ? await signInWithWebsite()
-            : (await getCurrentExtensionSession({ validateWebsiteSession: true })) ??
-              (await signInWithWebsiteSilently()));
+            ? await requestWebsiteSignIn()
+            : (await requestCurrentExtensionSession()) ??
+              (await requestSilentWebsiteSignIn()));
         if (!tokens) {
           await ensureStoreForUser(null, localStore);
           watchLibraryUserIdRef.current = null;
@@ -412,8 +412,13 @@ export function PopupApp() {
         return tokens;
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not sync account";
-        watchLibraryUserIdRef.current = null;
-        setAuthSession({ status: "error", tokens: null, error: message });
+        const cachedTokens = await getCachedExtensionSession();
+        watchLibraryUserIdRef.current = cachedTokens?.user.id ?? null;
+        setAuthSession(
+          cachedTokens
+            ? { status: "ready", tokens: cachedTokens, error: null }
+            : { status: "error", tokens: null, error: message },
+        );
         setSocialState((current) => ({
           status: "error",
           data: current.data,
@@ -434,7 +439,7 @@ export function PopupApp() {
     async (inviteId: string) => {
       setBusyInviteId(inviteId);
       try {
-        const tokens = await getCurrentExtensionSession();
+        const tokens = await requestCurrentExtensionSession();
         if (!tokens) {
           setSocialState({ status: "signed-out", data: null, error: null });
           return;
@@ -460,7 +465,7 @@ export function PopupApp() {
     async (inviteId: string) => {
       setBusyInviteId(inviteId);
       try {
-        const tokens = await getCurrentExtensionSession();
+        const tokens = await requestCurrentExtensionSession();
         if (!tokens) {
           setSocialState({ status: "signed-out", data: null, error: null });
           return;
@@ -532,7 +537,7 @@ export function PopupApp() {
       setBusySocialAction(key);
       setSocialNotice(null);
       try {
-        const tokens = await getCurrentExtensionSession();
+        const tokens = await requestCurrentExtensionSession();
         if (!tokens) {
           setSocialState({ status: "signed-out", data: null, error: null });
           return false;
@@ -682,7 +687,7 @@ export function PopupApp() {
   const createRoomFromSession = useCallback(async (session: WatchLibrarySession, sourceUrl: string) => {
     setBusyWatchSessionId(session.id);
     try {
-      const tokens = await getCurrentExtensionSession();
+      const tokens = await requestCurrentExtensionSession();
       if (!tokens) {
         watchLibraryUserIdRef.current = null;
         setWatchLibraryState({
