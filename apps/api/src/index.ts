@@ -11,6 +11,7 @@ import { cors } from "hono/cors";
 import { verifyRoomToken, type VerifiedRoomToken } from "./auth";
 import { createIceServersPayload } from "./ice-servers";
 import { hasValidInternalAuthorization } from "./internal-auth";
+import { notifyWebRoomEnded } from "./internal-web-client";
 import {
   endedRoomTombstone,
   parseEndRoomCommand,
@@ -24,10 +25,15 @@ import {
 } from "./p2p-signal-buffer";
 import {
   initializeRoomStorage,
+  activateStoredRoomLifecycle,
+  claimStoredRoomEndAttempt,
+  clearStoredRoomLifecycleAndAlarm,
+  markStoredRoomEmpty,
   persistEndedRoomTombstoneAndClearRuntime,
   readEndedRoomTombstone,
   readNextP2PServerSeq,
   readStoredP2PReplay,
+  readStoredRoomLifecycle,
   readStoredRoomState,
   writeNextP2PServerSeq,
   writeStoredP2PReplayEvent,
@@ -60,6 +66,7 @@ export interface Env {
   ANIDACHI_JWT_SECRET?: string;
   ANIDACHI_ENV?: string;
   ANIDACHI_INTERNAL_API_SECRET?: string;
+  ANIDACHI_WEB_INTERNAL_BASE_URL?: string;
   ROOM_ANALYTICS?: AnalyticsEngineDataset;
 }
 
@@ -324,6 +331,7 @@ export class RoomDurableObject {
       this.restoreWebSocketsFromAttachments();
     } else {
       state.setWebSocketAutoResponse();
+      state.waitUntil(clearStoredRoomLifecycleAndAlarm(state.storage));
       this.clearTerminalRuntimeState();
       sendAndCloseEndedRoomSockets(
         this.state.getWebSockets(),
@@ -449,6 +457,27 @@ export class RoomDurableObject {
     if (verified.capabilities) {
       this.room.setCapabilities(verified.capabilities);
     }
+    const tombstoneAfterVerification = readEndedRoomTombstone(this.state.storage);
+    if (tombstoneAfterVerification) {
+      this.endedTombstone = tombstoneAfterVerification;
+      return Response.json(
+        { error: "ROOM_ENDED", endedAt: tombstoneAfterVerification.endedAt },
+        { status: 410 },
+      );
+    }
+    const lifecycle = await readStoredRoomLifecycle(this.state.storage);
+    if (lifecycle?.status === "ending") {
+      return Response.json(
+        { error: "ROOM_ENDING", endedAt: lifecycle.endedAt },
+        { status: 409 },
+      );
+    }
+    if (lifecycle?.status === "ended") {
+      return Response.json(
+        { error: "ROOM_ENDED", endedAt: lifecycle.endedAt },
+        { status: 410 },
+      );
+    }
 
     const pair = new WebSocketPair();
     const client = pair[0];
@@ -484,6 +513,7 @@ export class RoomDurableObject {
     const sockets = this.state.getWebSockets();
     this.clearTerminalRuntimeState();
     sendAndCloseEndedRoomSockets(sockets, event);
+    await clearStoredRoomLifecycleAndAlarm(this.state.storage);
   }
 
   private clearTerminalRuntimeState(): void {
@@ -497,17 +527,24 @@ export class RoomDurableObject {
     this.rateLimiterBySocket.clear();
   }
 
-  webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer): void {
-    handleRoomWebSocketMessageBoundary(
-      socket,
-      this.room.roomId,
-      this.endedTombstone,
-      () => this.handleMessage(socket, raw),
-    );
+  async webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
+    if (this.endedTombstone) {
+      sendAndCloseEndedRoomSockets(
+        [socket],
+        roomEndedEvent(this.room.roomId, this.endedTombstone),
+      );
+      return;
+    }
+    await this.handleMessage(socket, raw);
   }
 
-  webSocketClose(socket: WebSocket, code: number, reason: string, _wasClean: boolean): void {
-    this.handleClose(socket);
+  async webSocketClose(
+    socket: WebSocket,
+    code: number,
+    reason: string,
+    _wasClean: boolean,
+  ): Promise<void> {
+    await this.handleClose(socket);
     try {
       socket.close(code, reason);
     } catch {
@@ -515,12 +552,59 @@ export class RoomDurableObject {
     }
   }
 
-  webSocketError(socket: WebSocket, error: unknown): void {
+  async webSocketError(socket: WebSocket, error: unknown): Promise<void> {
     console.error("[Anidachi] Room WebSocket error", error);
-    this.handleClose(socket);
+    await this.handleClose(socket);
   }
 
-  private handleMessage(socket: WebSocket, raw: string | ArrayBuffer): void {
+  async alarm(): Promise<void> {
+    if (this.endedTombstone) {
+      await clearStoredRoomLifecycleAndAlarm(this.state.storage);
+      return;
+    }
+    if (this.participantsBySocket.size > 0) {
+      const activation = await activateStoredRoomLifecycle(
+        this.state.storage,
+        Date.now(),
+      );
+      if (activation.accepted) return;
+    }
+    const attempt = await claimStoredRoomEndAttempt(
+      this.state.storage,
+      this.room.roomId,
+      Date.now(),
+    );
+    if (!attempt) return;
+
+    this.track(
+      attempt.attempts > 1
+        ? "room_end_callback_retry"
+        : "room_end_callback_attempt",
+      { value: attempt.attempts },
+    );
+
+    try {
+      await notifyWebRoomEnded(this.env, this.room.roomId, {
+        endedAt: attempt.endedAt,
+        eventId: attempt.eventId,
+        reason: "empty_timeout",
+      });
+    } catch {
+      this.track("room_end_callback_failure", { value: attempt.attempts });
+      // The transaction that claimed this attempt already persisted the next
+      // retry alarm and the unchanged callback identity.
+      return;
+    }
+
+    this.track("room_end_callback_success", { value: attempt.attempts });
+
+    await this.applyTerminalRoomState(endedRoomTombstone({
+      endedAt: attempt.endedAt,
+      reason: "empty_timeout",
+    }));
+  }
+
+  private async handleMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
     const limiter = this.rateLimiterBySocket.get(socket) ?? new RoomRateLimiter();
     this.rateLimiterBySocket.set(socket, limiter);
     const frameRateLimit = consumeRoomFrameBoundary(socket, limiter, raw);
@@ -563,7 +647,7 @@ export class RoomDurableObject {
         this.handlePing(socket, event);
         return;
       case "JOIN":
-        this.handleJoin(socket, event);
+        await this.handleJoin(socket, event);
         return;
       case "HOST_STATE":
         this.handleHostState(socket, event);
@@ -615,7 +699,10 @@ export class RoomDurableObject {
     });
   }
 
-  private handleJoin(socket: WebSocket, event: Extract<ClientEvent, { type: "JOIN" }>): void {
+  private async handleJoin(
+    socket: WebSocket,
+    event: Extract<ClientEvent, { type: "JOIN" }>,
+  ): Promise<void> {
     const verified = this.verifiedBySocket.get(socket);
     if (!verified) {
       this.send(socket, {
@@ -647,6 +734,33 @@ export class RoomDurableObject {
         message: `This watch room is full (max ${this.room.roomCapabilities.maxParticipants} people).`,
       });
       socket.close(4003, "Room is full");
+      return;
+    }
+
+    const activation = await activateStoredRoomLifecycle(
+      this.state.storage,
+      Date.now(),
+    );
+    if (!activation.accepted) {
+      if (activation.lifecycle?.status === "ending") {
+        this.send(socket, {
+          type: "ROOM_ENDED",
+          roomId: this.room.roomId,
+          endedAt: activation.lifecycle.endedAt,
+          reason: "empty_timeout",
+        });
+        socket.close(4004, "Room is ending");
+        return;
+      }
+      if (activation.lifecycle?.status === "ended") {
+        this.send(socket, roomEndedEvent(
+          this.room.roomId,
+          endedRoomTombstone(activation.lifecycle),
+        ));
+        socket.close(4004, "Room ended");
+        return;
+      }
+      socket.close(1011, "Room lifecycle state is unavailable");
       return;
     }
 
@@ -1003,7 +1117,7 @@ export class RoomDurableObject {
     }
   }
 
-  private handleClose(socket: WebSocket): void {
+  private async handleClose(socket: WebSocket): Promise<void> {
     const participantId = this.participantsBySocket.get(socket);
     this.verifiedBySocket.delete(socket);
     this.sessionIdBySocket.delete(socket);
@@ -1024,13 +1138,19 @@ export class RoomDurableObject {
       this.broadcast({ type: "PARTICIPANT_LEFT", participant });
       this.broadcast(this.room.snapshot);
     }
+    if (this.participantsBySocket.size === 0 && !this.endedTombstone) {
+      await markStoredRoomEmpty(this.state.storage, Date.now());
+      if (this.participantsBySocket.size > 0) {
+        await activateStoredRoomLifecycle(this.state.storage, Date.now());
+      }
+    }
   }
 
   private send(socket: WebSocket, event: ServerEvent): void {
     try {
       socket.send(encode(event));
     } catch {
-      this.handleClose(socket);
+      this.state.waitUntil(this.handleClose(socket));
     }
   }
 

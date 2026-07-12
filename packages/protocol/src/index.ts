@@ -1,3 +1,4 @@
 export * from "./limits";
+export * from "./room-lifecycle";
 export * from "./sync";
 export * from "./types";

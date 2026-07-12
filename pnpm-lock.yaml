@@ -109,6 +109,9 @@ importers:
       '@amplitude/unified':
         specifier: ^1.1.1
         version: 1.1.11(@amplitude/rrweb@2.1.1)(rollup@4.61.0)
+      '@anidachi/protocol':
+        specifier: workspace:*
+        version: link:../../packages/protocol
       '@radix-ui/react-slot':
         specifier: ^1.2.3
         version: 1.2.4(@types/react@19.2.16)(react@19.2.7)

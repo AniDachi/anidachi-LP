@@ -4,11 +4,22 @@ import {
   RoomCapabilitiesSchema,
   ServerEventSchema,
   WatchSourceDescriptorSchema,
+  createEmptyRoomEndEventId,
   type Participant,
 } from "@anidachi/protocol";
 import type { BufferedP2PSignalEvent } from "./p2p-signal-buffer";
 import type { RoomStateSnapshot } from "./room-state";
-import { parseEndRoomCommand, type EndedRoomTombstone } from "./room-lifecycle";
+import {
+  ROOM_LIFECYCLE_STORAGE_KEY,
+  activeRoomLifecycle,
+  emptyRoomLifecycle,
+  emptyRoomRetryAt,
+  parseEndRoomCommand,
+  parseRoomLifecycleState,
+  type EndedRoomTombstone,
+  type EndingRoomLifecycle,
+  type RoomLifecycleState,
+} from "./room-lifecycle";
 
 export const ROOM_STATE_META_KEY = "room_state";
 export const NEXT_P2P_SERVER_SEQ_META_KEY = "next_p2p_server_seq";
@@ -132,6 +143,126 @@ export function persistEndedRoomTombstoneAndClearRuntime(
   });
 }
 
+export async function readStoredRoomLifecycle(
+  storage: DurableObjectStorage,
+): Promise<RoomLifecycleState | null> {
+  return parseRoomLifecycleState(
+    await storage.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY),
+  );
+}
+
+export async function activateStoredRoomLifecycle(
+  storage: DurableObjectStorage,
+  updatedAt: number,
+): Promise<{ accepted: boolean; lifecycle: RoomLifecycleState | null }> {
+  return storage.transaction(async (transaction) => {
+    const raw = await transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY);
+    const current = parseStoredLifecycle(raw);
+    if (current === "invalid") {
+      return { accepted: false, lifecycle: null };
+    }
+    if (current?.status === "ending" || current?.status === "ended") {
+      return { accepted: false, lifecycle: current };
+    }
+
+    const active = activeRoomLifecycle(updatedAt);
+    await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, active);
+    await transaction.deleteAlarm();
+    return { accepted: true, lifecycle: active };
+  });
+}
+
+export async function markStoredRoomEmpty(
+  storage: DurableObjectStorage,
+  emptySince: number,
+): Promise<RoomLifecycleState> {
+  return storage.transaction(async (transaction) => {
+    const raw = await transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY);
+    const current = parseStoredLifecycle(raw);
+    if (current === "invalid") {
+      throw new Error("Invalid persisted room lifecycle state");
+    }
+    if (current?.status === "ending" || current?.status === "ended") {
+      return current;
+    }
+    if (current?.status === "empty") {
+      await transaction.setAlarm(current.alarmAt);
+      return current;
+    }
+
+    const empty = emptyRoomLifecycle(emptySince);
+    await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, empty);
+    await transaction.setAlarm(empty.alarmAt);
+    return empty;
+  });
+}
+
+/**
+ * Claims one due callback attempt. The ending outbox and its next retry alarm
+ * are committed together before the caller performs external I/O.
+ */
+export async function claimStoredRoomEndAttempt(
+  storage: DurableObjectStorage,
+  roomId: string,
+  now: number,
+): Promise<EndingRoomLifecycle | null> {
+  return storage.transaction(async (transaction) => {
+    const raw = await transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY);
+    const current = parseStoredLifecycle(raw);
+    if (current === "invalid") {
+      await transaction.setAlarm(emptyRoomRetryAt(1, now));
+      return null;
+    }
+    if (!current || current.status === "active" || current.status === "ended") {
+      await transaction.deleteAlarm();
+      return null;
+    }
+
+    if (current.status === "empty") {
+      if (now < current.alarmAt) {
+        await transaction.setAlarm(current.alarmAt);
+        return null;
+      }
+      const attempts = 1;
+      const ending: EndingRoomLifecycle = {
+        schemaVersion: 1,
+        status: "ending",
+        emptySince: current.emptySince,
+        endedAt: current.alarmAt,
+        eventId: await createEmptyRoomEndEventId(roomId, current.emptySince),
+        attempts,
+        nextAttemptAt: emptyRoomRetryAt(attempts, now),
+      };
+      await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, ending);
+      await transaction.setAlarm(ending.nextAttemptAt);
+      return ending;
+    }
+
+    if (now < current.nextAttemptAt) {
+      await transaction.setAlarm(current.nextAttemptAt);
+      return null;
+    }
+    const attempts = Math.min(Number.MAX_SAFE_INTEGER, current.attempts + 1);
+    const ending: EndingRoomLifecycle = {
+      ...current,
+      attempts,
+      nextAttemptAt: emptyRoomRetryAt(attempts, now),
+    };
+    await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, ending);
+    await transaction.setAlarm(ending.nextAttemptAt);
+    return ending;
+  });
+}
+
+export async function clearStoredRoomLifecycleAndAlarm(
+  storage: DurableObjectStorage,
+): Promise<void> {
+  await storage.transaction(async (transaction) => {
+    await transaction.delete(ROOM_LIFECYCLE_STORAGE_KEY);
+    await transaction.deleteAlarm();
+  });
+}
+
 export function readStoredP2PReplay(
   storage: DurableObjectStorage,
   now = Date.now(),
@@ -214,6 +345,13 @@ function writeMeta(storage: DurableObjectStorage, key: string, value: unknown, u
     JSON.stringify(value),
     updatedAt,
   );
+}
+
+function parseStoredLifecycle(
+  raw: unknown,
+): RoomLifecycleState | null | "invalid" {
+  if (raw === undefined) return null;
+  return parseRoomLifecycleState(raw) ?? "invalid";
 }
 
 export function parseRoomStateSnapshot(value: unknown): RoomStateSnapshot | null {

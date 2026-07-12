@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ClientEventSchema,
+  EMPTY_ROOM_TIMEOUT_MS,
   MAX_DISPLAY_NAME_CHARS,
   MAX_ICE_CANDIDATE_BYTES,
   MAX_PARTICIPANT_ID_CHARS,
@@ -17,12 +18,25 @@ import {
   RoomEndReasonSchema,
   ServerEventSchema,
   WatchSourceDescriptorSchema,
+  createEmptyRoomEndEventId,
   getExpectedHostTime,
   normalizeRemotePlaybackState,
   getSyncCorrection,
 } from "../src";
 
 describe("room protocol schemas", () => {
+  it("derives one private empty-room callback identity across service planes", async () => {
+    const roomId = "private-room-1";
+    const emptySince = 1_000;
+    const eventId = await createEmptyRoomEndEventId(roomId, emptySince);
+
+    expect(EMPTY_ROOM_TIMEOUT_MS).toBe(4 * 60 * 60 * 1_000);
+    expect(eventId).toMatch(/^empty_timeout:[a-f0-9]{64}$/);
+    expect(eventId).toBe(await createEmptyRoomEndEventId(roomId, emptySince));
+    expect(eventId).not.toContain(roomId);
+    expect(eventId).not.toBe(await createEmptyRoomEndEventId(roomId, emptySince + 1));
+  });
+
   it("accepts one terminal room-ended event with a bounded reason", () => {
     expect(RoomEndReasonSchema.options).toEqual([
       "host_ended",

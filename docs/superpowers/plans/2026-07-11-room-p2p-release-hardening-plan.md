@@ -160,22 +160,28 @@ export interface EndRoomCommand {
 }
 ```
 
-- [ ] Add failing protocol and runtime tests for one terminal event, socket close
+- [x] Add failing protocol and runtime tests for one terminal event, socket close
   code `4004`, replay cleanup, idempotent end, and `410` on token reconnect.
-- [ ] Add failing route tests for missing/wrong internal secret and malformed end
+- [x] Add failing route tests for missing/wrong internal secret and malformed end
   command.
-- [ ] Persist an ended tombstone before broadcasting/closing. Clear raw runtime
+- [x] Persist an ended tombstone before broadcasting/closing. Clear raw runtime
   state and replay while preserving the tombstone through room-token TTL.
-- [ ] Change the host end route to call the Worker on first and repeated end;
-  only then settle/update Supabase with the authoritative idempotent timestamp.
-- [ ] Handle `ROOM_ENDED` in the extension as terminal: stop media/reconnect,
-  clear room session, and show the existing ended state.
-- [ ] Run protocol/API/web/extension tests and room harness.
-- [ ] Commit as `fix(rooms): make room end terminal across control planes`.
+- [x] Keep the current legacy settlement/DB transition single-shot, then always
+  call the idempotent Worker end command on first and repeated end requests.
+  Return a retryable sync error if the Worker call fails. Task 7 replaces this
+  temporary ordering with one atomic lifecycle RPC before quota enforcement.
+- [x] Handle `ROOM_ENDED` in the extension as terminal: stop media/reconnect,
+  clear room session, and show the existing ended state. Treat close code
+  `4004` as the same terminal fallback if the event is lost in transit.
+- [x] Run protocol/API/web/extension tests and room harness.
+- [x] Commit as `fix(rooms): make room end terminal across control planes`.
 
 ### Task 4: Empty-Room Alarm And Idempotent Web Callback
 
 **Files:**
+- Create: `packages/protocol/src/room-lifecycle.ts`
+- Modify: `packages/protocol/src/index.ts`
+- Modify: `packages/protocol/test/protocol.test.ts`
 - Modify: `apps/api/src/room-lifecycle.ts`
 - Modify: `apps/api/src/index.ts`
 - Modify: `apps/api/src/room-persistence.ts`
@@ -189,15 +195,17 @@ export interface EndRoomCommand {
 - An authenticated rejoin atomically returns lifecycle to active and deletes the
   empty alarm.
 - Alarm callback uses an idempotency key derived from room ID and `emptySince`.
+- The four-hour deadline and privacy-safe callback identity are one shared
+  protocol contract consumed by Worker and Web, not duplicated implementations.
 
-- [ ] Add failing Workers-runtime tests for alarm scheduling, rejoin
+- [x] Add failing Workers-runtime tests for alarm scheduling, rejoin
   cancellation, stale alarm no-op, callback retry, and duplicate callback.
-- [ ] Persist `active | empty | ending | ended` lifecycle state. Transition to
+- [x] Persist `active | empty | ending | ended` lifecycle state. Transition to
   `ending` before external I/O and retain a retryable outbox entry on failure.
-- [ ] Implement the internal Web callback as an idempotent host settlement and
+- [x] Implement the internal Web callback as an idempotent host settlement and
   room-end operation.
-- [ ] Run API runtime tests and room harness twice to prove isolation.
-- [ ] Commit as `feat(rooms): end abandoned rooms with durable alarms`.
+- [x] Run API runtime tests and room harness twice to prove isolation.
+- [x] Commit as `feat(rooms): end abandoned rooms with durable alarms`.
 
 ### Task 5: Stable Media Session And Signaling Recovery
 
@@ -206,6 +214,7 @@ export interface EndRoomCommand {
 - Modify: `packages/protocol/test/protocol.test.ts`
 - Modify: `apps/extension/src/media-types.ts`
 - Modify: `apps/extension/src/room-client.ts`
+- Modify: `apps/extension/src/overlay-app.tsx`
 - Modify: `apps/extension/src/ghost-cam.ts`
 - Modify: `apps/extension/src/p2p-media.ts`
 - Modify: `apps/extension/test/room-client-auth.test.ts`
@@ -235,8 +244,12 @@ export interface SignalingTransportReady {
 - [ ] Make `RoomClient.send()` return a disposition and expose one ready callback
   per socket after its first authoritative snapshot.
 - [ ] Republish current camera and voice intent after transport ready.
+- [ ] Serialize incoming signaling per peer and only retain SDP/ICE dedupe
+  fingerprints after WebRTC accepts the corresponding operation.
 - [ ] Recover a stale `have-local-offer` with rollback and bounded fresh offer;
   replace the peer only if rollback fails.
+- [ ] Publish an explicit closed transport status so page lifecycle restoration
+  cannot retain a stale connected state.
 - [ ] Extend real-WebRTC harness with dropped-offer/answer and reconnect cases.
 - [ ] Run extension/protocol/API tests and real-WebRTC harness.
 - [ ] Commit as `fix(extension): recover media sessions across signaling loss`.
@@ -252,6 +265,7 @@ export interface SignalingTransportReady {
 - Modify: `apps/api/test/ice-servers.test.ts`
 - Modify: `apps/extension/entrypoints/background.ts`
 - Modify: `apps/extension/src/room-session-storage.ts`
+- Modify: `apps/extension/src/overlay-app.tsx`
 - Modify: `apps/extension/src/debug-log.ts`
 - Modify: `apps/extension/src/diagnostic-log.ts`
 - Modify: `apps/extension/src/p2p-ice.ts`
@@ -259,23 +273,28 @@ export interface SignalingTransportReady {
 
 **Interfaces:**
 - Raw SDP/ICE replay remains memory-only. Durable storage keeps sequence and
-  privacy-safe metadata only; hibernation loss emits a resync request.
+  privacy-safe replay metadata only; an optional `ROOM_SNAPSHOT` resync flag
+  bridges one mixed-version release and triggers fresh negotiation after a
+  hibernation replay gap.
 - Room session state is tab-scoped and owned by the background service worker in
   `chrome.storage.session`; content script uses typed runtime messages.
 - `createIceServersPayload(env, { roomId, userId, now })` generates a distinct
   short-lived credential per room/user scope. Default TTL is 15 minutes, max 30
   minutes, with an HMAC `customIdentifier` that exposes no raw identifier.
 
-- [ ] Add failing persistence tests proving no serialized row contains SDP,
-  candidate, IP, device ID, raw room ID, or raw user ID.
+- [ ] Add failing persistence tests proving replay rows and exported logs contain
+  no SDP, candidate, peer IP/address, device/track/stream ID, raw room/user/session
+  identifiers, or malformed raw frames. Operational room state and socket
+  attachments may retain the minimum participant identity needed for hibernation.
 - [ ] Add failing tab-isolation, account-switch, legacy-migration, and browser-
-  session cleanup tests.
+  session cleanup tests, including ACK-before-page-delete migration behavior.
 - [ ] Add failing TURN tests for cross-scope isolation, bounded cache, 15-minute
   default TTL, custom identifier, and refresh via `setConfiguration()`.
 - [ ] Implement storage/replay migration and remove legacy page entries only
   after background ACK.
 - [ ] Move ICE authorization to `Authorization` on a room-scoped route; keep a
-  one-release query fallback only where old clients require it.
+  one-release query fallback only where old clients require it, update CORS and
+  harness callers, and measure fallback use without logging token data.
 - [ ] Run API/extension tests, runtime hibernation test, and forced-relay harness
   when staging credentials are available.
 - [ ] Commit as `fix(p2p): harden media privacy and turn credentials`.

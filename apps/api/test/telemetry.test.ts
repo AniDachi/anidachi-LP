@@ -33,6 +33,16 @@ describe("telemetry", () => {
     expect(JSON.stringify(point)).not.toContain("secret-room-id");
   });
 
+  it("records lifecycle callback retries without exposing the room id", () => {
+    const point = buildRoomDataPoint(
+      { env: "staging", roomId: "private-room-id" },
+      { name: "room_end_callback_retry", value: 3 },
+    );
+    expect(point.blobs[1]).toBe("room_end_callback_retry");
+    expect(point.doubles).toEqual([3]);
+    expect(JSON.stringify(point)).not.toContain("private-room-id");
+  });
+
   it("defaults value to 1 and role to empty string", () => {
     const point = buildRoomDataPoint(
       { env: "local", roomId: "r" },

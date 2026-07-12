@@ -1,21 +1,223 @@
-import { evictDurableObject, reset, runInDurableObject } from "cloudflare:test";
+import {
+	evictDurableObject,
+	reset,
+	runDurableObjectAlarm,
+	runInDurableObject,
+} from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import {
+	EMPTY_ROOM_TIMEOUT_MS,
 	type Participant,
 	type ServerEvent,
 	ServerEventSchema,
+	createEmptyRoomEndEventId,
 } from "@anidachi/protocol";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { signRoomTokenForTest } from "../../src/auth";
 
 const TEST_SECRET_ENV = { ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret" };
 const INTERNAL_SECRET = "anidachi-runtime-internal-secret";
+const ROOM_LIFECYCLE_META_KEY = "room_lifecycle";
 
 afterEach(async () => {
+	vi.unstubAllGlobals();
 	await reset();
 });
 
 describe("RoomDurableObject WebSocket hibernation", () => {
+	it("persists one four-hour alarm when the last joined participant leaves, even with a pre-JOIN socket", async () => {
+		const roomId = `runtime-empty-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		const preJoin = await openRoomSocket(stub, {
+			roomId, role: "member", userId: "prejoin-user",
+		});
+		await host.waitFor((event) => event.type === "ROOM_SNAPSHOT", "host snapshot");
+
+		host.close();
+		const empty = await waitForRoomRuntime(
+			stub,
+			(value) => value.lifecycle?.status === "empty" && value.alarm !== null,
+			"empty lifecycle and alarm",
+		);
+		expect(empty.lifecycle).toMatchObject({ schemaVersion: 1, status: "empty" });
+		const emptySince = empty.lifecycle?.emptySince;
+		expect(typeof emptySince).toBe("number");
+		if (typeof emptySince !== "number") throw new Error("Expected emptySince");
+		expect(empty.lifecycle?.alarmAt).toBe(emptySince + EMPTY_ROOM_TIMEOUT_MS);
+		expect(empty.alarm).toBe(emptySince + EMPTY_ROOM_TIMEOUT_MS);
+
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		const restored = await readRoomRuntime(stub);
+		expect(restored).toEqual(empty);
+		const callbackFetch = vi.fn(async () => Response.json({ ok: true }));
+		vi.stubGlobal("fetch", callbackFetch);
+		expect(await runDurableObjectAlarm(stub)).toBe(true);
+		expect(callbackFetch).not.toHaveBeenCalled();
+		expect(await readRoomRuntime(stub)).toEqual(empty);
+
+		preJoin.close();
+		await sleep(50);
+		expect(await readRoomRuntime(stub)).toEqual(empty);
+	});
+
+	it("activates synchronously on authenticated rejoin and ignores a stale alarm", async () => {
+		const roomId = `runtime-empty-rejoin-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		await host.waitFor((event) => event.type === "ROOM_SNAPSHOT", "host snapshot");
+		host.close();
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.lifecycle?.status === "empty" && value.alarm !== null,
+			"empty lifecycle",
+		);
+
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-session", userId: "guest-user",
+		});
+		await guest.waitFor((event) => event.type === "ROOM_SNAPSHOT", "rejoin snapshot");
+		const active = await waitForRoomRuntime(
+			stub,
+			(value) => value.lifecycle?.status === "active" && value.alarm === null,
+			"active lifecycle and cancelled alarm",
+		);
+		expect(active.lifecycle).toMatchObject({ schemaVersion: 1, status: "active" });
+
+		const callbackFetch = vi.fn(async () => Response.json({ ok: true }));
+		vi.stubGlobal("fetch", callbackFetch);
+		await runInDurableObject(stub, async (_instance, state) => {
+			await state.storage.setAlarm(Date.now() + 60_000);
+		});
+		expect(await runDurableObjectAlarm(stub)).toBe(true);
+		expect(callbackFetch).not.toHaveBeenCalled();
+		expect(await readRoomRuntime(stub)).toMatchObject({
+			alarm: null,
+			lifecycle: { schemaVersion: 1, status: "active" },
+			tombstone: null,
+		});
+		guest.close();
+	});
+
+	it("cancels a stale empty alarm when a joined participant is still present", async () => {
+		const roomId = `runtime-empty-stale-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		await host.waitFor((event) => event.type === "ROOM_SNAPSHOT", "host snapshot");
+		await makeEmptyAlarmDue(stub);
+
+		const callbackFetch = vi.fn(async () => Response.json({ ok: true }));
+		vi.stubGlobal("fetch", callbackFetch);
+		expect(await runDurableObjectAlarm(stub)).toBe(true);
+		expect(callbackFetch).not.toHaveBeenCalled();
+		expect(await readRoomRuntime(stub)).toMatchObject({
+			alarm: null,
+			lifecycle: { schemaVersion: 1, status: "active" },
+			tombstone: null,
+		});
+
+		host.close();
+	});
+
+	it("persists a retry outbox, rejects rejoin while ending, and reuses the callback identity", async () => {
+		const roomId = `runtime-empty-retry-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		const preJoin = await openRoomSocket(stub, {
+			roomId, role: "member", userId: "prejoin-user",
+		});
+		await host.waitFor((event) => event.type === "ROOM_SNAPSHOT", "host snapshot");
+		host.close();
+		await waitForRoomRuntime(
+			stub,
+			(value) => value.lifecycle?.status === "empty" && value.alarm !== null,
+			"empty lifecycle",
+		);
+		const dueEmpty = await makeEmptyAlarmDue(stub);
+		const emptySince = dueEmpty.lifecycle?.emptySince;
+		if (typeof emptySince !== "number") throw new Error("Expected emptySince");
+		const expectedEndedAt = emptySince + EMPTY_ROOM_TIMEOUT_MS;
+		const expectedEventId = await createEmptyRoomEndEventId(roomId, emptySince);
+		expect(expectedEventId).not.toContain(roomId);
+
+		let callbackAttempt = 0;
+		const callbackFetch = vi.fn(async (
+			_input: RequestInfo | URL,
+			_init?: RequestInit,
+		) => {
+			callbackAttempt += 1;
+			return callbackAttempt === 1
+				? Response.json({ error: "temporary" }, { status: 503 })
+				: Response.json({ ok: true, eventId: expectedEventId });
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+
+		expect(await runDurableObjectAlarm(stub)).toBe(true);
+		const ending = await readRoomRuntime(stub);
+		expect(ending.lifecycle).toMatchObject({
+			schemaVersion: 1,
+			status: "ending",
+			emptySince,
+			endedAt: expectedEndedAt,
+			eventId: expectedEventId,
+			attempts: 1,
+		});
+		expect(ending.alarm).toBe(ending.lifecycle?.nextAttemptAt);
+		expect(ending.tombstone).toBeNull();
+
+		const token = await roomToken(roomId, "member", "late-user");
+		const rejoin = await stub.fetch(
+			`https://room.test/?roomToken=${encodeURIComponent(token)}`,
+			{ headers: { Upgrade: "websocket" } },
+		);
+		expect(rejoin.status).toBe(409);
+
+		await makeRetryAlarmDue(stub);
+		expect(await runDurableObjectAlarm(stub)).toBe(true);
+		await preJoin.waitFor(
+			(event) => event.type === "ROOM_ENDED" && event.reason === "empty_timeout",
+			"empty-timeout terminal event",
+		);
+		await preJoin.waitForClose(4004, "pre-JOIN terminal close");
+		const terminal = await readRoomRuntime(stub);
+		expect(terminal).toMatchObject({
+			alarm: null,
+			lifecycle: null,
+			tombstone: {
+				schemaVersion: 1,
+				endedAt: expectedEndedAt,
+				reason: "empty_timeout",
+			},
+		});
+
+		expect(callbackFetch).toHaveBeenCalledTimes(2);
+		for (const [input, init] of callbackFetch.mock.calls) {
+			expect(String(input)).toBe(
+				`https://web.internal/api/internal/rooms/${encodeURIComponent(roomId)}/ended`,
+			);
+			expect(new Headers(init?.headers).get("Authorization")).toBe(
+				`Bearer ${INTERNAL_SECRET}`,
+			);
+			expect(JSON.parse(String(init?.body))).toEqual({
+				endedAt: expectedEndedAt,
+				eventId: expectedEventId,
+				reason: "empty_timeout",
+			});
+		}
+	});
+
 	it("ends terminally once, closes every socket, and rejects reconnect after hibernation", async () => {
 		const roomId = `runtime-ended-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
@@ -308,6 +510,75 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		guestReconnect.close();
 	});
 });
+
+interface RoomRuntimeSnapshot {
+	alarm: number | null;
+	lifecycle: Record<string, unknown> | null;
+	tombstone: Record<string, unknown> | null;
+}
+
+async function readRoomRuntime(stub: DurableObjectStub): Promise<RoomRuntimeSnapshot> {
+	return runInDurableObject(stub, async (_instance, state) => {
+		const readMeta = (key: string): Record<string, unknown> | null => {
+			const row = state.storage.sql
+				.exec<{ value_json: string }>("SELECT value_json FROM room_meta WHERE key = ?", key)
+				.toArray()[0];
+			return row ? JSON.parse(row.value_json) as Record<string, unknown> : null;
+		};
+		return {
+			alarm: await state.storage.getAlarm(),
+			lifecycle: await state.storage.get<Record<string, unknown>>(ROOM_LIFECYCLE_META_KEY) ?? null,
+			tombstone: readMeta("room_ended"),
+		};
+	});
+}
+
+async function makeEmptyAlarmDue(stub: DurableObjectStub): Promise<RoomRuntimeSnapshot> {
+	await runInDurableObject(stub, async (_instance, state) => {
+		const emptySince = Date.now() - EMPTY_ROOM_TIMEOUT_MS - 1_000;
+		const alarmAt = emptySince + EMPTY_ROOM_TIMEOUT_MS;
+		await state.storage.transaction(async (transaction) => {
+			await transaction.put(ROOM_LIFECYCLE_META_KEY, {
+				schemaVersion: 1,
+				status: "empty",
+				emptySince,
+				alarmAt,
+			});
+			await transaction.setAlarm(Date.now() + 60_000);
+		});
+	});
+	return readRoomRuntime(stub);
+}
+
+async function makeRetryAlarmDue(stub: DurableObjectStub): Promise<void> {
+	await runInDurableObject(stub, async (_instance, state) => {
+		await state.storage.transaction(async (transaction) => {
+			const lifecycle = await transaction.get<Record<string, unknown>>(ROOM_LIFECYCLE_META_KEY);
+			if (!lifecycle || lifecycle.status !== "ending") {
+				throw new Error("Expected ending lifecycle");
+			}
+			const nextAttemptAt = Date.now() - 1;
+			await transaction.put(ROOM_LIFECYCLE_META_KEY, { ...lifecycle, nextAttemptAt });
+			await transaction.setAlarm(Date.now() + 60_000);
+		});
+	});
+}
+
+async function waitForRoomRuntime(
+	stub: DurableObjectStub,
+	predicate: (value: RoomRuntimeSnapshot) => boolean,
+	label: string,
+	timeoutMs = 1_500,
+): Promise<RoomRuntimeSnapshot> {
+	const deadline = Date.now() + timeoutMs;
+	let latest = await readRoomRuntime(stub);
+	while (Date.now() < deadline) {
+		if (predicate(latest)) return latest;
+		await sleep(20);
+		latest = await readRoomRuntime(stub);
+	}
+	throw new Error(`Timed out waiting for ${label}: ${JSON.stringify(latest)}`);
+}
 
 async function endRoom(
 	stub: DurableObjectStub,
