@@ -97,7 +97,7 @@ export const overlayStyles = `
     position: absolute;
     top: min(var(--mini-panel-top, 48px), calc(100% - 28px));
     right: var(--mini-panel-right, 10px);
-    width: min(312px, calc(100% - var(--mini-panel-right, 10px) - 10px));
+    width: min(324px, calc(100% - var(--mini-panel-right, 10px) - 10px));
     max-height: max(
       0px,
       calc(
@@ -106,7 +106,7 @@ export const overlayStyles = `
     );
     overflow: auto;
     overscroll-behavior: contain;
-    padding: 12px;
+    padding: 13px;
     border-radius: 18px;
     border: 1px solid var(--ad-border);
     background:
@@ -475,12 +475,13 @@ export const overlayStyles = `
 
   .settings-shell {
     display: grid;
-    gap: 9px;
+    gap: 8px;
   }
 
   .settings-category-rail {
     position: relative;
     min-width: 0;
+    padding-bottom: 5px;
   }
 
   .settings-category-rail::before,
@@ -490,20 +491,20 @@ export const overlayStyles = `
     top: 0;
     bottom: 0;
     z-index: 2;
-    width: 22px;
+    width: 18px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 160ms ease;
   }
 
   .settings-category-rail::before {
-    left: -1px;
-    background: linear-gradient(90deg, rgba(10, 10, 12, 0.92), rgba(10, 10, 12, 0));
+    left: -2px;
+    background: linear-gradient(90deg, rgba(10, 10, 12, 0.98), rgba(10, 10, 12, 0));
   }
 
   .settings-category-rail::after {
-    right: -1px;
-    background: linear-gradient(270deg, rgba(10, 10, 12, 0.92), rgba(10, 10, 12, 0));
+    right: -2px;
+    background: linear-gradient(270deg, rgba(10, 10, 12, 0.98), rgba(10, 10, 12, 0));
   }
 
   .settings-category-rail.can-scroll-left::before,
@@ -513,8 +514,8 @@ export const overlayStyles = `
 
   .settings-category-scroll {
     width: 100%;
-    margin: 0 -1px;
-    padding: 1px;
+    margin: 0;
+    padding: 1px 0 4px;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -522,16 +523,27 @@ export const overlayStyles = `
     gap: 6px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    scroll-snap-type: x proximity;
-    scroll-behavior: smooth;
-    cursor: grab;
+    scrollbar-color: rgba(255, 138, 61, 0.28) rgba(255, 255, 255, 0.04);
+    scrollbar-width: thin;
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+    cursor: default;
     user-select: none;
     touch-action: pan-x pan-y;
   }
 
   .settings-category-scroll::-webkit-scrollbar {
-    display: none;
+    height: 3px;
+  }
+
+  .settings-category-scroll::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .settings-category-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(255, 138, 61, 0.28);
   }
 
   .settings-category-rail.dragging .settings-category-scroll {
@@ -541,23 +553,24 @@ export const overlayStyles = `
   }
 
   .settings-category-pill {
-    height: 28px;
+    height: 29px;
     flex: 0 0 auto;
     min-width: 0;
-    padding: 0 13px;
-    border: 1px solid rgba(255, 255, 255, 0.075);
-    border-radius: 13px;
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(255, 255, 255, 0.52);
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028)),
+      rgba(255, 255, 255, 0.035);
+    color: rgba(255, 255, 255, 0.58);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font: inherit;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 720;
     line-height: 1;
-    scroll-snap-align: start;
     transition:
       background 160ms ease,
       border-color 160ms ease,
@@ -572,17 +585,21 @@ export const overlayStyles = `
 
   .settings-category-pill:hover {
     border-color: rgba(255, 138, 61, 0.2);
-    background: rgba(255, 255, 255, 0.065);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04)),
+      rgba(255, 255, 255, 0.05);
     color: rgba(255, 229, 210, 0.86);
   }
 
   .settings-category-pill.active {
-    border-color: rgba(255, 138, 61, 0.26);
-    background: rgba(249, 115, 22, 0.16);
+    border-color: rgba(255, 138, 61, 0.34);
+    background:
+      linear-gradient(180deg, rgba(255, 161, 86, 0.23), rgba(249, 115, 22, 0.13)),
+      rgba(249, 115, 22, 0.1);
     color: rgba(255, 224, 201, 0.96);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.06),
-      0 8px 18px rgba(0, 0, 0, 0.16);
+      0 8px 16px rgba(0, 0, 0, 0.16);
   }
 
   .settings-panel {
@@ -591,7 +608,240 @@ export const overlayStyles = `
 
   .settings-panel-stack {
     display: grid;
-    gap: 7px;
+    gap: 6px;
+  }
+
+  .layout-preset-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .layout-preset-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .layout-preset-pill {
+    height: 26px;
+    flex: 0 0 auto;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    background: rgba(255, 255, 255, 0.035);
+    color: rgba(255, 255, 255, 0.54);
+    cursor: pointer;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 740;
+    transition:
+      background 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease;
+  }
+
+  .layout-preset-pill:hover {
+    border-color: rgba(255, 138, 61, 0.24);
+    color: rgba(255, 232, 214, 0.86);
+  }
+
+  .layout-preset-pill.active {
+    border-color: rgba(255, 138, 61, 0.34);
+    background: rgba(249, 115, 22, 0.14);
+    color: rgba(255, 226, 204, 0.96);
+  }
+
+  .layout-preset-pill.custom {
+    margin-left: auto;
+  }
+
+  .layout-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    min-height: 126px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.105);
+    background:
+      radial-gradient(circle at 50% 42%, rgba(255, 138, 61, 0.08), transparent 44%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.026)),
+      rgba(3, 3, 5, 0.42);
+    overflow: hidden;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .layout-preview::after {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.045);
+    pointer-events: none;
+  }
+
+  .layout-preview-grid {
+    position: absolute;
+    inset: 9px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    gap: 1px;
+    opacity: 0.38;
+  }
+
+  .layout-preview-grid span {
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  .layout-preview-object {
+    position: absolute;
+    z-index: 2;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 0;
+    cursor: grab;
+    overflow: visible;
+    font: inherit;
+    transition:
+      border-color 140ms ease,
+      background 140ms ease,
+      box-shadow 140ms ease;
+  }
+
+  .layout-preview-object:active {
+    cursor: grabbing;
+  }
+
+  .layout-preview-object.selected {
+    border-color: rgba(255, 181, 116, 0.58);
+    box-shadow:
+      0 0 0 2px rgba(249, 115, 22, 0.12),
+      0 12px 24px rgba(0, 0, 0, 0.18);
+  }
+
+  .layout-preview-video {
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.09);
+  }
+
+  .layout-video-main,
+  .layout-video-ghost {
+    position: absolute;
+    border-radius: 999px;
+    border: 1px solid rgba(190, 255, 220, 0.38);
+    background: rgba(34, 197, 94, 0.32);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  }
+
+  .layout-video-main {
+    right: 6%;
+    top: 18%;
+    width: 36%;
+    aspect-ratio: 1;
+  }
+
+  .layout-video-ghost {
+    opacity: 0.42;
+    width: 24%;
+    aspect-ratio: 1;
+  }
+
+  .layout-video-ghost.ghost-one {
+    right: 34%;
+    top: 16%;
+  }
+
+  .layout-video-ghost.ghost-two {
+    right: 22%;
+    top: 46%;
+  }
+
+  .layout-video-ghost.ghost-three {
+    right: 52%;
+    top: 42%;
+  }
+
+  .layout-preview-chat {
+    display: grid;
+    align-content: end;
+    gap: 4px;
+    padding: 8px;
+    border-radius: 9px;
+    background: rgba(96, 165, 250, 0.12);
+  }
+
+  .layout-preview-chat span {
+    display: block;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(147, 197, 253, 0.56);
+  }
+
+  .layout-preview-chat span:nth-child(2) {
+    width: 78%;
+  }
+
+  .layout-preview-chat span:nth-child(3) {
+    width: 58%;
+  }
+
+  .layout-selection-card {
+    display: grid;
+    gap: 8px;
+    padding: 9px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.105);
+    background: rgba(255, 255, 255, 0.032);
+  }
+
+  .layout-selection-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .layout-selection-header span {
+    font-size: 12px;
+    font-weight: 740;
+  }
+
+  .layout-selection-header strong {
+    color: rgba(255, 181, 116, 0.72);
+    font-size: 10px;
+    font-weight: 760;
+  }
+
+  .layout-object-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .layout-object-switch button {
+    height: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.035);
+    color: rgba(255, 255, 255, 0.54);
+    cursor: pointer;
+    font: inherit;
+    font-size: 10.5px;
+    font-weight: 740;
+  }
+
+  .layout-object-switch button.selected {
+    border-color: rgba(255, 138, 61, 0.32);
+    background: rgba(249, 115, 22, 0.14);
+    color: rgba(255, 226, 204, 0.96);
+  }
+
+  .layout-control-stack {
+    display: grid;
+    gap: 6px;
   }
 
   .reaction-shortcut-grid {
@@ -599,18 +849,20 @@ export const overlayStyles = `
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 6px;
-    padding: 8px;
+    padding: 7px;
     border-radius: 12px;
-    border: 1px solid var(--ad-border);
-    background: var(--ad-surface);
+    border: 1px solid rgba(255, 255, 255, 0.105);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028)),
+      rgba(255, 255, 255, 0.035);
   }
 
   .reaction-shortcut {
     min-width: 0;
-    height: 50px;
+    height: 46px;
     padding: 5px 3px 6px;
     border: 1px solid transparent;
-    border-radius: 10px;
+    border-radius: 9px;
     background: rgba(255, 255, 255, 0.035);
     color: var(--ad-text);
     cursor: pointer;
@@ -941,28 +1193,31 @@ export const overlayStyles = `
 
   .room-people-list {
     display: grid;
-    gap: 1px;
-    padding: 6px;
-    border-radius: 13px;
-    border: 1px solid rgba(255, 255, 255, 0.065);
-    background: rgba(255, 255, 255, 0.025);
+    gap: 4px;
+    padding: 0;
+    border-radius: 0;
+    border: 0;
+    background: transparent;
   }
 
   .room-people-row {
     min-width: 0;
-    min-height: 34px;
-    padding: 4px 6px 4px 4px;
-    border-radius: 10px;
+    min-height: 38px;
+    padding: 6px 7px 6px 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.065);
+    background: rgba(255, 255, 255, 0.027);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 9px;
     color: rgba(255, 255, 255, 0.84);
   }
 
   .room-people-row.speaking {
-    background: rgba(97, 220, 154, 0.08);
-    box-shadow: inset 0 0 0 1px rgba(97, 220, 154, 0.16);
+    border-color: rgba(97, 220, 154, 0.24);
+    background: rgba(97, 220, 154, 0.075);
+    box-shadow: 0 0 0 1px rgba(97, 220, 154, 0.04);
   }
 
   .room-people-main {
@@ -973,9 +1228,15 @@ export const overlayStyles = `
   }
 
   .room-people-avatar {
-    width: 24px;
-    height: 24px;
-    font-size: 10px;
+    width: 25px;
+    height: 25px;
+    font-size: 10.5px;
+  }
+
+  .room-people-copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
   }
 
   .room-people-name {
@@ -983,15 +1244,18 @@ export const overlayStyles = `
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 12px;
-    font-weight: 680;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12.5px;
+    font-weight: 700;
   }
 
   .room-people-status {
-    flex: 0 0 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color: rgba(255, 255, 255, 0.42);
-    font-size: 10.5px;
-    font-weight: 560;
+    font-size: 9.5px;
+    font-weight: 620;
     white-space: nowrap;
   }
 
@@ -1006,15 +1270,15 @@ export const overlayStyles = `
 
   .room-people-action {
     flex: 0 0 auto;
-    min-width: 54px;
-    min-height: 24px;
-    padding: 4px 8px;
+    min-width: 50px;
+    min-height: 25px;
+    padding: 4px 9px;
     border-radius: 999px;
-    border: 1px solid rgba(255, 138, 61, 0.22);
-    background: rgba(255, 138, 61, 0.08);
-    color: rgba(255, 219, 194, 0.92);
+    border: 1px solid rgba(255, 138, 61, 0.2);
+    background: rgba(255, 138, 61, 0.075);
+    color: rgba(255, 219, 194, 0.88);
     cursor: pointer;
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 720;
     letter-spacing: 0;
     transition:
@@ -1041,9 +1305,12 @@ export const overlayStyles = `
     justify-content: space-between;
     gap: 10px;
     width: 100%;
-    padding: 9px 10px;
-    border: 1px solid var(--ad-border);
-    background: var(--ad-surface);
+    min-height: 36px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.105);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028)),
+      rgba(255, 255, 255, 0.035);
     color: inherit;
     cursor: pointer;
     transition:
@@ -1053,12 +1320,14 @@ export const overlayStyles = `
 
   .toggle:hover {
     border-color: rgba(255, 138, 61, 0.28);
-    background: var(--ad-surface-strong);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.04)),
+      rgba(255, 255, 255, 0.052);
   }
 
   .toggle span:first-child {
-    font-size: 13px;
-    font-weight: 650;
+    font-size: 12.5px;
+    font-weight: 680;
   }
 
   .toggle span:last-child {
@@ -1084,8 +1353,15 @@ export const overlayStyles = `
     gap: 8px;
     padding: 9px 10px 10px;
     border-radius: 12px;
-    border: 1px solid var(--ad-border);
-    background: var(--ad-surface);
+    border: 1px solid rgba(255, 255, 255, 0.105);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028)),
+      rgba(255, 255, 255, 0.035);
+  }
+
+  .size-control.compact {
+    gap: 7px;
+    padding: 8px 9px 9px;
   }
 
   .size-control-header {
@@ -1096,8 +1372,8 @@ export const overlayStyles = `
   }
 
   .size-control-header span {
-    font-size: 13px;
-    font-weight: 650;
+    font-size: 12.5px;
+    font-weight: 680;
   }
 
   .size-control-header strong {
@@ -1162,24 +1438,29 @@ export const overlayStyles = `
     align-items: center;
     justify-content: space-between;
     gap: 10px;
+    min-height: 36px;
     padding: 8px 8px 8px 10px;
     border-radius: 12px;
-    border: 1px solid var(--ad-border);
-    background: var(--ad-surface);
+    border: 1px solid rgba(255, 255, 255, 0.105);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028)),
+      rgba(255, 255, 255, 0.035);
   }
 
   .mode-control > span {
     min-width: 0;
-    font-size: 13px;
-    font-weight: 650;
+    font-size: 12.5px;
+    font-weight: 680;
   }
 
   .live-voice-status {
-    min-height: 38px;
-    padding: 9px 10px;
+    min-height: 36px;
+    padding: 8px 10px;
     border-radius: 12px;
-    border: 1px solid var(--ad-border);
-    background: var(--ad-surface);
+    border: 1px solid rgba(255, 255, 255, 0.105);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028)),
+      rgba(255, 255, 255, 0.035);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1428,21 +1709,24 @@ export const overlayStyles = `
 
   .cam-stack {
     position: absolute;
-    right: 12px;
-    bottom: var(--cam-stack-bottom, 54px);
+    top: var(--cam-stack-top, auto);
+    right: var(--cam-stack-right, 12px);
+    bottom: auto;
+    left: auto;
     display: flex;
     flex-direction: row-reverse;
     align-items: flex-end;
     gap: var(--cam-bubble-gap, 8px);
     pointer-events: auto;
     transition:
-      bottom 220ms ease,
+      right 220ms ease,
+      top 220ms ease,
       opacity 180ms ease,
       transform 180ms ease;
   }
 
   .anidachi-overlay.is-crunchyroll.player-controls-visible .cam-stack {
-    transform: translateY(-2px);
+    transform: translateY(0);
   }
 
   .room-rail {
@@ -1708,10 +1992,12 @@ export const overlayStyles = `
 
   .live-chat-column {
     position: absolute;
-    right: 6px;
-    bottom: var(--live-chat-bottom, 118px);
-    width: min(205px, calc(100% - 12px));
-    max-height: 122px;
+    top: var(--live-chat-top, auto);
+    right: auto;
+    bottom: auto;
+    left: var(--live-chat-left, auto);
+    width: min(var(--live-chat-width, 205px), 260px, calc(100% - 12px));
+    max-height: max(80px, min(var(--live-chat-height, 122px), 220px));
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -1720,7 +2006,10 @@ export const overlayStyles = `
     overflow: hidden;
     pointer-events: auto;
     transition:
-      bottom 220ms ease,
+      left 220ms ease,
+      top 220ms ease,
+      width 220ms ease,
+      max-height 220ms ease,
       opacity 180ms ease,
       transform 180ms ease;
   }
