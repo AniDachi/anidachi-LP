@@ -125,7 +125,6 @@ import {
 } from "./user-identity";
 import {
   AUTH_TOKENS_KEY,
-  AUTH_TOKENS_STORAGE_KEY,
   type AuthenticatedUser,
   type AuthenticatedUserPlan,
 } from "./auth-tokens";
@@ -3156,35 +3155,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     const unwatch = storage.watch(AUTH_TOKENS_KEY, () => {
       refreshIdentityFromStorage("auth-storage");
     });
-    const handleRawAuthStorageChange = (
-      changes: Record<string, chrome.storage.StorageChange>,
-      areaName: string,
-    ) => {
-      if (areaName !== "local" || !changes[AUTH_TOKENS_STORAGE_KEY]) {
-        return;
-      }
-
-      refreshIdentityFromStorage("auth-storage-raw");
-    };
-    const refreshFocusedIdentity = () => {
-      if (document.visibilityState === "hidden") {
-        return;
-      }
-      refreshIdentityFromStorage("window-focus");
-    };
-    const refreshVisibleIdentity = () => {
-      if (document.visibilityState === "visible") {
-        refreshIdentityFromStorage("visibility");
-      }
-    };
-    chrome.storage?.onChanged?.addListener(handleRawAuthStorageChange);
-    window.addEventListener("focus", refreshFocusedIdentity);
-    document.addEventListener("visibilitychange", refreshVisibleIdentity);
     return () => {
       disposed = true;
-      chrome.storage?.onChanged?.removeListener(handleRawAuthStorageChange);
-      window.removeEventListener("focus", refreshFocusedIdentity);
-      document.removeEventListener("visibilitychange", refreshVisibleIdentity);
       unwatch();
     };
   }, []);
