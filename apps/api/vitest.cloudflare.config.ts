@@ -8,6 +8,8 @@ export default defineConfig({
 			miniflare: {
 				bindings: {
 					ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret",
+					ANIDACHI_INTERNAL_API_SECRET: "anidachi-runtime-internal-secret",
+					ANIDACHI_WEB_INTERNAL_BASE_URL: "https://web.internal",
 				},
 			},
 		}),

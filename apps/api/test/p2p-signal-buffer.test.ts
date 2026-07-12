@@ -4,6 +4,7 @@ import {
   type BufferedP2PSignalEvent,
   RecentP2PSignalBuffer,
 } from "../src/p2p-signal-buffer";
+import { addP2PSignalForDispatch } from "../src/index";
 
 function p2pEvent(overrides: Partial<BufferedP2PSignalEvent> = {}): BufferedP2PSignalEvent {
   return {
@@ -23,6 +24,16 @@ function p2pEvent(overrides: Partial<BufferedP2PSignalEvent> = {}): BufferedP2PS
 }
 
 describe("RecentP2PSignalBuffer", () => {
+  it("returns no dispatch payload for a duplicate client signal id", () => {
+    const buffer = new RecentP2PSignalBuffer();
+    const first = p2pEvent({ serverSeq: 1 });
+    const duplicate = p2pEvent({ serverSeq: 2 });
+
+    expect(addP2PSignalForDispatch(buffer, first, 1_000)).toBe(first);
+    expect(addP2PSignalForDispatch(buffer, duplicate, 1_001)).toBeNull();
+    expect(buffer.replayFor("viewer", 0, 1_001)).toEqual([first]);
+  });
+
   it("dedupes repeated sender signal ids without replacing the original event", () => {
     const buffer = new RecentP2PSignalBuffer();
     const first = p2pEvent({ serverSeq: 1 });
@@ -61,9 +72,13 @@ describe("RecentP2PSignalBuffer", () => {
     buffer.add(third, 1_080);
 
     expect(buffer.replayFor("viewer", 0, 1_080)).toEqual([second, third]);
+    expect(buffer.requiresResyncAfter(0, 1_080)).toBe(true);
+    expect(buffer.requiresResyncAfter(1, 1_080)).toBe(false);
 
     buffer.prune(1_181);
     expect(buffer.replayFor("viewer", 0, 1_181)).toEqual([]);
+    expect(buffer.requiresResyncAfter(2)).toBe(true);
+    expect(buffer.requiresResyncAfter(3)).toBe(false);
   });
 
   it("does not replay signals from stale room or source generations", () => {
@@ -99,19 +114,43 @@ describe("RecentP2PSignalBuffer", () => {
     ).toEqual([active]);
   });
 
-  it("hydrates a persisted replay buffer and rebuilds dedupe state", () => {
+  it("marks durable signaling as an unreplayable gap after hibernation", () => {
     const buffer = new RecentP2PSignalBuffer();
-    const first = p2pEvent({ clientSignalId: "first", serverSeq: 1 });
-    const second = p2pEvent({ clientSignalId: "second", serverSeq: 2 });
+    buffer.markReplayGapThrough(8);
 
-    buffer.hydrate([second, first], 1_002);
+    expect(buffer.replayFor("viewer", 0, 1_002)).toEqual([]);
+    expect(buffer.requiresResyncAfter(0)).toBe(true);
+    expect(buffer.requiresResyncAfter(7)).toBe(true);
+    expect(buffer.requiresResyncAfter(8)).toBe(false);
+    expect(getP2PSignalDedupeKey(p2pEvent({ clientSignalId: "first" }))).toBe(
+      "room-1:host:viewer:first",
+    );
+  });
 
-    expect(buffer.replayFor("viewer", 0, 1_002)).toEqual([first, second]);
-    expect(buffer.hasSeen(first)).toBe(true);
-    expect(buffer.add({ ...first, serverSeq: 9 }, 1_003)).toEqual({
-      duplicate: true,
-      event: first,
+  it("marks expired in-memory signaling as a gap before the join resync check", () => {
+    const buffer = new RecentP2PSignalBuffer(80, 50);
+    buffer.add(p2pEvent({ serverSeq: 7, serverReceivedAt: 1_000 }), 1_000);
+
+    expect(buffer.requiresResyncAfter(0, 1_051)).toBe(true);
+    expect(buffer.replayFor("viewer", 0, 1_051)).toEqual([]);
+  });
+
+  it("prunes an expired event even when async work inserted it after a newer event", () => {
+    const buffer = new RecentP2PSignalBuffer(80, 50);
+    const newer = p2pEvent({
+      clientSignalId: "newer",
+      serverReceivedAt: 1_050,
+      serverSeq: 1,
     });
-    expect(getP2PSignalDedupeKey(first)).toBe("room-1:host:viewer:first");
+    const delayedExpired = p2pEvent({
+      clientSignalId: "delayed-expired",
+      serverReceivedAt: 1_000,
+      serverSeq: 2,
+    });
+    buffer.add(newer, 1_050);
+    buffer.add(delayedExpired, 1_050);
+
+    expect(buffer.requiresResyncAfter(1, 1_051)).toBe(true);
+    expect(buffer.replayFor("viewer", 0, 1_051)).toEqual([newer]);
   });
 });

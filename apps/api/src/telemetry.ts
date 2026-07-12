@@ -22,9 +22,14 @@ export type RoomTelemetryEventName =
   | "ws_close"
   | "ws_token_reject"
   | "join"
+  | "ice_query_auth_fallback"
   | "p2p_signal"
   | "p2p_replay"
   | "room_full"
+  | "room_end_callback_attempt"
+  | "room_end_callback_failure"
+  | "room_end_callback_retry"
+  | "room_end_callback_success"
   | "session_taken_over";
 
 export interface RoomTelemetryContext {

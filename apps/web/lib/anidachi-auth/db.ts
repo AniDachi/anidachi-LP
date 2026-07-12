@@ -1,3 +1,4 @@
+import type { RoomUsageSummary } from "@anidachi/protocol";
 import { createClient } from "@supabase/supabase-js";
 import type { PlanCode, RoomCapabilities } from "./plan-entitlements";
 
@@ -464,17 +465,31 @@ export async function updateRoom(
   if (error) throw new Error(`Failed to update room: ${error.message}`);
 }
 
-/** Rooms of this host that still have an open (unsettled) host segment. */
-export async function getOpenHostSegmentRooms(
-  hostUserId: string
-): Promise<RoomRow[]> {
-  const { data } = await db()
-    .from("rooms")
-    .select("*")
-    .eq("host_user_id", hostUserId)
-    .neq("status", "ended")
-    .not("host_connected_at", "is", null);
-  return (data as RoomRow[] | null) ?? [];
+export async function finalizeRoomUsage(
+  roomId: string,
+  endedAt: string,
+  usage?: RoomUsageSummary,
+): Promise<{ alreadyEnded: boolean; finalizedAt: string }> {
+  const { data, error } = await db().rpc("finalize_room_usage", {
+    p_room_id: roomId,
+    p_ended_at: endedAt,
+    p_usage_day: usage?.day ?? null,
+    p_usage_seconds: usage?.seconds ?? null,
+  });
+  if (error) throw new Error(`Failed to finalize room usage: ${error.message}`);
+
+  const row = Array.isArray(data) ? data[0] : null;
+  if (
+    !row ||
+    typeof row.already_ended !== "boolean" ||
+    typeof row.finalized_at !== "string"
+  ) {
+    throw new Error("Failed to finalize room usage: invalid database response");
+  }
+  return {
+    alreadyEnded: row.already_ended,
+    finalizedAt: row.finalized_at,
+  };
 }
 
 export async function getRoomById(roomId: string): Promise<RoomRow | null> {
@@ -492,27 +507,14 @@ export async function getUsageSecondsForDay(
   userId: string,
   day: string
 ): Promise<number> {
-  const { data } = await db()
+  const { data, error } = await db()
     .from("usage_daily")
     .select("host_seconds")
     .eq("user_id", userId)
     .eq("day", day)
     .maybeSingle();
+  if (error) throw new Error(`Failed to read room usage: ${error.message}`);
   return (data?.host_seconds as number | undefined) ?? 0;
-}
-
-export async function incrementUsageSeconds(
-  userId: string,
-  day: string,
-  seconds: number
-): Promise<void> {
-  if (seconds <= 0) return;
-  const { error } = await db().rpc("increment_host_usage", {
-    p_user_id: userId,
-    p_day: day,
-    p_seconds: Math.floor(seconds),
-  });
-  if (error) throw new Error(`Failed to increment usage: ${error.message}`);
 }
 
 export async function addRoomMember(
@@ -544,20 +546,6 @@ export async function getRoomMemberCount(roomId: string): Promise<number> {
     .select("user_id", { count: "exact", head: true })
     .eq("room_id", roomId);
   return count ?? 0;
-}
-
-export async function getFirstRoomMemberJoinedAt(
-  roomId: string
-): Promise<string | null> {
-  const { data, error } = await db()
-    .from("room_members")
-    .select("joined_at")
-    .eq("room_id", roomId)
-    .order("joined_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(`Failed to get first room member: ${error.message}`);
-  return typeof data?.joined_at === "string" ? data.joined_at : null;
 }
 
 export async function listRoomMembers(roomId: string): Promise<RoomMemberRow[]> {

@@ -1,5 +1,10 @@
 import type { ClientEvent, PlaybackState, ServerEvent } from "@anidachi/protocol";
 import { ANIDACHI_BUILD_ID, API_HTTP_BASE, API_WS_BASE } from "./constants";
+import {
+  redactPrivacySafeUrl,
+  sanitizePrivacySafeData,
+  sanitizePrivacySafeText,
+} from "./privacy-sanitizer";
 
 export interface DebugEntry {
   id: number;
@@ -28,9 +33,9 @@ export function logDebug(scope: string, message: string, data?: unknown): void {
     id: ++sequence,
     at: new Date().toISOString(),
     elapsedMs: Math.round(performance.now() - STARTED_AT),
-    scope,
-    message,
-    ...(data === undefined ? {} : { data: sanitizeDebugData(data, scope) }),
+    scope: sanitizePrivacySafeText(scope),
+    message: sanitizePrivacySafeText(message),
+    ...(data === undefined ? {} : { data: sanitizePrivacySafeData(data) }),
   };
 
   entries.push(entry);
@@ -43,7 +48,7 @@ export function logDebug(scope: string, message: string, data?: unknown): void {
 }
 
 export function getDebugEntries(): DebugEntry[] {
-  return entries.slice();
+  return entries.map(sanitizeDebugEntry);
 }
 
 export function clearDebugLog(): void {
@@ -60,7 +65,7 @@ export function getDebugLogText(): string {
       buildId: ANIDACHI_BUILD_ID,
       generatedAt: new Date().toISOString(),
       page: {
-        url: redactUrl(location.href),
+        url: redactPrivacySafeUrl(location.href),
         title: document.title,
         visibilityState: document.visibilityState,
       },
@@ -69,7 +74,7 @@ export function getDebugLogText(): string {
         apiWsBase: API_WS_BASE,
         userAgent: navigator.userAgent,
       },
-      entries,
+      entries: entries.map(sanitizeDebugEntry),
     },
     null,
     2,
@@ -78,6 +83,7 @@ export function getDebugLogText(): string {
 
 export function getCompactDebugLogText(): string {
   const compactEntries = entries
+    .map(sanitizeDebugEntry)
     .filter(isUsefulCompactEntry)
     .slice(-COMPACT_ENTRIES)
     .map((entry) => ({
@@ -96,7 +102,7 @@ export function getCompactDebugLogText(): string {
       buildId: ANIDACHI_BUILD_ID,
       generatedAt: new Date().toISOString(),
       page: {
-        url: redactUrl(location.href),
+        url: redactPrivacySafeUrl(location.href),
         title: document.title,
         visibilityState: document.visibilityState,
       },
@@ -116,7 +122,7 @@ export function getCompactDebugLogText(): string {
 export function playbackStateDebugSnapshot(state: PlaybackState): Record<string, unknown> {
   return {
     videoFingerprint: state.videoFingerprint,
-    sourceUrl: state.sourceUrl ? redactUrl(state.sourceUrl) : undefined,
+    sourceUrl: state.sourceUrl ? redactPrivacySafeUrl(state.sourceUrl) : undefined,
     playing: state.playing,
     hostTime: round(state.hostTime),
     updatedAt: state.updatedAt,
@@ -126,6 +132,13 @@ export function playbackStateDebugSnapshot(state: PlaybackState): Record<string,
 
 export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record<string, unknown> {
   switch (event.type) {
+    case "ROOM_ENDED":
+      return {
+        type: event.type,
+        roomId: event.roomId,
+        endedAt: event.endedAt,
+        reason: event.reason,
+      };
     case "PING":
       return { type: event.type, roomId: event.roomId, sentAt: event.sentAt };
     case "PONG":
@@ -152,6 +165,7 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
         roomGeneration: event.roomGeneration,
         sourceGeneration: event.sourceGeneration,
         serverSeq: event.serverSeq,
+        roomUsage: event.roomUsage,
         participants: event.participants.map((participant) => ({
           id: participant.id,
           role: participant.role,
@@ -372,7 +386,7 @@ function loadEntries(): DebugEntry[] {
     }
 
     sequence = parsed.reduce((max, entry) => Math.max(max, entry.id), 0);
-    return pruneDebugEntries(parsed).slice(-MAX_ENTRIES);
+    return pruneDebugEntries(parsed).slice(-MAX_ENTRIES).map(sanitizeDebugEntry);
   } catch {
     return [];
   }
@@ -398,7 +412,7 @@ function writeEntriesToStorage(): void {
   }
 
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.map(sanitizeDebugEntry)));
   } catch {
     // Ignore storage pressure; debug export is best-effort in content scripts.
   }
@@ -439,62 +453,13 @@ function shouldPrintDebugToConsole(): boolean {
   }
 }
 
-const P2P_IDENTIFIER_FIELDS = new Set([
-  "localParticipantId",
-  "participantId",
-  "participantSessionId",
-  "remoteUserId",
-  "sessionId",
-  "fromUserId",
-  "toUserId",
-]);
-
-const DEBUG_IDENTIFIER_FIELDS = new Set(["participantSessionId", "sessionId"]);
-
-const P2P_IDENTIFIER_ARRAY_FIELDS = new Set([
-  "activeSpeakerIds",
-  "existingPeerIds",
-  "remoteIds",
-]);
-
-function sanitizeDebugData(value: unknown, scope: string): unknown {
-  const sanitizeP2P = scope.startsWith("p2p.");
-  return JSON.parse(
-    JSON.stringify(value, (_key, item) => {
-      if (DEBUG_IDENTIFIER_FIELDS.has(_key) && typeof item === "string") {
-        return hashDebugId(item);
-      }
-
-      if (sanitizeP2P && P2P_IDENTIFIER_FIELDS.has(_key) && typeof item === "string") {
-        return hashDebugId(item);
-      }
-
-      if (sanitizeP2P && P2P_IDENTIFIER_ARRAY_FIELDS.has(_key) && Array.isArray(item)) {
-        return item.map((value) => (typeof value === "string" ? hashDebugId(value) : value));
-      }
-
-      if (sanitizeP2P && _key === "address" && item !== undefined && item !== null) {
-        return "<redacted>";
-      }
-
-      if (typeof item === "string") {
-        const redactedUrl = redactUrl(item);
-        return sanitizeP2P ? redactNetworkAddress(redactedUrl) : redactedUrl;
-      }
-
-      return item;
-    }),
-  );
-}
-
-function hashDebugId(value: string): string {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-
-  return `id_${(hash >>> 0).toString(36)}`;
+function sanitizeDebugEntry(entry: DebugEntry): DebugEntry {
+  return {
+    ...entry,
+    scope: sanitizePrivacySafeText(entry.scope),
+    message: sanitizePrivacySafeText(entry.message),
+    ...(entry.data === undefined ? {} : { data: sanitizePrivacySafeData(entry.data) }),
+  };
 }
 
 function isUsefulCompactEntry(entry: DebugEntry): boolean {
@@ -717,26 +682,5 @@ function round(value: number): number {
 }
 
 function redactUrl(value: string): string {
-  if (!/^https?:\/\//i.test(value)) {
-    return value;
-  }
-
-  try {
-    const url = new URL(value);
-    url.username = "";
-    url.password = "";
-    if (url.search) {
-      return `${url.origin}${url.pathname}?<redacted>${url.hash}`;
-    }
-    return `${url.origin}${url.pathname}${url.hash}`;
-  } catch {
-    return value;
-  }
-}
-
-function redactNetworkAddress(value: string): string {
-  return value
-    .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, "<redacted-ip>")
-    .replace(/\b(?:[a-f0-9]{1,4}:){2,}[a-f0-9:]{1,4}\b/gi, "<redacted-ip>")
-    .replace(/\b[a-z0-9-]+\.local\b/gi, "<redacted-local>");
+  return redactPrivacySafeUrl(value);
 }

@@ -4,7 +4,12 @@ import type {
   Participant,
 } from "@anidachi/protocol";
 import { logDebug } from "./debug-log";
-import type { GhostVideo, LiveVoiceStatus } from "./media-types";
+import type {
+  GhostVideo,
+  LiveVoiceStatus,
+  RoomSendDisposition,
+  SignalingTransportReady,
+} from "./media-types";
 
 const P2P_MAX_REMOTE_PARTICIPANTS = 3;
 const P2P_VIDEO_BITRATE_BPS = 150_000;
@@ -40,6 +45,7 @@ const P2P_VOICE_REACQUIRE_MAX_FAILURES = 3;
 const P2P_VOICE_STABLE_RESET_MS = 20_000;
 const P2P_SIGNAL_DEDUPE_TTL_MS = 30_000;
 const P2P_SIGNAL_DEDUPE_CAP = 240;
+const P2P_RETIRED_SIGNAL_SOURCE_CAP = 8;
 /**
  * When a participant stops publishing (camera off, voice released) keep the
  * peer connection warm for this long instead of tearing it down. A camera
@@ -162,16 +168,24 @@ export type P2PIceRestartDecision =
 export interface P2PSignalConnectionDecision {
   accept: boolean;
   nextSenderConnectionId: string | null;
+  nextSenderMediaSessionId?: string | null;
   reason:
     | "current-connection"
+    | "current-media-session"
     | "first-connection"
     | "missing-metadata"
+    | "new-media-session"
     | "new-publisher-connection"
     | "stale-connection";
 }
 
 export interface P2PSignalMetadata {
   senderConnectionId?: string | null;
+  senderMediaSessionId?: string | null;
+}
+
+export interface LocalP2PSignalMetadata {
+  senderMediaSessionId: string;
 }
 
 export function decideP2PIceRestart(
@@ -200,7 +214,69 @@ export function decideP2PSignalConnection(
   currentSenderConnectionId: string | null,
   incomingSenderConnectionId: string | null | undefined,
   signalKind: P2PSignal["kind"],
+  currentSenderMediaSessionId?: string | null,
+  incomingSenderMediaSessionId?: string | null,
 ): P2PSignalConnectionDecision {
+  if (incomingSenderMediaSessionId) {
+    if (currentSenderMediaSessionId === incomingSenderMediaSessionId) {
+      if (
+        signalKind === "bye" &&
+        currentSenderConnectionId &&
+        incomingSenderConnectionId &&
+        currentSenderConnectionId !== incomingSenderConnectionId
+      ) {
+        return {
+          accept: false,
+          nextSenderConnectionId: currentSenderConnectionId,
+          nextSenderMediaSessionId: currentSenderMediaSessionId,
+          reason: "stale-connection",
+        };
+      }
+
+      return {
+        accept: true,
+        nextSenderConnectionId:
+          signalKind === "bye"
+            ? null
+            : (incomingSenderConnectionId ?? currentSenderConnectionId),
+        nextSenderMediaSessionId:
+          signalKind === "bye" ? null : currentSenderMediaSessionId,
+        reason: "current-media-session",
+      };
+    }
+
+    if (signalKind === "bye") {
+      return {
+        accept: false,
+        nextSenderConnectionId: currentSenderConnectionId,
+        nextSenderMediaSessionId: currentSenderMediaSessionId ?? null,
+        reason: "stale-connection",
+      };
+    }
+
+    return {
+      accept: true,
+      nextSenderConnectionId:
+        incomingSenderConnectionId ?? currentSenderConnectionId,
+      nextSenderMediaSessionId: incomingSenderMediaSessionId,
+      reason: "new-media-session",
+    };
+  }
+
+  if (
+    currentSenderMediaSessionId &&
+    currentSenderConnectionId &&
+    incomingSenderConnectionId &&
+    currentSenderConnectionId !== incomingSenderConnectionId
+  ) {
+    return {
+      accept: false,
+      nextSenderConnectionId: currentSenderConnectionId,
+      nextSenderMediaSessionId: currentSenderMediaSessionId,
+      reason: "stale-connection",
+    };
+  }
+
   if (!incomingSenderConnectionId) {
     return {
       accept: true,
@@ -284,6 +360,21 @@ export function rememberP2PMediaSignalFingerprint(
   recent.set(key, nowMs);
   pruneRecentP2PSignalFingerprints(recent, nowMs, ttlMs, cap);
   return "accept";
+}
+
+export function hasRecentP2PMediaSignalFingerprint(
+  recent: Map<string, number>,
+  key: string | null,
+  nowMs: number,
+  ttlMs = P2P_SIGNAL_DEDUPE_TTL_MS,
+  cap = P2P_SIGNAL_DEDUPE_CAP,
+): boolean {
+  if (!key) {
+    return false;
+  }
+
+  pruneRecentP2PSignalFingerprints(recent, nowMs, ttlMs, cap);
+  return recent.has(key);
 }
 
 const DEFAULT_STUN_SERVERS: RTCIceServer[] = [
@@ -588,6 +679,7 @@ interface P2PPeer {
   lastIceRestartAt: number;
   lastIceRestartRequestAt: number;
   lastRenegotiationRequestAt: number;
+  lastSignalingRecoveryConnectionId: string | null;
   lastMediaStallRecoveryAt: number;
   makingOffer: boolean;
   mediaSyncing: boolean;
@@ -601,6 +693,7 @@ interface P2PPeer {
   remoteVideoExpected: boolean;
   remoteVideoStallSamples: number;
   remoteUserId: string;
+  signalingRecoveryNeeded: boolean;
   videoCodecPreferencesKey: string | null;
   videoTransceiver: RTCRtpTransceiver | null;
 }
@@ -614,7 +707,11 @@ interface P2PMediaControllerOptions {
   onVoiceMessageChange: (message: string | null) => void;
   onVoiceStatusChange: (status: LiveVoiceStatus) => void;
   refreshIceServers?: () => Promise<RTCIceServer[]>;
-  sendSignal: (toUserId: string, signal: P2PSignal) => void;
+  sendSignal: (
+    toUserId: string,
+    signal: P2PSignal,
+    metadata: LocalP2PSignalMetadata,
+  ) => RoomSendDisposition;
 }
 
 type IceCandidateStatsSnapshot = RTCStats & {
@@ -633,9 +730,19 @@ export class P2PMediaController {
   private readonly onVoiceMessageChange: (message: string | null) => void;
   private readonly onVoiceStatusChange: (status: LiveVoiceStatus) => void;
   private readonly refreshIceServers?: () => Promise<RTCIceServer[]>;
-  private readonly sendSignal: (toUserId: string, signal: P2PSignal) => void;
+  private readonly sendSignalToTransport: P2PMediaControllerOptions["sendSignal"];
   private readonly peers = new Map<string, P2PPeer>();
+  private readonly peerOperationChains = new Map<string, Promise<void>>();
   private readonly senderConnectionIdsByPeer = new Map<string, string>();
+  private readonly senderMediaSessionIdsByPeer = new Map<string, string>();
+  private readonly retiredSenderConnectionIdsByPeer = new Map<
+    string,
+    Set<string>
+  >();
+  private readonly retiredSenderMediaSessionIdsByPeer = new Map<
+    string,
+    Set<string>
+  >();
   private readonly videosByParticipant = new Map<string, GhostVideo>();
   private readonly audioElementsByParticipant = new Map<
     string,
@@ -666,23 +773,27 @@ export class P2PMediaController {
     VideoActivityStats
   >();
   private cameraFailureTimestamps: number[] = [];
+  private cameraIntentGeneration = 0;
   private cameraReacquireTimerId: number | null = null;
   private cameraStableTimerId: number | null = null;
-  private cameraStarting = false;
+  private cameraStartingGeneration: number | null = null;
   private cameraState: P2PCameraState = "off";
   private disposed = false;
   private localAudioStream: MediaStream | null = null;
   private localAudioTrack: MediaStreamTrack | null = null;
   private voiceFailureTimestamps: number[] = [];
+  private voiceIntentGeneration = 0;
   private voiceReacquireTimerId: number | null = null;
   private voiceStableTimerId: number | null = null;
   private localVideoStream: MediaStream | null = null;
   private localVideoTrack: MediaStreamTrack | null = null;
   private publicCameraEnabled = false;
+  private lastSignalingTransportReadyId: string | null = null;
   private wantsCamera = false;
   private wantsVoiceTalk = false;
-  private voiceStarting = false;
+  private voiceStartingGeneration: number | null = null;
   private voiceTalking = false;
+  readonly mediaSessionId = `media-${crypto.randomUUID()}`;
   // The mic track is kept warm between presses (track.enabled toggled) so
   // repeat push-to-talk is instant, then released after an idle timeout for
   // privacy (Block 5.2).
@@ -702,9 +813,7 @@ export class P2PMediaController {
     this.handleNetworkSignal("connection-change");
 
   constructor(options: P2PMediaControllerOptions) {
-    this.iceServers = options.iceServers?.length
-      ? options.iceServers
-      : getDefaultP2PIceServers();
+    this.iceServers = options.iceServers ?? getDefaultP2PIceServers();
     this.localParticipant = options.localParticipant;
     this.onActiveSpeakerIdsChange = options.onActiveSpeakerIdsChange;
     this.onCameraStatus = options.onCameraStatus;
@@ -712,7 +821,7 @@ export class P2PMediaController {
     this.onVoiceMessageChange = options.onVoiceMessageChange;
     this.onVoiceStatusChange = options.onVoiceStatusChange;
     this.refreshIceServers = options.refreshIceServers;
-    this.sendSignal = options.sendSignal;
+    this.sendSignalToTransport = options.sendSignal;
     this.publicCameraEnabled = options.localParticipant.cameraEnabled;
     this.reconcileTimerId = window.setInterval(() => {
       this.reconcile("interval");
@@ -730,8 +839,24 @@ export class P2PMediaController {
     );
     logDebug("p2p.controller", "created", {
       localParticipantId: options.localParticipant.id,
+      mediaSessionId: this.mediaSessionId,
       iceServers: summarizeIceServers(this.iceServers),
     });
+  }
+
+  private sendSignal(toUserId: string, signal: P2PSignal): RoomSendDisposition {
+    const disposition = this.sendSignalToTransport(toUserId, signal, {
+      senderMediaSessionId: this.mediaSessionId,
+    });
+    if (disposition !== "sent") {
+      logDebug("p2p.signal", "transport did not send immediately", {
+        disposition,
+        kind: signal.kind,
+        localParticipantId: this.localParticipant.id,
+        remoteUserId: toUserId,
+      });
+    }
+    return disposition;
   }
 
   /**
@@ -844,7 +969,7 @@ export class P2PMediaController {
       void this.syncPeerMediaAndNegotiate(
         peer,
         isNewPeer ? "peer-created" : "participants",
-        isNewPeer,
+        isNewPeer && this.shouldInitiateOffers(peer),
       );
       if (isNewPeer && this.voiceTalking) {
         this.sendSignal(peer.remoteUserId, { kind: "voice-start" });
@@ -858,18 +983,24 @@ export class P2PMediaController {
     }
 
     if (!enabled) {
-      this.wantsCamera = false;
       await this.stopCamera();
       return;
     }
 
+    if (!this.wantsCamera) {
+      this.cameraIntentGeneration += 1;
+    }
     this.wantsCamera = true;
     this.onVoiceMessageChange(null);
-    await this.acquireCamera("user-request");
+    await this.acquireCamera("user-request", this.cameraIntentGeneration);
   }
 
-  private async acquireCamera(reason: string): Promise<void> {
-    if (this.disposed || !this.wantsCamera) {
+  private async acquireCamera(reason: string, intentGeneration: number): Promise<void> {
+    if (
+      this.disposed ||
+      !this.wantsCamera ||
+      intentGeneration !== this.cameraIntentGeneration
+    ) {
       return;
     }
 
@@ -879,13 +1010,13 @@ export class P2PMediaController {
       return;
     }
 
-    if (this.cameraStarting) {
+    if (this.cameraStartingGeneration === intentGeneration) {
       return;
     }
 
     this.clearCameraReacquireTimer();
     this.clearCameraStableTimer();
-    this.cameraStarting = true;
+    this.cameraStartingGeneration = intentGeneration;
     this.cameraState = this.publicCameraEnabled ? "recovering" : "starting";
     logDebug("p2p.camera", "getUserMedia start", {
       localParticipantId: this.localParticipant.id,
@@ -898,10 +1029,12 @@ export class P2PMediaController {
       const stream = await navigator.mediaDevices.getUserMedia(
         P2P_VIDEO_CONSTRAINTS,
       );
-      if (this.disposed || !this.wantsCamera) {
+      if (
+        this.disposed ||
+        !this.wantsCamera ||
+        intentGeneration !== this.cameraIntentGeneration
+      ) {
         stopStream(stream);
-        this.cameraState = "off";
-        this.setPublicCameraEnabled(false, "camera-aborted");
         return;
       }
 
@@ -942,7 +1075,9 @@ export class P2PMediaController {
 
       this.setPublicCameraEnabled(true, "track-ready");
     } catch (error) {
-      console.warn("[Anidachi] P2P camera failed", error);
+      if (intentGeneration !== this.cameraIntentGeneration) {
+        return;
+      }
       logDebug("p2p.camera", "failed", {
         localParticipantId: this.localParticipant.id,
         error: error instanceof Error ? error.message : String(error),
@@ -957,7 +1092,9 @@ export class P2PMediaController {
         this.onVoiceMessageChange(formatCameraErrorMessage(error));
       }
     } finally {
-      this.cameraStarting = false;
+      if (this.cameraStartingGeneration === intentGeneration) {
+        this.cameraStartingGeneration = null;
+      }
     }
   }
 
@@ -1026,7 +1163,10 @@ export class P2PMediaController {
       if (this.disposed || !this.wantsCamera) {
         return;
       }
-      void this.acquireCamera(`reacquire:${reason}`);
+      void this.acquireCamera(
+        `reacquire:${reason}`,
+        this.cameraIntentGeneration,
+      );
     }, delay);
   }
 
@@ -1094,6 +1234,9 @@ export class P2PMediaController {
       return;
     }
 
+    if (!this.wantsVoiceTalk) {
+      this.voiceIntentGeneration += 1;
+    }
     this.wantsVoiceTalk = true;
     this.clearVoiceReacquireTimer();
     this.clearMicReleaseTimer();
@@ -1103,7 +1246,7 @@ export class P2PMediaController {
       return;
     }
 
-    if (this.voiceStarting) {
+    if (this.voiceStartingGeneration === this.voiceIntentGeneration) {
       this.onVoiceStatusChange("connecting");
       return;
     }
@@ -1131,11 +1274,15 @@ export class P2PMediaController {
       return;
     }
 
-    await this.acquireVoiceTrack("user-request");
+    await this.acquireVoiceTrack("user-request", this.voiceIntentGeneration);
   }
 
-  private async acquireVoiceTrack(reason: string): Promise<void> {
-    if (this.disposed || !this.wantsVoiceTalk) {
+  private async acquireVoiceTrack(reason: string, intentGeneration: number): Promise<void> {
+    if (
+      this.disposed ||
+      !this.wantsVoiceTalk ||
+      intentGeneration !== this.voiceIntentGeneration
+    ) {
       return;
     }
 
@@ -1147,12 +1294,12 @@ export class P2PMediaController {
       return;
     }
 
-    if (this.voiceStarting) {
+    if (this.voiceStartingGeneration === intentGeneration) {
       this.onVoiceStatusChange("connecting");
       return;
     }
 
-    this.voiceStarting = true;
+    this.voiceStartingGeneration = intentGeneration;
     this.onVoiceStatusChange("connecting");
     this.onVoiceMessageChange(null);
     logDebug("p2p.voice", "getUserMedia start", {
@@ -1165,9 +1312,12 @@ export class P2PMediaController {
       const stream = await navigator.mediaDevices.getUserMedia(
         P2P_AUDIO_CONSTRAINTS,
       );
-      if (this.disposed || !this.wantsVoiceTalk) {
+      if (
+        this.disposed ||
+        !this.wantsVoiceTalk ||
+        intentGeneration !== this.voiceIntentGeneration
+      ) {
         stopStream(stream);
-        this.onVoiceStatusChange("idle");
         return;
       }
 
@@ -1205,7 +1355,9 @@ export class P2PMediaController {
       this.publishActiveSpeakerIds();
       this.onVoiceStatusChange("talking");
     } catch (error) {
-      console.warn("[Anidachi] P2P voice failed", error);
+      if (intentGeneration !== this.voiceIntentGeneration) {
+        return;
+      }
       logDebug("p2p.voice", "failed", {
         localParticipantId: this.localParticipant.id,
         error: error instanceof Error ? error.message : String(error),
@@ -1219,14 +1371,16 @@ export class P2PMediaController {
         this.onVoiceMessageChange(formatVoiceErrorMessage(error));
       }
     } finally {
-      this.voiceStarting = false;
+      if (this.voiceStartingGeneration === intentGeneration) {
+        this.voiceStartingGeneration = null;
+      }
     }
   }
 
   async stopVoiceTalk(): Promise<void> {
     const wasVoiceActive =
       this.wantsVoiceTalk ||
-      this.voiceStarting ||
+      this.voiceStartingGeneration !== null ||
       this.voiceTalking ||
       Boolean(this.localAudioTrack?.enabled);
 
@@ -1244,8 +1398,9 @@ export class P2PMediaController {
       localParticipantId: this.localParticipant.id,
       peerCount: this.peers.size,
     });
+    this.voiceIntentGeneration += 1;
     this.wantsVoiceTalk = false;
-    this.voiceStarting = false;
+    this.voiceStartingGeneration = null;
     this.voiceTalking = false;
     this.clearVoiceReacquireTimer();
     this.clearVoiceStableTimer();
@@ -1363,7 +1518,10 @@ export class P2PMediaController {
       if (this.disposed || !this.wantsVoiceTalk) {
         return;
       }
-      void this.acquireVoiceTrack(`reacquire:${reason}`);
+      void this.acquireVoiceTrack(
+        `reacquire:${reason}`,
+        this.voiceIntentGeneration,
+      );
     }, delay);
   }
 
@@ -1371,7 +1529,8 @@ export class P2PMediaController {
     this.clearVoiceReacquireTimer();
     this.clearVoiceStableTimer();
     this.wantsVoiceTalk = false;
-    this.voiceStarting = false;
+    this.voiceIntentGeneration += 1;
+    this.voiceStartingGeneration = null;
     this.voiceTalking = false;
     stopStream(this.localAudioStream);
     this.localAudioStream = null;
@@ -1440,6 +1599,33 @@ export class P2PMediaController {
     signal: P2PSignal,
     metadata: P2PSignalMetadata = {},
   ): Promise<void> {
+    return this.enqueuePeerOperation(fromUserId, () =>
+      this.handleSignalNow(fromUserId, signal, metadata),
+    );
+  }
+
+  private enqueuePeerOperation(
+    remoteUserId: string,
+    operation: () => Promise<void>,
+  ): Promise<void> {
+    const previous =
+      this.peerOperationChains.get(remoteUserId) ?? Promise.resolve();
+    const next = previous.catch(() => undefined).then(operation);
+    this.peerOperationChains.set(remoteUserId, next);
+    const cleanup = () => {
+      if (this.peerOperationChains.get(remoteUserId) === next) {
+        this.peerOperationChains.delete(remoteUserId);
+      }
+    };
+    next.then(cleanup, cleanup);
+    return next;
+  }
+
+  private async handleSignalNow(
+    fromUserId: string,
+    signal: P2PSignal,
+    metadata: P2PSignalMetadata,
+  ): Promise<void> {
     if (this.disposed || fromUserId === this.localParticipant.id) {
       return;
     }
@@ -1449,20 +1635,61 @@ export class P2PMediaController {
       fromUserId,
       kind: signal.kind,
       senderConnectionId: metadata.senderConnectionId ?? null,
+      senderMediaSessionId: metadata.senderMediaSessionId ?? null,
       summary: summarizeSignal(signal),
     });
 
     const previousSenderConnectionId =
       this.senderConnectionIdsByPeer.get(fromUserId) ?? null;
+    const previousSenderMediaSessionId =
+      this.senderMediaSessionIdsByPeer.get(fromUserId) ?? null;
+    const incomingSenderConnectionId = metadata.senderConnectionId ?? null;
+    const incomingSenderMediaSessionId = metadata.senderMediaSessionId ?? null;
+    if (
+      incomingSenderMediaSessionId &&
+      this.retiredSenderMediaSessionIdsByPeer
+        .get(fromUserId)
+        ?.has(incomingSenderMediaSessionId)
+    ) {
+      logDebug("p2p.signal", "drop retired media session", {
+        incomingSenderMediaSessionId,
+        kind: signal.kind,
+        localParticipantId: this.localParticipant.id,
+        remoteUserId: fromUserId,
+      });
+      return;
+    }
+    if (
+      incomingSenderMediaSessionId &&
+      incomingSenderMediaSessionId === previousSenderMediaSessionId &&
+      incomingSenderConnectionId &&
+      this.retiredSenderConnectionIdsByPeer
+        .get(fromUserId)
+        ?.has(incomingSenderConnectionId)
+    ) {
+      logDebug("p2p.signal", "drop retired transport", {
+        incomingSenderConnectionId,
+        incomingSenderMediaSessionId,
+        kind: signal.kind,
+        localParticipantId: this.localParticipant.id,
+        remoteUserId: fromUserId,
+      });
+      return;
+    }
+
     const connectionDecision = decideP2PSignalConnection(
       previousSenderConnectionId,
-      metadata.senderConnectionId,
+      incomingSenderConnectionId,
       signal.kind,
+      previousSenderMediaSessionId,
+      incomingSenderMediaSessionId,
     );
     if (!connectionDecision.accept) {
       logDebug("p2p.signal", "drop stale sender connection", {
         currentSenderConnectionId: previousSenderConnectionId,
-        incomingSenderConnectionId: metadata.senderConnectionId ?? null,
+        currentSenderMediaSessionId: previousSenderMediaSessionId,
+        incomingSenderConnectionId,
+        incomingSenderMediaSessionId,
         kind: signal.kind,
         localParticipantId: this.localParticipant.id,
         reason: connectionDecision.reason,
@@ -1475,11 +1702,52 @@ export class P2PMediaController {
       Boolean(previousSenderConnectionId) &&
       Boolean(connectionDecision.nextSenderConnectionId) &&
       previousSenderConnectionId !== connectionDecision.nextSenderConnectionId;
+    const senderMediaSessionChanged =
+      Boolean(previousSenderMediaSessionId) &&
+      Boolean(connectionDecision.nextSenderMediaSessionId) &&
+      previousSenderMediaSessionId !==
+        connectionDecision.nextSenderMediaSessionId;
+
+    if (senderMediaSessionChanged && previousSenderMediaSessionId) {
+      rememberRetiredSignalSource(
+        this.retiredSenderMediaSessionIdsByPeer,
+        fromUserId,
+        previousSenderMediaSessionId,
+      );
+      this.retiredSenderConnectionIdsByPeer.delete(fromUserId);
+      const existingPeer = this.peers.get(fromUserId);
+      if (existingPeer) {
+        existingPeer.recentSignalFingerprints.clear();
+        existingPeer.pendingIceCandidates = [];
+        existingPeer.remoteVideoStallSamples = 0;
+      }
+      this.remoteVideoStatsByPeer.delete(fromUserId);
+      this.remoteAudioStatsByPeer.delete(fromUserId);
+      logDebug("p2p.signal", "media session changed", {
+        incomingSenderMediaSessionId,
+        localParticipantId: this.localParticipant.id,
+        previousSenderMediaSessionId,
+        remoteUserId: fromUserId,
+      });
+    } else if (
+      senderConnectionChanged &&
+      incomingSenderMediaSessionId &&
+      incomingSenderMediaSessionId === previousSenderMediaSessionId &&
+      previousSenderConnectionId
+    ) {
+      rememberRetiredSignalSource(
+        this.retiredSenderConnectionIdsByPeer,
+        fromUserId,
+        previousSenderConnectionId,
+      );
+    }
+
     if (
       senderConnectionChanged &&
+      !incomingSenderMediaSessionId &&
       (signal.kind === "offer" || signal.kind === "voice-start")
     ) {
-      logDebug("p2p.signal", "replace peer for new sender connection", {
+      logDebug("p2p.signal", "replace legacy peer for new sender connection", {
         kind: signal.kind,
         localParticipantId: this.localParticipant.id,
         previousSenderConnectionId,
@@ -1496,6 +1764,16 @@ export class P2PMediaController {
       );
     } else {
       this.senderConnectionIdsByPeer.delete(fromUserId);
+    }
+    if (connectionDecision.nextSenderMediaSessionId !== undefined) {
+      if (connectionDecision.nextSenderMediaSessionId) {
+        this.senderMediaSessionIdsByPeer.set(
+          fromUserId,
+          connectionDecision.nextSenderMediaSessionId,
+        );
+      } else {
+        this.senderMediaSessionIdsByPeer.delete(fromUserId);
+      }
     }
 
     if (signal.kind === "voice-start") {
@@ -1564,16 +1842,24 @@ export class P2PMediaController {
     }
 
     const peer = this.ensurePeer(fromUserId);
-    if (senderConnectionChanged) {
+    if (senderConnectionChanged && !incomingSenderMediaSessionId) {
       peer.recentSignalFingerprints.clear();
       peer.remoteVideoStallSamples = 0;
       this.remoteVideoStatsByPeer.delete(fromUserId);
       this.remoteAudioStatsByPeer.delete(fromUserId);
-      logDebug("p2p.signal", "sender connection changed", {
+      logDebug("p2p.signal", "legacy sender connection changed", {
         localParticipantId: this.localParticipant.id,
         previousSenderConnectionId,
         remoteUserId: fromUserId,
         senderConnectionId: connectionDecision.nextSenderConnectionId,
+      });
+    } else if (senderConnectionChanged) {
+      logDebug("p2p.signal", "signaling transport changed", {
+        localParticipantId: this.localParticipant.id,
+        previousSenderConnectionId,
+        remoteUserId: fromUserId,
+        senderConnectionId: connectionDecision.nextSenderConnectionId,
+        senderMediaSessionId: incomingSenderMediaSessionId,
       });
     }
 
@@ -1591,7 +1877,7 @@ export class P2PMediaController {
 
     if (signal.kind === "renegotiate") {
       if (this.shouldInitiateOffers(peer)) {
-        void this.syncPeerMediaAndNegotiate(peer, "remote-renegotiate", true);
+        await this.recoverPeerNegotiation(peer, "remote-renegotiate", true);
       } else {
         logDebug(
           "p2p.negotiation",
@@ -1607,11 +1893,11 @@ export class P2PMediaController {
 
     const dedupeKey = createP2PMediaSignalDedupeKey(fromUserId, signal);
     if (
-      rememberP2PMediaSignalFingerprint(
+      hasRecentP2PMediaSignalFingerprint(
         peer.recentSignalFingerprints,
         dedupeKey,
         Date.now(),
-      ) === "drop-duplicate"
+      )
     ) {
       logDebug("p2p.signal", "drop duplicate media signal", {
         localParticipantId: this.localParticipant.id,
@@ -1625,10 +1911,19 @@ export class P2PMediaController {
     try {
       if (signal.kind === "ice") {
         if (!peer.pc.remoteDescription) {
-          peer.pendingIceCandidates = [
-            ...peer.pendingIceCandidates,
-            signal.candidate,
-          ].slice(-40);
+          const alreadyQueued = peer.pendingIceCandidates.some(
+            (candidate) =>
+              createP2PMediaSignalDedupeKey(fromUserId, {
+                kind: "ice",
+                candidate,
+              }) === dedupeKey,
+          );
+          if (!alreadyQueued) {
+            peer.pendingIceCandidates = [
+              ...peer.pendingIceCandidates,
+              signal.candidate,
+            ].slice(-40);
+          }
           logDebug(
             "p2p.ice",
             "queued remote candidate before remote description",
@@ -1637,12 +1932,18 @@ export class P2PMediaController {
               remoteUserId: fromUserId,
               candidateType: getCandidateType(signal.candidate.candidate),
               queued: peer.pendingIceCandidates.length,
+              duplicatePending: alreadyQueued,
             },
           );
           return;
         }
 
         await peer.pc.addIceCandidate(signal.candidate);
+        rememberP2PMediaSignalFingerprint(
+          peer.recentSignalFingerprints,
+          dedupeKey,
+          Date.now(),
+        );
         logDebug("p2p.ice", "added remote candidate", {
           localParticipantId: this.localParticipant.id,
           remoteUserId: fromUserId,
@@ -1682,6 +1983,14 @@ export class P2PMediaController {
       peer.isSettingRemoteAnswerPending = description.type === "answer";
       try {
         await peer.pc.setRemoteDescription(description);
+        rememberP2PMediaSignalFingerprint(
+          peer.recentSignalFingerprints,
+          dedupeKey,
+          Date.now(),
+        );
+        if (description.type === "answer") {
+          peer.signalingRecoveryNeeded = false;
+        }
         logDebug("p2p.sdp", "set remote description", {
           localParticipantId: this.localParticipant.id,
           remoteUserId: fromUserId,
@@ -1694,24 +2003,18 @@ export class P2PMediaController {
       }
 
       if (description.type === "offer") {
-        await this.syncPeerMedia(peer);
-        const answer = await peer.pc.createAnswer();
-        await peer.pc.setLocalDescription(
-          prepareP2PLocalDescription(answer),
-        );
-        logDebug("p2p.sdp", "created answer", {
-          localParticipantId: this.localParticipant.id,
-          remoteUserId: fromUserId,
-          summary: summarizeP2PSdp(peer.pc.localDescription?.sdp ?? ""),
-        });
-        this.sendLocalDescription(peer);
+        peer.signalingRecoveryNeeded =
+          (await this.createAndSendAnswer(peer)) !== "sent";
       }
     } catch (error) {
       if (peer.ignoreOffer) {
         return;
       }
 
-      console.warn("[Anidachi] P2P signal failed", error);
+      if (peer.pc.signalingState === "have-remote-offer") {
+        peer.signalingRecoveryNeeded = true;
+      }
+
       logDebug("p2p.signal", "failed", {
         localParticipantId: this.localParticipant.id,
         fromUserId,
@@ -2073,6 +2376,170 @@ export class P2PMediaController {
     }
   }
 
+  async handleSignalingTransportReady(
+    ready: SignalingTransportReady,
+  ): Promise<void> {
+    if (
+      this.disposed ||
+      this.lastSignalingTransportReadyId === ready.senderConnectionId
+    ) {
+      return;
+    }
+
+    this.lastSignalingTransportReadyId = ready.senderConnectionId;
+    logDebug("p2p.lifecycle", "signaling transport ready", {
+      localParticipantId: this.localParticipant.id,
+      mediaSessionId: this.mediaSessionId,
+      peerCount: this.peers.size,
+      reconnect: ready.reconnect,
+      senderConnectionId: ready.senderConnectionId,
+    });
+
+    // The Worker snapshot is authoritative and can reset ephemeral camera state
+    // during a rejoin. Republish actual local intent only after that snapshot.
+    this.onCameraStatus(this.publicCameraEnabled);
+    for (const peer of this.peers.values()) {
+      this.sendSignal(peer.remoteUserId, {
+        kind:
+          this.voiceTalking || this.wantsVoiceTalk
+            ? "voice-start"
+            : "voice-stop",
+      });
+    }
+
+    if (!ready.reconnect) {
+      return;
+    }
+
+    await Promise.all(
+      Array.from(this.peers.values()).map((peer) =>
+        this.enqueuePeerOperation(peer.remoteUserId, async () => {
+          if (
+            this.disposed ||
+            this.peers.get(peer.remoteUserId) !== peer ||
+            peer.lastSignalingRecoveryConnectionId === ready.senderConnectionId
+          ) {
+            return;
+          }
+          peer.lastSignalingRecoveryConnectionId = ready.senderConnectionId;
+          await this.recoverPeerNegotiation(
+            peer,
+            `signaling-transport:${ready.senderConnectionId}`,
+            ready.forceMediaResync === true,
+          );
+        }),
+      ),
+    );
+  }
+
+  private async recoverPeerNegotiation(
+    peer: P2PPeer,
+    reason: string,
+    forceOffer: boolean,
+  ): Promise<void> {
+    if (
+      this.disposed ||
+      this.peers.get(peer.remoteUserId) !== peer ||
+      peer.pc.signalingState === "closed"
+    ) {
+      return;
+    }
+
+    if (peer.pc.signalingState === "have-remote-offer") {
+      try {
+        peer.signalingRecoveryNeeded =
+          (await this.createAndSendAnswer(peer)) !== "sent";
+      } catch (error) {
+        peer.signalingRecoveryNeeded = true;
+        logDebug("p2p.negotiation", "answer recovery failed", {
+          error: error instanceof Error ? error.message : String(error),
+          localParticipantId: this.localParticipant.id,
+          reason,
+          remoteUserId: peer.remoteUserId,
+        });
+      }
+      return;
+    }
+
+    if (peer.pc.signalingState === "have-local-offer" && !peer.makingOffer) {
+      try {
+        await peer.pc.setLocalDescription({ type: "rollback" });
+        const signalingStateAfterRollback = peer.pc
+          .signalingState as RTCSignalingState;
+        if (signalingStateAfterRollback !== "stable") {
+          throw new Error(
+            `rollback left signaling in ${signalingStateAfterRollback}`,
+          );
+        }
+        peer.needsNegotiation = false;
+        peer.signalingRecoveryNeeded = false;
+        logDebug("p2p.negotiation", "rolled back stale local offer", {
+          localParticipantId: this.localParticipant.id,
+          reason,
+          remoteUserId: peer.remoteUserId,
+        });
+      } catch (error) {
+        logDebug("p2p.negotiation", "rollback failed; replacing peer", {
+          error: error instanceof Error ? error.message : String(error),
+          localParticipantId: this.localParticipant.id,
+          reason,
+          remoteUserId: peer.remoteUserId,
+        });
+        const remoteUserId = peer.remoteUserId;
+        this.closePeer(remoteUserId, false, true);
+        const replacement = this.ensurePeer(remoteUserId);
+        await this.syncPeerMedia(replacement);
+        if (this.shouldInitiateOffers(replacement)) {
+          await this.createAndSendOffer(replacement);
+        } else {
+          replacement.signalingRecoveryNeeded =
+            this.requestRemoteRenegotiation(
+              replacement,
+              `${reason}:replacement`,
+              true,
+            ) !== "sent";
+        }
+        return;
+      }
+
+      await this.syncPeerMedia(peer);
+      if (this.shouldInitiateOffers(peer)) {
+        await this.createAndSendOffer(peer);
+      } else {
+        peer.signalingRecoveryNeeded =
+          this.requestRemoteRenegotiation(peer, `${reason}:rollback`, true) !==
+          "sent";
+      }
+      return;
+    }
+
+    if (peer.pc.signalingState !== "stable") {
+      logDebug("p2p.negotiation", "recovery deferred for active signaling", {
+        localParticipantId: this.localParticipant.id,
+        reason,
+        remoteUserId: peer.remoteUserId,
+        signalingState: peer.pc.signalingState,
+      });
+      return;
+    }
+
+    const healthy =
+      peer.pc.connectionState === "connected" &&
+      peer.pc.iceConnectionState === "connected";
+    if (healthy && !forceOffer && !peer.signalingRecoveryNeeded) {
+      return;
+    }
+
+    await this.syncPeerMedia(peer);
+    if (this.shouldInitiateOffers(peer)) {
+      await this.createAndSendOffer(peer);
+      return;
+    }
+
+    peer.signalingRecoveryNeeded =
+      this.requestRemoteRenegotiation(peer, reason, true) !== "sent";
+  }
+
   recoverDisconnectedPeers(reason: string): void {
     if (this.disposed || !this.peers.size) {
       return;
@@ -2103,8 +2570,12 @@ export class P2PMediaController {
     }
 
     this.disposed = true;
+    this.cameraIntentGeneration += 1;
+    this.voiceIntentGeneration += 1;
     this.wantsCamera = false;
     this.wantsVoiceTalk = false;
+    this.cameraStartingGeneration = null;
+    this.voiceStartingGeneration = null;
     this.clearCameraReacquireTimer();
     this.clearCameraStableTimer();
     this.clearVoiceReacquireTimer();
@@ -2130,6 +2601,12 @@ export class P2PMediaController {
     for (const remoteId of Array.from(this.peers.keys())) {
       this.closePeer(remoteId, false);
     }
+    this.peerOperationChains.clear();
+    this.senderConnectionIdsByPeer.clear();
+    this.senderMediaSessionIdsByPeer.clear();
+    this.retiredSenderConnectionIdsByPeer.clear();
+    this.retiredSenderMediaSessionIdsByPeer.clear();
+    this.lastSignalingTransportReadyId = null;
 
     stopStream(this.localVideoStream);
     stopStream(this.localAudioStream);
@@ -2184,6 +2661,7 @@ export class P2PMediaController {
       lastIceRestartAt: 0,
       lastIceRestartRequestAt: 0,
       lastRenegotiationRequestAt: 0,
+      lastSignalingRecoveryConnectionId: null,
       lastMediaStallRecoveryAt: 0,
       makingOffer: false,
       mediaSyncing: false,
@@ -2197,6 +2675,7 @@ export class P2PMediaController {
       remoteVideoExpected: false,
       remoteVideoStallSamples: 0,
       remoteUserId,
+      signalingRecoveryNeeded: false,
       videoCodecPreferencesKey: null,
       videoTransceiver: null,
     };
@@ -2708,9 +3187,12 @@ export class P2PMediaController {
         type: peer.pc.localDescription?.type,
         summary: summarizeP2PSdp(peer.pc.localDescription?.sdp ?? ""),
       });
-      this.sendLocalDescription(peer);
+      const disposition = this.sendLocalDescription(peer);
+      peer.signalingRecoveryNeeded = disposition !== "sent";
+      if (disposition !== "sent") {
+        peer.needsNegotiation = true;
+      }
     } catch (error) {
-      console.warn("[Anidachi] P2P offer failed", error);
       logDebug("p2p.negotiation", "offer failed", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: peer.remoteUserId,
@@ -2721,9 +3203,31 @@ export class P2PMediaController {
     }
   }
 
-  private sendLocalDescription(peer: P2PPeer): void {
+  private async createAndSendAnswer(
+    peer: P2PPeer,
+  ): Promise<RoomSendDisposition> {
+    if (
+      this.disposed ||
+      this.peers.get(peer.remoteUserId) !== peer ||
+      peer.pc.signalingState !== "have-remote-offer"
+    ) {
+      return "dropped";
+    }
+
+    await this.syncPeerMedia(peer);
+    const answer = await peer.pc.createAnswer();
+    await peer.pc.setLocalDescription(prepareP2PLocalDescription(answer));
+    logDebug("p2p.sdp", "created answer", {
+      localParticipantId: this.localParticipant.id,
+      remoteUserId: peer.remoteUserId,
+      summary: summarizeP2PSdp(peer.pc.localDescription?.sdp ?? ""),
+    });
+    return this.sendLocalDescription(peer);
+  }
+
+  private sendLocalDescription(peer: P2PPeer): RoomSendDisposition {
     if (this.disposed || this.peers.get(peer.remoteUserId) !== peer) {
-      return;
+      return "dropped";
     }
 
     const description = peer.pc.localDescription;
@@ -2731,7 +3235,7 @@ export class P2PMediaController {
       !description ||
       (description.type !== "offer" && description.type !== "answer")
     ) {
-      return;
+      return "dropped";
     }
 
     if (description.type === "offer") {
@@ -2740,11 +3244,10 @@ export class P2PMediaController {
         remoteUserId: peer.remoteUserId,
         summary: summarizeP2PSdp(description.sdp),
       });
-      this.sendSignal(peer.remoteUserId, {
+      return this.sendSignal(peer.remoteUserId, {
         kind: "offer",
         sdp: { type: "offer", sdp: description.sdp },
       });
-      return;
     }
 
     logDebug("p2p.signal", "send answer", {
@@ -2752,14 +3255,16 @@ export class P2PMediaController {
       remoteUserId: peer.remoteUserId,
       summary: summarizeP2PSdp(description.sdp),
     });
-    this.sendSignal(peer.remoteUserId, {
+    return this.sendSignal(peer.remoteUserId, {
       kind: "answer",
       sdp: { type: "answer", sdp: description.sdp },
     });
   }
 
   private async stopCamera(): Promise<void> {
+    this.cameraIntentGeneration += 1;
     this.wantsCamera = false;
+    this.cameraStartingGeneration = null;
     this.clearCameraReacquireTimer();
     this.clearCameraStableTimer();
     this.cameraFailureTimestamps = [];
@@ -2916,7 +3421,11 @@ export class P2PMediaController {
     peer.pendingCloseTimerId = null;
   }
 
-  private closePeer(remoteUserId: string, notifyRemote: boolean): void {
+  private closePeer(
+    remoteUserId: string,
+    notifyRemote: boolean,
+    preserveSignalSource = false,
+  ): void {
     const peer = this.peers.get(remoteUserId);
     if (!peer) {
       return;
@@ -2930,7 +3439,12 @@ export class P2PMediaController {
     this.clearPeerDisconnectTimer(peer);
     this.clearPeerLingerTimer(peer);
     peer.pc.close();
-    this.senderConnectionIdsByPeer.delete(remoteUserId);
+    if (!preserveSignalSource) {
+      this.senderConnectionIdsByPeer.delete(remoteUserId);
+      this.senderMediaSessionIdsByPeer.delete(remoteUserId);
+      this.retiredSenderConnectionIdsByPeer.delete(remoteUserId);
+      this.retiredSenderMediaSessionIdsByPeer.delete(remoteUserId);
+    }
     this.removeVideo(remoteUserId);
     this.removeAudio(remoteUserId);
     this.remoteSpeakingIds.delete(remoteUserId);
@@ -2953,9 +3467,23 @@ export class P2PMediaController {
     const pending = peer.pendingIceCandidates;
     peer.pendingIceCandidates = [];
     for (const candidate of pending) {
-      await peer.pc.addIceCandidate(candidate).catch((error) => {
-        console.warn("[Anidachi] P2P queued ICE failed", error);
-      });
+      try {
+        await peer.pc.addIceCandidate(candidate);
+        rememberP2PMediaSignalFingerprint(
+          peer.recentSignalFingerprints,
+          createP2PMediaSignalDedupeKey(peer.remoteUserId, {
+            kind: "ice",
+            candidate,
+          }),
+          Date.now(),
+        );
+      } catch (error) {
+        logDebug("p2p.ice", "queued candidate failed", {
+          error: error instanceof Error ? error.message : String(error),
+          localParticipantId: this.localParticipant.id,
+          remoteUserId: peer.remoteUserId,
+        });
+      }
     }
   }
 
@@ -3124,21 +3652,26 @@ export class P2PMediaController {
     peer.disconnectedRestartTimerId = null;
   }
 
-  private requestRemoteRenegotiation(peer: P2PPeer, reason: string): void {
+  private requestRemoteRenegotiation(
+    peer: P2PPeer,
+    reason: string,
+    force = false,
+  ): RoomSendDisposition {
     if (
       this.disposed ||
       this.peers.get(peer.remoteUserId) !== peer ||
       peer.pc.signalingState === "closed"
     ) {
-      return;
+      return "dropped";
     }
 
     const now = Date.now();
     if (
+      !force &&
       now - peer.lastRenegotiationRequestAt <
-      P2P_RENEGOTIATE_REQUEST_COOLDOWN_MS
+        P2P_RENEGOTIATE_REQUEST_COOLDOWN_MS
     ) {
-      return;
+      return "dropped";
     }
 
     peer.lastRenegotiationRequestAt = now;
@@ -3147,7 +3680,7 @@ export class P2PMediaController {
       remoteUserId: peer.remoteUserId,
       reason,
     });
-    this.sendSignal(peer.remoteUserId, { kind: "renegotiate" });
+    return this.sendSignal(peer.remoteUserId, { kind: "renegotiate" });
   }
 
   private requestRemoteIceRestart(peer: P2PPeer, reason: string): void {
@@ -3829,6 +4362,24 @@ function pruneRecentP2PSignalFingerprints(
     }
     recent.delete(oldestKey);
   }
+}
+
+function rememberRetiredSignalSource(
+  retiredByPeer: Map<string, Set<string>>,
+  remoteUserId: string,
+  value: string,
+): void {
+  const retired = retiredByPeer.get(remoteUserId) ?? new Set<string>();
+  retired.delete(value);
+  retired.add(value);
+  while (retired.size > P2P_RETIRED_SIGNAL_SOURCE_CAP) {
+    const oldest = retired.values().next().value;
+    if (oldest === undefined) {
+      break;
+    }
+    retired.delete(oldest);
+  }
+  retiredByPeer.set(remoteUserId, retired);
 }
 
 function hashString(value: string): string {

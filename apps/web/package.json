@@ -20,6 +20,7 @@
     "test": "tsx --test \"lib/**/*.test.ts\""
   },
   "dependencies": {
+    "@anidachi/protocol": "workspace:*",
     "@amplitude/unified": "^1.1.1",
     "@radix-ui/react-slot": "^1.2.3",
     "@supabase/supabase-js": "^2.106.2",

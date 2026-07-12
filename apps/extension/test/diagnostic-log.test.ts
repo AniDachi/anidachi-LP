@@ -76,6 +76,10 @@ describe("diagnostic log", () => {
       {
         candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
         participantSessionId: "session-secret-id",
+        storedUserId: "stored-user-secret",
+        probeUserId: "probe-user-secret",
+        currentUserId: "current-user-secret",
+        voiceParticipantIds: ["voice-user-one", "voice-user-two"],
         reason: "join:hash",
         userId: "user-secret-id",
         refreshToken: "refresh-secret",
@@ -91,8 +95,15 @@ describe("diagnostic log", () => {
           event: "failed",
           severity: "warn",
           data: {
-            candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+            candidate: "<redacted-media>",
             participantSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
+            storedUserId: expect.stringMatching(/^id_[a-z0-9]+$/),
+            probeUserId: expect.stringMatching(/^id_[a-z0-9]+$/),
+            currentUserId: expect.stringMatching(/^id_[a-z0-9]+$/),
+            voiceParticipantIds: [
+              expect.stringMatching(/^id_[a-z0-9]+$/),
+              expect.stringMatching(/^id_[a-z0-9]+$/),
+            ],
             reason: "join:hash",
             userId: expect.stringMatching(/^id_[a-z0-9]+$/),
             refreshToken: "<redacted>",
@@ -102,6 +113,9 @@ describe("diagnostic log", () => {
       ]);
     });
     expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toContain("session-secret-id");
+    expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toMatch(
+      /stored-user-secret|probe-user-secret|current-user-secret|voice-user-(?:one|two)/,
+    );
   });
 
   it("downloads a compact diagnostics bundle without raw tokens", async () => {
@@ -116,6 +130,7 @@ describe("diagnostic log", () => {
         avatarUrl: "https://example.com/avatar.png",
       },
     });
+    storage.set("anidachi.watchLibraryCache.v1.user-1", { entries: [] });
 
     const pageDebug = {
       entries: Array.from({ length: 620 }, (_, index) => ({
@@ -158,6 +173,7 @@ describe("diagnostic log", () => {
       mode: string;
       page: { url: string; participantId: string; pageDebug: { entries: unknown[] } };
       storage: {
+        keys: string[];
         auth: {
           hasAccessToken: boolean;
           hasRefreshToken: boolean;
@@ -173,6 +189,9 @@ describe("diagnostic log", () => {
     expect(bundle.page.pageDebug.entries).toHaveLength(500);
     expect(bundle.storage.auth.hasAccessToken).toBe(true);
     expect(bundle.storage.auth.hasRefreshToken).toBe(true);
+    expect(bundle.storage.keys).toContain(
+      "anidachi.watchLibraryCache.v1.<redacted-id>",
+    );
     expect(bundle.storage.auth.user).toEqual({
       id: expect.stringMatching(/^id_[a-z0-9]+$/),
       displayName: "Alina",
@@ -231,7 +250,7 @@ describe("diagnostic log", () => {
     expect(clipboard.writeText).not.toHaveBeenCalled();
   });
 
-  it("keeps full page debug reasons and WebRTC candidate strings intact", async () => {
+  it("keeps full page debug reasons while removing raw WebRTC and identifier material", async () => {
     const { download } = installChromeMock();
 
     const response = await handleDiagnosticMessage({
@@ -248,6 +267,17 @@ describe("diagnostic log", () => {
               message: "local candidate",
               data: {
                 candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+                sdp: "v=0\r\na=ice-pwd:raw-ice-password\r\na=msid:raw-stream raw-track",
+                raw: '{"candidate":"raw-frame-candidate"}',
+                roomId: "raw-room-id",
+                clientSignalId: "raw-client-signal-id",
+                senderConnectionId: "raw-connection-id",
+                senderMediaSessionId: "raw-media-session-id",
+                mediaSessionId: "raw-plain-media-session-id",
+                invite: "https://staging.anidachi.app/room/raw-room-path-id",
+                deviceId: "raw-device-id",
+                trackId: "raw-track-id",
+                streamId: "raw-stream-id",
                 participantSessionId: "session-debug-id",
                 reason: "join:hash",
               },
@@ -266,12 +296,40 @@ describe("diagnostic log", () => {
       };
     };
     expect(bundle.page.pageDebug.entries[0]?.data).toEqual({
-      candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+      candidate: "<redacted-media>",
+      sdp: "<redacted-media>",
+      raw: "<redacted-frame>",
+      roomId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      clientSignalId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      senderConnectionId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      senderMediaSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      mediaSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      invite: "https://staging.anidachi.app/room/<redacted-id>",
+      deviceId: "<redacted-media-id>",
+      trackId: "<redacted-media-id>",
+      streamId: "<redacted-media-id>",
       participantSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
       reason: "join:hash",
     });
-    expect(JSON.stringify(bundle)).not.toContain("session-debug-id");
-    expect(JSON.stringify(bundle)).not.toContain("nullhash");
+    const bundleText = JSON.stringify(bundle);
+    for (const forbidden of [
+      "session-debug-id",
+      "raw-ice-password",
+      "raw-frame-candidate",
+      "raw-room-id",
+      "raw-client-signal-id",
+      "raw-connection-id",
+      "raw-media-session-id",
+      "raw-plain-media-session-id",
+      "raw-room-path-id",
+      "raw-device-id",
+      "raw-track-id",
+      "raw-stream-id",
+      "203.0.113.8",
+      "nullhash",
+    ]) {
+      expect(bundleText).not.toContain(forbidden);
+    }
   });
 
   it("exports light diagnostics from the last two minutes only", async () => {
@@ -326,10 +384,7 @@ describe("diagnostic log", () => {
       page: { pageDebug: { entries: Array<{ id: number }> } };
     };
     expect(bundle.limits.windowSeconds).toBe(120);
-    expect(bundle.entries.map((entry) => entry.event)).toEqual([
-      "recent closed",
-      "recent",
-    ]);
+    expect(bundle.entries.map((entry) => entry.event)).toEqual(["recent closed", "recent"]);
     expect(bundle.page.pageDebug.entries.map((entry) => entry.id)).toEqual([2]);
   });
 
@@ -475,7 +530,7 @@ describe("diagnostic log", () => {
     expect(bundle.page.pageDebug.entries.at(-1)?.data).toEqual({
       participantSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
       reason: "join:hash",
-      roomId: "room-1",
+      roomId: expect.stringMatching(/^id_[a-z0-9]+$/),
     });
     expect(JSON.stringify(bundle)).not.toContain("secret-refresh");
     expect(JSON.stringify(bundle)).not.toContain("session-debug-id");

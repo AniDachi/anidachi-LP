@@ -1,17 +1,273 @@
 import { describe, expect, it } from "vitest";
 import {
   ClientEventSchema,
+  EMPTY_ROOM_TIMEOUT_MS,
+  MAX_DISPLAY_NAME_CHARS,
+  MAX_ICE_CANDIDATE_BYTES,
+  MAX_PARTICIPANT_ID_CHARS,
+  MAX_ROOM_ID_CHARS,
+  MAX_SDP_BYTES,
+  MAX_SESSION_ID_CHARS,
+  MAX_REACTION_EMOJI_CHARS,
+  MAX_URL_CHARS,
+  MAX_VIDEO_FINGERPRINT_CHARS,
+  MAX_WATCH_TITLE_CHARS,
   type PlaybackState,
   ReactionEventSchema,
   RoomCapabilitiesSchema,
+  RoomEndReasonSchema,
   ServerEventSchema,
   WatchSourceDescriptorSchema,
+  createEmptyRoomEndEventId,
   getExpectedHostTime,
   normalizeRemotePlaybackState,
   getSyncCorrection,
 } from "../src";
 
 describe("room protocol schemas", () => {
+  it("derives one private empty-room callback identity across service planes", async () => {
+    const roomId = "private-room-1";
+    const emptySince = 1_000;
+    const eventId = await createEmptyRoomEndEventId(roomId, emptySince);
+
+    expect(EMPTY_ROOM_TIMEOUT_MS).toBe(4 * 60 * 60 * 1_000);
+    expect(eventId).toMatch(/^empty_timeout:[a-f0-9]{64}$/);
+    expect(eventId).toBe(await createEmptyRoomEndEventId(roomId, emptySince));
+    expect(eventId).not.toContain(roomId);
+    expect(eventId).not.toBe(await createEmptyRoomEndEventId(roomId, emptySince + 1));
+  });
+
+  it("accepts one terminal room-ended event with a bounded reason", () => {
+    expect(RoomEndReasonSchema.options).toEqual([
+      "host_ended",
+      "empty_timeout",
+      "quota_exhausted",
+    ]);
+    expect(
+      ServerEventSchema.parse({
+        type: "ROOM_ENDED",
+        roomId: "room-1",
+        endedAt: 1_000,
+        reason: "host_ended",
+      }),
+    ).toEqual({
+      type: "ROOM_ENDED",
+      roomId: "room-1",
+      endedAt: 1_000,
+      reason: "host_ended",
+    });
+  });
+  it("exports the canonical room signaling limits", () => {
+    expect(MAX_ROOM_ID_CHARS).toBe(128);
+    expect(MAX_PARTICIPANT_ID_CHARS).toBe(128);
+    expect(MAX_SESSION_ID_CHARS).toBe(128);
+    expect(MAX_SDP_BYTES).toBe(48 * 1024);
+    expect(MAX_ICE_CANDIDATE_BYTES).toBe(2 * 1024);
+    expect(MAX_VIDEO_FINGERPRINT_CHARS).toBe(400);
+    expect(MAX_DISPLAY_NAME_CHARS).toBe(120);
+    expect(MAX_URL_CHARS).toBe(2048);
+    expect(MAX_REACTION_EMOJI_CHARS).toBe(64);
+    expect(MAX_WATCH_TITLE_CHARS).toBe(300);
+  });
+
+  it("rejects room, participant, and session identifiers beyond their bounds", () => {
+    const baseJoin = {
+      type: "JOIN",
+      roomId: "room-1",
+      videoFingerprint: "video-1",
+      participantSessionId: "session-1",
+      participant: {
+        id: "user-1",
+        displayName: "Max",
+        role: "viewer",
+        cameraEnabled: false,
+        mediaSeat: "none",
+        syncStatus: "unknown",
+        lastSeenAt: 1_000,
+      },
+    } as const;
+
+    expect(() =>
+      ClientEventSchema.parse({ ...baseJoin, roomId: "r".repeat(MAX_ROOM_ID_CHARS + 1) }),
+    ).toThrow();
+    expect(() =>
+      ClientEventSchema.parse({
+        ...baseJoin,
+        participant: { ...baseJoin.participant, id: "u".repeat(MAX_PARTICIPANT_ID_CHARS + 1) },
+      }),
+    ).toThrow();
+    expect(() =>
+      ClientEventSchema.parse({
+        ...baseJoin,
+        participantSessionId: "s".repeat(MAX_SESSION_ID_CHARS + 1),
+      }),
+    ).toThrow();
+  });
+
+  it("rejects oversized SDP and ICE candidates", () => {
+    const signalBase = {
+      type: "P2P_SIGNAL",
+      clientSignalId: "signal-1",
+      roomId: "room-1",
+      fromUserId: "user-1",
+      senderConnectionId: "connection-1",
+      toUserId: "user-2",
+    } as const;
+
+    for (const sdp of [
+      "s".repeat(MAX_SDP_BYTES + 1),
+      "é".repeat(MAX_SDP_BYTES / 2 + 1),
+    ]) {
+      expect(() =>
+        ClientEventSchema.parse({
+          ...signalBase,
+          signal: { kind: "offer", sdp: { type: "offer", sdp } },
+        }),
+      ).toThrow();
+    }
+    for (const candidate of [
+      "c".repeat(MAX_ICE_CANDIDATE_BYTES + 1),
+      "é".repeat(MAX_ICE_CANDIDATE_BYTES / 2 + 1),
+    ]) {
+      expect(() =>
+        ClientEventSchema.parse({
+          ...signalBase,
+          signal: { kind: "ice", candidate: { candidate } },
+        }),
+      ).toThrow();
+    }
+  });
+
+  it("accepts 400-character fingerprints and rejects 401", () => {
+    const event = {
+      type: "JOIN",
+      roomId: "room-1",
+      participant: {
+        id: "user-1",
+        displayName: "Max",
+        role: "viewer",
+        cameraEnabled: false,
+        mediaSeat: "none",
+        syncStatus: "unknown",
+        lastSeenAt: 1_000,
+      },
+    } as const;
+
+    expect(() =>
+      ClientEventSchema.parse({ ...event, videoFingerprint: "f".repeat(400) }),
+    ).not.toThrow();
+    expect(() =>
+      ClientEventSchema.parse({ ...event, videoFingerprint: "f".repeat(401) }),
+    ).toThrow();
+  });
+
+  it("bounds display names, URLs, and reaction emoji", () => {
+    const participant = {
+      id: "user-1",
+      displayName: "D".repeat(MAX_DISPLAY_NAME_CHARS + 1),
+      role: "viewer",
+      cameraEnabled: false,
+      mediaSeat: "none",
+      syncStatus: "unknown",
+      lastSeenAt: 1_000,
+    } as const;
+    expect(() =>
+      ClientEventSchema.parse({
+        type: "JOIN",
+        roomId: "room-1",
+        videoFingerprint: "video-1",
+        participant,
+      }),
+    ).toThrow();
+
+    const longUrl = `https://example.com/${"x".repeat(MAX_URL_CHARS)}`;
+    expect(() =>
+      ClientEventSchema.parse({
+        type: "HOST_STATE",
+        roomId: "room-1",
+        state: {
+          videoFingerprint: "video-1",
+          sourceUrl: longUrl,
+          playing: true,
+          hostTime: 1,
+          updatedAt: 1,
+          playbackRate: 1,
+        },
+      }),
+    ).toThrow();
+
+    expect(() =>
+      ClientEventSchema.parse({
+        type: "JOIN",
+        roomId: "room-1",
+        videoFingerprint: "video-1",
+        participant: { ...participant, displayName: "Max", avatarUrl: longUrl },
+      }),
+    ).toThrow();
+    const descriptor = {
+      provider: "generic",
+      sourceUrl: "https://example.com/source",
+      canonicalUrl: "https://example.com/canonical",
+      videoFingerprint: "video-1",
+      title: "Episode",
+      posterUrl: "https://example.com/poster",
+    } as const;
+    for (const field of ["sourceUrl", "canonicalUrl", "posterUrl"] as const) {
+      expect(() =>
+        WatchSourceDescriptorSchema.parse({ ...descriptor, [field]: longUrl }),
+      ).toThrow();
+    }
+    expect(() =>
+      ReactionEventSchema.parse({
+        id: "reaction-1",
+        userId: "user-1",
+        roomId: "room-1",
+        emoji: "e".repeat(MAX_REACTION_EMOJI_CHARS + 1),
+        videoTime: 1,
+        createdAt: 1,
+      }),
+    ).toThrow();
+  });
+
+  it("uses the shared watch title bound for descriptor title fields", () => {
+    const descriptor = {
+      provider: "generic",
+      sourceUrl: "https://example.com/source",
+      canonicalUrl: "https://example.com/canonical",
+      videoFingerprint: "video-1",
+      title: "T".repeat(MAX_WATCH_TITLE_CHARS),
+      seriesTitle: "S".repeat(MAX_WATCH_TITLE_CHARS),
+      episodeTitle: "E".repeat(MAX_WATCH_TITLE_CHARS),
+    } as const;
+
+    expect(() => WatchSourceDescriptorSchema.parse(descriptor)).not.toThrow();
+    for (const field of ["title", "seriesTitle", "episodeTitle"] as const) {
+      expect(() =>
+        WatchSourceDescriptorSchema.parse({
+          ...descriptor,
+          [field]: "x".repeat(MAX_WATCH_TITLE_CHARS + 1),
+        }),
+      ).toThrow();
+    }
+  });
+
+  it("rejects reactions scoped to a different nested room", () => {
+    expect(() =>
+      ClientEventSchema.parse({
+        type: "REACTION",
+        roomId: "room-1",
+        reaction: {
+          id: "reaction-1",
+          userId: "user-1",
+          roomId: "room-2",
+          emoji: "fire",
+          videoTime: 12,
+          createdAt: 1_100,
+        },
+      }),
+    ).toThrow();
+  });
+
   it("accepts room keepalive ping and pong events", () => {
     expect(
       ClientEventSchema.parse({
@@ -90,6 +346,82 @@ describe("room protocol schemas", () => {
       canSendPushInvites: true,
     });
     expect(parsedLegacy.hostPlanCode).toBe("pro");
+  });
+
+  it("accepts an optional P2P resync flag without breaking legacy room snapshots", () => {
+    const legacy = ServerEventSchema.parse({
+      type: "ROOM_SNAPSHOT",
+      roomId: "room-1",
+      roomGeneration: 1,
+      serverSeq: 1,
+      sourceGeneration: 1,
+      participants: [],
+    });
+    const resync = ServerEventSchema.parse({
+      type: "ROOM_SNAPSHOT",
+      roomId: "room-1",
+      roomGeneration: 1,
+      serverSeq: 2,
+      sourceGeneration: 1,
+      participants: [],
+      p2pResyncRequired: true,
+    });
+
+    expect(legacy).not.toHaveProperty("p2pResyncRequired");
+    expect(resync).toMatchObject({ p2pResyncRequired: true });
+    expect(() =>
+      ServerEventSchema.parse({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-1",
+        roomGeneration: 1,
+        serverSeq: 2,
+        sourceGeneration: 1,
+        participants: [],
+        p2pResyncRequired: "yes",
+      }),
+    ).toThrow();
+  });
+
+  it("carries a bounded authoritative room-usage summary in snapshots", () => {
+    const snapshot = ServerEventSchema.parse({
+      type: "ROOM_SNAPSHOT",
+      roomId: "room-1",
+      roomGeneration: 1,
+      serverSeq: 1,
+      sourceGeneration: 1,
+      participants: [],
+      roomUsage: {
+        day: "2026-07-12",
+        seconds: 125,
+      },
+    });
+
+    expect(snapshot).toHaveProperty("roomUsage", {
+      day: "2026-07-12",
+      seconds: 125,
+    });
+    expect(() =>
+      ServerEventSchema.parse({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-1",
+        roomGeneration: 1,
+        serverSeq: 1,
+        sourceGeneration: 1,
+        participants: [],
+        roomUsage: { day: "12-07-2026", seconds: 125 },
+      }),
+    ).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-1",
+        roomGeneration: 1,
+        serverSeq: 1,
+        sourceGeneration: 1,
+        participants: [],
+        roomUsage: { day: "2026-07-12", seconds: -1 },
+      }),
+    ).toThrow();
   });
 
   it("accepts valid join and reaction events", () => {
@@ -357,6 +689,80 @@ describe("room protocol schemas", () => {
     expect(candidate.roomGeneration).toBe(1);
     expect(candidate.serverSeq).toBe(3);
     expect(candidate.sourceGeneration).toBe(1);
+  });
+
+  it("accepts bounded media-session identities without breaking legacy P2P envelopes", () => {
+    const legacyClientEvent = ClientEventSchema.parse({
+      type: "P2P_SIGNAL",
+      clientSignalId: "signal-legacy",
+      roomId: "room-1",
+      fromUserId: "user-1",
+      senderConnectionId: "connection-1",
+      toUserId: "user-2",
+      signal: { kind: "voice-start" },
+    });
+    const currentClientEvent = ClientEventSchema.parse({
+      type: "P2P_SIGNAL",
+      clientSignalId: "signal-current",
+      roomId: "room-1",
+      fromUserId: "user-1",
+      senderConnectionId: "connection-1",
+      senderMediaSessionId: "media-session-1",
+      toUserId: "user-2",
+      signal: { kind: "voice-start" },
+    });
+    const currentServerEvent = ServerEventSchema.parse({
+      type: "P2P_SIGNAL",
+      clientSignalId: "signal-server",
+      roomId: "room-1",
+      fromUserId: "user-1",
+      roomGeneration: 1,
+      senderConnectionId: "connection-1",
+      senderMediaSessionId: "media-session-1",
+      serverReceivedAt: 1_000,
+      serverSeq: 3,
+      sourceGeneration: 1,
+      toUserId: "user-2",
+      signal: { kind: "voice-start" },
+    });
+
+    expect(legacyClientEvent).not.toHaveProperty("senderMediaSessionId");
+    expect(currentClientEvent).toMatchObject({
+      senderMediaSessionId: "media-session-1",
+    });
+    expect(currentServerEvent).toMatchObject({
+      senderMediaSessionId: "media-session-1",
+    });
+
+    const oversizedMediaSessionId = "m".repeat(MAX_SESSION_ID_CHARS + 1);
+    expect(() =>
+      ClientEventSchema.parse({
+        type: "P2P_SIGNAL",
+        clientSignalId: "signal-oversized-client",
+        roomId: "room-1",
+        fromUserId: "user-1",
+        senderConnectionId: "connection-1",
+        senderMediaSessionId: oversizedMediaSessionId,
+        toUserId: "user-2",
+        signal: { kind: "voice-start" },
+      }),
+    ).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({
+        type: "P2P_SIGNAL",
+        clientSignalId: "signal-oversized-server",
+        roomId: "room-1",
+        fromUserId: "user-1",
+        roomGeneration: 1,
+        senderConnectionId: "connection-1",
+        senderMediaSessionId: oversizedMediaSessionId,
+        serverReceivedAt: 1_000,
+        serverSeq: 3,
+        sourceGeneration: 1,
+        toUserId: "user-2",
+        signal: { kind: "voice-start" },
+      }),
+    ).toThrow();
   });
 
   it("accepts lightweight P2P renegotiation requests", () => {

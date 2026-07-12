@@ -1,5 +1,11 @@
 import { SignJWT } from "jose";
 import { describe, expect, it } from "vitest";
+import {
+  MAX_DISPLAY_NAME_CHARS,
+  MAX_PARTICIPANT_ID_CHARS,
+  MAX_ROOM_ID_CHARS,
+  MAX_URL_CHARS,
+} from "@anidachi/protocol";
 import { signRoomTokenForTest, verifyRoomToken } from "../src/auth";
 
 const env = {
@@ -106,5 +112,56 @@ describe("worker room auth", () => {
 
   it("rejects malformed tokens", async () => {
     await expect(verifyRoomToken("not-a-token", "room-1", env)).resolves.toBeNull();
+  });
+
+  it("rejects bounded room token claims before they reach room state", async () => {
+    const oversizedRoomId = "r".repeat(MAX_ROOM_ID_CHARS + 1);
+    const oversizedRoomToken = await signRoomTokenForTest(
+      { sub: "user-1", roomId: oversizedRoomId, role: "member" },
+      env,
+    );
+    const oversizedParticipantToken = await signRoomTokenForTest(
+      { sub: "u".repeat(MAX_PARTICIPANT_ID_CHARS + 1), roomId: "room-1", role: "member" },
+      env,
+    );
+
+    await expect(verifyRoomToken(oversizedRoomToken, oversizedRoomId, env)).resolves.toBeNull();
+    await expect(verifyRoomToken(oversizedParticipantToken, "room-1", env)).resolves.toBeNull();
+  });
+
+  it("rejects oversized token display names and avatar URLs", async () => {
+    const oversizedDisplayName = await signRoomTokenForTest(
+      {
+        sub: "user-1",
+        roomId: "room-1",
+        role: "member",
+        displayName: "D".repeat(MAX_DISPLAY_NAME_CHARS + 1),
+      },
+      env,
+    );
+    const oversizedAvatarUrl = await signRoomTokenForTest(
+      {
+        sub: "user-1",
+        roomId: "room-1",
+        role: "member",
+        avatarUrl: `https://example.com/${"x".repeat(MAX_URL_CHARS)}`,
+      },
+      env,
+    );
+
+    await expect(verifyRoomToken(oversizedDisplayName, "room-1", env)).resolves.toBeNull();
+    await expect(verifyRoomToken(oversizedAvatarUrl, "room-1", env)).resolves.toBeNull();
+  });
+
+  it("rejects otherwise valid room tokens signed with non-HS256 algorithms", async () => {
+    const token = await new SignJWT({ roomId: "room-1", role: "member", typ: "room" })
+      .setProtectedHeader({ alg: "HS384" })
+      .setSubject("user-1")
+      .setAudience("anidachi-worker")
+      .setIssuedAt()
+      .setExpirationTime("30m")
+      .sign(testSecret());
+
+    await expect(verifyRoomToken(token, "room-1", env)).resolves.toBeNull();
   });
 });

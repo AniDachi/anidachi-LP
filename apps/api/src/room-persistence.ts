@@ -2,15 +2,30 @@ import {
   ParticipantSchema,
   PlaybackStateSchema,
   RoomCapabilitiesSchema,
-  ServerEventSchema,
+  RoomUsageSummarySchema,
   WatchSourceDescriptorSchema,
+  createEmptyRoomEndEventId,
   type Participant,
 } from "@anidachi/protocol";
 import type { BufferedP2PSignalEvent } from "./p2p-signal-buffer";
+import { parseRoomMeterState, type RoomMeterState } from "./room-metering";
 import type { RoomStateSnapshot } from "./room-state";
+import {
+  ROOM_LIFECYCLE_STORAGE_KEY,
+  activeRoomLifecycle,
+  emptyRoomLifecycle,
+  emptyRoomRetryAt,
+  parseEndRoomCommand,
+  parseRoomLifecycleState,
+  type EndedRoomTombstone,
+  type EndingRoomLifecycle,
+  type RoomLifecycleState,
+} from "./room-lifecycle";
 
 export const ROOM_STATE_META_KEY = "room_state";
 export const NEXT_P2P_SERVER_SEQ_META_KEY = "next_p2p_server_seq";
+export const ROOM_ENDED_META_KEY = "room_ended";
+export const ROOM_METER_META_KEY = "room_meter";
 export const P2P_REPLAY_TTL_MS = 45_000;
 export const P2P_REPLAY_MAX_EVENTS = 80;
 
@@ -21,10 +36,23 @@ interface RoomMetaRow {
   value_json: string;
 }
 
-interface P2PReplayRow {
+interface P2PReplayMetadataRow {
   [key: string]: ArrayBuffer | number | string | null;
-  event_json: string;
+  dedupe_hash: string;
+  room_generation: number;
+  server_received_at: number;
   server_seq: number;
+  signal_kind: string;
+  source_generation: number;
+}
+
+export interface StoredP2PReplayMetadata {
+  dedupeHash: string;
+  roomGeneration: number;
+  serverReceivedAt: number;
+  serverSeq: number;
+  signalKind: BufferedP2PSignalEvent["signal"]["kind"];
+  sourceGeneration: number;
 }
 
 export function initializeRoomStorage(storage: DurableObjectStorage): void {
@@ -35,22 +63,22 @@ export function initializeRoomStorage(storage: DurableObjectStorage): void {
       updated_at INTEGER NOT NULL
     )`,
   );
+  // Earlier builds stored complete P2P envelopes, including SDP and ICE, in
+  // p2p_replay. They cannot be migrated safely, so remove that legacy table
+  // before creating the metadata-only replacement.
+  storage.sql.exec("DROP TABLE IF EXISTS p2p_replay");
   storage.sql.exec(
-    `CREATE TABLE IF NOT EXISTS p2p_replay (
+    `CREATE TABLE IF NOT EXISTS p2p_replay_meta (
       server_seq INTEGER PRIMARY KEY,
-      dedupe_key TEXT NOT NULL UNIQUE,
-      to_user_id TEXT NOT NULL,
+      dedupe_hash TEXT NOT NULL UNIQUE,
       room_generation INTEGER NOT NULL,
       source_generation INTEGER NOT NULL,
       server_received_at INTEGER NOT NULL,
-      event_json TEXT NOT NULL
+      signal_kind TEXT NOT NULL
     )`,
   );
   storage.sql.exec(
-    "CREATE INDEX IF NOT EXISTS idx_p2p_replay_target_seq ON p2p_replay (to_user_id, server_seq)",
-  );
-  storage.sql.exec(
-    "CREATE INDEX IF NOT EXISTS idx_p2p_replay_received_at ON p2p_replay (server_received_at)",
+    "CREATE INDEX IF NOT EXISTS idx_p2p_replay_meta_received_at ON p2p_replay_meta (server_received_at)",
   );
 }
 
@@ -76,6 +104,31 @@ export function writeStoredRoomState(
   writeMeta(storage, ROOM_STATE_META_KEY, snapshot, snapshot.updatedAt);
 }
 
+export function readStoredRoomMeter(
+  storage: DurableObjectStorage,
+): RoomMeterState | null {
+  const row = storage.sql
+    .exec<RoomMetaRow>(
+      "SELECT value_json, updated_at, key FROM room_meta WHERE key = ?",
+      ROOM_METER_META_KEY,
+    )
+    .toArray()[0];
+  if (!row) return null;
+  try {
+    return parseRoomMeterState(JSON.parse(row.value_json));
+  } catch {
+    return null;
+  }
+}
+
+export function writeStoredRoomMeter(
+  storage: DurableObjectStorage,
+  meter: RoomMeterState,
+  updatedAt: number,
+): void {
+  writeMeta(storage, ROOM_METER_META_KEY, meter, updatedAt);
+}
+
 export function readNextP2PServerSeq(storage: DurableObjectStorage): number | null {
   const row = storage.sql
     .exec<RoomMetaRow>(
@@ -99,15 +152,183 @@ export function writeNextP2PServerSeq(storage: DurableObjectStorage, nextSeq: nu
   writeMeta(storage, NEXT_P2P_SERVER_SEQ_META_KEY, nextSeq, Date.now());
 }
 
-export function readStoredP2PReplay(
+export function readEndedRoomTombstone(storage: DurableObjectStorage): EndedRoomTombstone | null {
+  const row = storage.sql
+    .exec<RoomMetaRow>("SELECT value_json, updated_at, key FROM room_meta WHERE key = ?", ROOM_ENDED_META_KEY)
+    .toArray()[0];
+  if (!row) return null;
+  try {
+    const value = JSON.parse(row.value_json) as Record<string, unknown>;
+    const command = parseEndRoomCommand(value);
+    const usage =
+      value.usage === undefined
+        ? undefined
+        : RoomUsageSummarySchema.safeParse(value.usage);
+    return value.schemaVersion === 1 &&
+      command &&
+      (usage === undefined || usage.success) &&
+      (value.usageFinalized === undefined || value.usageFinalized === true)
+      ? {
+          schemaVersion: 1,
+          ...command,
+          ...(usage?.success ? { usage: usage.data } : {}),
+          ...(value.usageFinalized === true
+            ? { usageFinalized: true as const }
+            : {}),
+        }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function persistEndedRoomTombstoneAndClearRuntime(
+  storage: DurableObjectStorage,
+  tombstone: EndedRoomTombstone,
+): void {
+  storage.transactionSync(() => {
+    writeMeta(storage, ROOM_ENDED_META_KEY, tombstone, tombstone.endedAt);
+    storage.sql.exec("DELETE FROM p2p_replay_meta");
+    storage.sql.exec("DROP TABLE IF EXISTS p2p_replay");
+    storage.sql.exec(
+      "DELETE FROM room_meta WHERE key IN (?, ?, ?)",
+      ROOM_STATE_META_KEY,
+      NEXT_P2P_SERVER_SEQ_META_KEY,
+      ROOM_METER_META_KEY,
+    );
+  });
+}
+
+export async function readStoredRoomLifecycle(
+  storage: DurableObjectStorage,
+): Promise<RoomLifecycleState | null> {
+  return parseRoomLifecycleState(
+    await storage.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY),
+  );
+}
+
+export async function activateStoredRoomLifecycle(
+  storage: DurableObjectStorage,
+  updatedAt: number,
+): Promise<{ accepted: boolean; lifecycle: RoomLifecycleState | null }> {
+  return storage.transaction(async (transaction) => {
+    const raw = await transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY);
+    const current = parseStoredLifecycle(raw);
+    if (current === "invalid") {
+      return { accepted: false, lifecycle: null };
+    }
+    if (current?.status === "ending" || current?.status === "ended") {
+      return { accepted: false, lifecycle: current };
+    }
+
+    const active = activeRoomLifecycle(updatedAt);
+    await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, active);
+    await transaction.deleteAlarm();
+    return { accepted: true, lifecycle: active };
+  });
+}
+
+export async function markStoredRoomEmpty(
+  storage: DurableObjectStorage,
+  emptySince: number,
+): Promise<RoomLifecycleState> {
+  return storage.transaction(async (transaction) => {
+    const raw = await transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY);
+    const current = parseStoredLifecycle(raw);
+    if (current === "invalid") {
+      throw new Error("Invalid persisted room lifecycle state");
+    }
+    if (current?.status === "ending" || current?.status === "ended") {
+      return current;
+    }
+    if (current?.status === "empty") {
+      await transaction.setAlarm(current.alarmAt);
+      return current;
+    }
+
+    const empty = emptyRoomLifecycle(emptySince);
+    await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, empty);
+    await transaction.setAlarm(empty.alarmAt);
+    return empty;
+  });
+}
+
+/**
+ * Claims one due callback attempt. The ending outbox and its next retry alarm
+ * are committed together before the caller performs external I/O.
+ */
+export async function claimStoredRoomEndAttempt(
+  storage: DurableObjectStorage,
+  roomId: string,
+  now: number,
+): Promise<EndingRoomLifecycle | null> {
+  return storage.transaction(async (transaction) => {
+    const raw = await transaction.get<unknown>(ROOM_LIFECYCLE_STORAGE_KEY);
+    const current = parseStoredLifecycle(raw);
+    if (current === "invalid") {
+      await transaction.setAlarm(emptyRoomRetryAt(1, now));
+      return null;
+    }
+    if (!current || current.status === "active" || current.status === "ended") {
+      await transaction.deleteAlarm();
+      return null;
+    }
+
+    if (current.status === "empty") {
+      if (now < current.alarmAt) {
+        await transaction.setAlarm(current.alarmAt);
+        return null;
+      }
+      const attempts = 1;
+      const ending: EndingRoomLifecycle = {
+        schemaVersion: 1,
+        status: "ending",
+        emptySince: current.emptySince,
+        endedAt: current.alarmAt,
+        eventId: await createEmptyRoomEndEventId(roomId, current.emptySince),
+        attempts,
+        nextAttemptAt: emptyRoomRetryAt(attempts, now),
+      };
+      await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, ending);
+      await transaction.setAlarm(ending.nextAttemptAt);
+      return ending;
+    }
+
+    if (now < current.nextAttemptAt) {
+      await transaction.setAlarm(current.nextAttemptAt);
+      return null;
+    }
+    const attempts = Math.min(Number.MAX_SAFE_INTEGER, current.attempts + 1);
+    const ending: EndingRoomLifecycle = {
+      ...current,
+      attempts,
+      nextAttemptAt: emptyRoomRetryAt(attempts, now),
+    };
+    await transaction.put(ROOM_LIFECYCLE_STORAGE_KEY, ending);
+    await transaction.setAlarm(ending.nextAttemptAt);
+    return ending;
+  });
+}
+
+export async function clearStoredRoomLifecycleAndAlarm(
+  storage: DurableObjectStorage,
+): Promise<void> {
+  await storage.transaction(async (transaction) => {
+    await transaction.delete(ROOM_LIFECYCLE_STORAGE_KEY);
+    await transaction.deleteAlarm();
+  });
+}
+
+export function readStoredP2PReplayMetadata(
   storage: DurableObjectStorage,
   now = Date.now(),
-): BufferedP2PSignalEvent[] {
-  pruneStoredP2PReplay(storage, now);
+): StoredP2PReplayMetadata[] {
+  pruneStoredP2PReplayMetadata(storage, now);
   const rows = storage.sql
-    .exec<P2PReplayRow>(
-      `SELECT server_seq, event_json
-       FROM p2p_replay
+    .exec<P2PReplayMetadataRow>(
+      `SELECT server_seq, dedupe_hash, room_generation, source_generation,
+              server_received_at, signal_kind
+       FROM p2p_replay_meta
        ORDER BY server_seq DESC
        LIMIT ?`,
       P2P_REPLAY_MAX_EVENTS,
@@ -115,58 +336,111 @@ export function readStoredP2PReplay(
     .toArray()
     .sort((a, b) => a.server_seq - b.server_seq);
 
-  const events: BufferedP2PSignalEvent[] = [];
+  const metadata: StoredP2PReplayMetadata[] = [];
   for (const row of rows) {
-    try {
-      const event = ServerEventSchema.parse(JSON.parse(row.event_json));
-      if (event.type === "P2P_SIGNAL") {
-        events.push(event);
-      }
-    } catch {
-      storage.sql.exec("DELETE FROM p2p_replay WHERE server_seq = ?", row.server_seq);
+    const parsed = parseStoredP2PReplayMetadataRow(row);
+    if (parsed) {
+      metadata.push(parsed);
+    } else {
+      storage.sql.exec("DELETE FROM p2p_replay_meta WHERE server_seq = ?", row.server_seq);
     }
   }
-  return events;
+  return metadata;
 }
 
-export function writeStoredP2PReplayEvent(
-  storage: DurableObjectStorage,
+export function createStoredP2PReplayMetadata(
   event: BufferedP2PSignalEvent,
-  dedupeKey: string,
+  dedupeHash: string,
+): StoredP2PReplayMetadata {
+  return {
+    dedupeHash,
+    roomGeneration: event.roomGeneration,
+    serverReceivedAt: event.serverReceivedAt,
+    serverSeq: event.serverSeq,
+    signalKind: event.signal.kind,
+    sourceGeneration: event.sourceGeneration,
+  };
+}
+
+export function writeStoredP2PReplayMetadata(
+  storage: DurableObjectStorage,
+  metadata: StoredP2PReplayMetadata,
   now = Date.now(),
 ): void {
   storage.sql.exec(
-    `INSERT OR IGNORE INTO p2p_replay (
+    `INSERT OR IGNORE INTO p2p_replay_meta (
       server_seq,
-      dedupe_key,
-      to_user_id,
+      dedupe_hash,
       room_generation,
       source_generation,
       server_received_at,
-      event_json
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    event.serverSeq,
-    dedupeKey,
-    event.toUserId,
-    event.roomGeneration,
-    event.sourceGeneration,
-    event.serverReceivedAt,
-    JSON.stringify(event),
+      signal_kind
+    ) VALUES (?, ?, ?, ?, ?, ?)`,
+    metadata.serverSeq,
+    metadata.dedupeHash,
+    metadata.roomGeneration,
+    metadata.sourceGeneration,
+    metadata.serverReceivedAt,
+    metadata.signalKind,
   );
-  pruneStoredP2PReplay(storage, now);
+  pruneStoredP2PReplayMetadata(storage, now);
 }
 
-export function pruneStoredP2PReplay(storage: DurableObjectStorage, now = Date.now()): void {
-  storage.sql.exec("DELETE FROM p2p_replay WHERE server_received_at < ?", now - P2P_REPLAY_TTL_MS);
+export function pruneStoredP2PReplayMetadata(
+  storage: DurableObjectStorage,
+  now = Date.now(),
+): void {
   storage.sql.exec(
-    `DELETE FROM p2p_replay
+    "DELETE FROM p2p_replay_meta WHERE server_received_at < ?",
+    now - P2P_REPLAY_TTL_MS,
+  );
+  storage.sql.exec(
+    `DELETE FROM p2p_replay_meta
      WHERE server_seq NOT IN (
        SELECT server_seq
-       FROM p2p_replay
+       FROM p2p_replay_meta
        ORDER BY server_seq DESC
        LIMIT ?
      )`,
     P2P_REPLAY_MAX_EVENTS,
+  );
+}
+
+function parseStoredP2PReplayMetadataRow(
+  row: P2PReplayMetadataRow,
+): StoredP2PReplayMetadata | null {
+  if (
+    !isNonNegativeInteger(row.server_seq) ||
+    !isNonNegativeInteger(row.room_generation) ||
+    !isNonNegativeInteger(row.source_generation) ||
+    !isNonNegativeInteger(row.server_received_at) ||
+    typeof row.dedupe_hash !== "string" ||
+    !/^[a-f0-9]{64}$/.test(row.dedupe_hash) ||
+    !isP2PSignalKind(row.signal_kind)
+  ) {
+    return null;
+  }
+
+  return {
+    dedupeHash: row.dedupe_hash,
+    roomGeneration: row.room_generation,
+    serverReceivedAt: row.server_received_at,
+    serverSeq: row.server_seq,
+    signalKind: row.signal_kind,
+    sourceGeneration: row.source_generation,
+  };
+}
+
+function isP2PSignalKind(value: unknown): value is BufferedP2PSignalEvent["signal"]["kind"] {
+  return (
+    value === "offer" ||
+    value === "answer" ||
+    value === "ice" ||
+    value === "voice-start" ||
+    value === "voice-stop" ||
+    value === "renegotiate" ||
+    value === "restart-ice" ||
+    value === "bye"
   );
 }
 
@@ -181,6 +455,13 @@ function writeMeta(storage: DurableObjectStorage, key: string, value: unknown, u
     JSON.stringify(value),
     updatedAt,
   );
+}
+
+function parseStoredLifecycle(
+  raw: unknown,
+): RoomLifecycleState | null | "invalid" {
+  if (raw === undefined) return null;
+  return parseRoomLifecycleState(raw) ?? "invalid";
 }
 
 export function parseRoomStateSnapshot(value: unknown): RoomStateSnapshot | null {

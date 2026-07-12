@@ -172,12 +172,12 @@ function appendWorkerVar(args, name) {
 }
 
 async function loadIceServersFromWorker(roomToken) {
-	const url = new URL(`http://127.0.0.1:${WORKER_PORT}/ice-servers`);
-	url.searchParams.set("roomId", ROOM_ID);
-	url.searchParams.set("roomToken", roomToken);
+	const url = new URL(
+		`http://127.0.0.1:${WORKER_PORT}/rooms/${encodeURIComponent(ROOM_ID)}/ice-servers`,
+	);
 
 	const response = await fetch(url, {
-		headers: { Accept: "application/json" },
+		headers: { Accept: "application/json", Authorization: `Bearer ${roomToken}` },
 		signal: AbortSignal.timeout(10_000),
 	});
 	if (!response.ok) {
@@ -309,11 +309,16 @@ async function waitForCameraEnabledCount(page, expectedCount, budgetMs) {
 	return { observedMs: null, state };
 }
 
-async function waitForRemoteFramesAbove(page, previousFrames, budgetMs) {
+async function waitForRemoteFramesAbove(
+	page,
+	previousFrames,
+	budgetMs,
+	minimumNewFrames = 1,
+) {
 	const t0 = Date.now();
 	while (Date.now() - t0 < budgetMs) {
 		const state = await page.evaluate(() => window.AnidachiHarness.getState());
-		if (state.remoteFramesDecoded > previousFrames) {
+		if (state.remoteFramesDecoded >= previousFrames + minimumNewFrames) {
 			return { recoveredMs: Date.now() - t0, state };
 		}
 		await sleep(150);
@@ -333,6 +338,25 @@ async function waitForRemoteVideoActivity(page, expectedActivity, budgetMs) {
 	}
 	const state = await page.evaluate(() => window.AnidachiHarness.getState());
 	return { observedMs: null, state };
+}
+
+async function waitForDroppedSignal(page, kind, previousCount, budgetMs) {
+	const t0 = Date.now();
+	while (Date.now() - t0 < budgetMs) {
+		const count = await page.evaluate(
+			({ kind }) => window.AnidachiHarness.getDroppedSignalCount(kind),
+			{ kind },
+		);
+		if (count > previousCount) {
+			return { count, observedMs: Date.now() - t0 };
+		}
+		await sleep(50);
+	}
+	const count = await page.evaluate(
+		({ kind }) => window.AnidachiHarness.getDroppedSignalCount(kind),
+		{ kind },
+	);
+	return { count, observedMs: null };
 }
 
 function maxIceRestartCount(state) {
@@ -408,6 +432,7 @@ async function main() {
 
 	const browser = await chromium.launch({
 		args: [
+			"--disable-features=WebRtcHideLocalIpsWithMdns",
 			"--use-fake-device-for-media-stream",
 			"--use-fake-ui-for-media-stream",
 		],
@@ -420,6 +445,14 @@ async function main() {
 		const hostPage = await hostCtx.newPage();
 		const guestPage = await guestCtx.newPage();
 		if (process.env.HARNESS_DEBUG) {
+			await Promise.all([
+				hostPage.addInitScript(() =>
+					localStorage.setItem("anidachi:debug-console", "true"),
+				),
+				guestPage.addInitScript(() =>
+					localStorage.setItem("anidachi:debug-console", "true"),
+				),
+			]);
 			hostPage.on("console", (m) => console.log(`[host] ${m.text()}`));
 			guestPage.on("console", (m) => console.log(`[guest] ${m.text()}`));
 			hostPage.on("pageerror", (e) => console.log(`[host err] ${e.message}`));
@@ -556,6 +589,92 @@ async function main() {
 
 		await hostPage.evaluate(() => window.AnidachiHarness.stopVoice());
 
+		// A signal can be lost while the WebSocket is between transports even
+		// though the RTCPeerConnection remains alive. Prove both halves of the
+		// recovery protocol with real browser peers: offerer rollback/fresh offer,
+		// then answerer-driven renegotiation after a dropped answer.
+		const droppedOffersBefore = await guestPage.evaluate(() =>
+			window.AnidachiHarness.getDroppedSignalCount("offer"),
+		);
+		await guestPage.evaluate(() => {
+			window.AnidachiHarness.dropNextSignal("offer");
+			return window.AnidachiHarness.setCameraEnabled(false);
+		});
+		const droppedOffer = await waitForDroppedSignal(
+			guestPage,
+			"offer",
+			droppedOffersBefore,
+			RECOVERY_BUDGET_MS,
+		);
+		record(
+			"harness intentionally drops one offer",
+			droppedOffer.observedMs !== null,
+			`count=${droppedOffer.count}`,
+		);
+		await sleep(500);
+		const beforeDroppedOfferRecovery = await hostPage.evaluate(() =>
+			window.AnidachiHarness.getState(),
+		);
+		await guestPage.evaluate(() =>
+			window.AnidachiHarness.setCameraEnabled(true),
+		);
+		await guestPage.evaluate(() =>
+			window.AnidachiHarness.reconnect("dropped-offer"),
+		);
+		const afterDroppedOffer = await waitForRemoteFramesAbove(
+			hostPage,
+			beforeDroppedOfferRecovery.remoteFramesDecoded,
+			RECOVERY_BUDGET_MS,
+			3,
+		);
+		record(
+			"media recovers after a dropped offer and signaling reconnect",
+			afterDroppedOffer.recoveredMs !== null,
+			`recovered=${afterDroppedOffer.recoveredMs}ms frames=${afterDroppedOffer.state.remoteFramesDecoded}`,
+		);
+
+		const droppedAnswersBefore = await hostPage.evaluate(() =>
+			window.AnidachiHarness.getDroppedSignalCount("answer"),
+		);
+		await hostPage.evaluate(() =>
+			window.AnidachiHarness.dropNextSignal("answer"),
+		);
+		await guestPage.evaluate(() =>
+			window.AnidachiHarness.setCameraEnabled(false),
+		);
+		const droppedAnswer = await waitForDroppedSignal(
+			hostPage,
+			"answer",
+			droppedAnswersBefore,
+			RECOVERY_BUDGET_MS,
+		);
+		record(
+			"harness intentionally drops one answer",
+			droppedAnswer.observedMs !== null,
+			`count=${droppedAnswer.count}`,
+		);
+		await sleep(500);
+		const beforeDroppedAnswerRecovery = await hostPage.evaluate(() =>
+			window.AnidachiHarness.getState(),
+		);
+		await guestPage.evaluate(() =>
+			window.AnidachiHarness.setCameraEnabled(true),
+		);
+		await hostPage.evaluate(() =>
+			window.AnidachiHarness.reconnect("dropped-answer"),
+		);
+		const afterDroppedAnswer = await waitForRemoteFramesAbove(
+			hostPage,
+			beforeDroppedAnswerRecovery.remoteFramesDecoded,
+			RECOVERY_BUDGET_MS,
+			3,
+		);
+		record(
+			"media recovers after a dropped answer and signaling reconnect",
+			afterDroppedAnswer.recoveredMs !== null,
+			`recovered=${afterDroppedAnswer.recoveredMs}ms frames=${afterDroppedAnswer.state.remoteFramesDecoded}`,
+		);
+
 		// S5: reload the guest, restart, and confirm media recovers without
 		// recreating the room.
 		await guestPage.evaluate(() => window.AnidachiHarness.stop());
@@ -639,9 +758,7 @@ async function main() {
 		console.log(
 			`   ICE restarts after network loss: before=${JSON.stringify(
 				restartBeforeNetwork.map((entry) => entry.restartCount),
-			)} after=${JSON.stringify(
-				restartAfterNetwork.map((entry) => entry.restartCount),
-			)}`,
+			)} after=${JSON.stringify(restartAfterNetwork.map((entry) => entry.restartCount))}`,
 		);
 
 		await hostPage.evaluate(() => window.AnidachiHarness.stop());

@@ -1,7 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { getP2PMediaSessionState } from "../src/overlay-media-session";
+import {
+  getP2PMediaSessionState,
+  persistRoomSessionForCurrentJoin,
+} from "../src/overlay-media-session";
 
 describe("overlay P2P media session state", () => {
+  it("rejects a persisted room session when its join becomes stale while storage resolves", async () => {
+    let resolvePersist: (value: { participantSessionId: string }) => void = () => {};
+    const persist = new Promise<{ participantSessionId: string }>((resolve) => {
+      resolvePersist = resolve;
+    });
+    let currentJoin = true;
+    const discarded: Array<{ participantSessionId: string }> = [];
+    const guardedPersistence = {
+      discard: async (session: { participantSessionId: string }) => {
+        discarded.push(session);
+      },
+      isCurrentJoin: () => currentJoin,
+      persist: () => persist,
+    };
+
+    const pending = persistRoomSessionForCurrentJoin(guardedPersistence);
+    currentJoin = false;
+    resolvePersist({ participantSessionId: "stale-session" });
+
+    await expect(pending).resolves.toBeNull();
+    expect(discarded).toEqual([{ participantSessionId: "stale-session" }]);
+  });
+
   it("keeps the media session active during a same-room websocket reconnect", () => {
     expect(
       getP2PMediaSessionState({
