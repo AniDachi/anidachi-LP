@@ -1,10 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getRoomById, updateRoom } from "@/lib/anidachi-auth/db";
+import { finalizeRoomUsage, getRoomById } from "@/lib/anidachi-auth/db";
 import {
   completeInternalRoomEnd,
   parseInternalRoomEndCommand,
 } from "@/lib/anidachi-auth/room-lifecycle";
-import { settleHostSegment } from "@/lib/anidachi-auth/room-usage";
 import { hasValidInternalServiceAuthorization } from "@/lib/internal-service-auth";
 
 export const dynamic = "force-dynamic";
@@ -31,14 +30,10 @@ export async function POST(
     alreadyEnded: room.status === "ended",
     command,
     dependencies: {
-      settle: () => settleHostSegment(room, room.host_plan_code, endedAt),
-      transition: () => updateRoom(roomId, {
-        status: "ended",
-        ended_at: endedAt.toISOString(),
-        host_connected_at: null,
-        last_active_at: endedAt.toISOString(),
-      }),
+      finalize: async (usage) => {
+        await finalizeRoomUsage(roomId, endedAt.toISOString(), usage);
+      },
     },
   });
-  return NextResponse.json({ ok: true, ...result });
+	return NextResponse.json({ ok: true, usageFinalized: true, ...result });
 }

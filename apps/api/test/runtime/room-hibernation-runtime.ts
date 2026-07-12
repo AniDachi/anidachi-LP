@@ -19,6 +19,14 @@ const TEST_SECRET_ENV = { ANIDACHI_JWT_SECRET: "anidachi-runtime-test-secret" };
 const INTERNAL_SECRET = "anidachi-runtime-internal-secret";
 const ROOM_LIFECYCLE_META_KEY = "room_lifecycle";
 
+function stubSuccessfulWebFinalization() {
+	const callbackFetch = vi.fn(async () =>
+		Response.json({ ok: true, usageFinalized: true }),
+	);
+	vi.stubGlobal("fetch", callbackFetch);
+	return callbackFetch;
+}
+
 afterEach(async () => {
 	vi.unstubAllGlobals();
 	await reset();
@@ -53,7 +61,9 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		await evictDurableObject(stub, { webSockets: "hibernate" });
 		const restored = await readRoomRuntime(stub);
 		expect(restored).toEqual(empty);
-		const callbackFetch = vi.fn(async () => Response.json({ ok: true }));
+		const callbackFetch = vi.fn(async () =>
+			Response.json({ ok: true, usageFinalized: true }),
+		);
 		vi.stubGlobal("fetch", callbackFetch);
 		expect(await runDurableObjectAlarm(stub)).toBe(true);
 		expect(callbackFetch).not.toHaveBeenCalled();
@@ -90,7 +100,9 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		);
 		expect(active.lifecycle).toMatchObject({ schemaVersion: 1, status: "active" });
 
-		const callbackFetch = vi.fn(async () => Response.json({ ok: true }));
+		const callbackFetch = vi.fn(async () =>
+			Response.json({ ok: true, usageFinalized: true }),
+		);
 		vi.stubGlobal("fetch", callbackFetch);
 		await runInDurableObject(stub, async (_instance, state) => {
 			await state.storage.setAlarm(Date.now() + 60_000);
@@ -115,7 +127,9 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		await host.waitFor((event) => event.type === "ROOM_SNAPSHOT", "host snapshot");
 		await makeEmptyAlarmDue(stub);
 
-		const callbackFetch = vi.fn(async () => Response.json({ ok: true }));
+		const callbackFetch = vi.fn(async () =>
+			Response.json({ ok: true, usageFinalized: true }),
+		);
 		vi.stubGlobal("fetch", callbackFetch);
 		expect(await runDurableObjectAlarm(stub)).toBe(true);
 		expect(callbackFetch).not.toHaveBeenCalled();
@@ -160,7 +174,11 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			callbackAttempt += 1;
 			return callbackAttempt === 1
 				? Response.json({ error: "temporary" }, { status: 503 })
-				: Response.json({ ok: true, eventId: expectedEventId });
+				: Response.json({
+					ok: true,
+					eventId: expectedEventId,
+					usageFinalized: true,
+				});
 		});
 		vi.stubGlobal("fetch", callbackFetch);
 
@@ -214,6 +232,10 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 				endedAt: expectedEndedAt,
 				eventId: expectedEventId,
 				reason: "empty_timeout",
+				usage: {
+					day: new Date(expectedEndedAt).toISOString().slice(0, 10),
+					seconds: 0,
+				},
 			});
 		}
 	});
@@ -249,9 +271,26 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		});
 		expect(unauthorized.status).toBe(401);
 
+		let callbackAttempt = 0;
+		const callbackFetch = vi.fn(async () => {
+			callbackAttempt += 1;
+			return callbackAttempt === 1
+				? Response.json({ error: "temporary" }, { status: 503 })
+				: Response.json({ ok: true, usageFinalized: true });
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+
 		const first = await endRoom(stub, command);
-		expect(first.status).toBe(200);
-		expect(await first.json()).toMatchObject({ ok: true, alreadyEnded: false });
+		expect(first.status).toBe(502);
+		expect(await readRoomRuntime(stub)).toMatchObject({ tombstone: null });
+
+		const completed = await endRoom(stub, command);
+		expect(completed.status).toBe(200);
+		expect(await completed.json()).toMatchObject({
+			ok: true,
+			alreadyEnded: false,
+			webFinalized: true,
+		});
 		await host.waitFor(
 			(event) => event.type === "ROOM_ENDED" && event.endedAt === 1_000,
 			"terminal room event",
@@ -262,14 +301,154 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 
 		const repeated = await endRoom(stub, { endedAt: 2_000, reason: "quota_exhausted" });
 		expect(await repeated.json()).toMatchObject({
-			ok: true, alreadyEnded: true, endedAt: 1_000, reason: "host_ended",
+			ok: true,
+			alreadyEnded: true,
+			webFinalized: true,
+			endedAt: 1_000,
+			reason: "host_ended",
 		});
+		expect(callbackFetch).toHaveBeenCalledTimes(2);
+	});
+
+	it("serializes concurrent end commands around the Web callback", async () => {
+		const roomId = `runtime-end-race-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		let releaseCallback: () => void = () => {};
+		const callbackGate = new Promise<void>((resolve) => {
+			releaseCallback = resolve;
+		});
+		const callbackFetch = vi.fn(async () => {
+			await callbackGate;
+			return Response.json({ ok: true, usageFinalized: true });
+		});
+		vi.stubGlobal("fetch", callbackFetch);
+
+		const firstPromise = endRoom(stub, { endedAt: 1_000, reason: "host_ended" });
+		await vi.waitFor(() => expect(callbackFetch).toHaveBeenCalledTimes(1));
+		const secondPromise = endRoom(stub, {
+			endedAt: 2_000,
+			reason: "quota_exhausted",
+		});
+		await sleep(25);
+		const callbackCountWhileBlocked = callbackFetch.mock.calls.length;
+		releaseCallback();
+
+		const [first, second] = await Promise.all([firstPromise, secondPromise]);
+		expect(callbackCountWhileBlocked).toBe(1);
+		expect(callbackFetch).toHaveBeenCalledTimes(1);
+		expect(await first.json()).toMatchObject({
+			alreadyEnded: false,
+			endedAt: 1_000,
+			reason: "host_ended",
+			webFinalized: true,
+		});
+		expect(await second.json()).toMatchObject({
+			alreadyEnded: true,
+			endedAt: 1_000,
+			reason: "host_ended",
+			webFinalized: true,
+		});
+	});
+
+	it("does not claim that a legacy tombstone proves Web finalization", async () => {
+		const roomId = `runtime-legacy-tombstone-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		await runInDurableObject(stub, (_instance, state) => {
+			state.storage.sql.exec(
+				"INSERT OR REPLACE INTO room_meta (key, value_json, updated_at) VALUES (?, ?, ?)",
+				"room_ended",
+				JSON.stringify({
+					schemaVersion: 1,
+					endedAt: 1_000,
+					reason: "host_ended",
+				}),
+				1_000,
+			);
+		});
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+
+		const repeated = await endRoom(stub, {
+			endedAt: 2_000,
+			reason: "quota_exhausted",
+		});
+		expect(await repeated.json()).toMatchObject({
+			alreadyEnded: true,
+			endedAt: 1_000,
+			reason: "host_ended",
+			webFinalized: false,
+		});
+	});
+
+	it("keeps authoritative Free-room usage through hibernation and repeated end", async () => {
+		const roomId = `runtime-meter-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-session", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-session", userId: "guest-user",
+		});
+		const guestSnapshot = await guest.waitFor(
+			(event) => event.type === "ROOM_SNAPSHOT",
+			"guest metered snapshot",
+		);
+		expect(guestSnapshot).toMatchObject({
+			type: "ROOM_SNAPSHOT",
+			roomUsage: { seconds: 0 },
+		});
+
+		const meterNow = Date.now();
+		await runInDurableObject(stub, (_instance, state) => {
+			state.storage.sql.exec(
+				"INSERT OR REPLACE INTO room_meta (key, value_json, updated_at) VALUES (?, ?, ?)",
+				"room_meter",
+				JSON.stringify({
+					schemaVersion: 1,
+					accumulatedMs: 125_000,
+					activeSince: meterNow - 5_000,
+					day: new Date(meterNow).toISOString().slice(0, 10),
+				}),
+				meterNow,
+			);
+		});
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		stubSuccessfulWebFinalization();
+
+		const first = await endRoom(stub, { endedAt: meterNow, reason: "host_ended" });
+		const firstBody = (await first.json()) as {
+			usage?: { day: string; seconds: number };
+		};
+		expect(firstBody).toMatchObject({
+			ok: true,
+			alreadyEnded: false,
+			webFinalized: true,
+		});
+		expect(firstBody.usage?.day).toBe(new Date(meterNow).toISOString().slice(0, 10));
+		expect(firstBody.usage?.seconds).toBeGreaterThanOrEqual(130);
+		expect(firstBody.usage?.seconds).toBeLessThanOrEqual(131);
+		const repeated = await endRoom(stub, {
+			endedAt: meterNow + 5_000,
+			reason: "quota_exhausted",
+		});
+		expect(await repeated.json()).toMatchObject({
+			ok: true,
+			alreadyEnded: true,
+			webFinalized: true,
+			usage: firstBody.usage,
+		});
+
+		host.close();
+		guest.close();
 	});
 
 	it("rejects valid-token reconnect after the ended tombstone is persisted", async () => {
 		const roomId = `runtime-ended-reconnect-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		stubSuccessfulWebFinalization();
 		const ended = await endRoom(stub, { endedAt: 1_000, reason: "host_ended" });
 		expect(ended.status).toBe(200);
 
@@ -285,6 +464,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		const roomId = `runtime-ended-retry-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
 		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		stubSuccessfulWebFinalization();
 		const first = await endRoom(stub, { endedAt: 1_000, reason: "host_ended" });
 		expect(first.status).toBe(200);
 		expect(

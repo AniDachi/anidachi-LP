@@ -7,6 +7,7 @@ import {
   type PlaybackState,
   type ReactionEvent,
   type RoomCapabilities,
+  type RoomUsageSummary,
   type ServerEvent,
 } from "@anidachi/protocol";
 import {
@@ -149,6 +150,10 @@ import {
   type RoomConnectionStatus,
   type RoomQuotaSummary,
 } from "./room-client";
+import {
+  applyRoomUsageSnapshot,
+  roomQuotaRemainingSeconds,
+} from "./room-quota-display";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
   clearRoomSession,
@@ -351,6 +356,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [roomToken, setRoomToken] = useState<string | null>(null);
   const [roomShareableLink, setRoomShareableLink] = useState<string | null>(null);
   const [roomQuota, setRoomQuota] = useState<RoomQuotaSummary | null>(null);
+  const [roomUsage, setRoomUsage] = useState<RoomUsageSummary | null>(null);
+  const roomQuotaRef = useRef<RoomQuotaSummary | null>(null);
+  const roomUsageRef = useRef<RoomUsageSummary | null>(null);
   const [roomCapabilities, setRoomCapabilities] = useState<RoomCapabilities | null>(null);
   const [quotaDisplayTick, setQuotaDisplayTick] = useState(0);
   const quotaMeteredMsRef = useRef(0);
@@ -717,6 +725,53 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     };
   }, [identityLoaded, participant?.id]);
 
+  const resetQuotaDisplayElapsed = useCallback(() => {
+    quotaMeteredMsRef.current = 0;
+    quotaTickAtRef.current = null;
+    setQuotaDisplayTick((tick) => tick + 1);
+  }, []);
+
+  const updateRoomQuota = useCallback(
+    (next: RoomQuotaSummary | null) => {
+      const current = roomQuotaRef.current;
+      if (
+        current?.remainingSeconds === next?.remainingSeconds &&
+        current?.resetAt === next?.resetAt
+      ) {
+        return;
+      }
+      resetQuotaDisplayElapsed();
+      roomQuotaRef.current = next;
+      setRoomQuota(next);
+    },
+    [resetQuotaDisplayElapsed],
+  );
+
+  const updateRoomUsage = useCallback(
+    (incoming: RoomUsageSummary | undefined) => {
+      const current = {
+        roomUsage: roomUsageRef.current,
+        localMeteredMs: quotaMeteredMsRef.current,
+      };
+      const next = applyRoomUsageSnapshot(current, incoming);
+      if (next === current) return;
+      quotaMeteredMsRef.current = next.localMeteredMs;
+      quotaTickAtRef.current = null;
+      roomUsageRef.current = next.roomUsage;
+      setRoomUsage(next.roomUsage);
+      setQuotaDisplayTick((tick) => tick + 1);
+    },
+    [],
+  );
+
+  const clearRoomQuotaDisplay = useCallback(() => {
+    resetQuotaDisplayElapsed();
+    roomQuotaRef.current = null;
+    roomUsageRef.current = null;
+    setRoomQuota(null);
+    setRoomUsage(null);
+  }, [resetQuotaDisplayElapsed]);
+
   const resetLocalRoomSession = useCallback((message?: string, openPanel = false) => {
     roomReconnectSuppressedRef.current = true;
     roomJoinSequenceRef.current += 1;
@@ -730,12 +785,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     roomIdRef.current = null;
     setRoomId(null);
     setParticipants([]);
-    setRoomQuota(null);
+    clearRoomQuotaDisplay();
     roomTokenRef.current = null;
     roomShareableLinkRef.current = null;
     setRoomToken(null);
     setRoomShareableLink(null);
-    setRoomQuota(null);
     setRoomCapabilities(null);
     clearStoredRoomSession();
     clearRoomHash();
@@ -745,7 +799,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     if (openPanel) {
       setPanelOpen(true);
     }
-  }, [clearStoredRoomSession]);
+  }, [clearRoomQuotaDisplay, clearStoredRoomSession]);
 
   const syncAuthUserScopedState = useCallback(
     (nextAuthUserId: string | null, reason: string) => {
@@ -959,9 +1013,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   ]
     .filter(Boolean)
     .join(" ");
-  // The free daily quota only burns while you host a room that a guest has
-  // actually joined (mirrors the server's metering proxy in room-quota.ts), so
-  // the live countdown ticks only under those conditions and freezes otherwise.
+  // Worker snapshots own accumulated room usage. The local interval only keeps
+  // the display moving between snapshots while host and guest are both live.
   const quotaMeteringActive =
     isConnected && isHost && participantCount > 1 && roomQuota !== null;
   const quotaRemainingSeconds = useMemo(() => {
@@ -970,8 +1023,13 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     }
     // quotaDisplayTick advances once per second while metering is active so the
     // countdown re-renders even though the elapsed time lives in a ref.
-    return Math.max(0, Math.floor(roomQuota.remainingSeconds - quotaMeteredMsRef.current / 1000));
-  }, [roomQuota, quotaDisplayTick]);
+    return roomQuotaRemainingSeconds({
+      serverRemainingSeconds: roomQuota.remainingSeconds,
+      resetAt: roomQuota.resetAt,
+      roomUsage,
+      localMeteredMs: quotaMeteredMsRef.current,
+    });
+  }, [roomQuota, roomUsage, quotaDisplayTick]);
   const isCrunchyroll = adapter.id === "crunchyroll";
   const cameraStackVisible = shouldShowCameraStack({
     cameraParticipantCount: displayedCameraParticipants.length,
@@ -2268,7 +2326,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setParticipants([]);
     setCamsEnabled(false);
     setIncomingP2PSignals([]);
-    setRoomQuota(null);
+    clearRoomQuotaDisplay();
     setRoomSnapshotReady(false);
     setSignalingTransportReady(null);
     roomTokenRef.current = null;
@@ -2280,7 +2338,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     clearRoomHash();
     setAuthMessage(message);
     setPanelOpen(true);
-  }, [clearStoredRoomSession]);
+  }, [clearRoomQuotaDisplay, clearStoredRoomSession]);
 
   const handleServerEvent = useCallback(
     (event: ServerEvent) => {
@@ -2317,6 +2375,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           setRoomGeneration(event.roomGeneration);
           setSourceGeneration(event.sourceGeneration);
           setParticipants(event.participants);
+          updateRoomUsage(event.roomUsage);
           if (event.capabilities) {
             setRoomCapabilities(event.capabilities);
           }
@@ -2504,6 +2563,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       reactionsEnabled,
       terminateRoomSession,
       triggerFlameBurst,
+      updateRoomUsage,
     ],
   );
 
@@ -2700,7 +2760,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         roomTokenRef.current = connected.roomToken;
         setRoomToken(connected.roomToken);
         setRoomCapabilities(connected.capabilities ?? null);
-        setRoomQuota(connected.quota ?? null);
+        updateRoomQuota(connected.quota ?? null);
         const shareableLink = buildRoomShareableUrl(nextRoomId);
         roomShareableLinkRef.current = shareableLink;
         setRoomShareableLink(shareableLink);
@@ -2726,7 +2786,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         }
       }
     },
-    [connectToRoomAsParticipant, refreshRoomActionIdentity],
+    [
+      connectToRoomAsParticipant,
+      refreshRoomActionIdentity,
+      updateRoomQuota,
+    ],
   );
 
   /*
@@ -2906,14 +2970,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     };
   }, [clearRoomReconnectTimer]);
 
-  // Each fresh server quota snapshot is the source of truth — reset the locally
-  // metered elapsed time so the live countdown re-anchors to it.
   useEffect(() => {
-    quotaMeteredMsRef.current = 0;
-    quotaTickAtRef.current = null;
     quotaEndTriggeredRef.current = false;
-    setQuotaDisplayTick((tick) => tick + 1);
-  }, [roomQuota]);
+  }, [roomId, roomQuota?.resetAt]);
 
   // Live quota countdown: accrue metered wall-clock only while the session is
   // actually burning quota, so the displayed time decreases every second
@@ -3060,7 +3119,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       roomIdRef.current = null;
       setRoomId(null);
       setParticipants([]);
-      setRoomQuota(null);
+      clearRoomQuotaDisplay();
       setRoomCapabilities(null);
     } catch (error) {
       setExtensionContextInvalidated(isExtensionContextInvalidatedError(error));
@@ -3068,7 +3127,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     } finally {
       setAuthBusy(false);
     }
-  }, [applyParticipantIdentity, clearRoomReconnectTimer]);
+  }, [
+    applyParticipantIdentity,
+    clearRoomQuotaDisplay,
+    clearRoomReconnectTimer,
+  ]);
 
   useEffect(() => {
     applyParticipantIdentityRef.current = applyParticipantIdentity;
@@ -3234,7 +3297,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       if (!isCurrentCreate()) {
         return null;
       }
-      setRoomQuota(created.quota ?? null);
+      clearRoomQuotaDisplay();
+      updateRoomQuota(created.quota ?? null);
       setRoomCapabilities(created.capabilities ?? null);
       if (roomIdRef.current) {
         return null;
@@ -3263,7 +3327,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       );
       return connected ? created : null;
     },
-    [adapter, cancelPendingRoomJoin, connectToRoomAsParticipant, refreshRoomActionIdentity],
+    [
+      adapter,
+      cancelPendingRoomJoin,
+      clearRoomQuotaDisplay,
+      connectToRoomAsParticipant,
+      refreshRoomActionIdentity,
+      updateRoomQuota,
+    ],
   );
 
   useEffect(() => {
@@ -3715,7 +3786,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       roomIdRef.current = null;
       setRoomId(null);
       setParticipants([]);
-      setRoomQuota(null);
+      clearRoomQuotaDisplay();
       setRoomCapabilities(null);
       roomTokenRef.current = null;
       roomShareableLinkRef.current = null;

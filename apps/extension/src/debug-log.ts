@@ -165,6 +165,7 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
         roomGeneration: event.roomGeneration,
         sourceGeneration: event.sourceGeneration,
         serverSeq: event.serverSeq,
+        roomUsage: event.roomUsage,
         participants: event.participants.map((participant) => ({
           id: participant.id,
           role: participant.role,

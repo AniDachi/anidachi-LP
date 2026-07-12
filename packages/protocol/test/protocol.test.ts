@@ -382,6 +382,48 @@ describe("room protocol schemas", () => {
     ).toThrow();
   });
 
+  it("carries a bounded authoritative room-usage summary in snapshots", () => {
+    const snapshot = ServerEventSchema.parse({
+      type: "ROOM_SNAPSHOT",
+      roomId: "room-1",
+      roomGeneration: 1,
+      serverSeq: 1,
+      sourceGeneration: 1,
+      participants: [],
+      roomUsage: {
+        day: "2026-07-12",
+        seconds: 125,
+      },
+    });
+
+    expect(snapshot).toHaveProperty("roomUsage", {
+      day: "2026-07-12",
+      seconds: 125,
+    });
+    expect(() =>
+      ServerEventSchema.parse({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-1",
+        roomGeneration: 1,
+        serverSeq: 1,
+        sourceGeneration: 1,
+        participants: [],
+        roomUsage: { day: "12-07-2026", seconds: 125 },
+      }),
+    ).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-1",
+        roomGeneration: 1,
+        serverSeq: 1,
+        sourceGeneration: 1,
+        participants: [],
+        roomUsage: { day: "2026-07-12", seconds: -1 },
+      }),
+    ).toThrow();
+  });
+
   it("accepts valid join and reaction events", () => {
     const joined = ClientEventSchema.parse({
       type: "JOIN",

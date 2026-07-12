@@ -34,8 +34,9 @@ Playwright.
 - Empty rooms auto-end after four hours. Rejoin before the alarm cancels end.
 - Free usage is metered only while a joined host and at least one joined guest
   are online. Paid plans are not metered by this policy.
-- Additive database migration ships before new enforcement; quota first runs in
-  shadow mode to avoid dual charging during mixed-version rollout.
+- Keep Free-plan metering proportional to the product risk: one durable
+  per-room counter, one atomic settlement, and no shadow ledger, lease table,
+  periodic checkpoint stream, or separate metering outbox.
 - No production promotion until forced TURN, two-device/two-network, camera
   toggle, PTT, reconnect, and full create-invite-end acceptance pass.
 
@@ -169,7 +170,7 @@ export interface EndRoomCommand {
 - [x] Keep the current legacy settlement/DB transition single-shot, then always
   call the idempotent Worker end command on first and repeated end requests.
   Return a retryable sync error if the Worker call fails. Task 7 replaces this
-  temporary ordering with one atomic lifecycle RPC before quota enforcement.
+  temporary ordering with one atomic lifecycle RPC.
 - [x] Handle `ROOM_ENDED` in the extension as terminal: stop media/reconnect,
   clear room session, and show the existing ended state. Treat close code
   `4004` as the same terminal fallback if the event is lost in transit.
@@ -313,44 +314,58 @@ WebRTC harness, and staging extension build validation. Forced-relay validation
 remains a staging gate because no Cloudflare TURN credentials are present in the
 local environment.
 
-### Task 7: Precise Free-Plan Metering In Shadow Mode
+### Task 7: Simple Durable Free-Plan Metering
 
 **Files:**
-- Create: `apps/web/supabase/migrations/20260711_room_quota_transactions.sql`
+- Create: `apps/web/supabase/migrations/20260712150606_finalize_room_usage.sql`
 - Create: `apps/api/src/room-metering.ts`
-- Create: `apps/api/src/internal-web-client.ts`
 - Create: `apps/api/test/room-metering.test.ts`
 - Modify: `apps/api/src/index.ts`
 - Modify: `apps/api/src/room-persistence.ts`
-- Create: `apps/web/app/api/internal/rooms/[roomId]/lifecycle/route.ts`
+- Modify: `apps/api/src/internal-web-client.ts`
+- Modify: `packages/protocol/src/types.ts`
+- Modify: `packages/protocol/test/protocol.test.ts`
 - Modify: `apps/web/lib/anidachi-auth/db.ts`
 - Modify: `apps/web/lib/anidachi-auth/room-lifecycle.ts`
-- Modify: room create/connect/end routes and quota tests
+- Modify: room connect/end routes and quota tests
+- Modify: `apps/extension/src/overlay-app.tsx`
+- Modify: associated extension tests
 
 **Interfaces:**
-- Add `room_meter_sessions` with one active Free lease per host/day.
-- Add `room_lifecycle_events` keyed by event ID and `(meter_session_id,
-  event_seq)`.
-- Add service-role-only `apply_room_lifecycle_event(...)` RPC that locks room,
-  usage row, and lease; accepts monotonic cumulative seconds; returns the same
-  saved result for retries.
-- DO meters only `host socket present && guest socket present && !ended`, stores
-  millisecond remainder, and sends cumulative checkpoints through a durable
-  outbox.
+- The room DO stores one small metering record in existing SQLite-backed room
+  metadata: accumulated milliseconds, optional active start, and the UTC day on
+  which metering first became active.
+- Metering is active only while a live host socket and at least one live guest
+  socket are joined. Paid rooms keep no billable usage.
+- `ROOM_SNAPSHOT` carries the current cumulative room usage so reconnect and
+  hibernation restore the existing extension countdown without client timers
+  becoming authoritative.
+- The existing Worker-to-Web end callback carries the cumulative usage summary.
+  Worker persists the terminal tombstone only after Web acknowledges atomic
+  finalization, then returns `webFinalized: true` to the original end request.
+- One service-role-only `finalize_room_usage(...)` RPC locks the room row,
+  applies usage to `usage_daily`, and marks the room ended in one transaction.
+  Repeated or concurrent finalization is a no-op after the first success.
+- Keep the current client-driven zero-minute end for this release. A global
+  cross-room Free lease and adversarial multi-room enforcement are explicitly
+  deferred until real abuse evidence justifies that extra coordination.
 
-- [ ] Write pgTAP/SQL assertions for duplicate events, payload conflict,
-  monotonic cumulative usage, over-grant rejection, concurrent starts, UTC
-  midnight, stop/release, and atomic cutoff/end.
-- [ ] Add failing DO unit/runtime tests for presence transitions, hibernation,
-  warning, cutoff, and outbox retries.
-- [ ] Ship additive schema and internal endpoint with enforcement disabled.
-- [ ] Implement DO cumulative metering and compare it with legacy usage in
-  shadow telemetry; do not charge both systems.
-- [ ] Validate staging drift is within 60 seconds across reconnect and guest
-  churn before enabling lease enforcement.
-- [ ] Commit schema/shadow runtime as `feat(rooms): add precise quota shadow metering`.
-- [ ] Enable enforcement only in a later reviewed deployment after shadow
-  acceptance; then remove legacy settlement in a separate commit.
+- [x] Add failing pure tests for solo host, host + guest, guest churn, host
+  reconnect, clock skew, and idempotent finalization inputs.
+- [x] Add failing Workers-runtime coverage proving the counter survives
+  hibernation and is returned unchanged on repeated room end.
+- [x] Persist the small meter record before publishing updated snapshots.
+- [x] Replace split `settle + transition` room-end writes with the atomic RPC;
+  retain a one-release fallback when an older Worker omits the callback
+  acknowledgement.
+- [x] Require an explicit usage-finalized callback acknowledgement, mark new
+  tombstones with that fact, and serialize only room-end operations around the
+  external callback so concurrent end commands cannot diverge.
+- [x] Anchor the extension countdown to `ROOM_SNAPSHOT` cumulative usage and
+  keep local ticking display-only between authoritative snapshots.
+- [ ] Validate create -> guest join -> leave -> rejoin -> reconnect -> end on
+  staging and confirm one settlement with no solo-time charge.
+- [x] Commit as `fix(rooms): make free quota settlement durable and atomic`.
 
 ### Task 8: Required Release Evidence And Documentation
 
@@ -384,8 +399,10 @@ local environment.
 3. Deploy lifecycle alarms with internal service secret configured on both
    Worker and Web. Roll back by disabling alarm scheduling, not by deleting the
    tombstone schema.
-4. Deploy quota schema and shadow metering with charging disabled. Compare with
-   legacy usage before enabling enforcement.
+4. Deploy the atomic quota finalization migration first, then Web, then Worker.
+   This lets the new Web safely finalize responses from the old Worker before
+   the new Worker starts requiring the explicit usage-finalized acknowledgement.
+   Verify one normal Free-room lifecycle on staging before promotion.
 5. Require stable E2E checks only after repeated green runs; keep a manual
    emergency dispatch path with documented approval and rollback.
 

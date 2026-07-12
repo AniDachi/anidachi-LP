@@ -2,11 +2,13 @@ import {
   ParticipantSchema,
   PlaybackStateSchema,
   RoomCapabilitiesSchema,
+  RoomUsageSummarySchema,
   WatchSourceDescriptorSchema,
   createEmptyRoomEndEventId,
   type Participant,
 } from "@anidachi/protocol";
 import type { BufferedP2PSignalEvent } from "./p2p-signal-buffer";
+import { parseRoomMeterState, type RoomMeterState } from "./room-metering";
 import type { RoomStateSnapshot } from "./room-state";
 import {
   ROOM_LIFECYCLE_STORAGE_KEY,
@@ -23,6 +25,7 @@ import {
 export const ROOM_STATE_META_KEY = "room_state";
 export const NEXT_P2P_SERVER_SEQ_META_KEY = "next_p2p_server_seq";
 export const ROOM_ENDED_META_KEY = "room_ended";
+export const ROOM_METER_META_KEY = "room_meter";
 export const P2P_REPLAY_TTL_MS = 45_000;
 export const P2P_REPLAY_MAX_EVENTS = 80;
 
@@ -101,6 +104,31 @@ export function writeStoredRoomState(
   writeMeta(storage, ROOM_STATE_META_KEY, snapshot, snapshot.updatedAt);
 }
 
+export function readStoredRoomMeter(
+  storage: DurableObjectStorage,
+): RoomMeterState | null {
+  const row = storage.sql
+    .exec<RoomMetaRow>(
+      "SELECT value_json, updated_at, key FROM room_meta WHERE key = ?",
+      ROOM_METER_META_KEY,
+    )
+    .toArray()[0];
+  if (!row) return null;
+  try {
+    return parseRoomMeterState(JSON.parse(row.value_json));
+  } catch {
+    return null;
+  }
+}
+
+export function writeStoredRoomMeter(
+  storage: DurableObjectStorage,
+  meter: RoomMeterState,
+  updatedAt: number,
+): void {
+  writeMeta(storage, ROOM_METER_META_KEY, meter, updatedAt);
+}
+
 export function readNextP2PServerSeq(storage: DurableObjectStorage): number | null {
   const row = storage.sql
     .exec<RoomMetaRow>(
@@ -132,8 +160,22 @@ export function readEndedRoomTombstone(storage: DurableObjectStorage): EndedRoom
   try {
     const value = JSON.parse(row.value_json) as Record<string, unknown>;
     const command = parseEndRoomCommand(value);
-    return value.schemaVersion === 1 && command
-      ? { schemaVersion: 1, ...command }
+    const usage =
+      value.usage === undefined
+        ? undefined
+        : RoomUsageSummarySchema.safeParse(value.usage);
+    return value.schemaVersion === 1 &&
+      command &&
+      (usage === undefined || usage.success) &&
+      (value.usageFinalized === undefined || value.usageFinalized === true)
+      ? {
+          schemaVersion: 1,
+          ...command,
+          ...(usage?.success ? { usage: usage.data } : {}),
+          ...(value.usageFinalized === true
+            ? { usageFinalized: true as const }
+            : {}),
+        }
       : null;
   } catch {
     return null;
@@ -149,9 +191,10 @@ export function persistEndedRoomTombstoneAndClearRuntime(
     storage.sql.exec("DELETE FROM p2p_replay_meta");
     storage.sql.exec("DROP TABLE IF EXISTS p2p_replay");
     storage.sql.exec(
-      "DELETE FROM room_meta WHERE key IN (?, ?)",
+      "DELETE FROM room_meta WHERE key IN (?, ?, ?)",
       ROOM_STATE_META_KEY,
       NEXT_P2P_SERVER_SEQ_META_KEY,
+      ROOM_METER_META_KEY,
     );
   });
 }

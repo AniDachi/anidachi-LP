@@ -107,6 +107,19 @@ export const RoomEndReasonSchema = z.enum([
   "quota_exhausted",
 ]);
 
+const UtcDaySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const parsed = new Date(`${value}T00:00:00.000Z`);
+    return Number.isFinite(parsed.getTime()) && parsed.toISOString().startsWith(value);
+  }, "Invalid UTC day");
+
+export const RoomUsageSummarySchema = z.object({
+  day: UtcDaySchema,
+  seconds: z.number().int().min(0).max(24 * 60 * 60),
+}).strict();
+
 export const P2PSessionDescriptionSchema = z.object({
   type: z.enum(["offer", "answer"]),
   sdp: boundedUtf8String(MAX_SDP_BYTES),
@@ -266,6 +279,7 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
     sourceGeneration: z.number().int().nonnegative(),
     participants: z.array(ParticipantSchema),
     p2pResyncRequired: z.boolean().optional(),
+    roomUsage: RoomUsageSummarySchema.optional(),
     capabilities: RoomCapabilitiesSchema.optional(),
     hostState: PlaybackStateSchema.optional(),
     source: WatchSourceDescriptorSchema.optional(),
@@ -330,6 +344,7 @@ export type P2PSignal = z.infer<typeof P2PSignalSchema>;
 export type ClientEvent = z.infer<typeof ClientEventSchema>;
 export type ServerEvent = z.infer<typeof ServerEventSchema>;
 export type RoomEndReason = z.infer<typeof RoomEndReasonSchema>;
+export type RoomUsageSummary = z.infer<typeof RoomUsageSummarySchema>;
 export type RoomEndedEvent = Extract<ServerEvent, { type: "ROOM_ENDED" }>;
 
 export function parseClientEvent(value: unknown): ClientEvent {

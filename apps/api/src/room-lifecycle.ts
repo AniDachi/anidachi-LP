@@ -1,8 +1,10 @@
 import {
   EMPTY_ROOM_TIMEOUT_MS,
   RoomEndReasonSchema,
+  RoomUsageSummarySchema,
   isEmptyRoomEndEventId,
   type RoomEndReason,
+  type RoomUsageSummary,
 } from "@anidachi/protocol";
 
 export const ROOM_LIFECYCLE_STORAGE_KEY = "room_lifecycle";
@@ -29,10 +31,15 @@ export function parseEndRoomCommand(value: unknown): EndRoomCommand | null {
 
 export interface EndedRoomTombstone extends EndRoomCommand {
   schemaVersion: 1;
+  usage?: RoomUsageSummary;
+  usageFinalized?: true;
 }
 
-export function endedRoomTombstone(command: EndRoomCommand): EndedRoomTombstone {
-  return { schemaVersion: 1, ...command };
+export function endedRoomTombstone(
+  command: EndRoomCommand,
+  details: Pick<EndedRoomTombstone, "usage" | "usageFinalized"> = {},
+): EndedRoomTombstone {
+  return { schemaVersion: 1, ...command, ...details };
 }
 
 export interface ActiveRoomLifecycle {
@@ -61,6 +68,8 @@ export interface EndingRoomLifecycle {
 export interface EndedRoomLifecycle extends EndRoomCommand {
   schemaVersion: 1;
   status: "ended";
+  usage?: RoomUsageSummary;
+  usageFinalized?: true;
 }
 
 export type RoomLifecycleState =
@@ -141,7 +150,22 @@ export function parseRoomLifecycleState(value: unknown): RoomLifecycleState | nu
 
   if (value.status === "ended") {
     const command = parseEndRoomCommand(value);
-    return command ? { schemaVersion: 1, status: "ended", ...command } : null;
+    const usage =
+      value.usage === undefined
+        ? undefined
+        : RoomUsageSummarySchema.safeParse(value.usage);
+    if (
+      !command ||
+      (usage !== undefined && !usage.success) ||
+      (value.usageFinalized !== undefined && value.usageFinalized !== true)
+    ) return null;
+    return {
+      schemaVersion: 1,
+      status: "ended",
+      ...command,
+      ...(usage?.success ? { usage: usage.data } : {}),
+      ...(value.usageFinalized === true ? { usageFinalized: true as const } : {}),
+    };
   }
 
   return null;

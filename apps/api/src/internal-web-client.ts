@@ -1,4 +1,5 @@
-import type { EndingRoomLifecycle } from "./room-lifecycle";
+import type { RoomUsageSummary } from "@anidachi/protocol";
+import type { EndRoomCommand } from "./room-lifecycle";
 
 export interface InternalWebLifecycleEnv {
   ANIDACHI_INTERNAL_API_SECRET?: string;
@@ -8,15 +9,15 @@ export interface InternalWebLifecycleEnv {
 export const INTERNAL_WEB_CALLBACK_TIMEOUT_MS = 8_000;
 const INTERNAL_WEB_CALLBACK_MAX_TIMEOUT_MS = 15_000;
 
-type EmptyRoomEndCallback = Pick<
-  EndingRoomLifecycle,
-  "endedAt" | "eventId"
-> & { reason: "empty_timeout" };
+type RoomEndCallback = EndRoomCommand & {
+  eventId?: string;
+  usage?: RoomUsageSummary;
+};
 
 export async function notifyWebRoomEnded(
   env: InternalWebLifecycleEnv,
   roomId: string,
-  command: EmptyRoomEndCallback,
+  command: RoomEndCallback,
   fetchImplementation: typeof fetch = fetch,
   timeoutMs = INTERNAL_WEB_CALLBACK_TIMEOUT_MS,
 ): Promise<void> {
@@ -45,8 +46,12 @@ export async function notifyWebRoomEnded(
     throw new Error(`Room lifecycle Web callback failed (${response.status})`);
   }
 
-  const body = await response.json().catch(() => null) as Record<string, unknown> | null;
-  if (!body || body.eventId !== command.eventId) {
+  const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  if (
+    body?.ok !== true ||
+    body.usageFinalized !== true ||
+    (command.eventId !== undefined && body.eventId !== command.eventId)
+  ) {
     throw new Error("Room lifecycle Web callback returned an invalid acknowledgement");
   }
 }

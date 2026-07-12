@@ -10,8 +10,9 @@ const clientApi = internalWebClient as typeof internalWebClient & {
     roomId: string,
     command: {
       endedAt: number;
-      eventId: string;
-      reason: "empty_timeout";
+      eventId?: string;
+      reason: "empty_timeout" | "host_ended";
+      usage?: { day: string; seconds: number };
     },
     fetchImplementation?: typeof fetch,
     timeoutMs?: number,
@@ -22,6 +23,7 @@ const command = {
   endedAt: 14_401_000,
   eventId: `empty_timeout:${"a".repeat(64)}`,
   reason: "empty_timeout" as const,
+  usage: { day: "2026-07-12", seconds: 125 },
 };
 
 describe("internal Web room lifecycle client", () => {
@@ -86,5 +88,44 @@ describe("internal Web room lifecycle client", () => {
     expect(String(input)).toBe("https://web.internal/api/internal/rooms/room%201/ended");
     expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer secret");
     expect(init?.body).toBe(JSON.stringify(command));
+  });
+
+  it("requires an explicit acknowledgement for host-triggered finalization", async () => {
+    expect(typeof clientApi.notifyWebRoomEnded).toBe("function");
+    if (!clientApi.notifyWebRoomEnded) return;
+    const env = {
+      ANIDACHI_INTERNAL_API_SECRET: "secret",
+      ANIDACHI_WEB_INTERNAL_BASE_URL: "https://web.internal",
+    };
+    const hostCommand = {
+      endedAt: 15_000,
+      reason: "host_ended" as const,
+      usage: { day: "2026-07-12", seconds: 130 },
+    };
+
+    await expect(
+      clientApi.notifyWebRoomEnded(
+        env,
+        "room-1",
+        hostCommand,
+        async () => Response.json({ error: "not finalized" }),
+      ),
+    ).rejects.toThrow("invalid acknowledgement");
+    await expect(
+      clientApi.notifyWebRoomEnded(
+        env,
+        "room-1",
+        hostCommand,
+        async () => Response.json({ ok: true }),
+      ),
+    ).rejects.toThrow("invalid acknowledgement");
+    await expect(
+      clientApi.notifyWebRoomEnded(
+        env,
+        "room-1",
+        hostCommand,
+        async () => Response.json({ ok: true, usageFinalized: true }),
+      ),
+    ).resolves.toBeUndefined();
   });
 });

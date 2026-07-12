@@ -192,7 +192,16 @@ Follow the roadmap's task lists verbatim; additions:
 - [ ] 6.3 DO Alarm room end (PD1): when the last participant disconnects, set an alarm for +4h; on fire with the room still empty, call a server-to-server web endpoint (`POST /api/internal/rooms/:roomId/ended`, authenticated by a dedicated shared secret/Worker service binding — never the user JWT secret) to set `ended`. Cancels on rejoin.
 - [x] 6.4 (PD3) DO join enforces `MAX_ROOM_PARTICIPANTS = 4` via `RoomState.canAdmit` (checked before stale-socket replacement, so reconnecting members are never falsely rejected); the 5th distinct user gets an `ERROR ROOM_FULL` + close 4003 and a `room_full` telemetry event. The overlay treats `ROOM_FULL` as terminal: suppresses reconnect, tears down room state, and shows the message. Pulled forward from Block 6 (independent of Hibernation). Verified: room-state unit test + harness scenario (4 admitted, 5th rejected with 4003, existing member reconnect still admitted) — harness 14/14.
 - [~] 6.5 `@cloudflare/vitest-pool-workers` integration tests: forced wake/rebuild keeps participants, host state, source snapshot, raw keepalive, and monotonic P2P replay. Remaining: alarm ends empty room, full-room rejection in Workers runtime, and any quota-metering runtime cases from the roadmap Task 6 list.
-- [ ] 6.6 PD2 precise quota metering: the DO tracks host-room active seconds (>=2 connected participants) hibernation-safely (timestamps in attachments/SQLite, not timers), reports usage server-to-server to the web internal endpoint on disconnect/alarm/threshold, and enforces the final cutoff: warning event at 5 remaining minutes, graceful room end + upgrade prompt at 0. Replaces the Block 2 token-expiry approximation.
+- [~] 6.6 PD2 durable quota metering: on the current room/P2P hardening branch,
+  the DO tracks Free host-room active seconds only while a live host and guest
+  are joined, persists one small SQLite-backed counter across hibernation,
+  exposes cumulative usage in `ROOM_SNAPSHOT`, and returns the same usage on
+  repeated room end. Worker waits for Web to acknowledge one atomic
+  service-role finalization RPC before persisting the terminal tombstone; the
+  extension keeps the existing graceful zero-minute end. Remaining: apply the
+  migration, deploy Web before Worker, run the real
+  create/join/leave/reconnect/end acceptance, and decide later whether observed
+  abuse warrants a global cross-room lease.
 
 **Acceptance:** roadmap Task 5/6 acceptance + idle rooms hibernate without disconnecting clients (S9) + empty rooms end themselves (closes defect 3 with PD1) + quota metering accurate to <=1 minute drift in harness.
 
@@ -281,3 +290,15 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 - [x] 2026-07-07: Promoted media seats from camera-derived UI state to explicit room protocol/runtime state on branch `codex/room-rail`. `Participant.mediaSeat` now defines the P2P media boundary: only `joined` participants can signal, receive camera/audio, or use push-to-talk; `cameraEnabled` is only the user's video publishing state inside that seat. The Worker auto-assigns seats on join while capacity is available, leaves overflow participants chat-only, supports request/cancel/leave plus host grant/revoke, preserves explicit self-leave/host-revoke state across restore, and re-authorizes buffered P2P replay against current media seats before delivery. The extension overlay now shows `media/chat/requested` participant status and compact seat actions, and P2P session lifetime requires the local participant to hold a media seat. Verified focused protocol/API/extension checks/tests, `pnpm harness:rooms` (38/38), and `npm --prefix tests/e2e run harness:p2p` (12/12).
 - [x] 2026-06-17: Development-flow gate added before remaining Block 6 work. Next room/P2P PR must use `AGENTS.md`, `.coderabbit.yaml`, the PR template, `pnpm dev:check -- --profile rooms`, the env/secrets matrix, and the staging acceptance checklist before promotion.
 - [x] 2026-06-27: First production hardening slice on `codex/p2p-production-hardening`: split client/server P2P protocol envelopes, made server-relayed P2P generation fields required, added `roomGeneration/sourceGeneration/serverSeq` to `ROOM_SNAPSHOT`, scoped Worker P2P replay by current generation, and made the extension/Ghost Cam drop stale P2P media signals. Verification: `pnpm --filter @anidachi/protocol check`, `pnpm --filter @anidachi/protocol test`, `pnpm --filter @anidachi/api check`, `pnpm --filter @anidachi/api test`, `pnpm --filter @anidachi/extension check`, `pnpm --filter @anidachi/extension test`, `pnpm harness:rooms` (29/29), `npm --prefix tests/e2e run harness:p2p` (8/8).
+- [~] 2026-07-12: Replaced the proposed quota shadow/lease/ledger system on
+  `codex/room-p2p-release-hardening` with one durable per-room meter and one
+  atomic Supabase finalization. Free usage accrues only with live host + guest
+  sockets, survives hibernation, anchors the extension countdown through
+  `ROOM_SNAPSHOT`, and is returned idempotently on room end. The SQL function
+  was exercised against the linked Supabase schema inside a fully rolled-back
+  transaction (first charge, duplicate no-op, room end; no test residue).
+  Verified locally with root check/test, Workers runtime 11/11 (including
+  concurrent end and legacy tombstone recovery), room harness twice at 39/39,
+  real-WebRTC 17/17, and staging extension build validation.
+  Remaining: apply the migration, deploy matching Web/Worker code to staging,
+  and run the real Free-room lifecycle acceptance before promotion.

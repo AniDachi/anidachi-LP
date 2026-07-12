@@ -1,55 +1,59 @@
 import { internalServiceAuthorization } from "@/lib/internal-service-auth";
 import {
   EMPTY_ROOM_TIMEOUT_MS,
+  RoomUsageSummarySchema,
   createEmptyRoomEndEventId,
   type RoomEndReason,
+  type RoomUsageSummary,
 } from "@anidachi/protocol";
 
 export interface EndRoomCommand { endedAt: number; reason: RoomEndReason }
-export interface InternalRoomEndCommand extends EndRoomCommand { eventId?: string }
+export interface InternalRoomEndCommand extends EndRoomCommand {
+  eventId?: string;
+  usage?: RoomUsageSummary;
+}
+
+export interface RoomEndSyncResult {
+  usage?: RoomUsageSummary;
+  webFinalized?: boolean;
+}
 
 export class RoomLifecycleSyncError extends Error {
   readonly status = 502;
-  constructor(message = "Room ended in the database but Worker synchronization failed") {
+  constructor(message = "Room Worker synchronization failed; the room was not finalized") {
     super(message);
     this.name = "RoomLifecycleSyncError";
   }
 }
 
 interface EndDependencies {
-  settle: () => Promise<void>;
-  transition: () => Promise<void>;
-  syncWorker: () => Promise<void>;
+  finalize: (usage?: RoomUsageSummary) => Promise<void>;
+  syncWorker: () => Promise<RoomEndSyncResult>;
 }
 
 export async function completeHostRoomEnd(params: {
   alreadyEnded: boolean;
   dependencies: EndDependencies;
-}): Promise<void> {
-  if (!params.alreadyEnded) {
-    await params.dependencies.settle();
-    await params.dependencies.transition();
-  }
+}): Promise<RoomEndSyncResult> {
+  let synced: RoomEndSyncResult;
   try {
-    await params.dependencies.syncWorker();
+    synced = await params.dependencies.syncWorker();
   } catch {
     throw new RoomLifecycleSyncError();
   }
+  if (!params.alreadyEnded && synced.webFinalized !== true) {
+    await params.dependencies.finalize(synced.usage);
+  }
+  return synced;
 }
 
-/**
- * Makes sequential Worker retries idempotent against the room's ended status.
- * Task 7 replaces the settlement/transition pair with one atomic database RPC
- * so concurrent callbacks are covered without changing this public contract.
- */
 export async function completeInternalRoomEnd(params: {
   alreadyEnded: boolean;
   command: InternalRoomEndCommand;
-  dependencies: Pick<EndDependencies, "settle" | "transition">;
+  dependencies: Pick<EndDependencies, "finalize">;
 }): Promise<{ alreadyEnded: boolean; eventId?: string }> {
   if (!params.alreadyEnded) {
-    await params.dependencies.settle();
-    await params.dependencies.transition();
+    await params.dependencies.finalize(params.command.usage);
   }
   return {
     alreadyEnded: params.alreadyEnded,
@@ -64,6 +68,12 @@ export async function parseInternalRoomEndCommand(
   if (!isRecord(value)) return null;
   if (!isTimestamp(value.endedAt)) return null;
   if (!isRoomEndReason(value.reason)) return null;
+  const usage =
+    value.usage === undefined
+      ? undefined
+      : RoomUsageSummarySchema.safeParse(value.usage);
+  if (usage !== undefined && !usage.success) return null;
+  const usageField = usage?.success ? { usage: usage.data } : {};
 
   if (value.reason === "empty_timeout") {
     const emptySince = value.endedAt - EMPTY_ROOM_TIMEOUT_MS;
@@ -74,11 +84,12 @@ export async function parseInternalRoomEndCommand(
       endedAt: value.endedAt,
       eventId: expectedEventId,
       reason: "empty_timeout",
+      ...usageField,
     };
   }
 
   if (value.eventId !== undefined) return null;
-  return { endedAt: value.endedAt, reason: value.reason };
+  return { endedAt: value.endedAt, reason: value.reason, ...usageField };
 }
 
 export async function syncRoomEndToWorker(
@@ -89,7 +100,7 @@ export async function syncRoomEndToWorker(
     secret?: string;
     fetch?: typeof fetch;
   } = {},
-): Promise<void> {
+): Promise<RoomEndSyncResult> {
   const baseUrl = options.baseUrl ?? process.env.ANIDACHI_API_INTERNAL_BASE_URL;
   const secret = options.secret ?? process.env.ANIDACHI_INTERNAL_API_SECRET;
   if (!baseUrl || !secret) throw new Error("Room lifecycle Worker synchronization is not configured");
@@ -105,6 +116,22 @@ export async function syncRoomEndToWorker(
     },
   );
   if (!response.ok) throw new Error(`Worker room end failed (${response.status})`);
+  const body = await response.json().catch(() => null);
+  if (!isRecord(body) || body.ok !== true) {
+    throw new Error("Worker room end returned an invalid response");
+  }
+  const webFinalized = body.webFinalized === true;
+  if (body.usage === undefined) {
+    return webFinalized ? { webFinalized: true } : {};
+  }
+  const usage = RoomUsageSummarySchema.safeParse(body.usage);
+  if (!usage.success) {
+    throw new Error("Worker room end returned invalid usage");
+  }
+  return {
+    usage: usage.data,
+    ...(webFinalized ? { webFinalized: true } : {}),
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

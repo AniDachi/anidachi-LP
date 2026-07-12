@@ -325,6 +325,13 @@ The extension currently supports:
   auto-response keepalive, JSON `PING` compatibility for old clients, and a
   Workers-runtime forced wake test for existing sockets, host state/source
   snapshots, camera state, raw keepalive, and P2P replay;
+- on the current room/P2P hardening branch, Free-room usage is now accumulated
+  in one SQLite-backed Durable Object record only while a live host and guest
+  are joined. `ROOM_SNAPSHOT` carries the cumulative value for reconnect-safe
+  countdown display. Worker waits for the existing internal Web callback to
+  acknowledge one service-role-only RPC that atomically applies usage and ends
+  the room before it persists the terminal tombstone. The migration and
+  matching Web/Worker code are not deployed to staging yet;
 - debug export from the extension panel. Current diagnostic bundles include a
   unified top-level timeline that merges background diagnostics with page debug
   entries, while still keeping the split `diagnosticEntries` and
@@ -353,14 +360,18 @@ These are intentionally not treated as solved:
   participant outside the local network/ISP path, with candidate type, TTFM,
   reconnect, audio, and push-to-talk results recorded. Same-network local tests
   are smoke tests only.
-- Hibernation forced-wake behavior now has explicit Workers-runtime coverage,
-  but staging idle-session acceptance, room-end alarms, and precise quota
-  metering are still pending.
+- Hibernation forced-wake behavior and empty-room end alarms have explicit
+  Workers-runtime coverage, but staging idle-session/alarm acceptance is still
+  pending.
+- The simplified Free quota meter is locally covered across presence changes,
+  hibernation, repeated end, and atomic rollback-tested Supabase finalization.
+  Staging migration/deploy acceptance is pending. A global lease preventing an
+  adversarial Free host from running several rooms concurrently is deliberately
+  deferred until product evidence justifies that extra coordination.
 - Source switching is not complete: live `SOURCE_CHANGED` and
   `sourceGeneration` bumps are implemented, but durable Supabase source
   persistence, room-create source descriptor plumbing, and explicit
   source-switch UI/commands are still pending.
-- Durable Object room-end alarms are still pending.
 - Watch progress persistence now has a backend-backed watch-library foundation
   on the Phase 6 branch, but staging acceptance across real browser profiles is
   still required before treating it as finished product behavior.

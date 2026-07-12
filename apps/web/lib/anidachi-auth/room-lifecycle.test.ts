@@ -10,49 +10,87 @@ import { completeHostRoomEnd, syncRoomEndToWorker } from "./room-lifecycle";
 const lifecycleApi = roomLifecycle as typeof roomLifecycle & {
   completeInternalRoomEnd?: (params: {
     alreadyEnded: boolean;
-    command: { endedAt: number; eventId?: string; reason: string };
-    dependencies: { settle: () => Promise<void>; transition: () => Promise<void> };
+    command: {
+      endedAt: number;
+      eventId?: string;
+      reason: string;
+      usage?: { day: string; seconds: number };
+    };
+    dependencies: {
+      finalize: (usage?: { day: string; seconds: number }) => Promise<void>;
+    };
   }) => Promise<{ alreadyEnded: boolean; eventId?: string }>;
   parseInternalRoomEndCommand?: (
     roomId: string,
     value: unknown,
-  ) => Promise<{ endedAt: number; eventId?: string; reason: string } | null>;
+  ) => Promise<{
+    endedAt: number;
+    eventId?: string;
+    reason: string;
+    usage?: { day: string; seconds: number };
+  } | null>;
 };
 
-test("settles and transitions once but syncs Worker on every end request", async () => {
+test("trusts a new Worker's confirmed Web finalization without writing twice", async () => {
   const calls: string[] = [];
   const dependencies = {
-    settle: async () => { calls.push("settle"); },
-    transition: async () => { calls.push("transition"); },
-    syncWorker: async () => { calls.push("sync"); },
+    finalize: async (usage?: { day: string; seconds: number }) => {
+      calls.push(`finalize:${usage?.seconds ?? "legacy"}`);
+    },
+    syncWorker: async () => {
+      calls.push("sync");
+      return {
+        usage: { day: "2026-07-12", seconds: 125 },
+        webFinalized: true,
+      };
+    },
   };
 
   await completeHostRoomEnd({ alreadyEnded: false, dependencies });
   await completeHostRoomEnd({ alreadyEnded: true, dependencies });
-  assert.deepEqual(calls, ["settle", "transition", "sync", "sync"]);
+  assert.deepEqual(calls, ["sync", "sync"]);
 });
 
-test("returns a retryable Worker sync error after legacy settlement", async () => {
+test("uses one fallback write when an older Worker has no callback acknowledgement", async () => {
+  const calls: string[] = [];
+  await completeHostRoomEnd({
+    alreadyEnded: false,
+    dependencies: {
+      finalize: async (usage) => {
+        calls.push(`finalize:${usage?.seconds ?? "legacy"}`);
+      },
+      syncWorker: async () => {
+        calls.push("sync");
+        return {};
+      },
+    },
+  });
+  assert.deepEqual(calls, ["sync", "finalize:legacy"]);
+});
+
+test("does not finalize when Worker synchronization fails", async () => {
   const calls: string[] = [];
   await assert.rejects(
     completeHostRoomEnd({
       alreadyEnded: false,
       dependencies: {
-        settle: async () => { calls.push("settle"); },
-        transition: async () => { calls.push("transition"); },
-        syncWorker: async () => { calls.push("sync"); throw new Error("offline"); },
+        finalize: async () => { calls.push("finalize"); },
+        syncWorker: async () => {
+          calls.push("sync");
+          throw new Error("offline");
+        },
       },
     }),
     (error: unknown) =>
       error instanceof Error && error.name === "RoomLifecycleSyncError" &&
       (error as Error & { status?: number }).status === 502,
   );
-  assert.deepEqual(calls, ["settle", "transition", "sync"]);
+  assert.deepEqual(calls, ["sync"]);
 });
 
 test("sends the internal secret and end command to the configured Worker", async () => {
   const calls: Array<{ input: string; init?: RequestInit }> = [];
-  await syncRoomEndToWorker(
+  const result = await syncRoomEndToWorker(
     "room 1",
     { endedAt: 1_000, reason: "host_ended" },
     {
@@ -60,13 +98,24 @@ test("sends the internal secret and end command to the configured Worker", async
       secret: "internal-secret",
       fetch: async (input, init) => {
         calls.push({ input: String(input), init });
-        return Response.json({ ok: true });
+        return Response.json({
+          ok: true,
+          webFinalized: true,
+          usage: { day: "2026-07-12", seconds: 125 },
+        });
       },
     },
   );
   assert.equal(calls[0]?.input, "https://api.example.com/internal/rooms/room%201/end");
   assert.equal(new Headers(calls[0]?.init?.headers).get("Authorization"), "Bearer internal-secret");
-  assert.equal(calls[0]?.init?.body, JSON.stringify({ endedAt: 1_000, reason: "host_ended" }));
+  assert.equal(
+    calls[0]?.init?.body,
+    JSON.stringify({ endedAt: 1_000, reason: "host_ended" }),
+  );
+  assert.deepEqual(result, {
+    webFinalized: true,
+    usage: { day: "2026-07-12", seconds: 125 },
+  });
 });
 
 test("validates a privacy-safe deterministic event identity for empty-timeout callbacks", async () => {
@@ -84,8 +133,14 @@ test("validates a privacy-safe deterministic event identity for empty-timeout ca
       endedAt,
       eventId,
       reason: "empty_timeout",
+      usage: { day: "2026-07-12", seconds: 125 },
     }),
-    { endedAt, eventId, reason: "empty_timeout" },
+    {
+      endedAt,
+      eventId,
+      reason: "empty_timeout",
+      usage: { day: "2026-07-12", seconds: 125 },
+    },
   );
   assert.equal(
     await lifecycleApi.parseInternalRoomEndCommand(roomId, {
@@ -99,6 +154,15 @@ test("validates a privacy-safe deterministic event identity for empty-timeout ca
       endedAt,
       eventId: `${eventId}:tampered`,
       reason: "empty_timeout",
+    }),
+    null,
+  );
+  assert.equal(
+    await lifecycleApi.parseInternalRoomEndCommand(roomId, {
+      endedAt,
+      eventId,
+      reason: "empty_timeout",
+      usage: { day: "2026-07-12", seconds: -1 },
     }),
     null,
   );
@@ -120,11 +184,13 @@ test("settles an internal callback once and echoes the same event identity on du
     endedAt: 1_000 + EMPTY_ROOM_TIMEOUT_MS,
     eventId,
     reason: "empty_timeout",
+    usage: { day: "2026-07-12", seconds: 125 },
   };
   const calls: string[] = [];
   const dependencies = {
-    settle: async () => { calls.push("settle"); },
-    transition: async () => { calls.push("transition"); },
+    finalize: async (usage?: { day: string; seconds: number }) => {
+      calls.push(`finalize:${usage?.seconds ?? "legacy"}`);
+    },
   };
 
   assert.deepEqual(
@@ -143,5 +209,5 @@ test("settles an internal callback once and echoes the same event identity on du
     }),
     { alreadyEnded: true, eventId },
   );
-  assert.deepEqual(calls, ["settle", "transition"]);
+  assert.deepEqual(calls, ["finalize:125"]);
 });

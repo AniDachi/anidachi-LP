@@ -4,6 +4,7 @@ import {
   MAX_ROOM_ID_CHARS,
   type ClientEvent,
   type Participant,
+  type RoomUsageSummary,
   type ServerEvent,
 } from "@anidachi/protocol";
 import { Hono } from "hono";
@@ -24,6 +25,12 @@ import {
   type BufferedP2PSignalEvent,
 } from "./p2p-signal-buffer";
 import {
+  createRoomMeterState,
+  reconcileRoomMeter,
+  roomUsageSummary,
+  type RoomMeterState,
+} from "./room-metering";
+import {
   initializeRoomStorage,
   activateStoredRoomLifecycle,
   claimStoredRoomEndAttempt,
@@ -34,10 +41,12 @@ import {
   readNextP2PServerSeq,
   readStoredP2PReplayMetadata,
   readStoredRoomLifecycle,
+  readStoredRoomMeter,
   readStoredRoomState,
   createStoredP2PReplayMetadata,
   writeNextP2PServerSeq,
   writeStoredP2PReplayMetadata,
+  writeStoredRoomMeter,
   writeStoredRoomState,
 } from "./room-persistence";
 import { createPrivacySafeHmacId } from "./privacy-id";
@@ -361,6 +370,9 @@ export class RoomDurableObject {
   private readonly rateLimiterBySocket = new Map<WebSocket, RoomRateLimiter>();
   private nextP2PServerSeq = 1;
   private endedTombstone: ReturnType<typeof endedRoomTombstone> | null;
+  private roomMeter: RoomMeterState;
+  private roomEndQueue: Promise<void> = Promise.resolve();
+  private roomEndInProgress = false;
 
   constructor(
     private readonly state: DurableObjectState,
@@ -370,6 +382,7 @@ export class RoomDurableObject {
 
     const roomId = state.id.name ?? "room";
     this.endedTombstone = readEndedRoomTombstone(state.storage);
+    this.roomMeter = readStoredRoomMeter(state.storage) ?? createRoomMeterState();
     this.room = new RoomState(roomId, undefined, readStoredRoomState(state.storage) ?? undefined);
     const replayMetadata = this.endedTombstone ? [] : readStoredP2PReplayMetadata(state.storage);
     const latestStoredSeq = replayMetadata.at(-1)?.serverSeq ?? 0;
@@ -390,6 +403,7 @@ export class RoomDurableObject {
         new WebSocketRequestResponsePair(HIBERNATION_KEEPALIVE_PING, HIBERNATION_KEEPALIVE_PONG),
       );
       this.restoreWebSocketsFromAttachments();
+      this.reconcileRoomUsage(Date.now());
     } else {
       state.setWebSocketAutoResponse();
       state.waitUntil(clearStoredRoomLifecycleAndAlarm(state.storage));
@@ -478,6 +492,68 @@ export class RoomDurableObject {
     writeNextP2PServerSeq(this.state.storage, this.nextP2PServerSeq);
   }
 
+  private isFreeRoom(): boolean {
+    return this.room.roomCapabilities.hostPlanCode === "free";
+  }
+
+  private shouldMeterRoom(): boolean {
+    if (!this.isFreeRoom()) return false;
+    let hostJoined = false;
+    let guestJoined = false;
+    for (const socket of this.participantsBySocket.keys()) {
+      const verified = this.verifiedBySocket.get(socket);
+      if (verified?.role === "host") hostJoined = true;
+      if (verified?.role === "member") guestJoined = true;
+      if (hostJoined && guestJoined) return true;
+    }
+    return false;
+  }
+
+  private updateRoomMeter(next: RoomMeterState, now: number): void {
+    if (next === this.roomMeter) return;
+    writeStoredRoomMeter(this.state.storage, next, now);
+    this.roomMeter = next;
+  }
+
+  private reconcileRoomUsage(now: number): void {
+    this.updateRoomMeter(
+      reconcileRoomMeter(this.roomMeter, this.shouldMeterRoom(), now),
+      now,
+    );
+  }
+
+  private stopRoomUsage(now: number): RoomUsageSummary | undefined {
+    if (!this.isFreeRoom()) return undefined;
+    this.updateRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), now);
+    return roomUsageSummary(this.roomMeter, now);
+  }
+
+  private currentRoomSnapshot(
+    now = Date.now(),
+  ): Extract<ServerEvent, { type: "ROOM_SNAPSHOT" }> {
+    const snapshot = this.room.snapshot;
+    if (snapshot.type !== "ROOM_SNAPSHOT") {
+      throw new Error("Room state returned a non-snapshot event");
+    }
+    return this.isFreeRoom()
+      ? { ...snapshot, roomUsage: roomUsageSummary(this.roomMeter, now) }
+      : snapshot;
+  }
+
+  private async runRoomEndExclusively<T>(operation: () => Promise<T>): Promise<T> {
+    const previous = this.roomEndQueue;
+    let release: () => void = () => {};
+    this.roomEndQueue = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+    try {
+      return await operation();
+    } finally {
+      release();
+    }
+  }
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === "POST" && url.pathname === "/internal/end") {
@@ -497,7 +573,13 @@ export class RoomDurableObject {
         this.state.getWebSockets(),
         roomEndedEvent(this.room.roomId, this.endedTombstone),
       );
-      return Response.json({ error: "ROOM_ENDED", endedAt: this.endedTombstone.endedAt }, { status: 410 });
+      return Response.json(
+        { error: "ROOM_ENDED", endedAt: this.endedTombstone.endedAt },
+        { status: 410 },
+      );
+    }
+    if (this.roomEndInProgress) {
+      return Response.json({ error: "ROOM_ENDING" }, { status: 409 });
     }
     const upgradeHeader = request.headers.get("Upgrade");
     if (upgradeHeader !== "websocket") {
@@ -539,6 +621,9 @@ export class RoomDurableObject {
         { status: 410 },
       );
     }
+    if (this.roomEndInProgress) {
+      return Response.json({ error: "ROOM_ENDING" }, { status: 409 });
+    }
 
     const pair = new WebSocketPair();
     const client = pair[0];
@@ -554,11 +639,57 @@ export class RoomDurableObject {
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  private async endRoom(command: EndRoomCommand): Promise<Response> {
-    const alreadyEnded = this.endedTombstone !== null;
-    const tombstone = this.endedTombstone ?? endedRoomTombstone(command);
-    await this.applyTerminalRoomState(tombstone);
-    return Response.json({ ok: true, alreadyEnded, ...tombstone });
+  private endRoom(command: EndRoomCommand): Promise<Response> {
+    return this.runRoomEndExclusively(() => this.endRoomExclusive(command));
+  }
+
+  private async endRoomExclusive(command: EndRoomCommand): Promise<Response> {
+    if (this.endedTombstone) {
+      await this.applyTerminalRoomState(this.endedTombstone);
+      return Response.json({
+        ok: true,
+        alreadyEnded: true,
+        webFinalized: this.endedTombstone.usageFinalized === true,
+        ...this.endedTombstone,
+      });
+    }
+
+    const meteredAt = Date.now();
+    const usage = this.stopRoomUsage(meteredAt);
+    this.roomEndInProgress = true;
+    try {
+      await notifyWebRoomEnded(this.env, this.room.roomId, {
+        ...command,
+        ...(usage ? { usage } : {}),
+      });
+    } catch {
+      this.reconcileRoomUsage(Date.now());
+      this.roomEndInProgress = false;
+      return Response.json(
+        {
+          error: "ROOM_END_CALLBACK_FAILED",
+          message: "Room finalization callback failed",
+          retryable: true,
+        },
+        { status: 502 },
+      );
+    }
+
+    const tombstone = endedRoomTombstone(command, {
+      ...(usage ? { usage } : {}),
+      usageFinalized: true,
+    });
+    try {
+      await this.applyTerminalRoomState(tombstone);
+      return Response.json({
+        ok: true,
+        alreadyEnded: false,
+        webFinalized: true,
+        ...tombstone,
+      });
+    } finally {
+      this.roomEndInProgress = false;
+    }
   }
 
   private async applyTerminalRoomState(
@@ -596,6 +727,7 @@ export class RoomDurableObject {
       );
       return;
     }
+    if (this.roomEndInProgress) return;
     await this.handleMessage(socket, raw);
   }
 
@@ -621,47 +753,67 @@ export class RoomDurableObject {
   }
 
   async alarm(): Promise<void> {
-    if (this.endedTombstone) {
-      await clearStoredRoomLifecycleAndAlarm(this.state.storage);
-      return;
-    }
-    if (this.participantsBySocket.size > 0) {
-      const activation = await activateStoredRoomLifecycle(
+    await this.runRoomEndExclusively(() => this.runAlarmExclusive());
+  }
+
+  private async runAlarmExclusive(): Promise<void> {
+    this.roomEndInProgress = true;
+    try {
+      if (this.endedTombstone) {
+        await clearStoredRoomLifecycleAndAlarm(this.state.storage);
+        return;
+      }
+      if (this.participantsBySocket.size > 0) {
+        const activation = await activateStoredRoomLifecycle(
+          this.state.storage,
+          Date.now(),
+        );
+        if (activation.accepted) return;
+      }
+      const attempt = await claimStoredRoomEndAttempt(
         this.state.storage,
+        this.room.roomId,
         Date.now(),
       );
-      if (activation.accepted) return;
+      if (!attempt) return;
+
+      this.track(
+        attempt.attempts > 1
+          ? "room_end_callback_retry"
+          : "room_end_callback_attempt",
+        { value: attempt.attempts },
+      );
+      const usage = this.stopRoomUsage(attempt.endedAt);
+
+      try {
+        await notifyWebRoomEnded(this.env, this.room.roomId, {
+          endedAt: attempt.endedAt,
+          eventId: attempt.eventId,
+          reason: "empty_timeout",
+          ...(usage ? { usage } : {}),
+        });
+      } catch {
+        this.track("room_end_callback_failure", { value: attempt.attempts });
+        // The claim already persisted the next retry alarm and callback identity.
+        return;
+      }
+
+      this.track("room_end_callback_success", { value: attempt.attempts });
+      await this.applyTerminalRoomState(
+        endedRoomTombstone(
+          {
+            endedAt: attempt.endedAt,
+            reason: "empty_timeout",
+          },
+          {
+            ...(usage ? { usage } : {}),
+            usageFinalized: true,
+          },
+        ),
+      );
+    } finally {
+      this.roomEndInProgress = false;
     }
-    const attempt = await claimStoredRoomEndAttempt(
-      this.state.storage,
-      this.room.roomId,
-      Date.now(),
-    );
-    if (!attempt) return;
-
-    this.track(attempt.attempts > 1 ? "room_end_callback_retry" : "room_end_callback_attempt", {
-      value: attempt.attempts,
-    });
-
-    try {
-      await notifyWebRoomEnded(this.env, this.room.roomId, {
-        endedAt: attempt.endedAt,
-        eventId: attempt.eventId,
-        reason: "empty_timeout",
-      });
-    } catch {
-      this.track("room_end_callback_failure", { value: attempt.attempts });
-      // The transaction that claimed this attempt already persisted the next
-      // retry alarm and the unchanged callback identity.
-      return;
-    }
-
-    this.track("room_end_callback_success", { value: attempt.attempts });
-
-    await this.applyTerminalRoomState(endedRoomTombstone({
-      endedAt: attempt.endedAt,
-      reason: "empty_timeout",
-    }));
   }
 
   private async handleMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
@@ -823,6 +975,15 @@ export class RoomDurableObject {
       socket.close(1011, "Room lifecycle state is unavailable");
       return;
     }
+    if (this.endedTombstone) {
+      this.send(socket, roomEndedEvent(this.room.roomId, this.endedTombstone));
+      socket.close(4004, "Room ended");
+      return;
+    }
+    if (this.roomEndInProgress) {
+      socket.close(1013, "Room end in progress");
+      return;
+    }
 
     const existingSocket = this.socketsByParticipant.get(serverParticipant.id);
     if (existingSocket && existingSocket !== socket) {
@@ -868,6 +1029,7 @@ export class RoomDurableObject {
       this.writeSocketAttachment(socket, updateRoomSocketAttachment(attachment, patch));
     }
     this.persistRoomState();
+    this.reconcileRoomUsage(Date.now());
     const lastSeenP2PServerSeq = event.lastSeenP2PServerSeq ?? 0;
     const replayAt = Date.now();
     const p2pResyncRequired = this.p2pSignalBuffer.requiresResyncAfter(
@@ -875,7 +1037,7 @@ export class RoomDurableObject {
       replayAt,
     );
     this.send(socket, {
-      ...this.room.snapshot,
+      ...this.currentRoomSnapshot(replayAt),
       ...(p2pResyncRequired ? { p2pResyncRequired: true } : {}),
     });
     this.replayP2PSignals(socket, joined.id, lastSeenP2PServerSeq, replayAt);
@@ -933,7 +1095,7 @@ export class RoomDurableObject {
     } else if (result.sourceChanged) {
       // If an old client sends a source-changing host state without a
       // descriptor, still publish the generation bump so clients can fence P2P.
-      this.broadcast(this.room.snapshot);
+      this.broadcast(this.currentRoomSnapshot());
     }
 
     this.broadcast({ type: "HOST_STATE", state: event.state }, socket);
@@ -1002,7 +1164,7 @@ export class RoomDurableObject {
       );
     }
     this.persistRoomState();
-    this.broadcast(this.room.snapshot);
+    this.broadcast(this.currentRoomSnapshot());
   }
 
   private handleMediaSeat(
@@ -1041,7 +1203,7 @@ export class RoomDurableObject {
       const participant = this.room.requestMediaSeat(userId);
       this.writeParticipantAttachment(socket, participant);
       this.persistRoomState();
-      this.broadcast(this.room.snapshot);
+      this.broadcast(this.currentRoomSnapshot());
       return;
     }
 
@@ -1057,7 +1219,7 @@ export class RoomDurableObject {
       const participant = this.room.cancelMediaSeatRequest(userId);
       this.writeParticipantAttachment(socket, participant);
       this.persistRoomState();
-      this.broadcast(this.room.snapshot);
+      this.broadcast(this.currentRoomSnapshot());
       return;
     }
 
@@ -1073,7 +1235,7 @@ export class RoomDurableObject {
       const participant = this.room.leaveMediaSeat(userId);
       this.writeParticipantAttachment(socket, participant);
       this.persistRoomState();
-      this.broadcast(this.room.snapshot);
+      this.broadcast(this.currentRoomSnapshot());
       return;
     }
 
@@ -1092,7 +1254,7 @@ export class RoomDurableObject {
       this.writeParticipantAttachment(targetSocket, result.participant);
     }
     this.persistRoomState();
-    this.broadcast(this.room.snapshot);
+    this.broadcast(this.currentRoomSnapshot());
   }
 
   private handleP2PSignal(
@@ -1243,11 +1405,12 @@ export class RoomDurableObject {
     }
     const participant = this.room.leave(participantId);
     this.persistRoomState();
+    this.reconcileRoomUsage(Date.now());
     this.track("ws_close", { value: this.room.participants.length });
 
     if (participant) {
       this.broadcast({ type: "PARTICIPANT_LEFT", participant });
-      this.broadcast(this.room.snapshot);
+      this.broadcast(this.currentRoomSnapshot());
     }
     if (this.participantsBySocket.size === 0 && !this.endedTombstone) {
       await markStoredRoomEmpty(this.state.storage, Date.now());

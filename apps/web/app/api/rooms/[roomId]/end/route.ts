@@ -1,8 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/anidachi-auth/session";
-import { getRoomById, updateRoom } from "@/lib/anidachi-auth/db";
+import { finalizeRoomUsage, getRoomById } from "@/lib/anidachi-auth/db";
 import { getExtensionSessionFromAuthorization } from "@/lib/anidachi-auth/extension-session";
-import { settleHostSegment } from "@/lib/anidachi-auth/room-usage";
 import {
   completeHostRoomEnd,
   RoomLifecycleSyncError,
@@ -53,17 +52,14 @@ export async function POST(
   const now = new Date();
   const alreadyEnded = room.status === "ended";
   const endedAt = alreadyEnded && room.ended_at ? room.ended_at : now.toISOString();
+  let finalization = { alreadyEnded, finalizedAt: endedAt };
   try {
     await completeHostRoomEnd({
       alreadyEnded,
       dependencies: {
-        settle: () => settleHostSegment(room, session.plan, now),
-        transition: () => updateRoom(roomId, {
-          status: "ended",
-          ended_at: endedAt,
-          host_connected_at: null,
-          last_active_at: endedAt,
-        }),
+        finalize: async (usage) => {
+          finalization = await finalizeRoomUsage(roomId, endedAt, usage);
+        },
         syncWorker: () => syncRoomEndToWorker(roomId, {
           endedAt: Date.parse(endedAt),
           reason: "host_ended",
@@ -82,7 +78,7 @@ export async function POST(
 
   return NextResponse.json({
     ok: true,
-    alreadyEnded,
-    endedAt,
+    alreadyEnded: finalization.alreadyEnded,
+    endedAt: finalization.finalizedAt,
   });
 }

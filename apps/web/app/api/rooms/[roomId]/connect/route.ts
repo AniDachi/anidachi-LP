@@ -13,7 +13,6 @@ import {
   getHostQuotaView,
   quotaExhaustedResponseBody,
   quotaSummaryForResponse,
-  settleHostSegment,
 } from "@/lib/anidachi-auth/room-usage";
 import {
   ROOM_TOKEN_TTL_SECONDS,
@@ -31,7 +30,7 @@ export const dynamic = "force-dynamic";
  * Lifecycle side effects (Block 2 of the 2026-06-12 execution plan):
  *   - every connect bumps `last_active_at`;
  *   - the first host connect promotes `lobby -> live`;
- *   - host connects settle the previous metering segment and start a new one;
+ *   - Worker snapshots own open-room metering across reconnects;
  *   - free-plan hosts with no remaining daily quota get QUOTA_EXHAUSTED.
  */
 export async function POST(
@@ -80,11 +79,6 @@ export async function POST(
 
   if (isHost) {
     if (isMeteredPlan(userPlan)) {
-      // Close the previous segment before recomputing the quota so a
-      // reconnect never double-counts the same span.
-      await settleHostSegment(room, userPlan, now);
-      await updateRoom(roomId, { host_connected_at: null });
-
       const quota = await getHostQuotaView(session.userId, userPlan, now);
       if (!canStartHostSession(quota)) {
         return NextResponse.json(quotaExhaustedResponseBody(quota), {

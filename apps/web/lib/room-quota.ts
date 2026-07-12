@@ -2,15 +2,8 @@
  * Pure quota math for the free-plan daily host minutes (PD2 in
  * docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md).
  *
- * Semantics (Zoom-style):
- *   - only the host's own room burns quota, guests always join free;
- *   - a host "segment" starts when the host connects to their room, but
- *     metered time starts only once the first guest has joined the room;
- *   - one segment can never charge more than HOST_SEGMENT_CAP_SECONDS because
- *     room tokens expire after that long (v1 approximation — precise
- *     DO-reported metering replaces this in Block 6.6);
- *   - quota resets at UTC midnight; a segment is charged to the UTC day it
- *     started on.
+ * The room Durable Object owns open-room time. This module only computes the
+ * daily view from usage already finalized atomically in Supabase.
  *
  * This module is dependency-free so it can be unit tested without Supabase.
  */
@@ -18,7 +11,6 @@
 import { getPlanEntitlements } from "./anidachi-auth/plan-entitlements";
 
 export const ROOM_TOKEN_TTL_SECONDS = 30 * 60;
-export const HOST_SEGMENT_CAP_SECONDS = ROOM_TOKEN_TTL_SECONDS;
 export const MIN_SESSION_START_SECONDS = 60;
 
 /** Unknown plans get the most restrictive quota, mirroring the old `?? 1` default. */
@@ -43,58 +35,6 @@ export function nextUtcMidnight(at: Date): Date {
   );
 }
 
-export interface HostSegment {
-  startedAt: Date;
-  /** v1 metering proxy: the room has at least one joined guest member. */
-  guestHasJoined: boolean;
-}
-
-/**
- * v1 Free-plan metering starts at the later of host connect and first guest join.
- * This keeps solo setup/testing free and avoids retroactively charging the host
- * for time spent waiting alone before a guest accepted the invite.
- */
-export function meteredSegmentStartedAt(
-  hostConnectedAt: Date,
-  firstGuestJoinedAt: Date | null
-): Date | null {
-  if (
-    !firstGuestJoinedAt ||
-    !Number.isFinite(hostConnectedAt.getTime()) ||
-    !Number.isFinite(firstGuestJoinedAt.getTime())
-  ) {
-    return null;
-  }
-
-  return new Date(Math.max(hostConnectedAt.getTime(), firstGuestJoinedAt.getTime()));
-}
-
-/** Seconds an open host segment counts toward quota right now. */
-export function openSegmentSeconds(segment: HostSegment, now: Date): number {
-  if (!segment.guestHasJoined) return 0;
-  const elapsed = Math.floor(
-    (now.getTime() - segment.startedAt.getTime()) / 1000
-  );
-  if (elapsed <= 0) return 0;
-  return Math.min(elapsed, HOST_SEGMENT_CAP_SECONDS);
-}
-
-/** Seconds to persist when a segment closes (reconnect, end room, stale settle). */
-export function settledSegmentSeconds(segment: HostSegment, now: Date): number {
-  return openSegmentSeconds(segment, now);
-}
-
-/** A segment older than the cap can be settled and closed — it cannot grow further. */
-export function isSegmentStale(
-  segment: Pick<HostSegment, "startedAt">,
-  now: Date
-): boolean {
-  return (
-    now.getTime() - segment.startedAt.getTime() >=
-    HOST_SEGMENT_CAP_SECONDS * 1000
-  );
-}
-
 export interface QuotaView {
   limitSeconds: number;
   usedSeconds: number;
@@ -106,15 +46,10 @@ export interface QuotaView {
 export function computeQuotaView(params: {
   plan: string;
   persistedSecondsToday: number;
-  openSegments: HostSegment[];
   now: Date;
 }): QuotaView {
   const limitSeconds = planDailyHostSeconds(params.plan);
-  const openSeconds = params.openSegments.reduce(
-    (sum, segment) => sum + openSegmentSeconds(segment, params.now),
-    0
-  );
-  const usedSeconds = Math.max(0, params.persistedSecondsToday) + openSeconds;
+  const usedSeconds = Math.max(0, params.persistedSecondsToday);
   const remainingSeconds = Number.isFinite(limitSeconds)
     ? Math.max(0, limitSeconds - usedSeconds)
     : Number.POSITIVE_INFINITY;
