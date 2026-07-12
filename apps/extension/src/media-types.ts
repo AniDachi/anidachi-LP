@@ -13,6 +13,7 @@ export type RoomSendDisposition = "sent" | "queued" | "dropped";
 export interface SignalingTransportReady {
   senderConnectionId: string;
   reconnect: boolean;
+  forceMediaResync?: boolean;
 }
 
 export interface IncomingP2PSignal {

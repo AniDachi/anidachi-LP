@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MAX_ROOM_FRAME_BYTES, MAX_ROOM_ID_CHARS } from "@anidachi/protocol";
 import { signRoomTokenForTest } from "../src/auth";
 import app, {
@@ -9,8 +9,11 @@ import app, {
   isRoomEventInScope,
   handleRoomWebSocketMessageBoundary,
   persistRoomEndAfterDisablingAutoResponse,
+  RoomDurableObject,
   sendAndCloseEndedRoomSockets,
 } from "../src/index";
+import { RecentP2PSignalBuffer } from "../src/p2p-signal-buffer";
+import * as privacyId from "../src/privacy-id";
 import { RoomRateLimiter } from "../src/room-rate-limit";
 
 const authEnv = { ANIDACHI_JWT_SECRET: "test-secret-at-least-32-characters-long" };
@@ -35,6 +38,102 @@ function trackingRooms() {
 }
 
 describe("worker routes", () => {
+  it("serves room-scoped ICE credentials through bearer auth with no-store CORS", async () => {
+    const roomToken = await signRoomTokenForTest(
+      { sub: "user-1", roomId: "room-1", role: "member" },
+      authEnv,
+    );
+    const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          iceServers: [
+            { urls: ["stun:stun.cloudflare.com:3478"] },
+            {
+              urls: ["turns:turn.cloudflare.com:443?transport=tcp"],
+              username: "temporary-user",
+              credential: "temporary-credential",
+            },
+          ],
+        }),
+        { status: 201 },
+      ),
+    );
+    const env = {
+      ...authEnv,
+      CLOUDFLARE_TURN_KEY_ID: "turn-key-id",
+      CLOUDFLARE_TURN_KEY_API_TOKEN: "turn-token",
+    };
+
+    const response = await app.request(
+      "/rooms/room-1/ice-servers",
+      { headers: { Authorization: `Bearer ${roomToken}` } },
+      env,
+    );
+    const preflight = await app.request(
+      "/rooms/room-1/ice-servers",
+      {
+        method: "OPTIONS",
+        headers: {
+          Origin: "https://www.crunchyroll.com",
+          "Access-Control-Request-Method": "GET",
+          "Access-Control-Request-Headers": "authorization",
+        },
+      },
+      env,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(await response.json()).toMatchObject({
+      configured: true,
+      provider: "cloudflare",
+      ttlSeconds: 900,
+    });
+    expect(preflight.headers.get("Access-Control-Allow-Headers")?.toLowerCase()).toContain(
+      "authorization",
+    );
+    const providerBody = JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body)) as {
+      customIdentifier: string;
+    };
+    expect(providerBody.customIdentifier).not.toContain("room-1");
+    expect(providerBody.customIdentifier).not.toContain("user-1");
+    fetcher.mockRestore();
+  });
+
+  it("keeps query-token ICE auth only on the legacy route and measures fallback use", async () => {
+    const roomToken = await signRoomTokenForTest(
+      { sub: "user-1", roomId: "room-1", role: "member" },
+      authEnv,
+    );
+    const dataPoints: Array<{ blobs?: string[] }> = [];
+    const env = {
+      ...authEnv,
+      ANIDACHI_ENV: "test",
+      ROOM_ANALYTICS: {
+        writeDataPoint(point: { blobs?: string[] }) {
+          dataPoints.push(point);
+        },
+      },
+    };
+
+    const primaryWithoutBearer = await app.request(
+      `/rooms/room-1/ice-servers?roomToken=${encodeURIComponent(roomToken)}`,
+      {},
+      env,
+    );
+    const legacy = await app.request(
+      `/ice-servers?roomId=room-1&roomToken=${encodeURIComponent(roomToken)}`,
+      {},
+      env,
+    );
+
+    expect(primaryWithoutBearer.status).toBe(401);
+    expect(legacy.status).toBe(200);
+    expect(legacy.headers.get("Cache-Control")).toBe("no-store");
+    expect(legacy.headers.get("X-Anidachi-Auth-Fallback")).toBe("query");
+    expect(dataPoints.some((point) => point.blobs?.includes("ice_query_auth_fallback"))).toBe(true);
+  });
+
   it("rejects missing and wrong internal room lifecycle secrets", async () => {
     const rooms = trackingRooms();
     for (const authorization of [undefined, "Bearer wrong-secret"]) {
@@ -132,6 +231,180 @@ describe("worker routes", () => {
       dispatch,
     )).toBe(false);
     expect(calls).toEqual(["send:ROOM_ENDED", "close:4004"]);
+  });
+
+  it("revalidates media signaling after asynchronous privacy hashing", async () => {
+    let releaseHash: (value: string) => void = () => {};
+    let markHashStarted: () => void = () => {};
+    const hashStarted = new Promise<void>((resolve) => {
+      markHashStarted = resolve;
+    });
+    const privacySpy = vi.spyOn(privacyId, "createPrivacySafeHmacId").mockImplementation(
+      () =>
+        new Promise<string>((resolve) => {
+          releaseHash = resolve;
+          markHashStarted();
+        }),
+    );
+
+    try {
+      const senderSocket = {} as WebSocket;
+      const targetSocket = {} as WebSocket;
+      let canSignal = true;
+      const send = vi.fn();
+      const sqlExec = vi.fn();
+      const fakeRoomObject = {
+        endedTombstone: null,
+        env: authEnv,
+        nextP2PServerSeq: 1,
+        participantsBySocket: new Map([[senderSocket, "sender-user"]]),
+        p2pSignalOperationsBySocket: new Map<WebSocket, Promise<void>>(),
+        p2pSignalBuffer: new RecentP2PSignalBuffer(),
+        persistedP2PDedupeHashes: new Set<string>(),
+        persistP2PState: vi.fn(),
+        room: {
+          canSignal: () => canSignal,
+          roomGeneration: 1,
+          sourceGeneration: 1,
+        },
+        send,
+        socketsByParticipant: new Map([
+          ["sender-user", senderSocket],
+          ["target-user", targetSocket],
+        ]),
+        state: { storage: { sql: { exec: sqlExec } } },
+        track: vi.fn(),
+      };
+      Object.setPrototypeOf(fakeRoomObject, RoomDurableObject.prototype);
+      const event = {
+        type: "P2P_SIGNAL" as const,
+        roomId: "room-1",
+        fromUserId: "sender-user",
+        toUserId: "target-user",
+        clientSignalId: "signal-1",
+        signal: { kind: "renegotiate" as const },
+      };
+
+      const pending = (
+        RoomDurableObject.prototype as unknown as {
+          handleP2PSignal(
+            this: typeof fakeRoomObject,
+            socket: WebSocket,
+            value: typeof event,
+          ): Promise<void>;
+        }
+      ).handleP2PSignal.call(fakeRoomObject, senderSocket, event);
+      await hashStarted;
+      canSignal = false;
+      releaseHash("a".repeat(64));
+      await pending;
+
+      expect(sqlExec).not.toHaveBeenCalled();
+      expect(send).not.toHaveBeenCalledWith(targetSocket, expect.anything());
+    } finally {
+      privacySpy.mockRestore();
+    }
+  });
+
+  it("preserves per-socket signaling order across asynchronous privacy hashing", async () => {
+    const hashResolvers: Array<(value: string) => void> = [];
+    let hashCallCount = 0;
+    let markFirstHashStarted: () => void = () => {};
+    let markSecondHashStarted: () => void = () => {};
+    const firstHashStarted = new Promise<void>((resolve) => {
+      markFirstHashStarted = resolve;
+    });
+    const secondHashStarted = new Promise<void>((resolve) => {
+      markSecondHashStarted = resolve;
+    });
+    const privacySpy = vi.spyOn(privacyId, "createPrivacySafeHmacId").mockImplementation(
+      () =>
+        new Promise<string>((resolve) => {
+          hashCallCount += 1;
+          hashResolvers.push(resolve);
+          if (hashCallCount === 1) {
+            markFirstHashStarted();
+          } else if (hashCallCount === 2) {
+            markSecondHashStarted();
+          }
+        }),
+    );
+    const pending: Promise<void>[] = [];
+
+    try {
+      const senderSocket = {} as WebSocket;
+      const targetSocket = {} as WebSocket;
+      const send = vi.fn();
+      const fakeRoomObject = {
+        endedTombstone: null,
+        env: authEnv,
+        nextP2PServerSeq: 1,
+        participantsBySocket: new Map([[senderSocket, "sender-user"]]),
+        p2pSignalOperationsBySocket: new Map<WebSocket, Promise<void>>(),
+        p2pSignalBuffer: new RecentP2PSignalBuffer(),
+        persistedP2PDedupeHashes: new Set<string>(),
+        persistP2PState: vi.fn(),
+        room: {
+          canSignal: () => true,
+          roomGeneration: 1,
+          sourceGeneration: 1,
+        },
+        send,
+        socketsByParticipant: new Map([
+          ["sender-user", senderSocket],
+          ["target-user", targetSocket],
+        ]),
+        state: { storage: { sql: { exec: vi.fn() } } },
+        track: vi.fn(),
+      };
+      Object.setPrototypeOf(fakeRoomObject, RoomDurableObject.prototype);
+      const invoke = (clientSignalId: string, kind: "voice-start" | "voice-stop") =>
+        (
+          RoomDurableObject.prototype as unknown as {
+            handleP2PSignal(
+              this: typeof fakeRoomObject,
+              socket: WebSocket,
+              value: {
+                type: "P2P_SIGNAL";
+                roomId: string;
+                fromUserId: string;
+                toUserId: string;
+                clientSignalId: string;
+                signal: { kind: typeof kind };
+              },
+            ): Promise<void>;
+          }
+        ).handleP2PSignal.call(fakeRoomObject, senderSocket, {
+          type: "P2P_SIGNAL",
+          roomId: "room-1",
+          fromUserId: "sender-user",
+          toUserId: "target-user",
+          clientSignalId,
+          signal: { kind },
+        });
+
+      pending.push(invoke("signal-start", "voice-start"));
+      pending.push(invoke("signal-stop", "voice-stop"));
+      await firstHashStarted;
+
+      expect(hashCallCount).toBe(1);
+      hashResolvers[0]?.("a".repeat(64));
+      await secondHashStarted;
+      hashResolvers[1]?.("b".repeat(64));
+      await Promise.all(pending);
+
+      expect(
+        send.mock.calls
+          .filter(([socket]) => socket === targetSocket)
+          .map(([, event]) => event.signal.kind),
+      ).toEqual(["voice-start", "voice-stop"]);
+    } finally {
+      hashResolvers.forEach((resolve, index) => {
+        resolve((index === 0 ? "a" : "b").repeat(64));
+      });
+      await Promise.allSettled(pending);
+      privacySpy.mockRestore();
+    }
   });
 
   it("disables hibernation auto-response before persisting a tombstone", () => {

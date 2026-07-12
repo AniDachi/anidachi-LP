@@ -265,6 +265,7 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
     serverSeq: z.number().int().nonnegative(),
     sourceGeneration: z.number().int().nonnegative(),
     participants: z.array(ParticipantSchema),
+    p2pResyncRequired: z.boolean().optional(),
     capabilities: RoomCapabilitiesSchema.optional(),
     hostState: PlaybackStateSchema.optional(),
     source: WatchSourceDescriptorSchema.optional(),

@@ -172,12 +172,12 @@ function appendWorkerVar(args, name) {
 }
 
 async function loadIceServersFromWorker(roomToken) {
-	const url = new URL(`http://127.0.0.1:${WORKER_PORT}/ice-servers`);
-	url.searchParams.set("roomId", ROOM_ID);
-	url.searchParams.set("roomToken", roomToken);
+	const url = new URL(
+		`http://127.0.0.1:${WORKER_PORT}/rooms/${encodeURIComponent(ROOM_ID)}/ice-servers`,
+	);
 
 	const response = await fetch(url, {
-		headers: { Accept: "application/json" },
+		headers: { Accept: "application/json", Authorization: `Bearer ${roomToken}` },
 		signal: AbortSignal.timeout(10_000),
 	});
 	if (!response.ok) {

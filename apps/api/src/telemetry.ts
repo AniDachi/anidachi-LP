@@ -22,6 +22,7 @@ export type RoomTelemetryEventName =
   | "ws_close"
   | "ws_token_reject"
   | "join"
+  | "ice_query_auth_fallback"
   | "p2p_signal"
   | "p2p_replay"
   | "room_full"

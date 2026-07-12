@@ -2,7 +2,6 @@ import {
   ParticipantSchema,
   PlaybackStateSchema,
   RoomCapabilitiesSchema,
-  ServerEventSchema,
   WatchSourceDescriptorSchema,
   createEmptyRoomEndEventId,
   type Participant,
@@ -34,10 +33,23 @@ interface RoomMetaRow {
   value_json: string;
 }
 
-interface P2PReplayRow {
+interface P2PReplayMetadataRow {
   [key: string]: ArrayBuffer | number | string | null;
-  event_json: string;
+  dedupe_hash: string;
+  room_generation: number;
+  server_received_at: number;
   server_seq: number;
+  signal_kind: string;
+  source_generation: number;
+}
+
+export interface StoredP2PReplayMetadata {
+  dedupeHash: string;
+  roomGeneration: number;
+  serverReceivedAt: number;
+  serverSeq: number;
+  signalKind: BufferedP2PSignalEvent["signal"]["kind"];
+  sourceGeneration: number;
 }
 
 export function initializeRoomStorage(storage: DurableObjectStorage): void {
@@ -48,22 +60,22 @@ export function initializeRoomStorage(storage: DurableObjectStorage): void {
       updated_at INTEGER NOT NULL
     )`,
   );
+  // Earlier builds stored complete P2P envelopes, including SDP and ICE, in
+  // p2p_replay. They cannot be migrated safely, so remove that legacy table
+  // before creating the metadata-only replacement.
+  storage.sql.exec("DROP TABLE IF EXISTS p2p_replay");
   storage.sql.exec(
-    `CREATE TABLE IF NOT EXISTS p2p_replay (
+    `CREATE TABLE IF NOT EXISTS p2p_replay_meta (
       server_seq INTEGER PRIMARY KEY,
-      dedupe_key TEXT NOT NULL UNIQUE,
-      to_user_id TEXT NOT NULL,
+      dedupe_hash TEXT NOT NULL UNIQUE,
       room_generation INTEGER NOT NULL,
       source_generation INTEGER NOT NULL,
       server_received_at INTEGER NOT NULL,
-      event_json TEXT NOT NULL
+      signal_kind TEXT NOT NULL
     )`,
   );
   storage.sql.exec(
-    "CREATE INDEX IF NOT EXISTS idx_p2p_replay_target_seq ON p2p_replay (to_user_id, server_seq)",
-  );
-  storage.sql.exec(
-    "CREATE INDEX IF NOT EXISTS idx_p2p_replay_received_at ON p2p_replay (server_received_at)",
+    "CREATE INDEX IF NOT EXISTS idx_p2p_replay_meta_received_at ON p2p_replay_meta (server_received_at)",
   );
 }
 
@@ -134,7 +146,8 @@ export function persistEndedRoomTombstoneAndClearRuntime(
 ): void {
   storage.transactionSync(() => {
     writeMeta(storage, ROOM_ENDED_META_KEY, tombstone, tombstone.endedAt);
-    storage.sql.exec("DELETE FROM p2p_replay");
+    storage.sql.exec("DELETE FROM p2p_replay_meta");
+    storage.sql.exec("DROP TABLE IF EXISTS p2p_replay");
     storage.sql.exec(
       "DELETE FROM room_meta WHERE key IN (?, ?)",
       ROOM_STATE_META_KEY,
@@ -263,15 +276,16 @@ export async function clearStoredRoomLifecycleAndAlarm(
   });
 }
 
-export function readStoredP2PReplay(
+export function readStoredP2PReplayMetadata(
   storage: DurableObjectStorage,
   now = Date.now(),
-): BufferedP2PSignalEvent[] {
-  pruneStoredP2PReplay(storage, now);
+): StoredP2PReplayMetadata[] {
+  pruneStoredP2PReplayMetadata(storage, now);
   const rows = storage.sql
-    .exec<P2PReplayRow>(
-      `SELECT server_seq, event_json
-       FROM p2p_replay
+    .exec<P2PReplayMetadataRow>(
+      `SELECT server_seq, dedupe_hash, room_generation, source_generation,
+              server_received_at, signal_kind
+       FROM p2p_replay_meta
        ORDER BY server_seq DESC
        LIMIT ?`,
       P2P_REPLAY_MAX_EVENTS,
@@ -279,58 +293,111 @@ export function readStoredP2PReplay(
     .toArray()
     .sort((a, b) => a.server_seq - b.server_seq);
 
-  const events: BufferedP2PSignalEvent[] = [];
+  const metadata: StoredP2PReplayMetadata[] = [];
   for (const row of rows) {
-    try {
-      const event = ServerEventSchema.parse(JSON.parse(row.event_json));
-      if (event.type === "P2P_SIGNAL") {
-        events.push(event);
-      }
-    } catch {
-      storage.sql.exec("DELETE FROM p2p_replay WHERE server_seq = ?", row.server_seq);
+    const parsed = parseStoredP2PReplayMetadataRow(row);
+    if (parsed) {
+      metadata.push(parsed);
+    } else {
+      storage.sql.exec("DELETE FROM p2p_replay_meta WHERE server_seq = ?", row.server_seq);
     }
   }
-  return events;
+  return metadata;
 }
 
-export function writeStoredP2PReplayEvent(
-  storage: DurableObjectStorage,
+export function createStoredP2PReplayMetadata(
   event: BufferedP2PSignalEvent,
-  dedupeKey: string,
+  dedupeHash: string,
+): StoredP2PReplayMetadata {
+  return {
+    dedupeHash,
+    roomGeneration: event.roomGeneration,
+    serverReceivedAt: event.serverReceivedAt,
+    serverSeq: event.serverSeq,
+    signalKind: event.signal.kind,
+    sourceGeneration: event.sourceGeneration,
+  };
+}
+
+export function writeStoredP2PReplayMetadata(
+  storage: DurableObjectStorage,
+  metadata: StoredP2PReplayMetadata,
   now = Date.now(),
 ): void {
   storage.sql.exec(
-    `INSERT OR IGNORE INTO p2p_replay (
+    `INSERT OR IGNORE INTO p2p_replay_meta (
       server_seq,
-      dedupe_key,
-      to_user_id,
+      dedupe_hash,
       room_generation,
       source_generation,
       server_received_at,
-      event_json
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    event.serverSeq,
-    dedupeKey,
-    event.toUserId,
-    event.roomGeneration,
-    event.sourceGeneration,
-    event.serverReceivedAt,
-    JSON.stringify(event),
+      signal_kind
+    ) VALUES (?, ?, ?, ?, ?, ?)`,
+    metadata.serverSeq,
+    metadata.dedupeHash,
+    metadata.roomGeneration,
+    metadata.sourceGeneration,
+    metadata.serverReceivedAt,
+    metadata.signalKind,
   );
-  pruneStoredP2PReplay(storage, now);
+  pruneStoredP2PReplayMetadata(storage, now);
 }
 
-export function pruneStoredP2PReplay(storage: DurableObjectStorage, now = Date.now()): void {
-  storage.sql.exec("DELETE FROM p2p_replay WHERE server_received_at < ?", now - P2P_REPLAY_TTL_MS);
+export function pruneStoredP2PReplayMetadata(
+  storage: DurableObjectStorage,
+  now = Date.now(),
+): void {
   storage.sql.exec(
-    `DELETE FROM p2p_replay
+    "DELETE FROM p2p_replay_meta WHERE server_received_at < ?",
+    now - P2P_REPLAY_TTL_MS,
+  );
+  storage.sql.exec(
+    `DELETE FROM p2p_replay_meta
      WHERE server_seq NOT IN (
        SELECT server_seq
-       FROM p2p_replay
+       FROM p2p_replay_meta
        ORDER BY server_seq DESC
        LIMIT ?
      )`,
     P2P_REPLAY_MAX_EVENTS,
+  );
+}
+
+function parseStoredP2PReplayMetadataRow(
+  row: P2PReplayMetadataRow,
+): StoredP2PReplayMetadata | null {
+  if (
+    !isNonNegativeInteger(row.server_seq) ||
+    !isNonNegativeInteger(row.room_generation) ||
+    !isNonNegativeInteger(row.source_generation) ||
+    !isNonNegativeInteger(row.server_received_at) ||
+    typeof row.dedupe_hash !== "string" ||
+    !/^[a-f0-9]{64}$/.test(row.dedupe_hash) ||
+    !isP2PSignalKind(row.signal_kind)
+  ) {
+    return null;
+  }
+
+  return {
+    dedupeHash: row.dedupe_hash,
+    roomGeneration: row.room_generation,
+    serverReceivedAt: row.server_received_at,
+    serverSeq: row.server_seq,
+    signalKind: row.signal_kind,
+    sourceGeneration: row.source_generation,
+  };
+}
+
+function isP2PSignalKind(value: unknown): value is BufferedP2PSignalEvent["signal"]["kind"] {
+  return (
+    value === "offer" ||
+    value === "answer" ||
+    value === "ice" ||
+    value === "voice-start" ||
+    value === "voice-stop" ||
+    value === "renegotiate" ||
+    value === "restart-ice" ||
+    value === "bye"
   );
 }
 

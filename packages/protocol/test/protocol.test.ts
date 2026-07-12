@@ -348,6 +348,40 @@ describe("room protocol schemas", () => {
     expect(parsedLegacy.hostPlanCode).toBe("pro");
   });
 
+  it("accepts an optional P2P resync flag without breaking legacy room snapshots", () => {
+    const legacy = ServerEventSchema.parse({
+      type: "ROOM_SNAPSHOT",
+      roomId: "room-1",
+      roomGeneration: 1,
+      serverSeq: 1,
+      sourceGeneration: 1,
+      participants: [],
+    });
+    const resync = ServerEventSchema.parse({
+      type: "ROOM_SNAPSHOT",
+      roomId: "room-1",
+      roomGeneration: 1,
+      serverSeq: 2,
+      sourceGeneration: 1,
+      participants: [],
+      p2pResyncRequired: true,
+    });
+
+    expect(legacy).not.toHaveProperty("p2pResyncRequired");
+    expect(resync).toMatchObject({ p2pResyncRequired: true });
+    expect(() =>
+      ServerEventSchema.parse({
+        type: "ROOM_SNAPSHOT",
+        roomId: "room-1",
+        roomGeneration: 1,
+        serverSeq: 2,
+        sourceGeneration: 1,
+        participants: [],
+        p2pResyncRequired: "yes",
+      }),
+    ).toThrow();
+  });
+
   it("accepts valid join and reaction events", () => {
     const joined = ClientEventSchema.parse({
       type: "JOIN",

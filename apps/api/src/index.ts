@@ -32,13 +32,15 @@ import {
   persistEndedRoomTombstoneAndClearRuntime,
   readEndedRoomTombstone,
   readNextP2PServerSeq,
-  readStoredP2PReplay,
+  readStoredP2PReplayMetadata,
   readStoredRoomLifecycle,
   readStoredRoomState,
+  createStoredP2PReplayMetadata,
   writeNextP2PServerSeq,
-  writeStoredP2PReplayEvent,
+  writeStoredP2PReplayMetadata,
   writeStoredRoomState,
 } from "./room-persistence";
+import { createPrivacySafeHmacId } from "./privacy-id";
 import {
   attachmentToVerifiedRoomToken,
   createRoomSocketAttachment,
@@ -76,7 +78,7 @@ app.use(
   "*",
   cors({
     origin: "*",
-    allowHeaders: ["Content-Type"],
+    allowHeaders: ["Authorization", "Content-Type"],
     allowMethods: ["GET", "POST", "OPTIONS"],
   }),
 );
@@ -122,14 +124,18 @@ app.post("/rooms", (c) => {
   );
 });
 
-app.get("/ice-servers", async (c) => {
-  // Require a valid room token so anonymous callers can't mint Cloudflare TURN
-  // credentials at the project's expense (Block 7.1). The token proves the
-  // caller is a participant of a real room; roomId scopes the check.
-  const roomToken = c.req.query("roomToken");
-  const roomId = c.req.query("roomId");
-  if (!roomToken || !roomId) {
-    return c.json({ error: "ROOM_TOKEN_REQUIRED", message: "roomToken and roomId are required" }, 401);
+app.get("/rooms/:roomId/ice-servers", async (c) => {
+  c.header("Cache-Control", "no-store");
+  const roomId = c.req.param("roomId");
+  const roomToken = readBearerToken(c.req.header("authorization"));
+  if (!roomToken) {
+    return c.json(
+      {
+        error: "ROOM_TOKEN_REQUIRED",
+        message: "Bearer room token is required",
+      },
+      401,
+    );
   }
 
   const verified = await verifyRoomToken(roomToken, roomId, c.env);
@@ -138,7 +144,55 @@ app.get("/ice-servers", async (c) => {
   }
 
   try {
-    return c.json(await createIceServersPayload(c.env));
+    return c.json(
+      await createIceServersPayload(c.env, {
+        now: Date.now(),
+        roomId,
+        userId: verified.sub,
+      }),
+    );
+  } catch (error) {
+    console.error("[Anidachi] ICE server generation failed", error);
+    return c.json(
+      {
+        error: "ICE_SERVER_GENERATION_FAILED",
+        message: error instanceof Error ? error.message : "Failed to generate ICE servers",
+      },
+      502,
+    );
+  }
+});
+
+app.get("/ice-servers", async (c) => {
+  c.header("Cache-Control", "no-store");
+  c.header("X-Anidachi-Auth-Fallback", "query");
+  const roomToken = c.req.query("roomToken");
+  const roomId = c.req.query("roomId");
+  if (!roomToken || !roomId) {
+    return c.json(
+      { error: "ROOM_TOKEN_REQUIRED", message: "roomToken and roomId are required" },
+      401,
+    );
+  }
+
+  const verified = await verifyRoomToken(roomToken, roomId, c.env);
+  if (!verified) {
+    return c.json({ error: "INVALID_ROOM_TOKEN", message: "Invalid or expired room token" }, 401);
+  }
+  emitRoomTelemetry(
+    c.env.ROOM_ANALYTICS,
+    { env: c.env.ANIDACHI_ENV ?? "local", roomId },
+    { name: "ice_query_auth_fallback" },
+  );
+
+  try {
+    return c.json(
+      await createIceServersPayload(c.env, {
+        now: Date.now(),
+        roomId,
+        userId: verified.sub,
+      }),
+    );
   } catch (error) {
     console.error("[Anidachi] ICE server generation failed", error);
     return c.json(
@@ -299,6 +353,8 @@ export class RoomDurableObject {
   private room: RoomState;
   private readonly participantsBySocket = new Map<WebSocket, string>();
   private readonly p2pSignalBuffer = new RecentP2PSignalBuffer();
+  private readonly p2pSignalOperationsBySocket = new Map<WebSocket, Promise<void>>();
+  private readonly persistedP2PDedupeHashes = new Set<string>();
   private readonly socketsByParticipant = new Map<string, WebSocket>();
   private readonly verifiedBySocket = new Map<WebSocket, VerifiedRoomToken>();
   private readonly sessionIdBySocket = new Map<WebSocket, string | undefined>();
@@ -315,15 +371,20 @@ export class RoomDurableObject {
     const roomId = state.id.name ?? "room";
     this.endedTombstone = readEndedRoomTombstone(state.storage);
     this.room = new RoomState(roomId, undefined, readStoredRoomState(state.storage) ?? undefined);
-    if (!this.endedTombstone) {
-      this.p2pSignalBuffer.hydrate(readStoredP2PReplay(state.storage));
+    const replayMetadata = this.endedTombstone ? [] : readStoredP2PReplayMetadata(state.storage);
+    const latestStoredSeq = replayMetadata.at(-1)?.serverSeq ?? 0;
+    for (const item of replayMetadata) {
+      this.persistedP2PDedupeHashes.add(item.dedupeHash);
     }
-    const replaySnapshot = this.p2pSignalBuffer.snapshot();
-    const latestStoredSeq = replaySnapshot.at(-1)?.serverSeq ?? 0;
     this.nextP2PServerSeq = Math.max(
       readNextP2PServerSeq(state.storage) ?? 1,
       latestStoredSeq + 1,
     );
+    // A newly constructed object has no raw SDP/ICE replay in memory. The
+    // durable sequence high-water mark survives longer than metadata TTL, so
+    // any client behind it must renegotiate instead of waiting for media
+    // signals that cannot be replayed.
+    this.p2pSignalBuffer.markReplayGapThrough(this.nextP2PServerSeq - 1);
     if (!this.endedTombstone) {
       state.setWebSocketAutoResponse(
         new WebSocketRequestResponsePair(HIBERNATION_KEEPALIVE_PING, HIBERNATION_KEEPALIVE_PONG),
@@ -553,7 +614,9 @@ export class RoomDurableObject {
   }
 
   async webSocketError(socket: WebSocket, error: unknown): Promise<void> {
-    console.error("[Anidachi] Room WebSocket error", error);
+    console.error("[Anidachi] Room WebSocket error", {
+      name: error instanceof Error ? error.name : "WebSocketError",
+    });
     await this.handleClose(socket);
   }
 
@@ -576,12 +639,9 @@ export class RoomDurableObject {
     );
     if (!attempt) return;
 
-    this.track(
-      attempt.attempts > 1
-        ? "room_end_callback_retry"
-        : "room_end_callback_attempt",
-      { value: attempt.attempts },
-    );
+    this.track(attempt.attempts > 1 ? "room_end_callback_retry" : "room_end_callback_attempt", {
+      value: attempt.attempts,
+    });
 
     try {
       await notifyWebRoomEnded(this.env, this.room.roomId, {
@@ -667,7 +727,7 @@ export class RoomDurableObject {
         this.handleMediaSeat(socket, event);
         return;
       case "P2P_SIGNAL":
-        this.handleP2PSignal(socket, event);
+        await this.handleP2PSignal(socket, event);
         return;
       case "PLAY":
       case "PAUSE":
@@ -808,8 +868,17 @@ export class RoomDurableObject {
       this.writeSocketAttachment(socket, updateRoomSocketAttachment(attachment, patch));
     }
     this.persistRoomState();
-    this.send(socket, this.room.snapshot);
-    this.replayP2PSignals(socket, joined.id, event.lastSeenP2PServerSeq ?? 0);
+    const lastSeenP2PServerSeq = event.lastSeenP2PServerSeq ?? 0;
+    const replayAt = Date.now();
+    const p2pResyncRequired = this.p2pSignalBuffer.requiresResyncAfter(
+      lastSeenP2PServerSeq,
+      replayAt,
+    );
+    this.send(socket, {
+      ...this.room.snapshot,
+      ...(p2pResyncRequired ? { p2pResyncRequired: true } : {}),
+    });
+    this.replayP2PSignals(socket, joined.id, lastSeenP2PServerSeq, replayAt);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
     this.track("join", { role: joined.role, value: this.room.participants.length });
   }
@@ -1029,7 +1098,23 @@ export class RoomDurableObject {
   private handleP2PSignal(
     socket: WebSocket,
     event: Extract<ClientEvent, { type: "P2P_SIGNAL" }>,
-  ): void {
+  ): Promise<void> {
+    const previous = this.p2pSignalOperationsBySocket.get(socket) ?? Promise.resolve();
+    const operation = previous
+      .catch(() => undefined)
+      .then(() => this.handleP2PSignalInOrder(socket, event));
+    this.p2pSignalOperationsBySocket.set(socket, operation);
+    return operation.finally(() => {
+      if (this.p2pSignalOperationsBySocket.get(socket) === operation) {
+        this.p2pSignalOperationsBySocket.delete(socket);
+      }
+    });
+  }
+
+  private async handleP2PSignalInOrder(
+    socket: WebSocket,
+    event: Extract<ClientEvent, { type: "P2P_SIGNAL" }>,
+  ): Promise<void> {
     const senderId = this.participantsBySocket.get(socket);
     if (
       !senderId ||
@@ -1041,6 +1126,33 @@ export class RoomDurableObject {
         code: "INVALID_P2P_SIGNAL",
         message: "P2P signals can only be sent between live media participants",
       });
+      return;
+    }
+
+    const authorizedRoomGeneration = this.room.roomGeneration;
+    const authorizedSourceGeneration = this.room.sourceGeneration;
+
+    this.p2pSignalBuffer.prune(Date.now());
+    if (this.p2pSignalBuffer.hasSeen(event)) {
+      return;
+    }
+
+    const dedupeHash = await createPrivacySafeHmacId(
+      this.env.ANIDACHI_JWT_SECRET,
+      "anidachi:p2p-replay-dedupe:v1",
+      [getP2PSignalDedupeKey(event)],
+    );
+    if (
+      this.endedTombstone ||
+      this.participantsBySocket.get(socket) !== senderId ||
+      this.socketsByParticipant.get(senderId) !== socket ||
+      this.room.roomGeneration !== authorizedRoomGeneration ||
+      this.room.sourceGeneration !== authorizedSourceGeneration ||
+      !this.room.canSignal(senderId, event.toUserId)
+    ) {
+      return;
+    }
+    if (this.persistedP2PDedupeHashes.has(dedupeHash)) {
       return;
     }
 
@@ -1066,10 +1178,9 @@ export class RoomDurableObject {
     if (!buffered) {
       return;
     }
-    writeStoredP2PReplayEvent(
+    writeStoredP2PReplayMetadata(
       this.state.storage,
-      buffered,
-      getP2PSignalDedupeKey(buffered),
+      createStoredP2PReplayMetadata(buffered, dedupeHash),
       forwarded.serverReceivedAt,
     );
     this.persistP2PState();
@@ -1078,11 +1189,8 @@ export class RoomDurableObject {
       console.log(
         JSON.stringify({
           event: "p2p.signal.buffered_offline_target",
-          fromUserId: event.fromUserId,
-          roomId: event.roomId,
           serverSeq: buffered.serverSeq,
           signalKind: event.signal.kind,
-          toUserId: event.toUserId,
         }),
       );
       return;
@@ -1092,9 +1200,14 @@ export class RoomDurableObject {
     this.send(target, buffered);
   }
 
-  private replayP2PSignals(socket: WebSocket, participantId: string, afterServerSeq: number): void {
+  private replayP2PSignals(
+    socket: WebSocket,
+    participantId: string,
+    afterServerSeq: number,
+    now = Date.now(),
+  ): void {
     const replay = this.p2pSignalBuffer
-      .replayFor(participantId, afterServerSeq, Date.now(), {
+      .replayFor(participantId, afterServerSeq, now, {
         roomGeneration: this.room.roomGeneration,
         sourceGeneration: this.room.sourceGeneration,
       })
@@ -1109,9 +1222,7 @@ export class RoomDurableObject {
         JSON.stringify({
           event: "p2p.signal.replay",
           afterServerSeq,
-          participantId,
           replayed: replay.length,
-          roomId: this.room.roomId,
         }),
       );
     }
@@ -1206,6 +1317,11 @@ function mediaSeatError(
         ? "This room does not include live media seats."
         : `This room has no free live media seats (max ${maxMediaSeats}).`,
   };
+}
+
+function readBearerToken(authorization: string | undefined): string | null {
+  const match = authorization?.match(/^Bearer\s+([^\s]+)$/i);
+  return match?.[1] ?? null;
 }
 
 export default app;

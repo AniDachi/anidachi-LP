@@ -18,6 +18,7 @@ export interface AddP2PSignalResult {
 export class RecentP2PSignalBuffer {
   private readonly events: BufferedP2PSignalEvent[] = [];
   private readonly seenKeys = new Set<string>();
+  private replayGapThroughSeq = 0;
 
   constructor(
     private readonly maxEvents = 80,
@@ -39,6 +40,7 @@ export class RecentP2PSignalBuffer {
       const removed = this.events.shift();
       if (removed) {
         this.seenKeys.delete(getP2PSignalDedupeKey(removed));
+        this.markReplayGapThrough(removed.serverSeq);
       }
     }
 
@@ -62,23 +64,27 @@ export class RecentP2PSignalBuffer {
 
   prune(now = Date.now()): void {
     let removed = false;
-    while (this.events.length > 0) {
-      const first = this.events[0];
-      if (!first || now - first.serverReceivedAt <= this.ttlMs) {
-        break;
+    const retained: BufferedP2PSignalEvent[] = [];
+    for (const event of this.events) {
+      if (now - event.serverReceivedAt <= this.ttlMs) {
+        retained.push(event);
+        continue;
       }
 
-      this.events.shift();
-      this.seenKeys.delete(getP2PSignalDedupeKey(first));
+      this.seenKeys.delete(getP2PSignalDedupeKey(event));
+      this.markReplayGapThrough(event.serverSeq);
       removed = true;
     }
 
     if (removed) {
+      this.events.splice(0, this.events.length, ...retained);
       this.rebuildDedupeKeys();
     }
   }
 
-  hasSeen(event: Pick<BufferedP2PSignalEvent, "clientSignalId" | "fromUserId" | "roomId" | "toUserId">): boolean {
+  hasSeen(
+    event: Pick<BufferedP2PSignalEvent, "clientSignalId" | "fromUserId" | "roomId" | "toUserId">,
+  ): boolean {
     return this.seenKeys.has(getP2PSignalDedupeKey(event));
   }
 
@@ -86,14 +92,15 @@ export class RecentP2PSignalBuffer {
     return this.events.length;
   }
 
-  hydrate(events: BufferedP2PSignalEvent[], now = Date.now()): void {
-    this.events.length = 0;
-    this.seenKeys.clear();
-    const sorted = [...events].sort((a, b) => a.serverSeq - b.serverSeq);
-    for (const event of sorted) {
-      this.add(event, now);
+  markReplayGapThrough(serverSeq: number): void {
+    if (Number.isInteger(serverSeq) && serverSeq > this.replayGapThroughSeq) {
+      this.replayGapThroughSeq = serverSeq;
     }
+  }
+
+  requiresResyncAfter(lastSeenServerSeq: number, now = Date.now()): boolean {
     this.prune(now);
+    return lastSeenServerSeq < this.replayGapThroughSeq;
   }
 
   snapshot(now = Date.now()): BufferedP2PSignalEvent[] {
@@ -104,6 +111,7 @@ export class RecentP2PSignalBuffer {
   clear(): void {
     this.events.length = 0;
     this.seenKeys.clear();
+    this.replayGapThroughSeq = 0;
   }
 
   private rebuildDedupeKeys(): void {

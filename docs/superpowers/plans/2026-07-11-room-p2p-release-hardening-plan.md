@@ -268,7 +268,15 @@ export interface SignalingTransportReady {
 - Modify: `apps/extension/src/overlay-app.tsx`
 - Modify: `apps/extension/src/debug-log.ts`
 - Modify: `apps/extension/src/diagnostic-log.ts`
+- Modify: `apps/extension/src/ghost-cam.ts`
+- Modify: `apps/extension/src/media-types.ts`
 - Modify: `apps/extension/src/p2p-ice.ts`
+- Modify: `apps/extension/src/p2p-media.ts`
+- Modify: `apps/extension/src/room-client.ts`
+- Modify: `packages/protocol/src/types.ts`
+- Modify: `scripts/room-signaling-harness.mjs`
+- Modify: `scripts/smoke-worker.mjs`
+- Modify: `tests/e2e/p2p-media-harness.mjs`
 - Modify: associated extension tests
 
 **Interfaces:**
@@ -282,22 +290,28 @@ export interface SignalingTransportReady {
   short-lived credential per room/user scope. Default TTL is 15 minutes, max 30
   minutes, with an HMAC `customIdentifier` that exposes no raw identifier.
 
-- [ ] Add failing persistence tests proving replay rows and exported logs contain
+- [x] Add failing persistence tests proving replay rows and exported logs contain
   no SDP, candidate, peer IP/address, device/track/stream ID, raw room/user/session
   identifiers, or malformed raw frames. Operational room state and socket
   attachments may retain the minimum participant identity needed for hibernation.
-- [ ] Add failing tab-isolation, account-switch, legacy-migration, and browser-
+- [x] Add failing tab-isolation, account-switch, legacy-migration, and browser-
   session cleanup tests, including ACK-before-page-delete migration behavior.
-- [ ] Add failing TURN tests for cross-scope isolation, bounded cache, 15-minute
+- [x] Add failing TURN tests for cross-scope isolation, bounded cache, 15-minute
   default TTL, custom identifier, and refresh via `setConfiguration()`.
-- [ ] Implement storage/replay migration and remove legacy page entries only
+- [x] Implement storage/replay migration and remove legacy page entries only
   after background ACK.
-- [ ] Move ICE authorization to `Authorization` on a room-scoped route; keep a
+- [x] Move ICE authorization to `Authorization` on a room-scoped route; keep a
   one-release query fallback only where old clients require it, update CORS and
   harness callers, and measure fallback use without logging token data.
-- [ ] Run API/extension tests, runtime hibernation test, and forced-relay harness
+- [x] Run API/extension tests, runtime hibernation test, and forced-relay harness
   when staging credentials are available.
-- [ ] Commit as `fix(p2p): harden media privacy and turn credentials`.
+- [x] Commit as `fix(p2p): harden media privacy and turn credentials`.
+
+Validation completed locally with protocol/API/extension/root checks and tests,
+Worker hibernation runtime tests, two room harness runs, the direct-first real
+WebRTC harness, and staging extension build validation. Forced-relay validation
+remains a staging gate because no Cloudflare TURN credentials are present in the
+local environment.
 
 ### Task 7: Precise Free-Plan Metering In Shadow Mode
 

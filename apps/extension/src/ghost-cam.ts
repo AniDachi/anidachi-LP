@@ -204,7 +204,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
           return;
         }
 
-        console.warn("[Anidachi] P2P ICE setup failed", error);
+        logDebug("p2p.ice-config", "initial setup failed", {
+          error: error instanceof Error ? error.message : String(error),
+        });
         setVoiceStatus("error");
         setVoiceMessage("Media relay is temporarily unavailable.");
         return;

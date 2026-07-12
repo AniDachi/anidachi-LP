@@ -88,7 +88,10 @@ import {
   shouldShowCameraStack,
   type CrunchyrollPlayerChromeState,
 } from "./overlay-layout";
-import { getP2PMediaSessionState } from "./overlay-media-session";
+import {
+  getP2PMediaSessionState,
+  persistRoomSessionForCurrentJoin,
+} from "./overlay-media-session";
 import { selectP2PMediaParticipants } from "./p2p-media";
 import {
   createRoomInvite,
@@ -148,14 +151,11 @@ import {
 } from "./room-client";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
-  clearLegacyRoomSessionStorage,
-  clearPersistedRoomId,
-  getPersistedRoomId,
-  getPersistedRoomIdForUser,
-  getPersistedRoomOwnerId,
-  getRoomSessionNamespace,
-  persistRoomId,
-  type RoomSessionNamespace,
+  clearRoomSession,
+  clearRoomSessionIfMatch,
+  migrateLegacyRoomSession,
+  persistRoomSession,
+  type RoomSessionRecord,
 } from "./room-session-storage";
 import { acquireRoomTabLock, releaseRoomTabLock } from "./room-tab-lock";
 import { buildRoomShareableUrl } from "./room-url";
@@ -343,9 +343,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [authBusy, setAuthBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [extensionContextInvalidated, setExtensionContextInvalidated] = useState(false);
-  const [roomSessionNamespace, setRoomSessionNamespace] = useState<RoomSessionNamespace | null>(
-    null,
-  );
+  const [storedRoomSession, setStoredRoomSession] = useState<RoomSessionRecord | null>(null);
+  const [roomSessionLoadedForUserId, setRoomSessionLoadedForUserId] = useState<
+    string | null | undefined
+  >(undefined);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [roomToken, setRoomToken] = useState<string | null>(null);
   const [roomShareableLink, setRoomShareableLink] = useState<string | null>(null);
@@ -428,6 +429,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const settingsRailDragRef = useRef<SettingsRailDragState | null>(null);
   const settingsRailSuppressClickRef = useRef(false);
   const authAccessTokenRef = useRef<string | null>(null);
+  const storedRoomSessionRef = useRef<RoomSessionRecord | null>(null);
   const roomIdRef = useRef<string | null>(null);
   const roomJoinSequenceRef = useRef(0);
   const roomJoinInFlightRef = useRef<{
@@ -669,19 +671,37 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     participantsRef.current = participants;
   }, [participants]);
 
+  const clearStoredRoomSession = useCallback(() => {
+    storedRoomSessionRef.current = null;
+    setStoredRoomSession(null);
+    void clearRoomSession().catch((error) => {
+      logDebug("overlay.room", "failed to clear background room session", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+      if (isExtensionContextInvalidatedError(error)) {
+        setExtensionContextInvalidated(true);
+      }
+    });
+  }, []);
+
   useEffect(() => {
+    if (!identityLoaded) {
+      return;
+    }
+
     let cancelled = false;
-    void getRoomSessionNamespace()
-      .then((namespace) => {
+    const currentUserId = participant?.id ?? null;
+    void migrateLegacyRoomSession(currentUserId)
+      .then((record) => {
         if (cancelled) {
           return;
         }
 
-        clearLegacyRoomSessionStorage();
-        clearLegacyParticipantSessionStorage();
-        setRoomSessionNamespace(namespace);
-        logDebug("overlay.room", "room session namespace ready", {
-          installId: namespace.installId,
+        storedRoomSessionRef.current = record;
+        setStoredRoomSession(record);
+        setRoomSessionLoadedForUserId(currentUserId);
+        logDebug("overlay.room", "background room session ready", {
+          hasPersistedRoomSession: Boolean(record),
         });
       })
       .catch((error) => {
@@ -695,7 +715,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [identityLoaded, participant?.id]);
 
   const resetLocalRoomSession = useCallback((message?: string, openPanel = false) => {
     roomReconnectSuppressedRef.current = true;
@@ -717,10 +737,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setRoomShareableLink(null);
     setRoomQuota(null);
     setRoomCapabilities(null);
-    clearLegacyRoomSessionStorage();
-    if (roomSessionNamespace) {
-      clearPersistedRoomId(roomSessionNamespace);
-    }
+    clearStoredRoomSession();
     clearRoomHash();
     if (message !== undefined) {
       setAuthMessage(message);
@@ -728,7 +745,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     if (openPanel) {
       setPanelOpen(true);
     }
-  }, [roomSessionNamespace]);
+  }, [clearStoredRoomSession]);
 
   const syncAuthUserScopedState = useCallback(
     (nextAuthUserId: string | null, reason: string) => {
@@ -752,16 +769,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         previousAuthUserId,
         nextAuthUserId,
         activeRoomId: roomIdRef.current,
-        persistedRoomId: roomSessionNamespace
-          ? getPersistedRoomId(roomSessionNamespace)
-          : null,
-        persistedRoomOwnerId: roomSessionNamespace
-          ? getPersistedRoomOwnerId(roomSessionNamespace)
-          : null,
+        hasPersistedRoomSession: Boolean(storedRoomSessionRef.current),
       });
       resetLocalRoomSession(undefined, false);
     },
-    [resetLocalRoomSession, roomSessionNamespace],
+    [resetLocalRoomSession],
   );
 
   const refreshRoomActionIdentity = useCallback(async (reason: string) => {
@@ -1692,7 +1704,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         video: videoDebugSnapshot(adapter.video),
       });
     },
-    [adapter, roomSessionNamespace],
+    [adapter],
   );
 
   const rememberPendingRemoteSeek = useCallback(
@@ -2025,19 +2037,16 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       const activeParticipantId = participantRef.current?.id ?? null;
+      const persistedRoomId =
+        storedRoomSessionRef.current?.ownerUserId === activeParticipantId
+          ? storedRoomSessionRef.current.roomId
+          : null;
       const activeRoomId =
         roomIdRef.current ??
-        getRoomIdFromHash() ??
-        (roomSessionNamespace
-          ? getPersistedRoomIdForUser(roomSessionNamespace, activeParticipantId)
-          : null);
+        getRoomIdFromHash() ?? persistedRoomId;
       const target = buildSourceUrlWithRoom(state.sourceUrl, activeRoomId);
       if (!target || isSameDocumentTarget(target)) {
         return false;
-      }
-
-      if (activeRoomId && activeParticipantId && roomSessionNamespace) {
-        persistRoomId(roomSessionNamespace, activeRoomId, activeParticipantId);
       }
 
       pendingSourceNavigationRef.current = {
@@ -2057,7 +2066,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       void navigateCrunchyrollToRemoteSource(target, state);
       return true;
     },
-    [adapter, roomSessionNamespace],
+    [adapter],
   );
 
   const applyRemotePlay = useCallback(
@@ -2267,14 +2276,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setRoomToken(null);
     setRoomShareableLink(null);
     setRoomCapabilities(null);
-    clearLegacyRoomSessionStorage();
-    if (roomSessionNamespace) {
-      clearPersistedRoomId(roomSessionNamespace);
-    }
+    clearStoredRoomSession();
     clearRoomHash();
     setAuthMessage(message);
     setPanelOpen(true);
-  }, [roomSessionNamespace]);
+  }, [clearStoredRoomSession]);
 
   const handleServerEvent = useCallback(
     (event: ServerEvent) => {
@@ -2506,7 +2512,16 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, [handleServerEvent]);
 
   const connectToRoomAsParticipant = useCallback(
-    (nextRoomId: string, activeParticipant: Participant, nextRoomToken: string) => {
+    async (
+      nextRoomId: string,
+      activeParticipant: Participant,
+      nextRoomToken: string,
+      isCurrentJoin: () => boolean,
+    ): Promise<boolean> => {
+      if (!isCurrentJoin()) {
+        return false;
+      }
+
       roomReconnectSuppressedRef.current = false;
       if (roomReconnectTimerRef.current !== null) {
         window.clearTimeout(roomReconnectTimerRef.current);
@@ -2523,11 +2538,34 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
       setRoomSnapshotReady(false);
       setSignalingTransportReady(null);
+      let nextStoredRoomSession: RoomSessionRecord | null;
+      try {
+        nextStoredRoomSession = await persistRoomSessionForCurrentJoin({
+          discard: (record) => clearRoomSessionIfMatch(record),
+          isCurrentJoin,
+          persist: () => persistRoomSession(nextRoomId, activeParticipant.id),
+        });
+      } catch (error) {
+        if (!isCurrentJoin()) {
+          return false;
+        }
+        releaseRoomTabLock();
+        throw error;
+      }
+
+      if (!nextStoredRoomSession) {
+        logDebug("overlay.room", "persisted session ignored for stale join", {
+          roomId: nextRoomId,
+          participantId: activeParticipant.id,
+        });
+        return false;
+      }
+
+      storedRoomSessionRef.current = nextStoredRoomSession;
+      setStoredRoomSession(nextStoredRoomSession);
+      setRoomSessionLoadedForUserId(activeParticipant.id);
       roomIdRef.current = nextRoomId;
       setRoomId(nextRoomId);
-      if (roomSessionNamespace) {
-        persistRoomId(roomSessionNamespace, nextRoomId, activeParticipant.id);
-      }
       ensureRoomHash(nextRoomId);
       logDebug("overlay.room", "connect requested", {
         roomId: nextRoomId,
@@ -2538,7 +2576,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       });
       clientRef.current.connect({
         lastSeenP2PServerSeq: sameRoomReconnect ? lastSeenP2PServerSeqRef.current : 0,
-        participantSessionId: getParticipantSessionId(roomSessionNamespace),
+        participantSessionId: nextStoredRoomSession.participantSessionId,
         reconnect: sameRoomReconnect,
         roomId: nextRoomId,
         roomToken: nextRoomToken,
@@ -2549,8 +2587,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         onTerminalClose: () => terminateRoomSession("Watch room ended."),
         onTransportReady: setSignalingTransportReady,
       });
+      return true;
     },
-    [adapter, roomSessionNamespace, setRoomStatus, terminateRoomSession],
+    [adapter, setRoomStatus, terminateRoomSession],
   );
 
   const connectToExistingWebsiteRoom = useCallback(
@@ -2665,7 +2704,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         const shareableLink = buildRoomShareableUrl(nextRoomId);
         roomShareableLinkRef.current = shareableLink;
         setRoomShareableLink(shareableLink);
-        connectToRoomAsParticipant(nextRoomId, activeParticipant, connected.roomToken);
+        await connectToRoomAsParticipant(
+          nextRoomId,
+          activeParticipant,
+          connected.roomToken,
+          () => isCurrentJoin() && participantRef.current?.id === activeParticipant.id,
+        );
       })();
 
       roomJoinInFlightRef.current = {
@@ -3142,7 +3186,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const createAndConnectRoom = useCallback(
     async (reason: string) => {
       cancelPendingRoomJoin();
+      const createSequence = roomJoinSequenceRef.current;
+      const isCurrentCreate = () => roomJoinSequenceRef.current === createSequence;
       const refreshed = await refreshRoomActionIdentity(`create:${reason}`);
+      if (!isCurrentCreate()) {
+        return null;
+      }
       const activeParticipant = refreshed.participant;
       const activeAccessToken = refreshed.accessToken;
       if (!activeParticipant || !activeAccessToken) {
@@ -3160,6 +3209,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         logDebug("overlay.room", "create blocked by tab lock", { reason });
         return null;
       }
+      if (!isCurrentCreate()) {
+        return null;
+      }
 
       // Idempotency key survives retries of the same create attempt and is
       // cleared only on success, so a network retry reuses the same room.
@@ -3173,10 +3225,15 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           clientRequestId: createRequestIdRef.current,
         });
       } catch (error) {
-        releaseRoomTabLock();
+        if (isCurrentCreate()) {
+          releaseRoomTabLock();
+        }
         throw error;
       }
       createRequestIdRef.current = null;
+      if (!isCurrentCreate()) {
+        return null;
+      }
       setRoomQuota(created.quota ?? null);
       setRoomCapabilities(created.capabilities ?? null);
       if (roomIdRef.current) {
@@ -3197,8 +3254,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         participantId: activeParticipant.id,
       });
       setRoomHash(created.roomId);
-      connectToRoomAsParticipant(created.roomId, activeParticipant, nextRoomToken);
-      return created;
+      const connected = await connectToRoomAsParticipant(
+        created.roomId,
+        activeParticipant,
+        nextRoomToken,
+        () =>
+          isCurrentCreate() && participantRef.current?.id === activeParticipant.id,
+      );
+      return connected ? created : null;
     },
     [adapter, cancelPendingRoomJoin, connectToRoomAsParticipant, refreshRoomActionIdentity],
   );
@@ -3266,15 +3329,19 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, []);
 
   useEffect(() => {
-    if (!identityLoaded || !roomSessionNamespace || roomId || roomIdRef.current) {
+    const currentUserId = participant?.id ?? null;
+    if (
+      !identityLoaded ||
+      roomSessionLoadedForUserId !== currentUserId ||
+      roomId ||
+      roomIdRef.current
+    ) {
       return;
     }
 
     const hashRoomId = getRoomIdFromHash();
-    const persistedRoomId = getPersistedRoomIdForUser(
-      roomSessionNamespace,
-      participant?.id ?? null,
-    );
+    const persistedRoomId =
+      storedRoomSession?.ownerUserId === currentUserId ? storedRoomSession.roomId : null;
     const initialRoomId = hashRoomId ?? persistedRoomId;
     if (initialRoomId) {
       if (!participant) {
@@ -3292,8 +3359,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
               roomId: initialRoomId,
               resetAt: error.resetAt,
             });
-            clearLegacyRoomSessionStorage();
-            clearPersistedRoomId(roomSessionNamespace);
+            clearStoredRoomSession();
             clearRoomHash();
             setAuthMessage(quotaExhaustedMessage(error.resetAt));
             setPanelOpen(true);
@@ -3306,8 +3372,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
               status: error.status,
               code: error.code,
             });
-            clearLegacyRoomSessionStorage();
-            clearPersistedRoomId(roomSessionNamespace);
+            clearStoredRoomSession();
             clearRoomHash();
             releaseRoomTabLock();
             setAuthMessage(roomJoinUnavailableMessage(error));
@@ -3323,7 +3388,15 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       );
       setPanelOpen(shouldOpenPanelForInitialRoom(hashRoomId, persistedRoomId));
     }
-  }, [connectToExistingWebsiteRoom, identityLoaded, participant, roomId, roomSessionNamespace]);
+  }, [
+    clearStoredRoomSession,
+    connectToExistingWebsiteRoom,
+    identityLoaded,
+    participant,
+    roomId,
+    roomSessionLoadedForUserId,
+    storedRoomSession,
+  ]);
 
   const sendHostState = useCallback(
     (allowController = false, stateOverride?: Partial<PlaybackState>) => {
@@ -3648,10 +3721,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       roomShareableLinkRef.current = null;
       setRoomToken(null);
       setRoomShareableLink(null);
-      clearLegacyRoomSessionStorage();
-      if (roomSessionNamespace) {
-        clearPersistedRoomId(roomSessionNamespace);
-      }
+      clearStoredRoomSession();
       clearRoomHash();
       setAuthMessage("Watch room ended.");
       logDebug("overlay.room", "ended by host", { roomId: activeRoomId });
@@ -4910,7 +4980,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                     <span>On-screen reactions</span>
                     <span>{reactionsEnabled ? "On" : "Off"}</span>
                   </button>
-                  <div className="reaction-shortcut-grid" aria-label="Reaction shortcuts">
+                  <div
+                    className="reaction-shortcut-grid"
+                    aria-label="Reaction shortcuts"
+                    role="group"
+                  >
                     {EMOJI_PALETTE.map((emoji, index) => (
                       <button
                         aria-label={`Reaction ${index + 1}`}
@@ -5654,40 +5728,6 @@ function isKeyboardEditableElement(element: HTMLElement): boolean {
 function getRoomIdFromHash(): string | null {
   const params = new URLSearchParams(location.hash.replace(/^#/, ""));
   return params.get("anidachiRoom");
-}
-
-const PARTICIPANT_SESSION_STORAGE_KEY = "anidachi:participant-session-id";
-
-/**
- * Stable id for this tab's room session. Persisted in sessionStorage so a
- * reload of the same tab keeps the same id (the Worker treats it as a
- * reconnect), while a different tab/device gets a different id (a takeover).
- */
-function getParticipantSessionId(namespace: RoomSessionNamespace | null): string {
-  const storageKey = namespace
-    ? `${namespace.prefix}:participant-session-id`
-    : PARTICIPANT_SESSION_STORAGE_KEY;
-  try {
-    const existing = sessionStorage.getItem(storageKey);
-    if (existing) {
-      return existing;
-    }
-
-    const generated = `session-${crypto.randomUUID()}`;
-    sessionStorage.setItem(storageKey, generated);
-    return generated;
-  } catch {
-    // sessionStorage may be unavailable; fall back to a per-call id.
-    return `session-${crypto.randomUUID()}`;
-  }
-}
-
-function clearLegacyParticipantSessionStorage(): void {
-  try {
-    sessionStorage.removeItem(PARTICIPANT_SESSION_STORAGE_KEY);
-  } catch {
-    // sessionStorage may be unavailable on some embedded pages.
-  }
 }
 
 function clearRoomHash(): void {

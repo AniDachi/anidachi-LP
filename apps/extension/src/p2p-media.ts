@@ -1078,7 +1078,6 @@ export class P2PMediaController {
       if (intentGeneration !== this.cameraIntentGeneration) {
         return;
       }
-      console.warn("[Anidachi] P2P camera failed", error);
       logDebug("p2p.camera", "failed", {
         localParticipantId: this.localParticipant.id,
         error: error instanceof Error ? error.message : String(error),
@@ -1359,7 +1358,6 @@ export class P2PMediaController {
       if (intentGeneration !== this.voiceIntentGeneration) {
         return;
       }
-      console.warn("[Anidachi] P2P voice failed", error);
       logDebug("p2p.voice", "failed", {
         localParticipantId: this.localParticipant.id,
         error: error instanceof Error ? error.message : String(error),
@@ -2017,7 +2015,6 @@ export class P2PMediaController {
         peer.signalingRecoveryNeeded = true;
       }
 
-      console.warn("[Anidachi] P2P signal failed", error);
       logDebug("p2p.signal", "failed", {
         localParticipantId: this.localParticipant.id,
         fromUserId,
@@ -2428,7 +2425,7 @@ export class P2PMediaController {
           await this.recoverPeerNegotiation(
             peer,
             `signaling-transport:${ready.senderConnectionId}`,
-            false,
+            ready.forceMediaResync === true,
           );
         }),
       ),
@@ -3196,7 +3193,6 @@ export class P2PMediaController {
         peer.needsNegotiation = true;
       }
     } catch (error) {
-      console.warn("[Anidachi] P2P offer failed", error);
       logDebug("p2p.negotiation", "offer failed", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: peer.remoteUserId,
@@ -3482,7 +3478,11 @@ export class P2PMediaController {
           Date.now(),
         );
       } catch (error) {
-        console.warn("[Anidachi] P2P queued ICE failed", error);
+        logDebug("p2p.ice", "queued candidate failed", {
+          error: error instanceof Error ? error.message : String(error),
+          localParticipantId: this.localParticipant.id,
+          remoteUserId: peer.remoteUserId,
+        });
       }
     }
   }

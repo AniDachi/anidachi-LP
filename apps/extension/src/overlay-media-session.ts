@@ -14,6 +14,26 @@ interface P2PMediaSessionState {
   p2pSessionActive: boolean;
 }
 
+interface PersistRoomSessionForCurrentJoinInput<T> {
+  discard: (persistedSession: T) => Promise<void>;
+  isCurrentJoin: () => boolean;
+  persist: () => Promise<T>;
+}
+
+export async function persistRoomSessionForCurrentJoin<T>({
+  discard,
+  isCurrentJoin,
+  persist,
+}: PersistRoomSessionForCurrentJoinInput<T>): Promise<T | null> {
+  const persistedSession = await persist();
+  if (isCurrentJoin()) {
+    return persistedSession;
+  }
+
+  await discard(persistedSession);
+  return null;
+}
+
 export function getP2PMediaSessionState({
   localHasMediaSeat,
   participantId,

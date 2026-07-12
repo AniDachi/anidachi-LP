@@ -1,122 +1,591 @@
 export const ROOM_SESSION_INSTALL_ID_STORAGE_KEY = "anidachi:extension-install-id:v1";
+export const ROOM_SESSION_STORAGE_MESSAGE_TYPE = "ANIDACHI_ROOM_SESSION_STORAGE";
 
+const ROOM_SESSION_RECORD_VERSION = 1 as const;
+const ROOM_SESSION_RECORD_KEY_PREFIX = "anidachi:room-session:v1:tab:";
 const LEGACY_ROOM_SESSION_STORAGE_KEY = "anidachi:room-id";
 const LEGACY_ROOM_SESSION_OWNER_STORAGE_KEY = "anidachi:room-owner-id";
+const LEGACY_PARTICIPANT_SESSION_STORAGE_KEY = "anidachi:participant-session-id";
 
-export interface RoomSessionNamespace {
-  installId: string;
-  prefix: string;
+export interface RoomSessionRecord {
+  version: typeof ROOM_SESSION_RECORD_VERSION;
+  revision: number;
+  roomId: string;
+  ownerUserId: string;
+  participantSessionId: string;
 }
 
-type SessionStorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+interface LegacyRoomSessionRecord {
+  roomId: string | null;
+  ownerUserId: string | null;
+  participantSessionId: string | null;
+}
 
-export async function getRoomSessionNamespace(): Promise<RoomSessionNamespace> {
-  const installId = await getOrCreateExtensionInstallId();
-  const runtimeId = chrome.runtime?.id || "runtime";
-  return {
-    installId,
-    prefix: `anidachi:${runtimeId}:${installId}:room-session`,
+export type RoomSessionStorageMessage =
+  | { type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE; command: "legacy-prefix" }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "load";
+      currentUserId: string | null;
+    }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "persist";
+      roomId: string | null;
+      ownerUserId: string | null;
+    }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "migrate";
+      currentUserId: string | null;
+      legacyRecord: LegacyRoomSessionRecord | null;
+    }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "clear-if-match";
+      record: RoomSessionRecord;
+    }
+  | { type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE; command: "clear" };
+
+export type RoomSessionStorageResponse =
+  | {
+      ok: true;
+      record: RoomSessionRecord | null;
+      legacyPrefix?: string | null;
+    }
+  | { ok: false; error: string };
+
+interface StorageAreaLike {
+  get(key: string): Promise<Record<string, unknown>>;
+  set(items: Record<string, unknown>): Promise<void>;
+  remove(key: string): Promise<void>;
+}
+
+type PageSessionStorageLike = Pick<Storage, "getItem" | "removeItem">;
+type RuntimeMessageSender = (
+  message: RoomSessionStorageMessage,
+) => Promise<RoomSessionStorageResponse | null | undefined | unknown>;
+
+const roomSessionOperationsByTab = new Map<number, Promise<unknown>>();
+
+export interface RoomSessionBackgroundDependencies {
+  sessionStorage?: StorageAreaLike;
+  localStorage?: StorageAreaLike;
+  runtimeId?: string;
+  randomUUID?: () => string;
+}
+
+export interface RoomSessionClientDependencies {
+  pageSessionStorage?: PageSessionStorageLike;
+  sendMessage?: RuntimeMessageSender;
+}
+
+export function isRoomSessionStorageMessage(value: unknown): value is RoomSessionStorageMessage {
+  if (!isObject(value) || value.type !== ROOM_SESSION_STORAGE_MESSAGE_TYPE) {
+    return false;
+  }
+
+  switch (value.command) {
+    case "legacy-prefix":
+    case "clear":
+      return true;
+    case "load":
+      return isNullableString(value.currentUserId);
+    case "persist":
+      return isNullableString(value.roomId) && isNullableString(value.ownerUserId);
+    case "migrate":
+      return (
+        isNullableString(value.currentUserId) &&
+        (value.legacyRecord === null || isLegacyRoomSessionRecord(value.legacyRecord))
+      );
+    case "clear-if-match":
+      return parseRoomSessionRecord(value.record) !== null;
+    default:
+      return false;
+  }
+}
+
+export function handleRoomSessionStorageRuntimeMessage(
+  value: unknown,
+  sender: { tab?: { id?: number } },
+  sendResponse: (response: RoomSessionStorageResponse) => void,
+  dependencies: RoomSessionBackgroundDependencies = {},
+): boolean {
+  if (!isRoomSessionStorageMessage(value)) {
+    return false;
+  }
+
+  void handleRoomSessionStorageMessage(value, sender, dependencies).then(
+    sendResponse,
+    (error) => {
+      sendResponse({
+        ok: false,
+        error: error instanceof Error ? error.message : "Room session storage failed",
+      });
+    },
+  );
+  return true;
+}
+
+export async function handleRoomSessionStorageMessage(
+  message: RoomSessionStorageMessage,
+  sender: { tab?: { id?: number } },
+  dependencies: RoomSessionBackgroundDependencies = {},
+): Promise<RoomSessionStorageResponse> {
+  const tabId = sender.tab?.id;
+  if (!Number.isInteger(tabId) || (tabId ?? -1) < 0) {
+    return { ok: false, error: "Room session message is missing a sender tab" };
+  }
+
+  const resolvedTabId = tabId as number;
+  return enqueueRoomSessionOperation(resolvedTabId, async () => {
+    const sessionStorage =
+      dependencies.sessionStorage ?? (chrome.storage.session as StorageAreaLike);
+    const localStorage = dependencies.localStorage ?? (chrome.storage.local as StorageAreaLike);
+    const randomUUID = dependencies.randomUUID ?? (() => crypto.randomUUID());
+
+    try {
+      switch (message.command) {
+        case "legacy-prefix": {
+          const stored = await localStorage.get(ROOM_SESSION_INSTALL_ID_STORAGE_KEY);
+          const installId = stored[ROOM_SESSION_INSTALL_ID_STORAGE_KEY];
+          const runtimeId = dependencies.runtimeId ?? chrome.runtime.id;
+          return {
+            ok: true,
+            record: null,
+            legacyPrefix:
+              isNonEmptyString(installId) && isNonEmptyString(runtimeId)
+                ? `anidachi:${runtimeId}:${installId}:room-session`
+                : null,
+          };
+        }
+        case "load":
+          return {
+            ok: true,
+            record: await loadRecordForUser(sessionStorage, resolvedTabId, message.currentUserId),
+          };
+        case "persist":
+          return {
+            ok: true,
+            record: await persistRecord(
+              sessionStorage,
+              resolvedTabId,
+              message.roomId,
+              message.ownerUserId,
+              randomUUID,
+            ),
+          };
+        case "migrate":
+          return {
+            ok: true,
+            record: await migrateRecord(
+              sessionStorage,
+              resolvedTabId,
+              message.currentUserId,
+              message.legacyRecord,
+              randomUUID,
+            ),
+          };
+        case "clear-if-match":
+          return {
+            ok: true,
+            record: await clearRoomSessionIfMatchForTab(
+              sessionStorage,
+              resolvedTabId,
+              message.record,
+            ),
+          };
+        case "clear":
+          await removeRoomSessionForTabNow(resolvedTabId, sessionStorage);
+          return { ok: true, record: null };
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "Room session storage failed",
+      };
+    }
+  });
+}
+
+export async function removeRoomSessionForTab(
+  tabId: number,
+  storage: StorageAreaLike = chrome.storage.session as StorageAreaLike,
+): Promise<void> {
+  await enqueueRoomSessionOperation(tabId, () => removeRoomSessionForTabNow(tabId, storage));
+}
+
+async function removeRoomSessionForTabNow(tabId: number, storage: StorageAreaLike): Promise<void> {
+  await storage.remove(roomSessionStorageKey(tabId));
+}
+
+function enqueueRoomSessionOperation<T>(tabId: number, operation: () => Promise<T>): Promise<T> {
+  const previous = roomSessionOperationsByTab.get(tabId) ?? Promise.resolve();
+  const current = previous.catch(() => undefined).then(operation);
+  const queued = current.finally(() => {
+    if (roomSessionOperationsByTab.get(tabId) === queued) {
+      roomSessionOperationsByTab.delete(tabId);
+    }
+  });
+  roomSessionOperationsByTab.set(tabId, queued);
+  return queued;
+}
+
+export async function loadRoomSession(
+  currentUserId: string | null,
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  const response = await sendRoomSessionMessage(
+    {
+      type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+      command: "load",
+      currentUserId,
+    },
+    dependencies.sendMessage,
+  );
+  return response.record;
+}
+
+export async function persistRoomSession(
+  roomId: string,
+  ownerUserId: string,
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<RoomSessionRecord> {
+  const response = await sendRoomSessionMessage(
+    {
+      type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+      command: "persist",
+      roomId,
+      ownerUserId,
+    },
+    dependencies.sendMessage,
+  );
+  if (!response.record) {
+    throw new Error("Room session storage rejected the current account");
+  }
+  return response.record;
+}
+
+export async function clearRoomSession(
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<void> {
+  await sendRoomSessionMessage(
+    { type: ROOM_SESSION_STORAGE_MESSAGE_TYPE, command: "clear" },
+    dependencies.sendMessage,
+  );
+}
+
+export async function clearRoomSessionIfMatch(
+  record: RoomSessionRecord,
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<void> {
+  await sendRoomSessionMessage(
+    { type: ROOM_SESSION_STORAGE_MESSAGE_TYPE, command: "clear-if-match", record },
+    dependencies.sendMessage,
+  );
+}
+
+export async function migrateLegacyRoomSession(
+  currentUserId: string | null,
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  const pageStorage = dependencies.pageSessionStorage ?? sessionStorage;
+  const prefixResponse = await sendRoomSessionMessage(
+    { type: ROOM_SESSION_STORAGE_MESSAGE_TYPE, command: "legacy-prefix" },
+    dependencies.sendMessage,
+  );
+  const legacyGroups = legacyStorageGroups(prefixResponse.legacyPrefix ?? null);
+  const values = legacyGroups.map((group) => readLegacyGroup(pageStorage, group));
+  const selected =
+    values.find((value) => isCompleteLegacyRecordForUser(value.record, currentUserId)) ??
+    values.find((value) => value.hasAnyValue);
+  const response = await sendRoomSessionMessage(
+    {
+      type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+      command: "migrate",
+      currentUserId,
+      legacyRecord: selected?.record ?? null,
+    },
+    dependencies.sendMessage,
+  );
+
+  for (const group of legacyGroups) {
+    removePageStorageKey(pageStorage, group.roomId);
+    removePageStorageKey(pageStorage, group.ownerUserId);
+    removePageStorageKey(pageStorage, group.participantSessionId);
+  }
+
+  return response.record;
+}
+
+async function loadRecordForUser(
+  storage: StorageAreaLike,
+  tabId: number,
+  currentUserId: string | null,
+): Promise<RoomSessionRecord | null> {
+  const key = roomSessionStorageKey(tabId);
+  const stored = await storage.get(key);
+  const rawRecord = stored[key];
+  if (rawRecord === undefined) {
+    return null;
+  }
+
+  const record = parseRoomSessionRecord(rawRecord);
+  if (!record || !isNonEmptyString(currentUserId) || record.ownerUserId !== currentUserId) {
+    await storage.remove(key);
+    return null;
+  }
+
+  return record;
+}
+
+async function persistRecord(
+  storage: StorageAreaLike,
+  tabId: number,
+  roomId: string | null,
+  ownerUserId: string | null,
+  randomUUID: () => string,
+): Promise<RoomSessionRecord | null> {
+  const key = roomSessionStorageKey(tabId);
+  if (!isNonEmptyString(roomId) || !isNonEmptyString(ownerUserId)) {
+    await storage.remove(key);
+    return null;
+  }
+
+  const stored = await storage.get(key);
+  const existing = parseRoomSessionRecord(stored[key]);
+  const record: RoomSessionRecord = {
+    version: ROOM_SESSION_RECORD_VERSION,
+    revision: nextRoomSessionRevision(existing),
+    roomId,
+    ownerUserId,
+    participantSessionId:
+      existing?.roomId === roomId && existing.ownerUserId === ownerUserId
+        ? existing.participantSessionId
+        : createParticipantSessionId(randomUUID),
   };
+  await storage.set({ [key]: record });
+  return record;
 }
 
-export function getPersistedRoomId(
-  namespace: RoomSessionNamespace,
-  storage: SessionStorageLike = sessionStorage,
-): string | null {
-  try {
-    return storage.getItem(roomIdKey(namespace));
-  } catch {
-    return null;
+async function migrateRecord(
+  storage: StorageAreaLike,
+  tabId: number,
+  currentUserId: string | null,
+  legacyRecord: LegacyRoomSessionRecord | null,
+  randomUUID: () => string,
+): Promise<RoomSessionRecord | null> {
+  if (legacyRecord === null) {
+    return loadRecordForUser(storage, tabId, currentUserId);
   }
-}
 
-export function getPersistedRoomOwnerId(
-  namespace: RoomSessionNamespace,
-  storage: SessionStorageLike = sessionStorage,
-): string | null {
-  try {
-    return storage.getItem(roomOwnerKey(namespace));
-  } catch {
-    return null;
-  }
-}
-
-export function getPersistedRoomIdForUser(
-  namespace: RoomSessionNamespace,
-  userId: string | null,
-  storage: SessionStorageLike = sessionStorage,
-): string | null {
-  const roomId = getPersistedRoomId(namespace, storage);
-  if (!roomId) {
+  const key = roomSessionStorageKey(tabId);
+  if (
+    !isNonEmptyString(currentUserId) ||
+    !isNonEmptyString(legacyRecord.roomId) ||
+    !isNonEmptyString(legacyRecord.ownerUserId) ||
+    legacyRecord.ownerUserId !== currentUserId
+  ) {
+    await storage.remove(key);
     return null;
   }
 
-  const ownerId = getPersistedRoomOwnerId(namespace, storage);
-  if (!ownerId || userId === null) {
-    return roomId;
+  const stored = await storage.get(key);
+  const existing = parseRoomSessionRecord(stored[key]);
+  const record: RoomSessionRecord = {
+    version: ROOM_SESSION_RECORD_VERSION,
+    revision: nextRoomSessionRevision(existing),
+    roomId: legacyRecord.roomId,
+    ownerUserId: legacyRecord.ownerUserId,
+    participantSessionId: isNonEmptyString(legacyRecord.participantSessionId)
+      ? legacyRecord.participantSessionId
+      : existing?.roomId === legacyRecord.roomId &&
+          existing.ownerUserId === legacyRecord.ownerUserId
+        ? existing.participantSessionId
+        : createParticipantSessionId(randomUUID),
+  };
+  await storage.set({ [key]: record });
+  return record;
+}
+
+async function sendRoomSessionMessage(
+  message: RoomSessionStorageMessage,
+  sendMessage: RuntimeMessageSender = (value) => chrome.runtime.sendMessage(value),
+): Promise<Extract<RoomSessionStorageResponse, { ok: true }>> {
+  const response = await sendMessage(message);
+  if (!isObject(response) || typeof response.ok !== "boolean") {
+    throw new Error("Room session storage did not return a response");
+  }
+  if (!response.ok) {
+    throw new Error(
+      typeof response.error === "string" ? response.error : "Room session storage failed",
+    );
+  }
+  return response as Extract<RoomSessionStorageResponse, { ok: true }>;
+}
+
+async function clearRoomSessionIfMatchForTab(
+  storage: StorageAreaLike,
+  tabId: number,
+  expected: RoomSessionRecord,
+): Promise<RoomSessionRecord | null> {
+  const key = roomSessionStorageKey(tabId);
+  const stored = await storage.get(key);
+  const current = parseRoomSessionRecord(stored[key]);
+  if (!current) {
+    if (stored[key] !== undefined) {
+      await storage.remove(key);
+    }
+    return null;
   }
 
-  if (ownerId === userId) {
-    return roomId;
+  if (!roomSessionRecordsMatch(current, expected)) {
+    return current;
   }
 
-  clearPersistedRoomId(namespace, storage);
+  await storage.remove(key);
   return null;
 }
 
-export function persistRoomId(
-  namespace: RoomSessionNamespace,
-  roomId: string,
-  ownerUserId: string,
-  storage: SessionStorageLike = sessionStorage,
-): void {
+function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null {
+  const revision =
+    isObject(value) && value.revision === undefined
+      ? 0
+      : isObject(value) &&
+          typeof value.revision === "number" &&
+          Number.isSafeInteger(value.revision) &&
+          value.revision >= 0
+        ? value.revision
+        : null;
+  if (
+    !isObject(value) ||
+    revision === null ||
+    value.version !== ROOM_SESSION_RECORD_VERSION ||
+    !isNonEmptyString(value.roomId) ||
+    !isNonEmptyString(value.ownerUserId) ||
+    !isNonEmptyString(value.participantSessionId)
+  ) {
+    return null;
+  }
+
+  return {
+    version: ROOM_SESSION_RECORD_VERSION,
+    revision,
+    roomId: value.roomId,
+    ownerUserId: value.ownerUserId,
+    participantSessionId: value.participantSessionId,
+  };
+}
+
+function nextRoomSessionRevision(existing: RoomSessionRecord | null): number {
+  const revision = existing?.revision ?? 0;
+  if (revision >= Number.MAX_SAFE_INTEGER) {
+    throw new Error("Room session revision is exhausted");
+  }
+  return revision + 1;
+}
+
+function roomSessionRecordsMatch(
+  current: RoomSessionRecord,
+  expected: RoomSessionRecord,
+): boolean {
+  return (
+    current.version === expected.version &&
+    current.revision === expected.revision &&
+    current.roomId === expected.roomId &&
+    current.ownerUserId === expected.ownerUserId &&
+    current.participantSessionId === expected.participantSessionId
+  );
+}
+
+function legacyStorageGroups(prefix: string | null): Array<{
+  roomId: string;
+  ownerUserId: string;
+  participantSessionId: string;
+}> {
+  const groups = [];
+  if (isNonEmptyString(prefix)) {
+    groups.push({
+      roomId: `${prefix}:room-id`,
+      ownerUserId: `${prefix}:room-owner-id`,
+      participantSessionId: `${prefix}:participant-session-id`,
+    });
+  }
+  groups.push({
+    roomId: LEGACY_ROOM_SESSION_STORAGE_KEY,
+    ownerUserId: LEGACY_ROOM_SESSION_OWNER_STORAGE_KEY,
+    participantSessionId: LEGACY_PARTICIPANT_SESSION_STORAGE_KEY,
+  });
+  return groups;
+}
+
+function readLegacyGroup(
+  storage: PageSessionStorageLike,
+  keys: { roomId: string; ownerUserId: string; participantSessionId: string },
+): { hasAnyValue: boolean; record: LegacyRoomSessionRecord } {
+  const record = {
+    roomId: readPageStorageKey(storage, keys.roomId),
+    ownerUserId: readPageStorageKey(storage, keys.ownerUserId),
+    participantSessionId: readPageStorageKey(storage, keys.participantSessionId),
+  };
+  return {
+    hasAnyValue: Object.values(record).some((value) => value !== null),
+    record,
+  };
+}
+
+function readPageStorageKey(storage: PageSessionStorageLike, key: string): string | null {
   try {
-    storage.setItem(roomIdKey(namespace), roomId);
-    storage.setItem(roomOwnerKey(namespace), ownerUserId);
+    return storage.getItem(key);
   } catch {
-    // Session storage may be unavailable on some embedded pages.
+    return null;
   }
 }
 
-export function clearPersistedRoomId(
-  namespace: RoomSessionNamespace,
-  storage: SessionStorageLike = sessionStorage,
-): void {
+function removePageStorageKey(storage: PageSessionStorageLike, key: string): void {
   try {
-    storage.removeItem(roomIdKey(namespace));
-    storage.removeItem(roomOwnerKey(namespace));
+    storage.removeItem(key);
   } catch {
-    // Session storage may be unavailable on some embedded pages.
+    // A page may block sessionStorage; the background ACK remains authoritative.
   }
 }
 
-export function clearLegacyRoomSessionStorage(
-  storage: SessionStorageLike = sessionStorage,
-): void {
-  try {
-    storage.removeItem(LEGACY_ROOM_SESSION_STORAGE_KEY);
-    storage.removeItem(LEGACY_ROOM_SESSION_OWNER_STORAGE_KEY);
-  } catch {
-    // Session storage may be unavailable on some embedded pages.
-  }
+function roomSessionStorageKey(tabId: number): string {
+  return `${ROOM_SESSION_RECORD_KEY_PREFIX}${tabId}`;
 }
 
-async function getOrCreateExtensionInstallId(): Promise<string> {
-  const stored = await chrome.storage.local.get(ROOM_SESSION_INSTALL_ID_STORAGE_KEY);
-  const existing = stored[ROOM_SESSION_INSTALL_ID_STORAGE_KEY];
-  if (typeof existing === "string" && existing.length > 0) {
-    return existing;
-  }
-
-  const generated = `install-${crypto.randomUUID()}`;
-  await chrome.storage.local.set({ [ROOM_SESSION_INSTALL_ID_STORAGE_KEY]: generated });
-  return generated;
+function createParticipantSessionId(randomUUID: () => string): string {
+  return `session-${randomUUID()}`;
 }
 
-function roomIdKey(namespace: RoomSessionNamespace): string {
-  return `${namespace.prefix}:room-id`;
+function isLegacyRoomSessionRecord(value: unknown): value is LegacyRoomSessionRecord {
+  return (
+    isObject(value) &&
+    isNullableString(value.roomId) &&
+    isNullableString(value.ownerUserId) &&
+    isNullableString(value.participantSessionId)
+  );
 }
 
-function roomOwnerKey(namespace: RoomSessionNamespace): string {
-  return `${namespace.prefix}:room-owner-id`;
+function isCompleteLegacyRecordForUser(
+  record: LegacyRoomSessionRecord,
+  currentUserId: string | null,
+): boolean {
+  return (
+    isNonEmptyString(currentUserId) &&
+    isNonEmptyString(record.roomId) &&
+    record.ownerUserId === currentUserId
+  );
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === "string";
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
 }

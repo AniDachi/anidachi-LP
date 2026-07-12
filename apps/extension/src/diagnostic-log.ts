@@ -1,5 +1,10 @@
 import { ANIDACHI_BUILD_ID, API_HTTP_BASE, API_WS_BASE, WEB_HTTP_BASE } from "./constants";
 import { AUTH_TOKENS_STORAGE_KEY } from "./auth-tokens";
+import {
+  hashPrivacySafeId,
+  sanitizePrivacySafeData,
+  sanitizePrivacySafeText,
+} from "./privacy-sanitizer";
 
 export type DiagnosticSeverity = "info" | "warn" | "error";
 
@@ -67,19 +72,6 @@ const EXPORT_WINDOW_MS_BY_MODE: Record<DiagnosticMode, number> = {
   full: 2 * 60_000,
 };
 const STARTED_AT = performance.now();
-
-const SECRET_FIELD_RE = /token|secret|cookie|authorization|password/i;
-const HASH_ID_FIELDS = new Set([
-  "userId",
-  "participantId",
-  "participantSessionId",
-  "localParticipantId",
-  "remoteUserId",
-  "sessionId",
-  "fromUserId",
-  "toUserId",
-  "byUserId",
-]);
 
 export function createSaveDiagnosticsMessage(
   mode: DiagnosticMode,
@@ -149,8 +141,8 @@ async function appendDiagnosticEntry(input: {
   entries.push({
     at: new Date().toISOString(),
     elapsedMs: Math.round(performance.now() - STARTED_AT),
-    scope: input.scope,
-    event: input.event,
+    scope: sanitizePrivacySafeText(input.scope),
+    event: sanitizePrivacySafeText(input.event),
     severity: input.severity,
     ...(input.data === undefined ? {} : { data: sanitizeDiagnosticData(input.data) }),
   });
@@ -165,7 +157,9 @@ async function appendDiagnosticEntry(input: {
 async function readDiagnosticEntries(): Promise<DiagnosticEntry[]> {
   const value = await chrome.storage.local.get(DIAGNOSTIC_STORAGE_KEY);
   const entries = value[DIAGNOSTIC_STORAGE_KEY];
-  return Array.isArray(entries) ? entries.filter(isDiagnosticEntry) : [];
+  return Array.isArray(entries)
+    ? entries.filter(isDiagnosticEntry).map(sanitizeDiagnosticEntry)
+    : [];
 }
 
 async function clearDiagnosticEntries(): Promise<void> {
@@ -255,14 +249,17 @@ async function readSafeStorageSnapshot(): Promise<Record<string, unknown>> {
     | undefined;
 
   return {
-    keys: Object.keys(storage).sort(),
+    keys: Object.keys(storage).map(sanitizeDiagnosticStorageKey).sort(),
     auth: authTokens
       ? {
           hasAccessToken: typeof authTokens.accessToken === "string",
           hasRefreshToken: typeof authTokens.refreshToken === "string",
           user: authTokens.user
             ? {
-                id: typeof authTokens.user.id === "string" ? hashDebugId(authTokens.user.id) : null,
+                id:
+                  typeof authTokens.user.id === "string"
+                    ? hashPrivacySafeId(authTokens.user.id)
+                    : null,
                 displayName:
                   typeof authTokens.user.displayName === "string"
                     ? authTokens.user.displayName
@@ -274,6 +271,13 @@ async function readSafeStorageSnapshot(): Promise<Record<string, unknown>> {
         }
       : null,
   };
+}
+
+function sanitizeDiagnosticStorageKey(key: string): string {
+  const accountScopedKey = key.match(
+    /^(.*(?:watchProgress|watchLibraryCache|watchLibrarySyncLedger)\.v\d+)\..+$/i,
+  );
+  return accountScopedKey ? `${accountScopedKey[1]}.<redacted-id>` : key;
 }
 
 function compactPageDebug(value: unknown, mode: DiagnosticMode): unknown {
@@ -338,8 +342,9 @@ function normalizePageDebugEntry(value: unknown): DiagnosticEntry | null {
   return {
     at: entry.at,
     elapsedMs: typeof entry.elapsedMs === "number" ? entry.elapsedMs : 0,
-    scope: typeof entry.scope === "string" ? `page.${entry.scope}` : "page",
-    event: typeof entry.message === "string" ? entry.message : "event",
+    scope:
+      typeof entry.scope === "string" ? sanitizePrivacySafeText(`page.${entry.scope}`) : "page",
+    event: typeof entry.message === "string" ? sanitizePrivacySafeText(entry.message) : "event",
     severity: "info",
     ...(entry.data === undefined
       ? {}
@@ -503,48 +508,14 @@ function isDiagnosticEntry(value: unknown): value is DiagnosticEntry {
 }
 
 function sanitizeDiagnosticData(value: unknown): unknown {
-  return JSON.parse(
-    JSON.stringify(value, (key, item) => {
-      if (SECRET_FIELD_RE.test(key)) {
-        if (typeof item === "boolean" || typeof item === "number" || item === null) {
-          return item;
-        }
-        return item === undefined ? item : "<redacted>";
-      }
-
-      if (HASH_ID_FIELDS.has(key) && typeof item === "string") {
-        return hashDebugId(item);
-      }
-
-      if (typeof item === "string") {
-        return redactUrl(item);
-      }
-
-      return item;
-    }),
-  );
+  return sanitizePrivacySafeData(value);
 }
 
-function redactUrl(value: string): string {
-  if (!/^https?:\/\//i.test(value)) {
-    return value;
-  }
-
-  try {
-    const url = new URL(value);
-    return `${url.origin}${url.pathname}${url.search ? "?<redacted>" : ""}${
-      url.hash ? "#<redacted>" : ""
-    }`;
-  } catch {
-    return value;
-  }
-}
-
-function hashDebugId(value: string): string {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return `id_${(hash >>> 0).toString(36)}`;
+function sanitizeDiagnosticEntry(entry: DiagnosticEntry): DiagnosticEntry {
+  return {
+    ...entry,
+    scope: sanitizePrivacySafeText(entry.scope),
+    event: sanitizePrivacySafeText(entry.event),
+    ...(entry.data === undefined ? {} : { data: sanitizeDiagnosticData(entry.data) }),
+  };
 }

@@ -1,3 +1,5 @@
+import { createPrivacySafeHmacId } from "./privacy-id";
+
 export interface IceServer {
   urls: string | string[];
   username?: string;
@@ -19,6 +21,12 @@ export interface IceServersPayload {
   ttlSeconds: number;
 }
 
+export interface IceServersScope {
+  now: number;
+  roomId: string;
+  userId: string;
+}
+
 export interface IceServersRelaySummary {
   hasStun: boolean;
   hasTurn: boolean;
@@ -29,10 +37,13 @@ export interface IceServersRelaySummary {
 }
 
 const CLOUDFLARE_TURN_ENDPOINT = "https://rtc.live.cloudflare.com/v1/turn/keys";
-const DEFAULT_TURN_TTL_SECONDS = 12 * 60 * 60;
+const DEFAULT_TURN_TTL_SECONDS = 15 * 60;
 const MIN_TURN_TTL_SECONDS = 10 * 60;
-const MAX_TURN_TTL_SECONDS = 24 * 60 * 60;
+const MAX_TURN_TTL_SECONDS = 30 * 60;
 const TURN_CACHE_SAFETY_MS = 5 * 60 * 1000;
+
+const TURN_CACHE_MAX_SCOPES = 64;
+const TURN_CUSTOM_IDENTIFIER_DOMAIN = "anidachi:turn-credential:v1";
 
 const FALLBACK_ICE_SERVERS: IceServer[] = [
   {
@@ -43,7 +54,6 @@ const FALLBACK_ICE_SERVERS: IceServer[] = [
 interface CachedCloudflareIceServers {
   expiresAtMs: number;
   freshUntilMs: number;
-  keyId: string;
   payload: IceServersPayload;
 }
 
@@ -51,13 +61,18 @@ interface CloudflareIceServersResponse {
   iceServers?: unknown;
 }
 
-let cachedCloudflareIceServers: CachedCloudflareIceServers | null = null;
+const cachedCloudflareIceServers = new Map<string, CachedCloudflareIceServers>();
 
 export async function createIceServersPayload(
   env: IceServerEnv,
+  scope: IceServersScope,
   fetcher: typeof fetch = fetch,
 ): Promise<IceServersPayload> {
   const ttlSeconds = parseTurnTtlSeconds(env.CLOUDFLARE_TURN_TTL_SECONDS);
+
+  if (!scope.roomId || !scope.userId || !Number.isFinite(scope.now)) {
+    throw new Error("Valid room/user TURN scope is required");
+  }
 
   if (!env.CLOUDFLARE_TURN_KEY_ID || !env.CLOUDFLARE_TURN_KEY_API_TOKEN) {
     return {
@@ -69,12 +84,16 @@ export async function createIceServersPayload(
     };
   }
 
-  const now = Date.now();
-  const freshCachedPayload = readCachedCloudflarePayload(
-    env.CLOUDFLARE_TURN_KEY_ID,
-    now,
-    "fresh",
-  );
+  const customIdentifier = `ani_${(
+    await createPrivacySafeHmacId(
+      env.CLOUDFLARE_TURN_KEY_API_TOKEN,
+      TURN_CUSTOM_IDENTIFIER_DOMAIN,
+      [scope.roomId, scope.userId],
+    )
+  ).slice(0, 40)}`;
+  const cacheKey = `${env.CLOUDFLARE_TURN_KEY_ID}:${customIdentifier}`;
+  const now = scope.now;
+  const freshCachedPayload = readCachedCloudflarePayload(cacheKey, now, "fresh");
   if (freshCachedPayload) {
     return { ...freshCachedPayload, cache: "fresh" };
   }
@@ -88,7 +107,7 @@ export async function createIceServersPayload(
           Authorization: `Bearer ${env.CLOUDFLARE_TURN_KEY_API_TOKEN}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ttl: ttlSeconds }),
+        body: JSON.stringify({ ttl: ttlSeconds, customIdentifier }),
       },
     );
 
@@ -115,14 +134,10 @@ export async function createIceServersPayload(
       relay,
       ttlSeconds,
     };
-    writeCachedCloudflarePayload(env.CLOUDFLARE_TURN_KEY_ID, iceServersPayload, now);
+    writeCachedCloudflarePayload(cacheKey, iceServersPayload, now);
     return iceServersPayload;
   } catch (error) {
-    const validCachedPayload = readCachedCloudflarePayload(
-      env.CLOUDFLARE_TURN_KEY_ID,
-      now,
-      "valid",
-    );
+    const validCachedPayload = readCachedCloudflarePayload(cacheKey, now, "valid");
     if (validCachedPayload) {
       return { ...validCachedPayload, cache: "stale-if-error" };
     }
@@ -231,37 +246,55 @@ function getIceServerUrls(server: IceServer): string[] {
 }
 
 function readCachedCloudflarePayload(
-  keyId: string,
+  cacheKey: string,
   nowMs: number,
   mode: "fresh" | "valid",
 ): IceServersPayload | null {
-  if (!cachedCloudflareIceServers || cachedCloudflareIceServers.keyId !== keyId) {
+  pruneCloudflareIceServerCache(nowMs);
+  const cached = cachedCloudflareIceServers.get(cacheKey);
+  if (!cached) {
     return null;
   }
 
-  const validUntilMs =
-    mode === "fresh"
-      ? cachedCloudflareIceServers.freshUntilMs
-      : cachedCloudflareIceServers.expiresAtMs;
+  const validUntilMs = mode === "fresh" ? cached.freshUntilMs : cached.expiresAtMs;
   if (validUntilMs <= nowMs) {
     return null;
   }
 
-  return cloneIceServersPayload(cachedCloudflareIceServers.payload);
+  cachedCloudflareIceServers.delete(cacheKey);
+  cachedCloudflareIceServers.set(cacheKey, cached);
+  return {
+    ...cloneIceServersPayload(cached.payload),
+    ttlSeconds: Math.max(1, Math.ceil((cached.expiresAtMs - nowMs) / 1000)),
+  };
 }
 
 function writeCachedCloudflarePayload(
-  keyId: string,
+  cacheKey: string,
   payload: IceServersPayload,
   nowMs: number,
 ): void {
   const expiresAtMs = nowMs + payload.ttlSeconds * 1000;
-  cachedCloudflareIceServers = {
+  cachedCloudflareIceServers.delete(cacheKey);
+  cachedCloudflareIceServers.set(cacheKey, {
     expiresAtMs,
     freshUntilMs: Math.max(nowMs, expiresAtMs - TURN_CACHE_SAFETY_MS),
-    keyId,
     payload: cloneIceServersPayload(payload),
-  };
+  });
+  pruneCloudflareIceServerCache(nowMs);
+  while (cachedCloudflareIceServers.size > TURN_CACHE_MAX_SCOPES) {
+    const oldestKey = cachedCloudflareIceServers.keys().next().value;
+    if (oldestKey === undefined) break;
+    cachedCloudflareIceServers.delete(oldestKey);
+  }
+}
+
+function pruneCloudflareIceServerCache(nowMs: number): void {
+  for (const [key, cached] of cachedCloudflareIceServers) {
+    if (cached.expiresAtMs <= nowMs) {
+      cachedCloudflareIceServers.delete(key);
+    }
+  }
 }
 
 function cloneIceServersPayload(payload: IceServersPayload): IceServersPayload {
@@ -276,5 +309,9 @@ function cloneIceServersPayload(payload: IceServersPayload): IceServersPayload {
 }
 
 export function clearIceServersCacheForTest(): void {
-  cachedCloudflareIceServers = null;
+  cachedCloudflareIceServers.clear();
+}
+
+export function getIceServersCacheSizeForTest(): number {
+  return cachedCloudflareIceServers.size;
 }

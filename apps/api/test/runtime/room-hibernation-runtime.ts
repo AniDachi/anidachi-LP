@@ -301,11 +301,14 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 				"next_p2p_server_seq", "99", 2_000,
 			);
 			state.storage.sql.exec(
-				`INSERT INTO p2p_replay (
-					server_seq, dedupe_key, to_user_id, room_generation,
-					source_generation, server_received_at, event_json
-				) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-				99, "stale", "guest-user", 1, 1, 2_000, "{}",
+				`INSERT INTO p2p_replay_meta (
+					server_seq, dedupe_hash, room_generation, source_generation,
+					server_received_at, signal_kind
+				) VALUES (?, ?, ?, ?, ?, ?)`,
+				99,
+				"a".repeat(64),
+				1, 1, 2_000,
+				"renegotiate",
 			);
 		});
 
@@ -318,13 +321,13 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 				.exec<{ key: string }>("SELECT key FROM room_meta ORDER BY key")
 				.toArray().map((row) => row.key),
 			replayCount: state.storage.sql
-				.exec<{ count: number }>("SELECT COUNT(*) AS count FROM p2p_replay")
+				.exec<{ count: number }>("SELECT COUNT(*) AS count FROM p2p_replay_meta")
 				.toArray()[0]?.count,
 		}));
 		expect(persisted).toEqual({ keys: ["room_ended"], replayCount: 0 });
 	});
 
-	it("wakes from hibernation with participants, host state, camera state, and P2P replay intact", async () => {
+	it("wakes with durable room state and requests fresh P2P negotiation instead of persisting media", async () => {
 		const roomId = `runtime-hibernation-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace })
 			.ROOMS;
@@ -480,6 +483,62 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		expect(afterEvictSignal.sourceGeneration).toBe(
 			cameraSnapshot.sourceGeneration,
 		);
+		const durableReplay = await runInDurableObject(stub, (_instance, state) => {
+			const tables = state.storage.sql
+				.exec<{ name: string }>(
+					"SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'p2p_replay%' ORDER BY name",
+				)
+				.toArray()
+				.map((row) => row.name);
+			const rows = state.storage.sql
+				.exec<Record<string, string | number>>("SELECT * FROM p2p_replay_meta ORDER BY server_seq")
+				.toArray();
+			return { rows, tables };
+		});
+		expect(durableReplay.tables).toEqual(["p2p_replay_meta"]);
+		const durableReplayText = JSON.stringify(durableReplay.rows);
+		for (const forbidden of [
+			roomId,
+			"host-user",
+			"guest-user",
+			"host-connection",
+			"before-evict",
+			"after-evict",
+			"candidate",
+			"sdp",
+		]) {
+			expect(durableReplayText).not.toContain(forbidden);
+		}
+		await runInDurableObject(stub, (_instance, state) => {
+			// Simulate privacy-safe replay metadata aging out before the next
+			// hibernation wake. The durable sequence high-water mark must still
+			// force media resync because no raw signal can be replayed.
+			state.storage.sql.exec("DELETE FROM p2p_replay_meta");
+			state.storage.sql.exec(
+				`CREATE TABLE p2p_replay (
+					server_seq INTEGER PRIMARY KEY,
+					dedupe_key TEXT NOT NULL,
+					to_user_id TEXT NOT NULL,
+					room_generation INTEGER NOT NULL,
+					source_generation INTEGER NOT NULL,
+					server_received_at INTEGER NOT NULL,
+					event_json TEXT NOT NULL
+				)`,
+			);
+			state.storage.sql.exec(
+				`INSERT INTO p2p_replay (
+					server_seq, dedupe_key, to_user_id, room_generation,
+					source_generation, server_received_at, event_json
+				) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+				999,
+				"raw-room:raw-user-a:raw-user-b:raw-signal",
+				"raw-user-b",
+				1,
+				1,
+				Date.now(),
+				JSON.stringify({ sdp: "raw-sdp", candidate: "raw-candidate" }),
+			);
+		});
 
 		await evictDurableObject(stub, { webSockets: "hibernate" });
 
@@ -490,20 +549,30 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			sessionId: "guest-session-reconnect",
 			userId: "guest-user",
 		});
-		await guestReconnect.waitFor(
+		const reconnectSnapshot = await guestReconnect.waitFor(
 			(event) => event.type === "ROOM_SNAPSHOT",
 			"guest reconnect snapshot",
 		);
-		const replayedSignal = await guestReconnect.waitFor(
-			(event) =>
-				event.type === "P2P_SIGNAL" && event.clientSignalId === "after-evict",
-			"guest replay after second wake",
-		);
-		expect(replayedSignal).toMatchObject({
-			type: "P2P_SIGNAL",
-			clientSignalId: "after-evict",
-			serverSeq: afterEvictSignal.serverSeq,
+		expect(reconnectSnapshot).toMatchObject({
+			type: "ROOM_SNAPSHOT",
+			p2pResyncRequired: true,
 		});
+		await sleep(100);
+		expect(
+			guestReconnect.hasEvent(
+				(event) =>
+					event.type === "P2P_SIGNAL" && event.clientSignalId === "after-evict",
+			),
+		).toBe(false);
+		const replayTablesAfterMigration = await runInDurableObject(stub, (_instance, state) =>
+			state.storage.sql
+				.exec<{ name: string }>(
+					"SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'p2p_replay%' ORDER BY name",
+				)
+				.toArray()
+				.map((row) => row.name),
+		);
+		expect(replayTablesAfterMigration).toEqual(["p2p_replay_meta"]);
 
 		host.close();
 		guest.close();
@@ -683,6 +752,10 @@ class RuntimeRoomClient {
 
 	sendRaw(message: string): void {
 		this.webSocket.send(message);
+	}
+
+	hasEvent(predicate: (event: ServerEvent) => boolean): boolean {
+		return this.events.some(predicate);
 	}
 
 	async waitFor(

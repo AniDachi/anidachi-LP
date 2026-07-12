@@ -145,6 +145,7 @@ function deferred<T>() {
 function createP2PControllerHarness(
   localParticipant = participant("host", false),
   sendDisposition: RoomSendDisposition = "sent",
+  refreshIceServers?: () => Promise<RTCIceServer[]>,
 ) {
   const activeSpeakerChanges: string[][] = [];
   const cameraStatuses: boolean[] = [];
@@ -164,6 +165,7 @@ function createP2PControllerHarness(
     onVideosChange: (items) => videos.push(items),
     onVoiceMessageChange: (message) => messages.push(message),
     onVoiceStatusChange: (status) => voiceStatuses.push(status),
+    refreshIceServers,
     sendSignal: (toUserId, signal, metadata) => {
       signals.push({ metadata, signal, toUserId });
       return sendDisposition;
@@ -1707,9 +1709,52 @@ class FakeRtcPeerConnection extends EventTarget {
       this.remoteDescription = description as RTCSessionDescription;
       this.signalingState =
         description.type === "offer" ? "have-remote-offer" : "stable";
-    },
-  );
+    });
 }
+
+describe("P2P TURN credential refresh", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    FakeRtcPeerConnection.instances = [];
+    vi.stubGlobal("RTCPeerConnection", FakeRtcPeerConnection);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("installs refreshed ICE servers before restarting an existing peer", async () => {
+    const refreshedIceServers: RTCIceServer[] = [
+      { urls: ["stun:stun.cloudflare.com:3478"] },
+      {
+        credential: "short-lived-credential",
+        urls: ["turns:turn.cloudflare.com:5349?transport=tcp"],
+        username: "short-lived-username",
+      },
+    ];
+    const refreshIceServers = vi.fn(async () => refreshedIceServers);
+    const harness = createP2PControllerHarness(participant("host"), "sent", refreshIceServers);
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    pc.signalingState = "stable";
+    window.dispatchEvent(new Event("online"));
+
+    await vi.waitFor(() => expect(refreshIceServers).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(pc.restartIce).toHaveBeenCalledTimes(1));
+    expect(pc.setConfiguration).toHaveBeenCalledWith(
+      expect.objectContaining({ iceServers: refreshedIceServers }),
+    );
+    expect(pc.setConfiguration.mock.invocationCallOrder[0]).toBeLessThan(
+      pc.restartIce.mock.invocationCallOrder[0],
+    );
+
+    harness.controller.disconnect();
+  });
+});
 
 describe("P2P idle peer linger", () => {
   beforeEach(() => {
@@ -1930,6 +1975,30 @@ describe("P2P idle peer linger", () => {
     harness.controller.disconnect();
   });
 
+  it("renegotiates a healthy peer when durable replay reports a signaling gap", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    pc.connectionState = "connected";
+    pc.iceConnectionState = "connected";
+    pc.signalingState = "stable";
+    pc.createOffer.mockClear();
+
+    await harness.controller.handleSignalingTransportReady({
+      forceMediaResync: true,
+      reconnect: true,
+      senderConnectionId: "local-connection-b",
+    });
+
+    expect(pc.createOffer).toHaveBeenCalledTimes(1);
+    expect(pc.close).not.toHaveBeenCalled();
+    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
+
+    harness.controller.disconnect();
+  });
+
   it("requests renegotiation after a dropped answer reconnect", async () => {
     const harness = createP2PControllerHarness(
       participant("viewer"),
@@ -2083,12 +2152,13 @@ describe("P2P idle peer linger", () => {
   });
 
   it("retries the same SDP after WebRTC rejects the first application", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const harness = createP2PControllerHarness(participant("viewer"));
     harness.controller.updateParticipants([participant("host", true)]);
     await vi.advanceTimersByTimeAsync(0);
     const pc = FakeRtcPeerConnection.instances[0];
     pc.setRemoteDescription.mockRejectedValueOnce(
-      new Error("temporary failure"),
+      new Error("temporary failure candidate:1 1 udp 1 203.0.113.9 5000 typ host"),
     );
     const signal: P2PSignal = {
       kind: "offer",
@@ -2106,6 +2176,12 @@ describe("P2P idle peer linger", () => {
     });
 
     expect(pc.setRemoteDescription).toHaveBeenCalledTimes(2);
+    const consoleText = warn.mock.calls
+      .flat()
+      .map((value) => (value instanceof Error ? value.message : String(value)))
+      .join(" ");
+    expect(consoleText).not.toContain("203.0.113.9");
+    expect(consoleText).not.toContain("candidate:1");
 
     harness.controller.disconnect();
   });

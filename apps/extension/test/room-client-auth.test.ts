@@ -427,20 +427,21 @@ describe("authenticated room client", () => {
     expect(onTransportReady).not.toHaveBeenCalled();
     expect(timeline).toEqual([]);
 
-    socket?.message(roomSnapshot());
+    socket?.message({ ...roomSnapshot(), p2pResyncRequired: true });
 
     expect(timeline).toEqual([
       "event:ROOM_SNAPSHOT",
       `ready:${senderConnectionId}`,
     ]);
     expect(onTransportReady).toHaveBeenCalledWith({
+      forceMediaResync: true,
       senderConnectionId,
       reconnect: true,
     });
 
     socket?.message({ ...roomSnapshot(), serverSeq: 2 });
     expect(onTransportReady).toHaveBeenCalledTimes(1);
-    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).not.toHaveBeenCalled();
 
     client.close();
   });

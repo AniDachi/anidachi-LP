@@ -530,6 +530,7 @@ export class RoomClient {
           options.onTransportReady?.({
             senderConnectionId,
             reconnect: options.reconnect === true,
+            ...(event.p2pResyncRequired ? { forceMediaResync: true } : {}),
           });
         }
       } catch (error) {
@@ -537,7 +538,6 @@ export class RoomClient {
           error: error instanceof Error ? error.message : String(error),
           raw: String(message.data).slice(0, 500),
         });
-        console.warn("[Anidachi] Ignoring invalid server event", error);
       }
     });
 
