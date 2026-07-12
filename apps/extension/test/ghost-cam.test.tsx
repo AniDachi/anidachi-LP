@@ -162,6 +162,8 @@ describe("useGhostCam P2P session lifecycle", () => {
     await act(async () => {
       root.unmount();
     });
+
+    expect(firstController.disconnect).toHaveBeenCalledTimes(1);
   });
 
   it("delivers a signal from an existing peer even if the latest snapshot is temporarily inactive", async () => {
