@@ -331,8 +331,10 @@ The extension currently supports:
   countdown display. Worker waits for the existing internal Web callback to
   acknowledge one service-role-only RPC that atomically applies usage and ends
   the room before it persists the terminal tombstone. The additive staging
-  migration and shared staging callback secret were installed on 2026-07-13;
-  matching Web/Worker rollout and staging acceptance remain required;
+  migration, shared callback secret, matching Web deployment, and matching
+  Worker deployment were rolled out in that order on 2026-07-13. Automated CI,
+  room/P2P E2E, Web smoke, and Worker smoke passed; real two-client acceptance
+  remains required before promotion;
 - debug export from the extension panel. Current diagnostic bundles include a
   unified top-level timeline that merges background diagnostics with page debug
   entries, while still keeping the split `diagnosticEntries` and
@@ -366,9 +368,11 @@ These are intentionally not treated as solved:
   pending.
 - The simplified Free quota meter is locally covered across presence changes,
   hibernation, repeated end, and atomic rollback-tested Supabase finalization.
-  Staging migration/deploy acceptance is pending. A global lease preventing an
-  adversarial Free host from running several rooms concurrently is deliberately
-  deferred until product evidence justifies that extra coordination.
+  The exact staging migration/Web/Worker rollout and automated smokes passed;
+  one normal Free-room lifecycle with two real clients and persisted usage
+  verification is still pending. A global lease preventing an adversarial Free
+  host from running several rooms concurrently is deliberately deferred until
+  product evidence justifies that extra coordination.
 - Source switching is not complete: live `SOURCE_CHANGED` and
   `sourceGeneration` bumps are implemented, but durable Supabase source
   persistence, room-create source descriptor plumbing, and explicit
