@@ -24,6 +24,9 @@ Project: Anidachi web app.
 | `ANIDACHI_STAGING_GATE_ENABLED` | Preview / `staging` | Enables app-level staging password gate | Unauthenticated staging request shows gate |
 | `ANIDACHI_STAGING_GATE_PASSWORD_SHA256` | Preview / `staging` | Hash of staging access password | Gate accepts known password, rejects wrong password |
 | `ANIDACHI_STAGING_GATE_COOKIE_SECRET` | Preview / `staging` | Signs staging access cookie | Gate cookie persists in same browser |
+| `ANIDACHI_API_INTERNAL_BASE_URL` | Preview / `staging` | Server-only Worker origin, expected `https://anidachi-api-staging.vladislav-gul7.workers.dev` | Host room end succeeds and the Worker receives `/internal/rooms/:roomId/end` |
+| `ANIDACHI_API_INTERNAL_BASE_URL` | Production | Server-only Worker origin, expected `https://anidachi-api-production.vladislav-gul7.workers.dev` | Production host room end reaches the production Worker, never staging |
+| `ANIDACHI_INTERNAL_API_SECRET` | Production / Preview `staging` | Authenticates Web/Worker room lifecycle calls; use a distinct matching value in both runtimes per environment | Host room end completes without `ROOM_END_SYNC_FAILED`; unauthenticated internal requests return `401` |
 | `KREATLI_CRM_PASSWORD` | Production / Preview as needed | Internal CRM access | CRM login works only for authorized users |
 | `KREATLI_CRM_SESSION_SECRET` | Production / Preview as needed | Internal CRM session signing | CRM session survives refresh |
 | `STRIPE_SECRET_KEY_TEST` | Preview / `staging`, Development | Server-only Stripe sandbox key. Must start with `sk_test_` | Staging checkout creates a test Checkout Session |
@@ -67,13 +70,15 @@ Engine is enabled and the GitHub token has the current scopes.
 | Analytics Engine binding | `ROOM_ANALYTICS` | `ROOM_ANALYTICS` | Dataset names differ by environment |
 | Analytics dataset | `anidachi_room_events_staging` | `anidachi_room_events_production` | Appears after binding and first writes |
 | Worker env var | `ANIDACHI_ENV=staging` | `ANIDACHI_ENV=production` | Used in telemetry/debugging |
+| Worker env var | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://staging.anidachi.app` | `ANIDACHI_WEB_INTERNAL_BASE_URL=https://www.anidachi.app` | Worker callback target for atomic room finalization |
+| Worker secret | `ANIDACHI_INTERNAL_API_SECRET` | `ANIDACHI_INTERNAL_API_SECRET` | Must match the Web value for the same environment and differ between staging/production |
 
 Worker secrets are managed with Wrangler/GitHub Actions. Do not store them in
 repo docs. Expected categories:
 
 - `ANIDACHI_JWT_SECRET`
 - Cloudflare TURN key id / API token
-- Any future internal server-to-server room-end secret
+- `ANIDACHI_INTERNAL_API_SECRET`
 
 ## OAuth Redirect Allowlists
 

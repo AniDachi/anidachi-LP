@@ -334,7 +334,10 @@ The extension currently supports:
   migration, shared callback secret, matching Web deployment, and matching
   Worker deployment were rolled out in that order on 2026-07-13. Automated CI,
   room/P2P E2E, Web smoke, and Worker smoke passed; real two-client acceptance
-  remains required before promotion;
+  remains required before promotion. The first manual host-end check exposed a
+  missing Vercel `ANIDACHI_API_INTERNAL_BASE_URL` and correctly failed closed
+  with `502`; the staging URL was configured, Web was redeployed, and a real
+  staging room then transitioned from `live` to persisted `ended` state;
 - debug export from the extension panel. Current diagnostic bundles include a
   unified top-level timeline that merges background diagnostics with page debug
   entries, while still keeping the split `diagnosticEntries` and

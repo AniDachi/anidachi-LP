@@ -68,6 +68,18 @@ For login or redirect failures:
 5. Trigger a fresh deployment if Vercel/Worker env changed.
 6. Verify login from website and extension.
 
+For room-end synchronization failures, verify the complete server-only bridge
+before changing code:
+
+1. Web has `ANIDACHI_API_INTERNAL_BASE_URL` for the matching Worker.
+2. Worker has `ANIDACHI_WEB_INTERNAL_BASE_URL` for the matching Web deployment.
+3. Web and Worker have the same environment-specific
+   `ANIDACHI_INTERNAL_API_SECRET`.
+4. Trigger a fresh Web deployment after Vercel env changes; changing a dashboard
+   value does not update an existing deployment.
+5. End a real staging room and verify both Worker acknowledgement and the
+   persisted Supabase `ended` state.
+
 ## Supabase Rollback
 
 For schema/data issues:
