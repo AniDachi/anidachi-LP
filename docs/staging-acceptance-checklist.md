@@ -37,6 +37,12 @@ password-gated and noindex.
 
 Minimum for room/P2P changes:
 
+- [ ] Vercel staging has `ANIDACHI_API_INTERNAL_BASE_URL` pointing to the
+      staging Worker.
+- [ ] Vercel staging and the staging Worker have the same
+      `ANIDACHI_INTERNAL_API_SECRET` value.
+- [ ] The staging Worker has `ANIDACHI_WEB_INTERNAL_BASE_URL` pointing to
+      `https://staging.anidachi.app`.
 - [ ] Host creates a room from a supported video page.
 - [ ] Host can copy invite.
 - [ ] Guest opens invite and joins.
@@ -47,6 +53,8 @@ Minimum for room/P2P changes:
 - [ ] Reloading host recovers without ghost participants.
 - [ ] Reloading guest recovers without ghost participants.
 - [ ] Host can end room.
+- [ ] Ending a room produces no `ROOM_END_SYNC_FAILED`, persists `ended` in
+      Supabase, and disconnects the room from the Worker.
 - [ ] Ended room cannot be rejoined.
 
 Preferred media profile:

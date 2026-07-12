@@ -3095,8 +3095,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1783878120.2974796,
-    "ast_hash": "7bf32523d3c227d359772413914ad646",
+    "mtime": 1783880808.5272114,
+    "ast_hash": "ecc03be23e71117898ae0e7ee476e152",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3110,8 +3110,8 @@
     "semantic_hash": ""
   },
   "docs/environment-and-secrets-matrix.md": {
-    "mtime": 1783759471.8888273,
-    "ast_hash": "a44671ca47636ff4ae9f6e464f529468",
+    "mtime": 1783880780.5422099,
+    "ast_hash": "538c6a79dd2ffa86306bcc0a5cad7e3a",
     "semantic_hash": ""
   },
   "docs/experimental-features.md": {
@@ -3150,8 +3150,8 @@
     "semantic_hash": ""
   },
   "docs/release-and-rollback-runbook.md": {
-    "mtime": 1783759471.89081,
-    "ast_hash": "40f8541abdd8a14d4b497fe4c6dcefc5",
+    "mtime": 1783880780.5429752,
+    "ast_hash": "aefe2b8ea8a78ebd47af4559a309da74",
     "semantic_hash": ""
   },
   "docs/shared-watch-progress-tracker.md": {
@@ -3170,8 +3170,8 @@
     "semantic_hash": ""
   },
   "docs/staging-acceptance-checklist.md": {
-    "mtime": 1783759471.8911033,
-    "ast_hash": "b66d8f1016524719e67174766f2523ee",
+    "mtime": 1783880780.542755,
+    "ast_hash": "bf3f328c6b2cb03e2c6957d371db48df",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-05-26-resources-progress-menu.md": {
