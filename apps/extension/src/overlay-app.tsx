@@ -305,7 +305,7 @@ const CHAT_DISPLAY_MODE_STORAGE_KEY = "local:chatDisplayMode";
 const DEFAULT_MESSAGE_DISPLAY_MODE: MessageDisplayMode = "chat";
 const DEFAULT_CHAT_DISPLAY_MODE: ChatDisplayMode = "live";
 const LIVE_CHAT_MESSAGE_TTL_MS = 9000;
-const LIVE_CHAT_MAX_MESSAGES = 6;
+const LIVE_CHAT_MAX_MESSAGES = Math.max(...OVERLAY_LAYOUT_CHAT_MESSAGE_OPTIONS);
 const CHAT_HISTORY_MAX_MESSAGES = 80;
 const SETTINGS_RAIL_DRAG_THRESHOLD_PX = 9;
 const SETTINGS_RAIL_HORIZONTAL_INTENT_RATIO = 1.2;
@@ -1284,7 +1284,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
     void storage.getItem<unknown>(OVERLAY_LAYOUT_STORAGE_KEY).then((storedPreferences) => {
       if (!cancelled && storedPreferences !== null) {
-        setOverlayLayoutPreferences(normalizeOverlayLayoutPreferences(storedPreferences));
+        const next = normalizeOverlayLayoutPreferences(storedPreferences);
+        overlayLayoutPreferencesRef.current = next;
+        setOverlayLayoutPreferences(next);
       }
     });
 
@@ -1341,13 +1343,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       updater: (current: OverlayLayoutPreferences) => OverlayLayoutPreferences,
       options: { persist?: boolean } = {},
     ) => {
-      setOverlayLayoutPreferences((current) => {
-        const next = updater(current);
-        if (options.persist !== false) {
-          persistOverlayLayoutPreferences(next);
-        }
-        return next;
-      });
+      const next = updater(overlayLayoutPreferencesRef.current);
+      overlayLayoutPreferencesRef.current = next;
+      setOverlayLayoutPreferences(next);
+      if (options.persist !== false) {
+        persistOverlayLayoutPreferences(next);
+      }
     },
     [persistOverlayLayoutPreferences],
   );
@@ -1355,6 +1356,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const applyLayoutPreset = useCallback(
     (presetId: OverlayLayoutPreferences["presetId"]) => {
       const next = applyOverlayLayoutPreset(presetId);
+      overlayLayoutPreferencesRef.current = next;
       setOverlayLayoutPreferences(next);
       persistOverlayLayoutPreferences(next);
     },
@@ -1362,13 +1364,13 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   );
 
   const saveCustomLayoutPreset = useCallback(() => {
-    const next = normalizeOverlayLayoutPreferences({
-      ...overlayLayoutPreferencesRef.current,
-      presetId: "custom",
-    });
-    setOverlayLayoutPreferences(next);
-    persistOverlayLayoutPreferences(next);
-  }, [persistOverlayLayoutPreferences]);
+    updateOverlayLayoutPreferences((current) =>
+      normalizeOverlayLayoutPreferences({
+        ...current,
+        presetId: "custom",
+      }),
+    );
+  }, [updateOverlayLayoutPreferences]);
 
   const moveLayoutObjectToPointer = useCallback(
     (
@@ -1473,6 +1475,44 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
     },
     [persistOverlayLayoutPreferences],
+  );
+
+  const handleLayoutObjectKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLButtonElement>, objectId: OverlayLayoutObjectId) => {
+      let deltaX = 0;
+      let deltaY = 0;
+
+      switch (event.key) {
+        case "ArrowDown":
+          deltaY = 1;
+          break;
+        case "ArrowLeft":
+          deltaX = -1;
+          break;
+        case "ArrowRight":
+          deltaX = 1;
+          break;
+        case "ArrowUp":
+          deltaY = -1;
+          break;
+        default:
+          return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      setSelectedLayoutObject(objectId);
+      updateOverlayLayoutPreferences((current) => {
+        const currentRect = current.objects[objectId];
+        return moveOverlayLayoutObject(
+          current,
+          objectId,
+          currentRect.x + deltaX,
+          currentRect.y + deltaY,
+        );
+      });
+    },
+    [updateOverlayLayoutPreferences],
   );
 
   const handleLayoutObjectSizeChange = useCallback(
@@ -5237,7 +5277,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                     </button>
                   </div>
 
+                  <p className="sr-only" id="anidachi-layout-preview-instructions">
+                    Select Video or Chat, then use the arrow keys to move it one grid cell.
+                  </p>
                   <div
+                    aria-describedby="anidachi-layout-preview-instructions"
                     aria-label="Overlay layout preview"
                     className="layout-preview"
                     onPointerCancel={handleLayoutPreviewPointerEnd}
@@ -5245,7 +5289,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                     onPointerMove={handleLayoutPreviewPointerMove}
                     onPointerUp={handleLayoutPreviewPointerEnd}
                     ref={layoutPreviewRef}
-                    role="application"
+                    role="group"
                   >
                     <div className="layout-preview-grid" aria-hidden="true">
                       {layoutPreviewCells.map((cell) => (
@@ -5257,11 +5301,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                       ))}
                     </div>
                     <button
+                      aria-label="Video position"
                       aria-pressed={selectedLayoutObject === "video"}
                       className={`layout-preview-object layout-preview-video${
                         selectedLayoutObject === "video" ? " selected" : ""
                       }`}
                       data-layout-object="video"
+                      onClick={() => setSelectedLayoutObject("video")}
+                      onKeyDown={(event) => handleLayoutObjectKeyDown(event, "video")}
                       style={getGridRectStyle(overlayLayoutPreferences.objects.video)}
                       type="button"
                     >
@@ -5271,11 +5318,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                       <span className="layout-video-ghost ghost-three" />
                     </button>
                     <button
+                      aria-label="Chat position"
                       aria-pressed={selectedLayoutObject === "chat"}
                       className={`layout-preview-object layout-preview-chat${
                         selectedLayoutObject === "chat" ? " selected" : ""
                       }`}
                       data-layout-object="chat"
+                      onClick={() => setSelectedLayoutObject("chat")}
+                      onKeyDown={(event) => handleLayoutObjectKeyDown(event, "chat")}
                       style={getGridRectStyle(overlayLayoutPreferences.objects.chat)}
                       type="button"
                     >

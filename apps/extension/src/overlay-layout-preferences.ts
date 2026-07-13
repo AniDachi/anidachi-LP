@@ -250,14 +250,19 @@ function normalizeChatMaxMessages(
   value: unknown,
   fallback: OverlayLayoutChatMaxMessages,
 ): OverlayLayoutChatMaxMessages {
-  const numeric = typeof value === "number" ? value : Number(value);
-  if (numeric <= 3) {
-    return 3;
+  const numeric =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim() !== ""
+        ? Number(value)
+        : Number.NaN;
+  if (!Number.isFinite(numeric)) {
+    return fallback;
   }
-  if (numeric >= 8) {
-    return 8;
-  }
-  return fallback === 8 ? 8 : 5;
+
+  return OVERLAY_LAYOUT_CHAT_MESSAGE_OPTIONS.reduce((nearest, option) =>
+    Math.abs(option - numeric) < Math.abs(nearest - numeric) ? option : nearest,
+  );
 }
 
 function normalizeGridRect(
@@ -291,7 +296,7 @@ function clampGridRect(rect: OverlayLayoutGridRect): OverlayLayoutGridRect {
 function resolveObjectCollisions(
   objects: Record<OverlayLayoutObjectId, OverlayLayoutGridRect>,
 ): Record<OverlayLayoutObjectId, OverlayLayoutGridRect> {
-  const video = clampGridRect(objects.video);
+  const video = ensureGridHasFreeCell(clampGridRect(objects.video));
   const chat = findNearestAvailableRect(clampGridRect(objects.chat), [video]);
   return { video, chat };
 }
@@ -301,29 +306,60 @@ function findNearestAvailableRect(
   blockedRects: OverlayLayoutGridRect[],
 ): OverlayLayoutGridRect {
   const rect = clampGridRect(proposed);
-  if (!blockedRects.some((blocked) => rectsOverlap(rect, blocked))) {
+  const blocked = blockedRects.map(clampGridRect);
+  if (!blocked.some((blockedRect) => rectsOverlap(rect, blockedRect))) {
     return rect;
   }
 
-  let best: { distance: number; rect: OverlayLayoutGridRect } | null = null;
-  const maxX = OVERLAY_LAYOUT_GRID_COLUMNS - rect.w;
-  const maxY = OVERLAY_LAYOUT_GRID_ROWS - rect.h;
+  let best: {
+    area: number;
+    dimensionLoss: number;
+    distance: number;
+    rect: OverlayLayoutGridRect;
+  } | null = null;
 
-  for (let y = 0; y <= maxY; y += 1) {
-    for (let x = 0; x <= maxX; x += 1) {
-      const candidate = { ...rect, x, y };
-      if (blockedRects.some((blocked) => rectsOverlap(candidate, blocked))) {
-        continue;
-      }
+  for (let h = rect.h; h >= 1; h -= 1) {
+    for (let w = rect.w; w >= 1; w -= 1) {
+      const maxX = OVERLAY_LAYOUT_GRID_COLUMNS - w;
+      const maxY = OVERLAY_LAYOUT_GRID_ROWS - h;
 
-      const distance = Math.abs(candidate.x - rect.x) + Math.abs(candidate.y - rect.y);
-      if (!best || distance < best.distance) {
-        best = { distance, rect: candidate };
+      for (let y = 0; y <= maxY; y += 1) {
+        for (let x = 0; x <= maxX; x += 1) {
+          const candidate = { h, w, x, y };
+          if (blocked.some((blockedRect) => rectsOverlap(candidate, blockedRect))) {
+            continue;
+          }
+
+          const area = candidate.w * candidate.h;
+          const dimensionLoss = rect.w - candidate.w + (rect.h - candidate.h);
+          const distance = Math.abs(candidate.x - rect.x) + Math.abs(candidate.y - rect.y);
+          if (
+            !best ||
+            area > best.area ||
+            (area === best.area && dimensionLoss < best.dimensionLoss) ||
+            (area === best.area &&
+              dimensionLoss === best.dimensionLoss &&
+              distance < best.distance)
+          ) {
+            best = { area, dimensionLoss, distance, rect: candidate };
+          }
+        }
       }
     }
   }
 
   return best?.rect ?? rect;
+}
+
+function ensureGridHasFreeCell(rect: OverlayLayoutGridRect): OverlayLayoutGridRect {
+  if (rect.w * rect.h < OVERLAY_LAYOUT_GRID_COLUMNS * OVERLAY_LAYOUT_GRID_ROWS) {
+    return rect;
+  }
+
+  return clampGridRect({
+    ...rect,
+    w: rect.w - 1,
+  });
 }
 
 function rectsOverlap(a: OverlayLayoutGridRect, b: OverlayLayoutGridRect): boolean {

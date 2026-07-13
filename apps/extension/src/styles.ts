@@ -715,6 +715,11 @@ export const overlayStyles = `
     cursor: grabbing;
   }
 
+  .layout-preview-object:focus-visible {
+    outline: 2px solid rgba(190, 255, 220, 0.78);
+    outline-offset: 2px;
+  }
+
   .layout-preview-object.selected {
     border-color: rgba(255, 181, 116, 0.58);
     box-shadow:
@@ -1996,8 +2001,11 @@ export const overlayStyles = `
     right: auto;
     bottom: auto;
     left: var(--live-chat-left, auto);
-    width: min(var(--live-chat-width, 205px), 260px, calc(100% - 12px));
-    max-height: max(80px, min(var(--live-chat-height, 122px), 220px));
+    width: min(var(--live-chat-width, 205px), calc(100% - 12px));
+    max-height: min(
+      max(80px, var(--live-chat-height, 122px)),
+      calc(100% - 12px)
+    );
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -2015,7 +2023,6 @@ export const overlayStyles = `
   }
 
   .live-chat-column.history {
-    max-height: 172px;
     justify-content: flex-start;
     gap: 6px;
     padding: 12px 0 10px;
