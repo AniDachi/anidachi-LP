@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { countSurveyLeads } from "@/lib/kreatli-crm/survey-lead-shared";
 import { readContacts } from "@/lib/kreatli-crm/store";
+import { countSurveyLeads } from "@/lib/kreatli-crm/survey-lead-shared";
 
 export async function GET() {
   try {
@@ -10,12 +10,21 @@ export async function GET() {
       { count },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+          "Cache-Control":
+            "public, max-age=0, s-maxage=30, stale-while-revalidate=60",
         },
       },
     );
   } catch (e) {
     console.error("[waitlist-stats] Failed to read survey lead count:", e);
-    return NextResponse.json({ count: null }, { status: 500 });
+    return NextResponse.json(
+      { count: null },
+      {
+        status: 503,
+        headers: {
+          "Cache-Control": "private, no-store, max-age=0",
+        },
+      },
+    );
   }
 }
