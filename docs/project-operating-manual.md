@@ -216,6 +216,30 @@ Extension login:
 7. The extension stores extension-scoped access/refresh tokens in
    `chrome.storage.local`.
 
+After exchange, the website and extension sessions have separate access and
+refresh lifecycles. The extension refreshes its own access token through
+`/api/extension/auth/refresh`; expiration of the short-lived website access
+cookie must not sign the extension out. The background service worker owns
+extension refresh and account reconciliation so tabs and the popup do not race
+each other.
+
+The website refresh cookie is checked through
+`/api/extension/auth/website-session` only when the extension needs to reconcile
+an explicit website logout or account change. That endpoint validates the
+existing cookie without rotating it. Transient network failures, rate limits,
+server errors, and malformed temporary responses keep the cached extension
+session; only a confirmed invalid extension refresh token, explicit logout, or
+confirmed account change clears it.
+Cached identity can remain visible while refresh is unavailable, but room,
+invite, and social actions must return a retryable error instead of using an
+unverified or expired bearer token.
+
+The background service worker performs one reconciliation when it starts so an
+account switch is not missed while the extension is updating or inactive. If
+browser cookie policy prevents the direct probe from receiving an existing
+cookie, reconciliation falls back to the non-interactive browser auth flow
+instead of interpreting the blocked request as logout.
+
 Important rule: the extension should never receive service-role keys, OAuth
 client secrets, JWT signing secrets, Stripe secrets, or Cloudflare TURN secrets.
 

@@ -1,6 +1,6 @@
-import fs from "fs/promises";
-import path from "path";
 import { get as blobGet, put as blobPut } from "@vercel/blob";
+import fs from "node:fs/promises";
+import path from "node:path";
 import type { Contact, Touch } from "./types";
 
 export function getCrmDataDir(): string {
@@ -22,13 +22,15 @@ function blobToken(): string | null {
 async function blobReadText(blobPath: string): Promise<string | null> {
   const token = blobToken();
   if (!token) return null;
-  try {
-    const result = await blobGet(blobPath, { access: BLOB_ACCESS, token });
-    if (!result || result.statusCode !== 200) return null;
-    return await new Response(result.stream).text();
-  } catch {
-    return null;
+
+  const result = await blobGet(blobPath, { access: BLOB_ACCESS, token });
+  if (!result) return null;
+  if (result.statusCode !== 200) {
+    throw new Error(
+      `Unexpected Vercel Blob response (${result.statusCode}) for ${blobPath}`,
+    );
   }
+  return await new Response(result.stream).text();
 }
 
 async function blobWriteText(blobPath: string, text: string): Promise<void> {
@@ -40,6 +42,26 @@ async function blobWriteText(blobPath: string, text: string): Promise<void> {
     addRandomSuffix: false,
     allowOverwrite: true,
   });
+}
+
+function parseContacts(raw: string, source: string): Contact[] {
+  let data: unknown;
+  try {
+    data = JSON.parse(raw) as unknown;
+  } catch (error) {
+    const detail = error instanceof Error ? `: ${error.message}` : "";
+    throw new Error(`Invalid CRM contacts data from ${source}${detail}`);
+  }
+
+  if (!Array.isArray(data)) {
+    throw new Error(`Invalid CRM contacts data from ${source}: expected an array`);
+  }
+  return data as Contact[];
+}
+
+function isFileNotFound(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error &&
+    (error as NodeJS.ErrnoException).code === "ENOENT";
 }
 
 function paths() {
@@ -111,24 +133,19 @@ export async function writeMeta(partial: Partial<CrmMeta>): Promise<void> {
 }
 
 export async function readContacts(): Promise<Contact[]> {
-  const blobText = await blobReadText(CONTACTS_BLOB_PATH);
-  if (blobText) {
-    try {
-      const data = JSON.parse(blobText) as unknown;
-      return Array.isArray(data) ? (data as Contact[]) : [];
-    } catch {
-      return [];
-    }
+  if (blobToken()) {
+    const blobText = await blobReadText(CONTACTS_BLOB_PATH);
+    return blobText === null ? [] : parseContacts(blobText, "Vercel Blob");
   }
 
   await ensureDir();
   const { contacts } = paths();
   try {
     const raw = await fs.readFile(contacts, "utf8");
-    const data = JSON.parse(raw) as unknown;
-    return Array.isArray(data) ? (data as Contact[]) : [];
-  } catch {
-    return [];
+    return parseContacts(raw, contacts);
+  } catch (error) {
+    if (isFileNotFound(error)) return [];
+    throw error;
   }
 }
 

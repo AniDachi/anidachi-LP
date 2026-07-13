@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getOverlayMountDecision, shouldRefreshSameVideoAdapter } from "../src/overlay-mount";
+import {
+  getOverlayMountDecision,
+  getOverlayPageDecision,
+  isOverlayAllowedOnPage,
+  mutationsAffectVideo,
+  shouldRefreshSameVideoAdapter,
+} from "../src/overlay-mount";
 
 describe("overlay mount decision", () => {
   it("updates the mounted overlay instead of remounting when the detected video changes", () => {
@@ -19,6 +25,43 @@ describe("overlay mount decision", () => {
     const video = document.createElement("video");
 
     expect(getOverlayMountDecision(null, video)).toBe("mount");
+  });
+
+  it("allows Crunchyroll overlays only on watch routes", () => {
+    expect(isOverlayAllowedOnPage("https://www.crunchyroll.com/watch/G14U4D0PE/example")).toBe(
+      true,
+    );
+    expect(isOverlayAllowedOnPage("https://www.crunchyroll.com/")).toBe(false);
+    expect(isOverlayAllowedOnPage("https://www.crunchyroll.com/videos/popular")).toBe(false);
+    expect(isOverlayAllowedOnPage("https://www.youtube.com/watch?v=example")).toBe(true);
+  });
+
+  it("disposes a mounted overlay after leaving a Crunchyroll watch route", () => {
+    expect(getOverlayPageDecision(true, "https://www.crunchyroll.com/")).toBe("dispose");
+    expect(getOverlayPageDecision(false, "https://www.crunchyroll.com/")).toBe("idle");
+    expect(
+      getOverlayPageDecision(true, "https://www.crunchyroll.com/watch/G14U4D0PE/example"),
+    ).toBe("continue");
+  });
+
+  it("treats removal of a nested video player as a lifecycle change", async () => {
+    const container = document.createElement("div");
+    const player = document.createElement("section");
+    player.append(document.createElement("video"));
+    container.append(player);
+    document.body.append(container);
+
+    const recordsPromise = new Promise<MutationRecord[]>((resolve) => {
+      const observer = new MutationObserver((records) => {
+        observer.disconnect();
+        resolve(records);
+      });
+      observer.observe(container, { childList: true, subtree: true });
+    });
+
+    player.remove();
+
+    expect(mutationsAffectVideo(await recordsPromise)).toBe(true);
   });
 
   it("refreshes the adapter for a reused video when the source fingerprint changes", () => {

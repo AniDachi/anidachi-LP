@@ -304,6 +304,23 @@ describe("P2P camera local-track recovery", () => {
     controller.disconnect();
   });
 
+  it("stops the local camera track when the media controller disconnects", async () => {
+    const cameraTrack = new FakeVideoTrack("camera-disconnect");
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia: vi.fn().mockResolvedValue(fakeVideoStream(cameraTrack)),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const { controller } = createP2PControllerHarness();
+
+    await controller.setCameraEnabled(true);
+    expect(cameraTrack.readyState).toBe("live");
+
+    controller.disconnect();
+
+    expect(cameraTrack.readyState).toBe("ended");
+  });
+
   it("keeps the public camera status on while scheduling delayed re-acquire after a local track ends", async () => {
     const firstTrack = new FakeVideoTrack("camera-1");
     const secondTrack = new FakeVideoTrack("camera-2");

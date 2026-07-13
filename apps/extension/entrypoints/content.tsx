@@ -9,7 +9,12 @@ import {
   ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
   isMessageComposerShortcutEvent,
 } from "../src/message-composer-events";
-import { getOverlayMountDecision, shouldRefreshSameVideoAdapter } from "../src/overlay-mount";
+import {
+  getOverlayMountDecision,
+  getOverlayPageDecision,
+  mutationsAffectVideo,
+  shouldRefreshSameVideoAdapter,
+} from "../src/overlay-mount";
 import { OverlayApp } from "../src/overlay-app";
 import { findBestVideoAdapter, type VideoAdapter } from "../src/video-adapter";
 
@@ -62,6 +67,20 @@ export default defineContentScript({
     ensurePageStyles();
 
     const mountOrRelocate = () => {
+      const pageDecision = getOverlayPageDecision(mounted !== null, location.href);
+      if (pageDecision === "dispose") {
+        logDebug("content", "dispose overlay after route change", {
+          adapterId: mounted?.adapter.id,
+          url: location.href,
+        });
+        mounted?.dispose();
+        mounted = null;
+        return;
+      }
+      if (pageDecision === "idle") {
+        return;
+      }
+
       const adapter = findBestVideoAdapter();
       if (!adapter) {
         return;
@@ -134,11 +153,9 @@ export default defineContentScript({
     mountOrRelocate();
     scheduleNextMountPoll();
 
-    // Watch the DOM so the overlay mounts (or swaps to a new <video>) the instant
-    // the player node is inserted — covering page reloads and Crunchyroll/YouTube
-    // SPA episode switches with no poll latency. Cheap: batches with no added
-    // <video> are skipped, and the scan is bypassed entirely when a check is
-    // already queued for the frame.
+    // Watch the DOM so player insertion/removal triggers a lifecycle check.
+    // Removal matters on SPA route changes: pagehide does not fire when
+    // Crunchyroll replaces a watch page with its catalogue.
     const handleVideoLifecycleEvent = (event: Event) => {
       if (event.target instanceof HTMLVideoElement) {
         scheduleMountCheck();
@@ -149,7 +166,7 @@ export default defineContentScript({
         return;
       }
 
-      if (mutationsAddVideo(mutations)) {
+      if (mutationsAffectVideo(mutations)) {
         scheduleMountCheck();
       }
     });
@@ -157,6 +174,10 @@ export default defineContentScript({
     document.addEventListener("loadstart", handleVideoLifecycleEvent, true);
     document.addEventListener("loadedmetadata", handleVideoLifecycleEvent, true);
     document.addEventListener("emptied", handleVideoLifecycleEvent, true);
+    const navigation = window.navigation;
+    navigation?.addEventListener("currententrychange", scheduleMountCheck);
+    window.addEventListener("popstate", scheduleMountCheck);
+    window.addEventListener("hashchange", scheduleMountCheck);
 
     document.addEventListener("fullscreenchange", () => mounted?.relocate());
     window.addEventListener("pagehide", () => {
@@ -168,35 +189,15 @@ export default defineContentScript({
       document.removeEventListener("loadstart", handleVideoLifecycleEvent, true);
       document.removeEventListener("loadedmetadata", handleVideoLifecycleEvent, true);
       document.removeEventListener("emptied", handleVideoLifecycleEvent, true);
+      navigation?.removeEventListener("currententrychange", scheduleMountCheck);
+      window.removeEventListener("popstate", scheduleMountCheck);
+      window.removeEventListener("hashchange", scheduleMountCheck);
       stopKeyboardGuard();
       stopCrunchyrollStudy?.();
       mounted?.dispose();
     });
   },
 });
-
-function nodeContainsVideo(node: Node): boolean {
-  if (node instanceof HTMLVideoElement) {
-    return true;
-  }
-
-  return node instanceof Element && node.querySelector("video") !== null;
-}
-
-function mutationsAddVideo(mutations: MutationRecord[]): boolean {
-  // Only added nodes can introduce a new player to mount/swap to; removals are
-  // handled by the relocate observers and the safety-net poll, so skipping them
-  // halves the per-batch scan on mutation-heavy SPA pages.
-  for (const mutation of mutations) {
-    for (const node of mutation.addedNodes) {
-      if (nodeContainsVideo(node)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
 
 function installMessageComposerKeyboardGuard(): () => void {
   const isComposerOpen = () =>

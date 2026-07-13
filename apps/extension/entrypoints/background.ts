@@ -3,6 +3,7 @@ import {
   handleAuthMessage,
   handleWebsiteAuthCookieChange,
   isAuthMessage,
+  reconcileExtensionSessionAgainstWebsite,
 } from "../src/auth-client";
 import { handleDiagnosticMessage, isDiagnosticMessage } from "../src/diagnostic-log";
 import { handleRoomHttpMessage, isRoomHttpMessage } from "../src/room-client";
@@ -53,6 +54,14 @@ export default defineBackground(() => {
   chrome.cookies?.onChanged?.addListener((changeInfo) => {
     void handleWebsiteAuthCookieChange(changeInfo);
   });
+
+  const reconcileStoredWebsiteSession = () => {
+    void reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false }).catch(
+      () => undefined,
+    );
+  };
+  chrome.runtime.onStartup?.addListener(reconcileStoredWebsiteSession);
+  chrome.runtime.onInstalled?.addListener(reconcileStoredWebsiteSession);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
     void removeRoomSessionForTab(tabId).catch(() => undefined);

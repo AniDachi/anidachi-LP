@@ -3,11 +3,17 @@ import {
   assertExtensionLogoutRedirect,
   buildExtensionConnectUrl,
   buildExtensionLogoutUrl,
+  clearExtensionSessionIfCurrent,
   createAuthMessage,
+  ExtensionAuthTemporarilyUnavailableError,
+  fetchWebsiteSessionProbe,
   getFastSessionAndRefreshInBackground,
+  getCurrentExtensionSession,
   isAuthMessage,
   normalizeExtensionRefreshResponse,
   parseExtensionAuthRedirect,
+  reconcileExtensionSessionAgainstWebsite,
+  refreshExtensionSession,
   runWebsiteSignOutSequence,
   shouldClearExtensionSessionForWebsiteProbe,
   shouldClearExtensionSessionForWebsiteCookieChange,
@@ -150,6 +156,198 @@ describe("extension auth client", () => {
     ).toBe(false);
   });
 
+  it("checks the long-lived website session through the extension auth endpoint", async () => {
+    const request = vi.fn(async (_url: string, _init?: RequestInit) =>
+      Response.json({ user: storedTokens.user }, { status: 200 }),
+    );
+
+    await expect(fetchWebsiteSessionProbe(request)).resolves.toEqual({
+      status: "authenticated",
+      user: storedTokens.user,
+    });
+
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(new URL(request.mock.calls[0][0]).pathname).toBe(
+      "/api/extension/auth/website-session",
+    );
+  });
+
+  it("falls back to browser auth when cookie blocking hides an existing website session", async () => {
+    const request = vi.fn(async (_url: string, _init?: RequestInit) =>
+      Response.json({ error: "Unauthorized" }, { status: 401 }),
+    );
+
+    await expect(
+      fetchWebsiteSessionProbe(request, async () => true),
+    ).resolves.toEqual({ status: "browser-flow-required" });
+  });
+
+  it("keeps storage but rejects actions when refresh is temporarily unavailable", async () => {
+    const clearStored = vi.fn(async () => undefined);
+    const setStored = vi.fn(async () => undefined);
+
+    await expect(
+      refreshExtensionSession({
+        getStored: async () => storedTokens,
+        requestRefresh: async () => ({ kind: "unavailable", status: 503 }),
+        resolveUser: async () => null,
+        setStored,
+        clearStored,
+      }),
+    ).rejects.toBeInstanceOf(ExtensionAuthTemporarilyUnavailableError);
+
+    expect(clearStored).not.toHaveBeenCalled();
+    expect(setStored).not.toHaveBeenCalled();
+  });
+
+  it("clears the cached session only when the refresh token is invalid", async () => {
+    const clearStored = vi.fn(async () => undefined);
+
+    await expect(
+      refreshExtensionSession({
+        getStored: async () => storedTokens,
+        requestRefresh: async () => ({ kind: "invalid" }),
+        resolveUser: async () => null,
+        setStored: vi.fn(async () => undefined),
+        clearStored,
+      }),
+    ).resolves.toBeNull();
+
+    expect(clearStored).toHaveBeenCalledTimes(1);
+  });
+
+  it("coalesces concurrent refresh requests into one operation", async () => {
+    let resolveRefresh:
+      | ((result: { kind: "success"; accessToken: string }) => void)
+      | undefined;
+    const requestRefresh = vi.fn(
+      () =>
+        new Promise<{ kind: "success"; accessToken: string }>((resolve) => {
+          resolveRefresh = resolve;
+        }),
+    );
+    const setStored = vi.fn(async () => undefined);
+    const dependencies = {
+      getStored: async () => storedTokens,
+      requestRefresh,
+      resolveUser: async () => storedTokens.user,
+      setStored,
+      clearStored: vi.fn(async () => undefined),
+    };
+
+    const first = refreshExtensionSession(dependencies);
+    const second = refreshExtensionSession(dependencies);
+    await vi.waitFor(() => expect(requestRefresh).toHaveBeenCalledTimes(1));
+    resolveRefresh?.({ kind: "success", accessToken: "access-2" });
+
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      { ...storedTokens, accessToken: "access-2" },
+      { ...storedTokens, accessToken: "access-2" },
+    ]);
+    expect(setStored).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not restore a session that was cleared while refresh was in flight", async () => {
+    let storedReadCount = 0;
+    const setStored = vi.fn(async () => undefined);
+
+    await expect(
+      refreshExtensionSession({
+        getStored: async () => {
+          storedReadCount += 1;
+          return storedReadCount === 1 ? storedTokens : null;
+        },
+        requestRefresh: async () => ({ kind: "success", accessToken: "access-2" }),
+        resolveUser: async () => storedTokens.user,
+        setStored,
+        clearStored: vi.fn(async () => undefined),
+      }),
+    ).resolves.toBeNull();
+
+    expect(setStored).not.toHaveBeenCalled();
+  });
+
+  it("does not restore a session changed while refreshed user data was loading", async () => {
+    let storedReadCount = 0;
+    const replacement = {
+      ...storedTokens,
+      refreshToken: "replacement-refresh",
+      user: { ...storedTokens.user, id: "user-2" },
+    };
+    const setStored = vi.fn(async () => undefined);
+
+    await expect(
+      refreshExtensionSession({
+        getStored: async () => {
+          storedReadCount += 1;
+          return storedReadCount < 3 ? storedTokens : replacement;
+        },
+        requestRefresh: async () => ({ kind: "success", accessToken: "access-2" }),
+        resolveUser: async () => storedTokens.user,
+        setStored,
+        clearStored: vi.fn(async () => undefined),
+      }),
+    ).resolves.toBe(replacement);
+
+    expect(setStored).not.toHaveBeenCalled();
+  });
+
+  it("does not restore a session that was cleared during user validation", async () => {
+    let storedReadCount = 0;
+    const setStored = vi.fn(async () => undefined);
+
+    await expect(
+      getCurrentExtensionSession({
+        getStored: async () => {
+          storedReadCount += 1;
+          return storedReadCount === 1 ? storedTokens : null;
+        },
+        resolveUser: async () => storedTokens.user,
+        setStored,
+        refresh: async () => storedTokens,
+      }),
+    ).resolves.toBeNull();
+
+    expect(setStored).not.toHaveBeenCalled();
+  });
+
+  it("does not clear a replacement session after an older request finishes", async () => {
+    const replacement = {
+      ...storedTokens,
+      refreshToken: "replacement-refresh",
+      user: { ...storedTokens.user, id: "user-2" },
+    };
+    const clearStored = vi.fn(async () => undefined);
+
+    await expect(
+      clearExtensionSessionIfCurrent(storedTokens.refreshToken, {
+        getStored: async () => replacement,
+        clearStored,
+      }),
+    ).resolves.toBe(false);
+
+    expect(clearStored).not.toHaveBeenCalled();
+  });
+
+  it("does not mint an extension session during startup when none is stored", async () => {
+    const signInSilently = vi.fn(async () => storedTokens);
+
+    await expect(
+      reconcileExtensionSessionAgainstWebsite(
+        { adoptIfMissing: false },
+        {
+          getStored: async () => null,
+          ensureMatches: async () => "matches",
+          signInSilently,
+          getCurrent: async () => storedTokens,
+          revokeRefreshToken: async () => undefined,
+        },
+      ),
+    ).resolves.toBeNull();
+
+    expect(signInSilently).not.toHaveBeenCalled();
+  });
+
   it("clears extension auth only for configured website refresh cookie removals", () => {
     expect(
       shouldClearExtensionSessionForWebsiteCookieChange({
@@ -243,7 +441,8 @@ describe("extension auth client", () => {
       attemptWebsiteLogout: vi.fn(async () => {
         events.push("logout-flow");
       }),
-      clearTokens: vi.fn(async () => {
+      clearTokens: vi.fn(async (expectedRefreshToken) => {
+        expect(expectedRefreshToken).toBe(storedTokens.refreshToken);
         events.push("clear");
       }),
     });
