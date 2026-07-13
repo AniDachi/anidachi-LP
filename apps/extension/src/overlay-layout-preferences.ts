@@ -134,7 +134,8 @@ export function moveOverlayLayoutObject(
     y: Math.round(y),
   });
   const otherObjectId = objectId === "video" ? "chat" : "video";
-  const nextRect = findNearestAvailableRect(proposed, [current.objects[otherObjectId]]);
+  const nextRect =
+    findNearestAvailableRect(proposed, [current.objects[otherObjectId]]) ?? currentRect;
 
   return markCustom({
     ...current,
@@ -158,7 +159,8 @@ export function resizeOverlayLayoutObject(
     w: Math.round(size.w),
   });
   const otherObjectId = objectId === "video" ? "chat" : "video";
-  const nextRect = findNearestAvailableRect(proposed, [current.objects[otherObjectId]]);
+  const nextRect =
+    findNearestAvailableRect(proposed, [current.objects[otherObjectId]]) ?? currentRect;
 
   return markCustom({
     ...current,
@@ -298,13 +300,18 @@ function resolveObjectCollisions(
 ): Record<OverlayLayoutObjectId, OverlayLayoutGridRect> {
   const video = ensureGridHasFreeCell(clampGridRect(objects.video));
   const chat = findNearestAvailableRect(clampGridRect(objects.chat), [video]);
-  return { video, chat };
+  return chat
+    ? { video, chat }
+    : {
+        video: { ...VIDEO_FOOTPRINT },
+        chat: { ...CHAT_FOOTPRINT },
+      };
 }
 
 function findNearestAvailableRect(
   proposed: OverlayLayoutGridRect,
   blockedRects: OverlayLayoutGridRect[],
-): OverlayLayoutGridRect {
+): OverlayLayoutGridRect | null {
   const rect = clampGridRect(proposed);
   const blocked = blockedRects.map(clampGridRect);
   if (!blocked.some((blockedRect) => rectsOverlap(rect, blockedRect))) {
@@ -348,7 +355,7 @@ function findNearestAvailableRect(
     }
   }
 
-  return best?.rect ?? rect;
+  return best?.rect ?? null;
 }
 
 function ensureGridHasFreeCell(rect: OverlayLayoutGridRect): OverlayLayoutGridRect {
