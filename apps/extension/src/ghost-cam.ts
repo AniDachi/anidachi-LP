@@ -1,7 +1,13 @@
 import type { Participant } from "@anidachi/protocol";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { logDebug } from "./debug-log";
-import type { GhostVideo, IncomingP2PSignal, LiveVoiceStatus } from "./media-types";
+import type {
+  GhostVideo,
+  IncomingP2PSignal,
+  LiveVoiceStatus,
+  RoomSendDisposition,
+  SignalingTransportReady,
+} from "./media-types";
 import { loadP2PIceServers, refreshP2PIceServers } from "./p2p-ice";
 import {
   canReceiveP2PSignalFromParticipant,
@@ -32,11 +38,16 @@ interface GhostCamOptions {
   roomId: string | null;
   roomToken: string | null;
   sendP2PSignal: IncomingP2PSignalSender;
+  signalingTransportReady: SignalingTransportReady | null;
   sourceGeneration: number;
   voiceTalkActive: boolean;
 }
 
-type IncomingP2PSignalSender = (toUserId: string, signal: IncomingP2PSignal["signal"]) => void;
+type IncomingP2PSignalSender = (
+  toUserId: string,
+  signal: IncomingP2PSignal["signal"],
+  senderMediaSessionId: string,
+) => RoomSendDisposition;
 
 export function useGhostCam(options: GhostCamOptions): GhostCamSession {
   return useP2PGhostCam(options);
@@ -54,6 +65,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     roomToken,
     roomGeneration,
     sendP2PSignal,
+    signalingTransportReady,
     sourceGeneration,
     voiceTalkActive,
   } = options;
@@ -69,6 +81,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const participantsRef = useRef(participants);
   const roomGenerationRef = useRef(roomGeneration);
   const sendP2PSignalRef = useRef(sendP2PSignal);
+  const signalingTransportReadyRef = useRef(signalingTransportReady);
   const sourceGenerationRef = useRef(sourceGeneration);
   const voiceTalkActiveRef = useRef(voiceTalkActive);
   const remoteVoiceParticipantIdsRef = useRef<Set<string>>(new Set());
@@ -138,6 +151,13 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   }, [sendP2PSignal]);
 
   useEffect(() => {
+    signalingTransportReadyRef.current = signalingTransportReady;
+    if (signalingTransportReady) {
+      void controllerRef.current?.handleSignalingTransportReady(signalingTransportReady);
+    }
+  }, [signalingTransportReady]);
+
+  useEffect(() => {
     if (
       roomGenerationRef.current !== roomGeneration ||
       sourceGenerationRef.current !== sourceGeneration
@@ -184,7 +204,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
           return;
         }
 
-        console.warn("[Anidachi] P2P ICE setup failed", error);
+        logDebug("p2p.ice-config", "initial setup failed", {
+          error: error instanceof Error ? error.message : String(error),
+        });
         setVoiceStatus("error");
         setVoiceMessage("Media relay is temporarily unavailable.");
         return;
@@ -203,7 +225,8 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         onVoiceMessageChange: setVoiceMessage,
         onVoiceStatusChange: setVoiceStatus,
         refreshIceServers: () => refreshP2PIceServers(iceAuthRef.current ?? undefined),
-        sendSignal: (toUserId, signal) => sendP2PSignalRef.current(toUserId, signal),
+        sendSignal: (toUserId, signal, metadata) =>
+          sendP2PSignalRef.current(toUserId, signal, metadata.senderMediaSessionId),
       });
 
       ownedController = controller;
@@ -228,6 +251,10 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         roomGeneration,
         sourceGeneration,
       );
+      const readyTransport = signalingTransportReadyRef.current;
+      if (readyTransport) {
+        await controller.handleSignalingTransportReady(readyTransport);
+      }
       if (voiceTalkActiveRef.current) {
         void controller.startVoiceTalk();
       } else {
@@ -490,6 +517,9 @@ function replayPendingP2PSignals(
 
     void controller.handleSignal(item.fromUserId, item.signal, {
       senderConnectionId: item.senderConnectionId,
+      ...(item.senderMediaSessionId
+        ? { senderMediaSessionId: item.senderMediaSessionId }
+        : {}),
     });
   }
 }
@@ -497,6 +527,9 @@ function replayPendingP2PSignals(
 function p2pSignalMetadata(item: IncomingP2PSignal) {
   return {
     senderConnectionId: item.senderConnectionId,
+    ...(item.senderMediaSessionId
+      ? { senderMediaSessionId: item.senderMediaSessionId }
+      : {}),
   };
 }
 

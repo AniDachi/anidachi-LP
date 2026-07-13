@@ -173,28 +173,8 @@ describe("Anidachi hotkeys", () => {
     ).toBeNull();
   });
 
-  it("keeps push-to-talk alive across a visible window blur while the voice key is still held", () => {
-    expect(
-      shouldStopVoiceTalkOnWindowBlur({
-        documentVisibilityState: "visible",
-        voiceKeyDown: true,
-      }),
-    ).toBe(false);
-  });
-
-  it("stops push-to-talk on blur when the voice key is not held or the document is hidden", () => {
-    expect(
-      shouldStopVoiceTalkOnWindowBlur({
-        documentVisibilityState: "visible",
-        voiceKeyDown: false,
-      }),
-    ).toBe(true);
-    expect(
-      shouldStopVoiceTalkOnWindowBlur({
-        documentVisibilityState: "hidden",
-        voiceKeyDown: true,
-      }),
-    ).toBe(true);
+  it("stops live voice on visible-window blur while V is still held", () => {
+    expect(shouldStopVoiceTalkOnWindowBlur()).toBe(true);
   });
 });
 

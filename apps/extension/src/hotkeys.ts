@@ -15,11 +15,6 @@ export interface HotkeyState {
   experimentalSuperReactionsEnabled?: boolean;
 }
 
-interface VoiceBlurState {
-  documentVisibilityState: DocumentVisibilityState;
-  voiceKeyDown: boolean;
-}
-
 export type HotkeyEventLike = Pick<
   KeyboardEvent,
   | "altKey"
@@ -79,12 +74,8 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
   return null;
 }
 
-export function shouldStopVoiceTalkOnWindowBlur(state: VoiceBlurState): boolean {
-  if (state.documentVisibilityState !== "visible") {
-    return true;
-  }
-
-  return !state.voiceKeyDown;
+export function shouldStopVoiceTalkOnWindowBlur(): true {
+  return true;
 }
 
 function hasBlockedModifier(event: HotkeyEventLike): boolean {

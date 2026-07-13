@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { clearDebugLog, getDebugEntries, logDebug } from "../src/debug-log";
+import { clearDebugLog, getDebugEntries, getDebugLogText, logDebug } from "../src/debug-log";
 
 function createStorageMock(): Storage {
   const values = new Map<string, string>();
@@ -91,9 +91,8 @@ describe("debug log", () => {
           expect.stringMatching(/^id_[a-z0-9]+$/),
           expect.stringMatching(/^id_[a-z0-9]+$/),
         ],
-        address: "<redacted>",
-        candidate:
-          "candidate:842163049 1 udp 1677729535 <redacted-ip> 56143 typ srflx raddr <redacted-ip> rport 56143",
+        address: "<redacted-media>",
+        candidate: "<redacted-media>",
       }),
     );
     expect(JSON.stringify(entry?.data)).not.toContain("user-local");
@@ -115,12 +114,90 @@ describe("debug log", () => {
     const entry = getDebugEntries().find((item) => item.scope === "room.ws");
     expect(entry?.data).toEqual(
       expect.objectContaining({
-        candidate: "candidate:842163049 1 udp 1677729535 203.0.113.8 56143 typ host",
+        candidate: "<redacted-media>",
         participantSessionId: expect.stringMatching(/^id_[a-z0-9]+$/),
         reason: "join:hash",
         url: "https://staging.anidachi.app/room?<redacted>",
       }),
     );
     expect(JSON.stringify(entry?.data)).not.toContain("session-secret-value");
+  });
+
+  it("hashes identifier aliases used by auth and voice diagnostics", () => {
+    clearDebugLog();
+
+    logDebug("identity", "probe", {
+      storedUserId: "stored-user-secret",
+      probeUserId: "probe-user-secret",
+      currentUserId: "current-user-secret",
+      inviteId: "invite-secret",
+      voiceParticipantIds: ["voice-user-one", "voice-user-two"],
+    });
+
+    const entry = getDebugEntries().find((item) => item.message === "probe");
+    expect(entry?.data).toEqual({
+      storedUserId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      probeUserId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      currentUserId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      inviteId: expect.stringMatching(/^id_[a-z0-9]+$/),
+      voiceParticipantIds: [
+        expect.stringMatching(/^id_[a-z0-9]+$/),
+        expect.stringMatching(/^id_[a-z0-9]+$/),
+      ],
+    });
+    expect(JSON.stringify(entry?.data)).not.toMatch(
+      /stored-user-secret|probe-user-secret|current-user-secret|invite-secret|voice-user-(?:one|two)/,
+    );
+  });
+
+  it("removes raw signaling, network, and identifier material from full exports", () => {
+    clearDebugLog();
+
+    logDebug("room.recv", "invalid server event", {
+      raw: '{"sdp":"raw-sdp-frame","candidate":"raw-candidate-frame"}',
+      error: "setRemoteDescription failed for candidate:9 1 udp 1 198.51.100.17 6000 typ host",
+      roomId: "raw-room-id",
+      participantId: "raw-participant-id",
+      clientSignalId: "raw-client-signal-id",
+      senderConnectionId: "raw-connection-id",
+      senderMediaSessionId: "raw-media-session-id",
+      mediaSessionId: "raw-plain-media-session-id",
+      invite: "https://staging.anidachi.app/room/raw-room-path-id",
+      deviceId: "raw-device-id",
+      trackId: "raw-track-id",
+      streamId: "raw-stream-id",
+      sdp: "v=0\r\na=ice-ufrag:raw-ufrag\r\na=msid:raw-stream raw-track",
+      candidate: "candidate:1 1 udp 1 203.0.113.9 5000 typ host",
+      nested: {
+        address: "2001:db8::1",
+        participants: [{ id: "raw-nested-participant-id" }],
+      },
+    });
+
+    const exported = getDebugLogText();
+    for (const forbidden of [
+      "raw-sdp-frame",
+      "raw-candidate-frame",
+      "candidate:9 1 udp",
+      "raw-room-id",
+      "raw-participant-id",
+      "raw-client-signal-id",
+      "raw-connection-id",
+      "raw-media-session-id",
+      "raw-plain-media-session-id",
+      "raw-room-path-id",
+      "raw-device-id",
+      "raw-track-id",
+      "raw-stream-id",
+      "raw-ufrag",
+      "203.0.113.9",
+      "2001:db8::1",
+      "raw-nested-participant-id",
+    ]) {
+      expect(exported).not.toContain(forbidden);
+    }
+    expect(exported).toContain("<redacted-media>");
+    expect(exported).toContain("<redacted-frame>");
+    expect(exported).toContain("/room/<redacted-id>");
   });
 });

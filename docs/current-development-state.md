@@ -141,6 +141,26 @@ the bridge window for old tokens, old Stripe metadata, and old database rows,
 but new UI, APIs, protocol payloads, Stripe metadata, database writes, and docs
 must emit `free`, `plus`, and `pro`.
 
+## Extension Session Ownership
+
+The extension background service worker is the single coordinator for extension
+sign-in, access-token refresh, and website-account reconciliation. Content
+scripts and the popup request auth operations through runtime messages and may
+read cached identity for immediate rendering, but they do not own refresh.
+
+Website and extension access tokens expire independently. A stale website access
+cookie is not evidence that the extension signed out. The extension uses
+`/api/extension/auth/website-session` to validate the long-lived website refresh
+cookie for explicit logout and account-switch synchronization. Temporary HTTP or
+network failures preserve the cached extension session; a confirmed invalid
+extension refresh token remains the terminal server-side sign-out signal.
+Cached identity may remain visible during a temporary outage, but authenticated
+actions fail with a retryable error until a usable access token is available.
+Supabase query failures propagate as server errors and must never be collapsed
+into an invalid-token response. Startup reconciliation and cookie-change events
+are coalesced by the background worker; strict cookie policies use the existing
+silent browser flow as a fallback.
+
 ## Runtime Environments
 
 Local development:
@@ -325,6 +345,19 @@ The extension currently supports:
   auto-response keepalive, JSON `PING` compatibility for old clients, and a
   Workers-runtime forced wake test for existing sockets, host state/source
   snapshots, camera state, raw keepalive, and P2P replay;
+- on the current room/P2P hardening branch, Free-room usage is now accumulated
+  in one SQLite-backed Durable Object record only while a live host and guest
+  are joined. `ROOM_SNAPSHOT` carries the cumulative value for reconnect-safe
+  countdown display. Worker waits for the existing internal Web callback to
+  acknowledge one service-role-only RPC that atomically applies usage and ends
+  the room before it persists the terminal tombstone. The additive staging
+  migration, shared callback secret, matching Web deployment, and matching
+  Worker deployment were rolled out in that order on 2026-07-13. Automated CI,
+  room/P2P E2E, Web smoke, and Worker smoke passed; real two-client acceptance
+  remains required before promotion. The first manual host-end check exposed a
+  missing Vercel `ANIDACHI_API_INTERNAL_BASE_URL` and correctly failed closed
+  with `502`; the staging URL was configured, Web was redeployed, and a real
+  staging room then transitioned from `live` to persisted `ended` state;
 - debug export from the extension panel. Current diagnostic bundles include a
   unified top-level timeline that merges background diagnostics with page debug
   entries, while still keeping the split `diagnosticEntries` and
@@ -353,14 +386,20 @@ These are intentionally not treated as solved:
   participant outside the local network/ISP path, with candidate type, TTFM,
   reconnect, audio, and push-to-talk results recorded. Same-network local tests
   are smoke tests only.
-- Hibernation forced-wake behavior now has explicit Workers-runtime coverage,
-  but staging idle-session acceptance, room-end alarms, and precise quota
-  metering are still pending.
+- Hibernation forced-wake behavior and empty-room end alarms have explicit
+  Workers-runtime coverage, but staging idle-session/alarm acceptance is still
+  pending.
+- The simplified Free quota meter is locally covered across presence changes,
+  hibernation, repeated end, and atomic rollback-tested Supabase finalization.
+  The exact staging migration/Web/Worker rollout and automated smokes passed;
+  one normal Free-room lifecycle with two real clients and persisted usage
+  verification is still pending. A global lease preventing an adversarial Free
+  host from running several rooms concurrently is deliberately deferred until
+  product evidence justifies that extra coordination.
 - Source switching is not complete: live `SOURCE_CHANGED` and
   `sourceGeneration` bumps are implemented, but durable Supabase source
   persistence, room-create source descriptor plumbing, and explicit
   source-switch UI/commands are still pending.
-- Durable Object room-end alarms are still pending.
 - Watch progress persistence now has a backend-backed watch-library foundation
   on the Phase 6 branch, but staging acceptance across real browser profiles is
   still required before treating it as finished product behavior.

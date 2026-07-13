@@ -1,13 +1,71 @@
 import { describe, expect, it } from "vitest";
 import {
-  clearLegacyRoomSessionStorage,
-  getPersistedRoomId,
-  getPersistedRoomIdForUser,
-  persistRoomId,
-  type RoomSessionNamespace,
+  handleRoomSessionStorageRuntimeMessage,
+  handleRoomSessionStorageMessage,
+  ROOM_SESSION_INSTALL_ID_STORAGE_KEY as INSTALL_ID_STORAGE_KEY,
+  migrateLegacyRoomSession,
+  ROOM_SESSION_STORAGE_MESSAGE_TYPE as ROOM_SESSION_MESSAGE_TYPE,
+  type RoomSessionStorageMessage as RoomSessionMessage,
+  type RoomSessionRecord,
+  type RoomSessionStorageResponse as RoomSessionResponse,
+  removeRoomSessionForTab,
 } from "../src/room-session-storage";
 
-class MemoryStorage implements Pick<Storage, "getItem" | "setItem" | "removeItem"> {
+interface StorageAreaLike {
+  get(key: string): Promise<Record<string, unknown>>;
+  set(items: Record<string, unknown>): Promise<void>;
+  remove(key: string): Promise<void>;
+}
+
+interface BackgroundDependencies {
+  sessionStorage: MemoryStorageArea;
+  localStorage: MemoryStorageArea;
+  runtimeId: string;
+  randomUUID: () => string;
+}
+
+class MemoryStorageArea implements StorageAreaLike {
+  readonly values = new Map<string, unknown>();
+  readonly setCalls: Record<string, unknown>[] = [];
+
+  async get(key: string): Promise<Record<string, unknown>> {
+    return this.values.has(key) ? { [key]: this.values.get(key) } : {};
+  }
+
+  async set(items: Record<string, unknown>): Promise<void> {
+    this.setCalls.push(items);
+    for (const [key, value] of Object.entries(items)) {
+      this.values.set(key, value);
+    }
+  }
+
+  async remove(key: string): Promise<void> {
+    this.values.delete(key);
+  }
+}
+
+class DelayedRemoveStorageArea extends MemoryStorageArea {
+  private releaseRemove!: () => void;
+  private signalRemoveStarted!: () => void;
+  readonly removeStarted = new Promise<void>((resolve) => {
+    this.signalRemoveStarted = resolve;
+  });
+  private readonly removeGate = new Promise<void>((resolve) => {
+    this.releaseRemove = resolve;
+  });
+
+  override async remove(key: string): Promise<void> {
+    this.signalRemoveStarted();
+    await this.removeGate;
+    await super.remove(key);
+  }
+
+  continueRemove(): void {
+    this.releaseRemove();
+  }
+}
+
+class PageSessionStorage implements Pick<Storage, "getItem" | "setItem" | "removeItem"> {
   readonly values = new Map<string, string>();
 
   getItem(key: string): string | null {
@@ -23,35 +81,419 @@ class MemoryStorage implements Pick<Storage, "getItem" | "setItem" | "removeItem
   }
 }
 
-function namespace(id: string): RoomSessionNamespace {
+function backgroundDependencies(): BackgroundDependencies {
+  let nextId = 0;
   return {
-    installId: id,
-    prefix: `anidachi:runtime:${id}:room-session`,
+    sessionStorage: new MemoryStorageArea(),
+    localStorage: new MemoryStorageArea(),
+    runtimeId: "runtime-id",
+    randomUUID: () => `uuid-${++nextId}`,
   };
 }
 
-describe("room session storage", () => {
-  it("scopes persisted rooms by extension install namespace and account owner", () => {
-    const storage = new MemoryStorage();
-    const firstInstall = namespace("install-a");
-    const secondInstall = namespace("install-b");
+function sender(tabId: number): { tab: { id: number } } {
+  return { tab: { id: tabId } };
+}
 
-    persistRoomId(firstInstall, "room-a", "user-a", storage);
+type MessageWithoutType<T> = T extends unknown ? Omit<T, "type"> : never;
 
-    expect(getPersistedRoomIdForUser(firstInstall, "user-a", storage)).toBe("room-a");
-    expect(getPersistedRoomIdForUser(secondInstall, "user-a", storage)).toBeNull();
-    expect(getPersistedRoomIdForUser(firstInstall, "user-b", storage)).toBeNull();
-    expect(getPersistedRoomId(firstInstall, storage)).toBeNull();
+function message(value: MessageWithoutType<RoomSessionMessage>): RoomSessionMessage {
+  return { type: ROOM_SESSION_MESSAGE_TYPE, ...value } as RoomSessionMessage;
+}
+
+function expectRecord(response: RoomSessionResponse): RoomSessionRecord {
+  expect(response.ok).toBe(true);
+  if (!response.ok || !response.record) {
+    throw new Error("Expected a room session record");
+  }
+  return response.record;
+}
+
+describe("background-owned room session storage", () => {
+  it("keeps the runtime message channel open until background persistence responds", async () => {
+    const dependencies = backgroundDependencies();
+    let resolveResponse: (response: RoomSessionResponse) => void = () => {};
+    const response = new Promise<RoomSessionResponse>((resolve) => {
+      resolveResponse = resolve;
+    });
+
+    expect(
+      handleRoomSessionStorageRuntimeMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(5),
+        resolveResponse,
+        dependencies,
+      ),
+    ).toBe(true);
+    expect(await response).toEqual({
+      ok: true,
+      record: expect.objectContaining({ roomId: "room-a", ownerUserId: "user-a" }),
+    });
+    expect(
+      handleRoomSessionStorageRuntimeMessage(
+        { type: "OTHER" },
+        sender(5),
+        resolveResponse,
+        dependencies,
+      ),
+    ).toBe(false);
   });
 
-  it("clears legacy page session keys from earlier extension builds", () => {
-    const storage = new MemoryStorage();
-    storage.setItem("anidachi:room-id", "legacy-room");
-    storage.setItem("anidachi:room-owner-id", "legacy-user");
+  it("stores one atomic versioned record and preserves its participant session id", async () => {
+    const dependencies = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "persist",
+          roomId: "room-a",
+          ownerUserId: "user-a",
+        }),
+        sender(7),
+        dependencies,
+      ),
+    );
+    const second = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "persist",
+          roomId: "room-a",
+          ownerUserId: "user-a",
+        }),
+        sender(7),
+        dependencies,
+      ),
+    );
 
-    clearLegacyRoomSessionStorage(storage);
+    expect(first).toEqual({
+      version: 1,
+      revision: 1,
+      roomId: "room-a",
+      ownerUserId: "user-a",
+      participantSessionId: "session-uuid-1",
+    });
 
-    expect(storage.getItem("anidachi:room-id")).toBeNull();
-    expect(storage.getItem("anidachi:room-owner-id")).toBeNull();
+    expect(second.participantSessionId).toBe(first.participantSessionId);
+    expect(second.revision).toBe(2);
+    expect(dependencies.sessionStorage.values.size).toBe(1);
+    expect(Object.values(dependencies.sessionStorage.setCalls[0] ?? {})).toEqual([first]);
+  });
+
+  it("isolates records and participant session ids by sender tab", async () => {
+    const dependencies = backgroundDependencies();
+
+    const tabOne = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "persist",
+          roomId: "room-a",
+          ownerUserId: "user-a",
+        }),
+        sender(11),
+        dependencies,
+      ),
+    );
+    const tabTwo = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({
+          command: "persist",
+          roomId: "room-b",
+          ownerUserId: "user-a",
+        }),
+        sender(12),
+        dependencies,
+      ),
+    );
+    const loadedTabOne = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "load", currentUserId: "user-a" }),
+        sender(11),
+        dependencies,
+      ),
+    );
+
+    expect(tabOne.roomId).toBe("room-a");
+    expect(tabTwo.roomId).toBe("room-b");
+    expect(tabOne.participantSessionId).not.toBe(tabTwo.participantSessionId);
+    expect(loadedTabOne).toEqual(tabOne);
+    expect(dependencies.sessionStorage.values.size).toBe(2);
+  });
+
+  it("restores the same tab session after background worker state is recreated", async () => {
+    const firstWorker = backgroundDependencies();
+    const persisted = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(17),
+        firstWorker,
+      ),
+    );
+    const restartedWorker = {
+      ...backgroundDependencies(),
+      sessionStorage: firstWorker.sessionStorage,
+    };
+
+    const restored = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "load", currentUserId: "user-a" }),
+        sender(17),
+        restartedWorker,
+      ),
+    );
+
+    expect(restored).toEqual(persisted);
+  });
+
+  it("fails closed and clears a record when the current user is missing", async () => {
+    const dependencies = backgroundDependencies();
+
+    await handleRoomSessionStorageMessage(
+      message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+      sender(19),
+      dependencies,
+    );
+    const response = await handleRoomSessionStorageMessage(
+      message({ command: "load", currentUserId: null }),
+      sender(19),
+      dependencies,
+    );
+
+    expect(response).toEqual({ ok: true, record: null });
+    expect(dependencies.sessionStorage.values.size).toBe(0);
+  });
+
+  it("fails closed and clears missing-owner or wrong-account state", async () => {
+    const dependencies = backgroundDependencies();
+
+    await handleRoomSessionStorageMessage(
+      message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+      sender(23),
+      dependencies,
+    );
+    const wrongAccount = await handleRoomSessionStorageMessage(
+      message({ command: "load", currentUserId: "user-b" }),
+      sender(23),
+      dependencies,
+    );
+
+    expect(wrongAccount).toEqual({ ok: true, record: null });
+    expect(dependencies.sessionStorage.values.size).toBe(0);
+
+    const missingOwner = await handleRoomSessionStorageMessage(
+      message({ command: "persist", roomId: "room-b", ownerUserId: null }),
+      sender(23),
+      dependencies,
+    );
+
+    expect(missingOwner).toEqual({ ok: true, record: null });
+    expect(dependencies.sessionStorage.values.size).toBe(0);
+  });
+
+  it("removes the tab record when the tab closes", async () => {
+    const dependencies = backgroundDependencies();
+
+    await handleRoomSessionStorageMessage(
+      message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+      sender(31),
+      dependencies,
+    );
+    await handleRoomSessionStorageMessage(
+      message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+      sender(32),
+      dependencies,
+    );
+
+    await removeRoomSessionForTab(31, dependencies.sessionStorage);
+
+    expect(dependencies.sessionStorage.values.size).toBe(1);
+    expect([...dependencies.sessionStorage.values.values()]).toEqual([
+      expect.objectContaining({ roomId: "room-b" }),
+    ]);
+  });
+
+  it("serializes clear and persist so an old clear cannot delete a new room", async () => {
+    const dependencies = backgroundDependencies();
+    const delayedStorage = new DelayedRemoveStorageArea();
+    dependencies.sessionStorage = delayedStorage;
+    await handleRoomSessionStorageMessage(
+      message({
+        command: "persist",
+        roomId: "room-old",
+        ownerUserId: "user-a",
+      }),
+      sender(37),
+      dependencies,
+    );
+
+    const clearPromise = handleRoomSessionStorageMessage(
+      message({ command: "clear" }),
+      sender(37),
+      dependencies,
+    );
+    await delayedStorage.removeStarted;
+    const persistPromise = handleRoomSessionStorageMessage(
+      message({
+        command: "persist",
+        roomId: "room-new",
+        ownerUserId: "user-a",
+      }),
+      sender(37),
+      dependencies,
+    );
+    delayedStorage.continueRemove();
+    await Promise.all([clearPromise, persistPromise]);
+
+    const loaded = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "load", currentUserId: "user-a" }),
+        sender(37),
+        dependencies,
+      ),
+    );
+    expect(loaded.roomId).toBe("room-new");
+  });
+
+  it("clears only the exact canceled persistence revision", async () => {
+    const dependencies = backgroundDependencies();
+    const canceled = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(39),
+        dependencies,
+      ),
+    );
+    const replacement = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(39),
+        dependencies,
+      ),
+    );
+
+    const staleCleanup = await handleRoomSessionStorageMessage(
+      {
+        type: ROOM_SESSION_MESSAGE_TYPE,
+        command: "clear-if-match",
+        record: canceled,
+      } as unknown as RoomSessionMessage,
+      sender(39),
+      dependencies,
+    );
+    expect(staleCleanup).toEqual({ ok: true, record: replacement });
+
+    const currentCleanup = await handleRoomSessionStorageMessage(
+      {
+        type: ROOM_SESSION_MESSAGE_TYPE,
+        command: "clear-if-match",
+        record: replacement,
+      } as unknown as RoomSessionMessage,
+      sender(39),
+      dependencies,
+    );
+    expect(currentCleanup).toEqual({ ok: true, record: null });
+    expect(dependencies.sessionStorage.values.size).toBe(0);
+  });
+});
+
+describe("legacy page room session migration", () => {
+  it("migrates namespaced keys through the background and deletes them after ACK", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+    const prefix = "anidachi:runtime-id:install-a:room-session";
+    await dependencies.localStorage.set({
+      [INSTALL_ID_STORAGE_KEY]: "install-a",
+    });
+    pageSessionStorage.setItem(`${prefix}:room-id`, "room-a");
+    pageSessionStorage.setItem(`${prefix}:room-owner-id`, "user-a");
+    pageSessionStorage.setItem(`${prefix}:participant-session-id`, "session-stable-a");
+
+    const record = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(41), dependencies),
+    });
+
+    expect(record).toEqual({
+      version: 1,
+      revision: 1,
+      roomId: "room-a",
+      ownerUserId: "user-a",
+      participantSessionId: "session-stable-a",
+    });
+    expect(pageSessionStorage.values.size).toBe(0);
+    expect(dependencies.sessionStorage.values.size).toBe(1);
+  });
+
+  it("migrates the old unnamespaced page keys", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+    pageSessionStorage.setItem("anidachi:room-id", "legacy-room");
+    pageSessionStorage.setItem("anidachi:room-owner-id", "user-a");
+    pageSessionStorage.setItem("anidachi:participant-session-id", "legacy-session");
+
+    const record = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(43), dependencies),
+    });
+
+    expect(record).toEqual({
+      version: 1,
+      revision: 1,
+      roomId: "legacy-room",
+      ownerUserId: "user-a",
+      participantSessionId: "legacy-session",
+    });
+    expect(pageSessionStorage.values.size).toBe(0);
+  });
+
+  it("prefers a complete legacy record over an earlier partial namespace", async () => {
+    const dependencies = backgroundDependencies();
+    const pageSessionStorage = new PageSessionStorage();
+    const prefix = "anidachi:runtime-id:install-a:room-session";
+    await dependencies.localStorage.set({
+      [INSTALL_ID_STORAGE_KEY]: "install-a",
+    });
+    pageSessionStorage.setItem(`${prefix}:participant-session-id`, "partial-session");
+    pageSessionStorage.setItem("anidachi:room-id", "legacy-room");
+    pageSessionStorage.setItem("anidachi:room-owner-id", "user-a");
+    pageSessionStorage.setItem("anidachi:participant-session-id", "complete-session");
+
+    const record = await migrateLegacyRoomSession("user-a", {
+      pageSessionStorage,
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(47), dependencies),
+    });
+
+    expect(record).toMatchObject({
+      roomId: "legacy-room",
+      ownerUserId: "user-a",
+      participantSessionId: "complete-session",
+    });
+    expect(pageSessionStorage.values.size).toBe(0);
+  });
+
+  it("keeps page keys retryable when the background does not ACK migration", async () => {
+    const pageSessionStorage = new PageSessionStorage();
+    pageSessionStorage.setItem("anidachi:room-id", "legacy-room");
+    pageSessionStorage.setItem("anidachi:room-owner-id", "user-a");
+    pageSessionStorage.setItem("anidachi:participant-session-id", "legacy-session");
+
+    await expect(
+      migrateLegacyRoomSession("user-a", {
+        pageSessionStorage,
+        sendMessage: async (runtimeMessage) =>
+          runtimeMessage.command === "legacy-prefix"
+            ? { ok: true, record: null, legacyPrefix: null }
+            : { ok: false, error: "session storage unavailable" },
+      }),
+    ).rejects.toThrow("session storage unavailable");
+
+    expect(pageSessionStorage.values).toEqual(
+      new Map([
+        ["anidachi:room-id", "legacy-room"],
+        ["anidachi:room-owner-id", "user-a"],
+        ["anidachi:participant-session-id", "legacy-session"],
+      ]),
+    );
   });
 });

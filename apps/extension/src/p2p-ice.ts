@@ -17,10 +17,16 @@ interface IceServersPayload {
   ttlSeconds?: number;
 }
 
-let cachedIceServers: RTCIceServer[] | null = null;
-let cachedUntilMs = 0;
-
 const ICE_SERVER_CACHE_SAFETY_MS = 5 * 60 * 1000;
+const ICE_SERVER_CACHE_MAX_SCOPES = 8;
+
+interface CachedIceServers {
+  expiresAtMs: number;
+  freshUntilMs: number;
+  iceServers: RTCIceServer[];
+}
+
+const cachedIceServersByScope = new Map<string, CachedIceServers>();
 
 /** Room credentials required to fetch authenticated TURN/STUN servers (Block 7.1). */
 export interface IceServersAuth {
@@ -36,13 +42,24 @@ export async function refreshP2PIceServers(auth?: IceServersAuth): Promise<RTCIc
   return loadP2PIceServersWithCache(true, auth);
 }
 
-function buildIceServersUrl(auth?: IceServersAuth): string {
-  const url = new URL(`${API_HTTP_BASE}/ice-servers`);
-  if (auth) {
-    url.searchParams.set("roomId", auth.roomId);
-    url.searchParams.set("roomToken", auth.roomToken);
+function buildIceServersRequest(auth?: IceServersAuth): {
+  headers: Record<string, string>;
+  url: string;
+} {
+  if (!auth) {
+    return {
+      headers: { Accept: "application/json" },
+      url: new URL(`${API_HTTP_BASE}/ice-servers`).toString(),
+    };
   }
-  return url.toString();
+
+  return {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${auth.roomToken}`,
+    },
+    url: new URL(`/rooms/${encodeURIComponent(auth.roomId)}/ice-servers`, API_HTTP_BASE).toString(),
+  };
 }
 
 async function loadP2PIceServersWithCache(
@@ -50,18 +67,16 @@ async function loadP2PIceServersWithCache(
   auth?: IceServersAuth,
 ): Promise<RTCIceServer[]> {
   const now = Date.now();
-  if (
-    !forceRefresh &&
-    cachedIceServers?.length &&
-    cachedUntilMs > now &&
-    (!auth || hasTurnServer(cachedIceServers))
-  ) {
-    return cachedIceServers;
+  const scopeKey = await iceServerCacheScopeKey(auth);
+  const freshCache = readCachedIceServers(scopeKey, now, "fresh");
+  if (!forceRefresh && freshCache?.length && (!auth || hasTurnServer(freshCache))) {
+    return freshCache;
   }
 
   try {
-    const response = await fetch(buildIceServersUrl(auth), {
-      headers: { Accept: "application/json" },
+    const request = buildIceServersRequest(auth);
+    const response = await fetch(request.url, {
+      headers: request.headers,
       method: "GET",
     });
 
@@ -81,9 +96,8 @@ async function loadP2PIceServersWithCache(
     const ttlSeconds =
       typeof payload.ttlSeconds === "number" && Number.isFinite(payload.ttlSeconds)
         ? payload.ttlSeconds
-        : 3600;
-    cachedIceServers = iceServers;
-    cachedUntilMs = now + Math.max(60_000, ttlSeconds * 1000 - ICE_SERVER_CACHE_SAFETY_MS);
+        : 900;
+    writeCachedIceServers(scopeKey, iceServers, ttlSeconds, now);
     logDebug("p2p.ice-config", "loaded", {
       configured: payload.configured,
       forceRefresh,
@@ -94,13 +108,14 @@ async function loadP2PIceServersWithCache(
     });
     return iceServers;
   } catch (error) {
-    if (cachedIceServers?.length && cachedUntilMs > now && hasTurnServer(cachedIceServers)) {
+    const validCache = readCachedIceServers(scopeKey, now, "valid");
+    if (validCache?.length && hasTurnServer(validCache)) {
       logDebug("p2p.ice-config", "cached relay fallback", {
         error: error instanceof Error ? error.message : String(error),
         forceRefresh,
-        iceServers: summarizeIceServers(cachedIceServers),
+        iceServers: summarizeIceServers(validCache),
       });
-      return cachedIceServers;
+      return validCache;
     }
 
     const fallback = getDefaultP2PIceServers();
@@ -113,8 +128,7 @@ async function loadP2PIceServersWithCache(
       throw error;
     }
 
-    cachedIceServers = fallback;
-    cachedUntilMs = now + 60_000;
+    writeCachedIceServers(scopeKey, fallback, 60, now);
     logDebug("p2p.ice-config", "fallback", {
       error: error instanceof Error ? error.message : String(error),
       forceRefresh,
@@ -232,6 +246,71 @@ function summarizeIceServers(servers: RTCIceServer[]): Array<Record<string, unkn
 }
 
 export function clearP2PIceServersCacheForTest(): void {
-  cachedIceServers = null;
-  cachedUntilMs = 0;
+  cachedIceServersByScope.clear();
+}
+
+async function iceServerCacheScopeKey(auth: IceServersAuth | undefined): Promise<string> {
+  if (!auth) {
+    return "anonymous";
+  }
+
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(`anidachi:ice-cache-scope:v1\0${auth.roomId}\0${auth.roomToken}`),
+  );
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function readCachedIceServers(
+  scopeKey: string,
+  nowMs: number,
+  mode: "fresh" | "valid",
+): RTCIceServer[] | null {
+  pruneIceServerCache(nowMs);
+  const cached = cachedIceServersByScope.get(scopeKey);
+  if (!cached) return null;
+  const validUntilMs = mode === "fresh" ? cached.freshUntilMs : cached.expiresAtMs;
+  if (validUntilMs <= nowMs) return null;
+
+  cachedIceServersByScope.delete(scopeKey);
+  cachedIceServersByScope.set(scopeKey, cached);
+  return cloneIceServers(cached.iceServers);
+}
+
+function writeCachedIceServers(
+  scopeKey: string,
+  iceServers: RTCIceServer[],
+  ttlSeconds: number,
+  nowMs: number,
+): void {
+  const ttlMs = Math.max(1, ttlSeconds) * 1000;
+  const expiresAtMs = nowMs + ttlMs;
+  const safetyMs = Math.min(ICE_SERVER_CACHE_SAFETY_MS, Math.floor(ttlMs / 3));
+  cachedIceServersByScope.delete(scopeKey);
+  cachedIceServersByScope.set(scopeKey, {
+    expiresAtMs,
+    freshUntilMs: Math.max(nowMs, expiresAtMs - safetyMs),
+    iceServers: cloneIceServers(iceServers),
+  });
+  pruneIceServerCache(nowMs);
+  while (cachedIceServersByScope.size > ICE_SERVER_CACHE_MAX_SCOPES) {
+    const oldestKey = cachedIceServersByScope.keys().next().value;
+    if (oldestKey === undefined) break;
+    cachedIceServersByScope.delete(oldestKey);
+  }
+}
+
+function pruneIceServerCache(nowMs: number): void {
+  for (const [scopeKey, cached] of cachedIceServersByScope) {
+    if (cached.expiresAtMs <= nowMs) {
+      cachedIceServersByScope.delete(scopeKey);
+    }
+  }
+}
+
+function cloneIceServers(servers: RTCIceServer[]): RTCIceServer[] {
+  return servers.map((server) => ({
+    ...server,
+    urls: Array.isArray(server.urls) ? [...server.urls] : server.urls,
+  }));
 }

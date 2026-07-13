@@ -9,7 +9,7 @@
  */
 import type { Participant, P2PSignal, ServerEvent } from "@anidachi/protocol";
 import { RoomClient, type RoomConnectionStatus } from "../../apps/extension/src/room-client";
-import { P2PMediaController } from "../../apps/extension/src/p2p-media";
+import { P2PMediaController, selectP2PMediaParticipants } from "../../apps/extension/src/p2p-media";
 
 interface StartOptions {
   roomId: string;
@@ -43,6 +43,8 @@ class Harness {
   private lastSeenP2PServerSeq = 0;
   private readonly seenSignals = new Set<string>();
   private readonly remoteVideos = new Map<string, HTMLVideoElement>();
+  private dropNextSignalKind: P2PSignal["kind"] | null = null;
+  private readonly droppedSignalCounts = new Map<P2PSignal["kind"], number>();
 
   constructor() {
     window.addEventListener("online", () => {
@@ -79,10 +81,17 @@ class Harness {
   private ensureController(options: StartOptions, self: Participant): P2PMediaController {
     if (!this.controller) {
       this.controller = new P2PMediaController({
-        iceServers: options.iceServers ?? [{ urls: "stun:stun.l.google.com:19302" }],
+        iceServers: options.iceServers ?? [],
         localParticipant: self,
         onActiveSpeakerIdsChange: () => undefined,
-        onCameraStatus: () => undefined,
+        onCameraStatus: (enabled) => {
+          self.cameraEnabled = enabled;
+          this.client?.send({
+            type: enabled ? "CAMERA_ON" : "CAMERA_OFF",
+            roomId: options.roomId,
+            userId: self.id,
+          });
+        },
         onVoiceMessageChange: () => undefined,
         onVoiceStatusChange: () => undefined,
         onVideosChange: (videos) => {
@@ -112,16 +121,25 @@ class Harness {
             }
           }
         },
-        sendSignal: (toUserId: string, signal: P2PSignal) => {
-          if (toUserId === self.id) return;
+        sendSignal: (toUserId, signal, metadata) => {
+          if (toUserId === self.id) return "dropped";
+          if (this.dropNextSignalKind === signal.kind) {
+            this.dropNextSignalKind = null;
+            this.droppedSignalCounts.set(
+              signal.kind,
+              (this.droppedSignalCounts.get(signal.kind) ?? 0) + 1,
+            );
+            return "dropped";
+          }
           const currentClient = this.client;
-          if (!currentClient) return;
-          currentClient.send({
+          if (!currentClient) return "dropped";
+          return currentClient.send({
             type: "P2P_SIGNAL",
             clientSignalId: crypto.randomUUID(),
             roomId: options.roomId,
             fromUserId: self.id,
             senderConnectionId: currentClient.senderConnectionId,
+            senderMediaSessionId: metadata.senderMediaSessionId,
             toUserId,
             signal,
           });
@@ -132,7 +150,7 @@ class Harness {
     return this.controller;
   }
 
-  private connectClient(options: StartOptions, self: Participant): void {
+  private connectClient(options: StartOptions, self: Participant, reconnect = false): void {
     const client = new RoomClient();
     this.client = client;
     this.ensureController(options, self);
@@ -144,10 +162,14 @@ class Harness {
       videoFingerprint: "harness",
       participantSessionId: options.sessionId,
       lastSeenP2PServerSeq: this.lastSeenP2PServerSeq,
+      reconnect,
       onStatus: (status) => {
         this.status = status;
       },
       onEvent: (event) => this.onServerEvent(self.id, event),
+      onTransportReady: (ready) => {
+        void this.controller?.handleSignalingTransportReady(ready);
+      },
     });
   }
 
@@ -158,7 +180,7 @@ class Harness {
 
     this.client?.close();
     this.status = "connecting";
-    this.connectClient(this.options, this.self);
+    this.connectClient(this.options, this.self, true);
     await this.waitForStatus("connected", 8000);
     this.controller?.recoverDisconnectedPeers(reason);
   }
@@ -166,7 +188,7 @@ class Harness {
   private onServerEvent(selfId: string, event: ServerEvent): void {
     if (event.type === "ROOM_SNAPSHOT") {
       this.participants = event.participants;
-      this.controller?.updateParticipants(this.participants);
+      this.updateControllerParticipants();
       return;
     }
     if (event.type === "PARTICIPANT_JOINED") {
@@ -174,12 +196,12 @@ class Harness {
         ...this.participants.filter((p) => p.id !== event.participant.id),
         event.participant,
       ];
-      this.controller?.updateParticipants(this.participants);
+      this.updateControllerParticipants();
       return;
     }
     if (event.type === "PARTICIPANT_LEFT") {
       this.participants = this.participants.filter((p) => p.id !== event.participant.id);
-      this.controller?.updateParticipants(this.participants);
+      this.updateControllerParticipants();
       return;
     }
     if (event.type === "P2P_SIGNAL" && event.toUserId === selfId) {
@@ -191,8 +213,19 @@ class Harness {
       this.seenSignals.add(key);
       void this.controller?.handleSignal(event.fromUserId, event.signal, {
         senderConnectionId: event.senderConnectionId,
+        senderMediaSessionId: event.senderMediaSessionId,
       });
     }
+  }
+
+  private updateControllerParticipants(): void {
+    if (!this.controller || !this.self) {
+      return;
+    }
+
+    this.controller.updateParticipants(
+      selectP2PMediaParticipants(this.participants, this.self.id, this.self.cameraEnabled),
+    );
   }
 
   private async waitForStatus(target: RoomConnectionStatus, timeoutMs: number): Promise<void> {
@@ -245,9 +278,8 @@ class Harness {
     return {
       status: this.status,
       participantCount: this.participants.length,
-      cameraEnabledCount: this.participants.filter(
-        (participant) => participant.cameraEnabled,
-      ).length,
+      cameraEnabledCount: this.participants.filter((participant) => participant.cameraEnabled)
+        .length,
       remoteVideoCount: this.remoteVideos.size,
       remoteFramesDecoded,
       candidatePairTypes,
@@ -264,6 +296,18 @@ class Harness {
 
   async stopVoice(): Promise<void> {
     await this.controller?.stopVoiceTalk();
+  }
+
+  dropNextSignal(kind: P2PSignal["kind"]): void {
+    this.dropNextSignalKind = kind;
+  }
+
+  getDroppedSignalCount(kind: P2PSignal["kind"]): number {
+    return this.droppedSignalCounts.get(kind) ?? 0;
+  }
+
+  async setCameraEnabled(enabled: boolean): Promise<void> {
+    await this.controller?.setCameraEnabled(enabled);
   }
 
   /** Max inbound audio bytes received across peers — proves audio actually flows. */

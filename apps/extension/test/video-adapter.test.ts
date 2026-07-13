@@ -1,11 +1,23 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  ClientEventSchema,
+  MAX_URL_CHARS,
+  MAX_VIDEO_FINGERPRINT_CHARS,
+  MAX_WATCH_TITLE_CHARS,
+} from "@anidachi/protocol";
+import {
   CRUNCHYROLL_CONTROL_RESULT_SOURCE,
   CRUNCHYROLL_CONTROL_SOURCE,
   type CrunchyrollControlRequest,
   type CrunchyrollControlResult,
 } from "../src/crunchyroll-control";
-import { findBestVideoAdapter, runCrunchyrollMainCommand } from "../src/video-adapter";
+import {
+  buildWatchSourceDescriptor,
+  canonicalWatchSourceUrl,
+  findBestVideoAdapter,
+  normalizeVideoFingerprint,
+  runCrunchyrollMainCommand,
+} from "../src/video-adapter";
 
 describe("generic video adapter detection", () => {
   it("selects the largest visible video", () => {
@@ -72,8 +84,49 @@ describe("generic video adapter detection", () => {
     expect(viewerFingerprint).toBe(hostFingerprint);
   });
 
+  it("keeps normal fingerprints unchanged and hashes the full overlong key", () => {
+    const normal = "html5|/watch|/demo.mp4";
+    const sharedPrefix = `html5|${"p".repeat(MAX_VIDEO_FINGERPRINT_CHARS)}`;
+    const first = normalizeVideoFingerprint(`${sharedPrefix}|tail-a`);
+    const second = normalizeVideoFingerprint(`${sharedPrefix}|tail-b`);
+
+    expect(normalizeVideoFingerprint(normal)).toBe(normal);
+    expect(first).toBe(normalizeVideoFingerprint(`${sharedPrefix}|tail-a`));
+    expect(first).toMatch(/^html5\|hash:/);
+    expect(first.length).toBeLessThanOrEqual(MAX_VIDEO_FINGERPRINT_CHARS);
+    expect(second).not.toBe(first);
+  });
+
+  it("emits a protocol-safe HOST_STATE for long page and video URLs", () => {
+    const longPagePath = `/watch/${"p".repeat(MAX_URL_CHARS)}`;
+    const longVideoUrl = `https://cdn.example.com/${"v".repeat(MAX_URL_CHARS)}/master.m3u8`;
+    mockHost("example.com", longPagePath);
+    document.body.innerHTML = `
+      <main id="player">
+        <video style="width: 640px; height: 360px;"></video>
+      </main>
+    `;
+    const video = document.querySelector("video") as HTMLVideoElement;
+    Object.defineProperty(video, "currentSrc", { configurable: true, value: longVideoUrl });
+    mockRect(video, 640, 360);
+    mockRect(document.querySelector("#player"), 640, 360);
+
+    const adapter = findBestVideoAdapter();
+    const state = adapter?.getState();
+    const source = adapter && state ? buildWatchSourceDescriptor(adapter, state) : undefined;
+
+    expect(adapter?.id).toBe("generic-html5-video");
+    expect(state?.videoFingerprint.length).toBeLessThanOrEqual(MAX_VIDEO_FINGERPRINT_CHARS);
+    expect(state?.sourceUrl).toBeUndefined();
+    expect(canonicalWatchSourceUrl(location.href)).toBeNull();
+    expect(source).toBeUndefined();
+    expect(() =>
+      ClientEventSchema.parse({ type: "HOST_STATE", roomId: "room-1", state, source }),
+    ).not.toThrow();
+  });
+
   it("uses a YouTube-stable fingerprint instead of transient media src", () => {
-    history.replaceState(null, "", "/watch?v=abc123#anidachiRoom=host");
+    mockHost("www.youtube.com", "/watch?v=abc123#anidachiRoom=host");
     document.body.innerHTML = `
       <h1 class="ytd-watch-metadata">Same video</h1>
       <div id="movie_player" class="html5-video-player">
@@ -90,6 +143,31 @@ describe("generic video adapter detection", () => {
     const secondFingerprint = findBestVideoAdapter()?.getFingerprint();
 
     expect(secondFingerprint).toBe(firstFingerprint);
+    expect(firstFingerprint).toBe("youtube|abc123");
+  });
+
+  it("normalizes an oversized YouTube video id into a protocol-safe HOST_STATE", () => {
+    const videoId = "y".repeat(MAX_VIDEO_FINGERPRINT_CHARS + 50);
+    mockHost("www.youtube.com", `/watch?v=${videoId}`);
+    document.title = "YouTube video";
+    document.body.innerHTML = `
+      <div id="movie_player" class="html5-video-player">
+        <video style="width: 640px; height: 360px;"></video>
+      </div>
+    `;
+    mockRect(document.querySelector("video"), 640, 360);
+    mockRect(document.querySelector("#movie_player"), 960, 540);
+
+    const adapter = findBestVideoAdapter();
+    const state = adapter?.getState();
+    const source = adapter && state ? buildWatchSourceDescriptor(adapter, state) : undefined;
+
+    expect(adapter?.id).toBe("youtube");
+    expect(state?.videoFingerprint).toMatch(/^youtube\|hash:/);
+    expect(state?.videoFingerprint.length).toBeLessThanOrEqual(MAX_VIDEO_FINGERPRINT_CHARS);
+    expect(() =>
+      ClientEventSchema.parse({ type: "HOST_STATE", roomId: "room-1", state, source }),
+    ).not.toThrow();
   });
 
   it("uses a Crunchyroll-stable fingerprint instead of transient media src", () => {
@@ -122,6 +200,56 @@ describe("generic video adapter detection", () => {
     expect(adapter?.container.id).toBe("player-container");
     expect(adapter?.getFingerprint()).toBe(firstFingerprint);
     expect(adapter?.getFingerprint()).toBe("crunchyroll|watch/G8WUNM123");
+  });
+
+  it("normalizes an oversized Crunchyroll key into a protocol-safe HOST_STATE", () => {
+    const watchKey = "c".repeat(MAX_VIDEO_FINGERPRINT_CHARS + 50);
+    mockHost("www.crunchyroll.com", `/watch/${watchKey}/episode`);
+    document.title = "Crunchyroll episode";
+    document.body.innerHTML = `
+      <div class="video-player-wrapper">
+        <div id="player-container" class="player-container">
+          <div class="bitmovinplayer-container"></div>
+          <video style="width: 640px; height: 360px;"></video>
+        </div>
+      </div>
+    `;
+    mockRect(document.querySelector("video"), 640, 360);
+    mockRect(document.querySelector(".bitmovinplayer-container"), 640, 360);
+    mockRect(document.querySelector("#player-container"), 960, 540);
+    mockRect(document.querySelector(".video-player-wrapper"), 960, 540);
+
+    const adapter = findBestVideoAdapter();
+    const state = adapter?.getState();
+    const source = adapter && state ? buildWatchSourceDescriptor(adapter, state) : undefined;
+
+    expect(adapter?.id).toBe("crunchyroll");
+    expect(state?.videoFingerprint).toMatch(/^crunchyroll\|hash:/);
+    expect(state?.videoFingerprint.length).toBeLessThanOrEqual(MAX_VIDEO_FINGERPRINT_CHARS);
+    expect(() =>
+      ClientEventSchema.parse({ type: "HOST_STATE", roomId: "room-1", state, source }),
+    ).not.toThrow();
+  });
+
+  it("bounds an overlong adapter title before building HOST_STATE", () => {
+    mockHost("example.com", "/watch/title-test");
+    document.title = "T".repeat(MAX_WATCH_TITLE_CHARS + 50);
+    document.body.innerHTML = `
+      <main id="player">
+        <video style="width: 640px; height: 360px;"></video>
+      </main>
+    `;
+    mockRect(document.querySelector("video"), 640, 360);
+    mockRect(document.querySelector("#player"), 640, 360);
+
+    const adapter = findBestVideoAdapter();
+    const state = adapter?.getState();
+    const source = adapter && state ? buildWatchSourceDescriptor(adapter, state) : undefined;
+
+    expect(source?.title).toBe("T".repeat(MAX_WATCH_TITLE_CHARS));
+    expect(() =>
+      ClientEventSchema.parse({ type: "HOST_STATE", roomId: "room-1", state, source }),
+    ).not.toThrow();
   });
 
   it("does not click Crunchyroll play/pause UI when programmatic play fails", async () => {

@@ -5,6 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ANIDACHI_ENV = "local"
+ANIDACHI_WEB_INTERNAL_BASE_URL = "http://localhost:3003"
 
 [[durable_objects.bindings]]
 name = "ROOMS"
@@ -24,6 +25,7 @@ workers_dev = true
 
 [env.staging.vars]
 ANIDACHI_ENV = "staging"
+ANIDACHI_WEB_INTERNAL_BASE_URL = "https://staging.anidachi.app"
 
 [[env.staging.durable_objects.bindings]]
 name = "ROOMS"
@@ -39,6 +41,7 @@ workers_dev = true
 
 [env.production.vars]
 ANIDACHI_ENV = "production"
+ANIDACHI_WEB_INTERNAL_BASE_URL = "https://www.anidachi.app"
 
 [[env.production.durable_objects.bindings]]
 name = "ROOMS"

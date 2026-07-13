@@ -3,12 +3,14 @@ import {
   handleAuthMessage,
   handleWebsiteAuthCookieChange,
   isAuthMessage,
+  reconcileExtensionSessionAgainstWebsite,
 } from "../src/auth-client";
+import { handleDiagnosticMessage, isDiagnosticMessage } from "../src/diagnostic-log";
 import { handleRoomHttpMessage, isRoomHttpMessage } from "../src/room-client";
 import {
-  handleDiagnosticMessage,
-  isDiagnosticMessage,
-} from "../src/diagnostic-log";
+  handleRoomSessionStorageRuntimeMessage,
+  removeRoomSessionForTab,
+} from "../src/room-session-storage";
 import { handleSocialHttpMessage, isSocialHttpMessage } from "../src/social-client";
 import {
   handleWatchLibraryHttpMessage,
@@ -16,7 +18,11 @@ import {
 } from "../src/watch-library-client";
 
 export default defineBackground(() => {
-  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (handleRoomSessionStorageRuntimeMessage(message, sender, sendResponse)) {
+      return true;
+    }
+
     if (isAuthMessage(message)) {
       void handleAuthMessage(message).then(sendResponse);
       return true;
@@ -47,5 +53,17 @@ export default defineBackground(() => {
 
   chrome.cookies?.onChanged?.addListener((changeInfo) => {
     void handleWebsiteAuthCookieChange(changeInfo);
+  });
+
+  const reconcileStoredWebsiteSession = () => {
+    void reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false }).catch(
+      () => undefined,
+    );
+  };
+  chrome.runtime.onStartup?.addListener(reconcileStoredWebsiteSession);
+  chrome.runtime.onInstalled?.addListener(reconcileStoredWebsiteSession);
+
+  chrome.tabs.onRemoved.addListener((tabId) => {
+    void removeRoomSessionForTab(tabId).catch(() => undefined);
   });
 });

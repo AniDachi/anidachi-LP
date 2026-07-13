@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseRoomStateSnapshot } from "../src/room-persistence";
+import { createStoredP2PReplayMetadata, parseRoomStateSnapshot } from "../src/room-persistence";
 
 const capabilities = {
   hostPlanCode: "pro",
@@ -10,6 +10,57 @@ const capabilities = {
 } as const;
 
 describe("room state persistence", () => {
+  it("reduces durable P2P replay rows to privacy-safe metadata", () => {
+    const metadata = createStoredP2PReplayMetadata(
+      {
+        type: "P2P_SIGNAL",
+        clientSignalId: "raw-client-signal-id",
+        fromUserId: "raw-user-a",
+        roomId: "raw-room-id",
+        roomGeneration: 3,
+        senderConnectionId: "raw-connection-id",
+        senderMediaSessionId: "raw-media-session-id",
+        serverReceivedAt: 1_000,
+        serverSeq: 8,
+        signal: {
+          kind: "offer",
+          sdp: {
+            type: "offer",
+            sdp: "v=0\\r\\na=candidate:raw-peer-address\\r\\na=msid:raw-stream raw-track",
+          },
+        },
+        sourceGeneration: 5,
+        toUserId: "raw-user-b",
+      },
+      "hmac_dedupe_value",
+    );
+    const serialized = JSON.stringify(metadata);
+
+    expect(metadata).toEqual({
+      dedupeHash: "hmac_dedupe_value",
+      roomGeneration: 3,
+      serverReceivedAt: 1_000,
+      serverSeq: 8,
+      signalKind: "offer",
+      sourceGeneration: 5,
+    });
+    for (const forbidden of [
+      "raw-client-signal-id",
+      "raw-user-a",
+      "raw-user-b",
+      "raw-room-id",
+      "raw-connection-id",
+      "raw-media-session-id",
+      "raw-peer-address",
+      "raw-stream",
+      "raw-track",
+      "candidate",
+      "sdp",
+    ]) {
+      expect(serialized).not.toContain(forbidden);
+    }
+  });
+
   it("migrates legacy participants without mediaSeat once without rewriting explicit removals", () => {
     const legacy = parseRoomStateSnapshot({
       schemaVersion: 1,
@@ -43,9 +94,7 @@ describe("room state persistence", () => {
       ],
     });
 
-    expect(explicit?.participants.find((item) => item.id === "viewer-a")?.mediaSeat).toBe(
-      "none",
-    );
+    expect(explicit?.participants.find((item) => item.id === "viewer-a")?.mediaSeat).toBe("none");
     expect(explicit?.participants.find((item) => item.id === "viewer-a")?.cameraEnabled).toBe(
       false,
     );

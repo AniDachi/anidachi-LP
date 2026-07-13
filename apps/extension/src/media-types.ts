@@ -8,12 +8,21 @@ export interface GhostVideo {
 
 export type LiveVoiceStatus = "idle" | "connecting" | "talking" | "error";
 
+export type RoomSendDisposition = "sent" | "queued" | "dropped";
+
+export interface SignalingTransportReady {
+  senderConnectionId: string;
+  reconnect: boolean;
+  forceMediaResync?: boolean;
+}
+
 export interface IncomingP2PSignal {
   clientSignalId: string;
   fromUserId: string;
   roomGeneration?: number;
   sequence: number;
   senderConnectionId: string;
+  senderMediaSessionId?: string;
   serverSeq?: number;
   signal: P2PSignal;
   sourceGeneration?: number;

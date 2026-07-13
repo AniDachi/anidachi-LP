@@ -1,4 +1,10 @@
-import type { PlaybackState } from "@anidachi/protocol";
+import {
+  MAX_URL_CHARS,
+  MAX_VIDEO_FINGERPRINT_CHARS,
+  MAX_WATCH_TITLE_CHARS,
+  type PlaybackState,
+  type WatchSourceDescriptor,
+} from "@anidachi/protocol";
 import {
   CRUNCHYROLL_CONTROL_RESULT_SOURCE,
   CRUNCHYROLL_CONTROL_SOURCE,
@@ -63,7 +69,9 @@ export class GenericVideoAdapter implements VideoAdapter {
   }
 
   getFingerprint(): string {
-    return `html5|${location.pathname}|${getStableVideoSourceKey(this.video)}`;
+    return normalizeVideoFingerprint(
+      `html5|${location.pathname}|${getStableVideoSourceKey(this.video)}`,
+    );
   }
 
   getCurrentTime(): number {
@@ -71,9 +79,10 @@ export class GenericVideoAdapter implements VideoAdapter {
   }
 
   getState(): PlaybackState {
+    const sourceUrl = canonicalWatchSourceUrl(location.href);
     return {
       videoFingerprint: this.getFingerprint(),
-      sourceUrl: location.href,
+      ...(sourceUrl ? { sourceUrl } : {}),
       playing: !this.video.paused,
       hostTime: this.getCurrentTime(),
       updatedAt: Date.now(),
@@ -186,7 +195,7 @@ class YouTubeVideoAdapter extends GenericVideoAdapter {
   }
 
   override getFingerprint(): string {
-    return `youtube|${getYouTubeVideoId() ?? location.pathname}`;
+    return normalizeVideoFingerprint(`youtube|${getYouTubeVideoId() ?? location.pathname}`);
   }
 
   override isFullscreen(): boolean {
@@ -266,7 +275,7 @@ class CrunchyrollVideoAdapter extends GenericVideoAdapter {
   }
 
   override getFingerprint(): string {
-    return `crunchyroll|${getCrunchyrollVideoKey()}`;
+    return normalizeVideoFingerprint(`crunchyroll|${getCrunchyrollVideoKey()}`);
   }
 
   override async play(): Promise<void> {
@@ -559,6 +568,78 @@ function getStableVideoSourceKey(video: HTMLVideoElement): string {
   }
 
   return getDocumentVideoKey();
+}
+
+export function normalizeVideoFingerprint(rawFingerprint: string): string {
+  if (rawFingerprint.length <= MAX_VIDEO_FINGERPRINT_CHARS) {
+    return rawFingerprint;
+  }
+
+  const typePrefix = rawFingerprint.match(/^([^|]{1,32})\|/)?.[1] ?? "video";
+  return `${typePrefix}|hash:${stableFingerprintHash(rawFingerprint)}`;
+}
+
+function stableFingerprintHash(value: string): string {
+  let hash = 0xcbf29ce484222325n;
+  const prime = 0x100000001b3n;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    hash ^= BigInt(code & 0xff);
+    hash = BigInt.asUintN(64, hash * prime);
+    hash ^= BigInt(code >>> 8);
+    hash = BigInt.asUintN(64, hash * prime);
+  }
+  return hash.toString(36);
+}
+
+export function canonicalWatchSourceUrl(value: string): string | null {
+  if (value.length > MAX_URL_CHARS) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value, location.href);
+    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
+    params.delete("anidachiRoom");
+    url.hash = params.toString();
+    const normalized = url.toString();
+    return normalized.length <= MAX_URL_CHARS ? normalized : null;
+  } catch {
+    return null;
+  }
+}
+
+export function buildWatchSourceDescriptor(
+  adapter: VideoAdapter,
+  state: PlaybackState,
+): WatchSourceDescriptor | undefined {
+  const sourceUrl = canonicalWatchSourceUrl(state.sourceUrl ?? location.href);
+  if (!sourceUrl) {
+    return undefined;
+  }
+
+  const title = normalizeWatchTitle(
+    adapter.getTitle()?.trim() || document.title?.trim() || adapter.name,
+  );
+  const duration = Number.isFinite(adapter.video.duration) ? adapter.video.duration : undefined;
+  return {
+    provider: watchProviderFromAdapterId(adapter.id),
+    sourceUrl,
+    canonicalUrl: sourceUrl,
+    videoFingerprint: state.videoFingerprint,
+    title,
+    ...(duration !== undefined ? { duration } : {}),
+  };
+}
+
+function normalizeWatchTitle(title: string): string {
+  return title.length <= MAX_WATCH_TITLE_CHARS ? title : title.slice(0, MAX_WATCH_TITLE_CHARS);
+}
+
+function watchProviderFromAdapterId(adapterId: string): WatchSourceDescriptor["provider"] {
+  if (adapterId === "crunchyroll") return "crunchyroll";
+  if (adapterId === "youtube") return "youtube";
+  return "generic";
 }
 
 function getDocumentVideoKey(): string {

@@ -9,6 +9,7 @@ import {
 } from "@anidachi/protocol";
 import { API_WS_BASE, WEB_HTTP_BASE } from "./constants";
 import { logDebug, roomEventDebugSnapshot } from "./debug-log";
+import type { RoomSendDisposition, SignalingTransportReady } from "./media-types";
 
 export type RoomConnectionStatus = "idle" | "connecting" | "connected" | "closed" | "error";
 
@@ -19,8 +20,11 @@ export interface RoomClientOptions {
   videoFingerprint: string;
   lastSeenP2PServerSeq?: number;
   participantSessionId?: string;
+  reconnect?: boolean;
   onEvent: (event: ServerEvent) => void;
   onStatus: (status: RoomConnectionStatus) => void;
+  onTerminalClose?: () => void;
+  onTransportReady?: (ready: SignalingTransportReady) => void;
 }
 
 /** Free-plan daily quota summary attached to room API responses (PD2). */
@@ -81,6 +85,11 @@ const ROOM_KEEPALIVE_INTERVAL_MS = 20_000;
 const ROOM_KEEPALIVE_TIMEOUT_MS = 45_000;
 const HIBERNATION_KEEPALIVE_PING = "ping";
 const HIBERNATION_KEEPALIVE_PONG = "pong";
+export const ROOM_ENDED_CLOSE_CODE = 4004;
+
+export function isTerminalRoomCloseCode(code: number): boolean {
+  return code === ROOM_ENDED_CLOSE_CODE;
+}
 
 export type RoomHttpCommand = "create-room" | "connect-room" | "end-room";
 
@@ -430,6 +439,7 @@ export class RoomClient {
   private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
   private pendingEvents: ClientEvent[] = [];
   private pongTimeout: ReturnType<typeof setTimeout> | null = null;
+  private currentStatusPublisher: ((status: RoomConnectionStatus) => void) | null = null;
   private ws: WebSocket | null = null;
 
   get senderConnectionId(): string {
@@ -437,13 +447,21 @@ export class RoomClient {
   }
 
   connect(options: RoomClientOptions): void {
-    this.close("reconnect");
-    this.currentSenderConnectionId = createRoomConnectionId();
+    this.closeSocket("reconnect", false);
+    const senderConnectionId = createRoomConnectionId();
+    this.currentSenderConnectionId = senderConnectionId;
     this.pendingEvents = [];
-    options.onStatus("connecting");
+    let lastStatus: RoomConnectionStatus = "idle";
+    const publishStatus = (status: RoomConnectionStatus): void => {
+      if (lastStatus === status) return;
+      lastStatus = status;
+      options.onStatus(status);
+    };
+    this.currentStatusPublisher = publishStatus;
+    publishStatus("connecting");
     logDebug("room.ws", "connecting", {
       apiWsBase: API_WS_BASE,
-      senderConnectionId: this.currentSenderConnectionId,
+      senderConnectionId,
       roomId: options.roomId,
       participantId: options.participant.id,
       participantSessionId: options.participantSessionId,
@@ -452,9 +470,11 @@ export class RoomClient {
 
     const ws = new WebSocket(buildRoomWebSocketUrl(options.roomId, options.roomToken));
     this.ws = ws;
+    let socketClosed = false;
+    let transportReadyPublished = false;
 
     ws.addEventListener("open", () => {
-      if (this.ws !== ws) {
+      if (this.ws !== ws || socketClosed) {
         return;
       }
 
@@ -462,9 +482,9 @@ export class RoomClient {
         roomId: options.roomId,
         participantId: options.participant.id,
         participantSessionId: options.participantSessionId,
-        senderConnectionId: this.currentSenderConnectionId,
+        senderConnectionId,
       });
-      options.onStatus("connected");
+      publishStatus("connected");
       const joinEvent: ClientEvent = {
         type: "JOIN",
         roomId: options.roomId,
@@ -483,7 +503,7 @@ export class RoomClient {
     });
 
     ws.addEventListener("message", (message) => {
-      if (this.ws !== ws) {
+      if (this.ws !== ws || socketClosed) {
         return;
       }
 
@@ -500,12 +520,24 @@ export class RoomClient {
 
         logDebug("room.recv", event.type, roomEventDebugSnapshot(event));
         options.onEvent(event);
+        if (
+          event.type === "ROOM_SNAPSHOT" &&
+          !transportReadyPublished &&
+          this.ws === ws &&
+          !socketClosed
+        ) {
+          transportReadyPublished = true;
+          options.onTransportReady?.({
+            senderConnectionId,
+            reconnect: options.reconnect === true,
+            ...(event.p2pResyncRequired ? { forceMediaResync: true } : {}),
+          });
+        }
       } catch (error) {
         logDebug("room.recv", "invalid server event", {
           error: error instanceof Error ? error.message : String(error),
           raw: String(message.data).slice(0, 500),
         });
-        console.warn("[Anidachi] Ignoring invalid server event", error);
       }
     });
 
@@ -514,38 +546,47 @@ export class RoomClient {
         return;
       }
 
+      socketClosed = true;
       logDebug("room.ws", "closed", {
         code: event.code,
         participantId: options.participant.id,
         participantSessionId: options.participantSessionId,
         reason: event.reason,
         roomId: options.roomId,
-        senderConnectionId: this.currentSenderConnectionId,
+        senderConnectionId,
         wasClean: event.wasClean,
       });
+      this.ws = null;
+      if (this.currentStatusPublisher === publishStatus) {
+        this.currentStatusPublisher = null;
+      }
       this.stopKeepalive();
-      options.onStatus("closed");
+      if (isTerminalRoomCloseCode(event.code)) {
+        options.onTerminalClose?.();
+      }
+      publishStatus("closed");
     });
     ws.addEventListener("error", () => {
-      if (this.ws !== ws) {
+      if (this.ws !== ws || socketClosed) {
         return;
       }
 
       logDebug("room.ws", "error");
       this.stopKeepalive();
-      options.onStatus("error");
+      publishStatus("error");
     });
   }
 
-  send(event: ClientEvent): void {
+  send(event: ClientEvent): RoomSendDisposition {
     const parsed = ClientEventSchema.parse(event);
-    if (this.ws?.readyState === WebSocket.OPEN) {
+    const ws = this.ws;
+    if (ws?.readyState === WebSocket.OPEN) {
       logDebug("room.send", parsed.type, roomEventDebugSnapshot(parsed));
-      this.ws.send(JSON.stringify(parsed));
-      return;
+      ws.send(JSON.stringify(parsed));
+      return "sent";
     }
 
-    const shouldQueue = this.ws?.readyState === WebSocket.CONNECTING;
+    const shouldQueue = ws?.readyState === WebSocket.CONNECTING;
     if (shouldQueue) {
       this.pendingEvents = [...this.pendingEvents, parsed].slice(-40);
     }
@@ -558,11 +599,17 @@ export class RoomClient {
         event: roomEventDebugSnapshot(parsed),
       },
     );
+    return shouldQueue ? "queued" : "dropped";
   }
 
   close(reason = "manual"): void {
+    this.closeSocket(reason, true);
+  }
+
+  private closeSocket(reason: string, publishClosed: boolean): void {
     this.stopKeepalive();
     const ws = this.ws;
+    const statusPublisher = this.currentStatusPublisher;
     if (ws) {
       logDebug("room.ws", "closing", {
         reason,
@@ -571,6 +618,10 @@ export class RoomClient {
       });
     }
     this.ws = null;
+    this.currentStatusPublisher = null;
+    if (publishClosed && ws) {
+      statusPublisher?.("closed");
+    }
     ws?.close();
     this.pendingEvents = [];
   }

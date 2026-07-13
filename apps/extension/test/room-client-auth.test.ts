@@ -19,8 +19,82 @@ import {
   RoomClient,
 } from "../src/room-client";
 
+class ControlledWebSocket {
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
+  static instances: ControlledWebSocket[] = [];
+
+  readonly listeners = new Map<string, Array<(event: unknown) => void>>();
+  readonly sent: string[] = [];
+  readyState = ControlledWebSocket.CONNECTING;
+
+  constructor(readonly url: string) {
+    ControlledWebSocket.instances.push(this);
+  }
+
+  addEventListener(type: string, listener: (event: unknown) => void): void {
+    this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+  }
+
+  close(code = 1000, reason = "client close"): void {
+    if (this.readyState === ControlledWebSocket.CLOSED) return;
+    this.readyState = ControlledWebSocket.CLOSED;
+    this.dispatch("close", { code, reason, wasClean: code === 1000 });
+  }
+
+  send(data: string): void {
+    this.sent.push(data);
+  }
+
+  open(): void {
+    this.readyState = ControlledWebSocket.OPEN;
+    this.dispatch("open", {});
+  }
+
+  message(value: unknown): void {
+    this.dispatch("message", {
+      data: typeof value === "string" ? value : JSON.stringify(value),
+    });
+  }
+
+  dispatch(type: string, event: unknown): void {
+    for (const listener of this.listeners.get(type) ?? []) {
+      listener(event);
+    }
+  }
+}
+
+const roomParticipant = {
+  id: "user-1",
+  displayName: "User",
+  role: "host" as const,
+  cameraEnabled: false,
+  mediaSeat: "none" as const,
+  syncStatus: "unknown" as const,
+  lastSeenAt: 0,
+};
+
+function roomSnapshot(roomId = "room-1") {
+  return {
+    type: "ROOM_SNAPSHOT" as const,
+    roomId,
+    roomGeneration: 1,
+    serverSeq: 1,
+    sourceGeneration: 1,
+    participants: [roomParticipant],
+  };
+}
+
+function installControlledWebSocket(): void {
+  ControlledWebSocket.instances = [];
+  vi.stubGlobal("WebSocket", ControlledWebSocket);
+}
+
 describe("authenticated room client", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
@@ -86,33 +160,43 @@ describe("authenticated room client", () => {
       reused: false,
       quota: null,
     });
-    expect(fetchMock).toHaveBeenCalledWith(new URL("http://localhost:3003/api/rooms"), {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer access-1",
-        "Content-Type": "application/json",
+    expect(fetchMock).toHaveBeenCalledWith(
+      new URL("http://localhost:3003/api/rooms"),
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer access-1",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
       },
-      body: JSON.stringify(input),
-    });
+    );
   });
 
   it("gets a room token for existing website rooms from the background API helper", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ roomToken: "room-token-2" }), { status: 200 }),
+      new Response(JSON.stringify({ roomToken: "room-token-2" }), {
+        status: 200,
+      }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(connectWebsiteRoomFromApi("room-2", "access-1")).resolves.toEqual({
+    await expect(
+      connectWebsiteRoomFromApi("room-2", "access-1"),
+    ).resolves.toEqual({
       roomToken: "room-token-2",
       quota: null,
     });
-    expect(fetchMock).toHaveBeenCalledWith(new URL("http://localhost:3003/api/rooms/room-2/connect"), {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer access-1",
-        "Content-Type": "application/json",
+    expect(fetchMock).toHaveBeenCalledWith(
+      new URL("http://localhost:3003/api/rooms/room-2/connect"),
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer access-1",
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
   });
 
   it("parses quota, reused, and clientRequestId on create", async () => {
@@ -269,6 +353,185 @@ describe("authenticated room client", () => {
       roomToken: "room-token-2",
     });
     expect(sendMessage).toHaveBeenCalledWith(connectRoomHttpMessage("room-2", "access-1"));
+  });
+
+  it("returns whether each valid room event was sent, queued, or dropped", () => {
+    installControlledWebSocket();
+    const client = new RoomClient();
+    const event = (sentAt: number) => ({
+      type: "PING" as const,
+      roomId: "room-1",
+      sentAt,
+    });
+
+    expect(client.send(event(1))).toBe("dropped");
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: roomParticipant,
+      videoFingerprint: "video-1",
+      onEvent: vi.fn(),
+      onStatus: vi.fn(),
+    });
+    expect(client.send(event(2))).toBe("queued");
+
+    const socket = ControlledWebSocket.instances[0];
+    socket?.open();
+    expect(
+      socket?.sent.slice(0, 2).map((entry) => JSON.parse(entry).type),
+    ).toEqual(["JOIN", "PING"]);
+    expect(client.send(event(3))).toBe("sent");
+    expect(JSON.parse(socket?.sent.at(-1) ?? "{}")).toMatchObject({
+      type: "PING",
+      sentAt: 3,
+    });
+
+    client.close();
+    expect(client.send(event(4))).toBe("dropped");
+  });
+
+  it("publishes transport readiness once, after delivering the first room snapshot", () => {
+    installControlledWebSocket();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const timeline: string[] = [];
+    const onTransportReady = vi.fn(
+      (ready: { senderConnectionId: string; reconnect: boolean }) => {
+        timeline.push(`ready:${ready.senderConnectionId}`);
+      },
+    );
+    const client = new RoomClient();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: roomParticipant,
+      videoFingerprint: "video-1",
+      reconnect: true,
+      onEvent: (event) => timeline.push(`event:${event.type}`),
+      onStatus: vi.fn(),
+      onTransportReady,
+    });
+    const senderConnectionId = client.senderConnectionId;
+    const socket = ControlledWebSocket.instances[0];
+    socket?.open();
+    socket?.message("pong");
+    socket?.message({
+      type: "PONG",
+      roomId: "room-1",
+      sentAt: 1,
+      serverTime: 2,
+    });
+    socket?.message("not-json");
+
+    expect(onTransportReady).not.toHaveBeenCalled();
+    expect(timeline).toEqual([]);
+
+    socket?.message({ ...roomSnapshot(), p2pResyncRequired: true });
+
+    expect(timeline).toEqual([
+      "event:ROOM_SNAPSHOT",
+      `ready:${senderConnectionId}`,
+    ]);
+    expect(onTransportReady).toHaveBeenCalledWith({
+      forceMediaResync: true,
+      senderConnectionId,
+      reconnect: true,
+    });
+
+    socket?.message({ ...roomSnapshot(), serverSeq: 2 });
+    expect(onTransportReady).toHaveBeenCalledTimes(1);
+    expect(warn).not.toHaveBeenCalled();
+
+    client.close();
+  });
+
+  it("does not publish transport readiness for stale or already-closed sockets", () => {
+    installControlledWebSocket();
+    const firstReady = vi.fn();
+    const secondReady = vi.fn();
+    const client = new RoomClient();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: roomParticipant,
+      videoFingerprint: "video-1",
+      reconnect: false,
+      onEvent: vi.fn(),
+      onStatus: vi.fn(),
+      onTransportReady: firstReady,
+    });
+    const firstSenderConnectionId = client.senderConnectionId;
+    const firstSocket = ControlledWebSocket.instances[0];
+    firstSocket?.open();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-2",
+      participant: roomParticipant,
+      videoFingerprint: "video-1",
+      reconnect: true,
+      onEvent: vi.fn(),
+      onStatus: vi.fn(),
+      onTransportReady: secondReady,
+    });
+    const secondSenderConnectionId = client.senderConnectionId;
+    const secondSocket = ControlledWebSocket.instances[1];
+    secondSocket?.open();
+
+    expect(secondSenderConnectionId).not.toBe(firstSenderConnectionId);
+    firstSocket?.message(roomSnapshot());
+    expect(firstReady).not.toHaveBeenCalled();
+    expect(secondReady).not.toHaveBeenCalled();
+
+    secondSocket?.close();
+    secondSocket?.message(roomSnapshot());
+    expect(secondReady).not.toHaveBeenCalled();
+  });
+
+  it("does not publish transport readiness when snapshot delivery closes the socket", () => {
+    installControlledWebSocket();
+    const onTransportReady = vi.fn();
+    const client = new RoomClient();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: roomParticipant,
+      videoFingerprint: "video-1",
+      onEvent: (event) => {
+        if (event.type === "ROOM_SNAPSHOT") client.close();
+      },
+      onStatus: vi.fn(),
+      onTransportReady,
+    });
+    const socket = ControlledWebSocket.instances[0];
+    socket?.open();
+    socket?.message(roomSnapshot());
+
+    expect(onTransportReady).not.toHaveBeenCalled();
+  });
+
+  it("publishes one closed status for explicit close without a replacement transition", () => {
+    installControlledWebSocket();
+    const statuses: string[] = [];
+    const client = new RoomClient();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: roomParticipant,
+      videoFingerprint: "video-1",
+      onEvent: vi.fn(),
+      onStatus: (status) => statuses.push(status),
+    });
+    ControlledWebSocket.instances[0]?.open();
+
+    client.close();
+    client.close();
+
+    expect(statuses).toEqual(["connecting", "connected", "closed"]);
   });
 
   it("ignores close events from stale websocket connections", () => {
@@ -500,5 +763,44 @@ describe("authenticated room client", () => {
     expect(statuses).toEqual(["connecting", "connected", "closed"]);
 
     vi.useRealTimers();
+  });
+
+  it("reports terminal close code 4004 when ROOM_ENDED is lost", () => {
+    const sockets: FakeWebSocket[] = [];
+    class FakeWebSocket {
+      static CONNECTING = 0;
+      static OPEN = 1;
+      static CLOSING = 2;
+      static CLOSED = 3;
+      readonly listeners = new Map<string, Array<(event: unknown) => void>>();
+      readyState = FakeWebSocket.CONNECTING;
+      constructor(readonly url: string) { sockets.push(this); }
+      addEventListener(type: string, listener: (event: unknown) => void): void {
+        this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+      }
+      close(): void { this.readyState = FakeWebSocket.CLOSED; }
+      send(): void {}
+      dispatch(type: string, event: unknown): void {
+        for (const listener of this.listeners.get(type) ?? []) listener(event);
+      }
+    }
+    vi.stubGlobal("WebSocket", FakeWebSocket);
+    const onTerminalClose = vi.fn();
+    const client = new RoomClient();
+    client.connect({
+      roomId: "room-1",
+      roomToken: "token",
+      participant: {
+        id: "user-1", displayName: "User", role: "viewer", cameraEnabled: false,
+        mediaSeat: "none", syncStatus: "unknown", lastSeenAt: 0,
+      },
+      videoFingerprint: "video-1",
+      onEvent: vi.fn(),
+      onStatus: vi.fn(),
+      onTerminalClose,
+    });
+
+    sockets[0]?.dispatch("close", { code: 4004, reason: "Room ended", wasClean: true });
+    expect(onTerminalClose).toHaveBeenCalledOnce();
   });
 });
