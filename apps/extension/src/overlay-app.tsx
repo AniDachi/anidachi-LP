@@ -90,6 +90,23 @@ import {
   type CrunchyrollPlayerChromeState,
 } from "./overlay-layout";
 import {
+  OVERLAY_LAYOUT_CHAT_MESSAGE_OPTIONS,
+  OVERLAY_LAYOUT_GRID_COLUMNS,
+  OVERLAY_LAYOUT_GRID_ROWS,
+  OVERLAY_LAYOUT_PRESETS,
+  applyOverlayLayoutPreset,
+  getCenteredGridPosition,
+  getDefaultOverlayLayoutPreferences,
+  getGridRectStyle,
+  getOverlayLayoutCssVariables,
+  moveOverlayLayoutObject,
+  normalizeOverlayLayoutPreferences,
+  resizeOverlayLayoutObject,
+  updateOverlayLayoutChatMaxMessages,
+  type OverlayLayoutObjectId,
+  type OverlayLayoutPreferences,
+} from "./overlay-layout-preferences";
+import {
   getP2PMediaSessionState,
   persistRoomSessionForCurrentJoin,
 } from "./overlay-media-session";
@@ -232,10 +249,10 @@ interface FireHoldState {
 
 type MessageDisplayMode = "chat" | "bubble";
 type ChatDisplayMode = "live" | "history";
-type SettingsPanelCategory = "cam" | "chat" | "reactions" | "voice" | "debug";
+type SettingsPanelCategory = "layout" | "chat" | "reactions" | "voice" | "debug";
 
 const SETTINGS_PANEL_CATEGORIES: Array<{ id: SettingsPanelCategory; label: string }> = [
-  { id: "cam", label: "Cam" },
+  { id: "layout", label: "Layout" },
   { id: "chat", label: "Chat" },
   { id: "reactions", label: "Reactions" },
   { id: "voice", label: "Voice" },
@@ -246,6 +263,14 @@ interface SettingsRailDragState {
   dragging: boolean;
   pointerId: number;
   startScrollLeft: number;
+  startX: number;
+  startY: number;
+}
+
+interface LayoutEditorDragState {
+  dragging: boolean;
+  objectId: OverlayLayoutObjectId;
+  pointerId: number;
   startX: number;
   startY: number;
 }
@@ -274,12 +299,13 @@ const CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS = 0.75;
 const CRUNCHYROLL_LOCAL_PLAYBACK_SUPPRESSION_AFTER_SEEK_MS = 900;
 const CRUNCHYROLL_SOURCE_NAVIGATION_GUARD_MS = 6000;
 const GHOST_CAM_SIZE_STORAGE_KEY = "local:ghostCamSizeStep";
+const OVERLAY_LAYOUT_STORAGE_KEY = "local:overlayLayoutPreferences";
 const MESSAGE_DISPLAY_MODE_STORAGE_KEY = "local:messageDisplayMode";
 const CHAT_DISPLAY_MODE_STORAGE_KEY = "local:chatDisplayMode";
 const DEFAULT_MESSAGE_DISPLAY_MODE: MessageDisplayMode = "chat";
 const DEFAULT_CHAT_DISPLAY_MODE: ChatDisplayMode = "live";
 const LIVE_CHAT_MESSAGE_TTL_MS = 9000;
-const LIVE_CHAT_MAX_MESSAGES = 6;
+const LIVE_CHAT_MAX_MESSAGES = Math.max(...OVERLAY_LAYOUT_CHAT_MESSAGE_OPTIONS);
 const CHAT_HISTORY_MAX_MESSAGES = 80;
 const SETTINGS_RAIL_DRAG_THRESHOLD_PX = 9;
 const SETTINGS_RAIL_HORIZONTAL_INTENT_RATIO = 1.2;
@@ -371,12 +397,16 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [roomCreatePending, setRoomCreatePending] = useState(false);
   const [roomEndPending, setRoomEndPending] = useState(false);
   const [settingsPanelCategory, setSettingsPanelCategory] =
-    useState<SettingsPanelCategory>("cam");
+    useState<SettingsPanelCategory>("layout");
   const [settingsRailDragging, setSettingsRailDragging] = useState(false);
   const [settingsRailOverflow, setSettingsRailOverflow] = useState({
     left: false,
     right: false,
   });
+  const [overlayLayoutPreferences, setOverlayLayoutPreferences] =
+    useState<OverlayLayoutPreferences>(() => getDefaultOverlayLayoutPreferences());
+  const [selectedLayoutObject, setSelectedLayoutObject] =
+    useState<OverlayLayoutObjectId>("video");
   const [invitePanelOpen, setInvitePanelOpen] = useState(false);
   const [inviteTargets, setInviteTargets] = useState<InviteTargets | null>(null);
   const [inviteTargetsLoading, setInviteTargetsLoading] = useState(false);
@@ -435,6 +465,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   >({});
   const settingsRailDragRef = useRef<SettingsRailDragState | null>(null);
   const settingsRailSuppressClickRef = useRef(false);
+  const layoutPreviewRef = useRef<HTMLDivElement | null>(null);
+  const layoutEditorDragRef = useRef<LayoutEditorDragState | null>(null);
+  const overlayLayoutPreferencesRef = useRef(overlayLayoutPreferences);
   const authAccessTokenRef = useRef<string | null>(null);
   const storedRoomSessionRef = useRef<RoomSessionRecord | null>(null);
   const roomIdRef = useRef<string | null>(null);
@@ -476,21 +509,46 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const handleSettingsCategoryWheel = useCallback(
     (event: ReactWheelEvent<HTMLDivElement>) => {
-      const horizontalGesture =
-        event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);
+      const rail = settingsCategoryScrollRef.current;
+      if (!rail) {
+        return;
+      }
 
-      if (horizontalGesture) {
+      const maxScrollLeft = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      if (maxScrollLeft <= 0) {
+        return;
+      }
+
+      const primaryDelta =
+        event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)
+          ? event.deltaX
+          : event.deltaY;
+
+      if (Math.abs(primaryDelta) < 1) {
+        return;
+      }
+
+      const atLeftEdge = rail.scrollLeft <= 1;
+      const atRightEdge = rail.scrollLeft >= maxScrollLeft - 1;
+      if ((primaryDelta < 0 && atLeftEdge) || (primaryDelta > 0 && atRightEdge)) {
         window.requestAnimationFrame(updateSettingsRailOverflow);
         return;
       }
 
-      const panel = event.currentTarget.closest(".mini-panel");
-      if (!(panel instanceof HTMLElement)) {
+      const nextScrollLeft = Math.max(
+        0,
+        Math.min(maxScrollLeft, rail.scrollLeft + primaryDelta),
+      );
+
+      if (Math.abs(nextScrollLeft - rail.scrollLeft) < 1) {
+        window.requestAnimationFrame(updateSettingsRailOverflow);
         return;
       }
 
       event.preventDefault();
-      panel.scrollTop += event.deltaY;
+      event.stopPropagation();
+      rail.scrollLeft = nextScrollLeft;
+      window.requestAnimationFrame(updateSettingsRailOverflow);
     },
     [updateSettingsRailOverflow],
   );
@@ -628,10 +686,37 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     }
 
     const frameId = window.requestAnimationFrame(() => {
-      settingsCategoryButtonRefs.current[settingsPanelCategory]?.scrollIntoView({
-        block: "nearest",
-        inline: "nearest",
-      });
+      const rail = settingsCategoryScrollRef.current;
+      const activeButton = settingsCategoryButtonRefs.current[settingsPanelCategory];
+      if (!rail || !activeButton) {
+        updateSettingsRailOverflow();
+        return;
+      }
+
+      const maxScrollLeft = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      const categoryIndex = SETTINGS_PANEL_CATEGORIES.findIndex(
+        (category) => category.id === settingsPanelCategory,
+      );
+      let nextScrollLeft = rail.scrollLeft;
+
+      if (categoryIndex === 0) {
+        nextScrollLeft = 0;
+      } else if (categoryIndex === SETTINGS_PANEL_CATEGORIES.length - 1) {
+        nextScrollLeft = maxScrollLeft;
+      } else {
+        const railRect = rail.getBoundingClientRect();
+        const activeRect = activeButton.getBoundingClientRect();
+        const leftInset = 14;
+        const rightInset = 14;
+
+        if (activeRect.left < railRect.left + leftInset) {
+          nextScrollLeft -= railRect.left + leftInset - activeRect.left;
+        } else if (activeRect.right > railRect.right - rightInset) {
+          nextScrollLeft += activeRect.right - (railRect.right - rightInset);
+        }
+      }
+
+      rail.scrollLeft = Math.max(0, Math.min(maxScrollLeft, nextScrollLeft));
       updateSettingsRailOverflow();
     });
 
@@ -641,6 +726,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   useEffect(() => {
     participantRef.current = participant;
   }, [participant]);
+
+  useEffect(() => {
+    overlayLayoutPreferencesRef.current = overlayLayoutPreferences;
+  }, [overlayLayoutPreferences]);
 
   useEffect(() => {
     authAccessTokenRef.current = authAccessToken;
@@ -993,6 +1082,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       ? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
       : "No live media";
   const participantLimitText = `${participantCount}/${roomParticipantLimit} people`;
+  const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
   const isHost = currentParticipant?.role === "host";
   const isConnected = status === "connected";
   const { p2pReady, p2pSessionActive } = getP2PMediaSessionState({
@@ -1057,6 +1147,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       })
     : 10;
   const overlayCssVariables = {
+    ...getOverlayLayoutCssVariables(overlayLayoutPreferences),
     "--cam-bubble-gap": `${ghostCamGapPx}px`,
     "--cam-bubble-size": `${ghostCamSizePx}px`,
     "--cam-stack-bottom": `${camStackBottomPx}px`,
@@ -1084,6 +1175,17 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     .join(" ");
   const displayedChatMessages =
     chatDisplayMode === "history" ? chatHistoryMessages : liveChatMessages;
+  const selectedLayoutRect = overlayLayoutPreferences.objects[selectedLayoutObject];
+  const selectedLayoutLabel = selectedLayoutObject === "video" ? "Video" : "Chat";
+  const layoutPreviewCells = useMemo(
+    () =>
+      Array.from({ length: OVERLAY_LAYOUT_GRID_COLUMNS * OVERLAY_LAYOUT_GRID_ROWS }, (_, index) => ({
+        column: index % OVERLAY_LAYOUT_GRID_COLUMNS,
+        id: index,
+        row: Math.floor(index / OVERLAY_LAYOUT_GRID_COLUMNS),
+      })),
+    [],
+  );
 
   useEffect(() => {
     if (!roomId || !roomSnapshotReady || !camsEnabled) {
@@ -1180,6 +1282,22 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   useEffect(() => {
     let cancelled = false;
 
+    void storage.getItem<unknown>(OVERLAY_LAYOUT_STORAGE_KEY).then((storedPreferences) => {
+      if (!cancelled && storedPreferences !== null) {
+        const next = normalizeOverlayLayoutPreferences(storedPreferences);
+        overlayLayoutPreferencesRef.current = next;
+        setOverlayLayoutPreferences(next);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
     void storage
       .getItem<MessageDisplayMode | string>(MESSAGE_DISPLAY_MODE_STORAGE_KEY)
       .then((storedMode) => {
@@ -1212,6 +1330,216 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setGhostCamSizeStep(nextStep);
     void storage.setItem(GHOST_CAM_SIZE_STORAGE_KEY, nextStep);
   }, []);
+
+  const persistOverlayLayoutPreferences = useCallback(
+    (nextPreferences: OverlayLayoutPreferences) => {
+      void storage.setItem(OVERLAY_LAYOUT_STORAGE_KEY, nextPreferences);
+    },
+    [],
+  );
+
+  const updateOverlayLayoutPreferences = useCallback(
+    (
+      updater: (current: OverlayLayoutPreferences) => OverlayLayoutPreferences,
+      options: { persist?: boolean } = {},
+    ) => {
+      const next = updater(overlayLayoutPreferencesRef.current);
+      overlayLayoutPreferencesRef.current = next;
+      setOverlayLayoutPreferences(next);
+      if (options.persist !== false) {
+        persistOverlayLayoutPreferences(next);
+      }
+    },
+    [persistOverlayLayoutPreferences],
+  );
+
+  const applyLayoutPreset = useCallback(
+    (presetId: OverlayLayoutPreferences["presetId"]) => {
+      const next = applyOverlayLayoutPreset(presetId);
+      overlayLayoutPreferencesRef.current = next;
+      setOverlayLayoutPreferences(next);
+      persistOverlayLayoutPreferences(next);
+    },
+    [persistOverlayLayoutPreferences],
+  );
+
+  const saveCustomLayoutPreset = useCallback(() => {
+    updateOverlayLayoutPreferences((current) =>
+      normalizeOverlayLayoutPreferences({
+        ...current,
+        presetId: "custom",
+      }),
+    );
+  }, [updateOverlayLayoutPreferences]);
+
+  const moveLayoutObjectToPointer = useCallback(
+    (
+      event: PointerEvent<HTMLElement>,
+      objectId: OverlayLayoutObjectId,
+      options: { persist?: boolean } = {},
+    ) => {
+      const preview = layoutPreviewRef.current;
+      if (!preview) {
+        return;
+      }
+
+      const rect = preview.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        return;
+      }
+
+      const cellX = Math.min(
+        OVERLAY_LAYOUT_GRID_COLUMNS - 1,
+        Math.max(0, Math.floor(((event.clientX - rect.left) / rect.width) * OVERLAY_LAYOUT_GRID_COLUMNS)),
+      );
+      const cellY = Math.min(
+        OVERLAY_LAYOUT_GRID_ROWS - 1,
+        Math.max(0, Math.floor(((event.clientY - rect.top) / rect.height) * OVERLAY_LAYOUT_GRID_ROWS)),
+      );
+
+      updateOverlayLayoutPreferences(
+        (current) => {
+          const currentRect = current.objects[objectId];
+          const nextPosition = getCenteredGridPosition(currentRect, cellX, cellY);
+          return moveOverlayLayoutObject(current, objectId, nextPosition.x, nextPosition.y);
+        },
+        { persist: options.persist },
+      );
+    },
+    [updateOverlayLayoutPreferences],
+  );
+
+  const handleLayoutPreviewPointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (!event.isPrimary || event.button !== 0) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const clickedObject = getLayoutObjectFromEventTarget(event.target);
+      const objectId = clickedObject ?? selectedLayoutObject;
+      setSelectedLayoutObject(objectId);
+
+      if (clickedObject) {
+        layoutEditorDragRef.current = {
+          dragging: false,
+          objectId,
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+        };
+        event.currentTarget.setPointerCapture(event.pointerId);
+        return;
+      }
+
+      moveLayoutObjectToPointer(event, objectId);
+    },
+    [moveLayoutObjectToPointer, selectedLayoutObject],
+  );
+
+  const handleLayoutPreviewPointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const drag = layoutEditorDragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+      if (!drag.dragging && distance < 4) {
+        return;
+      }
+
+      drag.dragging = true;
+      event.preventDefault();
+      event.stopPropagation();
+      moveLayoutObjectToPointer(event, drag.objectId, { persist: false });
+    },
+    [moveLayoutObjectToPointer],
+  );
+
+  const handleLayoutPreviewPointerEnd = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const drag = layoutEditorDragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      layoutEditorDragRef.current = null;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      if (drag.dragging) {
+        persistOverlayLayoutPreferences(overlayLayoutPreferencesRef.current);
+      }
+    },
+    [persistOverlayLayoutPreferences],
+  );
+
+  const handleLayoutObjectKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLButtonElement>, objectId: OverlayLayoutObjectId) => {
+      let deltaX = 0;
+      let deltaY = 0;
+
+      switch (event.key) {
+        case "ArrowDown":
+          deltaY = 1;
+          break;
+        case "ArrowLeft":
+          deltaX = -1;
+          break;
+        case "ArrowRight":
+          deltaX = 1;
+          break;
+        case "ArrowUp":
+          deltaY = -1;
+          break;
+        default:
+          return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      setSelectedLayoutObject(objectId);
+      updateOverlayLayoutPreferences((current) => {
+        const currentRect = current.objects[objectId];
+        return moveOverlayLayoutObject(
+          current,
+          objectId,
+          currentRect.x + deltaX,
+          currentRect.y + deltaY,
+        );
+      });
+    },
+    [updateOverlayLayoutPreferences],
+  );
+
+  const handleLayoutObjectSizeChange = useCallback(
+    (
+      objectId: OverlayLayoutObjectId,
+      dimension: "h" | "w",
+      value: number,
+    ) => {
+      updateOverlayLayoutPreferences((current) =>
+        resizeOverlayLayoutObject(current, objectId, {
+          ...current.objects[objectId],
+          [dimension]: value,
+        }),
+      );
+    },
+    [updateOverlayLayoutPreferences],
+  );
+
+  const handleLayoutChatMaxMessagesChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const nextMaxMessages = Number(event.currentTarget.value);
+      updateOverlayLayoutPreferences((current) =>
+        updateOverlayLayoutChatMaxMessages(current, nextMaxMessages),
+      );
+    },
+    [updateOverlayLayoutPreferences],
+  );
 
   const handleMessageDisplayModeChange = useCallback((nextMode: MessageDisplayMode) => {
     setMessageDisplayMode(nextMode);
@@ -4773,8 +5101,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           {roomId && visibleParticipants.length ? (
             <section className="room-people-section" aria-label="Room participants">
               <div className="section-title room-people-heading">
-                <span>Participants</span>
-                <span>{participantLimitText}</span>
+                <span>People</span>
+                <span>{roomPeopleCountText}</span>
               </div>
               <div className="room-people-list">
                 {visibleParticipants.map((item) => {
@@ -4861,12 +5189,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                         <span className="mini-avatar room-people-avatar">
                           {initials(item.displayName)}
                         </span>
-                        <span className="room-people-name">{item.displayName}</span>
+                        <span className="room-people-copy">
+                          <span className="room-people-name">{item.displayName}</span>
+                          <span className="room-people-status">{statusParts.join(" · ")}</span>
+                        </span>
                       </div>
-                      <div className="room-people-side">
-                        <span className="room-people-status">{statusParts.join(" · ")}</span>
-                        {mediaAction}
-                      </div>
+                      {mediaAction ? <div className="room-people-side">{mediaAction}</div> : null}
                     </div>
                   );
                 })}
@@ -4921,46 +5249,228 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             </div>
 
             <div className="settings-panel" role="tabpanel">
-              {settingsPanelCategory === "cam" ? (
+              {settingsPanelCategory === "layout" ? (
                 <div className="settings-panel-stack">
-                  <button
-                    className="toggle"
-                    type="button"
-                    onClick={handleGhostCamToggle}
+                  <div className="layout-preset-row" aria-label="Layout presets">
+                    {OVERLAY_LAYOUT_PRESETS.map((preset) => (
+                      <button
+                        aria-pressed={overlayLayoutPreferences.presetId === preset.id}
+                        className={`layout-preset-pill${
+                          overlayLayoutPreferences.presetId === preset.id ? " active" : ""
+                        }`}
+                        key={preset.id}
+                        onClick={() => applyLayoutPreset(preset.id)}
+                        type="button"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                    <button
+                      aria-pressed={overlayLayoutPreferences.presetId === "custom"}
+                      className={`layout-preset-pill custom${
+                        overlayLayoutPreferences.presetId === "custom" ? " active" : ""
+                      }`}
+                      onClick={saveCustomLayoutPreset}
+                      type="button"
+                    >
+                      Custom
+                    </button>
+                  </div>
+
+                  <p className="sr-only" id="anidachi-layout-preview-instructions">
+                    Select Video or Chat, then use the arrow keys to move it one grid cell.
+                  </p>
+                  <div
+                    aria-describedby="anidachi-layout-preview-instructions"
+                    aria-label="Overlay layout preview"
+                    className="layout-preview"
+                    onPointerCancel={handleLayoutPreviewPointerEnd}
+                    onPointerDown={handleLayoutPreviewPointerDown}
+                    onPointerMove={handleLayoutPreviewPointerMove}
+                    onPointerUp={handleLayoutPreviewPointerEnd}
+                    ref={layoutPreviewRef}
+                    role="group"
                   >
-                    <span>Cam</span>
-                    <span>
-                      {roomId && roomMediaSeatLimit <= 0
-                        ? "No seats"
-                        : roomId && !localHasMediaSeat
-                          ? localMediaSeatState === "requested"
-                            ? "Requested"
-                            : "Chat"
-                          : camsEnabled
-                            ? "On"
-                            : "Off"}
-                    </span>
-                  </button>
-                  <div className="size-control">
-                    <div className="size-control-header">
-                      <span>Cam size</span>
-                      <strong>{ghostCamSizeLabel}</strong>
-                    </div>
-                    <input
-                      aria-label="Cam bubble size"
-                      className="size-slider"
-                      max={GHOST_CAM_SIZE_MAX_STEP}
-                      min={GHOST_CAM_SIZE_MIN_STEP}
-                      onChange={handleGhostCamSizeChange}
-                      step={1}
-                      type="range"
-                      value={ghostCamSizeStep}
-                    />
-                    <div className="size-ticks" aria-hidden="true">
-                      {GHOST_CAM_SIZE_STEPS.map((step) => (
-                        <span key={step.step}>{step.label}</span>
+                    <div className="layout-preview-grid" aria-hidden="true">
+                      {layoutPreviewCells.map((cell) => (
+                        <span
+                          data-column={cell.column}
+                          data-row={cell.row}
+                          key={cell.id}
+                        />
                       ))}
                     </div>
+                    <button
+                      aria-label="Video position"
+                      aria-pressed={selectedLayoutObject === "video"}
+                      className={`layout-preview-object layout-preview-video${
+                        selectedLayoutObject === "video" ? " selected" : ""
+                      }`}
+                      data-layout-object="video"
+                      onClick={() => setSelectedLayoutObject("video")}
+                      onKeyDown={(event) => handleLayoutObjectKeyDown(event, "video")}
+                      style={getGridRectStyle(overlayLayoutPreferences.objects.video)}
+                      type="button"
+                    >
+                      <span className="layout-video-main" />
+                      <span className="layout-video-ghost ghost-one" />
+                      <span className="layout-video-ghost ghost-two" />
+                      <span className="layout-video-ghost ghost-three" />
+                    </button>
+                    <button
+                      aria-label="Chat position"
+                      aria-pressed={selectedLayoutObject === "chat"}
+                      className={`layout-preview-object layout-preview-chat${
+                        selectedLayoutObject === "chat" ? " selected" : ""
+                      }`}
+                      data-layout-object="chat"
+                      onClick={() => setSelectedLayoutObject("chat")}
+                      onKeyDown={(event) => handleLayoutObjectKeyDown(event, "chat")}
+                      style={getGridRectStyle(overlayLayoutPreferences.objects.chat)}
+                      type="button"
+                    >
+                      <span />
+                      <span />
+                      <span />
+                    </button>
+                  </div>
+
+                  <div className="layout-selection-card">
+                    <div className="layout-selection-header">
+                      <span>{selectedLayoutLabel}</span>
+                      <strong>
+                        {selectedLayoutRect.w}x{selectedLayoutRect.h}
+                      </strong>
+                    </div>
+                    <div className="layout-object-switch">
+                      <button
+                        className={selectedLayoutObject === "video" ? "selected" : ""}
+                        onClick={() => setSelectedLayoutObject("video")}
+                        type="button"
+                      >
+                        Video
+                      </button>
+                      <button
+                        className={selectedLayoutObject === "chat" ? "selected" : ""}
+                        onClick={() => setSelectedLayoutObject("chat")}
+                        type="button"
+                      >
+                        Chat
+                      </button>
+                    </div>
+
+                    {selectedLayoutObject === "video" ? (
+                      <div className="layout-control-stack">
+                        <button
+                          className="toggle"
+                          type="button"
+                          onClick={handleGhostCamToggle}
+                        >
+                          <span>Camera</span>
+                          <span>
+                            {roomId && roomMediaSeatLimit <= 0
+                              ? "No seats"
+                              : roomId && !localHasMediaSeat
+                                ? localMediaSeatState === "requested"
+                                  ? "Requested"
+                                  : "Chat"
+                                : camsEnabled
+                                  ? "On"
+                                  : "Off"}
+                          </span>
+                        </button>
+                        <div className="size-control compact">
+                          <div className="size-control-header">
+                            <span>Video size</span>
+                            <strong>{ghostCamSizeLabel}</strong>
+                          </div>
+                          <input
+                            aria-label="Video bubble size"
+                            className="size-slider"
+                            max={GHOST_CAM_SIZE_MAX_STEP}
+                            min={GHOST_CAM_SIZE_MIN_STEP}
+                            onChange={handleGhostCamSizeChange}
+                            step={1}
+                            type="range"
+                            value={ghostCamSizeStep}
+                          />
+                          <div className="size-ticks" aria-hidden="true">
+                            {GHOST_CAM_SIZE_STEPS.map((step) => (
+                              <span key={step.step}>{step.label}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="layout-control-stack">
+                        <div className="size-control compact">
+                          <div className="size-control-header">
+                            <span>Chat width</span>
+                            <strong>{overlayLayoutPreferences.objects.chat.w}</strong>
+                          </div>
+                          <input
+                            aria-label="Chat width"
+                            className="size-slider"
+                            max={6}
+                            min={3}
+                            onChange={(event) =>
+                              handleLayoutObjectSizeChange(
+                                "chat",
+                                "w",
+                                Number(event.currentTarget.value),
+                              )
+                            }
+                            step={1}
+                            type="range"
+                            value={overlayLayoutPreferences.objects.chat.w}
+                          />
+                        </div>
+                        <div className="size-control compact">
+                          <div className="size-control-header">
+                            <span>Chat height</span>
+                            <strong>{overlayLayoutPreferences.objects.chat.h}</strong>
+                          </div>
+                          <input
+                            aria-label="Chat height"
+                            className="size-slider"
+                            max={4}
+                            min={1}
+                            onChange={(event) =>
+                              handleLayoutObjectSizeChange(
+                                "chat",
+                                "h",
+                                Number(event.currentTarget.value),
+                              )
+                            }
+                            step={1}
+                            type="range"
+                            value={overlayLayoutPreferences.objects.chat.h}
+                          />
+                        </div>
+                        <div className="size-control compact">
+                          <div className="size-control-header">
+                            <span>Messages shown</span>
+                            <strong>{overlayLayoutPreferences.chat.maxMessages}</strong>
+                          </div>
+                          <input
+                            aria-label="Visible chat messages"
+                            className="size-slider"
+                            list="anidachi-layout-chat-message-options"
+                            max={8}
+                            min={3}
+                            onChange={handleLayoutChatMaxMessagesChange}
+                            step={1}
+                            type="range"
+                            value={overlayLayoutPreferences.chat.maxMessages}
+                          />
+                          <datalist id="anidachi-layout-chat-message-options">
+                            {OVERLAY_LAYOUT_CHAT_MESSAGE_OPTIONS.map((option) => (
+                              <option key={option} value={option} />
+                            ))}
+                          </datalist>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -5270,6 +5780,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             <LiveChatColumn
               mode={chatDisplayMode}
               messages={displayedChatMessages}
+              maxLiveMessages={overlayLayoutPreferences.chat.maxMessages}
               participants={participants}
               fallbackParticipantId={participant?.id}
             />
@@ -5543,11 +6054,13 @@ function CameraBubble({
 function LiveChatColumn({
   mode,
   messages,
+  maxLiveMessages,
   participants,
   fallbackParticipantId,
 }: {
   mode: ChatDisplayMode;
   messages: LiveChatMessage[];
+  maxLiveMessages: number;
   participants: Participant[];
   fallbackParticipantId?: string;
 }) {
@@ -5555,8 +6068,8 @@ function LiveChatColumn({
   const visibleMessages =
     mode === "history"
       ? messages.slice(-CHAT_HISTORY_MAX_MESSAGES)
-      : messages.slice(-LIVE_CHAT_MAX_MESSAGES);
-  const hasGhostRow = mode === "live" && visibleMessages.length >= LIVE_CHAT_MAX_MESSAGES;
+      : messages.slice(-maxLiveMessages);
+  const hasGhostRow = mode === "live" && visibleMessages.length >= maxLiveMessages;
 
   useEffect(() => {
     if (mode !== "history") {
@@ -5738,6 +6251,15 @@ function normalizeMessageDisplayMode(value: unknown): MessageDisplayMode {
 
 function normalizeChatDisplayMode(value: unknown): ChatDisplayMode {
   return value === "history" ? "history" : DEFAULT_CHAT_DISPLAY_MODE;
+}
+
+function getLayoutObjectFromEventTarget(target: EventTarget | null): OverlayLayoutObjectId | null {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  const object = target.closest<HTMLElement>("[data-layout-object]")?.dataset.layoutObject;
+  return object === "video" || object === "chat" ? object : null;
 }
 
 function isMessageComposerShortcut(event: KeyboardEvent): boolean {
