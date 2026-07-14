@@ -118,8 +118,8 @@
 
 - [x] Run `pnpm --filter @anidachi/extension test` and `pnpm --filter @anidachi/extension check`.
 - [x] Run `pnpm dev:check`, then broaden to `pnpm check` if recommended or affected by shared failures.
-- [ ] Build and validate the staging extension artifact.
+- [x] Build and validate the staging extension artifact.
 - [ ] Inspect the loaded UI at compact and desktop player sizes, including fullscreen, controls visible/hidden, zero/four preview cameras, one/four live cameras where locally reproducible, Apply/Revert, reload persistence, and storage failure presentation.
-- [ ] Rebuild `/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging` for the user's Chrome profile.
-- [ ] Refresh Graphify, review the complete branch diff, and update implementation checkboxes/docs truth.
+- [x] Rebuild `/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging` for the user's Chrome profile.
+- [x] Refresh Graphify, review the complete branch diff, and update implementation checkboxes/docs truth.
 - [ ] Open a PR into `staging`, wait for required CI, merge only after checks pass, and leave `main` untouched.
