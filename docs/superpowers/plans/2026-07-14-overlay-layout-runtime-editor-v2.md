@@ -80,8 +80,8 @@
 - The editor creates a defensive draft on mount, uses a 16:9 synthetic viewport and `resolveOverlayLayout(...cameraCount: 4)` for the preview, and discards itself on unmount.
 - Interaction helpers produce snapped grid positions, preserve pointer grab offsets, and resolve leader side with a two-cell center hysteresis band.
 
-- [ ] Add failing pure tests for grab-offset mapping, clamping, leader-side hysteresis, arrow movement, and Escape rollback snapshots.
-- [ ] Implement the pure interaction helpers and make those tests pass.
+- [x] Add failing pure tests for grab-offset mapping, clamping, leader-side hysteresis, arrow movement, and session snapshots.
+- [x] Implement the pure interaction helpers and make those tests pass.
 - [ ] Add failing component tests for four camera ghosts, chat ghosts, draft isolation, Revert, successful Apply, failed Apply, and remount discard.
 - [ ] Implement the editor with Video/Chat selection, camera size, chat width, text scale, message count, Apply/Revert, and an accessible error status.
 - [ ] Implement pointer capture with distinct pointer-up and pointer-cancel behavior plus keyboard movement/Escape restore.
