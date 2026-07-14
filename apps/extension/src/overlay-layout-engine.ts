@@ -109,14 +109,20 @@ export function resolveVideoLayout(
 
   const gapPx = getGhostCamGapPx(effectiveSizeStep);
   const leaderCenter = {
-    x: safeRect.x +
-      ((resolvedAnchor.x + 0.5) /
-        OVERLAY_LAYOUT_GRID_COLUMNS) *
-        safeRect.width,
-    y: safeRect.y +
-      ((resolvedAnchor.y + 0.5) /
-        OVERLAY_LAYOUT_GRID_ROWS) *
-        safeRect.height,
+    x: resolveEdgeAwareAnchorCenter(
+      resolvedAnchor.x,
+      OVERLAY_LAYOUT_GRID_COLUMNS,
+      safeRect.x,
+      safeRect.width,
+      effectiveSizePx,
+    ),
+    y: resolveEdgeAwareAnchorCenter(
+      resolvedAnchor.y,
+      OVERLAY_LAYOUT_GRID_ROWS,
+      safeRect.y,
+      safeRect.height,
+      effectiveSizePx,
+    ),
   };
   const followerDirection = video.leaderSide === "left" ? 1 : -1;
   const slots = Array.from({ length: occupiedCount }, (_, index): PixelRect => ({
@@ -154,6 +160,28 @@ export function resolveVideoLayout(
     leaderSide: video.leaderSide,
     slots: translatedSlots,
   };
+}
+
+function resolveEdgeAwareAnchorCenter(
+  anchor: number,
+  gridPositions: number,
+  start: number,
+  span: number,
+  objectSize: number,
+): number {
+  if (gridPositions <= 1 || objectSize >= span) {
+    return start + span / 2;
+  }
+
+  if (anchor <= 0) {
+    return start + objectSize / 2;
+  }
+
+  if (anchor >= gridPositions - 1) {
+    return start + span - objectSize / 2;
+  }
+
+  return start + ((anchor + 0.5) / gridPositions) * span;
 }
 
 export function resolveOverlayLayout(

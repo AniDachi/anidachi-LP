@@ -13,6 +13,27 @@ const viewport = {
 };
 
 describe("overlay layout camera geometry", () => {
+  it.each([0, 1, 2, 3] as const)(
+    "keeps edge anchors flush with the safe area at camera size step %i",
+    (sizeStep) => {
+      const rightBottom = resolveVideoLayout(
+        { anchor: { x: 11, y: 7 }, leaderSide: "right", sizeStep },
+        viewport,
+        4,
+      );
+      const leftTop = resolveVideoLayout(
+        { anchor: { x: 0, y: 0 }, leaderSide: "left", sizeStep },
+        viewport,
+        4,
+      );
+
+      expect(rightBottom.slots[0]!.x + rightBottom.slots[0]!.width).toBeCloseTo(1268);
+      expect(rightBottom.slots[0]!.y + rightBottom.slots[0]!.height).toBeCloseTo(664);
+      expect(leftTop.slots[0]!.x).toBeCloseTo(12);
+      expect(leftTop.slots[0]!.y).toBeCloseTo(12);
+    },
+  );
+
   it("places four right-side slots from the leader inward", () => {
     const result = resolveVideoLayout(
       { anchor: { x: 11, y: 5 }, leaderSide: "right", sizeStep: 1 },
@@ -177,7 +198,7 @@ describe("overlay layout resolver", () => {
       viewport: reservedCameraViewport,
     });
 
-    expect(result.video.bounds).toMatchObject({ x: 907, y: 7 });
+    expect(result.video.bounds).toMatchObject({ x: 907, y: 0 });
     expect(rectsOverlap(result.video.bounds, reservation)).toBe(false);
     expect(rectsOverlap(result.chat.rect, result.video.bounds)).toBe(false);
     expect(rectsOverlap(result.chat.rect, reservation)).toBe(false);
