@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1784049099.9412766,
-    "ast_hash": "315b13426e8eb111dfccbe96d50f598f",
+    "mtime": 1784059623.8277817,
+    "ast_hash": "e515e167ec5c64840d07ea553ffc32f3",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -3255,22 +3255,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1784047663.9980404,
+    "mtime": 1784059900.776323,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1784047663.9843037,
+    "mtime": 1784059900.7617574,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1784047663.9870677,
+    "mtime": 1784059900.765282,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1784047663.9883287,
+    "mtime": 1784059900.7665153,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3385,8 +3385,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-editor.tsx": {
-    "mtime": 1784049099.9404757,
-    "ast_hash": "b0995f979feec61dd10b4e39d8c979c0",
+    "mtime": 1784059623.8271563,
+    "ast_hash": "2d2defe45155201b3152a2fbf4284151",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-interaction.ts": {
@@ -3400,8 +3400,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-editor.test.tsx": {
-    "mtime": 1784049130.8060365,
-    "ast_hash": "ddc85fd701191fc3de212ddda87444c0",
+    "mtime": 1784059587.8179994,
+    "ast_hash": "f9cdea987cac543763598525cc5a12b8",
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-interaction.test.ts": {
@@ -3420,8 +3420,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-styles.test.ts": {
-    "mtime": 1784048788.765152,
-    "ast_hash": "7a5d554c0f7695fc8493d1d105ca16a9",
+    "mtime": 1784059623.8279743,
+    "ast_hash": "72bfb2c8f6f753416ab1b09dd6eb3b4b",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-ghost-preview.tsx": {

@@ -652,14 +652,6 @@ export const overlayStyles = `
     pointer-events: none;
   }
 
-  .layout-reserved-preview-v2 {
-    z-index: 0;
-    border: 1px dashed rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.025);
-    pointer-events: none;
-  }
-
   .layout-video-slot-v2 {
     z-index: 2;
     box-sizing: border-box;
@@ -2070,7 +2062,7 @@ export const overlayStyles = `
   .overlay-layout-ghost-preview {
     position: absolute;
     inset: 0;
-    z-index: 40;
+    z-index: 19;
     overflow: hidden;
     pointer-events: none;
     user-select: none;

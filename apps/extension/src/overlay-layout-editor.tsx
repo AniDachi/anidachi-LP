@@ -60,14 +60,7 @@ const FALLBACK_PREVIEW_WIDTH = 640;
 const FALLBACK_PREVIEW_HEIGHT = 360;
 const FALLBACK_PREVIEW_CONTEXT: OverlayLayoutContext = {
 	cameraCount: 4 as const,
-	reservedRects: [
-		{
-			height: 56,
-			width: 144,
-			x: FALLBACK_PREVIEW_WIDTH - PREVIEW_SAFE_PADDING - 144,
-			y: PREVIEW_SAFE_PADDING,
-		},
-	],
+	reservedRects: [],
 	viewport: {
 		height: FALLBACK_PREVIEW_HEIGHT,
 		safeInsets: {
@@ -478,17 +471,6 @@ export function OverlayLayoutEditor({
 						position: "absolute",
 					}}
 				/>
-				{previewContext.reservedRects.map((rect, index) => (
-					<div
-						key={`reserved-${index}`}
-						aria-hidden="true"
-						className="layout-reserved-preview-v2"
-						style={{
-							...getPercentageRectStyle(rect, previewWidth, previewHeight),
-							position: "absolute",
-						}}
-					/>
-				))}
 				{resolvedLayout.video.slots.map((slot, index) => {
 					const isLeader = index === 0;
 					const style = getPercentageRectStyle(
@@ -741,7 +723,7 @@ function createPreviewContext(
 
 	return {
 		cameraCount: 4,
-		reservedRects: layoutContext.reservedRects.map((rect) => ({ ...rect })),
+		reservedRects: [],
 		viewport: {
 			height,
 			safeInsets: { ...layoutContext.viewport.safeInsets },

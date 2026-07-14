@@ -95,6 +95,38 @@ describe("OverlayLayoutEditor", () => {
 		await unmount(editor.root);
 	});
 
+	it("keeps the editor canvas free of live overlay reserved areas", async () => {
+		const appliedLayout = getDefaultOverlayLayoutDefinition();
+		appliedLayout.chat.position = { x: 8, y: 0 };
+		const layoutContext: OverlayLayoutContext = {
+			cameraCount: 4,
+			reservedRects: [{ height: 360, width: 184, x: 456, y: 0 }],
+			viewport: {
+				height: 360,
+				safeInsets: { bottom: 0, left: 0, right: 0, top: 0 },
+				width: 640,
+			},
+		};
+		const expected = resolveOverlayLayout(appliedLayout, {
+			...layoutContext,
+			cameraCount: 4,
+			reservedRects: [],
+		});
+		const editor = await renderEditor({ appliedLayout, layoutContext });
+
+		expect(
+			editor.container.querySelectorAll(".layout-reserved-preview-v2"),
+		).toHaveLength(0);
+		expect(getChat(editor.container).style.left).toBe(
+			`${(expected.chat.rect.x / layoutContext.viewport.width) * 100}%`,
+		);
+		expect(getChat(editor.container).style.top).toBe(
+			`${(expected.chat.rect.y / layoutContext.viewport.height) * 100}%`,
+		);
+
+		await unmount(editor.root);
+	});
+
 	it("publishes the draft for live preview and clears it on unmount", async () => {
 		const editor = await renderEditor();
 
@@ -381,7 +413,7 @@ describe("OverlayLayoutEditor", () => {
 		await unmount(editor.root);
 	});
 
-	it("starts chat dragging from its resolved visible position", async () => {
+	it("starts chat dragging from its unobstructed preview position", async () => {
 		const appliedLayout = getDefaultOverlayLayoutDefinition();
 		appliedLayout.chat.position = { x: 0, y: 0 };
 		const layoutContext: OverlayLayoutContext = {
@@ -396,10 +428,11 @@ describe("OverlayLayoutEditor", () => {
 		const resolved = resolveOverlayLayout(appliedLayout, {
 			...layoutContext,
 			cameraCount: 4,
+			reservedRects: [],
 		});
 		const resolvedGridX = resolved.chat.position.x;
 		const resolvedGridY = resolved.chat.position.y;
-		expect({ x: resolvedGridX, y: resolvedGridY }).not.toEqual(
+		expect({ x: resolvedGridX, y: resolvedGridY }).toEqual(
 			appliedLayout.chat.position,
 		);
 

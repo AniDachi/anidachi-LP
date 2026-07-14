@@ -8,15 +8,18 @@ describe("overlay layout pointer surfaces", () => {
     expect(getRule(".cam-bubble")).toContain("pointer-events: auto");
   });
 
-  it("keeps live objects below the panel and editor ghosts pointer-transparent above it", () => {
+  it("keeps live objects and editor ghosts below the panel", () => {
     expect(getNumericProperty(".cam-stack", "z-index")).toBeLessThan(
       getNumericProperty(".mini-panel", "z-index"),
     );
     expect(getNumericProperty(".live-chat-column", "z-index")).toBeLessThan(
       getNumericProperty(".mini-panel", "z-index"),
     );
-    expect(getNumericProperty(".overlay-layout-ghost-preview", "z-index")).toBeGreaterThan(
+    expect(getNumericProperty(".overlay-layout-ghost-preview", "z-index")).toBeLessThan(
       getNumericProperty(".mini-panel", "z-index"),
+    );
+    expect(getNumericProperty(".overlay-layout-ghost-preview", "z-index")).toBeGreaterThan(
+      getNumericProperty(".cam-stack", "z-index"),
     );
     expect(getRule(".overlay-layout-ghost-preview")).toContain("pointer-events: none");
   });
