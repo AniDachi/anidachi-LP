@@ -295,8 +295,10 @@ Pointer-session state remains transient and is never persisted.
 
 Keep the first implementation focused:
 
-- `overlay-layout-preferences.ts` owns versioned stored types, built-in presets,
-  normalization, migration, and draft-to-persisted conversion.
+- a new `overlay-layout-model.ts` owns versioned stored types, built-in presets,
+  normalization, migration, and draft-to-persisted conversion. The existing
+  `overlay-layout-preferences.ts` remains a temporary version 1 compatibility
+  surface until runtime integration replaces it.
 - a new `overlay-layout-engine.ts` owns pure geometry, slot generation,
   collision handling, and compact fallback.
 - `overlay-app.tsx` owns React state, pointer sessions, WXT storage calls, and
