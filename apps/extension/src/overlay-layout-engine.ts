@@ -3,6 +3,7 @@ import {
   getResponsiveGhostCamSizePx,
 } from "./ghost-cam-size";
 import {
+  OVERLAY_LAYOUT_CAMERA_SLOT_CAPACITY,
   OVERLAY_LAYOUT_GRID_COLUMNS,
   OVERLAY_LAYOUT_GRID_ROWS,
   type OverlayLayoutCameraSizeStep,
@@ -12,7 +13,6 @@ import {
   normalizeOverlayLayoutDefinition,
 } from "./overlay-layout-model";
 
-const MAXIMUM_CAMERA_COUNT = 4;
 const CHAT_TEXT_METRICS = {
   compact: { fontSizePx: 11, lineHeightPx: 14, rowHeightPx: 30 },
   normal: { fontSizePx: 13, lineHeightPx: 16, rowHeightPx: 34 },
@@ -75,8 +75,8 @@ export function resolveVideoLayout(
   cameraCount: number,
   maximumSizeStep: OverlayLayoutCameraSizeStep = video.sizeStep,
 ): ResolvedVideoLayout {
-  const safeRect = resolveSafeRect(viewport);
-  const occupiedCount = clampInteger(cameraCount, 0, MAXIMUM_CAMERA_COUNT);
+  const safeRect = resolveOverlayLayoutSafeRect(viewport);
+  const occupiedCount = clampInteger(cameraCount, 0, OVERLAY_LAYOUT_CAMERA_SLOT_CAPACITY);
   const storedSizeStep = clampInteger(video.sizeStep, 0, 3) as OverlayLayoutCameraSizeStep;
   const sizeStepCap = clampInteger(maximumSizeStep, 0, 3) as OverlayLayoutCameraSizeStep;
   const effectiveSizeStep = Math.min(
@@ -153,14 +153,18 @@ export function resolveOverlayLayout(
 ): ResolvedOverlayLayout {
   const normalizedDefinition = normalizeOverlayLayoutDefinition(definition);
   const normalizedViewport = normalizeViewport(context.viewport);
-  const safeRect = resolveSafeRect(normalizedViewport);
+  const safeRect = resolveOverlayLayoutSafeRect(normalizedViewport);
 
   if (safeRect.width === 0 || safeRect.height === 0) {
     return createUnusableViewportFallback(normalizedDefinition);
   }
 
   const reservedRects = normalizeReservedRects(context.reservedRects);
-  const cameraCount = clampInteger(context.cameraCount, 0, MAXIMUM_CAMERA_COUNT);
+  const cameraCount = clampInteger(
+    context.cameraCount,
+    0,
+    OVERLAY_LAYOUT_CAMERA_SLOT_CAPACITY,
+  );
   const messageCounts = CHAT_MESSAGE_COUNTS.filter(
     (count) => count <= normalizedDefinition.chat.maxMessages,
   );
@@ -471,7 +475,9 @@ function normalizeReservedRects(rects: PixelRect[]): PixelRect[] {
   }));
 }
 
-function resolveSafeRect(viewport: OverlayLayoutViewport): PixelRect {
+export function resolveOverlayLayoutSafeRect(
+  viewport: OverlayLayoutViewport,
+): PixelRect {
   const width = finiteNonNegative(viewport.width);
   const height = finiteNonNegative(viewport.height);
   const left = Math.min(width, finiteNonNegative(viewport.safeInsets.left));

@@ -13,6 +13,7 @@ import {
 	type OverlayLayoutContext,
 	type PixelRect,
 	resolveOverlayLayout,
+	resolveOverlayLayoutSafeRect,
 } from "./overlay-layout-engine";
 import {
 	cloneOverlayLayoutDefinition,
@@ -166,6 +167,10 @@ export function OverlayLayoutEditor({
 	);
 	const previewWidth = previewContext.viewport.width;
 	const previewHeight = previewContext.viewport.height;
+	const previewSafeRect = useMemo(
+		() => resolveOverlayLayoutSafeRect(previewContext.viewport),
+		[previewContext],
+	);
 	const clean = overlayLayoutDefinitionsEqual(draft, appliedSnapshot);
 
 	const replaceDraft = (
@@ -204,7 +209,12 @@ export function OverlayLayoutEditor({
 		const pointer = getOverlayLayoutGridPointer(
 			event.clientX,
 			event.clientY,
-			previewRef.current.getBoundingClientRect(),
+			getPreviewGridPointerBounds(
+				previewRef.current,
+				previewSafeRect,
+				previewWidth,
+				previewHeight,
+			),
 		);
 		pointerSessionRef.current = {
 			objectId,
@@ -235,7 +245,12 @@ export function OverlayLayoutEditor({
 		const pointer = getOverlayLayoutGridPointer(
 			event.clientX,
 			event.clientY,
-			previewRef.current.getBoundingClientRect(),
+			getPreviewGridPointerBounds(
+				previewRef.current,
+				previewSafeRect,
+				previewWidth,
+				previewHeight,
+			),
 		);
 		replaceDraft(
 			moveOverlayLayoutObjectFromPointer(
@@ -444,6 +459,18 @@ export function OverlayLayoutEditor({
 					width: "100%",
 				}}
 			>
+				<div
+					aria-hidden="true"
+					className="layout-grid-preview-v2"
+					style={{
+						...getPercentageRectStyle(
+							previewSafeRect,
+							previewWidth,
+							previewHeight,
+						),
+						position: "absolute",
+					}}
+				/>
 				{previewContext.reservedRects.map((rect, index) => (
 					<div
 						key={`reserved-${index}`}
@@ -718,6 +745,26 @@ function createPreviewContext(
 
 function finitePositive(value: number): number | null {
 	return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function getPreviewGridPointerBounds(
+	preview: HTMLElement,
+	safeRect: PixelRect,
+	viewportWidth: number,
+	viewportHeight: number,
+) {
+	const bounds = preview.getBoundingClientRect();
+	const contentWidth = preview.clientWidth > 0 ? preview.clientWidth : bounds.width;
+	const contentHeight = preview.clientHeight > 0 ? preview.clientHeight : bounds.height;
+	const scaleX = contentWidth / viewportWidth;
+	const scaleY = contentHeight / viewportHeight;
+
+	return {
+		height: safeRect.height * scaleY,
+		left: bounds.left + preview.clientLeft + safeRect.x * scaleX,
+		top: bounds.top + preview.clientTop + safeRect.y * scaleY,
+		width: safeRect.width * scaleX,
+	};
 }
 
 function getArrowDelta(key: string): { x: number; y: number } | null {

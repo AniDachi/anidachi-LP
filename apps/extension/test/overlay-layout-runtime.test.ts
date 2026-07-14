@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
   createOverlayLayoutRuntimeContext,
+  getOverlayLayoutCameraSlotCount,
   getOverlayLayoutReservedRects,
   getOverlayLayoutRuntimeStyles,
 } from "../src/overlay-layout-runtime";
 
 describe("overlay layout runtime context", () => {
+  it("reserves the full four-seat camera layout whenever any camera is visible", () => {
+    expect(getOverlayLayoutCameraSlotCount(0)).toBe(0);
+    expect(getOverlayLayoutCameraSlotCount(1)).toBe(4);
+    expect(getOverlayLayoutCameraSlotCount(3)).toBe(4);
+    expect(getOverlayLayoutCameraSlotCount(Number.NaN)).toBe(0);
+  });
+
   it("builds safe insets and defensively copies reserved rectangles", () => {
     const reservedRects = [{ height: 40, width: 120, x: 16, y: 24 }];
     const context = createOverlayLayoutRuntimeContext({

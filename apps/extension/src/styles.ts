@@ -618,32 +618,36 @@ export const overlayStyles = `
   }
 
   .layout-preview-v2 {
-    min-height: 132px;
     box-sizing: border-box;
     container-type: inline-size;
     border: 1px solid rgba(255, 255, 255, 0.11);
     border-radius: 8px;
     background-color: rgba(5, 5, 8, 0.78);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 54%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.035),
+      inset 0 0 0 9px rgba(0, 0, 0, 0.08);
+    touch-action: none;
+  }
+
+  .layout-grid-preview-v2 {
+    z-index: 0;
     background-image:
       repeating-linear-gradient(
         to right,
         transparent 0,
         transparent calc(8.333% - 1px),
-        rgba(255, 255, 255, 0.035) calc(8.333% - 1px),
-        rgba(255, 255, 255, 0.035) 8.333%
+        rgba(255, 255, 255, 0.04) calc(8.333% - 1px),
+        rgba(255, 255, 255, 0.04) 8.333%
       ),
       repeating-linear-gradient(
         to bottom,
         transparent 0,
         transparent calc(12.5% - 1px),
-        rgba(255, 255, 255, 0.035) calc(12.5% - 1px),
-        rgba(255, 255, 255, 0.035) 12.5%
-      ),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 54%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.035),
-      inset 0 0 0 9px rgba(0, 0, 0, 0.08);
-    touch-action: none;
+        rgba(255, 255, 255, 0.04) calc(12.5% - 1px),
+        rgba(255, 255, 255, 0.04) 12.5%
+      );
+    pointer-events: none;
   }
 
   .layout-reserved-preview-v2 {
@@ -1760,7 +1764,7 @@ export const overlayStyles = `
     justify-content: flex-start;
     align-items: flex-end;
     gap: var(--cam-bubble-gap, 8px);
-    pointer-events: auto;
+    pointer-events: none;
     transition:
       left 220ms ease,
       top 220ms ease,
@@ -2164,6 +2168,7 @@ export const overlayStyles = `
       0 0 0 1px rgba(8, 10, 18, 0.5),
       0 10px 28px rgba(0, 0, 0, 0.34);
     isolation: isolate;
+    pointer-events: auto;
   }
 
   .cam-bubble.flame-active {
@@ -2300,10 +2305,16 @@ export const overlayStyles = `
   .nuke-spark.spark-10 { --spark-x: 39px; --spark-y: 7px; animation-delay: 165ms; }
   .nuke-spark.spark-11 { --spark-x: 5px; --spark-y: -72px; animation-delay: 120ms; }
 
-  .cam-bubble:hover,
-  .cam-bubble.active {
+  .cam-bubble:hover {
     border-color: rgba(255, 255, 255, 0.36);
     transform: scale(1.04);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08),
+      0 12px 30px rgba(0, 0, 0, 0.38);
+  }
+
+  .cam-bubble.active {
+    border-color: rgba(255, 255, 255, 0.36);
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.08),
       0 12px 30px rgba(0, 0, 0, 0.38);

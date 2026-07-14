@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1784045710.7497926,
-    "ast_hash": "76c56a6ca2c4a65bca70737788e672db",
+    "mtime": 1784047003.2724934,
+    "ast_hash": "05bc9b857046434e005a85807a6f9639",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1784045681.5240684,
-    "ast_hash": "33eecb12db1d9cf856f74e5d54d29c9d",
+    "mtime": 1784047445.59628,
+    "ast_hash": "8d53e4701518b3844437d766c5c13656",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -3090,8 +3090,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1784045924.923812,
-    "ast_hash": "4772ad46bd10387090c51c5504b905a2",
+    "mtime": 1784047122.142399,
+    "ast_hash": "a43535acbcd8d5a05fd869d0dc928d69",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3255,22 +3255,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1784044153.9813125,
+    "mtime": 1784046638.6304307,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1784044153.967188,
+    "mtime": 1784046638.616665,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1784044153.97013,
+    "mtime": 1784046638.619392,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1784044153.9713624,
+    "mtime": 1784046638.6207519,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3355,13 +3355,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-engine.ts": {
-    "mtime": 1784040354.3719518,
-    "ast_hash": "dae03529dcca1779c5b517d5552904a6",
+    "mtime": 1784046874.1081345,
+    "ast_hash": "37610484e72d70997dcc3029d12a629d",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-model.ts": {
-    "mtime": 1784037815.5675495,
-    "ast_hash": "7b7bf6e10f7980943fcd24cc25e98f44",
+    "mtime": 1784046840.1171138,
+    "ast_hash": "ff94131cab4edcf77cecaa723513b8f0",
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-engine.test.ts": {
@@ -3380,13 +3380,13 @@
     "semantic_hash": ""
   },
   "docs/superpowers/specs/2026-07-14-overlay-layout-engine-v2-design.md": {
-    "mtime": 1784045924.922114,
-    "ast_hash": "03b0483090fdc5a1600fa4cad87ab6d6",
+    "mtime": 1784047122.1418805,
+    "ast_hash": "13e4b83a3ae5766802513c420ae015c1",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-editor.tsx": {
-    "mtime": 1784046303.0870044,
-    "ast_hash": "a280d62c0abd40683eec637f30bf2f30",
+    "mtime": 1784046906.110046,
+    "ast_hash": "73c4d870454832ea643e82f434455ffc",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-interaction.ts": {
@@ -3395,13 +3395,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-runtime.ts": {
-    "mtime": 1784038336.0618074,
-    "ast_hash": "4511016a4b566bfca9bf5317a28aabef",
+    "mtime": 1784046989.0194397,
+    "ast_hash": "ec65eacbbc52b9e75c9c3f2592de6bba",
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-editor.test.tsx": {
-    "mtime": 1784046378.0625167,
-    "ast_hash": "fc9d06c5867d15e9bb2f78922d7d88c5",
+    "mtime": 1784047045.692258,
+    "ast_hash": "5cfba17556b18a2ef358bc2e00bbdd4d",
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-interaction.test.ts": {
@@ -3410,13 +3410,18 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-runtime.test.ts": {
-    "mtime": 1784038295.62101,
-    "ast_hash": "b4440377491f2de9b2a8d925d141282f",
+    "mtime": 1784047025.3842242,
+    "ast_hash": "6c875c82651fe75d9925872b167c23e8",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-14-overlay-layout-runtime-editor-v2.md": {
     "mtime": 1784045924.9228587,
     "ast_hash": "2a5b7cfb0233cd1b157a451b5f1a7268",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/overlay-layout-styles.test.ts": {
+    "mtime": 1784047514.1542814,
+    "ast_hash": "61f9c8913e83dbce8ea9a461b9dce24c",
     "semantic_hash": ""
   }
 }

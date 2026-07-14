@@ -81,6 +81,7 @@ import {
 } from "./overlay-layout-model";
 import {
   createOverlayLayoutRuntimeContext,
+  getOverlayLayoutCameraSlotCount,
   getOverlayLayoutReservedRects,
   getOverlayLayoutRuntimeStyles,
 } from "./overlay-layout-runtime";
@@ -1773,7 +1774,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         width: 104,
       },
       roomRail:
-        !panelOpen && voiceRailParticipants.length > 0
+        voiceRailParticipants.length > 0
           ? {
               height: Math.max(0, overlayViewportSize.height - roomRailTopPx - roomRailBottomPx),
               right: 0,
@@ -1784,7 +1785,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       viewport: overlayViewportSize,
     });
     return createOverlayLayoutRuntimeContext({
-      cameraCount: cameraStackVisible ? renderableCameraParticipants.length : 0,
+      cameraCount: getOverlayLayoutCameraSlotCount(
+        cameraStackVisible ? renderableCameraParticipants.length : 0,
+      ),
       controlsBottomInsetPx,
       height: overlayViewportSize.height,
       reservedRects,
@@ -1795,7 +1798,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     controlsBottomInsetPx,
     cameraStackVisible,
     overlayViewportSize,
-    panelOpen,
     renderableCameraParticipants.length,
     roomRailBottomPx,
     topBubbleRightPx,

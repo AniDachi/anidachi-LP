@@ -3,6 +3,7 @@ import type {
   PixelRect,
   ResolvedOverlayLayout,
 } from "./overlay-layout-engine";
+import { OVERLAY_LAYOUT_CAMERA_SLOT_CAPACITY } from "./overlay-layout-model";
 
 export interface OverlayLayoutRuntimeContextInput {
   width: number;
@@ -48,6 +49,14 @@ export function createOverlayLayoutRuntimeContext(
       width: input.width,
     },
   };
+}
+
+export function getOverlayLayoutCameraSlotCount(
+  visibleCameraCount: number,
+): 0 | typeof OVERLAY_LAYOUT_CAMERA_SLOT_CAPACITY {
+  return Number.isFinite(visibleCameraCount) && visibleCameraCount > 0
+    ? OVERLAY_LAYOUT_CAMERA_SLOT_CAPACITY
+    : 0;
 }
 
 export function getOverlayLayoutReservedRects(

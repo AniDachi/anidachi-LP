@@ -86,7 +86,10 @@ stored `leaderSide` makes the final result deterministic after reload.
 
 At runtime, active camera participants occupy slots from the leader inward.
 Adding or removing a participant must not reverse the group or move its anchor.
-The editor uses four ghost slots; the live overlay renders only occupied slots.
+Whenever at least one camera is visible, both editor and runtime resolve the
+full four-seat group so chat collision avoidance, responsive size, and the
+leader position remain stable as cameras join or leave. The editor shows all
+four projected slots; the live overlay renders only occupied slots.
 
 Camera size uses the existing discrete size vocabulary: `small`, `normal`,
 `large`, and `xl`. The resolver may temporarily constrain the effective pixel
@@ -120,6 +123,8 @@ Dragging, resizing, and changing chat settings update the draft, the scaled
 editor preview, and a transient live overlay preview. Both previews resolve
 against the same measured player viewport, safe insets, and reserved AniDachi
 UI as the running overlay. Storage and the applied snapshot remain unchanged.
+The visible `12x8` grid and pointer mapping are both constrained to that same
+runtime safe rectangle rather than the outer preview frame.
 
 - `Apply` normalizes and persists the already-previewed draft, then promotes it
   to the applied snapshot.

@@ -285,6 +285,8 @@ The extension currently supports:
   `local:overlayLayoutPreferencesV2`, previews one camera leader plus three
   followers, derives chat height from typography and message count, adapts to
   player controls and reserved AniDachi UI without rewriting saved preferences,
+  keeps the full four-seat camera geometry reserved while rendering only
+  occupied camera slots,
   previews editor drafts against the same measured runtime context in both the
   miniature and live overlay, and persists changes only after an explicit
   successful `Apply`;

@@ -28,7 +28,7 @@ interface RenderedEditor {
 }
 
 const measuredLayoutContext: OverlayLayoutContext = {
-	cameraCount: 1,
+	cameraCount: 4,
 	reservedRects: [],
 	viewport: {
 		height: 1080,
@@ -368,6 +368,55 @@ describe("OverlayLayoutEditor", () => {
 			clientX: 405.33,
 			clientY: 157.5,
 			pointerId: 7,
+		});
+		await click(getButton(editor.container, "Apply"));
+
+		expect(editor.onApply).toHaveBeenCalledWith(
+			expect.objectContaining({
+				video: expect.objectContaining({ anchor: { x: 6, y: 3 } }),
+			}),
+		);
+
+		await unmount(editor.root);
+	});
+
+	it("maps pointer movement through the runtime safe rectangle", async () => {
+		const safeContext: OverlayLayoutContext = {
+			cameraCount: 4,
+			reservedRects: [],
+			viewport: {
+				height: 360,
+				safeInsets: { bottom: 72, left: 64, right: 64, top: 36 },
+				width: 640,
+			},
+		};
+		const editor = await renderEditor({
+			appliedLayout: layoutAt({ x: 2, y: 2 }),
+			layoutContext: safeContext,
+		});
+		const preview = getPreview(editor.container);
+		const leader = getLeader(editor.container);
+		mockPreviewBounds(preview);
+		mockPointerCapture(leader);
+
+		expect(
+			(editor.container.querySelector(".layout-grid-preview-v2") as HTMLElement)
+				.style.left,
+		).toBe("10%");
+		await pointer(leader, "pointerdown", {
+			clientX: 170.67,
+			clientY: 114.75,
+			pointerId: 15,
+		});
+		await pointer(leader, "pointermove", {
+			clientX: 341.33,
+			clientY: 146.25,
+			pointerId: 15,
+		});
+		await pointer(leader, "pointerup", {
+			clientX: 341.33,
+			clientY: 146.25,
+			pointerId: 15,
 		});
 		await click(getButton(editor.container, "Apply"));
 
