@@ -137,7 +137,7 @@ not read or rewrite `local:overlayLayoutPreferences` or
 type OverlayLayoutLeaderSide = "left" | "right";
 type OverlayLayoutTextScale = "compact" | "normal" | "large";
 type OverlayLayoutMessageCount = 3 | 5 | 8;
-type OverlayLayoutCameraSize = 0 | 1 | 2 | 3;
+type OverlayLayoutCameraSizeStep = 0 | 1 | 2 | 3;
 
 interface OverlayLayoutGridPoint {
   x: number;
@@ -148,7 +148,7 @@ interface OverlayLayoutDefinition {
   video: {
     anchor: OverlayLayoutGridPoint;
     leaderSide: OverlayLayoutLeaderSide;
-    sizeStep: OverlayLayoutCameraSize;
+    sizeStep: OverlayLayoutCameraSizeStep;
   };
   chat: {
     position: OverlayLayoutGridPoint;
@@ -189,9 +189,21 @@ the new model never imports from them. Normalization is idempotent.
 The core is a pure function with no React, DOM, storage, or provider access.
 
 ```ts
+interface OverlayLayoutSafeInsets {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+interface OverlayLayoutViewport {
+  width: number;
+  height: number;
+  safeInsets: OverlayLayoutSafeInsets;
+}
+
 interface OverlayLayoutContext {
-  viewport: { width: number; height: number };
-  safeInsets: { top: number; right: number; bottom: number; left: number };
+  viewport: OverlayLayoutViewport;
   reservedRects: PixelRect[];
   cameraCount: 0 | 1 | 2 | 3 | 4;
 }
@@ -200,6 +212,7 @@ interface ResolvedOverlayLayout {
   video: {
     bounds: PixelRect;
     effectiveSizePx: number;
+    effectiveSizeStep: OverlayLayoutCameraSizeStep;
     leaderSide: OverlayLayoutLeaderSide;
     slots: PixelRect[];
   };

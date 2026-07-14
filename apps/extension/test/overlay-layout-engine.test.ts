@@ -113,20 +113,31 @@ describe("overlay layout camera geometry", () => {
 });
 
 describe("overlay layout resolver", () => {
-  it("derives larger chat geometry from text scale and message count", () => {
-    const definition = getDefaultOverlayLayoutDefinition();
-    const compact = resolveOverlayLayout(
-      { ...definition, chat: { ...definition.chat, maxMessages: 3, textScale: "compact" } },
-      { cameraCount: 0, reservedRects: [], viewport },
-    );
-    const large = resolveOverlayLayout(
-      { ...definition, chat: { ...definition.chat, maxMessages: 8, textScale: "large" } },
-      { cameraCount: 0, reservedRects: [], viewport },
-    );
+  it.each([
+    ["compact", 3, 11, 14, 116],
+    ["compact", 5, 11, 14, 186],
+    ["compact", 8, 11, 14, 291],
+    ["normal", 3, 13, 16, 128],
+    ["normal", 5, 13, 16, 206],
+    ["normal", 8, 13, 16, 323],
+    ["large", 3, 15, 19, 143],
+    ["large", 5, 15, 19, 231],
+    ["large", 8, 15, 19, 363],
+  ] as const)(
+    "derives exact chat metrics for %s text at %i messages",
+    (textScale, maxMessages, fontSizePx, lineHeightPx, height) => {
+      const definition = getDefaultOverlayLayoutDefinition();
+      const result = resolveOverlayLayout(
+        { ...definition, chat: { ...definition.chat, maxMessages, textScale } },
+        { cameraCount: 0, reservedRects: [], viewport },
+      );
 
-    expect(large.chat.rect.height).toBeGreaterThan(compact.chat.rect.height);
-    expect(large.chat.fontSizePx).toBeGreaterThan(compact.chat.fontSizePx);
-  });
+      expect(result.chat.effectiveMaxMessages).toBe(maxMessages);
+      expect(result.chat.fontSizePx).toBe(fontSizePx);
+      expect(result.chat.lineHeightPx).toBe(lineHeightPx);
+      expect(result.chat.rect.height).toBe(height);
+    },
+  );
 
   it("moves chat to the nearest free grid position without moving the camera anchor", () => {
     const definition = getDefaultOverlayLayoutDefinition();
@@ -175,6 +186,72 @@ describe("overlay layout resolver", () => {
     expect(result.video.effectiveSizeStep).toBe(definition.video.sizeStep);
   });
 
+  it("reduces the camera size step when the selected group exceeds the safe width", () => {
+    const definition = getDefaultOverlayLayoutDefinition();
+    const result = resolveOverlayLayout(definition, {
+      cameraCount: 4,
+      reservedRects: [],
+      viewport: {
+        height: 600,
+        safeInsets: { bottom: 0, left: 0, right: 0, top: 0 },
+        width: 300,
+      },
+    });
+
+    expect(result.video.effectiveSizeStep).toBe(0);
+    expect(result.video.slots).toHaveLength(4);
+    for (const slot of result.video.slots) {
+      expect(slot.x).toBeGreaterThanOrEqual(0);
+      expect(slot.y).toBeGreaterThanOrEqual(0);
+      expect(slot.x + slot.width).toBeLessThanOrEqual(300);
+      expect(slot.y + slot.height).toBeLessThanOrEqual(600);
+    }
+  });
+
+  it("selects the nearest unblocked chat cell by Manhattan distance", () => {
+    const definition = createCompactChatDefinition();
+    const result = resolveOverlayLayout(definition, {
+      cameraCount: 0,
+      reservedRects: [
+        { height: 1, width: 300, x: 500, y: 601 },
+        blockChatGridCell(5, 2),
+        blockChatGridCell(5, 4),
+      ],
+      viewport: selectionViewport,
+    });
+
+    expect(result.chat.rect).toMatchObject({ x: 500, y: 200 });
+  });
+
+  it("breaks equal-distance chat placement ties by y before x", () => {
+    const definition = createCompactChatDefinition();
+    const result = resolveOverlayLayout(definition, {
+      cameraCount: 0,
+      reservedRects: [blockChatGridCell(5, 3)],
+      viewport: selectionViewport,
+    });
+
+    expect(result.chat.rect).toMatchObject({ x: 500, y: 400 });
+  });
+
+  it("breaks equal-distance and y chat placement ties by x", () => {
+    const definition = createCompactChatDefinition();
+    const result = resolveOverlayLayout(definition, {
+      cameraCount: 0,
+      reservedRects: [
+        blockChatRow(0),
+        blockChatRow(1),
+        blockChatRow(2),
+        blockChatRow(4),
+        blockChatRow(5),
+        { height: 1, width: 300, x: 500, y: 601 },
+      ],
+      viewport: selectionViewport,
+    });
+
+    expect(result.chat.rect).toMatchObject({ x: 200, y: 600 });
+  });
+
   it("returns a finite clamped minimum fallback for impossible reserved geometry", () => {
     const defaultDefinition = getDefaultOverlayLayoutDefinition();
     const definition = {
@@ -219,3 +296,31 @@ describe("overlay layout resolver", () => {
     for (const value of Object.values(result.video.bounds)) expect(Number.isFinite(value)).toBe(true);
   });
 });
+
+const selectionViewport = {
+  height: 1600,
+  safeInsets: { bottom: 0, left: 0, right: 0, top: 0 },
+  width: 1200,
+};
+
+function createCompactChatDefinition() {
+  const definition = getDefaultOverlayLayoutDefinition();
+  return {
+    ...definition,
+    chat: {
+      ...definition.chat,
+      maxMessages: 3 as const,
+      position: { x: 5, y: 3 },
+      textScale: "compact" as const,
+      width: 3,
+    },
+  };
+}
+
+function blockChatGridCell(x: number, y: number) {
+  return { height: 1, width: 1, x: x * 100 + 1, y: y * 200 + 1 };
+}
+
+function blockChatRow(y: number) {
+  return { height: 1, width: 1200, x: 0, y: y * 200 + 1 };
+}

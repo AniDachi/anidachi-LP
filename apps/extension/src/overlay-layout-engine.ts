@@ -173,6 +173,10 @@ export function resolveOverlayLayout(
       sizeStep as OverlayLayoutCameraSizeStep,
     );
 
+    if (cameraCount > 0 && !isWithinSafeRect(video.bounds, safeRect)) {
+      continue;
+    }
+
     for (const messageCount of messageCounts) {
       const chat = createChatLayout(normalizedDefinition, safeRect, messageCount);
       const rect = findFreeChatRect(
