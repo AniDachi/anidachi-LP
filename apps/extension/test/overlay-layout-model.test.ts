@@ -1,47 +1,46 @@
 import { describe, expect, it } from "vitest";
 import {
-  getActiveOverlayLayoutDefinition,
+  getDefaultOverlayLayoutDefinition,
   getDefaultOverlayLayoutPreferencesV2,
   normalizeOverlayLayoutDefinition,
   parseOverlayLayoutPreferencesV2,
 } from "../src/overlay-layout-model";
 
 describe("overlay layout model v2", () => {
-  it("defaults to a four-seat classic definition", () => {
+  it("defaults to the clean four-seat definition", () => {
     const preferences = getDefaultOverlayLayoutPreferencesV2();
-    const definition = getActiveOverlayLayoutDefinition(preferences);
+    const definition = getDefaultOverlayLayoutDefinition();
 
-    expect(preferences).toMatchObject({ activePresetId: "classic", version: 2 });
-    expect(definition.video).toMatchObject({ leaderSide: "right", sizeStep: 1 });
-    expect(definition.chat).toMatchObject({ maxMessages: 5, textScale: "normal" });
+    expect(preferences).toEqual({ layout: definition, version: 2 });
+    expect(definition).toEqual({
+      video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 1 },
+      chat: { position: { x: 0, y: 4 }, width: 5, textScale: "normal", maxMessages: 5 },
+    });
+
+    definition.video.anchor.x = 0;
+    expect(getDefaultOverlayLayoutDefinition().video.anchor.x).toBe(11);
   });
 
-  it("migrates a custom version 1 rectangle and legacy camera size", () => {
-    const preferences = parseOverlayLayoutPreferencesV2(
-      {
-        version: 1,
-        presetId: "custom",
-        objects: {
-          video: { x: 1, y: 2, w: 4, h: 2 },
-          chat: { x: 7, y: 3, w: 5, h: 2 },
-        },
-        chat: { maxMessages: 8 },
+  it("rejects version 1 geometry and starts from clean defaults", () => {
+    const preferences = parseOverlayLayoutPreferencesV2({
+      version: 1,
+      presetId: "custom",
+      objects: {
+        video: { x: 1, y: 2, w: 4, h: 2 },
+        chat: { x: 7, y: 3, w: 5, h: 2 },
       },
-      { legacyCameraSizeStep: 3 },
-    );
+      chat: { maxMessages: 8 },
+    });
 
-    expect(preferences.activePresetId).toBe("custom");
-    expect(preferences.custom.video).toEqual({
-      anchor: { x: 1, y: 3 },
-      leaderSide: "left",
-      sizeStep: 3,
-    });
-    expect(preferences.custom.chat).toMatchObject({
-      maxMessages: 8,
-      position: { x: 7, y: 3 },
-      textScale: "normal",
-      width: 5,
-    });
+    expect(preferences).toEqual(getDefaultOverlayLayoutPreferencesV2());
+  });
+
+  it("returns clean defaults for every input that is not version 2", () => {
+    for (const value of [undefined, null, {}, { version: 3 }, { version: "2" }, []]) {
+      expect(parseOverlayLayoutPreferencesV2(value)).toEqual(
+        getDefaultOverlayLayoutPreferencesV2(),
+      );
+    }
   });
 
   it("normalizes malformed fields without mutating the input", () => {
@@ -58,9 +57,23 @@ describe("overlay layout model v2", () => {
     expect(normalized.chat).toMatchObject({ maxMessages: 8, textScale: "normal", width: 6 });
   });
 
-  it("is idempotent for valid version 2 storage", () => {
-    const first = parseOverlayLayoutPreferencesV2(getDefaultOverlayLayoutPreferencesV2());
+  it("normalizes version 2 layout storage without legacy state", () => {
+    const first = parseOverlayLayoutPreferencesV2({
+      version: 2,
+      layout: {
+        video: { anchor: { x: 1, y: 2 }, leaderSide: "left", sizeStep: 2 },
+        chat: { position: { x: 6, y: 4 }, width: 6, textScale: "large", maxMessages: 8 },
+      },
+    });
     const second = parseOverlayLayoutPreferencesV2(first);
+
+    expect(first).toEqual({
+      version: 2,
+      layout: {
+        video: { anchor: { x: 1, y: 2 }, leaderSide: "left", sizeStep: 2 },
+        chat: { position: { x: 6, y: 4 }, width: 6, textScale: "large", maxMessages: 8 },
+      },
+    });
     expect(second).toEqual(first);
   });
 });

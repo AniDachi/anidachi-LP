@@ -2,8 +2,6 @@ export const OVERLAY_LAYOUT_GRID_COLUMNS = 12;
 export const OVERLAY_LAYOUT_GRID_ROWS = 8;
 export const OVERLAY_LAYOUT_STORAGE_VERSION = 2 as const;
 
-export type OverlayLayoutPresetId = "classic" | "cinema" | "social" | "minimal" | "custom";
-export type OverlayLayoutBuiltinPresetId = Exclude<OverlayLayoutPresetId, "custom">;
 export type OverlayLayoutLeaderSide = "left" | "right";
 export type OverlayLayoutTextScale = "compact" | "normal" | "large";
 export type OverlayLayoutMessageCount = 3 | 5 | 8;
@@ -30,63 +28,23 @@ export interface OverlayLayoutDefinition {
 
 export interface OverlayLayoutPreferencesV2 {
   version: typeof OVERLAY_LAYOUT_STORAGE_VERSION;
-  activePresetId: OverlayLayoutPresetId;
-  custom: OverlayLayoutDefinition;
+  layout: OverlayLayoutDefinition;
 }
 
-export interface OverlayLayoutPresetV2 {
-  id: OverlayLayoutBuiltinPresetId;
-  definition: OverlayLayoutDefinition;
+const DEFAULT_LAYOUT = freezeDefinition({
+  video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 1 },
+  chat: { position: { x: 0, y: 4 }, width: 5, textScale: "normal", maxMessages: 5 },
+});
+
+export function getDefaultOverlayLayoutDefinition(): OverlayLayoutDefinition {
+  return cloneDefinition(DEFAULT_LAYOUT);
 }
-
-const CLASSIC_LAYOUT = freezeDefinition({
-  video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 1 },
-  chat: { position: { x: 7, y: 3 }, width: 5, textScale: "normal", maxMessages: 5 },
-});
-
-const CINEMA_LAYOUT = freezeDefinition({
-  video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 1 },
-  chat: { position: { x: 1, y: 6 }, width: 4, textScale: "normal", maxMessages: 5 },
-});
-
-const SOCIAL_LAYOUT = freezeDefinition({
-  video: { anchor: { x: 11, y: 2 }, leaderSide: "right", sizeStep: 1 },
-  chat: { position: { x: 6, y: 4 }, width: 6, textScale: "normal", maxMessages: 8 },
-});
-
-const MINIMAL_LAYOUT = freezeDefinition({
-  video: { anchor: { x: 11, y: 2 }, leaderSide: "right", sizeStep: 1 },
-  chat: { position: { x: 7, y: 6 }, width: 4, textScale: "normal", maxMessages: 3 },
-});
-
-const BUILTIN_LAYOUTS: Readonly<Record<OverlayLayoutBuiltinPresetId, OverlayLayoutDefinition>> =
-  Object.freeze({
-    classic: CLASSIC_LAYOUT,
-    cinema: CINEMA_LAYOUT,
-    social: SOCIAL_LAYOUT,
-    minimal: MINIMAL_LAYOUT,
-  });
-
-export const OVERLAY_LAYOUT_PRESETS_V2: readonly OverlayLayoutPresetV2[] = Object.freeze([
-  Object.freeze({ id: "classic" as const, definition: CLASSIC_LAYOUT }),
-  Object.freeze({ id: "cinema" as const, definition: CINEMA_LAYOUT }),
-  Object.freeze({ id: "social" as const, definition: SOCIAL_LAYOUT }),
-  Object.freeze({ id: "minimal" as const, definition: MINIMAL_LAYOUT }),
-]);
 
 export function getDefaultOverlayLayoutPreferencesV2(): OverlayLayoutPreferencesV2 {
-  return createPreferences("classic", CLASSIC_LAYOUT);
-}
-
-export function getActiveOverlayLayoutDefinition(
-  preferences: OverlayLayoutPreferencesV2,
-): OverlayLayoutDefinition {
-  const normalized = normalizeOverlayLayoutPreferencesV2(preferences);
-  const definition = normalized.activePresetId === "custom"
-    ? normalized.custom
-    : BUILTIN_LAYOUTS[normalized.activePresetId];
-
-  return cloneDefinition(definition);
+  return {
+    version: OVERLAY_LAYOUT_STORAGE_VERSION,
+    layout: getDefaultOverlayLayoutDefinition(),
+  };
 }
 
 export function normalizeOverlayLayoutDefinition(value: unknown): OverlayLayoutDefinition {
@@ -97,105 +55,61 @@ export function normalizeOverlayLayoutDefinition(value: unknown): OverlayLayoutD
   const rawPosition = isRecord(chat.position) ? chat.position : {};
 
   const anchor = {
-    x: normalizeGridCoordinate(rawAnchor.x, CLASSIC_LAYOUT.video.anchor.x, OVERLAY_LAYOUT_GRID_COLUMNS),
-    y: normalizeGridCoordinate(rawAnchor.y, CLASSIC_LAYOUT.video.anchor.y, OVERLAY_LAYOUT_GRID_ROWS),
+    x: normalizeGridCoordinate(
+      rawAnchor.x,
+      DEFAULT_LAYOUT.video.anchor.x,
+      OVERLAY_LAYOUT_GRID_COLUMNS,
+    ),
+    y: normalizeGridCoordinate(
+      rawAnchor.y,
+      DEFAULT_LAYOUT.video.anchor.y,
+      OVERLAY_LAYOUT_GRID_ROWS,
+    ),
   };
-  const width = clampInteger(numberOrFallback(chat.width, CLASSIC_LAYOUT.chat.width), 3, 6);
+  const width = clampInteger(
+    numberOrFallback(chat.width, DEFAULT_LAYOUT.chat.width),
+    3,
+    6,
+  );
   const position = {
     x: Math.min(
-      normalizeGridCoordinate(rawPosition.x, CLASSIC_LAYOUT.chat.position.x, OVERLAY_LAYOUT_GRID_COLUMNS),
+      normalizeGridCoordinate(
+        rawPosition.x,
+        DEFAULT_LAYOUT.chat.position.x,
+        OVERLAY_LAYOUT_GRID_COLUMNS,
+      ),
       OVERLAY_LAYOUT_GRID_COLUMNS - width,
     ),
-    y: normalizeGridCoordinate(rawPosition.y, CLASSIC_LAYOUT.chat.position.y, OVERLAY_LAYOUT_GRID_ROWS),
+    y: normalizeGridCoordinate(
+      rawPosition.y,
+      DEFAULT_LAYOUT.chat.position.y,
+      OVERLAY_LAYOUT_GRID_ROWS,
+    ),
   };
 
   return {
     video: {
       anchor,
       leaderSide: normalizeLeaderSide(video.leaderSide, anchor.x),
-      sizeStep: normalizeCameraSizeStep(video.sizeStep, 1),
+      sizeStep: normalizeCameraSizeStep(video.sizeStep),
     },
     chat: {
       position,
       width,
       textScale: normalizeTextScale(chat.textScale),
-      maxMessages: normalizeMessageCount(chat.maxMessages, CLASSIC_LAYOUT.chat.maxMessages),
+      maxMessages: normalizeMessageCount(chat.maxMessages),
     },
   };
 }
 
-export function parseOverlayLayoutPreferencesV2(
-  value: unknown,
-  options: { legacyCameraSizeStep?: unknown } = {},
-): OverlayLayoutPreferencesV2 {
-  if (!isRecord(value)) {
+export function parseOverlayLayoutPreferencesV2(value: unknown): OverlayLayoutPreferencesV2 {
+  if (!isRecord(value) || value.version !== OVERLAY_LAYOUT_STORAGE_VERSION) {
     return getDefaultOverlayLayoutPreferencesV2();
   }
 
-  if (value.version === OVERLAY_LAYOUT_STORAGE_VERSION) {
-    return normalizeOverlayLayoutPreferencesV2(value);
-  }
-
-  const objects = isRecord(value.objects) ? value.objects : null;
-  if (!objects || !isRecord(objects.video) || !isRecord(objects.chat)) {
-    return getDefaultOverlayLayoutPreferencesV2();
-  }
-
-  const legacyDefinition = migrateLegacyDefinition(objects.video, objects.chat, value.chat, options);
-  return createPreferences(normalizePresetId(value.presetId), legacyDefinition);
-}
-
-function normalizeOverlayLayoutPreferencesV2(value: unknown): OverlayLayoutPreferencesV2 {
-  const source = isRecord(value) ? value : {};
-  return createPreferences(
-    normalizePresetId(source.activePresetId),
-    normalizeOverlayLayoutDefinition(source.custom),
-  );
-}
-
-function migrateLegacyDefinition(
-  video: Record<string, unknown>,
-  chat: Record<string, unknown>,
-  legacyChat: unknown,
-  options: { legacyCameraSizeStep?: unknown },
-): OverlayLayoutDefinition {
-  const videoX = normalizeGridCoordinate(video.x, CLASSIC_LAYOUT.video.anchor.x, OVERLAY_LAYOUT_GRID_COLUMNS);
-  const videoY = normalizeGridCoordinate(video.y, CLASSIC_LAYOUT.video.anchor.y, OVERLAY_LAYOUT_GRID_ROWS);
-  const videoWidth = clampInteger(numberOrFallback(video.w, 1), 1, OVERLAY_LAYOUT_GRID_COLUMNS - videoX);
-  const videoHeight = clampInteger(numberOrFallback(video.h, 1), 1, OVERLAY_LAYOUT_GRID_ROWS - videoY);
-  const leaderSide: OverlayLayoutLeaderSide = videoX + videoWidth / 2 < OVERLAY_LAYOUT_GRID_COLUMNS / 2
-    ? "left"
-    : "right";
-
-  return normalizeOverlayLayoutDefinition({
-    video: {
-      anchor: {
-        x: leaderSide === "left" ? videoX : videoX + videoWidth - 1,
-        y: Math.round(videoY + videoHeight / 2),
-      },
-      leaderSide,
-      sizeStep: normalizeCameraSizeStep(options.legacyCameraSizeStep, 1),
-    },
-    chat: {
-      position: {
-        x: numberOrFallback(chat.x, CLASSIC_LAYOUT.chat.position.x),
-        y: numberOrFallback(chat.y, CLASSIC_LAYOUT.chat.position.y),
-      },
-      width: numberOrFallback(chat.w, CLASSIC_LAYOUT.chat.width),
-      textScale: "normal",
-      maxMessages: isRecord(legacyChat) ? legacyChat.maxMessages : CLASSIC_LAYOUT.chat.maxMessages,
-    },
-  });
-}
-
-function createPreferences(
-  activePresetId: OverlayLayoutPresetId,
-  custom: OverlayLayoutDefinition,
-): OverlayLayoutPreferencesV2 {
   return {
     version: OVERLAY_LAYOUT_STORAGE_VERSION,
-    activePresetId,
-    custom: cloneDefinition(custom),
+    layout: normalizeOverlayLayoutDefinition(value.layout),
   };
 }
 
@@ -223,12 +137,6 @@ function freezeDefinition(definition: OverlayLayoutDefinition): OverlayLayoutDef
   return Object.freeze(definition);
 }
 
-function normalizePresetId(value: unknown): OverlayLayoutPresetId {
-  return value === "cinema" || value === "social" || value === "minimal" || value === "custom"
-    ? value
-    : "classic";
-}
-
 function normalizeLeaderSide(value: unknown, anchorX: number): OverlayLayoutLeaderSide {
   if (value === "left" || value === "right") {
     return value;
@@ -238,13 +146,13 @@ function normalizeLeaderSide(value: unknown, anchorX: number): OverlayLayoutLead
 }
 
 function normalizeTextScale(value: unknown): OverlayLayoutTextScale {
-  return value === "compact" || value === "large" || value === "normal" ? value : "normal";
+  return value === "compact" || value === "normal" || value === "large" ? value : "normal";
 }
 
-function normalizeMessageCount(value: unknown, fallback: OverlayLayoutMessageCount): OverlayLayoutMessageCount {
+function normalizeMessageCount(value: unknown): OverlayLayoutMessageCount {
   const numeric = numberOrFallback(value, Number.NaN);
   if (!Number.isFinite(numeric)) {
-    return fallback;
+    return DEFAULT_LAYOUT.chat.maxMessages;
   }
 
   return ([3, 5, 8] as const).reduce<OverlayLayoutMessageCount>(
@@ -254,13 +162,12 @@ function normalizeMessageCount(value: unknown, fallback: OverlayLayoutMessageCou
   );
 }
 
-function normalizeCameraSizeStep(value: unknown, fallback: OverlayLayoutCameraSizeStep): OverlayLayoutCameraSizeStep {
-  const numeric = numberOrFallback(value, Number.NaN);
-  if (!Number.isFinite(numeric)) {
-    return fallback;
-  }
-
-  return clampInteger(numeric, 0, 3) as OverlayLayoutCameraSizeStep;
+function normalizeCameraSizeStep(value: unknown): OverlayLayoutCameraSizeStep {
+  return clampInteger(
+    numberOrFallback(value, DEFAULT_LAYOUT.video.sizeStep),
+    0,
+    3,
+  ) as OverlayLayoutCameraSizeStep;
 }
 
 function normalizeGridCoordinate(value: unknown, fallback: number, limit: number): number {
