@@ -1,6 +1,6 @@
 # Overlay Layout Engine V2 Design
 
-Status: Draft for written review
+Status: Implemented; staging visual acceptance pending
 
 ## Summary
 

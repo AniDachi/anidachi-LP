@@ -59,12 +59,12 @@
 
 - [x] Add failing engine coverage proving camera groups avoid reserved UI without mutating saved intent.
 - [x] Resolve the nearest same-size camera placement around reserved UI before compact size fallback.
-- [ ] Replace V1 and standalone camera-size state with one applied V2 definition and an async `applyLayoutDefinition()` that activates only after storage succeeds.
-- [ ] Resolve live geometry on player measurement, controls visibility, camera count, and applied-definition changes.
-- [ ] Render the camera group from resolved bounds/leader direction and the chat from resolved rect, typography, and effective message count.
-- [ ] Keep reaction placement coherent with the resolved camera vertical position without changing reaction transport or content.
-- [ ] Run focused tests and extension check.
-- [ ] Commit the task.
+- [x] Replace V1 and standalone camera-size state with one applied V2 definition and an async `applyLayoutDefinition()` that activates only after storage succeeds.
+- [x] Resolve live geometry on player measurement, controls visibility, camera count, and applied-definition changes.
+- [x] Render the camera group from resolved bounds/leader direction and the chat from resolved rect, typography, and effective message count.
+- [x] Keep reaction placement coherent with the resolved camera vertical position without changing reaction transport or content.
+- [x] Run focused tests and extension check.
+- [x] Commit the task.
 
 ### Task 3: Draft-Based V2 Layout Editor
 
@@ -82,12 +82,12 @@
 
 - [x] Add failing pure tests for grab-offset mapping, clamping, leader-side hysteresis, arrow movement, and session snapshots.
 - [x] Implement the pure interaction helpers and make those tests pass.
-- [ ] Add failing component tests for four camera ghosts, chat ghosts, draft isolation, Revert, successful Apply, failed Apply, and remount discard.
-- [ ] Implement the editor with Video/Chat selection, camera size, chat width, text scale, message count, Apply/Revert, and an accessible error status.
-- [ ] Implement pointer capture with distinct pointer-up and pointer-cancel behavior plus keyboard movement/Escape restore.
-- [ ] Wire the editor into the Layout settings category without changing other settings categories.
-- [ ] Run focused tests and extension check.
-- [ ] Commit the task.
+- [x] Add failing component tests for four camera ghosts, chat ghosts, draft isolation, Revert, successful Apply, failed Apply, and remount discard.
+- [x] Implement the editor with Video/Chat selection, camera size, chat width, text scale, message count, Apply/Revert, and an accessible error status.
+- [x] Implement pointer capture with distinct pointer-up and pointer-cancel behavior plus keyboard movement/Escape restore.
+- [x] Wire the editor into the Layout settings category without changing other settings categories.
+- [x] Run focused tests and extension check.
+- [x] Commit the task.
 
 ### Task 4: Delete V1 And Finish Visual Styling
 
@@ -101,12 +101,12 @@
 - Preserves only the V2 model, engine, runtime adapter, interaction helpers, and editor.
 - Removes old preset UI, direct-persist handlers, generic preview rectangles, chat-height control, and standalone ghost-camera-size storage.
 
-- [ ] Remove every V1 import, state/ref, storage key, handler, UI branch, and CSS selector.
-- [ ] Style the preview as a restrained player miniature with one clear leader, three quieter followers, representative chat rows, stable dimensions, visible focus, and no nested decorative cards.
-- [ ] Ensure compact-width text and controls do not overflow and reduced-motion users do not receive layout motion.
-- [ ] Verify `rg` finds no runtime V1 or old-key references outside historical docs.
-- [ ] Run extension tests/check and `git diff --check`.
-- [ ] Commit the task.
+- [x] Remove every V1 import, state/ref, storage key, handler, UI branch, and CSS selector.
+- [x] Style the preview as a restrained player miniature with one clear leader, three quieter followers, representative chat rows, stable dimensions, visible focus, and no nested decorative cards.
+- [x] Ensure compact-width text and controls do not overflow and reduced-motion users do not receive layout motion.
+- [x] Verify `rg` finds no runtime V1 or old-key references outside historical docs.
+- [x] Run extension tests/check and `git diff --check`.
+- [x] Commit the task.
 
 ### Task 5: Acceptance, Documentation, And Staging Delivery
 
@@ -116,8 +116,8 @@
 - Modify: this plan
 - Update approved Graphify artifacts when required by repository policy.
 
-- [ ] Run `pnpm --filter @anidachi/extension test` and `pnpm --filter @anidachi/extension check`.
-- [ ] Run `pnpm dev:check`, then broaden to `pnpm check` if recommended or affected by shared failures.
+- [x] Run `pnpm --filter @anidachi/extension test` and `pnpm --filter @anidachi/extension check`.
+- [x] Run `pnpm dev:check`, then broaden to `pnpm check` if recommended or affected by shared failures.
 - [ ] Build and validate the staging extension artifact.
 - [ ] Inspect the loaded UI at compact and desktop player sizes, including fullscreen, controls visible/hidden, zero/four preview cameras, one/four live cameras where locally reproducible, Apply/Revert, reload persistence, and storage failure presentation.
 - [ ] Rebuild `/Users/vladyslavhulyi/anidachi-LP-monorepo/anidachi-extension-staging` for the user's Chrome profile.

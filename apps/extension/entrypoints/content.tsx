@@ -569,6 +569,16 @@ function syncOverlayBounds(adapter: VideoAdapter, host: HTMLElement, target: HTM
     return;
   }
 
+  if (adapter.id === "youtube" || adapter.id === "crunchyroll") {
+    host.style.inset = "0";
+    host.style.left = "0";
+    host.style.top = "0";
+    host.style.width = "100%";
+    host.style.height = "100%";
+    host.style.borderRadius = getComputedStyle(target).borderRadius;
+    return;
+  }
+
   const videoRect = adapter.video.getBoundingClientRect();
   const targetRect = target.getBoundingClientRect();
   const left = videoRect.left - targetRect.left + target.scrollLeft;
