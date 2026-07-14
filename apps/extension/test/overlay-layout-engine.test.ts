@@ -50,6 +50,28 @@ describe("overlay layout camera geometry", () => {
     }
   });
 
+  it("sizes four slots against the usable safe rectangle", () => {
+    const constrainedViewport = {
+      height: 720,
+      safeInsets: { bottom: 0, left: 100, right: 710, top: 20 },
+      width: 1280,
+    };
+    const result = resolveVideoLayout(
+      { anchor: { x: 11, y: 5 }, leaderSide: "right", sizeStep: 3 },
+      constrainedViewport,
+      4,
+    );
+    const safeRect = { bottom: 720, left: 100, right: 570, top: 20 };
+
+    expect(result.slots).toHaveLength(4);
+    for (const slot of result.slots) {
+      expect(slot.x).toBeGreaterThanOrEqual(safeRect.left);
+      expect(slot.y).toBeGreaterThanOrEqual(safeRect.top);
+      expect(slot.x + slot.width).toBeLessThanOrEqual(safeRect.right);
+      expect(slot.y + slot.height).toBeLessThanOrEqual(safeRect.bottom);
+    }
+  });
+
   it("returns finite zero bounds when no cameras are occupied", () => {
     const result = resolveVideoLayout(
       { anchor: { x: 11, y: 7 }, leaderSide: "right", sizeStep: 3 },
@@ -79,7 +101,7 @@ describe("overlay layout camera geometry", () => {
 
     expect(result.slots).toHaveLength(4);
     expect(result.effectiveSizeStep).toBe(1);
-    expect(result.effectiveSizePx).toBe(83);
+    expect(result.effectiveSizePx).toBe(79);
     expect(video).toEqual(originalVideo);
     expect(viewport).toEqual(originalViewport);
   });

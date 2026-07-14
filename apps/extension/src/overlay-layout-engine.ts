@@ -56,8 +56,8 @@ export function resolveVideoLayout(
   ) as OverlayLayoutCameraSizeStep;
   const effectiveSizePx = getResponsiveGhostCamSizePx(effectiveSizeStep, {
     cameraCount: occupiedCount,
-    containerHeightPx: finiteNonNegative(viewport.height),
-    containerWidthPx: finiteNonNegative(viewport.width),
+    containerHeightPx: safeRect.height,
+    containerWidthPx: safeRect.width,
   });
 
   if (occupiedCount === 0) {
