@@ -69,7 +69,7 @@ import {
   shouldShowCameraStack,
   type CrunchyrollPlayerChromeState,
 } from "./overlay-layout";
-import { resolveOverlayLayout } from "./overlay-layout-engine";
+import { resolveOverlayLayout, type OverlayLayoutContext } from "./overlay-layout-engine";
 import { OverlayLayoutEditor } from "./overlay-layout-editor";
 import {
   getDefaultOverlayLayoutDefinition,
@@ -375,6 +375,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [appliedOverlayLayout, setAppliedOverlayLayout] = useState<OverlayLayoutDefinition>(() =>
     getDefaultOverlayLayoutDefinition(),
   );
+  const [previewOverlayLayout, setPreviewOverlayLayout] =
+    useState<OverlayLayoutDefinition | null>(null);
   const [overlayViewportSize, setOverlayViewportSize] = useState<OverlayViewportSize>(() => ({
     height: 0,
     width: 0,
@@ -1253,6 +1255,13 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setAppliedOverlayLayout(nextLayout);
   }, []);
 
+  const handleOverlayLayoutPreviewChange = useCallback(
+    (layout: OverlayLayoutDefinition | null) => {
+      setPreviewOverlayLayout(layout === null ? null : normalizeOverlayLayoutDefinition(layout));
+    },
+    [],
+  );
+
   const handleMessageDisplayModeChange = useCallback((nextMode: MessageDisplayMode) => {
     setMessageDisplayMode(nextMode);
     void storage.setItem(MESSAGE_DISPLAY_MODE_STORAGE_KEY, nextMode);
@@ -1754,7 +1763,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       : 0
     : DEFAULT_CAM_STACK_BOTTOM_PX;
   const roomRailBottomPx = Math.max(92, controlsBottomInsetPx + 12);
-  const resolvedOverlayLayout = useMemo(() => {
+  const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(() => {
     const roomRailTopPx = topBubbleTopPx + 44;
     const reservedRects = getOverlayLayoutReservedRects({
       accountBubble: {
@@ -1774,7 +1783,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           : undefined,
       viewport: overlayViewportSize,
     });
-    const context = createOverlayLayoutRuntimeContext({
+    return createOverlayLayoutRuntimeContext({
       cameraCount: cameraStackVisible ? renderableCameraParticipants.length : 0,
       controlsBottomInsetPx,
       height: overlayViewportSize.height,
@@ -1782,10 +1791,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       safePaddingPx: 12,
       width: overlayViewportSize.width,
     });
-
-    return resolveOverlayLayout(appliedOverlayLayout, context);
   }, [
-    appliedOverlayLayout,
     controlsBottomInsetPx,
     cameraStackVisible,
     overlayViewportSize,
@@ -1796,6 +1802,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     topBubbleTopPx,
     voiceRailParticipants.length,
   ]);
+  const resolvedOverlayLayout = useMemo(
+    () =>
+      resolveOverlayLayout(
+        previewOverlayLayout ?? appliedOverlayLayout,
+        overlayLayoutRuntimeContext,
+      ),
+    [appliedOverlayLayout, overlayLayoutRuntimeContext, previewOverlayLayout],
+  );
   const ghostCamSizePx = resolvedOverlayLayout.video.effectiveSizePx;
   const ghostCamGapPx = getGhostCamGapPx(resolvedOverlayLayout.video.effectiveSizeStep);
   const cameraStatusText =
@@ -5074,8 +5088,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                   appliedLayout={appliedOverlayLayout}
                   cameraEnabled={camsEnabled}
                   cameraStatus={cameraStatusText}
+                  layoutContext={overlayLayoutRuntimeContext}
                   onApply={handleOverlayLayoutApply}
                   onCameraToggle={handleGhostCamToggle}
+                  onPreviewChange={handleOverlayLayoutPreviewChange}
                 />
               ) : null}
               {settingsPanelCategory === "chat" ? (

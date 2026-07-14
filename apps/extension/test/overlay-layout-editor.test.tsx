@@ -3,6 +3,10 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { OverlayLayoutEditor } from "../src/overlay-layout-editor";
 import {
+	type OverlayLayoutContext,
+	resolveOverlayLayout,
+} from "../src/overlay-layout-engine";
+import {
 	getDefaultOverlayLayoutDefinition,
 	type OverlayLayoutDefinition,
 } from "../src/overlay-layout-model";
@@ -17,8 +21,21 @@ interface RenderedEditor {
 		typeof vi.fn<(layout: OverlayLayoutDefinition) => Promise<void>>
 	>;
 	onCameraToggle: ReturnType<typeof vi.fn<() => void>>;
+	onPreviewChange: ReturnType<
+		typeof vi.fn<(layout: OverlayLayoutDefinition | null) => void>
+	>;
 	root: Root;
 }
+
+const measuredLayoutContext: OverlayLayoutContext = {
+	cameraCount: 1,
+	reservedRects: [],
+	viewport: {
+		height: 1080,
+		safeInsets: { bottom: 0, left: 0, right: 0, top: 0 },
+		width: 1920,
+	},
+};
 
 describe("OverlayLayoutEditor", () => {
 	afterEach(() => {
@@ -52,6 +69,90 @@ describe("OverlayLayoutEditor", () => {
 		await unmount(editor.root);
 	});
 
+	it("scales preview geometry from the measured player context", async () => {
+		const editor = await renderEditor({ layoutContext: measuredLayoutContext });
+		const preview = getPreview(editor.container);
+		const leader = getLeader(editor.container);
+		const projected = resolveOverlayLayout(getDefaultOverlayLayoutDefinition(), {
+			...measuredLayoutContext,
+			cameraCount: 4,
+		});
+		const projectedLeader = projected.video.slots[0];
+		if (!projectedLeader) {
+			throw new Error("Projected video leader not found");
+		}
+
+		expect(preview.style.aspectRatio).toBe("1920 / 1080");
+		expect(leader.style.width).toBe(
+			`${(projected.video.effectiveSizePx / 1920) * 100}%`,
+		);
+		expect(leader.style.height).toBe(
+			`${(projected.video.effectiveSizePx / 1080) * 100}%`,
+		);
+		expect(leader.style.left).toBe(`${(projectedLeader.x / 1920) * 100}%`);
+		expect(leader.style.top).toBe(`${(projectedLeader.y / 1080) * 100}%`);
+
+		await unmount(editor.root);
+	});
+
+	it("publishes the draft for live preview and clears it on unmount", async () => {
+		const editor = await renderEditor();
+
+		expect(editor.onPreviewChange).toHaveBeenLastCalledWith(
+			getDefaultOverlayLayoutDefinition(),
+		);
+
+		await changeSelect(getSelect(editor.container, "Camera size"), "3");
+		expect(editor.onPreviewChange).toHaveBeenLastCalledWith(
+			expect.objectContaining({
+				video: expect.objectContaining({ sizeStep: 3 }),
+			}),
+		);
+
+		await unmount(editor.root);
+		expect(editor.onPreviewChange).toHaveBeenLastCalledWith(null);
+	});
+
+	it("reflows a dirty draft when the measured player viewport changes", async () => {
+		const appliedLayout = getDefaultOverlayLayoutDefinition();
+		const editor = await renderEditor({ appliedLayout });
+		await changeSelect(getSelect(editor.container, "Camera size"), "3");
+		const resizedContext: OverlayLayoutContext = {
+			...measuredLayoutContext,
+			viewport: { ...measuredLayoutContext.viewport, height: 720, width: 1280 },
+		};
+
+		await act(async () => {
+			editor.root.render(
+				<OverlayLayoutEditor
+					appliedLayout={appliedLayout}
+					cameraEnabled={false}
+					cameraStatus="Camera off"
+					layoutContext={resizedContext}
+					onApply={editor.onApply}
+					onCameraToggle={editor.onCameraToggle}
+					onPreviewChange={editor.onPreviewChange}
+				/>,
+			);
+		});
+
+		const projected = resolveOverlayLayout(
+			{
+				...appliedLayout,
+				video: { ...appliedLayout.video, sizeStep: 3 },
+			},
+			{ ...resizedContext, cameraCount: 4 },
+		);
+		expect(getSelect(editor.container, "Camera size").value).toBe("3");
+		expect(getPreview(editor.container).style.aspectRatio).toBe("1280 / 720");
+		expect(getLeader(editor.container).style.width).toBe(
+			`${(projected.video.effectiveSizePx / 1280) * 100}%`,
+		);
+		expect(getButton(editor.container, "Apply").disabled).toBe(false);
+
+		await unmount(editor.root);
+	});
+
 	it("keeps control changes in the draft until Apply", async () => {
 		const appliedLayout = getDefaultOverlayLayoutDefinition();
 		const editor = await renderEditor({ appliedLayout });
@@ -77,6 +178,9 @@ describe("OverlayLayoutEditor", () => {
 		expect(getButton(editor.container, "Apply").disabled).toBe(true);
 		expect(getButton(editor.container, "Revert").disabled).toBe(true);
 		expect(editor.onApply).not.toHaveBeenCalled();
+		expect(editor.onPreviewChange).toHaveBeenLastCalledWith(
+			getDefaultOverlayLayoutDefinition(),
+		);
 
 		await unmount(editor.root);
 	});
@@ -122,10 +226,18 @@ describe("OverlayLayoutEditor", () => {
 		expect(
 			editor.container.querySelector('[role="status"]')?.textContent,
 		).toMatch(/could not be saved/i);
+		expect(editor.onPreviewChange).toHaveBeenLastCalledWith(
+			expect.objectContaining({
+				video: expect.objectContaining({ sizeStep: 3 }),
+			}),
+		);
 
 		await click(getButton(editor.container, "Revert"));
 		expect(cameraSize.value).toBe("1");
 		expect(editor.onApply).toHaveBeenCalledTimes(1);
+		expect(editor.onPreviewChange).toHaveBeenLastCalledWith(
+			getDefaultOverlayLayoutDefinition(),
+		);
 
 		await unmount(editor.root);
 	});
@@ -143,8 +255,10 @@ describe("OverlayLayoutEditor", () => {
 					appliedLayout={next}
 					cameraEnabled={false}
 					cameraStatus="Camera off"
+					layoutContext={measuredLayoutContext}
 					onApply={editor.onApply}
 					onCameraToggle={editor.onCameraToggle}
+					onPreviewChange={editor.onPreviewChange}
 				/>,
 			);
 		});
@@ -166,8 +280,10 @@ describe("OverlayLayoutEditor", () => {
 					appliedLayout={structuredClone(appliedLayout)}
 					cameraEnabled={false}
 					cameraStatus="Camera off"
+					layoutContext={measuredLayoutContext}
 					onApply={editor.onApply}
 					onCameraToggle={editor.onCameraToggle}
+					onPreviewChange={editor.onPreviewChange}
 				/>,
 			);
 		});
@@ -199,8 +315,10 @@ describe("OverlayLayoutEditor", () => {
 					appliedLayout={structuredClone(appliedLayout)}
 					cameraEnabled={false}
 					cameraStatus="Camera off"
+					layoutContext={measuredLayoutContext}
 					onApply={editor.onApply}
 					onCameraToggle={editor.onCameraToggle}
+					onPreviewChange={editor.onPreviewChange}
 				/>,
 			);
 		});
@@ -454,6 +572,8 @@ async function renderEditor({
 		Promise.resolve(),
 	),
 	onCameraToggle = vi.fn<() => void>(),
+	onPreviewChange = vi.fn<(layout: OverlayLayoutDefinition | null) => void>(),
+	layoutContext = measuredLayoutContext,
 }: Partial<{
 	appliedLayout: OverlayLayoutDefinition;
 	cameraEnabled: boolean;
@@ -462,6 +582,10 @@ async function renderEditor({
 		typeof vi.fn<(layout: OverlayLayoutDefinition) => Promise<void>>
 	>;
 	onCameraToggle: ReturnType<typeof vi.fn<() => void>>;
+	onPreviewChange: ReturnType<
+		typeof vi.fn<(layout: OverlayLayoutDefinition | null) => void>
+	>;
+	layoutContext: OverlayLayoutContext;
 }> = {}): Promise<RenderedEditor> {
 	const container = document.createElement("div");
 	document.body.append(container);
@@ -473,13 +597,15 @@ async function renderEditor({
 				appliedLayout={appliedLayout}
 				cameraEnabled={cameraEnabled}
 				cameraStatus={cameraStatus}
+				layoutContext={layoutContext}
 				onApply={onApply}
 				onCameraToggle={onCameraToggle}
+				onPreviewChange={onPreviewChange}
 			/>,
 		);
 	});
 
-	return { container, onApply, onCameraToggle, root };
+	return { container, onApply, onCameraToggle, onPreviewChange, root };
 }
 
 function layoutAt(anchor: { x: number; y: number }): OverlayLayoutDefinition {

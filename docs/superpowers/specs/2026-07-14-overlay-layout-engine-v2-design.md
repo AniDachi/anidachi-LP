@@ -116,12 +116,18 @@ remain outside the first implementation scope.
 ### Draft And Apply
 
 Opening the Layout editor creates a draft from the applied preferences.
-Dragging, resizing, and changing chat settings update only the draft and editor
-preview.
+Dragging, resizing, and changing chat settings update the draft, the scaled
+editor preview, and a transient live overlay preview. Both previews resolve
+against the same measured player viewport, safe insets, and reserved AniDachi
+UI as the running overlay. Storage and the applied snapshot remain unchanged.
 
-- `Apply` normalizes, persists, and activates the draft.
+- `Apply` normalizes and persists the already-previewed draft, then promotes it
+  to the applied snapshot.
+- A failed write keeps the dirty draft and its transient preview visible while
+  showing a non-blocking error.
 - `Revert` restores the draft to the currently applied layout.
-- closing the panel without applying discards the draft.
+- Closing the panel without applying discards the draft and clears the
+  transient live preview.
 
 The first release stores one applied layout. Preset selection, named custom
 layouts, and preset management are intentionally deferred until the layout

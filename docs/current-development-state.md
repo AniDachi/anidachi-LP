@@ -285,7 +285,9 @@ The extension currently supports:
   `local:overlayLayoutPreferencesV2`, previews one camera leader plus three
   followers, derives chat height from typography and message count, adapts to
   player controls and reserved AniDachi UI without rewriting saved preferences,
-  and persists editor changes only after an explicit successful `Apply`;
+  previews editor drafts against the same measured runtime context in both the
+  miniature and live overlay, and persists changes only after an explicit
+  successful `Apply`;
 - push-to-talk audio;
 - WebRTC P2P media with Cloudflare TURN fallback;
 - no active LiveKit/SFU media path: the legacy extension transport, Worker

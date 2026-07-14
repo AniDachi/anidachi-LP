@@ -4,7 +4,7 @@
 
 **Goal:** Replace the running V1 overlay layout path with one truthful V2 path shared by the live camera/chat overlay and the layout editor.
 
-**Architecture:** `overlay-layout-model.ts` remains the only stored layout contract and `overlay-layout-engine.ts` remains the only geometry resolver. A focused runtime adapter converts measured player state and resolved geometry into CSS variables, while a dedicated editor component owns an unapplied draft and uses the same resolver for its synthetic 16:9 preview. `overlay-app.tsx` owns storage loading, applying the persisted definition, live player measurements, and wiring; the V1 preferences module and its storage keys are deleted after all consumers move.
+**Architecture:** `overlay-layout-model.ts` remains the only stored layout contract and `overlay-layout-engine.ts` remains the only geometry resolver. A focused runtime adapter converts measured player state and resolved geometry into CSS variables, while a dedicated editor component owns an unapplied draft and uses the same measured runtime context for its scaled preview. `overlay-app.tsx` owns storage loading, transient live draft preview, applying the persisted definition, live player measurements, and wiring; the V1 preferences module and its storage keys are deleted after all consumers move.
 
 **Tech Stack:** React 19, TypeScript 6, Vitest 4, WXT storage, existing CSS-in-TS overlay stylesheet, Pointer Events.
 
@@ -76,8 +76,8 @@
 - Modify: `apps/extension/src/overlay-app.tsx`
 
 **Interfaces:**
-- `OverlayLayoutEditor` consumes `appliedLayout`, camera enabled/status props, `onCameraToggle`, and async `onApply`.
-- The editor creates a defensive draft on mount, uses a 16:9 synthetic viewport and `resolveOverlayLayout(...cameraCount: 4)` for the preview, and discards itself on unmount.
+- `OverlayLayoutEditor` consumes `appliedLayout`, the measured runtime context, camera enabled/status props, `onCameraToggle`, transient `onPreviewChange`, and async `onApply`.
+- The editor creates a defensive draft on mount, uses the measured player viewport with `resolveOverlayLayout(...cameraCount: 4)` for the scaled preview, publishes the draft only as a transient live preview, and clears it on unmount.
 - Interaction helpers produce snapped grid positions, preserve pointer grab offsets, and resolve leader side with a two-cell center hysteresis band.
 
 - [x] Add failing pure tests for grab-offset mapping, clamping, leader-side hysteresis, arrow movement, and session snapshots.

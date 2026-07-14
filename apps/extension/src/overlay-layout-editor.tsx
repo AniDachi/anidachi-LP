@@ -9,7 +9,11 @@ import {
 	useState,
 } from "react";
 import { GHOST_CAM_SIZE_STEPS } from "./ghost-cam-size";
-import { type PixelRect, resolveOverlayLayout } from "./overlay-layout-engine";
+import {
+	type OverlayLayoutContext,
+	type PixelRect,
+	resolveOverlayLayout,
+} from "./overlay-layout-engine";
 import {
 	cloneOverlayLayoutDefinition,
 	getOverlayLayoutDragOffset,
@@ -32,8 +36,10 @@ export interface OverlayLayoutEditorProps {
 	appliedLayout: OverlayLayoutDefinition;
 	cameraEnabled: boolean;
 	cameraStatus: string;
+	layoutContext: OverlayLayoutContext;
 	onCameraToggle: () => void;
 	onApply: (layout: OverlayLayoutDefinition) => Promise<void>;
+	onPreviewChange: (layout: OverlayLayoutDefinition | null) => void;
 }
 
 interface PointerSession {
@@ -48,28 +54,28 @@ interface KeyboardSession {
 	snapshot: OverlayLayoutDefinition;
 }
 
-const PREVIEW_WIDTH = 640;
-const PREVIEW_HEIGHT = 360;
 const PREVIEW_SAFE_PADDING = 12;
-const PREVIEW_CONTEXT = {
+const FALLBACK_PREVIEW_WIDTH = 640;
+const FALLBACK_PREVIEW_HEIGHT = 360;
+const FALLBACK_PREVIEW_CONTEXT: OverlayLayoutContext = {
 	cameraCount: 4 as const,
 	reservedRects: [
 		{
 			height: 56,
 			width: 144,
-			x: PREVIEW_WIDTH - PREVIEW_SAFE_PADDING - 144,
+			x: FALLBACK_PREVIEW_WIDTH - PREVIEW_SAFE_PADDING - 144,
 			y: PREVIEW_SAFE_PADDING,
 		},
 	],
 	viewport: {
-		height: PREVIEW_HEIGHT,
+		height: FALLBACK_PREVIEW_HEIGHT,
 		safeInsets: {
 			bottom: PREVIEW_SAFE_PADDING,
 			left: PREVIEW_SAFE_PADDING,
 			right: PREVIEW_SAFE_PADDING,
 			top: PREVIEW_SAFE_PADDING,
 		},
-		width: PREVIEW_WIDTH,
+		width: FALLBACK_PREVIEW_WIDTH,
 	},
 };
 const CHAT_WIDTH_OPTIONS = [3, 4, 5, 6] as const;
@@ -88,8 +94,10 @@ export function OverlayLayoutEditor({
 	appliedLayout,
 	cameraEnabled,
 	cameraStatus,
+	layoutContext,
 	onCameraToggle,
 	onApply,
+	onPreviewChange,
 }: OverlayLayoutEditorProps) {
 	const [initialAppliedLayout] = useState<OverlayLayoutDefinition>(() =>
 		normalizeOverlayLayoutDefinition(appliedLayout),
@@ -122,6 +130,13 @@ export function OverlayLayoutEditor({
 	}, []);
 
 	useEffect(() => {
+		onPreviewChange(cloneOverlayLayoutDefinition(draftRef.current));
+		return () => {
+			onPreviewChange(null);
+		};
+	}, [onPreviewChange]);
+
+	useEffect(() => {
 		const nextApplied = normalizeOverlayLayoutDefinition(appliedLayout);
 		if (
 			overlayLayoutDefinitionsEqual(nextApplied, appliedSnapshotRef.current)
@@ -136,14 +151,21 @@ export function OverlayLayoutEditor({
 		applyGenerationRef.current += 1;
 		setAppliedSnapshot(nextApplied);
 		setDraft(nextDraft);
+		onPreviewChange(cloneOverlayLayoutDefinition(nextDraft));
 		setErrorMessage(null);
 		setSaving(false);
-	}, [appliedLayout]);
+	}, [appliedLayout, onPreviewChange]);
 
-	const resolvedLayout = useMemo(
-		() => resolveOverlayLayout(draft, PREVIEW_CONTEXT),
-		[draft],
+	const previewContext = useMemo(
+		() => createPreviewContext(layoutContext),
+		[layoutContext],
 	);
+	const resolvedLayout = useMemo(
+		() => resolveOverlayLayout(draft, previewContext),
+		[draft, previewContext],
+	);
+	const previewWidth = previewContext.viewport.width;
+	const previewHeight = previewContext.viewport.height;
 	const clean = overlayLayoutDefinitionsEqual(draft, appliedSnapshot);
 
 	const replaceDraft = (
@@ -153,6 +175,7 @@ export function OverlayLayoutEditor({
 		const defensiveDraft = cloneOverlayLayoutDefinition(nextDraft);
 		draftRef.current = defensiveDraft;
 		setDraft(defensiveDraft);
+		onPreviewChange(cloneOverlayLayoutDefinition(defensiveDraft));
 		if (clearError) {
 			setErrorMessage(null);
 		}
@@ -415,15 +438,30 @@ export function OverlayLayoutEditor({
 				ref={previewRef}
 				className="layout-preview-v2"
 				style={{
-					aspectRatio: "16 / 9",
+					aspectRatio: `${previewWidth} / ${previewHeight}`,
 					overflow: "hidden",
 					position: "relative",
 					width: "100%",
 				}}
 			>
+				{previewContext.reservedRects.map((rect, index) => (
+					<div
+						key={`reserved-${index}`}
+						aria-hidden="true"
+						className="layout-reserved-preview-v2"
+						style={{
+							...getPercentageRectStyle(rect, previewWidth, previewHeight),
+							position: "absolute",
+						}}
+					/>
+				))}
 				{resolvedLayout.video.slots.map((slot, index) => {
 					const isLeader = index === 0;
-					const style = getPercentageRectStyle(slot);
+					const style = getPercentageRectStyle(
+						slot,
+						previewWidth,
+						previewHeight,
+					);
 					if (!isLeader) {
 						return (
 							<div
@@ -498,9 +536,13 @@ export function OverlayLayoutEditor({
 						finishPointerSession("chat", event, false, true)
 					}
 					style={{
-						...getPercentageRectStyle(resolvedLayout.chat.rect),
-						fontSize: `${resolvedLayout.chat.fontSizePx}px`,
-						lineHeight: `${resolvedLayout.chat.lineHeightPx}px`,
+						...getPercentageRectStyle(
+							resolvedLayout.chat.rect,
+							previewWidth,
+							previewHeight,
+						),
+						fontSize: `${(resolvedLayout.chat.fontSizePx / previewWidth) * 100}cqw`,
+						lineHeight: `${(resolvedLayout.chat.lineHeightPx / previewWidth) * 100}cqw`,
 						overflow: "hidden",
 						position: "absolute",
 						touchAction: "none",
@@ -641,13 +683,41 @@ export function OverlayLayoutEditor({
 	);
 }
 
-function getPercentageRectStyle(rect: PixelRect): CSSProperties {
+function getPercentageRectStyle(
+	rect: PixelRect,
+	viewportWidth: number,
+	viewportHeight: number,
+): CSSProperties {
 	return {
-		height: `${(rect.height / PREVIEW_HEIGHT) * 100}%`,
-		left: `${(rect.x / PREVIEW_WIDTH) * 100}%`,
-		top: `${(rect.y / PREVIEW_HEIGHT) * 100}%`,
-		width: `${(rect.width / PREVIEW_WIDTH) * 100}%`,
+		height: `${(rect.height / viewportHeight) * 100}%`,
+		left: `${(rect.x / viewportWidth) * 100}%`,
+		top: `${(rect.y / viewportHeight) * 100}%`,
+		width: `${(rect.width / viewportWidth) * 100}%`,
 	};
+}
+
+function createPreviewContext(
+	layoutContext: OverlayLayoutContext,
+): OverlayLayoutContext {
+	const width = finitePositive(layoutContext.viewport.width);
+	const height = finitePositive(layoutContext.viewport.height);
+	if (width === null || height === null) {
+		return FALLBACK_PREVIEW_CONTEXT;
+	}
+
+	return {
+		cameraCount: 4,
+		reservedRects: layoutContext.reservedRects.map((rect) => ({ ...rect })),
+		viewport: {
+			height,
+			safeInsets: { ...layoutContext.viewport.safeInsets },
+			width,
+		},
+	};
+}
+
+function finitePositive(value: number): number | null {
+	return Number.isFinite(value) && value > 0 ? value : null;
 }
 
 function getArrowDelta(key: string): { x: number; y: number } | null {

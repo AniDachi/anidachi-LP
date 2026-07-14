@@ -619,6 +619,8 @@ export const overlayStyles = `
 
   .layout-preview-v2 {
     min-height: 132px;
+    box-sizing: border-box;
+    container-type: inline-size;
     border: 1px solid rgba(255, 255, 255, 0.11);
     border-radius: 8px;
     background-color: rgba(5, 5, 8, 0.78);
@@ -644,16 +646,10 @@ export const overlayStyles = `
     touch-action: none;
   }
 
-  .layout-preview-v2::after {
-    content: "";
-    position: absolute;
+  .layout-reserved-preview-v2 {
     z-index: 0;
-    top: 3.33%;
-    right: 1.88%;
-    width: 22.5%;
-    height: 15.56%;
     border: 1px dashed rgba(255, 255, 255, 0.08);
-    border-radius: 999px;
+    border-radius: 6px;
     background: rgba(255, 255, 255, 0.025);
     pointer-events: none;
   }
