@@ -534,9 +534,10 @@ Completed on `codex/overlay-layout-engine-v2` from `origin/staging` at
 - Clean-start scope correction: `a528af9`; no migration, adapter, preset, or
   custom-state surface remains in the V2 core.
 - Camera slot geometry: `4a7bd62`; safe-area sizing correction: `25d5396`.
-- Chat geometry, collision search, and combined resolver: `be28fcf`; focused
-  engine tests passed 12/12.
-- Final extension verification passed 33 files and 359 tests; extension type
+- Chat geometry, collision search, and combined resolver: `be28fcf`; final
+  safe-area and deterministic-contract hardening: `a24687f`; focused engine
+  tests passed 24/24.
+- Final extension verification passed 33 files and 371 tests; extension type
   checking and `git diff --check origin/staging...HEAD` passed.
 - `pnpm dev:check` selected only the extension and docs profiles.
 - Graphify refresh: `80f612a`. `.graphifyignore` now excludes the local
