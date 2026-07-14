@@ -165,23 +165,76 @@ export function resolveOverlayLayout(
     (count) => count <= normalizedDefinition.chat.maxMessages,
   );
 
+  if (cameraCount === 0) {
+    return resolveZeroCameraLayout(
+      normalizedDefinition,
+      normalizedViewport,
+      safeRect,
+      reservedRects,
+      messageCounts,
+    );
+  }
+
+  let fallbackVideo: ResolvedVideoLayout | undefined;
+
   for (let sizeStep = normalizedDefinition.video.sizeStep; sizeStep >= 0; sizeStep -= 1) {
-    const video = resolveVideoLayout(
+    const videoCandidates = findReservedSafeVideoLayoutsAtSize(
       normalizedDefinition.video,
       normalizedViewport,
       cameraCount,
+      safeRect,
+      reservedRects,
       sizeStep as OverlayLayoutCameraSizeStep,
     );
 
-    if (cameraCount > 0 && !isWithinSafeRect(video.bounds, safeRect)) {
+    if (videoCandidates.length === 0) {
       continue;
     }
 
+    fallbackVideo = videoCandidates[0];
+    for (const video of videoCandidates) {
+      for (const messageCount of messageCounts) {
+        const chat = createChatLayout(normalizedDefinition, safeRect, messageCount);
+        const rect = findFreeChatRect(
+          normalizedDefinition.chat.position,
+          normalizedDefinition.chat.width,
+          safeRect,
+          chat.rect,
+          [video.bounds, ...reservedRects],
+        );
+
+        if (rect) {
+          return { chat: { ...chat, rect }, video };
+        }
+      }
+    }
+  }
+
+  return fallbackVideo
+    ? createCameraPriorityFallback(normalizedDefinition, safeRect, fallbackVideo)
+    : createMinimumFallback(normalizedDefinition, normalizedViewport, cameraCount, safeRect);
+}
+
+function resolveZeroCameraLayout(
+  definition: OverlayLayoutDefinition,
+  viewport: OverlayLayoutViewport,
+  safeRect: PixelRect,
+  reservedRects: PixelRect[],
+  messageCounts: readonly OverlayLayoutMessageCount[],
+): ResolvedOverlayLayout {
+  for (let sizeStep = definition.video.sizeStep; sizeStep >= 0; sizeStep -= 1) {
+    const video = resolveVideoLayout(
+      definition.video,
+      viewport,
+      0,
+      sizeStep as OverlayLayoutCameraSizeStep,
+    );
+
     for (const messageCount of messageCounts) {
-      const chat = createChatLayout(normalizedDefinition, safeRect, messageCount);
+      const chat = createChatLayout(definition, safeRect, messageCount);
       const rect = findFreeChatRect(
-        normalizedDefinition.chat.position,
-        normalizedDefinition.chat.width,
+        definition.chat.position,
+        definition.chat.width,
         safeRect,
         chat.rect,
         [video.bounds, ...reservedRects],
@@ -193,7 +246,60 @@ export function resolveOverlayLayout(
     }
   }
 
-  return createMinimumFallback(normalizedDefinition, normalizedViewport, cameraCount, safeRect);
+  return createMinimumFallback(definition, viewport, 0, safeRect);
+}
+
+function findReservedSafeVideoLayoutsAtSize(
+  videoDefinition: OverlayLayoutDefinition["video"],
+  viewport: OverlayLayoutViewport,
+  cameraCount: number,
+  safeRect: PixelRect,
+  reservedRects: PixelRect[],
+  sizeStep: OverlayLayoutCameraSizeStep,
+): ResolvedVideoLayout[] {
+  const anchors = getOrderedVideoAnchors(videoDefinition.anchor);
+  const layouts: ResolvedVideoLayout[] = [];
+
+  for (const anchor of anchors) {
+    const video = resolveVideoLayout(
+      {
+        anchor,
+        leaderSide: videoDefinition.leaderSide,
+        sizeStep: videoDefinition.sizeStep,
+      },
+      viewport,
+      cameraCount,
+      sizeStep,
+    );
+
+    if (
+      isWithinSafeRect(video.bounds, safeRect) &&
+      !reservedRects.some((reserved) => rectsOverlap(video.bounds, reserved))
+    ) {
+      layouts.push(video);
+    }
+  }
+
+  return layouts;
+}
+
+function getOrderedVideoAnchors(
+  savedAnchor: OverlayLayoutDefinition["video"]["anchor"],
+): Array<OverlayLayoutDefinition["video"]["anchor"]> {
+  return Array.from(
+    { length: OVERLAY_LAYOUT_GRID_COLUMNS * OVERLAY_LAYOUT_GRID_ROWS },
+    (_, index) => {
+      const x = index % OVERLAY_LAYOUT_GRID_COLUMNS;
+      const y = Math.floor(index / OVERLAY_LAYOUT_GRID_COLUMNS);
+      return {
+        distance: Math.abs(x - savedAnchor.x) + Math.abs(y - savedAnchor.y),
+        x,
+        y,
+      };
+    },
+  )
+    .sort((a, b) => a.distance - b.distance || a.y - b.y || a.x - b.x)
+    .map(({ x, y }) => ({ x, y }));
 }
 
 export function rectsOverlap(a: PixelRect, b: PixelRect): boolean {
@@ -302,6 +408,24 @@ function createMinimumFallback(
   return {
     chat: { ...chat, rect: clampRectToSafeRect(requestedRect, safeRect) },
     video: resolveVideoLayout(definition.video, viewport, cameraCount, 0),
+  };
+}
+
+function createCameraPriorityFallback(
+  definition: OverlayLayoutDefinition,
+  safeRect: PixelRect,
+  video: ResolvedVideoLayout,
+): ResolvedOverlayLayout {
+  const chat = createChatLayout(definition, safeRect, 3);
+  const requestedRect = {
+    ...chat.rect,
+    x: safeRect.x + (definition.chat.position.x / OVERLAY_LAYOUT_GRID_COLUMNS) * safeRect.width,
+    y: safeRect.y + (definition.chat.position.y / OVERLAY_LAYOUT_GRID_ROWS) * safeRect.height,
+  };
+
+  return {
+    chat: { ...chat, rect: clampRectToSafeRect(requestedRect, safeRect) },
+    video,
   };
 }
 

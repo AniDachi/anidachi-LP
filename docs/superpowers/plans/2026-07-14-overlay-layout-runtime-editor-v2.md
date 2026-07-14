@@ -46,8 +46,10 @@
 ### Task 2: Live Runtime Parity
 
 **Files:**
+- Modify: `apps/extension/src/overlay-layout-engine.ts`
 - Modify: `apps/extension/src/overlay-app.tsx`
 - Modify: `apps/extension/src/styles.ts`
+- Modify: `apps/extension/test/overlay-layout-engine.test.ts`
 - Modify: `apps/extension/test/overlay-layout-runtime.test.ts`
 
 **Interfaces:**
@@ -55,7 +57,8 @@
 - Produces: one applied `OverlayLayoutDefinition` loaded only from the V2 key.
 - Produces: live camera/chat geometry recalculated from player dimensions, native-control safe inset, reserved AniDachi UI, camera count, and applied preferences.
 
-- [ ] Add failing runtime-adapter coverage for compact controls, top bubble, and room rail reservations.
+- [x] Add failing engine coverage proving camera groups avoid reserved UI without mutating saved intent.
+- [x] Resolve the nearest same-size camera placement around reserved UI before compact size fallback.
 - [ ] Replace V1 and standalone camera-size state with one applied V2 definition and an async `applyLayoutDefinition()` that activates only after storage succeeds.
 - [ ] Resolve live geometry on player measurement, controls visibility, camera count, and applied-definition changes.
 - [ ] Render the camera group from resolved bounds/leader direction and the chat from resolved rect, typography, and effective message count.

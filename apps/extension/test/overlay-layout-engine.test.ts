@@ -151,6 +151,133 @@ describe("overlay layout resolver", () => {
     expect(result.video.leaderSide).toBe(definition.video.leaderSide);
   });
 
+  it("moves a camera group away from a top-right reserved area before resolving chat", () => {
+    const definition = {
+      ...getDefaultOverlayLayoutDefinition(),
+      video: { anchor: { x: 11, y: 0 }, leaderSide: "right" as const, sizeStep: 1 as const },
+    };
+    const reservation = { height: 150, width: 200, x: 1000, y: 0 };
+    const result = resolveOverlayLayout(definition, {
+      cameraCount: 1,
+      reservedRects: [reservation],
+      viewport: reservedCameraViewport,
+    });
+
+    expect(result.video.bounds).toMatchObject({ x: 907, y: 7 });
+    expect(rectsOverlap(result.video.bounds, reservation)).toBe(false);
+    expect(rectsOverlap(result.chat.rect, result.video.bounds)).toBe(false);
+    expect(rectsOverlap(result.chat.rect, reservation)).toBe(false);
+  });
+
+  it("moves a four-camera group away from a right-side rail", () => {
+    const definition = {
+      ...getDefaultOverlayLayoutDefinition(),
+      video: { anchor: { x: 11, y: 6 }, leaderSide: "right" as const, sizeStep: 1 as const },
+    };
+    const rail = { height: 800, width: 300, x: 900, y: 0 };
+    const result = resolveOverlayLayout(definition, {
+      cameraCount: 4,
+      reservedRects: [rail],
+      viewport: reservedCameraViewport,
+    });
+
+    expect(result.video.effectiveSizeStep).toBe(1);
+    expect(result.video.bounds).toMatchObject({ x: 525, y: 607 });
+    expect(result.video.slots.every((slot) => !rectsOverlap(slot, rail))).toBe(true);
+    expect(rectsOverlap(result.video.bounds, rail)).toBe(false);
+  });
+
+  it("selects the nearest reserved-safe camera anchor by distance, y, then x", () => {
+    const definition = {
+      ...getDefaultOverlayLayoutDefinition(),
+      video: { anchor: { x: 5, y: 3 }, leaderSide: "left" as const, sizeStep: 0 as const },
+    };
+    const result = resolveOverlayLayout(definition, {
+      cameraCount: 1,
+      reservedRects: [{ height: 75, width: 75, x: 513, y: 663 }],
+      viewport: selectionViewport,
+    });
+
+    expect(result.video.bounds).toMatchObject({ x: 512.5, y: 462.5 });
+  });
+
+  it("keeps the requested camera size when another same-size anchor avoids reservations", () => {
+    const definition = {
+      ...getDefaultOverlayLayoutDefinition(),
+      video: { anchor: { x: 11, y: 0 }, leaderSide: "right" as const, sizeStep: 3 as const },
+    };
+    const reservation = { height: 220, width: 250, x: 950, y: 0 };
+    const result = resolveOverlayLayout(definition, {
+      cameraCount: 1,
+      reservedRects: [reservation],
+      viewport: reservedCameraViewport,
+    });
+
+    expect(result.video.effectiveSizeStep).toBe(3);
+    expect(rectsOverlap(result.video.bounds, reservation)).toBe(false);
+  });
+
+  it("tries every same-size camera anchor before compacting the camera group", () => {
+    const definition = {
+      video: { anchor: { x: 5, y: 3 }, leaderSide: "left" as const, sizeStep: 1 as const },
+      chat: {
+        position: { x: 0, y: 4 },
+        width: 5,
+        textScale: "compact" as const,
+        maxMessages: 3 as const,
+      },
+    };
+    const reservation = { height: 135, width: 400, x: 0, y: 0 };
+
+    const result = resolveOverlayLayout(definition, {
+      cameraCount: 4,
+      reservedRects: [reservation],
+      viewport: {
+        height: 360,
+        safeInsets: { bottom: 0, left: 0, right: 0, top: 0 },
+        width: 640,
+      },
+    });
+
+    expect(result.video.effectiveSizeStep).toBe(1);
+    expect(result.video.bounds).toMatchObject({ x: 309.66666666666663, y: 165.5 });
+    expect(rectsOverlap(result.video.bounds, reservation)).toBe(false);
+    expect(rectsOverlap(result.chat.rect, result.video.bounds)).toBe(false);
+  });
+
+  it("does not mutate saved camera intent or context while resolving reservations", () => {
+    const definition = {
+      ...getDefaultOverlayLayoutDefinition(),
+      video: { anchor: { x: 11, y: 0 }, leaderSide: "right" as const, sizeStep: 3 as const },
+    };
+    const context = {
+      cameraCount: 1 as const,
+      reservedRects: [{ height: 220, width: 250, x: 950, y: 0 }],
+      viewport: reservedCameraViewport,
+    };
+    const definitionSnapshot = structuredClone(definition);
+    const contextSnapshot = structuredClone(context);
+    const result = resolveOverlayLayout(definition, context);
+
+    expect(definition).toEqual(definitionSnapshot);
+    expect(context).toEqual(contextSnapshot);
+    expect(result.video.leaderSide).toBe(definition.video.leaderSide);
+    expect(result.video.effectiveSizeStep).toBe(definition.video.sizeStep);
+  });
+
+  it("keeps zero-camera output unchanged when reservations are present", () => {
+    const result = resolveOverlayLayout(getDefaultOverlayLayoutDefinition(), {
+      cameraCount: 0,
+      reservedRects: [{ height: 800, width: 300, x: 900, y: 0 }],
+      viewport: reservedCameraViewport,
+    });
+
+    expect(result.video).toMatchObject({
+      bounds: { height: 0, width: 0, x: 0, y: 0 },
+      slots: [],
+    });
+  });
+
   it("uses temporary compact fallback without mutating preferences", () => {
     const definition = getDefaultOverlayLayoutDefinition();
     const snapshot = structuredClone(definition);
@@ -168,6 +295,35 @@ describe("overlay layout resolver", () => {
     expect(result.chat.effectiveMaxMessages).toBeLessThanOrEqual(definition.chat.maxMessages);
     expect(result.video.effectiveSizeStep).toBeLessThanOrEqual(definition.video.sizeStep);
     expect(rectsOverlap(result.chat.rect, result.video.bounds)).toBe(false);
+  });
+
+  it("reduces camera size when reservations leave no chat space at the requested size", () => {
+    const definition = getDefaultOverlayLayoutDefinition();
+    const context = {
+      cameraCount: 4 as const,
+      reservedRects: [
+        { height: 140, width: 640, x: 0, y: 220 },
+        { height: 360, width: 80, x: 560, y: 0 },
+      ],
+      viewport: {
+        height: 360,
+        safeInsets: { bottom: 8, left: 8, right: 8, top: 8 },
+        width: 640,
+      },
+    };
+    const definitionSnapshot = structuredClone(definition);
+    const contextSnapshot = structuredClone(context);
+
+    const result = resolveOverlayLayout(definition, context);
+
+    expect(result.video.effectiveSizeStep).toBe(0);
+    expect(rectsOverlap(result.chat.rect, result.video.bounds)).toBe(false);
+    for (const reservation of context.reservedRects) {
+      expect(rectsOverlap(result.video.bounds, reservation)).toBe(false);
+      expect(rectsOverlap(result.chat.rect, reservation)).toBe(false);
+    }
+    expect(definition).toEqual(definitionSnapshot);
+    expect(context).toEqual(contextSnapshot);
   });
 
   it("compacts chat before reducing the stored camera size", () => {
@@ -299,6 +455,12 @@ describe("overlay layout resolver", () => {
 
 const selectionViewport = {
   height: 1600,
+  safeInsets: { bottom: 0, left: 0, right: 0, top: 0 },
+  width: 1200,
+};
+
+const reservedCameraViewport = {
+  height: 800,
   safeInsets: { bottom: 0, left: 0, right: 0, top: 0 },
   width: 1200,
 };
