@@ -1,5 +1,6 @@
 export const OVERLAY_LAYOUT_GRID_COLUMNS = 12;
 export const OVERLAY_LAYOUT_GRID_ROWS = 8;
+export const OVERLAY_LAYOUT_STORAGE_KEY_V2 = "local:overlayLayoutPreferencesV2";
 export const OVERLAY_LAYOUT_STORAGE_VERSION = 2 as const;
 
 export type OverlayLayoutLeaderSide = "left" | "right";

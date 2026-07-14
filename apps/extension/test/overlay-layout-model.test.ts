@@ -3,10 +3,15 @@ import {
   getDefaultOverlayLayoutDefinition,
   getDefaultOverlayLayoutPreferencesV2,
   normalizeOverlayLayoutDefinition,
+  OVERLAY_LAYOUT_STORAGE_KEY_V2,
   parseOverlayLayoutPreferencesV2,
 } from "../src/overlay-layout-model";
 
 describe("overlay layout model v2", () => {
+  it("uses the V2-only local storage key", () => {
+    expect(OVERLAY_LAYOUT_STORAGE_KEY_V2).toBe("local:overlayLayoutPreferencesV2");
+  });
+
   it("defaults to the clean four-seat definition", () => {
     const preferences = getDefaultOverlayLayoutPreferencesV2();
     const definition = getDefaultOverlayLayoutDefinition();
