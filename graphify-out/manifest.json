@@ -3365,8 +3365,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-engine.ts": {
-    "mtime": 1784033692.6044698,
-    "ast_hash": "1c07ad62c5042b800ba1782bc1af81d2",
+    "mtime": 1784035221.8428304,
+    "ast_hash": "146665426359e1d1575b9cf4b0f2f0be",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-model.ts": {
@@ -3375,8 +3375,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-engine.test.ts": {
-    "mtime": 1784033802.2914007,
-    "ast_hash": "d757644d6bb900f05d7cf1974ee62de4",
+    "mtime": 1784035206.093332,
+    "ast_hash": "5aaee0e85fb36de85dd99545c0ba65a3",
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-model.test.ts": {
@@ -3385,13 +3385,13 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-14-overlay-layout-engine-v2-core.md": {
-    "mtime": 1784031676.0758014,
-    "ast_hash": "fbc49ea160221280ce2b6c10a6286e61",
+    "mtime": 1784035405.5650742,
+    "ast_hash": "fbbf9453d815adf47a42290d1f8f985c",
     "semantic_hash": ""
   },
   "docs/superpowers/specs/2026-07-14-overlay-layout-engine-v2-design.md": {
-    "mtime": 1784031623.956006,
-    "ast_hash": "5f54b8545653a1ee68dfb35aa4546f6a",
+    "mtime": 1784035250.8140798,
+    "ast_hash": "091ca06cfbc95135dfaa8483774c9ac5",
     "semantic_hash": ""
   }
 }
