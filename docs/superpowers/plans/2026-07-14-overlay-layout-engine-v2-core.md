@@ -35,7 +35,7 @@
 - Consumes: unknown version 2 storage input.
 - Preserves: existing `overlay-layout-preferences.ts` exports so the current UI continues compiling unchanged.
 
-- [ ] **Step 1: Write failing model and parsing tests**
+- [x] **Step 1: Write failing model and parsing tests**
 
 Create tests that lock the public behavior:
 
@@ -94,7 +94,7 @@ describe("overlay layout model v2", () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test and verify the missing-module failure**
+- [x] **Step 2: Run the focused test and verify the missing-module failure**
 
 Run:
 
@@ -104,7 +104,7 @@ pnpm --filter @anidachi/extension exec vitest run test/overlay-layout-model.test
 
 Expected: FAIL because `../src/overlay-layout-model` does not exist.
 
-- [ ] **Step 3: Implement the version 2 model**
+- [x] **Step 3: Implement the version 2 model**
 
 Create these exact public types and constants:
 
@@ -157,7 +157,7 @@ Implement `parseOverlayLayoutPreferencesV2(value)` so it:
 3. returns the clean default for version 1, missing, or unrecognized input;
 4. never reads version 1 rectangles or the old camera-size key.
 
-- [ ] **Step 4: Run model tests and extension type checking**
+- [x] **Step 4: Run model tests and extension type checking**
 
 Run:
 
@@ -168,7 +168,7 @@ pnpm --filter @anidachi/extension check
 
 Expected: model tests PASS and extension TypeScript check exits `0`.
 
-- [ ] **Step 5: Commit the model**
+- [x] **Step 5: Commit the model**
 
 ```bash
 git add apps/extension/src/overlay-layout-model.ts apps/extension/test/overlay-layout-model.test.ts
@@ -190,7 +190,7 @@ git commit -m "feat(extension): add overlay layout model v2"
 - Produces: `PixelRect`, `OverlayLayoutSafeInsets`, `ResolvedVideoLayout`, and `resolveVideoLayout()`.
 - Later task dependency: Task 3 composes `resolveVideoLayout()` inside `resolveOverlayLayout()`.
 
-- [ ] **Step 1: Write failing camera geometry tests**
+- [x] **Step 1: Write failing camera geometry tests**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -244,7 +244,7 @@ describe("overlay layout camera geometry", () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and verify the missing-export failure**
+- [x] **Step 2: Run the test and verify the missing-export failure**
 
 ```bash
 pnpm --filter @anidachi/extension exec vitest run test/overlay-layout-engine.test.ts
@@ -252,7 +252,7 @@ pnpm --filter @anidachi/extension exec vitest run test/overlay-layout-engine.tes
 
 Expected: FAIL because `resolveVideoLayout` is not implemented.
 
-- [ ] **Step 3: Implement camera slot resolution**
+- [x] **Step 3: Implement camera slot resolution**
 
 Create these public interfaces:
 
@@ -286,7 +286,7 @@ Implement `resolveVideoLayout(video, viewport, cameraCount, maximumSizeStep?)` a
 
 The optional `maximumSizeStep` supports Task 3 compact fallback without changing the stored size step.
 
-- [ ] **Step 4: Run camera tests and extension checks**
+- [x] **Step 4: Run camera tests and extension checks**
 
 ```bash
 pnpm --filter @anidachi/extension exec vitest run test/overlay-layout-engine.test.ts
@@ -295,7 +295,7 @@ pnpm --filter @anidachi/extension check
 
 Expected: camera tests PASS and TypeScript check exits `0`.
 
-- [ ] **Step 5: Commit camera geometry**
+- [x] **Step 5: Commit camera geometry**
 
 ```bash
 git add apps/extension/src/overlay-layout-engine.ts apps/extension/test/overlay-layout-engine.test.ts
@@ -315,7 +315,7 @@ git commit -m "feat(extension): resolve adaptive camera slots"
 - Produces: `ResolvedChatLayout`, `ResolvedOverlayLayout`, and `resolveOverlayLayout()`.
 - Guarantees: finite output, deterministic nearest placement, no input mutation, and stored intent unchanged during compact fallback.
 
-- [ ] **Step 1: Add failing chat and collision tests**
+- [x] **Step 1: Add failing chat and collision tests**
 
 Append tests covering exact behavior:
 
@@ -382,7 +382,7 @@ it("returns finite geometry for an invalid viewport", () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test and verify missing resolver exports**
+- [x] **Step 2: Run the focused test and verify missing resolver exports**
 
 ```bash
 pnpm --filter @anidachi/extension exec vitest run test/overlay-layout-engine.test.ts
@@ -390,7 +390,7 @@ pnpm --filter @anidachi/extension exec vitest run test/overlay-layout-engine.tes
 
 Expected: FAIL because `resolveOverlayLayout` and `rectsOverlap` do not exist.
 
-- [ ] **Step 3: Implement chat metrics and collision search**
+- [x] **Step 3: Implement chat metrics and collision search**
 
 Use fixed readable text metrics:
 
@@ -442,7 +442,7 @@ Implement `resolveOverlayLayout(definition, context)` with this deterministic or
 
 Export `rectsOverlap(a, b)` for direct geometry tests. Treat zero-area rectangles as non-blocking.
 
-- [ ] **Step 4: Run focused and complete extension verification**
+- [x] **Step 4: Run focused and complete extension verification**
 
 ```bash
 pnpm --filter @anidachi/extension exec vitest run test/overlay-layout-engine.test.ts
@@ -452,7 +452,7 @@ pnpm --filter @anidachi/extension check
 
 Expected: all engine tests PASS, all extension tests PASS, and type checking exits `0`.
 
-- [ ] **Step 5: Commit the completed core resolver**
+- [x] **Step 5: Commit the completed core resolver**
 
 ```bash
 git add apps/extension/src/overlay-layout-engine.ts apps/extension/test/overlay-layout-engine.test.ts
@@ -472,7 +472,7 @@ git commit -m "feat(extension): add overlay layout resolver"
 - Verifies: Tasks 1-3 form a clean, tested, extension-local foundation.
 - Produces: a reviewable core checkpoint before any React/runtime integration begins.
 
-- [ ] **Step 1: Run repository quality routing**
+- [x] **Step 1: Run repository quality routing**
 
 ```bash
 pnpm dev:check
@@ -481,7 +481,7 @@ pnpm dev:check
 Expected: extension and docs profiles are recommended, with no unexpected API,
 protocol, database, or deployment profile.
 
-- [ ] **Step 2: Run final core checks**
+- [x] **Step 2: Run final core checks**
 
 ```bash
 pnpm --filter @anidachi/extension check
@@ -492,7 +492,7 @@ git diff --check origin/staging...HEAD
 Expected: all commands exit `0` and the diff contains only the approved layout
 core, tests, specification, plan, and approved graph artifacts.
 
-- [ ] **Step 3: Refresh Graphify after meaningful architecture changes**
+- [x] **Step 3: Refresh Graphify after meaningful architecture changes**
 
 ```bash
 pnpm graph:update
@@ -502,7 +502,7 @@ Inspect `git status`. Keep only `graphify-out/graph.json`,
 `graphify-out/GRAPH_REPORT.md`, and `graphify-out/manifest.json` if Graphify
 changed them. Do not add cost files, HTML, cache, wiki, or scratch exports.
 
-- [ ] **Step 4: Commit approved graph artifacts separately**
+- [x] **Step 4: Commit approved graph artifacts separately**
 
 Run only when approved graph files changed:
 
@@ -511,7 +511,7 @@ git add graphify-out/graph.json graphify-out/GRAPH_REPORT.md graphify-out/manife
 git commit -m "chore(graph): refresh overlay layout architecture"
 ```
 
-- [ ] **Step 5: Record the core checkpoint**
+- [x] **Step 5: Record the core checkpoint**
 
 Update this plan's Task 1-4 checkboxes and add a short execution note containing
 the final test counts, commit SHAs, and any deliberate deviations. Commit only
@@ -524,3 +524,27 @@ git commit -m "docs(extension): record layout core checkpoint"
 
 The next plan starts runtime/editor integration only after this checkpoint is
 reviewed. Advanced named presets remain a later product increment.
+
+## Execution Note
+
+Completed on `codex/overlay-layout-engine-v2` from `origin/staging` at
+`378f823`.
+
+- Clean V2 model and normalization: `eadeda0`; focused model tests passed 5/5.
+- Clean-start scope correction: `a528af9`; no migration, adapter, preset, or
+  custom-state surface remains in the V2 core.
+- Camera slot geometry: `4a7bd62`; safe-area sizing correction: `25d5396`.
+- Chat geometry, collision search, and combined resolver: `be28fcf`; focused
+  engine tests passed 12/12.
+- Final extension verification passed 33 files and 359 tests; extension type
+  checking and `git diff --check origin/staging...HEAD` passed.
+- `pnpm dev:check` selected only the extension and docs profiles.
+- Graphify refresh: `80f612a`. `.graphifyignore` now excludes the local
+  `.superpowers/` execution ledger so scratch reports cannot enter committed
+  graph artifacts.
+
+Deliberate degradation remains limited to physically impossible geometry: when
+the safe area is fully blocked even at the minimum supported chat and camera
+sizes, the resolver returns one finite, clamped, deterministic result that may
+overlap. Stored layout intent is never changed. Presets and runtime/editor
+integration remain outside this checkpoint.
