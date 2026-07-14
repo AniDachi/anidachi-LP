@@ -4,7 +4,7 @@
 
 **Goal:** Build the versioned, extension-local layout model and deterministic geometry engine that later editor and runtime work can share.
 
-**Architecture:** Add a version 2 model beside the existing version 1 compatibility module, then add a DOM-free resolver in a separate file. The first core increment stops before React, storage wiring, and visual changes; every output is exercised through focused Vitest coverage so runtime integration can consume a stable API.
+**Architecture:** Add a clean version 2 model beside the existing version 1 runtime, then add a DOM-free resolver in a separate file. Version 2 uses its own storage payload and never imports version 1 geometry. The first core increment stops before React, storage wiring, and visual changes; every output is exercised through focused Vitest coverage so runtime integration can consume a stable API.
 
 **Tech Stack:** TypeScript 6, Vitest 4, WXT 0.20, existing pure camera-size helpers.
 
@@ -14,14 +14,15 @@
 - Model exactly four media slots: one leader plus three followers.
 - Keep layout persistence device-local; do not touch API, protocol, rooms, P2P, or server code.
 - Add no drag-and-drop, geometry, or constraint-solving dependency.
-- Treat built-in presets as immutable and retain one durable custom definition.
+- Keep exactly one clean default and one stored layout; preset logic is out of scope.
 - Runtime adaptation must never mutate the stored definition.
-- Preserve the current version 1 runtime until the next integration plan.
+- Do not import, translate, wrap, dual-read, or dual-write version 1 layout data.
+- Leave the current version 1 runtime untouched only until the new runtime replaces and deletes it.
 - Use ASCII in source and tests.
 
 ---
 
-### Task 1: Version 2 Layout Model And Migration
+### Task 1: Version 2 Layout Model And Defaults
 
 **Files:**
 - Create: `apps/extension/src/overlay-layout-model.ts`
@@ -30,59 +31,45 @@
 - Reference: `apps/extension/src/ghost-cam-size.ts`
 
 **Interfaces:**
-- Produces: `OverlayLayoutDefinition`, `OverlayLayoutPreferencesV2`, `OVERLAY_LAYOUT_PRESETS_V2`, `getDefaultOverlayLayoutPreferencesV2()`, `getActiveOverlayLayoutDefinition()`, `normalizeOverlayLayoutDefinition()`, and `parseOverlayLayoutPreferencesV2()`.
-- Consumes: legacy version 1 objects as `unknown` and optional `legacyCameraSizeStep: unknown`.
+- Produces: `OverlayLayoutDefinition`, `OverlayLayoutPreferencesV2`, `getDefaultOverlayLayoutDefinition()`, `getDefaultOverlayLayoutPreferencesV2()`, `normalizeOverlayLayoutDefinition()`, and `parseOverlayLayoutPreferencesV2()`.
+- Consumes: unknown version 2 storage input.
 - Preserves: existing `overlay-layout-preferences.ts` exports so the current UI continues compiling unchanged.
 
-- [ ] **Step 1: Write failing model and migration tests**
+- [ ] **Step 1: Write failing model and parsing tests**
 
 Create tests that lock the public behavior:
 
 ```ts
 import { describe, expect, it } from "vitest";
 import {
-  getActiveOverlayLayoutDefinition,
+  getDefaultOverlayLayoutDefinition,
   getDefaultOverlayLayoutPreferencesV2,
   normalizeOverlayLayoutDefinition,
   parseOverlayLayoutPreferencesV2,
 } from "../src/overlay-layout-model";
 
 describe("overlay layout model v2", () => {
-  it("defaults to a four-seat classic definition", () => {
+  it("defaults to the clean four-seat definition", () => {
     const preferences = getDefaultOverlayLayoutPreferencesV2();
-    const definition = getActiveOverlayLayoutDefinition(preferences);
+    const definition = getDefaultOverlayLayoutDefinition();
 
-    expect(preferences).toMatchObject({ activePresetId: "classic", version: 2 });
+    expect(preferences).toEqual({ layout: definition, version: 2 });
     expect(definition.video).toMatchObject({ leaderSide: "right", sizeStep: 1 });
     expect(definition.chat).toMatchObject({ maxMessages: 5, textScale: "normal" });
   });
 
-  it("migrates a custom version 1 rectangle and legacy camera size", () => {
-    const preferences = parseOverlayLayoutPreferencesV2(
-      {
-        version: 1,
-        presetId: "custom",
-        objects: {
-          video: { x: 1, y: 2, w: 4, h: 2 },
-          chat: { x: 7, y: 3, w: 5, h: 2 },
-        },
-        chat: { maxMessages: 8 },
+  it("rejects version 1 geometry and starts from clean defaults", () => {
+    const preferences = parseOverlayLayoutPreferencesV2({
+      version: 1,
+      presetId: "custom",
+      objects: {
+        video: { x: 1, y: 2, w: 4, h: 2 },
+        chat: { x: 7, y: 3, w: 5, h: 2 },
       },
-      { legacyCameraSizeStep: 3 },
-    );
+      chat: { maxMessages: 8 },
+    });
 
-    expect(preferences.activePresetId).toBe("custom");
-    expect(preferences.custom.video).toEqual({
-      anchor: { x: 1, y: 3 },
-      leaderSide: "left",
-      sizeStep: 3,
-    });
-    expect(preferences.custom.chat).toMatchObject({
-      maxMessages: 8,
-      position: { x: 7, y: 3 },
-      textScale: "normal",
-      width: 5,
-    });
+    expect(preferences).toEqual(getDefaultOverlayLayoutPreferencesV2());
   });
 
   it("normalizes malformed fields without mutating the input", () => {
@@ -126,8 +113,6 @@ export const OVERLAY_LAYOUT_GRID_COLUMNS = 12;
 export const OVERLAY_LAYOUT_GRID_ROWS = 8;
 export const OVERLAY_LAYOUT_STORAGE_VERSION = 2 as const;
 
-export type OverlayLayoutPresetId = "classic" | "cinema" | "social" | "minimal" | "custom";
-export type OverlayLayoutBuiltinPresetId = Exclude<OverlayLayoutPresetId, "custom">;
 export type OverlayLayoutLeaderSide = "left" | "right";
 export type OverlayLayoutTextScale = "compact" | "normal" | "large";
 export type OverlayLayoutMessageCount = 3 | 5 | 8;
@@ -149,12 +134,11 @@ export interface OverlayLayoutDefinition {
 }
 export interface OverlayLayoutPreferencesV2 {
   version: typeof OVERLAY_LAYOUT_STORAGE_VERSION;
-  activePresetId: OverlayLayoutPresetId;
-  custom: OverlayLayoutDefinition;
+  layout: OverlayLayoutDefinition;
 }
 ```
 
-Define immutable Classic, Cinema, Social, and Minimal definitions using the current preset positions. Use `sizeStep: 1` and `textScale: "normal"` for all migrated built-ins. Return defensive clones from every public getter.
+Define one immutable default with video `{ anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 1 }` and chat `{ position: { x: 0, y: 4 }, width: 5, textScale: "normal", maxMessages: 5 }`. Return defensive clones from every public getter.
 
 Implement normalization with these exact ranges and fallbacks:
 
@@ -166,15 +150,12 @@ Implement normalization with these exact ranges and fallbacks:
 - text scale: exact supported value, fallback `normal`;
 - message count: nearest of `3`, `5`, and `8`.
 
-Implement `parseOverlayLayoutPreferencesV2(value, options)` so it:
+Implement `parseOverlayLayoutPreferencesV2(value)` so it:
 
 1. normalizes version 2 data directly;
-2. detects legacy objects containing `objects.video` and `objects.chat`;
-3. maps a left-half legacy video to the rectangle's left edge and a right-half video to its right edge;
-4. uses the rectangle's rounded vertical center for the leader anchor;
-5. reads `options.legacyCameraSizeStep` only during legacy migration;
-6. preserves a supported legacy built-in `presetId` while still initializing `custom` from the migrated definition;
-7. returns the default version 2 preferences for unrecognized input.
+2. normalizes the version 2 `layout` field-by-field;
+3. returns the clean default for version 1, missing, or unrecognized input;
+4. never reads version 1 rectangles or the old camera-size key.
 
 - [ ] **Step 4: Run model tests and extension type checking**
 
@@ -339,11 +320,11 @@ git commit -m "feat(extension): resolve adaptive camera slots"
 Append tests covering exact behavior:
 
 ```ts
-import { getActiveOverlayLayoutDefinition, getDefaultOverlayLayoutPreferencesV2 } from "../src/overlay-layout-model";
+import { getDefaultOverlayLayoutDefinition } from "../src/overlay-layout-model";
 import { rectsOverlap, resolveOverlayLayout } from "../src/overlay-layout-engine";
 
 it("derives larger chat geometry from text scale and message count", () => {
-  const definition = getActiveOverlayLayoutDefinition(getDefaultOverlayLayoutPreferencesV2());
+  const definition = getDefaultOverlayLayoutDefinition();
   const compact = resolveOverlayLayout(
     { ...definition, chat: { ...definition.chat, maxMessages: 3, textScale: "compact" } },
     { cameraCount: 0, reservedRects: [], viewport },
@@ -357,7 +338,7 @@ it("derives larger chat geometry from text scale and message count", () => {
 });
 
 it("moves chat to the nearest free grid position without moving the camera anchor", () => {
-  const definition = getActiveOverlayLayoutDefinition(getDefaultOverlayLayoutPreferencesV2());
+  const definition = getDefaultOverlayLayoutDefinition();
   const result = resolveOverlayLayout(definition, {
     cameraCount: 4,
     reservedRects: [{ x: 0, y: 650, width: 1280, height: 70 }],
@@ -368,7 +349,7 @@ it("moves chat to the nearest free grid position without moving the camera ancho
 });
 
 it("uses temporary compact fallback without mutating preferences", () => {
-  const definition = getActiveOverlayLayoutDefinition(getDefaultOverlayLayoutPreferencesV2());
+  const definition = getDefaultOverlayLayoutDefinition();
   const snapshot = structuredClone(definition);
   const result = resolveOverlayLayout(definition, {
     cameraCount: 4,
@@ -386,7 +367,7 @@ it("uses temporary compact fallback without mutating preferences", () => {
 });
 
 it("returns finite geometry for an invalid viewport", () => {
-  const definition = getActiveOverlayLayoutDefinition(getDefaultOverlayLayoutPreferencesV2());
+  const definition = getDefaultOverlayLayoutDefinition();
   const result = resolveOverlayLayout(definition, {
     cameraCount: 4,
     reservedRects: [],
@@ -498,7 +479,7 @@ pnpm dev:check
 ```
 
 Expected: extension and docs profiles are recommended, with no unexpected API,
-protocol, migration, or deployment profile.
+protocol, database, or deployment profile.
 
 - [ ] **Step 2: Run final core checks**
 

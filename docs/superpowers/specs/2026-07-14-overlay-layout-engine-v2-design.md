@@ -27,8 +27,7 @@ reasonably for chat, but it does not represent the live camera stack:
   footprint;
 - the editor writes every drag and slider change directly to persistent
   storage;
-- the `Custom` state is a label, not a durable custom preset that survives
-  switching to a built-in preset;
+- the current preset state mixes layout selection with editing behavior;
 - moving a preview object centers it under the pointer instead of preserving
   the grab offset;
 - inactive chat and cameras do not have a reliable shared representation for
@@ -50,12 +49,13 @@ unexpectedly on the actual player.
 - Persist layout intent rather than viewport-specific pixels.
 - Adapt safely to player dimensions and player UI without modifying saved
   preferences.
-- Preserve existing stored preferences through a versioned migration.
+- Start from a clean version 2 default without importing version 1 geometry.
 - Keep the implementation extension-local and dependency-light.
 
 ## Non-Goals
 
-- Multiple named user presets.
+- Built-in or named user presets. Presets are a later layer over the stable
+  layout definition.
 - Vertical, curved, or freeform camera arrangements.
 - Moving reactions, the room rail, the account bubble, or the settings panel.
 - Styling polish, new animations, or final editor visual design.
@@ -116,34 +116,24 @@ remain outside the first implementation scope.
 ### Draft And Apply
 
 Opening the Layout editor creates a draft from the applied preferences.
-Dragging, resizing, selecting a preset, and changing chat settings update only
-the draft and editor preview.
+Dragging, resizing, and changing chat settings update only the draft and editor
+preview.
 
 - `Apply` normalizes, persists, and activates the draft.
 - `Revert` restores the draft to the currently applied layout.
 - closing the panel without applying discards the draft.
-- modifying a built-in preset changes the draft selection to `custom`.
 
-Selecting a built-in preset replaces the draft with that preset's immutable
-definition. A user who wants the default Classic layout selects `Classic`;
-`Revert` is reserved for undoing the current unapplied editing session.
-
-The first release supports the built-in presets plus one durable custom layout.
-Switching to a built-in preset must not destroy the last applied custom layout.
+The first release stores one applied layout. Preset selection, named custom
+layouts, and preset management are intentionally deferred until the layout
+engine and editor behavior are stable.
 
 ## Stored Model
 
-The storage key remains `local:overlayLayoutPreferences`. Its payload advances
-to version 2.
+Version 2 uses a new storage key: `local:overlayLayoutPreferencesV2`. It does
+not read or rewrite `local:overlayLayoutPreferences` or
+`local:ghostCamSizeStep`.
 
 ```ts
-type OverlayLayoutPresetId =
-  | "classic"
-  | "cinema"
-  | "social"
-  | "minimal"
-  | "custom";
-
 type OverlayLayoutLeaderSide = "left" | "right";
 type OverlayLayoutTextScale = "compact" | "normal" | "large";
 type OverlayLayoutMessageCount = 3 | 5 | 8;
@@ -170,14 +160,13 @@ interface OverlayLayoutDefinition {
 
 interface OverlayLayoutPreferencesV2 {
   version: 2;
-  activePresetId: OverlayLayoutPresetId;
-  custom: OverlayLayoutDefinition;
+  layout: OverlayLayoutDefinition;
 }
 ```
 
-Built-in definitions remain immutable code constants. The active definition is
-resolved from `activePresetId`; `custom` stores the last applied custom
-definition even while a built-in preset is active.
+The model exposes one immutable default definition and returns defensive clones
+to callers. It contains no preset registry, legacy parser, compatibility
+adapter, or dual-read state.
 
 The grid remains 12 columns by 8 rows. Grid points describe layout intent. They
 are normalized and clamped before resolution and persistence. `video.anchor`
@@ -185,24 +174,15 @@ identifies the center cell of the leader slot. `chat.position` identifies the
 top-left cell of the derived chat block. Stored coordinates and widths are
 integers.
 
-## Migration
+## Clean Version 2 Start
 
-Version 1 data is migrated on read:
+Version 2 accepts only a valid or partially valid version 2 payload. Missing,
+version 1, or unrecognized values resolve to the clean default layout. Invalid
+version 2 fields fall back field-by-field so one damaged field does not discard
+the rest of a valid version 2 layout.
 
-1. Normalize the existing video and chat rectangles.
-2. Convert the video rectangle position into a leader anchor.
-3. Infer `leaderSide` from the anchor's horizontal half.
-4. Read the existing `local:ghostCamSizeStep` value as the camera size fallback.
-5. Convert chat width directly, map chat position to the new point, retain the
-   supported message count, and default text scale to `normal`.
-6. Store the migrated definition as `custom` when the version 1 data was
-   custom; otherwise preserve the valid built-in selection and initialize
-   `custom` with a normalized copy of the migrated active definition.
-
-Invalid or partial data falls back field-by-field rather than discarding an
-otherwise valid user layout. Normalization is idempotent. The legacy camera
-size key can remain untouched for rollback compatibility, but new layout
-writes use the version 2 payload as the source of truth.
+The old layout and camera-size keys remain untouched for rollback safety, but
+the new model never imports from them. Normalization is idempotent.
 
 ## Layout Resolver
 
@@ -295,10 +275,12 @@ Pointer-session state remains transient and is never persisted.
 
 Keep the first implementation focused:
 
-- a new `overlay-layout-model.ts` owns versioned stored types, built-in presets,
-  normalization, migration, and draft-to-persisted conversion. The existing
-  `overlay-layout-preferences.ts` remains a temporary version 1 compatibility
-  surface until runtime integration replaces it.
+- a new `overlay-layout-model.ts` owns the versioned stored type, clean default,
+  normalization, parsing, and draft-to-persisted conversion. It does not import
+  from the existing layout module. The old `overlay-layout-preferences.ts`
+  remains in use only by the still-running old editor and is deleted when the
+  new runtime integration replaces that editor; no adapter is added between
+  them.
 - a new `overlay-layout-engine.ts` owns pure geometry, slot generation,
   collision handling, and compact fallback.
 - `overlay-app.tsx` owns React state, pointer sessions, WXT storage calls, and
@@ -313,7 +295,7 @@ sufficient when backed by a deterministic engine.
 ## Failure Handling
 
 - Corrupt storage is normalized to safe defaults.
-- Migration failures fall back to the closest valid built-in layout.
+- Missing, version 1, or corrupt storage falls back to the clean default.
 - Persistence errors keep the applied in-memory layout and expose a non-blocking
   editor error; the UI must not claim the draft was saved.
 - Pointer cancellation releases capture and restores the last stable draft
@@ -325,9 +307,8 @@ sufficient when backed by a deterministic engine.
 
 ### Unit Tests
 
-- version 1 to version 2 migration, including legacy camera size;
+- rejection of version 1 and unrecognized storage in favor of clean defaults;
 - normalization and idempotence for malformed version 2 data;
-- built-in and custom selection preservation;
 - one through four camera slot generation;
 - left and right leader ordering;
 - center-side transition rules;
@@ -361,8 +342,8 @@ pnpm validate:extension:staging
 Inspect the loaded staging artifact at compact, 720p, and 1080p player sizes,
 both embedded and fullscreen. Cover chat hidden/visible, zero/one/four camera
 previews, one/four real camera participants, both leader sides, native player
-controls visible/hidden, built-in preset switching, custom Apply, discard, and
-extension reload persistence.
+controls visible/hidden, Apply, Revert, discard, and extension reload
+persistence.
 
 P2P signaling is unchanged, but the final staging acceptance should include a
 two-client visual smoke to confirm that remote media rendering and participant
@@ -370,16 +351,20 @@ ordering remain intact.
 
 ## Delivery Stages
 
-1. **Model and engine:** version 2 schema, migration, presets, pure resolver,
+1. **Model and engine:** version 2 schema, clean default, pure resolver,
    and unit tests. Keep the current visual editor mostly unchanged.
 2. **Runtime parity:** make the live camera stack, live chat, and editor preview
    consume the shared resolver.
 3. **Interaction:** leader dragging, center-side transition, chat dragging,
    draft/Apply/Revert, keyboard behavior, and component tests.
 4. **Product controls:** chat text scale and message controls, camera size,
-   durable custom preset behavior, errors, and empty-state ghosts.
+   errors, and empty-state ghosts.
 5. **Polish and acceptance:** visual refinement, animation, responsive browser
    verification, staging artifact, and two-client smoke.
 
 Each stage should be committed and verified independently. Do not mix unrelated
 room, P2P, protocol, or settings-menu redesign into this work.
+
+Preset architecture is designed only after the first four stages are stable.
+It must compose over `OverlayLayoutDefinition` rather than adding preset logic
+to the geometry engine.
