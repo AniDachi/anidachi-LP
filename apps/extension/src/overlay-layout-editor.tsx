@@ -17,7 +17,7 @@ import {
 } from "./overlay-layout-engine";
 import {
 	cloneOverlayLayoutDefinition,
-	getOverlayLayoutDragOffset,
+	getOverlayLayoutDragOffsetFromOrigin,
 	getOverlayLayoutGridPointer,
 	moveOverlayLayoutObjectByDelta,
 	moveOverlayLayoutObjectFromPointer,
@@ -218,7 +218,13 @@ export function OverlayLayoutEditor({
 		);
 		pointerSessionRef.current = {
 			objectId,
-			offset: getOverlayLayoutDragOffset(draftRef.current, objectId, pointer),
+			offset: getOverlayLayoutDragOffsetFromOrigin(
+				pointer,
+				getResolvedObjectGridOrigin(
+					objectId,
+					resolvedLayout,
+				),
+			),
 			pointerId: event.pointerId,
 			snapshot: cloneOverlayLayoutDefinition(draftRef.current),
 		};
@@ -391,6 +397,7 @@ export function OverlayLayoutEditor({
 			draftRef.current = cloneOverlayLayoutDefinition(nextApplied);
 			setAppliedSnapshot(nextApplied);
 			setDraft(draftRef.current);
+			onPreviewChange(null);
 		} catch {
 			if (
 				mountedRef.current &&
@@ -780,4 +787,18 @@ function getArrowDelta(key: string): { x: number; y: number } | null {
 		default:
 			return null;
 	}
+}
+
+function getResolvedObjectGridOrigin(
+	objectId: OverlayLayoutObjectIdV2,
+	resolvedLayout: ReturnType<typeof resolveOverlayLayout>,
+): { x: number; y: number } {
+	if (objectId === "chat") {
+		return resolvedLayout.chat.position;
+	}
+
+	return {
+		x: resolvedLayout.video.anchor.x + 0.5,
+		y: resolvedLayout.video.anchor.y + 0.5,
+	};
 }

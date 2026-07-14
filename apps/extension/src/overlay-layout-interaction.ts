@@ -40,19 +40,13 @@ export function getOverlayLayoutGridPointer(
   };
 }
 
-export function getOverlayLayoutDragOffset(
-  definition: OverlayLayoutDefinition,
-  objectId: OverlayLayoutObjectIdV2,
+export function getOverlayLayoutDragOffsetFromOrigin(
   pointer: OverlayLayoutGridPointer,
+  origin: OverlayLayoutGridPointer,
 ): OverlayLayoutDragOffset {
-  const normalized = normalizeOverlayLayoutDefinition(definition);
-  const origin = objectId === "video"
-    ? { x: normalized.video.anchor.x + 0.5, y: normalized.video.anchor.y + 0.5 }
-    : normalized.chat.position;
-
   return {
-    x: finiteOrZero(pointer.x) - origin.x,
-    y: finiteOrZero(pointer.y) - origin.y,
+    x: finiteOrZero(pointer.x) - finiteOrZero(origin.x),
+    y: finiteOrZero(pointer.y) - finiteOrZero(origin.y),
   };
 }
 

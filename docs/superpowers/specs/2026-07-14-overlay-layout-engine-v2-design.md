@@ -126,6 +126,14 @@ UI as the running overlay. Storage and the applied snapshot remain unchanged.
 The visible `12x8` grid and pointer mapping are both constrained to that same
 runtime safe rectangle rather than the outer preview frame.
 
+While the draft preview is active, the live player renders four translucent
+camera placeholders and a representative chat placeholder even when no camera
+or chat content exists. This preview layer is pointer-transparent and may cross
+the settings panel so the whole layout remains visible. The panel remains
+interactive beneath it. A successful `Apply` clears the placeholder layer;
+real camera and chat surfaces then use the applied geometry below the panel's
+stacking layer.
+
 - `Apply` normalizes and persists the already-previewed draft, then promotes it
   to the applied snapshot.
 - A failed write keeps the dirty draft and its transient preview visible while
@@ -273,17 +281,22 @@ Reserved geometry includes, when visible:
 - fixed outer padding required to keep shadows and controls on screen.
 
 Opening the settings panel does not change the saved layout. The editor preview
-uses a synthetic 16:9 viewport and the same resolver with four preview cameras.
-The live overlay resolves again whenever player dimensions, fullscreen state,
-controls visibility, camera count, or applied preferences change.
+scales the measured player viewport and uses the same resolver with four
+preview cameras. The live overlay resolves again whenever player dimensions,
+fullscreen state, controls visibility, camera count, or applied preferences
+change.
 
 ## Interaction Contract
 
 The UI layer owns pointer and keyboard interaction but delegates all geometry
 to the layout model and resolver.
 
-- Pointer dragging preserves the initial grab offset.
+- Pointer dragging preserves the initial grab offset from the resolver's
+  actually displayed logical placement, including collision-adjusted and edge
+  placements, rather than from stale stored intent.
 - Positions snap to grid cells.
+- The final chat row means bottom-edge alignment so the editor can place chat
+  flush with the safe-area edge without storing viewport pixels.
 - Only the video leader acts as the camera-group drag handle.
 - Crossing the center hysteresis band updates `leaderSide` once; movement
   inside the band preserves the previous side.

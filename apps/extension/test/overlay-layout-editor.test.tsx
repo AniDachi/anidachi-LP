@@ -207,6 +207,7 @@ describe("OverlayLayoutEditor", () => {
 		});
 		expect(getButton(editor.container, "Apply").disabled).toBe(true);
 		expect(getButton(editor.container, "Revert").disabled).toBe(true);
+		expect(editor.onPreviewChange).toHaveBeenLastCalledWith(null);
 
 		await unmount(editor.root);
 	});
@@ -380,6 +381,67 @@ describe("OverlayLayoutEditor", () => {
 		await unmount(editor.root);
 	});
 
+	it("starts chat dragging from its resolved visible position", async () => {
+		const appliedLayout = getDefaultOverlayLayoutDefinition();
+		appliedLayout.chat.position = { x: 0, y: 0 };
+		const layoutContext: OverlayLayoutContext = {
+			cameraCount: 4,
+			reservedRects: [{ height: 160, width: 360, x: 0, y: 0 }],
+			viewport: {
+				height: 360,
+				safeInsets: { bottom: 0, left: 0, right: 0, top: 0 },
+				width: 640,
+			},
+		};
+		const resolved = resolveOverlayLayout(appliedLayout, {
+			...layoutContext,
+			cameraCount: 4,
+		});
+		const resolvedGridX = resolved.chat.position.x;
+		const resolvedGridY = resolved.chat.position.y;
+		expect({ x: resolvedGridX, y: resolvedGridY }).not.toEqual(
+			appliedLayout.chat.position,
+		);
+
+		const editor = await renderEditor({ appliedLayout, layoutContext });
+		const preview = getPreview(editor.container);
+		const chat = getChat(editor.container);
+		mockPreviewBounds(preview);
+		mockPointerCapture(chat);
+		const grabX = resolved.chat.rect.x + 8;
+		const grabY = resolved.chat.rect.y + 8;
+
+		await pointer(chat, "pointerdown", {
+			clientX: grabX,
+			clientY: grabY,
+			pointerId: 17,
+		});
+		await pointer(chat, "pointermove", {
+			clientX: grabX + 640 / 12,
+			clientY: grabY,
+			pointerId: 17,
+		});
+		await pointer(chat, "pointerup", {
+			clientX: grabX + 640 / 12,
+			clientY: grabY,
+			pointerId: 17,
+		});
+		await click(getButton(editor.container, "Apply"));
+
+		expect(editor.onApply).toHaveBeenCalledWith(
+			expect.objectContaining({
+				chat: expect.objectContaining({
+					position: {
+						x: Math.min(7, resolvedGridX + 1),
+						y: resolvedGridY,
+					},
+				}),
+			}),
+		);
+
+		await unmount(editor.root);
+	});
+
 	it("maps pointer movement through the runtime safe rectangle", async () => {
 		const safeContext: OverlayLayoutContext = {
 			cameraCount: 4,
@@ -422,7 +484,7 @@ describe("OverlayLayoutEditor", () => {
 
 		expect(editor.onApply).toHaveBeenCalledWith(
 			expect.objectContaining({
-				video: expect.objectContaining({ anchor: { x: 6, y: 3 } }),
+				video: expect.objectContaining({ anchor: { x: 6, y: 2 } }),
 			}),
 		);
 
@@ -698,6 +760,14 @@ function getLeader(container: HTMLElement): HTMLElement {
 		throw new Error("Video leader not found");
 	}
 	return leader;
+}
+
+function getChat(container: HTMLElement): HTMLElement {
+	const chat = container.querySelector('[data-layout-object="chat"]');
+	if (!(chat instanceof HTMLElement)) {
+		throw new Error("Chat preview not found");
+	}
+	return chat;
 }
 
 function mockPreviewBounds(preview: HTMLElement) {

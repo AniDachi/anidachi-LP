@@ -288,8 +288,11 @@ The extension currently supports:
   keeps the full four-seat camera geometry reserved while rendering only
   occupied camera slots,
   previews editor drafts against the same measured runtime context in both the
-  miniature and live overlay, and persists changes only after an explicit
-  successful `Apply`;
+  miniature and a pointer-transparent live ghost layer, starts drag from the
+  resolver's actually displayed logical placement, supports bottom-edge chat
+  alignment, clears ghosts after Apply, keeps real chat/cameras below the open
+  settings panel, and persists changes only after an explicit successful
+  `Apply`;
 - push-to-talk audio;
 - WebRTC P2P media with Cloudflare TURN fallback;
 - no active LiveKit/SFU media path: the legacy extension transport, Worker

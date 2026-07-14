@@ -8,6 +8,7 @@ import {
   OVERLAY_LAYOUT_GRID_ROWS,
   type OverlayLayoutCameraSizeStep,
   type OverlayLayoutDefinition,
+  type OverlayLayoutGridPoint,
   type OverlayLayoutLeaderSide,
   type OverlayLayoutMessageCount,
   normalizeOverlayLayoutDefinition,
@@ -44,6 +45,7 @@ export interface OverlayLayoutViewport {
 }
 
 export interface ResolvedVideoLayout {
+  anchor: OverlayLayoutGridPoint;
   bounds: PixelRect;
   effectiveSizePx: number;
   effectiveSizeStep: OverlayLayoutCameraSizeStep;
@@ -59,6 +61,7 @@ export interface OverlayLayoutContext {
 
 export interface ResolvedChatLayout {
   rect: PixelRect;
+  position: OverlayLayoutGridPoint;
   effectiveMaxMessages: OverlayLayoutMessageCount;
   fontSizePx: number;
   lineHeightPx: number;
@@ -88,9 +91,14 @@ export function resolveVideoLayout(
     containerHeightPx: safeRect.height,
     containerWidthPx: safeRect.width,
   });
+  const resolvedAnchor = {
+    x: clampInteger(video.anchor.x, 0, OVERLAY_LAYOUT_GRID_COLUMNS - 1),
+    y: clampInteger(video.anchor.y, 0, OVERLAY_LAYOUT_GRID_ROWS - 1),
+  };
 
   if (occupiedCount === 0) {
     return {
+      anchor: resolvedAnchor,
       bounds: { height: 0, width: 0, x: 0, y: 0 },
       effectiveSizePx,
       effectiveSizeStep,
@@ -102,11 +110,11 @@ export function resolveVideoLayout(
   const gapPx = getGhostCamGapPx(effectiveSizeStep);
   const leaderCenter = {
     x: safeRect.x +
-      ((clampInteger(video.anchor.x, 0, OVERLAY_LAYOUT_GRID_COLUMNS - 1) + 0.5) /
+      ((resolvedAnchor.x + 0.5) /
         OVERLAY_LAYOUT_GRID_COLUMNS) *
         safeRect.width,
     y: safeRect.y +
-      ((clampInteger(video.anchor.y, 0, OVERLAY_LAYOUT_GRID_ROWS - 1) + 0.5) /
+      ((resolvedAnchor.y + 0.5) /
         OVERLAY_LAYOUT_GRID_ROWS) *
         safeRect.height,
   };
@@ -139,6 +147,7 @@ export function resolveVideoLayout(
   }));
 
   return {
+    anchor: resolvedAnchor,
     bounds: getBounds(translatedSlots),
     effectiveSizePx,
     effectiveSizeStep,
@@ -199,7 +208,7 @@ export function resolveOverlayLayout(
     for (const video of videoCandidates) {
       for (const messageCount of messageCounts) {
         const chat = createChatLayout(normalizedDefinition, safeRect, messageCount);
-        const rect = findFreeChatRect(
+        const placement = findFreeChatRect(
           normalizedDefinition.chat.position,
           normalizedDefinition.chat.width,
           safeRect,
@@ -207,8 +216,8 @@ export function resolveOverlayLayout(
           [video.bounds, ...reservedRects],
         );
 
-        if (rect) {
-          return { chat: { ...chat, rect }, video };
+        if (placement) {
+          return { chat: { ...chat, ...placement }, video };
         }
       }
     }
@@ -236,7 +245,7 @@ function resolveZeroCameraLayout(
 
     for (const messageCount of messageCounts) {
       const chat = createChatLayout(definition, safeRect, messageCount);
-      const rect = findFreeChatRect(
+      const placement = findFreeChatRect(
         definition.chat.position,
         definition.chat.width,
         safeRect,
@@ -244,8 +253,8 @@ function resolveZeroCameraLayout(
         [video.bounds, ...reservedRects],
       );
 
-      if (rect) {
-        return { chat: { ...chat, rect }, video };
+      if (placement) {
+        return { chat: { ...chat, ...placement }, video };
       }
     }
   }
@@ -325,9 +334,11 @@ function createUnusableViewportFallback(
       effectiveMaxMessages: definition.chat.maxMessages,
       fontSizePx: metrics.fontSizePx,
       lineHeightPx: metrics.lineHeightPx,
+      position: { ...definition.chat.position },
       rect,
     },
     video: {
+      anchor: { ...definition.video.anchor },
       bounds: { ...rect },
       effectiveSizePx: 0,
       effectiveSizeStep: definition.video.sizeStep,
@@ -349,6 +360,7 @@ function createChatLayout(
     effectiveMaxMessages,
     fontSizePx: metrics.fontSizePx,
     lineHeightPx: metrics.lineHeightPx,
+    position: { ...definition.chat.position },
     rect: {
       height: CHAT_PADDING_Y_PX * 2 + effectiveMaxMessages * metrics.rowHeightPx + rowGaps,
       width: Math.max(
@@ -367,7 +379,7 @@ function findFreeChatRect(
   safeRect: PixelRect,
   chatRect: PixelRect,
   blockedRects: PixelRect[],
-): PixelRect | undefined {
+): { position: OverlayLayoutGridPoint; rect: PixelRect } | undefined {
   const candidates = Array.from(
     { length: (OVERLAY_LAYOUT_GRID_COLUMNS - chatWidthColumns + 1) * OVERLAY_LAYOUT_GRID_ROWS },
     (_, index) => {
@@ -382,14 +394,19 @@ function findFreeChatRect(
   ).sort((a, b) => a.distance - b.distance || a.y - b.y || a.x - b.x);
 
   for (const candidate of candidates) {
+    const alignToBottomEdge =
+      requestedPosition.y === OVERLAY_LAYOUT_GRID_ROWS - 1 &&
+      candidate.y === OVERLAY_LAYOUT_GRID_ROWS - 1;
     const rect = {
       ...chatRect,
       x: safeRect.x + (candidate.x / OVERLAY_LAYOUT_GRID_COLUMNS) * safeRect.width,
-      y: safeRect.y + (candidate.y / OVERLAY_LAYOUT_GRID_ROWS) * safeRect.height,
+      y: alignToBottomEdge
+        ? safeRect.y + safeRect.height - chatRect.height
+        : safeRect.y + (candidate.y / OVERLAY_LAYOUT_GRID_ROWS) * safeRect.height,
     };
 
     if (isWithinSafeRect(rect, safeRect) && !blockedRects.some((blocked) => rectsOverlap(rect, blocked))) {
-      return rect;
+      return { position: { x: candidate.x, y: candidate.y }, rect };
     }
   }
 

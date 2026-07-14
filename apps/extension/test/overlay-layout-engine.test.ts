@@ -151,6 +151,20 @@ describe("overlay layout resolver", () => {
     expect(result.video.leaderSide).toBe(definition.video.leaderSide);
   });
 
+  it("aligns the last chat row and column with the safe-area edges", () => {
+    const definition = getDefaultOverlayLayoutDefinition();
+    definition.chat.position = { x: 7, y: 7 };
+    const result = resolveOverlayLayout(definition, {
+      cameraCount: 0,
+      reservedRects: [],
+      viewport,
+    });
+
+    expect(result.chat.position).toEqual({ x: 7, y: 7 });
+    expect(result.chat.rect.x + result.chat.rect.width).toBeCloseTo(1268);
+    expect(result.chat.rect.y + result.chat.rect.height).toBe(664);
+  });
+
   it("moves a camera group away from a top-right reserved area before resolving chat", () => {
     const definition = {
       ...getDefaultOverlayLayoutDefinition(),

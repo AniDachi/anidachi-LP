@@ -85,6 +85,11 @@
 - [x] Add failing component tests for four camera ghosts, chat ghosts, draft isolation, Revert, successful Apply, failed Apply, and remount discard.
 - [x] Implement the editor with Video/Chat selection, camera size, chat width, text scale, message count, Apply/Revert, and an accessible error status.
 - [x] Implement pointer capture with distinct pointer-up and pointer-cancel behavior plus keyboard movement/Escape restore.
+- [x] Rebase pointer sessions on the resolver's displayed logical placement,
+  support explicit bottom-edge chat alignment, and render pointer-transparent
+  live-player ghosts while a draft is active.
+- [x] Keep applied live camera and chat surfaces below the settings panel and
+  clear the live ghost layer after successful Apply.
 - [x] Wire the editor into the Layout settings category without changing other settings categories.
 - [x] Run focused tests and extension check.
 - [x] Commit the task.

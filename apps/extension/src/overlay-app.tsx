@@ -71,6 +71,7 @@ import {
 } from "./overlay-layout";
 import { resolveOverlayLayout, type OverlayLayoutContext } from "./overlay-layout-engine";
 import { OverlayLayoutEditor } from "./overlay-layout-editor";
+import { OverlayLayoutGhostPreview } from "./overlay-layout-ghost-preview";
 import {
   getDefaultOverlayLayoutDefinition,
   normalizeOverlayLayoutDefinition,
@@ -1764,6 +1765,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       : 0
     : DEFAULT_CAM_STACK_BOTTOM_PX;
   const roomRailBottomPx = Math.max(92, controlsBottomInsetPx + 12);
+  const overlayLayoutPreviewActive = previewOverlayLayout !== null;
   const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(() => {
     const roomRailTopPx = topBubbleTopPx + 44;
     const reservedRects = getOverlayLayoutReservedRects({
@@ -1785,9 +1787,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       viewport: overlayViewportSize,
     });
     return createOverlayLayoutRuntimeContext({
-      cameraCount: getOverlayLayoutCameraSlotCount(
-        cameraStackVisible ? renderableCameraParticipants.length : 0,
-      ),
+      cameraCount: overlayLayoutPreviewActive
+        ? 4
+        : getOverlayLayoutCameraSlotCount(
+            cameraStackVisible ? renderableCameraParticipants.length : 0,
+          ),
       controlsBottomInsetPx,
       height: overlayViewportSize.height,
       reservedRects,
@@ -1798,6 +1802,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     controlsBottomInsetPx,
     cameraStackVisible,
     overlayViewportSize,
+    overlayLayoutPreviewActive,
     renderableCameraParticipants.length,
     roomRailBottomPx,
     topBubbleRightPx,
@@ -5298,6 +5303,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         </section>
       ) : null}
 
+      {overlayLayoutPreviewActive ? (
+        <OverlayLayoutGhostPreview layout={resolvedOverlayLayout} />
+      ) : null}
+
       {messageComposerShieldVisible && roomId ? (
         <div
           ref={messageComposerShieldRef}
@@ -5405,7 +5414,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             />
           ) : null}
 
-          {messageDisplayMode === "chat" && !panelOpen && displayedChatMessages.length ? (
+          {messageDisplayMode === "chat" && displayedChatMessages.length ? (
             <LiveChatColumn
               mode={chatDisplayMode}
               messages={displayedChatMessages}

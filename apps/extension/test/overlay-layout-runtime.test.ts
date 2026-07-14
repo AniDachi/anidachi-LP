@@ -115,9 +115,11 @@ describe("overlay layout runtime styles", () => {
         effectiveMaxMessages: 5,
         fontSizePx: 13,
         lineHeightPx: 16,
+        position: { x: 0, y: 1 },
         rect: { height: 186, width: 300, x: 24, y: 108 },
       },
       video: {
+        anchor: { x: 8, y: 1 },
         bounds: { height: 80, width: 176, x: 900, y: 48 },
         effectiveSizePx: 80,
         effectiveSizeStep: 1,
@@ -148,9 +150,11 @@ describe("overlay layout runtime styles", () => {
         effectiveMaxMessages: 3,
         fontSizePx: 11,
         lineHeightPx: 14,
+        position: { x: 0, y: 0 },
         rect: { height: 116, width: 200, x: 0, y: 0 },
       },
       video: {
+        anchor: { x: 11, y: 0 },
         bounds: { height: 72, width: 72, x: 1100, y: 40 },
         effectiveSizePx: 72,
         effectiveSizeStep: 0,

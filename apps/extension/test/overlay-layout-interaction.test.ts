@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getDefaultOverlayLayoutDefinition } from "../src/overlay-layout-model";
 import {
   cloneOverlayLayoutDefinition,
-  getOverlayLayoutDragOffset,
+  getOverlayLayoutDragOffsetFromOrigin,
   getOverlayLayoutGridPointer,
   getOverlayLayoutLeaderSide,
   moveOverlayLayoutObjectByDelta,
@@ -33,21 +33,17 @@ describe("overlay layout interaction", () => {
   });
 
   it("uses the video leader center and chat top-left for grab offsets", () => {
-    const definition = {
-      video: { anchor: { x: 8, y: 2 }, leaderSide: "right" as const, sizeStep: 1 as const },
-      chat: {
-        position: { x: 3, y: 5 },
-        width: 5,
-        textScale: "normal" as const,
-        maxMessages: 5 as const,
-      },
-    };
-
-    expect(getOverlayLayoutDragOffset(definition, "video", { x: 9.25, y: 3.25 })).toEqual({
+    expect(getOverlayLayoutDragOffsetFromOrigin(
+      { x: 9.25, y: 3.25 },
+      { x: 8.5, y: 2.5 },
+    )).toEqual({
       x: 0.75,
       y: 0.75,
     });
-    expect(getOverlayLayoutDragOffset(definition, "chat", { x: 3.25, y: 6.5 })).toEqual({
+    expect(getOverlayLayoutDragOffsetFromOrigin(
+      { x: 3.25, y: 6.5 },
+      { x: 3, y: 5 },
+    )).toEqual({
       x: 0.25,
       y: 1.5,
     });
@@ -55,7 +51,10 @@ describe("overlay layout interaction", () => {
 
   it("preserves the video grab offset when snapping a pointer move", () => {
     const definition = getDefaultOverlayLayoutDefinition();
-    const offset = getOverlayLayoutDragOffset(definition, "video", { x: 11.75, y: 6.25 });
+    const offset = getOverlayLayoutDragOffsetFromOrigin(
+      { x: 11.75, y: 6.25 },
+      { x: 11.5, y: 6.5 },
+    );
 
     const moved = moveOverlayLayoutObjectFromPointer(
       definition,
@@ -70,7 +69,10 @@ describe("overlay layout interaction", () => {
 
   it("preserves the chat grab offset when snapping a pointer move", () => {
     const definition = getDefaultOverlayLayoutDefinition();
-    const offset = getOverlayLayoutDragOffset(definition, "chat", { x: 1.25, y: 4.5 });
+    const offset = getOverlayLayoutDragOffsetFromOrigin(
+      { x: 1.25, y: 4.5 },
+      { x: 0, y: 4 },
+    );
 
     const moved = moveOverlayLayoutObjectFromPointer(
       definition,

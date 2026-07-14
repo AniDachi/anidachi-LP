@@ -46,6 +46,7 @@ export const overlayStyles = `
     align-items: center;
     gap: 7px;
     pointer-events: auto;
+    z-index: 20;
     cursor: pointer;
     box-shadow:
       0 14px 34px rgba(0, 0, 0, 0.34),
@@ -117,6 +118,7 @@ export const overlayStyles = `
       0 24px 70px rgba(0, 0, 0, 0.48),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
     pointer-events: auto;
+    z-index: 30;
     scrollbar-width: none;
   }
 
@@ -1765,6 +1767,7 @@ export const overlayStyles = `
     align-items: flex-end;
     gap: var(--cam-bubble-gap, 8px);
     pointer-events: none;
+    z-index: 10;
     transition:
       left 220ms ease,
       top 220ms ease,
@@ -2054,6 +2057,7 @@ export const overlayStyles = `
     gap: 5px;
     overflow: hidden;
     pointer-events: auto;
+    z-index: 10;
     transition:
       left 220ms ease,
       top 220ms ease,
@@ -2061,6 +2065,52 @@ export const overlayStyles = `
       max-height 220ms ease,
       opacity 180ms ease,
       transform 180ms ease;
+  }
+
+  .overlay-layout-ghost-preview {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .overlay-layout-camera-ghost {
+    border: 1px dashed rgba(110, 231, 183, 0.62);
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.13);
+    box-shadow:
+      inset 0 0 0 1px rgba(236, 253, 245, 0.08),
+      0 8px 24px rgba(0, 0, 0, 0.12);
+    opacity: 0.58;
+  }
+
+  .overlay-layout-camera-ghost.is-leader {
+    border-style: solid;
+    background: rgba(16, 185, 129, 0.18);
+    opacity: 0.68;
+  }
+
+  .overlay-layout-chat-ghost {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 5px;
+    padding: 8px 10px;
+    overflow: hidden;
+    border: 1px dashed rgba(147, 197, 253, 0.64);
+    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.13);
+    opacity: 0.58;
+  }
+
+  .overlay-layout-chat-ghost span {
+    display: block;
+    height: 5px;
+    flex: 0 0 5px;
+    border-radius: 999px;
+    background: rgba(191, 219, 254, 0.62);
   }
 
   .live-chat-column.history {
