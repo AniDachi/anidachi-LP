@@ -120,20 +120,8 @@ pnpm dev:extension:staging
 ```
 
 Google can reject WXT's auto-opened browser because `web-ext` launches Chrome
-with remote debugging flags. For testing Google sign-in, use the Google-friendly
-launcher instead:
-
-```bash
-pnpm dev:extension:staging:google
-```
-
-This keeps WXT running for rebuilds, but opens a normal macOS Chrome instance
-with the dev extension loaded from `.output/chrome-mv3-dev`. Its persistent
-profile lives at:
-
-```txt
-apps/extension/.wxt/google-auth-chrome-data
-```
+with remote debugging flags. Test Google sign-in and release-like auth behavior
+in a normal Chrome profile with the built staging extension described below.
 
 The staging dev command intentionally uses broad host permissions for local
 developer speed. It does not change the store-safe staging artifact. To test the
@@ -172,6 +160,18 @@ downloaded from the GitHub Actions artifact:
 ```txt
 anidachi-extension-staging
 ```
+
+Build and validate the local staging artifact with:
+
+```bash
+pnpm build:extension:staging
+pnpm validate:extension:staging
+```
+
+Then open `chrome://extensions` in a normal Chrome profile, enable Developer
+mode, choose "Load unpacked", and select `anidachi-extension-staging`. Use this
+path for Google sign-in and final staging acceptance; use WXT dev mode for fast
+code iteration.
 
 Current staging build environment:
 
