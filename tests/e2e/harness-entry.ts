@@ -18,6 +18,7 @@ interface StartOptions {
   role: "host" | "viewer";
   sessionId: string;
   iceServers?: RTCIceServer[];
+  cameraEnabled?: boolean;
 }
 
 interface HarnessState {
@@ -67,15 +68,20 @@ class Harness {
     this.self = self;
 
     this.ensureController(options, self);
-    await this.controller?.setCameraEnabled(true);
-    self.cameraEnabled = true;
+    const cameraEnabled = options.cameraEnabled !== false;
+    if (cameraEnabled) {
+      await this.controller?.setCameraEnabled(true);
+      self.cameraEnabled = true;
+    }
     this.connectClient(options, self);
     await this.waitForStatus("connected", 8000);
-    this.client?.send({
-      type: "CAMERA_ON",
-      roomId: options.roomId,
-      userId: self.id,
-    });
+    if (cameraEnabled) {
+      this.client?.send({
+        type: "CAMERA_ON",
+        roomId: options.roomId,
+        userId: self.id,
+      });
+    }
   }
 
   private ensureController(options: StartOptions, self: Participant): P2PMediaController {

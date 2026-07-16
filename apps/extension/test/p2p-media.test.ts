@@ -659,6 +659,95 @@ describe("P2P initial negotiation ownership", () => {
 
     harness.controller.disconnect();
   });
+
+  it("serializes overlapping media sync before draining negotiation", async () => {
+    const harness = createP2PControllerHarness(participant("guest"));
+
+    harness.controller.updateParticipants([participant("host", false)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    expect(pc?.createOffer).toHaveBeenCalledTimes(1);
+    if (!pc) {
+      throw new Error("Expected a peer connection.");
+    }
+    pc.signalingState = "stable";
+    pc.localDescription = null;
+
+    const videoTransceiver = pc
+      .getTransceivers()
+      .find((transceiver) => transceiver.receiver.track.kind === "video");
+    if (!videoTransceiver) {
+      throw new Error("Expected a video transceiver.");
+    }
+
+    const firstMediaSync = deferred<void>();
+    videoTransceiver.sender.setParameters
+      .mockImplementationOnce(() => firstMediaSync.promise)
+      .mockResolvedValue(undefined);
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia: vi
+        .fn()
+        .mockResolvedValue(fakeVideoStream(new FakeVideoTrack("camera"))),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+
+    const cameraStart = harness.controller.setCameraEnabled(true);
+    await vi.waitFor(() => {
+      expect(videoTransceiver.sender.setParameters).toHaveBeenCalledTimes(1);
+    });
+
+    try {
+      harness.controller.updateParticipants([participant("host", false)]);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(videoTransceiver.sender.setParameters).toHaveBeenCalledTimes(1);
+    } finally {
+      firstMediaSync.resolve();
+      await cameraStart;
+    }
+
+    await vi.waitFor(() => {
+      expect(videoTransceiver.sender.setParameters).toHaveBeenCalledTimes(2);
+      expect(pc.createOffer).toHaveBeenCalledTimes(2);
+    });
+    harness.controller.disconnect();
+  });
+
+  it("does not reapply unchanged video sender parameters", async () => {
+    const harness = createP2PControllerHarness(participant("guest"));
+    harness.controller.updateParticipants([participant("host", false)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    const videoTransceiver = pc
+      ?.getTransceivers()
+      .find((transceiver) => transceiver.receiver.track.kind === "video");
+    if (!videoTransceiver) {
+      throw new Error("Expected a video transceiver.");
+    }
+
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia: vi
+        .fn()
+        .mockResolvedValue(fakeVideoStream(new FakeVideoTrack("camera"))),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    await harness.controller.setCameraEnabled(true);
+
+    videoTransceiver.sender.getParameters.mockReturnValue({
+      degradationPreference: "maintain-framerate",
+      encodings: [{ maxBitrate: 150_000, maxFramerate: 12 }],
+    });
+    videoTransceiver.sender.setParameters.mockClear();
+    harness.controller.updateParticipants([participant("host", false)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(videoTransceiver.sender.setParameters).not.toHaveBeenCalled();
+    harness.controller.disconnect();
+  });
 });
 
 describe("P2P reconciliation decision", () => {
@@ -1465,6 +1554,22 @@ describe("P2P media participant selection", () => {
     ).toEqual(["host", "viewer"]);
   });
 
+  it("pairs a local camera publisher with every joined media-seat receiver", () => {
+    const participants = [
+      participant("host", false),
+      participant("viewer-a", false),
+      participant("viewer-b", false),
+    ];
+
+    // A camera-off participant is still a receiver. The publisher needs a
+    // peer with every joined media seat for one-way video to reach them.
+    expect(
+      selectP2PMediaParticipants(participants, "viewer-a", true).map(
+        (item) => item.id,
+      ),
+    ).toEqual(["host", "viewer-a", "viewer-b"]);
+  });
+
   it("does not pair chat-only remotes solely because local camera is being published", () => {
     const participants = [
       participant("host", false),
@@ -1568,6 +1673,24 @@ describe("P2P media participant selection", () => {
     ).toBe(true);
   });
 
+  it("allows media-seat signaling before camera state replication catches up", () => {
+    const participants = [
+      participant("host", false),
+      participant("viewer", false),
+    ];
+
+    // The sender can negotiate immediately after getUserMedia succeeds, before
+    // CAMERA_ON reaches the receiver in the next room snapshot.
+    expect(
+      canReceiveP2PSignalFromParticipant(
+        participants,
+        "host",
+        "viewer",
+        false,
+      ),
+    ).toBe(true);
+  });
+
   it("does not allow a new chat-only renegotiate solely from local camera intent", () => {
     const participants = [
       participant("host", false),
@@ -1666,7 +1789,6 @@ class FakeRtcPeerConnection extends EventTarget {
   localDescription: RTCSessionDescription | null = null;
   remoteDescription: RTCSessionDescription | null = null;
   signalingState: RTCSignalingState = "stable";
-  failRollback = false;
   readonly addIceCandidate = vi.fn(async () => undefined);
   readonly close = vi.fn(() => {
     this.signalingState = "closed";
@@ -1684,9 +1806,6 @@ class FakeRtcPeerConnection extends EventTarget {
   readonly setLocalDescription = vi.fn(
     async (description: RTCSessionDescriptionInit) => {
       if (description.type === "rollback") {
-        if (this.failRollback) {
-          throw new Error("rollback failed");
-        }
         this.localDescription = null;
         this.signalingState = "stable";
         return;
@@ -1927,44 +2046,83 @@ describe("P2P idle peer linger", () => {
     harness.controller.disconnect();
   });
 
-  it("rolls back and sends one fresh offer after a dropped offer reconnect", async () => {
+  it("replaces a peer with a stale local offer after signaling reconnect", async () => {
+    const harness = createP2PControllerHarness(participant("host"), "dropped");
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const stalePeer = FakeRtcPeerConnection.instances[0];
+    expect(stalePeer.signalingState).toBe("have-local-offer");
+    expect(stalePeer.createOffer).toHaveBeenCalledTimes(1);
+
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "local-connection-b",
+    });
+
+    expect(stalePeer.close).toHaveBeenCalledTimes(1);
+    expect(stalePeer.setLocalDescription).not.toHaveBeenCalledWith({
+      type: "rollback",
+    });
+    expect(harness.signals.some((item) => item.signal.kind === "bye")).toBe(
+      true,
+    );
+    expect(FakeRtcPeerConnection.instances).toHaveLength(2);
+    expect(FakeRtcPeerConnection.instances[1]?.createOffer).toHaveBeenCalledTimes(
+      1,
+    );
+
+    harness.controller.disconnect();
+  });
+
+  it("waits for active media sync before replacing a stale-offer peer", async () => {
     const harness = createP2PControllerHarness(participant("host"), "dropped");
     harness.controller.updateParticipants([participant("viewer", true)]);
     await vi.advanceTimersByTimeAsync(0);
 
     const pc = FakeRtcPeerConnection.instances[0];
     expect(pc.signalingState).toBe("have-local-offer");
-    expect(pc.createOffer).toHaveBeenCalledTimes(1);
+    const videoTransceiver = pc
+      .getTransceivers()
+      .find((transceiver) => transceiver.receiver.track.kind === "video");
+    if (!videoTransceiver) {
+      throw new Error("Expected a video transceiver.");
+    }
 
-    await harness.controller.handleSignalingTransportReady({
+    const activeMediaSync = deferred<void>();
+    videoTransceiver.sender.setParameters.mockImplementationOnce(
+      () => activeMediaSync.promise,
+    );
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia: vi
+        .fn()
+        .mockResolvedValue(fakeVideoStream(new FakeVideoTrack("camera"))),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+
+    const cameraStart = harness.controller.setCameraEnabled(true);
+    await vi.waitFor(() => {
+      expect(videoTransceiver.sender.setParameters).toHaveBeenCalledTimes(1);
+    });
+
+    const recovery = harness.controller.handleSignalingTransportReady({
       reconnect: true,
       senderConnectionId: "local-connection-b",
     });
 
-    expect(pc.setLocalDescription).toHaveBeenCalledWith({ type: "rollback" });
-    expect(pc.createOffer).toHaveBeenCalledTimes(2);
-    expect(FakeRtcPeerConnection.instances).toHaveLength(1);
-    expect(pc.close).not.toHaveBeenCalled();
+    try {
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(pc.close).not.toHaveBeenCalled();
+      expect(FakeRtcPeerConnection.instances).toHaveLength(1);
+    } finally {
+      activeMediaSync.resolve();
+      await Promise.all([cameraStart, recovery]);
+    }
 
-    harness.controller.disconnect();
-  });
-
-  it("replaces the peer only when stale-offer rollback fails", async () => {
-    const harness = createP2PControllerHarness(participant("host"), "dropped");
-    harness.controller.updateParticipants([participant("viewer", true)]);
-    await vi.advanceTimersByTimeAsync(0);
-
-    const failedPeer = FakeRtcPeerConnection.instances[0];
-    failedPeer.failRollback = true;
-
-    await harness.controller.handleSignalingTransportReady({
-      reconnect: true,
-      senderConnectionId: "local-connection-b",
-    });
-
-    expect(failedPeer.close).toHaveBeenCalledTimes(1);
+    expect(pc.close).toHaveBeenCalledTimes(1);
     expect(FakeRtcPeerConnection.instances).toHaveLength(2);
-
     harness.controller.disconnect();
   });
 
