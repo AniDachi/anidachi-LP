@@ -60,6 +60,7 @@ import type {
   RoomSendDisposition,
   SignalingTransportReady,
 } from "./media-types";
+import { attachAndPlayVideoElement } from "./media-element-playback";
 import {
   ANIDACHI_COMPOSER_OPEN_ATTR,
   ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
@@ -5538,8 +5539,15 @@ function CameraBubble({
       return;
     }
 
-    ref.current.replaceChildren(video.element);
-  }, [video]);
+    void attachAndPlayVideoElement(ref.current, video.element).catch((error) => {
+      logDebug("p2p.video", "attached video playback failed", {
+        error: error instanceof Error ? error.message : String(error),
+        participantId: participant.id,
+        paused: video.element.paused,
+        readyState: video.element.readyState,
+      });
+    });
+  }, [participant.id, video]);
 
   return (
     <div
