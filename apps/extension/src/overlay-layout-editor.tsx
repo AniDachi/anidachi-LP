@@ -1,5 +1,4 @@
 import {
-	type ChangeEvent,
 	type CSSProperties,
 	type KeyboardEvent,
 	type PointerEvent,
@@ -9,6 +8,7 @@ import {
 	useState,
 } from "react";
 import { GHOST_CAM_SIZE_STEPS } from "./ghost-cam-size";
+import { OverlayLayoutChatPreview } from "./overlay-layout-chat-preview";
 import {
 	type OverlayLayoutContext,
 	type PixelRect,
@@ -27,25 +27,36 @@ import {
 } from "./overlay-layout-interaction";
 import {
 	normalizeOverlayLayoutDefinition,
+	OVERLAY_LAYOUT_GRID_COLUMNS,
+	OVERLAY_LAYOUT_GRID_ROWS,
+	OVERLAY_LAYOUT_MAX_CHAT_TRANSPARENCY,
+	OVERLAY_LAYOUT_MAX_CHAT_WIDTH,
+	OVERLAY_LAYOUT_MIN_CHAT_TRANSPARENCY,
+	OVERLAY_LAYOUT_MIN_CHAT_WIDTH,
+	OVERLAY_LAYOUT_MIN_MESSAGES,
 	type OverlayLayoutCameraSizeStep,
 	type OverlayLayoutDefinition,
 	type OverlayLayoutMessageCount,
 	type OverlayLayoutTextScale,
 } from "./overlay-layout-model";
+import { SteppedSettingSlider } from "./stepped-setting-slider";
 
 export interface OverlayLayoutEditorProps {
 	appliedLayout: OverlayLayoutDefinition;
-	cameraEnabled: boolean;
-	cameraStatus: string;
+	chatDisplayMode: OverlayLayoutChatDisplayMode;
 	layoutContext: OverlayLayoutContext;
-	onCameraToggle: () => void;
+	onChatDisplayModeChange: (mode: OverlayLayoutChatDisplayMode) => void;
 	onApply: (layout: OverlayLayoutDefinition) => Promise<void>;
 	onPreviewChange: (layout: OverlayLayoutDefinition | null) => void;
 }
 
+export type OverlayLayoutChatDisplayMode = "live" | "history";
+
 interface PointerSession {
+	chatPointerSteps: { x: number; y: number } | null;
 	objectId: OverlayLayoutObjectIdV2;
 	offset: OverlayLayoutDragOffset;
+	pointerBounds: ReturnType<typeof getPreviewGridPointerBounds>;
 	pointerId: number;
 	snapshot: OverlayLayoutDefinition;
 }
@@ -72,7 +83,6 @@ const FALLBACK_PREVIEW_CONTEXT: OverlayLayoutContext = {
 		width: FALLBACK_PREVIEW_WIDTH,
 	},
 };
-const CHAT_WIDTH_OPTIONS = [3, 4, 5, 6] as const;
 const CHAT_TEXT_SCALE_OPTIONS: ReadonlyArray<{
 	label: string;
 	value: OverlayLayoutTextScale;
@@ -81,15 +91,16 @@ const CHAT_TEXT_SCALE_OPTIONS: ReadonlyArray<{
 	{ label: "Normal", value: "normal" },
 	{ label: "Large", value: "large" },
 ];
-const CHAT_MESSAGE_OPTIONS: readonly OverlayLayoutMessageCount[] = [3, 5, 8];
-const CHAT_GHOST_WIDTHS = [72, 48, 84, 61, 76, 43, 68, 55];
+
+function formatChatWidth(width: number): string {
+	return width === 1 ? "1 column" : `${width} columns`;
+}
 
 export function OverlayLayoutEditor({
 	appliedLayout,
-	cameraEnabled,
-	cameraStatus,
+	chatDisplayMode,
 	layoutContext,
-	onCameraToggle,
+	onChatDisplayModeChange,
 	onApply,
 	onPreviewChange,
 }: OverlayLayoutEditorProps) {
@@ -158,6 +169,53 @@ export function OverlayLayoutEditor({
 		() => resolveOverlayLayout(draft, previewContext),
 		[draft, previewContext],
 	);
+	const fillMessageCapacity = useMemo(
+		() =>
+			resolveOverlayLayout(
+				{
+					...draft,
+					chat: { ...draft.chat, maxMessages: "fill" },
+				},
+				previewContext,
+			).chat.effectiveMaxMessages,
+		[draft, previewContext],
+	);
+	const messageSliderCapacity = useMemo(
+		() =>
+			resolveOverlayLayout(
+				{
+					...draft,
+					chat: {
+						...draft.chat,
+						maxMessages: "fill",
+						position: { x: 0, y: 0 },
+					},
+				},
+				{
+					...previewContext,
+					cameraCount: 0,
+					reservedRects: [],
+				},
+			).chat.effectiveMaxMessages,
+		[draft, previewContext],
+	);
+	const manualMessageCount =
+		typeof draft.chat.maxMessages === "number"
+			? draft.chat.maxMessages
+			: messageSliderCapacity;
+	const messageSliderManualMax = Math.max(
+		OVERLAY_LAYOUT_MIN_MESSAGES,
+		messageSliderCapacity,
+		manualMessageCount,
+	);
+	const messageSliderMax = messageSliderManualMax + 1;
+	const messageSliderValue =
+		draft.chat.maxMessages === "fill"
+			? messageSliderMax
+			: draft.chat.maxMessages;
+	const textScaleIndex = CHAT_TEXT_SCALE_OPTIONS.findIndex(
+		(option) => option.value === draft.chat.textScale,
+	);
 	const previewWidth = previewContext.viewport.width;
 	const previewHeight = previewContext.viewport.height;
 	const previewSafeRect = useMemo(
@@ -199,25 +257,36 @@ export function OverlayLayoutEditor({
 			return;
 		}
 
-		const pointer = getOverlayLayoutGridPointer(
+		event.preventDefault();
+		const pointerBounds = getPreviewGridPointerBounds(
+			previewRef.current,
+			previewSafeRect,
+			previewWidth,
+			previewHeight,
+		);
+		const chatPointerSteps =
+			objectId === "chat"
+				? getChatPointerSteps(
+						pointerBounds,
+						previewSafeRect,
+						resolvedLayout.chat.rect,
+					)
+				: null;
+		const pointer = getObjectDragPointer(
+			objectId,
 			event.clientX,
 			event.clientY,
-			getPreviewGridPointerBounds(
-				previewRef.current,
-				previewSafeRect,
-				previewWidth,
-				previewHeight,
-			),
+			pointerBounds,
+			chatPointerSteps,
 		);
 		pointerSessionRef.current = {
+			chatPointerSteps,
 			objectId,
 			offset: getOverlayLayoutDragOffsetFromOrigin(
 				pointer,
-				getResolvedObjectGridOrigin(
-					objectId,
-					resolvedLayout,
-				),
+				getResolvedObjectGridOrigin(objectId, resolvedLayout),
 			),
+			pointerBounds,
 			pointerId: event.pointerId,
 			snapshot: cloneOverlayLayoutDefinition(draftRef.current),
 		};
@@ -241,15 +310,12 @@ export function OverlayLayoutEditor({
 		}
 
 		event.preventDefault();
-		const pointer = getOverlayLayoutGridPointer(
+		const pointer = getObjectDragPointer(
+			objectId,
 			event.clientX,
 			event.clientY,
-			getPreviewGridPointerBounds(
-				previewRef.current,
-				previewSafeRect,
-				previewWidth,
-				previewHeight,
-			),
+			session.pointerBounds,
+			session.chatPointerSteps,
 		);
 		replaceDraft(
 			moveOverlayLayoutObjectFromPointer(
@@ -408,32 +474,43 @@ export function OverlayLayoutEditor({
 		}
 	};
 
-	const handleCameraSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
-		const sizeStep = Number(event.target.value) as OverlayLayoutCameraSizeStep;
+	const handleCameraSizeChange = (sizeStep: number) => {
 		updateDraft((current) => ({
 			...current,
-			video: { ...current.video, sizeStep },
+			video: {
+				...current.video,
+				sizeStep: sizeStep as OverlayLayoutCameraSizeStep,
+			},
 		}));
 	};
 
-	const handleChatWidthChange = (event: ChangeEvent<HTMLSelectElement>) => {
-		const width = Number(event.target.value);
+	const handleChatWidthChange = (width: number) => {
 		updateDraft((current) => ({
 			...current,
 			chat: { ...current.chat, width },
 		}));
 	};
 
-	const handleTextScaleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-		const textScale = event.target.value as OverlayLayoutTextScale;
+	const handleTextScaleChange = (index: number) => {
+		const textScale =
+			CHAT_TEXT_SCALE_OPTIONS[index]?.value ??
+			CHAT_TEXT_SCALE_OPTIONS[1]!.value;
 		updateDraft((current) => ({
 			...current,
 			chat: { ...current.chat, textScale },
 		}));
 	};
 
-	const handleMessageCountChange = (event: ChangeEvent<HTMLSelectElement>) => {
-		const maxMessages = Number(event.target.value) as OverlayLayoutMessageCount;
+	const handleChatTransparencyChange = (messageTransparency: number) => {
+		updateDraft((current) => ({
+			...current,
+			chat: { ...current.chat, messageTransparency },
+		}));
+	};
+
+	const handleMessageCountChange = (value: number) => {
+		const maxMessages: OverlayLayoutMessageCount =
+			value === messageSliderMax ? "fill" : value;
 		updateDraft((current) => ({
 			...current,
 			chat: { ...current.chat, maxMessages },
@@ -551,34 +628,26 @@ export function OverlayLayoutEditor({
 					onPointerUp={(event) =>
 						finishPointerSession("chat", event, false, true)
 					}
-					style={{
-						...getPercentageRectStyle(
-							resolvedLayout.chat.rect,
-							previewWidth,
-							previewHeight,
-						),
-						fontSize: `${(resolvedLayout.chat.fontSizePx / previewWidth) * 100}cqw`,
-						lineHeight: `${(resolvedLayout.chat.lineHeightPx / previewWidth) * 100}cqw`,
-						overflow: "hidden",
-						position: "absolute",
-						touchAction: "none",
-					}}
+					style={
+						{
+							...getPercentageRectStyle(
+								resolvedLayout.chat.rect,
+								previewWidth,
+								previewHeight,
+							),
+							fontSize: `${(resolvedLayout.chat.fontSizePx / previewWidth) * 100}cqw`,
+							lineHeight: `${(resolvedLayout.chat.lineHeightPx / previewWidth) * 100}cqw`,
+							"--live-chat-message-opacity": `${1 - resolvedLayout.chat.messageTransparency / 100}`,
+							overflow: "hidden",
+							position: "absolute",
+							touchAction: "none",
+						} as CSSProperties
+					}
 					tabIndex={0}
 				>
-					{Array.from(
-						{ length: resolvedLayout.chat.effectiveMaxMessages },
-						(_, index) => (
-							<span
-								key={`chat-ghost-${index}`}
-								aria-hidden="true"
-								className="layout-chat-ghost-v2"
-								data-layout-chat-ghost=""
-								style={{
-									width: `${CHAT_GHOST_WIDTHS[index % CHAT_GHOST_WIDTHS.length]}%`,
-								}}
-							/>
-						),
-					)}
+					<OverlayLayoutChatPreview
+						messageCount={resolvedLayout.chat.effectiveMaxMessages}
+					/>
 				</button>
 			</div>
 
@@ -607,78 +676,105 @@ export function OverlayLayoutEditor({
 
 			{selectedObject === "video" ? (
 				<div className="layout-controls-v2" data-layout-controls="video">
-					<button
-						type="button"
-						aria-label={cameraEnabled ? "Turn camera off" : "Turn camera on"}
+					<SteppedSettingSlider
 						disabled={saving}
-						onClick={onCameraToggle}
-					>
-						{cameraEnabled ? "Turn camera off" : "Turn camera on"}
-					</button>
-					<span className="layout-camera-status-v2">{cameraStatus}</span>
-					<label>
-						<span>Camera size</span>
-						<select
-							aria-label="Camera size"
-							disabled={saving}
-							onChange={handleCameraSizeChange}
-							value={draft.video.sizeStep}
-						>
-							{GHOST_CAM_SIZE_STEPS.map((option) => (
-								<option key={option.step} value={option.step}>
-									{option.label}
-								</option>
-							))}
-						</select>
-					</label>
+						endLabel={GHOST_CAM_SIZE_STEPS.at(-1)?.label ?? "XL"}
+						label="Camera size"
+						max={GHOST_CAM_SIZE_STEPS.length - 1}
+						min={0}
+						onValueChange={handleCameraSizeChange}
+						startLabel={GHOST_CAM_SIZE_STEPS[0]?.label ?? "Small"}
+						value={draft.video.sizeStep}
+						valueLabel={
+							GHOST_CAM_SIZE_STEPS[draft.video.sizeStep]?.label ?? "Normal"
+						}
+					/>
 				</div>
 			) : (
 				<div className="layout-controls-v2" data-layout-controls="chat">
-					<label>
-						<span>Chat width</span>
-						<select
-							aria-label="Chat width"
-							disabled={saving}
-							onChange={handleChatWidthChange}
-							value={draft.chat.width}
+					<div className="mode-control layout-chat-mode-control-v2">
+						<span>Chat mode</span>
+						<fieldset
+							aria-label="Chat display mode"
+							className="segmented-control"
 						>
-							{CHAT_WIDTH_OPTIONS.map((width) => (
-								<option key={width} value={width}>
-									{width}
-								</option>
-							))}
-						</select>
-					</label>
-					<label>
-						<span>Text scale</span>
-						<select
-							aria-label="Text scale"
-							disabled={saving}
-							onChange={handleTextScaleChange}
-							value={draft.chat.textScale}
-						>
-							{CHAT_TEXT_SCALE_OPTIONS.map((option) => (
-								<option key={option.value} value={option.value}>
-									{option.label}
-								</option>
-							))}
-						</select>
-					</label>
-					<label>
-						<span>Visible messages</span>
-						<select
-							aria-label="Visible messages"
-							disabled={saving}
-							onChange={handleMessageCountChange}
-							value={draft.chat.maxMessages}
-						>
-							{CHAT_MESSAGE_OPTIONS.map((count) => (
-								<option key={count} value={count}>
-									{count}
-								</option>
-							))}
-						</select>
-					</label>
+							<legend className="sr-only">Chat display mode</legend>
+							<button
+								aria-pressed={chatDisplayMode === "live"}
+								className={chatDisplayMode === "live" ? "selected" : ""}
+								disabled={saving}
+								onClick={() => onChatDisplayModeChange("live")}
+								type="button"
+							>
+								Live
+							</button>
+							<button
+								aria-pressed={chatDisplayMode === "history"}
+								className={chatDisplayMode === "history" ? "selected" : ""}
+								disabled={saving}
+								onClick={() => onChatDisplayModeChange("history")}
+								type="button"
+							>
+								History
+							</button>
+						</fieldset>
+					</div>
+					<SteppedSettingSlider
+						disabled={saving}
+						endLabel="Wide"
+						label="Chat width"
+						max={OVERLAY_LAYOUT_MAX_CHAT_WIDTH}
+						min={OVERLAY_LAYOUT_MIN_CHAT_WIDTH}
+						onValueChange={handleChatWidthChange}
+						startLabel="Narrow"
+						value={draft.chat.width}
+						valueLabel={formatChatWidth(draft.chat.width)}
+					/>
+					<SteppedSettingSlider
+						disabled={saving}
+						endLabel={CHAT_TEXT_SCALE_OPTIONS.at(-1)?.label ?? "Large"}
+						label="Text scale"
+						max={CHAT_TEXT_SCALE_OPTIONS.length - 1}
+						min={0}
+						onValueChange={handleTextScaleChange}
+						startLabel={CHAT_TEXT_SCALE_OPTIONS[0]?.label ?? "Compact"}
+						value={Math.max(0, textScaleIndex)}
+						valueLabel={
+							CHAT_TEXT_SCALE_OPTIONS[textScaleIndex]?.label ?? "Normal"
+						}
+					/>
+					<SteppedSettingSlider
+						ariaValueText={
+							draft.chat.maxMessages === "fill"
+								? `Fill · ${fillMessageCapacity}`
+								: `${draft.chat.maxMessages} messages`
+						}
+						disabled={saving}
+						endLabel="Fill"
+						label="Visible messages"
+						max={messageSliderMax}
+						min={OVERLAY_LAYOUT_MIN_MESSAGES}
+						onValueChange={handleMessageCountChange}
+						startLabel={`${OVERLAY_LAYOUT_MIN_MESSAGES}`}
+						value={messageSliderValue}
+						valueLabel={
+							draft.chat.maxMessages === "fill"
+								? `Fill · ${fillMessageCapacity}`
+								: `${draft.chat.maxMessages}`
+						}
+					/>
+					<SteppedSettingSlider
+						disabled={saving}
+						endLabel="95%"
+						label="Chat transparency"
+						max={OVERLAY_LAYOUT_MAX_CHAT_TRANSPARENCY}
+						min={OVERLAY_LAYOUT_MIN_CHAT_TRANSPARENCY}
+						onValueChange={handleChatTransparencyChange}
+						startLabel="0%"
+						step={5}
+						value={draft.chat.messageTransparency}
+						valueLabel={`${draft.chat.messageTransparency}%`}
+					/>
 				</div>
 			)}
 
@@ -743,8 +839,10 @@ function getPreviewGridPointerBounds(
 	viewportHeight: number,
 ) {
 	const bounds = preview.getBoundingClientRect();
-	const contentWidth = preview.clientWidth > 0 ? preview.clientWidth : bounds.width;
-	const contentHeight = preview.clientHeight > 0 ? preview.clientHeight : bounds.height;
+	const contentWidth =
+		preview.clientWidth > 0 ? preview.clientWidth : bounds.width;
+	const contentHeight =
+		preview.clientHeight > 0 ? preview.clientHeight : bounds.height;
 	const scaleX = contentWidth / viewportWidth;
 	const scaleY = contentHeight / viewportHeight;
 
@@ -754,6 +852,65 @@ function getPreviewGridPointerBounds(
 		top: bounds.top + preview.clientTop + safeRect.y * scaleY,
 		width: safeRect.width * scaleX,
 	};
+}
+
+function getChatPointerSteps(
+	pointerBounds: ReturnType<typeof getPreviewGridPointerBounds>,
+	safeRect: PixelRect,
+	chatRect: PixelRect,
+) {
+	const verticalTravel = Math.max(0, safeRect.height - chatRect.height);
+	const verticalTravelRatio =
+		safeRect.height > 0 ? verticalTravel / safeRect.height : 0;
+
+	return {
+		x: pointerBounds.width / OVERLAY_LAYOUT_GRID_COLUMNS,
+		y:
+			(pointerBounds.height * verticalTravelRatio) /
+			Math.max(1, OVERLAY_LAYOUT_GRID_ROWS - 1),
+	};
+}
+
+function getObjectDragPointer(
+	objectId: OverlayLayoutObjectIdV2,
+	clientX: number,
+	clientY: number,
+	pointerBounds: ReturnType<typeof getPreviewGridPointerBounds>,
+	chatPointerSteps: { x: number; y: number } | null,
+) {
+	if (objectId === "video" || chatPointerSteps === null) {
+		return getOverlayLayoutGridPointer(clientX, clientY, pointerBounds);
+	}
+
+	return {
+		x: getUnboundedPointerCoordinate(
+			clientX,
+			pointerBounds.left,
+			chatPointerSteps.x,
+		),
+		y: getUnboundedPointerCoordinate(
+			clientY,
+			pointerBounds.top,
+			chatPointerSteps.y,
+		),
+	};
+}
+
+function getUnboundedPointerCoordinate(
+	clientCoordinate: number,
+	origin: number,
+	stepSize: number,
+) {
+	if (
+		!Number.isFinite(clientCoordinate) ||
+		!Number.isFinite(origin) ||
+		!Number.isFinite(stepSize) ||
+		stepSize <= 0
+	) {
+		return 0;
+	}
+
+	return (clientCoordinate - origin) / stepSize;
 }
 
 function getArrowDelta(key: string): { x: number; y: number } | null {

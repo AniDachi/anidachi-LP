@@ -112,6 +112,7 @@ describe("overlay layout runtime styles", () => {
   it("maps a left leader, bubble gap, and chat typography to pixel custom properties", () => {
     expect(getOverlayLayoutRuntimeStyles({
       chat: {
+		messageTransparency: 65,
         effectiveMaxMessages: 5,
         fontSizePx: 13,
         lineHeightPx: 16,
@@ -136,6 +137,7 @@ describe("overlay layout runtime styles", () => {
       "--cam-stack-left": "900px",
       "--cam-stack-top": "48px",
       "--live-chat-font-size": "13px",
+		"--live-chat-message-opacity": "0.35",
       "--live-chat-height": "186px",
       "--live-chat-left": "24px",
       "--live-chat-line-height": "16px",
@@ -147,6 +149,7 @@ describe("overlay layout runtime styles", () => {
   it("uses row-reverse for a right leader and zero gap for one slot", () => {
     const styles = getOverlayLayoutRuntimeStyles({
       chat: {
+		messageTransparency: 65,
         effectiveMaxMessages: 3,
         fontSizePx: 11,
         lineHeightPx: 14,
@@ -192,6 +195,7 @@ describe("overlay layout runtime styles", () => {
       "--cam-stack-left": "0px",
       "--cam-stack-top": "0px",
       "--live-chat-font-size": "0px",
+		"--live-chat-message-opacity": "1",
       "--live-chat-height": "0px",
       "--live-chat-left": "0px",
       "--live-chat-line-height": "0px",

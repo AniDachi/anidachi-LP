@@ -129,6 +129,7 @@ export function cloneOverlayLayoutDefinition(
       sizeStep: definition.video.sizeStep,
     },
     chat: {
+      messageTransparency: definition.chat.messageTransparency,
       position: { ...definition.chat.position },
       width: definition.chat.width,
       textScale: definition.chat.textScale,
@@ -147,6 +148,7 @@ export function overlayLayoutDefinitionsEqual(
     && left.video.sizeStep === right.video.sizeStep
     && left.chat.position.x === right.chat.position.x
     && left.chat.position.y === right.chat.position.y
+    && left.chat.messageTransparency === right.chat.messageTransparency
     && left.chat.width === right.chat.width
     && left.chat.textScale === right.chat.textScale
     && left.chat.maxMessages === right.chat.maxMessages;

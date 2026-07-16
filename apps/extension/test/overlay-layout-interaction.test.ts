@@ -88,6 +88,7 @@ describe("overlay layout interaction", () => {
     const definition = {
       video: { anchor: { x: 1, y: 1 }, leaderSide: "left" as const, sizeStep: 3 as const },
       chat: {
+        messageTransparency: 0,
         position: { x: 6, y: 4 },
         width: 6,
         textScale: "large" as const,

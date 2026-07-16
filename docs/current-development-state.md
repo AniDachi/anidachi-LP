@@ -280,6 +280,10 @@ The extension currently supports:
 - WebSocket room join and playback sync;
 - reactions and live chat input;
 - Ghost Cam camera bubbles;
+- local camera publishing is opt-in for every newly created, joined, or restored
+  room session. A same-room network reconnect preserves the user's explicit
+  camera choice, while leaving the room, signing out, or switching account
+  resets the next room to camera off;
 - one extension-local Overlay Layout Engine V2 now drives both the live camera/chat
   geometry and the Layout editor. It stores only grid intent under
   `local:overlayLayoutPreferencesV2`, previews one camera leader plus three

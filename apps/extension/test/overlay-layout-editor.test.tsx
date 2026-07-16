@@ -16,11 +16,13 @@ import {
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
 interface RenderedEditor {
+	onChatDisplayModeChange: ReturnType<
+		typeof vi.fn<(mode: "live" | "history") => void>
+	>;
 	container: HTMLDivElement;
 	onApply: ReturnType<
 		typeof vi.fn<(layout: OverlayLayoutDefinition) => Promise<void>>
 	>;
-	onCameraToggle: ReturnType<typeof vi.fn<() => void>>;
 	onPreviewChange: ReturnType<
 		typeof vi.fn<(layout: OverlayLayoutDefinition | null) => void>
 	>;
@@ -53,8 +55,11 @@ describe("OverlayLayoutEditor", () => {
 			editor.container.querySelectorAll('[data-layout-video-slot="ghost"]'),
 		).toHaveLength(3);
 		expect(
-			editor.container.querySelectorAll("[data-layout-chat-ghost]").length,
+			editor.container.querySelectorAll(
+				"[data-overlay-layout-chat-preview-message]",
+			).length,
 		).toBeGreaterThan(0);
+		expect(editor.container.textContent).toContain("That scene was perfect");
 		expect(
 			editor.container
 				.querySelector('[data-layout-video-slot="leader"]')
@@ -73,10 +78,13 @@ describe("OverlayLayoutEditor", () => {
 		const editor = await renderEditor({ layoutContext: measuredLayoutContext });
 		const preview = getPreview(editor.container);
 		const leader = getLeader(editor.container);
-		const projected = resolveOverlayLayout(getDefaultOverlayLayoutDefinition(), {
-			...measuredLayoutContext,
-			cameraCount: 4,
-		});
+		const projected = resolveOverlayLayout(
+			getDefaultOverlayLayoutDefinition(),
+			{
+				...measuredLayoutContext,
+				cameraCount: 4,
+			},
+		);
 		const projectedLeader = projected.video.slots[0];
 		if (!projectedLeader) {
 			throw new Error("Projected video leader not found");
@@ -134,7 +142,7 @@ describe("OverlayLayoutEditor", () => {
 			getDefaultOverlayLayoutDefinition(),
 		);
 
-		await changeSelect(getSelect(editor.container, "Camera size"), "3");
+		await changeRange(getRange(editor.container, "Camera size"), "3");
 		expect(editor.onPreviewChange).toHaveBeenLastCalledWith(
 			expect.objectContaining({
 				video: expect.objectContaining({ sizeStep: 3 }),
@@ -145,10 +153,119 @@ describe("OverlayLayoutEditor", () => {
 		expect(editor.onPreviewChange).toHaveBeenLastCalledWith(null);
 	});
 
+	it("uses stepped sliders for ordered layout settings", async () => {
+		const editor = await renderEditor();
+
+		expect(editor.container.querySelector("select")).toBeNull();
+		expect(
+			getRange(editor.container, "Camera size").getAttribute("aria-valuetext"),
+		).toBe("Normal");
+
+		await click(getButton(editor.container, "Chat"));
+		expect(getRange(editor.container, "Chat width").min).toBe("1");
+		expect(getRange(editor.container, "Chat width").max).toBe("6");
+		await changeRange(getRange(editor.container, "Chat width"), "1");
+		expect(
+			getRange(editor.container, "Chat width").getAttribute("aria-valuetext"),
+		).toBe("1 column");
+		expect(getRange(editor.container, "Text scale").max).toBe("2");
+		expect(getRange(editor.container, "Chat transparency").min).toBe("0");
+		expect(getRange(editor.container, "Chat transparency").max).toBe("95");
+		expect(getRange(editor.container, "Chat transparency").step).toBe("5");
+		expect(
+			Number(getRange(editor.container, "Visible messages").max),
+		).toBeGreaterThan(8);
+
+		await unmount(editor.root);
+	});
+
+	it("keeps Live and History inside Chat settings without a Bubbles mode", async () => {
+		const editor = await renderEditor();
+
+		expect(
+			editor.container.querySelector('[aria-label="Message display mode"]'),
+		).toBeNull();
+		await click(getButton(editor.container, "Chat"));
+
+		expect(
+			editor.container.querySelector('[aria-label="Message display mode"]'),
+		).toBeNull();
+		expect(editor.container.textContent).not.toContain("Bubbles");
+		expect(
+			getButtonInGroup(
+				editor.container,
+				"Chat display mode",
+				"Live",
+			).classList.contains("selected"),
+		).toBe(true);
+		await click(
+			getButtonInGroup(editor.container, "Chat display mode", "History"),
+		);
+
+		expect(editor.onChatDisplayModeChange).toHaveBeenCalledWith("history");
+
+		await unmount(editor.root);
+	});
+
+	it("stores viewport fill as intent instead of a temporary message count", async () => {
+		const editor = await renderEditor();
+		await click(getButton(editor.container, "Chat"));
+		const messages = getRange(editor.container, "Visible messages");
+
+		await changeRange(messages, messages.max);
+		expect(messages.getAttribute("aria-valuetext")).toMatch(/^Fill · \d+$/);
+		await click(getButton(editor.container, "Apply"));
+
+		expect(editor.onApply).toHaveBeenCalledWith(
+			expect.objectContaining({
+				chat: expect.objectContaining({ maxMessages: "fill" }),
+			}),
+		);
+
+		await unmount(editor.root);
+	});
+
+	it("keeps the visible-message slider scale stable across chat positions", async () => {
+		const createLayout = (y: number) => {
+			const layout = getDefaultOverlayLayoutDefinition();
+			layout.chat.position = { x: 0, y };
+			layout.chat.textScale = "large";
+			layout.chat.maxMessages = "fill";
+			return layout;
+		};
+		const layoutContext: OverlayLayoutContext = {
+			cameraCount: 4,
+			reservedRects: [],
+			viewport: {
+				height: 720,
+				safeInsets: { bottom: 56, left: 12, right: 12, top: 12 },
+				width: 1280,
+			},
+		};
+		const upperEditor = await renderEditor({
+			appliedLayout: createLayout(4),
+			layoutContext,
+		});
+		await click(getButton(upperEditor.container, "Chat"));
+		const upperMax = getRange(upperEditor.container, "Visible messages").max;
+		await unmount(upperEditor.root);
+
+		const lowerEditor = await renderEditor({
+			appliedLayout: createLayout(5),
+			layoutContext,
+		});
+		await click(getButton(lowerEditor.container, "Chat"));
+		const lowerMax = getRange(lowerEditor.container, "Visible messages").max;
+
+		expect(lowerMax).toBe(upperMax);
+
+		await unmount(lowerEditor.root);
+	});
+
 	it("reflows a dirty draft when the measured player viewport changes", async () => {
 		const appliedLayout = getDefaultOverlayLayoutDefinition();
 		const editor = await renderEditor({ appliedLayout });
-		await changeSelect(getSelect(editor.container, "Camera size"), "3");
+		await changeRange(getRange(editor.container, "Camera size"), "3");
 		const resizedContext: OverlayLayoutContext = {
 			...measuredLayoutContext,
 			viewport: { ...measuredLayoutContext.viewport, height: 720, width: 1280 },
@@ -158,11 +275,10 @@ describe("OverlayLayoutEditor", () => {
 			editor.root.render(
 				<OverlayLayoutEditor
 					appliedLayout={appliedLayout}
-					cameraEnabled={false}
-					cameraStatus="Camera off"
+					chatDisplayMode="live"
 					layoutContext={resizedContext}
 					onApply={editor.onApply}
-					onCameraToggle={editor.onCameraToggle}
+					onChatDisplayModeChange={editor.onChatDisplayModeChange}
 					onPreviewChange={editor.onPreviewChange}
 				/>,
 			);
@@ -175,7 +291,7 @@ describe("OverlayLayoutEditor", () => {
 			},
 			{ ...resizedContext, cameraCount: 4 },
 		);
-		expect(getSelect(editor.container, "Camera size").value).toBe("3");
+		expect(getRange(editor.container, "Camera size").value).toBe("3");
 		expect(getPreview(editor.container).style.aspectRatio).toBe("1280 / 720");
 		expect(getLeader(editor.container).style.width).toBe(
 			`${(projected.video.effectiveSizePx / 1280) * 100}%`,
@@ -188,9 +304,9 @@ describe("OverlayLayoutEditor", () => {
 	it("keeps control changes in the draft until Apply", async () => {
 		const appliedLayout = getDefaultOverlayLayoutDefinition();
 		const editor = await renderEditor({ appliedLayout });
-		const cameraSize = getSelect(editor.container, "Camera size");
+		const cameraSize = getRange(editor.container, "Camera size");
 
-		await changeSelect(cameraSize, "3");
+		await changeRange(cameraSize, "3");
 
 		expect(appliedLayout.video.sizeStep).toBe(1);
 		expect(editor.onApply).not.toHaveBeenCalled();
@@ -201,9 +317,9 @@ describe("OverlayLayoutEditor", () => {
 
 	it("reverts a dirty draft to the current applied snapshot", async () => {
 		const editor = await renderEditor();
-		const cameraSize = getSelect(editor.container, "Camera size");
+		const cameraSize = getRange(editor.container, "Camera size");
 
-		await changeSelect(cameraSize, "3");
+		await changeRange(cameraSize, "3");
 		await click(getButton(editor.container, "Revert"));
 
 		expect(cameraSize.value).toBe("1");
@@ -220,17 +336,19 @@ describe("OverlayLayoutEditor", () => {
 	it("normalizes and sends the draft on Apply, then treats it as locally applied", async () => {
 		const editor = await renderEditor();
 
-		await changeSelect(getSelect(editor.container, "Camera size"), "3");
+		await changeRange(getRange(editor.container, "Camera size"), "3");
 		await click(getButton(editor.container, "Chat"));
-		await changeSelect(getSelect(editor.container, "Chat width"), "6");
-		await changeSelect(getSelect(editor.container, "Text scale"), "large");
-		await changeSelect(getSelect(editor.container, "Visible messages"), "8");
+		await changeRange(getRange(editor.container, "Chat width"), "6");
+		await changeRange(getRange(editor.container, "Text scale"), "2");
+		await changeRange(getRange(editor.container, "Chat transparency"), "65");
+		await changeRange(getRange(editor.container, "Visible messages"), "8");
 		await click(getButton(editor.container, "Apply"));
 
 		expect(editor.onApply).toHaveBeenCalledTimes(1);
 		expect(editor.onApply).toHaveBeenCalledWith({
 			video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 3 },
 			chat: {
+				messageTransparency: 65,
 				position: { x: 0, y: 4 },
 				width: 6,
 				textScale: "large",
@@ -249,9 +367,9 @@ describe("OverlayLayoutEditor", () => {
 			() => Promise.reject(new Error("storage unavailable")),
 		);
 		const editor = await renderEditor({ onApply });
-		const cameraSize = getSelect(editor.container, "Camera size");
+		const cameraSize = getRange(editor.container, "Camera size");
 
-		await changeSelect(cameraSize, "3");
+		await changeRange(cameraSize, "3");
 		await click(getButton(editor.container, "Apply"));
 
 		expect(cameraSize.value).toBe("3");
@@ -279,24 +397,23 @@ describe("OverlayLayoutEditor", () => {
 		const initial = getDefaultOverlayLayoutDefinition();
 		const editor = await renderEditor({ appliedLayout: initial });
 
-		await changeSelect(getSelect(editor.container, "Camera size"), "3");
+		await changeRange(getRange(editor.container, "Camera size"), "3");
 		const next = structuredClone(initial);
 		next.video.sizeStep = 0;
 		await act(async () => {
 			editor.root.render(
 				<OverlayLayoutEditor
 					appliedLayout={next}
-					cameraEnabled={false}
-					cameraStatus="Camera off"
+					chatDisplayMode="live"
 					layoutContext={measuredLayoutContext}
 					onApply={editor.onApply}
-					onCameraToggle={editor.onCameraToggle}
+					onChatDisplayModeChange={editor.onChatDisplayModeChange}
 					onPreviewChange={editor.onPreviewChange}
 				/>,
 			);
 		});
 
-		expect(getSelect(editor.container, "Camera size").value).toBe("0");
+		expect(getRange(editor.container, "Camera size").value).toBe("0");
 		expect(getButton(editor.container, "Apply").disabled).toBe(true);
 
 		await unmount(editor.root);
@@ -306,22 +423,21 @@ describe("OverlayLayoutEditor", () => {
 		const appliedLayout = getDefaultOverlayLayoutDefinition();
 		const editor = await renderEditor({ appliedLayout });
 
-		await changeSelect(getSelect(editor.container, "Camera size"), "3");
+		await changeRange(getRange(editor.container, "Camera size"), "3");
 		await act(async () => {
 			editor.root.render(
 				<OverlayLayoutEditor
 					appliedLayout={structuredClone(appliedLayout)}
-					cameraEnabled={false}
-					cameraStatus="Camera off"
+					chatDisplayMode="live"
 					layoutContext={measuredLayoutContext}
 					onApply={editor.onApply}
-					onCameraToggle={editor.onCameraToggle}
+					onChatDisplayModeChange={editor.onChatDisplayModeChange}
 					onPreviewChange={editor.onPreviewChange}
 				/>,
 			);
 		});
 
-		expect(getSelect(editor.container, "Camera size").value).toBe("3");
+		expect(getRange(editor.container, "Camera size").value).toBe("3");
 		expect(getButton(editor.container, "Apply").disabled).toBe(false);
 
 		await unmount(editor.root);
@@ -338,7 +454,7 @@ describe("OverlayLayoutEditor", () => {
 		);
 		const editor = await renderEditor({ appliedLayout, onApply });
 
-		await changeSelect(getSelect(editor.container, "Camera size"), "3");
+		await changeRange(getRange(editor.container, "Camera size"), "3");
 		await click(getButton(editor.container, "Apply"));
 		expect(getButton(editor.container, "Applying").disabled).toBe(true);
 
@@ -346,11 +462,10 @@ describe("OverlayLayoutEditor", () => {
 			editor.root.render(
 				<OverlayLayoutEditor
 					appliedLayout={structuredClone(appliedLayout)}
-					cameraEnabled={false}
-					cameraStatus="Camera off"
+					chatDisplayMode="live"
 					layoutContext={measuredLayoutContext}
 					onApply={editor.onApply}
-					onCameraToggle={editor.onCameraToggle}
+					onChatDisplayModeChange={editor.onChatDisplayModeChange}
 					onPreviewChange={editor.onPreviewChange}
 				/>,
 			);
@@ -369,11 +484,11 @@ describe("OverlayLayoutEditor", () => {
 		const appliedLayout = getDefaultOverlayLayoutDefinition();
 		const first = await renderEditor({ appliedLayout });
 
-		await changeSelect(getSelect(first.container, "Camera size"), "3");
+		await changeRange(getRange(first.container, "Camera size"), "3");
 		await unmount(first.root);
 
 		const second = await renderEditor({ appliedLayout });
-		expect(getSelect(second.container, "Camera size").value).toBe("1");
+		expect(getRange(second.container, "Camera size").value).toBe("1");
 		expect(second.onApply).not.toHaveBeenCalled();
 
 		await unmount(second.root);
@@ -475,6 +590,44 @@ describe("OverlayLayoutEditor", () => {
 		await unmount(editor.root);
 	});
 
+	it("moves a tall chat to the opposite edges in one drag from its far corner", async () => {
+		const appliedLayout = getDefaultOverlayLayoutDefinition();
+		appliedLayout.chat.position = { x: 0, y: 0 };
+		appliedLayout.chat.width = 3;
+		appliedLayout.chat.textScale = "large";
+		appliedLayout.chat.maxMessages = 17;
+		const editor = await renderEditor({ appliedLayout });
+		const preview = getPreview(editor.container);
+		const chat = getChat(editor.container);
+		mockPreviewBounds(preview);
+		mockPointerCapture(chat);
+
+		await pointer(chat, "pointerdown", {
+			clientX: 159,
+			clientY: 212,
+			pointerId: 18,
+		});
+		await pointer(chat, "pointermove", {
+			clientX: 639,
+			clientY: 359,
+			pointerId: 18,
+		});
+		await pointer(chat, "pointerup", {
+			clientX: 639,
+			clientY: 359,
+			pointerId: 18,
+		});
+		await click(getButton(editor.container, "Apply"));
+
+		expect(editor.onApply).toHaveBeenCalledWith(
+			expect.objectContaining({
+				chat: expect.objectContaining({ position: { x: 9, y: 7 } }),
+			}),
+		);
+
+		await unmount(editor.root);
+	});
+
 	it("maps pointer movement through the runtime safe rectangle", async () => {
 		const safeContext: OverlayLayoutContext = {
 			cameraCount: 4,
@@ -485,8 +638,10 @@ describe("OverlayLayoutEditor", () => {
 				width: 640,
 			},
 		};
+		const appliedLayout = layoutAt({ x: 2, y: 2 });
+		appliedLayout.chat.position = { x: 7, y: 7 };
 		const editor = await renderEditor({
-			appliedLayout: layoutAt({ x: 2, y: 2 }),
+			appliedLayout,
 			layoutContext: safeContext,
 		});
 		const preview = getPreview(editor.container);
@@ -517,7 +672,7 @@ describe("OverlayLayoutEditor", () => {
 
 		expect(editor.onApply).toHaveBeenCalledWith(
 			expect.objectContaining({
-				video: expect.objectContaining({ anchor: { x: 6, y: 2 } }),
+				video: expect.objectContaining({ anchor: { x: 6, y: 3 } }),
 			}),
 		);
 
@@ -693,16 +848,13 @@ describe("OverlayLayoutEditor", () => {
 		await unmount(editor.root);
 	});
 
-	it("calls the camera toggle callback", async () => {
-		const editor = await renderEditor({
-			cameraEnabled: true,
-			cameraStatus: "Camera ready",
-		});
+	it("keeps camera activation out of layout settings", async () => {
+		const editor = await renderEditor();
 
-		expect(editor.container.textContent).toContain("Camera ready");
-		await click(getButton(editor.container, "Turn camera off"));
-
-		expect(editor.onCameraToggle).toHaveBeenCalledTimes(1);
+		expect(editor.container.textContent).not.toContain("Camera off");
+		expect(
+			editor.container.querySelector('[aria-label="Turn camera on"]'),
+		).toBeNull();
 
 		await unmount(editor.root);
 	});
@@ -710,26 +862,26 @@ describe("OverlayLayoutEditor", () => {
 
 async function renderEditor({
 	appliedLayout = getDefaultOverlayLayoutDefinition(),
-	cameraEnabled = false,
-	cameraStatus = "Camera off",
 	onApply = vi.fn<(layout: OverlayLayoutDefinition) => Promise<void>>(() =>
 		Promise.resolve(),
 	),
-	onCameraToggle = vi.fn<() => void>(),
+	onChatDisplayModeChange = vi.fn<(mode: "live" | "history") => void>(),
 	onPreviewChange = vi.fn<(layout: OverlayLayoutDefinition | null) => void>(),
+	chatDisplayMode = "live",
 	layoutContext = measuredLayoutContext,
 }: Partial<{
 	appliedLayout: OverlayLayoutDefinition;
-	cameraEnabled: boolean;
-	cameraStatus: string;
 	onApply: ReturnType<
 		typeof vi.fn<(layout: OverlayLayoutDefinition) => Promise<void>>
 	>;
-	onCameraToggle: ReturnType<typeof vi.fn<() => void>>;
+	onChatDisplayModeChange: ReturnType<
+		typeof vi.fn<(mode: "live" | "history") => void>
+	>;
 	onPreviewChange: ReturnType<
 		typeof vi.fn<(layout: OverlayLayoutDefinition | null) => void>
 	>;
 	layoutContext: OverlayLayoutContext;
+	chatDisplayMode: "live" | "history";
 }> = {}): Promise<RenderedEditor> {
 	const container = document.createElement("div");
 	document.body.append(container);
@@ -739,17 +891,22 @@ async function renderEditor({
 		root.render(
 			<OverlayLayoutEditor
 				appliedLayout={appliedLayout}
-				cameraEnabled={cameraEnabled}
-				cameraStatus={cameraStatus}
+				chatDisplayMode={chatDisplayMode}
 				layoutContext={layoutContext}
 				onApply={onApply}
-				onCameraToggle={onCameraToggle}
+				onChatDisplayModeChange={onChatDisplayModeChange}
 				onPreviewChange={onPreviewChange}
 			/>,
 		);
 	});
 
-	return { container, onApply, onCameraToggle, onPreviewChange, root };
+	return {
+		container,
+		onApply,
+		onChatDisplayModeChange,
+		onPreviewChange,
+		root,
+	};
 }
 
 function layoutAt(anchor: { x: number; y: number }): OverlayLayoutDefinition {
@@ -771,12 +928,29 @@ function getButton(container: HTMLElement, name: string): HTMLButtonElement {
 	return button;
 }
 
-function getSelect(container: HTMLElement, label: string): HTMLSelectElement {
-	const select = container.querySelector(`select[aria-label="${label}"]`);
-	if (!(select instanceof HTMLSelectElement)) {
-		throw new Error(`Select not found: ${label}`);
+function getButtonInGroup(
+	container: HTMLElement,
+	groupLabel: string,
+	buttonLabel: string,
+): HTMLButtonElement {
+	const group = container.querySelector(`[aria-label="${groupLabel}"]`);
+	const button = Array.from(group?.querySelectorAll("button") ?? []).find(
+		(candidate) => candidate.textContent?.trim() === buttonLabel,
+	);
+	if (!(button instanceof HTMLButtonElement)) {
+		throw new Error(`Button not found in ${groupLabel}: ${buttonLabel}`);
 	}
-	return select;
+	return button;
+}
+
+function getRange(container: HTMLElement, label: string): HTMLInputElement {
+	const range = container.querySelector(
+		`input[type="range"][aria-label="${label}"]`,
+	);
+	if (!(range instanceof HTMLInputElement)) {
+		throw new Error(`Range not found: ${label}`);
+	}
+	return range;
 }
 
 function getPreview(container: HTMLElement): HTMLElement {
@@ -827,10 +1001,14 @@ function mockPointerCapture(target: HTMLElement) {
 	return releasePointerCapture;
 }
 
-async function changeSelect(select: HTMLSelectElement, value: string) {
+async function changeRange(range: HTMLInputElement, value: string) {
 	await act(async () => {
-		select.value = value;
-		select.dispatchEvent(new Event("change", { bubbles: true }));
+		const valueSetter = Object.getOwnPropertyDescriptor(
+			HTMLInputElement.prototype,
+			"value",
+		)?.set;
+		valueSetter?.call(range, value);
+		range.dispatchEvent(new Event("input", { bubbles: true }));
 	});
 }
 

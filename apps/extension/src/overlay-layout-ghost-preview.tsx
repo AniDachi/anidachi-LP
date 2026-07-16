@@ -1,35 +1,50 @@
 import type { CSSProperties } from "react";
 import type { PixelRect, ResolvedOverlayLayout } from "./overlay-layout-engine";
-
-const CHAT_LINE_WIDTHS = [72, 48, 84, 61, 76, 43, 68, 55];
+import { OverlayLayoutChatPreview } from "./overlay-layout-chat-preview";
 
 export interface OverlayLayoutGhostPreviewProps {
   layout: ResolvedOverlayLayout;
+  occupiedCameraSlots?: number;
+  showChatPlaceholder?: boolean;
 }
 
-export function OverlayLayoutGhostPreview({ layout }: OverlayLayoutGhostPreviewProps) {
+export function OverlayLayoutGhostPreview({
+  layout,
+  occupiedCameraSlots = 0,
+  showChatPlaceholder = true,
+}: OverlayLayoutGhostPreviewProps) {
+  const occupiedSlotCount = Math.max(
+    0,
+    Math.min(layout.video.slots.length, Math.round(occupiedCameraSlots)),
+  );
+
   return (
     <div aria-hidden="true" className="overlay-layout-ghost-preview">
-      {layout.video.slots.map((slot, index) => (
-        <div
-          className={`overlay-layout-camera-ghost${index === 0 ? " is-leader" : ""}`}
-          data-live-layout-camera-ghost=""
-          key={`layout-camera-ghost-${index}`}
-          style={getPixelRectStyle(slot)}
-        />
-      ))}
-      <div
-        className="overlay-layout-chat-ghost"
-        data-live-layout-chat-ghost=""
-        style={getPixelRectStyle(layout.chat.rect)}
-      >
-        {Array.from({ length: layout.chat.effectiveMaxMessages }, (_, index) => (
-          <span
-            key={`layout-chat-line-${index}`}
-            style={{ width: `${CHAT_LINE_WIDTHS[index % CHAT_LINE_WIDTHS.length]}%` }}
+      {layout.video.slots.map((slot, index) =>
+        index < occupiedSlotCount ? null : (
+          <div
+            className={`overlay-layout-camera-ghost${index === 0 ? " is-leader" : ""}`}
+            data-layout-slot-index={index}
+            data-live-layout-camera-ghost=""
+            key={`layout-camera-ghost-${index}`}
+            style={getPixelRectStyle(slot)}
           />
-        ))}
-      </div>
+        ),
+      )}
+      {showChatPlaceholder ? (
+        <div
+          className="overlay-layout-chat-ghost layout-chat-preview-shell"
+          data-live-layout-chat-ghost=""
+          style={{
+            ...getPixelRectStyle(layout.chat.rect),
+            "--live-chat-message-opacity": `${1 - layout.chat.messageTransparency / 100}`,
+            fontSize: `${layout.chat.fontSizePx}px`,
+            lineHeight: `${layout.chat.lineHeightPx}px`,
+          } as CSSProperties}
+        >
+          <OverlayLayoutChatPreview messageCount={layout.chat.effectiveMaxMessages} />
+        </div>
+      ) : null}
     </div>
   );
 }

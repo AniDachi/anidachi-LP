@@ -1,7 +1,7 @@
 import {
+  type ClientEvent,
   getSyncCorrection,
   normalizeRemotePlaybackState,
-  type ClientEvent,
   type P2PSignal,
   type Participant,
   type PlaybackState,
@@ -11,6 +11,7 @@ import {
   type ServerEvent,
 } from "@anidachi/protocol";
 import {
+  Check,
   Copy,
   DoorOpen,
   Mic,
@@ -19,23 +20,22 @@ import {
   SendHorizontal,
   SmilePlus,
   UserPlus,
-  X,
 } from "lucide-react";
 import type {
   CSSProperties,
   FormEvent,
-  KeyboardEvent as ReactKeyboardEvent,
   PointerEvent,
-  ReactNode,
-  SyntheticEvent,
+  KeyboardEvent as ReactKeyboardEvent,
   WheelEvent as ReactWheelEvent,
+  SyntheticEvent,
 } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { storage } from "wxt/utils/storage";
-import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK, EMOJI_PALETTE } from "./constants";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
-import { CurrentResourcePanel } from "./current-resource-panel";
+import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
+import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK, EMOJI_PALETTE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
+import { CurrentResourcePanel } from "./current-resource-panel";
 import {
   clearDebugLog,
   getCompactDebugLogText,
@@ -48,11 +48,12 @@ import {
 } from "./debug-log";
 import {
   clearDiagnosticsFromPage,
-  saveDiagnosticsFromPage,
   type DiagnosticMode,
+  saveDiagnosticsFromPage,
 } from "./diagnostic-log";
+import { HOLD_FIRE_SUPER_REACTION_EXPERIMENT, normalizeExperimentFlag } from "./experiments";
+import { type GhostVideo, type LiveVoiceStatus, useGhostCam } from "./ghost-cam";
 import { getGhostCamGapPx } from "./ghost-cam-size";
-import { useGhostCam, type GhostVideo, type LiveVoiceStatus } from "./ghost-cam";
 import { getHotkeyAction, shouldStopVoiceTalkOnWindowBlur } from "./hotkeys";
 import type {
   IncomingP2PSignal,
@@ -60,6 +61,13 @@ import type {
   SignalingTransportReady,
 } from "./media-types";
 import {
+  ANIDACHI_COMPOSER_OPEN_ATTR,
+  ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
+  ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
+  isMessageComposerShortcutEvent,
+} from "./message-composer-events";
+import {
+  type CrunchyrollPlayerChromeState,
   DEFAULT_CAM_STACK_BOTTOM_PX,
   DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE,
   DEFAULT_MINI_PANEL_RIGHT_PX,
@@ -67,54 +75,44 @@ import {
   DEFAULT_TOP_BUBBLE_RIGHT_PX,
   DEFAULT_TOP_BUBBLE_TOP_PX,
   shouldShowCameraStack,
-  type CrunchyrollPlayerChromeState,
 } from "./overlay-layout";
-import { resolveOverlayLayout, type OverlayLayoutContext } from "./overlay-layout-engine";
 import { OverlayLayoutEditor } from "./overlay-layout-editor";
+import { type OverlayLayoutContext, resolveOverlayLayout } from "./overlay-layout-engine";
 import { OverlayLayoutGhostPreview } from "./overlay-layout-ghost-preview";
 import {
   getDefaultOverlayLayoutDefinition,
   normalizeOverlayLayoutDefinition,
+  OVERLAY_LAYOUT_MAX_MESSAGES,
   OVERLAY_LAYOUT_STORAGE_KEY_V2,
   OVERLAY_LAYOUT_STORAGE_VERSION,
-  parseOverlayLayoutPreferencesV2,
   type OverlayLayoutDefinition,
+  parseOverlayLayoutPreferencesV2,
 } from "./overlay-layout-model";
 import {
   createOverlayLayoutRuntimeContext,
   getOverlayLayoutCameraSlotCount,
-  getOverlayLayoutReservedRects,
   getOverlayLayoutRuntimeStyles,
 } from "./overlay-layout-runtime";
-import { getP2PMediaSessionState, persistRoomSessionForCurrentJoin } from "./overlay-media-session";
-import { selectP2PMediaParticipants } from "./p2p-media";
 import {
-  createRoomInvite,
-  listInviteTargets,
-  type CreateRoomInviteInput,
-  type FriendGroup,
-  type FriendListItem,
-  type InviteTargets,
-} from "./social-client";
-import { adoptWebsiteSessionWithRetry } from "./silent-session-adoption";
+  DEFAULT_LOCAL_CAMERA_ENABLED,
+  getCameraEnabledForRoomConnection,
+  getP2PMediaSessionState,
+  persistRoomSessionForCurrentJoin,
+} from "./overlay-media-session";
 import {
-  ANIDACHI_COMPOSER_OPEN_ATTR,
-  ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
-  ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
-  isMessageComposerShortcutEvent,
-} from "./message-composer-events";
-import { HOLD_FIRE_SUPER_REACTION_EXPERIMENT, normalizeExperimentFlag } from "./experiments";
+  shouldDismissOverlayPanel,
+  waitForOverlayPaint,
+} from "./overlay-panel-interaction";
 import {
-  EXTENSION_CONTEXT_INVALIDATED_MESSAGE,
-  authErrorMessage,
-  createCurrentParticipant,
-  isExtensionContextInvalidatedError,
-  signInAndCreateParticipant,
-  signOutAndClearParticipant,
-  trySilentSignIn,
-  type CurrentParticipantResult,
-} from "./user-identity";
-import { AUTH_TOKENS_KEY, type AuthenticatedUser, type AuthenticatedUserPlan } from "./auth-tokens";
+  copyRoomInviteText,
+  getPrimaryRoomActionLabel,
+  isInviteCopiedFeedback,
+  type RoomActionFeedback,
+  ROOM_ACTION_FEEDBACK_DURATION_MS,
+} from "./overlay-room-action-feedback";
+import { PanelCameraControl, RoomPeopleSection } from "./overlay-room-media-controls";
+import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
+import { PanelAccountTitle } from "./panel-account-title";
 import {
   getRemotePlayReadyTimeoutMs,
   isMediaSettling,
@@ -147,15 +145,44 @@ import {
 } from "./room-session-storage";
 import { acquireRoomTabLock, releaseRoomTabLock } from "./room-tab-lock";
 import { buildRoomShareableUrl } from "./room-url";
+import {
+  DEFAULT_SETTINGS_PANEL_CATEGORY,
+  SETTINGS_PANEL_CATEGORIES,
+  type SettingsPanelCategory,
+} from "./settings-panel-navigation";
+import { adoptWebsiteSessionWithRetry } from "./silent-session-adoption";
+import {
+  type CreateRoomInviteInput,
+  createRoomInvite,
+  type FriendGroup,
+  type FriendListItem,
+  type InviteTargets,
+  listInviteTargets,
+} from "./social-client";
 import { overlayStyles } from "./styles";
-import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
+import {
+  authErrorMessage,
+  type CurrentParticipantResult,
+  createCurrentParticipant,
+  EXTENSION_CONTEXT_INVALIDATED_MESSAGE,
+  isExtensionContextInvalidatedError,
+  signInAndCreateParticipant,
+  signOutAndClearParticipant,
+  trySilentSignIn,
+} from "./user-identity";
 import {
   buildWatchSourceDescriptor,
-  runCrunchyrollMainCommand,
   type PlayerEvent,
+  runCrunchyrollMainCommand,
   type VideoAdapter,
 } from "./video-adapter";
 import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
+import { resolveWatchLibraryReconcileAuth } from "./watch-library-auth";
+import {
+  markWatchLibraryEntriesSynced,
+  reconcileWatchProgress,
+  type WatchCheckpointKind,
+} from "./watch-library-client";
 import {
   createEmptyWatchProgressStore,
   loadWatchProgressStoreForUser,
@@ -163,12 +190,6 @@ import {
   type WatchProgressEntry,
   type WatchProgressStore,
 } from "./watch-progress";
-import {
-  markWatchLibraryEntriesSynced,
-  reconcileWatchProgress,
-  type WatchCheckpointKind,
-} from "./watch-library-client";
-import { resolveWatchLibraryReconcileAuth } from "./watch-library-auth";
 import { getWatchProgressEntryForAdapter } from "./watch-progress-entry";
 
 interface OverlayAppProps {
@@ -214,20 +235,7 @@ interface FireHoldState {
   startedAt: number;
 }
 
-type MessageDisplayMode = "chat" | "bubble";
 type ChatDisplayMode = "live" | "history";
-type SettingsPanelCategory = "layout" | "chat" | "reactions" | "voice" | "debug";
-
-const SETTINGS_PANEL_CATEGORIES: Array<{
-  id: SettingsPanelCategory;
-  label: string;
-}> = [
-  { id: "layout", label: "Layout" },
-  { id: "chat", label: "Chat" },
-  { id: "reactions", label: "Reactions" },
-  { id: "voice", label: "Voice" },
-  { id: "debug", label: "Debug" },
-];
 
 interface SettingsRailDragState {
   dragging: boolean;
@@ -265,12 +273,10 @@ const CRUNCHYROLL_LOCAL_SEEK_DUPLICATE_MS = 1200;
 const CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS = 0.75;
 const CRUNCHYROLL_LOCAL_PLAYBACK_SUPPRESSION_AFTER_SEEK_MS = 900;
 const CRUNCHYROLL_SOURCE_NAVIGATION_GUARD_MS = 6000;
-const MESSAGE_DISPLAY_MODE_STORAGE_KEY = "local:messageDisplayMode";
 const CHAT_DISPLAY_MODE_STORAGE_KEY = "local:chatDisplayMode";
-const DEFAULT_MESSAGE_DISPLAY_MODE: MessageDisplayMode = "chat";
 const DEFAULT_CHAT_DISPLAY_MODE: ChatDisplayMode = "live";
 const LIVE_CHAT_MESSAGE_TTL_MS = 9000;
-const LIVE_CHAT_MAX_MESSAGES = 8;
+const LIVE_CHAT_MAX_MESSAGES = OVERLAY_LAYOUT_MAX_MESSAGES;
 const CHAT_HISTORY_MAX_MESSAGES = 80;
 const SETTINGS_RAIL_DRAG_THRESHOLD_PX = 9;
 const SETTINGS_RAIL_HORIZONTAL_INTENT_RATIO = 1.2;
@@ -331,6 +337,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const messageComposerFormRef = useRef<HTMLFormElement | null>(null);
   const messageComposerInputRef = useRef<HTMLInputElement | null>(null);
   const messageComposerShieldRef = useRef<HTMLDivElement | null>(null);
+  const miniPanelRef = useRef<HTMLElement | null>(null);
+  const topBubbleRef = useRef<HTMLButtonElement | null>(null);
+  const roomActionFeedbackTimerRef = useRef<number | null>(null);
   const messageComposerShieldReleaseTimerRef = useRef<number | null>(null);
   const messageComposerShieldReleasePointerRef = useRef<PointerWakePoint | null>(null);
   const authUserIdRef = useRef<string | null>(null);
@@ -367,8 +376,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [messageComposerOpen, setMessageComposerOpen] = useState(false);
   const [roomCreatePending, setRoomCreatePending] = useState(false);
   const [roomEndPending, setRoomEndPending] = useState(false);
+  const [roomActionFeedback, setRoomActionFeedback] = useState<RoomActionFeedback | null>(null);
   const [settingsPanelCategory, setSettingsPanelCategory] =
-    useState<SettingsPanelCategory>("layout");
+    useState<SettingsPanelCategory>(DEFAULT_SETTINGS_PANEL_CATEGORY);
   const [settingsRailDragging, setSettingsRailDragging] = useState(false);
   const [settingsRailOverflow, setSettingsRailOverflow] = useState({
     left: false,
@@ -377,8 +387,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [appliedOverlayLayout, setAppliedOverlayLayout] = useState<OverlayLayoutDefinition>(() =>
     getDefaultOverlayLayoutDefinition(),
   );
-  const [previewOverlayLayout, setPreviewOverlayLayout] =
-    useState<OverlayLayoutDefinition | null>(null);
+  const [previewOverlayLayout, setPreviewOverlayLayout] = useState<OverlayLayoutDefinition | null>(
+    null,
+  );
   const [overlayViewportSize, setOverlayViewportSize] = useState<OverlayViewportSize>(() => ({
     height: 0,
     width: 0,
@@ -393,13 +404,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [messageComposerShieldReleasing, setMessageComposerShieldReleasing] = useState(false);
   const [messageComposerEmojiOpen, setMessageComposerEmojiOpen] = useState(false);
   const [messageComposerText, setMessageComposerText] = useState("");
-  const [camsEnabled, setCamsEnabled] = useState(true);
+  const [camsEnabled, setCamsEnabled] = useState(DEFAULT_LOCAL_CAMERA_ENABLED);
   const [reactionsEnabled, setReactionsEnabled] = useState(true);
   const [experimentalSuperReactionsEnabled, setExperimentalSuperReactionsEnabled] = useState(
     HOLD_FIRE_SUPER_REACTION_EXPERIMENT.defaultEnabled,
-  );
-  const [messageDisplayMode, setMessageDisplayMode] = useState<MessageDisplayMode>(
-    DEFAULT_MESSAGE_DISPLAY_MODE,
   );
   const [chatDisplayMode, setChatDisplayMode] =
     useState<ChatDisplayMode>(DEFAULT_CHAT_DISPLAY_MODE);
@@ -456,6 +464,34 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const applyParticipantIdentityRef = useRef<
     (result: CurrentParticipantResult, reason: string, reconnectActiveRoom: boolean) => void
   >(() => undefined);
+
+  const clearRoomActionFeedback = useCallback(() => {
+    if (roomActionFeedbackTimerRef.current !== null) {
+      window.clearTimeout(roomActionFeedbackTimerRef.current);
+      roomActionFeedbackTimerRef.current = null;
+    }
+    setRoomActionFeedback(null);
+  }, []);
+
+  const showRoomActionFeedback = useCallback((feedback: RoomActionFeedback) => {
+    if (roomActionFeedbackTimerRef.current !== null) {
+      window.clearTimeout(roomActionFeedbackTimerRef.current);
+    }
+    setRoomActionFeedback(feedback);
+    roomActionFeedbackTimerRef.current = window.setTimeout(() => {
+      roomActionFeedbackTimerRef.current = null;
+      setRoomActionFeedback(null);
+    }, ROOM_ACTION_FEEDBACK_DURATION_MS);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (roomActionFeedbackTimerRef.current !== null) {
+        window.clearTimeout(roomActionFeedbackTimerRef.current);
+      }
+    },
+    [],
+  );
 
   const updateSettingsRailOverflow = useCallback(() => {
     const rail = settingsCategoryScrollRef.current;
@@ -686,6 +722,56 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, [panelOpen, settingsPanelCategory, updateSettingsRailOverflow]);
 
   useEffect(() => {
+    if (!panelOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: globalThis.PointerEvent) => {
+      const path = event.composedPath();
+      const panel = miniPanelRef.current;
+      const bubble = topBubbleRef.current;
+      const rootNode = panel?.getRootNode();
+      const overlayRoot = rootNode instanceof ShadowRoot ? rootNode.host : null;
+      if (
+        !shouldDismissOverlayPanel({
+          busy: roomCreatePending || roomEndPending,
+          eventPath: path,
+          overlayRoot,
+          panel,
+          topBubble: bubble,
+        })
+      ) {
+        return;
+      }
+
+      setPanelOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        !isEscapeKey(event) ||
+        isFullscreenActive() ||
+        roomCreatePending ||
+        roomEndPending
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      setPanelOpen(false);
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown, true);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown, true);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [panelOpen, roomCreatePending, roomEndPending]);
+
+  useEffect(() => {
     participantRef.current = participant;
   }, [participant]);
 
@@ -829,6 +915,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       roomIdRef.current = null;
       setRoomId(null);
       setParticipants([]);
+      setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
       clearRoomQuotaDisplay();
       roomTokenRef.current = null;
       roomShareableLinkRef.current = null;
@@ -1039,11 +1126,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     roomMediaSeatLimit > 0
       ? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
       : "No live media";
-  const participantLimitText = `${participantCount}/${roomParticipantLimit} people`;
+  const mediaSeatSummaryText =
+    roomMediaSeatLimit > 0
+      ? `${Math.min(occupiedMediaSeatCount, roomMediaSeatLimit)}/${roomMediaSeatLimit} media seats`
+      : "No media seats";
   const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
   const isHost = currentParticipant?.role === "host";
   const isConnected = status === "connected";
-  const { p2pReady, p2pSessionActive } = getP2PMediaSessionState({
+  const { p2pSessionActive } = getP2PMediaSessionState({
     localHasMediaSeat,
     participantId: currentParticipant?.id ?? null,
     roomId,
@@ -1086,6 +1176,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     : DEFAULT_CAM_STACK_BOTTOM_PX;
   const displayedChatMessages =
     chatDisplayMode === "history" ? chatHistoryMessages : liveChatMessages;
+  const liveChatVisible = displayedChatMessages.length > 0;
   useEffect(() => {
     if (!roomId || !roomSnapshotReady || !camsEnabled) {
       return;
@@ -1166,9 +1257,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   useEffect(() => {
     let disposed = false;
     const viewportElement =
-      adapter.id === "youtube" || adapter.id === "crunchyroll"
-        ? adapter.container
-        : adapter.video;
+      adapter.id === "youtube" || adapter.id === "crunchyroll" ? adapter.container : adapter.video;
 
     const updateViewportSize = () => {
       if (disposed) {
@@ -1221,22 +1310,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   useEffect(() => {
     let cancelled = false;
 
-    void storage
-      .getItem<MessageDisplayMode | string>(MESSAGE_DISPLAY_MODE_STORAGE_KEY)
-      .then((storedMode) => {
-        if (!cancelled && storedMode !== null) {
-          setMessageDisplayMode(normalizeMessageDisplayMode(storedMode));
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
     void storage.getItem<ChatDisplayMode | string>(CHAT_DISPLAY_MODE_STORAGE_KEY).then((mode) => {
       if (!cancelled && mode !== null) {
         setChatDisplayMode(normalizeChatDisplayMode(mode));
@@ -1257,16 +1330,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setAppliedOverlayLayout(nextLayout);
   }, []);
 
-  const handleOverlayLayoutPreviewChange = useCallback(
-    (layout: OverlayLayoutDefinition | null) => {
-      setPreviewOverlayLayout(layout === null ? null : normalizeOverlayLayoutDefinition(layout));
-    },
-    [],
-  );
-
-  const handleMessageDisplayModeChange = useCallback((nextMode: MessageDisplayMode) => {
-    setMessageDisplayMode(nextMode);
-    void storage.setItem(MESSAGE_DISPLAY_MODE_STORAGE_KEY, nextMode);
+  const handleOverlayLayoutPreviewChange = useCallback((layout: OverlayLayoutDefinition | null) => {
+    setPreviewOverlayLayout(layout === null ? null : normalizeOverlayLayoutDefinition(layout));
   }, []);
 
   const handleChatDisplayModeChange = useCallback((nextMode: ChatDisplayMode) => {
@@ -1649,21 +1714,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     [sendMediaSeatEvent],
   );
 
-  const leaveMediaSeat = useCallback(
-    (userId: string) => {
-      const activeRoomId = roomIdRef.current;
-      if (!activeRoomId) {
-        return;
-      }
-      sendMediaSeatEvent({
-        type: "MEDIA_SEAT_LEAVE",
-        roomId: activeRoomId,
-        userId,
-      });
-    },
-    [sendMediaSeatEvent],
-  );
-
   const grantMediaSeat = useCallback(
     (targetUserId: string) => {
       const activeRoomId = roomIdRef.current;
@@ -1766,49 +1816,27 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     : DEFAULT_CAM_STACK_BOTTOM_PX;
   const roomRailBottomPx = Math.max(92, controlsBottomInsetPx + 12);
   const overlayLayoutPreviewActive = previewOverlayLayout !== null;
-  const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(() => {
-    const roomRailTopPx = topBubbleTopPx + 44;
-    const reservedRects = getOverlayLayoutReservedRects({
-      accountBubble: {
-        height: 40,
-        right: topBubbleRightPx,
-        top: topBubbleTopPx,
-        width: 104,
-      },
-      roomRail:
-        voiceRailParticipants.length > 0
-          ? {
-              height: Math.max(0, overlayViewportSize.height - roomRailTopPx - roomRailBottomPx),
-              right: 0,
-              top: roomRailTopPx,
-              width: 184,
-            }
-          : undefined,
-      viewport: overlayViewportSize,
-    });
-    return createOverlayLayoutRuntimeContext({
-      cameraCount: overlayLayoutPreviewActive
-        ? 4
-        : getOverlayLayoutCameraSlotCount(
-            cameraStackVisible ? renderableCameraParticipants.length : 0,
-          ),
+  const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(
+    () =>
+      createOverlayLayoutRuntimeContext({
+        cameraCount: overlayLayoutPreviewActive
+          ? 4
+          : getOverlayLayoutCameraSlotCount(
+              cameraStackVisible ? renderableCameraParticipants.length : 0,
+            ),
+        controlsBottomInsetPx,
+        height: overlayViewportSize.height,
+        safePaddingPx: 12,
+        width: overlayViewportSize.width,
+      }),
+    [
       controlsBottomInsetPx,
-      height: overlayViewportSize.height,
-      reservedRects,
-      safePaddingPx: 12,
-      width: overlayViewportSize.width,
-    });
-  }, [
-    controlsBottomInsetPx,
-    cameraStackVisible,
-    overlayViewportSize,
-    overlayLayoutPreviewActive,
-    renderableCameraParticipants.length,
-    roomRailBottomPx,
-    topBubbleRightPx,
-    topBubbleTopPx,
-    voiceRailParticipants.length,
-  ]);
+      cameraStackVisible,
+      overlayViewportSize,
+      overlayLayoutPreviewActive,
+      renderableCameraParticipants.length,
+    ],
+  );
   const resolvedOverlayLayout = useMemo(
     () =>
       resolveOverlayLayout(
@@ -1819,16 +1847,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   );
   const ghostCamSizePx = resolvedOverlayLayout.video.effectiveSizePx;
   const ghostCamGapPx = getGhostCamGapPx(resolvedOverlayLayout.video.effectiveSizeStep);
-  const cameraStatusText =
-    roomId && roomMediaSeatLimit <= 0
-      ? "No seats"
-      : roomId && !localHasMediaSeat
-        ? localMediaSeatState === "requested"
-          ? "Requested"
-          : "Chat only"
-        : camsEnabled
-          ? "Camera on"
-          : "Camera off";
+  const cameraControlDisabledReason =
+    roomMediaSeatLimit <= 0
+      ? "Live media is not available in this room"
+      : localMediaSeatState === "requested"
+        ? "Waiting for the host to approve media access"
+        : "Media seat required";
   const resolvedCamStackBottomPx = resolvedOverlayLayout.video.slots.length
     ? Math.max(
         0,
@@ -1837,9 +1861,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       )
     : camStackBottomPx;
   const miniPanelBottomReservePx =
-    isCrunchyroll && crunchyrollPlayerChrome.controlsVisible
-      ? Math.max(10, camStackBottomPx)
-      : 10;
+    isCrunchyroll && crunchyrollPlayerChrome.controlsVisible ? Math.max(10, camStackBottomPx) : 10;
   const overlayCssVariables = {
     ...getOverlayLayoutRuntimeStyles(resolvedOverlayLayout),
     "--cam-stack-height": `${resolvedOverlayLayout.video.bounds.height}px`,
@@ -2675,12 +2697,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           }
           if (event.reaction.text) {
             recordChatHistoryMessage(event.reaction);
-            if (messageDisplayMode === "chat") {
-              if (chatDisplayMode === "live") {
-                enqueueLiveChatMessage(event.reaction);
-              }
-              return;
+            if (chatDisplayMode === "live") {
+              enqueueLiveChatMessage(event.reaction);
             }
+            return;
           }
           setReactions((current) => [...current, event.reaction]);
           window.setTimeout(() => {
@@ -2723,7 +2743,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       chatDisplayMode,
       enqueueLiveChatMessage,
       experimentalSuperReactionsEnabled,
-      messageDisplayMode,
       recordChatHistoryMessage,
       reactionsEnabled,
       terminateRoomSession,
@@ -2786,6 +2805,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         return false;
       }
 
+      setCamsEnabled((currentCameraEnabled) =>
+        getCameraEnabledForRoomConnection({
+          currentCameraEnabled,
+          sameRoomReconnect,
+        }),
+      );
       storedRoomSessionRef.current = nextStoredRoomSession;
       setStoredRoomSession(nextStoredRoomSession);
       setRoomSessionLoadedForUserId(activeParticipant.id);
@@ -3282,6 +3307,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       roomIdRef.current = null;
       setRoomId(null);
       setParticipants([]);
+      setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
       clearRoomQuotaDisplay();
       setRoomCapabilities(null);
     } catch (error) {
@@ -3874,10 +3900,16 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       return;
     }
 
+    clearRoomActionFeedback();
     setRoomCreatePending(true);
+    setPanelOpen(true);
     setAuthMessage(null);
     try {
-      await createAndConnectRoom("manual");
+      await waitForOverlayPaint();
+      const created = await createAndConnectRoom("manual");
+      if (created) {
+        showRoomActionFeedback("room-created");
+      }
     } catch (error) {
       if (isQuotaExhaustedError(error)) {
         logDebug("overlay.room", "create blocked by quota", {
@@ -3901,6 +3933,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       return;
     }
 
+    clearRoomActionFeedback();
     setRoomEndPending(true);
     try {
       const activeRoomId = roomIdRef.current;
@@ -3917,6 +3950,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       roomIdRef.current = null;
       setRoomId(null);
       setParticipants([]);
+      setCamsEnabled(DEFAULT_LOCAL_CAMERA_ENABLED);
       clearRoomQuotaDisplay();
       setRoomCapabilities(null);
       roomTokenRef.current = null;
@@ -3925,7 +3959,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       setRoomShareableLink(null);
       clearStoredRoomSession();
       clearRoomHash();
-      setAuthMessage("Watch room ended.");
+      setAuthMessage(null);
+      showRoomActionFeedback("room-closed");
       logDebug("overlay.room", "ended by host", { roomId: activeRoomId });
     } catch (error) {
       roomReconnectSuppressedRef.current = false;
@@ -3951,7 +3986,23 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     }
 
     const invite = roomShareableLinkRef.current ?? buildRoomShareableUrl(roomId);
-    await navigator.clipboard.writeText(invite).catch(() => fallbackCopy(invite));
+    const copied = await copyRoomInviteText(
+      invite,
+      async (text) => {
+        if (!navigator.clipboard) {
+          throw new Error("Clipboard API unavailable");
+        }
+        await navigator.clipboard.writeText(text);
+      },
+      fallbackCopy,
+    );
+    if (!copied) {
+      setAuthMessage("Could not copy the invite link.");
+      logDebug("overlay.invite", "copy failed", { roomId });
+      return;
+    }
+
+    showRoomActionFeedback("invite-copied");
     logDebug("overlay.invite", "copied", { roomId, invite });
   };
 
@@ -4700,13 +4751,13 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   ]
     .filter(Boolean)
     .join(" ");
-  const primaryRoomActionLabel = roomCreatePending
-    ? roomId
-      ? "Creating"
-      : "Creating room"
-    : roomId
-      ? "New room"
-      : "Create room";
+  const primaryRoomActionLabel = getPrimaryRoomActionLabel({
+    feedback: roomActionFeedback,
+    roomCreatePending,
+    roomEndPending,
+    roomExists: Boolean(roomId),
+  });
+  const inviteCopied = isInviteCopiedFeedback(roomActionFeedback);
   const accountDisplayName =
     accountUser?.displayName ??
     participant?.displayName ??
@@ -4724,39 +4775,34 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       style={overlayCssVariables}
     >
       <style>{overlayStyles}</style>
-      <button className="top-bubble" type="button" onClick={() => setPanelOpen((value) => !value)}>
+      <button
+        className="top-bubble"
+        ref={topBubbleRef}
+        type="button"
+        onClick={() =>
+          setPanelOpen((value) => (roomCreatePending || roomEndPending ? true : !value))
+        }
+      >
         <AnidachiLogoMark className="top-bubble-logo" size={24} />
         <span className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`} />
         <span className="bubble-count">{participantCount}</span>
       </button>
 
       {panelOpen ? (
-        <section className="mini-panel" aria-label="Anidachi controls">
+        <section className="mini-panel" aria-label="Anidachi controls" ref={miniPanelRef}>
           <div className="panel-header">
             <div className="panel-account">
               <span className="mini-avatar panel-account-avatar">
                 {initials(accountAvatarLabel)}
               </span>
               <div className="panel-account-copy">
-                <div className="panel-account-title-row">
-                  <strong className="panel-account-name">{accountDisplayName}</strong>
-                  {authAuthenticated && accountUser ? (
-                    <span className={`plan-badge ${accountUser.plan}`}>
-                      {planLabel(accountUser.plan)}
-                    </span>
-                  ) : null}
-                </div>
+                <PanelAccountTitle
+                  displayName={accountDisplayName}
+                  plan={authAuthenticated && accountUser ? accountUser.plan : null}
+                />
                 {roomId ? (
                   <div className="panel-room-summary">
-                    <span
-                      aria-hidden="true"
-                      className={`panel-room-dot ${isConnected ? "connected" : ""}`}
-                    />
-                    <span>{status}</span>
-                    <span aria-hidden="true">·</span>
-                    <span>{participantLimitText}</span>
-                    <span aria-hidden="true">·</span>
-                    <span>{mediaSeatText}</span>
+                    <span>{mediaSeatSummaryText}</span>
                   </div>
                 ) : !authAuthenticated ? (
                   <div className="panel-account-helper">{accountHelperText}</div>
@@ -4774,14 +4820,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                   {authBusy || !identityLoaded ? "Wait" : "Sign in"}
                 </button>
               ) : null}
-              <button
-                aria-label="Close panel"
-                className="icon-button panel-close-button"
-                type="button"
-                onClick={() => setPanelOpen(false)}
-              >
-                <X size={15} />
-              </button>
+              {roomId && currentParticipant ? (
+                <PanelCameraControl
+                  cameraEnabled={camsEnabled}
+                  disabled={!liveMediaAvailable}
+                  disabledReason={cameraControlDisabledReason}
+                  onToggle={handleGhostCamToggle}
+                />
+              ) : null}
             </div>
           </div>
 
@@ -4794,20 +4840,25 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                 !participant || extensionContextInvalidated || roomCreatePending || roomEndPending
               }
             >
-              <span>{primaryRoomActionLabel}</span>
+              <span aria-live="polite">{primaryRoomActionLabel}</span>
             </button>
             {roomId ? (
               <div className="panel-action-icons" role="group" aria-label="Room actions">
                 <button
-                  aria-label="Copy invite"
-                  className="panel-icon-action reveal-action"
-                  title="Copy invite"
+                  aria-label={inviteCopied ? "Invite copied" : "Copy invite"}
+                  className={`panel-icon-action reveal-action${inviteCopied ? " success" : ""}`}
+                  title={inviteCopied ? "Invite copied" : "Copy invite"}
                   type="button"
                   onClick={copyInvite}
                   disabled={roomCreatePending || roomEndPending}
                   style={{ "--action-index": 0 } as CSSProperties}
                 >
-                  <Copy size={14} />
+                  {inviteCopied ? <Check size={14} /> : <Copy size={14} />}
+                  {inviteCopied ? (
+                    <span className="sr-only" role="status">
+                      Invite copied
+                    </span>
+                  ) : null}
                 </button>
                 <button
                   aria-label="Invite friends and groups"
@@ -4866,7 +4917,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           ) : null}
           {roomQuota ? (
             <div className="quota-note">
-              Free watch-party time today: {formatQuotaCountdown(quotaRemainingSeconds)} left
+              <span>Free watch-party time today</span>
+              <strong>{formatQuotaCountdown(quotaRemainingSeconds)} left</strong>
             </div>
           ) : null}
           {invitePanelOpen ? (
@@ -4940,110 +4992,21 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           ) : null}
 
           {roomId && visibleParticipants.length ? (
-            <section className="room-people-section" aria-label="Room participants">
-              <div className="section-title room-people-heading">
-                <span>People</span>
-                <span>{roomPeopleCountText}</span>
-              </div>
-              <div className="room-people-list">
-                {visibleParticipants.map((item) => {
-                  const isSpeaking = liveVoiceActiveSpeakerIds.includes(item.id);
-                  const isSelf = item.id === currentParticipant?.id;
-                  const mediaLabel =
-                    item.mediaSeat === "joined"
-                      ? "media"
-                      : item.mediaSeat === "requested"
-                        ? "requested"
-                        : "chat";
-                  const statusParts = [
-                    item.role,
-                    mediaLabel,
-                    item.cameraEnabled ? "cam" : null,
-                    isSpeaking ? "speaking" : null,
-                  ].filter(Boolean);
-                  const mediaSeatsFull = occupiedMediaSeatCount >= roomMediaSeatLimit;
-                  let mediaAction: ReactNode = null;
-                  if (isSelf) {
-                    if (item.mediaSeat === "joined") {
-                      mediaAction = (
-                        <button
-                          className="room-people-action"
-                          onClick={() => leaveMediaSeat(item.id)}
-                          type="button"
-                        >
-                          Leave
-                        </button>
-                      );
-                    } else if (item.mediaSeat === "requested") {
-                      mediaAction = (
-                        <button
-                          className="room-people-action"
-                          onClick={() => cancelMediaSeatRequest(item.id)}
-                          type="button"
-                        >
-                          Cancel
-                        </button>
-                      );
-                    } else {
-                      mediaAction = (
-                        <button
-                          className="room-people-action"
-                          disabled={roomMediaSeatLimit <= 0}
-                          onClick={() => requestMediaSeat(item.id)}
-                          type="button"
-                        >
-                          Request
-                        </button>
-                      );
-                    }
-                  } else if (isHost) {
-                    if (item.mediaSeat === "joined") {
-                      mediaAction = (
-                        <button
-                          className="room-people-action"
-                          onClick={() => revokeMediaSeat(item.id)}
-                          type="button"
-                        >
-                          Remove
-                        </button>
-                      );
-                    } else {
-                      mediaAction = (
-                        <button
-                          className="room-people-action"
-                          disabled={roomMediaSeatLimit <= 0 || mediaSeatsFull}
-                          onClick={() => grantMediaSeat(item.id)}
-                          type="button"
-                        >
-                          {item.mediaSeat === "requested" ? "Accept" : "Give"}
-                        </button>
-                      );
-                    }
-                  }
-
-                  return (
-                    <div
-                      className={`room-people-row${isSpeaking ? " speaking" : ""}`}
-                      key={item.id}
-                    >
-                      <div className="room-people-main">
-                        <span className="mini-avatar room-people-avatar">
-                          {initials(item.displayName)}
-                        </span>
-                        <span className="room-people-copy">
-                          <span className="room-people-name">{item.displayName}</span>
-                          <span className="room-people-status">{statusParts.join(" · ")}</span>
-                        </span>
-                      </div>
-                      {mediaAction ? <div className="room-people-side">{mediaAction}</div> : null}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
+            <RoomPeopleSection
+              currentParticipantId={currentParticipant?.id ?? null}
+              liveVoiceActiveSpeakerIds={liveVoiceActiveSpeakerIds}
+              maxMediaSeats={roomMediaSeatLimit}
+              occupiedMediaSeatCount={occupiedMediaSeatCount}
+              onCancelMediaSeatRequest={cancelMediaSeatRequest}
+              onGrantMediaSeat={grantMediaSeat}
+              onRequestMediaSeat={requestMediaSeat}
+              onRevokeMediaSeat={revokeMediaSeat}
+              participants={visibleParticipants}
+              roomPeopleCountText={roomPeopleCountText}
+            />
           ) : null}
 
-          <div className="section-title">Settings</div>
+          <div className="section-title settings-section-title">Settings</div>
           <div className="settings-shell">
             <div
               className={[
@@ -5072,7 +5035,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                 {SETTINGS_PANEL_CATEGORIES.map((category) => (
                   <button
                     aria-selected={settingsPanelCategory === category.id}
-                    className={`settings-category-pill${
+                    className={`settings-category-tab${
                       settingsPanelCategory === category.id ? " active" : ""
                     }`}
                     key={category.id}
@@ -5093,59 +5056,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
               {settingsPanelCategory === "layout" ? (
                 <OverlayLayoutEditor
                   appliedLayout={appliedOverlayLayout}
-                  cameraEnabled={camsEnabled}
-                  cameraStatus={cameraStatusText}
+                  chatDisplayMode={chatDisplayMode}
                   layoutContext={overlayLayoutRuntimeContext}
                   onApply={handleOverlayLayoutApply}
-                  onCameraToggle={handleGhostCamToggle}
+                  onChatDisplayModeChange={handleChatDisplayModeChange}
                   onPreviewChange={handleOverlayLayoutPreviewChange}
                 />
-              ) : null}
-              {settingsPanelCategory === "chat" ? (
-                <div className="settings-panel-stack">
-                  <div className="mode-control">
-                    <span>Messages</span>
-                    <fieldset className="segmented-control">
-                      <legend className="sr-only">Message display mode</legend>
-                      <button
-                        className={messageDisplayMode === "chat" ? "selected" : ""}
-                        type="button"
-                        onClick={() => handleMessageDisplayModeChange("chat")}
-                      >
-                        Chat
-                      </button>
-                      <button
-                        className={messageDisplayMode === "bubble" ? "selected" : ""}
-                        type="button"
-                        onClick={() => handleMessageDisplayModeChange("bubble")}
-                      >
-                        Bubbles
-                      </button>
-                    </fieldset>
-                  </div>
-                  {messageDisplayMode === "chat" ? (
-                    <div className="mode-control">
-                      <span>Chat mode</span>
-                      <fieldset className="segmented-control">
-                        <legend className="sr-only">Chat display mode</legend>
-                        <button
-                          className={chatDisplayMode === "live" ? "selected" : ""}
-                          type="button"
-                          onClick={() => handleChatDisplayModeChange("live")}
-                        >
-                          Live
-                        </button>
-                        <button
-                          className={chatDisplayMode === "history" ? "selected" : ""}
-                          type="button"
-                          onClick={() => handleChatDisplayModeChange("history")}
-                        >
-                          History
-                        </button>
-                      </fieldset>
-                    </div>
-                  ) : null}
-                </div>
               ) : null}
 
               {settingsPanelCategory === "reactions" ? (
@@ -5304,7 +5220,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       ) : null}
 
       {overlayLayoutPreviewActive ? (
-        <OverlayLayoutGhostPreview layout={resolvedOverlayLayout} />
+        <OverlayLayoutGhostPreview
+          layout={resolvedOverlayLayout}
+          occupiedCameraSlots={cameraStackVisible ? renderableCameraParticipants.length : 0}
+          showChatPlaceholder={!liveChatVisible}
+        />
       ) : null}
 
       {messageComposerShieldVisible && roomId ? (
@@ -5414,8 +5334,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             />
           ) : null}
 
-          {messageDisplayMode === "chat" && displayedChatMessages.length ? (
+          {liveChatVisible ? (
             <LiveChatColumn
+              layoutPreviewActive={overlayLayoutPreviewActive}
               mode={chatDisplayMode}
               messages={displayedChatMessages}
               maxLiveMessages={resolvedOverlayLayout.chat.effectiveMaxMessages}
@@ -5688,12 +5609,14 @@ function CameraBubble({
 }
 
 function LiveChatColumn({
+  layoutPreviewActive,
   mode,
   messages,
   maxLiveMessages,
   participants,
   fallbackParticipantId,
 }: {
+  layoutPreviewActive: boolean;
   mode: ChatDisplayMode;
   messages: LiveChatMessage[];
   maxLiveMessages: number;
@@ -5701,17 +5624,14 @@ function LiveChatColumn({
   fallbackParticipantId?: string;
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const renderedMode = layoutPreviewActive ? "live" : mode;
   const visibleMessages =
-    mode === "history"
+    renderedMode === "history"
       ? messages.slice(-CHAT_HISTORY_MAX_MESSAGES)
       : messages.slice(-maxLiveMessages);
-  const hasGhostRow = mode === "live" && visibleMessages.length >= maxLiveMessages;
+  const latestMessageId = visibleMessages.at(-1)?.id;
 
   useEffect(() => {
-    if (mode !== "history") {
-      return;
-    }
-
     const element = scrollRef.current;
     if (!element) {
       return;
@@ -5721,11 +5641,13 @@ function LiveChatColumn({
     if (distanceFromBottom < 70 || messages.length <= 1) {
       element.scrollTop = element.scrollHeight;
     }
-  }, [messages.length, mode]);
+  }, [latestMessageId, messages.length, renderedMode]);
 
   return (
     <div
-      className={`live-chat-column ${mode}`}
+      className={`live-chat-column ${renderedMode}${
+        layoutPreviewActive ? " layout-chat-preview-shell" : ""
+      }`}
       aria-live="polite"
       onMouseMove={stopNativeEvent}
       onPointerDown={stopNativeEvent}
@@ -5735,21 +5657,16 @@ function LiveChatColumn({
       ref={scrollRef}
       role="log"
     >
-      {visibleMessages.map((message, index) => {
+      {visibleMessages.map((message) => {
         const participant = participants.find((item) => item.id === message.reaction.userId);
         const isFallback = message.reaction.userId === fallbackParticipantId && !participant;
         const displayName = participant?.displayName ?? (isFallback ? "You" : "Friend");
-        const isGhost = hasGhostRow && index === 0;
         const style = {
           "--chat-name-color": getLiveChatNameColor(message.reaction.userId),
         } as CSSProperties;
 
         return (
-          <div
-            className={`live-chat-message ${isGhost ? "ghost" : ""}`}
-            key={message.id}
-            style={style}
-          >
+          <div className="live-chat-message" key={message.id} style={style}>
             <span className="live-chat-name">{displayName}</span>
             <span className="live-chat-text">{message.reaction.text}</span>
           </div>
@@ -5874,10 +5791,6 @@ function toIncomingP2PSignal(event: P2PSignalServerEvent, sequence: number): Inc
   }
 
   return incoming;
-}
-
-function normalizeMessageDisplayMode(value: unknown): MessageDisplayMode {
-  return value === "bubble" ? "bubble" : DEFAULT_MESSAGE_DISPLAY_MODE;
 }
 
 function normalizeChatDisplayMode(value: unknown): ChatDisplayMode {
@@ -6039,15 +5952,18 @@ async function navigateCrunchyrollToRemoteSource(target: URL, state: PlaybackSta
   location.assign(targetUrl);
 }
 
-function fallbackCopy(text: string): void {
+function fallbackCopy(text: string): boolean {
   const input = document.createElement("textarea");
   input.value = text;
   input.style.position = "fixed";
   input.style.left = "-9999px";
   document.body.append(input);
   input.select();
-  document.execCommand("copy");
-  input.remove();
+  try {
+    return document.execCommand("copy");
+  } finally {
+    input.remove();
+  }
 }
 
 function initials(name: string): string {
@@ -6057,12 +5973,6 @@ function initials(name: string): string {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
-}
-
-function planLabel(plan: AuthenticatedUserPlan): string {
-  if (plan === "plus") return "Plus";
-  if (plan === "pro") return "Pro";
-  return "Free";
 }
 
 function getCrunchyrollPlayerChromeState(container: HTMLElement): CrunchyrollPlayerChromeState {

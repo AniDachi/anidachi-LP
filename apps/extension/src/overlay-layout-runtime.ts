@@ -86,6 +86,7 @@ export function getOverlayLayoutRuntimeStyles(
     "--cam-bubble-size": toPx(bubbleSizePx),
     "--cam-bubble-gap": toPx(getBubbleGapPx(video.slots, bubbleSizePx)),
     "--cam-stack-direction": video.leaderSide === "left" ? "row" : "row-reverse",
+    "--live-chat-message-opacity": toMessageOpacity(chat.messageTransparency),
     "--live-chat-left": toPx(chatRect.x),
     "--live-chat-top": toPx(chatRect.y),
     "--live-chat-width": toPx(chatRect.width),
@@ -93,6 +94,11 @@ export function getOverlayLayoutRuntimeStyles(
     "--live-chat-font-size": toPx(chat.fontSizePx),
     "--live-chat-line-height": toPx(chat.lineHeightPx),
   };
+}
+
+function toMessageOpacity(value: unknown): string {
+  const transparency = typeof value === "number" && Number.isFinite(value) ? value : 0;
+  return String(1 - Math.max(0, Math.min(95, transparency)) / 100);
 }
 
 function getBubbleGapPx(slots: unknown, bubbleSizePx: number): number {
