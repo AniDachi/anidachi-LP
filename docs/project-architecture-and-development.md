@@ -436,15 +436,10 @@ Use the shared staging website and staging Worker from the WXT dev browser:
 pnpm dev:extension:staging
 ```
 
-Use the Google-friendly launcher when testing Google sign-in:
-
-```bash
-pnpm dev:extension:staging:google
-```
-
-It starts WXT without auto-opening the `web-ext` browser, then opens a normal
-Chrome profile with the dev extension loaded. This avoids Google's "browser or
-app may not be secure" block while keeping WXT rebuilds active.
+For Google sign-in and release-like auth testing, build the staging extension
+and load `anidachi-extension-staging` manually in a normal Chrome profile. Use
+WXT dev mode for fast code iteration; its automated browser can be rejected by
+Google because it runs with remote debugging flags.
 
 Load the dev extension from:
 
