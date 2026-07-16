@@ -1,10 +1,34 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_LOCAL_CAMERA_ENABLED,
+  getCameraEnabledForRoomConnection,
   getP2PMediaSessionState,
   persistRoomSessionForCurrentJoin,
 } from "../src/overlay-media-session";
 
 describe("overlay P2P media session state", () => {
+  it("starts every new room with camera off while preserving same-room reconnects", () => {
+    expect(DEFAULT_LOCAL_CAMERA_ENABLED).toBe(false);
+    expect(
+      getCameraEnabledForRoomConnection({
+        currentCameraEnabled: true,
+        sameRoomReconnect: false,
+      }),
+    ).toBe(false);
+    expect(
+      getCameraEnabledForRoomConnection({
+        currentCameraEnabled: true,
+        sameRoomReconnect: true,
+      }),
+    ).toBe(true);
+    expect(
+      getCameraEnabledForRoomConnection({
+        currentCameraEnabled: false,
+        sameRoomReconnect: true,
+      }),
+    ).toBe(false);
+  });
+
   it("rejects a persisted room session when its join becomes stale while storage resolves", async () => {
     let resolvePersist: (value: { participantSessionId: string }) => void = () => {};
     const persist = new Promise<{ participantSessionId: string }>((resolve) => {

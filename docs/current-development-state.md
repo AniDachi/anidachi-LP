@@ -280,6 +280,23 @@ The extension currently supports:
 - WebSocket room join and playback sync;
 - reactions and live chat input;
 - Ghost Cam camera bubbles;
+- local camera publishing is opt-in for every newly created, joined, or restored
+  room session. A same-room network reconnect preserves the user's explicit
+  camera choice, while leaving the room, signing out, or switching account
+  resets the next room to camera off;
+- one extension-local Overlay Layout Engine V2 now drives both the live camera/chat
+  geometry and the Layout editor. It stores only grid intent under
+  `local:overlayLayoutPreferencesV2`, previews one camera leader plus three
+  followers, derives chat height from typography and message count, adapts to
+  player controls and reserved AniDachi UI without rewriting saved preferences,
+  keeps the full four-seat camera geometry reserved while rendering only
+  occupied camera slots,
+  previews editor drafts against the same measured runtime context in both the
+  miniature and a pointer-transparent live ghost layer, starts drag from the
+  resolver's actually displayed logical placement, supports bottom-edge chat
+  alignment, clears ghosts after Apply, keeps real chat/cameras below the open
+  settings panel, and persists changes only after an explicit successful
+  `Apply`;
 - push-to-talk audio;
 - WebRTC P2P media with Cloudflare TURN fallback;
 - no active LiveKit/SFU media path: the legacy extension transport, Worker
@@ -369,6 +386,11 @@ The extension still does not host, proxy, record, or distribute source video.
 
 These are intentionally not treated as solved:
 
+- Overlay Layout Engine V2 still requires loaded staging acceptance at compact,
+  720p, 1080p, and fullscreen player sizes. The local engine/component suite
+  covers deterministic geometry, draft isolation, persistence failure, pointer
+  cancellation, and keyboard rollback, but one/four real-camera rendering and
+  reload persistence must still be confirmed in Chrome;
 - P2P media reconnect and asymmetric join timing still require staging/manual
   acceptance beyond the local harness. The local harness now waits until both
   peers have received a room snapshot with both cameras enabled before measuring

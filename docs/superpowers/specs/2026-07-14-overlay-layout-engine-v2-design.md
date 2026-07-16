@@ -1,6 +1,6 @@
 # Overlay Layout Engine V2 Design
 
-Status: Draft for written review
+Status: Implemented; staging visual acceptance pending
 
 ## Summary
 
@@ -86,7 +86,10 @@ stored `leaderSide` makes the final result deterministic after reload.
 
 At runtime, active camera participants occupy slots from the leader inward.
 Adding or removing a participant must not reverse the group or move its anchor.
-The editor uses four ghost slots; the live overlay renders only occupied slots.
+Whenever at least one camera is visible, both editor and runtime resolve the
+full four-seat group so chat collision avoidance, responsive size, and the
+leader position remain stable as cameras join or leave. The editor shows all
+four projected slots; the live overlay renders only occupied slots.
 
 Camera size uses the existing discrete size vocabulary: `small`, `normal`,
 `large`, and `xl`. The resolver may temporarily constrain the effective pixel
@@ -116,12 +119,28 @@ remain outside the first implementation scope.
 ### Draft And Apply
 
 Opening the Layout editor creates a draft from the applied preferences.
-Dragging, resizing, and changing chat settings update only the draft and editor
-preview.
+Dragging, resizing, and changing chat settings update the draft, the scaled
+editor preview, and a transient live overlay preview. Both previews resolve
+against the same measured player viewport, safe insets, and reserved AniDachi
+UI as the running overlay. Storage and the applied snapshot remain unchanged.
+The visible `12x8` grid and pointer mapping are both constrained to that same
+runtime safe rectangle rather than the outer preview frame.
 
-- `Apply` normalizes, persists, and activates the draft.
+While the draft preview is active, the live player renders four translucent
+camera placeholders and a representative chat placeholder even when no camera
+or chat content exists. This preview layer is pointer-transparent and may cross
+the settings panel so the whole layout remains visible. The panel remains
+interactive beneath it. A successful `Apply` clears the placeholder layer;
+real camera and chat surfaces then use the applied geometry below the panel's
+stacking layer.
+
+- `Apply` normalizes and persists the already-previewed draft, then promotes it
+  to the applied snapshot.
+- A failed write keeps the dirty draft and its transient preview visible while
+  showing a non-blocking error.
 - `Revert` restores the draft to the currently applied layout.
-- closing the panel without applying discards the draft.
+- Closing the panel without applying discards the draft and clears the
+  transient live preview.
 
 The first release stores one applied layout. Preset selection, named custom
 layouts, and preset management are intentionally deferred until the layout
@@ -262,17 +281,22 @@ Reserved geometry includes, when visible:
 - fixed outer padding required to keep shadows and controls on screen.
 
 Opening the settings panel does not change the saved layout. The editor preview
-uses a synthetic 16:9 viewport and the same resolver with four preview cameras.
-The live overlay resolves again whenever player dimensions, fullscreen state,
-controls visibility, camera count, or applied preferences change.
+scales the measured player viewport and uses the same resolver with four
+preview cameras. The live overlay resolves again whenever player dimensions,
+fullscreen state, controls visibility, camera count, or applied preferences
+change.
 
 ## Interaction Contract
 
 The UI layer owns pointer and keyboard interaction but delegates all geometry
 to the layout model and resolver.
 
-- Pointer dragging preserves the initial grab offset.
+- Pointer dragging preserves the initial grab offset from the resolver's
+  actually displayed logical placement, including collision-adjusted and edge
+  placements, rather than from stale stored intent.
 - Positions snap to grid cells.
+- The final chat row means bottom-edge alignment so the editor can place chat
+  flush with the safe-area edge without storing viewport pixels.
 - Only the video leader acts as the camera-group drag handle.
 - Crossing the center hysteresis band updates `leaderSide` once; movement
   inside the band preserves the previous side.

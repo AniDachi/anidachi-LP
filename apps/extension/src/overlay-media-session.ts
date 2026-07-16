@@ -14,6 +14,20 @@ interface P2PMediaSessionState {
   p2pSessionActive: boolean;
 }
 
+interface CameraEnabledForRoomConnectionInput {
+  currentCameraEnabled: boolean;
+  sameRoomReconnect: boolean;
+}
+
+export const DEFAULT_LOCAL_CAMERA_ENABLED = false;
+
+export function getCameraEnabledForRoomConnection({
+  currentCameraEnabled,
+  sameRoomReconnect,
+}: CameraEnabledForRoomConnectionInput): boolean {
+  return sameRoomReconnect ? currentCameraEnabled : DEFAULT_LOCAL_CAMERA_ENABLED;
+}
+
 interface PersistRoomSessionForCurrentJoinInput<T> {
   discard: (persistedSession: T) => Promise<void>;
   isCurrentJoin: () => boolean;
@@ -44,15 +58,9 @@ export function getP2PMediaSessionState({
 }: P2PMediaSessionInput): P2PMediaSessionState {
   const roomSessionActive = status !== "idle";
   const p2pSessionActive = Boolean(
-    roomSessionActive &&
-      roomId &&
-      participantId &&
-      roomMediaSeatLimit > 0 &&
-      localHasMediaSeat,
+    roomSessionActive && roomId && participantId && roomMediaSeatLimit > 0 && localHasMediaSeat,
   );
-  const p2pReady = Boolean(
-    p2pSessionActive && status === "connected" && roomSnapshotReady,
-  );
+  const p2pReady = Boolean(p2pSessionActive && status === "connected" && roomSnapshotReady);
 
   return { p2pReady, p2pSessionActive };
 }

@@ -35,6 +35,9 @@ const HARNESS_ICE_SERVERS_FROM_ENV = parseHarnessIceServers(
 const HARNESS_USE_WORKER_ICE_SERVERS =
 	parseBooleanEnv(process.env.HARNESS_USE_WORKER_ICE_SERVERS) ||
 	(HARNESS_FORCE_RELAY && !HARNESS_ICE_SERVERS_FROM_ENV);
+const HARNESS_ONE_WAY_SMOKE = parseBooleanEnv(
+	process.env.HARNESS_ONE_WAY_SMOKE,
+);
 
 function b64url(input) {
 	return Buffer.from(input).toString("base64url");
@@ -246,11 +249,14 @@ async function waitForWorker() {
 	return false;
 }
 
-async function startPeer(page, { sub, role, sessionId, iceServers }) {
+async function startPeer(
+	page,
+	{ sub, role, sessionId, iceServers, cameraEnabled = true },
+) {
 	// Token role is the auth role (host|member); the participant role is host|viewer.
 	const token = signRoomToken(sub, role === "host" ? "host" : "member");
 	await page.evaluate(
-		async ({ roomId, token, sub, role, sessionId, iceServers }) => {
+		async ({ roomId, token, sub, role, sessionId, iceServers, cameraEnabled }) => {
 			await window.AnidachiHarness.start({
 				roomId,
 				token,
@@ -258,6 +264,7 @@ async function startPeer(page, { sub, role, sessionId, iceServers }) {
 				role,
 				sessionId,
 				iceServers,
+				cameraEnabled,
 			});
 		},
 		{
@@ -267,6 +274,7 @@ async function startPeer(page, { sub, role, sessionId, iceServers }) {
 			role,
 			sessionId,
 			iceServers,
+			cameraEnabled,
 		},
 	);
 }
@@ -318,7 +326,12 @@ async function waitForRemoteFramesAbove(
 	const t0 = Date.now();
 	while (Date.now() - t0 < budgetMs) {
 		const state = await page.evaluate(() => window.AnidachiHarness.getState());
-		if (state.remoteFramesDecoded >= previousFrames + minimumNewFrames) {
+		const counterAdvanced =
+			state.remoteFramesDecoded >= previousFrames + minimumNewFrames;
+		const peerWasReplaced =
+			state.remoteFramesDecoded < previousFrames &&
+			state.remoteFramesDecoded >= minimumNewFrames;
+		if (counterAdvanced || peerWasReplaced) {
 			return { recoveredMs: Date.now() - t0, state };
 		}
 		await sleep(150);
@@ -465,6 +478,7 @@ async function main() {
 			role: "host",
 			sessionId: "host-sess",
 			iceServers: activeIceServers,
+			cameraEnabled: !HARNESS_ONE_WAY_SMOKE,
 		});
 		await startPeer(guestPage, {
 			sub: "guest",
@@ -472,6 +486,39 @@ async function main() {
 			sessionId: "guest-sess",
 			iceServers: activeIceServers,
 		});
+
+		if (HARNESS_ONE_WAY_SMOKE) {
+			const hostCameraSnapshot = await waitForCameraEnabledCount(
+				hostPage,
+				1,
+				RECOVERY_BUDGET_MS,
+			);
+			const guestCameraSnapshot = await waitForCameraEnabledCount(
+				guestPage,
+				1,
+				RECOVERY_BUDGET_MS,
+			);
+			record(
+				"room snapshot exposes the guest as the only camera publisher",
+				hostCameraSnapshot.observedMs !== null &&
+					guestCameraSnapshot.observedMs !== null,
+				`host=${hostCameraSnapshot.state.cameraEnabledCount} guest=${guestCameraSnapshot.state.cameraEnabledCount}`,
+			);
+
+			const hostSees = await waitForRemoteVideo(hostPage, TTFM_BUDGET_MS);
+			record(
+				"camera-off host receives guest video",
+				hostSees.ttfmMs !== null,
+				`ttfm=${hostSees.ttfmMs}ms frames=${hostSees.state.remoteFramesDecoded}`,
+			);
+
+			await hostPage.evaluate(() => window.AnidachiHarness.stop());
+			await guestPage.evaluate(() => window.AnidachiHarness.stop());
+			failed = results.filter((result) => !result.ok).length;
+			console.log(`\n${results.length - failed}/${results.length} checks passed`);
+			process.exitCode = failed ? 1 : 0;
+			return;
+		}
 
 		const hostCameraSnapshot = await waitForCameraEnabledCount(
 			hostPage,

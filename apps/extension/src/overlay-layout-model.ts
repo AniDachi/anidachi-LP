@@ -1,10 +1,18 @@
 export const OVERLAY_LAYOUT_GRID_COLUMNS = 12;
 export const OVERLAY_LAYOUT_GRID_ROWS = 8;
+export const OVERLAY_LAYOUT_CAMERA_SLOT_CAPACITY = 4 as const;
+export const OVERLAY_LAYOUT_MIN_CHAT_WIDTH = 1 as const;
+export const OVERLAY_LAYOUT_MAX_CHAT_WIDTH = 6 as const;
+export const OVERLAY_LAYOUT_MIN_CHAT_TRANSPARENCY = 0 as const;
+export const OVERLAY_LAYOUT_MAX_CHAT_TRANSPARENCY = 95 as const;
+export const OVERLAY_LAYOUT_MIN_MESSAGES = 3 as const;
+export const OVERLAY_LAYOUT_MAX_MESSAGES = 64 as const;
+export const OVERLAY_LAYOUT_STORAGE_KEY_V2 = "local:overlayLayoutPreferencesV2";
 export const OVERLAY_LAYOUT_STORAGE_VERSION = 2 as const;
 
 export type OverlayLayoutLeaderSide = "left" | "right";
 export type OverlayLayoutTextScale = "compact" | "normal" | "large";
-export type OverlayLayoutMessageCount = 3 | 5 | 8;
+export type OverlayLayoutMessageCount = number | "fill";
 export type OverlayLayoutCameraSizeStep = 0 | 1 | 2 | 3;
 
 export interface OverlayLayoutGridPoint {
@@ -19,6 +27,7 @@ export interface OverlayLayoutDefinition {
     sizeStep: OverlayLayoutCameraSizeStep;
   };
   chat: {
+    messageTransparency: number;
     position: OverlayLayoutGridPoint;
     width: number;
     textScale: OverlayLayoutTextScale;
@@ -33,7 +42,13 @@ export interface OverlayLayoutPreferencesV2 {
 
 const DEFAULT_LAYOUT = freezeDefinition({
   video: { anchor: { x: 11, y: 6 }, leaderSide: "right", sizeStep: 1 },
-  chat: { position: { x: 0, y: 4 }, width: 5, textScale: "normal", maxMessages: 5 },
+  chat: {
+    messageTransparency: 0,
+    position: { x: 0, y: 4 },
+    width: 5,
+    textScale: "normal",
+    maxMessages: 5,
+  },
 });
 
 export function getDefaultOverlayLayoutDefinition(): OverlayLayoutDefinition {
@@ -68,8 +83,8 @@ export function normalizeOverlayLayoutDefinition(value: unknown): OverlayLayoutD
   };
   const width = clampInteger(
     numberOrFallback(chat.width, DEFAULT_LAYOUT.chat.width),
-    3,
-    6,
+    OVERLAY_LAYOUT_MIN_CHAT_WIDTH,
+    OVERLAY_LAYOUT_MAX_CHAT_WIDTH,
   );
   const position = {
     x: Math.min(
@@ -94,6 +109,11 @@ export function normalizeOverlayLayoutDefinition(value: unknown): OverlayLayoutD
       sizeStep: normalizeCameraSizeStep(video.sizeStep),
     },
     chat: {
+      messageTransparency: clampInteger(
+        numberOrFallback(chat.messageTransparency, DEFAULT_LAYOUT.chat.messageTransparency),
+        OVERLAY_LAYOUT_MIN_CHAT_TRANSPARENCY,
+        OVERLAY_LAYOUT_MAX_CHAT_TRANSPARENCY,
+      ),
       position,
       width,
       textScale: normalizeTextScale(chat.textScale),
@@ -121,6 +141,7 @@ function cloneDefinition(definition: OverlayLayoutDefinition): OverlayLayoutDefi
       sizeStep: definition.video.sizeStep,
     },
     chat: {
+      messageTransparency: definition.chat.messageTransparency,
       position: { ...definition.chat.position },
       width: definition.chat.width,
       textScale: definition.chat.textScale,
@@ -150,15 +171,19 @@ function normalizeTextScale(value: unknown): OverlayLayoutTextScale {
 }
 
 function normalizeMessageCount(value: unknown): OverlayLayoutMessageCount {
+  if (value === "fill") {
+    return value;
+  }
+
   const numeric = numberOrFallback(value, Number.NaN);
   if (!Number.isFinite(numeric)) {
     return DEFAULT_LAYOUT.chat.maxMessages;
   }
 
-  return ([3, 5, 8] as const).reduce<OverlayLayoutMessageCount>(
-    (nearest, option) =>
-      Math.abs(option - numeric) < Math.abs(nearest - numeric) ? option : nearest,
-    3,
+  return clampInteger(
+    numeric,
+    OVERLAY_LAYOUT_MIN_MESSAGES,
+    OVERLAY_LAYOUT_MAX_MESSAGES,
   );
 }
 

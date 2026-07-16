@@ -595,8 +595,8 @@ export function classifyRemoteVideoActivity(
  * Live media is restricted to server-assigned media seats. A peer pair exists
  * only among joined media-seat participants when media flows in at least one
  * direction:
- *  - video: any remote camera publisher stays connected so local camera-off
- *    remains receive-only instead of dropping the remote track;
+ *  - video: a local publisher pairs with every media-seat receiver, while any
+ *    remote publisher stays connected so local camera-off remains receive-only;
  *  - voice: either side is a live-voice participant. Listeners without a
  *    camera must still get a connection to hear the talker when they hold a
  *    media seat.
@@ -625,7 +625,8 @@ export function selectP2PMediaParticipants(
       .filter(
         (participant) =>
           participant.id !== localParticipantId &&
-          (participant.cameraEnabled ||
+          (localVideo ||
+            participant.cameraEnabled ||
             localVoice ||
             voiceParticipantIds.has(participant.id)),
       )
@@ -644,25 +645,25 @@ export function canReceiveP2PSignalFromParticipant(
   participants: Participant[],
   localParticipantId: string,
   remoteParticipantId: string,
-  localMediaWanted: boolean,
-  voiceParticipantIds: ReadonlySet<string> = new Set(),
+  _localMediaWanted: boolean,
+  _voiceParticipantIds: ReadonlySet<string> = new Set(),
 ): boolean {
   if (localParticipantId === remoteParticipantId) {
     return false;
   }
 
-  const mediaParticipants = selectP2PMediaParticipants(
-    participants,
-    localParticipantId,
-    localMediaWanted,
-    voiceParticipantIds,
+  const joinedMediaSeatIds = new Set(
+    participants
+      .filter((participant) => participant.mediaSeat === "joined")
+      .map((participant) => participant.id),
   );
-  const mediaParticipantIds = new Set(
-    mediaParticipants.map((participant) => participant.id),
-  );
+
+  // Camera and voice state arrive through room events independently from P2P
+  // signaling. Seat membership is the stable authorization boundary; requiring
+  // replicated media state here can drop the first offer from a new publisher.
   return (
-    mediaParticipantIds.has(localParticipantId) &&
-    mediaParticipantIds.has(remoteParticipantId)
+    joinedMediaSeatIds.has(localParticipantId) &&
+    joinedMediaSeatIds.has(remoteParticipantId)
   );
 }
 
@@ -682,6 +683,8 @@ interface P2PPeer {
   lastSignalingRecoveryConnectionId: string | null;
   lastMediaStallRecoveryAt: number;
   makingOffer: boolean;
+  mediaSyncChain: Promise<void>;
+  mediaSyncPendingCount: number;
   mediaSyncing: boolean;
   negotiationQueued: boolean;
   needsNegotiation: boolean;
@@ -2462,54 +2465,7 @@ export class P2PMediaController {
     }
 
     if (peer.pc.signalingState === "have-local-offer" && !peer.makingOffer) {
-      try {
-        await peer.pc.setLocalDescription({ type: "rollback" });
-        const signalingStateAfterRollback = peer.pc
-          .signalingState as RTCSignalingState;
-        if (signalingStateAfterRollback !== "stable") {
-          throw new Error(
-            `rollback left signaling in ${signalingStateAfterRollback}`,
-          );
-        }
-        peer.needsNegotiation = false;
-        peer.signalingRecoveryNeeded = false;
-        logDebug("p2p.negotiation", "rolled back stale local offer", {
-          localParticipantId: this.localParticipant.id,
-          reason,
-          remoteUserId: peer.remoteUserId,
-        });
-      } catch (error) {
-        logDebug("p2p.negotiation", "rollback failed; replacing peer", {
-          error: error instanceof Error ? error.message : String(error),
-          localParticipantId: this.localParticipant.id,
-          reason,
-          remoteUserId: peer.remoteUserId,
-        });
-        const remoteUserId = peer.remoteUserId;
-        this.closePeer(remoteUserId, false, true);
-        const replacement = this.ensurePeer(remoteUserId);
-        await this.syncPeerMedia(replacement);
-        if (this.shouldInitiateOffers(replacement)) {
-          await this.createAndSendOffer(replacement);
-        } else {
-          replacement.signalingRecoveryNeeded =
-            this.requestRemoteRenegotiation(
-              replacement,
-              `${reason}:replacement`,
-              true,
-            ) !== "sent";
-        }
-        return;
-      }
-
-      await this.syncPeerMedia(peer);
-      if (this.shouldInitiateOffers(peer)) {
-        await this.createAndSendOffer(peer);
-      } else {
-        peer.signalingRecoveryNeeded =
-          this.requestRemoteRenegotiation(peer, `${reason}:rollback`, true) !==
-          "sent";
-      }
+      await this.replacePeerForNegotiationRecovery(peer, reason);
       return;
     }
 
@@ -2538,6 +2494,41 @@ export class P2PMediaController {
 
     peer.signalingRecoveryNeeded =
       this.requestRemoteRenegotiation(peer, reason, true) !== "sent";
+  }
+
+  private async replacePeerForNegotiationRecovery(
+    peer: P2PPeer,
+    reason: string,
+  ): Promise<void> {
+    await peer.mediaSyncChain;
+    if (
+      this.disposed ||
+      this.peers.get(peer.remoteUserId) !== peer ||
+      peer.pc.signalingState === "closed"
+    ) {
+      return;
+    }
+
+    const remoteUserId = peer.remoteUserId;
+    logDebug("p2p.negotiation", "replace peer with stale local offer", {
+      localParticipantId: this.localParticipant.id,
+      reason,
+      remoteUserId,
+    });
+    this.closePeer(remoteUserId, true, true);
+    const replacement = this.ensurePeer(remoteUserId);
+    await this.syncPeerMedia(replacement);
+    if (this.shouldInitiateOffers(replacement)) {
+      await this.createAndSendOffer(replacement);
+      return;
+    }
+
+    replacement.signalingRecoveryNeeded =
+      this.requestRemoteRenegotiation(
+        replacement,
+        `${reason}:replacement`,
+        true,
+      ) !== "sent";
   }
 
   recoverDisconnectedPeers(reason: string): void {
@@ -2664,6 +2655,8 @@ export class P2PMediaController {
       lastSignalingRecoveryConnectionId: null,
       lastMediaStallRecoveryAt: 0,
       makingOffer: false,
+      mediaSyncChain: Promise.resolve(),
+      mediaSyncPendingCount: 0,
       mediaSyncing: false,
       negotiationQueued: false,
       needsNegotiation: false,
@@ -2894,19 +2887,58 @@ export class P2PMediaController {
       return;
     }
 
-    peer.mediaSyncing = true;
-    let changed = false;
-    try {
-      changed = await this.syncPeerMedia(peer);
-    } finally {
-      peer.mediaSyncing = false;
-    }
-    if (forceOffer || changed) {
+    const changed = await this.syncPeerMedia(peer);
+    // An offer attempt can be deferred while sender/transceiver state is being
+    // synchronized. Drain that request as soon as the sync releases the peer;
+    // otherwise no signaling-state event is guaranteed to wake it up again.
+    if (forceOffer || changed || peer.needsNegotiation) {
       this.queueNegotiation(peer, reason);
     }
   }
 
   private async syncPeerMedia(peer: P2PPeer): Promise<boolean> {
+    if (
+      this.disposed ||
+      this.peers.get(peer.remoteUserId) !== peer ||
+      peer.pc.signalingState === "closed"
+    ) {
+      return false;
+    }
+
+    return this.enqueuePeerMediaMutation(peer, () =>
+      this.syncPeerMediaNow(peer),
+    );
+  }
+
+  private async enqueuePeerMediaMutation<T>(
+    peer: P2PPeer,
+    mutation: () => Promise<T>,
+  ): Promise<T> {
+    peer.mediaSyncPendingCount += 1;
+    peer.mediaSyncing = true;
+    const queuedMutation = peer.mediaSyncChain
+      .catch(() => undefined)
+      .then(mutation);
+    peer.mediaSyncChain = queuedMutation.then(
+      () => undefined,
+      () => undefined,
+    );
+
+    try {
+      return await queuedMutation;
+    } finally {
+      peer.mediaSyncPendingCount = Math.max(
+        0,
+        peer.mediaSyncPendingCount - 1,
+      );
+      peer.mediaSyncing = peer.mediaSyncPendingCount > 0;
+      if (!peer.mediaSyncing && peer.needsNegotiation) {
+        this.queueNegotiation(peer, "media-sync-drain");
+      }
+    }
+  }
+
+  private async syncPeerMediaNow(peer: P2PPeer): Promise<boolean> {
     if (
       this.disposed ||
       this.peers.get(peer.remoteUserId) !== peer ||
@@ -3125,6 +3157,7 @@ export class P2PMediaController {
         remoteUserId: peer.remoteUserId,
         reason: _reason,
         mediaSyncing: peer.mediaSyncing,
+        mediaSyncPendingCount: peer.mediaSyncPendingCount,
         signalingState: peer.pc.signalingState,
         makingOffer: peer.makingOffer,
       });
@@ -4411,20 +4444,35 @@ async function configureSender(
   }
 
   const parameters = sender.getParameters();
-  parameters.encodings = parameters.encodings?.length
-    ? parameters.encodings
-    : [{}];
+  let changed = false;
+  if (!parameters.encodings?.length) {
+    parameters.encodings = [{}];
+    changed = true;
+  }
   const firstEncoding = parameters.encodings[0];
   if (!firstEncoding) {
     return;
   }
 
-  firstEncoding.maxBitrate = maxBitrate;
+  if (firstEncoding.maxBitrate !== maxBitrate) {
+    firstEncoding.maxBitrate = maxBitrate;
+    changed = true;
+  }
   if (maxFramerate !== undefined) {
-    firstEncoding.maxFramerate = maxFramerate;
+    if (firstEncoding.maxFramerate !== maxFramerate) {
+      firstEncoding.maxFramerate = maxFramerate;
+      changed = true;
+    }
     // Ghost Cam is motion presence at a low frame rate: keep the frame rate
     // steady and let resolution drop under pressure instead (Block 5.5).
-    parameters.degradationPreference = "maintain-framerate";
+    if (parameters.degradationPreference !== "maintain-framerate") {
+      parameters.degradationPreference = "maintain-framerate";
+      changed = true;
+    }
+  }
+
+  if (!changed) {
+    return;
   }
 
   await sender.setParameters(parameters).catch(() => undefined);
