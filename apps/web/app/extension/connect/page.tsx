@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import {
@@ -9,6 +10,10 @@ import { isMobileUserAgent } from "@/lib/mobile-user-agent";
 import { ExtensionConnectMobileConfirm } from "./extension-connect-mobile-confirm";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 type Props = {
   searchParams: Promise<{

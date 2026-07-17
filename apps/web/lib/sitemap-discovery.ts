@@ -9,7 +9,18 @@ const APP_DIR = path.join(process.cwd(), "app");
 const EXCLUDED_TOP_LEVEL = new Set<string>(INTERNAL_TOOL_APP_SEGMENTS);
 
 /** URL paths that must not appear in the sitemap (e.g. `noindex` pages). */
-const EXCLUDED_URL_PATHS = new Set(["/success"]);
+const EXCLUDED_URL_PATHS = new Set([
+  "/success",
+  "/account",
+  "/account/friends",
+  "/account/invites",
+  "/account/watch-library",
+  "/login",
+  "/join",
+  "/join/complete",
+  "/friends",
+  "/extension/connect",
+]);
 
 function isDynamicSegment(segment: string): boolean {
   return segment.startsWith("[") && segment.endsWith("]");

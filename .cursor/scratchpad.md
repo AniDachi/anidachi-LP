@@ -553,3 +553,38 @@ The survey should do more than “collect answers” — it should:
 - [x] Mobile overlay sizing pass: larger chip text/padding, clearer clock/progress bar, more readable pin card
 - [x] Fix mobile overlap: move reaction moment + timeline pin upward (compact offsets)
 - **Manual QA:** scroll to demo, toggle Async tab, confirm overlays read well on mobile (esp. chip/pin/clock) + timestamp pin + progress tracker animation.
+
+### Force-Index Sitemap + Noindex Cleanup (2026-07-17)
+
+**Background:** GSC Coverage Drilldown (`Discovered - currently not indexed`) listed 256 apex URLs. Scope B: temporary force-index sitemap for all **247** public URLs + exclude 9 noindex auth/product routes from the main sitemap.
+
+**High-level tasks**
+1. Add `apps/web/lib/force-index-urls.ts` (247 paths from 2026-07-17 GSC Table.csv).
+2. Add production-only `apps/web/app/force-index-sitemap.xml/route.ts` (404 when indexing disabled).
+3. Wire second sitemap in `apps/web/app/robots.ts`.
+4. Expand `EXCLUDED_URL_PATHS` in `sitemap-discovery.ts`; add `robots: noindex` on `/extension/connect`.
+5. Allow `/force-index-sitemap.xml` through staging/middleware/session-refresh static-asset bypasses (same as `/sitemap.xml`).
+
+**Success criteria**
+- [x] `FORCE_INDEX_URL_PATHS.length === 247` and none of the 9 noindex paths
+- [x] Static discovery leaks none of the 9 noindex paths
+- [x] `pnpm --filter @anidachi/web check` passes (Node 22)
+
+**Post-deploy / GSC ops (human)**
+1. Confirm `https://www.anidachi.app/force-index-sitemap.xml` returns 247 `<loc>` entries.
+2. Confirm main `/sitemap.xml` omits `/login`, `/account*`, `/join*`, `/friends`, `/extension/connect`.
+3. Submit `https://www.anidachi.app/force-index-sitemap.xml` in Google Search Console → Sitemaps.
+4. After pages are Indexed: delete force-index route + URL list + second robots sitemap entry (cleanup PR).
+
+### Executor's Feedback or Assistance Requests
+
+- Force-index sitemap + noindex cleanup implemented; ready for production deploy then GSC submit.
+- Please confirm production force-index sitemap URL count (247) and main sitemap no longer lists auth routes.
+- (Prior) Please submit a test email in the hero survey and confirm the contact appears at `/kreatli-email-crm` with segment `survey_lead`.
+- (Prior) Production needs `BLOB_READ_WRITE_TOKEN` set (same as Gmail tokens) for CRM writes on Vercel.
+
+### Lessons
+
+- Web package `engines.node` requires **22.x**; local default Node 23 fails `pnpm --filter @anidachi/web check` until `nvm use 22`.
+- GSC “Discovered – not indexed” exports can include intentionally noindex auth routes that auto-discovery still puts in `/sitemap.xml` — keep `EXCLUDED_URL_PATHS` in sync with page `robots: { index: false }`.
+
