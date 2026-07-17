@@ -89,6 +89,7 @@ export function isStaticAssetPath(pathname: string): boolean {
     pathname === "/favicon.ico" ||
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
+    pathname === "/force-index-sitemap.xml" ||
     pathname === "/manifest.webmanifest" ||
     /\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map|txt|woff2?)$/i.test(
       pathname,
