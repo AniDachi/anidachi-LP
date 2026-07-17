@@ -173,6 +173,7 @@ git fetch origin
 git switch staging
 git pull --ff-only origin staging
 git switch -c codex/task-name
+fnm use --install-if-missing
 corepack enable
 corepack prepare pnpm@11.2.2 --activate
 pnpm install --frozen-lockfile

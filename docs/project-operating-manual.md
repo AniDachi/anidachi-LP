@@ -502,9 +502,10 @@ Install dependencies:
 
 ```bash
 cd <repo>
+fnm use --install-if-missing
 corepack enable
 corepack prepare pnpm@11.2.2 --activate
-pnpm install
+pnpm install --frozen-lockfile
 ```
 
 Run checks:
