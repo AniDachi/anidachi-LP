@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@11.2.2",
+  "engines": {
+    "node": "22.x",
+    "pnpm": "11.2.2"
+  },
   "scripts": {
     "build": "turbo build",
     "build:extension:icons": "node scripts/generate-extension-icons.mjs",

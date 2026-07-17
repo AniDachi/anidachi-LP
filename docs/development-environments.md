@@ -13,6 +13,34 @@ Local checkout placeholder: <repo>
 Use the primary repo for new product work. In docs, `<repo>` means the folder
 where a developer cloned `AniDachi/anidachi-LP`.
 
+## Local Toolchain
+
+The repository uses Node.js `22.23.1` and pnpm `11.2.2`. `.node-version` is the
+single source for the exact local and CI Node version; `package.json` rejects
+other Node major versions and pnpm versions. `pnpm-workspace.yaml` strictly
+validates dependency engines against the Node version actually running.
+
+Install `fnm` once and enable automatic switching in zsh:
+
+```zsh
+eval "$(fnm env --use-on-cd --shell zsh)"
+```
+
+Then initialize a clone from its root:
+
+```bash
+fnm use --install-if-missing
+corepack enable
+corepack prepare pnpm@11.2.2 --activate
+pnpm install --frozen-lockfile
+```
+
+Verify `node --version` prints `v22.23.1` and `pnpm --version` prints `11.2.2`
+before running builds, tests, or development servers. Do not install project
+dependencies under a different Node major and reuse that `node_modules` tree.
+In an automated shell that does not source zsh configuration, run commands as
+`fnm exec --using="$(cat .node-version)" <command>`.
+
 ## Branch Model
 
 ```txt
