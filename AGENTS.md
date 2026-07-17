@@ -64,10 +64,14 @@ git fetch origin
 git switch staging
 git pull --ff-only origin staging
 git switch -c codex/task-name
+fnm use --install-if-missing
 corepack enable
 corepack prepare pnpm@11.2.2 --activate
 pnpm install --frozen-lockfile
 ```
+
+If an automated shell does not source the local zsh/fnm setup, prefix project
+commands with `fnm exec --using="$(cat .node-version)"`.
 
 ## Project Planes
 
@@ -106,7 +110,7 @@ exceptions must be documented.
 Baseline:
 
 ```bash
-node --version   # CI uses Node 22
+node --version   # repo .node-version: 22.23.1
 pnpm --version   # repo expects pnpm 11.2.2
 pnpm check
 pnpm test

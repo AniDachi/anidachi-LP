@@ -105,7 +105,9 @@ staging acceptance, or human/agent review. PRs should use the root
 `.github/pull_request_template.md` and include verification, staging impact,
 security/env impact, docs status, Graphify status, and rollback notes.
 
-CI uses Node 22 and `pnpm install --frozen-lockfile`. Do not churn
+Local development and CI use the exact Node version from `.node-version`
+(`22.23.1`) with pnpm `11.2.2` and `pnpm install --frozen-lockfile`.
+`package.json` and `pnpm-workspace.yaml` enforce that toolchain. Do not churn
 `pnpm-lock.yaml` unless dependency changes are intentional and reviewed.
 
 Graphify is the project knowledge graph for agent orientation. Commit only the
