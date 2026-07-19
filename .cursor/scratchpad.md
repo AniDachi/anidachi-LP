@@ -576,10 +576,29 @@ The survey should do more than “collect answers” — it should:
 3. Submit `https://www.anidachi.app/force-index-sitemap.xml` in Google Search Console → Sitemaps.
 4. After pages are Indexed: delete force-index route + URL list + second robots sitemap entry (cleanup PR).
 
+### High-converting SEO batch (2026-07-19) — Keyword Planner validated
+
+**Shipped (10 new routes):**
+1. `/pricing` — dedicated pricing + FAQ; footer “Pricing”; schema offer URLs; sitemap priority 0.9
+2. `/guides/best-teleparty-alternatives-for-anime`
+3. `/guides/can-you-screen-share-crunchyroll-on-discord`
+4. `/guides/does-teleparty-work-with-crunchyroll`
+5. `/guides/best-watch-party-apps-for-anime`
+6. `/guides/best-way-to-watch-crunchyroll-with-friends`
+7. `/guides/crunchyroll-party-alternative`
+8. `/guides/how-to-host-a-crunchyroll-watch-party`
+9. `/guides/rave-alternatives-for-anime`
+10. `/guides/switch-from-discord-screen-share`
+
+**Also:** `guide-links.ts` entries; hub links on Teleparty/Discord/CR Party/Rave compares, CR pillar, does-CR-have-WP, without-screen-share.
+
+**Checks:** `pnpm --filter @anidachi/web check` ✅ · `pnpm --filter @anidachi/web build` ✅ (all 10 routes in build output)
+
 ### Executor's Feedback or Assistance Requests
 
-- Force-index sitemap + noindex cleanup implemented; ready for production deploy then GSC submit.
-- Please confirm production force-index sitemap URL count (247) and main sitemap no longer lists auth routes.
+- **Manual QA (please spot-check):** `/pricing`, `/guides/does-teleparty-work-with-crunchyroll`, `/guides/can-you-screen-share-crunchyroll-on-discord`, `/guides/best-teleparty-alternatives-for-anime` — confirm layout, FAQ, CTA → pricing/survey, no broken links.
+- After deploy: confirm new URLs appear in `/sitemap.xml`; optionally submit sitemap in GSC.
+- Force-index sitemap + noindex cleanup was prior work; ready for production deploy then GSC submit.
 - (Prior) Please submit a test email in the hero survey and confirm the contact appears at `/kreatli-email-crm` with segment `survey_lead`.
 - (Prior) Production needs `BLOB_READ_WRITE_TOKEN` set (same as Gmail tokens) for CRM writes on Vercel.
 
