@@ -369,6 +369,102 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-c", "crunchyroll", "pillar-watch-crunchyroll"],
 	},
 	{
+		href: "/guides/does-teleparty-work-with-crunchyroll",
+		label: "Does Teleparty Work With Crunchyroll?",
+		tags: [
+			"template-c",
+			"crunchyroll",
+			"watch-party",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/best-teleparty-alternatives-for-anime",
+		label: "Best Teleparty Alternatives for Anime",
+		tags: [
+			"template-c",
+			"crunchyroll",
+			"watch-party",
+			"listicle",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/can-you-screen-share-crunchyroll-on-discord",
+		label: "Can You Screen Share Crunchyroll on Discord?",
+		tags: [
+			"template-c",
+			"discord",
+			"crunchyroll",
+			"online",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/switch-from-discord-screen-share",
+		label: "Switch From Discord Screen Share",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"discord",
+			"watch-party",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/best-way-to-watch-crunchyroll-with-friends",
+		label: "Best Way to Watch Crunchyroll With Friends",
+		tags: [
+			"template-c",
+			"crunchyroll",
+			"watch-party",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/crunchyroll-party-alternative",
+		label: "Crunchyroll Party Alternative",
+		tags: [
+			"template-c",
+			"crunchyroll",
+			"watch-party",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/how-to-host-a-crunchyroll-watch-party",
+		label: "How to Host a Crunchyroll Watch Party",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"crunchyroll",
+			"watch-party",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/best-watch-party-apps-for-anime",
+		label: "Best Watch Party Apps for Anime",
+		tags: [
+			"template-c",
+			"watch-party",
+			"crunchyroll",
+			"listicle",
+			"pillar-watch-anime",
+		],
+	},
+	{
+		href: "/guides/rave-alternatives-for-anime",
+		label: "Rave Alternatives for Anime",
+		tags: [
+			"template-c",
+			"watch-party",
+			"crunchyroll",
+			"online",
+			"pillar-watch-anime",
+		],
+	},
+	{
 		href: "/guides/how-to-watch-anime-for-free-with-friends",
 		label: "How to Watch Anime for Free With Friends",
 		tags: ["template-c", "how-to-core", "online", "pillar-watch-anime"],

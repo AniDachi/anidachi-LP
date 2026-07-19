@@ -82,7 +82,8 @@ function inferSitemapMeta(urlPath: string): {
     urlPath === "/watch-anime-together" ||
     urlPath === "/watch-crunchyroll-together" ||
     urlPath === "/anime-watch-party-toolkit" ||
-    urlPath === "/anime-watch-party"
+    urlPath === "/anime-watch-party" ||
+    urlPath === "/pricing"
   ) {
     return { changeFrequency: "weekly", priority: 0.9 };
   }

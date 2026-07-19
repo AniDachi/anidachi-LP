@@ -73,7 +73,7 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       description="Side-by-side comparison for Crunchyroll watch parties."
       url="/compare/anidachi-vs-crunchyroll-party"
       datePublished="2026-05-11"
-      dateModified="2026-06-23"
+      dateModified="2026-07-19"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -178,8 +178,16 @@ export default function AniDachiVsCrunchyrollPartyPage() {
           Watch Crunchyroll Together
         </Link>{" "}
         and then review{" "}
-        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
+        <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           AniDachi pricing
+        </Link>
+        . For an upgrade-focused narrative (when free live sync is no longer
+        enough), see{" "}
+        <Link
+          href="/guides/crunchyroll-party-alternative"
+          className="text-brand-orange hover:underline"
+        >
+          Crunchyroll Party alternative
         </Link>
         .
       </p>
@@ -191,6 +199,14 @@ export default function AniDachiVsCrunchyrollPartyPage() {
         Related
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link
+            href="/guides/crunchyroll-party-alternative"
+            className="hover:underline"
+          >
+            Crunchyroll Party alternative
+          </Link>
+        </li>
         <li>
           <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
             AniDachi vs Teleparty

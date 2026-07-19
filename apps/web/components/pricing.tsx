@@ -44,11 +44,15 @@ export function Pricing({
   survey,
   recommendedTier,
   getCtaLabelForTier,
+  headingLevel = 2,
 }: {
   survey?: HomeSurveyAnswers;
   recommendedTier?: CheckoutTier;
   getCtaLabelForTier?: (tier: CheckoutTier) => string;
+  /** Use 1 on the dedicated /pricing page so the page has a single H1. */
+  headingLevel?: 1 | 2;
 } = {}) {
+  const HeadingTag = headingLevel === 1 ? "h1" : "h2";
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittingTier, setSubmittingTier] = useState<CheckoutTier | null>(null);
@@ -210,9 +214,9 @@ export function Pricing({
             <Zap className="h-4 w-4" aria-hidden="true" />
             Pre-Launch Pricing
           </div>
-          <h2 className="mb-3 text-3xl font-bold text-foreground md:text-5xl">
+          <HeadingTag className="mb-3 text-3xl font-bold text-foreground md:text-5xl">
             Pre-launch pricing. Locked in forever.
-          </h2>
+          </HeadingTag>
           <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
           <p className="mx-auto max-w-2xl text-base text-foreground/70">
             Friends join free. Subscribe when you want to host without limits —

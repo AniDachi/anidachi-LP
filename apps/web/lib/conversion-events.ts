@@ -53,6 +53,9 @@ export function inferPageTemplateFromPath(path: string): PageTemplateId {
   ) {
     return "pillar";
   }
+  if (path === "/pricing") {
+    return "default";
+  }
   return "default";
 }
 

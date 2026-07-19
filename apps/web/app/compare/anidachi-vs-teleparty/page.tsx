@@ -76,7 +76,7 @@ export default function AniDachiVsTelepartyPage() {
       description="Side-by-side comparison for anime watch parties."
       url="/compare/anidachi-vs-teleparty"
       datePublished="2026-04-23"
-      dateModified="2026-06-23"
+      dateModified="2026-07-19"
       faq={faq}
       headings={headings}
     >
@@ -194,6 +194,23 @@ export default function AniDachiVsTelepartyPage() {
         more than having ten streaming logos in the same extension—especially if
         everyone already subscribes to Crunchyroll.
       </p>
+      <p className="text-foreground/80 leading-relaxed mb-8">
+        Still asking whether Teleparty even supports Crunchyroll? Start with{" "}
+        <Link
+          href="/guides/does-teleparty-work-with-crunchyroll"
+          className="text-brand-orange hover:underline"
+        >
+          Does Teleparty work with Crunchyroll?
+        </Link>{" "}
+        or browse the ranked list of{" "}
+        <Link
+          href="/guides/best-teleparty-alternatives-for-anime"
+          className="text-brand-orange hover:underline"
+        >
+          best Teleparty alternatives for anime
+        </Link>
+        .
+      </p>
 
       <h2
         id="related"
@@ -203,8 +220,24 @@ export default function AniDachiVsTelepartyPage() {
       </h2>
       <ul className="space-y-2 text-brand-orange">
         <li>
-          <Link href="/#pricing" className="hover:underline">
+          <Link href="/pricing" className="hover:underline">
             See pricing — Free to join, Plus from $7.99/mo to host
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/does-teleparty-work-with-crunchyroll"
+            className="hover:underline"
+          >
+            Does Teleparty work with Crunchyroll?
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/best-teleparty-alternatives-for-anime"
+            className="hover:underline"
+          >
+            Best Teleparty alternatives for anime
           </Link>
         </li>
         <li><Link href="/best-apps-watch-anime-together-long-distance" className="hover:underline">Best Apps for Watching Anime Together Long Distance</Link></li>
