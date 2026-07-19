@@ -38,7 +38,7 @@ export function StickyMobileCheckoutBar({
       style={{ transform: visible ? "translateY(0)" : "translateY(100%)" }}
     >
       <Link
-        href="/#pricing"
+        href="/pricing"
         className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-orange px-4 text-base font-semibold text-primary-foreground transition-colors hover:bg-brand-orange-deep glow-orange"
         onClick={(e) => {
           e.preventDefault();

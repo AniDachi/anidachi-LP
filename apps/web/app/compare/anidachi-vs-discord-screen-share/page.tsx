@@ -69,7 +69,7 @@ export default function AnidachiVsDiscordScreenSharePage() {
       description="Compare Discord Go Live setups with synced Crunchyroll watchrooms."
       url="/compare/anidachi-vs-discord-screen-share"
       datePublished="2026-05-08"
-      dateModified="2026-06-23"
+      dateModified="2026-07-19"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -128,16 +128,46 @@ export default function AnidachiVsDiscordScreenSharePage() {
           watch party delay troubleshooting
         </Link>{" "}
         if timing feels weird the first session. Pricing lives on{" "}
-        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
-          the homepage
+        <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
+          /pricing
         </Link>
-        .
+        . If Go Live already fails, read{" "}
+        <Link
+          href="/guides/can-you-screen-share-crunchyroll-on-discord"
+          className="text-brand-orange hover:underline"
+        >
+          can you screen share Crunchyroll on Discord?
+        </Link>{" "}
+        then follow the{" "}
+        <Link
+          href="/guides/switch-from-discord-screen-share"
+          className="text-brand-orange hover:underline"
+        >
+          switch from Discord screen share
+        </Link>{" "}
+        playbook.
       </p>
 
       <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Related
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link
+            href="/guides/can-you-screen-share-crunchyroll-on-discord"
+            className="hover:underline"
+          >
+            Can you screen share Crunchyroll on Discord?
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/switch-from-discord-screen-share"
+            className="hover:underline"
+          >
+            Switch from Discord screen share
+          </Link>
+        </li>
         <li>
           <Link href="/guides/how-to-watch-anime-with-friends-on-discord" className="hover:underline">
             How to watch anime with friends on Discord

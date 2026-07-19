@@ -84,7 +84,7 @@ export function SoftwareApplicationJsonLd() {
           priceCurrency: "USD",
           priceValidUntil: "2027-12-31",
           availability: "https://schema.org/InStock",
-          url: `${siteUrl}/#pricing`,
+          url: `${siteUrl}/pricing`,
         },
         {
           "@type": "Offer",
@@ -93,7 +93,7 @@ export function SoftwareApplicationJsonLd() {
           priceCurrency: "USD",
           priceValidUntil: "2027-12-31",
           availability: "https://schema.org/InStock",
-          url: `${siteUrl}/#pricing`,
+          url: `${siteUrl}/pricing`,
         },
       ],
     },

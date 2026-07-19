@@ -130,7 +130,7 @@ export function PrimaryCheckoutCta({
           asChild
         >
           <Link
-            href="/#pricing"
+            href="/pricing"
             onClick={(e) => {
               e.preventDefault();
               trackConversion("cta_click", {

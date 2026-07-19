@@ -117,7 +117,7 @@ export default function WatchCrunchyrollTogetherPage() {
       description="The complete guide to watching Crunchyroll with friends using sync, chat, and async watchrooms."
       url="/watch-crunchyroll-together"
       datePublished="2026-04-23"
-      dateModified="2026-06-08"
+      dateModified="2026-07-19"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -284,6 +284,30 @@ export default function WatchCrunchyrollTogetherPage() {
         Related Guides
       </h2>
       <ul className="space-y-2 text-brand-orange">
+        <li>
+          <Link
+            href="/guides/best-way-to-watch-crunchyroll-with-friends"
+            className="hover:underline"
+          >
+            Best way to watch Crunchyroll with friends (method verdict)
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/how-to-host-a-crunchyroll-watch-party"
+            className="hover:underline"
+          >
+            How to host a Crunchyroll watch party
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/best-teleparty-alternatives-for-anime"
+            className="hover:underline"
+          >
+            Best Teleparty alternatives for anime
+          </Link>
+        </li>
         {relatedGuideLinks.map((guide) => (
           <li key={guide.href}>
             <Link href={guide.href} className="hover:underline">
