@@ -1,3 +1,10 @@
+import {
+	arePlayerOverlayGeometriesEqual,
+	normalizePlayerOverlayGeometry,
+	type PlayerOverlayGeometry,
+	type PlayerOverlayGeometryListener,
+} from "../core/overlay-geometry";
+
 export interface CrunchyrollPlayerChromeState {
 	controlsVisible: boolean;
 	camStackBottomPx: number;
@@ -25,6 +32,27 @@ export const DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE: CrunchyrollPlayerChromeSta
 		topBubbleRightPx: DEFAULT_TOP_BUBBLE_RIGHT_PX,
 		topBubbleTopPx: DEFAULT_TOP_BUBBLE_TOP_PX,
 	};
+
+const CRUNCHYROLL_CONTROL_SELECTORS = [
+	"[data-testid='player-controls-root']",
+	"[data-testid='timeline-controls-container']",
+	"[data-testid='settings-button']",
+	"[data-testid='fullscreen-button']",
+	"[data-testid='playback-speed-button']",
+	"[data-testid='audio-subtitle-button']",
+	"[data-testid='play-pause-button']",
+	"[data-testid='timestamp']",
+	"[data-testid*='player' i]",
+	"[data-testid*='control' i]",
+	"[data-testid*='settings' i]",
+	"[data-testid*='fullscreen' i]",
+	"button",
+	"[role='button']",
+	"[role='slider']",
+	"input[type='range']",
+];
+
+const CRUNCHYROLL_CONTROL_SELECTOR = CRUNCHYROLL_CONTROL_SELECTORS.join(", ");
 
 export function getCrunchyrollPlayerChromeState(
 	container: HTMLElement,
@@ -74,6 +102,117 @@ export function getCrunchyrollPlayerChromeState(
 	};
 }
 
+export function getCrunchyrollPlayerOverlayGeometry(
+	container: HTMLElement,
+): PlayerOverlayGeometry {
+	const state = getCrunchyrollPlayerChromeState(container);
+
+	return normalizePlayerOverlayGeometry({
+		controlsVisible: state.controlsVisible,
+		viewport: {
+			widthPx: state.containerWidthPx,
+			heightPx: state.containerHeightPx,
+		},
+		safeInsets: {
+			topPx: 0,
+			rightPx: 0,
+			bottomPx: state.controlsVisible ? state.camStackBottomPx : 0,
+			leftPx: 0,
+		},
+		launcher: {
+			topPx: state.topBubbleTopPx,
+			rightPx: state.topBubbleRightPx,
+		},
+		panel: {
+			topPx: state.miniPanelTopPx,
+			rightPx: state.miniPanelRightPx,
+		},
+	});
+}
+
+export function subscribeCrunchyrollPlayerOverlayGeometry(
+	container: HTMLElement,
+	listener: PlayerOverlayGeometryListener,
+): () => void {
+	let disposed = false;
+	let animationFrame: number | null = null;
+	let currentGeometry = getCrunchyrollPlayerOverlayGeometry(container);
+	const observedChromeRoots = new Set<Element>();
+	const resizeObserver = new ResizeObserver(scheduleMeasurement);
+	const mutationObserver = new MutationObserver(() => {
+		refreshObservedChromeRoots();
+		scheduleMeasurement();
+	});
+
+	function refreshObservedChromeRoots(): void {
+		const nextChromeRoots = new Set<Element>([
+			container,
+			...getCrunchyrollChromeRoots(container),
+		]);
+
+		for (const root of observedChromeRoots) {
+			if (!nextChromeRoots.has(root)) {
+				resizeObserver.unobserve(root);
+				observedChromeRoots.delete(root);
+			}
+		}
+
+		for (const root of nextChromeRoots) {
+			if (!observedChromeRoots.has(root)) {
+				observedChromeRoots.add(root);
+				resizeObserver.observe(root);
+			}
+		}
+	}
+
+	function scheduleMeasurement(): void {
+		if (disposed || animationFrame !== null) {
+			return;
+		}
+
+		animationFrame = window.requestAnimationFrame(() => {
+			animationFrame = null;
+			const nextGeometry = getCrunchyrollPlayerOverlayGeometry(container);
+			if (arePlayerOverlayGeometriesEqual(currentGeometry, nextGeometry)) {
+				return;
+			}
+
+			currentGeometry = nextGeometry;
+			listener(nextGeometry);
+		});
+	}
+
+	refreshObservedChromeRoots();
+	mutationObserver.observe(container, {
+		attributes: true,
+		attributeFilter: ["class", "style", "aria-hidden", "hidden", "data-testid"],
+		childList: true,
+		subtree: true,
+	});
+	container.addEventListener("pointermove", scheduleMeasurement);
+	container.addEventListener("pointerleave", scheduleMeasurement);
+	container.addEventListener("transitionend", scheduleMeasurement);
+	document.addEventListener("fullscreenchange", scheduleMeasurement);
+
+	return () => {
+		if (disposed) {
+			return;
+		}
+
+		disposed = true;
+		if (animationFrame !== null) {
+			window.cancelAnimationFrame(animationFrame);
+			animationFrame = null;
+		}
+		mutationObserver.disconnect();
+		resizeObserver.disconnect();
+		container.removeEventListener("pointermove", scheduleMeasurement);
+		container.removeEventListener("pointerleave", scheduleMeasurement);
+		container.removeEventListener("transitionend", scheduleMeasurement);
+		document.removeEventListener("fullscreenchange", scheduleMeasurement);
+	};
+}
+
 export function areCrunchyrollPlayerChromeStatesEqual(
 	left: CrunchyrollPlayerChromeState,
 	right: CrunchyrollPlayerChromeState,
@@ -97,24 +236,7 @@ function getCrunchyrollControlRects(
 ): DOMRect[] {
 	const controls = Array.from(
 		container.querySelectorAll<HTMLElement>(
-			[
-				"[data-testid='player-controls-root']",
-				"[data-testid='timeline-controls-container']",
-				"[data-testid='settings-button']",
-				"[data-testid='fullscreen-button']",
-				"[data-testid='playback-speed-button']",
-				"[data-testid='audio-subtitle-button']",
-				"[data-testid='play-pause-button']",
-				"[data-testid='timestamp']",
-				"[data-testid*='player' i]",
-				"[data-testid*='control' i]",
-				"[data-testid*='settings' i]",
-				"[data-testid*='fullscreen' i]",
-				"button",
-				"[role='button']",
-				"[role='slider']",
-				"input[type='range']",
-			].join(", "),
+			CRUNCHYROLL_CONTROL_SELECTOR,
 		),
 	);
 
@@ -124,6 +246,12 @@ function getCrunchyrollControlRects(
 		)
 		.filter((rect): rect is DOMRect => Boolean(rect))
 		.filter((rect) => !isLikelyWholePlayerControlRoot(rect, containerRect));
+}
+
+function getCrunchyrollChromeRoots(container: HTMLElement): HTMLElement[] {
+	return Array.from(
+		container.querySelectorAll<HTMLElement>(CRUNCHYROLL_CONTROL_SELECTOR),
+	);
 }
 
 function getCrunchyrollTopControlRects(

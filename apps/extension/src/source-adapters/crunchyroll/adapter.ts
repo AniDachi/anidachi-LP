@@ -4,9 +4,17 @@ import {
 	videoDebugSnapshot,
 } from "../../debug-log";
 import { Html5VideoAdapter } from "../core/html5-video-adapter";
+import type {
+	PlayerOverlayGeometry,
+	PlayerOverlayGeometryListener,
+} from "../core/overlay-geometry";
 import { normalizeVideoFingerprint } from "../core/source-url";
 import type { PlayerEvent, SeekOptions } from "../core/types";
 import { runCrunchyrollMainCommand } from "./bridge-client";
+import {
+	getCrunchyrollPlayerOverlayGeometry,
+	subscribeCrunchyrollPlayerOverlayGeometry,
+} from "./player-chrome";
 
 export class CrunchyrollVideoAdapter extends Html5VideoAdapter {
 	override readonly id = "crunchyroll";
@@ -23,6 +31,16 @@ export class CrunchyrollVideoAdapter extends Html5VideoAdapter {
 
 	override getFingerprint(): string {
 		return normalizeVideoFingerprint(`crunchyroll|${getCrunchyrollVideoKey()}`);
+	}
+
+	override getOverlayGeometry(): PlayerOverlayGeometry {
+		return getCrunchyrollPlayerOverlayGeometry(this.container);
+	}
+
+	override subscribeOverlayGeometry(
+		listener: PlayerOverlayGeometryListener,
+	): () => void {
+		return subscribeCrunchyrollPlayerOverlayGeometry(this.container, listener);
 	}
 
 	override async play(): Promise<void> {
