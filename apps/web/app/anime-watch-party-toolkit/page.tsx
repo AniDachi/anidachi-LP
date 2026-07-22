@@ -98,7 +98,7 @@ export default function AnimeWatchPartyToolkitPage() {
       description="Structured starting point for Crunchyroll group watching with AniDachi."
       url="/anime-watch-party-toolkit"
       datePublished="2026-05-08"
-      dateModified="2026-06-23"
+      dateModified="2026-07-22"
       faq={faq}
       headings={tocHeadings}
       itemList={[...toolkitItemList, ...genreHubItemList(toolkitItemList.length + 1)]}
@@ -247,6 +247,30 @@ export default function AnimeWatchPartyToolkitPage() {
             className="hover:underline"
           >
             AniDachi vs Discord screen share
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/is-crunchyroll-party-worth-it"
+            className="hover:underline"
+          >
+            Is Crunchyroll Party worth it?
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/compare/anidachi-vs-metastream"
+            className="hover:underline"
+          >
+            AniDachi vs Metastream
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/kast-alternatives-for-anime"
+            className="hover:underline"
+          >
+            Kast alternatives for anime
           </Link>
         </li>
         <li>

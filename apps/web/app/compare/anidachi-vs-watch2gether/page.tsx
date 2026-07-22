@@ -62,7 +62,7 @@ export default function AniDachiVsWatch2GetherPage() {
       description="Compare Crunchyroll-first watchrooms with generic watch-together rooms."
       url="/compare/anidachi-vs-watch2gether"
       datePublished="2026-05-11"
-      dateModified="2026-06-23"
+      dateModified="2026-07-22"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -141,12 +141,20 @@ export default function AniDachiVsWatch2GetherPage() {
           </Link>
         </li>
         <li>
+          <Link
+            href="/guides/watch2gether-alternatives-for-anime"
+            className="hover:underline"
+          >
+            Watch2Gether alternatives for anime
+          </Link>
+        </li>
+        <li>
           <Link href="/compare/anidachi-vs-crunchyroll-party" className="hover:underline">
             AniDachi vs Crunchyroll Party
           </Link>
         </li>
         <li>
-          <Link href="/#pricing" className="hover:underline">
+          <Link href="/pricing" className="hover:underline">
             See pricing and start checkout
           </Link>
         </li>

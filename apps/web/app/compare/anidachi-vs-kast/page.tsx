@@ -61,7 +61,7 @@ export default function AniDachiVsKastPage() {
       description="Compare Crunchyroll-first watchrooms with general-purpose co-watching."
       url="/compare/anidachi-vs-kast"
       datePublished="2026-05-11"
-      dateModified="2026-06-23"
+      dateModified="2026-07-22"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -110,8 +110,8 @@ export default function AniDachiVsKastPage() {
           the Crunchyroll watch-together guide
         </Link>
         . If you want async catch-up and progress tracking for long-running shows, review{" "}
-        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
-          pricing on the homepage
+        <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
+          pricing on /pricing
         </Link>
         .
       </p>
@@ -120,6 +120,14 @@ export default function AniDachiVsKastPage() {
         Related
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link
+            href="/guides/kast-alternatives-for-anime"
+            className="hover:underline"
+          >
+            Kast alternatives for anime
+          </Link>
+        </li>
         <li>
           <Link href="/compare/anidachi-vs-discord-screen-share" className="hover:underline">
             AniDachi vs Discord screen share
