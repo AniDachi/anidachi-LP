@@ -120,6 +120,12 @@ import { PanelCameraControl, RoomPeopleSection } from "./overlay-room-media-cont
 import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
 import { PanelAccountTitle } from "./panel-account-title";
 import {
+  isRoomRailEdgeIntent,
+  ROOM_RAIL_OPEN_DELAY_MS,
+  shouldRenderRoomRail,
+} from "./room-rail-intent";
+import { useTopBubbleReveal } from "./top-bubble-reveal";
+import {
   getRemotePlayReadyTimeoutMs,
   isMediaSettling,
   type RemoteSeekAttempt,
@@ -338,6 +344,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const messageComposerInputRef = useRef<HTMLInputElement | null>(null);
   const messageComposerShieldRef = useRef<HTMLDivElement | null>(null);
   const miniPanelRef = useRef<HTMLElement | null>(null);
+  const overlayRootRef = useRef<HTMLDivElement | null>(null);
   const topBubbleRef = useRef<HTMLButtonElement | null>(null);
   const roomActionFeedbackTimerRef = useRef<number | null>(null);
   const messageComposerShieldReleaseTimerRef = useRef<number | null>(null);
@@ -373,6 +380,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [status, setStatus] = useState<RoomConnectionStatus>("idle");
   const [panelOpen, setPanelOpen] = useState(false);
+  const topBubbleReveal = useTopBubbleReveal({
+    bubbleRef: topBubbleRef,
+    overlayRef: overlayRootRef,
+    panelOpen,
+  });
   const [messageComposerOpen, setMessageComposerOpen] = useState(false);
   const [roomCreatePending, setRoomCreatePending] = useState(false);
   const [roomEndPending, setRoomEndPending] = useState(false);
@@ -759,6 +771,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       event.preventDefault();
+      topBubbleRef.current?.focus({ preventScroll: true });
       setPanelOpen(false);
     };
 
@@ -1803,6 +1816,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     () => visibleParticipants.filter((item) => !displayedCameraParticipantIds.has(item.id)),
     [displayedCameraParticipantIds, visibleParticipants],
   );
+  const roomRailVisible = shouldRenderRoomRail({
+    participantCount: voiceRailParticipants.length,
+    panelOpen,
+    roomActive: Boolean(roomId),
+  });
   const topBubbleTopPx = isCrunchyroll
     ? crunchyrollPlayerChrome.topBubbleTopPx
     : DEFAULT_TOP_BUBBLE_TOP_PX;
@@ -4772,24 +4790,50 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     <div
       className={overlayClassName}
       onPointerDownCapture={unlockLiveVoicePlayback}
+      ref={overlayRootRef}
       style={overlayCssVariables}
     >
       <style>{overlayStyles}</style>
-      <button
-        className="top-bubble"
-        ref={topBubbleRef}
-        type="button"
-        onClick={() =>
-          setPanelOpen((value) => (roomCreatePending || roomEndPending ? true : !value))
-        }
+      <div
+        className={[
+          "top-bubble-reveal",
+          panelOpen ? "panel-open" : "",
+          topBubbleReveal.bubbleVisible ? "bubble-visible" : "",
+          topBubbleReveal.edgeGlowVisible ? "edge-glow" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
-        <AnidachiLogoMark className="top-bubble-logo" size={24} />
-        <span className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`} />
-        <span className="bubble-count">{participantCount}</span>
-      </button>
+        <span className="top-bubble-edge-glow" aria-hidden="true" />
+        <button
+          aria-controls="anidachi-mini-panel"
+          aria-expanded={panelOpen}
+          aria-label={panelOpen ? "Close Anidachi controls" : "Open Anidachi controls"}
+          className="top-bubble"
+          onBlur={topBubbleReveal.handleBubbleBlur}
+          onFocus={topBubbleReveal.handleBubbleFocus}
+          ref={topBubbleRef}
+          type="button"
+          onClick={(event) => {
+            if (event.detail > 0) {
+              event.currentTarget.blur();
+            }
+            setPanelOpen((value) => (roomCreatePending || roomEndPending ? true : !value));
+          }}
+        >
+          <AnidachiLogoMark className="top-bubble-logo" size={24} />
+          <span className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`} />
+          <span className="bubble-count">{participantCount}</span>
+        </button>
+      </div>
 
       {panelOpen ? (
-        <section className="mini-panel" aria-label="Anidachi controls" ref={miniPanelRef}>
+        <section
+          className="mini-panel"
+          id="anidachi-mini-panel"
+          aria-label="Anidachi controls"
+          ref={miniPanelRef}
+        >
           <div className="panel-header">
             <div className="panel-account">
               <span className="mini-avatar panel-account-avatar">
@@ -5326,7 +5370,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             </div>
           ) : null}
 
-          {!panelOpen && voiceRailParticipants.length ? (
+          {roomRailVisible ? (
             <RoomRail
               activeParticipantId={participant?.id}
               participants={voiceRailParticipants}
@@ -5414,12 +5458,6 @@ function RoomRail({
     }
   }, []);
 
-  const openRail = useCallback(() => {
-    clearOpenTimer();
-    clearCloseTimer();
-    setExpanded(true);
-  }, [clearCloseTimer, clearOpenTimer]);
-
   const scheduleOpen = useCallback(() => {
     clearCloseTimer();
     if (expanded || openTimerRef.current !== undefined) {
@@ -5428,7 +5466,7 @@ function RoomRail({
     openTimerRef.current = window.setTimeout(() => {
       openTimerRef.current = undefined;
       setExpanded(true);
-    }, 260);
+    }, ROOM_RAIL_OPEN_DELAY_MS);
   }, [clearCloseTimer, expanded]);
 
   const scheduleClose = useCallback(() => {
@@ -5440,16 +5478,16 @@ function RoomRail({
     }, 340);
   }, [clearCloseTimer, clearOpenTimer]);
 
-  const handleEdgePointerMove = useCallback(
+  const handleEdgePointerIntent = useCallback(
     (event: PointerEvent<HTMLElement>) => {
-      const distanceToRightEdge = Math.max(0, window.innerWidth - event.clientX);
-      if (distanceToRightEdge <= 6) {
-        openRail();
+      const edgeRight = event.currentTarget.getBoundingClientRect().right;
+      if (!isRoomRailEdgeIntent({ clientX: event.clientX, edgeRight })) {
+        clearOpenTimer();
         return;
       }
       scheduleOpen();
     },
-    [openRail, scheduleOpen],
+    [clearOpenTimer, scheduleOpen],
   );
 
   const handleEdgePointerLeave = useCallback(() => {
@@ -5472,13 +5510,13 @@ function RoomRail({
     <aside className={`room-rail ${expanded ? "open" : ""}`} aria-label="Room participants">
       <div
         className="room-rail-edge"
-        onPointerEnter={scheduleOpen}
+        onPointerEnter={handleEdgePointerIntent}
         onPointerLeave={handleEdgePointerLeave}
-        onPointerMove={handleEdgePointerMove}
+        onPointerMove={handleEdgePointerIntent}
       />
       <div
         className="room-rail-panel"
-        onPointerEnter={expanded ? clearCloseTimer : scheduleOpen}
+        onPointerEnter={expanded ? clearCloseTimer : undefined}
         onPointerLeave={scheduleClose}
         onPointerMove={expanded ? clearCloseTimer : undefined}
       >

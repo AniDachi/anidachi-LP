@@ -282,7 +282,12 @@ The extension currently supports:
   restricted to full watch pages so feeds, previews, Shorts, and embeds remain
   untouched; broader provider lifecycle hardening and first-class YouTube room
   navigation remain follow-up work;
-- Anidachi bubble and compact room panel;
+- a compact room panel with an edge-intent launcher: while the panel is closed,
+  the top pill stays hidden until a deliberate top-right hover reveals it; the
+  open panel pins the pill in place as its close control;
+- an active-room-only side voice rail: it is absent before a room exists, and
+  its participant list expands only after a deliberate press against the player
+  edge rather than broad hover near the side;
 - sign-in through the web app with Google/Discord;
 - room creation and invite copying through the website/API/Worker flow;
 - WebSocket room join and playback sync;

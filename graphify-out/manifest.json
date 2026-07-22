@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1784685200.7401862,
-    "ast_hash": "6431ba3b8837f3e763d7b566841f946d",
+    "mtime": 1784697741.280039,
+    "ast_hash": "6941a12b55d41d17da9064a98a558a7d",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -380,8 +380,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1784676382.331631,
-    "ast_hash": "98c44e583d0f72111b180b2a23c23d86",
+    "mtime": 1784698382.5208623,
+    "ast_hash": "2c000815b0d09be6e4b58f8d8efe0219",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -3050,8 +3050,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1784689529.6151009,
-    "ast_hash": "f6ad33336f5fa97816244884c4dfdfd9",
+    "mtime": 1784697955.5057824,
+    "ast_hash": "cf287b95d5a570b752b9678416d1d75f",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3215,22 +3215,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1784688032.782227,
+    "mtime": 1784698100.4553852,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1784688032.7823925,
+    "mtime": 1784698100.4555266,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1784688032.7824872,
+    "mtime": 1784698100.455629,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1784688032.782601,
+    "mtime": 1784698100.4557264,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3380,8 +3380,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-styles.test.ts": {
-    "mtime": 1784676382.3355634,
-    "ast_hash": "4af9222f04b255fa54e7ad3515f4f76b",
+    "mtime": 1784698361.7904043,
+    "ast_hash": "8d9881dc53701fd85c3e3ad62bbf08ba",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-ghost-preview.tsx": {
@@ -3690,8 +3690,28 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md": {
-    "mtime": 1784689529.7050474,
-    "ast_hash": "6b8f9eb6dd311057814b0eaed5aaa6fb",
+    "mtime": 1784689585.1304345,
+    "ast_hash": "b99b25e9e8900d9ea3d84343dce1456d",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/top-bubble-reveal.ts": {
+    "mtime": 1784697009.0495853,
+    "ast_hash": "bf7fc8694012a55706f98909b8f2837b",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/top-bubble-reveal.test.tsx": {
+    "mtime": 1784696953.8109102,
+    "ast_hash": "049d54974307a1ad8016954dcb0628cf",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/room-rail-intent.ts": {
+    "mtime": 1784697741.1876845,
+    "ast_hash": "0bcbff7d752236dbeeef045adca0096f",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/room-rail-intent.test.ts": {
+    "mtime": 1784697697.0853276,
+    "ast_hash": "0d37806f60eb582c7ac21ae2a134f4a7",
     "semantic_hash": ""
   }
 }

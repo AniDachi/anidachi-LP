@@ -32,6 +32,39 @@ export const overlayStyles = `
     display: none;
   }
 
+  .top-bubble-reveal {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .top-bubble-edge-glow {
+    position: absolute;
+    top: 0;
+    right: max(0px, calc(var(--top-bubble-right, 10px) - 16px));
+    width: 104px;
+    height: 0;
+    border-radius: 999px;
+    background: transparent;
+    box-shadow:
+      0 3px 12px 6px rgba(255, 92, 20, 0.56),
+      0 13px 32px 12px rgba(249, 115, 22, 0.34),
+      0 18px 42px 14px rgba(76, 24, 4, 0.22);
+    opacity: 0;
+    transform: translateY(-4px) scaleX(0.7);
+    transform-origin: right center;
+    pointer-events: none;
+    transition:
+      opacity 120ms ease,
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .top-bubble-reveal.edge-glow .top-bubble-edge-glow {
+    opacity: 0.96;
+    transform: translateY(0) scaleX(1);
+  }
+
   .top-bubble {
     position: absolute;
     top: var(--top-bubble-top, 10px);
@@ -45,17 +78,36 @@ export const overlayStyles = `
     display: flex;
     align-items: center;
     gap: 7px;
-    pointer-events: auto;
-    z-index: 20;
+    opacity: 0;
+    transform: translateY(calc(-100% - var(--top-bubble-top, 10px)));
+    z-index: 1;
     cursor: pointer;
     box-shadow:
       0 14px 34px rgba(0, 0, 0, 0.34),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    pointer-events: none;
     transition:
       border-color 180ms ease,
       background 180ms ease,
       opacity 180ms ease,
-      transform 180ms ease;
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .top-bubble-reveal.bubble-visible .top-bubble {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .top-bubble-reveal.panel-open .top-bubble {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .top-bubble:focus-visible {
+    outline: 2px solid rgba(147, 197, 253, 0.9);
+    outline-offset: 2px;
   }
 
   .anidachi-overlay.is-crunchyroll.player-controls-visible .top-bubble {
@@ -2083,10 +2135,10 @@ export const overlayStyles = `
 
   .room-rail-edge {
     position: absolute;
-    top: -18px;
+    top: 0;
     right: 0;
-    bottom: -18px;
-    width: 24px;
+    bottom: 0;
+    width: 6px;
     pointer-events: auto;
   }
 
@@ -2100,7 +2152,7 @@ export const overlayStyles = `
     border: 0;
     border-radius: 0;
     background: rgba(10, 10, 12, 0);
-    pointer-events: auto;
+    pointer-events: none;
     transform: none;
     transition:
       background 190ms ease,
@@ -2111,6 +2163,10 @@ export const overlayStyles = `
   .room-rail-panel:focus-within {
     background: rgba(10, 10, 12, 0);
     box-shadow: none;
+  }
+
+  .room-rail.open .room-rail-panel {
+    pointer-events: auto;
   }
 
   .room-rail-list {
@@ -3126,6 +3182,8 @@ export const overlayStyles = `
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .top-bubble,
+    .top-bubble-edge-glow,
     .panel-primary-action,
     .panel-icon-action,
     .panel-icon-action.reveal-action,
