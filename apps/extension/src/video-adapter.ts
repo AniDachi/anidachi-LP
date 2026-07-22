@@ -1,6 +1,4 @@
 import {
-  MAX_URL_CHARS,
-  MAX_VIDEO_FINGERPRINT_CHARS,
   MAX_WATCH_TITLE_CHARS,
   type PlaybackState,
   type WatchSourceDescriptor,
@@ -12,36 +10,20 @@ import {
   type CrunchyrollControlResult,
 } from "./crunchyroll-control";
 import { controlsDebugSnapshot, logDebug, videoDebugSnapshot } from "./debug-log";
-import { duckVideoVolume } from "./media-ducking";
+import { Html5VideoAdapter } from "./source-adapters/core/html5-video-adapter";
+import {
+  canonicalWatchSourceUrl,
+  normalizeVideoFingerprint,
+} from "./source-adapters/core/source-url";
+import { findBestVideo, findPlayerContainer } from "./source-adapters/core/video-discovery";
+import type { PlayerEvent, SeekOptions, VideoAdapter } from "./source-adapters/core/types";
 
-export type PlayerEvent =
-  | { type: "play"; time: number }
-  | { type: "pause"; time: number }
-  | { type: "seek"; time: number }
-  | { type: "timeupdate"; time: number };
-
-export interface VideoAdapter {
-  id: string;
-  name: string;
-  video: HTMLVideoElement;
-  container: HTMLElement;
-  getTitle(): string | null;
-  getFingerprint(): string;
-  getCurrentTime(): number;
-  getState(): PlaybackState;
-  play(): Promise<void>;
-  pause(): void;
-  seek(time: number, options?: SeekOptions): void;
-  subscribe(callback: (event: PlayerEvent) => void): () => void;
-  duckVolume(targetVolume?: number): () => void;
-  isFullscreen(): boolean;
-  enterFullscreen(): Promise<void>;
-  exitFullscreen(): Promise<void>;
-}
-
-export interface SeekOptions {
-  resumeIfPlaying?: boolean;
-}
+export type { PlayerEvent, SeekOptions, VideoAdapter } from "./source-adapters/core/types";
+export { Html5VideoAdapter };
+export {
+  canonicalWatchSourceUrl,
+  normalizeVideoFingerprint,
+};
 
 interface YouTubeVolumePlayer extends HTMLElement {
   getVolume?: () => number;
@@ -51,136 +33,7 @@ interface YouTubeVolumePlayer extends HTMLElement {
   unMute?: () => void;
 }
 
-export class GenericVideoAdapter implements VideoAdapter {
-  readonly id: string = "generic-html5-video";
-  readonly name: string = "Generic HTML5 video";
-
-  constructor(
-    readonly video: HTMLVideoElement,
-    readonly container: HTMLElement,
-  ) {}
-
-  getTitle(): string | null {
-    const title =
-      document.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.content ??
-      document.title ??
-      null;
-    return title?.trim() || null;
-  }
-
-  getFingerprint(): string {
-    return normalizeVideoFingerprint(
-      `html5|${location.pathname}|${getStableVideoSourceKey(this.video)}`,
-    );
-  }
-
-  getCurrentTime(): number {
-    return this.video.currentTime || 0;
-  }
-
-  getState(): PlaybackState {
-    const sourceUrl = canonicalWatchSourceUrl(location.href);
-    return {
-      videoFingerprint: this.getFingerprint(),
-      ...(sourceUrl ? { sourceUrl } : {}),
-      playing: !this.video.paused,
-      hostTime: this.getCurrentTime(),
-      updatedAt: Date.now(),
-      playbackRate: this.video.playbackRate || 1,
-    };
-  }
-
-  async play(): Promise<void> {
-    logDebug("adapter.generic", "play start", {
-      adapterId: this.id,
-      video: videoDebugSnapshot(this.video),
-    });
-    await this.video.play();
-    logDebug("adapter.generic", "play resolved", {
-      adapterId: this.id,
-      video: videoDebugSnapshot(this.video),
-    });
-  }
-
-  pause(): void {
-    logDebug("adapter.generic", "pause start", {
-      adapterId: this.id,
-      video: videoDebugSnapshot(this.video),
-    });
-    this.video.pause();
-    window.setTimeout(() => {
-      logDebug("adapter.generic", "pause after 300ms", {
-        adapterId: this.id,
-        video: videoDebugSnapshot(this.video),
-      });
-    }, 300);
-  }
-
-  seek(time: number, _options?: SeekOptions): void {
-    const target = Math.max(0, Math.min(time, this.video.duration || time));
-    logDebug("adapter.generic", "seek start", {
-      adapterId: this.id,
-      requested: time,
-      target,
-      video: videoDebugSnapshot(this.video),
-    });
-    this.video.currentTime = target;
-    window.setTimeout(() => {
-      logDebug("adapter.generic", "seek after 500ms", {
-        adapterId: this.id,
-        requested: time,
-        target,
-        video: videoDebugSnapshot(this.video),
-      });
-    }, 500);
-  }
-
-  subscribe(callback: (event: PlayerEvent) => void): () => void {
-    let lastTimeUpdate = 0;
-    const onPlay = () => callback({ type: "play", time: this.getCurrentTime() });
-    const onPause = () => callback({ type: "pause", time: this.getCurrentTime() });
-    const onSeek = () => callback({ type: "seek", time: this.getCurrentTime() });
-    const onTimeUpdate = () => {
-      const now = Date.now();
-      if (now - lastTimeUpdate > 1000) {
-        lastTimeUpdate = now;
-        callback({ type: "timeupdate", time: this.getCurrentTime() });
-      }
-    };
-
-    this.video.addEventListener("play", onPlay);
-    this.video.addEventListener("pause", onPause);
-    this.video.addEventListener("seeked", onSeek);
-    this.video.addEventListener("timeupdate", onTimeUpdate);
-
-    return () => {
-      this.video.removeEventListener("play", onPlay);
-      this.video.removeEventListener("pause", onPause);
-      this.video.removeEventListener("seeked", onSeek);
-      this.video.removeEventListener("timeupdate", onTimeUpdate);
-    };
-  }
-
-  duckVolume(targetVolume = 0.1): () => void {
-    return duckVideoVolume(this.video, targetVolume);
-  }
-
-  isFullscreen(): boolean {
-    return (
-      document.fullscreenElement === this.container || document.fullscreenElement === this.video
-    );
-  }
-
-  async enterFullscreen(): Promise<void> {
-    await this.container.requestFullscreen();
-  }
-
-  async exitFullscreen(): Promise<void> {
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-    }
-  }
-}
+export class GenericVideoAdapter extends Html5VideoAdapter {}
 
 class YouTubeVideoAdapter extends GenericVideoAdapter {
   override readonly id = "youtube";
@@ -552,63 +405,6 @@ function isNearMediaTime(actual: number, target: number, toleranceSeconds: numbe
   return Number.isFinite(actual) && Math.abs(actual - target) <= toleranceSeconds;
 }
 
-function getStableVideoSourceKey(video: HTMLVideoElement): string {
-  const src = video.currentSrc || video.src;
-  if (!src) {
-    return getDocumentVideoKey();
-  }
-
-  try {
-    const url = new URL(src, location.href);
-    if (url.protocol === "http:" || url.protocol === "https:") {
-      return `${url.pathname}${url.search}`;
-    }
-  } catch {
-    return src;
-  }
-
-  return getDocumentVideoKey();
-}
-
-export function normalizeVideoFingerprint(rawFingerprint: string): string {
-  if (rawFingerprint.length <= MAX_VIDEO_FINGERPRINT_CHARS) {
-    return rawFingerprint;
-  }
-
-  const typePrefix = rawFingerprint.match(/^([^|]{1,32})\|/)?.[1] ?? "video";
-  return `${typePrefix}|hash:${stableFingerprintHash(rawFingerprint)}`;
-}
-
-function stableFingerprintHash(value: string): string {
-  let hash = 0xcbf29ce484222325n;
-  const prime = 0x100000001b3n;
-  for (let index = 0; index < value.length; index += 1) {
-    const code = value.charCodeAt(index);
-    hash ^= BigInt(code & 0xff);
-    hash = BigInt.asUintN(64, hash * prime);
-    hash ^= BigInt(code >>> 8);
-    hash = BigInt.asUintN(64, hash * prime);
-  }
-  return hash.toString(36);
-}
-
-export function canonicalWatchSourceUrl(value: string): string | null {
-  if (value.length > MAX_URL_CHARS) {
-    return null;
-  }
-
-  try {
-    const url = new URL(value, location.href);
-    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
-    params.delete("anidachiRoom");
-    url.hash = params.toString();
-    const normalized = url.toString();
-    return normalized.length <= MAX_URL_CHARS ? normalized : null;
-  } catch {
-    return null;
-  }
-}
-
 export function buildWatchSourceDescriptor(
   adapter: VideoAdapter,
   state: PlaybackState,
@@ -667,12 +463,7 @@ function getCrunchyrollVideoKey(): string {
 }
 
 export function findBestVideoAdapter(): VideoAdapter | null {
-  const videos = findVideosDeep(document).filter(isUsableVideo);
-  const scored = videos
-    .map((video) => ({ video, score: scoreVideo(video) }))
-    .sort((a, b) => b.score - a.score);
-
-  const winner = scored[0]?.video;
+  const winner = findBestVideo(document);
   if (!winner) {
     return null;
   }
@@ -688,42 +479,6 @@ export function findBestVideoAdapter(): VideoAdapter | null {
   }
 
   return new GenericVideoAdapter(winner, findPlayerContainer(winner));
-}
-
-function findVideosDeep(root: Document | ShadowRoot): HTMLVideoElement[] {
-  const videos: HTMLVideoElement[] = [];
-  const elements = Array.from(root.querySelectorAll("*"));
-
-  for (const element of elements) {
-    if (element instanceof HTMLVideoElement) {
-      videos.push(element);
-    }
-
-    if (element.shadowRoot) {
-      videos.push(...findVideosDeep(element.shadowRoot));
-    }
-  }
-
-  return videos;
-}
-
-function isUsableVideo(video: HTMLVideoElement): boolean {
-  const rect = video.getBoundingClientRect();
-  const style = getComputedStyle(video);
-  return (
-    rect.width >= 160 &&
-    rect.height >= 90 &&
-    style.display !== "none" &&
-    style.visibility !== "hidden" &&
-    style.opacity !== "0"
-  );
-}
-
-function scoreVideo(video: HTMLVideoElement): number {
-  const rect = video.getBoundingClientRect();
-  const durationBonus = Number.isFinite(video.duration) && video.duration > 60 ? 50000 : 0;
-  const playbackBonus = video.paused ? 0 : 100000;
-  return rect.width * rect.height + durationBonus + playbackBonus;
 }
 
 function findYouTubePlayerContainer(video: HTMLVideoElement): HTMLElement | null {
@@ -805,26 +560,4 @@ function findCrunchyrollFullscreenButton(container: HTMLElement): HTMLButtonElem
       "button[class*='fullscreen' i]",
     ].join(", "),
   );
-}
-
-function findPlayerContainer(video: HTMLVideoElement): HTMLElement {
-  const videoRect = video.getBoundingClientRect();
-  let parent = video.parentElement;
-
-  while (parent && parent !== document.body) {
-    const rect = parent.getBoundingClientRect();
-    const containsVideo = rect.width >= videoRect.width && rect.height >= videoRect.height;
-    const widthSlack = Math.max(96, videoRect.width * 0.18);
-    const heightSlack = Math.max(96, videoRect.height * 0.22);
-    const tightlyWrapsVideo =
-      rect.width <= videoRect.width + widthSlack && rect.height <= videoRect.height + heightSlack;
-
-    if (containsVideo && tightlyWrapsVideo) {
-      return parent;
-    }
-
-    parent = parent.parentElement;
-  }
-
-  return video.parentElement ?? document.body;
 }
