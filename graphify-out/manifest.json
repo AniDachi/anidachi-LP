@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "apps/extension/entrypoints/content.tsx": {
-    "mtime": 1784685200.550533,
-    "ast_hash": "3f4ee2119f9a0b3151a5eeee19a1d631",
+    "mtime": 1784712953.1335354,
+    "ast_hash": "9535785297b6a534cec60a273e00a9d6",
     "semantic_hash": ""
   },
   "apps/extension/entrypoints/crunchyroll.content.ts": {
@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1784697741.280039,
-    "ast_hash": "6941a12b55d41d17da9064a98a558a7d",
+    "mtime": 1784713543.2503433,
+    "ast_hash": "8614e50e8a972eb5d60070fdac9de8d2",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -3475,8 +3475,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/core/types.ts": {
-    "mtime": 1784685199.5173428,
-    "ast_hash": "10ed9ed5468c75dbc69da03002b4ebcc",
+    "mtime": 1784712964.6161485,
+    "ast_hash": "4588150f297de17a35f6684a5710ebe3",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/core/video-discovery.ts": {
@@ -3690,8 +3690,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md": {
-    "mtime": 1784704983.784346,
-    "ast_hash": "84a9bfeb3023253365fbf1ed43ce11dc",
+    "mtime": 1784713875.5660594,
+    "ast_hash": "205a880575ca7ab26e4e217557ce5e54",
     "semantic_hash": ""
   },
   "apps/extension/src/top-bubble-reveal.ts": {
@@ -3717,6 +3717,31 @@
   "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md": {
     "mtime": 1784704983.8787026,
     "ast_hash": "d1e41c2b75167a8ac989951a04206f10",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/active-adapter-playback.ts": {
+    "mtime": 1784713543.0553234,
+    "ast_hash": "6ac2f10d59be4873ccee46192a1fb89f",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/source-adapters/core/adapter-manager.ts": {
+    "mtime": 1784712256.286255,
+    "ast_hash": "30d540260d5cb2fc9b1a0abf3f73f4a1",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/active-adapter-playback.test.tsx": {
+    "mtime": 1784713543.1516309,
+    "ast_hash": "b951c28f5bf48a8b460f467688bc9467",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/source-adapters/content-lifecycle.test.tsx": {
+    "mtime": 1784712931.1193306,
+    "ast_hash": "07e0d6f0f1978648978d3212dcede279",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/source-adapters/core/adapter-manager.test.ts": {
+    "mtime": 1784712256.2864122,
+    "ast_hash": "6546986ec280085449a69a306bde6ea6",
     "semantic_hash": ""
   }
 }

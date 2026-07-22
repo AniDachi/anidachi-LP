@@ -610,11 +610,21 @@ Automated evidence recorded on 2026-07-22:
 
 ### Task 7: Add The Adapter Lifecycle Manager
 
+**Status:** Complete on 2026-07-22. The content lifecycle now has one
+deterministic adapter owner. Temporary player loss suspends playback bindings
+without unmounting `OverlayApp`, while replacement and terminal detach clean up
+the previous binding before activating or removing the next one. Final
+provider-owned page claims remain deliberately scoped to Task 11.
+
 **Files:**
 - Create: `apps/extension/src/source-adapters/core/adapter-manager.ts`
+- Create: `apps/extension/src/active-adapter-playback.ts`
 - Modify: `apps/extension/entrypoints/content.tsx`
+- Modify: `apps/extension/src/overlay-app.tsx`
+- Modify: `apps/extension/src/source-adapters/core/types.ts`
 - Test: `apps/extension/test/source-adapters/core/adapter-manager.test.ts`
 - Test: `apps/extension/test/source-adapters/content-lifecycle.test.tsx`
+- Test: `apps/extension/test/active-adapter-playback.test.tsx`
 
 **Produces:** One owner for adapter replacement and disposal:
 
@@ -637,25 +647,38 @@ export class AdapterManager {
 }
 ```
 
-- [ ] Test same instance relocation, same video/new fingerprint replacement,
+- [x] Test same instance relocation, same video/new fingerprint replacement,
   new video replacement, temporary disappearance, unsupported route detach,
   idempotent disposal, and `pagehide` cleanup. A `waiting` result suspends local
   adapter events and remote playback application while preserving the room
   shell; `blocked` detaches the overlay on an unsupported route.
-- [ ] Move listener, marker, `ResizeObserver`, fullscreen, and adapter cleanup
+- [x] Move listener, marker, `ResizeObserver`, fullscreen, and adapter cleanup
   ordering from `content.tsx` behind the manager hooks.
-- [ ] Keep room/WebSocket state inside `OverlayApp`; replacing the player must
+- [x] Keep room/WebSocket state inside `OverlayApp`; replacing the player must
   not recreate or close the room session.
-- [ ] Add a regression test that a replacement video receives adapter event
+- [x] Add a regression test that a replacement video receives adapter event
   listeners and resize observation.
-- [ ] Run lifecycle tests, extension check, and all extension tests.
-- [ ] Commit:
+- [x] Guard stale fullscreen reroutes and pending remote playback so an old
+  adapter cannot resume after suspension or replacement.
+- [x] Run lifecycle tests, extension check, and all extension tests.
+- [x] Commit:
 
 ```bash
 git add apps/extension/src/source-adapters/core/adapter-manager.ts \
   apps/extension/entrypoints/content.tsx apps/extension/test/source-adapters
 git commit -m "fix(extension): make adapter replacement lifecycle deterministic"
 ```
+
+Automated evidence recorded on 2026-07-22:
+
+- focused lifecycle suite passed: 3 files / 15 tests;
+- extension typecheck passed;
+- full extension suite passed: 59 files / 579 tests;
+- staging extension build and artifact validation passed;
+- `pnpm dev:check` selected only the extension and docs profiles;
+- `git diff --check` passed;
+- targeted Biome lint reported no errors (two pre-existing optional-chain
+  suggestions remain outside this task).
 
 ### Task 8: Replace Provider ID Branches With Capabilities And Policies
 

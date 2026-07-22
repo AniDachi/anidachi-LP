@@ -31,6 +31,7 @@ import type {
 } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { storage } from "wxt/utils/storage";
+import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
 import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK, EMOJI_PALETTE } from "./constants";
@@ -200,6 +201,7 @@ import { getWatchProgressEntryForAdapter } from "./watch-progress-entry";
 
 interface OverlayAppProps {
   adapter: VideoAdapter;
+  adapterActive?: boolean;
 }
 
 interface CatchUpState {
@@ -304,8 +306,10 @@ const FIRE_SUPER_DELAY_MS = HOLD_FIRE_SUPER_REACTION_EXPERIMENT.revealDelayMs;
 const FIRE_SUPER_CHARGE_MS = HOLD_FIRE_SUPER_REACTION_EXPERIMENT.chargeMs;
 const FIRE_SUPER_TOTAL_MS = FIRE_SUPER_DELAY_MS + FIRE_SUPER_CHARGE_MS;
 const NUKE_SPARKS = Array.from({ length: 12 }, (_, index) => index);
-export function OverlayApp({ adapter }: OverlayAppProps) {
+export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const clientRef = useRef(new RoomClient());
+  const adapterActiveRef = useRef(adapterActive);
+  adapterActiveRef.current = adapterActive;
   const suppressLocalEventsUntilRef = useRef(0);
   const remotePlaybackTokenRef = useRef(0);
   const pendingPlayWaitRef = useRef(false);
@@ -450,6 +454,22 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const crunchyrollPosterRequestsRef = useRef<Record<string, Promise<string | null> | undefined>>(
     {},
   );
+
+  const suspendAdapterPlayback = useCallback(() => {
+    remotePlaybackTokenRef.current += 1;
+    pendingPlayWaitRef.current = false;
+    pendingRemoteSeekRef.current = null;
+    const pendingLocalSeek = pendingLocalSeekBroadcastRef.current;
+    if (pendingLocalSeek) {
+      window.clearTimeout(pendingLocalSeek.timeoutId);
+      pendingLocalSeekBroadcastRef.current = null;
+    }
+    logDebug("adapter.lifecycle", "playback suspended", {
+      adapterId: adapter.id,
+      fingerprint: adapter.getFingerprint(),
+      token: remotePlaybackTokenRef.current,
+    });
+  }, [adapter]);
 
   const participantRef = useRef<Participant | null>(null);
   const settingsCategoryScrollRef = useRef<HTMLDivElement | null>(null);
@@ -1268,6 +1288,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, []);
 
   useEffect(() => {
+    if (!adapterActive) {
+      return;
+    }
+
     let disposed = false;
     const viewportElement =
       adapter.id === "youtube" || adapter.id === "crunchyroll" ? adapter.container : adapter.video;
@@ -1300,7 +1324,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       window.removeEventListener("resize", updateViewportSize);
       document.removeEventListener("fullscreenchange", updateViewportSize, true);
     };
-  }, [adapter]);
+  }, [adapter, adapterActive]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1353,7 +1377,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, []);
 
   useEffect(() => {
-    if (adapter.id !== "crunchyroll") {
+    if (!adapterActive || adapter.id !== "crunchyroll") {
       setCrunchyrollPlayerChrome(DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE);
       return;
     }
@@ -1407,7 +1431,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       adapter.container.removeEventListener("pointerleave", scheduleApplyState, true);
       document.removeEventListener("fullscreenchange", scheduleApplyState, true);
     };
-  }, [adapter]);
+  }, [adapter, adapterActive]);
 
   useEffect(() => {
     setMessageComposerDomGuard(messageComposerOpen || messageComposerGuardActive);
@@ -1553,6 +1577,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   );
 
   useEffect(() => {
+    if (!adapterActive) {
+      return;
+    }
+
     let disposed = false;
     let lastPersistedAt = 0;
     let lastRemoteReconcileAt = 0;
@@ -1647,7 +1675,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       adapter.video.removeEventListener("ended", persistEnded);
       window.removeEventListener("pagehide", persistPagehide);
     };
-  }, [adapter, getWatchLibraryReconcileAccessToken, roomId, participantCount, loadPosterArtwork]);
+  }, [
+    adapter,
+    adapterActive,
+    getWatchLibraryReconcileAccessToken,
+    roomId,
+    participantCount,
+    loadPosterArtwork,
+  ]);
 
   const sendCameraStatus = useCallback((enabled: boolean) => {
     const activeRoomId = roomIdRef.current;
@@ -2331,6 +2366,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const applyRemotePlay = useCallback(
     (byUserId: string, at: number) => {
+      if (!adapterActiveRef.current) {
+        return;
+      }
       if (isDuplicateRemoteCommand("PLAY", byUserId, at)) {
         return;
       }
@@ -2356,6 +2394,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const applyRemotePause = useCallback(
     (byUserId: string, at: number) => {
+      if (!adapterActiveRef.current) {
+        return;
+      }
       if (isDuplicateRemoteCommand("PAUSE", byUserId, at)) {
         return;
       }
@@ -2383,6 +2424,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const applyRemoteSeek = useCallback(
     (byUserId: string, to: number) => {
+      if (!adapterActiveRef.current) {
+        return;
+      }
       if (isDuplicateRemoteCommand("SEEK", byUserId, to)) {
         return;
       }
@@ -2408,6 +2452,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const applyHostState = useCallback(
     async (state: PlaybackState) => {
+      if (!adapterActiveRef.current) {
+        return;
+      }
       if (shouldHoldHostStateForPendingSourceNavigation(state)) {
         return;
       }
@@ -3641,6 +3688,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const sendHostState = useCallback(
     (allowController = false, stateOverride?: Partial<PlaybackState>) => {
+      if (!adapterActiveRef.current) {
+        return;
+      }
       const activeRoomId = roomIdRef.current;
       if (!activeRoomId || (!isCurrentHost() && !allowController)) {
         logDebug("sync.hostState", "skipped", {
@@ -3691,6 +3741,9 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const sendLocalControlEvent = useCallback(
     (event: PlayerEvent, stateOverride?: Partial<PlaybackState>) => {
+      if (!adapterActiveRef.current) {
+        return false;
+      }
       const activeRoomId = roomIdRef.current;
       const activeParticipant = participantRef.current;
       if (!activeRoomId || !activeParticipant) {
@@ -3836,8 +3889,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     };
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = adapter.subscribe((event) => {
+  const handleAdapterEvent = useCallback(
+    (event: PlayerEvent) => {
       if (Date.now() < suppressLocalEventsUntilRef.current) {
         logDebug("adapter.event", "suppressed local event", {
           event,
@@ -3889,19 +3942,18 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       sendLocalControlEvent(event);
-    });
+    },
+    [adapter, queueCrunchyrollLocalSeekBroadcast, sendLocalControlEvent],
+  );
 
-    return unsubscribe;
-  }, [adapter, queueCrunchyrollLocalSeekBroadcast, sendLocalControlEvent]);
-
-  useEffect(() => {
-    if (!isHost || !roomId) {
-      return;
-    }
-
-    const id = window.setInterval(sendHostState, 1500);
-    return () => window.clearInterval(id);
-  }, [isHost, roomId, sendHostState]);
+  useActiveAdapterPlayback({
+    active: adapterActive,
+    adapter,
+    heartbeatEnabled: isHost && Boolean(roomId),
+    onAdapterEvent: handleAdapterEvent,
+    onHeartbeat: sendHostState,
+    onSuspend: suspendAdapterPlayback,
+  });
 
   const handleCreateRoom = async () => {
     if (roomCreatePending) {
@@ -4334,6 +4386,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     restoreLiveVoiceDuckingRef.current?.();
     restoreLiveVoiceDuckingRef.current = null;
 
+    if (!adapterActive) {
+      return undefined;
+    }
+
     if (liveVoiceTalking) {
       restoreLiveVoiceDuckingRef.current = adapter.duckVolume(0.42);
       return () => {
@@ -4351,7 +4407,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     }
 
     return undefined;
-  }, [adapter, liveVoiceTalking, remoteLiveVoiceActive]);
+  }, [adapter, adapterActive, liveVoiceTalking, remoteLiveVoiceActive]);
 
   const startLiveVoiceTalk = useCallback(() => {
     if (!roomId) {
@@ -4415,7 +4471,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, [restoreVoiceDucking]);
 
   const startVoiceCapture = useCallback(() => {
-    if (voiceCaptureActiveRef.current || !roomId || !isSpeechRecognitionSupported()) {
+    if (
+      !adapterActiveRef.current ||
+      voiceCaptureActiveRef.current ||
+      !roomId ||
+      !isSpeechRecognitionSupported()
+    ) {
       return;
     }
 

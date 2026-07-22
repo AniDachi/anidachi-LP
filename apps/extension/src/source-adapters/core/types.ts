@@ -31,6 +31,12 @@ export interface SeekOptions {
   resumeIfPlaying?: boolean;
 }
 
+export type AdapterDetectionResult =
+  | { status: "ready"; adapter: VideoAdapter }
+  | { status: "waiting"; provider: SourceProvider }
+  | { status: "blocked"; provider: SourceProvider }
+  | { status: "none" };
+
 export interface SourceAdapterDefinition {
   readonly id: string;
   readonly provider: SourceProvider;
