@@ -557,8 +557,9 @@ git commit -m "refactor(extension): route adapters through provider registry"
 
 ### Task 6: PR 1 Verification And Staging Review
 
-**Status:** Automated verification complete on 2026-07-22. Manual loaded-
-extension staging acceptance remains pending.
+**Status:** Complete on 2026-07-22. Automated verification and user-confirmed
+loaded-extension staging acceptance are complete. The known cross-participant
+YouTube synchronization limitation remains explicitly deferred to PR 2.
 
 **Files:**
 - Modify only if behavior documentation moved:
@@ -572,10 +573,10 @@ extension staging acceptance remains pending.
 - [x] Run `pnpm dev:check` and record the extension profile output.
 - [x] Run `pnpm graph:update`; include team graph artifacts only if the graph
   policy and resulting diff require them.
-- [ ] Load the staging artifact in the normal test profile and verify one local
+- [x] Load the staging artifact in the normal test profile and verify one local
   room on existing Crunchyroll and YouTube videos: mount, play, pause, seek,
   fullscreen, camera controls, and panel close/reopen.
-- [ ] Open one PR into `staging` titled
+- [x] Open one PR into `staging` titled
   `refactor(extension): isolate source adapters` with explicit evidence that no
   provider behavior was intentionally changed.
 
@@ -595,6 +596,13 @@ Automated evidence recorded on 2026-07-22:
 - staging review found preview players on non-watch YouTube routes; page
   eligibility now permits only valid `/watch?v=...` pages and direct
   `youtu.be` video links, and disposes an existing overlay after leaving them.
+- loaded-extension acceptance used
+  `8d6c285-staging-20260722123458` in the normal test profile. `8d6c285` is the
+  final runtime-code commit in PR 1; the later `ef45b74` and `43d8967` commits
+  change documentation only.
+- the user confirmed the updated folder had already been exercised during the
+  staging review. This acceptance does not claim that cross-participant YouTube
+  synchronization is reliable; that behavior remains a required PR 2 gate.
 
 ---
 
