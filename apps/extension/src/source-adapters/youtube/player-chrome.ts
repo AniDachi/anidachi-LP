@@ -1,7 +1,9 @@
 import {
+	arePlayerOverlayGeometriesEqual,
 	DEFAULT_PLAYER_OVERLAY_GEOMETRY,
 	normalizePlayerOverlayGeometry,
 	type PlayerOverlayGeometry,
+	type PlayerOverlayGeometryListener,
 } from "../core/overlay-geometry";
 
 const YOUTUBE_BOTTOM_CHROME_SELECTORS = [
@@ -13,6 +15,12 @@ const YOUTUBE_TOP_ACTION_SELECTORS = [
 	".ytp-watch-later-button",
 	".ytp-share-button",
 	".ytp-chrome-top-buttons button",
+] as const;
+
+const YOUTUBE_TOP_CHROME_SELECTORS = [
+	".ytp-chrome-top",
+	".ytp-chrome-top-buttons",
+	...YOUTUBE_TOP_ACTION_SELECTORS,
 ] as const;
 
 const YOUTUBE_BOTTOM_FALLBACK_SELECTOR = [
@@ -29,6 +37,7 @@ const LAUNCHER_WIDTH_PX = 92;
 const LAUNCHER_HEIGHT_PX = 32;
 const PLAYER_MARGIN_PX = 10;
 const LAUNCHER_GAP_PX = 8;
+const VISIBILITY_SETTLE_DELAY_MS = 220;
 
 export function getYouTubePlayerOverlayGeometry(
 	container: HTMLElement,
@@ -68,6 +77,148 @@ export function getYouTubePlayerOverlayGeometry(
 			rightPx: PLAYER_MARGIN_PX,
 		},
 	});
+}
+
+export function subscribeYouTubePlayerOverlayGeometry(
+	container: HTMLElement,
+	listener: PlayerOverlayGeometryListener,
+): () => void {
+	let disposed = false;
+	let animationFrame: number | null = null;
+	let delayedMeasurement: number | null = null;
+	let currentGeometry = getYouTubePlayerOverlayGeometry(container);
+	const observedChromeRoots = new Set<Element>();
+	const resizeObserver = new ResizeObserver(scheduleMeasurement);
+	const mutationObserver = new MutationObserver(() => {
+		if (disposed) {
+			return;
+		}
+
+		refreshObservedChromeRoots();
+		scheduleVisibilityMeasurement();
+	});
+
+	function refreshObservedChromeRoots(): void {
+		const nextChromeRoots = new Set<Element>([
+			container,
+			...getYouTubeChromeRoots(container),
+		]);
+
+		for (const root of observedChromeRoots) {
+			if (!nextChromeRoots.has(root)) {
+				resizeObserver.unobserve(root);
+				observedChromeRoots.delete(root);
+			}
+		}
+
+		for (const root of nextChromeRoots) {
+			if (!observedChromeRoots.has(root)) {
+				observedChromeRoots.add(root);
+				resizeObserver.observe(root);
+			}
+		}
+	}
+
+	function scheduleMeasurement(): void {
+		if (disposed || animationFrame !== null) {
+			return;
+		}
+
+		animationFrame = window.requestAnimationFrame(() => {
+			animationFrame = null;
+			const nextGeometry = getYouTubePlayerOverlayGeometry(container);
+			if (arePlayerOverlayGeometriesEqual(currentGeometry, nextGeometry)) {
+				return;
+			}
+
+			currentGeometry = nextGeometry;
+			listener(nextGeometry);
+		});
+	}
+
+	function scheduleVisibilityMeasurement(): void {
+		if (disposed) {
+			return;
+		}
+
+		scheduleMeasurement();
+		if (delayedMeasurement !== null) {
+			window.clearTimeout(delayedMeasurement);
+		}
+		delayedMeasurement = window.setTimeout(() => {
+			delayedMeasurement = null;
+			scheduleMeasurement();
+		}, VISIBILITY_SETTLE_DELAY_MS);
+	}
+
+	refreshObservedChromeRoots();
+	mutationObserver.observe(container, {
+		attributes: true,
+		attributeFilter: ["class", "style", "aria-hidden", "hidden"],
+		childList: true,
+		subtree: true,
+	});
+	container.addEventListener(
+		"pointermove",
+		scheduleVisibilityMeasurement,
+		true,
+	);
+	container.addEventListener(
+		"pointerleave",
+		scheduleVisibilityMeasurement,
+		true,
+	);
+	container.addEventListener(
+		"transitionend",
+		scheduleVisibilityMeasurement,
+		true,
+	);
+	document.addEventListener("fullscreenchange", scheduleVisibilityMeasurement);
+	scheduleMeasurement();
+
+	return () => {
+		if (disposed) {
+			return;
+		}
+
+		disposed = true;
+		mutationObserver.disconnect();
+		resizeObserver.disconnect();
+		container.removeEventListener(
+			"pointermove",
+			scheduleVisibilityMeasurement,
+			true,
+		);
+		container.removeEventListener(
+			"pointerleave",
+			scheduleVisibilityMeasurement,
+			true,
+		);
+		container.removeEventListener(
+			"transitionend",
+			scheduleVisibilityMeasurement,
+			true,
+		);
+		document.removeEventListener(
+			"fullscreenchange",
+			scheduleVisibilityMeasurement,
+		);
+		if (animationFrame !== null) {
+			window.cancelAnimationFrame(animationFrame);
+			animationFrame = null;
+		}
+		if (delayedMeasurement !== null) {
+			window.clearTimeout(delayedMeasurement);
+			delayedMeasurement = null;
+		}
+	};
+}
+
+function getYouTubeChromeRoots(container: HTMLElement): HTMLElement[] {
+	return queryUniqueElements(container, [
+		...YOUTUBE_BOTTOM_CHROME_SELECTORS,
+		...YOUTUBE_TOP_CHROME_SELECTORS,
+	]);
 }
 
 function getBottomChromeRects(

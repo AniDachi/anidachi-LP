@@ -1,7 +1,13 @@
 import { Html5VideoAdapter } from "../core/html5-video-adapter";
-import type { PlayerOverlayGeometry } from "../core/overlay-geometry";
+import type {
+  PlayerOverlayGeometry,
+  PlayerOverlayGeometryListener,
+} from "../core/overlay-geometry";
 import { normalizeVideoFingerprint } from "../core/source-url";
-import { getYouTubePlayerOverlayGeometry } from "./player-chrome";
+import {
+  getYouTubePlayerOverlayGeometry,
+  subscribeYouTubePlayerOverlayGeometry,
+} from "./player-chrome";
 import { getYouTubeFingerprintKey } from "./url";
 
 interface YouTubeVolumePlayer extends HTMLElement {
@@ -30,6 +36,10 @@ export class YouTubeVideoAdapter extends Html5VideoAdapter {
 
   override getOverlayGeometry(): PlayerOverlayGeometry {
     return getYouTubePlayerOverlayGeometry(this.container);
+  }
+
+  override subscribeOverlayGeometry(listener: PlayerOverlayGeometryListener): () => void {
+    return subscribeYouTubePlayerOverlayGeometry(this.container, listener);
   }
 
   override isFullscreen(): boolean {

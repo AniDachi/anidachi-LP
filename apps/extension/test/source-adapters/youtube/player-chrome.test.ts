@@ -1,10 +1,16 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../../../src/source-adapters/core/overlay-geometry";
-import { getYouTubePlayerOverlayGeometry } from "../../../src/source-adapters/youtube/player-chrome";
+import {
+	getYouTubePlayerOverlayGeometry,
+	subscribeYouTubePlayerOverlayGeometry,
+} from "../../../src/source-adapters/youtube/player-chrome";
 
 describe("YouTube player chrome", () => {
 	afterEach(() => {
 		document.body.innerHTML = "";
+		vi.useRealTimers();
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
 	});
 
 	it("returns the provider-neutral defaults for an unusable player", () => {
@@ -181,6 +187,270 @@ describe("YouTube player chrome", () => {
 			panel: { topPx: 50, rightPx: 10 },
 		});
 	});
+
+	it("coalesces initial and resize measurements and scopes DOM observation", () => {
+		const {
+			mutationObservers,
+			pendingAnimationFrames,
+			resizeObservers,
+			runAnimationFrames,
+		} = installGeometryObserverStubs();
+		document.body.innerHTML = `
+      <div id="movie_player">
+        <div class="ytp-chrome-top-buttons"><button></button></div>
+        <div class="ytp-chrome-bottom"></div>
+      </div>
+    `;
+		const container = getPlayer();
+		const topChrome = document.querySelector(
+			".ytp-chrome-top-buttons",
+		) as HTMLElement;
+		const bottomChrome = document.querySelector(
+			".ytp-chrome-bottom",
+		) as HTMLElement;
+		mockRect(container, 0, 0, 960, 540);
+		mockRect(topChrome, 760, 10, 190, 40);
+		mockRect(topChrome.querySelector("button"), 900, 14, 40, 32);
+		mockRect(bottomChrome, 0, 450, 960, 90);
+		const listener = vi.fn();
+
+		const dispose = subscribeYouTubePlayerOverlayGeometry(container, listener);
+
+		expect(pendingAnimationFrames()).toBe(1);
+		expect(mutationObservers).toHaveLength(1);
+		expect(mutationObservers[0]?.observedTarget).toBe(container);
+		expect(mutationObservers[0]?.options).toEqual({
+			attributeFilter: ["class", "style", "aria-hidden", "hidden"],
+			attributes: true,
+			childList: true,
+			subtree: true,
+		});
+		expect(resizeObservers).toHaveLength(1);
+		expect(resizeObservers[0]?.observedTargets).toEqual(
+			new Set([
+				container,
+				topChrome,
+				topChrome.querySelector("button"),
+				bottomChrome,
+			]),
+		);
+
+		resizeObservers[0]?.trigger();
+		expect(pendingAnimationFrames()).toBe(1);
+		runAnimationFrames();
+		expect(listener).not.toHaveBeenCalled();
+
+		mockRect(container, 0, 0, 961, 540);
+		resizeObservers[0]?.trigger();
+		runAnimationFrames();
+		expect(listener).toHaveBeenCalledTimes(1);
+		expect(listener).toHaveBeenLastCalledWith(
+			expect.objectContaining({ viewport: { widthPx: 961, heightPx: 540 } }),
+		);
+
+		dispose();
+	});
+
+	it("responds to visibility events and replaces the delayed fade measurement", () => {
+		const { mutationObservers, pendingAnimationFrames, runAnimationFrames } =
+			installGeometryObserverStubs();
+		document.body.innerHTML = `
+      <div id="movie_player">
+        <div id="event-target"></div>
+        <div class="ytp-chrome-bottom"></div>
+      </div>
+    `;
+		const container = getPlayer();
+		const eventTarget = document.querySelector("#event-target") as HTMLElement;
+		const bottomChrome = document.querySelector(
+			".ytp-chrome-bottom",
+		) as HTMLElement;
+		mockRect(container, 0, 0, 960, 540);
+		mockRect(bottomChrome, 0, 450, 960, 90);
+		const listener = vi.fn();
+		const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
+
+		const dispose = subscribeYouTubePlayerOverlayGeometry(container, listener);
+		runAnimationFrames();
+
+		const dispatchAndMeasure = (dispatch: () => void, widthPx: number) => {
+			mockRect(container, 0, 0, widthPx, 540);
+			dispatch();
+			expect(pendingAnimationFrames()).toBe(1);
+			expect(vi.getTimerCount()).toBe(1);
+			runAnimationFrames();
+		};
+
+		container.classList.add("ytp-fullscreen");
+		dispatchAndMeasure(() => mutationObservers[0]?.trigger(), 961);
+		dispatchAndMeasure(
+			() =>
+				eventTarget.dispatchEvent(new Event("pointermove", { bubbles: true })),
+			962,
+		);
+		dispatchAndMeasure(
+			() =>
+				eventTarget.dispatchEvent(new Event("pointerleave", { bubbles: true })),
+			963,
+		);
+		dispatchAndMeasure(
+			() =>
+				eventTarget.dispatchEvent(
+					new Event("transitionend", { bubbles: true }),
+				),
+			964,
+		);
+		dispatchAndMeasure(
+			() => document.dispatchEvent(new Event("fullscreenchange")),
+			965,
+		);
+
+		expect(listener).toHaveBeenCalledTimes(5);
+		expect(clearTimeoutSpy).toHaveBeenCalledTimes(4);
+
+		vi.advanceTimersByTime(220);
+		expect(pendingAnimationFrames()).toBe(1);
+		runAnimationFrames();
+		expect(listener).toHaveBeenCalledTimes(5);
+
+		dispose();
+	});
+
+	it("refreshes resize observation when YouTube replaces chrome roots", () => {
+		const { mutationObservers, resizeObservers } =
+			installGeometryObserverStubs();
+		document.body.innerHTML = `
+      <div id="movie_player">
+        <div class="ytp-chrome-top-buttons"><button></button></div>
+        <div class="ytp-chrome-bottom"></div>
+      </div>
+    `;
+		const container = getPlayer();
+		const obsoleteTop = document.querySelector(
+			".ytp-chrome-top-buttons",
+		) as HTMLElement;
+		const obsoleteTopAction = obsoleteTop.querySelector(
+			"button",
+		) as HTMLButtonElement;
+		const obsoleteBottom = document.querySelector(
+			".ytp-chrome-bottom",
+		) as HTMLElement;
+		const replacementTop = document.createElement("div");
+		const replacementTopAction = document.createElement("button");
+		const replacementBottom = document.createElement("div");
+		replacementTop.className = "ytp-chrome-top-buttons";
+		replacementTop.append(replacementTopAction);
+		replacementBottom.className = "ytp-chrome-bottom";
+
+		const dispose = subscribeYouTubePlayerOverlayGeometry(container, vi.fn());
+		obsoleteTop.replaceWith(replacementTop);
+		obsoleteBottom.replaceWith(replacementBottom);
+		mutationObservers[0]?.trigger();
+
+		expect(resizeObservers[0]?.unobserve).toHaveBeenCalledWith(obsoleteTop);
+		expect(resizeObservers[0]?.unobserve).toHaveBeenCalledWith(
+			obsoleteTopAction,
+		);
+		expect(resizeObservers[0]?.unobserve).toHaveBeenCalledWith(obsoleteBottom);
+		expect(resizeObservers[0]?.observedTargets).toEqual(
+			new Set([
+				container,
+				replacementTop,
+				replacementTopAction,
+				replacementBottom,
+			]),
+		);
+
+		dispose();
+	});
+
+	it("suppresses duplicate normalized geometry and disposes exactly once", () => {
+		const {
+			cancelAnimationFrame,
+			mutationObservers,
+			pendingAnimationFrames,
+			resizeObservers,
+			runAnimationFrames,
+		} = installGeometryObserverStubs();
+		document.body.innerHTML = `
+      <div id="movie_player">
+        <div id="event-target"></div>
+        <div class="ytp-chrome-bottom"></div>
+      </div>
+    `;
+		const container = getPlayer();
+		const eventTarget = document.querySelector("#event-target") as HTMLElement;
+		const bottomChrome = document.querySelector(
+			".ytp-chrome-bottom",
+		) as HTMLElement;
+		mockRect(container, 0, 0, 959, 540);
+		mockRect(bottomChrome, 0, 450, 959, 90);
+		const addContainerListener = vi.spyOn(container, "addEventListener");
+		const removeContainerListener = vi.spyOn(container, "removeEventListener");
+		const addDocumentListener = vi.spyOn(document, "addEventListener");
+		const removeDocumentListener = vi.spyOn(document, "removeEventListener");
+		const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
+		const listener = vi.fn();
+
+		const dispose = subscribeYouTubePlayerOverlayGeometry(container, listener);
+		runAnimationFrames();
+		mockRect(container, 0, 0, 960.1, 540);
+		eventTarget.dispatchEvent(new Event("pointermove", { bubbles: true }));
+		runAnimationFrames();
+		mockRect(container, 0, 0, 960.4, 540);
+		document.dispatchEvent(new Event("fullscreenchange"));
+		runAnimationFrames();
+
+		expect(listener).toHaveBeenCalledTimes(1);
+		for (const type of ["pointermove", "pointerleave", "transitionend"]) {
+			expect(addContainerListener).toHaveBeenCalledWith(
+				type,
+				expect.any(Function),
+				true,
+			);
+		}
+		expect(addDocumentListener).toHaveBeenCalledWith(
+			"fullscreenchange",
+			expect.any(Function),
+		);
+
+		eventTarget.dispatchEvent(new Event("pointerleave", { bubbles: true }));
+		expect(pendingAnimationFrames()).toBe(1);
+		dispose();
+		dispose();
+
+		expect(cancelAnimationFrame).toHaveBeenCalledTimes(1);
+		expect(clearTimeoutSpy).toHaveBeenCalledTimes(3);
+		expect(mutationObservers[0]?.disconnect).toHaveBeenCalledTimes(1);
+		expect(resizeObservers[0]?.disconnect).toHaveBeenCalledTimes(1);
+		for (const type of ["pointermove", "pointerleave", "transitionend"]) {
+			const addedListener = addContainerListener.mock.calls.find(
+				([eventType]) => eventType === type,
+			)?.[1];
+			expect(removeContainerListener).toHaveBeenCalledWith(
+				type,
+				addedListener,
+				true,
+			);
+		}
+		const fullscreenListener = addDocumentListener.mock.calls.find(
+			([eventType]) => eventType === "fullscreenchange",
+		)?.[1];
+		expect(removeDocumentListener).toHaveBeenCalledWith(
+			"fullscreenchange",
+			fullscreenListener,
+		);
+		const replacementBottom = document.createElement("div");
+		replacementBottom.className = "ytp-chrome-bottom";
+		bottomChrome.replaceWith(replacementBottom);
+		mutationObservers[0]?.trigger();
+		expect(resizeObservers[0]?.unobserve).not.toHaveBeenCalled();
+		expect(vi.getTimerCount()).toBe(0);
+
+		vi.advanceTimersByTime(220);
+		runAnimationFrames();
+		expect(listener).toHaveBeenCalledTimes(1);
+	});
 });
 
 function getPlayer(): HTMLElement {
@@ -215,4 +485,86 @@ function mockRect(
 				width,
 			}) as DOMRect,
 	});
+}
+
+function installGeometryObserverStubs() {
+	vi.useFakeTimers();
+	const mutationObservers: MockMutationObserver[] = [];
+	const resizeObservers: MockResizeObserver[] = [];
+	const animationFrames = new Map<number, FrameRequestCallback>();
+	let nextAnimationFrameId = 1;
+
+	class MockMutationObserver {
+		readonly disconnect = vi.fn();
+		observedTarget: Node | null = null;
+		options: MutationObserverInit | null = null;
+
+		constructor(private readonly callback: MutationCallback) {
+			mutationObservers.push(this);
+		}
+
+		observe(target: Node, options?: MutationObserverInit): void {
+			this.observedTarget = target;
+			this.options = options ?? null;
+		}
+
+		takeRecords(): MutationRecord[] {
+			return [];
+		}
+
+		trigger(): void {
+			this.callback([], this as unknown as MutationObserver);
+		}
+	}
+
+	class MockResizeObserver {
+		readonly disconnect = vi.fn();
+		readonly observedTargets = new Set<Element>();
+		readonly unobserve = vi.fn((target: Element) => {
+			this.observedTargets.delete(target);
+		});
+
+		constructor(private readonly callback: ResizeObserverCallback) {
+			resizeObservers.push(this);
+		}
+
+		observe(target: Element): void {
+			this.observedTargets.add(target);
+		}
+
+		trigger(): void {
+			this.callback([], this as unknown as ResizeObserver);
+		}
+	}
+
+	const cancelAnimationFrame = vi.fn((animationFrameId: number) => {
+		animationFrames.delete(animationFrameId);
+	});
+
+	vi.stubGlobal("MutationObserver", MockMutationObserver);
+	vi.stubGlobal("ResizeObserver", MockResizeObserver);
+	vi.stubGlobal(
+		"requestAnimationFrame",
+		(callback: FrameRequestCallback): number => {
+			const animationFrameId = nextAnimationFrameId;
+			nextAnimationFrameId += 1;
+			animationFrames.set(animationFrameId, callback);
+			return animationFrameId;
+		},
+	);
+	vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
+
+	return {
+		cancelAnimationFrame,
+		mutationObservers,
+		pendingAnimationFrames: () => animationFrames.size,
+		resizeObservers,
+		runAnimationFrames: () => {
+			const pendingFrames = Array.from(animationFrames.values());
+			animationFrames.clear();
+			for (const callback of pendingFrames) {
+				callback(0);
+			}
+		},
+	};
 }

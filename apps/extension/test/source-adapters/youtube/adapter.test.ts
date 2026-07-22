@@ -8,6 +8,7 @@ describe("YouTube source adapter", () => {
     const mutableDocument = document as unknown as Record<string, unknown>;
     delete mutableDocument.exitFullscreen;
     delete mutableDocument.fullscreenElement;
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -71,6 +72,48 @@ describe("YouTube source adapter", () => {
       launcher: { topPx: 10, rightPx: 10 },
       panel: { topPx: 50, rightPx: 10 },
     });
+  });
+
+  it("exposes the YouTube player chrome geometry subscription", () => {
+    const observe = vi.fn();
+    const disconnectResize = vi.fn();
+    const disconnectMutation = vi.fn();
+    const requestAnimationFrame = vi.fn(() => 1);
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe = observe;
+        unobserve = vi.fn();
+        disconnect = disconnectResize;
+      },
+    );
+    vi.stubGlobal(
+      "MutationObserver",
+      class {
+        observe = vi.fn();
+        takeRecords = vi.fn(() => []);
+        disconnect = disconnectMutation;
+      },
+    );
+    vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    document.body.innerHTML = `
+      <div id="movie_player" class="html5-video-player">
+        <div class="ytp-chrome-bottom"></div>
+        <video></video>
+      </div>
+    `;
+    const adapter = youtubeDefinition.detect(
+      document.querySelector("video") as HTMLVideoElement,
+    );
+
+    const dispose = adapter?.subscribeOverlayGeometry(vi.fn());
+
+    expect(observe).toHaveBeenCalled();
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
+    dispose?.();
+    expect(disconnectResize).toHaveBeenCalledTimes(1);
+    expect(disconnectMutation).toHaveBeenCalledTimes(1);
   });
 
   it("uses the native fullscreen button for enter and exit", async () => {
