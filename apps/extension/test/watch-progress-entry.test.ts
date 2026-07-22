@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { getWatchProgressEntryForAdapter } from "../src/watch-progress-entry";
+import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../src/source-adapters/core/overlay-geometry";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
 
 describe("watch progress entry extraction", () => {
@@ -82,6 +83,7 @@ function fakeAdapter(input: {
     getTitle: () => input.title,
     getFingerprint: () => `${input.id}|test`,
     getCurrentTime: () => input.video.currentTime || 0,
+    getOverlayGeometry: () => DEFAULT_PLAYER_OVERLAY_GEOMETRY,
     getState: () => ({
       videoFingerprint: `${input.id}|test`,
       sourceUrl: location.href,
@@ -94,6 +96,7 @@ function fakeAdapter(input: {
     pause: () => {},
     seek: () => {},
     subscribe: () => () => {},
+    subscribeOverlayGeometry: () => () => {},
     duckVolume: () => () => {},
     isFullscreen: () => false,
     enterFullscreen: async () => {},

@@ -1,6 +1,12 @@
 import type { PlaybackState } from "@anidachi/protocol";
 import { logDebug, videoDebugSnapshot } from "../../debug-log";
 import { duckVideoVolume } from "../../media-ducking";
+import {
+  DEFAULT_PLAYER_OVERLAY_GEOMETRY,
+  normalizePlayerOverlayGeometry,
+  type PlayerOverlayGeometry,
+  type PlayerOverlayGeometryListener,
+} from "./overlay-geometry";
 import { canonicalWatchSourceUrl, normalizeVideoFingerprint } from "./source-url";
 import type { PlayerEvent, SeekOptions, VideoAdapter } from "./types";
 
@@ -112,6 +118,18 @@ export class Html5VideoAdapter implements VideoAdapter {
       this.video.removeEventListener("seeked", onSeek);
       this.video.removeEventListener("timeupdate", onTimeUpdate);
     };
+  }
+
+  getOverlayGeometry(): PlayerOverlayGeometry {
+    const { width, height } = this.container.getBoundingClientRect();
+    return normalizePlayerOverlayGeometry({
+      ...DEFAULT_PLAYER_OVERLAY_GEOMETRY,
+      viewport: { widthPx: width, heightPx: height },
+    });
+  }
+
+  subscribeOverlayGeometry(_listener: PlayerOverlayGeometryListener): () => void {
+    return () => undefined;
   }
 
   duckVolume(targetVolume = 0.1): () => void {

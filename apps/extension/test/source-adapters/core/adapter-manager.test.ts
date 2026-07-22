@@ -3,6 +3,7 @@ import {
 	AdapterManager,
 	type ActiveAdapterHooks,
 } from "../../../src/source-adapters/core/adapter-manager";
+import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../../../src/source-adapters/core/overlay-geometry";
 import type { VideoAdapter } from "../../../src/source-adapters/core/types";
 
 describe("AdapterManager", () => {
@@ -179,6 +180,7 @@ function createAdapter({
 		exitFullscreen: async () => undefined,
 		getCurrentTime: () => 0,
 		getFingerprint: () => fingerprint,
+		getOverlayGeometry: () => DEFAULT_PLAYER_OVERLAY_GEOMETRY,
 		getState: () => ({
 			hostTime: 0,
 			playbackRate: 1,
@@ -194,6 +196,7 @@ function createAdapter({
 		play: async () => undefined,
 		seek: () => undefined,
 		subscribe: () => () => undefined,
+		subscribeOverlayGeometry: () => () => undefined,
 		video,
 	};
 }

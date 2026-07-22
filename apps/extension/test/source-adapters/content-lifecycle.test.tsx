@@ -5,6 +5,7 @@ import {
 	type MountedOverlay,
 	type OverlayRenderer,
 } from "../../entrypoints/content";
+import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../../src/source-adapters/core/overlay-geometry";
 import type {
 	AdapterDetectionResult,
 	VideoAdapter,
@@ -251,6 +252,7 @@ function createAdapter(): VideoAdapter {
 		exitFullscreen: async () => undefined,
 		getCurrentTime: () => 0,
 		getFingerprint: () => fingerprint,
+		getOverlayGeometry: () => DEFAULT_PLAYER_OVERLAY_GEOMETRY,
 		getState: () => ({
 			hostTime: 0,
 			playbackRate: 1,
@@ -266,6 +268,7 @@ function createAdapter(): VideoAdapter {
 		play: async () => undefined,
 		seek: () => undefined,
 		subscribe: () => () => undefined,
+		subscribeOverlayGeometry: () => () => undefined,
 		video,
 	};
 }

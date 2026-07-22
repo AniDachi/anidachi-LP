@@ -2,6 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useActiveAdapterPlayback } from "../src/active-adapter-playback";
+import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../src/source-adapters/core/overlay-geometry";
 import type {
   PlayerEvent,
   VideoAdapter,
@@ -100,6 +101,7 @@ function createAdapter(
     exitFullscreen: async () => undefined,
     getCurrentTime: () => 0,
     getFingerprint: () => "youtube|video",
+    getOverlayGeometry: () => DEFAULT_PLAYER_OVERLAY_GEOMETRY,
     getState: () => ({
       hostTime: 0,
       playbackRate: 1,
@@ -115,6 +117,7 @@ function createAdapter(
     play: async () => undefined,
     seek: () => undefined,
     subscribe,
+    subscribeOverlayGeometry: () => () => undefined,
     video,
   };
 }

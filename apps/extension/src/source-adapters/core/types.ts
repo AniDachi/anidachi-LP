@@ -1,4 +1,8 @@
 import type { PlaybackState, WatchSourceDescriptor } from "@anidachi/protocol";
+import type {
+  PlayerOverlayGeometry,
+  PlayerOverlayGeometryListener,
+} from "./overlay-geometry";
 
 export type SourceProvider = WatchSourceDescriptor["provider"];
 
@@ -21,6 +25,8 @@ export interface VideoAdapter {
   pause(): void;
   seek(time: number, options?: SeekOptions): void;
   subscribe(callback: (event: PlayerEvent) => void): () => void;
+  getOverlayGeometry(): PlayerOverlayGeometry;
+  subscribeOverlayGeometry(listener: PlayerOverlayGeometryListener): () => void;
   duckVolume(targetVolume?: number): () => void;
   isFullscreen(): boolean;
   enterFullscreen(): Promise<void>;

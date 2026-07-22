@@ -1,6 +1,7 @@
 import { MAX_URL_CHARS, MAX_WATCH_TITLE_CHARS, type PlaybackState } from "@anidachi/protocol";
 import { describe, expect, it } from "vitest";
 import { buildWatchSourceDescriptor } from "../../../src/source-adapters/core/source-descriptor";
+import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../../../src/source-adapters/core/overlay-geometry";
 import type { VideoAdapter } from "../../../src/source-adapters/core/types";
 
 describe("buildWatchSourceDescriptor", () => {
@@ -76,6 +77,7 @@ function createAdapter({
     exitFullscreen: async () => undefined,
     getCurrentTime: () => 0,
     getFingerprint: () => "test|fingerprint",
+    getOverlayGeometry: () => DEFAULT_PLAYER_OVERLAY_GEOMETRY,
     getState: () => createPlaybackState(),
     getTitle: () => title,
     id,
@@ -85,6 +87,7 @@ function createAdapter({
     play: async () => undefined,
     seek: () => undefined,
     subscribe: () => () => undefined,
+    subscribeOverlayGeometry: () => () => undefined,
     video,
   };
 }
