@@ -84,6 +84,18 @@ describe("top bubble edge reveal", () => {
     await unmount(view.root);
   });
 
+  it("keeps a revealed launcher shifted more than 160 pixels from the physical edge", async () => {
+    const view = await renderHarness(false, rect(700, 10, 80, 32));
+
+    await movePointer(995, 5);
+    await advance(TOP_BUBBLE_REVEAL_DELAY_MS);
+    await movePointer(740, 20);
+    await advance(TOP_BUBBLE_HIDE_DELAY_MS);
+
+    expect(readPhase(view.container)).toBe("visible");
+    await unmount(view.root);
+  });
+
   it("cancels a pending hide when the pointer returns to the bubble", async () => {
     const view = await renderHarness(false);
 
@@ -159,7 +171,7 @@ describe("top bubble edge reveal", () => {
   });
 });
 
-function Harness({ panelOpen }: { panelOpen: boolean }) {
+function Harness({ bubbleRect, panelOpen }: { bubbleRect: DOMRect; panelOpen: boolean }) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLButtonElement>(null);
   const reveal = useTopBubbleReveal({ bubbleRef, overlayRef, panelOpen });
@@ -180,7 +192,7 @@ function Harness({ panelOpen }: { panelOpen: boolean }) {
         ref={(element) => {
           bubbleRef.current = element;
           if (element) {
-            element.getBoundingClientRect = () => rect(900, 10, 80, 32);
+            element.getBoundingClientRect = () => bubbleRect;
           }
         }}
         type="button"
@@ -191,7 +203,10 @@ function Harness({ panelOpen }: { panelOpen: boolean }) {
   );
 }
 
-async function renderHarness(panelOpen: boolean): Promise<{
+async function renderHarness(
+  panelOpen: boolean,
+  bubbleRect = rect(900, 10, 80, 32),
+): Promise<{
   container: HTMLDivElement;
   rerender(panelOpen: boolean): Promise<void>;
   root: Root;
@@ -199,12 +214,14 @@ async function renderHarness(panelOpen: boolean): Promise<{
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
-  await act(async () => root.render(<Harness panelOpen={panelOpen} />));
+  await act(async () => root.render(<Harness bubbleRect={bubbleRect} panelOpen={panelOpen} />));
   return {
     container,
     root,
     async rerender(nextPanelOpen) {
-      await act(async () => root.render(<Harness panelOpen={nextPanelOpen} />));
+      await act(async () =>
+        root.render(<Harness bubbleRect={bubbleRect} panelOpen={nextPanelOpen} />),
+      );
     },
   };
 }

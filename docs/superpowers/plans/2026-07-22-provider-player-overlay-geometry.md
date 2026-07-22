@@ -635,7 +635,10 @@ Do not write effective coordinates back to `OverlayLayoutDefinition` or storage.
 
 Extend `provider-boundaries.test.ts` so shared runtime files cannot import
 `youtube/player-chrome` or `crunchyroll/player-chrome` and cannot compare
-`adapter.id` to provider literals for geometry.
+`adapter.id` to provider literals while mapping overlay geometry. Keep this
+assertion scoped to the geometry-mapping block: existing provider-specific
+playback and seek behavior is outside this task and must not be hidden behind a
+renamed helper merely to satisfy a source scan.
 
 - [ ] **Step 7: Run integration tests and provider-ID scan**
 
@@ -646,12 +649,11 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
   test/overlay-layout-styles.test.ts \
   test/top-bubble-reveal.test.tsx \
   test/source-adapters/provider-boundaries.test.ts
-rg -n 'adapter\.id\s*[!=]==?\s*["\x27](youtube|crunchyroll)' \
-  apps/extension/src/overlay-app.tsx \
-  apps/extension/src/overlay-layout-runtime.ts
 ```
 
-Expected: tests pass and `rg` prints no matches.
+Expected: tests pass. The provider-boundary test verifies that the geometry
+mapping itself contains no provider-ID branches while leaving unrelated
+provider playback behavior explicit for its own later migration.
 
 - [ ] **Step 8: Commit overlay integration**
 

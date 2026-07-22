@@ -174,6 +174,8 @@ describe("overlay layout pointer surfaces", () => {
 
 		const edgeGlow = getRule(".top-bubble-edge-glow");
 		expect(edgeGlow).toContain("top: 0");
+		expect(edgeGlow).toContain("right: 0");
+		expect(edgeGlow).not.toContain("--top-bubble-right");
 		expect(edgeGlow).toContain("width: 104px");
 		expect(edgeGlow).toContain("height: 0");
 		expect(edgeGlow).toContain("background: transparent");
@@ -204,6 +206,19 @@ describe("overlay layout pointer surfaces", () => {
 		expect(pinnedBubble).toContain("opacity: 1");
 		expect(pinnedBubble).toContain("pointer-events: auto");
 		expect(pinnedBubble).toContain("transform: translateY(0)");
+		expect(
+			getNumericProperty(".top-bubble-reveal.panel-open", "z-index"),
+		).toBeGreaterThan(getNumericProperty(".mini-panel", "z-index"));
+	});
+
+	it("styles visible player controls without a provider-specific overlay class", () => {
+		const visibleControlsBubble = getRule(
+			".anidachi-overlay.player-controls-visible .top-bubble",
+		);
+		expect(visibleControlsBubble).toContain("background: rgba(9, 9, 11, 0.78)");
+		expect(overlayStyles).not.toContain(
+			".anidachi-overlay.is-crunchyroll.player-controls-visible",
+		);
 	});
 
 	it("keeps live objects and editor ghosts below the panel", () => {

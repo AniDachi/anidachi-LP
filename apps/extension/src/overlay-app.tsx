@@ -37,17 +37,6 @@ import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
 import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK, EMOJI_PALETTE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
 import { runCrunchyrollMainCommand } from "./source-adapters/crunchyroll/bridge-client";
-import {
-  areCrunchyrollPlayerChromeStatesEqual,
-  type CrunchyrollPlayerChromeState,
-  DEFAULT_CAM_STACK_BOTTOM_PX,
-  DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE,
-  DEFAULT_MINI_PANEL_RIGHT_PX,
-  DEFAULT_MINI_PANEL_TOP_PX,
-  DEFAULT_TOP_BUBBLE_RIGHT_PX,
-  DEFAULT_TOP_BUBBLE_TOP_PX,
-  getCrunchyrollPlayerChromeState,
-} from "./source-adapters/crunchyroll/player-chrome";
 import type { PlayerEvent, VideoAdapter } from "./source-adapters/core/types";
 import { buildWatchSourceDescriptor } from "./source-adapters/core/source-descriptor";
 import { CurrentResourcePanel } from "./current-resource-panel";
@@ -82,7 +71,7 @@ import {
   ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
   isMessageComposerShortcutEvent,
 } from "./message-composer-events";
-import { shouldShowCameraStack } from "./overlay-layout";
+import { getMiniPanelBottomReservePx, shouldShowCameraStack } from "./overlay-layout";
 import { OverlayLayoutEditor } from "./overlay-layout-editor";
 import { type OverlayLayoutContext, resolveOverlayLayout } from "./overlay-layout-engine";
 import { OverlayLayoutGhostPreview } from "./overlay-layout-ghost-preview";
@@ -428,8 +417,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [chatDisplayMode, setChatDisplayMode] =
     useState<ChatDisplayMode>(DEFAULT_CHAT_DISPLAY_MODE);
   const socialVisible = true;
-  const [crunchyrollPlayerChrome, setCrunchyrollPlayerChrome] =
-    useState<CrunchyrollPlayerChromeState>(DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE);
+  const [playerOverlayGeometry, setPlayerOverlayGeometry] = useState(() =>
+    adapter.getOverlayGeometry(),
+  );
   const [reactions, setReactions] = useState<ReactionEvent[]>([]);
   const [liveChatMessages, setLiveChatMessages] = useState<LiveChatMessage[]>([]);
   const [chatHistoryMessages, setChatHistoryMessages] = useState<LiveChatMessage[]>([]);
@@ -1199,14 +1189,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       localMeteredMs: quotaMeteredMsRef.current,
     });
   }, [roomQuota, roomUsage, quotaDisplayTick]);
-  const isCrunchyroll = adapter.id === "crunchyroll";
   const cameraStackVisible = shouldShowCameraStack({
     cameraParticipantCount: displayedCameraParticipants.length,
     p2pSessionActive,
   });
-  const camStackBottomPx = isCrunchyroll
-    ? crunchyrollPlayerChrome.camStackBottomPx
-    : DEFAULT_CAM_STACK_BOTTOM_PX;
   const displayedChatMessages =
     chatDisplayMode === "history" ? chatHistoryMessages : liveChatMessages;
   const liveChatVisible = displayedChatMessages.length > 0;
@@ -1288,45 +1274,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   }, []);
 
   useEffect(() => {
-    if (!adapterActive) {
-      return;
-    }
-
-    let disposed = false;
-    const viewportElement =
-      adapter.id === "youtube" || adapter.id === "crunchyroll" ? adapter.container : adapter.video;
-
-    const updateViewportSize = () => {
-      if (disposed) {
-        return;
-      }
-
-      const rect = viewportElement.getBoundingClientRect();
-      const nextSize = {
-        height: normalizeOverlayViewportDimension(rect.height),
-        width: normalizeOverlayViewportDimension(rect.width),
-      };
-      setOverlayViewportSize((current) =>
-        current.width === nextSize.width && current.height === nextSize.height ? current : nextSize,
-      );
-    };
-
-    updateViewportSize();
-    const observer =
-      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateViewportSize);
-    observer?.observe(viewportElement);
-    window.addEventListener("resize", updateViewportSize);
-    document.addEventListener("fullscreenchange", updateViewportSize, true);
-
-    return () => {
-      disposed = true;
-      observer?.disconnect();
-      window.removeEventListener("resize", updateViewportSize);
-      document.removeEventListener("fullscreenchange", updateViewportSize, true);
-    };
-  }, [adapter, adapterActive]);
-
-  useEffect(() => {
     let cancelled = false;
 
     void storage
@@ -1343,6 +1290,43 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!adapterActive) {
+      return;
+    }
+
+    let disposed = false;
+
+    const updateViewportSize = () => {
+      if (disposed) {
+        return;
+      }
+
+      const rect = adapter.container.getBoundingClientRect();
+      const nextSize = {
+        height: normalizeOverlayViewportDimension(rect.height),
+        width: normalizeOverlayViewportDimension(rect.width),
+      };
+      setOverlayViewportSize((current) =>
+        current.width === nextSize.width && current.height === nextSize.height ? current : nextSize,
+      );
+    };
+
+    updateViewportSize();
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateViewportSize);
+    observer?.observe(adapter.container);
+    window.addEventListener("resize", updateViewportSize);
+    document.addEventListener("fullscreenchange", updateViewportSize, true);
+
+    return () => {
+      disposed = true;
+      observer?.disconnect();
+      window.removeEventListener("resize", updateViewportSize);
+      document.removeEventListener("fullscreenchange", updateViewportSize, true);
+    };
+  }, [adapter, adapterActive]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1377,60 +1361,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   }, []);
 
   useEffect(() => {
-    if (!adapterActive || adapter.id !== "crunchyroll") {
-      setCrunchyrollPlayerChrome(DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE);
+    setPlayerOverlayGeometry(adapter.getOverlayGeometry());
+    if (!adapterActive) {
       return;
     }
 
-    let disposed = false;
-    let frameId = 0;
-
-    const applyState = () => {
-      frameId = 0;
-      if (disposed) {
-        return;
-      }
-
-      const nextState = getCrunchyrollPlayerChromeState(adapter.container);
-      setCrunchyrollPlayerChrome((current) =>
-        areCrunchyrollPlayerChromeStatesEqual(current, nextState) ? current : nextState,
-      );
-    };
-
-    const scheduleApplyState = () => {
-      if (frameId) {
-        return;
-      }
-
-      frameId = window.requestAnimationFrame(applyState);
-    };
-
-    scheduleApplyState();
-    const intervalId = window.setInterval(scheduleApplyState, 250);
-    const observer = new MutationObserver(scheduleApplyState);
-    observer.observe(adapter.container, {
-      attributeFilter: ["aria-hidden", "class", "data-testid", "style"],
-      attributes: true,
-      childList: true,
-      subtree: true,
-    });
-    adapter.container.addEventListener("mousemove", scheduleApplyState, true);
-    adapter.container.addEventListener("pointermove", scheduleApplyState, true);
-    adapter.container.addEventListener("pointerleave", scheduleApplyState, true);
-    document.addEventListener("fullscreenchange", scheduleApplyState, true);
-
-    return () => {
-      disposed = true;
-      window.clearInterval(intervalId);
-      if (frameId) {
-        window.cancelAnimationFrame(frameId);
-      }
-      observer.disconnect();
-      adapter.container.removeEventListener("mousemove", scheduleApplyState, true);
-      adapter.container.removeEventListener("pointermove", scheduleApplyState, true);
-      adapter.container.removeEventListener("pointerleave", scheduleApplyState, true);
-      document.removeEventListener("fullscreenchange", scheduleApplyState, true);
-    };
+    return adapter.subscribeOverlayGeometry(setPlayerOverlayGeometry);
   }, [adapter, adapterActive]);
 
   useEffect(() => {
@@ -1856,18 +1792,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     panelOpen,
     roomActive: Boolean(roomId),
   });
-  const topBubbleTopPx = isCrunchyroll
-    ? crunchyrollPlayerChrome.topBubbleTopPx
-    : DEFAULT_TOP_BUBBLE_TOP_PX;
-  const topBubbleRightPx = isCrunchyroll
-    ? crunchyrollPlayerChrome.topBubbleRightPx
-    : DEFAULT_TOP_BUBBLE_RIGHT_PX;
-  const controlsBottomInsetPx = isCrunchyroll
-    ? crunchyrollPlayerChrome.controlsVisible
-      ? camStackBottomPx
-      : 0
-    : DEFAULT_CAM_STACK_BOTTOM_PX;
-  const roomRailBottomPx = Math.max(92, controlsBottomInsetPx + 12);
+  const playerBottomInsetPx = playerOverlayGeometry.safeInsets.bottomPx;
+  const roomRailBottomPx = Math.max(92, playerBottomInsetPx + 12);
+  const topBubbleAnchor = panelOpen
+    ? playerOverlayGeometry.panel
+    : playerOverlayGeometry.launcher;
   const overlayLayoutPreviewActive = previewOverlayLayout !== null;
   const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(
     () =>
@@ -1877,16 +1806,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           : getOverlayLayoutCameraSlotCount(
               cameraStackVisible ? renderableCameraParticipants.length : 0,
             ),
-        controlsBottomInsetPx,
-        height: overlayViewportSize.height,
+        height: overlayViewportSize.height || playerOverlayGeometry.viewport.heightPx,
+        playerSafeInsets: playerOverlayGeometry.safeInsets,
         safePaddingPx: 12,
-        width: overlayViewportSize.width,
+        width: overlayViewportSize.width || playerOverlayGeometry.viewport.widthPx,
       }),
     [
-      controlsBottomInsetPx,
       cameraStackVisible,
-      overlayViewportSize,
       overlayLayoutPreviewActive,
+      overlayViewportSize,
+      playerOverlayGeometry,
       renderableCameraParticipants.length,
     ],
   );
@@ -1908,32 +1837,31 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         : "Media seat required";
   const resolvedCamStackBottomPx = resolvedOverlayLayout.video.slots.length
     ? Math.max(
-        0,
-        overlayViewportSize.height -
+        playerBottomInsetPx,
+        overlayLayoutRuntimeContext.viewport.height -
           (resolvedOverlayLayout.video.bounds.y + resolvedOverlayLayout.video.bounds.height),
       )
-    : camStackBottomPx;
-  const miniPanelBottomReservePx =
-    isCrunchyroll && crunchyrollPlayerChrome.controlsVisible ? Math.max(10, camStackBottomPx) : 10;
+    : playerBottomInsetPx;
+  const miniPanelBottomReservePx = getMiniPanelBottomReservePx({
+    cameraStackVisible: resolvedOverlayLayout.video.slots.length > 0,
+    camStackBottomPx: resolvedCamStackBottomPx,
+    controlsVisible: playerOverlayGeometry.controlsVisible,
+    ghostCamSizePx,
+  });
   const overlayCssVariables = {
     ...getOverlayLayoutRuntimeStyles(resolvedOverlayLayout),
     "--cam-stack-height": `${resolvedOverlayLayout.video.bounds.height}px`,
     "--cam-stack-width": `${resolvedOverlayLayout.video.bounds.width}px`,
     "--mini-panel-bottom-reserve": `${miniPanelBottomReservePx}px`,
-    "--mini-panel-right": `${
-      isCrunchyroll ? crunchyrollPlayerChrome.miniPanelRightPx : DEFAULT_MINI_PANEL_RIGHT_PX
-    }px`,
-    "--mini-panel-top": `${
-      isCrunchyroll ? crunchyrollPlayerChrome.miniPanelTopPx : DEFAULT_MINI_PANEL_TOP_PX
-    }px`,
-    "--top-bubble-right": `${topBubbleRightPx}px`,
-    "--top-bubble-top": `${topBubbleTopPx}px`,
+    "--mini-panel-right": `${playerOverlayGeometry.panel.rightPx}px`,
+    "--mini-panel-top": `${playerOverlayGeometry.panel.topPx}px`,
+    "--top-bubble-right": `${topBubbleAnchor.rightPx}px`,
+    "--top-bubble-top": `${topBubbleAnchor.topPx}px`,
     "--room-rail-bottom": `${roomRailBottomPx}px`,
   } as CSSProperties;
   const overlayClassName = [
     "anidachi-overlay",
-    isCrunchyroll ? "is-crunchyroll" : "",
-    isCrunchyroll && crunchyrollPlayerChrome.controlsVisible ? "player-controls-visible" : "",
+    playerOverlayGeometry.controlsVisible ? "player-controls-visible" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -3921,7 +3849,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         return;
       }
 
-      if (adapter.id === "crunchyroll" && (event.type === "play" || event.type === "pause")) {
+      if (
+        adapter.id === "crunchyroll" &&
+        (event.type === "play" || event.type === "pause")
+      ) {
         const now = Date.now();
         const pendingSeek = Boolean(pendingLocalSeekBroadcastRef.current);
         const mediaSettling = isMediaSettling(adapter.video);

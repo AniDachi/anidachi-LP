@@ -39,10 +39,14 @@ export const overlayStyles = `
     pointer-events: none;
   }
 
+  .top-bubble-reveal.panel-open {
+    z-index: 31;
+  }
+
   .top-bubble-edge-glow {
     position: absolute;
     top: 0;
-    right: max(0px, calc(var(--top-bubble-right, 10px) - 16px));
+    right: 0;
     width: 104px;
     height: 0;
     border-radius: 999px;
@@ -110,7 +114,7 @@ export const overlayStyles = `
     outline-offset: 2px;
   }
 
-  .anidachi-overlay.is-crunchyroll.player-controls-visible .top-bubble {
+  .anidachi-overlay.player-controls-visible .top-bubble {
     background: rgba(9, 9, 11, 0.78);
     border-color: rgba(255, 138, 61, 0.28);
   }
@@ -2118,7 +2122,7 @@ export const overlayStyles = `
       transform 180ms ease;
   }
 
-  .anidachi-overlay.is-crunchyroll.player-controls-visible .cam-stack {
+  .anidachi-overlay.player-controls-visible .cam-stack {
     transform: translateY(0);
   }
 

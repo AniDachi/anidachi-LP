@@ -17,7 +17,7 @@ describe("overlay layout", () => {
     ).toBe(DEFAULT_MINI_PANEL_BOTTOM_RESERVE_PX);
   });
 
-  it("keeps the mini panel above visible Crunchyroll controls even without cameras", () => {
+  it("keeps the mini panel above visible provider controls even without cameras", () => {
     expect(
       getMiniPanelBottomReservePx({
         cameraStackVisible: false,
