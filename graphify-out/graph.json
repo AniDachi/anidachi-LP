@@ -13072,7 +13072,7 @@
       "label": "YouTubeProgressInput",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L4",
+      "source_location": "L3",
       "_origin": "ast"
     },
     {
@@ -13080,7 +13080,7 @@
       "label": "getYouTubeProgressEntry()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L11",
+      "source_location": "L10",
       "_origin": "ast"
     },
     {
@@ -13088,7 +13088,15 @@
       "label": "getYouTubeProgressVideoId()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L39",
+      "source_location": "L38",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_source_adapters_youtube_progress_cleanyoutubeprogressvideoid",
+      "label": "cleanYouTubeProgressVideoId()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
+      "source_location": "L51",
       "_origin": "ast"
     },
     {
@@ -13096,7 +13104,7 @@
       "label": "canonicalSourceUrl()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L53",
+      "source_location": "L60",
       "_origin": "ast"
     },
     {
@@ -15736,7 +15744,7 @@
       "label": "fakeAdapter()",
       "file_type": "code",
       "source_file": "apps/extension/test/watch-progress-entry.test.ts",
-      "source_location": "L54",
+      "source_location": "L71",
       "_origin": "ast"
     },
     {
@@ -15744,7 +15752,7 @@
       "label": "mockLocation()",
       "file_type": "code",
       "source_file": "apps/extension/test/watch-progress-entry.test.ts",
-      "source_location": "L87",
+      "source_location": "L104",
       "_origin": "ast"
     },
     {
@@ -44896,7 +44904,7 @@
       "label": "PR 2: Lifecycle, Capabilities, And First-Class YouTube",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L547",
+      "source_location": "L562",
       "_origin": "ast"
     },
     {
@@ -44904,7 +44912,7 @@
       "label": "Task 7: Add The Adapter Lifecycle Manager",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L549",
+      "source_location": "L564",
       "_origin": "ast"
     },
     {
@@ -44912,7 +44920,7 @@
       "label": "Task 8: Replace Provider ID Branches With Capabilities And Policies",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L598",
+      "source_location": "L613",
       "_origin": "ast"
     },
     {
@@ -44920,7 +44928,7 @@
       "label": "Task 9: Move Source Descriptors And Progress Into Providers",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L641",
+      "source_location": "L656",
       "_origin": "ast"
     },
     {
@@ -44928,7 +44936,7 @@
       "label": "Task 10: Add Safe Provider Navigation And YouTube Source Switching",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L673",
+      "source_location": "L688",
       "_origin": "ast"
     },
     {
@@ -44936,7 +44944,7 @@
       "label": "Task 11: Provider-Aware Detection Hardening",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L718",
+      "source_location": "L733",
       "_origin": "ast"
     },
     {
@@ -44944,7 +44952,7 @@
       "label": "Task 12: Final Verification, Documentation, And PR 2",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L746",
+      "source_location": "L761",
       "_origin": "ast"
     },
     {
@@ -44952,7 +44960,7 @@
       "label": "Required Automated Verification",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L774",
+      "source_location": "L789",
       "_origin": "ast"
     },
     {
@@ -44960,7 +44968,7 @@
       "label": "Definition Of Done",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L790",
+      "source_location": "L805",
       "_origin": "ast"
     },
     {
@@ -44968,7 +44976,7 @@
       "label": "Rollback",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L807",
+      "source_location": "L822",
       "_origin": "ast"
     },
     {
@@ -88318,31 +88326,11 @@
     },
     {
       "source": "apps_extension_src_source_adapters_youtube_progress",
-      "target": "apps_extension_src_source_adapters_youtube_url",
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L2",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_source_adapters_youtube_progress",
-      "target": "apps_extension_src_source_adapters_youtube_url_parseyoutubevideoid",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L2",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_source_adapters_youtube_progress",
       "target": "apps_extension_src_source_adapters_youtube_progress_youtubeprogressinput",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -88351,7 +88339,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L11",
+      "source_location": "L10",
       "weight": 1.0
     },
     {
@@ -88360,7 +88348,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L39",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_source_adapters_youtube_progress",
+      "target": "apps_extension_src_source_adapters_youtube_progress_cleanyoutubeprogressvideoid",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -88369,7 +88366,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L53",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -88379,7 +88376,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L16",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -88389,7 +88386,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L19",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_source_adapters_youtube_progress_getyoutubeprogressvideoid",
+      "target": "apps_extension_src_source_adapters_youtube_progress_cleanyoutubeprogressvideoid",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -96321,7 +96328,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/watch-progress-entry.test.ts",
-      "source_location": "L54",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -96330,7 +96337,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/watch-progress-entry.test.ts",
-      "source_location": "L87",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -166166,7 +166173,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L547",
+      "source_location": "L562",
       "weight": 1.0
     },
     {
@@ -166175,7 +166182,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L549",
+      "source_location": "L564",
       "weight": 1.0
     },
     {
@@ -166184,7 +166191,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L598",
+      "source_location": "L613",
       "weight": 1.0
     },
     {
@@ -166193,7 +166200,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L641",
+      "source_location": "L656",
       "weight": 1.0
     },
     {
@@ -166202,7 +166209,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L673",
+      "source_location": "L688",
       "weight": 1.0
     },
     {
@@ -166211,7 +166218,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L718",
+      "source_location": "L733",
       "weight": 1.0
     },
     {
@@ -166220,7 +166227,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L746",
+      "source_location": "L761",
       "weight": 1.0
     },
     {
@@ -166229,7 +166236,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L774",
+      "source_location": "L789",
       "weight": 1.0
     },
     {
@@ -166238,7 +166245,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L790",
+      "source_location": "L805",
       "weight": 1.0
     },
     {
@@ -166247,7 +166254,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L807",
+      "source_location": "L822",
       "weight": 1.0
     },
     {
@@ -170167,16 +170174,6 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/crunchyroll/progress.ts",
       "source_location": "L652",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_source_adapters_youtube_progress_getyoutubeprogressvideoid",
-      "target": "apps_extension_src_source_adapters_youtube_url_parseyoutubevideoid",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/source-adapters/youtube/progress.ts",
-      "source_location": "L46",
       "weight": 1.0
     },
     {

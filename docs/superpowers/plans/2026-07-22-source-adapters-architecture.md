@@ -546,14 +546,16 @@ extension staging acceptance remains pending.
 Automated evidence recorded on 2026-07-22:
 
 - extension typecheck passed;
-- extension suite passed: 54 files / 542 tests;
+- extension suite passed: 54 files / 546 tests;
 - full workspace check passed: 6 tasks;
 - full workspace suite passed: 6 tasks, including web 101, API 88, protocol 29,
-  and extension 542 tests;
+  and extension 546 tests;
 - narrow staging artifact validated as
-  `ba54783-staging-20260722091624` with no broad host permissions;
-- Graphify rebuilt to 6,688 nodes / 13,906 edges and resolves the new registry
+  `dd7f88f-staging-20260722093846` with no broad host permissions;
+- Graphify rebuilt to 6,689 nodes / 13,905 edges and resolves the new registry
   and source descriptor without the removed facade paths.
+- final whole-branch review passed after restoring the legacy YouTube progress
+  gate for blank or invalid `v` parameters in `dd7f88f`.
 
 ---
 
