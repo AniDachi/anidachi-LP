@@ -5920,7 +5920,7 @@
       "label": "RoomRail()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5478",
+      "source_location": "L5470",
       "_origin": "ast"
     },
     {
@@ -5928,7 +5928,7 @@
       "label": "CameraBubble()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5603",
+      "source_location": "L5595",
       "_origin": "ast"
     },
     {
@@ -5936,7 +5936,7 @@
       "label": "LiveChatColumn()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5702",
+      "source_location": "L5694",
       "_origin": "ast"
     },
     {
@@ -5944,7 +5944,7 @@
       "label": "ReactionPop()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5770",
+      "source_location": "L5762",
       "_origin": "ast"
     },
     {
@@ -5952,7 +5952,7 @@
       "label": "getLiveChatNameColor()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5826",
+      "source_location": "L5818",
       "_origin": "ast"
     },
     {
@@ -5960,7 +5960,7 @@
       "label": "P2PSignalServerEvent",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5835",
+      "source_location": "L5827",
       "_origin": "ast"
     },
     {
@@ -5968,7 +5968,7 @@
       "label": "createClientSignalId()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5837",
+      "source_location": "L5829",
       "_origin": "ast"
     },
     {
@@ -5976,7 +5976,7 @@
       "label": "getIncomingP2PSignalDedupeKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5841",
+      "source_location": "L5833",
       "_origin": "ast"
     },
     {
@@ -5984,7 +5984,7 @@
       "label": "pruneHandledP2PSignalIds()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5848",
+      "source_location": "L5840",
       "_origin": "ast"
     },
     {
@@ -5992,7 +5992,7 @@
       "label": "toIncomingP2PSignal()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5864",
+      "source_location": "L5856",
       "_origin": "ast"
     },
     {
@@ -6000,7 +6000,7 @@
       "label": "normalizeChatDisplayMode()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5887",
+      "source_location": "L5879",
       "_origin": "ast"
     },
     {
@@ -6008,7 +6008,7 @@
       "label": "normalizeOverlayViewportDimension()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5891",
+      "source_location": "L5883",
       "_origin": "ast"
     },
     {
@@ -6016,7 +6016,7 @@
       "label": "isMessageComposerShortcut()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5895",
+      "source_location": "L5887",
       "_origin": "ast"
     },
     {
@@ -6024,7 +6024,7 @@
       "label": "isEscapeKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5899",
+      "source_location": "L5891",
       "_origin": "ast"
     },
     {
@@ -6032,7 +6032,7 @@
       "label": "isFullscreenActive()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5903",
+      "source_location": "L5895",
       "_origin": "ast"
     },
     {
@@ -6040,7 +6040,7 @@
       "label": "isKeyboardEditableTarget()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5907",
+      "source_location": "L5899",
       "_origin": "ast"
     },
     {
@@ -6048,7 +6048,7 @@
       "label": "isKeyboardEditableElement()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5912",
+      "source_location": "L5904",
       "_origin": "ast"
     },
     {
@@ -6056,7 +6056,7 @@
       "label": "getRoomIdFromHash()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5923",
+      "source_location": "L5915",
       "_origin": "ast"
     },
     {
@@ -6064,7 +6064,7 @@
       "label": "clearRoomHash()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5928",
+      "source_location": "L5920",
       "_origin": "ast"
     },
     {
@@ -6072,7 +6072,7 @@
       "label": "quotaExhaustedMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5939",
+      "source_location": "L5931",
       "_origin": "ast"
     },
     {
@@ -6080,7 +6080,7 @@
       "label": "roomJoinUnavailableMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5954",
+      "source_location": "L5946",
       "_origin": "ast"
     },
     {
@@ -6088,7 +6088,7 @@
       "label": "formatQuotaCountdown()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5962",
+      "source_location": "L5954",
       "_origin": "ast"
     },
     {
@@ -6096,7 +6096,7 @@
       "label": "shouldOpenPanelForInitialRoom()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5969",
+      "source_location": "L5961",
       "_origin": "ast"
     },
     {
@@ -6104,7 +6104,7 @@
       "label": "ensureRoomHash()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5973",
+      "source_location": "L5965",
       "_origin": "ast"
     },
     {
@@ -6112,7 +6112,7 @@
       "label": "setRoomHash()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5979",
+      "source_location": "L5971",
       "_origin": "ast"
     },
     {
@@ -6120,7 +6120,7 @@
       "label": "buildCurrentSourceUrlForInvite()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5985",
+      "source_location": "L5977",
       "_origin": "ast"
     },
     {
@@ -6128,7 +6128,7 @@
       "label": "buildSourceUrlWithRoom()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5993",
+      "source_location": "L5985",
       "_origin": "ast"
     },
     {
@@ -6136,7 +6136,7 @@
       "label": "isSameDocumentTarget()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6014",
+      "source_location": "L6006",
       "_origin": "ast"
     },
     {
@@ -6144,7 +6144,7 @@
       "label": "navigateCrunchyrollToRemoteSource()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6023",
+      "source_location": "L6015",
       "_origin": "ast"
     },
     {
@@ -6152,7 +6152,7 @@
       "label": "fallbackCopy()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6046",
+      "source_location": "L6038",
       "_origin": "ast"
     },
     {
@@ -6160,7 +6160,7 @@
       "label": "initials()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6060",
+      "source_location": "L6052",
       "_origin": "ast"
     },
     {
@@ -6168,7 +6168,7 @@
       "label": "isPointerInComposerDeadZone()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6069",
+      "source_location": "L6061",
       "_origin": "ast"
     },
     {
@@ -6176,7 +6176,7 @@
       "label": "resetComposerShieldInlineStyles()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6091",
+      "source_location": "L6083",
       "_origin": "ast"
     },
     {
@@ -6184,7 +6184,7 @@
       "label": "wakePlayerAfterComposerShieldRelease()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6100",
+      "source_location": "L6092",
       "_origin": "ast"
     },
     {
@@ -6192,7 +6192,7 @@
       "label": "isUsableRect()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6140",
+      "source_location": "L6132",
       "_origin": "ast"
     },
     {
@@ -6200,7 +6200,7 @@
       "label": "clampNumber()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6146",
+      "source_location": "L6138",
       "_origin": "ast"
     },
     {
@@ -6208,7 +6208,7 @@
       "label": "getLiveVoiceStatusText()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6154",
+      "source_location": "L6146",
       "_origin": "ast"
     },
     {
@@ -6216,7 +6216,7 @@
       "label": "stopNativeEvent()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6170",
+      "source_location": "L6162",
       "_origin": "ast"
     },
     {
@@ -7276,11 +7276,19 @@
       "_origin": "ast"
     },
     {
-      "id": "apps_extension_src_overlay_layout_getminipanelbottomreservepx",
-      "label": "getMiniPanelBottomReservePx()",
+      "id": "apps_extension_src_overlay_layout_overlaychromeplacement",
+      "label": "OverlayChromePlacement",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-layout.ts",
-      "source_location": "L4",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_overlay_layout_getoverlaychromeplacement",
+      "label": "getOverlayChromePlacement()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/overlay-layout.ts",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
@@ -7288,7 +7296,7 @@
       "label": "shouldShowCameraStack()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-layout.ts",
-      "source_location": "L36",
+      "source_location": "L53",
       "_origin": "ast"
     },
     {
@@ -7296,7 +7304,7 @@
       "label": "normalizePixelValue()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-layout.ts",
-      "source_location": "L46",
+      "source_location": "L63",
       "_origin": "ast"
     },
     {
@@ -69719,7 +69727,7 @@
     },
     {
       "source": "apps_extension_src_overlay_app",
-      "target": "apps_extension_src_overlay_layout_getminipanelbottomreservepx",
+      "target": "apps_extension_src_overlay_layout_getoverlaychromeplacement",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -71126,7 +71134,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5478",
+      "source_location": "L5470",
       "weight": 1.0
     },
     {
@@ -71135,7 +71143,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5603",
+      "source_location": "L5595",
       "weight": 1.0
     },
     {
@@ -71144,7 +71152,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5702",
+      "source_location": "L5694",
       "weight": 1.0
     },
     {
@@ -71153,7 +71161,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5770",
+      "source_location": "L5762",
       "weight": 1.0
     },
     {
@@ -71162,7 +71170,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5826",
+      "source_location": "L5818",
       "weight": 1.0
     },
     {
@@ -71171,7 +71179,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5835",
+      "source_location": "L5827",
       "weight": 1.0
     },
     {
@@ -71180,7 +71188,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5837",
+      "source_location": "L5829",
       "weight": 1.0
     },
     {
@@ -71189,7 +71197,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5841",
+      "source_location": "L5833",
       "weight": 1.0
     },
     {
@@ -71198,7 +71206,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5848",
+      "source_location": "L5840",
       "weight": 1.0
     },
     {
@@ -71207,7 +71215,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5864",
+      "source_location": "L5856",
       "weight": 1.0
     },
     {
@@ -71216,7 +71224,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5887",
+      "source_location": "L5879",
       "weight": 1.0
     },
     {
@@ -71225,7 +71233,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5891",
+      "source_location": "L5883",
       "weight": 1.0
     },
     {
@@ -71234,7 +71242,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5895",
+      "source_location": "L5887",
       "weight": 1.0
     },
     {
@@ -71243,7 +71251,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5899",
+      "source_location": "L5891",
       "weight": 1.0
     },
     {
@@ -71252,7 +71260,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5903",
+      "source_location": "L5895",
       "weight": 1.0
     },
     {
@@ -71261,7 +71269,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5907",
+      "source_location": "L5899",
       "weight": 1.0
     },
     {
@@ -71270,7 +71278,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5912",
+      "source_location": "L5904",
       "weight": 1.0
     },
     {
@@ -71279,7 +71287,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5923",
+      "source_location": "L5915",
       "weight": 1.0
     },
     {
@@ -71288,7 +71296,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5928",
+      "source_location": "L5920",
       "weight": 1.0
     },
     {
@@ -71297,7 +71305,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5939",
+      "source_location": "L5931",
       "weight": 1.0
     },
     {
@@ -71306,7 +71314,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5954",
+      "source_location": "L5946",
       "weight": 1.0
     },
     {
@@ -71315,7 +71323,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5962",
+      "source_location": "L5954",
       "weight": 1.0
     },
     {
@@ -71324,7 +71332,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5969",
+      "source_location": "L5961",
       "weight": 1.0
     },
     {
@@ -71333,7 +71341,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5973",
+      "source_location": "L5965",
       "weight": 1.0
     },
     {
@@ -71342,7 +71350,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5979",
+      "source_location": "L5971",
       "weight": 1.0
     },
     {
@@ -71351,7 +71359,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5985",
+      "source_location": "L5977",
       "weight": 1.0
     },
     {
@@ -71360,7 +71368,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5993",
+      "source_location": "L5985",
       "weight": 1.0
     },
     {
@@ -71369,7 +71377,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6014",
+      "source_location": "L6006",
       "weight": 1.0
     },
     {
@@ -71378,7 +71386,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6023",
+      "source_location": "L6015",
       "weight": 1.0
     },
     {
@@ -71387,7 +71395,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6046",
+      "source_location": "L6038",
       "weight": 1.0
     },
     {
@@ -71396,7 +71404,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6060",
+      "source_location": "L6052",
       "weight": 1.0
     },
     {
@@ -71405,7 +71413,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6069",
+      "source_location": "L6061",
       "weight": 1.0
     },
     {
@@ -71414,7 +71422,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6091",
+      "source_location": "L6083",
       "weight": 1.0
     },
     {
@@ -71423,7 +71431,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6100",
+      "source_location": "L6092",
       "weight": 1.0
     },
     {
@@ -71432,7 +71440,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6140",
+      "source_location": "L6132",
       "weight": 1.0
     },
     {
@@ -71441,7 +71449,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6146",
+      "source_location": "L6138",
       "weight": 1.0
     },
     {
@@ -71450,7 +71458,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6154",
+      "source_location": "L6146",
       "weight": 1.0
     },
     {
@@ -71459,7 +71467,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6170",
+      "source_location": "L6162",
       "weight": 1.0
     },
     {
@@ -71559,7 +71567,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1924",
+      "source_location": "L1916",
       "weight": 1.0
     },
     {
@@ -71569,7 +71577,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2323",
+      "source_location": "L2315",
       "weight": 1.0
     },
     {
@@ -71579,7 +71587,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2324",
+      "source_location": "L2316",
       "weight": 1.0
     },
     {
@@ -71589,7 +71597,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2325",
+      "source_location": "L2317",
       "weight": 1.0
     },
     {
@@ -71599,7 +71607,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2343",
+      "source_location": "L2335",
       "weight": 1.0
     },
     {
@@ -71609,7 +71617,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2710",
+      "source_location": "L2702",
       "weight": 1.0
     },
     {
@@ -71619,7 +71627,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2726",
+      "source_location": "L2718",
       "weight": 1.0
     },
     {
@@ -71629,7 +71637,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2728",
+      "source_location": "L2720",
       "weight": 1.0
     },
     {
@@ -71639,7 +71647,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2866",
+      "source_location": "L2858",
       "weight": 1.0
     },
     {
@@ -71649,7 +71657,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3118",
+      "source_location": "L3110",
       "weight": 1.0
     },
     {
@@ -71659,7 +71667,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3130",
+      "source_location": "L3122",
       "weight": 1.0
     },
     {
@@ -71669,7 +71677,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3485",
+      "source_location": "L3477",
       "weight": 1.0
     },
     {
@@ -71679,7 +71687,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3520",
+      "source_location": "L3512",
       "weight": 1.0
     },
     {
@@ -71689,7 +71697,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3659",
+      "source_location": "L3651",
       "weight": 1.0
     },
     {
@@ -71699,7 +71707,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4052",
+      "source_location": "L4044",
       "weight": 1.0
     },
     {
@@ -71709,7 +71717,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4632",
+      "source_location": "L4624",
       "weight": 1.0
     },
     {
@@ -71719,7 +71727,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4659",
+      "source_location": "L4651",
       "weight": 1.0
     },
     {
@@ -71729,7 +71737,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4714",
+      "source_location": "L4706",
       "weight": 1.0
     },
     {
@@ -71739,7 +71747,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4721",
+      "source_location": "L4713",
       "weight": 1.0
     },
     {
@@ -71749,7 +71757,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4886",
+      "source_location": "L4878",
       "weight": 1.0
     },
     {
@@ -71759,7 +71767,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5011",
+      "source_location": "L5003",
       "weight": 1.0
     },
     {
@@ -71769,7 +71777,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5582",
+      "source_location": "L5574",
       "weight": 1.0
     },
     {
@@ -71779,7 +71787,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5756",
+      "source_location": "L5748",
       "weight": 1.0
     },
     {
@@ -71789,7 +71797,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5909",
+      "source_location": "L5901",
       "weight": 1.0
     },
     {
@@ -71799,7 +71807,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5974",
+      "source_location": "L5966",
       "weight": 1.0
     },
     {
@@ -71809,7 +71817,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5975",
+      "source_location": "L5967",
       "weight": 1.0
     },
     {
@@ -71819,7 +71827,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6034",
+      "source_location": "L6026",
       "weight": 1.0
     },
     {
@@ -71829,7 +71837,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6074",
+      "source_location": "L6066",
       "weight": 1.0
     },
     {
@@ -71839,7 +71847,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6087",
+      "source_location": "L6079",
       "weight": 1.0
     },
     {
@@ -74730,11 +74738,40 @@
     },
     {
       "source": "apps_extension_src_overlay_layout",
-      "target": "apps_extension_src_overlay_layout_getminipanelbottomreservepx",
+      "target": "apps_extension_src_source_adapters_core_overlay_geometry",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/overlay-layout.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_layout",
+      "target": "apps_extension_src_source_adapters_core_overlay_geometry_playeroverlaygeometry",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/overlay-layout.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_layout",
+      "target": "apps_extension_src_overlay_layout_overlaychromeplacement",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-layout.ts",
-      "source_location": "L4",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_layout",
+      "target": "apps_extension_src_overlay_layout_getoverlaychromeplacement",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/overlay-layout.ts",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -74743,7 +74780,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-layout.ts",
-      "source_location": "L36",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -74752,17 +74789,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-layout.ts",
-      "source_location": "L46",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_overlay_layout_getminipanelbottomreservepx",
+      "source": "apps_extension_src_overlay_layout_getoverlaychromeplacement",
       "target": "apps_extension_src_overlay_layout_normalizepixelvalue",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-layout.ts",
-      "source_location": "L15",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -96396,7 +96433,7 @@
     },
     {
       "source": "apps_extension_test_overlay_layout_test",
-      "target": "apps_extension_src_overlay_layout_getminipanelbottomreservepx",
+      "target": "apps_extension_src_overlay_layout_getoverlaychromeplacement",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -174616,7 +174653,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3954",
+      "source_location": "L3946",
       "weight": 1.0
     },
     {
@@ -174626,7 +174663,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3963",
+      "source_location": "L3955",
       "weight": 1.0
     },
     {
@@ -174636,7 +174673,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3969",
+      "source_location": "L3961",
       "weight": 1.0
     },
     {
@@ -174646,7 +174683,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3977",
+      "source_location": "L3969",
       "weight": 1.0
     },
     {
@@ -174656,7 +174693,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3979",
+      "source_location": "L3971",
       "weight": 1.0
     },
     {
@@ -174666,7 +174703,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4002",
+      "source_location": "L3994",
       "weight": 1.0
     },
     {
@@ -174676,7 +174713,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4004",
+      "source_location": "L3996",
       "weight": 1.0
     },
     {
@@ -174686,7 +174723,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4019",
+      "source_location": "L4011",
       "weight": 1.0
     },
     {
@@ -174696,7 +174733,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4039",
+      "source_location": "L4031",
       "weight": 1.0
     },
     {
@@ -174706,7 +174743,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4043",
+      "source_location": "L4035",
       "weight": 1.0
     },
     {
@@ -174716,7 +174753,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4044",
+      "source_location": "L4036",
       "weight": 1.0
     },
     {
@@ -174726,7 +174763,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4156",
+      "source_location": "L4148",
       "weight": 1.0
     },
     {
@@ -174736,7 +174773,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4158",
+      "source_location": "L4150",
       "weight": 1.0
     },
     {
@@ -174746,7 +174783,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4161",
+      "source_location": "L4153",
       "weight": 1.0
     },
     {
@@ -174756,7 +174793,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4164",
+      "source_location": "L4156",
       "weight": 1.0
     },
     {
@@ -174766,7 +174803,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4164",
+      "source_location": "L4156",
       "weight": 1.0
     },
     {
@@ -174776,7 +174813,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4166",
+      "source_location": "L4158",
       "weight": 1.0
     },
     {
@@ -174786,7 +174823,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4190",
+      "source_location": "L4182",
       "weight": 1.0
     },
     {
@@ -174796,7 +174833,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4191",
+      "source_location": "L4183",
       "weight": 1.0
     },
     {
@@ -174806,7 +174843,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4193",
+      "source_location": "L4185",
       "weight": 1.0
     },
     {
@@ -180044,13 +180081,24 @@
     },
     {
       "source": "apps_extension_src_overlay_app_overlayapp",
+      "target": "apps_extension_src_overlay_layout_getoverlaychromeplacement",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/overlay-app.tsx",
+      "source_location": "L1851",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_app_overlayapp",
       "target": "apps_extension_src_overlay_layout_runtime_createoverlaylayoutruntimecontext",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1857",
+      "source_location": "L1855",
       "weight": 1.0
     },
     {
@@ -180061,7 +180109,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1860",
+      "source_location": "L1858",
       "weight": 1.0
     },
     {
@@ -180072,7 +180120,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1878",
+      "source_location": "L1876",
       "weight": 1.0
     },
     {
@@ -180083,18 +180131,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1885",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_overlay_app_overlayapp",
-      "target": "apps_extension_src_overlay_layout_getminipanelbottomreservepx",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1899",
+      "source_location": "L1883",
       "weight": 1.0
     },
     {
@@ -180105,7 +180142,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1906",
+      "source_location": "L1898",
       "weight": 1.0
     },
     {
@@ -180116,7 +180153,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2017",
+      "source_location": "L2009",
       "weight": 1.0
     },
     {
@@ -180127,7 +180164,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2060",
+      "source_location": "L2052",
       "weight": 1.0
     },
     {
@@ -180138,7 +180175,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2101",
+      "source_location": "L2093",
       "weight": 1.0
     },
     {
@@ -180149,7 +180186,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2143",
+      "source_location": "L2135",
       "weight": 1.0
     },
     {
@@ -180160,7 +180197,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2145",
+      "source_location": "L2137",
       "weight": 1.0
     },
     {
@@ -180171,7 +180208,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2225",
+      "source_location": "L2217",
       "weight": 1.0
     },
     {
@@ -180182,7 +180219,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2361",
+      "source_location": "L2353",
       "weight": 1.0
     },
     {
@@ -180193,7 +180230,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2457",
+      "source_location": "L2449",
       "weight": 1.0
     },
     {
@@ -180204,7 +180241,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2458",
+      "source_location": "L2450",
       "weight": 1.0
     },
     {
@@ -180215,7 +180252,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2469",
+      "source_location": "L2461",
       "weight": 1.0
     },
     {
@@ -180226,7 +180263,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2470",
+      "source_location": "L2462",
       "weight": 1.0
     },
     {
@@ -180237,7 +180274,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2583",
+      "source_location": "L2575",
       "weight": 1.0
     },
     {
@@ -180248,7 +180285,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2834",
+      "source_location": "L2826",
       "weight": 1.0
     },
     {
@@ -180259,7 +180296,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2835",
+      "source_location": "L2827",
       "weight": 1.0
     },
     {
@@ -180270,7 +180307,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2837",
+      "source_location": "L2829",
       "weight": 1.0
     },
     {
@@ -180281,7 +180318,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2856",
+      "source_location": "L2848",
       "weight": 1.0
     },
     {
@@ -180292,7 +180329,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2972",
+      "source_location": "L2964",
       "weight": 1.0
     },
     {
@@ -180303,7 +180340,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2988",
+      "source_location": "L2980",
       "weight": 1.0
     },
     {
@@ -180314,7 +180351,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3004",
+      "source_location": "L2996",
       "weight": 1.0
     },
     {
@@ -180325,7 +180362,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3069",
+      "source_location": "L3061",
       "weight": 1.0
     },
     {
@@ -180336,7 +180373,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3111",
+      "source_location": "L3103",
       "weight": 1.0
     },
     {
@@ -180347,7 +180384,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3122",
+      "source_location": "L3114",
       "weight": 1.0
     },
     {
@@ -180358,7 +180395,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3270",
+      "source_location": "L3262",
       "weight": 1.0
     },
     {
@@ -180369,7 +180406,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3334",
+      "source_location": "L3326",
       "weight": 1.0
     },
     {
@@ -180380,7 +180417,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3351",
+      "source_location": "L3343",
       "weight": 1.0
     },
     {
@@ -180391,7 +180428,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3419",
+      "source_location": "L3411",
       "weight": 1.0
     },
     {
@@ -180402,7 +180439,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3422",
+      "source_location": "L3414",
       "weight": 1.0
     },
     {
@@ -180413,7 +180450,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3484",
+      "source_location": "L3476",
       "weight": 1.0
     },
     {
@@ -180424,7 +180461,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3718",
+      "source_location": "L3710",
       "weight": 1.0
     },
     {
@@ -180435,7 +180472,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3846",
+      "source_location": "L3838",
       "weight": 1.0
     },
     {
@@ -180446,7 +180483,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3934",
+      "source_location": "L3926",
       "weight": 1.0
     },
     {
@@ -180457,7 +180494,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3963",
+      "source_location": "L3955",
       "weight": 1.0
     },
     {
@@ -180468,7 +180505,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4044",
+      "source_location": "L4036",
       "weight": 1.0
     },
     {
@@ -180479,7 +180516,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4075",
+      "source_location": "L4067",
       "weight": 1.0
     },
     {
@@ -180490,7 +180527,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4116",
+      "source_location": "L4108",
       "weight": 1.0
     },
     {
@@ -180501,7 +180538,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4164",
+      "source_location": "L4156",
       "weight": 1.0
     },
     {
@@ -180512,7 +180549,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4164",
+      "source_location": "L4156",
       "weight": 1.0
     },
     {
@@ -180523,7 +180560,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4166",
+      "source_location": "L4158",
       "weight": 1.0
     },
     {
@@ -180534,7 +180571,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4190",
+      "source_location": "L4182",
       "weight": 1.0
     },
     {
@@ -180545,7 +180582,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4191",
+      "source_location": "L4183",
       "weight": 1.0
     },
     {
@@ -180556,7 +180593,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4445",
+      "source_location": "L4437",
       "weight": 1.0
     },
     {
@@ -180567,7 +180604,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4463",
+      "source_location": "L4455",
       "weight": 1.0
     },
     {
@@ -180578,7 +180615,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4475",
+      "source_location": "L4467",
       "weight": 1.0
     },
     {
@@ -180589,7 +180626,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4728",
+      "source_location": "L4720",
       "weight": 1.0
     },
     {
@@ -180600,7 +180637,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4772",
+      "source_location": "L4764",
       "weight": 1.0
     },
     {
@@ -180611,7 +180648,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4805",
+      "source_location": "L4797",
       "weight": 1.0
     },
     {
@@ -180622,7 +180659,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4818",
+      "source_location": "L4810",
       "weight": 1.0
     },
     {
@@ -180633,7 +180670,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4824",
+      "source_location": "L4816",
       "weight": 1.0
     },
     {
@@ -180644,7 +180681,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5530",
+      "source_location": "L5522",
       "weight": 1.0
     },
     {
@@ -180655,7 +180692,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5625",
+      "source_location": "L5617",
       "weight": 1.0
     },
     {
@@ -180666,7 +180703,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5626",
+      "source_location": "L5618",
       "weight": 1.0
     },
     {
@@ -180677,7 +180714,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5896",
+      "source_location": "L5888",
       "weight": 1.0
     },
     {
@@ -180688,7 +180725,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6025",
+      "source_location": "L6017",
       "weight": 1.0
     },
     {
@@ -180699,7 +180736,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6028",
+      "source_location": "L6020",
       "weight": 1.0
     },
     {
@@ -180710,7 +180747,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L6030",
+      "source_location": "L6022",
       "weight": 1.0
     },
     {
@@ -191369,7 +191406,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2013",
+      "source_location": "L2005",
       "weight": 1.0
     },
     {
@@ -191380,7 +191417,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2127",
+      "source_location": "L2119",
       "weight": 1.0
     },
     {
@@ -191391,7 +191428,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2244",
+      "source_location": "L2236",
       "weight": 1.0
     },
     {
@@ -191402,7 +191439,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2388",
+      "source_location": "L2380",
       "weight": 1.0
     },
     {
@@ -191413,7 +191450,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3487",
+      "source_location": "L3479",
       "weight": 1.0
     },
     {
@@ -191424,7 +191461,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3705",
+      "source_location": "L3697",
       "weight": 1.0
     },
     {
@@ -191435,7 +191472,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4379",
+      "source_location": "L4371",
       "weight": 1.0
     },
     {

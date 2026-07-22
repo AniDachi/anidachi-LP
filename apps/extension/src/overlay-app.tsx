@@ -77,7 +77,7 @@ import {
   ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
   isMessageComposerShortcutEvent,
 } from "./message-composer-events";
-import { getMiniPanelBottomReservePx, shouldShowCameraStack } from "./overlay-layout";
+import { getOverlayChromePlacement, shouldShowCameraStack } from "./overlay-layout";
 import { OverlayLayoutEditor } from "./overlay-layout-editor";
 import { type OverlayLayoutContext, resolveOverlayLayout } from "./overlay-layout-engine";
 import { OverlayLayoutGhostPreview } from "./overlay-layout-ghost-preview";
@@ -1848,9 +1848,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   });
   const playerBottomInsetPx = playerOverlayGeometry.safeInsets.bottomPx;
   const roomRailBottomPx = Math.max(92, playerBottomInsetPx + 12);
-  const topBubbleAnchor = panelOpen
-    ? playerOverlayGeometry.panel
-    : playerOverlayGeometry.launcher;
+  const overlayChromePlacement = getOverlayChromePlacement(playerOverlayGeometry);
   const overlayLayoutPreviewActive = previewOverlayLayout !== null;
   const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(
     () =>
@@ -1896,21 +1894,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           (resolvedOverlayLayout.video.bounds.y + resolvedOverlayLayout.video.bounds.height),
       )
     : playerBottomInsetPx;
-  const miniPanelBottomReservePx = getMiniPanelBottomReservePx({
-    cameraStackVisible: resolvedOverlayLayout.video.slots.length > 0,
-    camStackBottomPx: resolvedCamStackBottomPx,
-    controlsVisible: playerOverlayGeometry.controlsVisible,
-    ghostCamSizePx,
-  });
   const overlayCssVariables = {
     ...getOverlayLayoutRuntimeStyles(resolvedOverlayLayout),
     "--cam-stack-height": `${resolvedOverlayLayout.video.bounds.height}px`,
     "--cam-stack-width": `${resolvedOverlayLayout.video.bounds.width}px`,
-    "--mini-panel-bottom-reserve": `${miniPanelBottomReservePx}px`,
-    "--mini-panel-right": `${playerOverlayGeometry.panel.rightPx}px`,
-    "--mini-panel-top": `${playerOverlayGeometry.panel.topPx}px`,
-    "--top-bubble-right": `${topBubbleAnchor.rightPx}px`,
-    "--top-bubble-top": `${topBubbleAnchor.topPx}px`,
+    "--mini-panel-bottom-reserve": `${overlayChromePlacement.miniPanelBottomReservePx}px`,
+    "--mini-panel-right": `${overlayChromePlacement.miniPanelRightPx}px`,
+    "--mini-panel-top": `${overlayChromePlacement.miniPanelTopPx}px`,
+    "--top-bubble-right": `${overlayChromePlacement.topBubbleRightPx}px`,
+    "--top-bubble-top": `${overlayChromePlacement.topBubbleTopPx}px`,
     "--room-rail-bottom": `${roomRailBottomPx}px`,
   } as CSSProperties;
   const overlayClassName = [
