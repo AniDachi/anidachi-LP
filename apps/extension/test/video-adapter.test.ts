@@ -66,6 +66,27 @@ describe("generic video adapter detection", () => {
     expect(adapter?.container.id).toBe("movie_player");
   });
 
+  it("keeps the winner-first visible video when extracting a YouTube adapter", () => {
+    mockHost("www.youtube.com", "/watch?v=winner-first");
+    document.body.innerHTML = `
+      <video id="preview" style="width: 320px; height: 180px;"></video>
+      <div id="movie_player" class="html5-video-player">
+        <video id="winner" style="width: 640px; height: 360px;"></video>
+      </div>
+    `;
+    const preview = document.querySelector("#preview") as HTMLVideoElement;
+    const winner = document.querySelector("#winner") as HTMLVideoElement;
+    mockRect(preview, 320, 180);
+    mockRect(winner, 640, 360);
+    mockRect(document.querySelector("#movie_player"), 960, 540);
+
+    const adapter = findBestVideoAdapter();
+
+    expect(adapter?.video).toBe(winner);
+    expect(adapter?.id).toBe("youtube");
+    expect(adapter?.container.id).toBe("movie_player");
+  });
+
   it("uses a LAN-stable generic fingerprint for the same page video", () => {
     history.replaceState(null, "", "/watch#anidachiRoom=host");
     document.body.innerHTML = `
@@ -144,6 +165,27 @@ describe("generic video adapter detection", () => {
 
     expect(secondFingerprint).toBe(firstFingerprint);
     expect(firstFingerprint).toBe("youtube|abc123");
+  });
+
+  it("changes the YouTube fingerprint when SPA navigation reuses the video element", () => {
+    mockHost("www.youtube.com", "/watch?v=first-video");
+    document.body.innerHTML = `
+      <div id="movie_player" class="html5-video-player">
+        <video style="width: 640px; height: 360px;"></video>
+      </div>
+    `;
+    const video = document.querySelector("video") as HTMLVideoElement;
+    mockRect(video, 640, 360);
+    mockRect(document.querySelector("#movie_player"), 960, 540);
+    const firstAdapter = findBestVideoAdapter();
+    const firstFingerprint = firstAdapter?.getFingerprint();
+
+    mockHost("www.youtube.com", "/watch?v=second-video");
+    const secondAdapter = findBestVideoAdapter();
+
+    expect(secondAdapter?.video).toBe(firstAdapter?.video);
+    expect(firstFingerprint).toBe("youtube|first-video");
+    expect(secondAdapter?.getFingerprint()).toBe("youtube|second-video");
   });
 
   it("normalizes an oversized YouTube video id into a protocol-safe HOST_STATE", () => {
@@ -358,6 +400,63 @@ describe("generic video adapter detection", () => {
     expect(video.pause).toHaveBeenCalledTimes(1);
     expect(click).not.toHaveBeenCalled();
     stopBridge();
+  });
+
+  it("fires Crunchyroll pause and seek immediately, then observes their bridge results", async () => {
+    mockHost("www.crunchyroll.com", "/watch/G8WUNM123/example-episode");
+    document.body.innerHTML = `
+      <div id="player-container">
+        <video style="width: 640px; height: 360px;"></video>
+      </div>
+    `;
+    const video = document.querySelector("video") as HTMLVideoElement;
+    const pause = vi.fn();
+    let currentTime = 10;
+    video.pause = pause;
+    Object.defineProperty(video, "duration", { configurable: true, value: 100 });
+    Object.defineProperty(video, "currentTime", {
+      configurable: true,
+      get: () => currentTime,
+      set: (value: number) => {
+        currentTime = value;
+      },
+    });
+    mockRect(video, 640, 360);
+    mockRect(document.querySelector("#player-container"), 960, 540);
+    const bridge = mockDeferredCrunchyrollBridge();
+    const adapter = findBestVideoAdapter();
+
+    const pauseResult = adapter?.pause();
+    const seekResult = adapter?.seek(42);
+
+    expect(pauseResult).toBeUndefined();
+    expect(seekResult).toBeUndefined();
+    expect(bridge.requests.map((request) => request.action)).toEqual(["pause", "seek"]);
+    expect(pause).not.toHaveBeenCalled();
+    expect(video.currentTime).toBe(10);
+
+    bridge.respond(bridge.requests[0]!, { error: "not-ready", ok: false });
+    bridge.respond(bridge.requests[1]!, {
+      error: "not-ready",
+      ok: false,
+      video: {
+        buffered: [],
+        currentTime: 10,
+        duration: 100,
+        ended: false,
+        muted: false,
+        networkState: 2,
+        paused: false,
+        playbackRate: 1,
+        readyState: 4,
+        seeking: false,
+        volume: 1,
+      },
+    });
+
+    await waitForAsync(() => expect(pause).toHaveBeenCalledTimes(1));
+    expect(video.currentTime).toBe(10);
+    bridge.stop();
   });
 
   it("uses Crunchyroll native fullscreen control before falling back to requestFullscreen", async () => {
@@ -594,7 +693,7 @@ describe("generic video adapter detection", () => {
     unsubscribe?.();
   });
 
-  it("ducks YouTube volume through the player API and restores it", () => {
+  it("restores YouTube player, native volume, and mute state exactly once", () => {
     document.body.innerHTML = `
       <div id="movie_player" class="html5-video-player">
         <video style="width: 640px; height: 360px;"></video>
@@ -608,7 +707,85 @@ describe("generic video adapter detection", () => {
       unMute: ReturnType<typeof vi.fn>;
     };
     const video = document.querySelector("video") as HTMLVideoElement;
-    video.volume = 0.8;
+    let nativeVolume = 0.8;
+    let nativeMuted = true;
+    const setNativeVolume = vi.fn((value: number) => {
+      nativeVolume = value;
+    });
+    const setNativeMuted = vi.fn((value: boolean) => {
+      nativeMuted = value;
+    });
+    Object.defineProperty(video, "volume", {
+      configurable: true,
+      get: () => nativeVolume,
+      set: setNativeVolume,
+    });
+    Object.defineProperty(video, "muted", {
+      configurable: true,
+      get: () => nativeMuted,
+      set: setNativeMuted,
+    });
+    Object.assign(player, {
+      getVolume: vi.fn(() => 72),
+      setVolume: vi.fn(),
+      isMuted: vi.fn(() => true),
+      mute: vi.fn(),
+      unMute: vi.fn(),
+    });
+    mockRect(video, 640, 360);
+    mockRect(player, 960, 540);
+
+    const restore = findBestVideoAdapter()?.duckVolume();
+
+    expect(player.setVolume).toHaveBeenCalledWith(10);
+    expect(nativeVolume).toBe(0.1);
+    expect(setNativeMuted).not.toHaveBeenCalled();
+
+    restore?.();
+    restore?.();
+
+    expect(player.setVolume).toHaveBeenCalledTimes(2);
+    expect(player.setVolume).toHaveBeenLastCalledWith(72);
+    expect(setNativeVolume).toHaveBeenCalledTimes(2);
+    expect(nativeVolume).toBe(0.8);
+    expect(setNativeMuted).toHaveBeenCalledTimes(1);
+    expect(nativeMuted).toBe(true);
+    expect(player.mute).toHaveBeenCalledTimes(1);
+    expect(player.unMute).not.toHaveBeenCalled();
+  });
+
+  it("restores an initially-unmuted YouTube player and native media state exactly once", () => {
+    document.body.innerHTML = `
+      <div id="movie_player" class="html5-video-player">
+        <video style="width: 640px; height: 360px;"></video>
+      </div>
+    `;
+    const player = document.querySelector("#movie_player") as HTMLElement & {
+      getVolume: ReturnType<typeof vi.fn>;
+      setVolume: ReturnType<typeof vi.fn>;
+      isMuted: ReturnType<typeof vi.fn>;
+      mute: ReturnType<typeof vi.fn>;
+      unMute: ReturnType<typeof vi.fn>;
+    };
+    const video = document.querySelector("video") as HTMLVideoElement;
+    let nativeVolume = 0.8;
+    let nativeMuted = false;
+    const setNativeVolume = vi.fn((value: number) => {
+      nativeVolume = value;
+    });
+    const setNativeMuted = vi.fn((value: boolean) => {
+      nativeMuted = value;
+    });
+    Object.defineProperty(video, "volume", {
+      configurable: true,
+      get: () => nativeVolume,
+      set: setNativeVolume,
+    });
+    Object.defineProperty(video, "muted", {
+      configurable: true,
+      get: () => nativeMuted,
+      set: setNativeMuted,
+    });
     Object.assign(player, {
       getVolume: vi.fn(() => 72),
       setVolume: vi.fn(),
@@ -621,14 +798,21 @@ describe("generic video adapter detection", () => {
 
     const restore = findBestVideoAdapter()?.duckVolume();
 
-    expect(player.setVolume).toHaveBeenCalledWith(10);
-    expect(video.volume).toBe(0.1);
+    expect(nativeVolume).toBe(0.1);
+    expect(setNativeMuted).not.toHaveBeenCalled();
 
     restore?.();
+    restore?.();
 
+    expect(player.setVolume).toHaveBeenCalledTimes(2);
     expect(player.setVolume).toHaveBeenLastCalledWith(72);
-    expect(player.unMute).toHaveBeenCalled();
-    expect(video.volume).toBe(0.8);
+    expect(setNativeVolume).toHaveBeenCalledTimes(2);
+    expect(nativeVolume).toBe(0.8);
+    expect(setNativeMuted).toHaveBeenCalledTimes(1);
+    expect(setNativeMuted).toHaveBeenCalledWith(false);
+    expect(nativeMuted).toBe(false);
+    expect(player.mute).not.toHaveBeenCalled();
+    expect(player.unMute).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -691,6 +875,48 @@ function mockCrunchyrollBridge(
   window.postMessage = postMessage;
   return () => {
     window.postMessage = originalPostMessage;
+  };
+}
+
+function mockDeferredCrunchyrollBridge(): {
+  requests: CrunchyrollControlRequest[];
+  respond: (
+    request: CrunchyrollControlRequest,
+    result: Partial<Omit<CrunchyrollControlResult, "action" | "id" | "source">>,
+  ) => void;
+  stop: () => void;
+} {
+  const originalPostMessage = window.postMessage.bind(window);
+  const requests: CrunchyrollControlRequest[] = [];
+  const postMessage = ((message: unknown, targetOrigin: string, transfer?: Transferable[]) => {
+    const request = message as Partial<CrunchyrollControlRequest>;
+    if (request.source !== CRUNCHYROLL_CONTROL_SOURCE || typeof request.id !== "string") {
+      return originalPostMessage(message, targetOrigin, transfer ?? []);
+    }
+
+    requests.push(request as CrunchyrollControlRequest);
+  }) as typeof window.postMessage;
+
+  window.postMessage = postMessage;
+  return {
+    requests,
+    respond: (request, result) => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            action: request.action,
+            id: request.id,
+            ok: result.ok ?? true,
+            source: CRUNCHYROLL_CONTROL_RESULT_SOURCE,
+            ...result,
+          },
+          source: window,
+        }),
+      );
+    },
+    stop: () => {
+      window.postMessage = originalPostMessage;
+    },
   };
 }
 
