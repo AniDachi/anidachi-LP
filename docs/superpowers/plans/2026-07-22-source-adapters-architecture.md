@@ -55,6 +55,7 @@ apps/extension/src/source-adapters/
   core/
     types.ts                 # stable adapter, definition, result, policy contracts
     adapter-manager.ts       # one active adapter and deterministic cleanup
+    overlay-geometry.ts      # provider-neutral overlay geometry values
     html5-video-adapter.ts   # shared native HTMLVideoElement behavior
     video-discovery.ts       # deep scan, usability checks, deterministic scoring
     source-url.ts            # bounded canonical URLs and room hash handling
@@ -64,6 +65,7 @@ apps/extension/src/source-adapters/
   youtube/
     adapter.ts               # YouTube player behavior and metadata
     definition.ts            # page claim, player detection, factory
+    player-chrome.ts         # YouTube player chrome/occlusion measurement
     url.ts                    # watch/shorts/embed/youtu.be parsing and canonicalization
     progress.ts              # YouTube watch-progress projection
     navigation.ts            # validated source navigation with hard-navigation fallback
@@ -103,6 +105,10 @@ plan before implementation continues.
 ```ts
 import type { PlaybackState, WatchSourceDescriptor } from "@anidachi/protocol";
 import type { WatchProgressEntry } from "../../watch-progress";
+import type {
+  PlayerOverlayGeometry,
+  PlayerOverlayGeometryListener,
+} from "./overlay-geometry";
 
 export type SourceAdapterId = "generic-html5-video" | "youtube" | "crunchyroll";
 export type SourceProvider = WatchSourceDescriptor["provider"];
@@ -174,8 +180,10 @@ export interface VideoAdapter {
   getSourceDescriptor(): WatchSourceDescriptor | undefined;
   getProgressEntry(context: ProgressContext): WatchProgressEntry | null;
   getOverlayBinding(): AdapterOverlayBinding;
-  getCameraStackBottomPx(): number;
-  subscribeCameraStackBottomPx(listener: (value: number) => void): () => void;
+  getOverlayGeometry(): PlayerOverlayGeometry;
+  subscribeOverlayGeometry(
+    listener: PlayerOverlayGeometryListener,
+  ): () => void;
 
   play(): Promise<void>;
   pause(): void;
@@ -615,6 +623,9 @@ git commit -m "fix(extension): make adapter replacement lifecycle deterministic"
 
 ### Task 8: Replace Provider ID Branches With Capabilities And Policies
 
+Detailed overlay-geometry execution plan:
+`docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md`.
+
 **Files:**
 - Modify: `apps/extension/src/source-adapters/core/types.ts`
 - Modify provider adapters under `apps/extension/src/source-adapters/`
@@ -630,8 +641,10 @@ player-chrome subscriptions; it never branches on `adapter.id`.
 
 - [ ] Move overlay target, viewport element, and native-double-click decisions
   into each adapter's overlay binding.
-- [ ] Move Crunchyroll player chrome measurement behind
-  `getCameraStackBottomPx()` and `subscribeCameraStackBottomPx()`.
+- [ ] Move Crunchyroll player chrome measurement behind the provider-neutral
+  `getOverlayGeometry()` and `subscribeOverlayGeometry()` capability.
+- [ ] Add the independent YouTube player-chrome implementation and route safe
+  insets, launcher anchors, and panel anchors through the same value contract.
 - [ ] Change playback helpers to receive `AdapterPlaybackPolicy`, not an
   adapter ID string.
 - [ ] Generalize pending-seek and local-seek state names; retain existing
