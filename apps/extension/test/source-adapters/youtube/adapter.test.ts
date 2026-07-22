@@ -50,6 +50,29 @@ describe("YouTube source adapter", () => {
     expect(youtubeDefinition.detect(video)?.getFingerprint()).toBe(fingerprint);
   });
 
+  it("exposes YouTube player chrome geometry", () => {
+    document.body.innerHTML = `
+      <div id="movie_player" class="html5-video-player">
+        <div class="ytp-chrome-bottom"></div>
+        <video></video>
+      </div>
+    `;
+    const player = document.querySelector("#movie_player") as HTMLElement;
+    mockRect(player, 100, 50, 960, 540);
+    mockRect(document.querySelector(".ytp-chrome-bottom"), 100, 500, 960, 90);
+    const adapter = youtubeDefinition.detect(
+      document.querySelector("video") as HTMLVideoElement,
+    );
+
+    expect(adapter?.getOverlayGeometry()).toEqual({
+      controlsVisible: true,
+      viewport: { widthPx: 960, heightPx: 540 },
+      safeInsets: { topPx: 0, rightPx: 0, bottomPx: 108, leftPx: 0 },
+      launcher: { topPx: 10, rightPx: 10 },
+      panel: { topPx: 50, rightPx: 10 },
+    });
+  });
+
   it("uses the native fullscreen button for enter and exit", async () => {
     document.body.innerHTML = `
       <div id="movie_player" class="html5-video-player ytp-fullscreen">
@@ -114,5 +137,30 @@ function mockLocation(url: string): void {
   Object.defineProperty(window, "location", {
     configurable: true,
     value: new URL(url),
+  });
+}
+
+function mockRect(
+  element: Element | null,
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+): void {
+  if (!element) {
+    throw new Error("Expected element");
+  }
+
+  Object.defineProperty(element, "getBoundingClientRect", {
+    configurable: true,
+    value: () =>
+      ({
+        bottom: top + height,
+        height,
+        left,
+        right: left + width,
+        top,
+        width,
+      }) as DOMRect,
   });
 }

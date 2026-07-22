@@ -1,5 +1,7 @@
-import { normalizeVideoFingerprint } from "../core/source-url";
 import { Html5VideoAdapter } from "../core/html5-video-adapter";
+import type { PlayerOverlayGeometry } from "../core/overlay-geometry";
+import { normalizeVideoFingerprint } from "../core/source-url";
+import { getYouTubePlayerOverlayGeometry } from "./player-chrome";
 import { getYouTubeFingerprintKey } from "./url";
 
 interface YouTubeVolumePlayer extends HTMLElement {
@@ -24,6 +26,10 @@ export class YouTubeVideoAdapter extends Html5VideoAdapter {
 
   override getFingerprint(): string {
     return normalizeVideoFingerprint(`youtube|${getYouTubeFingerprintKey(new URL(location.href))}`);
+  }
+
+  override getOverlayGeometry(): PlayerOverlayGeometry {
+    return getYouTubePlayerOverlayGeometry(this.container);
   }
 
   override isFullscreen(): boolean {
