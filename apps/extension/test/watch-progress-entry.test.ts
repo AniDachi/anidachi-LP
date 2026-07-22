@@ -38,6 +38,23 @@ describe("watch progress entry extraction", () => {
     });
   });
 
+  it.each([
+    ["blank v on a Shorts path", "https://www.youtube.com/shorts/dQw4w9WgXcQ?v="],
+    ["invalid v on a Shorts path", "https://www.youtube.com/shorts/dQw4w9WgXcQ?v=short"],
+    ["blank v on an embed path", "https://www.youtube.com/embed/dQw4w9WgXcQ?v="],
+    ["invalid v on an embed path", "https://www.youtube.com/embed/dQw4w9WgXcQ?v=short"],
+  ])("does not persist YouTube progress for %s", (_caseName, url) => {
+    mockLocation(url);
+    const video = document.createElement("video");
+
+    expect(
+      getWatchProgressEntryForAdapter({
+        adapter: fakeAdapter({ id: "youtube", title: "Anime opening", video }),
+        watchedWithCount: 1,
+      }),
+    ).toBeNull();
+  });
+
   it("ignores unsupported generic video adapters", () => {
     mockLocation("https://example.com/watch/1");
     const video = document.createElement("video");

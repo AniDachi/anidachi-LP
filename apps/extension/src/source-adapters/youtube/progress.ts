@@ -1,5 +1,4 @@
 import type { WatchProgressEntry } from "../../watch-progress";
-import { parseYouTubeVideoId } from "./url";
 
 export interface YouTubeProgressInput {
   title: string | null;
@@ -39,15 +38,23 @@ export function getYouTubeProgressEntry(input: YouTubeProgressInput): WatchProgr
 function getYouTubeProgressVideoId(): string | null {
   try {
     const url = new URL(location.href);
-    if (url.hostname !== "youtu.be" && !url.searchParams.has("v")) {
-      return null;
+    if (url.hostname === "youtu.be") {
+      return cleanYouTubeProgressVideoId(url.pathname.split("/").filter(Boolean)[0]);
     }
 
-    const videoId = parseYouTubeVideoId(url);
-    return videoId && videoId.length <= 32 ? videoId : null;
+    return cleanYouTubeProgressVideoId(url.searchParams.get("v"));
   } catch {
     return null;
   }
+}
+
+function cleanYouTubeProgressVideoId(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const cleaned = value.trim();
+  return /^[A-Za-z0-9_-]{6,32}$/.test(cleaned) ? cleaned : null;
 }
 
 function canonicalSourceUrl(): string | null {
