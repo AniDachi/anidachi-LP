@@ -276,6 +276,11 @@ For new testing, prefer the latest `Build Extension` artifact from the
 The extension currently supports:
 
 - YouTube and Crunchyroll content-script overlay;
+- an ordered source-adapter registry with shared HTML5 core behavior and
+  isolated Generic, YouTube, and Crunchyroll provider modules. This extraction
+  preserves the existing winner-first behavior; provider route ownership,
+  lifecycle hardening, and first-class YouTube room navigation remain follow-up
+  work;
 - Anidachi bubble and compact room panel;
 - sign-in through the web app with Google/Discord;
 - room creation and invite copying through the website/API/Worker flow;

@@ -97,6 +97,9 @@ Runtime plane: apps/extension inside the user's browser
 
 `apps/extension` owns browser runtime behavior:
 
+- `src/source-adapters/registry.ts` is the public video-adapter discovery
+  entrypoint; shared behavior and provider-specific implementations live under
+  `src/source-adapters/core`, `generic`, `youtube`, and `crunchyroll`;
 - WXT MV3 Chrome extension;
 - content scripts and Shadow DOM overlay;
 - Crunchyroll/provider adapters;

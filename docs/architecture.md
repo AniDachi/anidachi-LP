@@ -290,7 +290,11 @@ docs/shared-watch-progress-tracker.md
 
 ## Video Adapter Decisions
 
-The extension uses a generic video adapter system.
+The extension uses an ordered source-adapter registry. Shared HTML5 behavior
+lives under `source-adapters/core`, while Generic, YouTube, and Crunchyroll own
+their provider-specific detection and player behavior in separate folders.
+Discovery preserves the current winner-first behavior: it selects one usable
+video, then tries YouTube, Crunchyroll, and Generic definitions in that order.
 
 Implemented adapters:
 
@@ -463,7 +467,7 @@ pnpm check
 ```txt
 apps/extension/entrypoints/content.tsx    Overlay mounting and fullscreen relocation
 apps/extension/src/overlay-app.tsx        Main overlay UI and room interaction
-apps/extension/src/video-adapter.ts       Generic, YouTube, and Crunchyroll video adapters
+apps/extension/src/source-adapters/       Registry, shared core, and provider adapters
 apps/extension/src/ghost-cam.ts           Ghost Cam transport selection and UI state
 apps/extension/src/p2p-media.ts           P2P camera/audio controller
 apps/extension/src/p2p-ice.ts             ICE server loading and prioritization
