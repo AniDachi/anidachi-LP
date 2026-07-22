@@ -75,7 +75,7 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
       description="Crunchyroll does not have a native watch party as of 2026. Here is what it offers and how to watch Crunchyroll together with friends."
       url="/guides/does-crunchyroll-have-watch-party"
       datePublished="2026-06-21"
-      dateModified="2026-07-19"
+      dateModified="2026-07-22"
       faq={faq}
       headings={tocHeadings}
     >
@@ -239,6 +239,22 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
         Related Guides
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link
+            href="/guides/does-everyone-need-crunchyroll-premium-for-watch-party"
+            className="hover:underline"
+          >
+            Does everyone need Crunchyroll Premium for watch parties?
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/is-crunchyroll-party-worth-it"
+            className="hover:underline"
+          >
+            Is Crunchyroll Party worth it?
+          </Link>
+        </li>
         <li>
           <Link
             href="/guides/does-teleparty-work-with-crunchyroll"

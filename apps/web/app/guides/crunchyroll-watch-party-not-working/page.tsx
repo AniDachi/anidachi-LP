@@ -104,7 +104,7 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
         description="Fix sync, detection, and region issues with Crunchyroll watch party extensions."
         url="/guides/crunchyroll-watch-party-not-working"
         datePublished="2026-06-08"
-        dateModified="2026-06-08"
+        dateModified="2026-07-22"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -232,6 +232,14 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
           Related guides
         </h2>
         <ul className="space-y-2 text-brand-orange mb-8">
+          <li>
+            <Link
+              href="/guides/teleparty-not-working-crunchyroll"
+              className="hover:underline"
+            >
+              Teleparty not working on Crunchyroll
+            </Link>
+          </li>
           <li>
             <Link href="/guides/how-to-fix-watch-party-audio-delay" className="hover:underline">
               How to fix watch party audio delay
