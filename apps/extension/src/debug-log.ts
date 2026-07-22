@@ -5,6 +5,7 @@ import {
   sanitizePrivacySafeData,
   sanitizePrivacySafeText,
 } from "./privacy-sanitizer";
+import type { PlayerOverlayGeometry } from "./source-adapters/core/overlay-geometry";
 
 export interface DebugEntry {
   id: number;
@@ -127,6 +128,34 @@ export function playbackStateDebugSnapshot(state: PlaybackState): Record<string,
     hostTime: round(state.hostTime),
     updatedAt: state.updatedAt,
     playbackRate: round(state.playbackRate),
+  };
+}
+
+export function playerOverlayGeometryDebugSnapshot(
+  adapterId: string,
+  geometry: PlayerOverlayGeometry,
+): Record<string, unknown> {
+  return {
+    adapterId,
+    controlsVisible: geometry.controlsVisible,
+    viewport: {
+      widthPx: geometry.viewport.widthPx,
+      heightPx: geometry.viewport.heightPx,
+    },
+    safeInsets: {
+      topPx: geometry.safeInsets.topPx,
+      rightPx: geometry.safeInsets.rightPx,
+      bottomPx: geometry.safeInsets.bottomPx,
+      leftPx: geometry.safeInsets.leftPx,
+    },
+    launcher: {
+      topPx: geometry.launcher.topPx,
+      rightPx: geometry.launcher.rightPx,
+    },
+    panel: {
+      topPx: geometry.panel.topPx,
+      rightPx: geometry.panel.rightPx,
+    },
   };
 }
 

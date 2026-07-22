@@ -1,15 +1,24 @@
+import { act, StrictMode } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-	mountOverlay,
-	startContentLifecycle,
 	type MountedOverlay,
+	mountOverlay,
 	type OverlayRenderer,
+	startContentLifecycle,
 } from "../../entrypoints/content";
-import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../../src/source-adapters/core/overlay-geometry";
+import { clearDebugLog, getDebugEntries } from "../../src/debug-log";
+import { usePlayerOverlayGeometry } from "../../src/overlay-app";
+import {
+	DEFAULT_PLAYER_OVERLAY_GEOMETRY,
+	type PlayerOverlayGeometry,
+} from "../../src/source-adapters/core/overlay-geometry";
 import type {
 	AdapterDetectionResult,
 	VideoAdapter,
 } from "../../src/source-adapters/core/types";
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 describe("content adapter lifecycle", () => {
 	beforeEach(() => {
@@ -212,6 +221,206 @@ describe("mounted overlay adapter binding", () => {
 	});
 });
 
+describe("usePlayerOverlayGeometry", () => {
+	let container: HTMLDivElement;
+	let root: Root;
+
+	beforeEach(() => {
+		container = document.createElement("div");
+		document.body.append(container);
+		root = createRoot(container);
+		clearDebugLog();
+	});
+
+	afterEach(() => {
+		act(() => root.unmount());
+		container.remove();
+		clearDebugLog();
+		vi.restoreAllMocks();
+	});
+
+	it("normalizes provider geometry and logs only distinct callback changes", () => {
+		const initialGeometry = createGeometry({
+			controlsVisible: false,
+			viewport: { widthPx: 960.4, heightPx: 540.4 },
+			safeInsets: { topPx: -4, rightPx: 12.4, bottomPx: 96.4, leftPx: 0 },
+		});
+		const binding = createGeometryAdapter("youtube", initialGeometry);
+
+		renderGeometryHarness(root, binding.adapter, true);
+
+		expect(readRenderedGeometry(container)).toEqual(
+			createGeometry({
+				controlsVisible: false,
+				viewport: { widthPx: 960, heightPx: 540 },
+				safeInsets: { topPx: 0, rightPx: 12, bottomPx: 96, leftPx: 0 },
+			}),
+		);
+		expect(binding.subscribe).toHaveBeenCalledTimes(1);
+		expect(getGeometryDebugEntries()).toHaveLength(0);
+
+		act(() =>
+			binding.emit({
+				...initialGeometry,
+				viewport: { widthPx: 960.1, heightPx: 540.1 },
+			}),
+		);
+		expect(getGeometryDebugEntries()).toHaveLength(0);
+
+		act(() =>
+			binding.emit(
+				createGeometry({
+					controlsVisible: true,
+					viewport: { widthPx: 1279.6, heightPx: 719.6 },
+					safeInsets: { topPx: 44.2, rightPx: 18.2, bottomPx: 87.6, leftPx: 7.6 },
+					launcher: { topPx: 53.6, rightPx: 21.6 },
+					panel: { topPx: 91.6, rightPx: 21.6 },
+				}),
+			),
+		);
+
+		expect(readRenderedGeometry(container).viewport).toEqual({ widthPx: 1280, heightPx: 720 });
+		expect(getGeometryDebugEntries()).toEqual([
+			expect.objectContaining({
+				scope: "overlay.geometry",
+				message: "changed",
+				data: {
+					adapterId: "youtube",
+					controlsVisible: true,
+					viewport: { widthPx: 1280, heightPx: 720 },
+					safeInsets: { topPx: 44, rightPx: 18, bottomPx: 88, leftPx: 8 },
+					launcher: { topPx: 54, rightPx: 22 },
+					panel: { topPx: 92, rightPx: 22 },
+				},
+			}),
+		]);
+	});
+
+	it("does not log an initial measurement refresh before subscribing", () => {
+		const firstMeasurement = createGeometry({
+			viewport: { widthPx: 960, heightPx: 540 },
+		});
+		const refreshedMeasurement = createGeometry({
+			controlsVisible: true,
+			viewport: { widthPx: 1280, heightPx: 720 },
+		});
+		const binding = createGeometryAdapter("youtube", firstMeasurement);
+		binding.adapter.getOverlayGeometry = vi
+			.fn()
+			.mockReturnValueOnce(firstMeasurement)
+			.mockReturnValue(refreshedMeasurement);
+
+		renderGeometryHarness(root, binding.adapter, true);
+
+		expect(readRenderedGeometry(container)).toEqual(refreshedMeasurement);
+		expect(binding.subscribe).toHaveBeenCalledTimes(1);
+		expect(getGeometryDebugEntries()).toHaveLength(0);
+	});
+
+	it("disposes the old subscription before replacement and ignores its late callbacks", () => {
+		const events: string[] = [];
+		const first = createGeometryAdapter(
+			"youtube",
+			createGeometry({ viewport: { widthPx: 960, heightPx: 540 } }),
+			events,
+		);
+		const replacement = createGeometryAdapter(
+			"youtube",
+			createGeometry({ viewport: { widthPx: 1280, heightPx: 720 } }),
+			events,
+		);
+		first.onUnsubscribe = () => {
+			first.emit(createGeometry({ viewport: { widthPx: 320, heightPx: 180 } }));
+		};
+
+		renderGeometryHarness(root, first.adapter, true);
+		renderGeometryHarness(root, replacement.adapter, true);
+
+		expect(events.indexOf("youtube:unsubscribe")).toBeLessThan(
+			events.lastIndexOf("youtube:subscribe"),
+		);
+		expect(first.unsubscribe).toHaveBeenCalledTimes(1);
+		expect(replacement.subscribe).toHaveBeenCalledTimes(1);
+		expect(readRenderedGeometry(container).viewport).toEqual({ widthPx: 1280, heightPx: 720 });
+		expect(getGeometryDebugEntries()).toHaveLength(1);
+
+		act(() => first.emit(createGeometry({ viewport: { widthPx: 640, heightPx: 360 } })));
+		expect(readRenderedGeometry(container).viewport).toEqual({ widthPx: 1280, heightPx: 720 });
+		expect(getGeometryDebugEntries()).toHaveLength(1);
+
+		act(() => root.unmount());
+		expect(first.unsubscribe).toHaveBeenCalledTimes(1);
+		expect(replacement.unsubscribe).toHaveBeenCalledTimes(1);
+		root = createRoot(container);
+	});
+
+	it("unsubscribes while inactive and creates exactly one subscription when reactivated", () => {
+		const binding = createGeometryAdapter(
+			"youtube",
+			createGeometry({ viewport: { widthPx: 960, heightPx: 540 } }),
+		);
+
+		renderGeometryHarness(root, binding.adapter, true);
+		expect(binding.subscribe).toHaveBeenCalledTimes(1);
+
+		renderGeometryHarness(root, binding.adapter, false);
+		expect(binding.unsubscribe).toHaveBeenCalledTimes(1);
+		expect(binding.subscribe).toHaveBeenCalledTimes(1);
+
+		act(() => binding.emit(createGeometry({ viewport: { widthPx: 320, heightPx: 180 } })));
+		expect(readRenderedGeometry(container).viewport).toEqual({ widthPx: 960, heightPx: 540 });
+		expect(getGeometryDebugEntries()).toHaveLength(0);
+
+		renderGeometryHarness(root, binding.adapter, true);
+		expect(binding.subscribe).toHaveBeenCalledTimes(2);
+
+		act(() =>
+			binding.emitSubscription(
+				0,
+				createGeometry({ viewport: { widthPx: 640, heightPx: 360 } }),
+			),
+		);
+		expect(readRenderedGeometry(container).viewport).toEqual({ widthPx: 960, heightPx: 540 });
+		expect(getGeometryDebugEntries()).toHaveLength(0);
+
+		act(() => binding.emit(createGeometry({ viewport: { widthPx: 1280, heightPx: 720 } })));
+		expect(readRenderedGeometry(container).viewport).toEqual({ widthPx: 1280, heightPx: 720 });
+		expect(getGeometryDebugEntries()).toHaveLength(1);
+	});
+
+	it("survives StrictMode effect replay without stale updates or duplicate logs", () => {
+		const binding = createGeometryAdapter(
+			"youtube",
+			createGeometry({ viewport: { widthPx: 960, heightPx: 540 } }),
+		);
+
+		act(() =>
+			root.render(
+				<StrictMode>
+					<GeometryHarness adapter={binding.adapter} active />
+				</StrictMode>,
+			),
+		);
+
+		expect(binding.subscribe).toHaveBeenCalledTimes(2);
+		expect(binding.unsubscribe).toHaveBeenCalledTimes(1);
+		expect(getGeometryDebugEntries()).toHaveLength(0);
+
+		act(() =>
+			binding.emitSubscription(
+				0,
+				createGeometry({ viewport: { widthPx: 640, heightPx: 360 } }),
+			),
+		);
+		expect(readRenderedGeometry(container).viewport).toEqual({ widthPx: 960, heightPx: 540 });
+		expect(getGeometryDebugEntries()).toHaveLength(0);
+
+		act(() => binding.emit(createGeometry({ viewport: { widthPx: 1280, heightPx: 720 } })));
+		expect(readRenderedGeometry(container).viewport).toEqual({ widthPx: 1280, heightPx: 720 });
+		expect(getGeometryDebugEntries()).toHaveLength(1);
+	});
+});
+
 function createMountedOverlayStub(adapter: VideoAdapter): MountedOverlay {
 	return {
 		get adapter() {
@@ -271,6 +480,81 @@ function createAdapter(): VideoAdapter {
 		subscribeOverlayGeometry: () => () => undefined,
 		video,
 	};
+}
+
+interface GeometryAdapterBinding {
+	adapter: VideoAdapter;
+	emit(geometry: PlayerOverlayGeometry): void;
+	emitSubscription(index: number, geometry: PlayerOverlayGeometry): void;
+	onUnsubscribe?: () => void;
+	subscribe: ReturnType<typeof vi.fn>;
+	unsubscribe: ReturnType<typeof vi.fn>;
+}
+
+function createGeometryAdapter(
+	id: string,
+	initialGeometry: PlayerOverlayGeometry,
+	events: string[] = [],
+): GeometryAdapterBinding {
+	const listeners: Array<(geometry: PlayerOverlayGeometry) => void> = [];
+	const unsubscribe = vi.fn(() => {
+		events.push(`${id}:unsubscribe`);
+		binding.onUnsubscribe?.();
+	});
+	const subscribe = vi.fn((nextListener: (geometry: PlayerOverlayGeometry) => void) => {
+		events.push(`${id}:subscribe`);
+		listeners.push(nextListener);
+		return unsubscribe;
+	});
+	const adapter = createAdapter();
+	adapter.id = id;
+	adapter.getOverlayGeometry = vi.fn(() => initialGeometry);
+	adapter.subscribeOverlayGeometry = subscribe;
+	const binding: GeometryAdapterBinding = {
+		adapter,
+		emit(geometry) {
+			listeners.at(-1)?.(geometry);
+		},
+		emitSubscription(index, geometry) {
+			listeners[index]?.(geometry);
+		},
+		subscribe,
+		unsubscribe,
+	};
+	return binding;
+}
+
+function createGeometry(
+	overrides: Partial<PlayerOverlayGeometry> = {},
+): PlayerOverlayGeometry {
+	return {
+		controlsVisible: overrides.controlsVisible ?? false,
+		viewport: overrides.viewport ?? { widthPx: 960, heightPx: 540 },
+		safeInsets: overrides.safeInsets ?? { topPx: 0, rightPx: 0, bottomPx: 0, leftPx: 0 },
+		launcher: overrides.launcher ?? { topPx: 10, rightPx: 10 },
+		panel: overrides.panel ?? { topPx: 48, rightPx: 10 },
+	};
+}
+
+function renderGeometryHarness(root: Root, adapter: VideoAdapter, active: boolean): void {
+	act(() => root.render(<GeometryHarness adapter={adapter} active={active} />));
+}
+
+function GeometryHarness({ adapter, active }: { adapter: VideoAdapter; active: boolean }) {
+	const geometry = usePlayerOverlayGeometry(adapter, active);
+	return <output data-testid="geometry">{JSON.stringify(geometry)}</output>;
+}
+
+function readRenderedGeometry(container: HTMLElement): PlayerOverlayGeometry {
+	const output = container.querySelector('[data-testid="geometry"]');
+	if (!output?.textContent) {
+		throw new Error("Expected rendered player overlay geometry");
+	}
+	return JSON.parse(output.textContent) as PlayerOverlayGeometry;
+}
+
+function getGeometryDebugEntries() {
+	return getDebugEntries().filter((entry) => entry.scope === "overlay.geometry");
 }
 
 function mockRect(element: Element, width: number, height: number): void {

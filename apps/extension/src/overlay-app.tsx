@@ -37,6 +37,11 @@ import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
 import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK, EMOJI_PALETTE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
 import { runCrunchyrollMainCommand } from "./source-adapters/crunchyroll/bridge-client";
+import {
+  arePlayerOverlayGeometriesEqual,
+  normalizePlayerOverlayGeometry,
+  type PlayerOverlayGeometry,
+} from "./source-adapters/core/overlay-geometry";
 import type { PlayerEvent, VideoAdapter } from "./source-adapters/core/types";
 import { buildWatchSourceDescriptor } from "./source-adapters/core/source-descriptor";
 import { CurrentResourcePanel } from "./current-resource-panel";
@@ -46,6 +51,7 @@ import {
   getDebugEntries,
   getDebugLogText,
   logDebug,
+  playerOverlayGeometryDebugSnapshot,
   playbackStateDebugSnapshot,
   roomEventDebugSnapshot,
   videoDebugSnapshot,
@@ -295,6 +301,65 @@ const FIRE_SUPER_DELAY_MS = HOLD_FIRE_SUPER_REACTION_EXPERIMENT.revealDelayMs;
 const FIRE_SUPER_CHARGE_MS = HOLD_FIRE_SUPER_REACTION_EXPERIMENT.chargeMs;
 const FIRE_SUPER_TOTAL_MS = FIRE_SUPER_DELAY_MS + FIRE_SUPER_CHARGE_MS;
 const NUKE_SPARKS = Array.from({ length: 12 }, (_, index) => index);
+
+export function usePlayerOverlayGeometry(
+  adapter: VideoAdapter,
+  adapterActive = true,
+): PlayerOverlayGeometry {
+  const [geometry, setGeometry] = useState(() =>
+    normalizePlayerOverlayGeometry(adapter.getOverlayGeometry()),
+  );
+  const geometryRef = useRef(geometry);
+  const geometryEffectStartedRef = useRef(false);
+
+  useEffect(() => {
+    let disposed = false;
+    let unsubscribed = false;
+    const isInitialEffect = !geometryEffectStartedRef.current;
+    geometryEffectStartedRef.current = true;
+
+    const applyGeometry = (candidate: PlayerOverlayGeometry, shouldLog = true) => {
+      if (disposed) {
+        return;
+      }
+
+      const normalized = normalizePlayerOverlayGeometry(candidate);
+      if (arePlayerOverlayGeometriesEqual(geometryRef.current, normalized)) {
+        return;
+      }
+
+      geometryRef.current = normalized;
+      setGeometry(normalized);
+      if (shouldLog) {
+        logDebug(
+          "overlay.geometry",
+          "changed",
+          playerOverlayGeometryDebugSnapshot(adapter.id, normalized),
+        );
+      }
+    };
+
+    applyGeometry(adapter.getOverlayGeometry(), !isInitialEffect);
+    if (!adapterActive) {
+      return () => {
+        disposed = true;
+      };
+    }
+
+    const unsubscribe = adapter.subscribeOverlayGeometry(applyGeometry);
+    return () => {
+      disposed = true;
+      if (unsubscribed) {
+        return;
+      }
+      unsubscribed = true;
+      unsubscribe();
+    };
+  }, [adapter, adapterActive]);
+
+  return geometry;
+}
+
 export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const clientRef = useRef(new RoomClient());
   const adapterActiveRef = useRef(adapterActive);
@@ -417,9 +482,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [chatDisplayMode, setChatDisplayMode] =
     useState<ChatDisplayMode>(DEFAULT_CHAT_DISPLAY_MODE);
   const socialVisible = true;
-  const [playerOverlayGeometry, setPlayerOverlayGeometry] = useState(() =>
-    adapter.getOverlayGeometry(),
-  );
+  const playerOverlayGeometry = usePlayerOverlayGeometry(adapter, adapterActive);
   const [reactions, setReactions] = useState<ReactionEvent[]>([]);
   const [liveChatMessages, setLiveChatMessages] = useState<LiveChatMessage[]>([]);
   const [chatHistoryMessages, setChatHistoryMessages] = useState<LiveChatMessage[]>([]);
@@ -1359,15 +1422,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     setChatDisplayMode(nextMode);
     void storage.setItem(CHAT_DISPLAY_MODE_STORAGE_KEY, nextMode);
   }, []);
-
-  useEffect(() => {
-    setPlayerOverlayGeometry(adapter.getOverlayGeometry());
-    if (!adapterActive) {
-      return;
-    }
-
-    return adapter.subscribeOverlayGeometry(setPlayerOverlayGeometry);
-  }, [adapter, adapterActive]);
 
   useEffect(() => {
     setMessageComposerDomGuard(messageComposerOpen || messageComposerGuardActive);
