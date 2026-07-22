@@ -3185,8 +3185,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/README.md": {
-    "mtime": 1784676382.4184008,
-    "ast_hash": "fba61065576adeeb1f3af000925ebc62",
+    "mtime": 1784700451.7676709,
+    "ast_hash": "330e0d1761f039c8c7581790327e53c7",
     "semantic_hash": ""
   },
   "packages/protocol/AGENTS.md": {
@@ -3215,22 +3215,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1784698100.4553852,
+    "mtime": 1784698523.1266992,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1784698100.4555266,
+    "mtime": 1784698523.1268299,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1784698100.455629,
+    "mtime": 1784698523.1269255,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1784698100.4557264,
+    "mtime": 1784698523.1270177,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3690,8 +3690,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md": {
-    "mtime": 1784689585.1304345,
-    "ast_hash": "b99b25e9e8900d9ea3d84343dce1456d",
+    "mtime": 1784704983.784346,
+    "ast_hash": "84a9bfeb3023253365fbf1ed43ce11dc",
     "semantic_hash": ""
   },
   "apps/extension/src/top-bubble-reveal.ts": {
@@ -3712,6 +3712,11 @@
   "apps/extension/test/room-rail-intent.test.ts": {
     "mtime": 1784697697.0853276,
     "ast_hash": "0d37806f60eb582c7ac21ae2a134f4a7",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md": {
+    "mtime": 1784704983.8787026,
+    "ast_hash": "d1e41c2b75167a8ac989951a04206f10",
     "semantic_hash": ""
   }
 }

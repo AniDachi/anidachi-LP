@@ -44972,6 +44972,126 @@
       "_origin": "ast"
     },
     {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry",
+      "label": "2026-07-22-provider-player-overlay-geometry.md",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_provider_player_overlay_geometry_implementation_plan",
+      "label": "Provider Player Overlay Geometry Implementation Plan",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_prerequisites",
+      "label": "Prerequisites",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L22",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_global_constraints",
+      "label": "Global Constraints",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L33",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_file_structure",
+      "label": "File Structure",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L61",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_core_contract",
+      "label": "Core Contract",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L89",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_1_add_the_provider_neutral_geometry_contract",
+      "label": "Task 1: Add The Provider-Neutral Geometry Contract",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L147",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_2_expose_existing_crunchyroll_geometry_through_the_capability",
+      "label": "Task 2: Expose Existing Crunchyroll Geometry Through The Capability",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L245",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_3_implement_pure_youtube_chrome_measurement",
+      "label": "Task 3: Implement Pure YouTube Chrome Measurement",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L337",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_4_add_event_driven_youtube_geometry_updates",
+      "label": "Task 4: Add Event-Driven YouTube Geometry Updates",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L462",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_5_make_the_overlay_consume_adapter_geometry",
+      "label": "Task 5: Make The Overlay Consume Adapter Geometry",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L536",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_6_harden_replacement_fallback_and_performance_behavior",
+      "label": "Task 6: Harden Replacement, Fallback, And Performance Behavior",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L670",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_7_documentation_staging_artifact_and_acceptance",
+      "label": "Task 7: Documentation, Staging Artifact, And Acceptance",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L749",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_done_means",
+      "label": "Done Means",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L840",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_rollback",
+      "label": "Rollback",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L854",
+      "_origin": "ast"
+    },
+    {
       "id": "docs_superpowers_plans_2026_07_22_source_adapters_architecture",
       "label": "2026-07-22-source-adapters-architecture.md",
       "file_type": "document",
@@ -44996,11 +45116,19 @@
       "_origin": "ast"
     },
     {
+      "id": "docs_superpowers_plans_2026_07_22_source_adapters_architecture_provider_and_room_isolation_invariants",
+      "label": "Provider And Room Isolation Invariants",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
+      "source_location": "L42",
+      "_origin": "ast"
+    },
+    {
       "id": "docs_superpowers_plans_2026_07_22_source_adapters_architecture_non_goals",
       "label": "Non-Goals",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L42",
+      "source_location": "L69",
       "_origin": "ast"
     },
     {
@@ -45008,7 +45136,7 @@
       "label": "Target File Structure",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L51",
+      "source_location": "L78",
       "_origin": "ast"
     },
     {
@@ -45016,7 +45144,7 @@
       "label": "Core Contracts",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L97",
+      "source_location": "L126",
       "_origin": "ast"
     },
     {
@@ -45024,7 +45152,7 @@
       "label": "Registry Rules",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L221",
+      "source_location": "L257",
       "_origin": "ast"
     },
     {
@@ -45032,7 +45160,7 @@
       "label": "PR 1: Behavior-Preserving Provider Extraction",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L254",
+      "source_location": "L290",
       "_origin": "ast"
     },
     {
@@ -45040,7 +45168,7 @@
       "label": "Task 1: Lock Characterization Tests",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L256",
+      "source_location": "L292",
       "_origin": "ast"
     },
     {
@@ -45048,7 +45176,7 @@
       "label": "Task 2: Introduce Core Types And Shared HTML5 Primitives",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L299",
+      "source_location": "L335",
       "_origin": "ast"
     },
     {
@@ -45056,7 +45184,7 @@
       "label": "Task 3: Extract Generic And YouTube Providers",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L344",
+      "source_location": "L380",
       "_origin": "ast"
     },
     {
@@ -45064,7 +45192,7 @@
       "label": "Task 4: Extract Crunchyroll Provider And Bridge",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L399",
+      "source_location": "L435",
       "_origin": "ast"
     },
     {
@@ -45072,7 +45200,7 @@
       "label": "Task 5: Add Registry And Remove The Temporary Facade",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L456",
+      "source_location": "L492",
       "_origin": "ast"
     },
     {
@@ -45080,7 +45208,7 @@
       "label": "Task 6: PR 1 Verification And Staging Review",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L522",
+      "source_location": "L558",
       "_origin": "ast"
     },
     {
@@ -45088,7 +45216,7 @@
       "label": "PR 2: Lifecycle, Capabilities, And First-Class YouTube",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L565",
+      "source_location": "L601",
       "_origin": "ast"
     },
     {
@@ -45096,7 +45224,7 @@
       "label": "Task 7: Add The Adapter Lifecycle Manager",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L567",
+      "source_location": "L603",
       "_origin": "ast"
     },
     {
@@ -45104,7 +45232,7 @@
       "label": "Task 8: Replace Provider ID Branches With Capabilities And Policies",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L616",
+      "source_location": "L652",
       "_origin": "ast"
     },
     {
@@ -45112,7 +45240,7 @@
       "label": "Task 9: Move Source Descriptors And Progress Into Providers",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L659",
+      "source_location": "L700",
       "_origin": "ast"
     },
     {
@@ -45120,7 +45248,7 @@
       "label": "Task 10: Add Safe Provider Navigation And YouTube Source Switching",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L691",
+      "source_location": "L732",
       "_origin": "ast"
     },
     {
@@ -45128,7 +45256,7 @@
       "label": "Task 11: Provider-Aware Detection Hardening",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L736",
+      "source_location": "L788",
       "_origin": "ast"
     },
     {
@@ -45136,7 +45264,7 @@
       "label": "Task 12: Final Verification, Documentation, And PR 2",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L764",
+      "source_location": "L816",
       "_origin": "ast"
     },
     {
@@ -45144,7 +45272,7 @@
       "label": "Required Automated Verification",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L792",
+      "source_location": "L844",
       "_origin": "ast"
     },
     {
@@ -45152,7 +45280,7 @@
       "label": "Definition Of Done",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L808",
+      "source_location": "L860",
       "_origin": "ast"
     },
     {
@@ -45160,7 +45288,7 @@
       "label": "Rollback",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L825",
+      "source_location": "L879",
       "_origin": "ast"
     },
     {
@@ -166696,6 +166824,132 @@
       "weight": 1.0
     },
     {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_provider_player_overlay_geometry_implementation_plan",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_provider_player_overlay_geometry_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_prerequisites",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_provider_player_overlay_geometry_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_global_constraints",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_provider_player_overlay_geometry_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_file_structure",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_provider_player_overlay_geometry_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_core_contract",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L89",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_core_contract",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_1_add_the_provider_neutral_geometry_contract",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L147",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_core_contract",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_2_expose_existing_crunchyroll_geometry_through_the_capability",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L245",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_core_contract",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_3_implement_pure_youtube_chrome_measurement",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L337",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_core_contract",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_4_add_event_driven_youtube_geometry_updates",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L462",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_core_contract",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_5_make_the_overlay_consume_adapter_geometry",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L536",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_core_contract",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_6_harden_replacement_fallback_and_performance_behavior",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L670",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_core_contract",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_task_7_documentation_staging_artifact_and_acceptance",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L749",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_provider_player_overlay_geometry_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_done_means",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L840",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_provider_player_overlay_geometry_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_22_provider_player_overlay_geometry_rollback",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md",
+      "source_location": "L854",
+      "weight": 1.0
+    },
+    {
       "source": "docs_superpowers_plans_2026_07_22_source_adapters_architecture",
       "target": "docs_superpowers_plans_2026_07_22_source_adapters_architecture_source_adapter_architecture_implementation_plan",
       "relation": "contains",
@@ -166715,7 +166969,7 @@
     },
     {
       "source": "docs_superpowers_plans_2026_07_22_source_adapters_architecture_source_adapter_architecture_implementation_plan",
-      "target": "docs_superpowers_plans_2026_07_22_source_adapters_architecture_non_goals",
+      "target": "docs_superpowers_plans_2026_07_22_source_adapters_architecture_provider_and_room_isolation_invariants",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
@@ -166724,11 +166978,20 @@
     },
     {
       "source": "docs_superpowers_plans_2026_07_22_source_adapters_architecture_source_adapter_architecture_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_22_source_adapters_architecture_non_goals",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_22_source_adapters_architecture_source_adapter_architecture_implementation_plan",
       "target": "docs_superpowers_plans_2026_07_22_source_adapters_architecture_target_file_structure",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L51",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -166737,7 +167000,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L97",
+      "source_location": "L126",
       "weight": 1.0
     },
     {
@@ -166746,7 +167009,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L221",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -166755,7 +167018,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L254",
+      "source_location": "L290",
       "weight": 1.0
     },
     {
@@ -166764,7 +167027,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L256",
+      "source_location": "L292",
       "weight": 1.0
     },
     {
@@ -166773,7 +167036,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L299",
+      "source_location": "L335",
       "weight": 1.0
     },
     {
@@ -166782,7 +167045,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L344",
+      "source_location": "L380",
       "weight": 1.0
     },
     {
@@ -166791,7 +167054,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L399",
+      "source_location": "L435",
       "weight": 1.0
     },
     {
@@ -166800,7 +167063,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L456",
+      "source_location": "L492",
       "weight": 1.0
     },
     {
@@ -166809,7 +167072,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L522",
+      "source_location": "L558",
       "weight": 1.0
     },
     {
@@ -166818,7 +167081,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L565",
+      "source_location": "L601",
       "weight": 1.0
     },
     {
@@ -166827,7 +167090,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L567",
+      "source_location": "L603",
       "weight": 1.0
     },
     {
@@ -166836,7 +167099,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L616",
+      "source_location": "L652",
       "weight": 1.0
     },
     {
@@ -166845,7 +167108,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L659",
+      "source_location": "L700",
       "weight": 1.0
     },
     {
@@ -166854,7 +167117,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L691",
+      "source_location": "L732",
       "weight": 1.0
     },
     {
@@ -166863,7 +167126,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L736",
+      "source_location": "L788",
       "weight": 1.0
     },
     {
@@ -166872,7 +167135,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L764",
+      "source_location": "L816",
       "weight": 1.0
     },
     {
@@ -166881,7 +167144,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L792",
+      "source_location": "L844",
       "weight": 1.0
     },
     {
@@ -166890,7 +167153,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L808",
+      "source_location": "L860",
       "weight": 1.0
     },
     {
@@ -166899,7 +167162,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L825",
+      "source_location": "L879",
       "weight": 1.0
     },
     {

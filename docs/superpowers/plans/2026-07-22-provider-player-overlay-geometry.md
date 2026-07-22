@@ -33,6 +33,9 @@ scripts, `ResizeObserver`, `MutationObserver`, `requestAnimationFrame`, Vitest 4
 ## Global Constraints
 
 - Provider folders must not import one another.
+- Each provider owns its selectors, player-chrome measurement, visibility
+  rules, and event subscriptions. The shared geometry contract carries only
+  normalized result values; it does not share or select provider DOM logic.
 - Shared runtime files must not branch on `adapter.id` for overlay geometry.
 - Do not use undocumented YouTube player methods or global internal objects.
 - YouTube DOM selectors are implementation details and must live only under
@@ -239,7 +242,7 @@ git commit -m "refactor(extension): define provider overlay geometry"
 
 ---
 
-### Task 2: Move Crunchyroll Behind The Geometry Capability
+### Task 2: Expose Existing Crunchyroll Geometry Through The Capability
 
 **Files:**
 - Modify: `apps/extension/src/source-adapters/crunchyroll/player-chrome.ts`
@@ -277,13 +280,13 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
 
 Expected: failure because the new exports do not exist.
 
-- [ ] **Step 3: Map the current measurement into the common value contract**
+- [ ] **Step 3: Map the current measurement into the provider-neutral result contract**
 
 Preserve all existing selectors, visibility rules, constants, and clamping.
 Rename only the returned shape. When controls are hidden, preserve the current
 Crunchyroll runtime behavior by returning `safeInsets.bottomPx = 0`.
 
-- [ ] **Step 4: Move Crunchyroll observation into its provider file**
+- [ ] **Step 4: Keep Crunchyroll observation inside its provider file**
 
 The provider subscription must use:
 

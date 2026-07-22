@@ -39,6 +39,33 @@ shared `@anidachi/protocol` source descriptors.
 - The overlay/room shell must survive a temporary player disappearance during
   an SPA transition; it must not apply remote playback to the old video.
 
+## Provider And Room Isolation Invariants
+
+- Every supported resource owns one provider adapter. Provider adapters own
+  their page eligibility, player discovery, selectors, playback reads and
+  writes, seek behavior, source identity, same-provider navigation, player
+  chrome measurement, and provider-specific lifecycle quirks.
+- Shared room, auth, WebSocket, P2P, chat, and overlay-layout code consumes
+  typed adapter capabilities and normalized values. It must not import provider
+  selectors, call provider player APIs, or guess provider behavior.
+- The provider of a room is pinned when the room is created. For a joining
+  participant, it is pinned from the first validated authoritative room source
+  before remote navigation or playback is applied. The provider is immutable
+  for that room's lifetime.
+- A YouTube room may navigate between valid YouTube sources only. A
+  Crunchyroll room may navigate between valid Crunchyroll sources only. The
+  extension must never silently migrate an active room between providers.
+- If an authoritative source names a provider different from the pinned room
+  provider, the extension suspends source navigation and remote play, pause,
+  and seek application. It reports an unsupported provider mismatch instead of
+  opening another resource or applying state to the current player.
+- A known provider host or an in-progress provider SPA transition must never
+  fall through to Generic HTML5. Exactly one matching provider adapter may own
+  the active player at a time.
+- These invariants are extension-side and use the existing
+  `WatchSourceDescriptor.provider`; they do not require a new room protocol or
+  server schema in this plan.
+
 ## Non-Goals
 
 - Adding Netflix, Amazon, or another provider.
@@ -162,6 +189,7 @@ export type EnsureSourceResult =
 
 export interface SourceNavigationContext {
   roomId: string | null;
+  roomProvider: SourceProvider;
   signal: AbortSignal;
 }
 
@@ -724,6 +752,13 @@ export async function ensureRemoteSource(
 - [ ] Validate provider, URL, hostname, route shape, ID, and protocol before
   navigation; reject `javascript:`, foreign hosts, malformed IDs, and generic
   arbitrary URLs.
+- [ ] Pin `roomProvider` from the active adapter when creating a room and from
+  the first validated authoritative source when joining. Do not replace that
+  provider while the room remains active.
+- [ ] Reject `source.provider !== context.roomProvider` before invoking any
+  provider navigation or applying remote play, pause, or seek. Return
+  `unsupported` with a bounded provider-mismatch reason and keep the current
+  page unchanged.
 - [ ] Preserve the active room ID using the existing room hash convention and
   persisted room session; the hash is not the sole room source of truth.
 - [ ] Keep one navigation operation active. Abort an older operation when a
@@ -738,6 +773,10 @@ export async function ensureRemoteSource(
   whose fingerprint equals the target fingerprint.
 - [ ] Replace `navigateToRemoteSourceIfNeeded()` and Crunchyroll-only URL
   helpers in `overlay-app.tsx` with `ensureRemoteSource()`.
+- [ ] Test that a YouTube room rejects a Crunchyroll source and a Crunchyroll
+  room rejects a YouTube source without navigation or playback side effects.
+  Also test that switching to another valid source within the pinned provider
+  remains supported.
 - [ ] Run source-switching tests and full extension tests.
 - [ ] Commit:
 
@@ -823,6 +862,8 @@ the room experience around P2P media.
 - Generic, YouTube, and Crunchyroll logic live in separate provider folders.
 - Shared runtime code contains no provider-name branches.
 - No provider imports another provider.
+- The room provider is pinned for the room lifetime, and cross-provider source
+  updates never navigate or apply playback state.
 - Unsupported YouTube/Crunchyroll routes cannot fall through to Generic.
 - Adapter replacement and disposal are deterministic and tested.
 - YouTube source fingerprints, descriptors, progress, and navigation use one
