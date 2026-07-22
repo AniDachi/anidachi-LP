@@ -1,5 +1,7 @@
 import type { PlaybackState, WatchSourceDescriptor } from "@anidachi/protocol";
 
+export type SourceProvider = WatchSourceDescriptor["provider"];
+
 export type PlayerEvent =
   | { type: "play"; time: number }
   | { type: "pause"; time: number }
@@ -31,7 +33,7 @@ export interface SeekOptions {
 
 export interface SourceAdapterDefinition {
   readonly id: string;
-  readonly provider: WatchSourceDescriptor["provider"];
+  readonly provider: SourceProvider;
   readonly priority: number;
   detect(video: HTMLVideoElement): VideoAdapter | null;
 }

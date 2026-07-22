@@ -4,7 +4,7 @@ import { YouTubeVideoAdapter } from "./adapter";
 export const youtubeDefinition: SourceAdapterDefinition = {
   id: "youtube",
   provider: "youtube",
-  priority: 100,
+  priority: 300,
   detect(video) {
     const container = findYouTubePlayerContainer(video);
     return container ? new YouTubeVideoAdapter(video, container) : null;

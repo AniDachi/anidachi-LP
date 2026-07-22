@@ -27,7 +27,7 @@ describe("YouTube source adapter", () => {
     expect(youtubeDefinition).toMatchObject({
       id: "youtube",
       provider: "youtube",
-      priority: 100,
+      priority: 300,
     });
     expect(adapter).toBeInstanceOf(YouTubeVideoAdapter);
     expect(adapter?.container).toBe(player);

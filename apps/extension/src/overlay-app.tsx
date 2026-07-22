@@ -48,6 +48,7 @@ import {
   getCrunchyrollPlayerChromeState,
 } from "./source-adapters/crunchyroll/player-chrome";
 import type { PlayerEvent, VideoAdapter } from "./source-adapters/core/types";
+import { buildWatchSourceDescriptor } from "./source-adapters/core/source-descriptor";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import {
   clearDebugLog,
@@ -175,7 +176,6 @@ import {
   signOutAndClearParticipant,
   trySilentSignIn,
 } from "./user-identity";
-import { buildWatchSourceDescriptor } from "./video-adapter";
 import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
 import { resolveWatchLibraryReconcileAuth } from "./watch-library-auth";
 import {

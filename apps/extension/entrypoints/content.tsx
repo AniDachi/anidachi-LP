@@ -17,7 +17,7 @@ import {
 } from "../src/overlay-mount";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
 import { startCrunchyrollStudyIfEnabled } from "../src/source-adapters/crunchyroll/study";
-import { findBestVideoAdapter } from "../src/video-adapter";
+import { detectSourceAdapter } from "../src/source-adapters/registry";
 
 interface MountedOverlay {
   adapter: VideoAdapter;
@@ -82,7 +82,7 @@ export default defineContentScript({
         return;
       }
 
-      const adapter = findBestVideoAdapter();
+      const adapter = detectSourceAdapter();
       if (!adapter) {
         return;
       }

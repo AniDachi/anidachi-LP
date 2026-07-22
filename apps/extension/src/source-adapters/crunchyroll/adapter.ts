@@ -3,12 +3,12 @@ import {
 	logDebug,
 	videoDebugSnapshot,
 } from "../../debug-log";
+import { Html5VideoAdapter } from "../core/html5-video-adapter";
 import { normalizeVideoFingerprint } from "../core/source-url";
 import type { PlayerEvent, SeekOptions } from "../core/types";
-import { GenericVideoAdapter } from "../generic/adapter";
 import { runCrunchyrollMainCommand } from "./bridge-client";
 
-export class CrunchyrollVideoAdapter extends GenericVideoAdapter {
+export class CrunchyrollVideoAdapter extends Html5VideoAdapter {
 	override readonly id = "crunchyroll";
 	override readonly name = "Crunchyroll";
 

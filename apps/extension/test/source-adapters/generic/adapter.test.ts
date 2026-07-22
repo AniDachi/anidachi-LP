@@ -17,7 +17,7 @@ describe("generic source adapter", () => {
     expect(genericDefinition).toMatchObject({
       id: "generic-html5-video",
       provider: "generic",
-      priority: 0,
+      priority: 100,
     });
     expect(adapter).toBeInstanceOf(GenericVideoAdapter);
     expect(adapter?.video).toBe(video);

@@ -12,12 +12,12 @@ import {
   type CrunchyrollControlResult,
 } from "../src/source-adapters/crunchyroll/bridge-contract";
 import { runCrunchyrollMainCommand } from "../src/source-adapters/crunchyroll/bridge-client";
+import { buildWatchSourceDescriptor } from "../src/source-adapters/core/source-descriptor";
 import {
-  buildWatchSourceDescriptor,
   canonicalWatchSourceUrl,
-  findBestVideoAdapter,
   normalizeVideoFingerprint,
-} from "../src/video-adapter";
+} from "../src/source-adapters/core/source-url";
+import { detectSourceAdapter } from "../src/source-adapters/registry";
 
 describe("generic video adapter detection", () => {
   it("selects the largest visible video", () => {
@@ -30,7 +30,7 @@ describe("generic video adapter detection", () => {
     mockRect(document.querySelector("#large video"), 640, 360);
     mockRect(document.querySelector("#large"), 640, 360);
 
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
 
     expect(adapter?.container.id).toBe("large");
   });
@@ -45,7 +45,7 @@ describe("generic video adapter detection", () => {
     mockRect(document.querySelector("#visible video"), 320, 180);
     mockRect(document.querySelector("#visible"), 320, 180);
 
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
 
     expect(adapter?.container.id).toBe("visible");
   });
@@ -60,7 +60,7 @@ describe("generic video adapter detection", () => {
     mockRect(document.querySelector("#inner-video-wrap"), 640, 360);
     mockRect(document.querySelector("#movie_player"), 960, 540);
 
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
 
     expect(adapter?.id).toBe("youtube");
     expect(adapter?.container.id).toBe("movie_player");
@@ -80,7 +80,7 @@ describe("generic video adapter detection", () => {
     mockRect(winner, 640, 360);
     mockRect(document.querySelector("#movie_player"), 960, 540);
 
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
 
     expect(adapter?.video).toBe(winner);
     expect(adapter?.id).toBe("youtube");
@@ -97,10 +97,10 @@ describe("generic video adapter detection", () => {
     mockRect(document.querySelector("video"), 640, 360);
     mockRect(document.querySelector("#player"), 640, 360);
 
-    const hostFingerprint = findBestVideoAdapter()?.getFingerprint();
+    const hostFingerprint = detectSourceAdapter()?.getFingerprint();
 
     document.querySelector("video")?.setAttribute("src", "http://192.168.1.80:5174/demo.mp4");
-    const viewerFingerprint = findBestVideoAdapter()?.getFingerprint();
+    const viewerFingerprint = detectSourceAdapter()?.getFingerprint();
 
     expect(viewerFingerprint).toBe(hostFingerprint);
   });
@@ -132,7 +132,7 @@ describe("generic video adapter detection", () => {
     mockRect(video, 640, 360);
     mockRect(document.querySelector("#player"), 640, 360);
 
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
     const state = adapter?.getState();
     const source = adapter && state ? buildWatchSourceDescriptor(adapter, state) : undefined;
 
@@ -156,12 +156,12 @@ describe("generic video adapter detection", () => {
     `;
     mockRect(document.querySelector("video"), 640, 360);
     mockRect(document.querySelector("#movie_player"), 960, 540);
-    const firstFingerprint = findBestVideoAdapter()?.getFingerprint();
+    const firstFingerprint = detectSourceAdapter()?.getFingerprint();
 
     document
       .querySelector("video")
       ?.setAttribute("src", "https://rr5---sn.googlevideo.com/videoplayback?id=two");
-    const secondFingerprint = findBestVideoAdapter()?.getFingerprint();
+    const secondFingerprint = detectSourceAdapter()?.getFingerprint();
 
     expect(secondFingerprint).toBe(firstFingerprint);
     expect(firstFingerprint).toBe("youtube|abc123");
@@ -177,11 +177,11 @@ describe("generic video adapter detection", () => {
     const video = document.querySelector("video") as HTMLVideoElement;
     mockRect(video, 640, 360);
     mockRect(document.querySelector("#movie_player"), 960, 540);
-    const firstAdapter = findBestVideoAdapter();
+    const firstAdapter = detectSourceAdapter();
     const firstFingerprint = firstAdapter?.getFingerprint();
 
     mockHost("www.youtube.com", "/watch?v=second-video");
-    const secondAdapter = findBestVideoAdapter();
+    const secondAdapter = detectSourceAdapter();
 
     expect(secondAdapter?.video).toBe(firstAdapter?.video);
     expect(firstFingerprint).toBe("youtube|first-video");
@@ -200,7 +200,7 @@ describe("generic video adapter detection", () => {
     mockRect(document.querySelector("video"), 640, 360);
     mockRect(document.querySelector("#movie_player"), 960, 540);
 
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
     const state = adapter?.getState();
     const source = adapter && state ? buildWatchSourceDescriptor(adapter, state) : undefined;
 
@@ -231,12 +231,12 @@ describe("generic video adapter detection", () => {
     mockRect(document.querySelector(".bitmovinplayer-container"), 640, 360);
     mockRect(document.querySelector("#player-container"), 960, 540);
     mockRect(document.querySelector(".video-player-wrapper"), 960, 540);
-    const firstFingerprint = findBestVideoAdapter()?.getFingerprint();
+    const firstFingerprint = detectSourceAdapter()?.getFingerprint();
 
     document
       .querySelector("video")
       ?.setAttribute("src", "https://v.vrv.co/evs1/token-viewer/master.m3u8");
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
 
     expect(adapter?.id).toBe("crunchyroll");
     expect(adapter?.container.id).toBe("player-container");
@@ -261,7 +261,7 @@ describe("generic video adapter detection", () => {
     mockRect(document.querySelector("#player-container"), 960, 540);
     mockRect(document.querySelector(".video-player-wrapper"), 960, 540);
 
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
     const state = adapter?.getState();
     const source = adapter && state ? buildWatchSourceDescriptor(adapter, state) : undefined;
 
@@ -284,7 +284,7 @@ describe("generic video adapter detection", () => {
     mockRect(document.querySelector("video"), 640, 360);
     mockRect(document.querySelector("#player"), 640, 360);
 
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
     const state = adapter?.getState();
     const source = adapter && state ? buildWatchSourceDescriptor(adapter, state) : undefined;
 
@@ -313,7 +313,7 @@ describe("generic video adapter detection", () => {
     mockRect(document.querySelector("#player-container"), 960, 540);
     const stopBridge = mockCrunchyrollBridge(() => ({ error: "blocked", ok: false }));
 
-    await findBestVideoAdapter()?.play();
+    await detectSourceAdapter()?.play();
 
     expect(video.play).toHaveBeenCalledTimes(1);
     expect(click).not.toHaveBeenCalled();
@@ -341,7 +341,7 @@ describe("generic video adapter detection", () => {
       return { ok: true };
     });
 
-    await findBestVideoAdapter()?.play();
+    await detectSourceAdapter()?.play();
 
     expect(video.play).not.toHaveBeenCalled();
     expect(click).not.toHaveBeenCalled();
@@ -394,7 +394,7 @@ describe("generic video adapter detection", () => {
       return { ok: true };
     });
 
-    findBestVideoAdapter()?.pause();
+    detectSourceAdapter()?.pause();
     await waitForAsync(() => expect(video.pause).toHaveBeenCalledTimes(1));
 
     expect(video.pause).toHaveBeenCalledTimes(1);
@@ -424,7 +424,7 @@ describe("generic video adapter detection", () => {
     mockRect(video, 640, 360);
     mockRect(document.querySelector("#player-container"), 960, 540);
     const bridge = mockDeferredCrunchyrollBridge();
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
 
     const pauseResult = adapter?.pause();
     const seekResult = adapter?.seek(42);
@@ -478,7 +478,7 @@ describe("generic video adapter detection", () => {
     mockRect(video, 640, 360);
     mockRect(document.querySelector("#player-container"), 960, 540);
 
-    await findBestVideoAdapter()?.enterFullscreen();
+    await detectSourceAdapter()?.enterFullscreen();
 
     expect(click).toHaveBeenCalledTimes(1);
     expect(requestFullscreen).not.toHaveBeenCalled();
@@ -522,7 +522,7 @@ describe("generic video adapter detection", () => {
       return { ok: true };
     });
 
-    findBestVideoAdapter()?.seek(42);
+    detectSourceAdapter()?.seek(42);
     await waitForAsync(() => expect(video.currentTime).toBe(42));
 
     expect(input.value).toBe("10");
@@ -573,7 +573,7 @@ describe("generic video adapter detection", () => {
       };
     });
 
-    findBestVideoAdapter()?.seek(42);
+    detectSourceAdapter()?.seek(42);
     await waitForAsync(() => expect(video.currentTime).toBe(10));
 
     stopBridge();
@@ -619,7 +619,7 @@ describe("generic video adapter detection", () => {
       };
     });
 
-    findBestVideoAdapter()?.seek(42);
+    detectSourceAdapter()?.seek(42);
     await waitForAsync(() => expect(video.currentTime).toBe(10));
 
     stopBridge();
@@ -660,7 +660,7 @@ describe("generic video adapter detection", () => {
       return { ok: true };
     });
 
-    findBestVideoAdapter()?.seek(42);
+    detectSourceAdapter()?.seek(42);
     paused = true;
     await waitForAsync(() => expect(video.currentTime).toBe(42));
 
@@ -681,7 +681,7 @@ describe("generic video adapter detection", () => {
     Object.defineProperty(video, "currentTime", { configurable: true, value: 12 });
     mockRect(video, 640, 360);
     mockRect(document.querySelector("#player-container"), 960, 540);
-    const adapter = findBestVideoAdapter();
+    const adapter = detectSourceAdapter();
     const callback = vi.fn();
     const unsubscribe = adapter?.subscribe(callback);
 
@@ -735,7 +735,7 @@ describe("generic video adapter detection", () => {
     mockRect(video, 640, 360);
     mockRect(player, 960, 540);
 
-    const restore = findBestVideoAdapter()?.duckVolume();
+    const restore = detectSourceAdapter()?.duckVolume();
 
     expect(player.setVolume).toHaveBeenCalledWith(10);
     expect(nativeVolume).toBe(0.1);
@@ -796,7 +796,7 @@ describe("generic video adapter detection", () => {
     mockRect(video, 640, 360);
     mockRect(player, 960, 540);
 
-    const restore = findBestVideoAdapter()?.duckVolume();
+    const restore = detectSourceAdapter()?.duckVolume();
 
     expect(nativeVolume).toBe(0.1);
     expect(setNativeMuted).not.toHaveBeenCalled();
