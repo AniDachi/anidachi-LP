@@ -682,6 +682,12 @@ Automated evidence recorded on 2026-07-22:
 
 ### Task 8: Replace Provider ID Branches With Capabilities And Policies
 
+**Status:** In progress. The player-chrome geometry portion is complete on
+2026-07-22: Generic, YouTube, and Crunchyroll expose the provider-neutral
+geometry capability; YouTube and Crunchyroll own independent measurement and
+subscriptions; shared layout consumes normalized geometry without provider-ID
+branches. Overlay-binding and playback-policy migration remain in this task.
+
 Detailed overlay-geometry execution plan:
 `docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md`.
 
@@ -700,9 +706,9 @@ player-chrome subscriptions; it never branches on `adapter.id`.
 
 - [ ] Move overlay target, viewport element, and native-double-click decisions
   into each adapter's overlay binding.
-- [ ] Move Crunchyroll player chrome measurement behind the provider-neutral
+- [x] Move Crunchyroll player chrome measurement behind the provider-neutral
   `getOverlayGeometry()` and `subscribeOverlayGeometry()` capability.
-- [ ] Add the independent YouTube player-chrome implementation and route safe
+- [x] Add the independent YouTube player-chrome implementation and route safe
   insets, launcher anchors, and panel anchors through the same value contract.
 - [ ] Change playback helpers to receive `AdapterPlaybackPolicy`, not an
   adapter ID string.

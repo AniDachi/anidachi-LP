@@ -19,6 +19,11 @@ anchors.
 **Tech Stack:** TypeScript 6, React 19, WXT 0.20, MV3 isolated-world content
 scripts, `ResizeObserver`, `MutationObserver`, `requestAnimationFrame`, Vitest 4.
 
+**Implementation status (2026-07-22):** Tasks 1-6 are complete through commit
+`fc8aabc`. Automated extension checks pass at 61 test files / 628 tests after
+the final lifecycle regressions. Task 7 documentation and artifact work is in
+progress; real-browser and two-profile acceptance remain pending.
+
 ## Prerequisites
 
 - Complete the manual staging acceptance and PR checkpoint for PR 1 in
@@ -159,7 +164,7 @@ Subscription semantics:
 - Produces: `VideoAdapter.getOverlayGeometry()` and
   `VideoAdapter.subscribeOverlayGeometry()`.
 
-- [ ] **Step 1: Write failing normalization and equality tests**
+- [x] **Step 1: Write failing normalization and equality tests**
 
 Cover finite non-negative values, integer rounding, viewport bounds, invalid
 input fallback, structural cloning, and equality after normalization.
@@ -180,7 +185,7 @@ expect(
 });
 ```
 
-- [ ] **Step 2: Run the new test and verify RED**
+- [x] **Step 2: Run the new test and verify RED**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -189,7 +194,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
 
 Expected: failure because `overlay-geometry.ts` does not exist.
 
-- [ ] **Step 3: Implement the contract and safe defaults**
+- [x] **Step 3: Implement the contract and safe defaults**
 
 Use these literal defaults:
 
@@ -206,7 +211,7 @@ export const DEFAULT_PLAYER_OVERLAY_GEOMETRY: PlayerOverlayGeometry = {
 Clamp insets and anchors to the measured viewport when its dimensions are
 usable. Keep defaults unchanged when width or height is zero.
 
-- [ ] **Step 4: Add side-effect-free Generic HTML5 defaults**
+- [x] **Step 4: Add side-effect-free Generic HTML5 defaults**
 
 `Html5VideoAdapter.getOverlayGeometry()` returns a normalized copy whose
 viewport comes from `container.getBoundingClientRect()`. Its subscription is a
@@ -221,7 +226,7 @@ subscribeOverlayGeometry(
 }
 ```
 
-- [ ] **Step 5: Run focused tests and extension typecheck**
+- [x] **Step 5: Run focused tests and extension typecheck**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -232,7 +237,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: focused tests and typecheck pass.
 
-- [ ] **Step 6: Commit the contract**
+- [x] **Step 6: Commit the contract**
 
 ```bash
 git add apps/extension/src/source-adapters/core \
@@ -254,7 +259,7 @@ git commit -m "refactor(extension): define provider overlay geometry"
 - Produces: `getCrunchyrollPlayerOverlayGeometry()` and
   `subscribeCrunchyrollPlayerOverlayGeometry()`.
 
-- [ ] **Step 1: Extend existing Crunchyroll characterization tests**
+- [x] **Step 1: Extend existing Crunchyroll characterization tests**
 
 Keep the current expected geometry equivalent:
 
@@ -271,7 +276,7 @@ expect(getCrunchyrollPlayerOverlayGeometry(container)).toEqual({
 Also test hidden controls, unusable containers, repeated identical geometry,
 and idempotent subscription disposal.
 
-- [ ] **Step 2: Run the Crunchyroll test and verify RED**
+- [x] **Step 2: Run the Crunchyroll test and verify RED**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -280,13 +285,13 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
 
 Expected: failure because the new exports do not exist.
 
-- [ ] **Step 3: Map the current measurement into the provider-neutral result contract**
+- [x] **Step 3: Map the current measurement into the provider-neutral result contract**
 
 Preserve all existing selectors, visibility rules, constants, and clamping.
 Rename only the returned shape. When controls are hidden, preserve the current
 Crunchyroll runtime behavior by returning `safeInsets.bottomPx = 0`.
 
-- [ ] **Step 4: Keep Crunchyroll observation inside its provider file**
+- [x] **Step 4: Keep Crunchyroll observation inside its provider file**
 
 The provider subscription must use:
 
@@ -299,7 +304,7 @@ The provider subscription must use:
 Observe only `class`, `style`, `aria-hidden`, `hidden`, and `data-testid`
 attributes plus child-list changes required for replaced controls.
 
-- [ ] **Step 5: Expose capability methods from `CrunchyrollVideoAdapter`**
+- [x] **Step 5: Expose capability methods from `CrunchyrollVideoAdapter`**
 
 ```ts
 override getOverlayGeometry(): PlayerOverlayGeometry {
@@ -313,7 +318,7 @@ override subscribeOverlayGeometry(
 }
 ```
 
-- [ ] **Step 6: Run Crunchyroll and adapter regressions**
+- [x] **Step 6: Run Crunchyroll and adapter regressions**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -324,7 +329,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
 
 Expected: all tests pass with unchanged Crunchyroll values.
 
-- [ ] **Step 7: Commit the provider migration**
+- [x] **Step 7: Commit the provider migration**
 
 ```bash
 git add apps/extension/src/source-adapters/crunchyroll \
@@ -360,7 +365,7 @@ const YOUTUBE_TOP_ACTION_SELECTORS = [
 ] as const;
 ```
 
-- [ ] **Step 1: Write failing YouTube geometry tests**
+- [x] **Step 1: Write failing YouTube geometry tests**
 
 Cover:
 
@@ -383,7 +388,7 @@ bottomPx = clamp(
 );
 ```
 
-- [ ] **Step 2: Run the YouTube geometry test and verify RED**
+- [x] **Step 2: Run the YouTube geometry test and verify RED**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -392,7 +397,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
 
 Expected: failure because the module does not exist.
 
-- [ ] **Step 3: Implement visual availability checks**
+- [x] **Step 3: Implement visual availability checks**
 
 An element is usable only when:
 
@@ -406,7 +411,7 @@ An element is usable only when:
 Measure the same elements without the opacity condition to obtain stable layout
 geometry while YouTube fades controls out.
 
-- [ ] **Step 4: Implement bottom chrome reservation**
+- [x] **Step 4: Implement bottom chrome reservation**
 
 Use known bottom selectors first. If they are absent, inspect visible buttons,
 sliders, and progress controls in the bottom 30% of the player. Exclude any
@@ -417,7 +422,7 @@ Keep the measured bottom reservation stable across opacity-only hide/show
 transitions. This prevents cameras and chat from jumping every time YouTube
 autohides its controls.
 
-- [ ] **Step 5: Implement top launcher placement**
+- [x] **Step 5: Implement top launcher placement**
 
 Use a nominal launcher size of `92 x 32`, a player margin of `10`, and a gap of
 `8` pixels.
@@ -432,12 +437,12 @@ Use a nominal launcher size of `92 x 32`, a player margin of `10`, and a gap of
 5. If no cluster exists, use `{ topPx: 10, rightPx: 10 }`.
 6. Set the panel anchor to `{ topPx: max(48, launcher.topPx + 40), rightPx: 10 }`.
 
-- [ ] **Step 6: Expose pure geometry from `YouTubeVideoAdapter`**
+- [x] **Step 6: Expose pure geometry from `YouTubeVideoAdapter`**
 
 Add `getOverlayGeometry()` only. Leave subscription as the inherited no-op
 until Task 4.
 
-- [ ] **Step 7: Run focused YouTube tests and typecheck**
+- [x] **Step 7: Run focused YouTube tests and typecheck**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -449,7 +454,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: all focused tests and typecheck pass.
 
-- [ ] **Step 8: Commit pure YouTube measurement**
+- [x] **Step 8: Commit pure YouTube measurement**
 
 ```bash
 git add apps/extension/src/source-adapters/youtube \
@@ -469,7 +474,7 @@ git commit -m "feat(extension): measure youtube player chrome"
 **Interfaces:**
 - Produces: `subscribeYouTubePlayerOverlayGeometry(container, listener)`.
 
-- [ ] **Step 1: Write failing subscription lifecycle tests**
+- [x] **Step 1: Write failing subscription lifecycle tests**
 
 Test initial scheduling, resize, player class mutation, child replacement,
 pointer activity, fullscreen change, transition completion, duplicate-state
@@ -478,7 +483,7 @@ suppression, and repeated disposal.
 The listener must not run twice for two events that resolve to identical
 normalized geometry.
 
-- [ ] **Step 2: Run the subscription tests and verify RED**
+- [x] **Step 2: Run the subscription tests and verify RED**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -487,7 +492,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
 
 Expected: failure because subscription behavior is not implemented.
 
-- [ ] **Step 3: Implement requestAnimationFrame-coalesced measurement**
+- [x] **Step 3: Implement requestAnimationFrame-coalesced measurement**
 
 Register:
 
@@ -500,7 +505,7 @@ Schedule one immediate animation-frame measurement and one delayed measurement
 at 220 ms after a visibility-affecting event to capture YouTube's completed
 fade transition. A new event replaces the pending delayed timer.
 
-- [ ] **Step 4: Implement strict cleanup**
+- [x] **Step 4: Implement strict cleanup**
 
 The disposer must:
 
@@ -510,7 +515,7 @@ The disposer must:
 - clear the delayed transition timer;
 - become a no-op after its first call.
 
-- [ ] **Step 5: Override the YouTube subscription capability**
+- [x] **Step 5: Override the YouTube subscription capability**
 
 ```ts
 override subscribeOverlayGeometry(
@@ -520,7 +525,7 @@ override subscribeOverlayGeometry(
 }
 ```
 
-- [ ] **Step 6: Run focused tests and commit**
+- [x] **Step 6: Run focused tests and commit**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -552,7 +557,7 @@ git commit -m "feat(extension): track youtube overlay geometry"
   `adapter.subscribeOverlayGeometry()`.
 - Produces: provider-independent effective overlay placement.
 
-- [ ] **Step 1: Write failing runtime safe-inset tests**
+- [x] **Step 1: Write failing runtime safe-inset tests**
 
 Replace the bottom-only runtime input with the full provider value:
 
@@ -575,7 +580,7 @@ export interface OverlayLayoutRuntimeContextInput {
 Each effective inset is `max(safePaddingPx, playerSafeInset)`. Test all four
 edges, malformed values, and zero-sized viewports.
 
-- [ ] **Step 2: Run runtime tests and verify RED**
+- [x] **Step 2: Run runtime tests and verify RED**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -584,12 +589,12 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
 
 Expected: failure because runtime accepts only `controlsBottomInsetPx`.
 
-- [ ] **Step 3: Implement full safe-inset mapping**
+- [x] **Step 3: Implement full safe-inset mapping**
 
 Do not add YouTube or Crunchyroll checks to the layout engine. The engine
 continues to consume numeric safe insets only.
 
-- [ ] **Step 4: Replace Crunchyroll-specific React state**
+- [x] **Step 4: Replace Crunchyroll-specific React state**
 
 In `OverlayApp`:
 
@@ -607,7 +612,7 @@ useEffect(() => {
 Delete `CrunchyrollPlayerChromeState` imports and the Crunchyroll-only observer
 effect. Do not replace them with `isYouTube` branches.
 
-- [ ] **Step 5: Route every affected surface through geometry**
+- [x] **Step 5: Route every affected surface through geometry**
 
 Use:
 
@@ -631,7 +636,7 @@ regression test with a launcher shifted more than 160 pixels from the edge.
 
 Do not write effective coordinates back to `OverlayLayoutDefinition` or storage.
 
-- [ ] **Step 6: Add a provider-boundary assertion**
+- [x] **Step 6: Add a provider-boundary assertion**
 
 Extend `provider-boundaries.test.ts` so shared runtime files cannot import
 `youtube/player-chrome` or `crunchyroll/player-chrome` and cannot compare
@@ -640,7 +645,7 @@ assertion scoped to the geometry-mapping block: existing provider-specific
 playback and seek behavior is outside this task and must not be hidden behind a
 renamed helper merely to satisfy a source scan.
 
-- [ ] **Step 7: Run integration tests and provider-ID scan**
+- [x] **Step 7: Run integration tests and provider-ID scan**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -655,7 +660,7 @@ Expected: tests pass. The provider-boundary test verifies that the geometry
 mapping itself contains no provider-ID branches while leaving unrelated
 provider playback behavior explicit for its own later migration.
 
-- [ ] **Step 8: Commit overlay integration**
+- [x] **Step 8: Commit overlay integration**
 
 ```bash
 git add apps/extension/src/overlay-app.tsx \
@@ -683,7 +688,7 @@ git commit -m "refactor(extension): consume player overlay geometry"
   React effect cleanup for geometry subscriptions.
 - Produces: deterministic subscription replacement during SPA player changes.
 
-- [ ] **Step 1: Write failing replacement tests**
+- [x] **Step 1: Write failing replacement tests**
 
 Cover:
 
@@ -695,7 +700,7 @@ Cover:
 - fullscreen replacement does not retain the previous viewport dimensions;
 - unknown YouTube chrome falls back without detaching the room overlay.
 
-- [ ] **Step 2: Run lifecycle tests and verify RED**
+- [x] **Step 2: Run lifecycle tests and verify RED**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
@@ -703,7 +708,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension exec \
   test/source-adapters/youtube/player-chrome.test.ts
 ```
 
-- [ ] **Step 3: Fix cleanup ordering in the lifecycle hooks**
+- [x] **Step 3: Fix cleanup ordering in the lifecycle hooks**
 
 Required ownership and order:
 
@@ -721,14 +726,14 @@ Do not make `AdapterManager` own React state or geometry listeners. Its role is
 to make adapter replacement deterministic; `OverlayApp` owns the subscription
 because it owns the rendered geometry state.
 
-- [ ] **Step 4: Add bounded debug diagnostics**
+- [x] **Step 4: Add bounded debug diagnostics**
 
 Log one structured `overlay.geometry` entry only when normalized geometry
 changes. Include adapter ID, viewport, insets, launcher anchor, panel anchor,
 and controls visibility. Do not log DOM text, page content, or every pointer
 event.
 
-- [ ] **Step 5: Run lifecycle, check, and full extension tests**
+- [x] **Step 5: Run lifecycle, check, and full extension tests**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
@@ -737,7 +742,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test
 
 Expected: full extension suite passes without leaked timers or open handles.
 
-- [ ] **Step 6: Commit lifecycle hardening**
+- [x] **Step 6: Commit lifecycle hardening**
 
 ```bash
 git add apps/extension/src/overlay-app.tsx \
@@ -757,7 +762,7 @@ git commit -m "fix(extension): clean up player geometry lifecycle"
 - Modify: `docs/superpowers/plans/2026-07-22-source-adapters-architecture.md`
 - Modify: `docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md`
 
-- [ ] **Step 1: Document provider ownership and fallback rules**
+- [x] **Step 1: Document provider ownership and fallback rules**
 
 Record:
 
@@ -768,7 +773,7 @@ Record:
 - the manual procedure for updating selectors after YouTube changes;
 - the rule for adding another provider geometry implementation.
 
-- [ ] **Step 2: Run repository checks**
+- [x] **Step 2: Run repository checks**
 
 ```bash
 git diff --check
@@ -777,12 +782,25 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test
 fnm exec --using="$(cat .node-version)" pnpm dev:check
 ```
 
-- [ ] **Step 3: Build and validate staging extension**
+- [x] **Step 3: Build and validate staging extension**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm build:extension:staging
 fnm exec --using="$(cat .node-version)" pnpm validate:extension:staging
 ```
+
+Automated evidence recorded on 2026-07-22:
+
+- `git diff --check`, extension typecheck, and `pnpm dev:check` passed;
+- full extension suite passed: 61 files / 628 tests;
+- staging artifact validation passed with
+  `version_name: fc8aabc-staging-20260722184137`;
+- `pnpm graph:update` completed with 6,873 nodes / 14,339 edges;
+- Graphify query used: `How does provider-owned YouTube player chrome geometry
+  reach shared overlay layout and get disposed during adapter replacement?`;
+- geometry-only rollback base: `c37e6de`;
+- real YouTube modes, two-profile YouTube room acceptance, and Crunchyroll
+  regression acceptance remain pending and are intentionally unchecked below.
 
 - [ ] **Step 4: Run YouTube visual acceptance**
 
