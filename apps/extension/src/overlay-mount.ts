@@ -1,3 +1,8 @@
+import {
+  isYouTubeProviderHost,
+  isYouTubeWatchPage,
+} from "./source-adapters/youtube/url";
+
 export type OverlayMountDecision = "mount" | "relocate" | "update";
 export type OverlayPageDecision = "continue" | "dispose" | "idle";
 
@@ -18,6 +23,10 @@ export function isOverlayAllowedOnPage(pageUrl: string): boolean {
     const hostname = url.hostname.toLowerCase();
     if (hostname === "crunchyroll.com" || hostname.endsWith(".crunchyroll.com")) {
       return /\/watch\/[^/?#]+/i.test(url.pathname);
+    }
+
+    if (isYouTubeProviderHost(hostname)) {
+      return isYouTubeWatchPage(url);
     }
 
     return true;

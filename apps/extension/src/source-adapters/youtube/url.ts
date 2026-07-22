@@ -1,5 +1,29 @@
 const YOUTUBE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{6,}$/;
 
+export function isYouTubeProviderHost(hostname: string): boolean {
+  const normalizedHostname = hostname.toLowerCase();
+  return (
+    isYouTubeHost(normalizedHostname) ||
+    isYouTubeNoCookieHost(normalizedHostname) ||
+    normalizedHostname === "youtu.be" ||
+    normalizedHostname.endsWith(".youtu.be")
+  );
+}
+
+export function isYouTubeWatchPage(url: URL): boolean {
+  const hostname = url.hostname.toLowerCase();
+  if (hostname === "youtu.be" || hostname.endsWith(".youtu.be")) {
+    const segments = url.pathname.split("/").filter(Boolean);
+    return segments.length === 1 && cleanYouTubeVideoId(segments[0]) !== null;
+  }
+
+  if (!isYouTubeHost(hostname) || !/^\/watch\/?$/.test(url.pathname)) {
+    return false;
+  }
+
+  return cleanYouTubeVideoId(url.searchParams.get("v")) !== null;
+}
+
 export function getYouTubeFingerprintKey(url: URL): string {
   const watchId = url.searchParams.get("v");
   if (watchId) {

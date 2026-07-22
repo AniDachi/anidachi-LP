@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-mount.ts": {
-    "mtime": 1784676382.324358,
-    "ast_hash": "2173e0a31f7ef3bf312070828c1f5baa",
+    "mtime": 1784689217.9955988,
+    "ast_hash": "45115727fbe528523b192751b6ccc1e4",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-unmount-cleanup.ts": {
@@ -470,8 +470,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-mount.test.ts": {
-    "mtime": 1784676382.3360512,
-    "ast_hash": "1e905207b1df475fd21a204dcb4283c4",
+    "mtime": 1784689172.9126878,
+    "ast_hash": "b0bb3f3376b98ab50ec688ff8fe939f4",
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-unmount-cleanup.test.tsx": {
@@ -3040,8 +3040,8 @@
     "semantic_hash": ""
   },
   "docs/architecture.md": {
-    "mtime": 1784686230.908708,
-    "ast_hash": "6f8bfddcbcbe4d914396ce963d0daa74",
+    "mtime": 1784689529.5252368,
+    "ast_hash": "41735042a68ef9533b0ad71852d6eddd",
     "semantic_hash": ""
   },
   "docs/crunchyroll-adapter-notes.md": {
@@ -3050,8 +3050,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1784686231.0249624,
-    "ast_hash": "7ecf41549b5d21f0b73179e4d30e4d9a",
+    "mtime": 1784689529.6151009,
+    "ast_hash": "f6ad33336f5fa97816244884c4dfdfd9",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3565,8 +3565,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/youtube/url.ts": {
-    "mtime": 1784682067.25361,
-    "ast_hash": "25509e9c98b85ebcdff69f011b6f7ffd",
+    "mtime": 1784689217.9044855,
+    "ast_hash": "f5c815f98b6f53fd9c7945d05f59871e",
     "semantic_hash": ""
   },
   "apps/extension/test/media-element-playback.test.ts": {
@@ -3690,8 +3690,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md": {
-    "mtime": 1784687895.6269624,
-    "ast_hash": "a0d01cb943600577ec204da331cc365a",
+    "mtime": 1784689529.7050474,
+    "ast_hash": "6b8f9eb6dd311057814b0eaed5aaa6fb",
     "semantic_hash": ""
   }
 }

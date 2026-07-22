@@ -7136,7 +7136,7 @@
       "label": "OverlayMountDecision",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L1",
+      "source_location": "L6",
       "_origin": "ast"
     },
     {
@@ -7144,7 +7144,7 @@
       "label": "OverlayPageDecision",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L2",
+      "source_location": "L7",
       "_origin": "ast"
     },
     {
@@ -7152,7 +7152,7 @@
       "label": "getOverlayPageDecision()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L4",
+      "source_location": "L9",
       "_origin": "ast"
     },
     {
@@ -7160,7 +7160,7 @@
       "label": "isOverlayAllowedOnPage()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L15",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -7168,7 +7168,7 @@
       "label": "getOverlayMountDecision()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L29",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -7176,7 +7176,7 @@
       "label": "shouldRefreshSameVideoAdapter()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L40",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -7184,7 +7184,7 @@
       "label": "mutationsAffectVideo()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L47",
+      "source_location": "L56",
       "_origin": "ast"
     },
     {
@@ -7192,7 +7192,7 @@
       "label": "nodeContainsVideo()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L59",
+      "source_location": "L68",
       "_origin": "ast"
     },
     {
@@ -13116,11 +13116,27 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_extension_src_source_adapters_youtube_url_isyoutubeproviderhost",
+      "label": "isYouTubeProviderHost()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
+      "source_location": "L3",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_source_adapters_youtube_url_isyoutubewatchpage",
+      "label": "isYouTubeWatchPage()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_extension_src_source_adapters_youtube_url_getyoutubefingerprintkey",
       "label": "getYouTubeFingerprintKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L3",
+      "source_location": "L27",
       "_origin": "ast"
     },
     {
@@ -13128,7 +13144,7 @@
       "label": "parseYouTubeVideoId()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L13",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -13136,7 +13152,7 @@
       "label": "isYouTubeHost()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L33",
+      "source_location": "L57",
       "_origin": "ast"
     },
     {
@@ -13144,7 +13160,7 @@
       "label": "isYouTubeNoCookieHost()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L37",
+      "source_location": "L61",
       "_origin": "ast"
     },
     {
@@ -13152,7 +13168,7 @@
       "label": "getPathVideoId()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L41",
+      "source_location": "L65",
       "_origin": "ast"
     },
     {
@@ -13160,7 +13176,7 @@
       "label": "cleanYouTubeVideoId()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L46",
+      "source_location": "L70",
       "_origin": "ast"
     },
     {
@@ -40528,7 +40544,7 @@
       "label": "Fullscreen Overlay Decision",
       "file_type": "document",
       "source_file": "docs/architecture.md",
-      "source_location": "L333",
+      "source_location": "L336",
       "_origin": "ast"
     },
     {
@@ -40536,7 +40552,7 @@
       "label": "Room Protocol",
       "file_type": "document",
       "source_file": "docs/architecture.md",
-      "source_location": "L348",
+      "source_location": "L351",
       "_origin": "ast"
     },
     {
@@ -40544,7 +40560,7 @@
       "label": "Sync Algorithm",
       "file_type": "document",
       "source_file": "docs/architecture.md",
-      "source_location": "L376",
+      "source_location": "L379",
       "_origin": "ast"
     },
     {
@@ -40552,7 +40568,7 @@
       "label": "Identity and Invite Flow",
       "file_type": "document",
       "source_file": "docs/architecture.md",
-      "source_location": "L394",
+      "source_location": "L397",
       "_origin": "ast"
     },
     {
@@ -40560,7 +40576,7 @@
       "label": "Hotkeys",
       "file_type": "document",
       "source_file": "docs/architecture.md",
-      "source_location": "L404",
+      "source_location": "L407",
       "_origin": "ast"
     },
     {
@@ -40568,7 +40584,7 @@
       "label": "Known Constraints",
       "file_type": "document",
       "source_file": "docs/architecture.md",
-      "source_location": "L426",
+      "source_location": "L429",
       "_origin": "ast"
     },
     {
@@ -40576,7 +40592,7 @@
       "label": "Verification Commands",
       "file_type": "document",
       "source_file": "docs/architecture.md",
-      "source_location": "L438",
+      "source_location": "L441",
       "_origin": "ast"
     },
     {
@@ -40584,7 +40600,7 @@
       "label": "Important Files",
       "file_type": "document",
       "source_file": "docs/architecture.md",
-      "source_location": "L465",
+      "source_location": "L468",
       "_origin": "ast"
     },
     {
@@ -40800,7 +40816,7 @@
       "label": "Known Fragile Areas",
       "file_type": "document",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L392",
+      "source_location": "L393",
       "_origin": "ast"
     },
     {
@@ -40808,7 +40824,7 @@
       "label": "Documentation Map",
       "file_type": "document",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L439",
+      "source_location": "L440",
       "_origin": "ast"
     },
     {
@@ -44904,7 +44920,7 @@
       "label": "PR 2: Lifecycle, Capabilities, And First-Class YouTube",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L562",
+      "source_location": "L565",
       "_origin": "ast"
     },
     {
@@ -44912,7 +44928,7 @@
       "label": "Task 7: Add The Adapter Lifecycle Manager",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L564",
+      "source_location": "L567",
       "_origin": "ast"
     },
     {
@@ -44920,7 +44936,7 @@
       "label": "Task 8: Replace Provider ID Branches With Capabilities And Policies",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L613",
+      "source_location": "L616",
       "_origin": "ast"
     },
     {
@@ -44928,7 +44944,7 @@
       "label": "Task 9: Move Source Descriptors And Progress Into Providers",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L656",
+      "source_location": "L659",
       "_origin": "ast"
     },
     {
@@ -44936,7 +44952,7 @@
       "label": "Task 10: Add Safe Provider Navigation And YouTube Source Switching",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L688",
+      "source_location": "L691",
       "_origin": "ast"
     },
     {
@@ -44944,7 +44960,7 @@
       "label": "Task 11: Provider-Aware Detection Hardening",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L733",
+      "source_location": "L736",
       "_origin": "ast"
     },
     {
@@ -44952,7 +44968,7 @@
       "label": "Task 12: Final Verification, Documentation, And PR 2",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L761",
+      "source_location": "L764",
       "_origin": "ast"
     },
     {
@@ -44960,7 +44976,7 @@
       "label": "Required Automated Verification",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L789",
+      "source_location": "L792",
       "_origin": "ast"
     },
     {
@@ -44968,7 +44984,7 @@
       "label": "Definition Of Done",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L805",
+      "source_location": "L808",
       "_origin": "ast"
     },
     {
@@ -44976,7 +44992,7 @@
       "label": "Rollback",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L822",
+      "source_location": "L825",
       "_origin": "ast"
     },
     {
@@ -72807,11 +72823,41 @@
     },
     {
       "source": "apps_extension_src_overlay_mount",
+      "target": "apps_extension_src_source_adapters_youtube_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/overlay-mount.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_mount",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubeproviderhost",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/overlay-mount.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_mount",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubewatchpage",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/overlay-mount.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_mount",
       "target": "apps_extension_src_overlay_mount_overlaymountdecision",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L1",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -72820,7 +72866,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L2",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -72829,7 +72875,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L4",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -72838,7 +72884,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L15",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -72847,7 +72893,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L29",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -72856,7 +72902,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L40",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -72865,7 +72911,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L47",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -72874,7 +72920,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L59",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -72884,7 +72930,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L8",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -72894,7 +72940,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L50",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -88401,7 +88447,7 @@
     },
     {
       "source": "apps_extension_src_source_adapters_youtube_url",
-      "target": "apps_extension_src_source_adapters_youtube_url_getyoutubefingerprintkey",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubeproviderhost",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
@@ -88410,7 +88456,7 @@
     },
     {
       "source": "apps_extension_src_source_adapters_youtube_url",
-      "target": "apps_extension_src_source_adapters_youtube_url_parseyoutubevideoid",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubewatchpage",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
@@ -88419,16 +88465,16 @@
     },
     {
       "source": "apps_extension_src_source_adapters_youtube_url",
-      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubehost",
+      "target": "apps_extension_src_source_adapters_youtube_url_getyoutubefingerprintkey",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L33",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_source_adapters_youtube_url",
-      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubenocookiehost",
+      "target": "apps_extension_src_source_adapters_youtube_url_parseyoutubevideoid",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
@@ -88437,11 +88483,29 @@
     },
     {
       "source": "apps_extension_src_source_adapters_youtube_url",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubehost",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_source_adapters_youtube_url",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubenocookiehost",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_source_adapters_youtube_url",
       "target": "apps_extension_src_source_adapters_youtube_url_getpathvideoid",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L41",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -88450,7 +88514,47 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L46",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_source_adapters_youtube_url_isyoutubeproviderhost",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubehost",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_source_adapters_youtube_url_isyoutubeproviderhost",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubenocookiehost",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_source_adapters_youtube_url_isyoutubewatchpage",
+      "target": "apps_extension_src_source_adapters_youtube_url_cleanyoutubevideoid",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_source_adapters_youtube_url_isyoutubewatchpage",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubehost",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -88460,7 +88564,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L15",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -88470,7 +88574,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L18",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -88480,7 +88584,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L19",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -88490,7 +88594,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/url.ts",
-      "source_location": "L22",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -161529,7 +161633,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/architecture.md",
-      "source_location": "L333",
+      "source_location": "L336",
       "weight": 1.0
     },
     {
@@ -161538,7 +161642,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/architecture.md",
-      "source_location": "L348",
+      "source_location": "L351",
       "weight": 1.0
     },
     {
@@ -161547,7 +161651,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/architecture.md",
-      "source_location": "L376",
+      "source_location": "L379",
       "weight": 1.0
     },
     {
@@ -161556,7 +161660,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/architecture.md",
-      "source_location": "L394",
+      "source_location": "L397",
       "weight": 1.0
     },
     {
@@ -161565,7 +161669,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/architecture.md",
-      "source_location": "L404",
+      "source_location": "L407",
       "weight": 1.0
     },
     {
@@ -161574,7 +161678,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/architecture.md",
-      "source_location": "L426",
+      "source_location": "L429",
       "weight": 1.0
     },
     {
@@ -161583,7 +161687,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/architecture.md",
-      "source_location": "L438",
+      "source_location": "L441",
       "weight": 1.0
     },
     {
@@ -161592,7 +161696,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/architecture.md",
-      "source_location": "L465",
+      "source_location": "L468",
       "weight": 1.0
     },
     {
@@ -161817,7 +161921,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L392",
+      "source_location": "L393",
       "weight": 1.0
     },
     {
@@ -161826,7 +161930,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L439",
+      "source_location": "L440",
       "weight": 1.0
     },
     {
@@ -166173,7 +166277,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L562",
+      "source_location": "L565",
       "weight": 1.0
     },
     {
@@ -166182,7 +166286,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L564",
+      "source_location": "L567",
       "weight": 1.0
     },
     {
@@ -166191,7 +166295,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L613",
+      "source_location": "L616",
       "weight": 1.0
     },
     {
@@ -166200,7 +166304,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L656",
+      "source_location": "L659",
       "weight": 1.0
     },
     {
@@ -166209,7 +166313,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L688",
+      "source_location": "L691",
       "weight": 1.0
     },
     {
@@ -166218,7 +166322,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L733",
+      "source_location": "L736",
       "weight": 1.0
     },
     {
@@ -166227,7 +166331,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L761",
+      "source_location": "L764",
       "weight": 1.0
     },
     {
@@ -166236,7 +166340,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L789",
+      "source_location": "L792",
       "weight": 1.0
     },
     {
@@ -166245,7 +166349,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L805",
+      "source_location": "L808",
       "weight": 1.0
     },
     {
@@ -166254,7 +166358,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L822",
+      "source_location": "L825",
       "weight": 1.0
     },
     {
@@ -175556,6 +175660,28 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-layout-interaction.ts",
       "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_mount_isoverlayallowedonpage",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubeproviderhost",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/overlay-mount.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_overlay_mount_isoverlayallowedonpage",
+      "target": "apps_extension_src_source_adapters_youtube_url_isyoutubewatchpage",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/overlay-mount.ts",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -185895,7 +186021,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-mount.ts",
-      "source_location": "L64",
+      "source_location": "L73",
       "weight": 1.0
     },
     {

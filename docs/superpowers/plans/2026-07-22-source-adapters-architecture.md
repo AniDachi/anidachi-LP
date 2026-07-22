@@ -552,10 +552,13 @@ Automated evidence recorded on 2026-07-22:
   and extension 546 tests;
 - narrow staging artifact validated as
   `dd7f88f-staging-20260722093846` with no broad host permissions;
-- Graphify rebuilt to 6,689 nodes / 13,905 edges and resolves the new registry
+- Graphify rebuilt to 6,691 nodes / 13,916 edges and resolves the new registry
   and source descriptor without the removed facade paths.
 - final whole-branch review passed after restoring the legacy YouTube progress
   gate for blank or invalid `v` parameters in `dd7f88f`.
+- staging review found preview players on non-watch YouTube routes; page
+  eligibility now permits only valid `/watch?v=...` pages and direct
+  `youtu.be` video links, and disposes an existing overlay after leaving them.
 
 ---
 

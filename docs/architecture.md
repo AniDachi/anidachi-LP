@@ -312,6 +312,9 @@ Generic adapter:
 
 YouTube adapter:
 
+- mounts the overlay only on full `/watch?v=...` pages or direct `youtu.be`
+  video links; preview feeds, search/channel pages, Shorts, and embeds are
+  intentionally blocked;
 - uses `#movie_player` / `.html5-video-player` as the container;
 - uses YouTube video id for fingerprint;
 - uses YouTube native fullscreen button for fullscreen;
