@@ -10,6 +10,8 @@ import {
   type CrunchyrollControlResult,
 } from "./crunchyroll-control";
 import { controlsDebugSnapshot, logDebug, videoDebugSnapshot } from "./debug-log";
+import { GenericVideoAdapter } from "./source-adapters/generic/adapter";
+import { genericDefinition } from "./source-adapters/generic/definition";
 import { Html5VideoAdapter } from "./source-adapters/core/html5-video-adapter";
 import {
   canonicalWatchSourceUrl,
@@ -17,103 +19,15 @@ import {
 } from "./source-adapters/core/source-url";
 import { findBestVideo, findPlayerContainer } from "./source-adapters/core/video-discovery";
 import type { PlayerEvent, SeekOptions, VideoAdapter } from "./source-adapters/core/types";
+import { youtubeDefinition } from "./source-adapters/youtube/definition";
 
 export type { PlayerEvent, SeekOptions, VideoAdapter } from "./source-adapters/core/types";
 export { Html5VideoAdapter };
+export { GenericVideoAdapter };
 export {
   canonicalWatchSourceUrl,
   normalizeVideoFingerprint,
 };
-
-interface YouTubeVolumePlayer extends HTMLElement {
-  getVolume?: () => number;
-  setVolume?: (volume: number) => void;
-  isMuted?: () => boolean;
-  mute?: () => void;
-  unMute?: () => void;
-}
-
-export class GenericVideoAdapter extends Html5VideoAdapter {}
-
-class YouTubeVideoAdapter extends GenericVideoAdapter {
-  override readonly id = "youtube";
-  override readonly name = "YouTube";
-
-  override getTitle(): string | null {
-    const title =
-      document.querySelector<HTMLHeadingElement>("h1.ytd-watch-metadata")?.innerText ??
-      document.querySelector<HTMLMetaElement>('meta[name="title"]')?.content ??
-      super.getTitle();
-    return title?.trim() || null;
-  }
-
-  override getFingerprint(): string {
-    return normalizeVideoFingerprint(`youtube|${getYouTubeVideoId() ?? location.pathname}`);
-  }
-
-  override isFullscreen(): boolean {
-    const fullscreenElement = document.fullscreenElement;
-    return (
-      this.container.classList.contains("ytp-fullscreen") ||
-      fullscreenElement === this.container ||
-      (fullscreenElement instanceof HTMLElement &&
-        (fullscreenElement.contains(this.container) || this.container.contains(fullscreenElement)))
-    );
-  }
-
-  override async enterFullscreen(): Promise<void> {
-    const button = this.container.querySelector<HTMLButtonElement>(".ytp-fullscreen-button");
-    if (button) {
-      button.click();
-      return;
-    }
-
-    await super.enterFullscreen();
-  }
-
-  override async exitFullscreen(): Promise<void> {
-    const button = this.container.querySelector<HTMLButtonElement>(".ytp-fullscreen-button");
-    if (button && this.isFullscreen()) {
-      button.click();
-      return;
-    }
-
-    await super.exitFullscreen();
-  }
-
-  override duckVolume(targetVolume = 0.1): () => void {
-    const player = this.container as YouTubeVolumePlayer;
-    if (typeof player.getVolume !== "function" || typeof player.setVolume !== "function") {
-      return super.duckVolume(targetVolume);
-    }
-
-    const previousPlayerVolume = clampVolumePercent(player.getVolume());
-    const previousVideoVolume = this.video.volume;
-    const previousVideoMuted = this.video.muted;
-    const wasMuted = typeof player.isMuted === "function" ? player.isMuted() : this.video.muted;
-    let restored = false;
-
-    player.setVolume(Math.round(Math.min(previousPlayerVolume, targetVolume * 100)));
-    this.video.volume = Math.min(previousVideoVolume, targetVolume);
-
-    return () => {
-      if (restored) {
-        return;
-      }
-
-      restored = true;
-      player.setVolume?.(previousPlayerVolume);
-      this.video.volume = previousVideoVolume;
-      this.video.muted = previousVideoMuted;
-
-      if (wasMuted) {
-        player.mute?.();
-      } else {
-        player.unMute?.();
-      }
-    };
-  }
-}
 
 class CrunchyrollVideoAdapter extends GenericVideoAdapter {
   override readonly id = "crunchyroll";
@@ -294,14 +208,6 @@ class CrunchyrollVideoAdapter extends GenericVideoAdapter {
   }
 }
 
-function clampVolumePercent(volume: number): number {
-  if (!Number.isFinite(volume)) {
-    return 100;
-  }
-
-  return Math.max(0, Math.min(100, volume));
-}
-
 export function runCrunchyrollMainCommand(
   action: CrunchyrollControlAction,
   payload: {
@@ -438,21 +344,6 @@ function watchProviderFromAdapterId(adapterId: string): WatchSourceDescriptor["p
   return "generic";
 }
 
-function getDocumentVideoKey(): string {
-  return `${location.pathname}${location.search}`;
-}
-
-function getYouTubeVideoId(): string | null {
-  const url = new URL(location.href);
-  const watchId = url.searchParams.get("v");
-  if (watchId) {
-    return watchId;
-  }
-
-  const embedMatch = url.pathname.match(/\/(?:embed|shorts)\/([^/?#]+)/);
-  return embedMatch?.[1] ?? null;
-}
-
 function getCrunchyrollVideoKey(): string {
   const watchMatch = location.pathname.match(/\/watch\/([^/?#]+)/);
   if (watchMatch?.[1]) {
@@ -468,9 +359,9 @@ export function findBestVideoAdapter(): VideoAdapter | null {
     return null;
   }
 
-  const youtubeContainer = findYouTubePlayerContainer(winner);
-  if (youtubeContainer) {
-    return new YouTubeVideoAdapter(winner, youtubeContainer);
+  const youtubeAdapter = youtubeDefinition.detect(winner);
+  if (youtubeAdapter) {
+    return youtubeAdapter;
   }
 
   const crunchyrollContainer = findCrunchyrollPlayerContainer(winner);
@@ -478,17 +369,7 @@ export function findBestVideoAdapter(): VideoAdapter | null {
     return new CrunchyrollVideoAdapter(winner, crunchyrollContainer);
   }
 
-  return new GenericVideoAdapter(winner, findPlayerContainer(winner));
-}
-
-function findYouTubePlayerContainer(video: HTMLVideoElement): HTMLElement | null {
-  const player = video.closest<HTMLElement>("#movie_player, .html5-video-player");
-  if (player) {
-    return player;
-  }
-
-  const fallback = document.querySelector<HTMLElement>("#movie_player, .html5-video-player");
-  return fallback?.contains(video) ? fallback : null;
+  return genericDefinition.detect(winner);
 }
 
 function findCrunchyrollPlayerContainer(video: HTMLVideoElement): HTMLElement | null {
