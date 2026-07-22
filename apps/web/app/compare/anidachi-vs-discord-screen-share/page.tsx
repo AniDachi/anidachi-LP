@@ -69,7 +69,7 @@ export default function AnidachiVsDiscordScreenSharePage() {
       description="Compare Discord Go Live setups with synced Crunchyroll watchrooms."
       url="/compare/anidachi-vs-discord-screen-share"
       datePublished="2026-05-08"
-      dateModified="2026-07-19"
+      dateModified="2026-07-22"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -152,6 +152,14 @@ export default function AnidachiVsDiscordScreenSharePage() {
         Related
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link
+            href="/guides/crunchyroll-watch-party-with-discord"
+            className="hover:underline"
+          >
+            Crunchyroll watch party with Discord
+          </Link>
+        </li>
         <li>
           <Link
             href="/guides/can-you-screen-share-crunchyroll-on-discord"

@@ -124,9 +124,33 @@ function inferSitemapMeta(urlPath: string): {
     return { changeFrequency: "monthly", priority: 0.75 };
   }
   if (urlPath.startsWith("/compare/")) {
+    if (
+      urlPath.includes("teleparty") ||
+      urlPath.includes("crunchyroll-party") ||
+      urlPath.includes("discord-screen-share") ||
+      urlPath.includes("metastream") ||
+      urlPath.includes("hyperbeam") ||
+      urlPath.includes("twoseven") ||
+      urlPath.includes("watch2gether") ||
+      urlPath.includes("kast")
+    ) {
+      return { changeFrequency: "monthly", priority: 0.84 };
+    }
     return { changeFrequency: "monthly", priority: 0.7 };
   }
   if (urlPath.startsWith("/guides/")) {
+    if (
+      urlPath.includes("teleparty") ||
+      urlPath.includes("watch2gether-alternatives") ||
+      urlPath.includes("kast-alternatives") ||
+      urlPath.includes("crunchyroll-party-with-discord") ||
+      urlPath.includes("is-crunchyroll-party-worth-it") ||
+      urlPath.includes("without-account-sharing") ||
+      urlPath.includes("premium-for-watch-party") ||
+      urlPath.includes("not-working")
+    ) {
+      return { changeFrequency: "monthly", priority: 0.83 };
+    }
     if (
       urlPath.includes("best-anime-to-watch") ||
       urlPath.includes("best-isekai-anime-to-watch") ||
