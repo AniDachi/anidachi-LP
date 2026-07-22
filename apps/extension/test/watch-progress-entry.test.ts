@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { getWatchProgressEntryForAdapter } from "../src/watch-progress-entry";
-import type { VideoAdapter } from "../src/video-adapter";
+import type { VideoAdapter } from "../src/source-adapters/core/types";
 
 describe("watch progress entry extraction", () => {
   afterEach(() => {

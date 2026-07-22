@@ -10,13 +10,13 @@ import {
   CRUNCHYROLL_CONTROL_SOURCE,
   type CrunchyrollControlRequest,
   type CrunchyrollControlResult,
-} from "../src/crunchyroll-control";
+} from "../src/source-adapters/crunchyroll/bridge-contract";
+import { runCrunchyrollMainCommand } from "../src/source-adapters/crunchyroll/bridge-client";
 import {
   buildWatchSourceDescriptor,
   canonicalWatchSourceUrl,
   findBestVideoAdapter,
   normalizeVideoFingerprint,
-  runCrunchyrollMainCommand,
 } from "../src/video-adapter";
 
 describe("generic video adapter detection", () => {

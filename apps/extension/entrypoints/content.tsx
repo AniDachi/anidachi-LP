@@ -1,22 +1,23 @@
 import { createRoot, type Root } from "react-dom/client";
 import { defineContentScript } from "wxt/utils/define-content-script";
-import { startCrunchyrollStudyIfEnabled } from "../src/crunchyroll-study";
-import { startDebugProbe } from "../src/debug-probe";
 import { elementDebugSnapshot, logDebug, videoDebugSnapshot } from "../src/debug-log";
+import { startDebugProbe } from "../src/debug-probe";
 import {
   ANIDACHI_COMPOSER_OPEN_ATTR,
   ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
   ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
   isMessageComposerShortcutEvent,
 } from "../src/message-composer-events";
+import { OverlayApp } from "../src/overlay-app";
 import {
   getOverlayMountDecision,
   getOverlayPageDecision,
   mutationsAffectVideo,
   shouldRefreshSameVideoAdapter,
 } from "../src/overlay-mount";
-import { OverlayApp } from "../src/overlay-app";
-import { findBestVideoAdapter, type VideoAdapter } from "../src/video-adapter";
+import type { VideoAdapter } from "../src/source-adapters/core/types";
+import { startCrunchyrollStudyIfEnabled } from "../src/source-adapters/crunchyroll/study";
+import { findBestVideoAdapter } from "../src/video-adapter";
 
 interface MountedOverlay {
   adapter: VideoAdapter;

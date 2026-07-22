@@ -301,8 +301,8 @@ Watch library and progress tracking:
 
 - `apps/extension/src/watch-progress.ts`
 - `apps/extension/src/watch-library-client.ts`
-- `apps/extension/src/crunchyroll-progress.ts`
-- `apps/extension/src/crunchyroll-season.ts`
+- `apps/extension/src/source-adapters/crunchyroll/progress.ts`
+- `apps/extension/src/source-adapters/crunchyroll/season.ts`
 - `apps/web/lib/anidachi-auth/watch-library.ts`
 - dashboard/watch-library routes under `apps/web/app/*`
 
