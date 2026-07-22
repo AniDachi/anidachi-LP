@@ -220,7 +220,14 @@ describe("YouTube player chrome", () => {
 		expect(mutationObservers).toHaveLength(1);
 		expect(mutationObservers[0]?.observedTarget).toBe(container);
 		expect(mutationObservers[0]?.options).toEqual({
-			attributeFilter: ["class", "style", "aria-hidden", "hidden"],
+			attributeFilter: [
+				"class",
+				"style",
+				"aria-hidden",
+				"hidden",
+				"role",
+				"type",
+			],
 			attributes: true,
 			childList: true,
 			subtree: true,
@@ -249,6 +256,193 @@ describe("YouTube player chrome", () => {
 		);
 
 		dispose();
+	});
+
+	it("ignores unrelated playback mutations without scheduling visibility measurement", () => {
+		const { mutationObservers, pendingAnimationFrames, runAnimationFrames } =
+			installGeometryObserverStubs();
+		document.body.innerHTML = `
+      <div id="movie_player">
+        <div id="playback-surface"><div id="playback-progress"></div></div>
+        <div class="ytp-chrome-bottom"></div>
+      </div>
+    `;
+		const container = getPlayer();
+		const playbackSurface = document.querySelector(
+			"#playback-surface",
+		) as HTMLElement;
+		const playbackProgress = document.querySelector(
+			"#playback-progress",
+		) as HTMLElement;
+		const unrelatedChild = document.createElement("span");
+		mockRect(container, 0, 0, 960, 540);
+		mockRect(document.querySelector(".ytp-chrome-bottom"), 0, 450, 960, 90);
+		const containerRectRead = vi.spyOn(container, "getBoundingClientRect");
+		const bottomChromeRectRead = vi.spyOn(
+			document.querySelector(".ytp-chrome-bottom") as HTMLElement,
+			"getBoundingClientRect",
+		);
+
+		const dispose = subscribeYouTubePlayerOverlayGeometry(container, vi.fn());
+		runAnimationFrames();
+		containerRectRead.mockClear();
+		bottomChromeRectRead.mockClear();
+		playbackProgress.className = "playing";
+		playbackSurface.append(unrelatedChild);
+		mutationObservers[0]?.trigger([
+			{
+				attributeName: "class",
+				target: playbackProgress,
+				type: "attributes",
+			} as unknown as MutationRecord,
+			{
+				addedNodes: [unrelatedChild] as unknown as NodeList,
+				removedNodes: [] as unknown as NodeList,
+				target: playbackSurface,
+				type: "childList",
+			} as unknown as MutationRecord,
+		]);
+		const scheduledAnimationFrames = pendingAnimationFrames();
+		const scheduledTimers = vi.getTimerCount();
+		dispose();
+
+		expect(scheduledAnimationFrames).toBe(0);
+		expect(scheduledTimers).toBe(0);
+		expect(containerRectRead).not.toHaveBeenCalled();
+		expect(bottomChromeRectRead).not.toHaveBeenCalled();
+	});
+
+	it.each([
+		"class",
+		"style",
+		"aria-hidden",
+		"hidden",
+	])("schedules visibility measurement for known chrome %s mutations", (attributeName) => {
+		const { mutationObservers, pendingAnimationFrames, runAnimationFrames } =
+			installGeometryObserverStubs();
+		document.body.innerHTML = `
+        <div id="movie_player">
+          <div class="ytp-chrome-bottom"></div>
+        </div>
+      `;
+		const container = getPlayer();
+		const bottomChrome = document.querySelector(
+			".ytp-chrome-bottom",
+		) as HTMLElement;
+		mockRect(container, 0, 0, 960, 540);
+		mockRect(bottomChrome, 0, 450, 960, 90);
+
+		const dispose = subscribeYouTubePlayerOverlayGeometry(container, vi.fn());
+		runAnimationFrames();
+		mutationObservers[0]?.trigger([
+			{
+				attributeName,
+				target: bottomChrome,
+				type: "attributes",
+			} as unknown as MutationRecord,
+		]);
+		const scheduledAnimationFrames = pendingAnimationFrames();
+		const scheduledTimers = vi.getTimerCount();
+		dispose();
+
+		expect(scheduledAnimationFrames).toBe(1);
+		expect(scheduledTimers).toBe(1);
+	});
+
+	it.each([
+		{ attributeName: "role", tagName: "div", value: "button" },
+		{ attributeName: "type", tagName: "input", value: "range" },
+	])("starts observing a fallback control after dynamic $attributeName assignment", ({
+		attributeName,
+		tagName,
+		value,
+	}) => {
+		const {
+			mutationObservers,
+			pendingAnimationFrames,
+			resizeObservers,
+			runAnimationFrames,
+		} = installGeometryObserverStubs();
+		document.body.innerHTML = `
+        <div id="movie_player">
+          <${tagName} id="dynamic-control"></${tagName}>
+        </div>
+		`;
+		const container = getPlayer();
+		const dynamicControl = document.querySelector(
+			"#dynamic-control",
+		) as HTMLElement;
+		mockRect(container, 0, 0, 960, 540);
+		mockRect(dynamicControl, 20, 500, 80, 32);
+
+		const dispose = subscribeYouTubePlayerOverlayGeometry(container, vi.fn());
+		runAnimationFrames();
+		dynamicControl.setAttribute(attributeName, value);
+		mutationObservers[0]?.trigger([
+			{
+				attributeName,
+				target: dynamicControl,
+				type: "attributes",
+			} as unknown as MutationRecord,
+		]);
+
+		expect(mutationObservers[0]?.options?.attributeFilter).toEqual(
+			expect.arrayContaining(["role", "type"]),
+		);
+		expect(resizeObservers[0]?.observedTargets).toContain(dynamicControl);
+		expect(pendingAnimationFrames()).toBe(1);
+		expect(vi.getTimerCount()).toBe(1);
+		vi.runOnlyPendingTimers();
+		runAnimationFrames();
+		dispose();
+	});
+
+	it("observes active fallback controls and updates geometry when they resize", () => {
+		const { resizeObservers, runAnimationFrames } =
+			installGeometryObserverStubs();
+		document.body.innerHTML = `
+      <div id="movie_player">
+        <button id="top-action"></button>
+        <button id="bottom-control"></button>
+        <button id="center-control"></button>
+        <div id="overlay-root" role="button"></div>
+      </div>
+    `;
+		const container = getPlayer();
+		const topAction = document.querySelector("#top-action") as HTMLElement;
+		const bottomControl = document.querySelector(
+			"#bottom-control",
+		) as HTMLElement;
+		const centerControl = document.querySelector(
+			"#center-control",
+		) as HTMLElement;
+		const overlayRoot = document.querySelector("#overlay-root") as HTMLElement;
+		mockRect(container, 0, 0, 960, 540);
+		mockRect(topAction, 900, 14, 40, 32);
+		mockRect(bottomControl, 20, 500, 40, 32);
+		mockRect(centerControl, 460, 260, 40, 32);
+		mockRect(overlayRoot, 0, 0, 960, 540);
+		const listener = vi.fn();
+
+		const dispose = subscribeYouTubePlayerOverlayGeometry(container, listener);
+		const observedTargets = new Set(resizeObservers[0]?.observedTargets);
+		runAnimationFrames();
+		mockRect(bottomControl, 20, 460, 40, 32);
+		resizeObservers[0]?.trigger(bottomControl);
+		runAnimationFrames();
+		dispose();
+
+		expect(observedTargets).toEqual(
+			new Set([container, topAction, bottomControl]),
+		);
+		expect(listener).toHaveBeenCalledTimes(1);
+		expect(listener).toHaveBeenLastCalledWith(
+			expect.objectContaining({
+				safeInsets: expect.objectContaining({ bottomPx: 98 }),
+			}),
+		);
+		expect(observedTargets).not.toContain(centerControl);
+		expect(observedTargets).not.toContain(overlayRoot);
 	});
 
 	it("responds to visibility events and replaces the delayed fade measurement", () => {
@@ -282,7 +476,17 @@ describe("YouTube player chrome", () => {
 		};
 
 		container.classList.add("ytp-fullscreen");
-		dispatchAndMeasure(() => mutationObservers[0]?.trigger(), 961);
+		dispatchAndMeasure(
+			() =>
+				mutationObservers[0]?.trigger([
+					{
+						attributeName: "class",
+						target: container,
+						type: "attributes",
+					} as unknown as MutationRecord,
+				]),
+			961,
+		);
 		dispatchAndMeasure(
 			() =>
 				eventTarget.dispatchEvent(new Event("pointermove", { bubbles: true })),
@@ -345,7 +549,15 @@ describe("YouTube player chrome", () => {
 		const dispose = subscribeYouTubePlayerOverlayGeometry(container, vi.fn());
 		obsoleteTop.replaceWith(replacementTop);
 		obsoleteBottom.replaceWith(replacementBottom);
-		mutationObservers[0]?.trigger();
+		mutationObservers[0]?.trigger([
+			{
+				addedNodes: [replacementTop, replacementBottom] as unknown as NodeList,
+				removedNodes: [obsoleteTop, obsoleteBottom] as unknown as NodeList,
+				target: container,
+				type: "childList",
+			} as unknown as MutationRecord,
+		]);
+		expect(vi.getTimerCount()).toBe(1);
 
 		expect(resizeObservers[0]?.unobserve).toHaveBeenCalledWith(obsoleteTop);
 		expect(resizeObservers[0]?.unobserve).toHaveBeenCalledWith(
@@ -512,8 +724,8 @@ function installGeometryObserverStubs() {
 			return [];
 		}
 
-		trigger(): void {
-			this.callback([], this as unknown as MutationObserver);
+		trigger(records: MutationRecord[] = []): void {
+			this.callback(records, this as unknown as MutationObserver);
 		}
 	}
 
@@ -532,7 +744,10 @@ function installGeometryObserverStubs() {
 			this.observedTargets.add(target);
 		}
 
-		trigger(): void {
+		trigger(target?: Element): void {
+			if (target && !this.observedTargets.has(target)) {
+				return;
+			}
 			this.callback([], this as unknown as ResizeObserver);
 		}
 	}

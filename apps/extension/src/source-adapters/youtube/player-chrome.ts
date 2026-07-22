@@ -32,6 +32,11 @@ const YOUTUBE_BOTTOM_FALLBACK_SELECTOR = [
 	"progress",
 ].join(", ");
 const YOUTUBE_TOP_FALLBACK_SELECTOR = "button, [role='button']";
+const YOUTUBE_POTENTIAL_CHROME_SELECTOR = [
+	...YOUTUBE_BOTTOM_CHROME_SELECTORS,
+	...YOUTUBE_TOP_CHROME_SELECTORS,
+	YOUTUBE_BOTTOM_FALLBACK_SELECTOR,
+].join(", ");
 
 const LAUNCHER_WIDTH_PX = 92;
 const LAUNCHER_HEIGHT_PX = 32;
@@ -88,14 +93,76 @@ export function subscribeYouTubePlayerOverlayGeometry(
 	let delayedMeasurement: number | null = null;
 	let currentGeometry = getYouTubePlayerOverlayGeometry(container);
 	const observedChromeRoots = new Set<Element>();
-	const resizeObserver = new ResizeObserver(scheduleMeasurement);
-	const mutationObserver = new MutationObserver(() => {
+	const resizeObserver = new ResizeObserver(() => {
 		if (disposed) {
 			return;
 		}
 
 		refreshObservedChromeRoots();
-		scheduleVisibilityMeasurement();
+		scheduleMeasurement();
+	});
+	const mutationObserver = new MutationObserver((records) => {
+		if (disposed || records.length === 0) {
+			return;
+		}
+
+		const previousChromeRoots = new Set(
+			Array.from(observedChromeRoots).filter((root) => root !== container),
+		);
+		let rootsRefreshed = false;
+
+		const childListRecordsThatMayChangeChrome = records.filter(
+			(record) =>
+				record.type === "childList" &&
+				childListMutationMayChangeChromeRoots(record, previousChromeRoots),
+		);
+		if (childListRecordsThatMayChangeChrome.length > 0) {
+			refreshObservedChromeRoots();
+			rootsRefreshed = true;
+		}
+		let currentChromeRoots = new Set(
+			Array.from(observedChromeRoots).filter((root) => root !== container),
+		);
+
+		const hasRelevantMutation = records.some((record) => {
+			if (record.type === "childList") {
+				if (!childListRecordsThatMayChangeChrome.includes(record)) {
+					return false;
+				}
+
+				return childListMutationTouchesChromeRoots(
+					record,
+					previousChromeRoots,
+					currentChromeRoots,
+				);
+			}
+
+			if (
+				record.type !== "attributes" ||
+				(record.target !== container &&
+					!isPotentialChromeAttributeTarget(record.target, previousChromeRoots))
+			) {
+				return false;
+			}
+
+			if (!rootsRefreshed) {
+				refreshObservedChromeRoots();
+				rootsRefreshed = true;
+				currentChromeRoots = new Set(
+					Array.from(observedChromeRoots).filter((root) => root !== container),
+				);
+			}
+
+			return (
+				record.target === container ||
+				targetAffectsChromeRoots(record.target, previousChromeRoots) ||
+				targetAffectsChromeRoots(record.target, currentChromeRoots)
+			);
+		});
+
+		if (hasRelevantMutation) {
+			scheduleVisibilityMeasurement();
+		}
 	});
 
 	function refreshObservedChromeRoots(): void {
@@ -154,7 +221,14 @@ export function subscribeYouTubePlayerOverlayGeometry(
 	refreshObservedChromeRoots();
 	mutationObserver.observe(container, {
 		attributes: true,
-		attributeFilter: ["class", "style", "aria-hidden", "hidden"],
+		attributeFilter: [
+			"class",
+			"style",
+			"aria-hidden",
+			"hidden",
+			"role",
+			"type",
+		],
 		childList: true,
 		subtree: true,
 	});
@@ -215,10 +289,62 @@ export function subscribeYouTubePlayerOverlayGeometry(
 }
 
 function getYouTubeChromeRoots(container: HTMLElement): HTMLElement[] {
-	return queryUniqueElements(container, [
-		...YOUTUBE_BOTTOM_CHROME_SELECTORS,
-		...YOUTUBE_TOP_CHROME_SELECTORS,
-	]);
+	const roots = new Set<HTMLElement>(
+		queryUniqueElements(container, [
+			...YOUTUBE_BOTTOM_CHROME_SELECTORS,
+			...YOUTUBE_TOP_CHROME_SELECTORS,
+		]),
+	);
+	const containerRect = container.getBoundingClientRect();
+	if (!isUsableRect(containerRect)) {
+		return Array.from(roots);
+	}
+
+	for (const element of getActiveFallbackChromeElements(
+		container,
+		containerRect,
+	)) {
+		roots.add(element);
+	}
+
+	return Array.from(roots);
+}
+
+function getActiveFallbackChromeElements(
+	container: HTMLElement,
+	containerRect: DOMRect,
+): HTMLElement[] {
+	const elements = new Set<HTMLElement>();
+	const knownBottomElements = queryUniqueElements(
+		container,
+		YOUTUBE_BOTTOM_CHROME_SELECTORS,
+	);
+	if (knownBottomElements.length === 0) {
+		for (const candidate of getBottomFallbackCandidates(
+			container,
+			containerRect,
+			false,
+		)) {
+			elements.add(candidate.element);
+		}
+	}
+
+	const knownTopActions = getAvailableElementRects(
+		queryUniqueElements(container, YOUTUBE_TOP_ACTION_SELECTORS),
+		container,
+		containerRect,
+		true,
+	);
+	if (knownTopActions.length === 0) {
+		for (const candidate of getFallbackTopActionCandidates(
+			container,
+			containerRect,
+		)) {
+			elements.add(candidate.element);
+		}
+	}
+
+	return Array.from(elements);
 }
 
 function getBottomChromeRects(
@@ -239,15 +365,27 @@ function getBottomChromeRects(
 		);
 	}
 
+	return getBottomFallbackCandidates(
+		container,
+		containerRect,
+		respectOpacity,
+	).map(({ rect }) => rect);
+}
+
+function getBottomFallbackCandidates(
+	container: HTMLElement,
+	containerRect: DOMRect,
+	respectOpacity: boolean,
+): AvailableElementRect[] {
 	const bottomZoneTop = containerRect.top + containerRect.height * 0.7;
-	return getAvailableRects(
+	return getAvailableElementRects(
 		Array.from(
 			container.querySelectorAll<HTMLElement>(YOUTUBE_BOTTOM_FALLBACK_SELECTOR),
 		),
 		container,
 		containerRect,
 		respectOpacity,
-	).filter((rect) => {
+	).filter(({ rect }) => {
 		const centerY = rect.top + rect.height / 2;
 		const isWholeOverlayRoot =
 			rect.width > containerRect.width * 0.96 &&
@@ -334,21 +472,35 @@ function getFallbackTopActionRects(
 	container: HTMLElement,
 	containerRect: DOMRect,
 ): DOMRect[] {
+	return getFallbackTopActionCandidates(container, containerRect).map(
+		({ rect }) => rect,
+	);
+}
+
+function getFallbackTopActionCandidates(
+	container: HTMLElement,
+	containerRect: DOMRect,
+): AvailableElementRect[] {
 	const topZoneBottom = containerRect.top + containerRect.height * 0.25;
 	const rightZoneStart = containerRect.right - containerRect.width * 0.45;
 
-	return getAvailableRects(
+	return getAvailableElementRects(
 		Array.from(
 			container.querySelectorAll<HTMLElement>(YOUTUBE_TOP_FALLBACK_SELECTOR),
 		),
 		container,
 		containerRect,
 		true,
-	).filter((rect) => {
+	).filter(({ rect }) => {
 		const centerX = rect.left + rect.width / 2;
 		const centerY = rect.top + rect.height / 2;
 		return centerY <= topZoneBottom && centerX >= rightZoneStart;
 	});
+}
+
+interface AvailableElementRect {
+	element: HTMLElement;
+	rect: DOMRect;
 }
 
 function queryUniqueElements(
@@ -371,11 +523,110 @@ function getAvailableRects(
 	containerRect: DOMRect,
 	respectOpacity: boolean,
 ): DOMRect[] {
-	return elements
-		.map((element) =>
-			getAvailableRect(element, container, containerRect, respectOpacity),
+	return getAvailableElementRects(
+		elements,
+		container,
+		containerRect,
+		respectOpacity,
+	).map(({ rect }) => rect);
+}
+
+function getAvailableElementRects(
+	elements: HTMLElement[],
+	container: HTMLElement,
+	containerRect: DOMRect,
+	respectOpacity: boolean,
+): AvailableElementRect[] {
+	const availableElements: AvailableElementRect[] = [];
+	for (const element of elements) {
+		const rect = getAvailableRect(
+			element,
+			container,
+			containerRect,
+			respectOpacity,
+		);
+		if (rect) {
+			availableElements.push({ element, rect });
+		}
+	}
+
+	return availableElements;
+}
+
+function isPotentialChromeAttributeTarget(
+	target: Node,
+	currentChromeRoots: ReadonlySet<Element>,
+): boolean {
+	return (
+		targetAffectsChromeRoots(target, currentChromeRoots) ||
+		(target instanceof Element &&
+			(target.matches(YOUTUBE_POTENTIAL_CHROME_SELECTOR) ||
+				target.querySelector(YOUTUBE_POTENTIAL_CHROME_SELECTOR) !== null))
+	);
+}
+
+function targetAffectsChromeRoots(
+	target: Node,
+	chromeRoots: ReadonlySet<Element>,
+): boolean {
+	if (!(target instanceof Element)) {
+		return false;
+	}
+
+	for (const root of chromeRoots) {
+		if (target === root || target.contains(root)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function childListMutationTouchesChromeRoots(
+	record: MutationRecord,
+	previousChromeRoots: ReadonlySet<Element>,
+	currentChromeRoots: ReadonlySet<Element>,
+): boolean {
+	return (
+		Array.from(record.removedNodes).some((node) =>
+			nodeContainsChromeRoot(node, previousChromeRoots),
+		) ||
+		Array.from(record.addedNodes).some((node) =>
+			nodeContainsChromeRoot(node, currentChromeRoots),
 		)
-		.filter((rect): rect is DOMRect => rect !== null);
+	);
+}
+
+function childListMutationMayChangeChromeRoots(
+	record: MutationRecord,
+	previousChromeRoots: ReadonlySet<Element>,
+): boolean {
+	return (
+		Array.from(record.removedNodes).some((node) =>
+			nodeContainsChromeRoot(node, previousChromeRoots),
+		) || Array.from(record.addedNodes).some(nodeContainsPotentialChrome)
+	);
+}
+
+function nodeContainsPotentialChrome(node: Node): boolean {
+	return (
+		node instanceof Element &&
+		(node.matches(YOUTUBE_POTENTIAL_CHROME_SELECTOR) ||
+			node.querySelector(YOUTUBE_POTENTIAL_CHROME_SELECTOR) !== null)
+	);
+}
+
+function nodeContainsChromeRoot(
+	node: Node,
+	chromeRoots: ReadonlySet<Element>,
+): boolean {
+	for (const root of chromeRoots) {
+		if (node === root || (node instanceof Element && node.contains(root))) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 function getAvailableRect(
