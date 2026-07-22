@@ -34,7 +34,21 @@ import { storage } from "wxt/utils/storage";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
 import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK, EMOJI_PALETTE } from "./constants";
-import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
+import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
+import { runCrunchyrollMainCommand } from "./source-adapters/crunchyroll/bridge-client";
+import {
+  areCrunchyrollPlayerChromeStatesEqual,
+  type CrunchyrollPlayerChromeState,
+  DEFAULT_CAM_STACK_BOTTOM_PX,
+  DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE,
+  DEFAULT_MINI_PANEL_RIGHT_PX,
+  DEFAULT_MINI_PANEL_TOP_PX,
+  DEFAULT_TOP_BUBBLE_RIGHT_PX,
+  DEFAULT_TOP_BUBBLE_TOP_PX,
+  getCrunchyrollPlayerChromeState,
+} from "./source-adapters/crunchyroll/player-chrome";
+import type { PlayerEvent, VideoAdapter } from "./source-adapters/core/types";
+import { buildWatchSourceDescriptor } from "./source-adapters/core/source-descriptor";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import {
   clearDebugLog,
@@ -67,16 +81,7 @@ import {
   ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
   isMessageComposerShortcutEvent,
 } from "./message-composer-events";
-import {
-  type CrunchyrollPlayerChromeState,
-  DEFAULT_CAM_STACK_BOTTOM_PX,
-  DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE,
-  DEFAULT_MINI_PANEL_RIGHT_PX,
-  DEFAULT_MINI_PANEL_TOP_PX,
-  DEFAULT_TOP_BUBBLE_RIGHT_PX,
-  DEFAULT_TOP_BUBBLE_TOP_PX,
-  shouldShowCameraStack,
-} from "./overlay-layout";
+import { shouldShowCameraStack } from "./overlay-layout";
 import { OverlayLayoutEditor } from "./overlay-layout-editor";
 import { type OverlayLayoutContext, resolveOverlayLayout } from "./overlay-layout-engine";
 import { OverlayLayoutGhostPreview } from "./overlay-layout-ghost-preview";
@@ -114,6 +119,12 @@ import {
 import { PanelCameraControl, RoomPeopleSection } from "./overlay-room-media-controls";
 import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
 import { PanelAccountTitle } from "./panel-account-title";
+import {
+  isRoomRailEdgeIntent,
+  ROOM_RAIL_OPEN_DELAY_MS,
+  shouldRenderRoomRail,
+} from "./room-rail-intent";
+import { useTopBubbleReveal } from "./top-bubble-reveal";
 import {
   getRemotePlayReadyTimeoutMs,
   isMediaSettling,
@@ -171,12 +182,6 @@ import {
   signOutAndClearParticipant,
   trySilentSignIn,
 } from "./user-identity";
-import {
-  buildWatchSourceDescriptor,
-  type PlayerEvent,
-  runCrunchyrollMainCommand,
-  type VideoAdapter,
-} from "./video-adapter";
 import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
 import { resolveWatchLibraryReconcileAuth } from "./watch-library-auth";
 import {
@@ -339,6 +344,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const messageComposerInputRef = useRef<HTMLInputElement | null>(null);
   const messageComposerShieldRef = useRef<HTMLDivElement | null>(null);
   const miniPanelRef = useRef<HTMLElement | null>(null);
+  const overlayRootRef = useRef<HTMLDivElement | null>(null);
   const topBubbleRef = useRef<HTMLButtonElement | null>(null);
   const roomActionFeedbackTimerRef = useRef<number | null>(null);
   const messageComposerShieldReleaseTimerRef = useRef<number | null>(null);
@@ -374,6 +380,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [status, setStatus] = useState<RoomConnectionStatus>("idle");
   const [panelOpen, setPanelOpen] = useState(false);
+  const topBubbleReveal = useTopBubbleReveal({
+    bubbleRef: topBubbleRef,
+    overlayRef: overlayRootRef,
+    panelOpen,
+  });
   const [messageComposerOpen, setMessageComposerOpen] = useState(false);
   const [roomCreatePending, setRoomCreatePending] = useState(false);
   const [roomEndPending, setRoomEndPending] = useState(false);
@@ -760,6 +771,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
 
       event.preventDefault();
+      topBubbleRef.current?.focus({ preventScroll: true });
       setPanelOpen(false);
     };
 
@@ -1804,6 +1816,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     () => visibleParticipants.filter((item) => !displayedCameraParticipantIds.has(item.id)),
     [displayedCameraParticipantIds, visibleParticipants],
   );
+  const roomRailVisible = shouldRenderRoomRail({
+    participantCount: voiceRailParticipants.length,
+    panelOpen,
+    roomActive: Boolean(roomId),
+  });
   const topBubbleTopPx = isCrunchyroll
     ? crunchyrollPlayerChrome.topBubbleTopPx
     : DEFAULT_TOP_BUBBLE_TOP_PX;
@@ -4773,24 +4790,50 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     <div
       className={overlayClassName}
       onPointerDownCapture={unlockLiveVoicePlayback}
+      ref={overlayRootRef}
       style={overlayCssVariables}
     >
       <style>{overlayStyles}</style>
-      <button
-        className="top-bubble"
-        ref={topBubbleRef}
-        type="button"
-        onClick={() =>
-          setPanelOpen((value) => (roomCreatePending || roomEndPending ? true : !value))
-        }
+      <div
+        className={[
+          "top-bubble-reveal",
+          panelOpen ? "panel-open" : "",
+          topBubbleReveal.bubbleVisible ? "bubble-visible" : "",
+          topBubbleReveal.edgeGlowVisible ? "edge-glow" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
-        <AnidachiLogoMark className="top-bubble-logo" size={24} />
-        <span className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`} />
-        <span className="bubble-count">{participantCount}</span>
-      </button>
+        <span className="top-bubble-edge-glow" aria-hidden="true" />
+        <button
+          aria-controls="anidachi-mini-panel"
+          aria-expanded={panelOpen}
+          aria-label={panelOpen ? "Close Anidachi controls" : "Open Anidachi controls"}
+          className="top-bubble"
+          onBlur={topBubbleReveal.handleBubbleBlur}
+          onFocus={topBubbleReveal.handleBubbleFocus}
+          ref={topBubbleRef}
+          type="button"
+          onClick={(event) => {
+            if (event.detail > 0) {
+              event.currentTarget.blur();
+            }
+            setPanelOpen((value) => (roomCreatePending || roomEndPending ? true : !value));
+          }}
+        >
+          <AnidachiLogoMark className="top-bubble-logo" size={24} />
+          <span className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`} />
+          <span className="bubble-count">{participantCount}</span>
+        </button>
+      </div>
 
       {panelOpen ? (
-        <section className="mini-panel" aria-label="Anidachi controls" ref={miniPanelRef}>
+        <section
+          className="mini-panel"
+          id="anidachi-mini-panel"
+          aria-label="Anidachi controls"
+          ref={miniPanelRef}
+        >
           <div className="panel-header">
             <div className="panel-account">
               <span className="mini-avatar panel-account-avatar">
@@ -5327,7 +5370,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             </div>
           ) : null}
 
-          {!panelOpen && voiceRailParticipants.length ? (
+          {roomRailVisible ? (
             <RoomRail
               activeParticipantId={participant?.id}
               participants={voiceRailParticipants}
@@ -5415,12 +5458,6 @@ function RoomRail({
     }
   }, []);
 
-  const openRail = useCallback(() => {
-    clearOpenTimer();
-    clearCloseTimer();
-    setExpanded(true);
-  }, [clearCloseTimer, clearOpenTimer]);
-
   const scheduleOpen = useCallback(() => {
     clearCloseTimer();
     if (expanded || openTimerRef.current !== undefined) {
@@ -5429,7 +5466,7 @@ function RoomRail({
     openTimerRef.current = window.setTimeout(() => {
       openTimerRef.current = undefined;
       setExpanded(true);
-    }, 260);
+    }, ROOM_RAIL_OPEN_DELAY_MS);
   }, [clearCloseTimer, expanded]);
 
   const scheduleClose = useCallback(() => {
@@ -5441,16 +5478,16 @@ function RoomRail({
     }, 340);
   }, [clearCloseTimer, clearOpenTimer]);
 
-  const handleEdgePointerMove = useCallback(
+  const handleEdgePointerIntent = useCallback(
     (event: PointerEvent<HTMLElement>) => {
-      const distanceToRightEdge = Math.max(0, window.innerWidth - event.clientX);
-      if (distanceToRightEdge <= 6) {
-        openRail();
+      const edgeRight = event.currentTarget.getBoundingClientRect().right;
+      if (!isRoomRailEdgeIntent({ clientX: event.clientX, edgeRight })) {
+        clearOpenTimer();
         return;
       }
       scheduleOpen();
     },
-    [openRail, scheduleOpen],
+    [clearOpenTimer, scheduleOpen],
   );
 
   const handleEdgePointerLeave = useCallback(() => {
@@ -5473,13 +5510,13 @@ function RoomRail({
     <aside className={`room-rail ${expanded ? "open" : ""}`} aria-label="Room participants">
       <div
         className="room-rail-edge"
-        onPointerEnter={scheduleOpen}
+        onPointerEnter={handleEdgePointerIntent}
         onPointerLeave={handleEdgePointerLeave}
-        onPointerMove={handleEdgePointerMove}
+        onPointerMove={handleEdgePointerIntent}
       />
       <div
         className="room-rail-panel"
-        onPointerEnter={expanded ? clearCloseTimer : scheduleOpen}
+        onPointerEnter={expanded ? clearCloseTimer : undefined}
         onPointerLeave={scheduleClose}
         onPointerMove={expanded ? clearCloseTimer : undefined}
       >
@@ -5983,189 +6020,6 @@ function initials(name: string): string {
     .join("");
 }
 
-function getCrunchyrollPlayerChromeState(container: HTMLElement): CrunchyrollPlayerChromeState {
-  const containerRect = container.getBoundingClientRect();
-  if (!isUsableRect(containerRect)) {
-    return DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE;
-  }
-
-  const controlRects = getCrunchyrollControlRects(container, containerRect, true);
-  const layoutControlRects = getCrunchyrollControlRects(container, containerRect, false);
-  const timelineRect = getVisibleElementRect(
-    container.querySelector<HTMLElement>("[data-testid='timeline-controls-container']"),
-    container,
-    containerRect,
-    true,
-  );
-  const controlsVisible = Boolean(timelineRect) || controlRects.length > 0;
-  const topControlRects = getCrunchyrollTopControlRects(
-    layoutControlRects.length ? layoutControlRects : controlRects,
-    containerRect,
-  );
-  const topPosition = getCrunchyrollTopBubblePosition(
-    containerRect,
-    topControlRects,
-    topControlRects.length > 0,
-  );
-
-  return {
-    controlsVisible,
-    camStackBottomPx: controlsVisible
-      ? getCrunchyrollCamStackBottom(containerRect, timelineRect, controlRects)
-      : DEFAULT_CAM_STACK_BOTTOM_PX,
-    containerHeightPx: Math.round(containerRect.height),
-    containerWidthPx: Math.round(containerRect.width),
-    ...topPosition,
-  };
-}
-
-function getCrunchyrollControlRects(
-  container: HTMLElement,
-  containerRect: DOMRect,
-  respectOpacity: boolean,
-): DOMRect[] {
-  const controls = Array.from(
-    container.querySelectorAll<HTMLElement>(
-      [
-        "[data-testid='player-controls-root']",
-        "[data-testid='timeline-controls-container']",
-        "[data-testid='settings-button']",
-        "[data-testid='fullscreen-button']",
-        "[data-testid='playback-speed-button']",
-        "[data-testid='audio-subtitle-button']",
-        "[data-testid='play-pause-button']",
-        "[data-testid='timestamp']",
-        "[data-testid*='player' i]",
-        "[data-testid*='control' i]",
-        "[data-testid*='settings' i]",
-        "[data-testid*='fullscreen' i]",
-        "button",
-        "[role='button']",
-        "[role='slider']",
-        "input[type='range']",
-      ].join(", "),
-    ),
-  );
-
-  return controls
-    .map((element) => getVisibleElementRect(element, container, containerRect, respectOpacity))
-    .filter((rect): rect is DOMRect => Boolean(rect))
-    .filter((rect) => !isLikelyWholePlayerControlRoot(rect, containerRect));
-}
-
-function getCrunchyrollTopControlRects(controlRects: DOMRect[], containerRect: DOMRect): DOMRect[] {
-  const topZoneBottom = containerRect.top + Math.min(150, Math.max(96, containerRect.height * 0.2));
-  const rightZoneStart =
-    containerRect.right - Math.min(360, Math.max(180, containerRect.width * 0.4));
-
-  return controlRects.filter(
-    (rect) =>
-      rect.top < topZoneBottom &&
-      rect.bottom > containerRect.top &&
-      rect.right > rightZoneStart &&
-      rect.width >= 18 &&
-      rect.width <= 104 &&
-      rect.height >= 18 &&
-      rect.height <= 104,
-  );
-}
-
-function getCrunchyrollTopBubblePosition(
-  containerRect: DOMRect,
-  topControlRects: DOMRect[],
-  controlsVisible: boolean,
-): Pick<
-  CrunchyrollPlayerChromeState,
-  "miniPanelRightPx" | "miniPanelTopPx" | "topBubbleRightPx" | "topBubbleTopPx"
-> {
-  if (!controlsVisible || topControlRects.length === 0) {
-    return {
-      miniPanelRightPx: DEFAULT_MINI_PANEL_RIGHT_PX,
-      miniPanelTopPx: DEFAULT_MINI_PANEL_TOP_PX,
-      topBubbleRightPx: DEFAULT_TOP_BUBBLE_RIGHT_PX,
-      topBubbleTopPx: DEFAULT_TOP_BUBBLE_TOP_PX,
-    };
-  }
-
-  const margin = 10;
-  const bubbleHeight = 30;
-  const firstControl = [...topControlRects].sort((a, b) => a.top - b.top)[0];
-  const firstCenterY = rectCenterY(firstControl);
-  const rowRects = topControlRects.filter(
-    (rect) => Math.abs(rectCenterY(rect) - firstCenterY) <= 34,
-  );
-  const rowTop = Math.min(...rowRects.map((rect) => rect.top));
-  const rowBottom = Math.max(...rowRects.map((rect) => rect.bottom));
-  const topBubbleTopPx = Math.round(
-    clampNumber(
-      rowTop - containerRect.top + (rowBottom - rowTop - bubbleHeight) / 2,
-      margin,
-      Math.max(margin, containerRect.height - bubbleHeight - margin),
-    ),
-  );
-  const topBubbleRightPx = margin;
-
-  return {
-    miniPanelRightPx: margin,
-    miniPanelTopPx: Math.round(
-      clampNumber(
-        topBubbleTopPx + bubbleHeight + 8,
-        DEFAULT_MINI_PANEL_TOP_PX,
-        Math.max(DEFAULT_MINI_PANEL_TOP_PX, containerRect.height - 80),
-      ),
-    ),
-    topBubbleRightPx,
-    topBubbleTopPx,
-  };
-}
-
-function getCrunchyrollCamStackBottom(
-  containerRect: DOMRect,
-  timelineRect: DOMRect | null,
-  controlRects: DOMRect[],
-): number {
-  const lowerZoneTop =
-    containerRect.bottom - Math.min(260, Math.max(120, containerRect.height * 0.28));
-  const lowerControlRects = [timelineRect, ...controlRects].filter((rect): rect is DOMRect => {
-    if (!rect) {
-      return false;
-    }
-
-    return (
-      rect.top >= lowerZoneTop &&
-      rect.bottom <= containerRect.bottom + 4 &&
-      rect.width >= 18 &&
-      rect.height >= 6
-    );
-  });
-
-  if (lowerControlRects.length === 0) {
-    return 126;
-  }
-
-  const firstControlTop = Math.min(...lowerControlRects.map((rect) => rect.top));
-  const bottomPx = containerRect.bottom - firstControlTop + 18;
-  return Math.round(clampNumber(bottomPx, 96, Math.min(220, containerRect.height - 72)));
-}
-
-function getVisibleElementRect(
-  element: HTMLElement | null,
-  boundary: HTMLElement,
-  boundaryRect: DOMRect,
-  respectOpacity: boolean,
-): DOMRect | null {
-  if (!element || !isElementVisuallyAvailable(element, boundary, respectOpacity)) {
-    return null;
-  }
-
-  const rect = element.getBoundingClientRect();
-  if (!isUsableRect(rect) || !rectIntersects(rect, boundaryRect)) {
-    return null;
-  }
-
-  return rect;
-}
-
 function isPointerInComposerDeadZone(
   event: MouseEvent | globalThis.PointerEvent,
   container: HTMLElement,
@@ -6237,6 +6091,20 @@ function wakePlayerAfterComposerShieldRelease(point: PointerWakePoint, shield: H
   target.dispatchEvent(new MouseEvent("mousemove", eventInit));
 }
 
+function isUsableRect(rect: DOMRect): boolean {
+  return (
+    Number.isFinite(rect.width) && Number.isFinite(rect.height) && rect.width > 1 && rect.height > 1
+  );
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+
+  return Math.max(min, Math.min(max, value));
+}
+
 function getLiveVoiceStatusText(status: LiveVoiceStatus, talking: boolean): string {
   if (status === "error") {
     return "Mic blocked";
@@ -6256,88 +6124,4 @@ function getLiveVoiceStatusText(status: LiveVoiceStatus, talking: boolean): stri
 function stopNativeEvent(event: SyntheticEvent<HTMLElement>) {
   event.stopPropagation();
   event.nativeEvent.stopImmediatePropagation();
-}
-
-function isElementVisuallyAvailable(
-  element: HTMLElement,
-  boundary: HTMLElement,
-  respectOpacity: boolean,
-): boolean {
-  let current: HTMLElement | null = element;
-  let opacity = 1;
-
-  while (current) {
-    const style = getComputedStyle(current);
-    if (
-      style.display === "none" ||
-      style.visibility === "hidden" ||
-      style.visibility === "collapse"
-    ) {
-      return false;
-    }
-
-    const nextOpacity = Number.parseFloat(style.opacity || "1");
-    if (Number.isFinite(nextOpacity)) {
-      opacity *= nextOpacity;
-    }
-
-    if (current === boundary || (respectOpacity && opacity <= 0.04)) {
-      break;
-    }
-
-    current = current.parentElement;
-  }
-
-  return !respectOpacity || opacity > 0.04;
-}
-
-function isUsableRect(rect: DOMRect): boolean {
-  return (
-    Number.isFinite(rect.width) && Number.isFinite(rect.height) && rect.width > 1 && rect.height > 1
-  );
-}
-
-function rectIntersects(rect: DOMRect, boundary: DOMRect): boolean {
-  return (
-    rect.right > boundary.left &&
-    rect.left < boundary.right &&
-    rect.bottom > boundary.top &&
-    rect.top < boundary.bottom
-  );
-}
-
-function isLikelyWholePlayerControlRoot(rect: DOMRect, boundary: DOMRect): boolean {
-  return (
-    rect.width >= boundary.width * 0.84 &&
-    rect.height >= boundary.height * 0.62 &&
-    rect.top <= boundary.top + 24
-  );
-}
-
-function rectCenterY(rect: DOMRect): number {
-  return rect.top + rect.height / 2;
-}
-
-function clampNumber(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value)) {
-    return min;
-  }
-
-  return Math.max(min, Math.min(max, value));
-}
-
-function areCrunchyrollPlayerChromeStatesEqual(
-  left: CrunchyrollPlayerChromeState,
-  right: CrunchyrollPlayerChromeState,
-): boolean {
-  return (
-    left.controlsVisible === right.controlsVisible &&
-    left.camStackBottomPx === right.camStackBottomPx &&
-    left.containerHeightPx === right.containerHeightPx &&
-    left.containerWidthPx === right.containerWidthPx &&
-    left.miniPanelRightPx === right.miniPanelRightPx &&
-    left.miniPanelTopPx === right.miniPanelTopPx &&
-    left.topBubbleRightPx === right.topBubbleRightPx &&
-    left.topBubbleTopPx === right.topBubbleTopPx
-  );
 }

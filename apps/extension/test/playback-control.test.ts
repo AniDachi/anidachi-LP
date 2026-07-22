@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { getCrunchyrollTimelineValueForTime } from "../src/crunchyroll-control";
+import { getCrunchyrollTimelineValueForTime } from "../src/source-adapters/crunchyroll/bridge-contract";
 import {
   getRemotePlayReadyTimeoutMs,
   isMediaTimeBuffered,

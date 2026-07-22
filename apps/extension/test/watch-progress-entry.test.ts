@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { getWatchProgressEntryForAdapter } from "../src/watch-progress-entry";
-import type { VideoAdapter } from "../src/video-adapter";
+import type { VideoAdapter } from "../src/source-adapters/core/types";
 
 describe("watch progress entry extraction", () => {
   afterEach(() => {
@@ -36,6 +36,23 @@ describe("watch progress entry extraction", () => {
       roomId: "room-1",
       watchedWithCount: 2,
     });
+  });
+
+  it.each([
+    ["blank v on a Shorts path", "https://www.youtube.com/shorts/dQw4w9WgXcQ?v="],
+    ["invalid v on a Shorts path", "https://www.youtube.com/shorts/dQw4w9WgXcQ?v=short"],
+    ["blank v on an embed path", "https://www.youtube.com/embed/dQw4w9WgXcQ?v="],
+    ["invalid v on an embed path", "https://www.youtube.com/embed/dQw4w9WgXcQ?v=short"],
+  ])("does not persist YouTube progress for %s", (_caseName, url) => {
+    mockLocation(url);
+    const video = document.createElement("video");
+
+    expect(
+      getWatchProgressEntryForAdapter({
+        adapter: fakeAdapter({ id: "youtube", title: "Anime opening", video }),
+        watchedWithCount: 1,
+      }),
+    ).toBeNull();
   });
 
   it("ignores unsupported generic video adapters", () => {

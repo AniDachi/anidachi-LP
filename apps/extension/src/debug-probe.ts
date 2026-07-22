@@ -4,7 +4,7 @@ import {
   logDebug,
   videoDebugSnapshot,
 } from "./debug-log";
-import type { VideoAdapter } from "./video-adapter";
+import type { VideoAdapter } from "./source-adapters/core/types";
 
 const VIDEO_EVENTS = [
   "abort",

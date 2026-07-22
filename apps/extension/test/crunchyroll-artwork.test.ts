@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getCrunchyrollRelatedSeriesId,
   selectCrunchyrollPosterTall,
-} from "../src/crunchyroll-artwork-select";
+} from "../src/source-adapters/crunchyroll/artwork-select";
 
 describe("Crunchyroll artwork", () => {
   it("selects catalog poster_tall artwork instead of wide artwork", () => {

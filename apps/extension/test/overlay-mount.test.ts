@@ -33,7 +33,20 @@ describe("overlay mount decision", () => {
     );
     expect(isOverlayAllowedOnPage("https://www.crunchyroll.com/")).toBe(false);
     expect(isOverlayAllowedOnPage("https://www.crunchyroll.com/videos/popular")).toBe(false);
-    expect(isOverlayAllowedOnPage("https://www.youtube.com/watch?v=example")).toBe(true);
+  });
+
+  it("allows YouTube overlays only on full watch pages", () => {
+    expect(isOverlayAllowedOnPage("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(true);
+    expect(isOverlayAllowedOnPage("https://youtu.be/dQw4w9WgXcQ")).toBe(true);
+
+    expect(isOverlayAllowedOnPage("https://www.youtube.com/")).toBe(false);
+    expect(isOverlayAllowedOnPage("https://www.youtube.com/results?search_query=anime")).toBe(
+      false,
+    );
+    expect(isOverlayAllowedOnPage("https://www.youtube.com/shorts/dQw4w9WgXcQ")).toBe(false);
+    expect(isOverlayAllowedOnPage("https://www.youtube.com/embed/dQw4w9WgXcQ")).toBe(false);
+    expect(isOverlayAllowedOnPage("https://www.youtube.com/watch")).toBe(false);
+    expect(isOverlayAllowedOnPage("https://www.youtube.com/watch?v=short")).toBe(false);
   });
 
   it("disposes a mounted overlay after leaving a Crunchyroll watch route", () => {
@@ -41,6 +54,16 @@ describe("overlay mount decision", () => {
     expect(getOverlayPageDecision(false, "https://www.crunchyroll.com/")).toBe("idle");
     expect(
       getOverlayPageDecision(true, "https://www.crunchyroll.com/watch/G14U4D0PE/example"),
+    ).toBe("continue");
+  });
+
+  it("disposes a mounted overlay after leaving a YouTube watch route", () => {
+    expect(getOverlayPageDecision(true, "https://www.youtube.com/shorts/dQw4w9WgXcQ")).toBe(
+      "dispose",
+    );
+    expect(getOverlayPageDecision(false, "https://www.youtube.com/")).toBe("idle");
+    expect(
+      getOverlayPageDecision(true, "https://www.youtube.com/watch?v=dQw4w9WgXcQ"),
     ).toBe("continue");
   });
 
