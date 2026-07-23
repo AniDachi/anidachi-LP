@@ -4,12 +4,17 @@ import type {
   PlayerOverlayGeometryListener,
 } from "../core/overlay-geometry";
 import { normalizeVideoFingerprint } from "../core/source-url";
-import type { AdapterOverlayBinding } from "../core/types";
+import type {
+  AdapterOverlayBinding,
+  AdapterPlaybackSnapshot,
+  PlayerEvent,
+} from "../core/types";
+import { YouTubePlaybackPhaseTracker } from "./playback-phase";
 import {
   getYouTubePlayerOverlayGeometry,
   subscribeYouTubePlayerOverlayGeometry,
 } from "./player-chrome";
-import { getYouTubeFingerprintKey } from "./url";
+import { getYouTubeFingerprintKey, parseYouTubeVideoId } from "./url";
 
 interface YouTubeVolumePlayer extends HTMLElement {
   getVolume?: () => number;
@@ -23,6 +28,18 @@ export class YouTubeVideoAdapter extends Html5VideoAdapter {
   override readonly id = "youtube";
   override readonly provider = "youtube" as const;
   override readonly name = "YouTube";
+  private readonly playbackPhaseTracker: YouTubePlaybackPhaseTracker;
+
+  constructor(video: HTMLVideoElement, container: HTMLElement) {
+    super(video, container);
+    const expectedVideoId = parseYouTubeVideoId(new URL(location.href));
+    this.playbackPhaseTracker = new YouTubePlaybackPhaseTracker({
+      video,
+      player: container,
+      expectedVideoId,
+      getCurrentVideoId: () => parseYouTubeVideoId(new URL(location.href)),
+    });
+  }
 
   override getTitle(): string | null {
     const title =
@@ -34,6 +51,35 @@ export class YouTubeVideoAdapter extends Html5VideoAdapter {
 
   override getFingerprint(): string {
     return normalizeVideoFingerprint(`youtube|${getYouTubeFingerprintKey(new URL(location.href))}`);
+  }
+
+  override getCurrentTime(): number {
+    return this.playbackPhaseTracker.getSnapshot().contentTime;
+  }
+
+  override getPlaybackSnapshot(): AdapterPlaybackSnapshot {
+    return this.playbackPhaseTracker.getSnapshot();
+  }
+
+  override subscribe(callback: (event: PlayerEvent) => void): () => void {
+    let disposed = false;
+    const disposePhaseTracker = this.playbackPhaseTracker.subscribe((snapshot) => {
+      callback({ type: "phasechange", snapshot });
+    });
+    const disposeMediaEvents = super.subscribe((event) => {
+      if (this.getPlaybackSnapshot().phase === "content") {
+        callback(event);
+      }
+    });
+
+    return () => {
+      if (disposed) {
+        return;
+      }
+      disposed = true;
+      disposePhaseTracker();
+      disposeMediaEvents();
+    };
   }
 
   override getOverlayGeometry(): PlayerOverlayGeometry {

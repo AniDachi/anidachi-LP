@@ -52,7 +52,7 @@ describe("YouTube source adapter", () => {
       localSeekCoalescing: null,
     });
     expect(adapter?.getPlaybackSnapshot()).toMatchObject({
-      phase: "content",
+      phase: "transition",
       contentTime: 0,
       playing: false,
       playbackRate: 1,
