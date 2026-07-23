@@ -107,6 +107,7 @@ import {
 } from "./overlay-panel-interaction";
 import {
   copyRoomInviteText,
+  getPrimaryRoomActionKind,
   getPrimaryRoomActionLabel,
   isInviteCopiedFeedback,
   type RoomActionFeedback,
@@ -392,6 +393,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [messageComposerOpen, setMessageComposerOpen] = useState(false);
   const [roomCreatePending, setRoomCreatePending] = useState(false);
   const [roomEndPending, setRoomEndPending] = useState(false);
+  const [roomLeavePending, setRoomLeavePending] = useState(false);
   const [roomActionFeedback, setRoomActionFeedback] = useState<RoomActionFeedback | null>(null);
   const [settingsPanelCategory, setSettingsPanelCategory] =
     useState<SettingsPanelCategory>(DEFAULT_SETTINGS_PANEL_CATEGORY);
@@ -790,7 +792,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       const overlayRoot = rootNode instanceof ShadowRoot ? rootNode.host : null;
       if (
         !shouldDismissOverlayPanel({
-          busy: roomCreatePending || roomEndPending,
+          busy: roomCreatePending || roomEndPending || roomLeavePending,
           eventPath: path,
           overlayRoot,
           panel,
@@ -809,7 +811,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         !isEscapeKey(event) ||
         isFullscreenActive() ||
         roomCreatePending ||
-        roomEndPending
+        roomEndPending ||
+        roomLeavePending
       ) {
         return;
       }
@@ -826,7 +829,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       window.removeEventListener("pointerdown", handlePointerDown, true);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [panelOpen, roomCreatePending, roomEndPending]);
+  }, [panelOpen, roomCreatePending, roomEndPending, roomLeavePending]);
 
   useEffect(() => {
     participantRef.current = participant;
@@ -3279,6 +3282,30 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   };
 
+  const handleLeaveRoom = async () => {
+    if (roomLeavePending || !roomId || isHost) {
+      return;
+    }
+
+    clearRoomActionFeedback();
+    setRoomLeavePending(true);
+    setPanelOpen(true);
+    setAuthMessage(null);
+    try {
+      await waitForOverlayPaint();
+      const activeRoomId = roomIdRef.current;
+      if (!activeRoomId || isCurrentHost()) {
+        return;
+      }
+
+      resetLocalRoomSession(undefined, true);
+      showRoomActionFeedback("room-left");
+      logDebug("overlay.room", "left by guest", { roomId: activeRoomId });
+    } finally {
+      setRoomLeavePending(false);
+    }
+  };
+
   const reloadPage = useCallback(() => {
     window.location.reload();
   }, []);
@@ -4061,14 +4088,21 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     roomId ? "room-active" : "room-empty",
     roomCreatePending ? "creating" : "",
     roomEndPending ? "ending" : "",
+    roomLeavePending ? "leaving" : "",
   ]
     .filter(Boolean)
     .join(" ");
+  const primaryRoomActionKind = getPrimaryRoomActionKind({
+    isHost,
+    roomExists: Boolean(roomId),
+  });
   const primaryRoomActionLabel = getPrimaryRoomActionLabel({
     feedback: roomActionFeedback,
+    isHost,
     roomCreatePending,
     roomEndPending,
     roomExists: Boolean(roomId),
+    roomLeavePending,
   });
   const inviteCopied = isInviteCopiedFeedback(roomActionFeedback);
   const accountDisplayName =
@@ -4113,7 +4147,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
             if (event.detail > 0) {
               event.currentTarget.blur();
             }
-            setPanelOpen((value) => (roomCreatePending || roomEndPending ? true : !value));
+            setPanelOpen((value) =>
+              roomCreatePending || roomEndPending || roomLeavePending ? true : !value,
+            );
           }}
         >
           <AnidachiLogoMark className="top-bubble-logo" size={24} />
@@ -4173,11 +4209,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
           <div className={roomActionsClassName}>
             <button
-              className={`button primary panel-primary-action${roomCreatePending ? " loading" : ""}`}
+              className={`button primary panel-primary-action${roomCreatePending || roomLeavePending ? " loading" : ""}`}
               type="button"
-              onClick={handleCreateRoom}
+              onClick={
+                primaryRoomActionKind === "leave" ? handleLeaveRoom : handleCreateRoom
+              }
               disabled={
-                !participant || extensionContextInvalidated || roomCreatePending || roomEndPending
+                !participant ||
+                extensionContextInvalidated ||
+                roomCreatePending ||
+                roomEndPending ||
+                roomLeavePending
               }
             >
               <span aria-live="polite">{primaryRoomActionLabel}</span>
@@ -4190,7 +4232,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                   title={inviteCopied ? "Invite copied" : "Copy invite"}
                   type="button"
                   onClick={copyInvite}
-                  disabled={roomCreatePending || roomEndPending}
+                  disabled={roomCreatePending || roomEndPending || roomLeavePending}
                   style={{ "--action-index": 0 } as CSSProperties}
                 >
                   {inviteCopied ? <Check size={14} /> : <Copy size={14} />}
@@ -4212,7 +4254,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                     !authAuthenticated ||
                     inviteTargetsLoading ||
                     roomCreatePending ||
-                    roomEndPending
+                    roomEndPending ||
+                    roomLeavePending
                   }
                   style={{ "--action-index": 1 } as CSSProperties}
                 >
@@ -4224,7 +4267,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                   title={isHost ? "Sync now" : "Only the host can sync"}
                   type="button"
                   onClick={() => playbackSyncController.broadcastHostState()}
-                  disabled={!isHost || roomCreatePending || roomEndPending}
+                  disabled={
+                    !isHost || roomCreatePending || roomEndPending || roomLeavePending
+                  }
                   style={{ "--action-index": 2 } as CSSProperties}
                 >
                   <RefreshCw size={14} />
@@ -4236,7 +4281,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                     title={roomEndPending ? "Ending room" : "End room"}
                     type="button"
                     onClick={handleEndRoom}
-                    disabled={roomCreatePending || roomEndPending}
+                    disabled={roomCreatePending || roomEndPending || roomLeavePending}
                     style={{ "--action-index": 3 } as CSSProperties}
                   >
                     <DoorOpen size={14} />

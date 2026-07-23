@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   copyRoomInviteText,
+  getPrimaryRoomActionKind,
   getPrimaryRoomActionLabel,
   isInviteCopiedFeedback,
 } from "../src/overlay-room-action-feedback";
@@ -64,6 +65,45 @@ describe("overlay room action feedback", () => {
         roomExists: true,
       }),
     ).toBe("New room");
+  });
+
+  it("uses leave as the primary action only for a guest in an active room", () => {
+    expect(getPrimaryRoomActionKind({ isHost: false, roomExists: true })).toBe("leave");
+    expect(getPrimaryRoomActionKind({ isHost: true, roomExists: true })).toBe("create");
+    expect(getPrimaryRoomActionKind({ isHost: false, roomExists: false })).toBe("create");
+    expect(
+      getPrimaryRoomActionLabel({
+        feedback: null,
+        isHost: false,
+        roomCreatePending: false,
+        roomEndPending: false,
+        roomExists: true,
+        roomLeavePending: false,
+      }),
+    ).toBe("Leave room");
+  });
+
+  it("reports guest leave progress and success", () => {
+    expect(
+      getPrimaryRoomActionLabel({
+        feedback: null,
+        isHost: false,
+        roomCreatePending: false,
+        roomEndPending: false,
+        roomExists: true,
+        roomLeavePending: true,
+      }),
+    ).toBe("Leaving room");
+    expect(
+      getPrimaryRoomActionLabel({
+        feedback: "room-left",
+        isHost: false,
+        roomCreatePending: false,
+        roomEndPending: false,
+        roomExists: false,
+        roomLeavePending: false,
+      }),
+    ).toBe("Room left");
   });
 
   it("identifies only copied-invite feedback for the copy control", () => {
