@@ -1,4 +1,8 @@
-import type { ClientEvent, PlaybackState } from "@anidachi/protocol";
+import type {
+	ClientEvent,
+	PlaybackState,
+	WatchSourceDescriptor,
+} from "@anidachi/protocol";
 import {
 	afterEach,
 	beforeEach,
@@ -19,7 +23,9 @@ import {
 	DEFAULT_PLAYBACK_POLICY,
 } from "../src/source-adapters/core/playback-policy";
 import type {
+	EnsureSourceResult,
 	PlayerEvent,
+	SourceNavigationContext,
 	VideoAdapter,
 } from "../src/source-adapters/core/types";
 
@@ -301,6 +307,119 @@ describe("PlaybackSyncController", () => {
 		expect(harness.adapter.seek).not.toHaveBeenCalled();
 	});
 
+	it("holds remote playback and applies the newest state after the target adapter binds", async () => {
+		const navigation = deferred<EnsureSourceResult>();
+		const ensureRemoteSource = vi.fn(() => navigation.promise);
+		const harness = createHarness({ isHost: false, ensureRemoteSource });
+		const targetSource = watchSource("youtube", "next-video");
+
+		const first = harness.controller.handleHostState(
+			playbackState({
+				hostTime: 20,
+				videoFingerprint: targetSource.videoFingerprint,
+			}),
+			targetSource,
+		);
+		await Promise.resolve();
+		const second = harness.controller.handleHostState(
+			playbackState({
+				hostTime: 35,
+				videoFingerprint: targetSource.videoFingerprint,
+			}),
+			targetSource,
+		);
+		harness.controller.handleRemoteCommand({
+			type: "SEEK",
+			roomId: "room-1",
+			byUserId: "remote-host",
+			to: 50,
+		});
+
+		expect(ensureRemoteSource).toHaveBeenCalledTimes(1);
+		expect(harness.adapter.seek).not.toHaveBeenCalled();
+
+		const replacement = createFakeAdapter({
+			fingerprint: targetSource.videoFingerprint,
+			provider: "youtube",
+		});
+		harness.controller.bindAdapter(replacement);
+		await first;
+		await second;
+
+		expect(replacement.seek).toHaveBeenLastCalledWith(35, {
+			resumeIfPlaying: false,
+		});
+	});
+
+	it("cancels an older source navigation when a newer source arrives", async () => {
+		const navigations: Array<{
+			context: SourceNavigationContext;
+			deferred: ReturnType<typeof deferred<EnsureSourceResult>>;
+		}> = [];
+		const ensureRemoteSource = vi.fn(
+			(_source: WatchSourceDescriptor, context: SourceNavigationContext) => {
+				const operation = deferred<EnsureSourceResult>();
+				navigations.push({ context, deferred: operation });
+				return operation.promise;
+			},
+		);
+		const harness = createHarness({ isHost: false, ensureRemoteSource });
+
+		void harness.controller.handleHostState(
+			playbackState({ videoFingerprint: "youtube|video-b" }),
+			watchSource("youtube", "video-b"),
+		);
+		await Promise.resolve();
+		void harness.controller.handleHostState(
+			playbackState({ videoFingerprint: "youtube|video-c" }),
+			watchSource("youtube", "video-c"),
+		);
+		await Promise.resolve();
+
+		expect(ensureRemoteSource).toHaveBeenCalledTimes(2);
+		expect(navigations[0]?.context.signal.aborted).toBe(true);
+		expect(navigations[1]?.context.signal.aborted).toBe(false);
+
+		navigations[0]?.deferred.resolve({
+			status: "navigation-started",
+			targetUrl: "https://www.youtube.com/watch?v=video-b",
+		});
+		navigations[1]?.deferred.resolve({
+			status: "navigation-started",
+			targetUrl: "https://www.youtube.com/watch?v=video-c",
+		});
+		await Promise.resolve();
+	});
+
+	it("does not apply direct playback commands while source navigation is pending", async () => {
+		const navigation = deferred<EnsureSourceResult>();
+		const harness = createHarness({
+			isHost: false,
+			ensureRemoteSource: () => navigation.promise,
+		});
+
+		void harness.controller.handleHostState(
+			playbackState({ videoFingerprint: "youtube|next-video" }),
+			watchSource("youtube", "next-video"),
+		);
+		await Promise.resolve();
+		harness.controller.handleRemoteCommand({
+			type: "PLAY",
+			roomId: "room-1",
+			byUserId: "remote-host",
+			at: 42,
+		});
+		harness.controller.handleRemoteCommand({
+			type: "SEEK",
+			roomId: "room-1",
+			byUserId: "remote-host",
+			to: 42,
+		});
+
+		expect(harness.adapter.play).not.toHaveBeenCalled();
+		expect(harness.adapter.seek).not.toHaveBeenCalled();
+	});
+
 	it("ignores a late play completion after adapter replacement", async () => {
 		const deferredPlay = deferred<void>();
 		const harness = createHarness({
@@ -425,6 +544,11 @@ describe("PlaybackSyncController", () => {
 });
 
 interface HarnessOptions {
+	ensureRemoteSource?: (
+		source: WatchSourceDescriptor,
+		context: SourceNavigationContext,
+	) => Promise<EnsureSourceResult>;
+	fingerprint?: string;
 	isHost: boolean;
 	playImplementation?: () => Promise<void>;
 	provider?: "crunchyroll" | "youtube" | "generic";
@@ -436,6 +560,12 @@ function createHarness(options: HarnessOptions) {
 	const statuses: PlaybackSyncStatus[] = [];
 	const adapter = createFakeAdapter(options);
 	const controller = new PlaybackSyncController({
+		ensureRemoteSource:
+			options.ensureRemoteSource ??
+			(async () => ({
+				status: "unsupported" as const,
+				reason: "unsupported-route" as const,
+			})),
 		onStatus: (status) => statuses.push(status),
 		transport: {
 			send: (event) => sent.push(event),
@@ -493,9 +623,13 @@ interface FakeAdapter extends VideoAdapter {
 }
 
 function createFakeAdapter({
+	fingerprint,
 	playImplementation,
 	provider = "youtube",
-}: Pick<HarnessOptions, "playImplementation" | "provider"> = {}): FakeAdapter {
+}: Pick<
+	HarnessOptions,
+	"fingerprint" | "playImplementation" | "provider"
+> = {}): FakeAdapter {
 	const video = document.createElement("video");
 	let currentTime = 0;
 	let mediaReady = true;
@@ -537,7 +671,7 @@ function createFakeAdapter({
 		enterFullscreen: async () => undefined,
 		exitFullscreen: async () => undefined,
 		getCurrentTime: () => currentTime,
-		getFingerprint: () => `${provider}|video`,
+		getFingerprint: () => fingerprint ?? `${provider}|video`,
 		getOverlayBinding: () => ({
 			fillMountTarget: true,
 			mountTarget: document.body,
@@ -556,13 +690,13 @@ function createFakeAdapter({
 			provider,
 			sourceUrl: `https://example.com/watch/${provider}`,
 			title: "Test video",
-			videoFingerprint: `${provider}|video`,
+			videoFingerprint: fingerprint ?? `${provider}|video`,
 		}),
 		getState: () =>
 			playbackState({
 				hostTime: currentTime,
 				playing: !paused,
-				videoFingerprint: `${provider}|video`,
+				videoFingerprint: fingerprint ?? `${provider}|video`,
 			}),
 		getTitle: () => "Test video",
 		id: provider,
@@ -595,6 +729,19 @@ function createFakeAdapter({
 		subscribeOverlayGeometry: () => () => undefined,
 		unsubscribe,
 		video,
+	};
+}
+
+function watchSource(
+	provider: WatchSourceDescriptor["provider"],
+	key: string,
+): WatchSourceDescriptor {
+	return {
+		canonicalUrl: `https://www.youtube.com/watch?v=${key}`,
+		provider,
+		sourceUrl: `https://www.youtube.com/watch?v=${key}`,
+		title: "Test video",
+		videoFingerprint: `${provider}|${key}`,
 	};
 }
 

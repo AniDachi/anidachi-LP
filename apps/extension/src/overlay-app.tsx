@@ -7,6 +7,7 @@ import type {
   RoomCapabilities,
   RoomUsageSummary,
   ServerEvent,
+  WatchSourceDescriptor,
 } from "@anidachi/protocol";
 import {
   Check,
@@ -34,14 +35,14 @@ import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
 import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK, EMOJI_PALETTE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
-import { runCrunchyrollMainCommand } from "./source-adapters/crunchyroll/bridge-client";
+import { ensureSourceForProvider } from "./source-adapters/core/source-navigation";
 import {
   arePlayerOverlayGeometriesEqual,
   normalizePlayerOverlayGeometry,
   type PlayerOverlayGeometry,
 } from "./source-adapters/core/overlay-geometry";
-import { sourceProviderFromUrl } from "./source-adapters/core/source-url";
 import type { SourceProvider, VideoAdapter } from "./source-adapters/core/types";
+import { getDefinitionForProvider } from "./source-adapters/registry";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import {
   clearDebugLog,
@@ -120,7 +121,6 @@ import {
   shouldRenderRoomRail,
 } from "./room-rail-intent";
 import { useTopBubbleReveal } from "./top-bubble-reveal";
-import { isMediaSettling } from "./playback-control";
 import { PlaybackSyncController } from "./playback-sync-controller";
 import {
   connectWebsiteRoom,
@@ -194,14 +194,6 @@ interface CatchUpState {
   drift: number;
 }
 
-interface PendingSourceNavigation {
-  previousCurrentSrc: string;
-  previousVideo: HTMLVideoElement;
-  startedAt: number;
-  targetFingerprint: string;
-  targetUrl: string;
-}
-
 type FireChargePhase = "charging" | "ready";
 
 interface FireChargeState {
@@ -244,7 +236,6 @@ interface OverlayViewportSize {
   height: number;
 }
 
-const CRUNCHYROLL_SOURCE_NAVIGATION_GUARD_MS = 6000;
 const CHAT_DISPLAY_MODE_STORAGE_KEY = "local:chatDisplayMode";
 const DEFAULT_CHAT_DISPLAY_MODE: ChatDisplayMode = "live";
 const LIVE_CHAT_MESSAGE_TTL_MS = 9000;
@@ -333,7 +324,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const clientRef = useRef(new RoomClient());
   const adapterActiveRef = useRef(adapterActive);
   adapterActiveRef.current = adapterActive;
-  const pendingSourceNavigationRef = useRef<PendingSourceNavigation | null>(null);
   const stopVoiceRef = useRef<(() => void) | null>(null);
   const restoreLiveVoiceDuckingRef = useRef<(() => void) | null>(null);
   const restoreVoiceDuckingRef = useRef<(() => void) | null>(null);
@@ -455,6 +445,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const playbackSyncControllerRef = useRef<PlaybackSyncController | null>(null);
   if (!playbackSyncControllerRef.current) {
     playbackSyncControllerRef.current = new PlaybackSyncController({
+      ensureRemoteSource: (source, context) =>
+        ensureSourceForProvider(source, context, getDefinitionForProvider),
       onStatus: (syncStatus) => {
         if (syncStatus.kind === "out-of-sync") {
           setCatchUp({
@@ -838,10 +830,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     p2pSignalSequenceRef.current = 0;
     roomGenerationRef.current = 0;
     sourceGenerationRef.current = 0;
-    roomSourceProviderRef.current = null;
     setRoomGeneration(0);
     setSourceGeneration(0);
-    setRoomSourceProvider(null);
+    if (!roomId) {
+      roomSourceProviderRef.current = null;
+      setRoomSourceProvider(null);
+    } else {
+      setRoomSourceProvider(roomSourceProviderRef.current);
+    }
     setRoomSnapshotReady(false);
     setSignalingTransportReady(null);
     setIncomingP2PSignals([]);
@@ -1954,142 +1950,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     );
   }, []);
 
-  const shouldHoldHostStateForPendingSourceNavigation = useCallback(
-    (state: PlaybackState) => {
-      const pending = pendingSourceNavigationRef.current;
-      if (!pending || adapter.provider !== "crunchyroll") {
-        return false;
-      }
-
-      const ageMs = Date.now() - pending.startedAt;
-      if (state.videoFingerprint !== pending.targetFingerprint) {
-        return false;
-      }
-
-      if (ageMs > CRUNCHYROLL_SOURCE_NAVIGATION_GUARD_MS) {
-        pendingSourceNavigationRef.current = null;
-        logDebug("sync.source", "released stale source navigation guard", {
-          pending,
-          ageMs,
-          state: playbackStateDebugSnapshot(state),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return false;
-      }
-
-      const currentFingerprint = adapter.getFingerprint();
-      const stillOnPreviousMedia =
-        adapter.video === pending.previousVideo &&
-        adapter.video.currentSrc === pending.previousCurrentSrc;
-      const shouldHold =
-        currentFingerprint !== pending.targetFingerprint ||
-        stillOnPreviousMedia ||
-        isMediaSettling(adapter.video);
-
-      if (shouldHold) {
-        playbackSyncController.suppressLocalEventsForRemoteTransition();
-        logDebug("sync.source", "held host state during Crunchyroll source navigation", {
-          pending,
-          ageMs,
-          currentFingerprint,
-          stillOnPreviousMedia,
-          state: playbackStateDebugSnapshot(state),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return true;
-      }
-
-      pendingSourceNavigationRef.current = null;
-      logDebug("sync.source", "source navigation guard cleared", {
-        pending,
-        ageMs,
-        currentFingerprint,
-        state: playbackStateDebugSnapshot(state),
-        video: videoDebugSnapshot(adapter.video),
-      });
-      return false;
-    },
-    [adapter, playbackSyncController],
-  );
-
-  const navigateToRemoteSourceIfNeeded = useCallback(
-    (state: PlaybackState) => {
-      if (state.videoFingerprint === adapter.getFingerprint()) {
-        return false;
-      }
-
-      const roomProvider = roomSourceProviderRef.current;
-      if (
-        adapter.provider !== "crunchyroll" ||
-        !state.sourceUrl ||
-        roomProvider !== adapter.provider ||
-        sourceProviderFromUrl(state.sourceUrl) !== adapter.provider
-      ) {
-        return false;
-      }
-
-      const activeParticipantId = participantRef.current?.id ?? null;
-      const persistedRoomId =
-        storedRoomSessionRef.current?.ownerUserId === activeParticipantId
-          ? storedRoomSessionRef.current.roomId
-          : null;
-      const activeRoomId = roomIdRef.current ?? getRoomIdFromHash() ?? persistedRoomId;
-      const target = buildSourceUrlWithRoom(state.sourceUrl, activeRoomId);
-      if (!target || isSameDocumentTarget(target)) {
-        return false;
-      }
-
-      pendingSourceNavigationRef.current = {
-        previousCurrentSrc: adapter.video.currentSrc,
-        previousVideo: adapter.video,
-        startedAt: Date.now(),
-        targetFingerprint: state.videoFingerprint,
-        targetUrl: target.toString(),
-      };
-      playbackSyncController.suppressLocalEventsForRemoteTransition();
-
-      logDebug("sync.source", "navigate to host source", {
-        received: state.videoFingerprint,
-        local: adapter.getFingerprint(),
-        target: target.toString(),
-        roomId: activeRoomId,
-      });
-      void navigateCrunchyrollToRemoteSource(target, state);
-      return true;
-    },
-    [adapter, playbackSyncController],
-  );
-
   const applyHostState = useCallback(
-    async (state: PlaybackState) => {
+    async (state: PlaybackState, source?: WatchSourceDescriptor) => {
       if (!adapterActiveRef.current) {
         return;
       }
-      if (shouldHoldHostStateForPendingSourceNavigation(state)) {
-        return;
-      }
-
-      if (state.videoFingerprint !== adapter.getFingerprint()) {
-        if (navigateToRemoteSourceIfNeeded(state)) {
-          return;
-        }
-
-        logDebug("sync.applyHostState", "ignored fingerprint mismatch", {
-          received: state.videoFingerprint,
-          local: adapter.getFingerprint(),
-          state: playbackStateDebugSnapshot(state),
-        });
-        return;
-      }
-
-      await playbackSyncController.handleHostState(state);
+      await playbackSyncController.handleHostState(state, source);
     },
-    [
-      adapter,
-      navigateToRemoteSourceIfNeeded,
-      playbackSyncController,
-      shouldHoldHostStateForPendingSourceNavigation,
-    ],
+    [playbackSyncController],
   );
 
   // Terminally end the local room session without a reconnect loop: used for
@@ -2141,6 +2009,22 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           return;
         case "ROOM_SNAPSHOT": {
           if (
+            isStaleAuthoritativeGeneration(
+              roomGenerationRef.current,
+              sourceGenerationRef.current,
+              event.roomGeneration,
+              event.sourceGeneration,
+            )
+          ) {
+            logDebug("sync.source", "ignored stale room snapshot", {
+              currentRoomGeneration: roomGenerationRef.current,
+              currentSourceGeneration: sourceGenerationRef.current,
+              receivedRoomGeneration: event.roomGeneration,
+              receivedSourceGeneration: event.sourceGeneration,
+            });
+            return;
+          }
+          if (
             roomGenerationRef.current > 0 &&
             (roomGenerationRef.current !== event.roomGeneration ||
               sourceGenerationRef.current !== event.sourceGeneration)
@@ -2158,10 +2042,21 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           }
           roomGenerationRef.current = event.roomGeneration;
           sourceGenerationRef.current = event.sourceGeneration;
+          const currentRoomProvider = roomSourceProviderRef.current;
+          const snapshotSourceProvider = event.source?.provider ?? null;
           const snapshotProvider =
-            event.source?.provider ??
-            roomSourceProviderRef.current ??
-            adapter.provider;
+            currentRoomProvider ?? snapshotSourceProvider;
+          if (
+            currentRoomProvider &&
+            snapshotSourceProvider &&
+            currentRoomProvider !== snapshotSourceProvider
+          ) {
+            logDebug("sync.source", "ignored conflicting room snapshot provider", {
+              currentRoomProvider,
+              snapshotSourceProvider,
+              roomId: event.roomId,
+            });
+          }
           roomSourceProviderRef.current = snapshotProvider;
           setRoomGeneration(event.roomGeneration);
           setSourceGeneration(event.sourceGeneration);
@@ -2182,11 +2077,27 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
             sourceGeneration: event.sourceGeneration,
           });
           if (event.hostState && !isCurrentHost(event.participants)) {
-            void applyHostState(event.hostState);
+            void applyHostState(event.hostState, event.source);
           }
           return;
         }
         case "SOURCE_CHANGED":
+          if (
+            isStaleAuthoritativeGeneration(
+              roomGenerationRef.current,
+              sourceGenerationRef.current,
+              event.roomGeneration,
+              event.sourceGeneration,
+            )
+          ) {
+            logDebug("sync.source", "ignored stale source change", {
+              currentRoomGeneration: roomGenerationRef.current,
+              currentSourceGeneration: sourceGenerationRef.current,
+              receivedRoomGeneration: event.roomGeneration,
+              receivedSourceGeneration: event.sourceGeneration,
+            });
+            return;
+          }
           if (
             roomGenerationRef.current > 0 &&
             (roomGenerationRef.current !== event.roomGeneration ||
@@ -2207,21 +2118,33 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           }
           roomGenerationRef.current = event.roomGeneration;
           sourceGenerationRef.current = event.sourceGeneration;
-          roomSourceProviderRef.current = event.source.provider;
+          const sourceChangedProvider =
+            roomSourceProviderRef.current ?? event.source.provider;
+          if (
+            roomSourceProviderRef.current &&
+            roomSourceProviderRef.current !== event.source.provider
+          ) {
+            logDebug("sync.source", "ignored conflicting source-change provider", {
+              currentRoomProvider: roomSourceProviderRef.current,
+              receivedProvider: event.source.provider,
+              roomId: event.roomId,
+            });
+          }
+          roomSourceProviderRef.current = sourceChangedProvider;
           setRoomGeneration(event.roomGeneration);
           setSourceGeneration(event.sourceGeneration);
-          setRoomSourceProvider(event.source.provider);
+          setRoomSourceProvider(sourceChangedProvider);
           playbackSyncController.setSession({
             connectionGeneration: connectionGenerationRef.current,
             isHost: isCurrentHost(),
             participantId: participantRef.current?.id ?? null,
             roomGeneration: event.roomGeneration,
             roomId: event.roomId,
-            roomProvider: event.source.provider,
+            roomProvider: sourceChangedProvider,
             sourceGeneration: event.sourceGeneration,
           });
           if (!isCurrentHost()) {
-            void applyHostState(event.hostState);
+            void applyHostState(event.hostState, event.source);
           }
           return;
         case "PARTICIPANT_JOINED":
@@ -2377,6 +2300,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       activeParticipant: Participant,
       nextRoomToken: string,
       isCurrentJoin: () => boolean,
+      createdRoomProvider: SourceProvider | null = null,
     ): Promise<boolean> => {
       if (!isCurrentJoin()) {
         return false;
@@ -2390,6 +2314,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
       const sameRoomReconnect = roomIdRef.current === nextRoomId;
       if (!sameRoomReconnect) {
+        roomSourceProviderRef.current = createdRoomProvider;
+        setRoomSourceProvider(createdRoomProvider);
         handledP2PSignalIdsRef.current.clear();
         lastSeenP2PServerSeqRef.current = 0;
         p2pSignalSequenceRef.current = 0;
@@ -3092,6 +3018,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         activeParticipant,
         nextRoomToken,
         () => isCurrentCreate() && participantRef.current?.id === activeParticipant.id,
+        adapter.provider,
       );
       return connected ? created : null;
     },
@@ -5291,57 +5218,17 @@ function buildCurrentSourceUrlForInvite(): string {
   return url.toString();
 }
 
-function buildSourceUrlWithRoom(sourceUrl: string, roomId: string | null): URL | null {
-  let url: URL;
-  try {
-    url = new URL(sourceUrl, location.href);
-  } catch {
-    return null;
-  }
-
-  if (!url.hostname.endsWith("crunchyroll.com")) {
-    return null;
-  }
-
-  if (roomId) {
-    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
-    params.set("anidachiRoom", roomId);
-    url.hash = params.toString();
-  }
-
-  return url;
-}
-
-function isSameDocumentTarget(target: URL): boolean {
-  const current = new URL(location.href);
+function isStaleAuthoritativeGeneration(
+  currentRoomGeneration: number,
+  currentSourceGeneration: number,
+  receivedRoomGeneration: number,
+  receivedSourceGeneration: number,
+): boolean {
   return (
-    current.origin === target.origin &&
-    current.pathname === target.pathname &&
-    current.search === target.search
+    receivedRoomGeneration < currentRoomGeneration ||
+    (receivedRoomGeneration === currentRoomGeneration &&
+      receivedSourceGeneration < currentSourceGeneration)
   );
-}
-
-async function navigateCrunchyrollToRemoteSource(target: URL, state: PlaybackState): Promise<void> {
-  const targetUrl = target.toString();
-  const result = await runCrunchyrollMainCommand("navigate", {
-    url: targetUrl,
-  });
-  logDebug("sync.source", "Crunchyroll seamless navigation result", {
-    result,
-    state: playbackStateDebugSnapshot(state),
-    target: targetUrl,
-  });
-
-  if (result.ok || isSameDocumentTarget(target)) {
-    return;
-  }
-
-  logDebug("sync.source", "Crunchyroll hard navigation fallback", {
-    currentUrl: location.href,
-    error: result.error,
-    target: targetUrl,
-  });
-  location.assign(targetUrl);
 }
 
 function fallbackCopy(text: string): boolean {

@@ -98,4 +98,26 @@ export interface SourceAdapterDefinition {
   readonly provider: SourceProvider;
   readonly priority: number;
   detect(video: HTMLVideoElement): VideoAdapter | null;
+  ensureSource(
+    source: WatchSourceDescriptor,
+    context: SourceNavigationContext,
+  ): Promise<EnsureSourceResult>;
 }
+
+export interface SourceNavigationContext {
+  roomId: string | null;
+  roomProvider: SourceProvider;
+  signal: AbortSignal;
+}
+
+export type EnsureSourceResult =
+  | { status: "already-current" }
+  | { status: "navigation-started"; targetUrl: string }
+  | {
+      status: "unsupported";
+      reason:
+        | "provider-mismatch"
+        | "invalid-source"
+        | "unsupported-route";
+    }
+  | { status: "failed"; reason: "navigation-failed" };

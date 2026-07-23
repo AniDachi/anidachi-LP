@@ -1,10 +1,12 @@
 import type { SourceAdapterDefinition } from "../core/types";
 import { YouTubeVideoAdapter } from "./adapter";
+import { ensureYouTubeSource } from "./navigation";
 
 export const youtubeDefinition: SourceAdapterDefinition = {
   id: "youtube",
   provider: "youtube",
   priority: 300,
+  ensureSource: ensureYouTubeSource,
   detect(video) {
     const container = findYouTubePlayerContainer(video);
     return container ? new YouTubeVideoAdapter(video, container) : null;

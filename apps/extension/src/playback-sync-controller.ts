@@ -4,6 +4,7 @@ import {
 	normalizeRemotePlaybackState,
 	type PlaybackState,
 	type ServerEvent,
+	type WatchSourceDescriptor,
 } from "@anidachi/protocol";
 import {
 	isMediaSettling,
@@ -16,7 +17,9 @@ import {
 } from "./playback-control";
 import type { PlaybackSyncStatus } from "./playback-sync-status";
 import type {
+	EnsureSourceResult,
 	PlayerEvent,
+	SourceNavigationContext,
 	SourceProvider,
 	VideoAdapter,
 } from "./source-adapters/core/types";
@@ -41,6 +44,10 @@ export interface PlaybackSyncTransport {
 
 export interface PlaybackSyncControllerOptions {
 	transport: PlaybackSyncTransport;
+	ensureRemoteSource(
+		source: WatchSourceDescriptor,
+		context: SourceNavigationContext,
+	): Promise<EnsureSourceResult>;
 	onStatus(status: PlaybackSyncStatus): void;
 	now?: () => number;
 }
@@ -64,6 +71,14 @@ interface PendingRemoteSeek {
 interface AsyncEpoch {
 	adapter: VideoAdapter;
 	generation: number;
+	token: number;
+}
+
+interface PendingSourceNavigation {
+	abortController: AbortController;
+	latestHostState: PlaybackState;
+	source: WatchSourceDescriptor;
+	sourceGeneration: number;
 	token: number;
 }
 
@@ -94,18 +109,22 @@ export class PlaybackSyncController {
 	private pendingLocalSeek: PendingLocalSeek | null = null;
 	private pendingPlayWait = false;
 	private pendingRemoteSeek: PendingRemoteSeek | null = null;
+	private pendingSourceNavigation: PendingSourceNavigation | null = null;
 	private remotePlaybackToken = 0;
 	private session = EMPTY_SESSION;
+	private sourceNavigationToken = 0;
 	private suppressLocalEventsUntil = 0;
 	private unsubscribeAdapter: (() => void) | null = null;
 
 	private readonly now: () => number;
 	private readonly onStatus: (status: PlaybackSyncStatus) => void;
+	private readonly ensureRemoteSource: PlaybackSyncControllerOptions["ensureRemoteSource"];
 	private readonly transport: PlaybackSyncTransport;
 
 	constructor(options: PlaybackSyncControllerOptions) {
 		this.now = options.now ?? Date.now;
 		this.onStatus = options.onStatus;
+		this.ensureRemoteSource = options.ensureRemoteSource;
 		this.transport = options.transport;
 	}
 
@@ -133,6 +152,7 @@ export class PlaybackSyncController {
 				this.handleLocalEvent(event),
 			);
 		}
+		this.completeSourceNavigationForAdapter(adapter);
 		this.restartHeartbeatTimer();
 	}
 
@@ -147,6 +167,7 @@ export class PlaybackSyncController {
 		this.lastRemoteSeekAttempt = null;
 		this.latestHostState = null;
 		this.pendingRemoteSeek = null;
+		this.cancelPendingSourceNavigation();
 		this.suppressLocalEventsUntil = 0;
 		this.session = session;
 		this.restartHeartbeatTimer();
@@ -191,7 +212,67 @@ export class PlaybackSyncController {
 		this.sendLocalControlEvent(event);
 	}
 
-	handleHostState(state: PlaybackState): Promise<void> {
+	handleHostState(
+		state: PlaybackState,
+		source?: WatchSourceDescriptor,
+	): Promise<void> {
+		const adapter = this.getActiveAdapter();
+		if (
+			!adapter ||
+			!this.hasProviderBoundRoomSession() ||
+			this.session.isHost
+		) {
+			return Promise.resolve();
+		}
+
+		if (source) {
+			if (!this.isAuthoritativeSourceValid(source, state)) {
+				this.onStatus({
+					kind: "source-mismatch",
+					message: "The room source does not match this provider.",
+				});
+				return Promise.resolve();
+			}
+			if (state.videoFingerprint !== adapter.getFingerprint()) {
+				this.queueSourceNavigation(source, state);
+				return Promise.resolve();
+			}
+			this.clearPendingSourceNavigation();
+		} else if (this.pendingSourceNavigation) {
+			if (
+				state.videoFingerprint ===
+				this.pendingSourceNavigation.source.videoFingerprint
+			) {
+				this.pendingSourceNavigation.latestHostState = state;
+			}
+			return Promise.resolve();
+		}
+
+		if (
+			!this.hasActiveRoomSession() ||
+			state.videoFingerprint !== adapter.getFingerprint()
+		) {
+			return Promise.resolve();
+		}
+
+		return this.applyHostState(state);
+	}
+
+	pinRoomProvider(provider: SourceProvider): boolean {
+		if (
+			this.session.roomProvider &&
+			this.session.roomProvider !== provider
+		) {
+			return false;
+		}
+		if (this.session.roomProvider === provider) {
+			return true;
+		}
+		this.setSession({ ...this.session, roomProvider: provider });
+		return true;
+	}
+
+	private applyHostState(state: PlaybackState): Promise<void> {
 		const adapter = this.getActiveAdapter();
 		if (
 			!adapter ||
@@ -386,6 +467,41 @@ export class PlaybackSyncController {
 		this.adapter = null;
 		this.latestHostState = null;
 		this.pendingRemoteSeek = null;
+		this.cancelPendingSourceNavigation();
+	}
+
+	private cancelPendingSourceNavigation(): void {
+		const pending = this.pendingSourceNavigation;
+		if (!pending) {
+			return;
+		}
+		pending.abortController.abort();
+		this.pendingSourceNavigation = null;
+		this.sourceNavigationToken += 1;
+	}
+
+	private clearPendingSourceNavigation(): void {
+		this.cancelPendingSourceNavigation();
+		this.restartHeartbeatTimer();
+	}
+
+	private completeSourceNavigationForAdapter(
+		adapter: VideoAdapter | null,
+	): void {
+		const pending = this.pendingSourceNavigation;
+		if (
+			!adapter ||
+			!pending ||
+			adapter.provider !== pending.source.provider ||
+			adapter.getFingerprint() !== pending.source.videoFingerprint ||
+			this.session.sourceGeneration !== pending.sourceGeneration
+		) {
+			return;
+		}
+
+		const latestHostState = pending.latestHostState;
+		this.clearPendingSourceNavigation();
+		void this.applyHostState(latestHostState);
 	}
 
 	private cancelPendingRemotePlayback(): void {
@@ -476,6 +592,13 @@ export class PlaybackSyncController {
 	}
 
 	private hasActiveRoomSession(): boolean {
+		if (this.pendingSourceNavigation) {
+			return false;
+		}
+		return this.hasProviderBoundRoomSession();
+	}
+
+	private hasProviderBoundRoomSession(): boolean {
 		const adapter = this.getActiveAdapter();
 		return Boolean(
 			this.session.roomId &&
@@ -483,6 +606,17 @@ export class PlaybackSyncController {
 				this.session.roomProvider &&
 				adapter &&
 				this.session.roomProvider === adapter.provider,
+		);
+	}
+
+	private isAuthoritativeSourceValid(
+		source: WatchSourceDescriptor,
+		state: PlaybackState,
+	): boolean {
+		return Boolean(
+			this.session.roomProvider &&
+				source.provider === this.session.roomProvider &&
+				source.videoFingerprint === state.videoFingerprint,
 		);
 	}
 
@@ -595,6 +729,99 @@ export class PlaybackSyncController {
 			this.flushPendingLocalSeek();
 		}, delay);
 		this.pendingLocalSeek = { queuedAt: now, targetTime, timeoutId };
+	}
+
+	private queueSourceNavigation(
+		source: WatchSourceDescriptor,
+		state: PlaybackState,
+	): void {
+		const current = this.pendingSourceNavigation;
+		if (
+			current &&
+			current.source.provider === source.provider &&
+			current.source.videoFingerprint === source.videoFingerprint &&
+			current.sourceGeneration === this.session.sourceGeneration
+		) {
+			current.latestHostState = state;
+			return;
+		}
+
+		this.cancelPendingSourceNavigation();
+		this.invalidateAsyncWork();
+		this.clearPendingLocalSeek();
+		this.pendingRemoteSeek = null;
+		this.clearHeartbeatTimer();
+
+		const abortController = new AbortController();
+		const token = ++this.sourceNavigationToken;
+		const pending: PendingSourceNavigation = {
+			abortController,
+			latestHostState: state,
+			source,
+			sourceGeneration: this.session.sourceGeneration,
+			token,
+		};
+		this.pendingSourceNavigation = pending;
+
+		queueMicrotask(() => {
+			if (
+				this.disposed ||
+				this.pendingSourceNavigation !== pending ||
+				abortController.signal.aborted
+			) {
+				return;
+			}
+			void this.ensureRemoteSource(source, {
+				roomId: this.session.roomId,
+				roomProvider: source.provider,
+				signal: abortController.signal,
+			}).then(
+				(result) => this.handleSourceNavigationResult(pending, result),
+				() =>
+					this.handleSourceNavigationResult(pending, {
+						status: "failed",
+						reason: "navigation-failed",
+					}),
+			);
+		});
+	}
+
+	private handleSourceNavigationResult(
+		pending: PendingSourceNavigation,
+		result: EnsureSourceResult,
+	): void {
+		if (
+			this.disposed ||
+			this.pendingSourceNavigation !== pending ||
+			this.sourceNavigationToken !== pending.token ||
+			pending.abortController.signal.aborted
+		) {
+			return;
+		}
+
+		if (result.status === "already-current") {
+			this.completeSourceNavigationForAdapter(this.getActiveAdapter());
+			if (this.pendingSourceNavigation === pending) {
+				this.onStatus({
+					kind: "source-mismatch",
+					message: "The active player does not match the room source.",
+				});
+			}
+			return;
+		}
+		if (result.status === "unsupported") {
+			this.onStatus({
+				kind: "source-mismatch",
+				message: "This room source cannot be opened on the current provider.",
+			});
+			return;
+		}
+		if (result.status === "failed") {
+			this.onStatus({
+				kind: "sync-error",
+				message: "The room source could not be opened.",
+			});
+		}
 	}
 
 	private reconcileRejectedGuestControl(): void {
