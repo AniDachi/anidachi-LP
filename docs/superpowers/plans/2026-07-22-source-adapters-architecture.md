@@ -608,6 +608,15 @@ Automated evidence recorded on 2026-07-22:
 
 ## PR 2: Lifecycle, Capabilities, And First-Class YouTube
 
+Detailed playback synchronization, provider pinning, YouTube source switching,
+advertisement isolation, buffering, playback-rate, autoplay recovery, and
+two-profile acceptance now live in
+`docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md`. Treat
+that document as the execution detail for the unfinished playback portions of
+Tasks 8–12 below. Before each task, verify its assumptions against the active
+branch and amend the plan when source reality differs; do not follow stale
+steps mechanically.
+
 ### Task 7: Add The Adapter Lifecycle Manager
 
 **Status:** Complete on 2026-07-22. The content lifecycle now has one
@@ -768,6 +777,12 @@ git commit -m "refactor(extension): let providers describe watch sources"
 
 ### Task 10: Add Safe Provider Navigation And YouTube Source Switching
 
+**Execution note:** Implement this task through Task 3 of
+`2026-07-23-youtube-playback-sync-hardening.md`. That detailed task adds the
+required Worker/RoomState files, API tests, exact staging boundary, and
+cross-plane commit. Do not follow an older extension-only interpretation of
+this task.
+
 **Files:**
 - Create: `apps/extension/src/source-adapters/youtube/navigation.ts`
 - Create: `apps/extension/src/source-adapters/crunchyroll/navigation.ts`
@@ -798,16 +813,23 @@ export async function ensureRemoteSource(
   page unchanged.
 - [ ] Preserve the active room ID using the existing room hash convention and
   persisted room session; the hash is not the sole room source of truth.
-- [ ] Keep one navigation operation active. Abort an older operation when a
-  newer host source arrives.
+- [ ] Keep one pre-navigation operation active. Abort or coalesce older work
+  before dispatch when a newer host source arrives. A dispatched hard
+  navigation cannot be undone.
 - [ ] YouTube returns `already-current` for the same canonical video and uses
   `location.assign(canonicalTarget)` for a different video. Do not call
-  unsupported YouTube internal methods.
+  unsupported YouTube internal methods. Once `location.assign()` is called,
+  rely on the newest authoritative room snapshot after reload rather than
+  treating the old operation as cancellable.
 - [ ] Crunchyroll uses the existing MAIN-world `navigate` command and existing
   hard-navigation fallback.
 - [ ] While navigation is pending, hold the latest host state and do not apply
   play/seek to the previous video. Completion requires a newly detected adapter
   whose fingerprint equals the target fingerprint.
+- [ ] Treat the first valid room source as source initialization: broadcast it
+  to already connected participants, persist its generation, pin its validated
+  provider server-side, and reject later cross-provider source changes without
+  mutating room state.
 - [ ] Replace `navigateToRemoteSourceIfNeeded()` and Crunchyroll-only URL
   helpers in `overlay-app.tsx` with `ensureRemoteSource()`.
 - [ ] Test that a YouTube room rejects a Crunchyroll source and a Crunchyroll
@@ -815,12 +837,8 @@ export async function ensureRemoteSource(
   Also test that switching to another valid source within the pinned provider
   remains supported.
 - [ ] Run source-switching tests and full extension tests.
-- [ ] Commit:
-
-```bash
-git add apps/extension
-git commit -m "feat(extension): follow youtube room source changes safely"
-```
+- [ ] Verify and commit using the exact cross-plane file list and commands in
+  Task 3 Step 6 of `2026-07-23-youtube-playback-sync-hardening.md`.
 
 ### Task 11: Provider-Aware Detection Hardening
 

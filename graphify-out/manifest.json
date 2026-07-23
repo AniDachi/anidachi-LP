@@ -3215,22 +3215,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1784765728.3211014,
+    "mtime": 1784770904.9430737,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1784765728.3210573,
+    "mtime": 1784770904.9430237,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1784765728.3210163,
+    "mtime": 1784770904.9429812,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1784765728.3209677,
+    "mtime": 1784770904.9429328,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3690,8 +3690,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md": {
-    "mtime": 1784720384.5846727,
-    "ast_hash": "d08c03097c35e55a94caeee5546d9ef2",
+    "mtime": 1784790926.0939848,
+    "ast_hash": "a2e5b9e3375821ccaf7973afa529c78e",
     "semantic_hash": ""
   },
   "apps/extension/src/top-bubble-reveal.ts": {
@@ -3777,6 +3777,11 @@
   "apps/extension/test/overlay-interaction-boundary.test.ts": {
     "mtime": 1784765515.9468796,
     "ast_hash": "c9f8163bb56f61de609157007cc2539f",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md": {
+    "mtime": 1784791028.9740748,
+    "ast_hash": "5b2b9feda6d7bbab82cf3b24d374b1fc",
     "semantic_hash": ""
   }
 }

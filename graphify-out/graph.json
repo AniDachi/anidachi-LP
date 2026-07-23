@@ -46376,7 +46376,7 @@
       "label": "Task 7: Add The Adapter Lifecycle Manager",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L611",
+      "source_location": "L620",
       "_origin": "ast"
     },
     {
@@ -46384,7 +46384,7 @@
       "label": "Task 8: Replace Provider ID Branches With Capabilities And Policies",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L683",
+      "source_location": "L692",
       "_origin": "ast"
     },
     {
@@ -46392,7 +46392,7 @@
       "label": "Task 9: Move Source Descriptors And Progress Into Providers",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L737",
+      "source_location": "L746",
       "_origin": "ast"
     },
     {
@@ -46400,7 +46400,7 @@
       "label": "Task 10: Add Safe Provider Navigation And YouTube Source Switching",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L769",
+      "source_location": "L778",
       "_origin": "ast"
     },
     {
@@ -46408,7 +46408,7 @@
       "label": "Task 11: Provider-Aware Detection Hardening",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L825",
+      "source_location": "L843",
       "_origin": "ast"
     },
     {
@@ -46416,7 +46416,7 @@
       "label": "Task 12: Final Verification, Documentation, And PR 2",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L853",
+      "source_location": "L871",
       "_origin": "ast"
     },
     {
@@ -46424,7 +46424,7 @@
       "label": "Required Automated Verification",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L881",
+      "source_location": "L899",
       "_origin": "ast"
     },
     {
@@ -46432,7 +46432,7 @@
       "label": "Definition Of Done",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L897",
+      "source_location": "L915",
       "_origin": "ast"
     },
     {
@@ -46440,7 +46440,159 @@
       "label": "Rollback",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L916",
+      "source_location": "L934",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening",
+      "label": "2026-07-23-youtube-playback-sync-hardening.md",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "label": "YouTube Playback Synchronization Hardening Implementation Plan",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_status_and_relationship_to_existing_plans",
+      "label": "Status And Relationship To Existing Plans",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L23",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_product_decisions",
+      "label": "Product Decisions",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L39",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_global_constraints",
+      "label": "Global Constraints",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L83",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_external_constraints_verified_on_2026_07_23",
+      "label": "External Constraints Verified On 2026-07-23",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L124",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_current_verified_baseline",
+      "label": "Current Verified Baseline",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L142",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_target_file_structure",
+      "label": "Target File Structure",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L169",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_provisional_interfaces_and_dependency_direction",
+      "label": "Provisional Interfaces And Dependency Direction",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L210",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_1_characterize_and_extract_the_playback_coordinator",
+      "label": "Task 1: Characterize And Extract The Playback Coordinator",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L393",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_2_replace_provider_branches_with_playback_capabilities",
+      "label": "Task 2: Replace Provider Branches With Playback Capabilities",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L510",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_3_pin_room_provider_and_add_safe_youtube_source_switching",
+      "label": "Task 3: Pin Room Provider And Add Safe YouTube Source Switching",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L618",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_4_detect_youtube_content_advertisement_buffering_and_transition_phases",
+      "label": "Task 4: Detect YouTube Content, Advertisement, Buffering, And Transition Phases",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L760",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_5_apply_phase_barriers_and_host_guest_advertisement_policy",
+      "label": "Task 5: Apply Phase Barriers And Host/Guest Advertisement Policy",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L854",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_6_synchronize_playback_rate_and_recover_from_buffering_and_autoplay_blocks",
+      "label": "Task 6: Synchronize Playback Rate And Recover From Buffering And Autoplay Blocks",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L972",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_7_add_diagnostics_and_documentation",
+      "label": "Task 7: Add Diagnostics And Documentation",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1078",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_8_automated_and_two_profile_acceptance",
+      "label": "Task 8: Automated And Two-Profile Acceptance",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1152",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_definition_of_done",
+      "label": "Definition Of Done",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1295",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_rollback_boundaries",
+      "label": "Rollback Boundaries",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1317",
       "_origin": "ast"
     },
     {
@@ -171265,7 +171417,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L611",
+      "source_location": "L620",
       "weight": 1.0
     },
     {
@@ -171274,7 +171426,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L683",
+      "source_location": "L692",
       "weight": 1.0
     },
     {
@@ -171283,7 +171435,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L737",
+      "source_location": "L746",
       "weight": 1.0
     },
     {
@@ -171292,7 +171444,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L769",
+      "source_location": "L778",
       "weight": 1.0
     },
     {
@@ -171301,7 +171453,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L825",
+      "source_location": "L843",
       "weight": 1.0
     },
     {
@@ -171310,7 +171462,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L853",
+      "source_location": "L871",
       "weight": 1.0
     },
     {
@@ -171319,7 +171471,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L881",
+      "source_location": "L899",
       "weight": 1.0
     },
     {
@@ -171328,7 +171480,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L897",
+      "source_location": "L915",
       "weight": 1.0
     },
     {
@@ -171337,7 +171489,169 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md",
-      "source_location": "L916",
+      "source_location": "L934",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_status_and_relationship_to_existing_plans",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_product_decisions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_global_constraints",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_external_constraints_verified_on_2026_07_23",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_current_verified_baseline",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L142",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_target_file_structure",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L169",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_provisional_interfaces_and_dependency_direction",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L210",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_provisional_interfaces_and_dependency_direction",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_1_characterize_and_extract_the_playback_coordinator",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L393",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_provisional_interfaces_and_dependency_direction",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_2_replace_provider_branches_with_playback_capabilities",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L510",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_provisional_interfaces_and_dependency_direction",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_3_pin_room_provider_and_add_safe_youtube_source_switching",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L618",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_provisional_interfaces_and_dependency_direction",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_4_detect_youtube_content_advertisement_buffering_and_transition_phases",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L760",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_provisional_interfaces_and_dependency_direction",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_5_apply_phase_barriers_and_host_guest_advertisement_policy",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L854",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_provisional_interfaces_and_dependency_direction",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_6_synchronize_playback_rate_and_recover_from_buffering_and_autoplay_blocks",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L972",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_provisional_interfaces_and_dependency_direction",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_7_add_diagnostics_and_documentation",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1078",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_provisional_interfaces_and_dependency_direction",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_task_8_automated_and_two_profile_acceptance",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1152",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_definition_of_done",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1295",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_youtube_playback_synchronization_hardening_implementation_plan",
+      "target": "docs_superpowers_plans_2026_07_23_youtube_playback_sync_hardening_rollback_boundaries",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md",
+      "source_location": "L1317",
       "weight": 1.0
     },
     {
