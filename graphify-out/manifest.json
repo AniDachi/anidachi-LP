@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1784806642.7349772,
-    "ast_hash": "06d1b896c32f208f2a29e0b1d5f282fa",
+    "mtime": 1784807425.8571095,
+    "ast_hash": "d9ac0e2f366c19edd09837ac5338766d",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -380,8 +380,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1784806165.6372738,
-    "ast_hash": "92928cc0590fb873198d658c392c7e34",
+    "mtime": 1784807437.0823112,
+    "ast_hash": "538f233f06ae42f1a7f3dbf5126aef0b",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -3215,22 +3215,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1784806250.4855988,
+    "mtime": 1784806726.487686,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1784806250.4857101,
+    "mtime": 1784806726.4878125,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1784806250.4858854,
+    "mtime": 1784806726.4878986,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1784806250.4859867,
+    "mtime": 1784806726.4879837,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3380,8 +3380,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-styles.test.ts": {
-    "mtime": 1784806153.2152195,
-    "ast_hash": "93c17583f335f82041ab97b499535d81",
+    "mtime": 1784807454.122101,
+    "ast_hash": "11c83f9809e71db9fd57b0db4a874309",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-ghost-preview.tsx": {
@@ -3430,8 +3430,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-room-action-feedback.ts": {
-    "mtime": 1784806608.9948816,
-    "ast_hash": "277e11f2bdf2f2f2989b4083e945b5ba",
+    "mtime": 1784807370.3281322,
+    "ast_hash": "d86062b49e7871afd0c90e545d06c0ee",
     "semantic_hash": ""
   },
   "apps/extension/src/settings-panel-navigation.ts": {
@@ -3445,8 +3445,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-room-action-feedback.test.ts": {
-    "mtime": 1784806588.199193,
-    "ast_hash": "d5e821605e32e92ec00cb87f09dc5e59",
+    "mtime": 1784807350.2021036,
+    "ast_hash": "a7accabdef7dc8da696cd9633f64e8dd",
     "semantic_hash": ""
   },
   "apps/extension/test/settings-panel-navigation.test.ts": {

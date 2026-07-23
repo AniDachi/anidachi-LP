@@ -492,6 +492,25 @@ export const overlayStyles = `
     background: linear-gradient(135deg, #ffc07a, #fb7c24);
   }
 
+  .button.primary.panel-primary-action.room-exit {
+    border-color: rgba(248, 113, 113, 0.22);
+    background: rgba(127, 29, 29, 0.1);
+    color: rgba(254, 202, 202, 0.9);
+    box-shadow: none;
+  }
+
+  .button.primary.panel-primary-action.room-exit:not(:disabled):hover {
+    border-color: rgba(248, 113, 113, 0.36);
+    background: rgba(127, 29, 29, 0.18);
+    color: rgba(254, 226, 226, 0.98);
+  }
+
+  .button.primary.panel-primary-action.room-exit.confirming {
+    border-color: rgba(248, 113, 113, 0.48);
+    background: rgba(153, 27, 27, 0.24);
+    color: rgba(254, 226, 226, 0.98);
+  }
+
   .button:not(:disabled):active,
   .icon-button:not(:disabled):active {
     transform: translateY(1px);

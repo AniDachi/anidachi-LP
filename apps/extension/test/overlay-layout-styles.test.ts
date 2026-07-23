@@ -125,6 +125,18 @@ describe("overlay layout pointer surfaces", () => {
 		expect(activePrimaryAction).toContain("max-width: none");
 	});
 
+	it("renders room exit as a restrained destructive primary action", () => {
+		const exitAction = getRule(
+			".button.primary.panel-primary-action.room-exit",
+		);
+		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.22)");
+		expect(exitAction).toContain("background: rgba(127, 29, 29, 0.1)");
+		expect(exitAction).toContain("box-shadow: none");
+		expect(
+			getRule(".button.primary.panel-primary-action.room-exit.confirming"),
+		).toContain("background: rgba(153, 27, 27, 0.24)");
+	});
+
 	it("uses restrained text tabs for settings navigation", () => {
 		const tab = getRule(".settings-category-tab");
 		expect(tab).toContain("position: relative");

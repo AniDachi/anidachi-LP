@@ -4,6 +4,7 @@ import {
   getPrimaryRoomActionKind,
   getPrimaryRoomActionLabel,
   isInviteCopiedFeedback,
+  shouldConfirmRoomEnd,
 } from "../src/overlay-room-action-feedback";
 
 describe("overlay room action feedback", () => {
@@ -64,12 +65,12 @@ describe("overlay room action feedback", () => {
         roomEndPending: false,
         roomExists: true,
       }),
-    ).toBe("New room");
+    ).toBe("End room");
   });
 
   it("uses leave as the primary action only for a guest in an active room", () => {
     expect(getPrimaryRoomActionKind({ isHost: false, roomExists: true })).toBe("leave");
-    expect(getPrimaryRoomActionKind({ isHost: true, roomExists: true })).toBe("create");
+    expect(getPrimaryRoomActionKind({ isHost: true, roomExists: true })).toBe("end");
     expect(getPrimaryRoomActionKind({ isHost: false, roomExists: false })).toBe("create");
     expect(
       getPrimaryRoomActionLabel({
@@ -104,6 +105,23 @@ describe("overlay room action feedback", () => {
         roomLeavePending: false,
       }),
     ).toBe("Room left");
+  });
+
+  it("requests confirmation only when ending a room with guests", () => {
+    expect(shouldConfirmRoomEnd(1)).toBe(false);
+    expect(shouldConfirmRoomEnd(2)).toBe(true);
+    expect(shouldConfirmRoomEnd(6)).toBe(true);
+    expect(
+      getPrimaryRoomActionLabel({
+        feedback: null,
+        isHost: true,
+        roomCreatePending: false,
+        roomEndConfirmationPending: true,
+        roomEndPending: false,
+        roomExists: true,
+        roomLeavePending: false,
+      }),
+    ).toBe("Confirm end");
   });
 
   it("identifies only copied-invite feedback for the copy control", () => {

@@ -12,7 +12,6 @@ import type {
 import {
   Check,
   Copy,
-  DoorOpen,
   Mic,
   MicOff,
   RefreshCw,
@@ -112,6 +111,8 @@ import {
   isInviteCopiedFeedback,
   type RoomActionFeedback,
   ROOM_ACTION_FEEDBACK_DURATION_MS,
+  ROOM_END_CONFIRMATION_DURATION_MS,
+  shouldConfirmRoomEnd,
 } from "./overlay-room-action-feedback";
 import { PanelCameraControl, RoomPeopleSection } from "./overlay-room-media-controls";
 import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
@@ -352,6 +353,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const overlayRootRef = useRef<HTMLDivElement | null>(null);
   const topBubbleRef = useRef<HTMLButtonElement | null>(null);
   const roomActionFeedbackTimerRef = useRef<number | null>(null);
+  const roomEndConfirmationTimerRef = useRef<number | null>(null);
   const messageComposerShieldReleaseTimerRef = useRef<number | null>(null);
   const messageComposerShieldReleasePointerRef = useRef<PointerWakePoint | null>(null);
   const authUserIdRef = useRef<string | null>(null);
@@ -392,6 +394,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   });
   const [messageComposerOpen, setMessageComposerOpen] = useState(false);
   const [roomCreatePending, setRoomCreatePending] = useState(false);
+  const [roomEndConfirmationPending, setRoomEndConfirmationPending] = useState(false);
   const [roomEndPending, setRoomEndPending] = useState(false);
   const [roomLeavePending, setRoomLeavePending] = useState(false);
   const [roomActionFeedback, setRoomActionFeedback] = useState<RoomActionFeedback | null>(null);
@@ -542,10 +545,21 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }, ROOM_ACTION_FEEDBACK_DURATION_MS);
   }, []);
 
+  const clearRoomEndConfirmation = useCallback(() => {
+    if (roomEndConfirmationTimerRef.current !== null) {
+      window.clearTimeout(roomEndConfirmationTimerRef.current);
+      roomEndConfirmationTimerRef.current = null;
+    }
+    setRoomEndConfirmationPending(false);
+  }, []);
+
   useEffect(
     () => () => {
       if (roomActionFeedbackTimerRef.current !== null) {
         window.clearTimeout(roomActionFeedbackTimerRef.current);
+      }
+      if (roomEndConfirmationTimerRef.current !== null) {
+        window.clearTimeout(roomEndConfirmationTimerRef.current);
       }
     },
     [],
@@ -1198,6 +1212,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       : "No media seats";
   const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
   const isHost = currentParticipant?.role === "host";
+
+  useEffect(() => {
+    if (!roomId || !isHost) {
+      clearRoomEndConfirmation();
+    }
+  }, [clearRoomEndConfirmation, isHost, roomId]);
   const isConnected = status === "connected";
   const { p2pSessionActive } = getP2PMediaSessionState({
     localHasMediaSeat,
@@ -2963,6 +2983,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
   const createAndConnectRoom = useCallback(
     async (reason: string) => {
+      if (roomIdRef.current) {
+        logDebug("overlay.room", "create skipped while room is active", {
+          reason,
+          roomId: roomIdRef.current,
+        });
+        return null;
+      }
+
       cancelPendingRoomJoin();
       const createSequence = roomJoinSequenceRef.current;
       const isCurrentCreate = () => roomJoinSequenceRef.current === createSequence;
@@ -3241,6 +3269,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
 
     clearRoomActionFeedback();
+    clearRoomEndConfirmation();
     setRoomEndPending(true);
     try {
       const activeRoomId = roomIdRef.current;
@@ -3280,6 +3309,26 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     } finally {
       setRoomEndPending(false);
     }
+  };
+
+  const handleRequestEndRoom = async () => {
+    if (roomEndPending || !roomId || !isHost) {
+      return;
+    }
+
+    if (shouldConfirmRoomEnd(participantCount) && !roomEndConfirmationPending) {
+      setRoomEndConfirmationPending(true);
+      if (roomEndConfirmationTimerRef.current !== null) {
+        window.clearTimeout(roomEndConfirmationTimerRef.current);
+      }
+      roomEndConfirmationTimerRef.current = window.setTimeout(() => {
+        roomEndConfirmationTimerRef.current = null;
+        setRoomEndConfirmationPending(false);
+      }, ROOM_END_CONFIRMATION_DURATION_MS);
+      return;
+    }
+
+    await handleEndRoom();
   };
 
   const handleLeaveRoom = async () => {
@@ -4100,6 +4149,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     feedback: roomActionFeedback,
     isHost,
     roomCreatePending,
+    roomEndConfirmationPending,
     roomEndPending,
     roomExists: Boolean(roomId),
     roomLeavePending,
@@ -4209,10 +4259,23 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
           <div className={roomActionsClassName}>
             <button
-              className={`button primary panel-primary-action${roomCreatePending || roomLeavePending ? " loading" : ""}`}
+              className={[
+                "button",
+                "primary",
+                "panel-primary-action",
+                primaryRoomActionKind !== "create" ? "room-exit" : "",
+                roomEndConfirmationPending ? "confirming" : "",
+                roomCreatePending || roomEndPending || roomLeavePending ? "loading" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               type="button"
               onClick={
-                primaryRoomActionKind === "leave" ? handleLeaveRoom : handleCreateRoom
+                primaryRoomActionKind === "leave"
+                  ? handleLeaveRoom
+                  : primaryRoomActionKind === "end"
+                    ? handleRequestEndRoom
+                    : handleCreateRoom
               }
               disabled={
                 !participant ||
@@ -4274,19 +4337,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                 >
                   <RefreshCw size={14} />
                 </button>
-                {isHost ? (
-                  <button
-                    aria-label={roomEndPending ? "Ending room" : "End room"}
-                    className={`panel-icon-action danger reveal-action${roomEndPending ? " loading" : ""}`}
-                    title={roomEndPending ? "Ending room" : "End room"}
-                    type="button"
-                    onClick={handleEndRoom}
-                    disabled={roomCreatePending || roomEndPending || roomLeavePending}
-                    style={{ "--action-index": 3 } as CSSProperties}
-                  >
-                    <DoorOpen size={14} />
-                  </button>
-                ) : null}
               </div>
             ) : null}
           </div>
