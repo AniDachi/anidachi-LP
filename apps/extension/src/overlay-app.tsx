@@ -77,6 +77,7 @@ import {
   ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
   isMessageComposerShortcutEvent,
 } from "./message-composer-events";
+import { overlayInteractionBoundaryProps } from "./overlay-interaction-boundary";
 import { getOverlayChromePlacement, shouldShowCameraStack } from "./overlay-layout";
 import { OverlayLayoutEditor } from "./overlay-layout-editor";
 import { type OverlayLayoutContext, resolveOverlayLayout } from "./overlay-layout-engine";
@@ -4871,6 +4872,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           id="anidachi-mini-panel"
           aria-label="Anidachi controls"
           ref={miniPanelRef}
+          {...overlayInteractionBoundaryProps}
         >
           <div className="panel-header">
             <div className="panel-account">
