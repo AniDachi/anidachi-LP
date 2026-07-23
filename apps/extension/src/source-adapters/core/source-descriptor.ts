@@ -22,7 +22,7 @@ export function buildWatchSourceDescriptor(
 		? adapter.video.duration
 		: undefined;
 	return {
-		provider: watchProviderFromAdapterId(adapter.id),
+		provider: sourceProviderFromAdapterId(adapter.id),
 		sourceUrl,
 		canonicalUrl: sourceUrl,
 		videoFingerprint: state.videoFingerprint,
@@ -37,7 +37,7 @@ function normalizeWatchTitle(title: string): string {
 		: title.slice(0, MAX_WATCH_TITLE_CHARS);
 }
 
-function watchProviderFromAdapterId(
+export function sourceProviderFromAdapterId(
 	adapterId: string,
 ): WatchSourceDescriptor["provider"] {
 	if (adapterId === "crunchyroll") return "crunchyroll";

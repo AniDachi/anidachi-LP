@@ -1,14 +1,12 @@
-import {
-  type ClientEvent,
-  getSyncCorrection,
-  normalizeRemotePlaybackState,
-  type P2PSignal,
-  type Participant,
-  type PlaybackState,
-  type ReactionEvent,
-  type RoomCapabilities,
-  type RoomUsageSummary,
-  type ServerEvent,
+import type {
+  ClientEvent,
+  P2PSignal,
+  Participant,
+  PlaybackState,
+  ReactionEvent,
+  RoomCapabilities,
+  RoomUsageSummary,
+  ServerEvent,
 } from "@anidachi/protocol";
 import {
   Check,
@@ -42,8 +40,8 @@ import {
   normalizePlayerOverlayGeometry,
   type PlayerOverlayGeometry,
 } from "./source-adapters/core/overlay-geometry";
-import type { PlayerEvent, VideoAdapter } from "./source-adapters/core/types";
-import { buildWatchSourceDescriptor } from "./source-adapters/core/source-descriptor";
+import { sourceProviderFromAdapterId } from "./source-adapters/core/source-descriptor";
+import type { SourceProvider, VideoAdapter } from "./source-adapters/core/types";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import {
   clearDebugLog,
@@ -122,17 +120,8 @@ import {
   shouldRenderRoomRail,
 } from "./room-rail-intent";
 import { useTopBubbleReveal } from "./top-bubble-reveal";
-import {
-  getRemotePlayReadyTimeoutMs,
-  isMediaSettling,
-  type RemoteSeekAttempt,
-  shouldDeferHostStateSeek,
-  shouldPlayWithoutWaitingForMediaReady,
-  shouldSeekForHostState,
-  shouldSeekForRemoteCommand,
-  shouldThrottleRemoteSeekAttempt,
-  waitForMediaReady,
-} from "./playback-control";
+import { isMediaSettling } from "./playback-control";
+import { PlaybackSyncController } from "./playback-sync-controller";
 import {
   connectWebsiteRoom,
   createRoom,
@@ -205,17 +194,6 @@ interface CatchUpState {
   drift: number;
 }
 
-interface LocalSeekBroadcast {
-  queuedAt: number;
-  targetTime: number;
-  timeoutId: number;
-}
-
-interface PendingRemoteSeek {
-  startedAt: number;
-  targetTime: number;
-}
-
 interface PendingSourceNavigation {
   previousCurrentSrc: string;
   previousVideo: HTMLVideoElement;
@@ -266,16 +244,6 @@ interface OverlayViewportSize {
   height: number;
 }
 
-const REMOTE_EVENT_SUPPRESSION_MS = 1800;
-const REMOTE_COMMAND_DEDUPE_MS = 800;
-const CRUNCHYROLL_REMOTE_SEEK_GUARD_MS = 15_000;
-const CRUNCHYROLL_REMOTE_SEEK_GUARD_TOLERANCE_SECONDS = 4;
-const CRUNCHYROLL_REMOTE_SEEK_HOST_TARGET_TOLERANCE_SECONDS = 8;
-const CRUNCHYROLL_LOCAL_SEEK_SETTLING_DELAY_MS = 360;
-const CRUNCHYROLL_LOCAL_SEEK_READY_DELAY_MS = 80;
-const CRUNCHYROLL_LOCAL_SEEK_DUPLICATE_MS = 1200;
-const CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS = 0.75;
-const CRUNCHYROLL_LOCAL_PLAYBACK_SUPPRESSION_AFTER_SEEK_MS = 900;
 const CRUNCHYROLL_SOURCE_NAVIGATION_GUARD_MS = 6000;
 const CHAT_DISPLAY_MODE_STORAGE_KEY = "local:chatDisplayMode";
 const DEFAULT_CHAT_DISPLAY_MODE: ChatDisplayMode = "live";
@@ -365,22 +333,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const clientRef = useRef(new RoomClient());
   const adapterActiveRef = useRef(adapterActive);
   adapterActiveRef.current = adapterActive;
-  const suppressLocalEventsUntilRef = useRef(0);
-  const remotePlaybackTokenRef = useRef(0);
-  const pendingPlayWaitRef = useRef(false);
-  const lastRemoteCommandRef = useRef<{
-    key: string;
-    receivedAt: number;
-  } | null>(null);
-  const lastRemoteSeekAttemptRef = useRef<RemoteSeekAttempt | null>(null);
-  const pendingRemoteSeekRef = useRef<PendingRemoteSeek | null>(null);
   const pendingSourceNavigationRef = useRef<PendingSourceNavigation | null>(null);
-  const pendingLocalSeekBroadcastRef = useRef<LocalSeekBroadcast | null>(null);
-  const lastLocalSeekEventAtRef = useRef(0);
-  const lastLocalSeekBroadcastRef = useRef<{
-    sentAt: number;
-    targetTime: number;
-  } | null>(null);
   const stopVoiceRef = useRef<(() => void) | null>(null);
   const restoreLiveVoiceDuckingRef = useRef<(() => void) | null>(null);
   const restoreVoiceDuckingRef = useRef<(() => void) | null>(null);
@@ -393,8 +346,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const handledP2PSignalIdsRef = useRef(new Set<string>());
   const lastSeenP2PServerSeqRef = useRef(0);
   const p2pSignalSequenceRef = useRef(0);
+  const connectionGenerationRef = useRef(0);
   const roomGenerationRef = useRef(0);
   const sourceGenerationRef = useRef(0);
+  const roomSourceProviderRef = useRef<SourceProvider | null>(null);
   const roomReconnectAttemptRef = useRef(0);
   const roomReconnectInFlightRef = useRef(false);
   const roomReconnectSuppressedRef = useRef(false);
@@ -490,12 +445,32 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [incomingP2PSignals, setIncomingP2PSignals] = useState<IncomingP2PSignal[]>([]);
   const [roomGeneration, setRoomGeneration] = useState(0);
   const [sourceGeneration, setSourceGeneration] = useState(0);
+  const [roomSourceProvider, setRoomSourceProvider] = useState<SourceProvider | null>(null);
   const [roomSnapshotReady, setRoomSnapshotReady] = useState(false);
   const [signalingTransportReady, setSignalingTransportReady] =
     useState<SignalingTransportReady | null>(null);
   const [fireCharge, setFireCharge] = useState<FireChargeState | null>(null);
   const [flamingParticipantIds, setFlamingParticipantIds] = useState<string[]>([]);
   const [catchUp, setCatchUp] = useState<CatchUpState | null>(null);
+  const playbackSyncControllerRef = useRef<PlaybackSyncController | null>(null);
+  if (!playbackSyncControllerRef.current) {
+    playbackSyncControllerRef.current = new PlaybackSyncController({
+      onStatus: (syncStatus) => {
+        if (syncStatus.kind === "out-of-sync") {
+          setCatchUp({
+            drift: syncStatus.drift,
+            expectedTime: syncStatus.expectedTime,
+          });
+          return;
+        }
+        setCatchUp(null);
+      },
+      transport: {
+        send: (event) => clientRef.current.send(event),
+      },
+    });
+  }
+  const playbackSyncController = playbackSyncControllerRef.current;
   const [liveVoiceTalking, setLiveVoiceTalking] = useState(false);
   const [voiceListening, setVoiceListening] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
@@ -508,22 +483,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const crunchyrollPosterRequestsRef = useRef<Record<string, Promise<string | null> | undefined>>(
     {},
   );
-
-  const suspendAdapterPlayback = useCallback(() => {
-    remotePlaybackTokenRef.current += 1;
-    pendingPlayWaitRef.current = false;
-    pendingRemoteSeekRef.current = null;
-    const pendingLocalSeek = pendingLocalSeekBroadcastRef.current;
-    if (pendingLocalSeek) {
-      window.clearTimeout(pendingLocalSeek.timeoutId);
-      pendingLocalSeekBroadcastRef.current = null;
-    }
-    logDebug("adapter.lifecycle", "playback suspended", {
-      adapterId: adapter.id,
-      fingerprint: adapter.getFingerprint(),
-      token: remotePlaybackTokenRef.current,
-    });
-  }, [adapter]);
 
   const participantRef = useRef<Participant | null>(null);
   const settingsCategoryScrollRef = useRef<HTMLDivElement | null>(null);
@@ -879,8 +838,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     p2pSignalSequenceRef.current = 0;
     roomGenerationRef.current = 0;
     sourceGenerationRef.current = 0;
+    roomSourceProviderRef.current = null;
     setRoomGeneration(0);
     setSourceGeneration(0);
+    setRoomSourceProvider(null);
     setRoomSnapshotReady(false);
     setSignalingTransportReady(null);
     setIncomingP2PSignals([]);
@@ -1277,11 +1238,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
   const setRoomStatus = useCallback(
     (nextStatus: RoomConnectionStatus) => {
+      const previousStatus = statusRef.current;
       logDebug("overlay.status", nextStatus, {
         roomId: roomIdRef.current,
         participantId: participantRef.current?.id,
         video: videoDebugSnapshot(adapter.video),
       });
+      if (nextStatus === "connected" && previousStatus !== "connected") {
+        connectionGenerationRef.current += 1;
+      }
       statusRef.current = nextStatus;
       setStatus(nextStatus);
       if (nextStatus === "connected") {
@@ -1294,6 +1259,29 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     },
     [adapter],
   );
+
+  useEffect(() => {
+    playbackSyncController.setSession({
+      connectionGeneration: connectionGenerationRef.current,
+      isHost,
+      participantId: participant?.id ?? null,
+      roomGeneration,
+      roomId,
+      roomProvider:
+        roomId && roomSnapshotReady && status === "connected" ? roomSourceProvider : null,
+      sourceGeneration,
+    });
+  }, [
+    isHost,
+    participant?.id,
+    playbackSyncController,
+    roomGeneration,
+    roomId,
+    roomSnapshotReady,
+    roomSourceProvider,
+    sourceGeneration,
+    status,
+  ]);
 
   useEffect(() => {
     const id = window.setInterval(() => setDebugEntriesCount(getDebugEntries().length), 1000);
@@ -1966,280 +1954,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     );
   }, []);
 
-  const cancelPendingRemotePlayback = useCallback(
-    (reason: string) => {
-      remotePlaybackTokenRef.current += 1;
-      pendingPlayWaitRef.current = false;
-      logDebug("sync.remote", "cancel pending playback", {
-        reason,
-        token: remotePlaybackTokenRef.current,
-        video: videoDebugSnapshot(adapter.video),
-      });
-    },
-    [adapter],
-  );
-
-  const rememberPendingRemoteSeek = useCallback(
-    (targetTime: number, reason: string) => {
-      if (adapter.id !== "crunchyroll") {
-        return;
-      }
-
-      pendingRemoteSeekRef.current = { startedAt: Date.now(), targetTime };
-      logDebug("sync.remote", "remember pending Crunchyroll seek", {
-        reason,
-        targetTime,
-        video: videoDebugSnapshot(adapter.video),
-      });
-    },
-    [adapter],
-  );
-
-  const clearPendingRemoteSeekIfSettled = useCallback(
-    (reason: string) => {
-      const pending = pendingRemoteSeekRef.current;
-      if (!pending || adapter.id !== "crunchyroll") {
-        return;
-      }
-
-      const ageMs = Date.now() - pending.startedAt;
-      const driftFromSeekTarget = adapter.getCurrentTime() - pending.targetTime;
-      const isNearSeekTarget =
-        Math.abs(driftFromSeekTarget) <= CRUNCHYROLL_REMOTE_SEEK_GUARD_TOLERANCE_SECONDS;
-      if (
-        (!isMediaSettling(adapter.video) && isNearSeekTarget) ||
-        ageMs > CRUNCHYROLL_REMOTE_SEEK_GUARD_MS
-      ) {
-        pendingRemoteSeekRef.current = null;
-        logDebug("sync.remote", "clear pending Crunchyroll seek", {
-          reason,
-          pending,
-          ageMs,
-          driftFromSeekTarget,
-          video: videoDebugSnapshot(adapter.video),
-        });
-      }
-    },
-    [adapter],
-  );
-
-  const shouldHoldHostStateForPendingCrunchyrollSeek = useCallback(
-    (state: PlaybackState) => {
-      if (adapter.id !== "crunchyroll") {
-        return false;
-      }
-
-      const pending = pendingRemoteSeekRef.current;
-      if (!pending) {
-        return false;
-      }
-
-      const ageMs = Date.now() - pending.startedAt;
-      if (ageMs > CRUNCHYROLL_REMOTE_SEEK_GUARD_MS) {
-        return false;
-      }
-
-      const expectedPendingTime = state.playing
-        ? pending.targetTime + (ageMs / 1000) * (state.playbackRate || 1)
-        : pending.targetTime;
-      const remoteStateDistanceFromPending = Math.abs(state.hostTime - expectedPendingTime);
-      if (remoteStateDistanceFromPending > CRUNCHYROLL_REMOTE_SEEK_HOST_TARGET_TOLERANCE_SECONDS) {
-        pendingRemoteSeekRef.current = null;
-        logDebug("sync.applyHostState", "released pending Crunchyroll seek for newer host target", {
-          pending,
-          ageMs,
-          expectedPendingTime,
-          remoteStateDistanceFromPending,
-          state: playbackStateDebugSnapshot(state),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return false;
-      }
-
-      const driftFromSeekTarget = adapter.getCurrentTime() - pending.targetTime;
-      const isFreshSeekDispatch = ageMs < 500;
-      const shouldHold =
-        isFreshSeekDispatch ||
-        isMediaSettling(adapter.video) ||
-        Math.abs(driftFromSeekTarget) <= CRUNCHYROLL_REMOTE_SEEK_GUARD_TOLERANCE_SECONDS;
-      if (shouldHold) {
-        logDebug("sync.applyHostState", "held during pending Crunchyroll seek", {
-          pending,
-          ageMs,
-          isFreshSeekDispatch,
-          state: playbackStateDebugSnapshot(state),
-          driftFromSeekTarget,
-          video: videoDebugSnapshot(adapter.video),
-        });
-      }
-
-      return shouldHold;
-    },
-    [adapter],
-  );
-
-  const playWhenReady = useCallback(
-    async (reason: string) => {
-      const settling = isMediaSettling(adapter.video);
-      if (settling && pendingPlayWaitRef.current) {
-        logDebug("sync.remote", "play wait already pending", {
-          reason,
-          token: remotePlaybackTokenRef.current,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      const token = ++remotePlaybackTokenRef.current;
-      const playImmediately = shouldPlayWithoutWaitingForMediaReady(adapter.id);
-      logDebug("sync.remote", "play requested when ready", {
-        reason,
-        token,
-        playImmediately,
-        settling,
-        video: videoDebugSnapshot(adapter.video),
-      });
-
-      if (playImmediately) {
-        if (!adapter.video.paused && !isMediaSettling(adapter.video)) {
-          logDebug("sync.remote", "play skipped because video is already playing", {
-            reason,
-            token,
-            readyReason: "immediate",
-            video: videoDebugSnapshot(adapter.video),
-          });
-          return;
-        }
-
-        suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-        logDebug("sync.remote", "play requested immediately", {
-          reason,
-          token,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        await adapter.play().catch((error) => {
-          logDebug("sync.remote", "play failed", {
-            reason,
-            token,
-            readyReason: "immediate",
-            error: error instanceof Error ? error.message : String(error),
-            video: videoDebugSnapshot(adapter.video),
-          });
-        });
-        return;
-      }
-
-      if (settling) {
-        pendingPlayWaitRef.current = true;
-      }
-
-      const readyReason = await waitForMediaReady(
-        adapter.video,
-        getRemotePlayReadyTimeoutMs(adapter.id),
-      );
-      if (token === remotePlaybackTokenRef.current) {
-        pendingPlayWaitRef.current = false;
-      }
-      if (token !== remotePlaybackTokenRef.current) {
-        logDebug("sync.remote", "play skipped after newer command", {
-          reason,
-          token,
-          activeToken: remotePlaybackTokenRef.current,
-          readyReason,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      if (
-        adapter.id === "crunchyroll" &&
-        readyReason === "timeout" &&
-        isMediaSettling(adapter.video)
-      ) {
-        logDebug("sync.remote", "play skipped because Crunchyroll media is still settling", {
-          reason,
-          token,
-          readyReason,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      if (!adapter.video.paused) {
-        logDebug("sync.remote", "play skipped because video is already playing", {
-          reason,
-          token,
-          readyReason,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-      await adapter.play().catch((error) => {
-        logDebug("sync.remote", "play failed", {
-          reason,
-          token,
-          readyReason,
-          error: error instanceof Error ? error.message : String(error),
-          video: videoDebugSnapshot(adapter.video),
-        });
-      });
-    },
-    [adapter],
-  );
-
-  const isDuplicateRemoteCommand = useCallback(
-    (type: "PLAY" | "PAUSE" | "SEEK", byUserId: string, mediaTime: number) => {
-      const now = Date.now();
-      const key = `${type}:${byUserId}:${Math.round(mediaTime * 4) / 4}`;
-      const last = lastRemoteCommandRef.current;
-      if (last?.key === key && now - last.receivedAt < REMOTE_COMMAND_DEDUPE_MS) {
-        logDebug("sync.remote", "ignored duplicate command", {
-          type,
-          byUserId,
-          mediaTime,
-          previousReceivedAt: last.receivedAt,
-          now,
-        });
-        return true;
-      }
-
-      lastRemoteCommandRef.current = { key, receivedAt: now };
-      return false;
-    },
-    [],
-  );
-
-  const seekFromRemote = useCallback(
-    (targetTime: number, reason: string) => {
-      const now = Date.now();
-      if (
-        shouldThrottleRemoteSeekAttempt(
-          adapter.id,
-          lastRemoteSeekAttemptRef.current,
-          targetTime,
-          now,
-        )
-      ) {
-        logDebug("sync.remote", "throttled duplicate seek attempt", {
-          reason,
-          targetTime,
-          previousAttempt: lastRemoteSeekAttemptRef.current,
-          now,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return false;
-      }
-
-      lastRemoteSeekAttemptRef.current = { attemptedAt: now, targetTime };
-      rememberPendingRemoteSeek(targetTime, reason);
-      adapter.seek(targetTime, { resumeIfPlaying: false });
-      return true;
-    },
-    [adapter, rememberPendingRemoteSeek],
-  );
-
   const shouldHoldHostStateForPendingSourceNavigation = useCallback(
     (state: PlaybackState) => {
       const pending = pendingSourceNavigationRef.current;
@@ -2273,7 +1987,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         isMediaSettling(adapter.video);
 
       if (shouldHold) {
-        suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
+        playbackSyncController.suppressLocalEventsForRemoteTransition();
         logDebug("sync.source", "held host state during Crunchyroll source navigation", {
           pending,
           ageMs,
@@ -2295,7 +2009,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       });
       return false;
     },
-    [adapter],
+    [adapter, playbackSyncController],
   );
 
   const navigateToRemoteSourceIfNeeded = useCallback(
@@ -2326,6 +2040,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         targetFingerprint: state.videoFingerprint,
         targetUrl: target.toString(),
       };
+      playbackSyncController.suppressLocalEventsForRemoteTransition();
 
       logDebug("sync.source", "navigate to host source", {
         received: state.videoFingerprint,
@@ -2336,93 +2051,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       void navigateCrunchyrollToRemoteSource(target, state);
       return true;
     },
-    [adapter],
-  );
-
-  const applyRemotePlay = useCallback(
-    (byUserId: string, at: number) => {
-      if (!adapterActiveRef.current) {
-        return;
-      }
-      if (isDuplicateRemoteCommand("PLAY", byUserId, at)) {
-        return;
-      }
-
-      suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-      const drift = adapter.getCurrentTime() - at;
-      const settling = isMediaSettling(adapter.video);
-      if (shouldSeekForRemoteCommand(drift, settling)) {
-        seekFromRemote(at, "remote-play");
-      } else if (Math.abs(drift) > 1.25) {
-        logDebug("sync.remote", "deferred play seek because media is settling", {
-          at,
-          drift,
-          video: videoDebugSnapshot(adapter.video),
-        });
-      }
-
-      setCatchUp(null);
-      void playWhenReady("remote-play");
-    },
-    [adapter, isDuplicateRemoteCommand, playWhenReady, seekFromRemote],
-  );
-
-  const applyRemotePause = useCallback(
-    (byUserId: string, at: number) => {
-      if (!adapterActiveRef.current) {
-        return;
-      }
-      if (isDuplicateRemoteCommand("PAUSE", byUserId, at)) {
-        return;
-      }
-
-      cancelPendingRemotePlayback("remote-pause");
-      suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-      adapter.pause();
-
-      const drift = adapter.getCurrentTime() - at;
-      const settling = isMediaSettling(adapter.video);
-      if (shouldSeekForRemoteCommand(drift, settling)) {
-        seekFromRemote(at, "remote-pause");
-      } else if (Math.abs(drift) > 1.25) {
-        logDebug("sync.remote", "deferred pause seek because media is settling", {
-          at,
-          drift,
-          video: videoDebugSnapshot(adapter.video),
-        });
-      }
-
-      setCatchUp(null);
-    },
-    [adapter, cancelPendingRemotePlayback, isDuplicateRemoteCommand, seekFromRemote],
-  );
-
-  const applyRemoteSeek = useCallback(
-    (byUserId: string, to: number) => {
-      if (!adapterActiveRef.current) {
-        return;
-      }
-      if (isDuplicateRemoteCommand("SEEK", byUserId, to)) {
-        return;
-      }
-
-      cancelPendingRemotePlayback("remote-seek");
-      suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-
-      const drift = adapter.getCurrentTime() - to;
-      if (!isMediaSettling(adapter.video) || Math.abs(drift) > 2) {
-        seekFromRemote(to, "remote-seek");
-      } else {
-        logDebug("sync.remote", "ignored seek while media is already settling near target", {
-          to,
-          drift,
-          video: videoDebugSnapshot(adapter.video),
-        });
-      }
-
-      setCatchUp(null);
-    },
-    [adapter, cancelPendingRemotePlayback, isDuplicateRemoteCommand, seekFromRemote],
+    [adapter, playbackSyncController],
   );
 
   const applyHostState = useCallback(
@@ -2447,92 +2076,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         return;
       }
 
-      const remoteState = normalizeRemotePlaybackState(state);
-      const correction = getSyncCorrection(adapter.getCurrentTime(), remoteState);
-      const settling = isMediaSettling(adapter.video);
-      clearPendingRemoteSeekIfSettled("host-state");
-      if (shouldHoldHostStateForPendingCrunchyrollSeek(remoteState)) {
-        suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-        if (settling && remoteState.playing && adapter.video.paused) {
-          void playWhenReady("host-state-pending-crunchyroll-seek");
-        }
-        return;
-      }
-
-      const shouldSeek = shouldSeekForHostState(correction.action, settling);
-      const shouldDeferSeek = shouldDeferHostStateSeek(correction.action, settling);
-      const shouldChangePlayback =
-        (remoteState.playing && adapter.video.paused) ||
-        (!remoteState.playing && !adapter.video.paused);
-
-      if (shouldSeek || shouldChangePlayback) {
-        suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-      }
-
-      logDebug("sync.applyHostState", "decision", {
-        state: playbackStateDebugSnapshot(remoteState),
-        correction,
-        settling,
-        shouldSeek,
-        shouldDeferSeek,
-        shouldChangePlayback,
-        suppressUntil: suppressLocalEventsUntilRef.current,
-        video: videoDebugSnapshot(adapter.video),
-      });
-
-      if (shouldDeferSeek) {
-        logDebug("sync.applyHostState", "deferred seek because media is settling", {
-          expectedTime: correction.expectedTime,
-          drift: correction.drift,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        if (
-          remoteState.playing &&
-          (adapter.video.paused || shouldPlayWithoutWaitingForMediaReady(adapter.id))
-        ) {
-          void playWhenReady("host-state-settling");
-        }
-        return;
-      }
-
-      let didSeek = false;
-      if (shouldSeek) {
-        didSeek = seekFromRemote(correction.expectedTime, "host-state");
-      }
-
-      if (correction.action === "catch-up" && !didSeek) {
-        setCatchUp({
-          expectedTime: correction.expectedTime,
-          drift: correction.drift,
-        });
-      } else {
-        setCatchUp(null);
-      }
-
-      if (remoteState.playing) {
-        if (
-          didSeek ||
-          adapter.video.paused ||
-          (settling && shouldPlayWithoutWaitingForMediaReady(adapter.id))
-        ) {
-          void playWhenReady("host-state");
-        }
-      } else {
-        cancelPendingRemotePlayback("host-state-pause");
-        if (!adapter.video.paused) {
-          adapter.pause();
-        }
-      }
+      await playbackSyncController.handleHostState(state);
     },
     [
       adapter,
-      cancelPendingRemotePlayback,
       navigateToRemoteSourceIfNeeded,
+      playbackSyncController,
       shouldHoldHostStateForPendingSourceNavigation,
-      playWhenReady,
-      seekFromRemote,
-      clearPendingRemoteSeekIfSettled,
-      shouldHoldHostStateForPendingCrunchyrollSeek,
     ],
   );
 
@@ -2583,7 +2133,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         case "ROOM_ENDED":
           terminateRoomSession("Watch room ended.");
           return;
-        case "ROOM_SNAPSHOT":
+        case "ROOM_SNAPSHOT": {
           if (
             roomGenerationRef.current > 0 &&
             (roomGenerationRef.current !== event.roomGeneration ||
@@ -2602,18 +2152,34 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           }
           roomGenerationRef.current = event.roomGeneration;
           sourceGenerationRef.current = event.sourceGeneration;
+          const snapshotProvider =
+            event.source?.provider ??
+            roomSourceProviderRef.current ??
+            sourceProviderFromAdapterId(adapter.id);
+          roomSourceProviderRef.current = snapshotProvider;
           setRoomGeneration(event.roomGeneration);
           setSourceGeneration(event.sourceGeneration);
+          setRoomSourceProvider(snapshotProvider);
           setParticipants(event.participants);
           updateRoomUsage(event.roomUsage);
           if (event.capabilities) {
             setRoomCapabilities(event.capabilities);
           }
           setRoomSnapshotReady(true);
+          playbackSyncController.setSession({
+            connectionGeneration: connectionGenerationRef.current,
+            isHost: isCurrentHost(event.participants),
+            participantId: participantRef.current?.id ?? null,
+            roomGeneration: event.roomGeneration,
+            roomId: event.roomId,
+            roomProvider: snapshotProvider,
+            sourceGeneration: event.sourceGeneration,
+          });
           if (event.hostState && !isCurrentHost(event.participants)) {
             void applyHostState(event.hostState);
           }
           return;
+        }
         case "SOURCE_CHANGED":
           if (
             roomGenerationRef.current > 0 &&
@@ -2635,8 +2201,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           }
           roomGenerationRef.current = event.roomGeneration;
           sourceGenerationRef.current = event.sourceGeneration;
+          roomSourceProviderRef.current = event.source.provider;
           setRoomGeneration(event.roomGeneration);
           setSourceGeneration(event.sourceGeneration);
+          setRoomSourceProvider(event.source.provider);
+          playbackSyncController.setSession({
+            connectionGeneration: connectionGenerationRef.current,
+            isHost: isCurrentHost(),
+            participantId: participantRef.current?.id ?? null,
+            roomGeneration: event.roomGeneration,
+            roomId: event.roomId,
+            roomProvider: event.source.provider,
+            sourceGeneration: event.sourceGeneration,
+          });
           if (!isCurrentHost()) {
             void applyHostState(event.hostState);
           }
@@ -2656,19 +2233,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           }
           return;
         case "PLAY":
-          if (event.byUserId !== participantRef.current?.id) {
-            applyRemotePlay(event.byUserId, event.at);
-          }
+          playbackSyncController.handleRemoteCommand(event);
           return;
         case "PAUSE":
-          if (event.byUserId !== participantRef.current?.id) {
-            applyRemotePause(event.byUserId, event.at);
-          }
+          playbackSyncController.handleRemoteCommand(event);
           return;
         case "SEEK":
-          if (event.byUserId !== participantRef.current?.id) {
-            applyRemoteSeek(event.byUserId, event.to);
-          }
+          playbackSyncController.handleRemoteCommand(event);
           return;
         case "P2P_SIGNAL": {
           if (
@@ -2774,15 +2345,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       }
     },
     [
+      adapter.id,
       adapter.video,
       applyHostState,
-      applyRemotePause,
-      applyRemotePlay,
-      applyRemoteSeek,
       isCurrentHost,
       chatDisplayMode,
       enqueueLiveChatMessage,
       experimentalSuperReactionsEnabled,
+      playbackSyncController,
       recordChatHistoryMessage,
       reactionsEnabled,
       terminateRoomSession,
@@ -3661,276 +3231,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     storedRoomSession,
   ]);
 
-  const sendHostState = useCallback(
-    (allowController = false, stateOverride?: Partial<PlaybackState>) => {
-      if (!adapterActiveRef.current) {
-        return;
-      }
-      const activeRoomId = roomIdRef.current;
-      if (!activeRoomId || (!isCurrentHost() && !allowController)) {
-        logDebug("sync.hostState", "skipped", {
-          hasRoom: Boolean(activeRoomId),
-          isCurrentHost: isCurrentHost(),
-          allowController,
-          participantId: participantRef.current?.id,
-        });
-        return;
-      }
-
-      if (!allowController && Date.now() < suppressLocalEventsUntilRef.current) {
-        logDebug("sync.hostState", "skipped during remote suppression", {
-          suppressUntil: suppressLocalEventsUntilRef.current,
-          now: Date.now(),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      if (!allowController && isMediaSettling(adapter.video)) {
-        logDebug("sync.hostState", "skipped while media is settling", {
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      const state = stateOverride
-        ? {
-            ...adapter.getState(),
-            ...stateOverride,
-          }
-        : adapter.getState();
-      logDebug("sync.hostState", "send", {
-        roomId: activeRoomId,
-        allowController,
-        state: playbackStateDebugSnapshot(state),
-      });
-      clientRef.current.send({
-        type: "HOST_STATE",
-        roomId: activeRoomId,
-        state,
-        source: buildWatchSourceDescriptor(adapter, state),
-      });
-    },
-    [adapter, isCurrentHost],
-  );
-
-  const sendLocalControlEvent = useCallback(
-    (event: PlayerEvent, stateOverride?: Partial<PlaybackState>) => {
-      if (!adapterActiveRef.current) {
-        return false;
-      }
-      const activeRoomId = roomIdRef.current;
-      const activeParticipant = participantRef.current;
-      if (!activeRoomId || !activeParticipant) {
-        logDebug("adapter.event", "control send skipped without room", {
-          event,
-          hasRoom: Boolean(activeRoomId),
-          hasParticipant: Boolean(activeParticipant),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return false;
-      }
-
-      if (event.type === "play") {
-        clientRef.current.send({
-          type: "PLAY",
-          roomId: activeRoomId,
-          byUserId: activeParticipant.id,
-          at: event.time,
-        });
-      } else if (event.type === "pause") {
-        clientRef.current.send({
-          type: "PAUSE",
-          roomId: activeRoomId,
-          byUserId: activeParticipant.id,
-          at: event.time,
-        });
-      } else if (event.type === "seek") {
-        clientRef.current.send({
-          type: "SEEK",
-          roomId: activeRoomId,
-          byUserId: activeParticipant.id,
-          to: event.time,
-        });
-      } else {
-        return false;
-      }
-
-      sendHostState(true, stateOverride);
-      return true;
-    },
-    [adapter.video, sendHostState],
-  );
-
-  const flushPendingCrunchyrollLocalSeek = useCallback(
-    (reason: string) => {
-      const pending = pendingLocalSeekBroadcastRef.current;
-      if (!pending) {
-        return false;
-      }
-
-      window.clearTimeout(pending.timeoutId);
-      pendingLocalSeekBroadcastRef.current = null;
-
-      const now = Date.now();
-      const previous = lastLocalSeekBroadcastRef.current;
-      if (
-        previous &&
-        now - previous.sentAt < CRUNCHYROLL_LOCAL_SEEK_DUPLICATE_MS &&
-        Math.abs(previous.targetTime - pending.targetTime) <=
-          CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS
-      ) {
-        logDebug("adapter.event", "ignored duplicate Crunchyroll local seek broadcast", {
-          reason,
-          pending,
-          previous,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return false;
-      }
-
-      lastLocalSeekBroadcastRef.current = {
-        sentAt: now,
-        targetTime: pending.targetTime,
-      };
-      const currentTime = adapter.getCurrentTime();
-      const hostTime =
-        Number.isFinite(currentTime) &&
-        Math.abs(currentTime - pending.targetTime) <= CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS
-          ? currentTime
-          : pending.targetTime;
-      const playing = !adapter.video.paused;
-
-      logDebug("adapter.event", "flush Crunchyroll local seek broadcast", {
-        reason,
-        pending,
-        hostTime,
-        playing,
-        video: videoDebugSnapshot(adapter.video),
-      });
-
-      return sendLocalControlEvent(
-        { type: "seek", time: pending.targetTime },
-        {
-          hostTime,
-          playing,
-          updatedAt: now,
-        },
-      );
-    },
-    [adapter, sendLocalControlEvent],
-  );
-
-  const queueCrunchyrollLocalSeekBroadcast = useCallback(
-    (targetTime: number, reason: string) => {
-      const now = Date.now();
-      lastLocalSeekEventAtRef.current = now;
-
-      const previous = pendingLocalSeekBroadcastRef.current;
-      if (previous) {
-        window.clearTimeout(previous.timeoutId);
-      }
-
-      const delay = isMediaSettling(adapter.video)
-        ? CRUNCHYROLL_LOCAL_SEEK_SETTLING_DELAY_MS
-        : CRUNCHYROLL_LOCAL_SEEK_READY_DELAY_MS;
-      const timeoutId = window.setTimeout(() => {
-        flushPendingCrunchyrollLocalSeek("timer");
-      }, delay);
-
-      pendingLocalSeekBroadcastRef.current = {
-        queuedAt: now,
-        targetTime,
-        timeoutId,
-      };
-
-      logDebug("adapter.event", "queue Crunchyroll local seek broadcast", {
-        reason,
-        delay,
-        targetTime,
-        video: videoDebugSnapshot(adapter.video),
-      });
-    },
-    [adapter.video, flushPendingCrunchyrollLocalSeek],
-  );
-
-  useEffect(() => {
-    return () => {
-      const pending = pendingLocalSeekBroadcastRef.current;
-      if (pending) {
-        window.clearTimeout(pending.timeoutId);
-        pendingLocalSeekBroadcastRef.current = null;
-      }
-    };
-  }, []);
-
-  const handleAdapterEvent = useCallback(
-    (event: PlayerEvent) => {
-      if (Date.now() < suppressLocalEventsUntilRef.current) {
-        logDebug("adapter.event", "suppressed local event", {
-          event,
-          suppressUntil: suppressLocalEventsUntilRef.current,
-          now: Date.now(),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      if (event.type === "timeupdate" && adapter.video.paused) {
-        logDebug("adapter.event", "ignored paused timeupdate", {
-          event,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      logDebug("adapter.event", "local event", {
-        event,
-        roomId: roomIdRef.current,
-        participantId: participantRef.current?.id,
-        video: videoDebugSnapshot(adapter.video),
-      });
-
-      if (adapter.id === "crunchyroll" && event.type === "seek") {
-        queueCrunchyrollLocalSeekBroadcast(event.time, "adapter-seek");
-        return;
-      }
-
-      if (
-        adapter.id === "crunchyroll" &&
-        (event.type === "play" || event.type === "pause")
-      ) {
-        const now = Date.now();
-        const pendingSeek = Boolean(pendingLocalSeekBroadcastRef.current);
-        const mediaSettling = isMediaSettling(adapter.video);
-        const nearSeek =
-          now - lastLocalSeekEventAtRef.current <
-          CRUNCHYROLL_LOCAL_PLAYBACK_SUPPRESSION_AFTER_SEEK_MS;
-        if (pendingSeek || mediaSettling || nearSeek) {
-          logDebug("adapter.event", "coalesced Crunchyroll playback event during seek", {
-            event,
-            pendingSeek,
-            mediaSettling,
-            nearSeek,
-            lastLocalSeekEventAt: lastLocalSeekEventAtRef.current,
-            video: videoDebugSnapshot(adapter.video),
-          });
-          return;
-        }
-      }
-
-      sendLocalControlEvent(event);
-    },
-    [adapter, queueCrunchyrollLocalSeekBroadcast, sendLocalControlEvent],
-  );
-
   useActiveAdapterPlayback({
     active: adapterActive,
     adapter,
-    heartbeatEnabled: isHost && Boolean(roomId),
-    onAdapterEvent: handleAdapterEvent,
-    onHeartbeat: sendHostState,
-    onSuspend: suspendAdapterPlayback,
+    controller: playbackSyncController,
   });
 
   const handleCreateRoom = async () => {
@@ -4967,7 +4271,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                   className="panel-icon-action reveal-action"
                   title={isHost ? "Sync now" : "Only the host can sync"}
                   type="button"
-                  onClick={() => sendHostState(true)}
+                  onClick={() => playbackSyncController.broadcastHostState()}
                   disabled={!isHost || roomCreatePending || roomEndPending}
                   style={{ "--action-index": 2 } as CSSProperties}
                 >
@@ -5453,10 +4757,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                     drift: catchUp.drift,
                     video: videoDebugSnapshot(adapter.video),
                   });
-                  adapter.seek(catchUp.expectedTime, {
-                    resumeIfPlaying: false,
-                  });
-                  setCatchUp(null);
+                  playbackSyncController.catchUpFromUserGesture();
                 }}
               >
                 Catch up
