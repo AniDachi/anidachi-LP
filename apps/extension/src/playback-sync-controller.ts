@@ -17,6 +17,8 @@ import {
 } from "./playback-control";
 import type { PlaybackSyncStatus } from "./playback-sync-status";
 import type {
+	AdapterPlaybackPhase,
+	AdapterPlaybackSnapshot,
 	EnsureSourceResult,
 	PlayerEvent,
 	SourceNavigationContext,
@@ -27,6 +29,7 @@ import type {
 const HEARTBEAT_INTERVAL_MS = 1500;
 const REMOTE_EVENT_SUPPRESSION_MS = 1800;
 const REMOTE_COMMAND_DEDUPE_MS = 800;
+const SOURCE_TRANSITION_TIMEOUT_MS = 10_000;
 
 export interface PlaybackSyncSession {
 	roomId: string | null;
@@ -79,6 +82,7 @@ interface PendingSourceNavigation {
 	latestHostState: PlaybackState;
 	source: WatchSourceDescriptor;
 	sourceGeneration: number;
+	timeoutId: number;
 	token: number;
 }
 
@@ -103,6 +107,7 @@ export class PlaybackSyncController {
 		targetTime: number;
 	} | null = null;
 	private lastLocalSeekEventAt = 0;
+	private lastConfirmedContentState: PlaybackState | null = null;
 	private lastRemoteCommand: { key: string; receivedAt: number } | null = null;
 	private lastRemoteSeekAttempt: RemoteSeekAttempt | null = null;
 	private latestHostState: PlaybackState | null = null;
@@ -110,6 +115,8 @@ export class PlaybackSyncController {
 	private pendingPlayWait = false;
 	private pendingRemoteSeek: PendingRemoteSeek | null = null;
 	private pendingSourceNavigation: PendingSourceNavigation | null = null;
+	private playbackBarrier: AdapterPlaybackPhase | null = null;
+	private hostInterstitialHoldSent = false;
 	private remotePlaybackToken = 0;
 	private session = EMPTY_SESSION;
 	private sourceNavigationToken = 0;
@@ -146,11 +153,15 @@ export class PlaybackSyncController {
 		this.lastRemoteSeekAttempt = null;
 		this.pendingRemoteSeek = null;
 		this.suppressLocalEventsUntil = 0;
+		this.lastConfirmedContentState = null;
+		this.playbackBarrier = null;
+		this.hostInterstitialHoldSent = false;
 
 		if (adapter) {
 			this.unsubscribeAdapter = adapter.subscribe((event) =>
 				this.handleLocalEvent(event),
 			);
+			this.refreshPlaybackPhase(adapter);
 		}
 		this.completeSourceNavigationForAdapter(adapter);
 		this.restartHeartbeatTimer();
@@ -167,15 +178,31 @@ export class PlaybackSyncController {
 		this.lastRemoteSeekAttempt = null;
 		this.latestHostState = null;
 		this.pendingRemoteSeek = null;
+		this.playbackBarrier = null;
+		this.hostInterstitialHoldSent = false;
 		this.cancelPendingSourceNavigation();
 		this.suppressLocalEventsUntil = 0;
 		this.session = session;
+		const adapter = this.getActiveAdapter();
+		if (adapter) {
+			this.refreshPlaybackPhase(adapter);
+		}
 		this.restartHeartbeatTimer();
 	}
 
 	handleLocalEvent(event: PlayerEvent): void {
 		const adapter = this.getActiveAdapter();
-		if (!adapter || this.now() < this.suppressLocalEventsUntil) {
+		if (!adapter) {
+			return;
+		}
+		if (event.type === "phasechange") {
+			this.applyPlaybackSnapshot(adapter, event.snapshot);
+			return;
+		}
+		if (
+			this.refreshPlaybackPhase(adapter) ||
+			this.now() < this.suppressLocalEventsUntil
+		) {
 			return;
 		}
 		if (event.type === "timeupdate" && adapter.video.paused) {
@@ -224,7 +251,6 @@ export class PlaybackSyncController {
 		) {
 			return Promise.resolve();
 		}
-
 		if (source) {
 			if (!this.isAuthoritativeSourceValid(source, state)) {
 				this.onStatus({
@@ -245,6 +271,12 @@ export class PlaybackSyncController {
 			) {
 				this.pendingSourceNavigation.latestHostState = state;
 			}
+			return Promise.resolve();
+		}
+
+		const remoteState = normalizeRemotePlaybackState(state, this.now());
+		this.latestHostState = remoteState;
+		if (this.refreshPlaybackPhase(adapter)) {
 			return Promise.resolve();
 		}
 
@@ -278,13 +310,13 @@ export class PlaybackSyncController {
 			!adapter ||
 			!this.hasActiveRoomSession() ||
 			this.session.isHost ||
-			state.videoFingerprint !== adapter.getFingerprint()
+			state.videoFingerprint !== adapter.getFingerprint() ||
+			this.refreshPlaybackPhase(adapter)
 		) {
 			return Promise.resolve();
 		}
 
 		const remoteState = normalizeRemotePlaybackState(state, this.now());
-		this.latestHostState = remoteState;
 		const correction = getSyncCorrection(
 			adapter.getCurrentTime(),
 			remoteState,
@@ -368,6 +400,10 @@ export class PlaybackSyncController {
 		) {
 			return;
 		}
+		if (this.refreshPlaybackPhase(adapter)) {
+			this.updateLatestHostStateFromCommand(event);
+			return;
+		}
 
 		const mediaTime = event.type === "SEEK" ? event.to : event.at;
 		if (this.isDuplicateRemoteCommand(event.type, event.byUserId, mediaTime)) {
@@ -404,10 +440,18 @@ export class PlaybackSyncController {
 	}
 
 	heartbeat(): void {
+		const adapter = this.getActiveAdapter();
+		if (!adapter || this.refreshPlaybackPhase(adapter)) {
+			return;
+		}
 		this.sendHostState(false);
 	}
 
 	broadcastHostState(): void {
+		const adapter = this.getActiveAdapter();
+		if (!adapter || this.refreshPlaybackPhase(adapter)) {
+			return;
+		}
 		this.sendHostState(true);
 	}
 
@@ -466,7 +510,10 @@ export class PlaybackSyncController {
 		this.clearPendingLocalSeek();
 		this.adapter = null;
 		this.latestHostState = null;
+		this.lastConfirmedContentState = null;
 		this.pendingRemoteSeek = null;
+		this.playbackBarrier = null;
+		this.hostInterstitialHoldSent = false;
 		this.cancelPendingSourceNavigation();
 	}
 
@@ -476,6 +523,7 @@ export class PlaybackSyncController {
 			return;
 		}
 		pending.abortController.abort();
+		window.clearTimeout(pending.timeoutId);
 		this.pendingSourceNavigation = null;
 		this.sourceNavigationToken += 1;
 	}
@@ -620,6 +668,141 @@ export class PlaybackSyncController {
 		);
 	}
 
+	private applyPlaybackSnapshot(
+		adapter: VideoAdapter,
+		snapshot: AdapterPlaybackSnapshot,
+	): boolean {
+		if (adapter !== this.getActiveAdapter()) {
+			return true;
+		}
+
+		const nextBarrier = isPlaybackBarrier(snapshot.phase)
+			? snapshot.phase
+			: null;
+		if (!nextBarrier) {
+			this.rememberConfirmedContentState(adapter, snapshot);
+		}
+		if (nextBarrier === this.playbackBarrier) {
+			return nextBarrier !== null;
+		}
+
+		const previousBarrier = this.playbackBarrier;
+		this.playbackBarrier = nextBarrier;
+		if (nextBarrier) {
+			this.invalidateAsyncWork();
+			this.clearPendingLocalSeek();
+			this.pendingRemoteSeek = null;
+			if (nextBarrier === "interstitial") {
+				if (this.session.isHost) {
+					this.sendHostInterstitialHold(adapter);
+					this.onStatus({ kind: "waiting-for-host-ad" });
+				} else {
+					this.onStatus({ kind: "watching-local-ad" });
+				}
+			} else if (nextBarrier === "unsupported") {
+				this.onStatus({ kind: "unsupported-media" });
+			}
+			return true;
+		}
+
+		if (!this.hasActiveRoomSession()) {
+			this.hostInterstitialHoldSent = false;
+			return false;
+		}
+		if (
+			this.session.isHost &&
+			previousBarrier === "interstitial" &&
+			this.hostInterstitialHoldSent
+		) {
+			this.sendConfirmedHostState(adapter, snapshot);
+		} else if (
+			!this.session.isHost &&
+			this.latestHostState &&
+			this.latestHostState.videoFingerprint === adapter.getFingerprint()
+		) {
+			void this.applyHostState(this.latestHostState);
+		}
+		this.hostInterstitialHoldSent = false;
+		this.onStatus({ kind: "synced" });
+		return false;
+	}
+
+	private refreshPlaybackPhase(adapter: VideoAdapter): boolean {
+		return this.applyPlaybackSnapshot(adapter, adapter.getPlaybackSnapshot());
+	}
+
+	private rememberConfirmedContentState(
+		adapter: VideoAdapter,
+		snapshot: AdapterPlaybackSnapshot,
+	): void {
+		const state = adapter.getState();
+		this.lastConfirmedContentState = {
+			...state,
+			hostTime: snapshot.contentTime,
+			playbackRate: snapshot.playbackRate,
+			playing: snapshot.playing,
+			updatedAt: snapshot.capturedAt,
+			videoFingerprint: adapter.getFingerprint(),
+		};
+	}
+
+	private sendHostInterstitialHold(adapter: VideoAdapter): void {
+		if (this.hostInterstitialHoldSent || !this.hasActiveRoomSession()) {
+			return;
+		}
+		const base =
+			this.lastConfirmedContentState ??
+			({
+				...adapter.getState(),
+				hostTime: 0,
+				playbackRate: 1,
+				playing: false,
+				updatedAt: this.now(),
+				videoFingerprint: adapter.getFingerprint(),
+			} satisfies PlaybackState);
+		this.sendAuthoritativeHostState(adapter, {
+			...base,
+			playing: false,
+			updatedAt: this.now(),
+		});
+		this.hostInterstitialHoldSent = true;
+	}
+
+	private sendConfirmedHostState(
+		adapter: VideoAdapter,
+		snapshot: AdapterPlaybackSnapshot,
+	): void {
+		this.sendAuthoritativeHostState(adapter, {
+			...adapter.getState(),
+			hostTime: snapshot.contentTime,
+			playbackRate: snapshot.playbackRate,
+			playing: snapshot.playing,
+			updatedAt: snapshot.capturedAt,
+			videoFingerprint: adapter.getFingerprint(),
+		});
+	}
+
+	private sendAuthoritativeHostState(
+		adapter: VideoAdapter,
+		state: PlaybackState,
+	): void {
+		const { participantId, roomId } = this.session;
+		if (
+			!roomId ||
+			!participantId ||
+			!this.session.isHost ||
+			!this.hasProviderBoundRoomSession()
+		) {
+			return;
+		}
+		this.transport.send({
+			type: "HOST_STATE",
+			roomId,
+			state,
+			source: adapter.getSourceDescriptor(),
+		});
+	}
+
 	private invalidateAsyncWork(): void {
 		this.asyncGeneration += 1;
 		this.cancelPendingRemotePlayback();
@@ -653,7 +836,7 @@ export class PlaybackSyncController {
 
 	private async playWhenReady(): Promise<void> {
 		const adapter = this.getActiveAdapter();
-		if (!adapter) {
+		if (!adapter || this.refreshPlaybackPhase(adapter)) {
 			return;
 		}
 
@@ -695,6 +878,7 @@ export class PlaybackSyncController {
 		}
 		if (
 			!this.isAsyncEpochCurrent(epoch) ||
+			this.refreshPlaybackPhase(adapter) ||
 			!adapter.video.paused ||
 			(readyReason === "timeout" &&
 				policy.skipPlayAfterTimeoutWhileSettling &&
@@ -759,8 +943,20 @@ export class PlaybackSyncController {
 			latestHostState: state,
 			source,
 			sourceGeneration: this.session.sourceGeneration,
+			timeoutId: 0,
 			token,
 		};
+		pending.timeoutId = window.setTimeout(() => {
+			if (this.pendingSourceNavigation !== pending) {
+				return;
+			}
+			this.onStatus({
+				kind: "source-mismatch",
+				message: "The player did not reach the room source in time.",
+			});
+			this.cancelPendingSourceNavigation();
+			this.restartHeartbeatTimer();
+		}, SOURCE_TRANSITION_TIMEOUT_MS);
 		this.pendingSourceNavigation = pending;
 
 		queueMicrotask(() => {
@@ -830,7 +1026,8 @@ export class PlaybackSyncController {
 		if (
 			!adapter ||
 			!state ||
-			state.videoFingerprint !== adapter.getFingerprint()
+			state.videoFingerprint !== adapter.getFingerprint() ||
+			this.refreshPlaybackPhase(adapter)
 		) {
 			return;
 		}
@@ -869,7 +1066,7 @@ export class PlaybackSyncController {
 
 	private seekFromRemote(targetTime: number): boolean {
 		const adapter = this.getActiveAdapter();
-		if (!adapter) {
+		if (!adapter || this.refreshPlaybackPhase(adapter)) {
 			return false;
 		}
 
@@ -904,6 +1101,9 @@ export class PlaybackSyncController {
 			!this.session.isHost ||
 			!this.hasActiveRoomSession()
 		) {
+			return false;
+		}
+		if (this.refreshPlaybackPhase(adapter)) {
 			return false;
 		}
 		if (!allowController && this.now() < this.suppressLocalEventsUntil) {
@@ -1011,7 +1211,10 @@ export class PlaybackSyncController {
 			return;
 		}
 
-		const base = this.latestHostState ?? adapter.getState();
+		const base =
+			this.latestHostState ??
+			this.lastConfirmedContentState ??
+			adapter.getState();
 		const mediaTime = event.type === "SEEK" ? event.to : event.at;
 		this.latestHostState = {
 			...base,
@@ -1025,6 +1228,14 @@ export class PlaybackSyncController {
 			updatedAt: this.now(),
 		};
 	}
+}
+
+function isPlaybackBarrier(phase: AdapterPlaybackPhase): boolean {
+	return (
+		phase === "transition" ||
+		phase === "interstitial" ||
+		phase === "unsupported"
+	);
 }
 
 function sessionsEqual(

@@ -23,6 +23,7 @@ import {
 	DEFAULT_PLAYBACK_POLICY,
 } from "../src/source-adapters/core/playback-policy";
 import type {
+	AdapterPlaybackPhase,
 	EnsureSourceResult,
 	PlayerEvent,
 	SourceNavigationContext,
@@ -120,6 +121,135 @@ describe("PlaybackSyncController", () => {
 		harness.controller.broadcastHostState();
 
 		expect(harness.sent.map((event) => event.type)).toEqual(["HOST_STATE"]);
+	});
+
+	it("holds the room once at the last confirmed content time during a host ad", () => {
+		const harness = createHarness({ isHost: true });
+		harness.adapter.setCurrentTime(42);
+		harness.adapter.setPaused(false);
+		harness.adapter.emit({ type: "timeupdate", time: 42 });
+		harness.sent.length = 0;
+
+		harness.adapter.setPhase("interstitial");
+		harness.adapter.setCurrentTime(7);
+		harness.adapter.emitPhase();
+		harness.adapter.emitPhase();
+		harness.controller.heartbeat();
+
+		expect(harness.sent).toHaveLength(1);
+		expect(harness.sent[0]).toMatchObject({
+			type: "HOST_STATE",
+			state: { hostTime: 42, playing: false },
+		});
+		expect(harness.adapter.pause).not.toHaveBeenCalled();
+		expect(harness.adapter.seek).not.toHaveBeenCalled();
+		expect(harness.statuses.at(-1)).toEqual({
+			kind: "waiting-for-host-ad",
+		});
+	});
+
+	it("uses a zero content hold for a host pre-roll", () => {
+		const harness = createHarness({ isHost: true });
+		harness.adapter.setPhase("interstitial");
+
+		harness.adapter.emitPhase();
+
+		expect(harness.sent).toHaveLength(1);
+		expect(harness.sent[0]).toMatchObject({
+			type: "HOST_STATE",
+			state: { hostTime: 0, playing: false },
+		});
+	});
+
+	it("publishes fresh content state once after the host ad ends", () => {
+		const harness = createHarness({ isHost: true });
+		harness.adapter.setCurrentTime(20);
+		harness.adapter.setPaused(false);
+		harness.adapter.emit({ type: "timeupdate", time: 20 });
+		harness.sent.length = 0;
+		harness.adapter.setPhase("interstitial");
+		harness.adapter.emitPhase();
+		harness.adapter.setCurrentTime(24);
+		harness.adapter.setPhase("content");
+
+		harness.adapter.emitPhase();
+		harness.adapter.emitPhase();
+
+		expect(harness.sent).toHaveLength(2);
+		expect(harness.sent[1]).toMatchObject({
+			type: "HOST_STATE",
+			state: { hostTime: 24, playing: true },
+		});
+	});
+
+	it("queues only the latest host state while a guest watches an ad", async () => {
+		const harness = createHarness({ isHost: false });
+		harness.adapter.setPhase("interstitial");
+		harness.adapter.emitPhase();
+
+		await harness.controller.handleHostState(
+			playbackState({ hostTime: 10, playing: true }),
+		);
+		await harness.controller.handleHostState(
+			playbackState({ hostTime: 30, playing: false }),
+		);
+		harness.controller.handleRemoteCommand({
+			type: "SEEK",
+			roomId: "room-1",
+			byUserId: "remote-host",
+			to: 35,
+		});
+
+		expect(harness.adapter.pause).not.toHaveBeenCalled();
+		expect(harness.adapter.play).not.toHaveBeenCalled();
+		expect(harness.adapter.seek).not.toHaveBeenCalled();
+
+		harness.adapter.setPaused(false);
+		harness.adapter.setPhase("content");
+		harness.adapter.emitPhase();
+		await Promise.resolve();
+
+		expect(harness.adapter.seek).toHaveBeenLastCalledWith(35, {
+			resumeIfPlaying: false,
+		});
+		expect(harness.adapter.pause).toHaveBeenCalledTimes(1);
+	});
+
+	it("cancels pending remote play when a transition begins", async () => {
+		const harness = createHarness({ isHost: false, provider: "youtube" });
+		harness.adapter.setPaused(true);
+		harness.adapter.setMediaReady(false);
+		harness.controller.handleRemoteCommand({
+			type: "PLAY",
+			roomId: "room-1",
+			byUserId: "remote-host",
+			at: 0,
+		});
+
+		harness.adapter.setPhase("transition");
+		harness.adapter.emitPhase();
+		harness.adapter.setMediaReady(true);
+		harness.adapter.video.dispatchEvent(new Event("canplay"));
+		await Promise.resolve();
+		await Promise.resolve();
+
+		expect(harness.adapter.play).not.toHaveBeenCalled();
+	});
+
+	it("blocks unsupported media without touching playback", () => {
+		const harness = createHarness({ isHost: false });
+		harness.adapter.setPhase("unsupported");
+		harness.adapter.emitPhase();
+		harness.controller.handleRemoteCommand({
+			type: "PLAY",
+			roomId: "room-1",
+			byUserId: "remote-host",
+			at: 15,
+		});
+
+		expect(harness.adapter.play).not.toHaveBeenCalled();
+		expect(harness.adapter.seek).not.toHaveBeenCalled();
+		expect(harness.statuses.at(-1)).toEqual({ kind: "unsupported-media" });
 	});
 
 	it("suppresses events caused by a remote command", () => {
@@ -420,6 +550,34 @@ describe("PlaybackSyncController", () => {
 		expect(harness.adapter.seek).not.toHaveBeenCalled();
 	});
 
+	it("times out a source transition without touching the wrong media", async () => {
+		const navigation = deferred<EnsureSourceResult>();
+		const contexts: SourceNavigationContext[] = [];
+		const harness = createHarness({
+			isHost: false,
+			ensureRemoteSource: (_source, nextContext) => {
+				contexts.push(nextContext);
+				return navigation.promise;
+			},
+		});
+
+		void harness.controller.handleHostState(
+			playbackState({ videoFingerprint: "youtube|next-video" }),
+			watchSource("youtube", "next-video"),
+		);
+		await Promise.resolve();
+		vi.advanceTimersByTime(10_000);
+
+		expect(contexts[0]?.signal.aborted).toBe(true);
+		expect(harness.adapter.play).not.toHaveBeenCalled();
+		expect(harness.adapter.pause).not.toHaveBeenCalled();
+		expect(harness.adapter.seek).not.toHaveBeenCalled();
+		expect(harness.statuses.at(-1)).toEqual({
+			kind: "source-mismatch",
+			message: "The player did not reach the room source in time.",
+		});
+	});
+
 	it("ignores a late play completion after adapter replacement", async () => {
 		const deferredPlay = deferred<void>();
 		const harness = createHarness({
@@ -613,12 +771,14 @@ function playbackState(overrides: Partial<PlaybackState> = {}): PlaybackState {
 
 interface FakeAdapter extends VideoAdapter {
 	emit(event: PlayerEvent): void;
+	emitPhase(): void;
 	pause: MockedFunction<VideoAdapter["pause"]>;
 	play: MockedFunction<VideoAdapter["play"]>;
 	seek: MockedFunction<VideoAdapter["seek"]>;
 	setCurrentTime(time: number): void;
 	setMediaReady(ready: boolean): void;
 	setPaused(paused: boolean): void;
+	setPhase(phase: AdapterPlaybackPhase): void;
 	unsubscribe: ReturnType<typeof vi.fn>;
 }
 
@@ -634,6 +794,8 @@ function createFakeAdapter({
 	let currentTime = 0;
 	let mediaReady = true;
 	let paused = true;
+	let phase: AdapterPlaybackPhase = "content";
+	let confirmedContentTime = 0;
 	let subscriber: ((event: PlayerEvent) => void) | null = null;
 	const unsubscribe = vi.fn(() => {
 		subscriber = null;
@@ -667,7 +829,23 @@ function createFakeAdapter({
 	return {
 		container: document.createElement("div"),
 		duckVolume: () => () => undefined,
-		emit: (event) => subscriber?.(event),
+		emit: (event) => {
+			if (phase === "content" || phase === "buffering") {
+				confirmedContentTime = currentTime;
+			}
+			subscriber?.(event);
+		},
+		emitPhase: () =>
+			subscriber?.({
+				type: "phasechange",
+				snapshot: {
+					capturedAt: Date.now(),
+					contentTime: confirmedContentTime,
+					phase,
+					playbackRate: video.playbackRate || 1,
+					playing: !paused,
+				},
+			}),
 		enterFullscreen: async () => undefined,
 		exitFullscreen: async () => undefined,
 		getCurrentTime: () => currentTime,
@@ -680,8 +858,8 @@ function createFakeAdapter({
 		getOverlayGeometry: () => DEFAULT_PLAYER_OVERLAY_GEOMETRY,
 		getPlaybackSnapshot: () => ({
 			capturedAt: Date.now(),
-			contentTime: currentTime,
-			phase: "content",
+			contentTime: confirmedContentTime,
+			phase,
 			playbackRate: video.playbackRate || 1,
 			playing: !paused,
 		}),
@@ -721,6 +899,15 @@ function createFakeAdapter({
 		},
 		setPaused: (value) => {
 			paused = value;
+		},
+		setPhase: (value) => {
+			if (phase === "content" || phase === "buffering") {
+				confirmedContentTime = currentTime;
+			}
+			phase = value;
+			if (phase === "content" || phase === "buffering") {
+				confirmedContentTime = currentTime;
+			}
 		},
 		subscribe: (callback) => {
 			subscriber = callback;

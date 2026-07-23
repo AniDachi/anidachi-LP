@@ -442,6 +442,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [fireCharge, setFireCharge] = useState<FireChargeState | null>(null);
   const [flamingParticipantIds, setFlamingParticipantIds] = useState<string[]>([]);
   const [catchUp, setCatchUp] = useState<CatchUpState | null>(null);
+  const [playbackSyncNotice, setPlaybackSyncNotice] = useState<string | null>(null);
   const playbackSyncControllerRef = useRef<PlaybackSyncController | null>(null);
   if (!playbackSyncControllerRef.current) {
     playbackSyncControllerRef.current = new PlaybackSyncController({
@@ -449,6 +450,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         ensureSourceForProvider(source, context, getDefinitionForProvider),
       onStatus: (syncStatus) => {
         if (syncStatus.kind === "out-of-sync") {
+          setPlaybackSyncNotice(null);
           setCatchUp({
             drift: syncStatus.drift,
             expectedTime: syncStatus.expectedTime,
@@ -456,6 +458,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           return;
         }
         setCatchUp(null);
+        if (syncStatus.kind === "waiting-for-host-ad") {
+          setPlaybackSyncNotice("Ad playing · room paused");
+        } else if (syncStatus.kind === "watching-local-ad") {
+          setPlaybackSyncNotice("Ad playing · sync will resume automatically");
+        } else if (syncStatus.kind === "unsupported-media") {
+          setPlaybackSyncNotice("This video cannot be synchronized");
+        } else if (syncStatus.kind === "synced") {
+          setPlaybackSyncNotice(null);
+        }
       },
       transport: {
         send: (event) => clientRef.current.send(event),
@@ -4309,6 +4320,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           {currentResourceEntry ? (
             <div className="panel-sync-card">
               <CurrentResourcePanel entry={currentResourceEntry} store={watchProgressStore} />
+            </div>
+          ) : null}
+          {playbackSyncNotice ? (
+            <div className="playback-sync-notice" role="status">
+              {playbackSyncNotice}
             </div>
           ) : null}
 

@@ -1389,6 +1389,13 @@ export const overlayStyles = `
     background: transparent;
   }
 
+  .playback-sync-notice {
+    color: rgba(240, 240, 244, 0.72);
+    font-size: 13px;
+    line-height: 1.35;
+    padding: 2px 4px;
+  }
+
   .invite-panel {
     margin-top: 10px;
     padding: 9px 10px;
