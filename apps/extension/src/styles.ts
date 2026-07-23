@@ -335,9 +335,10 @@ export const overlayStyles = `
     min-width: 0;
   }
 
-  .panel-primary-action {
+  .button.panel-primary-action {
     flex: 1 1 auto;
     height: 36px;
+    min-height: 36px;
     min-width: 0;
     position: relative;
     overflow: hidden;
@@ -493,22 +494,36 @@ export const overlayStyles = `
   }
 
   .button.primary.panel-primary-action.room-exit {
-    border-color: rgba(248, 113, 113, 0.22);
-    background: rgba(127, 29, 29, 0.1);
-    color: rgba(254, 202, 202, 0.9);
-    box-shadow: none;
+    border-color: rgba(248, 113, 113, 0.3);
+    background:
+      linear-gradient(180deg, rgba(127, 29, 29, 0.2), rgba(69, 10, 10, 0.13)),
+      rgba(127, 29, 29, 0.08);
+    color: rgba(254, 226, 226, 0.92);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.045),
+      0 8px 20px rgba(69, 10, 10, 0.1);
   }
 
   .button.primary.panel-primary-action.room-exit:not(:disabled):hover {
-    border-color: rgba(248, 113, 113, 0.36);
-    background: rgba(127, 29, 29, 0.18);
+    border-color: rgba(248, 113, 113, 0.46);
+    background:
+      linear-gradient(180deg, rgba(153, 27, 27, 0.26), rgba(89, 13, 13, 0.18)),
+      rgba(127, 29, 29, 0.1);
     color: rgba(254, 226, 226, 0.98);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 10px 24px rgba(69, 10, 10, 0.14);
   }
 
   .button.primary.panel-primary-action.room-exit.confirming {
-    border-color: rgba(248, 113, 113, 0.48);
-    background: rgba(153, 27, 27, 0.24);
+    border-color: rgba(248, 113, 113, 0.58);
+    background:
+      linear-gradient(180deg, rgba(185, 28, 28, 0.32), rgba(127, 29, 29, 0.22)),
+      rgba(127, 29, 29, 0.12);
     color: rgba(254, 226, 226, 0.98);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      0 0 0 1px rgba(248, 113, 113, 0.08);
   }
 
   .button:not(:disabled):active,

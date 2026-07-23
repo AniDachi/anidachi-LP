@@ -126,15 +126,21 @@ describe("overlay layout pointer surfaces", () => {
 	});
 
 	it("renders room exit as a restrained destructive primary action", () => {
+		const primaryAction = getRule(".button.panel-primary-action");
+		expect(primaryAction).toContain("height: 36px");
+		expect(primaryAction).toContain("min-height: 36px");
+
 		const exitAction = getRule(
 			".button.primary.panel-primary-action.room-exit",
 		);
-		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.22)");
-		expect(exitAction).toContain("background: rgba(127, 29, 29, 0.1)");
-		expect(exitAction).toContain("box-shadow: none");
+		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.3)");
+		expect(exitAction).toContain(
+			"linear-gradient(180deg, rgba(127, 29, 29, 0.2), rgba(69, 10, 10, 0.13))",
+		);
+		expect(exitAction).toContain("inset 0 1px 0 rgba(255, 255, 255, 0.045)");
 		expect(
 			getRule(".button.primary.panel-primary-action.room-exit.confirming"),
-		).toContain("background: rgba(153, 27, 27, 0.24)");
+		).toContain("border-color: rgba(248, 113, 113, 0.58)");
 	});
 
 	it("uses restrained text tabs for settings navigation", () => {
