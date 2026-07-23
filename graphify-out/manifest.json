@@ -3215,22 +3215,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1784727923.3790255,
+    "mtime": 1784765728.3211014,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1784727923.3789644,
+    "mtime": 1784765728.3210573,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1784727923.3789127,
+    "mtime": 1784765728.3210163,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1784727923.3788583,
+    "mtime": 1784765728.3209677,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3750,8 +3750,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/youtube/player-chrome.ts": {
-    "mtime": 1784718494.8823829,
-    "ast_hash": "e137fbe13ee2972d79d1f5774892cdeb",
+    "mtime": 1784770580.6550045,
+    "ast_hash": "5d2bb2cb2ffd5fd265ae166311b48603",
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/core/overlay-geometry.test.ts": {
@@ -3760,8 +3760,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/youtube/player-chrome.test.ts": {
-    "mtime": 1784718511.2686675,
-    "ast_hash": "0dcd420eb77c49010717970497ff131e",
+    "mtime": 1784770534.462859,
+    "ast_hash": "18563b98958a92c6dcc5914e1244457d",
     "semantic_hash": ""
   },
   "docs/youtube-adapter-notes.md": {

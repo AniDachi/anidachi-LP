@@ -57,15 +57,11 @@ export function getYouTubePlayerOverlayGeometry(
 		containerRect,
 		true,
 	);
-	const layoutBottomChrome = getBottomChromeRects(
-		container,
-		containerRect,
-		false,
-	);
+	const controlsVisible = visibleBottomChrome.length > 0;
 	const launcher = getLauncherPosition(container, containerRect);
 
 	return normalizePlayerOverlayGeometry({
-		controlsVisible: visibleBottomChrome.length > 0,
+		controlsVisible,
 		viewport: {
 			widthPx: containerRect.width,
 			heightPx: containerRect.height,
@@ -73,7 +69,9 @@ export function getYouTubePlayerOverlayGeometry(
 		safeInsets: {
 			topPx: 0,
 			rightPx: 0,
-			bottomPx: getBottomReservation(containerRect, layoutBottomChrome),
+			bottomPx: controlsVisible
+				? getBottomReservation(containerRect, visibleBottomChrome)
+				: 0,
 			leftPx: 0,
 		},
 		launcher,

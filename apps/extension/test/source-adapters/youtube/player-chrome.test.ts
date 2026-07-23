@@ -40,7 +40,7 @@ describe("YouTube player chrome", () => {
 		});
 	});
 
-	it("keeps bottom reservation stable when cumulative opacity hides the controls", () => {
+	it("releases bottom reservation when cumulative opacity hides the controls", () => {
 		document.body.innerHTML = `
       <div id="movie_player">
         <div id="fading-chrome" style="opacity: 0.2">
@@ -55,10 +55,68 @@ describe("YouTube player chrome", () => {
 		expect(getYouTubePlayerOverlayGeometry(container)).toEqual({
 			controlsVisible: false,
 			viewport: { widthPx: 960, heightPx: 540 },
-			safeInsets: { topPx: 0, rightPx: 0, bottomPx: 108, leftPx: 0 },
+			safeInsets: { topPx: 0, rightPx: 0, bottomPx: 0, leftPx: 0 },
 			launcher: { topPx: 10, rightPx: 10 },
 			panel: { topPx: 50, rightPx: 10 },
 		});
+	});
+
+	it("moves bottom-safe layout as YouTube controls hide and reappear", () => {
+		const { mutationObservers, runAnimationFrames } =
+			installGeometryObserverStubs();
+		document.body.innerHTML = `
+      <div id="movie_player">
+        <div id="fading-chrome">
+          <div class="ytp-chrome-bottom"></div>
+        </div>
+      </div>
+    `;
+		const container = getPlayer();
+		const fadingChrome = document.querySelector(
+			"#fading-chrome",
+		) as HTMLElement;
+		mockRect(container, 100, 50, 960, 540);
+		mockRect(document.querySelector(".ytp-chrome-bottom"), 100, 500, 960, 90);
+		const listener = vi.fn();
+		const dispose = subscribeYouTubePlayerOverlayGeometry(container, listener);
+		runAnimationFrames();
+
+		fadingChrome.style.opacity = "0";
+		mutationObservers[0]?.trigger([
+			{
+				attributeName: "style",
+				target: fadingChrome,
+				type: "attributes",
+			} as unknown as MutationRecord,
+		]);
+		runAnimationFrames();
+
+		expect(listener).toHaveBeenLastCalledWith(
+			expect.objectContaining({
+				controlsVisible: false,
+				safeInsets: expect.objectContaining({ bottomPx: 0 }),
+			}),
+		);
+
+		fadingChrome.style.opacity = "1";
+		mutationObservers[0]?.trigger([
+			{
+				attributeName: "style",
+				target: fadingChrome,
+				type: "attributes",
+			} as unknown as MutationRecord,
+		]);
+		runAnimationFrames();
+
+		expect(listener).toHaveBeenLastCalledWith(
+			expect.objectContaining({
+				controlsVisible: true,
+				safeInsets: expect.objectContaining({ bottomPx: 108 }),
+			}),
+		);
+		expect(listener).toHaveBeenCalledTimes(2);
+
+		dispose();
 	});
 
 	it.each([

@@ -13744,7 +13744,7 @@
       "label": "subscribeYouTubePlayerOverlayGeometry()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L87",
+      "source_location": "L85",
       "_origin": "ast"
     },
     {
@@ -13752,7 +13752,7 @@
       "label": "getYouTubeChromeRoots()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L291",
+      "source_location": "L289",
       "_origin": "ast"
     },
     {
@@ -13760,7 +13760,7 @@
       "label": "getActiveFallbackChromeElements()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L313",
+      "source_location": "L311",
       "_origin": "ast"
     },
     {
@@ -13768,7 +13768,7 @@
       "label": "getBottomChromeRects()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L350",
+      "source_location": "L348",
       "_origin": "ast"
     },
     {
@@ -13776,7 +13776,7 @@
       "label": "getBottomFallbackCandidates()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L375",
+      "source_location": "L373",
       "_origin": "ast"
     },
     {
@@ -13784,7 +13784,7 @@
       "label": "getBottomReservation()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L397",
+      "source_location": "L395",
       "_origin": "ast"
     },
     {
@@ -13792,7 +13792,7 @@
       "label": "getLauncherPosition()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L415",
+      "source_location": "L413",
       "_origin": "ast"
     },
     {
@@ -13800,7 +13800,7 @@
       "label": "getFallbackTopActionRects()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L471",
+      "source_location": "L469",
       "_origin": "ast"
     },
     {
@@ -13808,7 +13808,7 @@
       "label": "getFallbackTopActionCandidates()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L480",
+      "source_location": "L478",
       "_origin": "ast"
     },
     {
@@ -13816,7 +13816,7 @@
       "label": "AvailableElementRect",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L501",
+      "source_location": "L499",
       "_origin": "ast"
     },
     {
@@ -13824,7 +13824,7 @@
       "label": "queryUniqueElements()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L506",
+      "source_location": "L504",
       "_origin": "ast"
     },
     {
@@ -13832,7 +13832,7 @@
       "label": "getAvailableRects()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L520",
+      "source_location": "L518",
       "_origin": "ast"
     },
     {
@@ -13840,7 +13840,7 @@
       "label": "getAvailableElementRects()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L534",
+      "source_location": "L532",
       "_origin": "ast"
     },
     {
@@ -13848,7 +13848,7 @@
       "label": "isPotentialChromeAttributeTarget()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L556",
+      "source_location": "L554",
       "_origin": "ast"
     },
     {
@@ -13856,7 +13856,7 @@
       "label": "targetAffectsChromeRoots()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L568",
+      "source_location": "L566",
       "_origin": "ast"
     },
     {
@@ -13864,7 +13864,7 @@
       "label": "childListMutationTouchesChromeRoots()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L585",
+      "source_location": "L583",
       "_origin": "ast"
     },
     {
@@ -13872,7 +13872,7 @@
       "label": "childListMutationMayChangeChromeRoots()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L600",
+      "source_location": "L598",
       "_origin": "ast"
     },
     {
@@ -13880,7 +13880,7 @@
       "label": "nodeContainsPotentialChrome()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L611",
+      "source_location": "L609",
       "_origin": "ast"
     },
     {
@@ -13888,7 +13888,7 @@
       "label": "nodeContainsChromeRoot()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L619",
+      "source_location": "L617",
       "_origin": "ast"
     },
     {
@@ -13896,7 +13896,7 @@
       "label": "getAvailableRect()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L632",
+      "source_location": "L630",
       "_origin": "ast"
     },
     {
@@ -13904,7 +13904,7 @@
       "label": "isVisuallyAvailable()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L653",
+      "source_location": "L651",
       "_origin": "ast"
     },
     {
@@ -13912,7 +13912,7 @@
       "label": "getBoundingRect()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L689",
+      "source_location": "L687",
       "_origin": "ast"
     },
     {
@@ -13920,7 +13920,7 @@
       "label": "isUsableRect()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L705",
+      "source_location": "L703",
       "_origin": "ast"
     },
     {
@@ -13928,7 +13928,7 @@
       "label": "rectIntersects()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L714",
+      "source_location": "L712",
       "_origin": "ast"
     },
     {
@@ -13936,7 +13936,7 @@
       "label": "clampNumber()",
       "file_type": "code",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L723",
+      "source_location": "L721",
       "_origin": "ast"
     },
     {
@@ -16864,7 +16864,7 @@
       "label": "getPlayer()",
       "file_type": "code",
       "source_file": "apps/extension/test/source-adapters/youtube/player-chrome.test.ts",
-      "source_location": "L668",
+      "source_location": "L726",
       "_origin": "ast"
     },
     {
@@ -16872,7 +16872,7 @@
       "label": "mockRect()",
       "file_type": "code",
       "source_file": "apps/extension/test/source-adapters/youtube/player-chrome.test.ts",
-      "source_location": "L677",
+      "source_location": "L735",
       "_origin": "ast"
     },
     {
@@ -16880,7 +16880,7 @@
       "label": "installGeometryObserverStubs()",
       "file_type": "code",
       "source_file": "apps/extension/test/source-adapters/youtube/player-chrome.test.ts",
-      "source_location": "L702",
+      "source_location": "L760",
       "_origin": "ast"
     },
     {
@@ -91381,7 +91381,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L87",
+      "source_location": "L85",
       "weight": 1.0
     },
     {
@@ -91390,7 +91390,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L291",
+      "source_location": "L289",
       "weight": 1.0
     },
     {
@@ -91399,7 +91399,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L313",
+      "source_location": "L311",
       "weight": 1.0
     },
     {
@@ -91408,7 +91408,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L350",
+      "source_location": "L348",
       "weight": 1.0
     },
     {
@@ -91417,7 +91417,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L375",
+      "source_location": "L373",
       "weight": 1.0
     },
     {
@@ -91426,7 +91426,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L397",
+      "source_location": "L395",
       "weight": 1.0
     },
     {
@@ -91435,7 +91435,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L415",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -91444,7 +91444,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L471",
+      "source_location": "L469",
       "weight": 1.0
     },
     {
@@ -91453,7 +91453,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L480",
+      "source_location": "L478",
       "weight": 1.0
     },
     {
@@ -91462,7 +91462,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L501",
+      "source_location": "L499",
       "weight": 1.0
     },
     {
@@ -91471,7 +91471,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L506",
+      "source_location": "L504",
       "weight": 1.0
     },
     {
@@ -91480,7 +91480,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L520",
+      "source_location": "L518",
       "weight": 1.0
     },
     {
@@ -91489,7 +91489,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L534",
+      "source_location": "L532",
       "weight": 1.0
     },
     {
@@ -91498,7 +91498,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L556",
+      "source_location": "L554",
       "weight": 1.0
     },
     {
@@ -91507,7 +91507,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L568",
+      "source_location": "L566",
       "weight": 1.0
     },
     {
@@ -91516,7 +91516,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L585",
+      "source_location": "L583",
       "weight": 1.0
     },
     {
@@ -91525,7 +91525,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L600",
+      "source_location": "L598",
       "weight": 1.0
     },
     {
@@ -91534,7 +91534,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L611",
+      "source_location": "L609",
       "weight": 1.0
     },
     {
@@ -91543,7 +91543,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L619",
+      "source_location": "L617",
       "weight": 1.0
     },
     {
@@ -91552,7 +91552,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L632",
+      "source_location": "L630",
       "weight": 1.0
     },
     {
@@ -91561,7 +91561,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L653",
+      "source_location": "L651",
       "weight": 1.0
     },
     {
@@ -91570,7 +91570,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L689",
+      "source_location": "L687",
       "weight": 1.0
     },
     {
@@ -91579,7 +91579,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L705",
+      "source_location": "L703",
       "weight": 1.0
     },
     {
@@ -91588,7 +91588,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L714",
+      "source_location": "L712",
       "weight": 1.0
     },
     {
@@ -91597,7 +91597,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L723",
+      "source_location": "L721",
       "weight": 1.0
     },
     {
@@ -91627,7 +91627,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L65",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -91637,7 +91637,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L76",
+      "source_location": "L73",
       "weight": 1.0
     },
     {
@@ -91647,7 +91647,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L94",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -91657,7 +91657,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L117",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -91667,7 +91667,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L133",
+      "source_location": "L131",
       "weight": 1.0
     },
     {
@@ -91677,7 +91677,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L143",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -91687,7 +91687,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L158",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -91697,7 +91697,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L293",
+      "source_location": "L291",
       "weight": 1.0
     },
     {
@@ -91707,7 +91707,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L299",
+      "source_location": "L297",
       "weight": 1.0
     },
     {
@@ -91717,7 +91717,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L303",
+      "source_location": "L301",
       "weight": 1.0
     },
     {
@@ -91727,7 +91727,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L318",
+      "source_location": "L316",
       "weight": 1.0
     },
     {
@@ -91737,7 +91737,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L323",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -91747,7 +91747,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L332",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -91757,7 +91757,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L339",
+      "source_location": "L337",
       "weight": 1.0
     },
     {
@@ -91767,7 +91767,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L355",
+      "source_location": "L353",
       "weight": 1.0
     },
     {
@@ -91777,7 +91777,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L360",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -91787,7 +91787,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L368",
+      "source_location": "L366",
       "weight": 1.0
     },
     {
@@ -91797,7 +91797,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L381",
+      "source_location": "L379",
       "weight": 1.0
     },
     {
@@ -91807,7 +91807,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L408",
+      "source_location": "L406",
       "weight": 1.0
     },
     {
@@ -91817,7 +91817,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L419",
+      "source_location": "L417",
       "weight": 1.0
     },
     {
@@ -91827,7 +91827,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L420",
+      "source_location": "L418",
       "weight": 1.0
     },
     {
@@ -91837,7 +91837,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L428",
+      "source_location": "L426",
       "weight": 1.0
     },
     {
@@ -91847,7 +91847,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L434",
+      "source_location": "L432",
       "weight": 1.0
     },
     {
@@ -91857,7 +91857,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L447",
+      "source_location": "L445",
       "weight": 1.0
     },
     {
@@ -91867,7 +91867,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L475",
+      "source_location": "L473",
       "weight": 1.0
     },
     {
@@ -91877,7 +91877,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L487",
+      "source_location": "L485",
       "weight": 1.0
     },
     {
@@ -91887,7 +91887,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L526",
+      "source_location": "L524",
       "weight": 1.0
     },
     {
@@ -91897,7 +91897,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L542",
+      "source_location": "L540",
       "weight": 1.0
     },
     {
@@ -91907,7 +91907,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L561",
+      "source_location": "L559",
       "weight": 1.0
     },
     {
@@ -91917,7 +91917,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L592",
+      "source_location": "L590",
       "weight": 1.0
     },
     {
@@ -91927,7 +91927,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L606",
+      "source_location": "L604",
       "weight": 1.0
     },
     {
@@ -91937,7 +91937,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L607",
+      "source_location": "L605",
       "weight": 1.0
     },
     {
@@ -91947,7 +91947,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L640",
+      "source_location": "L638",
       "weight": 1.0
     },
     {
@@ -91957,7 +91957,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L646",
+      "source_location": "L644",
       "weight": 1.0
     },
     {
@@ -91967,7 +91967,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L646",
+      "source_location": "L644",
       "weight": 1.0
     },
     {
@@ -100376,7 +100376,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/source-adapters/youtube/player-chrome.test.ts",
-      "source_location": "L668",
+      "source_location": "L726",
       "weight": 1.0
     },
     {
@@ -100385,7 +100385,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/source-adapters/youtube/player-chrome.test.ts",
-      "source_location": "L677",
+      "source_location": "L735",
       "weight": 1.0
     },
     {
@@ -100394,7 +100394,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/source-adapters/youtube/player-chrome.test.ts",
-      "source_location": "L702",
+      "source_location": "L760",
       "weight": 1.0
     },
     {
@@ -182864,7 +182864,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L67",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
@@ -182875,7 +182875,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L117",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -191917,7 +191917,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L563",
+      "source_location": "L561",
       "weight": 1.0
     },
     {
@@ -191928,7 +191928,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L577",
+      "source_location": "L575",
       "weight": 1.0
     },
     {
@@ -191939,7 +191939,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L614",
+      "source_location": "L612",
       "weight": 1.0
     },
     {
@@ -191950,7 +191950,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/source-adapters/youtube/player-chrome.ts",
-      "source_location": "L624",
+      "source_location": "L622",
       "weight": 1.0
     },
     {
