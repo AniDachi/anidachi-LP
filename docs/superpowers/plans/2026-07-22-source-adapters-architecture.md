@@ -691,11 +691,12 @@ Automated evidence recorded on 2026-07-22:
 
 ### Task 8: Replace Provider ID Branches With Capabilities And Policies
 
-**Status:** In progress. The player-chrome geometry portion is complete on
-2026-07-22: Generic, YouTube, and Crunchyroll expose the provider-neutral
-geometry capability; YouTube and Crunchyroll own independent measurement and
-subscriptions; shared layout consumes normalized geometry without provider-ID
-branches. Overlay-binding and playback-policy migration remain in this task.
+**Status:** Complete on 2026-07-23. Generic, YouTube, and Crunchyroll expose
+provider-neutral overlay binding, geometry, playback policy, phase snapshots,
+source descriptors, and navigation capabilities. Shared playback and layout
+code consumes those contracts without provider DOM or provider-ID branches.
+Detailed YouTube synchronization behavior is maintained in
+`docs/youtube-adapter-notes.md`.
 
 Detailed overlay-geometry execution plan:
 `docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md`.

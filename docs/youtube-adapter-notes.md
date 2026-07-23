@@ -1,103 +1,108 @@
-# YouTube Adapter Maintenance Notes
+# YouTube Adapter Notes
 
-This document describes the current ownership and maintenance rules for the
-YouTube extension adapter. It is an implementation guide, not a contract with
-YouTube: DOM classes and element structure can change without notice.
+This document is the maintenance contract for AniDachi's YouTube provider
+adapter. Shared room and overlay code must consume normalized adapter
+capabilities; it must not inspect YouTube selectors or infer YouTube state.
 
-## Ownership Boundary
+## Supported Surface
 
-All YouTube-specific player detection, selectors, geometry measurement, and
-observation must stay under:
+- The overlay mounts only on finite-duration YouTube `/watch?v=<id>` pages.
+- Feed previews, Shorts, embeds, channel pages, search, and other YouTube routes
+  are blocked from adapter fallback and do not receive the AniDachi overlay.
+- A YouTube room can navigate only to another valid YouTube watch source.
+  Cross-provider navigation is rejected by both the extension and Room Worker.
+- Navigation uses a canonical watch URL and a bounded room hash. It does not use
+  undocumented YouTube player APIs.
+
+## Ownership
+
+The YouTube folder owns:
+
+- watch-route and video-ID parsing;
+- player discovery and source identity;
+- same-provider navigation;
+- player chrome measurement and overlay safe insets;
+- playback-phase detection;
+- YouTube-specific playback observations.
+
+The shared `PlaybackSyncController` owns host authority, drift correction,
+barriers, buffering debounce, autoplay recovery, and transport events. It sees
+only normalized phase snapshots and never reads YouTube DOM.
+
+## Playback Phases
+
+`YouTubePlaybackPhaseTracker` reports:
+
+- `content`: stable finite VOD content;
+- `interstitial`: a confirmed local advertisement;
+- `buffering`: confirmed content without enough ready data;
+- `transition`: source identity or player readiness is not stable;
+- `unsupported`: metadata confirms a non-finite/live timeline.
+
+The tracker observes only the player class and bounded ad containers, plus
+native media readiness events. `ad-showing` is a strong signal. Persistent weak
+ad nodes require corroboration and hidden nodes are ignored. A short exit grace
+prevents an ad pod from briefly leaking content events between consecutive ads.
+
+Signal precedence is:
 
 ```txt
-apps/extension/src/source-adapters/youtube/
+transition -> interstitial -> unsupported -> buffering -> content
 ```
 
-`player-chrome.ts` owns YouTube player-control geometry. Shared overlay code
-consumes only the normalized `PlayerOverlayGeometry` values exposed by the
-active `VideoAdapter`. It must not import YouTube selectors or branch on the
-YouTube adapter ID when positioning overlay elements.
+Contradictory state fails closed to `transition`.
 
-The current primary selectors are:
+## Synchronization Policy
 
-```txt
-.ytp-chrome-bottom
-.ytp-progress-bar-container
-.ytp-watch-later-button
-.ytp-share-button
-.ytp-chrome-top-buttons button
-.ytp-chrome-top
-.ytp-chrome-top-buttons
+- Advertisement media is never paused, played, sought, skipped, or published as
+  room content.
+- A host advertisement persists one paused `HOST_STATE` at the last confirmed
+  content time. A pre-roll uses time `0`.
+- A guest advertisement does not pause the room. Only the newest authoritative
+  host state is retained and applied after content returns.
+- Source transitions and unsupported media block local events, heartbeats, and
+  remote media operations. A transition that does not stabilize within ten
+  seconds reports a source mismatch.
+- Host buffering shorter than 500 ms is ignored. Longer buffering persists one
+  content hold; guest buffering remains local.
+- Host playback rate is authoritative and is applied before drift correction.
+- `NotAllowedError` produces one `Resume sync` action. AniDachi does not retry
+  autoplay in a timer loop.
+
+## Selector Maintenance
+
+When YouTube changes its DOM:
+
+1. Capture privacy-safe diagnostics from both participants.
+2. Update selectors only inside `source-adapters/youtube/`.
+3. Add a fixture proving strong, weak, hidden, entry, exit, and cleanup behavior.
+4. Keep observers scoped to the player and ensure disposal remains idempotent.
+5. Run the full extension suite and two-profile staging acceptance.
+
+Diagnostics may include adapter ID, provider, phase, content time, playback
+rate, action, source generation, and navigation status. Do not log video IDs,
+raw fingerprints, URLs, titles, DOM text, or advertisement metadata.
+
+## Required Acceptance
+
+Automated:
+
+```bash
+pnpm --filter @anidachi/extension check
+pnpm --filter @anidachi/extension test
+pnpm build:extension:staging
+pnpm validate:extension:staging
 ```
 
-When these classes are unavailable, the adapter uses bounded semantic
-fallbacks for interactive elements near the bottom or top-right of the player.
-Those fallbacks are intentionally limited to the active player container.
+Manual, with two independent browser profiles:
 
-## Measurement And Fallback
+- play, pause, seek, and playback-rate changes;
+- guest-local control rejection;
+- host-only ad, guest-only ad, simultaneous/different-length ads, and pre-roll;
+- short and long host buffering plus guest buffering;
+- blocked autoplay and `Resume sync`;
+- same-provider source switching and reconnect during a hold;
+- normal, theater, and fullscreen player chrome behavior;
+- a final Crunchyroll regression pass.
 
-The provider measurer returns normalized values for:
-
-- player viewport dimensions;
-- stable safe insets;
-- launcher and panel anchors;
-- whether bottom controls are currently visible.
-
-Bottom-control visibility respects rendered opacity. The reserved bottom inset
-uses the stable control layout even while controls fade out, preventing saved
-camera and chat positions from jumping. If top actions cannot be measured, the
-launcher falls back to the physical top-right player margin. If the player
-container itself has no usable size, the provider-neutral safe defaults are
-returned; the overlay is not detached and user layout preferences are not
-rewritten.
-
-Captions, ads, cards, annotations, end screens, transient menus, and temporary
-tooltips do not contribute to safe insets. Following those elements would make
-the overlay unstable during normal playback.
-
-## Observation And Disposal
-
-Observation begins only when `subscribeOverlayGeometry()` is called. Adapter
-construction remains side-effect free.
-
-The YouTube provider observes the player container and discovered chrome roots
-with `ResizeObserver`, and filters `MutationObserver` records to relevant
-structure and visibility attributes. Pointer movement, pointer exit,
-transitions, and fullscreen changes schedule coalesced measurements. A single
-delayed measurement captures the end of the control fade transition; there is
-no polling interval.
-
-The disposer must disconnect both observers, remove every event listener,
-cancel the pending animation frame, and clear the delayed measurement. Shared
-React lifecycle code marks the subscription disposed before invoking that
-disposer, so a late callback from a replaced player cannot update the new
-overlay.
-
-## Updating YouTube Selectors
-
-When YouTube changes its player DOM:
-
-1. Reproduce the issue on a valid full `/watch?v=...` page in normal, theater,
-   fullscreen, and small-window modes.
-2. Inspect only elements inside `#movie_player` or `.html5-video-player`.
-3. Prefer stable player chrome roots or semantic roles. Do not use page-wide
-   selectors, generated element indexes, page text, or undocumented YouTube
-   JavaScript APIs.
-4. Update selectors and measurement logic only in
-   `source-adapters/youtube/player-chrome.ts`.
-5. Add or update characterization tests for visible, hidden, missing, replaced,
-   and fallback chrome.
-6. Run the focused player-chrome and lifecycle tests, the complete extension
-   suite, staging build validation, and real-player visual acceptance.
-7. Confirm Crunchyroll behavior is unchanged before merging into `staging`.
-
-## Adding Another Provider
-
-A new provider gets its own folder, measurer, subscription, tests, and adapter
-capability implementation. It may reuse the provider-neutral geometry types and
-normalization helpers, but must not reuse YouTube or Crunchyroll selectors or
-import either provider implementation. Unknown chrome must degrade to safe
-normalized values, and all observation must have a deterministic disposer.
-
-The shared overlay should require no provider-specific geometry change when a
-new adapter is added.
+Automated fixtures do not replace real-ad acceptance.

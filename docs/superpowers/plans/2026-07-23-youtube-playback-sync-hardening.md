@@ -22,6 +22,14 @@ Crunchyroll DOM.
 
 ## Status And Relationship To Existing Plans
 
+- Automated implementation Tasks 1–6 are complete on
+  `codex/provider-adapter-lifecycle` through commit `1b7e5cc`. Task 7 adds
+  privacy-safe diagnostics and this maintenance documentation. The extension
+  suite passes 68 files / 729 tests and TypeScript check passes. This evidence
+  does not claim real-ad or two-profile acceptance.
+- Task 8 remains open: build/validate the final staging artifact, run the
+  two-profile matrix, record evidence, and perform the Crunchyroll regression
+  pass before moving PR #148 out of draft.
 - This plan is the detailed execution plan for the unfinished playback and
   source-navigation portions of
   `docs/superpowers/plans/2026-07-22-source-adapters-architecture.md`, especially

@@ -25,8 +25,8 @@
     "semantic_hash": ""
   },
   "apps/api/src/index.ts": {
-    "mtime": 1784676382.3107755,
-    "ast_hash": "aff30d1f7a9f81ca83b054ba0924c626",
+    "mtime": 1784796429.1377978,
+    "ast_hash": "63517bc46f220eeaa508b4f61e2502d8",
     "semantic_hash": ""
   },
   "apps/api/src/internal-auth.ts": {
@@ -75,8 +75,8 @@
     "semantic_hash": ""
   },
   "apps/api/src/room-state.ts": {
-    "mtime": 1784676382.3119528,
-    "ast_hash": "92ac00036b278e51fe46c6c173513074",
+    "mtime": 1784797279.7073758,
+    "ast_hash": "05423d7d60ecbefb1f6154c17fba7512",
     "semantic_hash": ""
   },
   "apps/api/src/telemetry.ts": {
@@ -130,8 +130,8 @@
     "semantic_hash": ""
   },
   "apps/api/test/room-state.test.ts": {
-    "mtime": 1784676382.313523,
-    "ast_hash": "ebc8441ac83884a8ba8262a3166d5d66",
+    "mtime": 1784797259.775547,
+    "ast_hash": "ab3da86acaff01048ca9fc4f800c2ed7",
     "semantic_hash": ""
   },
   "apps/api/test/routes.test.ts": {
@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "apps/api/test/runtime/room-hibernation-runtime.ts": {
-    "mtime": 1784676382.313719,
-    "ast_hash": "3d1bc33c734d019b2b8f6162b551c0af",
+    "mtime": 1784796910.46111,
+    "ast_hash": "cecf266d1376546d1a2eaa7cccea9693",
     "semantic_hash": ""
   },
   "apps/api/test/telemetry.test.ts": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "apps/extension/entrypoints/content.tsx": {
-    "mtime": 1784712953.1335354,
-    "ast_hash": "9535785297b6a534cec60a273e00a9d6",
+    "mtime": 1784795356.704453,
+    "ast_hash": "8253aae15750f7877993f58178110ea3",
     "semantic_hash": ""
   },
   "apps/extension/entrypoints/crunchyroll.content.ts": {
@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1784765457.599937,
-    "ast_hash": "16c30c02bf87eeed0970d82cea3f3e7d",
+    "mtime": 1784799329.694877,
+    "ast_hash": "bd41e162cc89077f7f642c4f5637044f",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -320,8 +320,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
-    "mtime": 1784676382.3265586,
-    "ast_hash": "364694d628b0b75ae14b7f61f850b237",
+    "mtime": 1784795109.0416207,
+    "ast_hash": "36308950ab5526f30362d99a6ae2826f",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-app.tsx": {
@@ -380,8 +380,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1784719065.9176648,
-    "ast_hash": "155cc43bdc4a6d5fe7d6c2066a6443af",
+    "mtime": 1784799329.787563,
+    "ast_hash": "ee02128dbb2c451f8ff3e331aca0485f",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -490,8 +490,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/playback-control.test.ts": {
-    "mtime": 1784683124.04799,
-    "ast_hash": "ca1125db37a4e74d419054ca505c33f1",
+    "mtime": 1784795192.3279738,
+    "ast_hash": "6880c590956fc235cf8f9b0915dbef78",
     "semantic_hash": ""
   },
   "apps/extension/test/room-client-auth.test.ts": {
@@ -550,8 +550,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/watch-progress-entry.test.ts": {
-    "mtime": 1784714477.197057,
-    "ast_hash": "12ea6a901e2cd1d480c045bbeba3ab8b",
+    "mtime": 1784795415.7187397,
+    "ast_hash": "3c0515404aa44888c7c66176421d3904",
     "semantic_hash": ""
   },
   "apps/extension/test/watch-progress.test.ts": {
@@ -2815,8 +2815,8 @@
     "semantic_hash": ""
   },
   "scripts/room-signaling-harness.mjs": {
-    "mtime": 1784676382.4393659,
-    "ast_hash": "e14d3ff817459402ff9bd962f9d35f96",
+    "mtime": 1784796812.1753492,
+    "ast_hash": "f32188c03dbfdbce5208bcba1a3a910c",
     "semantic_hash": ""
   },
   "scripts/seo-cta-cleanup.py": {
@@ -3050,8 +3050,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1784720427.1480021,
-    "ast_hash": "e6516ebe01840913be554772d5e0cc9a",
+    "mtime": 1784799648.747718,
+    "ast_hash": "715033f14d4b8bba2c9c002b5e013e6b",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3215,22 +3215,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1784770904.9430737,
+    "mtime": 1784796935.4434643,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1784770904.9430237,
+    "mtime": 1784796935.4436407,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1784770904.9429812,
+    "mtime": 1784796935.443758,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1784770904.9429328,
+    "mtime": 1784796935.4439278,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3460,23 +3460,23 @@
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/core/html5-video-adapter.ts": {
-    "mtime": 1784714396.059009,
-    "ast_hash": "06b840c919f504d99b5c720e1934b480",
+    "mtime": 1784795356.3844771,
+    "ast_hash": "fb97a55d85075cee555642a361d7b967",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/core/source-descriptor.ts": {
-    "mtime": 1784685199.6787698,
-    "ast_hash": "127d2f09f07f25d6f9605177b7e84df6",
+    "mtime": 1784794680.254879,
+    "ast_hash": "f2a225744268a8da5e91dc337a435ded",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/core/source-url.ts": {
-    "mtime": 1784679769.633622,
-    "ast_hash": "6d012786d5288c8354a770ca087a40ef",
+    "mtime": 1784795271.1308167,
+    "ast_hash": "3e93b43d9aa2d8ae88ada238523d99e6",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/core/types.ts": {
-    "mtime": 1784714395.9633152,
-    "ast_hash": "ad8d6356aeb5f62ed1b7afa5da04ff13",
+    "mtime": 1784796474.6596873,
+    "ast_hash": "0672f65c7b408798419fefa385d03745",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/core/video-discovery.ts": {
@@ -3485,8 +3485,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/crunchyroll/adapter.ts": {
-    "mtime": 1784715055.9199963,
-    "ast_hash": "1c4e4a991f06682667df86b1f47bed01",
+    "mtime": 1784795415.1421635,
+    "ast_hash": "61abfb232e04d14542bb1e5256a64439",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/crunchyroll/artwork-select.ts": {
@@ -3510,8 +3510,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/crunchyroll/definition.ts": {
-    "mtime": 1784684356.2331188,
-    "ast_hash": "84f593b7d8e20db9dae775c405a5cb11",
+    "mtime": 1784796475.1340926,
+    "ast_hash": "d53f0b88af47f1aecc24bda6ff171e03",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/crunchyroll/player-chrome.ts": {
@@ -3540,23 +3540,23 @@
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/generic/definition.ts": {
-    "mtime": 1784685200.19882,
-    "ast_hash": "d11cc81e777a58acf7459cce840c346b",
+    "mtime": 1784796475.2293847,
+    "ast_hash": "45fec96d22a1db62c36b691b37f185df",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/registry.ts": {
-    "mtime": 1784685199.8527002,
+    "mtime": 1784796475.326537,
     "ast_hash": "47fd563b2d22bb7dcb9e57e25d2c9a06",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/youtube/adapter.ts": {
-    "mtime": 1784716598.5959358,
-    "ast_hash": "f88553da0bdb6a76e0994bd5945668f0",
+    "mtime": 1784797973.7635074,
+    "ast_hash": "d0fb8e8c9595594cfe1396ac68761fb6",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/youtube/definition.ts": {
-    "mtime": 1784685200.0416656,
-    "ast_hash": "58c037aae497349aecfed9fd2a9aa37c",
+    "mtime": 1784796475.0373642,
+    "ast_hash": "08704bf8d4a94bdc5b846461c8aacb88",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/youtube/progress.ts": {
@@ -3575,13 +3575,13 @@
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/core/source-descriptor.test.ts": {
-    "mtime": 1784714477.103034,
-    "ast_hash": "0f4e425333bfde7948f201acbfe5b945",
+    "mtime": 1784795415.6240098,
+    "ast_hash": "e8dda0cc9ae1439b6c591c5e8dfd29a5",
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/core/source-url.test.ts": {
-    "mtime": 1784679634.5999625,
-    "ast_hash": "c37907476b6c1632971efe44c1b3c227",
+    "mtime": 1784795300.4696972,
+    "ast_hash": "fc56842dfe309d1fd9d2292977cc221e",
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/core/video-discovery.test.ts": {
@@ -3590,8 +3590,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/crunchyroll/adapter.test.ts": {
-    "mtime": 1784684356.2397094,
-    "ast_hash": "86090b22b762ee33f0b5b4736c6d5fce",
+    "mtime": 1784795428.1408782,
+    "ast_hash": "b6c32e3050fa5a1fe22a1cbca18ef741",
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/crunchyroll/bridge-client.test.ts": {
@@ -3605,8 +3605,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/generic/adapter.test.ts": {
-    "mtime": 1784685148.0063539,
-    "ast_hash": "770ed1723d7fb3a8a9bb2b6036258be3",
+    "mtime": 1784795427.9494848,
+    "ast_hash": "8ec8cf253c0e701070a9ba52c7bb2273",
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/provider-boundaries.test.ts": {
@@ -3620,8 +3620,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/youtube/adapter.test.ts": {
-    "mtime": 1784716532.213233,
-    "ast_hash": "348786dd83a03043d8891ab5d7048a91",
+    "mtime": 1784798283.1406538,
+    "ast_hash": "5d4f8a73f9c4b880b9f042396e03be58",
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/youtube/url.test.ts": {
@@ -3690,8 +3690,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-22-source-adapters-architecture.md": {
-    "mtime": 1784790926.0939848,
-    "ast_hash": "a2e5b9e3375821ccaf7973afa529c78e",
+    "mtime": 1784799648.9458356,
+    "ast_hash": "263ca27883c0855a1144ecc518ee5864",
     "semantic_hash": ""
   },
   "apps/extension/src/top-bubble-reveal.ts": {
@@ -3720,8 +3720,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/active-adapter-playback.ts": {
-    "mtime": 1784713543.0553234,
-    "ast_hash": "6ac2f10d59be4873ccee46192a1fb89f",
+    "mtime": 1784794138.6411483,
+    "ast_hash": "6f5e7e859505257da1b89ef78bc20c09",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/core/adapter-manager.ts": {
@@ -3730,18 +3730,18 @@
     "semantic_hash": ""
   },
   "apps/extension/test/active-adapter-playback.test.tsx": {
-    "mtime": 1784714476.8239598,
-    "ast_hash": "56719a1e81df3ef86fe6af0f7b6d0f73",
+    "mtime": 1784795415.237353,
+    "ast_hash": "5d717e1e0d6cad4f031ebdb35e874fac",
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/content-lifecycle.test.tsx": {
-    "mtime": 1784720186.3708358,
-    "ast_hash": "b46fe438743acc7213a3615333f141b0",
+    "mtime": 1784795415.4306161,
+    "ast_hash": "e21ee9980b053e299b6430bda1f2b9ed",
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/core/adapter-manager.test.ts": {
-    "mtime": 1784714544.155685,
-    "ast_hash": "891d3b8a3ee4819da2cf52cc51cd33f9",
+    "mtime": 1784795415.5268083,
+    "ast_hash": "7b9a78e0d48f5d1d3d26d0b1af96bfe6",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/core/overlay-geometry.ts": {
@@ -3765,8 +3765,8 @@
     "semantic_hash": ""
   },
   "docs/youtube-adapter-notes.md": {
-    "mtime": 1784720384.3086386,
-    "ast_hash": "b2604b94f9861c2a258c676a9c698386",
+    "mtime": 1784799648.6461265,
+    "ast_hash": "bfb6916fbcd6d631b8520db46a5d8f5a",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-interaction-boundary.ts": {
@@ -3780,8 +3780,73 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md": {
-    "mtime": 1784791028.9740748,
-    "ast_hash": "5b2b9feda6d7bbab82cf3b24d374b1fc",
+    "mtime": 1784799734.704601,
+    "ast_hash": "92d78d0541e2e9a883933fe7d07bd597",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/playback-sync-controller.ts": {
+    "mtime": 1784799592.8552237,
+    "ast_hash": "26d248defeef03316340f0792ea7f5d0",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/playback-sync-status.ts": {
+    "mtime": 1784799329.5074365,
+    "ast_hash": "2a56cdeb6913bbd31e695f327b59e8fe",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/source-adapters/core/playback-policy.ts": {
+    "mtime": 1784794993.129014,
+    "ast_hash": "14157fa736dbefa11e9393b2e633f9a9",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/source-adapters/core/source-navigation.ts": {
+    "mtime": 1784796474.7531033,
+    "ast_hash": "fe44b7c22812f6eb4210e2bc3a78ed35",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/source-adapters/crunchyroll/navigation.ts": {
+    "mtime": 1784796474.942066,
+    "ast_hash": "0e81968bf3bb25e4cd455a2a65667342",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/source-adapters/youtube/navigation.ts": {
+    "mtime": 1784796474.8471434,
+    "ast_hash": "9f17b5a81463e0e6a855cd1fd9db1327",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/source-adapters/youtube/playback-phase.ts": {
+    "mtime": 1784798102.3918793,
+    "ast_hash": "cf1f19616add5325e8b4b6fd5a4fd280",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/playback-sync-controller.test.ts": {
+    "mtime": 1784799446.9015658,
+    "ast_hash": "ea28b402044eeb7a77d9ab6600562689",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/source-adapters/crunchyroll/navigation.test.ts": {
+    "mtime": 1784796474.5665617,
+    "ast_hash": "3917e8ac87dee8865bf8d2398f595342",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/source-adapters/source-switching.test.ts": {
+    "mtime": 1784796370.6275098,
+    "ast_hash": "236ed2d7a0ccf72d87608f7457d22bfb",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/source-adapters/youtube/navigation.test.ts": {
+    "mtime": 1784796474.4716208,
+    "ast_hash": "e32a08c320524f3992a624e1e9e59181",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/source-adapters/youtube/playback-phase.test.ts": {
+    "mtime": 1784798082.4898882,
+    "ast_hash": "fddc694862830442fe1cdd7fceddc851",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/source-adapters/youtube/sync-integration.test.ts": {
+    "mtime": 1784798965.5315566,
+    "ast_hash": "b700b35fda000eeec9a5127e466ebba6",
     "semantic_hash": ""
   }
 }

@@ -15,6 +15,7 @@ import {
 	shouldThrottleRemoteSeekAttempt,
 	waitForMediaReady,
 } from "./playback-control";
+import { logDebug } from "./debug-log";
 import type { PlaybackSyncStatus } from "./playback-sync-status";
 import type {
 	AdapterPlaybackPhase,
@@ -753,6 +754,16 @@ export class PlaybackSyncController {
 			: null;
 		const previousPhase = this.lastPlaybackPhase;
 		this.lastPlaybackPhase = snapshot.phase;
+		if (previousPhase !== snapshot.phase) {
+			logDebug("sync.playback", "phase changed", {
+				action: "phase-change",
+				adapterId: adapter.id,
+				contentTime: snapshot.contentTime,
+				phase: snapshot.phase,
+				playbackRate: snapshot.playbackRate,
+				provider: adapter.provider,
+			});
+		}
 		if (!nextBarrier) {
 			this.rememberConfirmedContentState(adapter, snapshot);
 		}
@@ -843,6 +854,14 @@ export class PlaybackSyncController {
 						updatedAt: this.now(),
 					});
 					this.hostBufferingHoldSent = true;
+					logDebug("sync.playback", "host buffering hold", {
+						action: "buffering-hold",
+						adapterId: activeAdapter.id,
+						contentTime: current.contentTime,
+						phase: current.phase,
+						playbackRate: current.playbackRate,
+						provider: activeAdapter.provider,
+					});
 					this.onStatus({ kind: "buffering" });
 				}, adapter.playbackPolicy.hostBufferingHoldDelayMs);
 			}
@@ -1122,6 +1141,13 @@ export class PlaybackSyncController {
 				kind: "source-mismatch",
 				message: "The player did not reach the room source in time.",
 			});
+			logDebug("sync.playback", "source transition timeout", {
+				action: "source-timeout",
+				adapterId: this.adapter?.id,
+				navigationStatus: "timeout",
+				provider: source.provider,
+				sourceGeneration: pending.sourceGeneration,
+			});
 			this.cancelPendingSourceNavigation();
 			this.restartHeartbeatTimer();
 		}, SOURCE_TRANSITION_TIMEOUT_MS);
@@ -1255,6 +1281,12 @@ export class PlaybackSyncController {
 		}
 		if (errorName === "NotAllowedError") {
 			this.resumeRequired = true;
+			logDebug("sync.playback", "autoplay requires user gesture", {
+				action: "autoplay-blocked",
+				adapterId: this.adapter?.id,
+				phase: this.adapter?.getPlaybackSnapshot().phase,
+				provider: this.adapter?.provider,
+			});
 			this.onStatus({ kind: "resume-required" });
 			return;
 		}
