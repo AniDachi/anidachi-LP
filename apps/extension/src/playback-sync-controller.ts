@@ -108,6 +108,7 @@ export class PlaybackSyncController {
 	} | null = null;
 	private lastLocalSeekEventAt = 0;
 	private lastConfirmedContentState: PlaybackState | null = null;
+	private lastPlaybackPhase: AdapterPlaybackPhase | null = null;
 	private lastRemoteCommand: { key: string; receivedAt: number } | null = null;
 	private lastRemoteSeekAttempt: RemoteSeekAttempt | null = null;
 	private latestHostState: PlaybackState | null = null;
@@ -117,7 +118,11 @@ export class PlaybackSyncController {
 	private pendingSourceNavigation: PendingSourceNavigation | null = null;
 	private playbackBarrier: AdapterPlaybackPhase | null = null;
 	private hostInterstitialHoldSent = false;
+	private hostBufferingHoldSent = false;
+	private hostBufferingTimeoutId: number | null = null;
 	private remotePlaybackToken = 0;
+	private resumeRequired = false;
+	private resumeAttemptPending = false;
 	private session = EMPTY_SESSION;
 	private sourceNavigationToken = 0;
 	private suppressLocalEventsUntil = 0;
@@ -154,8 +159,13 @@ export class PlaybackSyncController {
 		this.pendingRemoteSeek = null;
 		this.suppressLocalEventsUntil = 0;
 		this.lastConfirmedContentState = null;
+		this.lastPlaybackPhase = null;
 		this.playbackBarrier = null;
 		this.hostInterstitialHoldSent = false;
+		this.hostBufferingHoldSent = false;
+		this.resumeRequired = false;
+		this.resumeAttemptPending = false;
+		this.clearHostBufferingTimer();
 
 		if (adapter) {
 			this.unsubscribeAdapter = adapter.subscribe((event) =>
@@ -180,6 +190,10 @@ export class PlaybackSyncController {
 		this.pendingRemoteSeek = null;
 		this.playbackBarrier = null;
 		this.hostInterstitialHoldSent = false;
+		this.hostBufferingHoldSent = false;
+		this.resumeRequired = false;
+		this.resumeAttemptPending = false;
+		this.clearHostBufferingTimer();
 		this.cancelPendingSourceNavigation();
 		this.suppressLocalEventsUntil = 0;
 		this.session = session;
@@ -217,6 +231,16 @@ export class PlaybackSyncController {
 				this.reconcileRejectedGuestControl();
 				this.onStatus({ kind: "host-controls-playback" });
 			}
+			return;
+		}
+
+		if (event.type === "ratechange") {
+			this.sendHostState(true, {
+				hostTime: event.time,
+				playbackRate: event.playbackRate,
+				playing: !adapter.video.paused,
+				updatedAt: this.now(),
+			});
 			return;
 		}
 
@@ -276,6 +300,9 @@ export class PlaybackSyncController {
 
 		const remoteState = normalizeRemotePlaybackState(state, this.now());
 		this.latestHostState = remoteState;
+		if (!remoteState.playing) {
+			this.clearResumeRequired();
+		}
 		if (this.refreshPlaybackPhase(adapter)) {
 			return Promise.resolve();
 		}
@@ -317,6 +344,7 @@ export class PlaybackSyncController {
 		}
 
 		const remoteState = normalizeRemotePlaybackState(state, this.now());
+		this.applyAuthoritativePlaybackRate(adapter, remoteState.playbackRate);
 		const correction = getSyncCorrection(
 			adapter.getCurrentTime(),
 			remoteState,
@@ -367,7 +395,7 @@ export class PlaybackSyncController {
 				expectedTime: correction.expectedTime,
 				drift: correction.drift,
 			});
-		} else {
+		} else if (!this.resumeRequired) {
 			this.onStatus({ kind: "synced" });
 		}
 
@@ -424,6 +452,7 @@ export class PlaybackSyncController {
 		}
 
 		this.cancelPendingRemotePlayback();
+		this.clearResumeRequired();
 		if (event.type === "PAUSE") {
 			adapter.pause();
 			const drift = adapter.getCurrentTime() - event.at;
@@ -484,6 +513,43 @@ export class PlaybackSyncController {
 		this.onStatus({ kind: "synced" });
 	}
 
+	resumeFromUserGesture(): void {
+		const adapter = this.getActiveAdapter();
+		const state = this.latestHostState;
+		if (
+			!adapter ||
+			!state?.playing ||
+			this.session.isHost ||
+			!this.resumeRequired ||
+			this.resumeAttemptPending ||
+			this.refreshPlaybackPhase(adapter)
+		) {
+			return;
+		}
+
+		this.resumeAttemptPending = true;
+		let playResult: Promise<void>;
+		try {
+			playResult = adapter.play();
+		} catch (error) {
+			this.resumeAttemptPending = false;
+			this.handlePlayFailure(error);
+			return;
+		}
+		void playResult.then(
+			() => {
+				this.resumeAttemptPending = false;
+				this.resumeRequired = false;
+				this.onStatus({ kind: "synced" });
+				void this.applyHostState(state);
+			},
+			(error) => {
+				this.resumeAttemptPending = false;
+				this.handlePlayFailure(error);
+			},
+		);
+	}
+
 	suspend(): void {
 		if (this.disposed || !this.adapterActive) {
 			return;
@@ -494,6 +560,7 @@ export class PlaybackSyncController {
 		this.unsubscribeFromAdapter();
 		this.clearHeartbeatTimer();
 		this.clearPendingLocalSeek();
+		this.clearHostBufferingTimer();
 		this.pendingRemoteSeek = null;
 	}
 
@@ -511,9 +578,14 @@ export class PlaybackSyncController {
 		this.adapter = null;
 		this.latestHostState = null;
 		this.lastConfirmedContentState = null;
+		this.lastPlaybackPhase = null;
 		this.pendingRemoteSeek = null;
 		this.playbackBarrier = null;
 		this.hostInterstitialHoldSent = false;
+		this.hostBufferingHoldSent = false;
+		this.resumeRequired = false;
+		this.resumeAttemptPending = false;
+		this.clearHostBufferingTimer();
 		this.cancelPendingSourceNavigation();
 	}
 
@@ -679,16 +751,25 @@ export class PlaybackSyncController {
 		const nextBarrier = isPlaybackBarrier(snapshot.phase)
 			? snapshot.phase
 			: null;
+		const previousPhase = this.lastPlaybackPhase;
+		this.lastPlaybackPhase = snapshot.phase;
 		if (!nextBarrier) {
 			this.rememberConfirmedContentState(adapter, snapshot);
 		}
+		const guestBufferingBlocked = this.handleBufferingPhase(
+			adapter,
+			snapshot,
+			previousPhase,
+		);
 		if (nextBarrier === this.playbackBarrier) {
-			return nextBarrier !== null;
+			return nextBarrier !== null || guestBufferingBlocked;
 		}
 
 		const previousBarrier = this.playbackBarrier;
 		this.playbackBarrier = nextBarrier;
 		if (nextBarrier) {
+			this.clearHostBufferingTimer();
+			this.hostBufferingHoldSent = false;
 			this.invalidateAsyncWork();
 			this.clearPendingLocalSeek();
 			this.pendingRemoteSeek = null;
@@ -725,6 +806,78 @@ export class PlaybackSyncController {
 		this.hostInterstitialHoldSent = false;
 		this.onStatus({ kind: "synced" });
 		return false;
+	}
+
+	private handleBufferingPhase(
+		adapter: VideoAdapter,
+		snapshot: AdapterPlaybackSnapshot,
+		previousPhase: AdapterPlaybackPhase | null,
+	): boolean {
+		if (snapshot.phase === "buffering") {
+			if (
+				this.session.isHost &&
+				snapshot.playing &&
+				this.hasActiveRoomSession() &&
+				this.hostBufferingTimeoutId === null &&
+				!this.hostBufferingHoldSent
+			) {
+				this.hostBufferingTimeoutId = window.setTimeout(() => {
+					this.hostBufferingTimeoutId = null;
+					const activeAdapter = this.getActiveAdapter();
+					if (!activeAdapter || activeAdapter !== adapter) {
+						return;
+					}
+					const current = activeAdapter.getPlaybackSnapshot();
+					if (
+						current.phase !== "buffering" ||
+						!current.playing ||
+						!this.hasActiveRoomSession()
+					) {
+						return;
+					}
+					const base =
+						this.lastConfirmedContentState ?? activeAdapter.getState();
+					this.sendAuthoritativeHostState(activeAdapter, {
+						...base,
+						playing: false,
+						updatedAt: this.now(),
+					});
+					this.hostBufferingHoldSent = true;
+					this.onStatus({ kind: "buffering" });
+				}, adapter.playbackPolicy.hostBufferingHoldDelayMs);
+			}
+			return !this.session.isHost;
+		}
+
+		if (previousPhase !== "buffering") {
+			return false;
+		}
+		this.clearHostBufferingTimer();
+		if (
+			this.session.isHost &&
+			this.hostBufferingHoldSent &&
+			snapshot.phase === "content"
+		) {
+			this.sendConfirmedHostState(adapter, snapshot);
+			this.onStatus({ kind: "synced" });
+		} else if (
+			!this.session.isHost &&
+			this.latestHostState &&
+			snapshot.phase === "content" &&
+			this.latestHostState.videoFingerprint === adapter.getFingerprint()
+		) {
+			void this.applyHostState(this.latestHostState);
+		}
+		this.hostBufferingHoldSent = false;
+		return false;
+	}
+
+	private clearHostBufferingTimer(): void {
+		if (this.hostBufferingTimeoutId === null) {
+			return;
+		}
+		window.clearTimeout(this.hostBufferingTimeoutId);
+		this.hostBufferingTimeoutId = null;
 	}
 
 	private refreshPlaybackPhase(adapter: VideoAdapter): boolean {
@@ -836,16 +989,21 @@ export class PlaybackSyncController {
 
 	private async playWhenReady(): Promise<void> {
 		const adapter = this.getActiveAdapter();
-		if (!adapter || this.refreshPlaybackPhase(adapter)) {
+		if (
+			!adapter ||
+			this.resumeRequired ||
+			this.refreshPlaybackPhase(adapter)
+		) {
 			return;
 		}
 
 		const settling = isMediaSettling(adapter.video);
-		if (settling && this.pendingPlayWait) {
+		if (this.pendingPlayWait) {
 			return;
 		}
 
 		const token = ++this.remotePlaybackToken;
+		this.pendingPlayWait = true;
 		const epoch: AsyncEpoch = {
 			adapter,
 			generation: this.asyncGeneration,
@@ -854,28 +1012,26 @@ export class PlaybackSyncController {
 		const policy = adapter.playbackPolicy;
 		if (policy.playBeforeMediaReady) {
 			if (!adapter.video.paused && !isMediaSettling(adapter.video)) {
+				this.finishPendingPlay(token);
 				return;
 			}
 			this.suppressLocalEventsUntil = this.now() + REMOTE_EVENT_SUPPRESSION_MS;
 			try {
 				await adapter.play();
-			} catch {
+			} catch (error) {
+				this.handlePlayFailure(error);
+				this.finishPendingPlay(token);
 				return;
 			}
+			this.finishPendingPlay(token);
 			this.isAsyncEpochCurrent(epoch);
 			return;
 		}
 
-		if (settling) {
-			this.pendingPlayWait = true;
-		}
 		const readyReason = await waitForMediaReady(
 			adapter.video,
 			policy.readyTimeoutMs,
 		);
-		if (this.remotePlaybackToken === token) {
-			this.pendingPlayWait = false;
-		}
 		if (
 			!this.isAsyncEpochCurrent(epoch) ||
 			this.refreshPlaybackPhase(adapter) ||
@@ -884,16 +1040,26 @@ export class PlaybackSyncController {
 				policy.skipPlayAfterTimeoutWhileSettling &&
 				isMediaSettling(adapter.video))
 		) {
+			this.finishPendingPlay(token);
 			return;
 		}
 
 		this.suppressLocalEventsUntil = this.now() + REMOTE_EVENT_SUPPRESSION_MS;
 		try {
 			await adapter.play();
-		} catch {
+		} catch (error) {
+			this.handlePlayFailure(error);
+			this.finishPendingPlay(token);
 			return;
 		}
+		this.finishPendingPlay(token);
 		this.isAsyncEpochCurrent(epoch);
+	}
+
+	private finishPendingPlay(token: number): void {
+		if (this.remotePlaybackToken === token) {
+			this.pendingPlayWait = false;
+		}
 	}
 
 	private queueLocalSeek(targetTime: number): void {
@@ -933,6 +1099,8 @@ export class PlaybackSyncController {
 		this.cancelPendingSourceNavigation();
 		this.invalidateAsyncWork();
 		this.clearPendingLocalSeek();
+		this.clearHostBufferingTimer();
+		this.hostBufferingHoldSent = false;
 		this.pendingRemoteSeek = null;
 		this.clearHeartbeatTimer();
 
@@ -1038,6 +1206,7 @@ export class PlaybackSyncController {
 			this.now(),
 		);
 		this.suppressLocalEventsUntil = this.now() + REMOTE_EVENT_SUPPRESSION_MS;
+		this.applyAuthoritativePlaybackRate(adapter, state.playbackRate);
 		adapter.seek(correction.expectedTime, { resumeIfPlaying: false });
 		if (state.playing) {
 			void this.playWhenReady();
@@ -1051,6 +1220,48 @@ export class PlaybackSyncController {
 		if (this.adapter?.playbackPolicy.pendingSeekGuard) {
 			this.pendingRemoteSeek = { startedAt: this.now(), targetTime };
 		}
+	}
+
+	private applyAuthoritativePlaybackRate(
+		adapter: VideoAdapter,
+		playbackRate: number,
+	): void {
+		if (
+			!Number.isFinite(playbackRate) ||
+			playbackRate <= 0 ||
+			Math.abs(adapter.video.playbackRate - playbackRate) < 0.001
+		) {
+			return;
+		}
+		this.suppressLocalEventsUntil = this.now() + REMOTE_EVENT_SUPPRESSION_MS;
+		adapter.setPlaybackRate(playbackRate);
+	}
+
+	private clearResumeRequired(): void {
+		this.resumeRequired = false;
+		this.resumeAttemptPending = false;
+	}
+
+	private handlePlayFailure(error: unknown): void {
+		const errorName =
+			typeof error === "object" &&
+			error !== null &&
+			"name" in error &&
+			typeof error.name === "string"
+				? error.name
+				: "";
+		if (errorName === "AbortError") {
+			return;
+		}
+		if (errorName === "NotAllowedError") {
+			this.resumeRequired = true;
+			this.onStatus({ kind: "resume-required" });
+			return;
+		}
+		this.onStatus({
+			kind: "sync-error",
+			message: "Playback could not be resumed.",
+		});
 	}
 
 	private restartHeartbeatTimer(): void {

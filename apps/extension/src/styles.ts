@@ -1390,10 +1390,23 @@ export const overlayStyles = `
   }
 
   .playback-sync-notice {
+    align-items: center;
     color: rgba(240, 240, 244, 0.72);
+    display: flex;
     font-size: 13px;
+    justify-content: space-between;
     line-height: 1.35;
     padding: 2px 4px;
+  }
+
+  .playback-sync-resume {
+    background: transparent;
+    border: 0;
+    color: #ff9a5c;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 2px 0 2px 10px;
   }
 
   .invite-panel {

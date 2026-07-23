@@ -114,6 +114,55 @@ describe("PlaybackSyncController", () => {
 		]);
 	});
 
+	it("broadcasts host playback-rate changes as authoritative state", () => {
+		const harness = createHarness({ isHost: true });
+
+		harness.adapter.emit({
+			type: "ratechange",
+			time: 18,
+			playbackRate: 1.5,
+		});
+
+		expect(harness.sent).toHaveLength(1);
+		expect(harness.sent[0]).toMatchObject({
+			type: "HOST_STATE",
+			state: { hostTime: 18, playbackRate: 1.5 },
+		});
+	});
+
+	it("applies the host playback rate before guest drift correction", async () => {
+		const harness = createHarness({ isHost: false });
+		const order: string[] = [];
+		harness.adapter.setPlaybackRate.mockImplementation(() => order.push("rate"));
+		harness.adapter.seek.mockImplementation(() => order.push("seek"));
+
+		await harness.controller.handleHostState(
+			playbackState({ hostTime: 10, playbackRate: 1.5, playing: false }),
+		);
+
+		expect(harness.adapter.setPlaybackRate).toHaveBeenCalledWith(1.5);
+		expect(order).toEqual(["rate", "seek"]);
+	});
+
+	it("restores a guest-local playback-rate change to the host rate", async () => {
+		const harness = createHarness({ isHost: false });
+		await harness.controller.handleHostState(
+			playbackState({ hostTime: 0, playbackRate: 1.25 }),
+		);
+		vi.advanceTimersByTime(2_000);
+		harness.adapter.setPlaybackRate(2);
+		harness.adapter.setPlaybackRate.mockClear();
+
+		harness.adapter.emit({
+			type: "ratechange",
+			time: 0,
+			playbackRate: 2,
+		});
+
+		expect(harness.adapter.setPlaybackRate).toHaveBeenCalledWith(1.25);
+		expect(harness.sent).toEqual([]);
+	});
+
 	it("broadcasts an explicit host state even during remote-event suppression", () => {
 		const harness = createHarness({ isHost: true });
 
@@ -252,6 +301,70 @@ describe("PlaybackSyncController", () => {
 		expect(harness.statuses.at(-1)).toEqual({ kind: "unsupported-media" });
 	});
 
+	it("ignores short host buffering and holds after the provider delay", () => {
+		const harness = createHarness({ isHost: true });
+		harness.adapter.setCurrentTime(12);
+		harness.adapter.setPaused(false);
+		harness.adapter.setPhase("buffering");
+		harness.adapter.emitPhase();
+
+		vi.advanceTimersByTime(499);
+		expect(harness.sent).toEqual([]);
+		vi.advanceTimersByTime(1);
+
+		expect(harness.sent).toHaveLength(1);
+		expect(harness.sent[0]).toMatchObject({
+			type: "HOST_STATE",
+			state: { hostTime: 12, playing: false },
+		});
+		expect(harness.statuses.at(-1)).toEqual({ kind: "buffering" });
+	});
+
+	it("resumes the room once after host buffering clears", () => {
+		const harness = createHarness({ isHost: true });
+		harness.adapter.setCurrentTime(12);
+		harness.adapter.setPaused(false);
+		harness.adapter.setPhase("buffering");
+		harness.adapter.emitPhase();
+		vi.advanceTimersByTime(500);
+		harness.adapter.setCurrentTime(14);
+		harness.adapter.setPhase("content");
+
+		harness.adapter.emitPhase();
+		harness.adapter.emitPhase();
+
+		expect(harness.sent).toHaveLength(2);
+		expect(harness.sent[1]).toMatchObject({
+			type: "HOST_STATE",
+			state: { hostTime: 14, playing: true },
+		});
+	});
+
+	it("queues the newest host state while a guest is buffering", async () => {
+		const harness = createHarness({ isHost: false });
+		harness.adapter.setPhase("buffering");
+		harness.adapter.emitPhase();
+
+		await harness.controller.handleHostState(
+			playbackState({ hostTime: 10, playing: true }),
+		);
+		await harness.controller.handleHostState(
+			playbackState({ hostTime: 25, playing: false }),
+		);
+		expect(harness.adapter.seek).not.toHaveBeenCalled();
+		expect(harness.adapter.pause).not.toHaveBeenCalled();
+
+		harness.adapter.setPaused(false);
+		harness.adapter.setPhase("content");
+		harness.adapter.emitPhase();
+		await Promise.resolve();
+
+		expect(harness.adapter.seek).toHaveBeenLastCalledWith(25, {
+			resumeIfPlaying: false,
+		});
+		expect(harness.adapter.pause).toHaveBeenCalledTimes(1);
+	});
+
 	it("suppresses events caused by a remote command", () => {
 		const harness = createHarness({ isHost: false });
 
@@ -360,6 +473,59 @@ describe("PlaybackSyncController", () => {
 
 		expect(harness.adapter.play).not.toHaveBeenCalled();
 		expect(harness.adapter.pause).toHaveBeenCalledTimes(1);
+	});
+
+	it("requires one user gesture after an autoplay rejection without retrying", async () => {
+		const harness = createHarness({
+			isHost: false,
+			provider: "youtube",
+			playImplementation: async () => {
+				throw new DOMException("Blocked", "NotAllowedError");
+			},
+		});
+		harness.adapter.setPaused(true);
+
+		harness.controller.handleRemoteCommand({
+			type: "PLAY",
+			roomId: "room-1",
+			byUserId: "remote-host",
+			at: 0,
+		});
+		await settleAsyncWork();
+		await harness.controller.handleHostState(
+			playbackState({ hostTime: 1, playing: true }),
+		);
+
+		expect(harness.adapter.play).toHaveBeenCalledTimes(1);
+		expect(harness.statuses.at(-1)).toEqual({ kind: "resume-required" });
+	});
+
+	it("retries autoplay once from resumeFromUserGesture", async () => {
+		let blocked = true;
+		const harness = createHarness({
+			isHost: false,
+			provider: "youtube",
+			playImplementation: async () => {
+				if (blocked) {
+					blocked = false;
+					throw new DOMException("Blocked", "NotAllowedError");
+				}
+			},
+		});
+		harness.adapter.setPaused(true);
+		harness.controller.handleRemoteCommand({
+			type: "PLAY",
+			roomId: "room-1",
+			byUserId: "remote-host",
+			at: 0,
+		});
+		await settleAsyncWork();
+
+		harness.controller.resumeFromUserGesture();
+		expect(harness.adapter.play).toHaveBeenCalledTimes(2);
+		await settleAsyncWork();
+
+		expect(harness.statuses.at(-1)).toEqual({ kind: "synced" });
 	});
 
 	it("does not apply remote state while the adapter is suspended", async () => {
@@ -779,6 +945,7 @@ interface FakeAdapter extends VideoAdapter {
 	setMediaReady(ready: boolean): void;
 	setPaused(paused: boolean): void;
 	setPhase(phase: AdapterPlaybackPhase): void;
+	setPlaybackRate: MockedFunction<VideoAdapter["setPlaybackRate"]>;
 	unsubscribe: ReturnType<typeof vi.fn>;
 }
 
@@ -811,6 +978,9 @@ function createFakeAdapter({
 	});
 	const seek = vi.fn((time: number) => {
 		currentTime = time;
+	});
+	const setPlaybackRate = vi.fn((rate: number) => {
+		video.playbackRate = rate;
 	});
 
 	Object.defineProperties(video, {
@@ -888,9 +1058,7 @@ function createFakeAdapter({
 		play,
 		provider,
 		seek,
-		setPlaybackRate: (rate) => {
-			video.playbackRate = rate;
-		},
+		setPlaybackRate,
 		setCurrentTime: (time) => {
 			currentTime = time;
 		},
@@ -940,4 +1108,10 @@ function deferred<T>() {
 		reject = nextReject;
 	});
 	return { promise, reject, resolve };
+}
+
+async function settleAsyncWork(): Promise<void> {
+	for (let index = 0; index < 6; index += 1) {
+		await Promise.resolve();
+	}
 }

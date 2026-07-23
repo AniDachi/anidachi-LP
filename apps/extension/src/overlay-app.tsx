@@ -443,6 +443,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [flamingParticipantIds, setFlamingParticipantIds] = useState<string[]>([]);
   const [catchUp, setCatchUp] = useState<CatchUpState | null>(null);
   const [playbackSyncNotice, setPlaybackSyncNotice] = useState<string | null>(null);
+  const [resumeSyncRequired, setResumeSyncRequired] = useState(false);
   const playbackSyncControllerRef = useRef<PlaybackSyncController | null>(null);
   if (!playbackSyncControllerRef.current) {
     playbackSyncControllerRef.current = new PlaybackSyncController({
@@ -450,6 +451,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         ensureSourceForProvider(source, context, getDefinitionForProvider),
       onStatus: (syncStatus) => {
         if (syncStatus.kind === "out-of-sync") {
+          setResumeSyncRequired(false);
           setPlaybackSyncNotice(null);
           setCatchUp({
             drift: syncStatus.drift,
@@ -462,10 +464,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           setPlaybackSyncNotice("Ad playing · room paused");
         } else if (syncStatus.kind === "watching-local-ad") {
           setPlaybackSyncNotice("Ad playing · sync will resume automatically");
+        } else if (syncStatus.kind === "buffering") {
+          setPlaybackSyncNotice("Buffering · room paused");
+        } else if (syncStatus.kind === "resume-required") {
+          setPlaybackSyncNotice("Playback needs your permission");
+          setResumeSyncRequired(true);
         } else if (syncStatus.kind === "unsupported-media") {
           setPlaybackSyncNotice("This video cannot be synchronized");
         } else if (syncStatus.kind === "synced") {
           setPlaybackSyncNotice(null);
+          setResumeSyncRequired(false);
         }
       },
       transport: {
@@ -4324,7 +4332,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           ) : null}
           {playbackSyncNotice ? (
             <div className="playback-sync-notice" role="status">
-              {playbackSyncNotice}
+              <span>{playbackSyncNotice}</span>
+              {resumeSyncRequired ? (
+                <button
+                  className="playback-sync-resume"
+                  onClick={() => playbackSyncController.resumeFromUserGesture()}
+                  type="button"
+                >
+                  Resume sync
+                </button>
+              ) : null}
             </div>
           ) : null}
 
