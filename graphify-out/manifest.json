@@ -3215,22 +3215,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1784806726.487686,
+    "mtime": 1784807657.9208815,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1784806726.4878125,
+    "mtime": 1784807657.9209864,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1784806726.4878986,
+    "mtime": 1784807657.9210842,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1784806726.4879837,
+    "mtime": 1784807657.921171,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3430,8 +3430,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-room-action-feedback.ts": {
-    "mtime": 1784807370.3281322,
-    "ast_hash": "d86062b49e7871afd0c90e545d06c0ee",
+    "mtime": 1784807827.5867534,
+    "ast_hash": "769959dfab8fe9833a902da3a7a2d6c8",
     "semantic_hash": ""
   },
   "apps/extension/src/settings-panel-navigation.ts": {
@@ -3445,8 +3445,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-room-action-feedback.test.ts": {
-    "mtime": 1784807350.2021036,
-    "ast_hash": "a7accabdef7dc8da696cd9633f64e8dd",
+    "mtime": 1784807827.6772466,
+    "ast_hash": "099bb659d40e7b17945b28bfa32a86cd",
     "semantic_hash": ""
   },
   "apps/extension/test/settings-panel-navigation.test.ts": {

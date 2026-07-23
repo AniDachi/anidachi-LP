@@ -121,7 +121,7 @@ describe("overlay room action feedback", () => {
         roomExists: true,
         roomLeavePending: false,
       }),
-    ).toBe("Confirm end");
+    ).toBe("Press again to end");
   });
 
   it("identifies only copied-invite feedback for the copy control", () => {

@@ -55,7 +55,7 @@ export function getPrimaryRoomActionLabel({
     return "Closing room";
   }
   if (roomEndConfirmationPending) {
-    return "Confirm end";
+    return "Press again to end";
   }
   if (feedback === "room-created" && roomExists) {
     return "Room created";
