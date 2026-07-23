@@ -173,6 +173,7 @@ export const overlayStyles = `
     box-shadow:
       0 24px 70px rgba(0, 0, 0, 0.48),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    cursor: default;
     pointer-events: auto;
     z-index: 30;
     scrollbar-width: none;

@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { overlayStyles } from "../src/styles";
 
 describe("overlay layout pointer surfaces", () => {
+	it("keeps the cursor visible across the complete control panel", () => {
+		expect(getRule(".mini-panel")).toContain("cursor: default");
+	});
+
 	it("separates personal camera controls from the participant hierarchy", () => {
 		const cameraControl = getRule(".icon-button.panel-camera-control");
 		expect(cameraControl).toContain("position: relative");

@@ -380,8 +380,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1784799329.787563,
-    "ast_hash": "ee02128dbb2c451f8ff3e331aca0485f",
+    "mtime": 1784806165.6372738,
+    "ast_hash": "92928cc0590fb873198d658c392c7e34",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -3215,22 +3215,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1784796935.4434643,
+    "mtime": 1784799925.545784,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1784796935.4436407,
+    "mtime": 1784799925.5460732,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1784796935.443758,
+    "mtime": 1784799925.5462022,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1784796935.4439278,
+    "mtime": 1784799925.5463076,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3380,8 +3380,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-styles.test.ts": {
-    "mtime": 1784719066.0121737,
-    "ast_hash": "a13920b36de0db0bd66a05253de002b2",
+    "mtime": 1784806153.2152195,
+    "ast_hash": "93c17583f335f82041ab97b499535d81",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-ghost-preview.tsx": {
