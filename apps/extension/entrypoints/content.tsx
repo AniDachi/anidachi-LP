@@ -295,13 +295,7 @@ function detectLifecycleResult(
 }
 
 function providerFromAdapter(adapter: VideoAdapter): SourceProvider {
-  if (adapter.id === "youtube") {
-    return "youtube";
-  }
-  if (adapter.id === "crunchyroll") {
-    return "crunchyroll";
-  }
-  return "generic";
+  return adapter.provider;
 }
 
 function providerFromUrl(pageUrl: string): SourceProvider {
@@ -523,12 +517,13 @@ export function mountOverlay(
       return;
     }
 
-    const target = getOverlayTarget(adapter);
+    const overlayBinding = adapter.getOverlayBinding();
+    const target = overlayBinding.mountTarget;
     prepareOverlayContainer(target);
     if (host.parentElement !== target) {
       target.append(host);
     }
-    syncOverlayBounds(adapter, host, target);
+    syncOverlayBounds(adapter, host, target, overlayBinding.fillMountTarget);
     if (observedTarget !== target) {
       if (observedTarget) {
         resizeObserver?.disconnect();
@@ -622,7 +617,7 @@ export function mountOverlay(
   };
 
   function handleVideoDoubleClick(event: MouseEvent): void {
-    if (shouldUseNativePlayerDoubleClick(adapter)) {
+    if (adapter.getOverlayBinding().useNativePlayerDoubleClick) {
       return;
     }
 
@@ -654,23 +649,6 @@ function shouldStartDebugProbe(): boolean {
     hashParams.get("anidachiDebugProbe") === "1" ||
     localStorage.getItem("anidachiDebugProbe") === "1"
   );
-}
-
-function shouldUseNativePlayerDoubleClick(adapter: VideoAdapter): boolean {
-  return adapter.id === "crunchyroll" || adapter.id === "youtube";
-}
-
-function getOverlayTarget(adapter: VideoAdapter): HTMLElement {
-  if (adapter.id === "youtube" || adapter.id === "crunchyroll") {
-    return adapter.container;
-  }
-
-  const fullscreenElement = document.fullscreenElement;
-  if (fullscreenElement instanceof HTMLElement) {
-    return fullscreenElement;
-  }
-
-  return adapter.container;
 }
 
 function ensurePageStyles(): void {
@@ -782,6 +760,7 @@ function syncOverlayBounds(
   adapter: VideoAdapter,
   host: HTMLElement,
   target: HTMLElement,
+  fillMountTarget: boolean,
 ): void {
   const videoStyle = getComputedStyle(adapter.video);
 
@@ -795,7 +774,7 @@ function syncOverlayBounds(
     return;
   }
 
-  if (adapter.id === "youtube" || adapter.id === "crunchyroll") {
+  if (fillMountTarget) {
     host.style.inset = "0";
     host.style.left = "0";
     host.style.top = "0";

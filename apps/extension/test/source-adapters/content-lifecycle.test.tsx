@@ -13,6 +13,7 @@ import {
 	DEFAULT_PLAYER_OVERLAY_GEOMETRY,
 	type PlayerOverlayGeometry,
 } from "../../src/source-adapters/core/overlay-geometry";
+import { DEFAULT_PLAYBACK_POLICY } from "../../src/source-adapters/core/playback-policy";
 import type {
 	AdapterDetectionResult,
 	VideoAdapter,
@@ -461,7 +462,20 @@ function createAdapter(): VideoAdapter {
 		exitFullscreen: async () => undefined,
 		getCurrentTime: () => 0,
 		getFingerprint: () => fingerprint,
+		getOverlayBinding: () => ({
+			fillMountTarget: true,
+			mountTarget: container,
+			useNativePlayerDoubleClick: true,
+		}),
 		getOverlayGeometry: () => DEFAULT_PLAYER_OVERLAY_GEOMETRY,
+		getPlaybackSnapshot: () => ({
+			capturedAt: 0,
+			contentTime: 0,
+			phase: "content",
+			playbackRate: 1,
+			playing: false,
+		}),
+		getSourceDescriptor: () => undefined,
 		getState: () => ({
 			hostTime: 0,
 			playbackRate: 1,
@@ -474,8 +488,11 @@ function createAdapter(): VideoAdapter {
 		isFullscreen: () => false,
 		name: "YouTube",
 		pause: () => undefined,
+		playbackPolicy: DEFAULT_PLAYBACK_POLICY,
 		play: async () => undefined,
+		provider: "youtube",
 		seek: () => undefined,
+		setPlaybackRate: () => undefined,
 		subscribe: () => () => undefined,
 		subscribeOverlayGeometry: () => () => undefined,
 		video,

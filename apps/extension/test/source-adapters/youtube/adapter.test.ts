@@ -31,9 +31,32 @@ describe("YouTube source adapter", () => {
       priority: 300,
     });
     expect(adapter).toBeInstanceOf(YouTubeVideoAdapter);
+    expect(adapter?.provider).toBe("youtube");
     expect(adapter?.container).toBe(player);
+    expect(adapter?.getOverlayBinding()).toEqual({
+      fillMountTarget: true,
+      mountTarget: player,
+      useNativePlayerDoubleClick: true,
+    });
     expect(adapter?.getTitle()).toBe("Anime opening");
     expect(adapter?.getFingerprint()).toBe("youtube|dQw4w9WgXcQ");
+    expect(adapter?.getSourceDescriptor()).toMatchObject({
+      provider: "youtube",
+      videoFingerprint: "youtube|dQw4w9WgXcQ",
+    });
+    expect(adapter?.playbackPolicy).toMatchObject({
+      playBeforeMediaReady: false,
+      readyTimeoutMs: 2500,
+      remoteSeekThrottleMs: 0,
+      pendingSeekGuard: null,
+      localSeekCoalescing: null,
+    });
+    expect(adapter?.getPlaybackSnapshot()).toMatchObject({
+      phase: "content",
+      contentTime: 0,
+      playing: false,
+      playbackRate: 1,
+    });
   });
 
   it.each([

@@ -40,7 +40,7 @@ import {
   normalizePlayerOverlayGeometry,
   type PlayerOverlayGeometry,
 } from "./source-adapters/core/overlay-geometry";
-import { sourceProviderFromAdapterId } from "./source-adapters/core/source-descriptor";
+import { sourceProviderFromUrl } from "./source-adapters/core/source-url";
 import type { SourceProvider, VideoAdapter } from "./source-adapters/core/types";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import {
@@ -1957,7 +1957,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const shouldHoldHostStateForPendingSourceNavigation = useCallback(
     (state: PlaybackState) => {
       const pending = pendingSourceNavigationRef.current;
-      if (!pending || adapter.id !== "crunchyroll") {
+      if (!pending || adapter.provider !== "crunchyroll") {
         return false;
       }
 
@@ -2018,7 +2018,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         return false;
       }
 
-      if (adapter.id !== "crunchyroll" || !state.sourceUrl) {
+      const roomProvider = roomSourceProviderRef.current;
+      if (
+        adapter.provider !== "crunchyroll" ||
+        !state.sourceUrl ||
+        roomProvider !== adapter.provider ||
+        sourceProviderFromUrl(state.sourceUrl) !== adapter.provider
+      ) {
         return false;
       }
 
@@ -2155,7 +2161,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           const snapshotProvider =
             event.source?.provider ??
             roomSourceProviderRef.current ??
-            sourceProviderFromAdapterId(adapter.id);
+            adapter.provider;
           roomSourceProviderRef.current = snapshotProvider;
           setRoomGeneration(event.roomGeneration);
           setSourceGeneration(event.sourceGeneration);

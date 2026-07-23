@@ -6,21 +6,15 @@ import {
 	type ServerEvent,
 } from "@anidachi/protocol";
 import {
-	getRemotePlayReadyTimeoutMs,
 	isMediaSettling,
 	type RemoteSeekAttempt,
 	shouldDeferHostStateSeek,
-	shouldPlayWithoutWaitingForMediaReady,
 	shouldSeekForHostState,
 	shouldSeekForRemoteCommand,
 	shouldThrottleRemoteSeekAttempt,
 	waitForMediaReady,
 } from "./playback-control";
 import type { PlaybackSyncStatus } from "./playback-sync-status";
-import {
-	buildWatchSourceDescriptor,
-	sourceProviderFromAdapterId,
-} from "./source-adapters/core/source-descriptor";
 import type {
 	PlayerEvent,
 	SourceProvider,
@@ -30,14 +24,6 @@ import type {
 const HEARTBEAT_INTERVAL_MS = 1500;
 const REMOTE_EVENT_SUPPRESSION_MS = 1800;
 const REMOTE_COMMAND_DEDUPE_MS = 800;
-const CRUNCHYROLL_REMOTE_SEEK_GUARD_MS = 15_000;
-const CRUNCHYROLL_REMOTE_SEEK_GUARD_TOLERANCE_SECONDS = 4;
-const CRUNCHYROLL_REMOTE_SEEK_HOST_TARGET_TOLERANCE_SECONDS = 8;
-const CRUNCHYROLL_LOCAL_SEEK_SETTLING_DELAY_MS = 360;
-const CRUNCHYROLL_LOCAL_SEEK_READY_DELAY_MS = 80;
-const CRUNCHYROLL_LOCAL_SEEK_DUPLICATE_MS = 1200;
-const CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS = 0.75;
-const CRUNCHYROLL_LOCAL_PLAYBACK_SUPPRESSION_AFTER_SEEK_MS = 900;
 
 export interface PlaybackSyncSession {
 	roomId: string | null;
@@ -186,19 +172,17 @@ export class PlaybackSyncController {
 			return;
 		}
 
-		if (adapter.id === "crunchyroll" && event.type === "seek") {
-			this.queueCrunchyrollLocalSeek(event.time);
+		const localSeekPolicy = adapter.playbackPolicy.localSeekCoalescing;
+		if (localSeekPolicy && event.type === "seek") {
+			this.queueLocalSeek(event.time);
 			return;
 		}
 
-		if (
-			adapter.id === "crunchyroll" &&
-			(event.type === "play" || event.type === "pause")
-		) {
+		if (localSeekPolicy && (event.type === "play" || event.type === "pause")) {
 			const now = this.now();
 			const nearSeek =
 				now - this.lastLocalSeekEventAt <
-				CRUNCHYROLL_LOCAL_PLAYBACK_SUPPRESSION_AFTER_SEEK_MS;
+				localSeekPolicy.suppressPlaybackAfterSeekMs;
 			if (this.pendingLocalSeek || isMediaSettling(adapter.video) || nearSeek) {
 				return;
 			}
@@ -228,7 +212,7 @@ export class PlaybackSyncController {
 		const settling = isMediaSettling(adapter.video);
 		this.clearPendingRemoteSeekIfSettled();
 
-		if (this.shouldHoldHostStateForPendingCrunchyrollSeek(remoteState)) {
+		if (this.shouldHoldHostStateForPendingSeek(remoteState)) {
 			this.suppressLocalEventsUntil = this.now() + REMOTE_EVENT_SUPPRESSION_MS;
 			if (settling && remoteState.playing && adapter.video.paused) {
 				void this.playWhenReady();
@@ -252,8 +236,7 @@ export class PlaybackSyncController {
 		if (shouldDeferSeek) {
 			if (
 				remoteState.playing &&
-				(adapter.video.paused ||
-					shouldPlayWithoutWaitingForMediaReady(adapter.id))
+				(adapter.video.paused || adapter.playbackPolicy.playBeforeMediaReady)
 			) {
 				void this.playWhenReady();
 			}
@@ -279,7 +262,7 @@ export class PlaybackSyncController {
 			if (
 				didSeek ||
 				adapter.video.paused ||
-				(settling && shouldPlayWithoutWaitingForMediaReady(adapter.id))
+				(settling && adapter.playbackPolicy.playBeforeMediaReady)
 			) {
 				void this.playWhenReady();
 			}
@@ -429,27 +412,28 @@ export class PlaybackSyncController {
 	private clearPendingRemoteSeekIfSettled(): void {
 		const adapter = this.adapter;
 		const pending = this.pendingRemoteSeek;
-		if (!adapter || !pending || adapter.id !== "crunchyroll") {
+		const guard = adapter?.playbackPolicy.pendingSeekGuard;
+		if (!adapter || !pending || !guard) {
 			return;
 		}
 
 		const ageMs = this.now() - pending.startedAt;
 		const driftFromSeekTarget = adapter.getCurrentTime() - pending.targetTime;
 		const isNearSeekTarget =
-			Math.abs(driftFromSeekTarget) <=
-			CRUNCHYROLL_REMOTE_SEEK_GUARD_TOLERANCE_SECONDS;
+			Math.abs(driftFromSeekTarget) <= guard.localTargetToleranceSeconds;
 		if (
 			(!isMediaSettling(adapter.video) && isNearSeekTarget) ||
-			ageMs > CRUNCHYROLL_REMOTE_SEEK_GUARD_MS
+			ageMs > guard.maxAgeMs
 		) {
 			this.pendingRemoteSeek = null;
 		}
 	}
 
-	private flushPendingCrunchyrollLocalSeek(): boolean {
+	private flushPendingLocalSeek(): boolean {
 		const adapter = this.getActiveAdapter();
 		const pending = this.pendingLocalSeek;
-		if (!adapter || !pending) {
+		const policy = adapter?.playbackPolicy.localSeekCoalescing;
+		if (!adapter || !pending || !policy) {
 			return false;
 		}
 
@@ -459,9 +443,9 @@ export class PlaybackSyncController {
 		const previous = this.lastLocalSeekBroadcast;
 		if (
 			previous &&
-			now - previous.sentAt < CRUNCHYROLL_LOCAL_SEEK_DUPLICATE_MS &&
+			now - previous.sentAt < policy.duplicateWindowMs &&
 			Math.abs(previous.targetTime - pending.targetTime) <=
-				CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS
+				policy.targetToleranceSeconds
 		) {
 			return false;
 		}
@@ -474,7 +458,7 @@ export class PlaybackSyncController {
 		const hostTime =
 			Number.isFinite(currentTime) &&
 			Math.abs(currentTime - pending.targetTime) <=
-				CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS
+				policy.targetToleranceSeconds
 				? currentTime
 				: pending.targetTime;
 		return this.sendLocalControlEvent(
@@ -498,7 +482,7 @@ export class PlaybackSyncController {
 				this.session.participantId &&
 				this.session.roomProvider &&
 				adapter &&
-				this.session.roomProvider === sourceProviderFromAdapterId(adapter.id),
+				this.session.roomProvider === adapter.provider,
 		);
 	}
 
@@ -550,7 +534,8 @@ export class PlaybackSyncController {
 			generation: this.asyncGeneration,
 			token,
 		};
-		if (shouldPlayWithoutWaitingForMediaReady(adapter.id)) {
+		const policy = adapter.playbackPolicy;
+		if (policy.playBeforeMediaReady) {
 			if (!adapter.video.paused && !isMediaSettling(adapter.video)) {
 				return;
 			}
@@ -567,14 +552,20 @@ export class PlaybackSyncController {
 		if (settling) {
 			this.pendingPlayWait = true;
 		}
-		await waitForMediaReady(
+		const readyReason = await waitForMediaReady(
 			adapter.video,
-			getRemotePlayReadyTimeoutMs(adapter.id),
+			policy.readyTimeoutMs,
 		);
 		if (this.remotePlaybackToken === token) {
 			this.pendingPlayWait = false;
 		}
-		if (!this.isAsyncEpochCurrent(epoch) || !adapter.video.paused) {
+		if (
+			!this.isAsyncEpochCurrent(epoch) ||
+			!adapter.video.paused ||
+			(readyReason === "timeout" &&
+				policy.skipPlayAfterTimeoutWhileSettling &&
+				isMediaSettling(adapter.video))
+		) {
 			return;
 		}
 
@@ -587,9 +578,10 @@ export class PlaybackSyncController {
 		this.isAsyncEpochCurrent(epoch);
 	}
 
-	private queueCrunchyrollLocalSeek(targetTime: number): void {
+	private queueLocalSeek(targetTime: number): void {
 		const adapter = this.adapter;
-		if (!adapter) {
+		const policy = adapter?.playbackPolicy.localSeekCoalescing;
+		if (!adapter || !policy) {
 			return;
 		}
 
@@ -597,10 +589,10 @@ export class PlaybackSyncController {
 		this.lastLocalSeekEventAt = now;
 		this.clearPendingLocalSeek();
 		const delay = isMediaSettling(adapter.video)
-			? CRUNCHYROLL_LOCAL_SEEK_SETTLING_DELAY_MS
-			: CRUNCHYROLL_LOCAL_SEEK_READY_DELAY_MS;
+			? policy.settleDelayMs
+			: policy.readyDelayMs;
 		const timeoutId = window.setTimeout(() => {
-			this.flushPendingCrunchyrollLocalSeek();
+			this.flushPendingLocalSeek();
 		}, delay);
 		this.pendingLocalSeek = { queuedAt: now, targetTime, timeoutId };
 	}
@@ -632,7 +624,7 @@ export class PlaybackSyncController {
 	}
 
 	private rememberPendingRemoteSeek(targetTime: number): void {
-		if (this.adapter?.id === "crunchyroll") {
+		if (this.adapter?.playbackPolicy.pendingSeekGuard) {
 			this.pendingRemoteSeek = { startedAt: this.now(), targetTime };
 		}
 	}
@@ -657,7 +649,7 @@ export class PlaybackSyncController {
 		const now = this.now();
 		if (
 			shouldThrottleRemoteSeekAttempt(
-				adapter.id,
+				adapter.playbackPolicy,
 				this.lastRemoteSeekAttempt,
 				targetTime,
 				now,
@@ -678,7 +670,13 @@ export class PlaybackSyncController {
 	): boolean {
 		const adapter = this.getActiveAdapter();
 		const { participantId, roomId } = this.session;
-		if (!adapter || !roomId || !participantId || !this.session.isHost) {
+		if (
+			!adapter ||
+			!roomId ||
+			!participantId ||
+			!this.session.isHost ||
+			!this.hasActiveRoomSession()
+		) {
 			return false;
 		}
 		if (!allowController && this.now() < this.suppressLocalEventsUntil) {
@@ -695,7 +693,7 @@ export class PlaybackSyncController {
 			type: "HOST_STATE",
 			roomId,
 			state,
-			source: buildWatchSourceDescriptor(adapter, state),
+			source: adapter.getSourceDescriptor(),
 		});
 		return true;
 	}
@@ -740,17 +738,16 @@ export class PlaybackSyncController {
 		return true;
 	}
 
-	private shouldHoldHostStateForPendingCrunchyrollSeek(
-		state: PlaybackState,
-	): boolean {
+	private shouldHoldHostStateForPendingSeek(state: PlaybackState): boolean {
 		const adapter = this.adapter;
 		const pending = this.pendingRemoteSeek;
-		if (adapter?.id !== "crunchyroll" || !pending) {
+		const guard = adapter?.playbackPolicy.pendingSeekGuard;
+		if (!adapter || !pending || !guard) {
 			return false;
 		}
 
 		const ageMs = this.now() - pending.startedAt;
-		if (ageMs > CRUNCHYROLL_REMOTE_SEEK_GUARD_MS) {
+		if (ageMs > guard.maxAgeMs) {
 			return false;
 		}
 		const expectedPendingTime = state.playing
@@ -758,7 +755,7 @@ export class PlaybackSyncController {
 			: pending.targetTime;
 		if (
 			Math.abs(state.hostTime - expectedPendingTime) >
-			CRUNCHYROLL_REMOTE_SEEK_HOST_TARGET_TOLERANCE_SECONDS
+			guard.remoteTargetToleranceSeconds
 		) {
 			this.pendingRemoteSeek = null;
 			return false;
@@ -768,8 +765,7 @@ export class PlaybackSyncController {
 		return (
 			ageMs < 500 ||
 			isMediaSettling(adapter.video) ||
-			Math.abs(driftFromSeekTarget) <=
-				CRUNCHYROLL_REMOTE_SEEK_GUARD_TOLERANCE_SECONDS
+			Math.abs(driftFromSeekTarget) <= guard.localTargetToleranceSeconds
 		);
 	}
 

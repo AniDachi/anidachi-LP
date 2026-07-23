@@ -4,6 +4,7 @@ import type {
   PlayerOverlayGeometryListener,
 } from "../core/overlay-geometry";
 import { normalizeVideoFingerprint } from "../core/source-url";
+import type { AdapterOverlayBinding } from "../core/types";
 import {
   getYouTubePlayerOverlayGeometry,
   subscribeYouTubePlayerOverlayGeometry,
@@ -20,6 +21,7 @@ interface YouTubeVolumePlayer extends HTMLElement {
 
 export class YouTubeVideoAdapter extends Html5VideoAdapter {
   override readonly id = "youtube";
+  override readonly provider = "youtube" as const;
   override readonly name = "YouTube";
 
   override getTitle(): string | null {
@@ -36,6 +38,14 @@ export class YouTubeVideoAdapter extends Html5VideoAdapter {
 
   override getOverlayGeometry(): PlayerOverlayGeometry {
     return getYouTubePlayerOverlayGeometry(this.container);
+  }
+
+  override getOverlayBinding(): AdapterOverlayBinding {
+    return {
+      mountTarget: this.container,
+      fillMountTarget: true,
+      useNativePlayerDoubleClick: true,
+    };
   }
 
   override subscribeOverlayGeometry(listener: PlayerOverlayGeometryListener): () => void {

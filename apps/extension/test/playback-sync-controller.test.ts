@@ -14,6 +14,10 @@ import {
 } from "../src/playback-sync-controller";
 import type { PlaybackSyncStatus } from "../src/playback-sync-status";
 import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../src/source-adapters/core/overlay-geometry";
+import {
+	CRUNCHYROLL_PLAYBACK_POLICY,
+	DEFAULT_PLAYBACK_POLICY,
+} from "../src/source-adapters/core/playback-policy";
 import type {
 	PlayerEvent,
 	VideoAdapter,
@@ -279,6 +283,7 @@ describe("PlaybackSyncController", () => {
 		});
 
 		harness.adapter.emit({ type: "play", time: 10 });
+		harness.controller.broadcastHostState();
 		harness.controller.handleRemoteCommand({
 			type: "SEEK",
 			roomId: "room-1",
@@ -533,7 +538,26 @@ function createFakeAdapter({
 		exitFullscreen: async () => undefined,
 		getCurrentTime: () => currentTime,
 		getFingerprint: () => `${provider}|video`,
+		getOverlayBinding: () => ({
+			fillMountTarget: true,
+			mountTarget: document.body,
+			useNativePlayerDoubleClick: true,
+		}),
 		getOverlayGeometry: () => DEFAULT_PLAYER_OVERLAY_GEOMETRY,
+		getPlaybackSnapshot: () => ({
+			capturedAt: Date.now(),
+			contentTime: currentTime,
+			phase: "content",
+			playbackRate: video.playbackRate || 1,
+			playing: !paused,
+		}),
+		getSourceDescriptor: () => ({
+			canonicalUrl: `https://example.com/watch/${provider}`,
+			provider,
+			sourceUrl: `https://example.com/watch/${provider}`,
+			title: "Test video",
+			videoFingerprint: `${provider}|video`,
+		}),
 		getState: () =>
 			playbackState({
 				hostTime: currentTime,
@@ -545,8 +569,16 @@ function createFakeAdapter({
 		isFullscreen: () => false,
 		name: provider,
 		pause,
+		playbackPolicy:
+			provider === "crunchyroll"
+				? CRUNCHYROLL_PLAYBACK_POLICY
+				: DEFAULT_PLAYBACK_POLICY,
 		play,
+		provider,
 		seek,
+		setPlaybackRate: (rate) => {
+			video.playbackRate = rate;
+		},
 		setCurrentTime: (time) => {
 			currentTime = time;
 		},

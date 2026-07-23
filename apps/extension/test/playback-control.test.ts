@@ -1,16 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 import { getCrunchyrollTimelineValueForTime } from "../src/source-adapters/crunchyroll/bridge-contract";
 import {
-  getRemotePlayReadyTimeoutMs,
   isMediaTimeBuffered,
   isMediaSettling,
   shouldDeferHostStateSeek,
-  shouldPlayWithoutWaitingForMediaReady,
   shouldSeekForHostState,
   shouldSeekForRemoteCommand,
   shouldThrottleRemoteSeekAttempt,
   waitForMediaReady,
 } from "../src/playback-control";
+import {
+  CRUNCHYROLL_PLAYBACK_POLICY,
+  DEFAULT_PLAYBACK_POLICY,
+} from "../src/source-adapters/core/playback-policy";
 
 describe("playback control helpers", () => {
   it("treats ready media as immediately playable", async () => {
@@ -53,30 +55,50 @@ describe("playback control helpers", () => {
   });
 
   it("starts Crunchyroll playback immediately so the player can fetch the seek target", () => {
-    expect(shouldPlayWithoutWaitingForMediaReady("crunchyroll")).toBe(true);
-    expect(shouldPlayWithoutWaitingForMediaReady("youtube")).toBe(false);
+    expect(CRUNCHYROLL_PLAYBACK_POLICY.playBeforeMediaReady).toBe(true);
+    expect(DEFAULT_PLAYBACK_POLICY.playBeforeMediaReady).toBe(false);
   });
 
   it("allows a longer remote play readiness window on Crunchyroll", () => {
-    expect(getRemotePlayReadyTimeoutMs("crunchyroll")).toBe(6500);
-    expect(getRemotePlayReadyTimeoutMs("youtube")).toBe(2500);
+    expect(CRUNCHYROLL_PLAYBACK_POLICY.readyTimeoutMs).toBe(6500);
+    expect(DEFAULT_PLAYBACK_POLICY.readyTimeoutMs).toBe(2500);
   });
 
   it("throttles repeated Crunchyroll remote seeks to the same target window", () => {
     const previousAttempt = { attemptedAt: 10_000, targetTime: 728.5 };
 
-    expect(shouldThrottleRemoteSeekAttempt("crunchyroll", previousAttempt, 729.25, 11_000)).toBe(
-      true,
-    );
-    expect(shouldThrottleRemoteSeekAttempt("crunchyroll", previousAttempt, 735, 11_000)).toBe(
-      false,
-    );
-    expect(shouldThrottleRemoteSeekAttempt("crunchyroll", previousAttempt, 729.25, 13_000)).toBe(
-      false,
-    );
-    expect(shouldThrottleRemoteSeekAttempt("youtube", previousAttempt, 729.25, 11_000)).toBe(
-      false,
-    );
+    expect(
+      shouldThrottleRemoteSeekAttempt(
+        CRUNCHYROLL_PLAYBACK_POLICY,
+        previousAttempt,
+        729.25,
+        11_000,
+      ),
+    ).toBe(true);
+    expect(
+      shouldThrottleRemoteSeekAttempt(
+        CRUNCHYROLL_PLAYBACK_POLICY,
+        previousAttempt,
+        735,
+        11_000,
+      ),
+    ).toBe(false);
+    expect(
+      shouldThrottleRemoteSeekAttempt(
+        CRUNCHYROLL_PLAYBACK_POLICY,
+        previousAttempt,
+        729.25,
+        13_000,
+      ),
+    ).toBe(false);
+    expect(
+      shouldThrottleRemoteSeekAttempt(
+        DEFAULT_PLAYBACK_POLICY,
+        previousAttempt,
+        729.25,
+        11_000,
+      ),
+    ).toBe(false);
   });
 
   it("detects whether a requested media time is already buffered", () => {
