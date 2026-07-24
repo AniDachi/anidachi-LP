@@ -1069,12 +1069,18 @@ export class RoomDurableObject {
     const userId = this.participantsBySocket.get(socket);
     const result = userId
       ? this.room.updateHostState(userId, event.state, event.source)
-      : { accepted: false, sourceChanged: false };
+      : { accepted: false, sourceChanged: false, code: "NOT_HOST" as const };
     if (!userId || !result.accepted) {
+      const code = result.code ?? "NOT_HOST";
       this.send(socket, {
         type: "ERROR",
-        code: "NOT_HOST",
-        message: "Only joined room participants can update playback state",
+        code,
+        message:
+          code === "SOURCE_PROVIDER_MISMATCH"
+            ? "Source provider does not match the room provider"
+            : code === "INVALID_SOURCE"
+              ? "Source descriptor is invalid"
+              : "Only joined room participants can update playback state",
       });
       return;
     }

@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { overlayStyles } from "../src/styles";
 
 describe("overlay layout pointer surfaces", () => {
+	it("keeps the cursor visible across the complete control panel", () => {
+		expect(getRule(".mini-panel")).toContain("cursor: default");
+	});
+
 	it("separates personal camera controls from the participant hierarchy", () => {
 		const cameraControl = getRule(".icon-button.panel-camera-control");
 		expect(cameraControl).toContain("position: relative");
@@ -121,6 +125,24 @@ describe("overlay layout pointer surfaces", () => {
 		expect(activePrimaryAction).toContain("max-width: none");
 	});
 
+	it("renders room exit as a restrained destructive primary action", () => {
+		const primaryAction = getRule(".button.panel-primary-action");
+		expect(primaryAction).toContain("height: 36px");
+		expect(primaryAction).toContain("min-height: 36px");
+
+		const exitAction = getRule(
+			".button.primary.panel-primary-action.room-exit",
+		);
+		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.24)");
+		expect(exitAction).toContain("background: rgba(51, 35, 37, 0.88)");
+		expect(exitAction).toContain("color: rgba(255, 255, 255, 0.9)");
+		expect(exitAction).toContain("box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025)");
+		expect(exitAction).not.toContain("linear-gradient");
+		expect(
+			getRule(".button.primary.panel-primary-action.room-exit.confirming"),
+		).toContain("background: rgba(88, 38, 42, 0.96)");
+	});
+
 	it("uses restrained text tabs for settings navigation", () => {
 		const tab = getRule(".settings-category-tab");
 		expect(tab).toContain("position: relative");
@@ -174,6 +196,8 @@ describe("overlay layout pointer surfaces", () => {
 
 		const edgeGlow = getRule(".top-bubble-edge-glow");
 		expect(edgeGlow).toContain("top: 0");
+		expect(edgeGlow).toContain("right: 0");
+		expect(edgeGlow).not.toContain("--top-bubble-right");
 		expect(edgeGlow).toContain("width: 104px");
 		expect(edgeGlow).toContain("height: 0");
 		expect(edgeGlow).toContain("background: transparent");
@@ -204,6 +228,19 @@ describe("overlay layout pointer surfaces", () => {
 		expect(pinnedBubble).toContain("opacity: 1");
 		expect(pinnedBubble).toContain("pointer-events: auto");
 		expect(pinnedBubble).toContain("transform: translateY(0)");
+		expect(
+			getNumericProperty(".top-bubble-reveal.panel-open", "z-index"),
+		).toBeGreaterThan(getNumericProperty(".mini-panel", "z-index"));
+	});
+
+	it("styles visible player controls without a provider-specific overlay class", () => {
+		const visibleControlsBubble = getRule(
+			".anidachi-overlay.player-controls-visible .top-bubble",
+		);
+		expect(visibleControlsBubble).toContain("background: rgba(9, 9, 11, 0.78)");
+		expect(overlayStyles).not.toContain(
+			".anidachi-overlay.is-crunchyroll.player-controls-visible",
+		);
 	});
 
 	it("keeps live objects and editor ghosts below the panel", () => {

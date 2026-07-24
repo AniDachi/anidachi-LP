@@ -3,6 +3,7 @@ import { MAX_URL_CHARS } from "@anidachi/protocol";
 import {
   canonicalWatchSourceUrl,
   normalizeVideoFingerprint,
+  sourceProviderFromUrl,
 } from "../../../src/source-adapters/core/source-url";
 
 describe("canonicalWatchSourceUrl", () => {
@@ -21,6 +22,22 @@ describe("canonicalWatchSourceUrl", () => {
 
     expect(canonicalWatchSourceUrl(atLimit)).toBe(atLimit);
     expect(canonicalWatchSourceUrl(overLimit)).toBeNull();
+  });
+});
+
+describe("sourceProviderFromUrl", () => {
+  it.each([
+    ["https://www.youtube.com/watch?v=video", "youtube"],
+    ["https://youtu.be/video", "youtube"],
+    ["https://www.youtube-nocookie.com/embed/video", "youtube"],
+    ["https://www.crunchyroll.com/watch/episode", "crunchyroll"],
+    ["https://example.com/watch/video", "generic"],
+  ] as const)("classifies %s as %s", (url, provider) => {
+    expect(sourceProviderFromUrl(url)).toBe(provider);
+  });
+
+  it("rejects malformed URLs without throwing", () => {
+    expect(sourceProviderFromUrl("http://[")).toBeNull();
   });
 });
 

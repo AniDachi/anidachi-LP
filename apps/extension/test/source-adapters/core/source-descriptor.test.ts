@@ -1,6 +1,7 @@
 import { MAX_URL_CHARS, MAX_WATCH_TITLE_CHARS, type PlaybackState } from "@anidachi/protocol";
 import { describe, expect, it } from "vitest";
 import { buildWatchSourceDescriptor } from "../../../src/source-adapters/core/source-descriptor";
+import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../../../src/source-adapters/core/overlay-geometry";
 import type { VideoAdapter } from "../../../src/source-adapters/core/types";
 
 describe("buildWatchSourceDescriptor", () => {
@@ -43,6 +44,7 @@ describe("buildWatchSourceDescriptor", () => {
     const adapter = createAdapter({
       duration: Number.POSITIVE_INFINITY,
       id: "other-provider",
+      provider: "generic",
       title: "T".repeat(MAX_WATCH_TITLE_CHARS + 1),
     });
 
@@ -60,10 +62,12 @@ describe("buildWatchSourceDescriptor", () => {
 function createAdapter({
   duration = Number.NaN,
   id = "generic-html5-video",
+  provider = id === "youtube" ? "youtube" : id === "crunchyroll" ? "crunchyroll" : "generic",
   title = null,
 }: {
   duration?: number;
   id?: string;
+  provider?: VideoAdapter["provider"];
   title?: string | null;
 } = {}): VideoAdapter {
   const video = document.createElement("video");
@@ -76,15 +80,42 @@ function createAdapter({
     exitFullscreen: async () => undefined,
     getCurrentTime: () => 0,
     getFingerprint: () => "test|fingerprint",
+    getOverlayBinding: () => ({
+      fillMountTarget: true,
+      mountTarget: document.body,
+      useNativePlayerDoubleClick: true,
+    }),
+    getOverlayGeometry: () => DEFAULT_PLAYER_OVERLAY_GEOMETRY,
+    getPlaybackSnapshot: () => ({
+      capturedAt: 1,
+      contentTime: 0,
+      phase: "content",
+      playbackRate: 1,
+      playing: false,
+    }),
+    getSourceDescriptor: () => undefined,
     getState: () => createPlaybackState(),
     getTitle: () => title,
     id,
     isFullscreen: () => false,
     name: "Test adapter",
     pause: () => undefined,
+    playbackPolicy: {
+      hostBufferingHoldDelayMs: 500,
+      localSeekCoalescing: null,
+      pendingSeekGuard: null,
+      playBeforeMediaReady: false,
+      readyTimeoutMs: 2500,
+      remoteSeekTargetToleranceSeconds: 0,
+      remoteSeekThrottleMs: 0,
+      skipPlayAfterTimeoutWhileSettling: false,
+    },
     play: async () => undefined,
+    provider,
     seek: () => undefined,
+    setPlaybackRate: () => undefined,
     subscribe: () => () => undefined,
+    subscribeOverlayGeometry: () => () => undefined,
     video,
   };
 }

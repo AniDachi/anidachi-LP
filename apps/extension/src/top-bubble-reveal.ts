@@ -140,14 +140,10 @@ export function useTopBubbleReveal({
         clientX <= overlayRect.right &&
         clientY >= overlayRect.top &&
         clientY <= overlayRect.top + TOP_EDGE_PROXIMITY_HEIGHT_PX;
-      const couldBeInsideBubble =
-        phaseRef.current === "visible" &&
-        clientX >= overlayRect.right - 160 &&
-        clientY >= overlayRect.top &&
-        clientY <= overlayRect.top + 80;
-      const bubbleRect = couldBeInsideBubble
-        ? bubbleRef.current?.getBoundingClientRect()
-        : undefined;
+      const bubbleRect =
+        phaseRef.current === "visible"
+          ? bubbleRef.current?.getBoundingClientRect()
+          : undefined;
       const insideBubble = bubbleRect ? pointInsideRect(clientX, clientY, bubbleRect) : false;
 
       if (phaseRef.current === "visible") {

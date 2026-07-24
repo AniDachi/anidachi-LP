@@ -545,11 +545,11 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			type: "HOST_STATE",
 			roomId,
 			state: playbackState(
-				"crunchyroll|runtime|s1|e1",
+				"crunchyroll|watch/runtime-one",
 				"https://www.crunchyroll.com/watch/runtime-one",
 			),
 			source: sourceDescriptor(
-				"crunchyroll|runtime|s1|e1",
+				"crunchyroll|watch/runtime-one",
 				"Runtime Episode 1",
 				"https://www.crunchyroll.com/watch/runtime-one",
 			),
@@ -557,7 +557,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		await guest.waitFor(
 			(event) =>
 				event.type === "HOST_STATE" &&
-				event.state.videoFingerprint === "crunchyroll|runtime|s1|e1",
+				event.state.videoFingerprint === "crunchyroll|watch/runtime-one",
 			"guest receives pre-eviction host state",
 		);
 
@@ -592,11 +592,11 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			type: "HOST_STATE",
 			roomId,
 			state: playbackState(
-				"crunchyroll|runtime|s1|e1",
+				"crunchyroll|watch/runtime-one",
 				"https://www.crunchyroll.com/watch/runtime-one",
 			),
 			source: sourceDescriptor(
-				"crunchyroll|runtime|s1|e1",
+				"crunchyroll|watch/runtime-one",
 				"Runtime Episode 1",
 				"https://www.crunchyroll.com/watch/runtime-one",
 			),
@@ -604,7 +604,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		await guest.waitFor(
 			(event) =>
 				event.type === "HOST_STATE" &&
-				event.state.videoFingerprint === "crunchyroll|runtime|s1|e1",
+				event.state.videoFingerprint === "crunchyroll|watch/runtime-one",
 			"guest receives post-wake host state",
 		);
 
@@ -623,7 +623,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 			throw new Error("Expected ROOM_SNAPSHOT");
 		}
 		expect(cameraSnapshot.hostState?.videoFingerprint).toBe(
-			"crunchyroll|runtime|s1|e1",
+			"crunchyroll|watch/runtime-one",
 		);
 		expect(cameraSnapshot.source?.title).toBe("Runtime Episode 1");
 

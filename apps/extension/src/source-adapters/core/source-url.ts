@@ -1,4 +1,5 @@
 import { MAX_URL_CHARS, MAX_VIDEO_FINGERPRINT_CHARS } from "@anidachi/protocol";
+import type { SourceProvider } from "./types";
 
 export function normalizeVideoFingerprint(rawFingerprint: string): string {
   if (rawFingerprint.length <= MAX_VIDEO_FINGERPRINT_CHARS) {
@@ -34,6 +35,31 @@ export function canonicalWatchSourceUrl(value: string): string | null {
     url.hash = params.toString();
     const normalized = url.toString();
     return normalized.length <= MAX_URL_CHARS ? normalized : null;
+  } catch {
+    return null;
+  }
+}
+
+export function sourceProviderFromUrl(value: string): SourceProvider | null {
+  try {
+    const hostname = new URL(value, location.href).hostname.toLowerCase();
+    if (
+      hostname === "youtube.com" ||
+      hostname.endsWith(".youtube.com") ||
+      hostname === "youtu.be" ||
+      hostname.endsWith(".youtu.be") ||
+      hostname === "youtube-nocookie.com" ||
+      hostname.endsWith(".youtube-nocookie.com")
+    ) {
+      return "youtube";
+    }
+    if (
+      hostname === "crunchyroll.com" ||
+      hostname.endsWith(".crunchyroll.com")
+    ) {
+      return "crunchyroll";
+    }
+    return "generic";
   } catch {
     return null;
   }

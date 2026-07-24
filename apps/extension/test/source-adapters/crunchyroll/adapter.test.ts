@@ -16,8 +16,38 @@ describe("Crunchyroll adapter definition", () => {
 		const adapter = crunchyrollDefinition.detect(video);
 
 		expect(adapter?.id).toBe("crunchyroll");
+		expect(adapter?.provider).toBe("crunchyroll");
 		expect(adapter?.container.id).toBe("player-container");
+		expect(adapter?.getOverlayBinding()).toEqual({
+			fillMountTarget: true,
+			mountTarget: adapter?.container,
+			useNativePlayerDoubleClick: true,
+		});
 		expect(adapter?.getFingerprint()).toBe("crunchyroll|watch/G8WUNM123");
+		expect(adapter?.getSourceDescriptor()).toMatchObject({
+			provider: "crunchyroll",
+			videoFingerprint: "crunchyroll|watch/G8WUNM123",
+		});
+		expect(adapter?.playbackPolicy).toEqual({
+			playBeforeMediaReady: true,
+			readyTimeoutMs: 6500,
+			skipPlayAfterTimeoutWhileSettling: false,
+			remoteSeekThrottleMs: 2400,
+			remoteSeekTargetToleranceSeconds: 3,
+			pendingSeekGuard: {
+				maxAgeMs: 15_000,
+				localTargetToleranceSeconds: 4,
+				remoteTargetToleranceSeconds: 8,
+			},
+			localSeekCoalescing: {
+				settleDelayMs: 360,
+				readyDelayMs: 80,
+				duplicateWindowMs: 1200,
+				targetToleranceSeconds: 0.75,
+				suppressPlaybackAfterSeekMs: 900,
+			},
+			hostBufferingHoldDelayMs: 500,
+		});
 	});
 
 	it("does not claim a non-Crunchyroll player", () => {

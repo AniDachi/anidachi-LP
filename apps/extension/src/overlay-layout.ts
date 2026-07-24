@@ -1,36 +1,53 @@
+import type { PlayerOverlayGeometry } from "./source-adapters/core/overlay-geometry";
+
 export const DEFAULT_MINI_PANEL_BOTTOM_RESERVE_PX = 10;
-const DEFAULT_CAMERA_STACK_BOTTOM_PX = 54;
+const DEFAULT_MINI_PANEL_TOP_PX = 48;
+const DEFAULT_MINI_PANEL_RIGHT_PX = 10;
+const DEFAULT_TOP_BUBBLE_TOP_PX = 10;
+const DEFAULT_TOP_BUBBLE_RIGHT_PX = 10;
 
-export function getMiniPanelBottomReservePx({
-	cameraStackVisible,
-	camStackBottomPx,
-	controlsVisible,
-	ghostCamSizePx,
-}: {
-	cameraStackVisible: boolean;
-	camStackBottomPx: number;
-	controlsVisible: boolean;
-	ghostCamSizePx: number;
-}): number {
-	const safeCamStackBottomPx = normalizePixelValue(
-		camStackBottomPx,
-		DEFAULT_CAMERA_STACK_BOTTOM_PX,
-	);
-	const safeGhostCamSizePx = normalizePixelValue(ghostCamSizePx, 0);
-	const controlsReservePx = controlsVisible
-		? Math.max(DEFAULT_MINI_PANEL_BOTTOM_RESERVE_PX, safeCamStackBottomPx)
-		: DEFAULT_MINI_PANEL_BOTTOM_RESERVE_PX;
-	const cameraReservePx = cameraStackVisible
-		? safeCamStackBottomPx + safeGhostCamSizePx + 18
+export interface OverlayChromePlacement {
+	miniPanelBottomReservePx: number;
+	miniPanelRightPx: number;
+	miniPanelTopPx: number;
+	topBubbleRightPx: number;
+	topBubbleTopPx: number;
+}
+
+export function getOverlayChromePlacement(
+	geometry: Pick<
+		PlayerOverlayGeometry,
+		"controlsVisible" | "launcher" | "panel" | "safeInsets"
+	>,
+): OverlayChromePlacement {
+	const controlsBottomReservePx = geometry.controlsVisible
+		? normalizePixelValue(
+				geometry.safeInsets.bottomPx,
+				DEFAULT_MINI_PANEL_BOTTOM_RESERVE_PX,
+			)
 		: DEFAULT_MINI_PANEL_BOTTOM_RESERVE_PX;
 
-	return Math.round(
-		Math.max(
-			DEFAULT_MINI_PANEL_BOTTOM_RESERVE_PX,
-			controlsReservePx,
-			cameraReservePx,
+	return {
+		miniPanelBottomReservePx: Math.round(
+			Math.max(DEFAULT_MINI_PANEL_BOTTOM_RESERVE_PX, controlsBottomReservePx),
 		),
-	);
+		miniPanelRightPx: normalizePixelValue(
+			geometry.panel.rightPx,
+			DEFAULT_MINI_PANEL_RIGHT_PX,
+		),
+		miniPanelTopPx: normalizePixelValue(
+			geometry.panel.topPx,
+			DEFAULT_MINI_PANEL_TOP_PX,
+		),
+		topBubbleRightPx: normalizePixelValue(
+			geometry.launcher.rightPx,
+			DEFAULT_TOP_BUBBLE_RIGHT_PX,
+		),
+		topBubbleTopPx: normalizePixelValue(
+			geometry.launcher.topPx,
+			DEFAULT_TOP_BUBBLE_TOP_PX,
+		),
+	};
 }
 
 export function shouldShowCameraStack({

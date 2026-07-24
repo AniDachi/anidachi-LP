@@ -39,10 +39,14 @@ export const overlayStyles = `
     pointer-events: none;
   }
 
+  .top-bubble-reveal.panel-open {
+    z-index: 31;
+  }
+
   .top-bubble-edge-glow {
     position: absolute;
     top: 0;
-    right: max(0px, calc(var(--top-bubble-right, 10px) - 16px));
+    right: 0;
     width: 104px;
     height: 0;
     border-radius: 999px;
@@ -110,7 +114,7 @@ export const overlayStyles = `
     outline-offset: 2px;
   }
 
-  .anidachi-overlay.is-crunchyroll.player-controls-visible .top-bubble {
+  .anidachi-overlay.player-controls-visible .top-bubble {
     background: rgba(9, 9, 11, 0.78);
     border-color: rgba(255, 138, 61, 0.28);
   }
@@ -169,6 +173,7 @@ export const overlayStyles = `
     box-shadow:
       0 24px 70px rgba(0, 0, 0, 0.48),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    cursor: default;
     pointer-events: auto;
     z-index: 30;
     scrollbar-width: none;
@@ -330,9 +335,10 @@ export const overlayStyles = `
     min-width: 0;
   }
 
-  .panel-primary-action {
+  .button.panel-primary-action {
     flex: 1 1 auto;
     height: 36px;
+    min-height: 36px;
     min-width: 0;
     position: relative;
     overflow: hidden;
@@ -485,6 +491,27 @@ export const overlayStyles = `
 
   .button.primary:not(:disabled):hover {
     background: linear-gradient(135deg, #ffc07a, #fb7c24);
+  }
+
+  .button.primary.panel-primary-action.room-exit {
+    border-color: rgba(248, 113, 113, 0.24);
+    background: rgba(51, 35, 37, 0.88);
+    color: rgba(255, 255, 255, 0.9);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  }
+
+  .button.primary.panel-primary-action.room-exit:not(:disabled):hover {
+    border-color: rgba(248, 113, 113, 0.38);
+    background: rgba(67, 39, 42, 0.94);
+    color: rgba(255, 255, 255, 0.98);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  }
+
+  .button.primary.panel-primary-action.room-exit.confirming {
+    border-color: rgba(248, 113, 113, 0.52);
+    background: rgba(88, 38, 42, 0.96);
+    color: rgba(255, 255, 255, 0.98);
+    box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.08);
   }
 
   .button:not(:disabled):active,
@@ -1385,6 +1412,26 @@ export const overlayStyles = `
     background: transparent;
   }
 
+  .playback-sync-notice {
+    align-items: center;
+    color: rgba(240, 240, 244, 0.72);
+    display: flex;
+    font-size: 13px;
+    justify-content: space-between;
+    line-height: 1.35;
+    padding: 2px 4px;
+  }
+
+  .playback-sync-resume {
+    background: transparent;
+    border: 0;
+    color: #ff9a5c;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 2px 0 2px 10px;
+  }
+
   .invite-panel {
     margin-top: 10px;
     padding: 9px 10px;
@@ -2118,7 +2165,7 @@ export const overlayStyles = `
       transform 180ms ease;
   }
 
-  .anidachi-overlay.is-crunchyroll.player-controls-visible .cam-stack {
+  .anidachi-overlay.player-controls-visible .cam-stack {
     transform: translateY(0);
   }
 

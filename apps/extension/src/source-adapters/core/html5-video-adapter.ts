@@ -1,12 +1,29 @@
 import type { PlaybackState } from "@anidachi/protocol";
 import { logDebug, videoDebugSnapshot } from "../../debug-log";
 import { duckVideoVolume } from "../../media-ducking";
+import { buildWatchSourceDescriptor } from "./source-descriptor";
+import {
+  DEFAULT_PLAYER_OVERLAY_GEOMETRY,
+  normalizePlayerOverlayGeometry,
+  type PlayerOverlayGeometry,
+  type PlayerOverlayGeometryListener,
+} from "./overlay-geometry";
+import { DEFAULT_PLAYBACK_POLICY } from "./playback-policy";
 import { canonicalWatchSourceUrl, normalizeVideoFingerprint } from "./source-url";
-import type { PlayerEvent, SeekOptions, VideoAdapter } from "./types";
+import type {
+  AdapterOverlayBinding,
+  AdapterPlaybackSnapshot,
+  PlayerEvent,
+  SeekOptions,
+  SourceProvider,
+  VideoAdapter,
+} from "./types";
 
 export class Html5VideoAdapter implements VideoAdapter {
   readonly id: string = "generic-html5-video";
+  readonly provider: SourceProvider = "generic";
   readonly name: string = "Generic HTML5 video";
+  readonly playbackPolicy = DEFAULT_PLAYBACK_POLICY;
 
   constructor(
     readonly video: HTMLVideoElement,
@@ -41,6 +58,37 @@ export class Html5VideoAdapter implements VideoAdapter {
       updatedAt: Date.now(),
       playbackRate: this.video.playbackRate || 1,
     };
+  }
+
+  getSourceDescriptor(): ReturnType<typeof buildWatchSourceDescriptor> {
+    return buildWatchSourceDescriptor(this, this.getState());
+  }
+
+  getPlaybackSnapshot(): AdapterPlaybackSnapshot {
+    return {
+      phase: "content",
+      contentTime: this.getCurrentTime(),
+      playing: !this.video.paused,
+      playbackRate: this.video.playbackRate || 1,
+      capturedAt: Date.now(),
+    };
+  }
+
+  getOverlayBinding(): AdapterOverlayBinding {
+    const fullscreenElement = document.fullscreenElement;
+    return {
+      mountTarget:
+        fullscreenElement instanceof HTMLElement ? fullscreenElement : this.container,
+      fillMountTarget: false,
+      useNativePlayerDoubleClick: false,
+    };
+  }
+
+  setPlaybackRate(rate: number): void {
+    if (!Number.isFinite(rate) || rate <= 0) {
+      return;
+    }
+    this.video.playbackRate = rate;
   }
 
   async play(): Promise<void> {
@@ -100,18 +148,38 @@ export class Html5VideoAdapter implements VideoAdapter {
         callback({ type: "timeupdate", time: this.getCurrentTime() });
       }
     };
+    const onRateChange = () =>
+      callback({
+        type: "ratechange",
+        time: this.getCurrentTime(),
+        playbackRate: this.video.playbackRate || 1,
+      });
 
     this.video.addEventListener("play", onPlay);
     this.video.addEventListener("pause", onPause);
     this.video.addEventListener("seeked", onSeek);
     this.video.addEventListener("timeupdate", onTimeUpdate);
+    this.video.addEventListener("ratechange", onRateChange);
 
     return () => {
       this.video.removeEventListener("play", onPlay);
       this.video.removeEventListener("pause", onPause);
       this.video.removeEventListener("seeked", onSeek);
       this.video.removeEventListener("timeupdate", onTimeUpdate);
+      this.video.removeEventListener("ratechange", onRateChange);
     };
+  }
+
+  getOverlayGeometry(): PlayerOverlayGeometry {
+    const { width, height } = this.container.getBoundingClientRect();
+    return normalizePlayerOverlayGeometry({
+      ...DEFAULT_PLAYER_OVERLAY_GEOMETRY,
+      viewport: { widthPx: width, heightPx: height },
+    });
+  }
+
+  subscribeOverlayGeometry(_listener: PlayerOverlayGeometryListener): () => void {
+    return () => undefined;
   }
 
   duckVolume(targetVolume = 0.1): () => void {

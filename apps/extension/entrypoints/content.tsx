@@ -1,6 +1,11 @@
+import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { defineContentScript } from "wxt/utils/define-content-script";
-import { elementDebugSnapshot, logDebug, videoDebugSnapshot } from "../src/debug-log";
+import {
+  elementDebugSnapshot,
+  logDebug,
+  videoDebugSnapshot,
+} from "../src/debug-log";
 import { startDebugProbe } from "../src/debug-probe";
 import {
   ANIDACHI_COMPOSER_OPEN_ATTR,
@@ -10,22 +15,56 @@ import {
 } from "../src/message-composer-events";
 import { OverlayApp } from "../src/overlay-app";
 import {
-  getOverlayMountDecision,
   getOverlayPageDecision,
   mutationsAffectVideo,
-  shouldRefreshSameVideoAdapter,
 } from "../src/overlay-mount";
-import type { VideoAdapter } from "../src/source-adapters/core/types";
+import {
+  AdapterManager,
+  type AdapterReconcileResult,
+} from "../src/source-adapters/core/adapter-manager";
+import type {
+  AdapterDetectionResult,
+  SourceProvider,
+  VideoAdapter,
+} from "../src/source-adapters/core/types";
 import { startCrunchyrollStudyIfEnabled } from "../src/source-adapters/crunchyroll/study";
 import { detectSourceAdapter } from "../src/source-adapters/registry";
 
-interface MountedOverlay {
-  adapter: VideoAdapter;
-  host: HTMLElement;
-  root: Root;
-  stopDebugProbe: () => void;
+export interface MountedOverlay {
+  readonly adapter: VideoAdapter;
   relocate(): void;
-  updateAdapter(adapter: VideoAdapter): void;
+  replaceAdapter(adapter: VideoAdapter): void;
+  suspend(): void;
+  dispose(): void;
+}
+
+export interface OverlayRenderer {
+  render(adapter: VideoAdapter, active: boolean): void;
+  unmount(): void;
+}
+
+interface ResizeObserverBinding {
+  disconnect(): void;
+  observe(target: Element): void;
+}
+
+interface MountOverlayOptions {
+  createResizeObserver?: (
+    callback: ResizeObserverCallback,
+  ) => ResizeObserverBinding;
+  renderer?: OverlayRenderer;
+}
+
+interface ContentLifecycleDependencies {
+  detect(current: VideoAdapter | null): AdapterDetectionResult;
+  ensureStyles(): void;
+  installKeyboardGuard(): () => void;
+  mount(adapter: VideoAdapter): MountedOverlay;
+  startProviderStudy(): (() => void) | null | undefined;
+}
+
+export interface ContentLifecycleRuntime {
+  reconcile(): AdapterReconcileResult;
   dispose(): void;
 }
 
@@ -52,153 +91,234 @@ const USE_STORE_CONTENT_SCRIPT_MATCHES =
   (import.meta.env.WXT_EXTENSION_CHANNEL === "staging" &&
     import.meta.env.WXT_BROAD_HOST_PERMISSIONS !== "true");
 
-const CONTENT_SCRIPT_MATCHES =
-  USE_STORE_CONTENT_SCRIPT_MATCHES
-    ? STORE_CONTENT_SCRIPT_MATCHES
-    : LOCAL_CONTENT_SCRIPT_MATCHES;
+const CONTENT_SCRIPT_MATCHES = USE_STORE_CONTENT_SCRIPT_MATCHES
+  ? STORE_CONTENT_SCRIPT_MATCHES
+  : LOCAL_CONTENT_SCRIPT_MATCHES;
 
 export default defineContentScript({
   matches: CONTENT_SCRIPT_MATCHES,
   allFrames: true,
   runAt: "document_start",
   main() {
-    let mounted: MountedOverlay | null = null;
-    const stopKeyboardGuard = installMessageComposerKeyboardGuard();
-    const stopCrunchyrollStudy = startCrunchyrollStudyIfEnabled();
-    ensurePageStyles();
+    startContentLifecycle();
+  },
+});
 
-    const mountOrRelocate = () => {
-      const pageDecision = getOverlayPageDecision(mounted !== null, location.href);
-      if (pageDecision === "dispose") {
-        logDebug("content", "dispose overlay after route change", {
-          adapterId: mounted?.adapter.id,
-          url: location.href,
-        });
-        mounted?.dispose();
-        mounted = null;
-        return;
-      }
-      if (pageDecision === "idle") {
-        return;
-      }
+export function startContentLifecycle(
+  overrides: Partial<ContentLifecycleDependencies> = {},
+): ContentLifecycleRuntime {
+  const dependencies: ContentLifecycleDependencies = {
+    detect: detectLifecycleResult,
+    ensureStyles: ensurePageStyles,
+    installKeyboardGuard: installMessageComposerKeyboardGuard,
+    mount: mountOverlay,
+    startProviderStudy: startCrunchyrollStudyIfEnabled,
+    ...overrides,
+  };
+  let mounted: MountedOverlay | null = null;
+  let disposed = false;
+  const stopKeyboardGuard = dependencies.installKeyboardGuard();
+  const stopProviderStudy = dependencies.startProviderStudy();
+  dependencies.ensureStyles();
 
-      const adapter = detectSourceAdapter();
-      if (!adapter) {
-        return;
-      }
-
-      const decision = getOverlayMountDecision(mounted?.adapter.video ?? null, adapter.video);
-      if (decision === "relocate") {
-        mounted?.relocate();
-        return;
-      }
-
-      if (decision === "update") {
-        logDebug("content", "update adapter", {
-          adapterId: adapter.id,
-          fingerprint: adapter.getFingerprint(),
-          container: elementDebugSnapshot(adapter.container),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        mounted?.updateAdapter(adapter);
-        return;
-      }
-
+  const manager = new AdapterManager({
+    detached(previous) {
+      logDebug("content", "detach adapter", {
+        adapterId: previous.id,
+        fingerprint: previous.getFingerprint(),
+        url: location.href,
+      });
+      mounted?.dispose();
+      mounted = null;
+    },
+    mounted(adapter) {
       logDebug("content", "mount adapter", {
         adapterId: adapter.id,
         fingerprint: adapter.getFingerprint(),
         container: elementDebugSnapshot(adapter.container),
         video: videoDebugSnapshot(adapter.video),
       });
-      mounted = mountOverlay(adapter);
-    };
-
-    let mountCheckScheduled = false;
-    const scheduleMountCheck = () => {
-      if (mountCheckScheduled) {
-        return;
-      }
-
-      mountCheckScheduled = true;
-      window.requestAnimationFrame(() => {
-        mountCheckScheduled = false;
-        mountOrRelocate();
+      mounted = dependencies.mount(adapter);
+    },
+    relocated() {
+      mounted?.relocate();
+    },
+    replaced(previous, next) {
+      logDebug("content", "replace adapter", {
+        adapterId: next.id,
+        previousAdapterId: previous.id,
+        previousFingerprint: previous.getFingerprint(),
+        nextFingerprint: next.getFingerprint(),
+        container: elementDebugSnapshot(next.container),
+        video: videoDebugSnapshot(next.video),
       });
-    };
+      mounted?.replaceAdapter(next);
+    },
+    suspended(previous) {
+      logDebug("content", "suspend adapter", {
+        adapterId: previous.id,
+        fingerprint: previous.getFingerprint(),
+        url: location.href,
+      });
+      mounted?.suspend();
+    },
+  });
 
-    // The MutationObserver below mounts the overlay the instant a <video> node
-    // appears, so this poll is only a safety net for the rare case a video
-    // becomes the best adapter without a DOM insertion. It backs off while
-    // unmounted so frames that never host a player (ads, embeds) stop spinning,
-    // and slows right down once the overlay is mounted — keeping idle CPU low in
-    // every frame the content script runs in.
-    const MOUNT_POLL_MIN_MS = 1000;
-    const MOUNT_POLL_MAX_MS = 8000;
-    let mountPollDelay = MOUNT_POLL_MIN_MS;
-    let mountPollTimer: number | null = null;
-    const scheduleNextMountPoll = () => {
-      if (mountPollTimer !== null) {
-        return;
-      }
+  const reconcile = () =>
+    manager.reconcile(dependencies.detect(manager.current));
 
-      mountPollDelay = mounted
-        ? MOUNT_POLL_MAX_MS
-        : Math.min(Math.round(mountPollDelay * 1.5), MOUNT_POLL_MAX_MS);
-      mountPollTimer = window.setTimeout(() => {
-        mountPollTimer = null;
-        mountOrRelocate();
-        scheduleNextMountPoll();
-      }, mountPollDelay);
-    };
+  let mountCheckFrame: number | null = null;
+  const scheduleMountCheck = () => {
+    if (disposed || mountCheckFrame !== null) {
+      return;
+    }
 
-    mountOrRelocate();
-    scheduleNextMountPoll();
-
-    // Watch the DOM so player insertion/removal triggers a lifecycle check.
-    // Removal matters on SPA route changes: pagehide does not fire when
-    // Crunchyroll replaces a watch page with its catalogue.
-    const handleVideoLifecycleEvent = (event: Event) => {
-      if (event.target instanceof HTMLVideoElement) {
-        scheduleMountCheck();
-      }
-    };
-    const videoObserver = new MutationObserver((mutations) => {
-      if (mountCheckScheduled) {
-        return;
-      }
-
-      if (mutationsAffectVideo(mutations)) {
-        scheduleMountCheck();
-      }
+    mountCheckFrame = window.requestAnimationFrame(() => {
+      mountCheckFrame = null;
+      reconcile();
     });
-    videoObserver.observe(document.documentElement, { childList: true, subtree: true });
-    document.addEventListener("loadstart", handleVideoLifecycleEvent, true);
-    document.addEventListener("loadedmetadata", handleVideoLifecycleEvent, true);
-    document.addEventListener("emptied", handleVideoLifecycleEvent, true);
-    const navigation = window.navigation;
-    navigation?.addEventListener("currententrychange", scheduleMountCheck);
-    window.addEventListener("popstate", scheduleMountCheck);
-    window.addEventListener("hashchange", scheduleMountCheck);
+  };
 
-    document.addEventListener("fullscreenchange", () => mounted?.relocate());
-    window.addEventListener("pagehide", () => {
-      if (mountPollTimer !== null) {
-        window.clearTimeout(mountPollTimer);
-        mountPollTimer = null;
-      }
-      videoObserver.disconnect();
-      document.removeEventListener("loadstart", handleVideoLifecycleEvent, true);
-      document.removeEventListener("loadedmetadata", handleVideoLifecycleEvent, true);
-      document.removeEventListener("emptied", handleVideoLifecycleEvent, true);
-      navigation?.removeEventListener("currententrychange", scheduleMountCheck);
-      window.removeEventListener("popstate", scheduleMountCheck);
-      window.removeEventListener("hashchange", scheduleMountCheck);
-      stopKeyboardGuard();
-      stopCrunchyrollStudy?.();
-      mounted?.dispose();
-    });
-  },
-});
+  // DOM events do the immediate work. This backed-off poll only covers players
+  // that become detectable without inserting or replacing a video node.
+  const MOUNT_POLL_MIN_MS = 1000;
+  const MOUNT_POLL_MAX_MS = 8000;
+  let mountPollDelay = MOUNT_POLL_MIN_MS;
+  let mountPollTimer: number | null = null;
+  const scheduleNextMountPoll = () => {
+    if (disposed || mountPollTimer !== null) {
+      return;
+    }
+
+    mountPollDelay = manager.current
+      ? MOUNT_POLL_MAX_MS
+      : Math.min(Math.round(mountPollDelay * 1.5), MOUNT_POLL_MAX_MS);
+    mountPollTimer = window.setTimeout(() => {
+      mountPollTimer = null;
+      reconcile();
+      scheduleNextMountPoll();
+    }, mountPollDelay);
+  };
+
+  reconcile();
+  scheduleNextMountPoll();
+
+  const handleVideoLifecycleEvent = (event: Event) => {
+    if (event.target instanceof HTMLVideoElement) {
+      scheduleMountCheck();
+    }
+  };
+  const videoObserver = new MutationObserver((mutations) => {
+    if (mountCheckFrame !== null) {
+      return;
+    }
+
+    if (mutationsAffectVideo(mutations)) {
+      scheduleMountCheck();
+    }
+  });
+  videoObserver.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+  document.addEventListener("loadstart", handleVideoLifecycleEvent, true);
+  document.addEventListener("loadedmetadata", handleVideoLifecycleEvent, true);
+  document.addEventListener("emptied", handleVideoLifecycleEvent, true);
+  const navigation = window.navigation;
+  navigation?.addEventListener("currententrychange", scheduleMountCheck);
+  window.addEventListener("popstate", scheduleMountCheck);
+  window.addEventListener("hashchange", scheduleMountCheck);
+
+  const handleFullscreenChange = () => mounted?.relocate();
+  document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+  const dispose = () => {
+    if (disposed) {
+      return;
+    }
+    disposed = true;
+    if (mountPollTimer !== null) {
+      window.clearTimeout(mountPollTimer);
+      mountPollTimer = null;
+    }
+    if (mountCheckFrame !== null) {
+      window.cancelAnimationFrame(mountCheckFrame);
+      mountCheckFrame = null;
+    }
+    videoObserver.disconnect();
+    document.removeEventListener("loadstart", handleVideoLifecycleEvent, true);
+    document.removeEventListener(
+      "loadedmetadata",
+      handleVideoLifecycleEvent,
+      true,
+    );
+    document.removeEventListener("emptied", handleVideoLifecycleEvent, true);
+    document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    navigation?.removeEventListener("currententrychange", scheduleMountCheck);
+    window.removeEventListener("popstate", scheduleMountCheck);
+    window.removeEventListener("hashchange", scheduleMountCheck);
+    window.removeEventListener("pagehide", dispose);
+    stopKeyboardGuard();
+    stopProviderStudy?.();
+    manager.dispose();
+  };
+
+  window.addEventListener("pagehide", dispose);
+
+  return { dispose, reconcile };
+}
+
+function detectLifecycleResult(
+  current: VideoAdapter | null,
+): AdapterDetectionResult {
+  const pageDecision = getOverlayPageDecision(current !== null, location.href);
+  if (pageDecision === "dispose") {
+    return {
+      status: "blocked",
+      provider: current
+        ? providerFromAdapter(current)
+        : providerFromUrl(location.href),
+    };
+  }
+  if (pageDecision === "idle") {
+    return { status: "none" };
+  }
+
+  const adapter = detectSourceAdapter();
+  if (adapter) {
+    return { status: "ready", adapter };
+  }
+
+  return current
+    ? { status: "waiting", provider: providerFromAdapter(current) }
+    : { status: "none" };
+}
+
+function providerFromAdapter(adapter: VideoAdapter): SourceProvider {
+  return adapter.provider;
+}
+
+function providerFromUrl(pageUrl: string): SourceProvider {
+  try {
+    const hostname = new URL(pageUrl).hostname.toLowerCase();
+    if (
+      hostname === "youtube.com" ||
+      hostname.endsWith(".youtube.com") ||
+      hostname === "youtu.be"
+    ) {
+      return "youtube";
+    }
+    if (
+      hostname === "crunchyroll.com" ||
+      hostname.endsWith(".crunchyroll.com")
+    ) {
+      return "crunchyroll";
+    }
+  } catch {
+    // Invalid URLs are treated as unowned generic pages.
+  }
+  return "generic";
+}
 
 function installMessageComposerKeyboardGuard(): () => void {
   const isComposerOpen = () =>
@@ -209,7 +329,9 @@ function installMessageComposerKeyboardGuard(): () => void {
       setPageComposerGuard(true);
       event.preventDefault();
       event.stopImmediatePropagation();
-      window.dispatchEvent(new CustomEvent(ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT));
+      window.dispatchEvent(
+        new CustomEvent(ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT),
+      );
       return;
     }
 
@@ -217,7 +339,9 @@ function installMessageComposerKeyboardGuard(): () => void {
       setPageComposerGuard(true);
       event.preventDefault();
       event.stopImmediatePropagation();
-      window.dispatchEvent(new CustomEvent(ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT));
+      window.dispatchEvent(
+        new CustomEvent(ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT),
+      );
     }
   };
 
@@ -240,7 +364,10 @@ function setPageComposerGuard(active: boolean): void {
     }
 
     window.setTimeout(() => {
-      if (document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] === "guard") {
+      if (
+        document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR] ===
+        "guard"
+      ) {
         delete document.documentElement.dataset[ANIDACHI_COMPOSER_OPEN_ATTR];
       }
 
@@ -259,9 +386,14 @@ function setPageComposerGuard(active: boolean): void {
   }
 }
 
-function mountOverlay(initialAdapter: VideoAdapter): MountedOverlay {
+export function mountOverlay(
+  initialAdapter: VideoAdapter,
+  options: MountOverlayOptions = {},
+): MountedOverlay {
   let adapter = initialAdapter;
   let stopDebugProbe: () => void = () => undefined;
+  let adapterBindingActive = false;
+  let disposed = false;
   const host = document.createElement("anidachi-overlay-root");
   host.style.position = "absolute";
   host.style.zIndex = "2147483647";
@@ -272,19 +404,23 @@ function mountOverlay(initialAdapter: VideoAdapter): MountedOverlay {
   const shadow = host.attachShadow({ mode: "open" });
   const appRoot = document.createElement("div");
   shadow.append(appRoot);
-  const root = createRoot(appRoot);
+  const renderer = options.renderer ?? createReactOverlayRenderer(appRoot);
 
   let animationFrame = 0;
-  let adapterFingerprint = adapter.getFingerprint();
-  const resizeObserver =
-    typeof ResizeObserver === "undefined"
+  let fullscreenTransitionGeneration = 0;
+  let observedTarget: Element | null = null;
+  let positionedTarget: HTMLElement | null = null;
+  let previousInlinePosition = "";
+  const createResizeObserver =
+    options.createResizeObserver ??
+    (typeof ResizeObserver === "undefined"
       ? null
-      : new ResizeObserver(() => {
-          scheduleRelocate();
-        });
+      : (callback: ResizeObserverCallback) => new ResizeObserver(callback));
+  const resizeObserver =
+    createResizeObserver?.(() => scheduleRelocate()) ?? null;
 
-  const renderOverlay = () => {
-    root.render(<OverlayApp adapter={adapter} />);
+  const renderOverlay = (active: boolean) => {
+    renderer.render(adapter, active);
   };
 
   const markAdapter = (nextAdapter: VideoAdapter) => {
@@ -302,38 +438,100 @@ function mountOverlay(initialAdapter: VideoAdapter): MountedOverlay {
   const addAdapterListeners = (nextAdapter: VideoAdapter) => {
     nextAdapter.video.addEventListener("loadedmetadata", scheduleRelocate);
     nextAdapter.video.addEventListener("loadeddata", scheduleRelocate);
-    nextAdapter.video.addEventListener("dblclick", handleVideoDoubleClick, true);
+    nextAdapter.video.addEventListener(
+      "dblclick",
+      handleVideoDoubleClick,
+      true,
+    );
   };
 
   const removeAdapterListeners = (previousAdapter: VideoAdapter) => {
-    previousAdapter.video.removeEventListener("loadedmetadata", scheduleRelocate);
+    previousAdapter.video.removeEventListener(
+      "loadedmetadata",
+      scheduleRelocate,
+    );
     previousAdapter.video.removeEventListener("loadeddata", scheduleRelocate);
-    previousAdapter.video.removeEventListener("dblclick", handleVideoDoubleClick, true);
+    previousAdapter.video.removeEventListener(
+      "dblclick",
+      handleVideoDoubleClick,
+      true,
+    );
   };
 
   const startAdapterDebugProbe = () => {
-    stopDebugProbe = shouldStartDebugProbe() ? startDebugProbe(adapter) : () => undefined;
+    stopDebugProbe = shouldStartDebugProbe()
+      ? startDebugProbe(adapter)
+      : () => undefined;
+  };
+
+  const stopAdapterDebugProbe = () => {
+    stopDebugProbe();
+    stopDebugProbe = () => undefined;
+  };
+
+  const restoreOverlayContainerPosition = () => {
+    if (positionedTarget?.style.position === "relative") {
+      positionedTarget.style.position = previousInlinePosition;
+    }
+    positionedTarget = null;
+    previousInlinePosition = "";
+  };
+
+  const prepareOverlayContainer = (target: HTMLElement) => {
+    if (positionedTarget && positionedTarget !== target) {
+      restoreOverlayContainerPosition();
+    }
+    if (getComputedStyle(target).position !== "static") {
+      return;
+    }
+
+    positionedTarget = target;
+    previousInlinePosition = target.style.position;
+    target.style.position = "relative";
   };
 
   const relocate = () => {
     window.cancelAnimationFrame(animationFrame);
-    if (document.fullscreenElement === adapter.video && adapter.container !== adapter.video) {
+    animationFrame = 0;
+    if (!adapterBindingActive || disposed) {
+      return;
+    }
+    if (
+      document.fullscreenElement === adapter.video &&
+      adapter.container !== adapter.video
+    ) {
+      const fullscreenAdapter = adapter;
+      const transitionGeneration = ++fullscreenTransitionGeneration;
       logDebug("overlay", "reroute video fullscreen", {
         adapterId: adapter.id,
         fullscreenElement: elementDebugSnapshot(document.fullscreenElement),
       });
-      rerouteVideoFullscreen(adapter);
+      rerouteVideoFullscreen(fullscreenAdapter, () =>
+        Boolean(
+          !disposed &&
+            adapterBindingActive &&
+            adapter === fullscreenAdapter &&
+            transitionGeneration === fullscreenTransitionGeneration,
+        ),
+      );
       return;
     }
 
-    const target = getOverlayTarget(adapter);
-    ensureOverlayContainer(target);
+    const overlayBinding = adapter.getOverlayBinding();
+    const target = overlayBinding.mountTarget;
+    prepareOverlayContainer(target);
     if (host.parentElement !== target) {
       target.append(host);
     }
-    syncOverlayBounds(adapter, host, target);
-    resizeObserver?.observe(adapter.video);
-    resizeObserver?.observe(target);
+    syncOverlayBounds(adapter, host, target, overlayBinding.fillMountTarget);
+    if (observedTarget !== target) {
+      if (observedTarget) {
+        resizeObserver?.disconnect();
+      }
+      resizeObserver?.observe(adapter.video);
+      resizeObserver?.observe(target);
+      observedTarget = target;
+    }
     logDebug("overlay", "relocated", {
       adapterId: adapter.id,
       target: elementDebugSnapshot(target),
@@ -343,80 +541,83 @@ function mountOverlay(initialAdapter: VideoAdapter): MountedOverlay {
   };
 
   const scheduleRelocate = () => {
+    if (!adapterBindingActive || disposed) {
+      return;
+    }
     window.cancelAnimationFrame(animationFrame);
     animationFrame = window.requestAnimationFrame(relocate);
   };
 
-  markAdapter(adapter);
-  startAdapterDebugProbe();
-  renderOverlay();
-  relocate();
+  const deactivateAdapterBinding = () => {
+    if (!adapterBindingActive) {
+      return;
+    }
+
+    adapterBindingActive = false;
+    fullscreenTransitionGeneration += 1;
+    window.cancelAnimationFrame(animationFrame);
+    animationFrame = 0;
+    removeAdapterListeners(adapter);
+    resizeObserver?.disconnect();
+    observedTarget = null;
+    unmarkAdapter(adapter);
+    restoreOverlayContainerPosition();
+    stopAdapterDebugProbe();
+  };
+
+  const activateAdapterBinding = () => {
+    if (disposed) {
+      return;
+    }
+
+    adapterBindingActive = true;
+    markAdapter(adapter);
+    startAdapterDebugProbe();
+    addAdapterListeners(adapter);
+    renderOverlay(true);
+    relocate();
+  };
+
   window.addEventListener("resize", scheduleRelocate);
   window.addEventListener("scroll", scheduleRelocate, true);
-  addAdapterListeners(adapter);
+  activateAdapterBinding();
 
   return {
     get adapter() {
       return adapter;
     },
-    host,
-    root,
-    get stopDebugProbe() {
-      return stopDebugProbe;
-    },
     relocate: scheduleRelocate,
-    updateAdapter(nextAdapter: VideoAdapter) {
-      const nextFingerprint = nextAdapter.getFingerprint();
-      if (adapter.video === nextAdapter.video) {
-        if (
-          shouldRefreshSameVideoAdapter(
-            { id: adapter.id, fingerprint: adapterFingerprint },
-            { id: nextAdapter.id, fingerprint: nextFingerprint },
-          )
-        ) {
-          logDebug("content", "refresh adapter for same video", {
-            adapterId: nextAdapter.id,
-            previousAdapterId: adapter.id,
-            previousFingerprint: adapterFingerprint,
-            nextFingerprint,
-            video: videoDebugSnapshot(nextAdapter.video),
-          });
-          adapter = nextAdapter;
-          adapterFingerprint = nextFingerprint;
-          renderOverlay();
-        }
-        scheduleRelocate();
+    replaceAdapter(nextAdapter: VideoAdapter) {
+      if (disposed) {
         return;
       }
-
-      const previousAdapter = adapter;
-      removeAdapterListeners(previousAdapter);
-      unmarkAdapter(previousAdapter);
-      resizeObserver?.disconnect();
-      stopDebugProbe();
-
+      deactivateAdapterBinding();
+      renderOverlay(false);
       adapter = nextAdapter;
-      adapterFingerprint = nextFingerprint;
-      markAdapter(adapter);
-      startAdapterDebugProbe();
-      renderOverlay();
-      scheduleRelocate();
+      activateAdapterBinding();
+    },
+    suspend() {
+      if (disposed || !adapterBindingActive) {
+        return;
+      }
+      deactivateAdapterBinding();
+      renderOverlay(false);
     },
     dispose() {
-      window.cancelAnimationFrame(animationFrame);
+      if (disposed) {
+        return;
+      }
+      deactivateAdapterBinding();
+      disposed = true;
       window.removeEventListener("resize", scheduleRelocate);
       window.removeEventListener("scroll", scheduleRelocate, true);
-      removeAdapterListeners(adapter);
-      resizeObserver?.disconnect();
-      unmarkAdapter(adapter);
-      stopDebugProbe();
-      root.unmount();
+      renderer.unmount();
       host.remove();
     },
   };
 
   function handleVideoDoubleClick(event: MouseEvent): void {
-    if (shouldUseNativePlayerDoubleClick(adapter)) {
+    if (adapter.getOverlayBinding().useNativePlayerDoubleClick) {
       return;
     }
 
@@ -424,6 +625,20 @@ function mountOverlay(initialAdapter: VideoAdapter): MountedOverlay {
     event.stopImmediatePropagation();
     togglePlayerFullscreen(adapter);
   }
+}
+
+function createReactOverlayRenderer(appRoot: HTMLElement): OverlayRenderer {
+  const root: Root = createRoot(appRoot);
+  return {
+    render(adapter, active) {
+      flushSync(() => {
+        root.render(<OverlayApp adapter={adapter} adapterActive={active} />);
+      });
+    },
+    unmount() {
+      root.unmount();
+    },
+  };
 }
 
 function shouldStartDebugProbe(): boolean {
@@ -434,30 +649,6 @@ function shouldStartDebugProbe(): boolean {
     hashParams.get("anidachiDebugProbe") === "1" ||
     localStorage.getItem("anidachiDebugProbe") === "1"
   );
-}
-
-function shouldUseNativePlayerDoubleClick(adapter: VideoAdapter): boolean {
-  return adapter.id === "crunchyroll" || adapter.id === "youtube";
-}
-
-function getOverlayTarget(adapter: VideoAdapter): HTMLElement {
-  if (adapter.id === "youtube" || adapter.id === "crunchyroll") {
-    return adapter.container;
-  }
-
-  const fullscreenElement = document.fullscreenElement;
-  if (fullscreenElement instanceof HTMLElement) {
-    return fullscreenElement;
-  }
-
-  return adapter.container;
-}
-
-function ensureOverlayContainer(element: HTMLElement): void {
-  const style = getComputedStyle(element);
-  if (style.position === "static") {
-    element.style.position = "relative";
-  }
 }
 
 function ensurePageStyles(): void {
@@ -532,10 +723,18 @@ function ensurePageStyles(): void {
   document.documentElement.append(style);
 }
 
-function rerouteVideoFullscreen(adapter: VideoAdapter): void {
+function rerouteVideoFullscreen(
+  adapter: VideoAdapter,
+  isCurrentTransition: () => boolean,
+): void {
   document
     .exitFullscreen()
-    .then(() => adapter.enterFullscreen())
+    .then(() => {
+      if (!isCurrentTransition()) {
+        return;
+      }
+      return adapter.enterFullscreen();
+    })
     .catch(() => {});
 }
 
@@ -557,7 +756,12 @@ function togglePlayerFullscreen(adapter: VideoAdapter): void {
   adapter.enterFullscreen().catch(() => {});
 }
 
-function syncOverlayBounds(adapter: VideoAdapter, host: HTMLElement, target: HTMLElement): void {
+function syncOverlayBounds(
+  adapter: VideoAdapter,
+  host: HTMLElement,
+  target: HTMLElement,
+  fillMountTarget: boolean,
+): void {
   const videoStyle = getComputedStyle(adapter.video);
 
   if (adapter.isFullscreen()) {
@@ -570,7 +774,7 @@ function syncOverlayBounds(adapter: VideoAdapter, host: HTMLElement, target: HTM
     return;
   }
 
-  if (adapter.id === "youtube" || adapter.id === "crunchyroll") {
+  if (fillMountTarget) {
     host.style.inset = "0";
     host.style.left = "0";
     host.style.top = "0";

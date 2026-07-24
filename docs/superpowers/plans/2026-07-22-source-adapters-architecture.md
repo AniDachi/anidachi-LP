@@ -608,13 +608,32 @@ Automated evidence recorded on 2026-07-22:
 
 ## PR 2: Lifecycle, Capabilities, And First-Class YouTube
 
+Detailed playback synchronization, provider pinning, YouTube source switching,
+advertisement isolation, buffering, playback-rate, autoplay recovery, and
+two-profile acceptance now live in
+`docs/superpowers/plans/2026-07-23-youtube-playback-sync-hardening.md`. Treat
+that document as the execution detail for the unfinished playback portions of
+Tasks 8–12 below. Before each task, verify its assumptions against the active
+branch and amend the plan when source reality differs; do not follow stale
+steps mechanically.
+
 ### Task 7: Add The Adapter Lifecycle Manager
+
+**Status:** Complete on 2026-07-22. The content lifecycle now has one
+deterministic adapter owner. Temporary player loss suspends playback bindings
+without unmounting `OverlayApp`, while replacement and terminal detach clean up
+the previous binding before activating or removing the next one. Final
+provider-owned page claims remain deliberately scoped to Task 11.
 
 **Files:**
 - Create: `apps/extension/src/source-adapters/core/adapter-manager.ts`
+- Create: `apps/extension/src/active-adapter-playback.ts`
 - Modify: `apps/extension/entrypoints/content.tsx`
+- Modify: `apps/extension/src/overlay-app.tsx`
+- Modify: `apps/extension/src/source-adapters/core/types.ts`
 - Test: `apps/extension/test/source-adapters/core/adapter-manager.test.ts`
 - Test: `apps/extension/test/source-adapters/content-lifecycle.test.tsx`
+- Test: `apps/extension/test/active-adapter-playback.test.tsx`
 
 **Produces:** One owner for adapter replacement and disposal:
 
@@ -637,19 +656,21 @@ export class AdapterManager {
 }
 ```
 
-- [ ] Test same instance relocation, same video/new fingerprint replacement,
+- [x] Test same instance relocation, same video/new fingerprint replacement,
   new video replacement, temporary disappearance, unsupported route detach,
   idempotent disposal, and `pagehide` cleanup. A `waiting` result suspends local
   adapter events and remote playback application while preserving the room
   shell; `blocked` detaches the overlay on an unsupported route.
-- [ ] Move listener, marker, `ResizeObserver`, fullscreen, and adapter cleanup
+- [x] Move listener, marker, `ResizeObserver`, fullscreen, and adapter cleanup
   ordering from `content.tsx` behind the manager hooks.
-- [ ] Keep room/WebSocket state inside `OverlayApp`; replacing the player must
+- [x] Keep room/WebSocket state inside `OverlayApp`; replacing the player must
   not recreate or close the room session.
-- [ ] Add a regression test that a replacement video receives adapter event
+- [x] Add a regression test that a replacement video receives adapter event
   listeners and resize observation.
-- [ ] Run lifecycle tests, extension check, and all extension tests.
-- [ ] Commit:
+- [x] Guard stale fullscreen reroutes and pending remote playback so an old
+  adapter cannot resume after suspension or replacement.
+- [x] Run lifecycle tests, extension check, and all extension tests.
+- [x] Commit:
 
 ```bash
 git add apps/extension/src/source-adapters/core/adapter-manager.ts \
@@ -657,7 +678,25 @@ git add apps/extension/src/source-adapters/core/adapter-manager.ts \
 git commit -m "fix(extension): make adapter replacement lifecycle deterministic"
 ```
 
+Automated evidence recorded on 2026-07-22:
+
+- focused lifecycle suite passed: 3 files / 15 tests;
+- extension typecheck passed;
+- full extension suite passed: 59 files / 579 tests;
+- staging extension build and artifact validation passed;
+- `pnpm dev:check` selected only the extension and docs profiles;
+- `git diff --check` passed;
+- targeted Biome lint reported no errors (two pre-existing optional-chain
+  suggestions remain outside this task).
+
 ### Task 8: Replace Provider ID Branches With Capabilities And Policies
+
+**Status:** Complete on 2026-07-23. Generic, YouTube, and Crunchyroll expose
+provider-neutral overlay binding, geometry, playback policy, phase snapshots,
+source descriptors, and navigation capabilities. Shared playback and layout
+code consumes those contracts without provider DOM or provider-ID branches.
+Detailed YouTube synchronization behavior is maintained in
+`docs/youtube-adapter-notes.md`.
 
 Detailed overlay-geometry execution plan:
 `docs/superpowers/plans/2026-07-22-provider-player-overlay-geometry.md`.
@@ -677,9 +716,9 @@ player-chrome subscriptions; it never branches on `adapter.id`.
 
 - [ ] Move overlay target, viewport element, and native-double-click decisions
   into each adapter's overlay binding.
-- [ ] Move Crunchyroll player chrome measurement behind the provider-neutral
+- [x] Move Crunchyroll player chrome measurement behind the provider-neutral
   `getOverlayGeometry()` and `subscribeOverlayGeometry()` capability.
-- [ ] Add the independent YouTube player-chrome implementation and route safe
+- [x] Add the independent YouTube player-chrome implementation and route safe
   insets, launcher anchors, and panel anchors through the same value contract.
 - [ ] Change playback helpers to receive `AdapterPlaybackPolicy`, not an
   adapter ID string.
@@ -739,6 +778,12 @@ git commit -m "refactor(extension): let providers describe watch sources"
 
 ### Task 10: Add Safe Provider Navigation And YouTube Source Switching
 
+**Execution note:** Implement this task through Task 3 of
+`2026-07-23-youtube-playback-sync-hardening.md`. That detailed task adds the
+required Worker/RoomState files, API tests, exact staging boundary, and
+cross-plane commit. Do not follow an older extension-only interpretation of
+this task.
+
 **Files:**
 - Create: `apps/extension/src/source-adapters/youtube/navigation.ts`
 - Create: `apps/extension/src/source-adapters/crunchyroll/navigation.ts`
@@ -769,16 +814,23 @@ export async function ensureRemoteSource(
   page unchanged.
 - [ ] Preserve the active room ID using the existing room hash convention and
   persisted room session; the hash is not the sole room source of truth.
-- [ ] Keep one navigation operation active. Abort an older operation when a
-  newer host source arrives.
+- [ ] Keep one pre-navigation operation active. Abort or coalesce older work
+  before dispatch when a newer host source arrives. A dispatched hard
+  navigation cannot be undone.
 - [ ] YouTube returns `already-current` for the same canonical video and uses
   `location.assign(canonicalTarget)` for a different video. Do not call
-  unsupported YouTube internal methods.
+  unsupported YouTube internal methods. Once `location.assign()` is called,
+  rely on the newest authoritative room snapshot after reload rather than
+  treating the old operation as cancellable.
 - [ ] Crunchyroll uses the existing MAIN-world `navigate` command and existing
   hard-navigation fallback.
 - [ ] While navigation is pending, hold the latest host state and do not apply
   play/seek to the previous video. Completion requires a newly detected adapter
   whose fingerprint equals the target fingerprint.
+- [ ] Treat the first valid room source as source initialization: broadcast it
+  to already connected participants, persist its generation, pin its validated
+  provider server-side, and reject later cross-provider source changes without
+  mutating room state.
 - [ ] Replace `navigateToRemoteSourceIfNeeded()` and Crunchyroll-only URL
   helpers in `overlay-app.tsx` with `ensureRemoteSource()`.
 - [ ] Test that a YouTube room rejects a Crunchyroll source and a Crunchyroll
@@ -786,12 +838,8 @@ export async function ensureRemoteSource(
   Also test that switching to another valid source within the pinned provider
   remains supported.
 - [ ] Run source-switching tests and full extension tests.
-- [ ] Commit:
-
-```bash
-git add apps/extension
-git commit -m "feat(extension): follow youtube room source changes safely"
-```
+- [ ] Verify and commit using the exact cross-plane file list and commands in
+  Task 3 Step 6 of `2026-07-23-youtube-playback-sync-hardening.md`.
 
 ### Task 11: Provider-Aware Detection Hardening
 

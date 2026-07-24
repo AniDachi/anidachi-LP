@@ -4,13 +4,28 @@ import {
 	videoDebugSnapshot,
 } from "../../debug-log";
 import { Html5VideoAdapter } from "../core/html5-video-adapter";
+import type {
+	PlayerOverlayGeometry,
+	PlayerOverlayGeometryListener,
+} from "../core/overlay-geometry";
+import { CRUNCHYROLL_PLAYBACK_POLICY } from "../core/playback-policy";
 import { normalizeVideoFingerprint } from "../core/source-url";
-import type { PlayerEvent, SeekOptions } from "../core/types";
+import type {
+	AdapterOverlayBinding,
+	PlayerEvent,
+	SeekOptions,
+} from "../core/types";
 import { runCrunchyrollMainCommand } from "./bridge-client";
+import {
+	getCrunchyrollPlayerOverlayGeometry,
+	subscribeCrunchyrollPlayerOverlayGeometry,
+} from "./player-chrome";
 
 export class CrunchyrollVideoAdapter extends Html5VideoAdapter {
 	override readonly id = "crunchyroll";
+	override readonly provider = "crunchyroll" as const;
 	override readonly name = "Crunchyroll";
+	override readonly playbackPolicy = CRUNCHYROLL_PLAYBACK_POLICY;
 
 	override getTitle(): string | null {
 		const title =
@@ -23,6 +38,24 @@ export class CrunchyrollVideoAdapter extends Html5VideoAdapter {
 
 	override getFingerprint(): string {
 		return normalizeVideoFingerprint(`crunchyroll|${getCrunchyrollVideoKey()}`);
+	}
+
+	override getOverlayGeometry(): PlayerOverlayGeometry {
+		return getCrunchyrollPlayerOverlayGeometry(this.container);
+	}
+
+	override getOverlayBinding(): AdapterOverlayBinding {
+		return {
+			mountTarget: this.container,
+			fillMountTarget: true,
+			useNativePlayerDoubleClick: true,
+		};
+	}
+
+	override subscribeOverlayGeometry(
+		listener: PlayerOverlayGeometryListener,
+	): () => void {
+		return subscribeCrunchyrollPlayerOverlayGeometry(this.container, listener);
 	}
 
 	override async play(): Promise<void> {

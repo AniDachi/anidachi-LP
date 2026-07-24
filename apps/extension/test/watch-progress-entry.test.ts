@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { getWatchProgressEntryForAdapter } from "../src/watch-progress-entry";
+import { DEFAULT_PLAYER_OVERLAY_GEOMETRY } from "../src/source-adapters/core/overlay-geometry";
+import { DEFAULT_PLAYBACK_POLICY } from "../src/source-adapters/core/playback-policy";
 import type { VideoAdapter } from "../src/source-adapters/core/types";
 
 describe("watch progress entry extraction", () => {
@@ -82,6 +84,20 @@ function fakeAdapter(input: {
     getTitle: () => input.title,
     getFingerprint: () => `${input.id}|test`,
     getCurrentTime: () => input.video.currentTime || 0,
+    getOverlayBinding: () => ({
+      fillMountTarget: true,
+      mountTarget: container,
+      useNativePlayerDoubleClick: true,
+    }),
+    getOverlayGeometry: () => DEFAULT_PLAYER_OVERLAY_GEOMETRY,
+    getPlaybackSnapshot: () => ({
+      capturedAt: Date.now(),
+      contentTime: input.video.currentTime || 0,
+      phase: "content",
+      playbackRate: 1,
+      playing: false,
+    }),
+    getSourceDescriptor: () => undefined,
     getState: () => ({
       videoFingerprint: `${input.id}|test`,
       sourceUrl: location.href,
@@ -92,12 +108,21 @@ function fakeAdapter(input: {
     }),
     play: async () => {},
     pause: () => {},
+    playbackPolicy: DEFAULT_PLAYBACK_POLICY,
     seek: () => {},
+    setPlaybackRate: () => {},
     subscribe: () => () => {},
+    subscribeOverlayGeometry: () => () => {},
     duckVolume: () => () => {},
     isFullscreen: () => false,
     enterFullscreen: async () => {},
     exitFullscreen: async () => {},
+    provider:
+      input.id === "youtube"
+        ? "youtube"
+        : input.id === "crunchyroll"
+          ? "crunchyroll"
+          : "generic",
   };
 }
 
