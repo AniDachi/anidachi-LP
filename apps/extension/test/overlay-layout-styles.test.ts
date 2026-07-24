@@ -133,14 +133,13 @@ describe("overlay layout pointer surfaces", () => {
 		const exitAction = getRule(
 			".button.primary.panel-primary-action.room-exit",
 		);
-		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.3)");
-		expect(exitAction).toContain(
-			"linear-gradient(180deg, rgba(127, 29, 29, 0.2), rgba(69, 10, 10, 0.13))",
-		);
-		expect(exitAction).toContain("inset 0 1px 0 rgba(255, 255, 255, 0.045)");
+		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.24)");
+		expect(exitAction).toContain("background: rgba(51, 35, 37, 0.88)");
+		expect(exitAction).toContain("box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025)");
+		expect(exitAction).not.toContain("linear-gradient");
 		expect(
 			getRule(".button.primary.panel-primary-action.room-exit.confirming"),
-		).toContain("border-color: rgba(248, 113, 113, 0.58)");
+		).toContain("background: rgba(88, 38, 42, 0.96)");
 	});
 
 	it("uses restrained text tabs for settings navigation", () => {
