@@ -21564,6 +21564,54 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_hyperbeam_page_site_url",
+      "label": "SITE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_hyperbeam_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_hyperbeam_page_faq",
+      "label": "faq",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_hyperbeam_page_headings",
+      "label": "headings",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L58",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_hyperbeam_page_anidachivshyperbeampage",
+      "label": "AniDachiVsHyperbeamPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L68",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_app_compare_anidachi_vs_kast_page",
       "label": "page.tsx",
       "file_type": "code",
@@ -21609,6 +21657,54 @@
       "file_type": "code",
       "source_file": "apps/web/app/compare/anidachi-vs-kast/page.tsx",
       "source_location": "L52",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_metastream_page_site_url",
+      "label": "SITE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_metastream_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_metastream_page_faq",
+      "label": "faq",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_metastream_page_headings",
+      "label": "headings",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L58",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_metastream_page_anidachivsmetastreampage",
+      "label": "AniDachiVsMetastreamPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L68",
       "_origin": "ast"
     },
     {
@@ -21889,6 +21985,54 @@
       "file_type": "code",
       "source_file": "apps/web/app/compare/anidachi-vs-teleparty/page.tsx",
       "source_location": "L62",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_twoseven_page_site_url",
+      "label": "SITE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_twoseven_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_twoseven_page_faq",
+      "label": "faq",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_twoseven_page_headings",
+      "label": "headings",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L58",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_compare_anidachi_vs_twoseven_page_anidachivstwosevenpage",
+      "label": "AniDachiVsTwosevenPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L68",
       "_origin": "ast"
     },
     {
@@ -24572,6 +24716,62 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_site_url",
+      "label": "SITE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_faq",
+      "label": "faq",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L33",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_tocheadings",
+      "label": "tocHeadings",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L55",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_howtosteps",
+      "label": "howToSteps",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L64",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_crunchyrollwatchpartywithdiscordpage",
+      "label": "CrunchyrollWatchPartyWithDiscordPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L87",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_app_guides_does_crunchyroll_have_watch_party_page",
       "label": "page.tsx",
       "file_type": "code",
@@ -24609,6 +24809,54 @@
       "file_type": "code",
       "source_file": "apps/web/app/guides/does-crunchyroll-have-watch-party/page.tsx",
       "source_location": "L66",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_site_url",
+      "label": "SITE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_faq",
+      "label": "faq",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L34",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_tocheadings",
+      "label": "tocHeadings",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L61",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_doeseveryoneneedcrunchyrollpremiumpage",
+      "label": "DoesEveryoneNeedCrunchyrollPremiumPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L70",
       "_origin": "ast"
     },
     {
@@ -25484,6 +25732,54 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_site_url",
+      "label": "SITE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L11",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_faq",
+      "label": "faq",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L38",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_tocheadings",
+      "label": "tocHeadings",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L65",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_watchcrunchyrollwithoutaccountsharingpage",
+      "label": "WatchCrunchyrollWithoutAccountSharingPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L74",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_page",
       "label": "page.tsx",
       "file_type": "code",
@@ -25577,6 +25873,102 @@
       "file_type": "code",
       "source_file": "apps/web/app/guides/how-to-watch-seasonal-anime-together/page.tsx",
       "source_location": "L86",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_site_url",
+      "label": "SITE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_faq",
+      "label": "faq",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L32",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_tocheadings",
+      "label": "tocHeadings",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L54",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_iscrunchyrollpartyworthitpage",
+      "label": "IsCrunchyrollPartyWorthItPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L63",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_kast_alternatives_for_anime_page_site_url",
+      "label": "SITE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_kast_alternatives_for_anime_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_kast_alternatives_for_anime_page_faq",
+      "label": "faq",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_kast_alternatives_for_anime_page_tocheadings",
+      "label": "tocHeadings",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L58",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_kast_alternatives_for_anime_page_kastalternativesforanimepage",
+      "label": "KastAlternativesForAnimePage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L67",
       "_origin": "ast"
     },
     {
@@ -25684,6 +26076,62 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_site_url",
+      "label": "SITE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_faq",
+      "label": "faq",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L33",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_tocheadings",
+      "label": "tocHeadings",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L60",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_howtosteps",
+      "label": "howToSteps",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L70",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_telepartynotworkingcrunchyrollpage",
+      "label": "TelepartyNotWorkingCrunchyrollPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L97",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_web_app_guides_watch_party_app_for_crunchyroll_page",
       "label": "page.tsx",
       "file_type": "code",
@@ -25705,6 +26153,54 @@
       "file_type": "code",
       "source_file": "apps/web/app/guides/watch-party-app-for-crunchyroll/page.tsx",
       "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_site_url",
+      "label": "SITE_URL",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_metadata",
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_faq",
+      "label": "faq",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_tocheadings",
+      "label": "tocHeadings",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L58",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_watch2getheralternativesforanimepage",
+      "label": "Watch2GetherAlternativesForAnimePage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L67",
       "_origin": "ast"
     },
     {
@@ -33416,7 +33912,7 @@
       "label": "getGuideLinks()",
       "file_type": "code",
       "source_file": "apps/web/lib/guide-links.ts",
-      "source_location": "L535",
+      "source_location": "L630",
       "_origin": "ast"
     },
     {
@@ -35672,7 +36168,7 @@
       "label": "discoverStaticSitemapUrlPaths()",
       "file_type": "code",
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L158",
+      "source_location": "L182",
       "_origin": "ast"
     },
     {
@@ -35680,7 +36176,7 @@
       "label": "resolvePageModuleAbsPath()",
       "file_type": "code",
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L170",
+      "source_location": "L194",
       "_origin": "ast"
     },
     {
@@ -35688,7 +36184,7 @@
       "label": "staticPathsToSitemapEntries()",
       "file_type": "code",
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L182",
+      "source_location": "L206",
       "_origin": "ast"
     },
     {
@@ -42220,27 +42716,35 @@
       "_origin": "ast"
     },
     {
-      "id": "cursor_scratchpad_high_converting_seo_batch_2026_07_19_keyword_planner_validated",
-      "label": "High-converting SEO batch (2026-07-19) — Keyword Planner validated",
+      "id": "cursor_scratchpad_high_converting_seo_batch_2_2026_07_22_keyword_planner_validated",
+      "label": "High-converting SEO batch 2 (2026-07-22) — Keyword Planner validated",
       "file_type": "document",
       "source_file": ".cursor/scratchpad.md",
       "source_location": "L579",
       "_origin": "ast"
     },
     {
-      "id": "cursor_scratchpad_executor_s_feedback_or_assistance_requests_597",
-      "label": "Executor's Feedback or Assistance Requests",
+      "id": "cursor_scratchpad_high_converting_seo_batch_2026_07_19_keyword_planner_validated",
+      "label": "High-converting SEO batch (2026-07-19) — Keyword Planner validated",
       "file_type": "document",
       "source_file": ".cursor/scratchpad.md",
       "source_location": "L597",
       "_origin": "ast"
     },
     {
-      "id": "cursor_scratchpad_lessons_605",
+      "id": "cursor_scratchpad_executor_s_feedback_or_assistance_requests_615",
+      "label": "Executor's Feedback or Assistance Requests",
+      "file_type": "document",
+      "source_file": ".cursor/scratchpad.md",
+      "source_location": "L615",
+      "_origin": "ast"
+    },
+    {
+      "id": "cursor_scratchpad_lessons_623",
       "label": "Lessons",
       "file_type": "document",
       "source_file": ".cursor/scratchpad.md",
-      "source_location": "L605",
+      "source_location": "L623",
       "_origin": "ast"
     },
     {
@@ -120741,6 +121245,191 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_components_seo_page_layout",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_components_seo_page_layout_seopagelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_components_seo_page_layout_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_components_responsive_compare_table",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_components_responsive_compare_table_responsivecomparetable",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_lib_guide_links",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_lib_site_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_lib_site_url_getresolvedsiteorigin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_compare_overview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_free_tier_table",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_app_compare_anidachi_vs_hyperbeam_page_site_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_app_compare_anidachi_vs_hyperbeam_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_app_compare_anidachi_vs_hyperbeam_page_faq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_app_compare_anidachi_vs_hyperbeam_page_headings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_app_compare_anidachi_vs_hyperbeam_page_anidachivshyperbeampage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_compare_anidachi_vs_kast_page",
       "target": "ref_next",
       "relation": "imports_from",
@@ -120853,6 +121542,191 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/compare/anidachi-vs-kast/page.tsx",
       "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_components_seo_page_layout",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_components_seo_page_layout_seopagelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_components_seo_page_layout_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_components_responsive_compare_table",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_components_responsive_compare_table_responsivecomparetable",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_lib_guide_links",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_lib_site_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_lib_site_url_getresolvedsiteorigin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_compare_overview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_free_tier_table",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_app_compare_anidachi_vs_metastream_page_site_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_app_compare_anidachi_vs_metastream_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_app_compare_anidachi_vs_metastream_page_faq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_app_compare_anidachi_vs_metastream_page_headings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_app_compare_anidachi_vs_metastream_page_anidachivsmetastreampage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -121694,6 +122568,191 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/compare/anidachi-vs-teleparty/page.tsx",
       "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_components_seo_page_layout",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_components_seo_page_layout_seopagelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_components_seo_page_layout_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_components_responsive_compare_table",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_components_responsive_compare_table_responsivecomparetable",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_lib_guide_links",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_lib_site_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_lib_site_url_getresolvedsiteorigin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_long_distance_snippet",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_free_tier_table",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_app_compare_anidachi_vs_twoseven_page_site_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_app_compare_anidachi_vs_twoseven_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_app_compare_anidachi_vs_twoseven_page_faq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_app_compare_anidachi_vs_twoseven_page_headings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_app_compare_anidachi_vs_twoseven_page_anidachivstwosevenpage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -128540,6 +129599,190 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_components_seo_page_layout",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_components_seo_page_layout_seopagelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_components_seo_page_layout_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_components_json_ld",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_components_json_ld_howtojsonld",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_lib_guide_links",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_lib_site_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_lib_site_url_getresolvedsiteorigin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_discord_compare_faq",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_site_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_faq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_tocheadings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_howtosteps",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_crunchyrollwatchpartywithdiscordpage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_guides_does_crunchyroll_have_watch_party_page",
       "target": "ref_next",
       "relation": "imports_from",
@@ -128623,6 +129866,161 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/guides/does-crunchyroll-have-watch-party/page.tsx",
       "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_components_seo_page_layout",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_components_seo_page_layout_seopagelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_components_seo_page_layout_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_lib_guide_links",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_lib_site_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_lib_site_url_getresolvedsiteorigin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_friends_need_subscription_answer",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_site_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_faq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_tocheadings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_doeseveryoneneedcrunchyrollpremiumpage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -130964,6 +132362,171 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_components_seo_page_layout",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_components_seo_page_layout_seopagelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_components_seo_page_layout_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_lib_guide_links",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_lib_site_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_lib_site_url_getresolvedsiteorigin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_friends_need_subscription_answer",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_group_onboarding",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_site_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_faq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_tocheadings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_watchcrunchyrollwithoutaccountsharingpage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_page",
       "target": "ref_next",
       "relation": "imports_from",
@@ -131241,6 +132804,346 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/guides/how-to-watch-seasonal-anime-together/page.tsx",
       "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_components_seo_page_layout",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_components_seo_page_layout_seopagelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_components_seo_page_layout_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_lib_guide_links",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_lib_site_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_lib_site_url_getresolvedsiteorigin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_compare_overview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_site_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_faq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_tocheadings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_iscrunchyrollpartyworthitpage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L63",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_components_seo_page_layout",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_components_seo_page_layout_seopagelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_components_seo_page_layout_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_components_responsive_compare_table",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_components_responsive_compare_table_responsivecomparetable",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_lib_guide_links",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_lib_site_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_lib_site_url_getresolvedsiteorigin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_compare_overview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_free_tier_table",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_app_guides_kast_alternatives_for_anime_page_site_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_app_guides_kast_alternatives_for_anime_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_app_guides_kast_alternatives_for_anime_page_faq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_app_guides_kast_alternatives_for_anime_page_tocheadings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_app_guides_kast_alternatives_for_anime_page_kastalternativesforanimepage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -131623,6 +133526,190 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_components_seo_page_layout",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_components_seo_page_layout_seopagelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_components_seo_page_layout_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_components_json_ld",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_components_json_ld_howtojsonld",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_lib_guide_links",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_lib_site_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_lib_site_url_getresolvedsiteorigin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_teleparty_compare_faq",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_site_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_faq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_tocheadings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_howtosteps",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_telepartynotworkingcrunchyrollpage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L97",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_guides_watch_party_app_for_crunchyroll_page",
       "target": "apps_web_lib_pseo_new_guides",
       "relation": "imports_from",
@@ -131668,6 +133755,191 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/guides/watch-party-app-for-crunchyroll/page.tsx",
       "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "ref_next",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_components_seo_page_layout",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_components_seo_page_layout_seopagelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_components_seo_page_layout_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_components_responsive_compare_table",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_components_responsive_compare_table_responsivecomparetable",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_lib_guide_links",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_lib_site_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_lib_site_url_getresolvedsiteorigin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_lib_pricing_copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_compare_overview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_web_lib_pricing_copy_pricing_free_tier_table",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_site_url",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_metadata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_faq",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_tocheadings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_watch2getheralternativesforanimepage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -153778,7 +156050,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/guide-links.ts",
-      "source_location": "L535",
+      "source_location": "L630",
       "weight": 1.0
     },
     {
@@ -159047,7 +161319,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L158",
+      "source_location": "L182",
       "weight": 1.0
     },
     {
@@ -159056,7 +161328,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L170",
+      "source_location": "L194",
       "weight": 1.0
     },
     {
@@ -159065,7 +161337,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L182",
+      "source_location": "L206",
       "weight": 1.0
     },
     {
@@ -159105,7 +161377,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L159",
+      "source_location": "L183",
       "weight": 1.0
     },
     {
@@ -159115,7 +161387,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L162",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
@@ -159125,7 +161397,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L187",
+      "source_location": "L211",
       "weight": 1.0
     },
     {
@@ -159135,7 +161407,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L188",
+      "source_location": "L212",
       "weight": 1.0
     },
     {
@@ -171676,7 +173948,7 @@
     },
     {
       "source": "cursor_scratchpad_survey_subscription_conversion_planner_notes",
-      "target": "cursor_scratchpad_high_converting_seo_batch_2026_07_19_keyword_planner_validated",
+      "target": "cursor_scratchpad_high_converting_seo_batch_2_2026_07_22_keyword_planner_validated",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".cursor/scratchpad.md",
@@ -171685,7 +173957,7 @@
     },
     {
       "source": "cursor_scratchpad_survey_subscription_conversion_planner_notes",
-      "target": "cursor_scratchpad_executor_s_feedback_or_assistance_requests_597",
+      "target": "cursor_scratchpad_high_converting_seo_batch_2026_07_19_keyword_planner_validated",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".cursor/scratchpad.md",
@@ -171694,11 +173966,20 @@
     },
     {
       "source": "cursor_scratchpad_survey_subscription_conversion_planner_notes",
-      "target": "cursor_scratchpad_lessons_605",
+      "target": "cursor_scratchpad_executor_s_feedback_or_assistance_requests_615",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": ".cursor/scratchpad.md",
-      "source_location": "L605",
+      "source_location": "L615",
+      "weight": 1.0
+    },
+    {
+      "source": "cursor_scratchpad_survey_subscription_conversion_planner_notes",
+      "target": "cursor_scratchpad_lessons_623",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".cursor/scratchpad.md",
+      "source_location": "L623",
       "weight": 1.0
     },
     {
@@ -179726,12 +182007,32 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page",
+      "target": "apps_web_components_table_of_contents_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_compare_anidachi_vs_kast_page",
       "target": "apps_web_components_table_of_contents_tocheading",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/compare/anidachi-vs-kast/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page",
+      "target": "apps_web_components_table_of_contents_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
       "source_location": "L3",
       "weight": 1.0
     },
@@ -179792,6 +182093,16 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/compare/anidachi-vs-teleparty/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page",
+      "target": "apps_web_components_table_of_contents_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
       "source_location": "L3",
       "weight": 1.0
     },
@@ -180216,12 +182527,32 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page",
+      "target": "apps_web_components_table_of_contents_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_guides_does_crunchyroll_have_watch_party_page",
       "target": "apps_web_components_table_of_contents_tocheading",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/guides/does-crunchyroll-have-watch-party/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page",
+      "target": "apps_web_components_table_of_contents_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
       "source_location": "L3",
       "weight": 1.0
     },
@@ -180396,6 +182727,16 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page",
+      "target": "apps_web_components_table_of_contents_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_page",
       "target": "apps_web_components_table_of_contents_tocheading",
       "relation": "imports",
@@ -180416,6 +182757,26 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page",
+      "target": "apps_web_components_table_of_contents_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page",
+      "target": "apps_web_components_table_of_contents_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_guides_rave_alternatives_for_anime_page",
       "target": "apps_web_components_table_of_contents_tocheading",
       "relation": "imports",
@@ -180432,6 +182793,26 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/web/app/guides/switch-from-discord-screen-share/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page",
+      "target": "apps_web_components_table_of_contents_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page",
+      "target": "apps_web_components_table_of_contents_tocheading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
       "source_location": "L3",
       "weight": 1.0
     },
@@ -194573,6 +196954,28 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_compare_anidachi_vs_hyperbeam_page_anidachivshyperbeampage",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/compare/anidachi-vs-hyperbeam/page.tsx",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_metastream_page_anidachivsmetastreampage",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/compare/anidachi-vs-metastream/page.tsx",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_compare_anidachi_vs_rave_page_anidachivsravepage",
       "target": "apps_web_lib_guide_links_getguidelinks",
       "relation": "calls",
@@ -194592,6 +196995,17 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/compare/anidachi-vs-teleparty/page.tsx",
       "source_location": "L63",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_compare_anidachi_vs_twoseven_page_anidachivstwosevenpage",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/compare/anidachi-vs-twoseven/page.tsx",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -194848,6 +197262,28 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_guides_crunchyroll_watch_party_with_discord_page_crunchyrollwatchpartywithdiscordpage",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/guides/crunchyroll-watch-party-with-discord/page.tsx",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_does_everyone_need_crunchyroll_premium_for_watch_party_page_doeseveryoneneedcrunchyrollpremiumpage",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/guides/does-everyone-need-crunchyroll-premium-for-watch-party/page.tsx",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_guides_does_teleparty_work_with_crunchyroll_page_doestelepartyworkwithcrunchyrollpage",
       "target": "apps_web_lib_guide_links_getguidelinks",
       "relation": "calls",
@@ -194892,6 +197328,17 @@
       "weight": 1.0
     },
     {
+      "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_without_account_sharing_page_watchcrunchyrollwithoutaccountsharingpage",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing/page.tsx",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
       "source": "apps_web_app_guides_how_to_watch_crunchyroll_with_friends_page_howtowatchwithfriendspage",
       "target": "apps_web_lib_guide_links_getguidelinks",
       "relation": "calls",
@@ -194900,6 +197347,28 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/guides/how-to-watch-crunchyroll-with-friends/page.tsx",
       "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_is_crunchyroll_party_worth_it_page_iscrunchyrollpartyworthitpage",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/guides/is-crunchyroll-party-worth-it/page.tsx",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_kast_alternatives_for_anime_page_kastalternativesforanimepage",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/guides/kast-alternatives-for-anime/page.tsx",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -194922,6 +197391,28 @@
       "confidence_score": 1.0,
       "source_file": "apps/web/app/guides/switch-from-discord-screen-share/page.tsx",
       "source_location": "L94",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_teleparty_not_working_crunchyroll_page_telepartynotworkingcrunchyrollpage",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/guides/teleparty-not-working-crunchyroll/page.tsx",
+      "source_location": "L98",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_web_app_guides_watch2gether_alternatives_for_anime_page_watch2getheralternativesforanimepage",
+      "target": "apps_web_lib_guide_links_getguidelinks",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/guides/watch2gether-alternatives-for-anime/page.tsx",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -200047,7 +202538,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/web/lib/sitemap-discovery.ts",
-      "source_location": "L164",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
