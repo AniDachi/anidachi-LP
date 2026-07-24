@@ -117,7 +117,7 @@ export default function WatchCrunchyrollTogetherPage() {
       description="The complete guide to watching Crunchyroll with friends using sync, chat, and async watchrooms."
       url="/watch-crunchyroll-together"
       datePublished="2026-04-23"
-      dateModified="2026-07-19"
+      dateModified="2026-07-22"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -298,6 +298,38 @@ export default function WatchCrunchyrollTogetherPage() {
             className="hover:underline"
           >
             How to host a Crunchyroll watch party
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/teleparty-not-working-crunchyroll"
+            className="hover:underline"
+          >
+            Teleparty not working on Crunchyroll
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/crunchyroll-watch-party-with-discord"
+            className="hover:underline"
+          >
+            Crunchyroll watch party with Discord
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/does-everyone-need-crunchyroll-premium-for-watch-party"
+            className="hover:underline"
+          >
+            Does everyone need Crunchyroll Premium?
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing"
+            className="hover:underline"
+          >
+            Watch without account sharing
           </Link>
         </li>
         <li>

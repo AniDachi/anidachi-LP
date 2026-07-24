@@ -76,7 +76,7 @@ export default function AniDachiVsTelepartyPage() {
       description="Side-by-side comparison for anime watch parties."
       url="/compare/anidachi-vs-teleparty"
       datePublished="2026-04-23"
-      dateModified="2026-07-19"
+      dateModified="2026-07-22"
       faq={faq}
       headings={headings}
     >
@@ -238,6 +238,14 @@ export default function AniDachiVsTelepartyPage() {
             className="hover:underline"
           >
             Best Teleparty alternatives for anime
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/teleparty-not-working-crunchyroll"
+            className="hover:underline"
+          >
+            Teleparty not working on Crunchyroll
           </Link>
         </li>
         <li><Link href="/best-apps-watch-anime-together-long-distance" className="hover:underline">Best Apps for Watching Anime Together Long Distance</Link></li>

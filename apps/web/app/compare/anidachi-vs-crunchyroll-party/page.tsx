@@ -73,7 +73,7 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       description="Side-by-side comparison for Crunchyroll watch parties."
       url="/compare/anidachi-vs-crunchyroll-party"
       datePublished="2026-05-11"
-      dateModified="2026-07-19"
+      dateModified="2026-07-22"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
@@ -199,6 +199,14 @@ export default function AniDachiVsCrunchyrollPartyPage() {
         Related
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link
+            href="/guides/is-crunchyroll-party-worth-it"
+            className="hover:underline"
+          >
+            Is Crunchyroll Party worth it?
+          </Link>
+        </li>
         <li>
           <Link
             href="/guides/crunchyroll-party-alternative"

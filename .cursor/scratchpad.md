@@ -576,6 +576,24 @@ The survey should do more than “collect answers” — it should:
 3. Submit `https://www.anidachi.app/force-index-sitemap.xml` in Google Search Console → Sitemaps.
 4. After pages are Indexed: delete force-index route + URL list + second robots sitemap entry (cleanup PR).
 
+### High-converting SEO batch 2 (2026-07-22) — Keyword Planner validated
+
+**Shipped (10 new routes):**
+1. `/guides/teleparty-not-working-crunchyroll`
+2. `/guides/does-everyone-need-crunchyroll-premium-for-watch-party`
+3. `/compare/anidachi-vs-metastream`
+4. `/compare/anidachi-vs-hyperbeam`
+5. `/guides/watch2gether-alternatives-for-anime`
+6. `/guides/crunchyroll-watch-party-with-discord`
+7. `/guides/is-crunchyroll-party-worth-it`
+8. `/compare/anidachi-vs-twoseven`
+9. `/guides/kast-alternatives-for-anime`
+10. `/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing`
+
+**Also:** guide-links.ts, sitemap priority bumps, hub backlinks on Teleparty/Watch2Gether/Kast/CR Party/Discord compares, CR pillar, toolkit.
+
+**Checks:** `pnpm --filter @anidachi/web check` ✅ · `pnpm --filter @anidachi/web build` ✅
+
 ### High-converting SEO batch (2026-07-19) — Keyword Planner validated
 
 **Shipped (10 new routes):**
