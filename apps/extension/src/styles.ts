@@ -496,21 +496,21 @@ export const overlayStyles = `
   .button.primary.panel-primary-action.room-exit {
     border-color: rgba(248, 113, 113, 0.24);
     background: rgba(51, 35, 37, 0.88);
-    color: rgba(254, 226, 226, 0.88);
+    color: rgba(255, 255, 255, 0.9);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
   }
 
   .button.primary.panel-primary-action.room-exit:not(:disabled):hover {
     border-color: rgba(248, 113, 113, 0.38);
     background: rgba(67, 39, 42, 0.94);
-    color: rgba(254, 226, 226, 0.98);
+    color: rgba(255, 255, 255, 0.98);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   }
 
   .button.primary.panel-primary-action.room-exit.confirming {
     border-color: rgba(248, 113, 113, 0.52);
     background: rgba(88, 38, 42, 0.96);
-    color: rgba(254, 226, 226, 0.98);
+    color: rgba(255, 255, 255, 0.98);
     box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.08);
   }
 

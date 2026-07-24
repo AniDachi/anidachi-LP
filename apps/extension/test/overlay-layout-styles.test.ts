@@ -135,6 +135,7 @@ describe("overlay layout pointer surfaces", () => {
 		);
 		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.24)");
 		expect(exitAction).toContain("background: rgba(51, 35, 37, 0.88)");
+		expect(exitAction).toContain("color: rgba(255, 255, 255, 0.9)");
 		expect(exitAction).toContain("box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025)");
 		expect(exitAction).not.toContain("linear-gradient");
 		expect(
