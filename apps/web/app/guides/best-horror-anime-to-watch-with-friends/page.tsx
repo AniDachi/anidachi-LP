@@ -96,7 +96,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         {
           name: "Best horror anime to watch with friends",
           url: "/guides/best-horror-anime-to-watch-with-friends",

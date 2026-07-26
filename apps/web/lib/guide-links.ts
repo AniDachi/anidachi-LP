@@ -608,7 +608,71 @@ export const guideLinks: GuideLinkItem[] = [
 	{
 		href: "/watch-youtube-together-long-distance",
 		label: "How to Watch YouTube Together Long Distance",
-		tags: ["how-to-core", "long-distance", "online"],
+		tags: [
+			"how-to-core",
+			"long-distance",
+			"online",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+		],
+	},
+	{
+		href: "/watch-youtube-together",
+		label: "YouTube Watch Party — Watch YouTube Together",
+		tags: ["youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
+		href: "/guides/how-to-watch-youtube-with-friends",
+		label: "How to Watch YouTube With Friends",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+		],
+	},
+	{
+		href: "/guides/netflix-party-for-youtube",
+		label: "Netflix Party for YouTube",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
+		href: "/guides/does-teleparty-work-with-youtube",
+		label: "Does Teleparty Work With YouTube?",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
+		href: "/guides/youtube-watch-party-chrome-extension",
+		label: "YouTube Watch Party Chrome Extension",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
+		href: "/guides/watch2gether-alternatives-for-youtube",
+		label: "Watch2Gether Alternatives for YouTube",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
+		href: "/guides/youtube-watch-party-with-discord",
+		label: "YouTube Watch Party With Discord",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
+		href: "/guides/best-apps-to-watch-youtube-together",
+		label: "Best Apps to Watch YouTube Together",
+		tags: [
+			"template-c",
+			"listicle",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+		],
+	},
+	{
+		href: "/compare/anidachi-vs-watch2gether",
+		label: "AniDachi vs Watch2Gether",
+		tags: ["compare", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
 	{
 		href: "/watch-movies-together-long-distance",

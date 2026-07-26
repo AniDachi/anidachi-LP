@@ -41,7 +41,7 @@ export default function AnimeWatchPartyIdeasPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Watch Party Ideas", url: "/guides/anime-watch-party-ideas" },
       ]}
       title="Anime Watch Party Ideas"

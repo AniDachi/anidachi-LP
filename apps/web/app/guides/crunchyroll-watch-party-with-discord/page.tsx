@@ -101,7 +101,7 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
           {
             name: "Crunchyroll watch party with Discord",
             url: "/guides/crunchyroll-watch-party-with-discord",

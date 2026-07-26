@@ -81,7 +81,7 @@ export default function BestRomanceAnimeWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Best romance anime to watch with friends", url: "/guides/best-romance-anime-to-watch-with-friends" },
       ]}
       title="Best romance anime to watch with friends in 2026"

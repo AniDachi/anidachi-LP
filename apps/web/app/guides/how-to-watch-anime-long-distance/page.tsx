@@ -98,7 +98,7 @@ export default function HowToWatchAnimeLongDistancePage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "How to Watch Anime Long Distance",
             url: "/guides/how-to-watch-anime-long-distance",

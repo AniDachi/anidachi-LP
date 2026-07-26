@@ -117,7 +117,7 @@ export default function WatchCrunchyrollTogetherPage() {
       description="The complete guide to watching Crunchyroll with friends using sync, chat, and async watchrooms."
       url="/watch-crunchyroll-together"
       datePublished="2026-04-23"
-      dateModified="2026-07-22"
+      dateModified="2026-07-25"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -284,6 +284,16 @@ export default function WatchCrunchyrollTogetherPage() {
         Related Guides
       </h2>
       <ul className="space-y-2 text-brand-orange">
+        <li>
+          <Link href="/watch-anime-together" className="hover:underline">
+            Watch Anime Together (vertical hub)
+          </Link>
+        </li>
+        <li>
+          <Link href="/watch-youtube-together" className="hover:underline">
+            YouTube Watch Party (sibling platform)
+          </Link>
+        </li>
         <li>
           <Link
             href="/guides/best-way-to-watch-crunchyroll-with-friends"

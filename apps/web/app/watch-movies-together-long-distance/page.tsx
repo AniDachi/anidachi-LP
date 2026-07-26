@@ -206,8 +206,9 @@ export default function WatchMoviesTogetherLongDistancePage() {
       </p>
       <p className="text-foreground/80 leading-relaxed mb-8">
         AniDachi does not support Netflix, Disney+, or other general
-        streaming platforms. It is Crunchyroll-only and is the right tool
-        when your primary shared content is anime.{" "}
+        streaming platforms. It supports Crunchyroll and YouTube watchrooms
+        and is the right tool when your primary shared content is anime or
+        YouTube.{" "}
         <Link href="/timezone-friendly-anime-watch-parties" className="text-brand-orange hover:underline">
           Learn how async anime watching works across time zones.
         </Link>

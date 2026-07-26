@@ -76,7 +76,7 @@ export default function CrunchyrollPartyAlternativePage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-crunchyroll-together" },
+        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
         {
           name: "Crunchyroll Party alternative",
           url: "/guides/crunchyroll-party-alternative",

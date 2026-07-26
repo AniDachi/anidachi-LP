@@ -50,7 +50,7 @@ export default function AsyncVsLivePage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Async vs Live Watch Party", url: "/guides/asynchronous-vs-live-watch-party" },
       ]}
       title="Asynchronous vs Live Anime Watch Parties"

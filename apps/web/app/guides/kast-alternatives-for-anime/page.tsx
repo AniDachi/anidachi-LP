@@ -75,7 +75,7 @@ export default function KastAlternativesForAnimePage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         {
           name: "Kast alternatives for anime",
           url: "/guides/kast-alternatives-for-anime",

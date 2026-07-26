@@ -90,7 +90,7 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "How to Watch Anime With Friends in Different Time Zones",
             url: "/guides/how-to-watch-anime-with-friends-in-different-time-zones",

@@ -129,7 +129,7 @@ export default function FirstAnimeWatchPartyChecklistPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "First Anime Watch Party Checklist",
             url: "/guides/first-anime-watch-party-checklist",

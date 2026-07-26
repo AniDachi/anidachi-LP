@@ -86,7 +86,7 @@ export default function HowToSyncCrunchyrollWithFriendsPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
           {
             name: "How to sync Crunchyroll with friends",
             url: "/guides/how-to-sync-crunchyroll-with-friends",

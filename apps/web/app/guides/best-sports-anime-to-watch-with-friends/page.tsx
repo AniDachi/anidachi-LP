@@ -70,7 +70,7 @@ export default function BestSportsAnimeToWatchWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         {
           name: "Best sports anime to watch with friends",
           url: "/guides/best-sports-anime-to-watch-with-friends",

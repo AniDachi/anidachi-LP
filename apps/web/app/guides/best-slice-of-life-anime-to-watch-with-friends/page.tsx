@@ -96,7 +96,7 @@ export default function BestSliceOfLifeAnimeWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         {
           name: "Best slice of life anime to watch with friends",
           url: "/guides/best-slice-of-life-anime-to-watch-with-friends",

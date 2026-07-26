@@ -86,7 +86,7 @@ export default function BestAnimeOnCrunchyrollWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Best anime on Crunchyroll with friends", url: "/guides/best-anime-to-watch-on-crunchyroll-with-friends" },
       ]}
       title="Best anime to watch on Crunchyroll with friends in 2026"

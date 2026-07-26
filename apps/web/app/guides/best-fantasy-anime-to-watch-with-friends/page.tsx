@@ -63,7 +63,7 @@ export default function BestFantasyAnimeToWatchWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Best fantasy anime to watch with friends", url: "/guides/best-fantasy-anime-to-watch-with-friends" },
       ]}
       title="16 best fantasy anime to watch with friends in 2026"

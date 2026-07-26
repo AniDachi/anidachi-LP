@@ -107,7 +107,7 @@ export default function SwitchFromDiscordScreenSharePage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "Switch from Discord screen share",
             url: "/guides/switch-from-discord-screen-share",

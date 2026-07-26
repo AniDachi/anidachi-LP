@@ -117,7 +117,7 @@ export default function AniDachiVsNetflixWatchPartyPage() {
         ]}
         rows={[
           { feature: "Crunchyroll support", values: { anidachi: "yes", netflix: "No" } },
-          { feature: "Netflix support", values: { anidachi: "No (Crunchyroll only)", netflix: "yes" } },
+          { feature: "Netflix support", values: { anidachi: "No — CR & YouTube only", netflix: "yes" } },
           { feature: "Asynchronous watching", values: { anidachi: "yes", netflix: "no" } },
           { feature: "Live synchronized playback", values: { anidachi: "yes", netflix: "yes" } },
           { feature: "Per-user episode progress", values: { anidachi: "yes", netflix: "no" } },

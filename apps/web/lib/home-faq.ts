@@ -45,7 +45,7 @@ export const homeFAQ = [
   {
     question: "What anime streaming services does AniDachi support?",
     answer:
-      "AniDachi currently supports Crunchyroll through its Chrome extension. Support for additional platforms is on the roadmap.",
+      "AniDachi’s Chrome extension supports full watchrooms on Crunchyroll and YouTube — synced playback, chat, and async catch-up on each person’s own stream. Shorts, embeds, and homepage feeds are not supported. Netflix, Disney+, and other services are not supported yet.",
   },
   {
     question: "Does AniDachi work on mobile?",

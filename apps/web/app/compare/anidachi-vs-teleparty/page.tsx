@@ -123,9 +123,10 @@ export default function AniDachiVsTelepartyPage() {
         ]}
         rows={[
           { feature: "Crunchyroll support", values: { anidachi: "yes", teleparty: "yes" } },
+          { feature: "YouTube support", values: { anidachi: "yes", teleparty: "yes" } },
           {
             feature: "Netflix / Disney+ / HBO",
-            values: { anidachi: "No (Crunchyroll only)", teleparty: "yes" },
+            values: { anidachi: "No — CR & YouTube only", teleparty: "yes" },
           },
           {
             feature: "Asynchronous watching",

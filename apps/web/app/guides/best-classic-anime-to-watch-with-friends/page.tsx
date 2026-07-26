@@ -85,7 +85,7 @@ export default function BestClassicAnimeWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         {
           name: "Best classic anime to watch with friends",
           url: "/guides/best-classic-anime-to-watch-with-friends",

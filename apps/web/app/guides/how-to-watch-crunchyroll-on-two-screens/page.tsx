@@ -86,7 +86,7 @@ export default function HowToWatchCrunchyrollOnTwoScreensPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
           {
             name: "How to watch Crunchyroll on two screens",
             url: "/guides/how-to-watch-crunchyroll-on-two-screens",

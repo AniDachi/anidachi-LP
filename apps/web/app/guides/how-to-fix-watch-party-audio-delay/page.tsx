@@ -83,7 +83,7 @@ export default function HowToFixWatchPartyAudioDelayPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "Fix watch party audio delay",
             url: "/guides/how-to-fix-watch-party-audio-delay",

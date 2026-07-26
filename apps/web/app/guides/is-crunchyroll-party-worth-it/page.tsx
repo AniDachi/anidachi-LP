@@ -71,7 +71,7 @@ export default function IsCrunchyrollPartyWorthItPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
         {
           name: "Is Crunchyroll Party worth it?",
           url: "/guides/is-crunchyroll-party-worth-it",

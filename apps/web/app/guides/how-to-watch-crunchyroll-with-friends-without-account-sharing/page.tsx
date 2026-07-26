@@ -83,7 +83,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
         {
           name: "Watch Crunchyroll without account sharing",
           url: "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing",

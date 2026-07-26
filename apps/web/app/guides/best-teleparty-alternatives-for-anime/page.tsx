@@ -75,7 +75,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
         {
           name: "Best Teleparty alternatives for anime",
           url: "/guides/best-teleparty-alternatives-for-anime",

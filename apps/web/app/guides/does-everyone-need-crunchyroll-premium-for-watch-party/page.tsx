@@ -78,7 +78,7 @@ export default function DoesEveryoneNeedCrunchyrollPremiumPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
         {
           name: "Does everyone need Crunchyroll Premium?",
           url: "/guides/does-everyone-need-crunchyroll-premium-for-watch-party",

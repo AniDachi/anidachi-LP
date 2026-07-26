@@ -66,12 +66,13 @@ const faq = [
   {
     question: "Do I need a Crunchyroll account to use AniDachi?",
     answer:
-      "Yes, each person needs their own Crunchyroll account to stream the anime. AniDachi provides the watchroom, sync, and chat layer on top.",
+      "For anime on Crunchyroll, yes — each person needs their own Crunchyroll account to stream. For YouTube watchrooms, each person uses their own YouTube session instead. AniDachi provides the watchroom, sync, and chat layer on top of whichever platform you’re watching.",
   },
 ];
 
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
+  { id: "platform-hubs", label: "Platform hubs", level: 2 },
   { id: "why-watch", label: "Why watch anime together?", level: 2 },
   { id: "watch-party", label: "Anime watch party options", level: 2 },
   { id: "methods-heading", label: "Methods", level: 2 },
@@ -102,7 +103,7 @@ export default function WatchAnimeTogetherPage() {
       description="Watch anime with friends online — live sync, async, or long-distance. Free and paid options compared."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-07-02"
+      dateModified="2026-07-25"
       faq={faq}
       headings={tocHeadings}
       itemList={genreHubItemList(1)}
@@ -131,12 +132,48 @@ export default function WatchAnimeTogetherPage() {
 
       <p className="text-foreground/80 mb-8">
         Ready to try the Crunchyroll-first option?{" "}
-        <Link href="/#pricing" className="text-brand-orange font-medium hover:underline">
+        <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
           See AniDachi pricing — Free limited hosting, Plus unlimited
         </Link>{" "}
         — early-access pricing with a clear refund path, then create your first
         watchroom in minutes.
       </p>
+
+      <h2
+        id="platform-hubs"
+        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
+      >
+        Platform hubs
+      </h2>
+      <p className="text-foreground/80 leading-relaxed mb-4">
+        Anime series nights belong on{" "}
+        <strong>Crunchyroll</strong>. YouTube is a separate co-watch use case
+        (videos, essays, music) — not where most groups stream anime catalog
+        titles.
+      </p>
+      <ul className="space-y-3 text-foreground/80 mb-8">
+        <li>
+          <Link
+            href="/watch-crunchyroll-together"
+            className="text-brand-orange font-semibold hover:underline"
+          >
+            Crunchyroll Watch Party
+          </Link>
+          {" — "}
+          primary hub for synced and async anime watchrooms on Crunchyroll.
+        </li>
+        <li>
+          <Link
+            href="/watch-youtube-together"
+            className="text-brand-orange hover:underline"
+          >
+            YouTube Watch Party
+          </Link>
+          {" — "}
+          also host YouTube nights in AniDachi (same extension; different intent
+          cluster).
+        </li>
+      </ul>
 
       <h2
         id="why-watch"
@@ -356,8 +393,9 @@ export default function WatchAnimeTogetherPage() {
       </h2>
       <ul className="space-y-2 text-brand-orange">
         <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll Together</Link></li>
+        <li><Link href="/watch-youtube-together" className="hover:underline">YouTube Watch Party</Link></li>
         <li>
-          <Link href="/#pricing" className="hover:underline">
+          <Link href="/pricing" className="hover:underline">
             See pricing — Free to join, Plus from $7.99/mo to host
           </Link>
         </li>

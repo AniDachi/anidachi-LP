@@ -12,13 +12,13 @@ const steps = [
     icon: Chrome,
     title: "Install the Chrome Extension",
     description:
-      "Add AniDachi to Chrome in seconds — works with your existing Crunchyroll account.",
+      "Add AniDachi to Chrome in seconds — works with your Crunchyroll or YouTube session.",
   },
   {
     icon: Search,
-    title: "Detect Anime Automatically",
+    title: "Detect What You’re Watching",
     description:
-      "Open any title on Crunchyroll and AniDachi identifies the show, season, and episode.",
+      "Open a Crunchyroll anime or a YouTube video and AniDachi identifies the title and episode (or video) for the room.",
   },
   {
     icon: Users,
@@ -38,7 +38,7 @@ const extensionHighlights = [
   {
     icon: Chrome,
     title: "Auto detection",
-    description: "Finds anime on Crunchyroll — no URL pasting.",
+    description: "Finds Crunchyroll anime or YouTube videos — no URL pasting.",
   },
   {
     icon: MousePointer,

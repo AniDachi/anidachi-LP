@@ -101,7 +101,7 @@ export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: n
             <span className="text-brand-orange">Fix that.</span>
           </h1>
           <p className="mx-auto mb-6 max-w-2xl text-lg text-foreground/70 md:text-xl">
-            Watch anime with friends on Crunchyroll — synced, in chat, across
+            Watch together on Crunchyroll and YouTube — synced, in chat, across
             time zones.
           </p>
           <p className="mx-auto mb-6 max-w-xl text-sm text-foreground/45 md:hidden">
@@ -153,7 +153,7 @@ export function Hero({ waitlistCount: initialWaitlistCount }: { waitlistCount: n
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-foreground/50">
             <span className="inline-flex items-center gap-1.5">
               <Users className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
-              Crunchyroll
+              Crunchyroll & YouTube
             </span>
             <span className="text-brand-border/80" aria-hidden="true">
               ·

@@ -69,7 +69,7 @@ export default function BestAnimeToWatchAsynchronouslyPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Best anime to watch asynchronously", url: "/guides/best-anime-to-watch-asynchronously" },
       ]}
       title="16 best anime to watch asynchronously with friends in 2026"
