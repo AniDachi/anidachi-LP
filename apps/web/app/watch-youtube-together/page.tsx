@@ -116,20 +116,28 @@ export default function WatchYoutubeTogetherPage() {
       label: "How to watch YouTube with friends",
     },
     {
-      href: "/guides/netflix-party-for-youtube",
-      label: "Netflix Party for YouTube",
+      href: "/guides/does-youtube-have-watch-party",
+      label: "Does YouTube have a watch party?",
     },
     {
-      href: "/guides/does-teleparty-work-with-youtube",
-      label: "Does Teleparty work with YouTube?",
+      href: "/guides/youtube-group-watch",
+      label: "YouTube group watch",
     },
     {
-      href: "/guides/youtube-watch-party-chrome-extension",
-      label: "YouTube watch party Chrome extension",
+      href: "/guides/how-to-host-a-youtube-watch-party",
+      label: "How to host a YouTube watch party",
     },
     {
-      href: "/guides/youtube-watch-party-with-discord",
-      label: "YouTube watch party with Discord",
+      href: "/guides/best-teleparty-alternatives-for-youtube",
+      label: "Best Teleparty alternatives for YouTube",
+    },
+    {
+      href: "/guides/can-you-screen-share-youtube-on-discord",
+      label: "Screen share YouTube on Discord?",
+    },
+    {
+      href: "/guides/youtube-watch-party-free",
+      label: "YouTube watch party free options",
     },
     {
       href: "/watch-youtube-together-long-distance",
@@ -164,7 +172,7 @@ export default function WatchYoutubeTogetherPage() {
         description="The complete guide to YouTube watch parties: sync, chat, async, and every alternative compared."
         url="/watch-youtube-together"
         datePublished="2026-07-25"
-        dateModified="2026-07-25"
+        dateModified="2026-07-26"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

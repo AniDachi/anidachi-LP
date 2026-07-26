@@ -640,6 +640,28 @@ The survey should do more than “collect answers” — it should:
 
 **No URL renames / no 301s.**
 
+### YouTube SEO batch 2 — 10 KP-validated guides (2026-07-26)
+
+**Status:** Implementation complete — awaiting manual QA.
+
+**Keyword Planner (US) reconfirmed:**
+| URL | Primary term | Searches/mo |
+|-----|--------------|-------------|
+| `/guides/does-youtube-have-watch-party` | does youtube have watch party | 20 |
+| `/guides/can-you-screen-share-youtube-on-discord` | can you screen share youtube on discord | 40 |
+| `/guides/rave-alternatives-for-youtube` | rave youtube | 70 |
+| `/guides/youtube-group-watch` | youtube group watch | 40 |
+| `/guides/how-to-host-a-youtube-watch-party` | how to host a youtube watch party | 10 |
+| `/guides/how-to-sync-youtube-with-friends` | sync youtube with friends | 10 |
+| `/guides/best-teleparty-alternatives-for-youtube` | teleparty youtube (parent) | 110 |
+| `/guides/how-to-watch-youtube-together-without-screen-share` | related Discord SS | 40 |
+| `/guides/kast-alternatives-for-youtube` | kast youtube | 10 |
+| `/guides/youtube-watch-party-free` | youtube watch party free | 10 |
+
+**Wiring:** `guide-links.ts` (+10); pillar `/watch-youtube-together` related + dateModified; soft link from `does-teleparty-work-with-youtube`. Footer unchanged (pillar-only YouTube entry).
+
+**Checks:** `pnpm --filter @anidachi/web check` ✅ · `pnpm --filter @anidachi/web build` ✅
+
 ### Hero extension demo overlay restyle (2026-07-26)
 
 **Status:** Implementation complete — awaiting manual QA.
@@ -654,7 +676,8 @@ The survey should do more than “collect answers” — it should:
 
 ### Executor's Feedback or Assistance Requests
 
-- **Manual QA (hero Live demo):** On homepage “See It In Action”, confirm Live sequence shows new panel chrome, green sync, chat/composer/rail peeks, cams with speaking ring; Async tab still works; check mobile width.
+- **Manual QA (YouTube batch 2):** Spot-check `/guides/does-youtube-have-watch-party`, `/guides/rave-alternatives-for-youtube`, `/guides/best-teleparty-alternatives-for-youtube`, `/guides/can-you-screen-share-youtube-on-discord` — breadcrumbs under YouTube pillar (no Anime parent), FAQ, CTA → `/pricing`, related links.
+- **Manual QA (hero Live demo):** On homepage “See It In Action”, confirm Live sequence shows new panel chrome, green sync, chat/composer, cams with speaking ring (no duplicate rail); Async tab still works; check mobile width.
 - **Manual QA:** Open http://localhost:3003 — confirm Watch dropdown shows three siblings; check breadcrumbs on `/watch-youtube-together`, `/watch-crunchyroll-together`, `/guides/how-to-watch-youtube-with-friends`, `/guides/does-teleparty-work-with-crunchyroll`.
 - **Manual QA (Watch IA siblings):** Confirm Watch dropdown = Anime / CR / YouTube (peers). Breadcrumbs: peers (`Home → CR/YT → page`); tablet has no hamburger overlap; YT related list not polluted by anime tags.
 - **Manual QA (YouTube batch):** spot-check `/watch-youtube-together`, `/guides/how-to-watch-youtube-with-friends`, `/guides/does-teleparty-work-with-youtube`, rewritten `/watch-youtube-together-long-distance` — layout, FAQ, CTA → `/pricing`, no CR-only contradictions on home.
