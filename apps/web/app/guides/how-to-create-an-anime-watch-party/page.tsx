@@ -56,7 +56,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Download the extension from the Chrome Web Store on the host machine.",
+    text: "Open /pricing for early access and install the AniDachi Chrome extension on the host machine.",
   },
   {
     name: "Detect the anime",
@@ -142,15 +142,11 @@ export default function HowToCreateAnimeWatchPartyPage() {
             Crunchyroll Help
           </a>{" "}
           links with first-timers so they fix subscription issues before the
-          countdown. Ask guests to install via the official{" "}
-          <a
-            href="https://chromewebstore.google.com/"
-            className="text-brand-orange hover:underline"
-            rel="noopener noreferrer"
-          >
-            Chrome Web Store
-          </a>{" "}
-          page so everyone runs compatible builds.
+          countdown. Ask guests to install via{" "}
+          <Link href="/pricing" className="text-brand-orange hover:underline">
+            AniDachi pricing / early access
+          </Link>{" "}
+          so everyone runs compatible builds during soft launch.
         </p>
 
         <h2

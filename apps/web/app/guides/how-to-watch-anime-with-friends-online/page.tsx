@@ -52,7 +52,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Install AniDachi",
-    text: "Add AniDachi from the Chrome Web Store and pin the extension for quick access.",
+    text: "Open /pricing for early access, install AniDachi, and pin the extension for quick access.",
   },
   {
     name: "Open Crunchyroll",
@@ -138,16 +138,11 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
             Crunchyroll account
           </a>{" "}
           in full quality instead of compressing video through a single screen
-          share. For installation, use the{" "}
-          <a
-            href="https://chromewebstore.google.com/"
-            className="text-brand-orange hover:underline"
-            rel="noopener noreferrer"
-          >
-            Chrome Web Store
-          </a>{" "}
-          listing for AniDachi and confirm permissions before you invite the
-          group.
+          share. For installation, start at{" "}
+          <Link href="/pricing" className="text-brand-orange hover:underline">
+            AniDachi pricing / early access
+          </Link>{" "}
+          and confirm permissions before you invite the group.
         </p>
 
         <h2
@@ -184,7 +179,7 @@ export default function HowToWatchAnimeWithFriendsOnlinePage() {
           Step-by-step with AniDachi
         </h2>
         <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          <li>Install AniDachi from the Chrome Web Store and pin the extension.</li>
+          <li>Install AniDachi from pricing / early access (/pricing) and pin the extension.</li>
           <li>Open Crunchyroll and sign in with the account you use for anime.</li>
           <li>Load the episode your group agreed to watch.</li>
           <li>Click detect in AniDachi so the room maps to the correct series.</li>

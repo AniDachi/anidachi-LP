@@ -36,7 +36,7 @@ const faq = [
   {
     question: "Is AniDachi only for Crunchyroll?",
     answer:
-      "Yes. AniDachi is Crunchyroll-first. That focus enables anime detection, watchroom workflows, and progress tracking built around Crunchyroll viewing.",
+      "No. AniDachi supports full watchrooms on Crunchyroll and YouTube. Crunchyroll stays the focus for anime clubs (detection, episode progress); YouTube covers full youtube.com/watch nights. Netflix, Disney+, and similar services are not supported.",
   },
 ];
 

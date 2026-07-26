@@ -37,7 +37,7 @@ const faq = [
   {
     question: "Does Teleparty work with Crunchyroll in 2026?",
     answer:
-      "Teleparty does support Crunchyroll, but compatibility can vary by update. AniDachi is purpose-built for Crunchyroll and is more reliable for group Crunchyroll sessions. It also adds async watching, which Teleparty does not offer.",
+      "Teleparty does support Crunchyroll, but compatibility can vary by update. AniDachi is built for Crunchyroll anime groups (async, detection, progress) and also supports YouTube watchrooms — Teleparty stays live-only multi-platform. For Crunchyroll nights, AniDachi is usually more reliable and adds async watching Teleparty does not offer.",
   },
   {
     question: "Can you watch Crunchyroll together with friends?",
@@ -52,7 +52,7 @@ const faq = [
   {
     question: "Can you Teleparty Crunchyroll — is there a Teleparty for Crunchyroll?",
     answer:
-      "Teleparty (formerly Netflix Party) supports Crunchyroll as one of its platforms. However, Teleparty is primarily built for Netflix and Disney+. AniDachi is the watch party tool built specifically for Crunchyroll, with deeper anime-specific features including async watching and episode progress tracking.",
+      "Teleparty (formerly Netflix Party) supports Crunchyroll as one of its platforms. However, Teleparty is primarily built for Netflix and Disney+. AniDachi is the watch party tool focused on Crunchyroll anime workflows (async, detection, progress) and also supports YouTube — Teleparty remains live-only across more streaming brands.",
   },
   {
     question: "Is there a free way to watch Crunchyroll together?",
@@ -88,7 +88,7 @@ const tocHeadings: TocHeading[] = [
 ];
 
 const howToSteps = [
-  { name: "Install AniDachi", text: "Add the AniDachi Chrome extension from the Chrome Web Store. Takes seconds." },
+  { name: "Get AniDachi", text: "Open /pricing for early access and install the AniDachi Chrome extension. Takes seconds." },
   { name: "Navigate to any Crunchyroll anime", text: "Open any episode on Crunchyroll and click 'Detect Anime' in the AniDachi toolbar." },
   { name: "Create a watchroom", text: "Click 'Create Room' in AniDachi. The room is linked to the detected anime and episode." },
   { name: "Share the invite link", text: "Copy the invite link and share it with friends via Discord, text, or email." },
@@ -97,7 +97,7 @@ const howToSteps = [
 
 export default function WatchCrunchyrollTogetherPage() {
   const relatedGuideLinks = getGuideLinks({
-    includeTags: ["pillar-watch-crunchyroll", "how-to-core", "time-zones"],
+    includeTags: ["pillar-watch-crunchyroll"],
     limit: 7,
   });
 
@@ -117,7 +117,7 @@ export default function WatchCrunchyrollTogetherPage() {
       description="The complete guide to watching Crunchyroll with friends using sync, chat, and async watchrooms."
       url="/watch-crunchyroll-together"
       datePublished="2026-04-23"
-      dateModified="2026-07-25"
+      dateModified="2026-07-26"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -166,7 +166,11 @@ export default function WatchCrunchyrollTogetherPage() {
       <ol className="space-y-4 text-foreground/80 mb-8">
         <li className="flex gap-3">
           <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-orange/15 text-brand-orange text-sm font-bold flex items-center justify-center">1</span>
-          <span><strong>Install the AniDachi Chrome extension</strong> from the Chrome Web Store. It takes seconds.</span>
+          <span><strong>Install the AniDachi Chrome extension</strong> from{" "}
+          <Link href="/pricing" className="text-brand-orange hover:underline">
+            AniDachi pricing / early access
+          </Link>
+          . It takes seconds.</span>
         </li>
         <li className="flex gap-3">
           <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-orange/15 text-brand-orange text-sm font-bold flex items-center justify-center">2</span>

@@ -7,7 +7,7 @@ You work exclusively on **public marketing and SEO surfaces** for the AniDachi N
 
 ## Hard boundaries
 
-- **Platforms (locked):** AniDachi Chrome extension supports **full watchrooms on Crunchyroll and YouTube** (provider-pinned rooms). Soft-pedal only unsupported surfaces: Shorts, embeds, homepage feeds, native mobile app. Do **not** invent Netflix/Disney/Hulu support.
+- **Platforms (locked):** AniDachi Chrome extension supports **full watchrooms on Crunchyroll and YouTube** (rooms are pinned to one provider per session). **Published product limits** (use this wording, never agent jargon): Crunchyroll catalog pages in desktop Chrome; full `youtube.com/watch` pages in desktop Chrome — **not** YouTube Shorts, embeds, homepage feeds, or the native mobile apps. Do **not** invent Netflix/Disney/Hulu support. **Never** publish the words `soft-pedal` or unexplained `provider-pinned` in FAQs or body copy.
 - **Include**: `app/page.tsx`, `app/guides/**`, `app/glossary/**`, `app/resources/**`, `app/watch-party-starter/**`, `app/anime-watch-party-toolkit/**`, `app/watch-crunchyroll-together/**`, `app/watch-youtube-together/**`, `app/watch-youtube-together-long-distance/**`, `app/watch-anime-together/**`, **genre hub pages** (`app/watch-action-anime-with-friends/**`, `app/watch-romance-anime-with-friends/**`, `app/watch-comedy-anime-with-friends/**`, `app/watch-sports-anime-with-friends/**`, `app/watch-mystery-anime-with-friends/**`), `app/compare/**`, `app/watch/[slug]/**`, `lib/anime-data.ts` (`animeList`, `isMovieEntry`, `getAnimeByGenre`), `lib/watch-page-rich-content.ts` (HowTo steps, `buildWatchPageMetaDescription`, `buildWatchPageFaq`, `watchPageResourceItemList`, genre/pacing helpers), `lib/guide-links.ts` (tags + entries for **`getGuideLinks`** on pillars/toolkits), `lib/sitemap-discovery.ts` (static URL discovery, exclusions, default `priority` / `changeFrequency` for sitemap), `lib/site-url.ts` (canonical origin, preview robots, optional AI-crawler blocks), `components/seo-page-layout.tsx`, `components/json-ld.tsx`, `components/primary-checkout-cta.tsx`, `app/sitemap.ts`, `components/footer.tsx`, `components/nav-bar.tsx` when adding crawl paths or hub links.
 - **Exclude from SEO work**: Blou (`app/blou/**`), internal CRM (`app/kreatli-email-crm/**`), APIs — **do not** mention Blou in marketing copy, footers for discovery, or sitemap entries beyond whatever already exists for unrelated routing; treat Blou as intentionally hidden from acquisition surfaces.
 
@@ -23,7 +23,7 @@ You work exclusively on **public marketing and SEO surfaces** for the AniDachi N
 
 Tie searcher intent to the templates surfaced by **`inferPageTemplateFromPath`** in `lib/conversion-events.ts` and **`SeoPageLayout`** / **`PrimaryCheckoutCta`** in `components/seo-page-layout.tsx`:
 
-- **Commercial / high intent** (e.g. “watch Crunchyroll with friends”, “youtube watch party”, “anime watch party extension”, product vs competitor): prioritize **pillars** (`/watch-anime-together`, `/watch-crunchyroll-together`, `/watch-youtube-together`, `/anime-watch-party-toolkit`), **compare** URLs, and “how-to” guides where the reader is deciding what to use. Lead with **clear above-the-fold value** and path to install/signup/pricing (“what it is → why AniDachi → primary action”). Use **`aboveFoldCta`** where it matches sibling pages with similar intent (see gold-standard pillar below).
+- **Commercial / high intent** (e.g. “watch Crunchyroll with friends”, “youtube watch party”, “anime watch party extension”, product vs competitor): prioritize **pillars** (`/watch-anime-together`, `/watch-crunchyroll-together`, `/watch-youtube-together`, `/anime-watch-party-toolkit`), **compare** URLs, and “how-to” guides where the reader is deciding what to use. Lead with **clear above-the-fold value** and path to **`/pricing`** (“what it is → why AniDachi → primary action”). Use **`aboveFoldCta`** plus an inline **`PrimaryCheckoutCta`** (`placement="content_mid"`) after the problem section on commercial intents (alternatives, free, Discord pain, host, switcher listicles, primary how-tos). Do **not** rely on unused `midContentSlot` for conversion — the live pattern is fold CTA + mid `PrimaryCheckoutCta`.
 - **Informational / AEO** (long-distance watching, time zones, spoilers, party ideas): optimize for **snippet-shaped H2/H3** and FAQs. Opening answer line: **one tight paragraph**, then optional bullets or deeper detail—helps featured snippets and answer engines without burying the lead.
 - **Programmatic / title intent** (`/watch/[slug]-with-friends`): searcher pairs **a specific anime title** with **watching together**. Differentiation must come from **non-generic copy** (group fit, pacing, honest availability notes)—not template filler alone. See **Programmatic quality guardrails** below. **Anime `/watch/[slug]` pages stay Crunchyroll-first** — do not rewrite every anime meta to “on YouTube.” YouTube is a separate hub-and-spoke cluster.
 
@@ -57,13 +57,126 @@ Prefer these seeds when planning or editing YouTube SEO (re-pull via `pnpm --fil
 - Apps → `/guides/best-apps-to-watch-youtube-together`
 - LDR → rewrite existing `/watch-youtube-together-long-distance` in place (no `/guides/` duplicate)
 
-**CTA path:** `/pricing` (not Chrome Web Store until listing live).
+**CTA path (global, both platforms):** Primary action is **`/pricing`** (early access / checkout) until a real Chrome Web Store listing is live. HowTo install steps must say “from AniDachi pricing / early access,” **not** a generic `chromewebstore.google.com` link. Do not invent “Add to Chrome” CTAs.
 
-**YouTube pillar checklist:** Mirror CR pillar patterns (`SeoPageLayout`, `aboveFoldCta`, FAQ ↔ FAQPageJsonLd, HowToJsonLd) but keep YouTube as a **sibling platform cluster** — breadcrumbs must **not** parent under `/watch-anime-together`. Soft-link `/watch-crunchyroll-together` and `/watch-anime-together` for dual-platform users. Sitemap priority ~0.9, `inferPageTemplateFromPath` → `pillar`. Tags: `youtube`, `watch-party`, `pillar-watch-youtube`.
+**YouTube pillar checklist:** Mirror CR pillar patterns (`SeoPageLayout`, `aboveFoldCta`, FAQ ↔ FAQPageJsonLd, HowToJsonLd) but keep YouTube as a **sibling platform cluster** — breadcrumbs must **not** parent under `/watch-anime-together`. Soft-link `/watch-crunchyroll-together` and `/watch-anime-together` for dual-platform users. Sitemap priority ~0.9, `inferPageTemplateFromPath` → `pillar`. Entry tags may include `youtube` / `pillar-watch-youtube`; **related lists** on YT spokes use `includeTags: ["pillar-watch-youtube"]` only.
 
-**Outdated-copy audit:** Rewrite any page that still says AniDachi is Crunchyroll-only or that W2G/Teleparty are the only YouTube options. Compare matrices must say **Crunchyroll + YouTube** (not “Crunchyroll only”) when claiming platform coverage. Soft-pedal Shorts/embeds/mobile only as accuracy.
+**Outdated-copy audit (both clusters):** Rewrite any page that still says AniDachi is **Crunchyroll-only**, “only for Crunchyroll,” or “purpose-built for Crunchyroll” **without** mentioning YouTube. Correct product claim: **Crunchyroll + YouTube** watchrooms; Netflix/Disney/Hulu/Amazon Prime Video sync remain unsupported. Also rewrite copy that says W2G/Teleparty are the only YouTube options. Compare matrices must say **Crunchyroll + YouTube** when claiming AniDachi platform coverage. State Shorts/embeds/mobile limits in human terms only.
 
 **Defer:** channel listicles, couple YouTube listicles, party-ideas/podcast guides with n/a volume, glossary-first for the 1,000/mo head term, programmatic `/youtube/[channelSlug]` batches.
+
+### YouTube conversion checklist (required)
+
+For every **new or substantially edited** YouTube guide/spoke:
+
+1. **Answer-first** H2 with strong lead that names AniDachi when commercial.
+2. **Problem → mechanism → `/pricing`**: fold CTA (`aboveFoldCta`) plus an inline **`PrimaryCheckoutCta`** (`placement="content_mid"`) after the problem section on commercial intents (alternatives, free, Discord pain, host, switcher listicles).
+3. **Human product limits** in published copy: “full `youtube.com/watch` in desktop Chrome — not Shorts, embeds, or the native mobile app.” **Never** ship agent jargon (`soft-pedal`, unexplained `provider-pinned`) in FAQs or body.
+4. **Unique FAQs**: do **not** paste full “Is AniDachi free?” on every page. Full free FAQ only on `/guides/youtube-watch-party-free` and `/watch-youtube-together` (or link to `/pricing`). Other pages: one sentence + `PRICING_YT_PRICING_SNIPPET` / link.
+5. **YouTube-safe pricing constants** from `lib/pricing-copy.ts`: `PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER`, `PRICING_FRIENDS_NEED_YOUTUBE_ANSWER`, `PRICING_DISCORD_COMPARE_YOUTUBE_FAQ`, `PRICING_TELEPARTY_COMPARE_YOUTUBE_FAQ`, `PRICING_RAVE_COMPARE_YOUTUBE_FAQ`, `PRICING_COMPARE_OVERVIEW_YOUTUBE`. **Do not** `.replace(/Crunchyroll/g, "YouTube")` on CR-only strings.
+6. **Hard links**: pillar `/watch-youtube-together` in the answer + `/pricing` after steps/problem + one sibling spoke. Related via `getGuideLinks({ includeTags: ["pillar-watch-youtube"], ... })` only (avoid broad `watch-party` OR that pulls anime cluster).
+7. **SERP CTR**: commercial metas lead with AniDachi outcome; competitors ranked **in-body**, not as co-equal in the meta description.
+8. **Breadcrumbs**: `Home → YouTube Watch Party → …` — never nest under Anime.
+
+### Keyword Planner gate (before locking URLs)
+
+Before proposing net-new YouTube URLs, run:
+
+`pnpm --filter @anidachi/web google-ads:keywords "<seeds…>"`
+
+**Reject:**
+
+- Noise (birthday/party youtube, sports highlights, political “party”, game titles).
+- Avg monthly searches **&lt; 10** unless the URL is a twin of a proven commercial CR page (Discord SS, free, host, sync).
+- Queries **already owned** by an existing URL (see anti-cannibalization map).
+- Sole H1 **“youtube party”** (noisy) — prefer “youtube watch party”.
+
+Done summary **must** include a KP table: term → searches/mo → URL → primary CTA.
+
+### YouTube anti-cannibalization map (owned queries)
+
+| Query / intent | Canonical URL |
+| -------------- | ------------- |
+| youtube watch party / watch youtube together (head) | `/watch-youtube-together` |
+| how to watch youtube with friends / together (how-to) | `/guides/how-to-watch-youtube-with-friends` |
+| long distance YouTube | `/watch-youtube-together-long-distance` (no `/guides/` duplicate) |
+| teleparty + youtube (AEO) | `/guides/does-teleparty-work-with-youtube` |
+| teleparty alternatives (switcher) | `/guides/best-teleparty-alternatives-for-youtube` |
+| free YouTube watch party | `/guides/youtube-watch-party-free` |
+| Discord screen share YouTube | `/guides/can-you-screen-share-youtube-on-discord` |
+| extension | `/guides/youtube-watch-party-chrome-extension` |
+| does YouTube have watch party | `/guides/does-youtube-have-watch-party` |
+| rave alternatives (YouTube) | `/guides/rave-alternatives-for-youtube` |
+| kast alternatives (YouTube) | `/guides/kast-alternatives-for-youtube` |
+| youtube group watch | `/guides/youtube-group-watch` |
+| host a YouTube watch party | `/guides/how-to-host-a-youtube-watch-party` |
+| sync YouTube with friends | `/guides/how-to-sync-youtube-with-friends` |
+| YouTube without screen share | `/guides/how-to-watch-youtube-together-without-screen-share` |
+| apps roundup | `/guides/best-apps-to-watch-youtube-together` |
+| netflix party for youtube | `/guides/netflix-party-for-youtube` |
+| youtube + discord hybrid | `/guides/youtube-watch-party-with-discord` |
+
+Do **not** ship a second how-to or LDR guide URL for the same intent. Low-volume spokes must **feed the pillar**, not compete for the same H1.
+
+### Alternatives / listicle differentiation minimum
+
+Reject “short answer + three bullets + related” for switcher pages (CR or YT). Require: compare table (`ResponsiveCompareTable`) + **when to pick each** + mid CTA + AniDachi-led meta.
+
+### YouTube measurement note
+
+After shipping a YouTube batch, track **pricing / checkout sessions by landing path** for 2–4 weeks. Enrich winners (pillar, free, Teleparty alts, Discord pain) before shipping more ≤10/mo clones. GSC: impressions before clicks is normal for new spokes.
+
+## Crunchyroll conversion stack (required)
+
+Mirror the YouTube operating system for the Crunchyroll / anime-platform cluster. Prefer enriching existing CR URLs over shipping thin twins.
+
+### Crunchyroll conversion checklist (required)
+
+For every **new or substantially edited** Crunchyroll guide/spoke (and commercial anime-platform twins):
+
+1. **Answer-first** H2 with strong lead that names AniDachi when commercial.
+2. **Problem → mechanism → `/pricing`**: fold CTA (`aboveFoldCta`) plus inline **`PrimaryCheckoutCta`** (`placement="content_mid"`) after the problem section on commercial intents (alternatives, free, Discord pain, host, sync, primary how-to, switcher listicles).
+3. **Human product limits**: Crunchyroll in desktop Chrome; each person needs their own Crunchyroll access. Soft-link YouTube nights to `/watch-youtube-together` when dual-platform is relevant — never claim Netflix sync.
+4. **Unique FAQs**: do **not** paste full “Is AniDachi free?” on every page. Full free FAQ only on `/guides/crunchyroll-watch-party-free` and `/watch-crunchyroll-together` (or link to `/pricing`). Other pages: one sentence + `PRICING_CR_PRICING_SNIPPET` / link.
+5. **Crunchyroll pricing constants** from `lib/pricing-copy.ts`: `PRICING_IS_ANIDACHI_FREE_ANSWER`, `PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER`, `PRICING_DISCORD_COMPARE_FAQ`, `PRICING_TELEPARTY_COMPARE_FAQ`, `PRICING_RAVE_COMPARE_FAQ`, `PRICING_COMPARE_OVERVIEW`, `PRICING_CR_PRICING_SNIPPET`. Do **not** paste YouTube-only helpers onto CR pages.
+6. **Hard links**: pillar `/watch-crunchyroll-together` in the answer + `/pricing` after steps/problem + one sibling spoke. Related via `getGuideLinks({ includeTags: ["pillar-watch-crunchyroll"], ... })` **only** — ban OR-ing bare `watch-party` / `how-to-core` / `compare` on CR spokes (wrong-cluster pollution). Soft-link Anime hub in body when useful; do not nest CR under Anime in crumbs.
+7. **SERP CTR**: commercial metas lead with AniDachi outcome; competitors ranked **in-body**.
+8. **Breadcrumbs**: `Home → Watch Crunchyroll Together → …` — including **Pseo CR slugs** (`lib/pseo-new-guides.tsx`); never crumb CR commercial pages under `/watch-anime-together`.
+9. **Primary how-to parity**: `/guides/how-to-watch-crunchyroll-with-friends` must ship `HowToJsonLd` + `aboveFoldCta` + mid CTA + `/pricing` install wording (mirror `/guides/how-to-watch-youtube-with-friends`).
+10. **Free page conversion-class**: `/guides/crunchyroll-watch-party-free` is a P0 commercial URL — enrich toward the YT free gold standard (not a thin Pseo shell). Prefer a dedicated `page.tsx` over Pseo when conversion density requires it.
+
+### Crunchyroll Keyword Planner gate (before locking URLs)
+
+Before proposing net-new Crunchyroll URLs, run:
+
+`pnpm --filter @anidachi/web google-ads:keywords "<seeds…>"`
+
+**Reject:** noise; avg monthly searches **&lt; 10** unless twin of a proven commercial page; queries **already owned** (see CR anti-cannibalization map); doorway CR clones of anime listicles without new intent.
+
+Done summary **must** include a KP table: term → searches/mo → URL → primary CTA.
+
+### Crunchyroll anti-cannibalization map (owned queries)
+
+| Query / intent | Canonical URL |
+| -------------- | ------------- |
+| watch crunchyroll with friends / crunchyroll watch party (head) | `/watch-crunchyroll-together` |
+| how to watch crunchyroll with friends | `/guides/how-to-watch-crunchyroll-with-friends` |
+| free crunchyroll watch party | `/guides/crunchyroll-watch-party-free` |
+| Discord screen share Crunchyroll | `/guides/can-you-screen-share-crunchyroll-on-discord` |
+| teleparty alternatives (anime/CR) | `/guides/best-teleparty-alternatives-for-anime` |
+| host a Crunchyroll watch party | `/guides/how-to-host-a-crunchyroll-watch-party` |
+| sync Crunchyroll with friends | `/guides/how-to-sync-crunchyroll-with-friends` |
+| crunchyroll watch party chrome extension | `/guides/crunchyroll-watch-party-chrome-extension` |
+| does Crunchyroll have watch party | `/guides/does-crunchyroll-have-watch-party` |
+| is Crunchyroll Party worth it | `/guides/is-crunchyroll-party-worth-it` |
+| crunchyroll party alternative | `/guides/crunchyroll-party-alternative` |
+| best way to watch crunchyroll with friends | `/guides/best-way-to-watch-crunchyroll-with-friends` |
+
+Low-volume spokes must **feed the CR pillar**, not compete for the same H1. Anime vertical hubs (`/watch-anime-together`, genre hubs, `/watch/[slug]`) stay Crunchyroll-first but are a **separate** vertical — do not duplicate platform-head queries there.
+
+### Crunchyroll measurement note
+
+After shipping a CR batch, track **pricing / checkout sessions by landing path**. Enrich winners (pillar, free, Teleparty alts, Discord pain, primary how-to) before more thin spokes.
 
 ## Information architecture (platforms × verticals)
 
@@ -78,7 +191,7 @@ Keyword Planner shows **YouTube co-watch** and **anime/Crunchyroll** as separate
   - Anime-general guides: `Home → Watch Anime Together → …`.
 - **URL policy:** Do **not** rename or 301 existing ranking URLs for “prettier” nesting. Add new platforms as new paths.
 - **Cross-links:** Anime hub → strong CR link; soft “also YouTube nights” to YT. Never frame YouTube as “watch anime on YouTube.”
-- **Related lists:** Prefer narrow tags (e.g. `pillar-watch-youtube` only). Avoid OR-ing broad tags like `watch-party` that pull wrong-cluster pages. Deduplicate hard-coded vs `getGuideLinks` hrefs.
+- **Related lists:** Prefer narrow tags (e.g. `pillar-watch-youtube` or `pillar-watch-crunchyroll` **alone**). Avoid OR-ing broad tags like `watch-party` that pull wrong-cluster pages. Deduplicate hard-coded vs `getGuideLinks` hrefs.
 - **Programmatic watch pages carry mixed intent** — the H1 targets "watch X with friends" (social/group intent) but the same page also receives "app to watch X together", "X watch party chrome extension", and "best way to watch X with friends online". Capture these variants without keyword-stuffing by:
   1. Using both "watchroom" and "watch party" in the first 100 words of the answer-first paragraph and HowTo intro.
   2. Including the phrase "Chrome extension" once in the HowTo steps copy as a product description ("AniDachi's Chrome extension syncs playback…"), not as an install CTA.
@@ -116,7 +229,7 @@ When adding or substantially editing a marketing route:
 - **External proof**: Chrome Web Store reviews, press, or relationship disclaimers are allowed only when **verifiable** and accurate. **No fabricated social proof** or implied official partnerships that are not true.
 - **Usage social proof**: If the product has a verifiable watchroom count, install count, or user count that appears publicly on `app/page.tsx` or the Chrome Web Store listing, surface it in the **first 200 words** of commercial-intent pages (pillars, compare pages, genre hubs). Cite only numbers that are live and accurate — do not fabricate figures or use placeholder text like "thousands of users" without a source.
 - **Group watch opinions must be grounded**: Copy in `extraWhyWatchParagraphs`, `pacingLeadParagraph`, and `genreDiscussionTips` must cite a **title-specific observable property** — episode length, cliffhanger density, arc structure, dub availability, pacing rhythm — rather than generic praise. If you cannot cite something specific from the synopsis or genres, derive one (e.g. "24-minute episodes make a 2-episode session fit a lunch break"). Never write filler like "this show is great for groups" without a concrete reason tied to the title.
-- **FAQ answer specificity**: Every FAQ answer must contain at least one specific detail — an episode range, a genre-specific tip, a named AniDachi feature, or a specific Crunchyroll behavior. Answers that say only "yes, AniDachi supports this" fail the E-E-A-T bar and will not rank for PAA boxes.
+- **FAQ answer specificity**: Every FAQ answer must contain at least one specific detail — an episode range, a genre-specific tip, a named AniDachi feature, or a specific **Crunchyroll or YouTube** product behavior (match the page’s platform cluster). Answers that say only "yes, AniDachi supports this" fail the E-E-A-T bar and will not rank for PAA boxes.
 
 ## Programmatic anime pages (`/watch/[slug]`)
 
@@ -156,7 +269,7 @@ There is **one** page component for every `/watch/{slug}-with-friends` URL (no p
 - **FAQs**: Use **`buildWatchPageFaq(anime, episodesDisplay)`**—do **not** inline a static 7-question array in the page file. Slots vary by movie vs series, episode count, and genre.
 - **Question-format H2s** (PAA): e.g. `Is {title} Good to Watch With a Group?`, `How Do You Avoid Spoilers Watching {title} With Friends?`—mirror in TOC `headings`.
 - **Rich sections**: Templated “why watch / pacing / genre tips” live in **`extraWhyWatchParagraphs`**, **`genreDiscussionTips`**, **`pacingLeadParagraph`**—tune uniqueness there rather than branching per slug in the page file.
-- **CTAs on watch pages**: Set **`aboveFoldCta`** on `SeoPageLayout` for high-intent anime landing. **Do not** add a second **`PrimaryCheckoutCta`** inside page children (layout already renders fold + bottom checkout). Prefer a short **contextual paragraph after the HowTo list** with a **`/#pricing`** link when you need a mid-page conversion nudge tied to “ready to host.” **Do not** add Chrome Web Store / “Add to Chrome” install links until a real extension listing exists.
+- **CTAs on watch pages**: Set **`aboveFoldCta`** on `SeoPageLayout` for high-intent anime landing. **Do not** add a second **`PrimaryCheckoutCta`** inside page children (layout already renders fold + bottom checkout). Prefer a short **contextual paragraph after the HowTo list** with a **`/pricing`** link when you need a mid-page conversion nudge tied to “ready to host.” **Do not** add Chrome Web Store / “Add to Chrome” install links until a real extension listing exists — HowTo steps point to AniDachi `/pricing` / early access.
 
 ### Genre hub pages (`/watch-{genre}-anime-with-friends`)
 
@@ -239,13 +352,13 @@ This 3-sentence structure maps to the Google featured snippet shape: **direct an
 
 ## Voice and claims
 
-- Truthful product positioning: Chrome extension, Crunchyroll-aligned watchrooms, sync/async, chat — avoid claiming unavailable tiers or features as shipped unless copy explicitly marks them planned (match pricing/home conventions).
+- Truthful product positioning: Chrome extension, **Crunchyroll + YouTube** watchrooms, sync/async, chat — avoid claiming unavailable tiers or features as shipped unless copy explicitly marks them planned (match pricing/home conventions). Never claim AniDachi is Crunchyroll-only.
 - Prefer concise H2/H3 structure, scannable lists, and FAQ blocks that answer **snippet-style** queries (see **AEO** above).
 
 ### Conversion and CTAs
 
-- **One primary action** per page aligned with the home/pricing story: extension install, signup, or checkout—whatever the product actually offers on `app/page.tsx`; stay truthful.
-- **Contextual repeats**: When using `midContentSlot` or section breaks, tie the next CTA to the **problem just addressed** (e.g. after explaining sync → invite friends / start a watchroom).
+- **One primary action** per page: **`/pricing`** until Chrome Web Store is live; stay truthful to home/pricing.
+- **Contextual repeats**: After the problem section on commercial intents, place **`PrimaryCheckoutCta`** with `placement="content_mid"` (do not use unused `midContentSlot` as the conversion pattern).
 - **CTA copy**: Outcome-led, human phrasing (“stay on the same episode”, “watch the same moment”)—not keyword-stuffed buttons.
 
 ## Gold-standard reference pages
@@ -254,9 +367,13 @@ When in doubt, mirror structure and metadata density of these:
 
 | Template                                        | Reference                                                                                                                   |
 | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Pillar                                          | `app/watch-anime-together/page.tsx`, `app/watch-crunchyroll-together/page.tsx`, `app/watch-youtube-together/page.tsx`, `app/anime-watch-party-toolkit/page.tsx` |
-| Guide + HowTo                                   | `app/guides/how-to-watch-anime-long-distance/page.tsx`, `app/guides/how-to-watch-youtube-with-friends/page.tsx`             |
-| Guide + checklist (conversion-heavy, non-HowTo) | `app/guides/first-anime-watch-party-checklist/page.tsx` (HowTo JSON-LD gold-standard remains the long-distance guide above) |
+| Pillar                                          | `app/watch-anime-together/page.tsx`, `app/watch-crunchyroll-together/page.tsx`, `app/watch-youtube-together/page.tsx` (Start-here `itemList`), `app/anime-watch-party-toolkit/page.tsx` |
+| Guide + HowTo                                   | `app/guides/how-to-watch-anime-long-distance/page.tsx`, `app/guides/how-to-watch-youtube-with-friends/page.tsx`, **`app/guides/how-to-watch-crunchyroll-with-friends/page.tsx`** (must match YT how-to density) |
+| Guide + checklist (conversion-heavy, non-HowTo) | `app/guides/first-anime-watch-party-checklist/page.tsx`; YT free: `app/guides/youtube-watch-party-free/page.tsx`; CR free: `app/guides/crunchyroll-watch-party-free` (conversion-class twin) |
+| YT commercial AEO                               | `app/guides/does-teleparty-work-with-youtube/page.tsx`, `app/guides/can-you-screen-share-youtube-on-discord/page.tsx`       |
+| CR commercial AEO                               | `app/guides/does-teleparty-work-with-crunchyroll/page.tsx`, `app/guides/can-you-screen-share-crunchyroll-on-discord/page.tsx` |
+| YT switcher listicle                            | `app/guides/best-teleparty-alternatives-for-youtube/page.tsx`                                                                 |
+| CR switcher listicle                            | `app/guides/best-teleparty-alternatives-for-anime/page.tsx`                                                                  |
 | Listicle                                        | `app/guides/best-anime-to-watch-as-a-couple/page.tsx`                                                                       |
 | Compare                                         | `app/compare/anidachi-vs-teleparty/page.tsx`, `app/compare/anidachi-vs-discord-screen-share/page.tsx`                       |
 | Glossary                                        | `app/glossary/watchroom/page.tsx`                                                                                           |
@@ -273,6 +390,8 @@ When in doubt, mirror structure and metadata density of these:
 4. Apply the checklist above in minimal diffs.
 5. Mention touched files by path; run lint on edited files if available.
 6. **Spot-check before done**: Canonical matches rendered path; FAQ body text ↔ `FAQPageJsonLd` source array; no accidental `noindex` on marketing routes; `conversionTemplate` correct for new URL shapes.
-7. **Measurement mindset**: Note the primary **query bucket** the page targets; after launch expect **impressions before clicks** in Search Console for new URLs.
+7. **Measurement mindset**: Note the primary **query bucket** the page targets; after launch expect **impressions before clicks** in Search Console for new URLs. For **YouTube or Crunchyroll** batches, also note pricing conversion by landing path and prefer enriching winners over more thin spokes.
 8. **Do not** ship **doorway** patterns—many near-duplicate pages (geo/device variants) without distinct product value—unless the user and product explicitly require separate value props per page.
 9. **Search Console and indexation monitoring**: After shipping any batch of 5+ new anime entries, or after substantially editing programmatic copy across many watch pages, include a note in your summary: *"Submit the updated sitemap to Google Search Console if not already auto-submitted via Vercel integration (`/sitemap.xml`)."* For large batches (10+ new pages), note that indexation of programmatic pages at this scale may take 4–8 weeks. The early warning signal is Search Console Coverage → **Discovered (not indexed)** — pages Google sees via sitemap or internal links but hasn’t crawled. If this count grows relative to the number of new pages added, it indicates insufficient page uniqueness or too-shallow internal link depth. Recommend the user check this report 4 weeks after any large batch.
+10. **YouTube batches**: Follow **YouTube conversion checklist**, **KP gate**, and **anti-cannibalization map** above before locking URLs.
+11. **Crunchyroll / anime-platform batches**: Follow **Crunchyroll conversion checklist**, **CR KP gate**, and **CR anti-cannibalization map** above before locking URLs. Verify Pseo CR crumbs under `/watch-crunchyroll-together` and that no FAQ claims AniDachi is Crunchyroll-only.

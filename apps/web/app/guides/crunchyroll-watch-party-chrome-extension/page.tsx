@@ -30,7 +30,7 @@ const faq = [
   {
     question: "Are Crunchyroll watch party extensions safe?",
     answer:
-      "Reputable extensions from the Chrome Web Store are generally safe. Always check permissions, reviews, and publisher info before installing. AniDachi, Crunchyroll Party, and Teleparty are widely used with transparent privacy policies.",
+      "During soft launch, start from AniDachi pricing / early access (/pricing) for install instructions. Do not assume a public Chrome Web Store listing until it is live. Always check permissions and publisher info before installing any extension.",
   },
   {
     question: "Do watch party extensions work with Crunchyroll ads?",

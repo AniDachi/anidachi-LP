@@ -25,7 +25,7 @@ const faq = [
   {
     question: "Is there a free anime watch party website?",
     answer:
-      "There is no platform that both streams anime and provides watch party functionality in a single free product. The practical approach is to combine a free streaming service (Crunchyroll free tier) with a separate sync tool. AniDachi is purpose-built for Crunchyroll group watching.",
+      "There is no platform that both streams anime and provides watch party functionality in a single free product. The practical approach is to combine a free streaming service (Crunchyroll free tier) with a separate sync tool. AniDachi focuses on Crunchyroll group watching (and also supports YouTube).",
   },
   {
     question: "Can you watch anime together online for free?",

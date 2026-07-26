@@ -43,7 +43,7 @@ const faq = [
   {
     question: "Is Teleparty better than AniDachi for anime watch parties?",
     answer:
-      "Teleparty supports more streaming platforms but has no async mode. AniDachi is purpose-built for Crunchyroll with async watching, auto anime detection, and per-person progress tracking. For Crunchyroll-first groups, AniDachi is the better choice.",
+      "Teleparty supports more streaming platforms but has no async mode. AniDachi focuses on Crunchyroll anime groups with async watching, auto anime detection, and per-person progress — and also supports YouTube watchrooms. For Crunchyroll-first groups, AniDachi is the better choice.",
   },
   {
     question: "When should I open this toolkit instead of the long-form pillars?",

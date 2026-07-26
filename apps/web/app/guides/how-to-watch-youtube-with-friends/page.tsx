@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
-import { PRICING_IS_ANIDACHI_FREE_ANSWER } from "@/lib/pricing-copy";
+import { PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
@@ -48,7 +48,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free?",
-    answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
+    answer: PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
   },
 ];
 
@@ -111,7 +111,7 @@ export default function HowToWatchYoutubeWithFriendsPage() {
         description="Step-by-step YouTube watchroom setup — live sync or async catch-up."
         url="/guides/how-to-watch-youtube-with-friends"
         datePublished="2026-07-25"
-        dateModified="2026-07-25"
+        dateModified="2026-07-26"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}

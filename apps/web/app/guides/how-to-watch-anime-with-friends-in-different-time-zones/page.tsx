@@ -59,7 +59,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Add the extension from the Chrome Web Store for every member who watches on desktop.",
+    text: "Open /pricing for early access and install the AniDachi Chrome extension for every member who watches on desktop.",
   },
   {
     name: "Agree on pacing",
@@ -140,15 +140,12 @@ export default function HowToWatchAnimeFriendsTimeZonesPage() {
           >
             Crunchyroll Help
           </a>
-          . Install browsers extensions from the official{" "}
-          <a
-            href="https://chromewebstore.google.com/"
-            className="text-brand-orange hover:underline"
-            rel="noopener noreferrer"
-          >
-            Chrome Web Store
-          </a>{" "}
-          channel only so permissions stay predictable for international members.
+          . Install AniDachi from{" "}
+          <Link href="/pricing" className="text-brand-orange hover:underline">
+            pricing / early access
+          </Link>{" "}
+          so permissions stay predictable for international members during soft
+          launch.
         </p>
 
         <h2

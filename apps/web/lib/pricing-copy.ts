@@ -45,6 +45,32 @@ export const PRICING_RAVE_COMPARE_FAQ =
 export const PRICING_DISCORD_COMPARE_FAQ =
   `Discord screen sharing is bundled with their app, but you still need individual Crunchyroll access for everyone to watch legally unless one person hosts a single stream. AniDachi adds watchrooms, anime detection, sync, and async pacing on top of personal Crunchyroll streams — Free for limited rooms; Plus and Pro for higher host limits.`;
 
+/** YouTube cluster — do not reuse Crunchyroll-only pricing FAQs on YT pages. */
+export const PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER =
+  `Yes — friends can join YouTube watchrooms on a Free account. When you want to host without the 30-minute daily limit, Plus starts at ${PRICING_STARTING_AT} and Pro at ${PRICING_PRO_SHORT.replace("/mo", "/month")} during pre-launch (locked forever). ${PRICING_HOST_MODEL} ${PRICING_REFUND_NOTE}`;
+
+export const PRICING_FRIENDS_NEED_YOUTUBE_ANSWER =
+  `No. ${PRICING_HOST_MODEL} Each person opens the same full YouTube watch page in their own browser — AniDachi syncs the room; it does not re-stream the video.`;
+
+export const PRICING_DISCORD_COMPARE_YOUTUBE_FAQ =
+  `Discord Go Live can share a YouTube tab, but guests watch a compressed stream and only the host controls the player. AniDachi syncs full youtube.com/watch playback per person while Discord stays for voice — Free for limited rooms; Plus and Pro for higher host limits.`;
+
+export const PRICING_TELEPARTY_COMPARE_YOUTUBE_FAQ =
+  "Teleparty has a free tier for basic live YouTube sync, plus a premium tier. AniDachi has a Free tier for joining and limited hosting, with Plus/Pro for higher host limits and async YouTube catch-up during early access. Pick Teleparty for free live-only multi-platform nights; pick AniDachi when schedules do not overlap.";
+
+export const PRICING_RAVE_COMPARE_YOUTUBE_FAQ =
+  `Rave offers a free tier with basic sync and chat. AniDachi has a Free tier for joining and limited hosting; Plus starts at ${PRICING_PLUS_SHORT} and Pro at ${PRICING_PRO_SHORT} during early access for hosts who need unlimited YouTube watchrooms, async catch-up, and per-person progress on full watch pages.`;
+
+export const PRICING_COMPARE_OVERVIEW_YOUTUBE =
+  `AniDachi has a Free tier for joining and hosting limited YouTube watchrooms. Hosts who need unlimited rooms, async catch-up, and progress tracking can upgrade to Plus (${PRICING_PLUS_SHORT}) or Pro (${PRICING_PRO_SHORT}) during pre-launch.`;
+
+export const PRICING_YT_PRICING_SNIPPET =
+  `Free to join; hosts unlock unlimited rooms on Plus (${PRICING_PLUS_SHORT}) — see /pricing.`;
+
+/** Crunchyroll cluster — short pricing line for non-canonical free FAQs. */
+export const PRICING_CR_PRICING_SNIPPET =
+  `Free to join; hosts unlock unlimited rooms on Plus (${PRICING_PLUS_SHORT}) — see /pricing.`;
+
 export const PRICING_FREE_TIER_TABLE = "Yes (limited rooms)";
 export const PRICING_HOST_PRICING_TABLE = `Free limited hosting; Plus ${PRICING_PLUS_SHORT} unlimited`;
 export const PRICING_PRICE_TABLE = `Free; Plus ${PRICING_PLUS_SHORT}`;

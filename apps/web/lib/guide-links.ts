@@ -670,6 +670,80 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
+		href: "/guides/does-youtube-have-watch-party",
+		label: "Does YouTube Have a Watch Party?",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
+		href: "/guides/can-you-screen-share-youtube-on-discord",
+		label: "Can You Screen Share YouTube on Discord?",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube", "discord"],
+	},
+	{
+		href: "/guides/rave-alternatives-for-youtube",
+		label: "Rave Alternatives for YouTube",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
+		href: "/guides/youtube-group-watch",
+		label: "YouTube Group Watch",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+		],
+	},
+	{
+		href: "/guides/how-to-host-a-youtube-watch-party",
+		label: "How to Host a YouTube Watch Party",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+		],
+	},
+	{
+		href: "/guides/how-to-sync-youtube-with-friends",
+		label: "How to Sync YouTube With Friends",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+		],
+	},
+	{
+		href: "/guides/best-teleparty-alternatives-for-youtube",
+		label: "Best Teleparty Alternatives for YouTube",
+		tags: ["template-c", "listicle", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
+		href: "/guides/how-to-watch-youtube-together-without-screen-share",
+		label: "Watch YouTube Together Without Screen Share",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+		],
+	},
+	{
+		href: "/guides/kast-alternatives-for-youtube",
+		label: "Kast Alternatives for YouTube",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
+		href: "/guides/youtube-watch-party-free",
+		label: "YouTube Watch Party Free Options",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
+	{
 		href: "/compare/anidachi-vs-watch2gether",
 		label: "AniDachi vs Watch2Gether",
 		tags: ["compare", "youtube", "watch-party", "pillar-watch-youtube"],

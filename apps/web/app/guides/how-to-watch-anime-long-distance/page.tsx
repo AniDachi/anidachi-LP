@@ -67,7 +67,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Add the extension from the Chrome Web Store on each participant's laptop.",
+    text: "Open /pricing for early access and install the AniDachi Chrome extension on each participant's laptop.",
   },
   {
     name: "Create a shared watchroom",
@@ -150,15 +150,11 @@ export default function HowToWatchAnimeLongDistancePage() {
             Crunchyroll Help
           </a>{" "}
           articles if they need account or playback troubleshooting. Install
-          AniDachi from the{" "}
-          <a
-            href="https://chromewebstore.google.com/"
-            className="text-brand-orange hover:underline"
-            rel="noopener noreferrer"
-          >
-            Chrome Web Store
-          </a>{" "}
-          so updates arrive automatically.
+          AniDachi from{" "}
+          <Link href="/pricing" className="text-brand-orange hover:underline">
+            pricing / early access
+          </Link>{" "}
+          so everyone runs the same build during soft launch.
         </p>
 
         <h2

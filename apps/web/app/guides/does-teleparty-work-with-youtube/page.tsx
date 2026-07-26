@@ -81,7 +81,7 @@ export default function DoesTelepartyWorkWithYoutubePage() {
       description="Yes for live sync; no for async. How Teleparty for YouTube fits — and when AniDachi is better."
       url="/guides/does-teleparty-work-with-youtube"
       datePublished="2026-07-25"
-      dateModified="2026-07-25"
+      dateModified="2026-07-26"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -104,7 +104,14 @@ export default function DoesTelepartyWorkWithYoutubePage() {
         </strong>{" "}
         It does not offer async catch-up or durable episode-style progress for
         staggered schedules. If your group watches YouTube across time zones,
-        you will outgrow Teleparty for those nights.
+        you will outgrow Teleparty for those nights — see{" "}
+        <Link
+          href="/guides/best-teleparty-alternatives-for-youtube"
+          className="text-brand-orange hover:underline"
+        >
+          best Teleparty alternatives for YouTube
+        </Link>
+        .
       </p>
 
       <h2

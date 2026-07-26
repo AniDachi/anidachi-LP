@@ -7,7 +7,7 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_COMPARE_OVERVIEW,
   PRICING_EARLY_ACCESS_PRICE,
-  PRICING_IS_ANIDACHI_FREE_ANSWER,
+  PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
 } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
@@ -49,7 +49,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free?",
-    answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
+    answer: PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
   },
 ];
 
@@ -82,7 +82,7 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
       description="Ranked YouTube co-watch apps — AniDachi, Watch2Gether, Teleparty, Discord."
       url="/guides/best-apps-to-watch-youtube-together"
       datePublished="2026-07-25"
-      dateModified="2026-07-25"
+      dateModified="2026-07-26"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}

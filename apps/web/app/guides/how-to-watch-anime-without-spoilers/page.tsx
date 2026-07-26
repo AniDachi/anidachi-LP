@@ -56,7 +56,7 @@ const howToSteps = [
   },
   {
     name: "Install AniDachi",
-    text: "Use the Chrome Web Store build so everyone runs the same chat features.",
+    text: "Install AniDachi from /pricing so everyone runs the same chat features during soft launch.",
   },
   {
     name: "Create a dedicated room",
@@ -138,14 +138,10 @@ export default function HowToWatchAnimeWithoutSpoilersPage() {
             Crunchyroll Help
           </a>{" "}
           before discussing plot points that might have been missed due to
-          buffering. Install helper extensions from the{" "}
-          <a
-            href="https://chromewebstore.google.com/"
-            className="text-brand-orange hover:underline"
-            rel="noopener noreferrer"
-          >
-            Chrome Web Store
-          </a>{" "}
+          buffering. Install AniDachi from{" "}
+          <Link href="/pricing" className="text-brand-orange hover:underline">
+            pricing / early access
+          </Link>{" "}
           so you are not sideloading unsigned builds mid-season.
         </p>
 

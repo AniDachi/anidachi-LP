@@ -145,7 +145,8 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
       </p>
       <ul className="space-y-4 text-foreground/80 mb-8">
         <li>
-          <strong>AniDachi</strong> — purpose-built for Crunchyroll anime groups.
+          <strong>AniDachi</strong> — built for Crunchyroll anime groups
+          (and YouTube watchrooms).
           Adds synchronized live playback, async progress tracking (for different
           schedules), episode-level spoiler controls, and shared reaction threads.
           Best for ongoing group watches and anime clubs where members don&apos;t

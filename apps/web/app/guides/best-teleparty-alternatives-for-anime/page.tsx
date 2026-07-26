@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
@@ -66,7 +67,7 @@ const tocHeadings: TocHeading[] = [
 
 export default function BestTelepartyAlternativesForAnimePage() {
   const relatedGuideLinks = getGuideLinks({
-    includeTags: ["crunchyroll", "watch-party", "compare"],
+    includeTags: ["pillar-watch-crunchyroll"],
     excludeHref: "/guides/best-teleparty-alternatives-for-anime",
     limit: 4,
   });
@@ -85,7 +86,7 @@ export default function BestTelepartyAlternativesForAnimePage() {
       description="Ranked Teleparty alternatives for Crunchyroll anime nights — not a 1:1 clone of the AniDachi vs Teleparty page."
       url="/guides/best-teleparty-alternatives-for-anime"
       datePublished="2026-07-19"
-      dateModified="2026-07-19"
+      dateModified="2026-07-26"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -117,6 +118,13 @@ export default function BestTelepartyAlternativesForAnimePage() {
         </Link>
         .
       </p>
+
+      <PrimaryCheckoutCta
+        pagePath="/guides/best-teleparty-alternatives-for-anime"
+        pageTemplate="guide"
+        placement="content_mid"
+        className="my-10"
+      />
 
       <h2
         id="ranked"
