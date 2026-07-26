@@ -6,8 +6,9 @@ import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_FREE_TIER_TABLE,
-  PRICING_RAVE_COMPARE_FAQ,
+  PRICING_RAVE_COMPARE_YOUTUBE_FAQ,
 } from "@/lib/pricing-copy";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
@@ -46,10 +47,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free compared to Rave?",
-    answer: PRICING_RAVE_COMPARE_FAQ.replace(
-      /auto anime detection/g,
-      "YouTube + Crunchyroll rooms",
-    ),
+    answer: PRICING_RAVE_COMPARE_YOUTUBE_FAQ,
   },
   {
     question: "Where is the full AniDachi vs Rave comparison?",
@@ -119,10 +117,16 @@ export default function RaveAlternativesForYoutubePage() {
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-8">
         Rave targets generic movie nights across many sites. That can include YouTube,
-        but mixed-schedule groups outgrow live-only sync. AniDachi is built for
-        provider-pinned YouTube (and Crunchyroll) rooms on full watch pages — not Shorts
-        or embeds.
+        but mixed-schedule groups outgrow live-only sync. AniDachi is built for YouTube
+        and Crunchyroll rooms on full watch pages — not Shorts or embeds.
       </p>
+
+      <PrimaryCheckoutCta
+        pagePath="/guides/rave-alternatives-for-youtube"
+        pageTemplate="guide"
+        placement="content_mid"
+        className="my-10"
+      />
 
       <h2
         id="alternatives"

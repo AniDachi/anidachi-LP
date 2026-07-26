@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
-import { PRICING_IS_ANIDACHI_FREE_ANSWER } from "@/lib/pricing-copy";
+import { PRICING_YT_PRICING_SNIPPET } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
@@ -61,7 +61,7 @@ const faq = [
   },
   {
     question: "Is YouTube group watch free?",
-    answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
+    answer: `Free to join with limited hosting. ${PRICING_YT_PRICING_SNIPPET}`,
   },
   {
     question: "Can we use Discord for a YouTube group watch?",
@@ -71,7 +71,7 @@ const faq = [
   {
     question: "Does this work on Shorts?",
     answer:
-      "AniDachi YouTube rooms target full watch pages. Soft-pedal Shorts, embeds, and the native mobile app for provider-pinned sync.",
+      "AniDachi YouTube rooms work on full youtube.com/watch pages in desktop Chrome — not Shorts, embeds, or the native mobile app.",
   },
 ];
 

@@ -104,8 +104,9 @@ export default function AniDachiVsRavePage() {
       </h2>
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
-          AniDachi is purpose-built for Crunchyroll anime groups who need async
-          watchrooms and progress tracking. Rave is a general multi-platform watch
+          AniDachi is built for Crunchyroll anime groups who need async
+          watchrooms and progress tracking — and also supports YouTube
+          watchrooms. Rave is a general multi-platform watch
           party tool with live sync and voice chat across many streaming services.
         </strong>
       </p>

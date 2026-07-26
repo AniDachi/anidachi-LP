@@ -1,17 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { HowToJsonLd } from "@/components/json-ld";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
-import { PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION, PRICING_GROUP_ONBOARDING } from "@/lib/pricing-copy";
+import {
+  PRICING_CR_PRICING_SNIPPET,
+  PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION,
+} from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
   title: "How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide (2026)",
   description:
-    "Step-by-step guide to watching Crunchyroll with friends in 2026. Does Crunchyroll have a watch party feature? Can you group watch on Crunchyroll? Every method — Chrome extensions, Discord screen share, and async watchrooms — compared and explained.",
+    "Step-by-step: watch Crunchyroll with friends using AniDachi watchrooms — live sync or async. Free Discord and Crunchyroll Party options compared.",
   alternates: { canonical: "/guides/how-to-watch-crunchyroll-with-friends" },
   openGraph: {
     title: "How to Watch Crunchyroll with Friends — Watch Party Guide (2026)",
-    description: "Does Crunchyroll have a watch party? No — but here's how to do it anyway. Every method compared.",
+    description:
+      "Create a Crunchyroll watchroom in minutes — synced playback, chat, and async catch-up.",
     url: "/guides/how-to-watch-crunchyroll-with-friends",
   },
 };
@@ -20,180 +26,224 @@ const faq = [
   {
     question: "Does Crunchyroll have a watch party feature in 2026?",
     answer:
-      "No. As of 2026, Crunchyroll still does not have a built-in watch party or group watch feature. You need to use a third-party tool — Chrome extensions like AniDachi or Crunchyroll Party, or Discord screen sharing. This guide covers all three options step by step.",
+      "No. As of 2026, Crunchyroll still does not have a built-in watch party or group watch feature. You need a third-party tool — AniDachi, Crunchyroll Party, or Discord screen sharing.",
   },
   {
     question: "How do I watch Crunchyroll with friends online?",
     answer:
-      "Install the AniDachi Chrome extension, open any anime on Crunchyroll, click Detect Anime, and create a watchroom. Share the invite link. Each friend joins with their own Crunchyroll account and playback stays in sync automatically. Alternatively, use the free Crunchyroll Party extension for a live-sync-only option.",
+      "Open /pricing for AniDachi early access, install the Chrome extension, open any anime on Crunchyroll, detect the show, and create a watchroom. Share the invite link so each friend joins on their own Crunchyroll account.",
   },
   {
     question: "Does Crunchyroll have a group watch or watch together option?",
     answer:
-      `Crunchyroll does not have a native group watch or watch together feature. Third-party Chrome extensions fill this gap: ${PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION}, Crunchyroll Party (sync + basic chat, free), and Teleparty (cross-platform sync, freemium). All of them work with each person's own Crunchyroll account.`,
+      `Crunchyroll does not have a native group watch feature. Third-party Chrome extensions fill this gap: ${PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION}, Crunchyroll Party (sync + basic chat, free), and Teleparty (cross-platform sync, freemium).`,
   },
   {
-    question: "Can you do a watch party on Crunchyroll?",
-    answer:
-      "Yes, but only through a third-party extension. Install Crunchyroll Party (free) or AniDachi (Free to join; Plus/Pro to host) and you can host a Crunchyroll watch party with synced playback and chat. Crunchyroll itself does not have a watch party button or built-in feature.",
-  },
-  {
-    question: "Can two people watch Crunchyroll at the same time?",
-    answer:
-      "Yes, but each person needs their own Crunchyroll account. Free accounts are limited, while Mega Fan and Ultimate Fan plans support multiple simultaneous streams. Watch party tools like AniDachi work on top of individual accounts.",
-  },
-  {
-    question: "What is the best free way to watch Crunchyroll together?",
-    answer:
-      "The easiest free option is Discord screen sharing (Go Live). It requires only one Crunchyroll account but the viewer quality is lower. For better quality, the free Crunchyroll Party Chrome extension syncs each person's own stream.",
-  },
-  {
-    question: "How do I set up a Crunchyroll watch party on Discord?",
-    answer:
-      "Join a voice channel, start streaming your browser window with Crunchyroll open, and your friends watch via screen share. Quality may be limited and there's no automatic sync — if someone pauses, you'll need to coordinate manually.",
-  },
-  {
-    question: "How do I watch anime with friends on Crunchyroll?",
-    answer:
-      "Since Crunchyroll has no native watch-together feature, install a Chrome extension: AniDachi for the best experience (sync, chat, and async watching), or Crunchyroll Party for a free live-sync option. Each person needs their own Crunchyroll account — free or paid — to stream the video.",
+    question: "Is AniDachi free for Crunchyroll watch parties?",
+    answer: PRICING_CR_PRICING_SNIPPET,
   },
 ];
 
 const tocHeadings: TocHeading[] = [
-  { id: "method-anidachi", label: "Method 1: AniDachi", level: 2 },
-  { id: "method-discord", label: "Method 2: Discord", level: 2 },
-  { id: "method-cr-party", label: "Method 3: Crunchyroll Party", level: 2 },
+  { id: "answer", label: "Short answer", level: 2 },
+  { id: "steps", label: "Step-by-step (AniDachi)", level: 2 },
+  { id: "method-discord", label: "Discord alternative", level: 2 },
+  { id: "method-cr-party", label: "Crunchyroll Party", level: 2 },
   { id: "which-method", label: "Which method to choose", level: 2 },
   { id: "related", label: "Related guides", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
 ];
 
+const howToSteps = [
+  {
+    name: "Get AniDachi",
+    text: "Open /pricing for early access and install the AniDachi Chrome extension.",
+  },
+  {
+    name: "Open Crunchyroll",
+    text: "Navigate to any anime episode on Crunchyroll in desktop Chrome.",
+  },
+  {
+    name: "Detect and create a watchroom",
+    text: "Click Detect Anime, then Create Room so the room is linked to the show and episode.",
+  },
+  {
+    name: "Invite friends",
+    text: "Share the invite link so each friend joins on their own Crunchyroll account.",
+  },
+  {
+    name: "Watch live or async",
+    text: "Sync for a live hang, or leave reactions when someone watches later.",
+  },
+];
+
 export default function HowToWatchWithFriendsPage() {
   const relatedGuideLinks = getGuideLinks({
-    includeTags: ["how-to-core", "online", "time-zones"],
+    includeTags: ["pillar-watch-crunchyroll"],
+    excludeHref: "/guides/how-to-watch-crunchyroll-with-friends",
     limit: 4,
   });
 
   return (
-    <SeoPageLayout
-      breadcrumbs={[
-        { name: "Home", url: "/" },
-        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
-        { name: "How to Watch Crunchyroll with Friends", url: "/guides/how-to-watch-crunchyroll-with-friends" },
-      ]}
-      title="How to Watch Crunchyroll with Friends"
-      description="Every method to watch Crunchyroll together, compared and explained."
-      url="/guides/how-to-watch-crunchyroll-with-friends"
-      datePublished="2026-04-23"
-      dateModified="2026-06-08"
-      faq={faq}
-      headings={tocHeadings}
-    >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide (2026)
-      </h1>
-
-      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
-        <strong>
-          Crunchyroll does not have a built-in watch party feature in 2026 —
-          but you can easily create a Crunchyroll watch party using a Chrome
-          extension like AniDachi or Crunchyroll Party.
-        </strong>{" "}
-        Each method syncs playback so everyone watches the same frame in full
-        quality on their own account. This guide covers every option — from free
-        Discord screen sharing to premium async watchrooms — and explains which
-        to choose for your group.
-      </p>
-
-      <h2
-        id="method-anidachi"
-        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
+    <>
+      <HowToJsonLd
+        name="How to watch Crunchyroll with friends"
+        description="Set up an AniDachi Crunchyroll watchroom for synced or async co-watching."
+        steps={howToSteps}
+      />
+      <SeoPageLayout
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
+          {
+            name: "How to Watch Crunchyroll with Friends",
+            url: "/guides/how-to-watch-crunchyroll-with-friends",
+          },
+        ]}
+        title="How to Watch Crunchyroll with Friends"
+        description="Every method to watch Crunchyroll together, compared and explained."
+        url="/guides/how-to-watch-crunchyroll-with-friends"
+        datePublished="2026-04-23"
+        dateModified="2026-07-26"
+        faq={faq}
+        headings={tocHeadings}
+        aboveFoldCta
       >
-        Method 1: AniDachi Chrome Extension (Best for Groups)
-      </h2>
-      <p className="text-foreground/80 leading-relaxed mb-4">
-        AniDachi offers the most feature-rich experience for watching
-        Crunchyroll together. It auto-detects anime, creates watchrooms with
-        one click, and uniquely supports async watching — friends don&apos;t
-        need to be online at the same time.
-      </p>
-      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-6">
-        <li>Install the AniDachi extension from the Chrome Web Store.</li>
-        <li>Navigate to any anime episode on Crunchyroll.</li>
-        <li>Click &quot;Detect Anime&quot; — AniDachi identifies the show automatically.</li>
-        <li>Create a watchroom and share the invite link.</li>
-        <li>Watch together with synced playback and live chat.</li>
-      </ol>
+        <h1 className="text-4xl font-bold text-foreground mb-6">
+          How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide
+          (2026)
+        </h1>
 
-      <h2
-        id="method-discord"
-        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
-      >
-        Method 2: Discord Screen Sharing (Free, Quick)
-      </h2>
-      <p className="text-foreground/80 leading-relaxed mb-4">
-        Discord&apos;s Go Live feature lets you share your Crunchyroll browser
-        tab with friends in a voice channel. It&apos;s free and fast, but
-        quality is limited (often 720p) and there&apos;s no automatic playback
-        sync. Best for informal viewing with friends already on a Discord
-        server.
-      </p>
-
-      <h2
-        id="method-cr-party"
-        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
-      >
-        Method 3: Crunchyroll Party Extension (Free, Live Sync)
-      </h2>
-      <p className="text-foreground/80 leading-relaxed mb-4">
-        Crunchyroll Party is a free Chrome extension that syncs playback across
-        multiple browsers. Each person watches on their own Crunchyroll account
-        in full quality. It includes basic text chat but lacks async features,
-        progress tracking, or auto-detection.
-      </p>
-
-      <h2
-        id="which-method"
-        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
-      >
-        Which Method Should You Choose?
-      </h2>
-      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
-        <li><strong>For async groups across time zones:</strong> AniDachi</li>
-        <li><strong>For free one-off sessions:</strong> Discord screen sharing</li>
-        <li><strong>For free live sync:</strong> Crunchyroll Party</li>
-      </ul>
-
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
-      >
-        Related Guides
-      </h2>
-      <ul className="space-y-2 text-brand-orange">
-        <li>
-          <Link href="/watch-crunchyroll-together" className="hover:underline">
-            Watch Crunchyroll Together (Pillar Guide)
+        <h2
+          id="answer"
+          className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
+        >
+          Short Answer
+        </h2>
+        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
+          <strong>
+            Create an AniDachi Crunchyroll watchroom, share the invite, and watch
+            on each person&apos;s own Crunchyroll tab — synced for live hangs,
+            async when schedules conflict.
+          </strong>{" "}
+          Full hub:{" "}
+          <Link
+            href="/watch-crunchyroll-together"
+            className="text-brand-orange hover:underline"
+          >
+            Watch Crunchyroll Together
           </Link>
-        </li>
-        <li>
-          <Link href="/guides/crunchyroll-watch-party-chrome-extension" className="hover:underline">
-            Best Crunchyroll Watch Party Chrome Extensions
+          . Checkout:{" "}
+          <Link href="/pricing" className="text-brand-orange hover:underline">
+            pricing / early access
           </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-            AniDachi vs Teleparty
+          .
+        </p>
+
+        <PrimaryCheckoutCta
+          pagePath="/guides/how-to-watch-crunchyroll-with-friends"
+          pageTemplate="guide"
+          placement="content_mid"
+          className="my-10"
+        />
+
+        <h2
+          id="steps"
+          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
+        >
+          Step-by-step (AniDachi)
+        </h2>
+        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
+          {howToSteps.map((step) => (
+            <li key={step.name}>
+              <strong>{step.name}.</strong> {step.text}
+            </li>
+          ))}
+        </ol>
+
+        <h2
+          id="method-discord"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
+        >
+          Discord screen sharing (free, lower quality)
+        </h2>
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          Discord&apos;s Go Live can share a Crunchyroll tab, but quality is
+          limited and capture often fails. Prefer Discord for voice only — see{" "}
+          <Link
+            href="/guides/can-you-screen-share-crunchyroll-on-discord"
+            className="text-brand-orange hover:underline"
+          >
+            can you screen share Crunchyroll on Discord
           </Link>
-        </li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="hover:underline">
-              {guide.label}
+          .
+        </p>
+
+        <h2
+          id="method-cr-party"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
+        >
+          Crunchyroll Party (free, live sync only)
+        </h2>
+        <p className="text-foreground/80 leading-relaxed mb-4">
+          Crunchyroll Party syncs live playback on each person&apos;s account
+          with basic chat. It lacks async catch-up and host room upgrades —
+          fine for same-time nights; upgrade path when schedules drift is AniDachi.
+        </p>
+
+        <h2
+          id="which-method"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
+        >
+          Which Method Should You Choose?
+        </h2>
+        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
+          <li>
+            <strong>For async groups across time zones:</strong> AniDachi
+          </li>
+          <li>
+            <strong>For free one-off sessions:</strong> Discord voice + free sync
+            tool (not Go Live as the video pipe)
+          </li>
+          <li>
+            <strong>For free live sync:</strong> Crunchyroll Party
+          </li>
+        </ul>
+
+        <h2
+          id="related"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
+        >
+          Related Guides
+        </h2>
+        <ul className="space-y-2 text-brand-orange">
+          <li>
+            <Link href="/watch-crunchyroll-together" className="hover:underline">
+              Watch Crunchyroll Together (Pillar Guide)
             </Link>
           </li>
-        ))}
-      </ul>
-    </SeoPageLayout>
+          <li>
+            <Link
+              href="/guides/crunchyroll-watch-party-free"
+              className="hover:underline"
+            >
+              Free Crunchyroll watch party options
+            </Link>
+          </li>
+          <li>
+            <Link href="/pricing" className="hover:underline">
+              AniDachi pricing
+            </Link>
+          </li>
+          {relatedGuideLinks.map((guide) => (
+            <li key={guide.href}>
+              <Link href={guide.href} className="hover:underline">
+                {guide.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </SeoPageLayout>
+    </>
   );
 }

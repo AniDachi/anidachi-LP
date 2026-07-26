@@ -4,7 +4,7 @@ import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
-import { PRICING_IS_ANIDACHI_FREE_ANSWER } from "@/lib/pricing-copy";
+import { PRICING_YT_PRICING_SNIPPET } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
@@ -70,7 +70,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free?",
-    answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
+    answer: `Free to join with limited hosting. ${PRICING_YT_PRICING_SNIPPET}`,
   },
 ];
 

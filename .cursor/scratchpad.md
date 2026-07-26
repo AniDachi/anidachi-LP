@@ -1,39 +1,45 @@
 ## Background and Motivation
 
-We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Friends”) to expand SEO coverage and internal linking, with a focus on **higher conversion to paid subscription checkout** (via the homepage `/#pricing` → pricing/checkout flow).
+**(Active — 2026-07-26)** SEO agent critical fixes (YT + CR parity): agent playbook CR conversion stack + product-truth / mid-CTA / `/pricing` install alignment. Plan: `.cursor/plans/seo_agent_critical_fixes_a6487aa6.plan.md`.
 
-## Key Challenges and Analysis
-
-- Watch pages are generated from `lib/anime-data.ts` (`animeList`) via `app/watch/[slug]/page.tsx`.
-- Adding “5 more watch pages” typically means adding 5 new `AnimeEntry` items, making sure:
-  - slugs are unique and URL-safe
-  - `related` references existing slugs
-  - hub pages/listicles link to the new watch pages
-  - any site-wide `dateModified`/metadata patterns stay consistent
+~~YouTube SEO batch 2… conversion polish~~ (prior; completed — awaiting Planner confirm on polish QA).
 
 ## High-level Task Breakdown
 
-### Batch: Create 10 new programmatic watch pages (conversion = start subscription)
+### SEO agent critical fixes (Planner → Executor 2026-07-26)
 
-1. Add 10 new `AnimeEntry` items to `lib/anime-data.ts` (slugs listed below).
-   - Success criteria: `animeList` includes 10 new, unique slugs; each has `title`, `synopsis`, `episodes`, `genres`, and `related` slugs that exist in `animeList`.
-2. Add MAL IDs for the 10 new slugs to `lib/anime-mal-ids.ts`.
-   - Success criteria: `getMalIdForSlug(slug)` returns a number for each new slug; watch pages can fetch posters/scores via Jikan.
-3. Add required hub/listicle backlinks for every new watch page.
-   - Success criteria:
-     - Each new slug is linked from `app/watch-anime-together/page.tsx` (“Popular Anime to Watch Together” grid).
-     - Each new slug is linked from `app/guides/best-anime-to-watch-with-friends/page.tsx` (exactly one best-fit section per title; no duplicate `/watch/...` links on the page).
-     - Bump `dateModified` on any touched hub/listicle pages (ISO date, honest).
-4. Validate build.
-   - Success criteria: `npm run build` succeeds.
+1. Agent CR parity + Soft-pedal/voice/global CTA/mid-CTA/tag rules + YT map polish + `PRICING_CR_PRICING_SNIPPET`.
+2. Fix AniDachi Crunchyroll-only claims on compare + P0 CR FAQs.
+3. CR how-to HowTo+CTAs; Teleparty/Discord SS mid CTAs; narrow related tags.
+4. Pseo CR breadcrumbs under CR pillar; enrich `crunchyroll-watch-party-free`.
+5. Align CR pillar + key how-tos install steps to `/pricing` until CWS live.
+   - Success: check/build pass; no “only for Crunchyroll” FAQs; CR how-to matches YT density.
 
 ## Project Status Board
 
-### Completed (previous batch)
+### SEO agent critical fixes (Executor — awaiting Planner confirm)
 
-- [x] Add 5 anime entries to `lib/anime-data.ts`
-- [x] Add hub/listicle backlinks for the 5 new watch pages
-- [x] Run `npm run build`
+- [x] Agent CR parity + language/CTA/tag rules
+- [x] Truth: compare + P0 CR FAQs (YouTube where product-true)
+- [x] CR conversion pages (how-to, Teleparty alts, Discord SS)
+- [x] Pseo CR crumbs + free page enrichment
+- [x] CWS → `/pricing` on CR pillar + key how-tos
+
+### YouTube conversion polish (Executor — awaiting Planner confirm)
+
+- [x] YouTube pricing helpers (`pricing-copy.ts`)
+- [x] Enrich P0 pages + pillar Start-here list
+- [x] P1 + P2 light pass (+ 3 older YT guides → `*_YOUTUBE_*` free FAQ)
+- [x] SEO agent playbook update
+- [x] Web check + build ✅ (2026-07-26); check re-run after FAQ swaps
+
+### Completed (YouTube SEO batch 2 — 2026-07-26)
+
+- [x] 10 KP-validated YouTube guide pages
+- [x] guide-links + pillar wiring
+- [x] web check + build
+
+### Completed (prior watch-page batches — historical)
 
 ### Next batch (10 new watch pages)
 
@@ -41,6 +47,29 @@ We are adding more programmatic `/watch/[slug]` pages (“Watch {Anime} with Fri
 - [x] Add MAL IDs for the 10 slugs to `lib/anime-mal-ids.ts`
 - [x] Add hub/listicle backlinks (`watch-anime-together`, `best-anime-to-watch-with-friends`) + bump `dateModified`
 - [x] Run `npm run build`
+
+## Key Challenges and Analysis
+
+- Batch 2 pages are KP-valid but thin on conversion (meta promotes competitors equally; FAQ repeats “Is AniDachi free?”; agent jargon in FAQs; mid CTA underused).
+- Head-term money sits on `/watch-youtube-together` (1k/720) — enrich pillar over shipping more 10/mo clones.
+- SEO agent lacked KP gate, cannibalization map, and YT-specific conversion checklist → future batches risk more thin spokes.
+
+## Executor's Feedback or Assistance Requests
+
+- **Executor (SEO agent critical fixes):** All plan todos done. Check/build pending/complete — please confirm as Planner.
+- **Manual QA checklist (agent critical fixes):**
+  1. `/guides/how-to-watch-crunchyroll-with-friends` — HowToJsonLd, fold + mid CTA, `/pricing` install.
+  2. `/guides/crunchyroll-watch-party-free` — conversion-class twin of YT free; CR crumbs.
+  3. Compare FAQs (syncplay, netflix, rave, amazon, metastream) — not “Crunchyroll only.”
+  4. Pseo CR guides (e.g. group-watch) — crumbs under Watch Crunchyroll Together.
+  5. CR pillar HowTo — install via `/pricing`, not Chrome Web Store.
+- **Executor (conversion polish):** Steps 1–5 done. Check + build passed. Please confirm as Planner when manual QA looks good.
+- **Manual QA checklist (conversion polish):**
+  1. `/watch-youtube-together` — “Start here” list + mid CTA → `/pricing`; FAQ uses YouTube-safe free answer.
+  2. `/guides/youtube-watch-party-free` + Teleparty/Discord SS YT guides — CTR metas, mid CTA, no agent jargon.
+  3. Rave/Kast/does-youtube + host/sync/group/without-SS — pricing snippets (not full free FAQ spam); no Crunchyroll-only FAQ text.
+  4. Spot-check older YT guides (`best-apps…`, `how-to-watch-youtube-with-friends`, chrome-extension) — free FAQ mentions YouTube.
+  5. After deploy: SERP title/description + pricing conversion by landing path.
 
 ### Additional batch (10 more watch pages — 2026-05-12)
 
@@ -692,3 +721,5 @@ The survey should do more than “collect answers” — it should:
 - Web package `engines.node` requires **22.x**; local default Node 23 fails `pnpm --filter @anidachi/web check` until `nvm use 22`.
 - GSC “Discovered – not indexed” exports can include intentionally noindex auth routes that auto-discovery still puts in `/sitemap.xml` — keep `EXCLUDED_URL_PATHS` in sync with page `robots: { index: false }`.
 - Stale `.next/types` can fail `tsc` after deleting routes (e.g. `app/extension/page.tsx`); clearing `.next/types` before `pnpm check` fixes phantom module errors.
+- SEO agent: after adding a YouTube conversion/KP/anti-cannibal stack, ship the **Crunchyroll twin in the same playbook pass** — otherwise CR pages drift (mid-CTA, crumbs, CWS vs `/pricing`, “Crunchyroll-only” FAQs).
+- Never put agent jargon (`soft-pedal`, unexplained `provider-pinned`) in hard boundaries without an explicit “never publish” ban — agents copy it into FAQs.

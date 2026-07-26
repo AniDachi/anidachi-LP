@@ -97,8 +97,9 @@ export default function AniDachiVsAmazonWatchPartyPage() {
       </h2>
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
-          AniDachi is purpose-built for Crunchyroll anime — the platform with
-          the largest anime catalog. Amazon Watch Together works only with
+          AniDachi is built for Crunchyroll anime — the platform with
+          the largest anime catalog — and also supports YouTube watchrooms.
+          Amazon Watch Together works only with
           Amazon Prime Video, which has a smaller but distinct anime selection.
           The right choice depends on where your group&apos;s anime actually lives.
         </strong>

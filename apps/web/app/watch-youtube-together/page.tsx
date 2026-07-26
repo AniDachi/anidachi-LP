@@ -8,8 +8,9 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
   PRICING_ASYNC_HOST_SNIPPET,
   PRICING_EARLY_ACCESS_PRICE,
-  PRICING_IS_ANIDACHI_FREE_ANSWER,
+  PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
 } from "@/lib/pricing-copy";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
@@ -18,12 +19,12 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "YouTube Watch Party — Watch YouTube Together With Friends (2026)",
   description:
-    "YouTube has no native watch party. Use AniDachi for synced YouTube watchrooms with chat and async catch-up — or compare Watch2Gether, Teleparty, and Discord.",
+    "YouTube has no native watch party. Host AniDachi watchrooms on full YouTube videos with sync, chat, and async catch-up — start free at pricing.",
   alternates: { canonical: "/watch-youtube-together" },
   openGraph: {
     title: "YouTube Watch Party — Watch YouTube Together",
     description:
-      "Create a YouTube watch party with sync, chat, and async support. Every method compared.",
+      "Create a YouTube watch party with sync, chat, and async. Start from pricing.",
     url: "/watch-youtube-together",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "YouTube Watch Party — Watch YouTube Together",
     description:
-      "Synced YouTube watchrooms with AniDachi — live or async. Methods compared.",
+      "Synced YouTube watchrooms with AniDachi — live or async. Start free.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -59,7 +60,7 @@ const faq = [
   },
   {
     question: "Is AniDachi free for YouTube watch parties?",
-    answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
+    answer: PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER,
   },
   {
     question: "Does Teleparty work with YouTube?",
@@ -70,12 +71,41 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
+  { id: "start-here", label: "Start here", level: 2 },
   { id: "no-native", label: "Why no built-in watch party", level: 2 },
   { id: "step-by-step", label: "Step-by-step", level: 2 },
   { id: "compare-methods", label: "Compare methods", level: 2 },
   { id: "anidachi-difference", label: "What makes AniDachi different", level: 2 },
   { id: "related", label: "Related guides", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
+];
+
+const startHereItemList = [
+  {
+    name: "How to watch YouTube with friends",
+    url: "/guides/how-to-watch-youtube-with-friends",
+    position: 1,
+  },
+  {
+    name: "Can you screen share YouTube on Discord?",
+    url: "/guides/can-you-screen-share-youtube-on-discord",
+    position: 2,
+  },
+  {
+    name: "Free YouTube watch party options",
+    url: "/guides/youtube-watch-party-free",
+    position: 3,
+  },
+  {
+    name: "Best Teleparty alternatives for YouTube",
+    url: "/guides/best-teleparty-alternatives-for-youtube",
+    position: 4,
+  },
+  {
+    name: "How to host a YouTube watch party",
+    url: "/guides/how-to-host-a-youtube-watch-party",
+    position: 5,
+  },
 ];
 
 const howToSteps = [
@@ -175,6 +205,7 @@ export default function WatchYoutubeTogetherPage() {
         dateModified="2026-07-26"
         faq={faq}
         headings={tocHeadings}
+        itemList={startHereItemList}
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
@@ -194,14 +225,35 @@ export default function WatchYoutubeTogetherPage() {
             creates watchrooms on full YouTube videos with synced playback, chat,
             and async catch-up.
           </strong>{" "}
-          YouTube has no native co-watching feature. Watch2Gether and Teleparty
-          remain solid free live-only options; Discord voice pairs well with any
-          sync tool. Start from{" "}
+          YouTube has no native co-watching feature. Start from{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing / early access
           </Link>
-          .
+          . Compare free live-only tools below after you know the AniDachi path.
         </p>
+
+        <h2
+          id="start-here"
+          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
+        >
+          Start Here
+        </h2>
+        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
+          {startHereItemList.map((item) => (
+            <li key={item.url}>
+              <Link href={item.url} className="text-brand-orange hover:underline">
+                {item.name}
+              </Link>
+            </li>
+          ))}
+        </ol>
+
+        <PrimaryCheckoutCta
+          pagePath="/watch-youtube-together"
+          pageTemplate="pillar"
+          placement="content_mid"
+          className="my-10"
+        />
 
         <h2
           id="no-native"

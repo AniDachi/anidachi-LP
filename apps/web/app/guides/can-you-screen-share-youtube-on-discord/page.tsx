@@ -1,25 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
-import { PRICING_DISCORD_COMPARE_FAQ } from "@/lib/pricing-copy";
+import {
+  PRICING_DISCORD_COMPARE_YOUTUBE_FAQ,
+  PRICING_YT_PRICING_SNIPPET,
+} from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Can You Screen Share YouTube on Discord? (2026) | AniDachi",
+  title: "Can You Screen Share YouTube on Discord? Better Sync (2026) | AniDachi",
   description:
-    "Yes, but quality and control suffer: Discord Go Live makes one person the streamer. Better: sync YouTube watchrooms and keep Discord for voice only.",
+    "Yes, Discord can screen-share YouTube — but quality and control suffer. Sync full YouTube watch pages with AniDachi and keep Discord for voice. Start free at pricing.",
   alternates: {
     canonical: "/guides/can-you-screen-share-youtube-on-discord",
   },
   openGraph: {
     title: "Can You Screen Share YouTube on Discord?",
     description:
-      "Screen share works more often than Crunchyroll — but sync tools still win for quality.",
+      "Go Live works for clips — sync tools win for real YouTube watch parties.",
     url: "/guides/can-you-screen-share-youtube-on-discord",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
@@ -35,26 +39,26 @@ const faq = [
   {
     question: "Can you screen share YouTube on Discord?",
     answer:
-      "Yes in most setups — Discord Go Live can capture a browser tab or window playing YouTube. Friends hear and see your stream, but only you control the player and everyone else watches a compressed Discord feed.",
+      "Yes in most setups — Discord Go Live can capture a browser tab playing YouTube. Friends see your stream, but only you control the player and everyone else watches a compressed Discord feed.",
   },
   {
     question: "Is Discord screen share good for a YouTube watch party?",
     answer:
-      "It is fine for a quick clip. For longer nights it is worse than per-person YouTube playback: lower resolution, host bandwidth bottlenecks, and no independent scrubbing for guests. Prefer AniDachi sync plus Discord voice.",
+      "Fine for a quick clip. For longer nights it loses to per-person YouTube playback: lower resolution, host bandwidth bottlenecks, and no guest scrubbing. Prefer AniDachi sync plus Discord voice.",
   },
   {
     question: "Why is synced YouTube better than screen share?",
     answer:
-      "Each friend opens the same full youtube.com/watch page on their own connection. AniDachi keeps timestamps aligned while Discord handles conversation — no one is stuck staring at a single friend's stream.",
+      "Each friend opens the same full youtube.com/watch page on their own connection. AniDachi keeps timestamps aligned while Discord handles conversation.",
   },
   {
     question: "Does AniDachi replace Discord?",
     answer:
-      "No. Keep Discord (or another call) for voice and community. AniDachi only owns the YouTube watchroom layer — playback sync, chat, and optional async catch-up.",
+      "No. Keep Discord for voice. AniDachi owns the YouTube watchroom — playback sync, chat, and optional async catch-up.",
   },
   {
-    question: "Is AniDachi free compared to Discord screen share?",
-    answer: PRICING_DISCORD_COMPARE_FAQ.replace(/Crunchyroll/g, "YouTube"),
+    question: "How does AniDachi pricing compare to Discord screen share?",
+    answer: `${PRICING_DISCORD_COMPARE_YOUTUBE_FAQ} ${PRICING_YT_PRICING_SNIPPET}`,
   },
 ];
 
@@ -106,8 +110,12 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
           watch party.
         </strong>{" "}
         Only the host controls the player, guests watch a compressed stream, and long
-        videos eat the host&apos;s upload bandwidth. Better: everyone opens YouTube
-        themselves, AniDachi syncs playback, and Discord stays for voice. See{" "}
+        videos eat the host&apos;s upload. Better: everyone opens the same full watch
+        page,{" "}
+        <Link href="/watch-youtube-together" className="text-brand-orange hover:underline">
+          AniDachi syncs the room
+        </Link>
+        , and Discord stays for voice. See{" "}
         <Link
           href="/guides/youtube-watch-party-with-discord"
           className="text-brand-orange hover:underline"
@@ -135,6 +143,13 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
         </li>
       </ul>
 
+      <PrimaryCheckoutCta
+        pagePath="/guides/can-you-screen-share-youtube-on-discord"
+        pageTemplate="guide"
+        placement="content_mid"
+        className="my-10"
+      />
+
       <h2
         id="better-path"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
@@ -149,7 +164,7 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
           </Link>{" "}
           for AniDachi early access.
         </li>
-        <li>Open the same full YouTube watch page on every device.</li>
+        <li>Open the same full youtube.com/watch page on every device (not Shorts or embeds).</li>
         <li>Create a watchroom and share the invite.</li>
         <li>Join a Discord voice channel — mute YouTube tabs as needed.</li>
       </ol>

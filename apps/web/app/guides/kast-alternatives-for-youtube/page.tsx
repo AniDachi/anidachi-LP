@@ -5,9 +5,10 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
-  PRICING_COMPARE_OVERVIEW,
+  PRICING_COMPARE_OVERVIEW_YOUTUBE,
   PRICING_FREE_TIER_TABLE,
 } from "@/lib/pricing-copy";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
@@ -51,10 +52,7 @@ const faq = [
   },
   {
     question: "How does AniDachi pricing compare?",
-    answer: PRICING_COMPARE_OVERVIEW.replace(
-      /anime detection/g,
-      "YouTube + Crunchyroll rooms",
-    ),
+    answer: PRICING_COMPARE_OVERVIEW_YOUTUBE,
   },
 ];
 
@@ -119,8 +117,15 @@ export default function KastAlternativesForYoutubePage() {
       <p className="text-foreground/80 leading-relaxed mb-8">
         Host-relayed video can feel fine for short clips and fails for long videos or
         spotty Wi-Fi. AniDachi targets full YouTube watch pages with per-user streams —
-        Soft-pedal Shorts and embeds.
+        not Shorts or embeds.
       </p>
+
+      <PrimaryCheckoutCta
+        pagePath="/guides/kast-alternatives-for-youtube"
+        pageTemplate="guide"
+        placement="content_mid"
+        className="my-10"
+      />
 
       <h2
         id="alternatives"

@@ -3,28 +3,28 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
-import { PRICING_IS_ANIDACHI_FREE_ANSWER } from "@/lib/pricing-copy";
+import { PRICING_YT_PRICING_SNIPPET } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Does YouTube Have a Watch Party? (2026 Answer) | AniDachi",
+  title: "Does YouTube Have a Watch Party? No — Watch Together (2026) | AniDachi",
   description:
-    "Does YouTube have a watch party or group watch feature? No native watch party — use AniDachi, Teleparty, or Watch2Gether for synced YouTube nights.",
+    "No — YouTube has no native watch party. Sync full videos with AniDachi watchrooms (live or async) and start free at pricing.",
   alternates: { canonical: "/guides/does-youtube-have-watch-party" },
   openGraph: {
     title: "Does YouTube Have a Watch Party Feature?",
     description:
-      "YouTube has no native watch party in 2026. Here is how to watch YouTube together anyway.",
+      "YouTube has no native watch party. Here's how to watch YouTube together with AniDachi.",
     url: "/guides/does-youtube-have-watch-party",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Does YouTube Have a Watch Party?",
-    description: "No native feature — third-party watchrooms fill the gap.",
+    description: "No native feature — AniDachi watchrooms fill the gap.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -43,11 +43,11 @@ const faq = [
   {
     question: "Can you watch YouTube together with friends online?",
     answer:
-      "Yes — with a sync layer. Open the same full YouTube video on each device, join an AniDachi watchroom, and keep Discord (or another call) for voice. Soft-pedal Shorts, embeds, and the mobile app — provider-pinned rooms target the desktop watch page.",
+      "Yes — with a sync layer. Open the same full YouTube video on each device, join an AniDachi watchroom, and keep Discord (or another call) for voice. Rooms work on full youtube.com/watch pages in desktop Chrome — not Shorts, embeds, or the mobile app.",
   },
   {
     question: "Is AniDachi free for YouTube watch parties?",
-    answer: PRICING_IS_ANIDACHI_FREE_ANSWER,
+    answer: `Yes for joining and limited hosting. ${PRICING_YT_PRICING_SNIPPET} Full details on the free YouTube watch party guide.`,
   },
   {
     question: "What is the best way to watch YouTube with friends?",
@@ -126,9 +126,9 @@ export default function DoesYoutubeHaveWatchPartyPage() {
           aligned across devices.
         </li>
         <li>
-          <strong>Shorts / embeds / mobile app:</strong> Not the target for AniDachi
-          provider-pinned rooms — use a full <code>youtube.com/watch</code> page on
-          desktop Chrome.
+          <strong>Shorts / embeds / mobile app:</strong> Not supported for AniDachi
+          YouTube rooms — use a full <code>youtube.com/watch</code> page on desktop
+          Chrome.
         </li>
       </ul>
 

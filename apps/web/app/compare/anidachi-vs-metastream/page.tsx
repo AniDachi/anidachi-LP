@@ -100,8 +100,9 @@ export default function AniDachiVsMetastreamPage() {
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
           Metastream is a flexible live tab-sync tool for casual co-watching.
-          AniDachi is purpose-built for Crunchyroll anime groups who need async
-          watchrooms, episode-scoped progress, and spoiler-safe catch-up.
+          AniDachi is built for Crunchyroll anime groups who need async
+          watchrooms, episode-scoped progress, and spoiler-safe catch-up — and
+          also supports YouTube watchrooms.
         </strong>
       </p>
 

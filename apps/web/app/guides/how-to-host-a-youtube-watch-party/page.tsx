@@ -5,7 +5,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
-  PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
+  PRICING_FRIENDS_NEED_YOUTUBE_ANSWER,
   PRICING_HOST_MODEL,
   PRICING_PLUS_VS_PRO_ANSWER,
   PRICING_PLUS_SHORT,
@@ -70,10 +70,7 @@ const faq = [
   },
   {
     question: "Do guests need paid AniDachi accounts?",
-    answer: PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER.replace(
-      /Crunchyroll/g,
-      "YouTube",
-    ),
+    answer: PRICING_FRIENDS_NEED_YOUTUBE_ANSWER,
   },
   {
     question: "Plus or Pro for club hosts?",

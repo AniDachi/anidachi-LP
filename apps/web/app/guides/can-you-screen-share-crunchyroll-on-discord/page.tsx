@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import { PRICING_DISCORD_COMPARE_FAQ } from "@/lib/pricing-copy";
@@ -70,7 +71,7 @@ const tocHeadings: TocHeading[] = [
 
 export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
   const relatedGuideLinks = getGuideLinks({
-    includeTags: ["discord", "online", "crunchyroll"],
+    includeTags: ["pillar-watch-crunchyroll"],
     excludeHref: "/guides/can-you-screen-share-crunchyroll-on-discord",
     limit: 4,
   });
@@ -89,7 +90,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
       description="Often blocked or poor quality — why Discord Go Live struggles with Crunchyroll and what to use instead."
       url="/guides/can-you-screen-share-crunchyroll-on-discord"
       datePublished="2026-07-19"
-      dateModified="2026-07-19"
+      dateModified="2026-07-26"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -115,6 +116,13 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         full Crunchyroll quality. For weekly anime nights, screen share is the
         wrong tool.
       </p>
+
+      <PrimaryCheckoutCta
+        pagePath="/guides/can-you-screen-share-crunchyroll-on-discord"
+        pageTemplate="guide"
+        placement="content_mid"
+        className="my-10"
+      />
 
       <h2
         id="why-it-fails"

@@ -5,32 +5,33 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
-  PRICING_COMPARE_OVERVIEW,
+  PRICING_COMPARE_OVERVIEW_YOUTUBE,
   PRICING_FREE_TIER_TABLE,
 } from "@/lib/pricing-copy";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Best Teleparty Alternatives for YouTube (2026 Ranked) | AniDachi",
+  title: "Best Teleparty Alternatives for YouTube (2026) | Switch to AniDachi",
   description:
-    "Ranked Teleparty alternatives for YouTube: AniDachi for sync + async, Watch2Gether, Rave, Discord voice. When to pick each.",
+    "Best Teleparty alternative for YouTube: AniDachi for live sync + async catch-up. Ranked vs Watch2Gether, Rave, and Discord voice — start at pricing.",
   alternates: {
     canonical: "/guides/best-teleparty-alternatives-for-youtube",
   },
   openGraph: {
     title: "Best Teleparty Alternatives for YouTube — 2026",
     description:
-      "Not a 1:1 Teleparty clone list — ranked by YouTube fit, with when-to-pick guidance.",
+      "Switch from Teleparty when you need async YouTube rooms — ranked options.",
     url: "/guides/best-teleparty-alternatives-for-youtube",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Best Teleparty Alternatives for YouTube",
-    description: "AniDachi, Watch2Gether, Rave, Discord — ranked for YouTube nights.",
+    description: "AniDachi for async YouTube rooms — when to pick each alternative.",
     images: [BRAND_OG_PATH],
   },
 };
@@ -53,10 +54,7 @@ const faq = [
   },
   {
     question: "How does AniDachi pricing compare for Teleparty switchers?",
-    answer: PRICING_COMPARE_OVERVIEW.replace(
-      /anime detection/g,
-      "YouTube + Crunchyroll rooms",
-    ),
+    answer: PRICING_COMPARE_OVERVIEW_YOUTUBE,
   },
 ];
 
@@ -126,9 +124,21 @@ export default function BestTelepartyAlternativesForYoutubePage() {
         .
       </p>
 
+      <PrimaryCheckoutCta
+        pagePath="/guides/best-teleparty-alternatives-for-youtube"
+        pageTemplate="guide"
+        placement="content_mid"
+        className="my-10"
+      />
+
       <h2 id="ranked" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Ranked Alternatives
       </h2>
+      <p className="text-foreground/80 leading-relaxed mb-4">
+        <strong>Switch to AniDachi</strong> if you need async catch-up, Discord voice with
+        local YouTube streams, or rooms that also work on Crunchyroll. Stay on Teleparty
+        for free live-only multi-platform nights when everyone is online.
+      </p>
       <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
         <li>
           <strong>AniDachi</strong> — YouTube + Crunchyroll rooms; start at{" "}

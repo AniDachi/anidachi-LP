@@ -505,7 +505,7 @@ export const guidePages: Record<string, GuidePage> = {
 				],
 			},
 		],
-		relatedTags: ["crunchyroll", "watch-party", "pillar-watch-crunchyroll"],
+		relatedTags: ["pillar-watch-crunchyroll"],
 		faq: [
 			{
 				question: "What is the best watch party app for Crunchyroll?",
@@ -573,7 +573,7 @@ export const guidePages: Record<string, GuidePage> = {
 				],
 			},
 		],
-		relatedTags: ["crunchyroll", "watch-party", "pillar-watch-crunchyroll"],
+		relatedTags: ["pillar-watch-crunchyroll"],
 		faq: [
 			{
 				question: "Can you group watch on Crunchyroll?",
@@ -649,7 +649,7 @@ export const guidePages: Record<string, GuidePage> = {
 				],
 			},
 		],
-		relatedTags: ["crunchyroll", "watch-party", "pillar-watch-crunchyroll"],
+		relatedTags: ["pillar-watch-crunchyroll"],
 		faq: [
 			{
 				question: "Can I make a Crunchyroll watch party for free?",
@@ -987,6 +987,9 @@ export function PseoListiclePage({
 export function PseoGuidePage({ slug }: { slug: keyof typeof guidePages }) {
 	const page = guidePages[slug];
 	const url = `/guides/${page.slug}`;
+	const isCrunchyrollCluster = page.relatedTags.includes(
+		"pillar-watch-crunchyroll",
+	);
 	const headings: TocHeading[] = [
 		...page.sections.map((section) => ({
 			id: section.id,
@@ -998,7 +1001,9 @@ export function PseoGuidePage({ slug }: { slug: keyof typeof guidePages }) {
 		{ id: "faq", label: "FAQ", level: 2 },
 	];
 	const related = getGuideLinks({
-		includeTags: page.relatedTags,
+		includeTags: isCrunchyrollCluster
+			? ["pillar-watch-crunchyroll"]
+			: page.relatedTags,
 		excludeHref: url,
 		limit: 4,
 	});
@@ -1007,18 +1012,24 @@ export function PseoGuidePage({ slug }: { slug: keyof typeof guidePages }) {
 		<SeoPageLayout
 			breadcrumbs={[
 				{ name: "Home", url: "/" },
-				{ name: "Guides", url: "/watch-anime-together" },
+				isCrunchyrollCluster
+					? {
+							name: "Watch Crunchyroll Together",
+							url: "/watch-crunchyroll-together",
+						}
+					: { name: "Guides", url: "/watch-anime-together" },
 				{ name: page.h1, url },
 			]}
 			title={page.h1}
 			description={page.description}
 			url={url}
 			datePublished="2026-07-12"
-			dateModified="2026-07-12"
+			dateModified="2026-07-26"
 			faq={page.faq}
 			headings={headings}
 			articleImage={ARTICLE_IMAGE}
 			conversionTemplate="guide"
+			aboveFoldCta
 		>
 			<HowToJsonLd
 				name={page.howToName}
