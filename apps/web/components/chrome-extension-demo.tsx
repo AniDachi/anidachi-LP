@@ -37,7 +37,7 @@ const SECTION_COPY: Record<
     eyebrow: "Live Demo",
     headline: "See It In Action",
     subcopy:
-      "The overlay sits on any Crunchyroll player. Create a room, share the link, you're in.",
+      "The overlay sits on any Crunchyroll or YouTube player. Create a room, share the link, you're in.",
   },
   async: {
     eyebrow: "Async Demo",

@@ -640,8 +640,21 @@ The survey should do more than “collect answers” — it should:
 
 **No URL renames / no 301s.**
 
+### Hero extension demo overlay restyle (2026-07-26)
+
+**Status:** Implementation complete — awaiting manual QA.
+
+**Scope:** Live animated mock only (Async unchanged). Highest fidelity vs latest extension overlay.
+
+**Changes:**
+- `apps/web/components/chrome-extension-demo-overlay.tsx` — green sync dot, account+Plus panel, icon actions, Settings tabs (Reactions/Layout/Voice), live chat column, message composer peek, mint speaking cams, catch-up restyle, emoji set `😂😱❤️🔥😭👀` (room rail peek removed — duplicated cam bubbles)
+- `apps/web/components/chrome-extension-demo.tsx` — Live subcopy → Crunchyroll or YouTube
+
+**Checks:** `pnpm --filter @anidachi/web check` ✅ · `pnpm --filter @anidachi/web build` ✅
+
 ### Executor's Feedback or Assistance Requests
 
+- **Manual QA (hero Live demo):** On homepage “See It In Action”, confirm Live sequence shows new panel chrome, green sync, chat/composer/rail peeks, cams with speaking ring; Async tab still works; check mobile width.
 - **Manual QA:** Open http://localhost:3003 — confirm Watch dropdown shows three siblings; check breadcrumbs on `/watch-youtube-together`, `/watch-crunchyroll-together`, `/guides/how-to-watch-youtube-with-friends`, `/guides/does-teleparty-work-with-crunchyroll`.
 - **Manual QA (Watch IA siblings):** Confirm Watch dropdown = Anime / CR / YouTube (peers). Breadcrumbs: peers (`Home → CR/YT → page`); tablet has no hamburger overlap; YT related list not polluted by anime tags.
 - **Manual QA (YouTube batch):** spot-check `/watch-youtube-together`, `/guides/how-to-watch-youtube-with-friends`, `/guides/does-teleparty-work-with-youtube`, rewritten `/watch-youtube-together-long-distance` — layout, FAQ, CTA → `/pricing`, no CR-only contradictions on home.
