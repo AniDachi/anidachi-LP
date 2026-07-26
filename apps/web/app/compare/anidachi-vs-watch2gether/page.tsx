@@ -1,33 +1,45 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
+import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
+import { PRICING_FREE_TIER_TABLE } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
 const BRAND_OG_PATH = "/Anidachi_logo.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "AniDachi vs Watch2Gether — Which Works Better for Crunchyroll? (2026)",
+  title: "AniDachi vs Watch2Gether — YouTube & Crunchyroll (2026)",
   description:
-    "AniDachi is the better choice for Crunchyroll anime groups. Watch2Gether is a generic free room for casual co-watching. Full comparison to find the right fit.",
+    "AniDachi vs Watch2Gether for YouTube watch parties and Crunchyroll anime groups: async watchrooms vs free live browser rooms. Full comparison.",
   alternates: { canonical: "/compare/anidachi-vs-watch2gether" },
   openGraph: {
     title: "AniDachi vs Watch2Gether",
     description:
-      "Compare a Crunchyroll-first watchroom tool with a generic watch-together room.",
+      "Compare YouTube + Crunchyroll watchrooms with Watch2Gether’s free live rooms.",
     url: "/compare/anidachi-vs-watch2gether",
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "AniDachi vs Watch2Gether",
-    description: "Crunchyroll-first watchrooms vs generic watch-together rooms.",
+    description: "YouTube & Crunchyroll watchrooms vs generic watch-together rooms.",
     images: [BRAND_OG_PATH],
   },
 };
 
 const faq = [
+  {
+    question: "Does Watch2Gether work for YouTube?",
+    answer:
+      "Yes. Watch2Gether is one of the most popular free tools for live YouTube sync: create a room, paste a URL, share the link. It does not offer AniDachi-style async watchrooms.",
+  },
+  {
+    question: "Does AniDachi work for YouTube and Crunchyroll?",
+    answer:
+      "Yes. AniDachi’s Chrome extension supports full watchrooms on YouTube and Crunchyroll — live sync plus async catch-up. Shorts and embeds are not supported.",
+  },
   {
     question: "Do tools like Watch2Gether replace a Crunchyroll subscription?",
     answer:
@@ -36,14 +48,14 @@ const faq = [
   {
     question: "Why would I choose AniDachi over a generic room link?",
     answer:
-      "If your group watches anime weekly, you usually want repeatable rooms, episode context, spoiler boundaries, and (optionally) async catch-up—features AniDachi is designed around.",
+      "If your group watches YouTube or anime weekly, you usually want repeatable rooms, spoiler hygiene, and optional async catch-up—features AniDachi is designed around.",
   },
 ];
 
 const headings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
   { id: "tldr", label: "At a glance", level: 2 },
-  { id: "what-anime-groups-need", label: "What anime groups need", level: 2 },
+  { id: "feature-comparison", label: "Feature comparison", level: 2 },
   { id: "when-watch2gether", label: "When Watch2Gether is enough", level: 2 },
   { id: "when-anidachi", label: "When AniDachi wins", level: 2 },
   { id: "related", label: "Related", level: 2 },
@@ -55,20 +67,21 @@ export default function AniDachiVsWatch2GetherPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Compare", url: "/watch-crunchyroll-together" },
+        { name: "Compare", url: "/watch-anime-together" },
         { name: "AniDachi vs Watch2Gether", url: "/compare/anidachi-vs-watch2gether" },
       ]}
       title="AniDachi vs Watch2Gether"
-      description="Compare Crunchyroll-first watchrooms with generic watch-together rooms."
+      description="Compare YouTube + Crunchyroll watchrooms with Watch2Gether’s free live rooms."
       url="/compare/anidachi-vs-watch2gether"
       datePublished="2026-05-11"
-      dateModified="2026-07-22"
+      dateModified="2026-07-25"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
+      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
-        AniDachi vs Watch2Gether for anime watch parties
+        AniDachi vs Watch2Gether for YouTube and Anime
       </h1>
       <h2
         id="answer"
@@ -78,10 +91,9 @@ export default function AniDachiVsWatch2GetherPage() {
       </h2>
       <p className="text-xl text-foreground/80 leading-relaxed mb-6">
         <strong>
-          If your group is Crunchyroll-first, the most reliable workflow is per-user
-          playback in each person’s own tab—then sync the room on top. Generic “room link”
-          tools can be great for quick hangs, but anime nights usually need stronger
-          episode context and spoiler hygiene.
+          Choose AniDachi for YouTube or Crunchyroll watchrooms with async
+          catch-up. Choose Watch2Gether for a free, zero-extension live room when
+          everyone can watch at the same time.
         </strong>
       </p>
 
@@ -89,23 +101,48 @@ export default function AniDachiVsWatch2GetherPage() {
         At a glance
       </h2>
       <p className="text-foreground/80 mb-8">
-        <strong>Watch2Gether:</strong> fast to start, generic room model.{" "}
-        <strong>AniDachi:</strong> Crunchyroll watchrooms with anime detection,
-        sync, chat, and optional async catch-up.
+        <strong>Watch2Gether:</strong> fast browser rooms, great for casual YouTube
+        hangs. <strong>AniDachi:</strong> Chrome extension watchrooms on YouTube and
+        Crunchyroll with sync, chat, and optional async.
       </p>
 
       <h2
-        id="what-anime-groups-need"
+        id="feature-comparison"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        What anime groups need (beyond “press play together”)
+        Feature comparison
       </h2>
-      <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
-        <li>Everyone watches in full quality on their own stream.</li>
-        <li>Chat stays tied to the right episode so late viewers aren’t spoiled.</li>
-        <li>A repeatable room workflow for weekly seasons and long shows.</li>
-        <li>Optional async catch-up when schedules don’t align.</li>
-      </ul>
+      <ResponsiveCompareTable
+        columns={[
+          { id: "anidachi", label: "AniDachi", highlight: true },
+          { id: "w2g", label: "Watch2Gether" },
+        ]}
+        rows={[
+          {
+            feature: "YouTube support",
+            values: { anidachi: "yes", w2g: "yes" },
+          },
+          {
+            feature: "Crunchyroll support",
+            values: { anidachi: "yes", w2g: "no" },
+          },
+          {
+            feature: "Async catch-up",
+            values: { anidachi: "yes", w2g: "no" },
+          },
+          {
+            feature: "Chrome extension",
+            values: { anidachi: "yes", w2g: "no (web)" },
+          },
+          {
+            feature: "Free tier",
+            values: {
+              anidachi: PRICING_FREE_TIER_TABLE,
+              w2g: "Yes (rooms)",
+            },
+          },
+        ]}
+      />
 
       <h2
         id="when-watch2gether"
@@ -114,9 +151,9 @@ export default function AniDachiVsWatch2GetherPage() {
         When Watch2Gether is enough
       </h2>
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
-        <li>You want a quick, casual hang with minimal setup.</li>
+        <li>You want a quick YouTube hang with minimal setup.</li>
         <li>Everyone can watch at the same time and doesn’t need async pacing.</li>
-        <li>You don’t need anime detection or per-person progress.</li>
+        <li>You don’t need Crunchyroll anime detection or per-person progress.</li>
       </ul>
 
       <h2
@@ -126,15 +163,28 @@ export default function AniDachiVsWatch2GetherPage() {
         When AniDachi wins
       </h2>
       <ul className="list-disc pl-6 text-foreground/80 space-y-2 mb-8">
-        <li>You host Crunchyroll anime nights regularly.</li>
-        <li>Your group needs spoiler-safe episode context.</li>
-        <li>You want async catch-up and progress tracking built in.</li>
+        <li>You host recurring YouTube or Crunchyroll nights.</li>
+        <li>Your group needs spoiler-safe async catch-up.</li>
+        <li>You want one extension for both platforms.</li>
       </ul>
 
       <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Related
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link href="/watch-youtube-together" className="hover:underline">
+            YouTube watch party hub
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/guides/watch2gether-alternatives-for-youtube"
+            className="hover:underline"
+          >
+            Watch2Gether alternatives for YouTube
+          </Link>
+        </li>
         <li>
           <Link href="/watch-crunchyroll-together" className="hover:underline">
             Watch Crunchyroll Together
@@ -149,11 +199,6 @@ export default function AniDachiVsWatch2GetherPage() {
           </Link>
         </li>
         <li>
-          <Link href="/compare/anidachi-vs-crunchyroll-party" className="hover:underline">
-            AniDachi vs Crunchyroll Party
-          </Link>
-        </li>
-        <li>
           <Link href="/pricing" className="hover:underline">
             See pricing and start checkout
           </Link>
@@ -162,4 +207,3 @@ export default function AniDachiVsWatch2GetherPage() {
     </SeoPageLayout>
   );
 }
-

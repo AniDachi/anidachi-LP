@@ -63,7 +63,7 @@ export default function BestActionAnimeToWatchWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Best action anime to watch with friends", url: "/guides/best-action-anime-to-watch-with-friends" },
       ]}
       title="18 best action anime to watch with friends in 2026"

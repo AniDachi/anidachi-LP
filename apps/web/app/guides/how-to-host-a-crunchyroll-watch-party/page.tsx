@@ -109,7 +109,7 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-crunchyroll-together" },
+          { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
           {
             name: "How to host a Crunchyroll watch party",
             url: "/guides/how-to-host-a-crunchyroll-watch-party",

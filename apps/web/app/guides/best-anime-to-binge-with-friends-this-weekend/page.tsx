@@ -91,7 +91,7 @@ export default function BestAnimeToBingeWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         {
           name: "Best anime to binge with friends this weekend",
           url: "/guides/best-anime-to-binge-with-friends-this-weekend",

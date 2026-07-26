@@ -63,7 +63,7 @@ export default function BestSciFiAnimeToWatchWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Best sci-fi anime to watch with friends", url: "/guides/best-sci-fi-anime-to-watch-with-friends" },
       ]}
       title="14 best sci-fi anime to watch with friends in 2026"

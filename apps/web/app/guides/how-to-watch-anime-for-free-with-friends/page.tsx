@@ -78,7 +78,7 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
       <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "How to watch anime for free with friends", url: "/guides/how-to-watch-anime-for-free-with-friends" },
       ]}
       title="How to watch anime for free with friends online"

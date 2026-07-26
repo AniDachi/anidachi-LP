@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { AnidachiLogoLink } from "@/components/anidachi-logo";
 import { Menu, X, LogOut, ChevronDown, Users, User } from "lucide-react";
 import { NavPricingButton } from "@/components/nav-pricing-button";
@@ -188,14 +189,179 @@ function MobileSignOut({ onDone }: { onDone: () => void }) {
   );
 }
 
-const navLinks = [
-  { href: "/#how-it-works", label: "How It Works" },
-  { href: "/watch-anime-together", label: "Watch" },
-  { href: "mailto:anidachi.app@gmail.com", label: "Contact" },
+/** Sibling hubs under Watch — platforms are peers of the anime vertical (not nested under anime). */
+const watchHubLinks = [
+  {
+    href: "/watch-anime-together",
+    label: "Watch Anime Together",
+    description: "Anime vertical hub",
+  },
+  {
+    href: "/watch-crunchyroll-together",
+    label: "Crunchyroll Watch Party",
+    description: "Crunchyroll platform",
+  },
+  {
+    href: "/watch-youtube-together",
+    label: "YouTube Watch Party",
+    description: "YouTube platform",
+  },
 ] as const;
 
-function isExternalNavLink(href: string) {
-  return href.startsWith("mailto:") || href.startsWith("http");
+function isWatchClusterPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (
+    pathname === "/watch-anime-together" ||
+    pathname === "/watch-crunchyroll-together" ||
+    pathname === "/watch-youtube-together" ||
+    pathname === "/anime-watch-party-toolkit" ||
+    pathname === "/anime-watch-party" ||
+    pathname.startsWith("/watch-crunchyroll-") ||
+    pathname.startsWith("/watch-youtube-") ||
+    pathname.startsWith("/watch/")
+  ) {
+    return true;
+  }
+  // Genre hubs: /watch-{genre}-anime-with-friends
+  if (/^\/watch-[a-z0-9-]+-anime-with-friends$/.test(pathname)) {
+    return true;
+  }
+  // Platform-tagged guide/compare URLs only (avoid lighting Watch on every SEO page)
+  return (
+    pathname.startsWith("/guides/") || pathname.startsWith("/compare/")
+  ) &&
+    (pathname.includes("youtube") ||
+      pathname.includes("crunchyroll") ||
+      pathname.includes("watch2gether") ||
+      pathname.includes("teleparty") ||
+      pathname.includes("watch-party") ||
+      pathname.includes("anime"));
+}
+
+function WatchNavMenu({
+  variant,
+  onNavigate,
+}: {
+  variant: "desktop" | "tablet" | "mobile";
+  onNavigate?: () => void;
+}) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLLIElement>(null);
+  const active = isWatchClusterPath(pathname);
+  const menuId = "watch-hubs-menu";
+
+  useEffect(() => {
+    if (variant === "mobile") return;
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open, variant]);
+
+  useEffect(() => {
+    if (!open || variant === "mobile") return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, variant]);
+
+  if (variant === "mobile") {
+    return (
+      <li>
+        <p
+          id="mobile-watch-nav-label"
+          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-foreground/40"
+        >
+          Watch
+        </p>
+        <ul
+          className="flex flex-col gap-1"
+          aria-labelledby="mobile-watch-nav-label"
+        >
+          {watchHubLinks.map((hub) => (
+            <li key={hub.href}>
+              <Link
+                href={hub.href}
+                className={cn(
+                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  pathname === hub.href
+                    ? "text-brand-orange-bright"
+                    : "text-foreground/70",
+                )}
+                onClick={onNavigate}
+              >
+                {hub.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </li>
+    );
+  }
+
+  return (
+    <li
+      ref={ref}
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-controls={menuId}
+        className={cn(
+          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-brand-orange-bright",
+          active || open ? "text-brand-orange-bright" : "text-foreground/70",
+        )}
+        onClick={() => setOpen((o) => !o)}
+        onFocus={() => setOpen(true)}
+      >
+        Watch
+        <ChevronDown
+          className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+      {open ? (
+        <div
+          id={menuId}
+          role="menu"
+          aria-label="Watch hubs"
+          className="absolute left-0 top-full z-[100] w-72 pt-2"
+        >
+          <div className="rounded-xl border border-brand-border bg-brand-surface p-2 shadow-2xl glow-orange-sm">
+            {watchHubLinks.map((hub) => (
+              <Link
+                key={hub.href}
+                href={hub.href}
+                role="menuitem"
+                className={cn(
+                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  pathname === hub.href &&
+                    "bg-brand-orange/10 text-brand-orange-bright",
+                )}
+                onClick={() => {
+                  setOpen(false);
+                  onNavigate?.();
+                }}
+              >
+                <span className="text-sm font-semibold">{hub.label}</span>
+                <span className="text-xs opacity-70">{hub.description}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </li>
+  );
 }
 
 export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
@@ -251,25 +417,23 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
 
         {/* Desktop inline nav */}
         <ul className="hidden items-center gap-4 text-sm md:flex md:gap-6">
-          {navLinks.map((link) => (
-            <li key={link.href}>
-              {isExternalNavLink(link.href) ? (
-                <a
-                  href={link.href}
-                  className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
-                >
-                  {link.label}
-                </a>
-              ) : (
-                <Link
-                  href={link.href}
-                  className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
-                >
-                  {link.label}
-                </Link>
-              )}
-            </li>
-          ))}
+          <li>
+            <Link
+              href="/#how-it-works"
+              className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
+            >
+              How It Works
+            </Link>
+          </li>
+          <WatchNavMenu variant="desktop" />
+          <li>
+            <a
+              href="mailto:anidachi.app@gmail.com"
+              className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
+            >
+              Contact
+            </a>
+          </li>
           <li>
             <JoinDiscordButton variant="nav" placement="nav" />
           </li>
@@ -290,15 +454,15 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           </li>
         </ul>
 
-        {/* Mobile: pricing + sign in + menu */}
-        <div className="flex items-center gap-1 md:hidden">
-          <span className="inline-flex min-h-11 min-w-11 items-center justify-center sm:hidden">
+        {/* Mobile-only: pricing + sign in + hamburger (hidden from sm up — tablet uses inline strip) */}
+        <div className="flex items-center gap-1 sm:hidden">
+          <span className="inline-flex min-h-11 min-w-11 items-center justify-center">
             <NavPricingLink className="inline-flex min-h-11 items-center rounded-full bg-brand-orange/15 border border-brand-orange/30 px-3 text-sm font-semibold text-brand-orange-bright transition-colors hover:bg-brand-orange" />
           </span>
           {!user ? (
             <Link
               href="/login"
-              className="inline-flex min-h-11 items-center rounded-full border border-brand-border px-3 text-xs font-semibold text-foreground transition-colors hover:border-brand-orange/50 hover:text-brand-orange-bright sm:hidden"
+              className="inline-flex min-h-11 items-center rounded-full border border-brand-border px-3 text-xs font-semibold text-foreground transition-colors hover:border-brand-orange/50 hover:text-brand-orange-bright"
             >
               Sign in
             </Link>
@@ -319,18 +483,17 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
           </button>
         </div>
 
-        {/* Tablet: show text pricing link, hide hamburger until md */}
+        {/* Tablet: inline nav + pricing (no hamburger) */}
         <ul className="hidden items-center gap-4 text-sm sm:flex md:hidden">
-          {navLinks.slice(0, 2).map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
+          <li>
+            <Link
+              href="/#how-it-works"
+              className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
+            >
+              How It Works
+            </Link>
+          </li>
+          <WatchNavMenu variant="tablet" />
           <li>
             <JoinDiscordButton variant="nav" placement="nav_tablet" />
           </li>
@@ -355,40 +518,41 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-[45] bg-black/50 md:hidden touch-none"
+            className="fixed inset-0 z-[45] bg-black/50 sm:hidden touch-none"
             aria-label="Close menu"
             onClick={() => setMenuOpen(false)}
           />
           <div
             id="mobile-nav-menu"
             data-scroll-lock-scrollable
-            className="fixed inset-x-0 top-[calc(3.5rem+var(--safe-top))] z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem-var(--safe-top)))] overflow-y-auto overscroll-contain border-b border-brand-border bg-background/95 backdrop-blur-xl px-4 py-4 shadow-lg md:hidden"
+            className="fixed inset-x-0 top-[calc(3.5rem+var(--safe-top))] z-[46] max-h-[min(70dvh,calc(100dvh-3.5rem-var(--safe-top)))] overflow-y-auto overscroll-contain border-b border-brand-border bg-background/95 backdrop-blur-xl px-4 py-4 shadow-lg sm:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile navigation menu"
           >
             <ul className="flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <li key={link.href}>
-                  {isExternalNavLink(link.href) ? (
-                    <a
-                      href={link.href}
-                      className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <Link
-                      href={link.href}
-                      className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
+              <li>
+                <Link
+                  href="/#how-it-works"
+                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  How It Works
+                </Link>
+              </li>
+              <WatchNavMenu
+                variant="mobile"
+                onNavigate={() => setMenuOpen(false)}
+              />
+              <li>
+                <a
+                  href="mailto:anidachi.app@gmail.com"
+                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Contact
+                </a>
+              </li>
               <li>
                 <JoinDiscordButton
                   variant="nav"

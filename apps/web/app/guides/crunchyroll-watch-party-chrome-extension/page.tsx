@@ -59,7 +59,7 @@ export default function CrunchyrollExtensionsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
         { name: "Crunchyroll Watch Party Extensions", url: "/guides/crunchyroll-watch-party-chrome-extension" },
       ]}
       title="Best Crunchyroll Watch Party Chrome Extensions"

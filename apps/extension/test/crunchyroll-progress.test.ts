@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { getCrunchyrollProgressEntry } from "../src/crunchyroll-progress";
+import { getCrunchyrollProgressEntry } from "../src/source-adapters/crunchyroll/progress";
 
 describe("Crunchyroll progress extraction", () => {
   afterEach(() => {

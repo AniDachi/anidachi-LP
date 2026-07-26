@@ -70,7 +70,7 @@ export default function BestIsekaiAnimeToWatchWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         {
           name: "Best isekai anime to watch with friends",
           url: "/guides/best-isekai-anime-to-watch-with-friends",

@@ -77,7 +77,7 @@ export default function BestWayToWatchCrunchyrollWithFriendsPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-crunchyroll-together" },
+        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
         {
           name: "Best way to watch Crunchyroll with friends",
           url: "/guides/best-way-to-watch-crunchyroll-with-friends",

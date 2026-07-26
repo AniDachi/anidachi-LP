@@ -88,7 +88,15 @@ export function Footer() {
                   href="/watch-crunchyroll-together"
                   className="hover:text-brand-orange-bright transition-colors"
                 >
-                  Watch Crunchyroll Together
+                  Crunchyroll Watch Party
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/watch-youtube-together"
+                  className="hover:text-brand-orange-bright transition-colors"
+                >
+                  YouTube Watch Party
                 </Link>
               </li>
               <li>

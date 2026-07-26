@@ -25,7 +25,7 @@ Implemented in:
 - `apps/extension/src/popup-app.tsx`
 - `apps/extension/src/popup-styles.ts`
 - `apps/extension/src/watch-progress.ts`
-- `apps/extension/src/crunchyroll-progress.ts`
+- `apps/extension/src/source-adapters/crunchyroll/progress.ts`
 - `apps/extension/src/current-resource-panel.tsx`
 
 Current behavior:

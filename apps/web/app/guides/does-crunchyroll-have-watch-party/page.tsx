@@ -68,7 +68,7 @@ export default function DoesCrunchyrollHaveWatchPartyPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
         { name: "Does Crunchyroll have watch party?", url: "/guides/does-crunchyroll-have-watch-party" },
       ]}
       title="Does Crunchyroll have a watch party feature?"

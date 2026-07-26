@@ -96,7 +96,7 @@ export default function HowToWatchAnimeTogetherWithoutScreenSharePage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "Watch anime together without screen share",
             url: "/guides/how-to-watch-anime-together-without-screen-share",

@@ -91,7 +91,7 @@ export default function HowToCreateAnimeWatchPartyPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "How to Create an Anime Watch Party",
             url: "/guides/how-to-create-an-anime-watch-party",

@@ -97,6 +97,9 @@ Runtime plane: apps/extension inside the user's browser
 
 `apps/extension` owns browser runtime behavior:
 
+- `src/source-adapters/registry.ts` is the public video-adapter discovery
+  entrypoint; shared behavior and provider-specific implementations live under
+  `src/source-adapters/core`, `generic`, `youtube`, and `crunchyroll`;
 - WXT MV3 Chrome extension;
 - content scripts and Shadow DOM overlay;
 - Crunchyroll/provider adapters;
@@ -301,8 +304,8 @@ Watch library and progress tracking:
 
 - `apps/extension/src/watch-progress.ts`
 - `apps/extension/src/watch-library-client.ts`
-- `apps/extension/src/crunchyroll-progress.ts`
-- `apps/extension/src/crunchyroll-season.ts`
+- `apps/extension/src/source-adapters/crunchyroll/progress.ts`
+- `apps/extension/src/source-adapters/crunchyroll/season.ts`
 - `apps/web/lib/anidachi-auth/watch-library.ts`
 - dashboard/watch-library routes under `apps/web/app/*`
 

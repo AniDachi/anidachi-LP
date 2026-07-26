@@ -26,11 +26,11 @@ import {
 } from "./auth-client";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
-import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
+import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
 import {
   inferCrunchyrollSeasonFromSourceUrl,
   seasonNumberFromTitle,
-} from "./crunchyroll-season";
+} from "./source-adapters/crunchyroll/season";
 import { popupStyles } from "./popup-styles";
 import {
   acceptRoomInvite,

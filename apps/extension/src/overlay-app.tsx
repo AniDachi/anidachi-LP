@@ -1,19 +1,17 @@
-import {
-  type ClientEvent,
-  getSyncCorrection,
-  normalizeRemotePlaybackState,
-  type P2PSignal,
-  type Participant,
-  type PlaybackState,
-  type ReactionEvent,
-  type RoomCapabilities,
-  type RoomUsageSummary,
-  type ServerEvent,
+import type {
+  ClientEvent,
+  P2PSignal,
+  Participant,
+  PlaybackState,
+  ReactionEvent,
+  RoomCapabilities,
+  RoomUsageSummary,
+  ServerEvent,
+  WatchSourceDescriptor,
 } from "@anidachi/protocol";
 import {
   Check,
   Copy,
-  DoorOpen,
   Mic,
   MicOff,
   RefreshCw,
@@ -31,10 +29,19 @@ import type {
 } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { storage } from "wxt/utils/storage";
+import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
 import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK, EMOJI_PALETTE } from "./constants";
-import { loadCrunchyrollPosterArtwork } from "./crunchyroll-artwork";
+import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
+import { ensureSourceForProvider } from "./source-adapters/core/source-navigation";
+import {
+  arePlayerOverlayGeometriesEqual,
+  normalizePlayerOverlayGeometry,
+  type PlayerOverlayGeometry,
+} from "./source-adapters/core/overlay-geometry";
+import type { SourceProvider, VideoAdapter } from "./source-adapters/core/types";
+import { getDefinitionForProvider } from "./source-adapters/registry";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import {
   clearDebugLog,
@@ -42,6 +49,7 @@ import {
   getDebugEntries,
   getDebugLogText,
   logDebug,
+  playerOverlayGeometryDebugSnapshot,
   playbackStateDebugSnapshot,
   roomEventDebugSnapshot,
   videoDebugSnapshot,
@@ -67,16 +75,8 @@ import {
   ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
   isMessageComposerShortcutEvent,
 } from "./message-composer-events";
-import {
-  type CrunchyrollPlayerChromeState,
-  DEFAULT_CAM_STACK_BOTTOM_PX,
-  DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE,
-  DEFAULT_MINI_PANEL_RIGHT_PX,
-  DEFAULT_MINI_PANEL_TOP_PX,
-  DEFAULT_TOP_BUBBLE_RIGHT_PX,
-  DEFAULT_TOP_BUBBLE_TOP_PX,
-  shouldShowCameraStack,
-} from "./overlay-layout";
+import { overlayInteractionBoundaryProps } from "./overlay-interaction-boundary";
+import { getOverlayChromePlacement, shouldShowCameraStack } from "./overlay-layout";
 import { OverlayLayoutEditor } from "./overlay-layout-editor";
 import { type OverlayLayoutContext, resolveOverlayLayout } from "./overlay-layout-engine";
 import { OverlayLayoutGhostPreview } from "./overlay-layout-ghost-preview";
@@ -106,25 +106,24 @@ import {
 } from "./overlay-panel-interaction";
 import {
   copyRoomInviteText,
+  getPrimaryRoomActionKind,
   getPrimaryRoomActionLabel,
   isInviteCopiedFeedback,
   type RoomActionFeedback,
   ROOM_ACTION_FEEDBACK_DURATION_MS,
+  ROOM_END_CONFIRMATION_DURATION_MS,
+  shouldConfirmRoomEnd,
 } from "./overlay-room-action-feedback";
 import { PanelCameraControl, RoomPeopleSection } from "./overlay-room-media-controls";
 import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
 import { PanelAccountTitle } from "./panel-account-title";
 import {
-  getRemotePlayReadyTimeoutMs,
-  isMediaSettling,
-  type RemoteSeekAttempt,
-  shouldDeferHostStateSeek,
-  shouldPlayWithoutWaitingForMediaReady,
-  shouldSeekForHostState,
-  shouldSeekForRemoteCommand,
-  shouldThrottleRemoteSeekAttempt,
-  waitForMediaReady,
-} from "./playback-control";
+  isRoomRailEdgeIntent,
+  ROOM_RAIL_OPEN_DELAY_MS,
+  shouldRenderRoomRail,
+} from "./room-rail-intent";
+import { useTopBubbleReveal } from "./top-bubble-reveal";
+import { PlaybackSyncController } from "./playback-sync-controller";
 import {
   connectWebsiteRoom,
   createRoom,
@@ -171,12 +170,6 @@ import {
   signOutAndClearParticipant,
   trySilentSignIn,
 } from "./user-identity";
-import {
-  buildWatchSourceDescriptor,
-  type PlayerEvent,
-  runCrunchyrollMainCommand,
-  type VideoAdapter,
-} from "./video-adapter";
 import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
 import { resolveWatchLibraryReconcileAuth } from "./watch-library-auth";
 import {
@@ -195,30 +188,12 @@ import { getWatchProgressEntryForAdapter } from "./watch-progress-entry";
 
 interface OverlayAppProps {
   adapter: VideoAdapter;
+  adapterActive?: boolean;
 }
 
 interface CatchUpState {
   expectedTime: number;
   drift: number;
-}
-
-interface LocalSeekBroadcast {
-  queuedAt: number;
-  targetTime: number;
-  timeoutId: number;
-}
-
-interface PendingRemoteSeek {
-  startedAt: number;
-  targetTime: number;
-}
-
-interface PendingSourceNavigation {
-  previousCurrentSrc: string;
-  previousVideo: HTMLVideoElement;
-  startedAt: number;
-  targetFingerprint: string;
-  targetUrl: string;
 }
 
 type FireChargePhase = "charging" | "ready";
@@ -263,17 +238,6 @@ interface OverlayViewportSize {
   height: number;
 }
 
-const REMOTE_EVENT_SUPPRESSION_MS = 1800;
-const REMOTE_COMMAND_DEDUPE_MS = 800;
-const CRUNCHYROLL_REMOTE_SEEK_GUARD_MS = 15_000;
-const CRUNCHYROLL_REMOTE_SEEK_GUARD_TOLERANCE_SECONDS = 4;
-const CRUNCHYROLL_REMOTE_SEEK_HOST_TARGET_TOLERANCE_SECONDS = 8;
-const CRUNCHYROLL_LOCAL_SEEK_SETTLING_DELAY_MS = 360;
-const CRUNCHYROLL_LOCAL_SEEK_READY_DELAY_MS = 80;
-const CRUNCHYROLL_LOCAL_SEEK_DUPLICATE_MS = 1200;
-const CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS = 0.75;
-const CRUNCHYROLL_LOCAL_PLAYBACK_SUPPRESSION_AFTER_SEEK_MS = 900;
-const CRUNCHYROLL_SOURCE_NAVIGATION_GUARD_MS = 6000;
 const CHAT_DISPLAY_MODE_STORAGE_KEY = "local:chatDisplayMode";
 const DEFAULT_CHAT_DISPLAY_MODE: ChatDisplayMode = "live";
 const LIVE_CHAT_MESSAGE_TTL_MS = 9000;
@@ -299,24 +263,69 @@ const FIRE_SUPER_DELAY_MS = HOLD_FIRE_SUPER_REACTION_EXPERIMENT.revealDelayMs;
 const FIRE_SUPER_CHARGE_MS = HOLD_FIRE_SUPER_REACTION_EXPERIMENT.chargeMs;
 const FIRE_SUPER_TOTAL_MS = FIRE_SUPER_DELAY_MS + FIRE_SUPER_CHARGE_MS;
 const NUKE_SPARKS = Array.from({ length: 12 }, (_, index) => index);
-export function OverlayApp({ adapter }: OverlayAppProps) {
+
+export function usePlayerOverlayGeometry(
+  adapter: VideoAdapter,
+  adapterActive = true,
+): PlayerOverlayGeometry {
+  const [geometry, setGeometry] = useState(() =>
+    normalizePlayerOverlayGeometry(adapter.getOverlayGeometry()),
+  );
+  const geometryRef = useRef(geometry);
+  const geometryEffectStartedRef = useRef(false);
+
+  useEffect(() => {
+    let disposed = false;
+    let unsubscribed = false;
+    const isInitialEffect = !geometryEffectStartedRef.current;
+    geometryEffectStartedRef.current = true;
+
+    const applyGeometry = (candidate: PlayerOverlayGeometry, shouldLog = true) => {
+      if (disposed) {
+        return;
+      }
+
+      const normalized = normalizePlayerOverlayGeometry(candidate);
+      if (arePlayerOverlayGeometriesEqual(geometryRef.current, normalized)) {
+        return;
+      }
+
+      geometryRef.current = normalized;
+      setGeometry(normalized);
+      if (shouldLog) {
+        logDebug(
+          "overlay.geometry",
+          "changed",
+          playerOverlayGeometryDebugSnapshot(adapter.id, normalized),
+        );
+      }
+    };
+
+    applyGeometry(adapter.getOverlayGeometry(), !isInitialEffect);
+    if (!adapterActive) {
+      return () => {
+        disposed = true;
+      };
+    }
+
+    const unsubscribe = adapter.subscribeOverlayGeometry(applyGeometry);
+    return () => {
+      disposed = true;
+      if (unsubscribed) {
+        return;
+      }
+      unsubscribed = true;
+      unsubscribe();
+    };
+  }, [adapter, adapterActive]);
+
+  return geometry;
+}
+
+export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const clientRef = useRef(new RoomClient());
-  const suppressLocalEventsUntilRef = useRef(0);
-  const remotePlaybackTokenRef = useRef(0);
-  const pendingPlayWaitRef = useRef(false);
-  const lastRemoteCommandRef = useRef<{
-    key: string;
-    receivedAt: number;
-  } | null>(null);
-  const lastRemoteSeekAttemptRef = useRef<RemoteSeekAttempt | null>(null);
-  const pendingRemoteSeekRef = useRef<PendingRemoteSeek | null>(null);
-  const pendingSourceNavigationRef = useRef<PendingSourceNavigation | null>(null);
-  const pendingLocalSeekBroadcastRef = useRef<LocalSeekBroadcast | null>(null);
-  const lastLocalSeekEventAtRef = useRef(0);
-  const lastLocalSeekBroadcastRef = useRef<{
-    sentAt: number;
-    targetTime: number;
-  } | null>(null);
+  const adapterActiveRef = useRef(adapterActive);
+  adapterActiveRef.current = adapterActive;
   const stopVoiceRef = useRef<(() => void) | null>(null);
   const restoreLiveVoiceDuckingRef = useRef<(() => void) | null>(null);
   const restoreVoiceDuckingRef = useRef<(() => void) | null>(null);
@@ -329,8 +338,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const handledP2PSignalIdsRef = useRef(new Set<string>());
   const lastSeenP2PServerSeqRef = useRef(0);
   const p2pSignalSequenceRef = useRef(0);
+  const connectionGenerationRef = useRef(0);
   const roomGenerationRef = useRef(0);
   const sourceGenerationRef = useRef(0);
+  const roomSourceProviderRef = useRef<SourceProvider | null>(null);
   const roomReconnectAttemptRef = useRef(0);
   const roomReconnectInFlightRef = useRef(false);
   const roomReconnectSuppressedRef = useRef(false);
@@ -339,8 +350,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const messageComposerInputRef = useRef<HTMLInputElement | null>(null);
   const messageComposerShieldRef = useRef<HTMLDivElement | null>(null);
   const miniPanelRef = useRef<HTMLElement | null>(null);
+  const overlayRootRef = useRef<HTMLDivElement | null>(null);
   const topBubbleRef = useRef<HTMLButtonElement | null>(null);
   const roomActionFeedbackTimerRef = useRef<number | null>(null);
+  const roomEndConfirmationTimerRef = useRef<number | null>(null);
   const messageComposerShieldReleaseTimerRef = useRef<number | null>(null);
   const messageComposerShieldReleasePointerRef = useRef<PointerWakePoint | null>(null);
   const authUserIdRef = useRef<string | null>(null);
@@ -374,9 +387,16 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [status, setStatus] = useState<RoomConnectionStatus>("idle");
   const [panelOpen, setPanelOpen] = useState(false);
+  const topBubbleReveal = useTopBubbleReveal({
+    bubbleRef: topBubbleRef,
+    overlayRef: overlayRootRef,
+    panelOpen,
+  });
   const [messageComposerOpen, setMessageComposerOpen] = useState(false);
   const [roomCreatePending, setRoomCreatePending] = useState(false);
+  const [roomEndConfirmationPending, setRoomEndConfirmationPending] = useState(false);
   const [roomEndPending, setRoomEndPending] = useState(false);
+  const [roomLeavePending, setRoomLeavePending] = useState(false);
   const [roomActionFeedback, setRoomActionFeedback] = useState<RoomActionFeedback | null>(null);
   const [settingsPanelCategory, setSettingsPanelCategory] =
     useState<SettingsPanelCategory>(DEFAULT_SETTINGS_PANEL_CATEGORY);
@@ -413,20 +433,60 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   const [chatDisplayMode, setChatDisplayMode] =
     useState<ChatDisplayMode>(DEFAULT_CHAT_DISPLAY_MODE);
   const socialVisible = true;
-  const [crunchyrollPlayerChrome, setCrunchyrollPlayerChrome] =
-    useState<CrunchyrollPlayerChromeState>(DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE);
+  const playerOverlayGeometry = usePlayerOverlayGeometry(adapter, adapterActive);
   const [reactions, setReactions] = useState<ReactionEvent[]>([]);
   const [liveChatMessages, setLiveChatMessages] = useState<LiveChatMessage[]>([]);
   const [chatHistoryMessages, setChatHistoryMessages] = useState<LiveChatMessage[]>([]);
   const [incomingP2PSignals, setIncomingP2PSignals] = useState<IncomingP2PSignal[]>([]);
   const [roomGeneration, setRoomGeneration] = useState(0);
   const [sourceGeneration, setSourceGeneration] = useState(0);
+  const [roomSourceProvider, setRoomSourceProvider] = useState<SourceProvider | null>(null);
   const [roomSnapshotReady, setRoomSnapshotReady] = useState(false);
   const [signalingTransportReady, setSignalingTransportReady] =
     useState<SignalingTransportReady | null>(null);
   const [fireCharge, setFireCharge] = useState<FireChargeState | null>(null);
   const [flamingParticipantIds, setFlamingParticipantIds] = useState<string[]>([]);
   const [catchUp, setCatchUp] = useState<CatchUpState | null>(null);
+  const [playbackSyncNotice, setPlaybackSyncNotice] = useState<string | null>(null);
+  const [resumeSyncRequired, setResumeSyncRequired] = useState(false);
+  const playbackSyncControllerRef = useRef<PlaybackSyncController | null>(null);
+  if (!playbackSyncControllerRef.current) {
+    playbackSyncControllerRef.current = new PlaybackSyncController({
+      ensureRemoteSource: (source, context) =>
+        ensureSourceForProvider(source, context, getDefinitionForProvider),
+      onStatus: (syncStatus) => {
+        if (syncStatus.kind === "out-of-sync") {
+          setResumeSyncRequired(false);
+          setPlaybackSyncNotice(null);
+          setCatchUp({
+            drift: syncStatus.drift,
+            expectedTime: syncStatus.expectedTime,
+          });
+          return;
+        }
+        setCatchUp(null);
+        if (syncStatus.kind === "waiting-for-host-ad") {
+          setPlaybackSyncNotice("Ad playing · room paused");
+        } else if (syncStatus.kind === "watching-local-ad") {
+          setPlaybackSyncNotice("Ad playing · sync will resume automatically");
+        } else if (syncStatus.kind === "buffering") {
+          setPlaybackSyncNotice("Buffering · room paused");
+        } else if (syncStatus.kind === "resume-required") {
+          setPlaybackSyncNotice("Playback needs your permission");
+          setResumeSyncRequired(true);
+        } else if (syncStatus.kind === "unsupported-media") {
+          setPlaybackSyncNotice("This video cannot be synchronized");
+        } else if (syncStatus.kind === "synced") {
+          setPlaybackSyncNotice(null);
+          setResumeSyncRequired(false);
+        }
+      },
+      transport: {
+        send: (event) => clientRef.current.send(event),
+      },
+    });
+  }
+  const playbackSyncController = playbackSyncControllerRef.current;
   const [liveVoiceTalking, setLiveVoiceTalking] = useState(false);
   const [voiceListening, setVoiceListening] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
@@ -485,10 +545,21 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     }, ROOM_ACTION_FEEDBACK_DURATION_MS);
   }, []);
 
+  const clearRoomEndConfirmation = useCallback(() => {
+    if (roomEndConfirmationTimerRef.current !== null) {
+      window.clearTimeout(roomEndConfirmationTimerRef.current);
+      roomEndConfirmationTimerRef.current = null;
+    }
+    setRoomEndConfirmationPending(false);
+  }, []);
+
   useEffect(
     () => () => {
       if (roomActionFeedbackTimerRef.current !== null) {
         window.clearTimeout(roomActionFeedbackTimerRef.current);
+      }
+      if (roomEndConfirmationTimerRef.current !== null) {
+        window.clearTimeout(roomEndConfirmationTimerRef.current);
       }
     },
     [],
@@ -735,7 +806,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       const overlayRoot = rootNode instanceof ShadowRoot ? rootNode.host : null;
       if (
         !shouldDismissOverlayPanel({
-          busy: roomCreatePending || roomEndPending,
+          busy: roomCreatePending || roomEndPending || roomLeavePending,
           eventPath: path,
           overlayRoot,
           panel,
@@ -754,12 +825,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         !isEscapeKey(event) ||
         isFullscreenActive() ||
         roomCreatePending ||
-        roomEndPending
+        roomEndPending ||
+        roomLeavePending
       ) {
         return;
       }
 
       event.preventDefault();
+      topBubbleRef.current?.focus({ preventScroll: true });
       setPanelOpen(false);
     };
 
@@ -770,7 +843,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       window.removeEventListener("pointerdown", handlePointerDown, true);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [panelOpen, roomCreatePending, roomEndPending]);
+  }, [panelOpen, roomCreatePending, roomEndPending, roomLeavePending]);
 
   useEffect(() => {
     participantRef.current = participant;
@@ -795,6 +868,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     sourceGenerationRef.current = 0;
     setRoomGeneration(0);
     setSourceGeneration(0);
+    if (!roomId) {
+      roomSourceProviderRef.current = null;
+      setRoomSourceProvider(null);
+    } else {
+      setRoomSourceProvider(roomSourceProviderRef.current);
+    }
     setRoomSnapshotReady(false);
     setSignalingTransportReady(null);
     setIncomingP2PSignals([]);
@@ -1133,6 +1212,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       : "No media seats";
   const roomPeopleCountText = `${participantCount}/${roomParticipantLimit} in room`;
   const isHost = currentParticipant?.role === "host";
+
+  useEffect(() => {
+    if (!roomId || !isHost) {
+      clearRoomEndConfirmation();
+    }
+  }, [clearRoomEndConfirmation, isHost, roomId]);
   const isConnected = status === "connected";
   const { p2pSessionActive } = getP2PMediaSessionState({
     localHasMediaSeat,
@@ -1167,14 +1252,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       localMeteredMs: quotaMeteredMsRef.current,
     });
   }, [roomQuota, roomUsage, quotaDisplayTick]);
-  const isCrunchyroll = adapter.id === "crunchyroll";
   const cameraStackVisible = shouldShowCameraStack({
     cameraParticipantCount: displayedCameraParticipants.length,
     p2pSessionActive,
   });
-  const camStackBottomPx = isCrunchyroll
-    ? crunchyrollPlayerChrome.camStackBottomPx
-    : DEFAULT_CAM_STACK_BOTTOM_PX;
   const displayedChatMessages =
     chatDisplayMode === "history" ? chatHistoryMessages : liveChatMessages;
   const liveChatVisible = displayedChatMessages.length > 0;
@@ -1195,11 +1276,15 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const setRoomStatus = useCallback(
     (nextStatus: RoomConnectionStatus) => {
+      const previousStatus = statusRef.current;
       logDebug("overlay.status", nextStatus, {
         roomId: roomIdRef.current,
         participantId: participantRef.current?.id,
         video: videoDebugSnapshot(adapter.video),
       });
+      if (nextStatus === "connected" && previousStatus !== "connected") {
+        connectionGenerationRef.current += 1;
+      }
       statusRef.current = nextStatus;
       setStatus(nextStatus);
       if (nextStatus === "connected") {
@@ -1212,6 +1297,29 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     },
     [adapter],
   );
+
+  useEffect(() => {
+    playbackSyncController.setSession({
+      connectionGeneration: connectionGenerationRef.current,
+      isHost,
+      participantId: participant?.id ?? null,
+      roomGeneration,
+      roomId,
+      roomProvider:
+        roomId && roomSnapshotReady && status === "connected" ? roomSourceProvider : null,
+      sourceGeneration,
+    });
+  }, [
+    isHost,
+    participant?.id,
+    playbackSyncController,
+    roomGeneration,
+    roomId,
+    roomSnapshotReady,
+    roomSourceProvider,
+    sourceGeneration,
+    status,
+  ]);
 
   useEffect(() => {
     const id = window.setInterval(() => setDebugEntriesCount(getDebugEntries().length), 1000);
@@ -1256,41 +1364,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, []);
 
   useEffect(() => {
-    let disposed = false;
-    const viewportElement =
-      adapter.id === "youtube" || adapter.id === "crunchyroll" ? adapter.container : adapter.video;
-
-    const updateViewportSize = () => {
-      if (disposed) {
-        return;
-      }
-
-      const rect = viewportElement.getBoundingClientRect();
-      const nextSize = {
-        height: normalizeOverlayViewportDimension(rect.height),
-        width: normalizeOverlayViewportDimension(rect.width),
-      };
-      setOverlayViewportSize((current) =>
-        current.width === nextSize.width && current.height === nextSize.height ? current : nextSize,
-      );
-    };
-
-    updateViewportSize();
-    const observer =
-      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateViewportSize);
-    observer?.observe(viewportElement);
-    window.addEventListener("resize", updateViewportSize);
-    document.addEventListener("fullscreenchange", updateViewportSize, true);
-
-    return () => {
-      disposed = true;
-      observer?.disconnect();
-      window.removeEventListener("resize", updateViewportSize);
-      document.removeEventListener("fullscreenchange", updateViewportSize, true);
-    };
-  }, [adapter]);
-
-  useEffect(() => {
     let cancelled = false;
 
     void storage
@@ -1307,6 +1380,43 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!adapterActive) {
+      return;
+    }
+
+    let disposed = false;
+
+    const updateViewportSize = () => {
+      if (disposed) {
+        return;
+      }
+
+      const rect = adapter.container.getBoundingClientRect();
+      const nextSize = {
+        height: normalizeOverlayViewportDimension(rect.height),
+        width: normalizeOverlayViewportDimension(rect.width),
+      };
+      setOverlayViewportSize((current) =>
+        current.width === nextSize.width && current.height === nextSize.height ? current : nextSize,
+      );
+    };
+
+    updateViewportSize();
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateViewportSize);
+    observer?.observe(adapter.container);
+    window.addEventListener("resize", updateViewportSize);
+    document.addEventListener("fullscreenchange", updateViewportSize, true);
+
+    return () => {
+      disposed = true;
+      observer?.disconnect();
+      window.removeEventListener("resize", updateViewportSize);
+      document.removeEventListener("fullscreenchange", updateViewportSize, true);
+    };
+  }, [adapter, adapterActive]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1339,63 +1449,6 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     setChatDisplayMode(nextMode);
     void storage.setItem(CHAT_DISPLAY_MODE_STORAGE_KEY, nextMode);
   }, []);
-
-  useEffect(() => {
-    if (adapter.id !== "crunchyroll") {
-      setCrunchyrollPlayerChrome(DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE);
-      return;
-    }
-
-    let disposed = false;
-    let frameId = 0;
-
-    const applyState = () => {
-      frameId = 0;
-      if (disposed) {
-        return;
-      }
-
-      const nextState = getCrunchyrollPlayerChromeState(adapter.container);
-      setCrunchyrollPlayerChrome((current) =>
-        areCrunchyrollPlayerChromeStatesEqual(current, nextState) ? current : nextState,
-      );
-    };
-
-    const scheduleApplyState = () => {
-      if (frameId) {
-        return;
-      }
-
-      frameId = window.requestAnimationFrame(applyState);
-    };
-
-    scheduleApplyState();
-    const intervalId = window.setInterval(scheduleApplyState, 250);
-    const observer = new MutationObserver(scheduleApplyState);
-    observer.observe(adapter.container, {
-      attributeFilter: ["aria-hidden", "class", "data-testid", "style"],
-      attributes: true,
-      childList: true,
-      subtree: true,
-    });
-    adapter.container.addEventListener("mousemove", scheduleApplyState, true);
-    adapter.container.addEventListener("pointermove", scheduleApplyState, true);
-    adapter.container.addEventListener("pointerleave", scheduleApplyState, true);
-    document.addEventListener("fullscreenchange", scheduleApplyState, true);
-
-    return () => {
-      disposed = true;
-      window.clearInterval(intervalId);
-      if (frameId) {
-        window.cancelAnimationFrame(frameId);
-      }
-      observer.disconnect();
-      adapter.container.removeEventListener("mousemove", scheduleApplyState, true);
-      adapter.container.removeEventListener("pointermove", scheduleApplyState, true);
-      adapter.container.removeEventListener("pointerleave", scheduleApplyState, true);
-      document.removeEventListener("fullscreenchange", scheduleApplyState, true);
-    };
-  }, [adapter]);
 
   useEffect(() => {
     setMessageComposerDomGuard(messageComposerOpen || messageComposerGuardActive);
@@ -1541,6 +1594,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   );
 
   useEffect(() => {
+    if (!adapterActive) {
+      return;
+    }
+
     let disposed = false;
     let lastPersistedAt = 0;
     let lastRemoteReconcileAt = 0;
@@ -1635,7 +1692,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       adapter.video.removeEventListener("ended", persistEnded);
       window.removeEventListener("pagehide", persistPagehide);
     };
-  }, [adapter, getWatchLibraryReconcileAccessToken, roomId, participantCount, loadPosterArtwork]);
+  }, [
+    adapter,
+    adapterActive,
+    getWatchLibraryReconcileAccessToken,
+    roomId,
+    participantCount,
+    loadPosterArtwork,
+  ]);
 
   const sendCameraStatus = useCallback((enabled: boolean) => {
     const activeRoomId = roomIdRef.current;
@@ -1804,18 +1868,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     () => visibleParticipants.filter((item) => !displayedCameraParticipantIds.has(item.id)),
     [displayedCameraParticipantIds, visibleParticipants],
   );
-  const topBubbleTopPx = isCrunchyroll
-    ? crunchyrollPlayerChrome.topBubbleTopPx
-    : DEFAULT_TOP_BUBBLE_TOP_PX;
-  const topBubbleRightPx = isCrunchyroll
-    ? crunchyrollPlayerChrome.topBubbleRightPx
-    : DEFAULT_TOP_BUBBLE_RIGHT_PX;
-  const controlsBottomInsetPx = isCrunchyroll
-    ? crunchyrollPlayerChrome.controlsVisible
-      ? camStackBottomPx
-      : 0
-    : DEFAULT_CAM_STACK_BOTTOM_PX;
-  const roomRailBottomPx = Math.max(92, controlsBottomInsetPx + 12);
+  const roomRailVisible = shouldRenderRoomRail({
+    participantCount: voiceRailParticipants.length,
+    panelOpen,
+    roomActive: Boolean(roomId),
+  });
+  const playerBottomInsetPx = playerOverlayGeometry.safeInsets.bottomPx;
+  const roomRailBottomPx = Math.max(92, playerBottomInsetPx + 12);
+  const overlayChromePlacement = getOverlayChromePlacement(playerOverlayGeometry);
   const overlayLayoutPreviewActive = previewOverlayLayout !== null;
   const overlayLayoutRuntimeContext = useMemo<OverlayLayoutContext>(
     () =>
@@ -1825,16 +1885,16 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           : getOverlayLayoutCameraSlotCount(
               cameraStackVisible ? renderableCameraParticipants.length : 0,
             ),
-        controlsBottomInsetPx,
-        height: overlayViewportSize.height,
+        height: overlayViewportSize.height || playerOverlayGeometry.viewport.heightPx,
+        playerSafeInsets: playerOverlayGeometry.safeInsets,
         safePaddingPx: 12,
-        width: overlayViewportSize.width,
+        width: overlayViewportSize.width || playerOverlayGeometry.viewport.widthPx,
       }),
     [
-      controlsBottomInsetPx,
       cameraStackVisible,
-      overlayViewportSize,
       overlayLayoutPreviewActive,
+      overlayViewportSize,
+      playerOverlayGeometry,
       renderableCameraParticipants.length,
     ],
   );
@@ -1856,32 +1916,25 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         : "Media seat required";
   const resolvedCamStackBottomPx = resolvedOverlayLayout.video.slots.length
     ? Math.max(
-        0,
-        overlayViewportSize.height -
+        playerBottomInsetPx,
+        overlayLayoutRuntimeContext.viewport.height -
           (resolvedOverlayLayout.video.bounds.y + resolvedOverlayLayout.video.bounds.height),
       )
-    : camStackBottomPx;
-  const miniPanelBottomReservePx =
-    isCrunchyroll && crunchyrollPlayerChrome.controlsVisible ? Math.max(10, camStackBottomPx) : 10;
+    : playerBottomInsetPx;
   const overlayCssVariables = {
     ...getOverlayLayoutRuntimeStyles(resolvedOverlayLayout),
     "--cam-stack-height": `${resolvedOverlayLayout.video.bounds.height}px`,
     "--cam-stack-width": `${resolvedOverlayLayout.video.bounds.width}px`,
-    "--mini-panel-bottom-reserve": `${miniPanelBottomReservePx}px`,
-    "--mini-panel-right": `${
-      isCrunchyroll ? crunchyrollPlayerChrome.miniPanelRightPx : DEFAULT_MINI_PANEL_RIGHT_PX
-    }px`,
-    "--mini-panel-top": `${
-      isCrunchyroll ? crunchyrollPlayerChrome.miniPanelTopPx : DEFAULT_MINI_PANEL_TOP_PX
-    }px`,
-    "--top-bubble-right": `${topBubbleRightPx}px`,
-    "--top-bubble-top": `${topBubbleTopPx}px`,
+    "--mini-panel-bottom-reserve": `${overlayChromePlacement.miniPanelBottomReservePx}px`,
+    "--mini-panel-right": `${overlayChromePlacement.miniPanelRightPx}px`,
+    "--mini-panel-top": `${overlayChromePlacement.miniPanelTopPx}px`,
+    "--top-bubble-right": `${overlayChromePlacement.topBubbleRightPx}px`,
+    "--top-bubble-top": `${overlayChromePlacement.topBubbleTopPx}px`,
     "--room-rail-bottom": `${roomRailBottomPx}px`,
   } as CSSProperties;
   const overlayClassName = [
     "anidachi-overlay",
-    isCrunchyroll ? "is-crunchyroll" : "",
-    isCrunchyroll && crunchyrollPlayerChrome.controlsVisible ? "player-controls-visible" : "",
+    playerOverlayGeometry.controlsVisible ? "player-controls-visible" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -1939,562 +1992,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     );
   }, []);
 
-  const cancelPendingRemotePlayback = useCallback(
-    (reason: string) => {
-      remotePlaybackTokenRef.current += 1;
-      pendingPlayWaitRef.current = false;
-      logDebug("sync.remote", "cancel pending playback", {
-        reason,
-        token: remotePlaybackTokenRef.current,
-        video: videoDebugSnapshot(adapter.video),
-      });
-    },
-    [adapter],
-  );
-
-  const rememberPendingRemoteSeek = useCallback(
-    (targetTime: number, reason: string) => {
-      if (adapter.id !== "crunchyroll") {
-        return;
-      }
-
-      pendingRemoteSeekRef.current = { startedAt: Date.now(), targetTime };
-      logDebug("sync.remote", "remember pending Crunchyroll seek", {
-        reason,
-        targetTime,
-        video: videoDebugSnapshot(adapter.video),
-      });
-    },
-    [adapter],
-  );
-
-  const clearPendingRemoteSeekIfSettled = useCallback(
-    (reason: string) => {
-      const pending = pendingRemoteSeekRef.current;
-      if (!pending || adapter.id !== "crunchyroll") {
-        return;
-      }
-
-      const ageMs = Date.now() - pending.startedAt;
-      const driftFromSeekTarget = adapter.getCurrentTime() - pending.targetTime;
-      const isNearSeekTarget =
-        Math.abs(driftFromSeekTarget) <= CRUNCHYROLL_REMOTE_SEEK_GUARD_TOLERANCE_SECONDS;
-      if (
-        (!isMediaSettling(adapter.video) && isNearSeekTarget) ||
-        ageMs > CRUNCHYROLL_REMOTE_SEEK_GUARD_MS
-      ) {
-        pendingRemoteSeekRef.current = null;
-        logDebug("sync.remote", "clear pending Crunchyroll seek", {
-          reason,
-          pending,
-          ageMs,
-          driftFromSeekTarget,
-          video: videoDebugSnapshot(adapter.video),
-        });
-      }
-    },
-    [adapter],
-  );
-
-  const shouldHoldHostStateForPendingCrunchyrollSeek = useCallback(
-    (state: PlaybackState) => {
-      if (adapter.id !== "crunchyroll") {
-        return false;
-      }
-
-      const pending = pendingRemoteSeekRef.current;
-      if (!pending) {
-        return false;
-      }
-
-      const ageMs = Date.now() - pending.startedAt;
-      if (ageMs > CRUNCHYROLL_REMOTE_SEEK_GUARD_MS) {
-        return false;
-      }
-
-      const expectedPendingTime = state.playing
-        ? pending.targetTime + (ageMs / 1000) * (state.playbackRate || 1)
-        : pending.targetTime;
-      const remoteStateDistanceFromPending = Math.abs(state.hostTime - expectedPendingTime);
-      if (remoteStateDistanceFromPending > CRUNCHYROLL_REMOTE_SEEK_HOST_TARGET_TOLERANCE_SECONDS) {
-        pendingRemoteSeekRef.current = null;
-        logDebug("sync.applyHostState", "released pending Crunchyroll seek for newer host target", {
-          pending,
-          ageMs,
-          expectedPendingTime,
-          remoteStateDistanceFromPending,
-          state: playbackStateDebugSnapshot(state),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return false;
-      }
-
-      const driftFromSeekTarget = adapter.getCurrentTime() - pending.targetTime;
-      const isFreshSeekDispatch = ageMs < 500;
-      const shouldHold =
-        isFreshSeekDispatch ||
-        isMediaSettling(adapter.video) ||
-        Math.abs(driftFromSeekTarget) <= CRUNCHYROLL_REMOTE_SEEK_GUARD_TOLERANCE_SECONDS;
-      if (shouldHold) {
-        logDebug("sync.applyHostState", "held during pending Crunchyroll seek", {
-          pending,
-          ageMs,
-          isFreshSeekDispatch,
-          state: playbackStateDebugSnapshot(state),
-          driftFromSeekTarget,
-          video: videoDebugSnapshot(adapter.video),
-        });
-      }
-
-      return shouldHold;
-    },
-    [adapter],
-  );
-
-  const playWhenReady = useCallback(
-    async (reason: string) => {
-      const settling = isMediaSettling(adapter.video);
-      if (settling && pendingPlayWaitRef.current) {
-        logDebug("sync.remote", "play wait already pending", {
-          reason,
-          token: remotePlaybackTokenRef.current,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      const token = ++remotePlaybackTokenRef.current;
-      const playImmediately = shouldPlayWithoutWaitingForMediaReady(adapter.id);
-      logDebug("sync.remote", "play requested when ready", {
-        reason,
-        token,
-        playImmediately,
-        settling,
-        video: videoDebugSnapshot(adapter.video),
-      });
-
-      if (playImmediately) {
-        if (!adapter.video.paused && !isMediaSettling(adapter.video)) {
-          logDebug("sync.remote", "play skipped because video is already playing", {
-            reason,
-            token,
-            readyReason: "immediate",
-            video: videoDebugSnapshot(adapter.video),
-          });
-          return;
-        }
-
-        suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-        logDebug("sync.remote", "play requested immediately", {
-          reason,
-          token,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        await adapter.play().catch((error) => {
-          logDebug("sync.remote", "play failed", {
-            reason,
-            token,
-            readyReason: "immediate",
-            error: error instanceof Error ? error.message : String(error),
-            video: videoDebugSnapshot(adapter.video),
-          });
-        });
-        return;
-      }
-
-      if (settling) {
-        pendingPlayWaitRef.current = true;
-      }
-
-      const readyReason = await waitForMediaReady(
-        adapter.video,
-        getRemotePlayReadyTimeoutMs(adapter.id),
-      );
-      if (token === remotePlaybackTokenRef.current) {
-        pendingPlayWaitRef.current = false;
-      }
-      if (token !== remotePlaybackTokenRef.current) {
-        logDebug("sync.remote", "play skipped after newer command", {
-          reason,
-          token,
-          activeToken: remotePlaybackTokenRef.current,
-          readyReason,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      if (
-        adapter.id === "crunchyroll" &&
-        readyReason === "timeout" &&
-        isMediaSettling(adapter.video)
-      ) {
-        logDebug("sync.remote", "play skipped because Crunchyroll media is still settling", {
-          reason,
-          token,
-          readyReason,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      if (!adapter.video.paused) {
-        logDebug("sync.remote", "play skipped because video is already playing", {
-          reason,
-          token,
-          readyReason,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-      await adapter.play().catch((error) => {
-        logDebug("sync.remote", "play failed", {
-          reason,
-          token,
-          readyReason,
-          error: error instanceof Error ? error.message : String(error),
-          video: videoDebugSnapshot(adapter.video),
-        });
-      });
-    },
-    [adapter],
-  );
-
-  const isDuplicateRemoteCommand = useCallback(
-    (type: "PLAY" | "PAUSE" | "SEEK", byUserId: string, mediaTime: number) => {
-      const now = Date.now();
-      const key = `${type}:${byUserId}:${Math.round(mediaTime * 4) / 4}`;
-      const last = lastRemoteCommandRef.current;
-      if (last?.key === key && now - last.receivedAt < REMOTE_COMMAND_DEDUPE_MS) {
-        logDebug("sync.remote", "ignored duplicate command", {
-          type,
-          byUserId,
-          mediaTime,
-          previousReceivedAt: last.receivedAt,
-          now,
-        });
-        return true;
-      }
-
-      lastRemoteCommandRef.current = { key, receivedAt: now };
-      return false;
-    },
-    [],
-  );
-
-  const seekFromRemote = useCallback(
-    (targetTime: number, reason: string) => {
-      const now = Date.now();
-      if (
-        shouldThrottleRemoteSeekAttempt(
-          adapter.id,
-          lastRemoteSeekAttemptRef.current,
-          targetTime,
-          now,
-        )
-      ) {
-        logDebug("sync.remote", "throttled duplicate seek attempt", {
-          reason,
-          targetTime,
-          previousAttempt: lastRemoteSeekAttemptRef.current,
-          now,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return false;
-      }
-
-      lastRemoteSeekAttemptRef.current = { attemptedAt: now, targetTime };
-      rememberPendingRemoteSeek(targetTime, reason);
-      adapter.seek(targetTime, { resumeIfPlaying: false });
-      return true;
-    },
-    [adapter, rememberPendingRemoteSeek],
-  );
-
-  const shouldHoldHostStateForPendingSourceNavigation = useCallback(
-    (state: PlaybackState) => {
-      const pending = pendingSourceNavigationRef.current;
-      if (!pending || adapter.id !== "crunchyroll") {
-        return false;
-      }
-
-      const ageMs = Date.now() - pending.startedAt;
-      if (state.videoFingerprint !== pending.targetFingerprint) {
-        return false;
-      }
-
-      if (ageMs > CRUNCHYROLL_SOURCE_NAVIGATION_GUARD_MS) {
-        pendingSourceNavigationRef.current = null;
-        logDebug("sync.source", "released stale source navigation guard", {
-          pending,
-          ageMs,
-          state: playbackStateDebugSnapshot(state),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return false;
-      }
-
-      const currentFingerprint = adapter.getFingerprint();
-      const stillOnPreviousMedia =
-        adapter.video === pending.previousVideo &&
-        adapter.video.currentSrc === pending.previousCurrentSrc;
-      const shouldHold =
-        currentFingerprint !== pending.targetFingerprint ||
-        stillOnPreviousMedia ||
-        isMediaSettling(adapter.video);
-
-      if (shouldHold) {
-        suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-        logDebug("sync.source", "held host state during Crunchyroll source navigation", {
-          pending,
-          ageMs,
-          currentFingerprint,
-          stillOnPreviousMedia,
-          state: playbackStateDebugSnapshot(state),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return true;
-      }
-
-      pendingSourceNavigationRef.current = null;
-      logDebug("sync.source", "source navigation guard cleared", {
-        pending,
-        ageMs,
-        currentFingerprint,
-        state: playbackStateDebugSnapshot(state),
-        video: videoDebugSnapshot(adapter.video),
-      });
-      return false;
-    },
-    [adapter],
-  );
-
-  const navigateToRemoteSourceIfNeeded = useCallback(
-    (state: PlaybackState) => {
-      if (state.videoFingerprint === adapter.getFingerprint()) {
-        return false;
-      }
-
-      if (adapter.id !== "crunchyroll" || !state.sourceUrl) {
-        return false;
-      }
-
-      const activeParticipantId = participantRef.current?.id ?? null;
-      const persistedRoomId =
-        storedRoomSessionRef.current?.ownerUserId === activeParticipantId
-          ? storedRoomSessionRef.current.roomId
-          : null;
-      const activeRoomId = roomIdRef.current ?? getRoomIdFromHash() ?? persistedRoomId;
-      const target = buildSourceUrlWithRoom(state.sourceUrl, activeRoomId);
-      if (!target || isSameDocumentTarget(target)) {
-        return false;
-      }
-
-      pendingSourceNavigationRef.current = {
-        previousCurrentSrc: adapter.video.currentSrc,
-        previousVideo: adapter.video,
-        startedAt: Date.now(),
-        targetFingerprint: state.videoFingerprint,
-        targetUrl: target.toString(),
-      };
-
-      logDebug("sync.source", "navigate to host source", {
-        received: state.videoFingerprint,
-        local: adapter.getFingerprint(),
-        target: target.toString(),
-        roomId: activeRoomId,
-      });
-      void navigateCrunchyrollToRemoteSource(target, state);
-      return true;
-    },
-    [adapter],
-  );
-
-  const applyRemotePlay = useCallback(
-    (byUserId: string, at: number) => {
-      if (isDuplicateRemoteCommand("PLAY", byUserId, at)) {
-        return;
-      }
-
-      suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-      const drift = adapter.getCurrentTime() - at;
-      const settling = isMediaSettling(adapter.video);
-      if (shouldSeekForRemoteCommand(drift, settling)) {
-        seekFromRemote(at, "remote-play");
-      } else if (Math.abs(drift) > 1.25) {
-        logDebug("sync.remote", "deferred play seek because media is settling", {
-          at,
-          drift,
-          video: videoDebugSnapshot(adapter.video),
-        });
-      }
-
-      setCatchUp(null);
-      void playWhenReady("remote-play");
-    },
-    [adapter, isDuplicateRemoteCommand, playWhenReady, seekFromRemote],
-  );
-
-  const applyRemotePause = useCallback(
-    (byUserId: string, at: number) => {
-      if (isDuplicateRemoteCommand("PAUSE", byUserId, at)) {
-        return;
-      }
-
-      cancelPendingRemotePlayback("remote-pause");
-      suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-      adapter.pause();
-
-      const drift = adapter.getCurrentTime() - at;
-      const settling = isMediaSettling(adapter.video);
-      if (shouldSeekForRemoteCommand(drift, settling)) {
-        seekFromRemote(at, "remote-pause");
-      } else if (Math.abs(drift) > 1.25) {
-        logDebug("sync.remote", "deferred pause seek because media is settling", {
-          at,
-          drift,
-          video: videoDebugSnapshot(adapter.video),
-        });
-      }
-
-      setCatchUp(null);
-    },
-    [adapter, cancelPendingRemotePlayback, isDuplicateRemoteCommand, seekFromRemote],
-  );
-
-  const applyRemoteSeek = useCallback(
-    (byUserId: string, to: number) => {
-      if (isDuplicateRemoteCommand("SEEK", byUserId, to)) {
-        return;
-      }
-
-      cancelPendingRemotePlayback("remote-seek");
-      suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-
-      const drift = adapter.getCurrentTime() - to;
-      if (!isMediaSettling(adapter.video) || Math.abs(drift) > 2) {
-        seekFromRemote(to, "remote-seek");
-      } else {
-        logDebug("sync.remote", "ignored seek while media is already settling near target", {
-          to,
-          drift,
-          video: videoDebugSnapshot(adapter.video),
-        });
-      }
-
-      setCatchUp(null);
-    },
-    [adapter, cancelPendingRemotePlayback, isDuplicateRemoteCommand, seekFromRemote],
-  );
-
   const applyHostState = useCallback(
-    async (state: PlaybackState) => {
-      if (shouldHoldHostStateForPendingSourceNavigation(state)) {
+    async (state: PlaybackState, source?: WatchSourceDescriptor) => {
+      if (!adapterActiveRef.current) {
         return;
       }
-
-      if (state.videoFingerprint !== adapter.getFingerprint()) {
-        if (navigateToRemoteSourceIfNeeded(state)) {
-          return;
-        }
-
-        logDebug("sync.applyHostState", "ignored fingerprint mismatch", {
-          received: state.videoFingerprint,
-          local: adapter.getFingerprint(),
-          state: playbackStateDebugSnapshot(state),
-        });
-        return;
-      }
-
-      const remoteState = normalizeRemotePlaybackState(state);
-      const correction = getSyncCorrection(adapter.getCurrentTime(), remoteState);
-      const settling = isMediaSettling(adapter.video);
-      clearPendingRemoteSeekIfSettled("host-state");
-      if (shouldHoldHostStateForPendingCrunchyrollSeek(remoteState)) {
-        suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-        if (settling && remoteState.playing && adapter.video.paused) {
-          void playWhenReady("host-state-pending-crunchyroll-seek");
-        }
-        return;
-      }
-
-      const shouldSeek = shouldSeekForHostState(correction.action, settling);
-      const shouldDeferSeek = shouldDeferHostStateSeek(correction.action, settling);
-      const shouldChangePlayback =
-        (remoteState.playing && adapter.video.paused) ||
-        (!remoteState.playing && !adapter.video.paused);
-
-      if (shouldSeek || shouldChangePlayback) {
-        suppressLocalEventsUntilRef.current = Date.now() + REMOTE_EVENT_SUPPRESSION_MS;
-      }
-
-      logDebug("sync.applyHostState", "decision", {
-        state: playbackStateDebugSnapshot(remoteState),
-        correction,
-        settling,
-        shouldSeek,
-        shouldDeferSeek,
-        shouldChangePlayback,
-        suppressUntil: suppressLocalEventsUntilRef.current,
-        video: videoDebugSnapshot(adapter.video),
-      });
-
-      if (shouldDeferSeek) {
-        logDebug("sync.applyHostState", "deferred seek because media is settling", {
-          expectedTime: correction.expectedTime,
-          drift: correction.drift,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        if (
-          remoteState.playing &&
-          (adapter.video.paused || shouldPlayWithoutWaitingForMediaReady(adapter.id))
-        ) {
-          void playWhenReady("host-state-settling");
-        }
-        return;
-      }
-
-      let didSeek = false;
-      if (shouldSeek) {
-        didSeek = seekFromRemote(correction.expectedTime, "host-state");
-      }
-
-      if (correction.action === "catch-up" && !didSeek) {
-        setCatchUp({
-          expectedTime: correction.expectedTime,
-          drift: correction.drift,
-        });
-      } else {
-        setCatchUp(null);
-      }
-
-      if (remoteState.playing) {
-        if (
-          didSeek ||
-          adapter.video.paused ||
-          (settling && shouldPlayWithoutWaitingForMediaReady(adapter.id))
-        ) {
-          void playWhenReady("host-state");
-        }
-      } else {
-        cancelPendingRemotePlayback("host-state-pause");
-        if (!adapter.video.paused) {
-          adapter.pause();
-        }
-      }
+      await playbackSyncController.handleHostState(state, source);
     },
-    [
-      adapter,
-      cancelPendingRemotePlayback,
-      navigateToRemoteSourceIfNeeded,
-      shouldHoldHostStateForPendingSourceNavigation,
-      playWhenReady,
-      seekFromRemote,
-      clearPendingRemoteSeekIfSettled,
-      shouldHoldHostStateForPendingCrunchyrollSeek,
-    ],
+    [playbackSyncController],
   );
 
   // Terminally end the local room session without a reconnect loop: used for
@@ -2544,7 +2049,23 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         case "ROOM_ENDED":
           terminateRoomSession("Watch room ended.");
           return;
-        case "ROOM_SNAPSHOT":
+        case "ROOM_SNAPSHOT": {
+          if (
+            isStaleAuthoritativeGeneration(
+              roomGenerationRef.current,
+              sourceGenerationRef.current,
+              event.roomGeneration,
+              event.sourceGeneration,
+            )
+          ) {
+            logDebug("sync.source", "ignored stale room snapshot", {
+              currentRoomGeneration: roomGenerationRef.current,
+              currentSourceGeneration: sourceGenerationRef.current,
+              receivedRoomGeneration: event.roomGeneration,
+              receivedSourceGeneration: event.sourceGeneration,
+            });
+            return;
+          }
           if (
             roomGenerationRef.current > 0 &&
             (roomGenerationRef.current !== event.roomGeneration ||
@@ -2563,19 +2084,62 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           }
           roomGenerationRef.current = event.roomGeneration;
           sourceGenerationRef.current = event.sourceGeneration;
+          const currentRoomProvider = roomSourceProviderRef.current;
+          const snapshotSourceProvider = event.source?.provider ?? null;
+          const snapshotProvider =
+            currentRoomProvider ?? snapshotSourceProvider;
+          if (
+            currentRoomProvider &&
+            snapshotSourceProvider &&
+            currentRoomProvider !== snapshotSourceProvider
+          ) {
+            logDebug("sync.source", "ignored conflicting room snapshot provider", {
+              currentRoomProvider,
+              snapshotSourceProvider,
+              roomId: event.roomId,
+            });
+          }
+          roomSourceProviderRef.current = snapshotProvider;
           setRoomGeneration(event.roomGeneration);
           setSourceGeneration(event.sourceGeneration);
+          setRoomSourceProvider(snapshotProvider);
           setParticipants(event.participants);
           updateRoomUsage(event.roomUsage);
           if (event.capabilities) {
             setRoomCapabilities(event.capabilities);
           }
           setRoomSnapshotReady(true);
+          playbackSyncController.setSession({
+            connectionGeneration: connectionGenerationRef.current,
+            isHost: isCurrentHost(event.participants),
+            participantId: participantRef.current?.id ?? null,
+            roomGeneration: event.roomGeneration,
+            roomId: event.roomId,
+            roomProvider: snapshotProvider,
+            sourceGeneration: event.sourceGeneration,
+          });
           if (event.hostState && !isCurrentHost(event.participants)) {
-            void applyHostState(event.hostState);
+            void applyHostState(event.hostState, event.source);
           }
           return;
+        }
         case "SOURCE_CHANGED":
+          if (
+            isStaleAuthoritativeGeneration(
+              roomGenerationRef.current,
+              sourceGenerationRef.current,
+              event.roomGeneration,
+              event.sourceGeneration,
+            )
+          ) {
+            logDebug("sync.source", "ignored stale source change", {
+              currentRoomGeneration: roomGenerationRef.current,
+              currentSourceGeneration: sourceGenerationRef.current,
+              receivedRoomGeneration: event.roomGeneration,
+              receivedSourceGeneration: event.sourceGeneration,
+            });
+            return;
+          }
           if (
             roomGenerationRef.current > 0 &&
             (roomGenerationRef.current !== event.roomGeneration ||
@@ -2596,10 +2160,33 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           }
           roomGenerationRef.current = event.roomGeneration;
           sourceGenerationRef.current = event.sourceGeneration;
+          const sourceChangedProvider =
+            roomSourceProviderRef.current ?? event.source.provider;
+          if (
+            roomSourceProviderRef.current &&
+            roomSourceProviderRef.current !== event.source.provider
+          ) {
+            logDebug("sync.source", "ignored conflicting source-change provider", {
+              currentRoomProvider: roomSourceProviderRef.current,
+              receivedProvider: event.source.provider,
+              roomId: event.roomId,
+            });
+          }
+          roomSourceProviderRef.current = sourceChangedProvider;
           setRoomGeneration(event.roomGeneration);
           setSourceGeneration(event.sourceGeneration);
+          setRoomSourceProvider(sourceChangedProvider);
+          playbackSyncController.setSession({
+            connectionGeneration: connectionGenerationRef.current,
+            isHost: isCurrentHost(),
+            participantId: participantRef.current?.id ?? null,
+            roomGeneration: event.roomGeneration,
+            roomId: event.roomId,
+            roomProvider: sourceChangedProvider,
+            sourceGeneration: event.sourceGeneration,
+          });
           if (!isCurrentHost()) {
-            void applyHostState(event.hostState);
+            void applyHostState(event.hostState, event.source);
           }
           return;
         case "PARTICIPANT_JOINED":
@@ -2617,19 +2204,13 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           }
           return;
         case "PLAY":
-          if (event.byUserId !== participantRef.current?.id) {
-            applyRemotePlay(event.byUserId, event.at);
-          }
+          playbackSyncController.handleRemoteCommand(event);
           return;
         case "PAUSE":
-          if (event.byUserId !== participantRef.current?.id) {
-            applyRemotePause(event.byUserId, event.at);
-          }
+          playbackSyncController.handleRemoteCommand(event);
           return;
         case "SEEK":
-          if (event.byUserId !== participantRef.current?.id) {
-            applyRemoteSeek(event.byUserId, event.to);
-          }
+          playbackSyncController.handleRemoteCommand(event);
           return;
         case "P2P_SIGNAL": {
           if (
@@ -2735,15 +2316,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       }
     },
     [
+      adapter.id,
       adapter.video,
       applyHostState,
-      applyRemotePause,
-      applyRemotePlay,
-      applyRemoteSeek,
       isCurrentHost,
       chatDisplayMode,
       enqueueLiveChatMessage,
       experimentalSuperReactionsEnabled,
+      playbackSyncController,
       recordChatHistoryMessage,
       reactionsEnabled,
       terminateRoomSession,
@@ -2762,6 +2342,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       activeParticipant: Participant,
       nextRoomToken: string,
       isCurrentJoin: () => boolean,
+      createdRoomProvider: SourceProvider | null = null,
     ): Promise<boolean> => {
       if (!isCurrentJoin()) {
         return false;
@@ -2775,6 +2356,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
       const sameRoomReconnect = roomIdRef.current === nextRoomId;
       if (!sameRoomReconnect) {
+        roomSourceProviderRef.current = createdRoomProvider;
+        setRoomSourceProvider(createdRoomProvider);
         handledP2PSignalIdsRef.current.clear();
         lastSeenP2PServerSeqRef.current = 0;
         p2pSignalSequenceRef.current = 0;
@@ -3400,6 +2983,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
   const createAndConnectRoom = useCallback(
     async (reason: string) => {
+      if (roomIdRef.current) {
+        logDebug("overlay.room", "create skipped while room is active", {
+          reason,
+          roomId: roomIdRef.current,
+        });
+        return null;
+      }
+
       cancelPendingRoomJoin();
       const createSequence = roomJoinSequenceRef.current;
       const isCurrentCreate = () => roomJoinSequenceRef.current === createSequence;
@@ -3477,6 +3068,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
         activeParticipant,
         nextRoomToken,
         () => isCurrentCreate() && participantRef.current?.id === activeParticipant.id,
+        adapter.provider,
       );
       return connected ? created : null;
     },
@@ -3622,269 +3214,11 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     storedRoomSession,
   ]);
 
-  const sendHostState = useCallback(
-    (allowController = false, stateOverride?: Partial<PlaybackState>) => {
-      const activeRoomId = roomIdRef.current;
-      if (!activeRoomId || (!isCurrentHost() && !allowController)) {
-        logDebug("sync.hostState", "skipped", {
-          hasRoom: Boolean(activeRoomId),
-          isCurrentHost: isCurrentHost(),
-          allowController,
-          participantId: participantRef.current?.id,
-        });
-        return;
-      }
-
-      if (!allowController && Date.now() < suppressLocalEventsUntilRef.current) {
-        logDebug("sync.hostState", "skipped during remote suppression", {
-          suppressUntil: suppressLocalEventsUntilRef.current,
-          now: Date.now(),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      if (!allowController && isMediaSettling(adapter.video)) {
-        logDebug("sync.hostState", "skipped while media is settling", {
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      const state = stateOverride
-        ? {
-            ...adapter.getState(),
-            ...stateOverride,
-          }
-        : adapter.getState();
-      logDebug("sync.hostState", "send", {
-        roomId: activeRoomId,
-        allowController,
-        state: playbackStateDebugSnapshot(state),
-      });
-      clientRef.current.send({
-        type: "HOST_STATE",
-        roomId: activeRoomId,
-        state,
-        source: buildWatchSourceDescriptor(adapter, state),
-      });
-    },
-    [adapter, isCurrentHost],
-  );
-
-  const sendLocalControlEvent = useCallback(
-    (event: PlayerEvent, stateOverride?: Partial<PlaybackState>) => {
-      const activeRoomId = roomIdRef.current;
-      const activeParticipant = participantRef.current;
-      if (!activeRoomId || !activeParticipant) {
-        logDebug("adapter.event", "control send skipped without room", {
-          event,
-          hasRoom: Boolean(activeRoomId),
-          hasParticipant: Boolean(activeParticipant),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return false;
-      }
-
-      if (event.type === "play") {
-        clientRef.current.send({
-          type: "PLAY",
-          roomId: activeRoomId,
-          byUserId: activeParticipant.id,
-          at: event.time,
-        });
-      } else if (event.type === "pause") {
-        clientRef.current.send({
-          type: "PAUSE",
-          roomId: activeRoomId,
-          byUserId: activeParticipant.id,
-          at: event.time,
-        });
-      } else if (event.type === "seek") {
-        clientRef.current.send({
-          type: "SEEK",
-          roomId: activeRoomId,
-          byUserId: activeParticipant.id,
-          to: event.time,
-        });
-      } else {
-        return false;
-      }
-
-      sendHostState(true, stateOverride);
-      return true;
-    },
-    [adapter.video, sendHostState],
-  );
-
-  const flushPendingCrunchyrollLocalSeek = useCallback(
-    (reason: string) => {
-      const pending = pendingLocalSeekBroadcastRef.current;
-      if (!pending) {
-        return false;
-      }
-
-      window.clearTimeout(pending.timeoutId);
-      pendingLocalSeekBroadcastRef.current = null;
-
-      const now = Date.now();
-      const previous = lastLocalSeekBroadcastRef.current;
-      if (
-        previous &&
-        now - previous.sentAt < CRUNCHYROLL_LOCAL_SEEK_DUPLICATE_MS &&
-        Math.abs(previous.targetTime - pending.targetTime) <=
-          CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS
-      ) {
-        logDebug("adapter.event", "ignored duplicate Crunchyroll local seek broadcast", {
-          reason,
-          pending,
-          previous,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return false;
-      }
-
-      lastLocalSeekBroadcastRef.current = {
-        sentAt: now,
-        targetTime: pending.targetTime,
-      };
-      const currentTime = adapter.getCurrentTime();
-      const hostTime =
-        Number.isFinite(currentTime) &&
-        Math.abs(currentTime - pending.targetTime) <= CRUNCHYROLL_LOCAL_SEEK_TOLERANCE_SECONDS
-          ? currentTime
-          : pending.targetTime;
-      const playing = !adapter.video.paused;
-
-      logDebug("adapter.event", "flush Crunchyroll local seek broadcast", {
-        reason,
-        pending,
-        hostTime,
-        playing,
-        video: videoDebugSnapshot(adapter.video),
-      });
-
-      return sendLocalControlEvent(
-        { type: "seek", time: pending.targetTime },
-        {
-          hostTime,
-          playing,
-          updatedAt: now,
-        },
-      );
-    },
-    [adapter, sendLocalControlEvent],
-  );
-
-  const queueCrunchyrollLocalSeekBroadcast = useCallback(
-    (targetTime: number, reason: string) => {
-      const now = Date.now();
-      lastLocalSeekEventAtRef.current = now;
-
-      const previous = pendingLocalSeekBroadcastRef.current;
-      if (previous) {
-        window.clearTimeout(previous.timeoutId);
-      }
-
-      const delay = isMediaSettling(adapter.video)
-        ? CRUNCHYROLL_LOCAL_SEEK_SETTLING_DELAY_MS
-        : CRUNCHYROLL_LOCAL_SEEK_READY_DELAY_MS;
-      const timeoutId = window.setTimeout(() => {
-        flushPendingCrunchyrollLocalSeek("timer");
-      }, delay);
-
-      pendingLocalSeekBroadcastRef.current = {
-        queuedAt: now,
-        targetTime,
-        timeoutId,
-      };
-
-      logDebug("adapter.event", "queue Crunchyroll local seek broadcast", {
-        reason,
-        delay,
-        targetTime,
-        video: videoDebugSnapshot(adapter.video),
-      });
-    },
-    [adapter.video, flushPendingCrunchyrollLocalSeek],
-  );
-
-  useEffect(() => {
-    return () => {
-      const pending = pendingLocalSeekBroadcastRef.current;
-      if (pending) {
-        window.clearTimeout(pending.timeoutId);
-        pendingLocalSeekBroadcastRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = adapter.subscribe((event) => {
-      if (Date.now() < suppressLocalEventsUntilRef.current) {
-        logDebug("adapter.event", "suppressed local event", {
-          event,
-          suppressUntil: suppressLocalEventsUntilRef.current,
-          now: Date.now(),
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      if (event.type === "timeupdate" && adapter.video.paused) {
-        logDebug("adapter.event", "ignored paused timeupdate", {
-          event,
-          video: videoDebugSnapshot(adapter.video),
-        });
-        return;
-      }
-
-      logDebug("adapter.event", "local event", {
-        event,
-        roomId: roomIdRef.current,
-        participantId: participantRef.current?.id,
-        video: videoDebugSnapshot(adapter.video),
-      });
-
-      if (adapter.id === "crunchyroll" && event.type === "seek") {
-        queueCrunchyrollLocalSeekBroadcast(event.time, "adapter-seek");
-        return;
-      }
-
-      if (adapter.id === "crunchyroll" && (event.type === "play" || event.type === "pause")) {
-        const now = Date.now();
-        const pendingSeek = Boolean(pendingLocalSeekBroadcastRef.current);
-        const mediaSettling = isMediaSettling(adapter.video);
-        const nearSeek =
-          now - lastLocalSeekEventAtRef.current <
-          CRUNCHYROLL_LOCAL_PLAYBACK_SUPPRESSION_AFTER_SEEK_MS;
-        if (pendingSeek || mediaSettling || nearSeek) {
-          logDebug("adapter.event", "coalesced Crunchyroll playback event during seek", {
-            event,
-            pendingSeek,
-            mediaSettling,
-            nearSeek,
-            lastLocalSeekEventAt: lastLocalSeekEventAtRef.current,
-            video: videoDebugSnapshot(adapter.video),
-          });
-          return;
-        }
-      }
-
-      sendLocalControlEvent(event);
-    });
-
-    return unsubscribe;
-  }, [adapter, queueCrunchyrollLocalSeekBroadcast, sendLocalControlEvent]);
-
-  useEffect(() => {
-    if (!isHost || !roomId) {
-      return;
-    }
-
-    const id = window.setInterval(sendHostState, 1500);
-    return () => window.clearInterval(id);
-  }, [isHost, roomId, sendHostState]);
+  useActiveAdapterPlayback({
+    active: adapterActive,
+    adapter,
+    controller: playbackSyncController,
+  });
 
   const handleCreateRoom = async () => {
     if (roomCreatePending) {
@@ -3935,6 +3269,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     }
 
     clearRoomActionFeedback();
+    clearRoomEndConfirmation();
     setRoomEndPending(true);
     try {
       const activeRoomId = roomIdRef.current;
@@ -3973,6 +3308,50 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
       setAuthMessage(message);
     } finally {
       setRoomEndPending(false);
+    }
+  };
+
+  const handleRequestEndRoom = async () => {
+    if (roomEndPending || !roomId || !isHost) {
+      return;
+    }
+
+    if (shouldConfirmRoomEnd(participantCount) && !roomEndConfirmationPending) {
+      setRoomEndConfirmationPending(true);
+      if (roomEndConfirmationTimerRef.current !== null) {
+        window.clearTimeout(roomEndConfirmationTimerRef.current);
+      }
+      roomEndConfirmationTimerRef.current = window.setTimeout(() => {
+        roomEndConfirmationTimerRef.current = null;
+        setRoomEndConfirmationPending(false);
+      }, ROOM_END_CONFIRMATION_DURATION_MS);
+      return;
+    }
+
+    await handleEndRoom();
+  };
+
+  const handleLeaveRoom = async () => {
+    if (roomLeavePending || !roomId || isHost) {
+      return;
+    }
+
+    clearRoomActionFeedback();
+    setRoomLeavePending(true);
+    setPanelOpen(true);
+    setAuthMessage(null);
+    try {
+      await waitForOverlayPaint();
+      const activeRoomId = roomIdRef.current;
+      if (!activeRoomId || isCurrentHost()) {
+        return;
+      }
+
+      resetLocalRoomSession(undefined, true);
+      showRoomActionFeedback("room-left");
+      logDebug("overlay.room", "left by guest", { roomId: activeRoomId });
+    } finally {
+      setRoomLeavePending(false);
     }
   };
 
@@ -4317,6 +3696,10 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     restoreLiveVoiceDuckingRef.current?.();
     restoreLiveVoiceDuckingRef.current = null;
 
+    if (!adapterActive) {
+      return undefined;
+    }
+
     if (liveVoiceTalking) {
       restoreLiveVoiceDuckingRef.current = adapter.duckVolume(0.42);
       return () => {
@@ -4334,7 +3717,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     }
 
     return undefined;
-  }, [adapter, liveVoiceTalking, remoteLiveVoiceActive]);
+  }, [adapter, adapterActive, liveVoiceTalking, remoteLiveVoiceActive]);
 
   const startLiveVoiceTalk = useCallback(() => {
     if (!roomId) {
@@ -4398,7 +3781,12 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
   }, [restoreVoiceDucking]);
 
   const startVoiceCapture = useCallback(() => {
-    if (voiceCaptureActiveRef.current || !roomId || !isSpeechRecognitionSupported()) {
+    if (
+      !adapterActiveRef.current ||
+      voiceCaptureActiveRef.current ||
+      !roomId ||
+      !isSpeechRecognitionSupported()
+    ) {
       return;
     }
 
@@ -4749,14 +4137,22 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     roomId ? "room-active" : "room-empty",
     roomCreatePending ? "creating" : "",
     roomEndPending ? "ending" : "",
+    roomLeavePending ? "leaving" : "",
   ]
     .filter(Boolean)
     .join(" ");
+  const primaryRoomActionKind = getPrimaryRoomActionKind({
+    isHost,
+    roomExists: Boolean(roomId),
+  });
   const primaryRoomActionLabel = getPrimaryRoomActionLabel({
     feedback: roomActionFeedback,
+    isHost,
     roomCreatePending,
+    roomEndConfirmationPending,
     roomEndPending,
     roomExists: Boolean(roomId),
+    roomLeavePending,
   });
   const inviteCopied = isInviteCopiedFeedback(roomActionFeedback);
   const accountDisplayName =
@@ -4773,24 +4169,53 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
     <div
       className={overlayClassName}
       onPointerDownCapture={unlockLiveVoicePlayback}
+      ref={overlayRootRef}
       style={overlayCssVariables}
     >
       <style>{overlayStyles}</style>
-      <button
-        className="top-bubble"
-        ref={topBubbleRef}
-        type="button"
-        onClick={() =>
-          setPanelOpen((value) => (roomCreatePending || roomEndPending ? true : !value))
-        }
+      <div
+        className={[
+          "top-bubble-reveal",
+          panelOpen ? "panel-open" : "",
+          topBubbleReveal.bubbleVisible ? "bubble-visible" : "",
+          topBubbleReveal.edgeGlowVisible ? "edge-glow" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
-        <AnidachiLogoMark className="top-bubble-logo" size={24} />
-        <span className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`} />
-        <span className="bubble-count">{participantCount}</span>
-      </button>
+        <span className="top-bubble-edge-glow" aria-hidden="true" />
+        <button
+          aria-controls="anidachi-mini-panel"
+          aria-expanded={panelOpen}
+          aria-label={panelOpen ? "Close Anidachi controls" : "Open Anidachi controls"}
+          className="top-bubble"
+          onBlur={topBubbleReveal.handleBubbleBlur}
+          onFocus={topBubbleReveal.handleBubbleFocus}
+          ref={topBubbleRef}
+          type="button"
+          onClick={(event) => {
+            if (event.detail > 0) {
+              event.currentTarget.blur();
+            }
+            setPanelOpen((value) =>
+              roomCreatePending || roomEndPending || roomLeavePending ? true : !value,
+            );
+          }}
+        >
+          <AnidachiLogoMark className="top-bubble-logo" size={24} />
+          <span className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`} />
+          <span className="bubble-count">{participantCount}</span>
+        </button>
+      </div>
 
       {panelOpen ? (
-        <section className="mini-panel" aria-label="Anidachi controls" ref={miniPanelRef}>
+        <section
+          className="mini-panel"
+          id="anidachi-mini-panel"
+          aria-label="Anidachi controls"
+          ref={miniPanelRef}
+          {...overlayInteractionBoundaryProps}
+        >
           <div className="panel-header">
             <div className="panel-account">
               <span className="mini-avatar panel-account-avatar">
@@ -4834,11 +4259,30 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
 
           <div className={roomActionsClassName}>
             <button
-              className={`button primary panel-primary-action${roomCreatePending ? " loading" : ""}`}
+              className={[
+                "button",
+                "primary",
+                "panel-primary-action",
+                primaryRoomActionKind !== "create" ? "room-exit" : "",
+                roomEndConfirmationPending ? "confirming" : "",
+                roomCreatePending || roomEndPending || roomLeavePending ? "loading" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               type="button"
-              onClick={handleCreateRoom}
+              onClick={
+                primaryRoomActionKind === "leave"
+                  ? handleLeaveRoom
+                  : primaryRoomActionKind === "end"
+                    ? handleRequestEndRoom
+                    : handleCreateRoom
+              }
               disabled={
-                !participant || extensionContextInvalidated || roomCreatePending || roomEndPending
+                !participant ||
+                extensionContextInvalidated ||
+                roomCreatePending ||
+                roomEndPending ||
+                roomLeavePending
               }
             >
               <span aria-live="polite">{primaryRoomActionLabel}</span>
@@ -4851,7 +4295,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                   title={inviteCopied ? "Invite copied" : "Copy invite"}
                   type="button"
                   onClick={copyInvite}
-                  disabled={roomCreatePending || roomEndPending}
+                  disabled={roomCreatePending || roomEndPending || roomLeavePending}
                   style={{ "--action-index": 0 } as CSSProperties}
                 >
                   {inviteCopied ? <Check size={14} /> : <Copy size={14} />}
@@ -4873,7 +4317,8 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                     !authAuthenticated ||
                     inviteTargetsLoading ||
                     roomCreatePending ||
-                    roomEndPending
+                    roomEndPending ||
+                    roomLeavePending
                   }
                   style={{ "--action-index": 1 } as CSSProperties}
                 >
@@ -4884,25 +4329,14 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                   className="panel-icon-action reveal-action"
                   title={isHost ? "Sync now" : "Only the host can sync"}
                   type="button"
-                  onClick={() => sendHostState(true)}
-                  disabled={!isHost || roomCreatePending || roomEndPending}
+                  onClick={() => playbackSyncController.broadcastHostState()}
+                  disabled={
+                    !isHost || roomCreatePending || roomEndPending || roomLeavePending
+                  }
                   style={{ "--action-index": 2 } as CSSProperties}
                 >
                   <RefreshCw size={14} />
                 </button>
-                {isHost ? (
-                  <button
-                    aria-label={roomEndPending ? "Ending room" : "End room"}
-                    className={`panel-icon-action danger reveal-action${roomEndPending ? " loading" : ""}`}
-                    title={roomEndPending ? "Ending room" : "End room"}
-                    type="button"
-                    onClick={handleEndRoom}
-                    disabled={roomCreatePending || roomEndPending}
-                    style={{ "--action-index": 3 } as CSSProperties}
-                  >
-                    <DoorOpen size={14} />
-                  </button>
-                ) : null}
               </div>
             ) : null}
           </div>
@@ -4989,6 +4423,20 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
           {currentResourceEntry ? (
             <div className="panel-sync-card">
               <CurrentResourcePanel entry={currentResourceEntry} store={watchProgressStore} />
+            </div>
+          ) : null}
+          {playbackSyncNotice ? (
+            <div className="playback-sync-notice" role="status">
+              <span>{playbackSyncNotice}</span>
+              {resumeSyncRequired ? (
+                <button
+                  className="playback-sync-resume"
+                  onClick={() => playbackSyncController.resumeFromUserGesture()}
+                  type="button"
+                >
+                  Resume sync
+                </button>
+              ) : null}
             </div>
           ) : null}
 
@@ -5327,7 +4775,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
             </div>
           ) : null}
 
-          {!panelOpen && voiceRailParticipants.length ? (
+          {roomRailVisible ? (
             <RoomRail
               activeParticipantId={participant?.id}
               participants={voiceRailParticipants}
@@ -5370,10 +4818,7 @@ export function OverlayApp({ adapter }: OverlayAppProps) {
                     drift: catchUp.drift,
                     video: videoDebugSnapshot(adapter.video),
                   });
-                  adapter.seek(catchUp.expectedTime, {
-                    resumeIfPlaying: false,
-                  });
-                  setCatchUp(null);
+                  playbackSyncController.catchUpFromUserGesture();
                 }}
               >
                 Catch up
@@ -5415,12 +4860,6 @@ function RoomRail({
     }
   }, []);
 
-  const openRail = useCallback(() => {
-    clearOpenTimer();
-    clearCloseTimer();
-    setExpanded(true);
-  }, [clearCloseTimer, clearOpenTimer]);
-
   const scheduleOpen = useCallback(() => {
     clearCloseTimer();
     if (expanded || openTimerRef.current !== undefined) {
@@ -5429,7 +4868,7 @@ function RoomRail({
     openTimerRef.current = window.setTimeout(() => {
       openTimerRef.current = undefined;
       setExpanded(true);
-    }, 260);
+    }, ROOM_RAIL_OPEN_DELAY_MS);
   }, [clearCloseTimer, expanded]);
 
   const scheduleClose = useCallback(() => {
@@ -5441,16 +4880,16 @@ function RoomRail({
     }, 340);
   }, [clearCloseTimer, clearOpenTimer]);
 
-  const handleEdgePointerMove = useCallback(
+  const handleEdgePointerIntent = useCallback(
     (event: PointerEvent<HTMLElement>) => {
-      const distanceToRightEdge = Math.max(0, window.innerWidth - event.clientX);
-      if (distanceToRightEdge <= 6) {
-        openRail();
+      const edgeRight = event.currentTarget.getBoundingClientRect().right;
+      if (!isRoomRailEdgeIntent({ clientX: event.clientX, edgeRight })) {
+        clearOpenTimer();
         return;
       }
       scheduleOpen();
     },
-    [openRail, scheduleOpen],
+    [clearOpenTimer, scheduleOpen],
   );
 
   const handleEdgePointerLeave = useCallback(() => {
@@ -5473,13 +4912,13 @@ function RoomRail({
     <aside className={`room-rail ${expanded ? "open" : ""}`} aria-label="Room participants">
       <div
         className="room-rail-edge"
-        onPointerEnter={scheduleOpen}
+        onPointerEnter={handleEdgePointerIntent}
         onPointerLeave={handleEdgePointerLeave}
-        onPointerMove={handleEdgePointerMove}
+        onPointerMove={handleEdgePointerIntent}
       />
       <div
         className="room-rail-panel"
-        onPointerEnter={expanded ? clearCloseTimer : scheduleOpen}
+        onPointerEnter={expanded ? clearCloseTimer : undefined}
         onPointerLeave={scheduleClose}
         onPointerMove={expanded ? clearCloseTimer : undefined}
       >
@@ -5907,57 +5346,17 @@ function buildCurrentSourceUrlForInvite(): string {
   return url.toString();
 }
 
-function buildSourceUrlWithRoom(sourceUrl: string, roomId: string | null): URL | null {
-  let url: URL;
-  try {
-    url = new URL(sourceUrl, location.href);
-  } catch {
-    return null;
-  }
-
-  if (!url.hostname.endsWith("crunchyroll.com")) {
-    return null;
-  }
-
-  if (roomId) {
-    const params = new URLSearchParams(url.hash.replace(/^#/, ""));
-    params.set("anidachiRoom", roomId);
-    url.hash = params.toString();
-  }
-
-  return url;
-}
-
-function isSameDocumentTarget(target: URL): boolean {
-  const current = new URL(location.href);
+function isStaleAuthoritativeGeneration(
+  currentRoomGeneration: number,
+  currentSourceGeneration: number,
+  receivedRoomGeneration: number,
+  receivedSourceGeneration: number,
+): boolean {
   return (
-    current.origin === target.origin &&
-    current.pathname === target.pathname &&
-    current.search === target.search
+    receivedRoomGeneration < currentRoomGeneration ||
+    (receivedRoomGeneration === currentRoomGeneration &&
+      receivedSourceGeneration < currentSourceGeneration)
   );
-}
-
-async function navigateCrunchyrollToRemoteSource(target: URL, state: PlaybackState): Promise<void> {
-  const targetUrl = target.toString();
-  const result = await runCrunchyrollMainCommand("navigate", {
-    url: targetUrl,
-  });
-  logDebug("sync.source", "Crunchyroll seamless navigation result", {
-    result,
-    state: playbackStateDebugSnapshot(state),
-    target: targetUrl,
-  });
-
-  if (result.ok || isSameDocumentTarget(target)) {
-    return;
-  }
-
-  logDebug("sync.source", "Crunchyroll hard navigation fallback", {
-    currentUrl: location.href,
-    error: result.error,
-    target: targetUrl,
-  });
-  location.assign(targetUrl);
 }
 
 function fallbackCopy(text: string): boolean {
@@ -5981,189 +5380,6 @@ function initials(name: string): string {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
-}
-
-function getCrunchyrollPlayerChromeState(container: HTMLElement): CrunchyrollPlayerChromeState {
-  const containerRect = container.getBoundingClientRect();
-  if (!isUsableRect(containerRect)) {
-    return DEFAULT_CRUNCHYROLL_PLAYER_CHROME_STATE;
-  }
-
-  const controlRects = getCrunchyrollControlRects(container, containerRect, true);
-  const layoutControlRects = getCrunchyrollControlRects(container, containerRect, false);
-  const timelineRect = getVisibleElementRect(
-    container.querySelector<HTMLElement>("[data-testid='timeline-controls-container']"),
-    container,
-    containerRect,
-    true,
-  );
-  const controlsVisible = Boolean(timelineRect) || controlRects.length > 0;
-  const topControlRects = getCrunchyrollTopControlRects(
-    layoutControlRects.length ? layoutControlRects : controlRects,
-    containerRect,
-  );
-  const topPosition = getCrunchyrollTopBubblePosition(
-    containerRect,
-    topControlRects,
-    topControlRects.length > 0,
-  );
-
-  return {
-    controlsVisible,
-    camStackBottomPx: controlsVisible
-      ? getCrunchyrollCamStackBottom(containerRect, timelineRect, controlRects)
-      : DEFAULT_CAM_STACK_BOTTOM_PX,
-    containerHeightPx: Math.round(containerRect.height),
-    containerWidthPx: Math.round(containerRect.width),
-    ...topPosition,
-  };
-}
-
-function getCrunchyrollControlRects(
-  container: HTMLElement,
-  containerRect: DOMRect,
-  respectOpacity: boolean,
-): DOMRect[] {
-  const controls = Array.from(
-    container.querySelectorAll<HTMLElement>(
-      [
-        "[data-testid='player-controls-root']",
-        "[data-testid='timeline-controls-container']",
-        "[data-testid='settings-button']",
-        "[data-testid='fullscreen-button']",
-        "[data-testid='playback-speed-button']",
-        "[data-testid='audio-subtitle-button']",
-        "[data-testid='play-pause-button']",
-        "[data-testid='timestamp']",
-        "[data-testid*='player' i]",
-        "[data-testid*='control' i]",
-        "[data-testid*='settings' i]",
-        "[data-testid*='fullscreen' i]",
-        "button",
-        "[role='button']",
-        "[role='slider']",
-        "input[type='range']",
-      ].join(", "),
-    ),
-  );
-
-  return controls
-    .map((element) => getVisibleElementRect(element, container, containerRect, respectOpacity))
-    .filter((rect): rect is DOMRect => Boolean(rect))
-    .filter((rect) => !isLikelyWholePlayerControlRoot(rect, containerRect));
-}
-
-function getCrunchyrollTopControlRects(controlRects: DOMRect[], containerRect: DOMRect): DOMRect[] {
-  const topZoneBottom = containerRect.top + Math.min(150, Math.max(96, containerRect.height * 0.2));
-  const rightZoneStart =
-    containerRect.right - Math.min(360, Math.max(180, containerRect.width * 0.4));
-
-  return controlRects.filter(
-    (rect) =>
-      rect.top < topZoneBottom &&
-      rect.bottom > containerRect.top &&
-      rect.right > rightZoneStart &&
-      rect.width >= 18 &&
-      rect.width <= 104 &&
-      rect.height >= 18 &&
-      rect.height <= 104,
-  );
-}
-
-function getCrunchyrollTopBubblePosition(
-  containerRect: DOMRect,
-  topControlRects: DOMRect[],
-  controlsVisible: boolean,
-): Pick<
-  CrunchyrollPlayerChromeState,
-  "miniPanelRightPx" | "miniPanelTopPx" | "topBubbleRightPx" | "topBubbleTopPx"
-> {
-  if (!controlsVisible || topControlRects.length === 0) {
-    return {
-      miniPanelRightPx: DEFAULT_MINI_PANEL_RIGHT_PX,
-      miniPanelTopPx: DEFAULT_MINI_PANEL_TOP_PX,
-      topBubbleRightPx: DEFAULT_TOP_BUBBLE_RIGHT_PX,
-      topBubbleTopPx: DEFAULT_TOP_BUBBLE_TOP_PX,
-    };
-  }
-
-  const margin = 10;
-  const bubbleHeight = 30;
-  const firstControl = [...topControlRects].sort((a, b) => a.top - b.top)[0];
-  const firstCenterY = rectCenterY(firstControl);
-  const rowRects = topControlRects.filter(
-    (rect) => Math.abs(rectCenterY(rect) - firstCenterY) <= 34,
-  );
-  const rowTop = Math.min(...rowRects.map((rect) => rect.top));
-  const rowBottom = Math.max(...rowRects.map((rect) => rect.bottom));
-  const topBubbleTopPx = Math.round(
-    clampNumber(
-      rowTop - containerRect.top + (rowBottom - rowTop - bubbleHeight) / 2,
-      margin,
-      Math.max(margin, containerRect.height - bubbleHeight - margin),
-    ),
-  );
-  const topBubbleRightPx = margin;
-
-  return {
-    miniPanelRightPx: margin,
-    miniPanelTopPx: Math.round(
-      clampNumber(
-        topBubbleTopPx + bubbleHeight + 8,
-        DEFAULT_MINI_PANEL_TOP_PX,
-        Math.max(DEFAULT_MINI_PANEL_TOP_PX, containerRect.height - 80),
-      ),
-    ),
-    topBubbleRightPx,
-    topBubbleTopPx,
-  };
-}
-
-function getCrunchyrollCamStackBottom(
-  containerRect: DOMRect,
-  timelineRect: DOMRect | null,
-  controlRects: DOMRect[],
-): number {
-  const lowerZoneTop =
-    containerRect.bottom - Math.min(260, Math.max(120, containerRect.height * 0.28));
-  const lowerControlRects = [timelineRect, ...controlRects].filter((rect): rect is DOMRect => {
-    if (!rect) {
-      return false;
-    }
-
-    return (
-      rect.top >= lowerZoneTop &&
-      rect.bottom <= containerRect.bottom + 4 &&
-      rect.width >= 18 &&
-      rect.height >= 6
-    );
-  });
-
-  if (lowerControlRects.length === 0) {
-    return 126;
-  }
-
-  const firstControlTop = Math.min(...lowerControlRects.map((rect) => rect.top));
-  const bottomPx = containerRect.bottom - firstControlTop + 18;
-  return Math.round(clampNumber(bottomPx, 96, Math.min(220, containerRect.height - 72)));
-}
-
-function getVisibleElementRect(
-  element: HTMLElement | null,
-  boundary: HTMLElement,
-  boundaryRect: DOMRect,
-  respectOpacity: boolean,
-): DOMRect | null {
-  if (!element || !isElementVisuallyAvailable(element, boundary, respectOpacity)) {
-    return null;
-  }
-
-  const rect = element.getBoundingClientRect();
-  if (!isUsableRect(rect) || !rectIntersects(rect, boundaryRect)) {
-    return null;
-  }
-
-  return rect;
 }
 
 function isPointerInComposerDeadZone(
@@ -6237,6 +5453,20 @@ function wakePlayerAfterComposerShieldRelease(point: PointerWakePoint, shield: H
   target.dispatchEvent(new MouseEvent("mousemove", eventInit));
 }
 
+function isUsableRect(rect: DOMRect): boolean {
+  return (
+    Number.isFinite(rect.width) && Number.isFinite(rect.height) && rect.width > 1 && rect.height > 1
+  );
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+
+  return Math.max(min, Math.min(max, value));
+}
+
 function getLiveVoiceStatusText(status: LiveVoiceStatus, talking: boolean): string {
   if (status === "error") {
     return "Mic blocked";
@@ -6256,88 +5486,4 @@ function getLiveVoiceStatusText(status: LiveVoiceStatus, talking: boolean): stri
 function stopNativeEvent(event: SyntheticEvent<HTMLElement>) {
   event.stopPropagation();
   event.nativeEvent.stopImmediatePropagation();
-}
-
-function isElementVisuallyAvailable(
-  element: HTMLElement,
-  boundary: HTMLElement,
-  respectOpacity: boolean,
-): boolean {
-  let current: HTMLElement | null = element;
-  let opacity = 1;
-
-  while (current) {
-    const style = getComputedStyle(current);
-    if (
-      style.display === "none" ||
-      style.visibility === "hidden" ||
-      style.visibility === "collapse"
-    ) {
-      return false;
-    }
-
-    const nextOpacity = Number.parseFloat(style.opacity || "1");
-    if (Number.isFinite(nextOpacity)) {
-      opacity *= nextOpacity;
-    }
-
-    if (current === boundary || (respectOpacity && opacity <= 0.04)) {
-      break;
-    }
-
-    current = current.parentElement;
-  }
-
-  return !respectOpacity || opacity > 0.04;
-}
-
-function isUsableRect(rect: DOMRect): boolean {
-  return (
-    Number.isFinite(rect.width) && Number.isFinite(rect.height) && rect.width > 1 && rect.height > 1
-  );
-}
-
-function rectIntersects(rect: DOMRect, boundary: DOMRect): boolean {
-  return (
-    rect.right > boundary.left &&
-    rect.left < boundary.right &&
-    rect.bottom > boundary.top &&
-    rect.top < boundary.bottom
-  );
-}
-
-function isLikelyWholePlayerControlRoot(rect: DOMRect, boundary: DOMRect): boolean {
-  return (
-    rect.width >= boundary.width * 0.84 &&
-    rect.height >= boundary.height * 0.62 &&
-    rect.top <= boundary.top + 24
-  );
-}
-
-function rectCenterY(rect: DOMRect): number {
-  return rect.top + rect.height / 2;
-}
-
-function clampNumber(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value)) {
-    return min;
-  }
-
-  return Math.max(min, Math.min(max, value));
-}
-
-function areCrunchyrollPlayerChromeStatesEqual(
-  left: CrunchyrollPlayerChromeState,
-  right: CrunchyrollPlayerChromeState,
-): boolean {
-  return (
-    left.controlsVisible === right.controlsVisible &&
-    left.camStackBottomPx === right.camStackBottomPx &&
-    left.containerHeightPx === right.containerHeightPx &&
-    left.containerWidthPx === right.containerWidthPx &&
-    left.miniPanelRightPx === right.miniPanelRightPx &&
-    left.miniPanelTopPx === right.miniPanelTopPx &&
-    left.topBubbleRightPx === right.topBubbleRightPx &&
-    left.topBubbleTopPx === right.topBubbleTopPx
-  );
 }

@@ -60,7 +60,7 @@ export function SoftwareApplicationJsonLd() {
     applicationCategory: "EntertainmentApplication",
     operatingSystem: "Chrome, Web",
     description:
-      "Watch anime together with friends. Create watchrooms, sync Crunchyroll playback, chat in real-time, and track your anime journey.",
+      "Watch together with friends on Crunchyroll and YouTube. Create watchrooms, sync playback, chat in real-time, and track progress — including async catch-up.",
     url: siteUrl,
     offers: {
       "@type": "AggregateOffer",

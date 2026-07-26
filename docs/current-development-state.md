@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-07-07.
+Last updated: 2026-07-23.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -276,7 +276,31 @@ For new testing, prefer the latest `Build Extension` artifact from the
 The extension currently supports:
 
 - YouTube and Crunchyroll content-script overlay;
-- Anidachi bubble and compact room panel;
+- an ordered source-adapter registry with shared HTML5 core behavior and
+  isolated Generic, YouTube, and Crunchyroll provider modules. This extraction
+  preserves the existing winner-first behavior. YouTube overlay mounting is
+  restricted to full watch pages so feeds, previews, Shorts, and embeds remain
+  untouched;
+- deterministic adapter replacement and suspension without recreating the room
+  session. Provider geometry subscriptions are disposed before replacement,
+  and stale callbacks from the previous player are ignored;
+- independent YouTube and Crunchyroll player-chrome geometry. Shared overlay
+  layout consumes only normalized safe insets and anchors from the active
+  adapter;
+- first-class provider-pinned room sources. YouTube and Crunchyroll rooms can
+  switch only within their own provider, and the Room Worker rejects conflicting
+  provider updates;
+- YouTube finite-VOD synchronization with fail-closed transition detection,
+  local advertisement isolation, 500 ms host-buffering debounce, authoritative
+  playback rate, and explicit user-gesture recovery after autoplay blocking.
+  Real-ad and two-profile staging acceptance remain required before PR #148 can
+  leave draft;
+- a compact room panel with an edge-intent launcher: while the panel is closed,
+  the top pill stays hidden until a deliberate top-right hover reveals it; the
+  open panel pins the pill in place as its close control;
+- an active-room-only side voice rail: it is absent before a room exists, and
+  its participant list expands only after a deliberate press against the player
+  edge rather than broad hover near the side;
 - sign-in through the web app with Google/Discord;
 - room creation and invite copying through the website/API/Worker flow;
 - WebSocket room join and playback sync;

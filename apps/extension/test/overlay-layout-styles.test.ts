@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { overlayStyles } from "../src/styles";
 
 describe("overlay layout pointer surfaces", () => {
+	it("keeps the cursor visible across the complete control panel", () => {
+		expect(getRule(".mini-panel")).toContain("cursor: default");
+	});
+
 	it("separates personal camera controls from the participant hierarchy", () => {
 		const cameraControl = getRule(".icon-button.panel-camera-control");
 		expect(cameraControl).toContain("position: relative");
@@ -121,6 +125,24 @@ describe("overlay layout pointer surfaces", () => {
 		expect(activePrimaryAction).toContain("max-width: none");
 	});
 
+	it("renders room exit as a restrained destructive primary action", () => {
+		const primaryAction = getRule(".button.panel-primary-action");
+		expect(primaryAction).toContain("height: 36px");
+		expect(primaryAction).toContain("min-height: 36px");
+
+		const exitAction = getRule(
+			".button.primary.panel-primary-action.room-exit",
+		);
+		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.24)");
+		expect(exitAction).toContain("background: rgba(51, 35, 37, 0.88)");
+		expect(exitAction).toContain("color: rgba(255, 255, 255, 0.9)");
+		expect(exitAction).toContain("box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025)");
+		expect(exitAction).not.toContain("linear-gradient");
+		expect(
+			getRule(".button.primary.panel-primary-action.room-exit.confirming"),
+		).toContain("background: rgba(88, 38, 42, 0.96)");
+	});
+
 	it("uses restrained text tabs for settings navigation", () => {
 		const tab = getRule(".settings-category-tab");
 		expect(tab).toContain("position: relative");
@@ -157,10 +179,68 @@ describe("overlay layout pointer surfaces", () => {
 
 	it("keeps the top bubble and rendered cameras interactive without blocking empty slots", () => {
 		const topBubble = getRule(".top-bubble");
-		expect(topBubble).toContain("pointer-events: auto");
+		expect(topBubble).toContain("pointer-events: none");
+		expect(getRule(".top-bubble-reveal.bubble-visible .top-bubble")).toContain(
+			"pointer-events: auto",
+		);
 		expect(topBubble).toContain("align-items: center");
 		expect(getRule(".cam-stack")).toContain("pointer-events: none");
 		expect(getRule(".cam-bubble")).toContain("pointer-events: auto");
+	});
+
+	it("reveals the top bubble only after deliberate edge intent and pins it with the panel", () => {
+		const revealSurface = getRule(".top-bubble-reveal");
+		expect(revealSurface).toContain("position: absolute");
+		expect(revealSurface).toContain("inset: 0");
+		expect(revealSurface).toContain("pointer-events: none");
+
+		const edgeGlow = getRule(".top-bubble-edge-glow");
+		expect(edgeGlow).toContain("top: 0");
+		expect(edgeGlow).toContain("right: 0");
+		expect(edgeGlow).not.toContain("--top-bubble-right");
+		expect(edgeGlow).toContain("width: 104px");
+		expect(edgeGlow).toContain("height: 0");
+		expect(edgeGlow).toContain("background: transparent");
+		expect(edgeGlow).toContain("pointer-events: none");
+		expect(edgeGlow).toContain("opacity: 0");
+		expect(edgeGlow).toContain("rgba(255, 92, 20, 0.56)");
+		expect(edgeGlow).toContain("rgba(249, 115, 22, 0.34)");
+		expect(edgeGlow).toContain("rgba(76, 24, 4, 0.22)");
+		expect(edgeGlow).toContain("scaleX(0.7)");
+		const visibleEdgeGlow = getRule(
+			".top-bubble-reveal.edge-glow .top-bubble-edge-glow",
+		);
+		expect(visibleEdgeGlow).toContain("opacity: 0.96");
+		expect(visibleEdgeGlow).toContain("scaleX(1)");
+
+		const hiddenBubble = getRule(".top-bubble");
+		expect(hiddenBubble).toContain("opacity: 0");
+		expect(hiddenBubble).toContain("pointer-events: none");
+		expect(hiddenBubble).not.toContain("visibility: hidden");
+		expect(hiddenBubble).toContain("translateY(");
+
+		const edgeReveal = getRule(".top-bubble-reveal.bubble-visible .top-bubble");
+		expect(edgeReveal).toContain("opacity: 1");
+		expect(edgeReveal).toContain("pointer-events: auto");
+		expect(edgeReveal).toContain("transform: translateY(0)");
+
+		const pinnedBubble = getRule(".top-bubble-reveal.panel-open .top-bubble");
+		expect(pinnedBubble).toContain("opacity: 1");
+		expect(pinnedBubble).toContain("pointer-events: auto");
+		expect(pinnedBubble).toContain("transform: translateY(0)");
+		expect(
+			getNumericProperty(".top-bubble-reveal.panel-open", "z-index"),
+		).toBeGreaterThan(getNumericProperty(".mini-panel", "z-index"));
+	});
+
+	it("styles visible player controls without a provider-specific overlay class", () => {
+		const visibleControlsBubble = getRule(
+			".anidachi-overlay.player-controls-visible .top-bubble",
+		);
+		expect(visibleControlsBubble).toContain("background: rgba(9, 9, 11, 0.78)");
+		expect(overlayStyles).not.toContain(
+			".anidachi-overlay.is-crunchyroll.player-controls-visible",
+		);
 	});
 
 	it("keeps live objects and editor ghosts below the panel", () => {
@@ -190,6 +270,14 @@ describe("overlay layout pointer surfaces", () => {
 		);
 		expect(getRule(".overlay-layout-ghost-preview")).toContain(
 			"pointer-events: none",
+		);
+	});
+
+	it("keeps the closed room rail inert outside a narrow edge target", () => {
+		expect(getRule(".room-rail-edge")).toContain("width: 6px");
+		expect(getRule(".room-rail-panel")).toContain("pointer-events: none");
+		expect(getRule(".room-rail.open .room-rail-panel")).toContain(
+			"pointer-events: auto",
 		);
 	});
 

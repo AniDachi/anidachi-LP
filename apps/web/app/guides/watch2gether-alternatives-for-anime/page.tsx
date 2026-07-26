@@ -75,7 +75,7 @@ export default function Watch2GetherAlternativesForAnimePage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         {
           name: "Watch2Gether alternatives for anime",
           url: "/guides/watch2gether-alternatives-for-anime",

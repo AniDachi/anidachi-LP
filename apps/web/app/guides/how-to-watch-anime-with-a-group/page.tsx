@@ -87,7 +87,7 @@ export default function HowToWatchAnimeWithAGroupPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "How to Watch Anime With a Group",
             url: "/guides/how-to-watch-anime-with-a-group",

@@ -7,11 +7,11 @@ import {
   type CrunchyrollControlResult,
   type CrunchyrollTimelineSnapshot,
   type CrunchyrollVideoSnapshot,
-} from "../src/crunchyroll-control";
+} from "../src/source-adapters/crunchyroll/bridge-contract";
 import {
   getCrunchyrollRelatedSeriesId,
   selectCrunchyrollPosterTall,
-} from "../src/crunchyroll-artwork-select";
+} from "../src/source-adapters/crunchyroll/artwork-select";
 
 export default defineContentScript({
   matches: ["https://*.crunchyroll.com/*"],

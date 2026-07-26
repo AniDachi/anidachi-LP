@@ -70,11 +70,12 @@ const tocHeadings: TocHeading[] = [
 const toolkitItemList = [
   { name: "Watch Anime Together (pillar)", url: "/watch-anime-together", position: 1 },
   { name: "Watch Crunchyroll Together (pillar)", url: "/watch-crunchyroll-together", position: 2 },
-  { name: "Chrome extension guide", url: "/guides/crunchyroll-watch-party-chrome-extension", position: 3 },
+  { name: "YouTube Watch Party (pillar)", url: "/watch-youtube-together", position: 3 },
+  { name: "Chrome extension guide", url: "/guides/crunchyroll-watch-party-chrome-extension", position: 4 },
   {
     name: "First watch party checklist",
     url: "/guides/first-anime-watch-party-checklist",
-    position: 4,
+    position: 5,
   },
 ];
 
@@ -98,7 +99,7 @@ export default function AnimeWatchPartyToolkitPage() {
       description="Structured starting point for Crunchyroll group watching with AniDachi."
       url="/anime-watch-party-toolkit"
       datePublished="2026-05-08"
-      dateModified="2026-07-22"
+      dateModified="2026-07-25"
       faq={faq}
       headings={tocHeadings}
       itemList={[...toolkitItemList, ...genreHubItemList(toolkitItemList.length + 1)]}
@@ -144,6 +145,11 @@ export default function AnimeWatchPartyToolkitPage() {
         <li>
           <Link href="/watch-crunchyroll-together" className="hover:underline">
             Watch Crunchyroll Together hub
+          </Link>
+        </li>
+        <li>
+          <Link href="/watch-youtube-together" className="hover:underline">
+            YouTube Watch Party hub
           </Link>
         </li>
       </ul>

@@ -76,7 +76,7 @@ export default function BestAnimeForBeginnersPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         {
           name: "Best Anime for Beginners",
           url: "/guides/best-anime-to-watch-for-beginners",

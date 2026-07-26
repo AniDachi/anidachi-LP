@@ -97,7 +97,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "Discord Anime Watch Party",
             url: "/guides/how-to-watch-anime-with-friends-on-discord",

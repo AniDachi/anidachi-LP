@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { clearDebugLog, getDebugEntries, getDebugLogText, logDebug } from "../src/debug-log";
+import {
+  clearDebugLog,
+  getDebugEntries,
+  getDebugLogText,
+  logDebug,
+  playerOverlayGeometryDebugSnapshot,
+} from "../src/debug-log";
 
 function createStorageMock(): Storage {
   const values = new Map<string, string>();
@@ -68,6 +74,25 @@ describe("debug log", () => {
     logDebug("test.scope", "captured message");
 
     expect(info).toHaveBeenCalledWith("[Anidachi Debug]", "test.scope", "captured message", "");
+  });
+
+  it("keeps player geometry diagnostics bounded to numeric layout data", () => {
+    expect(
+      playerOverlayGeometryDebugSnapshot("youtube", {
+        controlsVisible: true,
+        viewport: { widthPx: 1280, heightPx: 720 },
+        safeInsets: { topPx: 44, rightPx: 18, bottomPx: 88, leftPx: 8 },
+        launcher: { topPx: 54, rightPx: 22 },
+        panel: { topPx: 92, rightPx: 22 },
+      }),
+    ).toEqual({
+      adapterId: "youtube",
+      controlsVisible: true,
+      viewport: { widthPx: 1280, heightPx: 720 },
+      safeInsets: { topPx: 44, rightPx: 18, bottomPx: 88, leftPx: 8 },
+      launcher: { topPx: 54, rightPx: 22 },
+      panel: { topPx: 92, rightPx: 22 },
+    });
   });
 
   it("hashes P2P participant identifiers and redacts ICE addresses", () => {

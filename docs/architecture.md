@@ -290,7 +290,11 @@ docs/shared-watch-progress-tracker.md
 
 ## Video Adapter Decisions
 
-The extension uses a generic video adapter system.
+The extension uses an ordered source-adapter registry. Shared HTML5 behavior
+lives under `source-adapters/core`, while Generic, YouTube, and Crunchyroll own
+their provider-specific detection and player behavior in separate folders.
+Discovery preserves the current winner-first behavior: it selects one usable
+video, then tries YouTube, Crunchyroll, and Generic definitions in that order.
 
 Implemented adapters:
 
@@ -308,10 +312,15 @@ Generic adapter:
 
 YouTube adapter:
 
+- mounts the overlay only on full `/watch?v=...` pages or direct `youtu.be`
+  video links; preview feeds, search/channel pages, Shorts, and embeds are
+  intentionally blocked;
 - uses `#movie_player` / `.html5-video-player` as the container;
 - uses YouTube video id for fingerprint;
 - uses YouTube native fullscreen button for fullscreen;
-- uses YouTube player API `setVolume/getVolume` for voice ducking, with HTML5 fallback.
+- uses YouTube player API `setVolume/getVolume` for voice ducking, with HTML5 fallback;
+- owns YouTube-only player-chrome measurement and observation under
+  `source-adapters/youtube/player-chrome.ts`.
 
 This prevents YouTube fullscreen/layout issues where appending overlays to `document.body` disappears in fullscreen or clips the video.
 
@@ -325,6 +334,28 @@ Crunchyroll adapter:
 - does not override Crunchyroll's fullscreen layout CSS or double-click behavior.
 
 The Teleparty black-box/static observation that informed this: for Crunchyroll they use a platform-specific content/injected-script approach with selectors around `#vilosRoot`, `#player0`, `video[src]`, and `vilos` control test ids. We copied the architectural idea, not proprietary code.
+
+### Provider Player-Chrome Geometry
+
+Each provider owns its player selectors, control visibility rules, safe-inset
+measurement, and event subscription. The shared overlay receives only a
+normalized `PlayerOverlayGeometry` from the active adapter. It does not choose
+provider DOM logic and does not branch on an adapter ID for layout.
+
+YouTube and Crunchyroll therefore have independent `player-chrome.ts`
+implementations. Generic HTML5 supplies safe geometry defaults and relies on
+the content lifecycle for container resize relocation. Provider geometry
+changes only effective runtime placement; saved layout preferences remain
+provider-independent.
+
+An adapter replacement disposes the old geometry subscription before the new
+one is activated. Late callbacks are ignored, and every provider disposer owns
+its observers, event listeners, animation frames, and delayed measurements.
+Unknown or changed provider chrome falls back to normalized safe defaults
+without detaching the room overlay.
+
+YouTube selector ownership, fallback behavior, and the selector maintenance
+procedure are documented in `docs/youtube-adapter-notes.md`.
 
 ## Fullscreen Overlay Decision
 
@@ -463,7 +494,7 @@ pnpm check
 ```txt
 apps/extension/entrypoints/content.tsx    Overlay mounting and fullscreen relocation
 apps/extension/src/overlay-app.tsx        Main overlay UI and room interaction
-apps/extension/src/video-adapter.ts       Generic, YouTube, and Crunchyroll video adapters
+apps/extension/src/source-adapters/       Registry, shared core, and provider adapters
 apps/extension/src/ghost-cam.ts           Ghost Cam transport selection and UI state
 apps/extension/src/p2p-media.ts           P2P camera/audio controller
 apps/extension/src/p2p-ice.ts             ICE server loading and prioritization

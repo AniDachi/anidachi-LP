@@ -79,7 +79,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
         {
           name: "Screen share Crunchyroll on Discord?",
           url: "/guides/can-you-screen-share-crunchyroll-on-discord",

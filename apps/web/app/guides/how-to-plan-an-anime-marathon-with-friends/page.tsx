@@ -94,7 +94,7 @@ export default function HowToPlanAnAnimeMarathonWithFriendsPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "How to plan an anime marathon with friends",
             url: "/guides/how-to-plan-an-anime-marathon-with-friends",

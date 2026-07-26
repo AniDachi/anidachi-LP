@@ -75,7 +75,7 @@ export default function RaveAlternativesForAnimePage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         {
           name: "Rave alternatives for anime",
           url: "/guides/rave-alternatives-for-anime",

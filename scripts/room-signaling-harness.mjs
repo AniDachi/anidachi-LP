@@ -290,7 +290,7 @@ async function runScenarios() {
   // 3b. Source switch: the host first establishes the current source, then
   //     navigates to a different source. The Worker must own the source
   //     generation bump and announce it before any new P2P signaling is used.
-  const sourceOneFingerprint = "crunchyroll|harness-series|s1|e1";
+  const sourceOneFingerprint = "crunchyroll|watch/source-one";
   const sourceOneUrl = "https://www.crunchyroll.com/watch/source-one";
   host.send({
     type: "HOST_STATE",
@@ -304,7 +304,7 @@ async function runScenarios() {
   );
   record("initial host source state broadcast", Boolean(initialHostState));
 
-  const sourceTwoFingerprint = "crunchyroll|harness-series|s1|e2";
+  const sourceTwoFingerprint = "crunchyroll|watch/source-two";
   const sourceTwoUrl = "https://www.crunchyroll.com/watch/source-two";
   host.send({
     type: "HOST_STATE",
@@ -322,8 +322,8 @@ async function runScenarios() {
   );
   record(
     "source change increments source generation",
-    sourceChanged.sourceGeneration === 2 &&
-      hostSourceChanged.sourceGeneration === 2 &&
+    sourceChanged.sourceGeneration === 3 &&
+      hostSourceChanged.sourceGeneration === 3 &&
       sourceChanged.previousSource?.videoFingerprint === sourceOneFingerprint,
     `sourceGeneration=${sourceChanged.sourceGeneration}`,
   );
@@ -348,7 +348,7 @@ async function runScenarios() {
   );
   record(
     "new p2p signal carries new source generation",
-    relayedAfterSourceChange.sourceGeneration === 2,
+    relayedAfterSourceChange.sourceGeneration === 3,
     `sourceGeneration=${relayedAfterSourceChange.sourceGeneration}`,
   );
 
@@ -365,7 +365,7 @@ async function runScenarios() {
   );
   record(
     "missed active-source signal replayed on reconnect (S5)",
-    replayed.sourceGeneration === 2,
+    replayed.sourceGeneration === 3,
     `sourceGeneration=${replayed.sourceGeneration}`,
   );
   const staleSourceReplay = guestB.events.some(

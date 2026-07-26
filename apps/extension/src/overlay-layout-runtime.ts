@@ -9,7 +9,12 @@ export interface OverlayLayoutRuntimeContextInput {
   width: number;
   height: number;
   cameraCount: number;
-  controlsBottomInsetPx: number;
+  playerSafeInsets?: {
+    topPx: number;
+    rightPx: number;
+    bottomPx: number;
+    leftPx: number;
+  };
   safePaddingPx?: number;
   reservedRects?: PixelRect[];
 }
@@ -33,20 +38,21 @@ export interface OverlayLayoutReservedRectsInput {
 export function createOverlayLayoutRuntimeContext(
   input: OverlayLayoutRuntimeContextInput,
 ): OverlayLayoutContext {
-  const safePaddingPx = input.safePaddingPx ?? 12;
+  const safePaddingPx = normalizeSafePadding(input.safePaddingPx);
+  const playerSafeInsets = input.playerSafeInsets;
 
   return {
     cameraCount: normalizeCameraCount(input.cameraCount),
     reservedRects: (input.reservedRects ?? []).map((rect) => ({ ...rect })),
     viewport: {
-      height: input.height,
+      height: finiteNonNegative(input.height),
       safeInsets: {
-        bottom: Math.max(safePaddingPx, input.controlsBottomInsetPx),
-        left: safePaddingPx,
-        right: safePaddingPx,
-        top: safePaddingPx,
+        bottom: Math.max(safePaddingPx, finiteNonNegative(playerSafeInsets?.bottomPx)),
+        left: Math.max(safePaddingPx, finiteNonNegative(playerSafeInsets?.leftPx)),
+        right: Math.max(safePaddingPx, finiteNonNegative(playerSafeInsets?.rightPx)),
+        top: Math.max(safePaddingPx, finiteNonNegative(playerSafeInsets?.topPx)),
       },
-      width: input.width,
+      width: finiteNonNegative(input.width),
     },
   };
 }
@@ -156,6 +162,10 @@ function toRect(value: unknown): PixelRect {
 
 function finiteNonNegative(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+function normalizeSafePadding(value: number | undefined): number {
+  return value === undefined || !Number.isFinite(value) || value < 0 ? 12 : value;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {

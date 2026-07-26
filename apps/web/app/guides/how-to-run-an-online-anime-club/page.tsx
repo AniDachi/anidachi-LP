@@ -94,7 +94,7 @@ export default function HowToRunAnOnlineAnimeClubPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Anime Together", url: "/watch-anime-together" },
           {
             name: "How to run an online anime club",
             url: "/guides/how-to-run-an-online-anime-club",

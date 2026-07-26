@@ -63,7 +63,7 @@ export default function BestAnimeToWatchInAWatchPartyPage() {
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Guides", url: "/watch-anime-together" },
+        { name: "Watch Anime Together", url: "/watch-anime-together" },
         { name: "Best anime to watch in a watch party", url: "/guides/best-anime-to-watch-in-a-watch-party" },
       ]}
       title="15 best anime to watch in a watch party in 2026"

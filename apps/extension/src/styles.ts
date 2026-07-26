@@ -32,6 +32,43 @@ export const overlayStyles = `
     display: none;
   }
 
+  .top-bubble-reveal {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .top-bubble-reveal.panel-open {
+    z-index: 31;
+  }
+
+  .top-bubble-edge-glow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 104px;
+    height: 0;
+    border-radius: 999px;
+    background: transparent;
+    box-shadow:
+      0 3px 12px 6px rgba(255, 92, 20, 0.56),
+      0 13px 32px 12px rgba(249, 115, 22, 0.34),
+      0 18px 42px 14px rgba(76, 24, 4, 0.22);
+    opacity: 0;
+    transform: translateY(-4px) scaleX(0.7);
+    transform-origin: right center;
+    pointer-events: none;
+    transition:
+      opacity 120ms ease,
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .top-bubble-reveal.edge-glow .top-bubble-edge-glow {
+    opacity: 0.96;
+    transform: translateY(0) scaleX(1);
+  }
+
   .top-bubble {
     position: absolute;
     top: var(--top-bubble-top, 10px);
@@ -45,20 +82,39 @@ export const overlayStyles = `
     display: flex;
     align-items: center;
     gap: 7px;
-    pointer-events: auto;
-    z-index: 20;
+    opacity: 0;
+    transform: translateY(calc(-100% - var(--top-bubble-top, 10px)));
+    z-index: 1;
     cursor: pointer;
     box-shadow:
       0 14px 34px rgba(0, 0, 0, 0.34),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    pointer-events: none;
     transition:
       border-color 180ms ease,
       background 180ms ease,
       opacity 180ms ease,
-      transform 180ms ease;
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .anidachi-overlay.is-crunchyroll.player-controls-visible .top-bubble {
+  .top-bubble-reveal.bubble-visible .top-bubble {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .top-bubble-reveal.panel-open .top-bubble {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .top-bubble:focus-visible {
+    outline: 2px solid rgba(147, 197, 253, 0.9);
+    outline-offset: 2px;
+  }
+
+  .anidachi-overlay.player-controls-visible .top-bubble {
     background: rgba(9, 9, 11, 0.78);
     border-color: rgba(255, 138, 61, 0.28);
   }
@@ -117,6 +173,7 @@ export const overlayStyles = `
     box-shadow:
       0 24px 70px rgba(0, 0, 0, 0.48),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    cursor: default;
     pointer-events: auto;
     z-index: 30;
     scrollbar-width: none;
@@ -278,9 +335,10 @@ export const overlayStyles = `
     min-width: 0;
   }
 
-  .panel-primary-action {
+  .button.panel-primary-action {
     flex: 1 1 auto;
     height: 36px;
+    min-height: 36px;
     min-width: 0;
     position: relative;
     overflow: hidden;
@@ -433,6 +491,27 @@ export const overlayStyles = `
 
   .button.primary:not(:disabled):hover {
     background: linear-gradient(135deg, #ffc07a, #fb7c24);
+  }
+
+  .button.primary.panel-primary-action.room-exit {
+    border-color: rgba(248, 113, 113, 0.24);
+    background: rgba(51, 35, 37, 0.88);
+    color: rgba(255, 255, 255, 0.9);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  }
+
+  .button.primary.panel-primary-action.room-exit:not(:disabled):hover {
+    border-color: rgba(248, 113, 113, 0.38);
+    background: rgba(67, 39, 42, 0.94);
+    color: rgba(255, 255, 255, 0.98);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  }
+
+  .button.primary.panel-primary-action.room-exit.confirming {
+    border-color: rgba(248, 113, 113, 0.52);
+    background: rgba(88, 38, 42, 0.96);
+    color: rgba(255, 255, 255, 0.98);
+    box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.08);
   }
 
   .button:not(:disabled):active,
@@ -1333,6 +1412,26 @@ export const overlayStyles = `
     background: transparent;
   }
 
+  .playback-sync-notice {
+    align-items: center;
+    color: rgba(240, 240, 244, 0.72);
+    display: flex;
+    font-size: 13px;
+    justify-content: space-between;
+    line-height: 1.35;
+    padding: 2px 4px;
+  }
+
+  .playback-sync-resume {
+    background: transparent;
+    border: 0;
+    color: #ff9a5c;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 2px 0 2px 10px;
+  }
+
   .invite-panel {
     margin-top: 10px;
     padding: 9px 10px;
@@ -2066,7 +2165,7 @@ export const overlayStyles = `
       transform 180ms ease;
   }
 
-  .anidachi-overlay.is-crunchyroll.player-controls-visible .cam-stack {
+  .anidachi-overlay.player-controls-visible .cam-stack {
     transform: translateY(0);
   }
 
@@ -2083,10 +2182,10 @@ export const overlayStyles = `
 
   .room-rail-edge {
     position: absolute;
-    top: -18px;
+    top: 0;
     right: 0;
-    bottom: -18px;
-    width: 24px;
+    bottom: 0;
+    width: 6px;
     pointer-events: auto;
   }
 
@@ -2100,7 +2199,7 @@ export const overlayStyles = `
     border: 0;
     border-radius: 0;
     background: rgba(10, 10, 12, 0);
-    pointer-events: auto;
+    pointer-events: none;
     transform: none;
     transition:
       background 190ms ease,
@@ -2111,6 +2210,10 @@ export const overlayStyles = `
   .room-rail-panel:focus-within {
     background: rgba(10, 10, 12, 0);
     box-shadow: none;
+  }
+
+  .room-rail.open .room-rail-panel {
+    pointer-events: auto;
   }
 
   .room-rail-list {
@@ -3126,6 +3229,8 @@ export const overlayStyles = `
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .top-bubble,
+    .top-bubble-edge-glow,
     .panel-primary-action,
     .panel-icon-action,
     .panel-icon-action.reveal-action,

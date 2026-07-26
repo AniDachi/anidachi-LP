@@ -94,7 +94,7 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
           {
             name: "Crunchyroll watch party not working",
             url: "/guides/crunchyroll-watch-party-not-working",

@@ -81,6 +81,7 @@ function inferSitemapMeta(urlPath: string): {
   if (
     urlPath === "/watch-anime-together" ||
     urlPath === "/watch-crunchyroll-together" ||
+    urlPath === "/watch-youtube-together" ||
     urlPath === "/anime-watch-party-toolkit" ||
     urlPath === "/anime-watch-party" ||
     urlPath === "/pricing"

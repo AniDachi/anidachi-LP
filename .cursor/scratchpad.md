@@ -612,9 +612,53 @@ The survey should do more than “collect answers” — it should:
 
 **Checks:** `pnpm --filter @anidachi/web check` ✅ · `pnpm --filter @anidachi/web build` ✅ (all 10 routes in build output)
 
+### YouTube SEO agent + content plan (2026-07-25)
+
+**Status:** Implementation complete — awaiting manual QA.
+
+**Agent:** `.cursor/agents/anidachi-seo-aeo-pages.md` — YouTube keyword bank, platforms CR+YT, Include paths, pillar checklist, conversionTemplate includes `/watch-youtube-together`.
+
+**Truth fixes:** home FAQ, hero, how-it-works, SoftwareApplicationJsonLd; LDR YouTube rewrite; compare matrices → Crunchyroll + YouTube.
+
+**New routes:**
+1. `/watch-youtube-together` (pillar)
+2. `/guides/how-to-watch-youtube-with-friends`
+3. `/guides/netflix-party-for-youtube`
+4. `/guides/does-teleparty-work-with-youtube`
+5. `/guides/youtube-watch-party-chrome-extension`
+6. `/guides/watch2gether-alternatives-for-youtube`
+7. `/guides/youtube-watch-party-with-discord`
+8. `/guides/best-apps-to-watch-youtube-together`
+
+**Enriched:** `/compare/anidachi-vs-watch2gether`, `/compare/anidachi-vs-twoseven`; rewrite `/watch-youtube-together-long-distance`.
+
+**Wiring:** `guide-links.ts` (youtube / pillar-watch-youtube), footer, toolkit, sitemap priority 0.9, `inferPageTemplateFromPath` → pillar.
+
+### Scalable Watch IA (2026-07-25) — siblings, no redirects
+
+**Implemented:** Watch nav dropdown (Anime / CR / YouTube siblings); anime hub platform section (strong CR, soft YT); CR breadcrumbs under Anime; YT breadcrumbs without Anime parent; SEO agent platform×vertical rules; footer label consistency.
+
+**No URL renames / no 301s.**
+
+### Hero extension demo overlay restyle (2026-07-26)
+
+**Status:** Implementation complete — awaiting manual QA.
+
+**Scope:** Live animated mock only (Async unchanged). Highest fidelity vs latest extension overlay.
+
+**Changes:**
+- `apps/web/components/chrome-extension-demo-overlay.tsx` — green sync dot, account+Plus panel, icon actions, Settings tabs (Reactions/Layout/Voice), live chat column, message composer peek, mint speaking cams, catch-up restyle, emoji set `😂😱❤️🔥😭👀` (room rail peek removed — duplicated cam bubbles)
+- `apps/web/components/chrome-extension-demo.tsx` — Live subcopy → Crunchyroll or YouTube
+
+**Checks:** `pnpm --filter @anidachi/web check` ✅ · `pnpm --filter @anidachi/web build` ✅
+
 ### Executor's Feedback or Assistance Requests
 
-- **Manual QA (please spot-check):** `/pricing`, `/guides/does-teleparty-work-with-crunchyroll`, `/guides/can-you-screen-share-crunchyroll-on-discord`, `/guides/best-teleparty-alternatives-for-anime` — confirm layout, FAQ, CTA → pricing/survey, no broken links.
+- **Manual QA (hero Live demo):** On homepage “See It In Action”, confirm Live sequence shows new panel chrome, green sync, chat/composer/rail peeks, cams with speaking ring; Async tab still works; check mobile width.
+- **Manual QA:** Open http://localhost:3003 — confirm Watch dropdown shows three siblings; check breadcrumbs on `/watch-youtube-together`, `/watch-crunchyroll-together`, `/guides/how-to-watch-youtube-with-friends`, `/guides/does-teleparty-work-with-crunchyroll`.
+- **Manual QA (Watch IA siblings):** Confirm Watch dropdown = Anime / CR / YouTube (peers). Breadcrumbs: peers (`Home → CR/YT → page`); tablet has no hamburger overlap; YT related list not polluted by anime tags.
+- **Manual QA (YouTube batch):** spot-check `/watch-youtube-together`, `/guides/how-to-watch-youtube-with-friends`, `/guides/does-teleparty-work-with-youtube`, rewritten `/watch-youtube-together-long-distance` — layout, FAQ, CTA → `/pricing`, no CR-only contradictions on home.
+- **Manual QA (prior commercial):** `/pricing`, `/guides/does-teleparty-work-with-crunchyroll`, `/guides/can-you-screen-share-crunchyroll-on-discord`, `/guides/best-teleparty-alternatives-for-anime` — confirm layout, FAQ, CTA → pricing/survey, no broken links.
 - After deploy: confirm new URLs appear in `/sitemap.xml`; optionally submit sitemap in GSC.
 - Force-index sitemap + noindex cleanup was prior work; ready for production deploy then GSC submit.
 - (Prior) Please submit a test email in the hero survey and confirm the contact appears at `/kreatli-email-crm` with segment `survey_lead`.
@@ -624,4 +668,4 @@ The survey should do more than “collect answers” — it should:
 
 - Web package `engines.node` requires **22.x**; local default Node 23 fails `pnpm --filter @anidachi/web check` until `nvm use 22`.
 - GSC “Discovered – not indexed” exports can include intentionally noindex auth routes that auto-discovery still puts in `/sitemap.xml` — keep `EXCLUDED_URL_PATHS` in sync with page `robots: { index: false }`.
-
+- Stale `.next/types` can fail `tsc` after deleting routes (e.g. `app/extension/page.tsx`); clearing `.next/types` before `pnpm check` fixes phantom module errors.

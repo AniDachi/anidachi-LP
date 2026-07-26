@@ -18,8 +18,13 @@ describe("overlay layout runtime context", () => {
     const reservedRects = [{ height: 40, width: 120, x: 16, y: 24 }];
     const context = createOverlayLayoutRuntimeContext({
       cameraCount: 2,
-      controlsBottomInsetPx: 48,
       height: 720,
+      playerSafeInsets: {
+        bottomPx: 48,
+        leftPx: 6,
+        rightPx: 30,
+        topPx: 24,
+      },
       reservedRects,
       width: 1280,
     });
@@ -29,7 +34,7 @@ describe("overlay layout runtime context", () => {
       reservedRects: [{ height: 40, width: 120, x: 16, y: 24 }],
       viewport: {
         height: 720,
-        safeInsets: { bottom: 48, left: 12, right: 12, top: 12 },
+        safeInsets: { bottom: 48, left: 12, right: 30, top: 24 },
         width: 1280,
       },
     });
@@ -43,13 +48,55 @@ describe("overlay layout runtime context", () => {
   it("uses supplied safe padding when controls need less bottom space", () => {
     const context = createOverlayLayoutRuntimeContext({
       cameraCount: 0,
-      controlsBottomInsetPx: 8,
       height: 360,
+      playerSafeInsets: { bottomPx: 8, leftPx: 4, rightPx: 12, topPx: 0 },
       safePaddingPx: 20,
       width: 640,
     });
 
     expect(context.viewport.safeInsets).toEqual({ bottom: 20, left: 20, right: 20, top: 20 });
+  });
+
+  it("uses default safe padding when provider insets are missing", () => {
+    const context = createOverlayLayoutRuntimeContext({
+      cameraCount: 0,
+      height: 360,
+      width: 640,
+    });
+
+    expect(context.viewport.safeInsets).toEqual({ bottom: 12, left: 12, right: 12, top: 12 });
+  });
+
+  it("normalizes malformed safe padding and provider insets", () => {
+    const context = createOverlayLayoutRuntimeContext({
+      cameraCount: 0,
+      height: 360,
+      playerSafeInsets: {
+        bottomPx: -10,
+        leftPx: 7,
+        rightPx: Number.POSITIVE_INFINITY,
+        topPx: Number.NaN,
+      },
+      safePaddingPx: Number.NaN,
+      width: 640,
+    });
+
+    expect(context.viewport.safeInsets).toEqual({ bottom: 12, left: 12, right: 12, top: 12 });
+  });
+
+  it("keeps finite provider insets for a zero-sized viewport", () => {
+    const context = createOverlayLayoutRuntimeContext({
+      cameraCount: 0,
+      height: 0,
+      playerSafeInsets: { bottomPx: 40, leftPx: 30, rightPx: 20, topPx: 10 },
+      width: 0,
+    });
+
+    expect(context.viewport).toEqual({
+      height: 0,
+      safeInsets: { bottom: 40, left: 30, right: 20, top: 12 },
+      width: 0,
+    });
   });
 
   it.each([
@@ -59,7 +106,6 @@ describe("overlay layout runtime context", () => {
   ])("$label", ({ cameraCount, expected }) => {
     const context = createOverlayLayoutRuntimeContext({
       cameraCount,
-      controlsBottomInsetPx: 0,
       height: 360,
       width: 640,
     });

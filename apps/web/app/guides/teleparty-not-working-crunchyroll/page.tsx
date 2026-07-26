@@ -111,7 +111,7 @@ export default function TelepartyNotWorkingCrunchyrollPage() {
       <SeoPageLayout
         breadcrumbs={[
           { name: "Home", url: "/" },
-          { name: "Guides", url: "/watch-anime-together" },
+          { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
           {
             name: "Teleparty not working on Crunchyroll",
             url: "/guides/teleparty-not-working-crunchyroll",
