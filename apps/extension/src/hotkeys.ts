@@ -1,4 +1,5 @@
 import { EMOJI_PALETTE } from "./constants";
+import type { VoiceMode } from "./media-types";
 
 export type HotkeyAction =
   | { type: "fire-start" }
@@ -13,6 +14,7 @@ export interface HotkeyState {
   panelOpen: boolean;
   reactionsEnabled: boolean;
   experimentalSuperReactionsEnabled?: boolean;
+  voiceMode: VoiceMode;
 }
 
 export type HotkeyEventLike = Pick<
@@ -40,7 +42,11 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
     return { type: "message-composer-open" };
   }
 
-  if (!event.shiftKey && isVoiceKey(event)) {
+  if (
+    state.voiceMode === "push-to-talk" &&
+    !event.shiftKey &&
+    isVoiceKey(event)
+  ) {
     if (event.type === "keydown" && !event.repeat) {
       return { type: "voice-start" };
     }
@@ -74,8 +80,10 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
   return null;
 }
 
-export function shouldStopVoiceTalkOnWindowBlur(): true {
-  return true;
+export function shouldStopVoiceTalkOnWindowBlur(
+  voiceMode: VoiceMode,
+): boolean {
+  return voiceMode === "push-to-talk";
 }
 
 function hasBlockedModifier(event: HotkeyEventLike): boolean {

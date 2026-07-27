@@ -27,7 +27,14 @@ import type {
   WheelEvent as ReactWheelEvent,
   SyntheticEvent,
 } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { storage } from "wxt/utils/storage";
 import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
@@ -116,6 +123,11 @@ import {
 } from "./overlay-room-action-feedback";
 import { PanelCameraControl, RoomPeopleSection } from "./overlay-room-media-controls";
 import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
+import {
+  createVoiceSessionState,
+  isVoiceSessionPublishing,
+  reduceVoiceSession,
+} from "./overlay-voice-session";
 import { PanelAccountTitle } from "./panel-account-title";
 import {
   isRoomRailEdgeIntent,
@@ -501,7 +513,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     });
   }
   const playbackSyncController = playbackSyncControllerRef.current;
-  const [liveVoiceTalking, setLiveVoiceTalking] = useState(false);
+  const [voiceSession, dispatchVoiceSession] = useReducer(
+    reduceVoiceSession,
+    createVoiceSessionState({
+      listenerScope: null,
+      localHasMediaSeat: false,
+      mode: "push-to-talk",
+      roomId: null,
+    }),
+  );
   const [voiceListening, setVoiceListening] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
   const [debugEntriesCount, setDebugEntriesCount] = useState(() => getDebugEntries().length);
@@ -530,7 +550,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     roomId: string;
     sequence: number;
   } | null>(null);
-  const liveVoiceKeyDownRef = useRef(false);
+  const microphonePublicationRef = useRef(false);
   const roomTokenRef = useRef<string | null>(null);
   const roomShareableLinkRef = useRef<string | null>(null);
   const statusRef = useRef<RoomConnectionStatus>("idle");
@@ -1284,6 +1304,26 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     identityLoaded &&
     loadedVoiceAudioPreferences.listenerUserId ===
       participantAudioPreferenceScope;
+  useEffect(() => {
+    if (!participantAudioPreferencesReady) {
+      return;
+    }
+    dispatchVoiceSession({
+      type: "mode",
+      mode: loadedVoiceAudioPreferences.preferences.mode,
+    });
+  }, [
+    loadedVoiceAudioPreferences.preferences.mode,
+    participantAudioPreferencesReady,
+  ]);
+  useEffect(() => {
+    dispatchVoiceSession({
+      type: "context",
+      listenerScope: participantAudioPreferenceScope,
+      localHasMediaSeat,
+      roomId,
+    });
+  }, [localHasMediaSeat, participantAudioPreferenceScope, roomId]);
   const { p2pSessionActive } = getP2PMediaSessionState({
     localHasMediaSeat,
     participantId: currentParticipant?.id ?? null,
@@ -2007,10 +2047,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     .filter(Boolean)
     .join(" ");
   const liveVoiceActiveSpeakerIds = ghostCamSession.activeSpeakerIds;
+  const localLiveVoiceActive = Boolean(
+    participant?.id && liveVoiceActiveSpeakerIds.includes(participant.id),
+  );
   const remoteLiveVoiceActive = liveVoiceActiveSpeakerIds.some((id) => id !== participant?.id);
+  const microphonePublishingWanted = isVoiceSessionPublishing(voiceSession);
   const liveVoiceStatusText = getLiveVoiceStatusText(
     ghostCamSession.microphoneStatus,
-    liveVoiceTalking,
+    voiceSession.mode,
+    localLiveVoiceActive,
+    microphonePublishingWanted,
   );
 
   const isCurrentHost = useCallback((list = participantsRef.current) => {
@@ -3771,7 +3817,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       return undefined;
     }
 
-    if (liveVoiceTalking) {
+    if (microphonePublishingWanted) {
       restoreLiveVoiceDuckingRef.current = adapter.duckVolume(0.42);
       return () => {
         restoreLiveVoiceDuckingRef.current?.();
@@ -3788,10 +3834,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
 
     return undefined;
-  }, [adapter, adapterActive, liveVoiceTalking, remoteLiveVoiceActive]);
+  }, [adapter, adapterActive, microphonePublishingWanted, remoteLiveVoiceActive]);
 
-  const startLiveVoiceTalk = useCallback(() => {
-    if (!roomId) {
+  const startPushToTalk = useCallback(() => {
+    if (voiceSession.mode !== "push-to-talk" || !roomId) {
       return;
     }
     if (!localHasMediaSeat) {
@@ -3804,44 +3850,46 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       return;
     }
 
-    liveVoiceKeyDownRef.current = true;
-    setLiveVoiceTalking(true);
-    void ghostCamSession.setMicrophonePublishing(true, "warm");
+    dispatchVoiceSession({ type: "push-to-talk", held: true });
   }, [
-    ghostCamSession.setMicrophonePublishing,
     localHasMediaSeat,
     localMediaSeatState,
     roomId,
+    voiceSession.mode,
   ]);
 
-  const stopLiveVoiceTalk = useCallback(() => {
-    liveVoiceKeyDownRef.current = false;
-    setLiveVoiceTalking(false);
-    void ghostCamSession.setMicrophonePublishing(false, "warm");
-  }, [ghostCamSession.setMicrophonePublishing]);
+  const stopPushToTalk = useCallback(() => {
+    dispatchVoiceSession({ type: "push-to-talk", held: false });
+  }, []);
 
-  const stopLiveVoiceTalkForUnmount = useCallback(() => {
-    liveVoiceKeyDownRef.current = false;
+  const stopMicrophoneForUnmount = useCallback(() => {
     void ghostCamSession.setMicrophonePublishing(false, "immediate");
   }, [ghostCamSession.setMicrophonePublishing]);
 
   useEffect(() => {
-    if (localHasMediaSeat) {
+    if (
+      microphonePublicationRef.current === microphonePublishingWanted
+    ) {
       return;
     }
 
-    liveVoiceKeyDownRef.current = false;
-    setLiveVoiceTalking(false);
-    void ghostCamSession.setMicrophonePublishing(false, "immediate");
-  }, [ghostCamSession.setMicrophonePublishing, localHasMediaSeat]);
+    microphonePublicationRef.current = microphonePublishingWanted;
+    void ghostCamSession.setMicrophonePublishing(
+      microphonePublishingWanted,
+      voiceSession.release,
+    );
+  }, [
+    ghostCamSession.setMicrophonePublishing,
+    microphonePublishingWanted,
+    voiceSession.release,
+  ]);
 
   useEffect(() => {
     if (!ghostCamSession.microphoneTerminalFailure) {
       return;
     }
 
-    liveVoiceKeyDownRef.current = false;
-    setLiveVoiceTalking(false);
+    dispatchVoiceSession({ type: "terminal-failure" });
   }, [ghostCamSession.microphoneTerminalFailure]);
 
   const unlockLiveVoicePlayback = useCallback(() => {
@@ -4115,6 +4163,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       panelOpen,
       reactionsEnabled,
       roomActive: Boolean(roomId),
+      voiceMode: voiceSession.mode,
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -4152,8 +4201,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       } else if (action.type === "message-composer-open") {
         openMessageComposer();
       } else if (action.type === "voice-start") {
-        liveVoiceKeyDownRef.current = true;
-        startLiveVoiceTalk();
+        startPushToTalk();
       } else if (action.type === "reaction") {
         sendReaction(action.emoji);
       }
@@ -4176,28 +4224,37 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       if (action.type === "fire-stop") {
         finishFireHold("hotkey-up");
       } else {
-        liveVoiceKeyDownRef.current = false;
-        stopLiveVoiceTalk();
+        stopPushToTalk();
       }
     };
 
     const handleBlur = () => {
       cancelFireHold("window-blur");
-      if (shouldStopVoiceTalkOnWindowBlur()) {
-        liveVoiceKeyDownRef.current = false;
-        stopLiveVoiceTalk();
+      if (shouldStopVoiceTalkOnWindowBlur(voiceSession.mode)) {
+        stopPushToTalk();
       }
       stopVoiceCapture(true);
+    };
+
+    const handleVisibilityChange = () => {
+      if (
+        document.visibilityState === "hidden" &&
+        voiceSession.mode === "push-to-talk"
+      ) {
+        stopPushToTalk();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown, true);
     window.addEventListener("keyup", handleKeyUp, true);
     window.addEventListener("blur", handleBlur);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
       window.removeEventListener("keyup", handleKeyUp, true);
       window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [
     beginFireHold,
@@ -4211,13 +4268,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     reactionsEnabled,
     roomId,
     sendReaction,
-    startLiveVoiceTalk,
-    stopLiveVoiceTalk,
+    startPushToTalk,
+    stopPushToTalk,
     stopVoiceCapture,
+    voiceSession.mode,
   ]);
 
   useOverlayUnmountCleanup({
-    stopLiveVoiceTalk: stopLiveVoiceTalkForUnmount,
+    stopMicrophonePublication: stopMicrophoneForUnmount,
     stopVoiceCapture,
   });
 
@@ -4650,10 +4708,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
               {settingsPanelCategory === "voice" ? (
                 <div className="settings-panel-stack">
-                  <div className={`live-voice-status ${liveVoiceTalking ? "talking" : ""}`}>
+                  <div
+                    className={`live-voice-status ${localLiveVoiceActive ? "talking" : ""}`}
+                  >
                     <span className="live-voice-label">
                       <Mic size={13} />
-                      Push to talk
+                      {voiceSession.mode === "open-mic"
+                        ? "Open mic"
+                        : "Push to talk"}
                     </span>
                     <span>{liveVoiceStatusText}</span>
                   </div>
@@ -5558,7 +5620,9 @@ function clampNumber(value: number, min: number, max: number): number {
 
 function getLiveVoiceStatusText(
   status: MicrophoneStatus,
-  talking: boolean,
+  mode: "open-mic" | "push-to-talk",
+  speaking: boolean,
+  publishing: boolean,
 ): string {
   if (status === "error") {
     return "Mic blocked";
@@ -5568,15 +5632,15 @@ function getLiveVoiceStatusText(
     return "Connecting";
   }
 
-  if (talking) {
+  if (speaking) {
     return "Talking";
   }
 
-  if (status === "on") {
+  if (publishing || status === "on") {
     return "Mic on";
   }
 
-  return "Hold V";
+  return mode === "open-mic" ? "Off" : "Hold V";
 }
 
 function stopNativeEvent(event: SyntheticEvent<HTMLElement>) {

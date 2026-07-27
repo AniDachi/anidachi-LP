@@ -9,6 +9,7 @@ const activeState = {
   panelOpen: false,
   reactionsEnabled: true,
   experimentalSuperReactionsEnabled: true,
+  voiceMode: "push-to-talk" as const,
 };
 
 describe("Anidachi hotkeys", () => {
@@ -174,7 +175,28 @@ describe("Anidachi hotkeys", () => {
   });
 
   it("stops live voice on visible-window blur while V is still held", () => {
-    expect(shouldStopVoiceTalkOnWindowBlur()).toBe(true);
+    expect(shouldStopVoiceTalkOnWindowBlur("push-to-talk")).toBe(true);
+  });
+
+  it("ignores V voice actions in Open mic mode", () => {
+    const openMicState = {
+      ...activeState,
+      voiceMode: "open-mic" as const,
+    };
+
+    expect(
+      getHotkeyAction(
+        keyEvent({ code: "KeyV", key: "v", type: "keydown" }),
+        openMicState,
+      ),
+    ).toBeNull();
+    expect(
+      getHotkeyAction(
+        keyEvent({ code: "KeyV", key: "v", type: "keyup" }),
+        openMicState,
+      ),
+    ).toBeNull();
+    expect(shouldStopVoiceTalkOnWindowBlur("open-mic")).toBe(false);
   });
 });
 

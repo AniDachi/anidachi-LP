@@ -1,20 +1,20 @@
 import { useEffect, useRef } from "react";
 
 interface OverlayUnmountCleanupOptions {
-  stopLiveVoiceTalk: () => void;
+  stopMicrophonePublication: () => void;
   stopVoiceCapture: (send?: boolean) => void;
 }
 
 export function useOverlayUnmountCleanup({
-  stopLiveVoiceTalk,
+  stopMicrophonePublication,
   stopVoiceCapture,
 }: OverlayUnmountCleanupOptions): void {
-  const stopLiveVoiceTalkRef = useRef(stopLiveVoiceTalk);
+  const stopMicrophonePublicationRef = useRef(stopMicrophonePublication);
   const stopVoiceCaptureRef = useRef(stopVoiceCapture);
 
   useEffect(() => {
-    stopLiveVoiceTalkRef.current = stopLiveVoiceTalk;
-  }, [stopLiveVoiceTalk]);
+    stopMicrophonePublicationRef.current = stopMicrophonePublication;
+  }, [stopMicrophonePublication]);
 
   useEffect(() => {
     stopVoiceCaptureRef.current = stopVoiceCapture;
@@ -22,7 +22,7 @@ export function useOverlayUnmountCleanup({
 
   useEffect(
     () => () => {
-      stopLiveVoiceTalkRef.current();
+      stopMicrophonePublicationRef.current();
       stopVoiceCaptureRef.current(false);
     },
     [],
