@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-07-23.
+Last updated: 2026-07-27.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -477,6 +477,8 @@ These are intentionally not treated as solved:
 - Active execution program for that roadmap (SLOs, verified defects, e2e harness,
   block-by-block plan):
   `docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md`
+- Approved extension voice controls and participant audio implementation plan:
+  `docs/superpowers/plans/2026-07-27-voice-controls-and-participant-audio-plan.md`
 - Historical commercial room/P2P/progress plan:
   `docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`
 - Monorepo migration history:
