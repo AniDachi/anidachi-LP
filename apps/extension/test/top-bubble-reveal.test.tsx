@@ -169,12 +169,39 @@ describe("top bubble edge reveal", () => {
     expect(readPhase(view.container)).toBe("hidden");
     await unmount(view.root);
   });
+
+  it("keeps a quiet Open mic launcher visible without edge intent", async () => {
+    const view = await renderHarness(false, rect(900, 10, 80, 32), true);
+    expect(readPhase(view.container)).toBe("visible");
+
+    await movePointer(400, 300);
+    await advance(TOP_BUBBLE_HIDE_DELAY_MS);
+    expect(readPhase(view.container)).toBe("visible");
+
+    await view.rerender(false, false);
+    await advance(TOP_BUBBLE_HIDE_DELAY_MS);
+    expect(readPhase(view.container)).toBe("hidden");
+    await unmount(view.root);
+  });
 });
 
-function Harness({ bubbleRect, panelOpen }: { bubbleRect: DOMRect; panelOpen: boolean }) {
+function Harness({
+  bubbleRect,
+  forceVisible,
+  panelOpen,
+}: {
+  bubbleRect: DOMRect;
+  forceVisible: boolean;
+  panelOpen: boolean;
+}) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLButtonElement>(null);
-  const reveal = useTopBubbleReveal({ bubbleRef, overlayRef, panelOpen });
+  const reveal = useTopBubbleReveal({
+    bubbleRef,
+    forceVisible,
+    overlayRef,
+    panelOpen,
+  });
 
   return (
     <div
@@ -206,31 +233,38 @@ function Harness({ bubbleRect, panelOpen }: { bubbleRect: DOMRect; panelOpen: bo
 async function renderHarness(
   panelOpen: boolean,
   bubbleRect = rect(900, 10, 80, 32),
+  forceVisible = false,
 ): Promise<{
   container: HTMLDivElement;
-  rerender(panelOpen: boolean): Promise<void>;
+  rerender(panelOpen: boolean, forceVisible?: boolean): Promise<void>;
   root: Root;
 }> {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
-  await act(async () => root.render(<Harness bubbleRect={bubbleRect} panelOpen={panelOpen} />));
+  await act(async () =>
+    root.render(
+      <Harness bubbleRect={bubbleRect} forceVisible={forceVisible} panelOpen={panelOpen} />,
+    ),
+  );
   return {
     container,
     root,
-    async rerender(nextPanelOpen) {
+    async rerender(nextPanelOpen, nextForceVisible = forceVisible) {
       await act(async () =>
-        root.render(<Harness bubbleRect={bubbleRect} panelOpen={nextPanelOpen} />),
+        root.render(
+          <Harness
+            bubbleRect={bubbleRect}
+            forceVisible={nextForceVisible}
+            panelOpen={nextPanelOpen}
+          />,
+        ),
       );
     },
   };
 }
 
-async function movePointer(
-  clientX: number,
-  clientY: number,
-  pointerType?: string,
-): Promise<void> {
+async function movePointer(clientX: number, clientY: number, pointerType?: string): Promise<void> {
   await act(async () => {
     window.dispatchEvent(new PointerEvent("pointermove", { clientX, clientY, pointerType }));
   });

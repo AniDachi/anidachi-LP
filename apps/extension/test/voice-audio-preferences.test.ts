@@ -14,6 +14,7 @@ import {
   parseVoiceAudioPreferences,
   toggleParticipantAudioMute,
   updateParticipantAudioPreference,
+  updateVoiceMode,
   VOICE_AUDIO_PREFERENCES_STORAGE_PREFIX,
   voiceAudioPreferencesStorageKeyForUser,
 } from "../src/voice-audio-preferences";
@@ -31,16 +32,12 @@ describe("voice audio preference codec", () => {
     const accountAKey = voiceAudioPreferencesStorageKeyForUser("account-a");
     const accountBKey = voiceAudioPreferencesStorageKeyForUser("account-b");
 
-    expect(VOICE_AUDIO_PREFERENCES_STORAGE_PREFIX).toBe(
-      "local:voiceAudioPreferencesV1",
-    );
+    expect(VOICE_AUDIO_PREFERENCES_STORAGE_PREFIX).toBe("local:voiceAudioPreferencesV1");
     expect(accountAKey).toBe(
       `${VOICE_AUDIO_PREFERENCES_STORAGE_PREFIX}.${encodeURIComponent("user:account-a")}`,
     );
     expect(accountBKey).not.toBe(accountAKey);
-    expect(() => voiceAudioPreferencesStorageKeyForUser("   ")).toThrow(
-      /listener user id/i,
-    );
+    expect(() => voiceAudioPreferencesStorageKeyForUser("   ")).toThrow(/listener user id/i);
   });
 
   it("keeps account A and B stores isolated even for the same participant", () => {
@@ -106,9 +103,7 @@ describe("voice audio preference codec", () => {
       { version: 2, mode: "open-mic" },
       { version: "1", mode: "open-mic" },
     ]) {
-      expect(parseVoiceAudioPreferences(value)).toEqual(
-        getDefaultVoiceAudioPreferences(),
-      );
+      expect(parseVoiceAudioPreferences(value)).toEqual(getDefaultVoiceAudioPreferences());
     }
   });
 
@@ -146,17 +141,12 @@ describe("voice audio preference codec", () => {
   });
 
   it("does not mute or unmute when a slider event has no finite value", () => {
+    expect(applyParticipantAudioSliderValue({ muted: false, volume: 0.4 }, Number.NaN)).toEqual({
+      muted: false,
+      volume: 0.4,
+    });
     expect(
-      applyParticipantAudioSliderValue(
-        { muted: false, volume: 0.4 },
-        Number.NaN,
-      ),
-    ).toEqual({ muted: false, volume: 0.4 });
-    expect(
-      applyParticipantAudioSliderValue(
-        { muted: true, volume: 0.65 },
-        Number.POSITIVE_INFINITY,
-      ),
+      applyParticipantAudioSliderValue({ muted: true, volume: 0.65 }, Number.POSITIVE_INFINITY),
     ).toEqual({ muted: true, volume: 0.65 });
   });
 
@@ -211,20 +201,14 @@ describe("voice audio preference codec", () => {
     let preferences = getDefaultVoiceAudioPreferences();
 
     for (const participantId of ["__proto__", "constructor", "toString"]) {
-      preferences = updateParticipantAudioPreference(
-        preferences,
-        participantId,
-        {
-          muted: true,
-          volume: 0.25,
-        },
-      );
+      preferences = updateParticipantAudioPreference(preferences, participantId, {
+        muted: true,
+        volume: 0.25,
+      });
     }
 
     for (const participantId of ["__proto__", "constructor", "toString"]) {
-      expect(Object.hasOwn(preferences.participantAudio, participantId)).toBe(
-        true,
-      );
+      expect(Object.hasOwn(preferences.participantAudio, participantId)).toBe(true);
       expect(preferences.participantAudio[participantId]).toEqual({
         muted: true,
         volume: 0.25,
@@ -238,6 +222,24 @@ describe("voice audio preference codec", () => {
 
     expect(first).toEqual({ muted: false, volume: 1 });
     expect(first).not.toBe(second);
+  });
+
+  it("changes voice mode without mutating participant mix preferences", () => {
+    const previous = updateParticipantAudioPreference(
+      getDefaultVoiceAudioPreferences(),
+      "remote-user",
+      { muted: true, volume: 0.35 },
+    );
+
+    const next = updateVoiceMode(previous, "open-mic");
+
+    expect(next).not.toBe(previous);
+    expect(next.mode).toBe("open-mic");
+    expect(next.participantAudio).toBe(previous.participantAudio);
+    expect(next.participantAudio["remote-user"]).toEqual({
+      muted: true,
+      volume: 0.35,
+    });
   });
 });
 
@@ -266,9 +268,7 @@ describe("microphone publication intent", () => {
     };
 
     expect(shouldPublishMicrophone(intent, context)).toBe(true);
-    expect(
-      shouldPublishMicrophone({ ...intent, pushToTalkHeld: false }, context),
-    ).toBe(false);
+    expect(shouldPublishMicrophone({ ...intent, pushToTalkHeld: false }, context)).toBe(false);
   });
 
   it("publishes Open mic only after its explicit toggle in an eligible room", () => {
@@ -279,9 +279,7 @@ describe("microphone publication intent", () => {
     };
 
     expect(shouldPublishMicrophone(intent, context)).toBe(true);
-    expect(
-      shouldPublishMicrophone({ ...intent, openMicEnabled: false }, context),
-    ).toBe(false);
+    expect(shouldPublishMicrophone({ ...intent, openMicEnabled: false }, context)).toBe(false);
   });
 
   it("never publishes without both an active room and a media seat", () => {

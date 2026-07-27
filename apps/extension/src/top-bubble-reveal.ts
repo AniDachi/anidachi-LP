@@ -14,6 +14,7 @@ type RevealPhase = "hidden" | "glow" | "visible";
 
 interface UseTopBubbleRevealOptions {
   bubbleRef: RefObject<HTMLButtonElement | null>;
+  forceVisible?: boolean;
   overlayRef: RefObject<HTMLElement | null>;
   panelOpen: boolean;
 }
@@ -27,12 +28,15 @@ interface TopBubbleRevealState {
 
 export function useTopBubbleReveal({
   bubbleRef,
+  forceVisible = false,
   overlayRef,
   panelOpen,
 }: UseTopBubbleRevealOptions): TopBubbleRevealState {
-  const [phase, setPhaseState] = useState<RevealPhase>(panelOpen ? "visible" : "hidden");
-  const phaseRef = useRef<RevealPhase>(panelOpen ? "visible" : "hidden");
+  const initiallyVisible = panelOpen || forceVisible;
+  const [phase, setPhaseState] = useState<RevealPhase>(initiallyVisible ? "visible" : "hidden");
+  const phaseRef = useRef<RevealPhase>(initiallyVisible ? "visible" : "hidden");
   const panelOpenRef = useRef(panelOpen);
+  const forceVisibleRef = useRef(forceVisible);
   const focusedRef = useRef(false);
   const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
   const overlayRectRef = useRef<DOMRect | null>(null);
@@ -57,7 +61,7 @@ export function useTopBubbleReveal({
   }, []);
 
   const hide = useCallback(() => {
-    if (panelOpenRef.current || focusedRef.current) {
+    if (panelOpenRef.current || forceVisibleRef.current || focusedRef.current) {
       return;
     }
     clearRevealTimer();
@@ -65,7 +69,12 @@ export function useTopBubbleReveal({
   }, [clearRevealTimer, setPhase]);
 
   const scheduleHide = useCallback(() => {
-    if (panelOpenRef.current || focusedRef.current || hideTimerRef.current !== null) {
+    if (
+      panelOpenRef.current ||
+      forceVisibleRef.current ||
+      focusedRef.current ||
+      hideTimerRef.current !== null
+    ) {
       return;
     }
     clearRevealTimer();
@@ -118,7 +127,7 @@ export function useTopBubbleReveal({
 
   const evaluatePointer = useCallback(
     (clientX: number, clientY: number) => {
-      if (panelOpenRef.current || focusedRef.current) {
+      if (panelOpenRef.current || forceVisibleRef.current || focusedRef.current) {
         return;
       }
 
@@ -141,9 +150,7 @@ export function useTopBubbleReveal({
         clientY >= overlayRect.top &&
         clientY <= overlayRect.top + TOP_EDGE_PROXIMITY_HEIGHT_PX;
       const bubbleRect =
-        phaseRef.current === "visible"
-          ? bubbleRef.current?.getBoundingClientRect()
-          : undefined;
+        phaseRef.current === "visible" ? bubbleRef.current?.getBoundingClientRect() : undefined;
       const insideBubble = bubbleRect ? pointInsideRect(clientX, clientY, bubbleRect) : false;
 
       if (phaseRef.current === "visible") {
@@ -197,7 +204,9 @@ export function useTopBubbleReveal({
       }
     };
 
-    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: true,
+    });
     window.addEventListener("pointerout", handlePointerOut, { passive: true });
     window.addEventListener("blur", handlePointerExit);
     return () => {
@@ -228,7 +237,8 @@ export function useTopBubbleReveal({
 
   useEffect(() => {
     panelOpenRef.current = panelOpen;
-    if (panelOpen) {
+    forceVisibleRef.current = forceVisible;
+    if (panelOpen || forceVisible) {
       revealImmediately();
       return;
     }
@@ -239,7 +249,7 @@ export function useTopBubbleReveal({
     } else {
       scheduleHide();
     }
-  }, [evaluatePointer, panelOpen, revealImmediately, scheduleHide]);
+  }, [evaluatePointer, forceVisible, panelOpen, revealImmediately, scheduleHide]);
 
   useEffect(
     () => () => {
@@ -277,9 +287,6 @@ function clearTimer(timerRef: { current: number | null }): void {
 
 function pointInsideRect(clientX: number, clientY: number, rect: DOMRect): boolean {
   return (
-    clientX >= rect.left &&
-    clientX <= rect.right &&
-    clientY >= rect.top &&
-    clientY <= rect.bottom
+    clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
   );
 }

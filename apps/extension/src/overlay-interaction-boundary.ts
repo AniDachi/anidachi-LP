@@ -1,5 +1,11 @@
 import type { HTMLAttributes, SyntheticEvent } from "react";
 
+export const OVERLAY_HOTKEY_BOUNDARY_ATTRIBUTE = "data-anidachi-hotkey-boundary";
+
+export const overlayHotkeyBoundaryProps = {
+  [OVERLAY_HOTKEY_BOUNDARY_ATTRIBUTE]: "true",
+} as const;
+
 type OverlayInteractionBoundaryProps = Pick<
   HTMLAttributes<HTMLElement>,
   | "onClick"
@@ -53,3 +59,12 @@ export const overlayInteractionBoundaryProps = {
   onTouchStart: stopOverlayInteraction,
   onWheel: stopOverlayInteraction,
 } satisfies OverlayInteractionBoundaryProps;
+
+export function isWithinOverlayHotkeyBoundary(event: {
+  composedPath?: () => EventTarget[];
+}): boolean {
+  return (event.composedPath?.() ?? []).some(
+    (target) =>
+      target instanceof HTMLElement && target.hasAttribute(OVERLAY_HOTKEY_BOUNDARY_ATTRIBUTE),
+  );
+}

@@ -42,11 +42,7 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
     return { type: "message-composer-open" };
   }
 
-  if (
-    state.voiceMode === "push-to-talk" &&
-    !event.shiftKey &&
-    isVoiceKey(event)
-  ) {
+  if (state.voiceMode === "push-to-talk" && !event.shiftKey && isVoiceKey(event)) {
     if (event.type === "keydown" && !event.repeat) {
       return { type: "voice-start" };
     }
@@ -80,17 +76,27 @@ export function getHotkeyAction(event: HotkeyEventLike, state: HotkeyState): Hot
   return null;
 }
 
-export function shouldStopVoiceTalkOnWindowBlur(
-  voiceMode: VoiceMode,
-): boolean {
+export function shouldStopVoiceTalkOnWindowBlur(voiceMode: VoiceMode): boolean {
   return voiceMode === "push-to-talk";
+}
+
+export function isPushToTalkReleaseEvent(
+  event: Pick<HotkeyEventLike, "code" | "key" | "type">,
+  state: {
+    held: boolean;
+    voiceMode: VoiceMode;
+  },
+): boolean {
+  return (
+    state.held && state.voiceMode === "push-to-talk" && event.type === "keyup" && isVoiceKey(event)
+  );
 }
 
 function hasBlockedModifier(event: HotkeyEventLike): boolean {
   return event.altKey || event.ctrlKey || event.metaKey;
 }
 
-function isVoiceKey(event: HotkeyEventLike): boolean {
+function isVoiceKey(event: Pick<HotkeyEventLike, "code" | "key">): boolean {
   return event.code === "KeyV" || event.key.toLowerCase() === "v";
 }
 

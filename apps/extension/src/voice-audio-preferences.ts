@@ -1,7 +1,6 @@
 import type { VoiceMode } from "./media-types";
 
-export const VOICE_AUDIO_PREFERENCES_STORAGE_PREFIX =
-  "local:voiceAudioPreferencesV1";
+export const VOICE_AUDIO_PREFERENCES_STORAGE_PREFIX = "local:voiceAudioPreferencesV1";
 export const VOICE_AUDIO_PREFERENCES_VERSION = 1 as const;
 export const DEFAULT_PARTICIPANT_AUDIO_VOLUME = 1;
 export const MIN_PARTICIPANT_AUDIO_VOLUME = 0.05;
@@ -34,9 +33,7 @@ export function getDefaultVoiceAudioPreferences(): VoiceAudioPreferencesV1 {
   };
 }
 
-export function voiceAudioPreferencesStorageKeyForUser(
-  listenerUserId: string,
-): `local:${string}` {
+export function voiceAudioPreferencesStorageKeyForUser(listenerUserId: string): `local:${string}` {
   const normalizedUserId = listenerUserId.trim();
   if (!normalizedUserId) {
     throw new Error("A listener user ID is required for voice audio preferences.");
@@ -47,35 +44,23 @@ export function voiceAudioPreferencesStorageKeyForUser(
   )}`;
 }
 
-export function parseVoiceAudioPreferences(
-  value: unknown,
-): VoiceAudioPreferencesV1 {
-  if (
-    !isRecord(value) ||
-    value.version !== VOICE_AUDIO_PREFERENCES_VERSION
-  ) {
+export function parseVoiceAudioPreferences(value: unknown): VoiceAudioPreferencesV1 {
+  if (!isRecord(value) || value.version !== VOICE_AUDIO_PREFERENCES_VERSION) {
     return getDefaultVoiceAudioPreferences();
   }
 
   const participantEntries = isRecord(value.participantAudio)
-    ? Object.entries(value.participantAudio).flatMap(
-        ([participantId, preference]) =>
-          isRecord(preference)
-            ? [
-                [
-                  participantId,
-                  normalizeParticipantAudioPreference(preference),
-                ] as const,
-              ]
-            : [],
+    ? Object.entries(value.participantAudio).flatMap(([participantId, preference]) =>
+        isRecord(preference)
+          ? [[participantId, normalizeParticipantAudioPreference(preference)] as const]
+          : [],
       )
     : [];
 
   return {
     version: VOICE_AUDIO_PREFERENCES_VERSION,
     mode: normalizeVoiceMode(value.mode),
-    participantAudio:
-      createParticipantAudioPreferenceRecord(participantEntries),
+    participantAudio: createParticipantAudioPreferenceRecord(participantEntries),
   };
 }
 
@@ -84,15 +69,10 @@ export function clampParticipantAudioVolume(volume: number): number {
     return DEFAULT_PARTICIPANT_AUDIO_VOLUME;
   }
 
-  return Math.max(
-    MIN_PARTICIPANT_AUDIO_VOLUME,
-    Math.min(MAX_PARTICIPANT_AUDIO_VOLUME, volume),
-  );
+  return Math.max(MIN_PARTICIPANT_AUDIO_VOLUME, Math.min(MAX_PARTICIPANT_AUDIO_VOLUME, volume));
 }
 
-export function getParticipantAudioSliderValue(
-  preference: ParticipantAudioPreference,
-): number {
+export function getParticipantAudioSliderValue(preference: ParticipantAudioPreference): number {
   const normalized = normalizeParticipantAudioPreference(preference);
   return normalized.muted ? 0 : normalized.volume;
 }
@@ -143,13 +123,20 @@ export function updateParticipantAudioPreference(
   };
 }
 
+export function updateVoiceMode(
+  preferences: VoiceAudioPreferencesV1,
+  mode: VoiceMode,
+): VoiceAudioPreferencesV1 {
+  return {
+    ...preferences,
+    mode,
+  };
+}
+
 function createParticipantAudioPreferenceRecord(
   entries: Iterable<readonly [string, ParticipantAudioPreference]> = [],
 ): Record<string, ParticipantAudioPreference> {
-  const participantAudio = Object.create(null) as Record<
-    string,
-    ParticipantAudioPreference
-  >;
+  const participantAudio = Object.create(null) as Record<string, ParticipantAudioPreference>;
   for (const [participantId, preference] of entries) {
     participantAudio[participantId] = preference;
   }
@@ -157,9 +144,7 @@ function createParticipantAudioPreferenceRecord(
 }
 
 function normalizeVoiceMode(value: unknown): VoiceMode {
-  return value === "open-mic" || value === "push-to-talk"
-    ? value
-    : "push-to-talk";
+  return value === "open-mic" || value === "push-to-talk" ? value : "push-to-talk";
 }
 
 export function normalizeParticipantAudioPreference(

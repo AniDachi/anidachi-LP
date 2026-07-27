@@ -27,18 +27,16 @@ describe("overlay layout pointer surfaces", () => {
 			getRule(
 				".icon-button.panel-camera-control.active .panel-camera-control-icon",
 			),
-		).toContain(
-			"color: rgba(134, 239, 172, 0.98)",
-		);
+		).toContain("color: rgba(134, 239, 172, 0.98)");
 		expect(
 			getRule(
 				".icon-button.panel-camera-control.unavailable .panel-camera-control-icon",
 			),
-		).toContain(
-			"color: rgba(248, 113, 113, 0.72)",
-		);
+		).toContain("color: rgba(248, 113, 113, 0.72)");
 		const peopleList = getRule(".room-people-list");
-		expect(peopleList).toContain("border: 1px solid rgba(255, 255, 255, 0.065)");
+		expect(peopleList).toContain(
+			"border: 1px solid rgba(255, 255, 255, 0.065)",
+		);
 		expect(peopleList).toContain("background: rgba(255, 255, 255, 0.018)");
 		expect(getRule(".room-people-entry + .room-people-entry")).toContain(
 			"border-top: 1px solid rgba(255, 255, 255, 0.055)",
@@ -80,16 +78,44 @@ describe("overlay layout pointer surfaces", () => {
 
 		const mediaAction = getRule(".room-people-action");
 		expect(mediaAction).toContain("display: inline-flex");
-		expect(mediaAction).toContain("border: 1px solid rgba(255, 255, 255, 0.09)");
+		expect(mediaAction).toContain(
+			"border: 1px solid rgba(255, 255, 255, 0.09)",
+		);
 		expect(mediaAction).toContain("background: rgba(255, 255, 255, 0.025)");
 		expect(getRule(".room-people-action svg")).toContain(
 			"color: rgba(255, 155, 84, 0.9)",
 		);
 	});
 
+	it("keeps microphone state compact and reserves green for measured speech", () => {
+		const microphoneControl = getRule(".icon-button.panel-microphone-control");
+		expect(microphoneControl).toContain("width: 48px");
+		expect(microphoneControl).toContain("height: 26px");
+		expect(microphoneControl).toContain("overflow: hidden");
+		expect(microphoneControl).toContain("border-radius: 999px");
+		expect(getRule(".panel-microphone-control-thumb")).toContain("width: 20px");
+		expect(
+			getRule(
+				".icon-button.panel-microphone-control.enabled .panel-microphone-control-thumb",
+			),
+		).toContain("transform: translateX(22px)");
+		expect(
+			getRule(
+				".icon-button.panel-microphone-control.enabled .panel-microphone-control-icon",
+			),
+		).not.toContain("134, 239, 172");
+		expect(
+			getRule(
+				".icon-button.panel-microphone-control.speaking .panel-microphone-control-icon",
+			),
+		).toContain("color: rgba(134, 239, 172, 0.98)");
+	});
+
 	it("keeps the account name flexible and the header actions aligned", () => {
 		expect(getRule(".panel-account-name")).toContain("flex: 0 1 auto");
-		expect(getRule(".panel-account-title-row")).toContain("align-items: baseline");
+		expect(getRule(".panel-account-title-row")).toContain(
+			"align-items: baseline",
+		);
 		const accountPlan = getRule(".panel-account-title-row .plan-badge");
 		expect(accountPlan).toContain("height: auto");
 		expect(accountPlan).toContain("padding: 0");
@@ -110,10 +136,12 @@ describe("overlay layout pointer surfaces", () => {
 		expect(headerActions).toContain("justify-content: flex-end");
 		expect(headerActions).toContain("align-items: start");
 		expect(overlayStyles).not.toContain("panel-close-button");
-		expect(getRule(".icon-button.panel-camera-control:focus")).toContain("outline: 0");
-		expect(getRule(".icon-button.panel-camera-control:focus-visible")).toContain(
-			"box-shadow: 0 0 0 2px rgba(255, 166, 92, 0.38)",
+		expect(getRule(".icon-button.panel-camera-control:focus")).toContain(
+			"outline: 0",
 		);
+		expect(
+			getRule(".icon-button.panel-camera-control:focus-visible"),
+		).toContain("box-shadow: 0 0 0 2px rgba(255, 166, 92, 0.38)");
 	});
 
 	it("keeps the room action row flush with both panel content edges", () => {
@@ -136,7 +164,9 @@ describe("overlay layout pointer surfaces", () => {
 		expect(exitAction).toContain("border-color: rgba(248, 113, 113, 0.24)");
 		expect(exitAction).toContain("background: rgba(51, 35, 37, 0.88)");
 		expect(exitAction).toContain("color: rgba(255, 255, 255, 0.9)");
-		expect(exitAction).toContain("box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025)");
+		expect(exitAction).toContain(
+			"box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025)",
+		);
 		expect(exitAction).not.toContain("linear-gradient");
 		expect(
 			getRule(".button.primary.panel-primary-action.room-exit.confirming"),
@@ -279,6 +309,34 @@ describe("overlay layout pointer surfaces", () => {
 		expect(getRule(".room-rail.open .room-rail-panel")).toContain(
 			"pointer-events: auto",
 		);
+	});
+
+	it("keeps participant audio controls stable on both rail and camera surfaces", () => {
+		const inlineControl = getRule(".participant-audio-inline-control");
+		expect(inlineControl).toContain("width: 84px");
+		expect(inlineControl).toContain("flex: 0 0 84px");
+		expect(inlineControl).toContain("opacity: 0");
+		expect(
+			getRule(
+				".room-rail.open .room-rail-slot:hover .participant-audio-inline-control",
+			),
+		).toContain("opacity: 1");
+		expect(getRule(".room-rail-panel.adjusting-audio")).toContain(
+			"pointer-events: auto",
+		);
+
+		const contour = getRule(".participant-audio-contour-control");
+		expect(contour).toContain("position: absolute");
+		expect(contour).toContain("inset: -8px");
+		expect(
+			getNumericProperty(".participant-audio-contour-control", "z-index"),
+		).toBeGreaterThan(getNumericProperty(".nuke-burst", "z-index"));
+		expect(getRule(".participant-audio-contour-arc")).toContain(
+			"conic-gradient",
+		);
+		expect(
+			getRule(".cam-bubble:hover .participant-audio-contour-control"),
+		).toContain("pointer-events: auto");
 	});
 
 	it("keeps ghost objects legible over changing video frames", () => {
