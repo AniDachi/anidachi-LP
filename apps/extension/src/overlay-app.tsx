@@ -171,6 +171,12 @@ import {
   trySilentSignIn,
 } from "./user-identity";
 import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
+import {
+  getDefaultVoiceAudioPreferences,
+  parseVoiceAudioPreferences,
+  type VoiceAudioPreferencesV1,
+  voiceAudioPreferencesStorageKeyForUser,
+} from "./voice-audio-preferences";
 import { resolveWatchLibraryReconcileAuth } from "./watch-library-auth";
 import {
   markWatchLibraryEntriesSynced,
@@ -364,6 +370,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [authAuthenticated, setAuthAuthenticated] = useState(false);
   const [authAccessToken, setAuthAccessToken] = useState<string | null>(null);
   const [accountUser, setAccountUser] = useState<AuthenticatedUser | null>(null);
+  const [loadedVoiceAudioPreferences, setLoadedVoiceAudioPreferences] =
+    useState<{
+      listenerUserId: string | null;
+      preferences: VoiceAudioPreferencesV1;
+    }>(() => ({
+      listenerUserId: null,
+      preferences: getDefaultVoiceAudioPreferences(),
+    }));
   const [authBusy, setAuthBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [extensionContextInvalidated, setExtensionContextInvalidated] = useState(false);
@@ -937,6 +951,52 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     };
   }, [identityLoaded, participant?.id]);
 
+  useEffect(() => {
+    if (!identityLoaded) {
+      return;
+    }
+
+    const listenerUserId = accountUser?.id ?? null;
+    if (!listenerUserId) {
+      setLoadedVoiceAudioPreferences({
+        listenerUserId: null,
+        preferences: getDefaultVoiceAudioPreferences(),
+      });
+      return;
+    }
+
+    let cancelled = false;
+    const storageKey = voiceAudioPreferencesStorageKeyForUser(listenerUserId);
+    void storage
+      .getItem<unknown>(storageKey)
+      .then((stored) => {
+        if (cancelled) {
+          return;
+        }
+        setLoadedVoiceAudioPreferences({
+          listenerUserId,
+          preferences: parseVoiceAudioPreferences(stored),
+        });
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+        logDebug("p2p.audio-preferences", "load failed; using safe defaults", {
+          error: error instanceof Error ? error.message : String(error),
+          listenerUserId,
+        });
+        setLoadedVoiceAudioPreferences({
+          listenerUserId,
+          preferences: getDefaultVoiceAudioPreferences(),
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accountUser?.id, identityLoaded]);
+
   const resetQuotaDisplayElapsed = useCallback(() => {
     quotaMeteredMsRef.current = 0;
     quotaTickAtRef.current = null;
@@ -1219,6 +1279,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   }, [clearRoomEndConfirmation, isHost, roomId]);
   const isConnected = status === "connected";
+  const participantAudioPreferenceScope = accountUser?.id ?? null;
+  const participantAudioPreferencesReady =
+    identityLoaded &&
+    loadedVoiceAudioPreferences.listenerUserId ===
+      participantAudioPreferenceScope;
   const { p2pSessionActive } = getP2PMediaSessionState({
     localHasMediaSeat,
     participantId: currentParticipant?.id ?? null,
@@ -1847,6 +1912,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     sourceGeneration,
     participant,
     onCameraStatus: sendCameraStatus,
+    participantAudioPreferenceScope,
+    participantAudioPreferences:
+      loadedVoiceAudioPreferences.preferences.participantAudio,
+    participantAudioPreferencesReady,
     sendP2PSignal,
     signalingTransportReady,
   });

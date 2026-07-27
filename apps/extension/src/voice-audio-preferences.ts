@@ -36,7 +36,7 @@ export function getDefaultVoiceAudioPreferences(): VoiceAudioPreferencesV1 {
 
 export function voiceAudioPreferencesStorageKeyForUser(
   listenerUserId: string,
-): string {
+): `local:${string}` {
   const normalizedUserId = listenerUserId.trim();
   if (!normalizedUserId) {
     throw new Error("A listener user ID is required for voice audio preferences.");
@@ -162,7 +162,7 @@ function normalizeVoiceMode(value: unknown): VoiceMode {
     : "push-to-talk";
 }
 
-function normalizeParticipantAudioPreference(
+export function normalizeParticipantAudioPreference(
   value: Record<string, unknown> | ParticipantAudioPreference,
 ): ParticipantAudioPreference {
   return {

@@ -28,8 +28,10 @@ const mockP2PMedia = vi.hoisted(() => {
     handleSignal: ReturnType<typeof vi.fn>;
     handleSignalingTransportReady: ReturnType<typeof vi.fn>;
     hasPeer: ReturnType<typeof vi.fn>;
+    replaceParticipantAudioOutputs: ReturnType<typeof vi.fn>;
     setCameraEnabled: ReturnType<typeof vi.fn>;
     setMicrophonePublishing: ReturnType<typeof vi.fn>;
+    setParticipantAudioOutput: ReturnType<typeof vi.fn>;
     unlockAudio: ReturnType<typeof vi.fn>;
     updateParticipants: ReturnType<typeof vi.fn>;
   }> = [];
@@ -43,8 +45,10 @@ const mockP2PMedia = vi.hoisted(() => {
       handleSignal: vi.fn(),
       handleSignalingTransportReady: vi.fn(() => Promise.resolve()),
       hasPeer: vi.fn(() => false),
+      replaceParticipantAudioOutputs: vi.fn(),
       setCameraEnabled: vi.fn(() => Promise.resolve()),
       setMicrophonePublishing: vi.fn(() => Promise.resolve()),
+      setParticipantAudioOutput: vi.fn(),
       unlockAudio: vi.fn(() => Promise.resolve()),
       updateParticipants: vi.fn(),
     };
@@ -73,6 +77,7 @@ vi.mock("../src/p2p-media", () => ({
 
 import { canReceiveP2PSignalFromParticipant } from "../src/p2p-media";
 import { type GhostCamSession, useGhostCam } from "../src/ghost-cam";
+import type { ParticipantAudioPreference } from "../src/voice-audio-preferences";
 
 function participant(
   id: string,
@@ -105,6 +110,9 @@ function GhostCamHarness({
   incomingP2PSignals = [],
   onSession,
   participant: activeParticipant,
+  participantAudioPreferenceScope = "account-1",
+  participantAudioPreferences = {},
+  participantAudioPreferencesReady = true,
   participants,
   roomId = "room-1",
   signalingTransportReady = null,
@@ -114,6 +122,11 @@ function GhostCamHarness({
   incomingP2PSignals?: IncomingP2PSignal[];
   onSession?: (session: GhostCamSession) => void;
   participant: Participant;
+  participantAudioPreferenceScope?: string;
+  participantAudioPreferences?: Readonly<
+    Record<string, ParticipantAudioPreference>
+  >;
+  participantAudioPreferencesReady?: boolean;
   participants: Participant[];
   roomId?: string;
   signalingTransportReady?: SignalingTransportReady | null;
@@ -125,6 +138,9 @@ function GhostCamHarness({
     incomingP2PSignals,
     onCameraStatus: noopCameraStatus,
     participant: activeParticipant,
+    participantAudioPreferenceScope,
+    participantAudioPreferences,
+    participantAudioPreferencesReady,
     participants,
     roomGeneration: 1,
     roomId,
@@ -555,6 +571,155 @@ describe("useGhostCam P2P session lifecycle", () => {
     expect(
       mockP2PMedia.controllers[1].setMicrophonePublishing,
     ).toHaveBeenCalledWith(false, "immediate");
+
+    await act(async () => root.unmount());
+  });
+
+  it("waits for participant audio preferences before creating a controller", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    const viewerPreference = {
+      muted: true,
+      volume: 0.3,
+    } satisfies ParticipantAudioPreference;
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          participant={host}
+          participantAudioPreferences={{ viewer: viewerPreference }}
+          participantAudioPreferencesReady={false}
+          participants={[host]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+    expect(mockP2PMedia.controllers).toHaveLength(0);
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          participant={host}
+          participantAudioPreferences={{ viewer: viewerPreference }}
+          participantAudioPreferencesReady
+          participants={[host]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    expect(mockP2PMedia.controllers).toHaveLength(1);
+    expect(
+      mockP2PMedia.controllers[0].replaceParticipantAudioOutputs,
+    ).toHaveBeenCalledWith({ viewer: viewerPreference });
+    expect(
+      mockP2PMedia.controllers[0].replaceParticipantAudioOutputs.mock
+        .invocationCallOrder[0],
+    ).toBeLessThan(
+      mockP2PMedia.controllers[0].setCameraEnabled.mock.invocationCallOrder[0],
+    );
+
+    await act(async () => root.unmount());
+  });
+
+  it("applies participant output updates to the live controller", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    let session: GhostCamSession | null = null;
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+    await act(async () => {
+      session?.setParticipantAudioOutput("viewer", {
+        muted: false,
+        volume: 0.55,
+      });
+    });
+
+    expect(
+      mockP2PMedia.controllers[0].setParticipantAudioOutput,
+    ).toHaveBeenCalledWith("viewer", {
+      muted: false,
+      volume: 0.55,
+    });
+
+    await act(async () => root.unmount());
+  });
+
+  it("clears old-listener output preferences before loading another account", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    const accountA = {
+      viewer: { muted: true, volume: 0.2 },
+    } satisfies Record<string, ParticipantAudioPreference>;
+    const accountB = {
+      viewer: { muted: false, volume: 0.8 },
+    } satisfies Record<string, ParticipantAudioPreference>;
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          participant={host}
+          participantAudioPreferenceScope="account-a"
+          participantAudioPreferences={accountA}
+          participants={[host]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+    expect(mockP2PMedia.controllers).toHaveLength(1);
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          participant={host}
+          participantAudioPreferenceScope="account-b"
+          participantAudioPreferences={accountA}
+          participantAudioPreferencesReady={false}
+          participants={[host]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+    expect(mockP2PMedia.controllers[0].disconnect).toHaveBeenCalledTimes(1);
+    expect(mockP2PMedia.controllers).toHaveLength(1);
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          participant={host}
+          participantAudioPreferenceScope="account-b"
+          participantAudioPreferences={accountB}
+          participantAudioPreferencesReady
+          participants={[host]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    expect(mockP2PMedia.controllers).toHaveLength(2);
+    expect(
+      mockP2PMedia.controllers[1].replaceParticipantAudioOutputs,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      mockP2PMedia.controllers[1].replaceParticipantAudioOutputs,
+    ).toHaveBeenCalledWith(accountB);
 
     await act(async () => root.unmount());
   });

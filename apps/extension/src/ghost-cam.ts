@@ -15,6 +15,7 @@ import {
   P2PMediaController,
   selectP2PMediaParticipants,
 } from "./p2p-media";
+import type { ParticipantAudioPreference } from "./voice-audio-preferences";
 
 export type { GhostVideo, MicrophoneStatus } from "./media-types";
 
@@ -26,6 +27,10 @@ export interface GhostCamSession {
     enabled: boolean,
     release: "warm" | "immediate",
   ) => Promise<void>;
+  setParticipantAudioOutput: (
+    participantId: string,
+    preference: ParticipantAudioPreference,
+  ) => void;
   unlockAudio: () => Promise<void>;
   videos: GhostVideo[];
   voiceMessage: string | null;
@@ -37,6 +42,11 @@ interface GhostCamOptions {
   incomingP2PSignals: IncomingP2PSignal[];
   onCameraStatus: (enabled: boolean) => void;
   participant: Participant | null;
+  participantAudioPreferenceScope: string | null;
+  participantAudioPreferences: Readonly<
+    Record<string, ParticipantAudioPreference>
+  >;
+  participantAudioPreferencesReady: boolean;
   participants: Participant[];
   roomGeneration: number;
   roomId: string | null;
@@ -63,6 +73,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     incomingP2PSignals,
     onCameraStatus,
     participant,
+    participantAudioPreferenceScope,
+    participantAudioPreferences,
+    participantAudioPreferencesReady,
     participants,
     roomId,
     roomToken,
@@ -91,6 +104,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const microphonePublishingRef = useRef(false);
   const microphoneReleaseRef = useRef<"warm" | "immediate">("warm");
   const microphoneScopeKeyRef = useRef<string | null>(null);
+  const participantAudioPreferencesRef = useRef(participantAudioPreferences);
   const remoteVoiceParticipantIdsRef = useRef<Set<string>>(new Set());
   const lastSignalSequenceRef = useRef(0);
   const participantId = participant?.id ?? null;
@@ -149,6 +163,15 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   }, [participant]);
 
   useEffect(() => {
+    participantAudioPreferencesRef.current = participantAudioPreferences;
+    if (participantAudioPreferencesReady) {
+      controllerRef.current?.replaceParticipantAudioOutputs(
+        participantAudioPreferences,
+      );
+    }
+  }, [participantAudioPreferences, participantAudioPreferencesReady]);
+
+  useEffect(() => {
     participantsRef.current = participants;
   }, [participants]);
 
@@ -176,8 +199,13 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
 
   useEffect(() => {
     const microphoneScopeKey =
-      shouldConnect && roomId && participantId
-        ? `${roomId}\u0000${participantId}`
+      shouldConnect &&
+      roomId &&
+      participantId &&
+      participantAudioPreferencesReady
+        ? `${roomId}\u0000${participantId}\u0000${
+            participantAudioPreferenceScope ?? "anonymous"
+          }`
         : null;
     if (microphoneScopeKeyRef.current !== microphoneScopeKey) {
       microphonePublishingRef.current = false;
@@ -186,7 +214,12 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
       setMicrophoneTerminalFailure(null);
     }
 
-    if (!shouldConnect || !roomId || !participantId) {
+    if (
+      !shouldConnect ||
+      !roomId ||
+      !participantId ||
+      !participantAudioPreferencesReady
+    ) {
       controllerRef.current?.disconnect();
       controllerRef.current = null;
       remoteVoiceParticipantIdsRef.current.clear();
@@ -252,6 +285,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         sendSignal: (toUserId, signal, metadata) =>
           sendP2PSignalRef.current(toUserId, signal, metadata.senderMediaSessionId),
       });
+      controller.replaceParticipantAudioOutputs(
+        participantAudioPreferencesRef.current,
+      );
 
       ownedController = controller;
       controllerRef.current = controller;
@@ -297,6 +333,8 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   }, [
     getMediaParticipants,
     participantId,
+    participantAudioPreferenceScope,
+    participantAudioPreferencesReady,
     roomGeneration,
     roomId,
     shouldConnect,
@@ -479,11 +517,25 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     await controllerRef.current?.unlockAudio();
   }, []);
 
+  const setParticipantAudioOutput = useCallback(
+    (
+      targetParticipantId: string,
+      preference: ParticipantAudioPreference,
+    ) => {
+      controllerRef.current?.setParticipantAudioOutput(
+        targetParticipantId,
+        preference,
+      );
+    },
+    [],
+  );
+
   return {
     activeSpeakerIds,
     microphoneStatus,
     microphoneTerminalFailure,
     setMicrophonePublishing,
+    setParticipantAudioOutput,
     unlockAudio,
     videos,
     voiceMessage,

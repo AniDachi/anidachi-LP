@@ -32,6 +32,7 @@ import type {
   MicrophoneTerminalFailure,
   RoomSendDisposition,
 } from "../src/media-types";
+import type { ParticipantAudioPreference } from "../src/voice-audio-preferences";
 
 function participant(
   id: string,
@@ -313,6 +314,30 @@ function installRemoteAudioElement(
       track: null,
     },
   };
+  return element;
+}
+
+function dispatchRemoteAudioTrack(
+  controller: P2PMediaController,
+  remoteUserId: string,
+  pc: EventTarget,
+  track = new FakeAudioTrack("remote-audio"),
+): HTMLAudioElement {
+  const stream = fakeAudioStream(track);
+  const event = new Event("track");
+  Object.defineProperties(event, {
+    streams: { value: [stream] },
+    track: { value: track },
+  });
+  pc.dispatchEvent(event);
+  const element = (
+    controller as unknown as {
+      audioElementsByParticipant: Map<string, HTMLAudioElement>;
+    }
+  ).audioElementsByParticipant.get(remoteUserId);
+  if (!element) {
+    throw new Error("Expected a remote audio element.");
+  }
   return element;
 }
 
@@ -2541,6 +2566,146 @@ describe("P2P idle peer linger", () => {
     vi.unstubAllGlobals();
     vi.useRealTimers();
     vi.restoreAllMocks();
+  });
+
+  it("applies a stored participant output preference before first playback", async () => {
+    const harness = createP2PControllerHarness();
+    const preference = {
+      muted: true,
+      volume: 0.35,
+    } satisfies ParticipantAudioPreference;
+    harness.controller.replaceParticipantAudioOutputs({
+      viewer: preference,
+    });
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    const pc = FakeRtcPeerConnection.instances[0];
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockImplementation(function playWithPreference(this: HTMLMediaElement) {
+        expect(this.muted).toBe(true);
+        expect(this.volume).toBe(0.35);
+        return Promise.resolve();
+      });
+
+    const element = dispatchRemoteAudioTrack(
+      harness.controller,
+      "viewer",
+      pc,
+    );
+
+    expect(element.muted).toBe(true);
+    expect(element.volume).toBe(0.35);
+    expect(play).toHaveBeenCalledTimes(1);
+    harness.controller.disconnect();
+  });
+
+  it("applies participant output changes to an existing audio element", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    const element = dispatchRemoteAudioTrack(
+      harness.controller,
+      "viewer",
+      FakeRtcPeerConnection.instances[0],
+    );
+
+    harness.controller.setParticipantAudioOutput("viewer", {
+      muted: false,
+      volume: 0.45,
+    });
+    expect(element.muted).toBe(false);
+    expect(element.volume).toBe(0.45);
+
+    harness.controller.setParticipantAudioOutput("viewer", {
+      muted: true,
+      volume: 0.45,
+    });
+    expect(element.muted).toBe(true);
+    expect(element.volume).toBe(0.45);
+    harness.controller.disconnect();
+  });
+
+  it("retains participant output preference across remote track replacement", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.replaceParticipantAudioOutputs({
+      viewer: { muted: false, volume: 0.25 },
+    });
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    const pc = FakeRtcPeerConnection.instances[0];
+
+    const first = dispatchRemoteAudioTrack(
+      harness.controller,
+      "viewer",
+      pc,
+      new FakeAudioTrack("remote-audio-1"),
+    );
+    const replacement = dispatchRemoteAudioTrack(
+      harness.controller,
+      "viewer",
+      pc,
+      new FakeAudioTrack("remote-audio-2"),
+    );
+
+    expect(first.srcObject).toBeNull();
+    expect(replacement.muted).toBe(false);
+    expect(replacement.volume).toBe(0.25);
+    harness.controller.disconnect();
+  });
+
+  it("keeps measured speaking active while local playback is muted", async () => {
+    const { activeSpeakerChanges, controller } = createP2PControllerHarness();
+    installStatsPeer(controller, "viewer", [
+      statsReportFrom([
+        {
+          id: "viewer-audio",
+          type: "inbound-rtp",
+          kind: "audio",
+          bytesReceived: 100,
+          packetsReceived: 10,
+          audioLevel: 0.03,
+        },
+      ]),
+    ]);
+    const element = installRemoteAudioElement(controller, "viewer");
+    controller.setParticipantAudioOutput("viewer", {
+      muted: true,
+      volume: 0.3,
+    });
+
+    await controller.handleSignal("viewer", { kind: "voice-start" });
+    await sampleP2PAudioActivity(controller);
+
+    expect(element.muted).toBe(true);
+    expect(activeSpeakerChanges.at(-1)).toEqual(["viewer"]);
+    controller.disconnect();
+  });
+
+  it("reapplies stored output preference before unlocking audio", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    const element = dispatchRemoteAudioTrack(
+      harness.controller,
+      "viewer",
+      FakeRtcPeerConnection.instances[0],
+    );
+    harness.controller.setParticipantAudioOutput("viewer", {
+      muted: true,
+      volume: 0.4,
+    });
+    element.muted = false;
+    element.volume = 1;
+    const play = vi.spyOn(element, "play").mockImplementation(async () => {
+      expect(element.muted).toBe(true);
+      expect(element.volume).toBe(0.4);
+    });
+
+    await harness.controller.unlockAudio();
+
+    expect(play).toHaveBeenCalledTimes(1);
+    harness.controller.disconnect();
   });
 
   it("keeps an idle peer warm for the linger window before closing it", async () => {

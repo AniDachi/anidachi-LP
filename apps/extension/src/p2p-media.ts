@@ -21,6 +21,11 @@ import {
   type SpeakingHysteresisState,
   updateSpeakingHysteresis,
 } from "./voice-activity";
+import {
+  getDefaultParticipantAudioPreference,
+  normalizeParticipantAudioPreference,
+  type ParticipantAudioPreference,
+} from "./voice-audio-preferences";
 
 const P2P_MAX_REMOTE_PARTICIPANTS = 3;
 const P2P_VIDEO_BITRATE_BPS = 150_000;
@@ -684,6 +689,10 @@ export class P2PMediaController {
   private readonly audioElementsByParticipant = new Map<
     string,
     HTMLAudioElement
+  >();
+  private readonly participantAudioOutputPreferences = new Map<
+    string,
+    ParticipantAudioPreference
   >();
   private readonly remoteSpeakingIds = new Set<string>();
   private readonly remoteAudioExpectationGenerationByPeer = new Map<
@@ -1440,8 +1449,36 @@ export class P2PMediaController {
   }
 
   async unlockAudio(): Promise<void> {
-    for (const element of this.audioElementsByParticipant.values()) {
+    for (const [participantId, element] of this.audioElementsByParticipant) {
+      this.applyParticipantAudioOutput(participantId, element);
       await element.play().catch(() => undefined);
+    }
+  }
+
+  setParticipantAudioOutput(
+    participantId: string,
+    preference: ParticipantAudioPreference,
+  ): void {
+    const normalized = normalizeParticipantAudioPreference(preference);
+    this.participantAudioOutputPreferences.set(participantId, normalized);
+    const element = this.audioElementsByParticipant.get(participantId);
+    if (element) {
+      this.applyParticipantAudioOutput(participantId, element);
+    }
+  }
+
+  replaceParticipantAudioOutputs(
+    preferences: Readonly<Record<string, ParticipantAudioPreference>>,
+  ): void {
+    this.participantAudioOutputPreferences.clear();
+    for (const [participantId, preference] of Object.entries(preferences)) {
+      this.participantAudioOutputPreferences.set(
+        participantId,
+        normalizeParticipantAudioPreference(preference),
+      );
+    }
+    for (const [participantId, element] of this.audioElementsByParticipant) {
+      this.applyParticipantAudioOutput(participantId, element);
     }
   }
 
@@ -3118,7 +3155,7 @@ export class P2PMediaController {
         this.removeAudio(remoteUserId);
         const element = document.createElement("audio");
         element.autoplay = true;
-        element.volume = 1;
+        this.applyParticipantAudioOutput(remoteUserId, element);
         element.srcObject = stream;
         this.audioElementsByParticipant.set(remoteUserId, element);
         void element.play().catch(() => {
@@ -3645,6 +3682,17 @@ export class P2PMediaController {
     if (this.remoteSpeakingIds.delete(participantId)) {
       this.publishActiveSpeakerIds();
     }
+  }
+
+  private applyParticipantAudioOutput(
+    participantId: string,
+    element: HTMLAudioElement,
+  ): void {
+    const preference =
+      this.participantAudioOutputPreferences.get(participantId) ??
+      getDefaultParticipantAudioPreference();
+    element.volume = preference.volume;
+    element.muted = preference.muted;
   }
 
   private videoElementUsesTrack(
