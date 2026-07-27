@@ -146,9 +146,12 @@ export const P2PSignalSchema = z.discriminatedUnion("kind", [
     candidate: P2PIceCandidateSchema,
   }),
   z.object({
+    // The sender expects to publish microphone audio. Speaking activity is
+    // measured from WebRTC audio levels and must not be inferred from this.
     kind: z.literal("voice-start"),
   }),
   z.object({
+    // The sender no longer expects to publish microphone audio.
     kind: z.literal("voice-stop"),
   }),
   z.object({

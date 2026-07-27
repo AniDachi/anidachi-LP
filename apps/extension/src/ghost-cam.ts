@@ -4,7 +4,8 @@ import { logDebug } from "./debug-log";
 import type {
   GhostVideo,
   IncomingP2PSignal,
-  LiveVoiceStatus,
+  MicrophoneStatus,
+  MicrophoneTerminalFailure,
   RoomSendDisposition,
   SignalingTransportReady,
 } from "./media-types";
@@ -15,16 +16,19 @@ import {
   selectP2PMediaParticipants,
 } from "./p2p-media";
 
-export type { GhostVideo, LiveVoiceStatus } from "./media-types";
+export type { GhostVideo, MicrophoneStatus } from "./media-types";
 
 export interface GhostCamSession {
   activeSpeakerIds: string[];
-  startVoiceTalk: () => Promise<void>;
-  stopVoiceTalk: () => Promise<void>;
+  microphoneStatus: MicrophoneStatus;
+  microphoneTerminalFailure: MicrophoneTerminalFailure | null;
+  setMicrophonePublishing: (
+    enabled: boolean,
+    release: "warm" | "immediate",
+  ) => Promise<void>;
   unlockAudio: () => Promise<void>;
   videos: GhostVideo[];
   voiceMessage: string | null;
-  voiceStatus: LiveVoiceStatus;
 }
 
 interface GhostCamOptions {
@@ -40,7 +44,6 @@ interface GhostCamOptions {
   sendP2PSignal: IncomingP2PSignalSender;
   signalingTransportReady: SignalingTransportReady | null;
   sourceGeneration: number;
-  voiceTalkActive: boolean;
 }
 
 type IncomingP2PSignalSender = (
@@ -67,10 +70,12 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     sendP2PSignal,
     signalingTransportReady,
     sourceGeneration,
-    voiceTalkActive,
   } = options;
   const [videos, setVideos] = useState<GhostVideo[]>([]);
-  const [voiceStatus, setVoiceStatus] = useState<LiveVoiceStatus>("idle");
+  const [microphoneStatus, setMicrophoneStatus] =
+    useState<MicrophoneStatus>("off");
+  const [microphoneTerminalFailure, setMicrophoneTerminalFailure] =
+    useState<MicrophoneTerminalFailure | null>(null);
   const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
   const [activeSpeakerIds, setActiveSpeakerIds] = useState<string[]>([]);
   const controllerRef = useRef<P2PMediaController | null>(null);
@@ -83,7 +88,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const sendP2PSignalRef = useRef(sendP2PSignal);
   const signalingTransportReadyRef = useRef(signalingTransportReady);
   const sourceGenerationRef = useRef(sourceGeneration);
-  const voiceTalkActiveRef = useRef(voiceTalkActive);
+  const microphonePublishingRef = useRef(false);
+  const microphoneReleaseRef = useRef<"warm" | "immediate">("warm");
+  const microphoneScopeKeyRef = useRef<string | null>(null);
   const remoteVoiceParticipantIdsRef = useRef<Set<string>>(new Set());
   const lastSignalSequenceRef = useRef(0);
   const participantId = participant?.id ?? null;
@@ -92,13 +99,12 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const iceAuthRef = useRef<{ roomId: string; roomToken: string } | null>(null);
   iceAuthRef.current = roomId && roomToken ? { roomId, roomToken } : null;
 
-  // Live-voice participants: remotes that announced voice-start, plus the
-  // local user while push-to-talk is held. selectP2PMediaParticipants pairs a
-  // talking participant with everyone in the room, so nobody else needs to be
-  // force-added here.
+  // Publication participants: remotes that announced voice-start, plus the
+  // local user while microphone publication is wanted. Measured speaking is a
+  // separate concern and must not decide whether the media peer exists.
   const getVoiceParticipantIds = useCallback((activeParticipant: Participant) => {
     const voiceParticipantIds = new Set(remoteVoiceParticipantIdsRef.current);
-    if (voiceTalkActiveRef.current) {
+    if (microphonePublishingRef.current) {
       voiceParticipantIds.add(activeParticipant.id);
     }
     return voiceParticipantIds;
@@ -169,17 +175,25 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   }, [roomGeneration, sourceGeneration]);
 
   useEffect(() => {
-    voiceTalkActiveRef.current = voiceTalkActive;
-  }, [voiceTalkActive]);
+    const microphoneScopeKey =
+      shouldConnect && roomId && participantId
+        ? `${roomId}\u0000${participantId}`
+        : null;
+    if (microphoneScopeKeyRef.current !== microphoneScopeKey) {
+      microphonePublishingRef.current = false;
+      microphoneReleaseRef.current = "immediate";
+      microphoneScopeKeyRef.current = microphoneScopeKey;
+      setMicrophoneTerminalFailure(null);
+    }
 
-  useEffect(() => {
     if (!shouldConnect || !roomId || !participantId) {
       controllerRef.current?.disconnect();
       controllerRef.current = null;
       remoteVoiceParticipantIdsRef.current.clear();
       setVideos([]);
       setActiveSpeakerIds([]);
-      setVoiceStatus("idle");
+      setMicrophoneStatus("off");
+      setMicrophoneTerminalFailure(null);
       setVoiceMessage(null);
       lastSignalSequenceRef.current = 0;
       return;
@@ -193,7 +207,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     }
     const sessionParticipant: Participant = activeParticipant;
     remoteVoiceParticipantIdsRef.current.clear();
-    setVoiceStatus("connecting");
+    setMicrophoneStatus(
+      microphonePublishingRef.current ? "connecting" : "off",
+    );
 
     async function connectP2P() {
       let iceServers: RTCIceServer[];
@@ -207,7 +223,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         logDebug("p2p.ice-config", "initial setup failed", {
           error: error instanceof Error ? error.message : String(error),
         });
-        setVoiceStatus("error");
+        setMicrophoneStatus(
+          microphonePublishingRef.current ? "error" : "off",
+        );
         setVoiceMessage("Media relay is temporarily unavailable.");
         return;
       }
@@ -221,9 +239,15 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         localParticipant: sessionParticipant,
         onActiveSpeakerIdsChange: setActiveSpeakerIds,
         onCameraStatus: (enabled) => onCameraStatusRef.current(enabled),
+        onMicrophoneTerminalFailure: (failure) => {
+          microphonePublishingRef.current = false;
+          microphoneReleaseRef.current = "immediate";
+          setMicrophoneTerminalFailure(failure);
+          updateControllerParticipants(sessionParticipant);
+        },
         onVideosChange: setVideos,
         onVoiceMessageChange: setVoiceMessage,
-        onVoiceStatusChange: setVoiceStatus,
+        onMicrophoneStatusChange: setMicrophoneStatus,
         refreshIceServers: () => refreshP2PIceServers(iceAuthRef.current ?? undefined),
         sendSignal: (toUserId, signal, metadata) =>
           sendP2PSignalRef.current(toUserId, signal, metadata.senderMediaSessionId),
@@ -255,11 +279,10 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
       if (readyTransport) {
         await controller.handleSignalingTransportReady(readyTransport);
       }
-      if (voiceTalkActiveRef.current) {
-        void controller.startVoiceTalk();
-      } else {
-        setVoiceStatus("idle");
-      }
+      await controller.setMicrophonePublishing(
+        microphonePublishingRef.current,
+        microphoneReleaseRef.current,
+      );
     }
 
     void connectP2P();
@@ -308,19 +331,6 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
 
     updateControllerParticipants(activeParticipant);
   }, [cameraEnabled, participantId, updateControllerParticipants]);
-
-  useEffect(() => {
-    if (!voiceTalkActive) {
-      void (async () => {
-        await controllerRef.current?.stopVoiceTalk();
-        updateControllerParticipants();
-      })();
-      return;
-    }
-
-    updateControllerParticipants();
-    void controllerRef.current?.startVoiceTalk();
-  }, [updateControllerParticipants, voiceTalkActive]);
 
   useEffect(() => {
     const controller = controllerRef.current;
@@ -451,13 +461,19 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     };
   }, [shouldConnect]);
 
-  const startVoiceTalk = useCallback(async () => {
-    await controllerRef.current?.startVoiceTalk();
-  }, []);
-
-  const stopVoiceTalk = useCallback(async () => {
-    await controllerRef.current?.stopVoiceTalk();
-  }, []);
+  const setMicrophonePublishing = useCallback(
+    async (enabled: boolean, release: "warm" | "immediate") => {
+      microphonePublishingRef.current = enabled;
+      microphoneReleaseRef.current = release;
+      if (enabled) {
+        setMicrophoneTerminalFailure(null);
+      }
+      updateControllerParticipants();
+      await controllerRef.current?.setMicrophonePublishing(enabled, release);
+      updateControllerParticipants();
+    },
+    [updateControllerParticipants],
+  );
 
   const unlockAudio = useCallback(async () => {
     await controllerRef.current?.unlockAudio();
@@ -465,12 +481,12 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
 
   return {
     activeSpeakerIds,
-    startVoiceTalk,
-    stopVoiceTalk,
+    microphoneStatus,
+    microphoneTerminalFailure,
+    setMicrophonePublishing,
     unlockAudio,
     videos,
     voiceMessage,
-    voiceStatus,
   };
 }
 

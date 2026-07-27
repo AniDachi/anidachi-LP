@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   canReceiveP2PSignalFromParticipant,
+  classifyMicrophoneTerminalFailure,
   classifyRemoteVideoActivity,
   classifyPeerHealth,
   P2PMediaController,
@@ -27,7 +28,8 @@ import {
 import type { P2PSignal, Participant } from "@anidachi/protocol";
 import type {
   GhostVideo,
-  LiveVoiceStatus,
+  MicrophoneStatus,
+  MicrophoneTerminalFailure,
   RoomSendDisposition,
 } from "../src/media-types";
 
@@ -143,14 +145,17 @@ function deferred<T>() {
 
 function createP2PControllerHarness(
   localParticipant = participant("host", false),
-  sendDisposition: RoomSendDisposition = "sent",
+  sendDisposition:
+    | RoomSendDisposition
+    | ((signal: P2PSignal, toUserId: string) => RoomSendDisposition) = "sent",
   refreshIceServers?: () => Promise<RTCIceServer[]>,
 ) {
   const activeSpeakerChanges: string[][] = [];
   const cameraStatuses: boolean[] = [];
   const messages: Array<string | null> = [];
+  const microphoneFailures: MicrophoneTerminalFailure[] = [];
   const videos: GhostVideo[][] = [];
-  const voiceStatuses: LiveVoiceStatus[] = [];
+  const microphoneStatuses: MicrophoneStatus[] = [];
   const signals: Array<{
     metadata: { senderMediaSessionId: string };
     signal: P2PSignal;
@@ -161,13 +166,17 @@ function createP2PControllerHarness(
     localParticipant,
     onActiveSpeakerIdsChange: (ids) => activeSpeakerChanges.push(ids),
     onCameraStatus: (enabled) => cameraStatuses.push(enabled),
+    onMicrophoneTerminalFailure: (failure) =>
+      microphoneFailures.push(failure),
     onVideosChange: (items) => videos.push(items),
     onVoiceMessageChange: (message) => messages.push(message),
-    onVoiceStatusChange: (status) => voiceStatuses.push(status),
+    onMicrophoneStatusChange: (status) => microphoneStatuses.push(status),
     refreshIceServers,
     sendSignal: (toUserId, signal, metadata) => {
       signals.push({ metadata, signal, toUserId });
-      return sendDisposition;
+      return typeof sendDisposition === "function"
+        ? sendDisposition(signal, toUserId)
+        : sendDisposition;
     },
   });
 
@@ -176,9 +185,10 @@ function createP2PControllerHarness(
     cameraStatuses,
     controller,
     messages,
+    microphoneFailures,
     signals,
     videos,
-    voiceStatuses,
+    microphoneStatuses,
   };
 }
 
@@ -504,6 +514,147 @@ describe("P2P push-to-talk local-track recovery", () => {
     vi.restoreAllMocks();
   });
 
+  it.each([
+    ["NotAllowedError", "permission-denied"],
+    ["PermissionDeniedError", "permission-denied"],
+    ["SecurityError", "security"],
+    ["NotFoundError", "device-not-found"],
+    ["DevicesNotFoundError", "device-not-found"],
+    ["OverconstrainedError", "constraints"],
+    ["ConstraintNotSatisfiedError", "constraints"],
+    ["TypeError", "constraints"],
+  ] as const)(
+    "classifies terminal microphone capture error %s",
+    (errorName, expectedReason) => {
+      expect(
+        classifyMicrophoneTerminalFailure(
+          new DOMException("Microphone failure", errorName),
+        ),
+      ).toBe(expectedReason);
+    },
+  );
+
+  it.each(["AbortError", "NotReadableError", "TrackStartError", "UnknownError"])(
+    "keeps recoverable microphone capture error %s on the bounded retry path",
+    (errorName) => {
+      expect(
+        classifyMicrophoneTerminalFailure(
+          new DOMException("Microphone failure", errorName),
+        ),
+      ).toBeNull();
+    },
+  );
+
+  it("releases microphone capture immediately when publication stops with immediate release", async () => {
+    const track = new FakeAudioTrack("mic-open");
+    const getUserMedia = vi
+      .fn()
+      .mockResolvedValue(fakeAudioStream(track));
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia,
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const { controller } = createP2PControllerHarness();
+    const setMicrophonePublishing = (
+      controller as unknown as {
+        setMicrophonePublishing: (
+          enabled: boolean,
+          release: "warm" | "immediate",
+        ) => Promise<void>;
+      }
+    ).setMicrophonePublishing.bind(controller);
+
+    await setMicrophonePublishing(true, "immediate");
+    expect(track.readyState).toBe("live");
+
+    await setMicrophonePublishing(false, "immediate");
+
+    expect(track.readyState).toBe("ended");
+    expect(
+      (
+        controller as unknown as {
+          localAudioTrack: MediaStreamTrack | null;
+        }
+      ).localAudioTrack,
+    ).toBeNull();
+    controller.disconnect();
+  });
+
+  it("does not retry a terminal microphone permission failure", async () => {
+    const getUserMedia = vi
+      .fn()
+      .mockRejectedValue(
+        new DOMException("Permission denied", "NotAllowedError"),
+      );
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia,
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const {
+      controller,
+      messages,
+      microphoneFailures,
+      signals,
+      microphoneStatuses,
+    } =
+      createP2PControllerHarness();
+    installStatsPeer(controller, "viewer", []);
+    signals.length = 0;
+
+    await (
+      controller as unknown as {
+        setMicrophonePublishing: (
+          enabled: boolean,
+          release: "warm" | "immediate",
+        ) => Promise<void>;
+      }
+    ).setMicrophonePublishing(true, "warm");
+    await vi.advanceTimersByTimeAsync(4_000);
+
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    expect(microphoneStatuses.at(-1)).toBe("error");
+    expect(messages.at(-1)).toContain("Microphone");
+    expect(microphoneFailures).toEqual([
+      {
+        errorName: "NotAllowedError",
+        message: "Microphone access is blocked. Allow microphone access and try again.",
+        reason: "permission-denied",
+      },
+    ]);
+    expect(signals.map((item) => item.signal)).not.toContainEqual({
+      kind: "voice-stop",
+    });
+    controller.disconnect();
+  });
+
+  it("retries a recoverable microphone device failure within the bounded policy", async () => {
+    const track = new FakeAudioTrack("mic-recovered");
+    const getUserMedia = vi
+      .fn()
+      .mockRejectedValueOnce(new DOMException("Device busy", "NotReadableError"))
+      .mockResolvedValueOnce(fakeAudioStream(track));
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia,
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const { controller, microphoneFailures, microphoneStatuses } =
+      createP2PControllerHarness();
+
+    await controller.setMicrophonePublishing(true, "warm");
+    expect(microphoneStatuses.at(-1)).toBe("connecting");
+
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    expect(track.readyState).toBe("live");
+    expect(microphoneStatuses.at(-1)).toBe("on");
+    expect(microphoneFailures).toEqual([]);
+    controller.disconnect();
+  });
+
   it("rejects an old microphone request that resolves after stop and restart", async () => {
     const oldRequest = deferred<MediaStream>();
     const currentRequest = deferred<MediaStream>();
@@ -518,13 +669,13 @@ describe("P2P push-to-talk local-track recovery", () => {
       getUserMedia,
       removeEventListener: vi.fn(),
     } as unknown as MediaDevices);
-    const { activeSpeakerChanges, controller, voiceStatuses } =
+    const { activeSpeakerChanges, controller, microphoneStatuses } =
       createP2PControllerHarness();
 
-    const oldStart = controller.startVoiceTalk();
+    const oldStart = controller.setMicrophonePublishing(true, "warm");
     await Promise.resolve();
-    await controller.stopVoiceTalk();
-    const currentStart = controller.startVoiceTalk();
+    await controller.setMicrophonePublishing(false, "warm");
+    const currentStart = controller.setMicrophonePublishing(true, "warm");
 
     expect(getUserMedia).toHaveBeenCalledTimes(2);
     currentRequest.resolve(fakeAudioStream(currentTrack));
@@ -542,7 +693,7 @@ describe("P2P push-to-talk local-track recovery", () => {
       ).localAudioTrack,
     ).toBe(currentTrack);
     expect(activeSpeakerChanges.at(-1) ?? []).toEqual([]);
-    expect(voiceStatuses.at(-1)).toBe("talking");
+    expect(microphoneStatuses.at(-1)).toBe("on");
 
     controller.disconnect();
   });
@@ -559,18 +710,18 @@ describe("P2P push-to-talk local-track recovery", () => {
       getUserMedia,
       removeEventListener: vi.fn(),
     } as unknown as MediaDevices);
-    const { activeSpeakerChanges, controller, signals, voiceStatuses } =
+    const { activeSpeakerChanges, controller, signals, microphoneStatuses } =
       createP2PControllerHarness();
 
-    await controller.startVoiceTalk();
+    await controller.setMicrophonePublishing(true, "warm");
     expect(getUserMedia).toHaveBeenCalledTimes(1);
     expect(activeSpeakerChanges.at(-1) ?? []).toEqual([]);
-    expect(voiceStatuses.at(-1)).toBe("talking");
+    expect(microphoneStatuses.at(-1)).toBe("on");
 
     firstTrack.end();
 
     expect(activeSpeakerChanges.at(-1) ?? []).toEqual([]);
-    expect(voiceStatuses.at(-1)).toBe("connecting");
+    expect(microphoneStatuses.at(-1)).toBe("connecting");
     expect(signals.map((item) => item.signal)).not.toContainEqual({
       kind: "voice-stop",
     });
@@ -581,7 +732,7 @@ describe("P2P push-to-talk local-track recovery", () => {
     await vi.advanceTimersByTimeAsync(1);
     expect(getUserMedia).toHaveBeenCalledTimes(2);
     expect(activeSpeakerChanges.at(-1) ?? []).toEqual([]);
-    expect(voiceStatuses.at(-1)).toBe("talking");
+    expect(microphoneStatuses.at(-1)).toBe("on");
 
     controller.disconnect();
   });
@@ -598,17 +749,17 @@ describe("P2P push-to-talk local-track recovery", () => {
       getUserMedia,
       removeEventListener: vi.fn(),
     } as unknown as MediaDevices);
-    const { activeSpeakerChanges, controller, voiceStatuses } =
+    const { activeSpeakerChanges, controller, microphoneStatuses } =
       createP2PControllerHarness();
 
-    await controller.startVoiceTalk();
+    await controller.setMicrophonePublishing(true, "warm");
     firstTrack.end();
-    await controller.stopVoiceTalk();
+    await controller.setMicrophonePublishing(false, "warm");
 
     await vi.advanceTimersByTimeAsync(250);
     expect(getUserMedia).toHaveBeenCalledTimes(1);
     expect(activeSpeakerChanges.at(-1) ?? []).toEqual([]);
-    expect(voiceStatuses.at(-1)).toBe("idle");
+    expect(microphoneStatuses.at(-1)).toBe("off");
 
     controller.disconnect();
   });
@@ -629,10 +780,10 @@ describe("P2P push-to-talk local-track recovery", () => {
       getUserMedia,
       removeEventListener: vi.fn(),
     } as unknown as MediaDevices);
-    const { activeSpeakerChanges, controller, messages, voiceStatuses } =
+    const { activeSpeakerChanges, controller, messages, microphoneStatuses } =
       createP2PControllerHarness();
 
-    await controller.startVoiceTalk();
+    await controller.setMicrophonePublishing(true, "warm");
     tracks[0].end();
     await vi.advanceTimersByTimeAsync(250);
     tracks[1].end();
@@ -641,7 +792,7 @@ describe("P2P push-to-talk local-track recovery", () => {
 
     expect(getUserMedia).toHaveBeenCalledTimes(3);
     expect(activeSpeakerChanges.at(-1) ?? []).toEqual([]);
-    expect(voiceStatuses.at(-1)).toBe("error");
+    expect(microphoneStatuses.at(-1)).toBe("error");
     expect(messages.at(-1)).toContain("Microphone is unavailable");
 
     await vi.advanceTimersByTimeAsync(2_000);
@@ -1295,14 +1446,14 @@ describe("P2P measured audio activity", () => {
       controller as unknown as {
         localAudioTrack: MediaStreamTrack;
         peers: Map<string, { audioTransceiver: unknown; pc: unknown }>;
-        voiceTalking: boolean;
+        microphonePublishing: boolean;
       }
     ).localAudioTrack = localTrack as unknown as MediaStreamTrack;
     (
       controller as unknown as {
-        voiceTalking: boolean;
+        microphonePublishing: boolean;
       }
-    ).voiceTalking = true;
+    ).microphonePublishing = true;
     const peer = (
       controller as unknown as {
         peers: Map<string, { audioTransceiver: unknown; pc: unknown }>;
@@ -1352,14 +1503,14 @@ describe("P2P measured audio activity", () => {
     (
       controller as unknown as {
         localAudioTrack: MediaStreamTrack;
-        voiceTalking: boolean;
+        microphonePublishing: boolean;
       }
     ).localAudioTrack = localTrack as unknown as MediaStreamTrack;
     (
       controller as unknown as {
-        voiceTalking: boolean;
+        microphonePublishing: boolean;
       }
-    ).voiceTalking = true;
+    ).microphonePublishing = true;
 
     await sampleP2PAudioActivity(controller);
     expect(activeSpeakerChanges.at(-1)).toEqual(["host"]);
@@ -1398,17 +1549,17 @@ describe("P2P measured audio activity", () => {
     (
       controller as unknown as {
         localAudioTrack: MediaStreamTrack;
-        voiceTalking: boolean;
+        microphonePublishing: boolean;
       }
     ).localAudioTrack = localTrack as unknown as MediaStreamTrack;
     (
       controller as unknown as {
-        voiceTalking: boolean;
+        microphonePublishing: boolean;
       }
-    ).voiceTalking = true;
+    ).microphonePublishing = true;
 
     const sampling = sampleP2PAudioActivity(controller);
-    await controller.stopVoiceTalk();
+    await controller.setMicrophonePublishing(false, "warm");
     pendingStats.resolve(
       statsReportFrom([
         {
@@ -2491,6 +2642,165 @@ describe("P2P idle peer linger", () => {
     harness.controller.disconnect();
   });
 
+  it("publishes one microphone state transition per peer and informs late peers", async () => {
+    const track = new FakeAudioTrack("mic");
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia: vi.fn().mockResolvedValue(fakeAudioStream(track)),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    harness.signals.length = 0;
+
+    await harness.controller.setMicrophonePublishing(true, "warm");
+    await harness.controller.setMicrophonePublishing(true, "warm");
+    harness.controller.updateParticipants([
+      participant("viewer", true),
+      participant("late-viewer", true),
+    ]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const starts = harness.signals.filter(
+      (item) => item.signal.kind === "voice-start",
+    );
+    expect(starts.filter((item) => item.toUserId === "viewer")).toHaveLength(1);
+    expect(
+      starts.filter((item) => item.toUserId === "late-viewer"),
+    ).toHaveLength(1);
+
+    await harness.controller.setMicrophonePublishing(false, "warm");
+    await harness.controller.setMicrophonePublishing(false, "warm");
+
+    const stops = harness.signals.filter(
+      (item) => item.signal.kind === "voice-stop",
+    );
+    expect(stops.filter((item) => item.toUserId === "viewer")).toHaveLength(1);
+    expect(
+      stops.filter((item) => item.toUserId === "late-viewer"),
+    ).toHaveLength(1);
+
+    harness.controller.disconnect();
+  });
+
+  it("does not renegotiate when a warm microphone track is re-enabled", async () => {
+    const track = new FakeAudioTrack("mic");
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia: vi.fn().mockResolvedValue(fakeAudioStream(track)),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const pc = FakeRtcPeerConnection.instances[0];
+    await harness.controller.setMicrophonePublishing(true, "warm");
+    await vi.advanceTimersByTimeAsync(0);
+    await harness.controller.setMicrophonePublishing(false, "warm");
+    const offerCountBeforeResume = pc.createOffer.mock.calls.length;
+
+    await harness.controller.setMicrophonePublishing(true, "warm");
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(pc.createOffer).toHaveBeenCalledTimes(offerCountBeforeResume);
+    expect(track.enabled).toBe(true);
+
+    harness.controller.disconnect();
+  });
+
+  it("retries microphone publication state when transport drops a signal", async () => {
+    const track = new FakeAudioTrack("mic");
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia: vi.fn().mockResolvedValue(fakeAudioStream(track)),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    let voiceDisposition: RoomSendDisposition = "dropped";
+    const harness = createP2PControllerHarness(
+      participant("host"),
+      (signal) =>
+        signal.kind === "voice-start" || signal.kind === "voice-stop"
+          ? voiceDisposition
+          : "sent",
+    );
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    harness.signals.length = 0;
+
+    await harness.controller.setMicrophonePublishing(true, "warm");
+    await harness.controller.setMicrophonePublishing(true, "warm");
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "voice-start"),
+    ).toHaveLength(2);
+
+    voiceDisposition = "sent";
+    await harness.controller.setMicrophonePublishing(true, "warm");
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "voice-start"),
+    ).toHaveLength(3);
+
+    voiceDisposition = "dropped";
+    await harness.controller.setMicrophonePublishing(false, "warm");
+    await harness.controller.setMicrophonePublishing(false, "warm");
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "voice-stop"),
+    ).toHaveLength(2);
+
+    voiceDisposition = "sent";
+    await harness.controller.setMicrophonePublishing(false, "warm");
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "voice-stop"),
+    ).toHaveLength(3);
+
+    harness.controller.disconnect();
+  });
+
+  it("replays microphone publication after a technical peer replacement", async () => {
+    const track = new FakeAudioTrack("mic");
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia: vi.fn().mockResolvedValue(fakeAudioStream(track)),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    harness.signals.length = 0;
+    await harness.controller.setMicrophonePublishing(true, "warm");
+
+    const controllerInternals = harness.controller as unknown as {
+      peers: Map<string, unknown>;
+      replacePeerForNegotiationRecovery: (
+        peer: unknown,
+        reason: string,
+      ) => Promise<void>;
+    };
+    const stalePeer = controllerInternals.peers.get("viewer");
+    if (!stalePeer) {
+      throw new Error("Expected an existing peer.");
+    }
+    await controllerInternals.replacePeerForNegotiationRecovery(
+      stalePeer,
+      "test",
+    );
+
+    await harness.controller.setMicrophonePublishing(false, "warm");
+
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "voice-start"),
+    ).toHaveLength(2);
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "bye"),
+    ).toHaveLength(1);
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "voice-stop"),
+    ).toHaveLength(1);
+
+    harness.controller.disconnect();
+  });
+
   it("republishes camera and voice intent once per ready transport", async () => {
     const harness = createP2PControllerHarness(participant("host", true));
     harness.controller.updateParticipants([participant("viewer", true)]);
@@ -2504,16 +2814,16 @@ describe("P2P idle peer linger", () => {
     harness.signals.length = 0;
     (
       harness.controller as unknown as {
-        voiceTalking: boolean;
-        wantsVoiceTalk: boolean;
+        microphonePublishing: boolean;
+        microphonePublishingWanted: boolean;
       }
-    ).voiceTalking = true;
+    ).microphonePublishing = true;
     (
       harness.controller as unknown as {
-        voiceTalking: boolean;
-        wantsVoiceTalk: boolean;
+        microphonePublishing: boolean;
+        microphonePublishingWanted: boolean;
       }
-    ).wantsVoiceTalk = true;
+    ).microphonePublishingWanted = true;
 
     await harness.controller.handleSignalingTransportReady({
       reconnect: true,
@@ -2529,6 +2839,32 @@ describe("P2P idle peer linger", () => {
       harness.signals.filter((item) => item.signal.kind === "voice-start"),
     ).toHaveLength(1);
     expect(pc.close).not.toHaveBeenCalled();
+
+    harness.controller.disconnect();
+  });
+
+  it("replays microphone off once for every new signaling transport", async () => {
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    harness.signals.length = 0;
+
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "local-connection-b",
+    });
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "local-connection-b",
+    });
+    await harness.controller.handleSignalingTransportReady({
+      reconnect: true,
+      senderConnectionId: "local-connection-c",
+    });
+
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "voice-stop"),
+    ).toHaveLength(2);
 
     harness.controller.disconnect();
   });

@@ -6,7 +6,9 @@ import type {
 import { logDebug } from "./debug-log";
 import type {
   GhostVideo,
-  LiveVoiceStatus,
+  MicrophoneStatus,
+  MicrophoneTerminalFailure,
+  MicrophoneTerminalFailureReason,
   RoomSendDisposition,
   SignalingTransportReady,
 } from "./media-types";
@@ -45,11 +47,11 @@ const P2P_CAMERA_REACQUIRE_MAX_DELAY_MS = 8_000;
 const P2P_CAMERA_REACQUIRE_FAILURE_WINDOW_MS = 15_000;
 const P2P_CAMERA_REACQUIRE_MAX_FAILURES = 3;
 const P2P_CAMERA_STABLE_RESET_MS = 30_000;
-const P2P_VOICE_REACQUIRE_BASE_DELAY_MS = 250;
-const P2P_VOICE_REACQUIRE_MAX_DELAY_MS = 2_000;
-const P2P_VOICE_REACQUIRE_FAILURE_WINDOW_MS = 10_000;
-const P2P_VOICE_REACQUIRE_MAX_FAILURES = 3;
-const P2P_VOICE_STABLE_RESET_MS = 20_000;
+const P2P_MICROPHONE_REACQUIRE_BASE_DELAY_MS = 250;
+const P2P_MICROPHONE_REACQUIRE_MAX_DELAY_MS = 2_000;
+const P2P_MICROPHONE_REACQUIRE_FAILURE_WINDOW_MS = 10_000;
+const P2P_MICROPHONE_REACQUIRE_MAX_FAILURES = 3;
+const P2P_MICROPHONE_STABLE_RESET_MS = 20_000;
 const P2P_SIGNAL_DEDUPE_TTL_MS = 30_000;
 const P2P_SIGNAL_DEDUPE_CAP = 240;
 const P2P_RETIRED_SIGNAL_SOURCE_CAP = 8;
@@ -631,9 +633,12 @@ interface P2PMediaControllerOptions {
   localParticipant: Participant;
   onActiveSpeakerIdsChange: (ids: string[]) => void;
   onCameraStatus: (enabled: boolean) => void;
+  onMicrophoneTerminalFailure: (
+    failure: MicrophoneTerminalFailure,
+  ) => void;
   onVideosChange: (videos: GhostVideo[]) => void;
   onVoiceMessageChange: (message: string | null) => void;
-  onVoiceStatusChange: (status: LiveVoiceStatus) => void;
+  onMicrophoneStatusChange: (status: MicrophoneStatus) => void;
   refreshIceServers?: () => Promise<RTCIceServer[]>;
   sendSignal: (
     toUserId: string,
@@ -654,12 +659,16 @@ export class P2PMediaController {
   private readonly localParticipant: Participant;
   private readonly onActiveSpeakerIdsChange: (ids: string[]) => void;
   private readonly onCameraStatus: (enabled: boolean) => void;
+  private readonly onMicrophoneTerminalFailure: (
+    failure: MicrophoneTerminalFailure,
+  ) => void;
   private readonly onVideosChange: (videos: GhostVideo[]) => void;
   private readonly onVoiceMessageChange: (message: string | null) => void;
-  private readonly onVoiceStatusChange: (status: LiveVoiceStatus) => void;
+  private readonly onMicrophoneStatusChange: (status: MicrophoneStatus) => void;
   private readonly refreshIceServers?: () => Promise<RTCIceServer[]>;
   private readonly sendSignalToTransport: P2PMediaControllerOptions["sendSignal"];
   private readonly peers = new Map<string, P2PPeer>();
+  private readonly microphonePublicationSignaledByPeer = new Set<string>();
   private readonly peerOperationChains = new Map<string, Promise<void>>();
   private readonly senderConnectionIdsByPeer = new Map<string, string>();
   private readonly senderMediaSessionIdsByPeer = new Map<string, string>();
@@ -722,18 +731,18 @@ export class P2PMediaController {
   private disposed = false;
   private localAudioStream: MediaStream | null = null;
   private localAudioTrack: MediaStreamTrack | null = null;
-  private voiceFailureTimestamps: number[] = [];
-  private voiceIntentGeneration = 0;
-  private voiceReacquireTimerId: number | null = null;
-  private voiceStableTimerId: number | null = null;
+  private microphoneFailureTimestamps: number[] = [];
+  private microphoneIntentGeneration = 0;
+  private microphoneReacquireTimerId: number | null = null;
+  private microphoneStableTimerId: number | null = null;
   private localVideoStream: MediaStream | null = null;
   private localVideoTrack: MediaStreamTrack | null = null;
   private publicCameraEnabled = false;
   private lastSignalingTransportReadyId: string | null = null;
   private wantsCamera = false;
-  private wantsVoiceTalk = false;
-  private voiceStartingGeneration: number | null = null;
-  private voiceTalking = false;
+  private microphonePublishingWanted = false;
+  private microphoneStartingGeneration: number | null = null;
+  private microphonePublishing = false;
   private localSpeaking = false;
   private localSpeakingHysteresis: SpeakingHysteresisState = {
     quietSamples: 0,
@@ -769,9 +778,10 @@ export class P2PMediaController {
     this.localParticipant = options.localParticipant;
     this.onActiveSpeakerIdsChange = options.onActiveSpeakerIdsChange;
     this.onCameraStatus = options.onCameraStatus;
+    this.onMicrophoneTerminalFailure = options.onMicrophoneTerminalFailure;
     this.onVideosChange = options.onVideosChange;
     this.onVoiceMessageChange = options.onVoiceMessageChange;
-    this.onVoiceStatusChange = options.onVoiceStatusChange;
+    this.onMicrophoneStatusChange = options.onMicrophoneStatusChange;
     this.refreshIceServers = options.refreshIceServers;
     this.sendSignalToTransport = options.sendSignal;
     this.publicCameraEnabled = options.localParticipant.cameraEnabled;
@@ -809,6 +819,48 @@ export class P2PMediaController {
       });
     }
     return disposition;
+  }
+
+  private sendMicrophonePublicationState(
+    remoteUserId: string,
+    publishing: boolean,
+    force = false,
+  ): void {
+    const signaled =
+      this.microphonePublicationSignaledByPeer.has(remoteUserId);
+    if (!force && signaled === publishing) {
+      return;
+    }
+
+    const disposition = this.sendSignal(remoteUserId, {
+      kind: publishing ? "voice-start" : "voice-stop",
+    });
+    if (disposition === "dropped") {
+      return;
+    }
+
+    if (publishing) {
+      this.microphonePublicationSignaledByPeer.add(remoteUserId);
+    } else {
+      this.microphonePublicationSignaledByPeer.delete(remoteUserId);
+    }
+  }
+
+  private sendMicrophonePublicationStateToAll(
+    publishing: boolean,
+    force = false,
+  ): void {
+    for (const peer of this.peers.values()) {
+      this.sendMicrophonePublicationState(
+        peer.remoteUserId,
+        publishing,
+        force,
+      );
+    }
+  }
+
+  private isMicrophonePublicationExpected(): boolean {
+    return this.microphonePublishing || this.microphonePublishingWanted;
   }
 
   /**
@@ -923,8 +975,8 @@ export class P2PMediaController {
         isNewPeer ? "peer-created" : "participants",
         isNewPeer && this.shouldInitiateOffers(peer),
       );
-      if (isNewPeer && this.voiceTalking) {
-        this.sendSignal(peer.remoteUserId, { kind: "voice-start" });
+      if (isNewPeer && this.isMicrophonePublicationExpected()) {
+        this.sendMicrophonePublicationState(peer.remoteUserId, true);
       }
     }
   }
@@ -1181,25 +1233,78 @@ export class P2PMediaController {
     this.cameraStableTimerId = null;
   }
 
-  async startVoiceTalk(): Promise<void> {
+  async setMicrophonePublishing(
+    enabled: boolean,
+    release: "warm" | "immediate",
+  ): Promise<void> {
     if (this.disposed) {
       return;
     }
 
-    if (!this.wantsVoiceTalk) {
-      this.voiceIntentGeneration += 1;
-    }
-    this.wantsVoiceTalk = true;
-    this.clearVoiceReacquireTimer();
-    this.clearMicReleaseTimer();
+    if (!enabled) {
+      const wasPublishing =
+        this.microphonePublishingWanted ||
+        this.microphoneStartingGeneration !== null ||
+        this.microphonePublishing ||
+        Boolean(this.localAudioTrack?.enabled);
 
-    if (this.voiceTalking && this.localAudioTrack?.readyState === "live") {
-      this.onVoiceStatusChange("talking");
+      if (!wasPublishing) {
+        logDebug("p2p.voice", "publication stop ignored", {
+          localParticipantId: this.localParticipant.id,
+          peerCount: this.peers.size,
+          reason: "already-off",
+        });
+        this.sendMicrophonePublicationStateToAll(false);
+        this.onMicrophoneStatusChange("off");
+        return;
+      }
+
+      logDebug("p2p.voice", "publication stop", {
+        localParticipantId: this.localParticipant.id,
+        peerCount: this.peers.size,
+        release,
+      });
+      this.microphoneIntentGeneration += 1;
+      this.microphonePublishingWanted = false;
+      this.microphoneStartingGeneration = null;
+      this.microphonePublishing = false;
+      this.clearLocalSpeaking();
+      this.clearMicrophoneReacquireTimer();
+      this.clearMicrophoneStableTimer();
+
+      // Push to talk keeps a disabled track warm briefly for responsive repeat
+      // presses. Open mic and privacy/terminal paths release capture now.
+      if (this.localAudioTrack) {
+        this.localAudioTrack.enabled = false;
+        if (release === "immediate") {
+          this.clearMicReleaseTimer();
+          this.releaseMic();
+        } else {
+          this.scheduleMicRelease();
+        }
+      }
+
+      this.sendMicrophonePublicationStateToAll(false);
+      this.updateAudioActivitySampler();
+      this.onMicrophoneStatusChange("off");
       return;
     }
 
-    if (this.voiceStartingGeneration === this.voiceIntentGeneration) {
-      this.onVoiceStatusChange("connecting");
+    if (!this.microphonePublishingWanted) {
+      this.microphoneIntentGeneration += 1;
+    }
+    this.microphonePublishingWanted = true;
+    this.clearMicrophoneReacquireTimer();
+    this.clearMicReleaseTimer();
+
+    if (this.microphonePublishing && this.localAudioTrack?.readyState === "live") {
+      this.sendMicrophonePublicationStateToAll(true);
+      this.onMicrophoneStatusChange("on");
+      return;
+    }
+
+    if (this.microphoneStartingGeneration === this.microphoneIntentGeneration) {
+      this.onMicrophoneStatusChange("connecting");
       return;
     }
 
@@ -1208,17 +1313,17 @@ export class P2PMediaController {
     // so audio resumes near-instantly (Block 5.2).
     if (this.localAudioTrack && this.localAudioTrack.readyState === "live") {
       this.localAudioTrack.enabled = true;
-      this.voiceTalking = true;
+      this.microphonePublishing = true;
       for (const peer of this.peers.values()) {
         const needsMediaOffer = this.peerNeedsMediaOffer(peer);
         const negotiationNeeded = await this.syncPeerMedia(peer);
         if (needsMediaOffer || negotiationNeeded) {
           this.queueNegotiation(peer, "voice-resume");
         }
-        this.sendSignal(peer.remoteUserId, { kind: "voice-start" });
+        this.sendMicrophonePublicationState(peer.remoteUserId, true);
       }
       this.updateAudioActivitySampler();
-      this.onVoiceStatusChange("talking");
+      this.onMicrophoneStatusChange("on");
       logDebug("p2p.voice", "resumed warm mic", {
         localParticipantId: this.localParticipant.id,
         peerCount: this.peers.size,
@@ -1226,33 +1331,33 @@ export class P2PMediaController {
       return;
     }
 
-    await this.acquireVoiceTrack("user-request", this.voiceIntentGeneration);
+    await this.acquireMicrophoneTrack("user-request", this.microphoneIntentGeneration);
   }
 
-  private async acquireVoiceTrack(reason: string, intentGeneration: number): Promise<void> {
+  private async acquireMicrophoneTrack(reason: string, intentGeneration: number): Promise<void> {
     if (
       this.disposed ||
-      !this.wantsVoiceTalk ||
-      intentGeneration !== this.voiceIntentGeneration
+      !this.microphonePublishingWanted ||
+      intentGeneration !== this.microphoneIntentGeneration
     ) {
       return;
     }
 
     if (this.localAudioTrack?.readyState === "live") {
       this.localAudioTrack.enabled = true;
-      this.voiceTalking = true;
+      this.microphonePublishing = true;
       this.updateAudioActivitySampler();
-      this.onVoiceStatusChange("talking");
+      this.onMicrophoneStatusChange("on");
       return;
     }
 
-    if (this.voiceStartingGeneration === intentGeneration) {
-      this.onVoiceStatusChange("connecting");
+    if (this.microphoneStartingGeneration === intentGeneration) {
+      this.onMicrophoneStatusChange("connecting");
       return;
     }
 
-    this.voiceStartingGeneration = intentGeneration;
-    this.onVoiceStatusChange("connecting");
+    this.microphoneStartingGeneration = intentGeneration;
+    this.onMicrophoneStatusChange("connecting");
     this.onVoiceMessageChange(null);
     logDebug("p2p.voice", "getUserMedia start", {
       localParticipantId: this.localParticipant.id,
@@ -1266,8 +1371,8 @@ export class P2PMediaController {
       );
       if (
         this.disposed ||
-        !this.wantsVoiceTalk ||
-        intentGeneration !== this.voiceIntentGeneration
+        !this.microphonePublishingWanted ||
+        intentGeneration !== this.microphoneIntentGeneration
       ) {
         stopStream(stream);
         return;
@@ -1286,8 +1391,8 @@ export class P2PMediaController {
       );
       this.localAudioStream = stream;
       this.localAudioTrack = track;
-      this.voiceTalking = true;
-      this.scheduleVoiceStableReset();
+      this.microphonePublishing = true;
+      this.scheduleMicrophoneStableReset();
       logDebug("p2p.voice", "local track ready", {
         localParticipantId: this.localParticipant.id,
         reason,
@@ -1301,13 +1406,13 @@ export class P2PMediaController {
         if (needsMediaOffer || negotiationNeeded) {
           this.queueNegotiation(peer, "voice-start");
         }
-        this.sendSignal(peer.remoteUserId, { kind: "voice-start" });
+        this.sendMicrophonePublicationState(peer.remoteUserId, true);
       }
 
       this.updateAudioActivitySampler();
-      this.onVoiceStatusChange("talking");
+      this.onMicrophoneStatusChange("on");
     } catch (error) {
-      if (intentGeneration !== this.voiceIntentGeneration) {
+      if (intentGeneration !== this.microphoneIntentGeneration) {
         return;
       }
       logDebug("p2p.voice", "failed", {
@@ -1315,66 +1420,23 @@ export class P2PMediaController {
         error: error instanceof Error ? error.message : String(error),
         reason,
       });
-      if (this.wantsVoiceTalk && !this.disposed) {
-        this.scheduleVoiceReacquire("get-user-media-failed", error);
+      const terminalReason = classifyMicrophoneTerminalFailure(error);
+      if (terminalReason) {
+        this.failMicrophonePublication(error, terminalReason);
+      } else if (this.microphonePublishingWanted && !this.disposed) {
+        this.scheduleMicrophoneReacquire("get-user-media-failed", error);
       } else {
-        this.voiceTalking = false;
+        this.microphonePublishing = false;
         this.clearLocalSpeaking();
         this.updateAudioActivitySampler();
-        this.onVoiceStatusChange("error");
-        this.onVoiceMessageChange(formatVoiceErrorMessage(error));
+        this.onMicrophoneStatusChange("error");
+        this.onVoiceMessageChange(formatMicrophoneErrorMessage(error));
       }
     } finally {
-      if (this.voiceStartingGeneration === intentGeneration) {
-        this.voiceStartingGeneration = null;
+      if (this.microphoneStartingGeneration === intentGeneration) {
+        this.microphoneStartingGeneration = null;
       }
     }
-  }
-
-  async stopVoiceTalk(): Promise<void> {
-    const wasVoiceActive =
-      this.wantsVoiceTalk ||
-      this.voiceStartingGeneration !== null ||
-      this.voiceTalking ||
-      Boolean(this.localAudioTrack?.enabled);
-
-    if (!wasVoiceActive) {
-      logDebug("p2p.voice", "stop ignored", {
-        localParticipantId: this.localParticipant.id,
-        peerCount: this.peers.size,
-        reason: "already-idle",
-      });
-      this.onVoiceStatusChange("idle");
-      return;
-    }
-
-    logDebug("p2p.voice", "stop", {
-      localParticipantId: this.localParticipant.id,
-      peerCount: this.peers.size,
-    });
-    this.voiceIntentGeneration += 1;
-    this.wantsVoiceTalk = false;
-    this.voiceStartingGeneration = null;
-    this.voiceTalking = false;
-    this.clearLocalSpeaking();
-    this.clearVoiceReacquireTimer();
-    this.clearVoiceStableTimer();
-
-    // Mute by disabling the track (DTX sends ~no bytes) but keep it warm so a
-    // repeat press resumes instantly. Release the mic after an idle timeout for
-    // privacy (Block 5.2). The audio transceiver/sender are untouched, so this
-    // never renegotiates.
-    if (this.localAudioTrack) {
-      this.localAudioTrack.enabled = false;
-      this.scheduleMicRelease();
-    }
-
-    for (const peer of this.peers.values()) {
-      this.sendSignal(peer.remoteUserId, { kind: "voice-stop" });
-    }
-
-    this.updateAudioActivitySampler();
-    this.onVoiceStatusChange("idle");
   }
 
   async unlockAudio(): Promise<void> {
@@ -1387,7 +1449,7 @@ export class P2PMediaController {
     this.clearMicReleaseTimer();
     this.micReleaseTimerId = window.setTimeout(() => {
       this.micReleaseTimerId = null;
-      if (!this.voiceTalking && !this.disposed) {
+      if (!this.microphonePublishing && !this.disposed) {
         this.releaseMic();
       }
     }, P2P_MIC_IDLE_RELEASE_MS);
@@ -1403,14 +1465,14 @@ export class P2PMediaController {
   private handleLocalAudioTrackEnded(track: MediaStreamTrack): void {
     logDebug("p2p.voice", "local track ended", {
       localParticipantId: this.localParticipant.id,
-      wantsVoiceTalk: this.wantsVoiceTalk,
-      voiceTalking: this.voiceTalking,
+      microphonePublishingWanted: this.microphonePublishingWanted,
+      microphonePublishing: this.microphonePublishing,
     });
     if (this.localAudioTrack !== track) {
       return;
     }
 
-    this.clearVoiceStableTimer();
+    this.clearMicrophoneStableTimer();
     this.localAudioStream = null;
     this.localAudioTrack = null;
     for (const peer of this.peers.values()) {
@@ -1419,123 +1481,133 @@ export class P2PMediaController {
         .catch(() => undefined);
     }
 
-    if (this.wantsVoiceTalk && !this.disposed) {
+    if (this.microphonePublishingWanted && !this.disposed) {
       // Holding V is the user's intent. A transient MediaStreamTrack ended event
       // should recover the mic, not publish voice-stop and make the remote side
       // flicker.
-      this.voiceTalking = true;
+      this.microphonePublishing = true;
       this.clearLocalSpeaking();
       this.updateAudioActivitySampler();
-      this.onVoiceStatusChange("connecting");
-      this.scheduleVoiceReacquire("track-ended");
+      this.onMicrophoneStatusChange("connecting");
+      this.scheduleMicrophoneReacquire("track-ended");
       return;
     }
 
-    this.voiceTalking = false;
+    this.microphonePublishing = false;
     this.clearLocalSpeaking();
     this.updateAudioActivitySampler();
-    this.onVoiceStatusChange("idle");
+    this.onMicrophoneStatusChange("off");
   }
 
-  private scheduleVoiceReacquire(reason: string, error?: unknown): void {
-    if (this.disposed || !this.wantsVoiceTalk) {
+  private scheduleMicrophoneReacquire(reason: string, error?: unknown): void {
+    if (this.disposed || !this.microphonePublishingWanted) {
       return;
     }
-    if (this.voiceReacquireTimerId !== null) {
+    if (this.microphoneReacquireTimerId !== null) {
       return;
     }
 
     const now = Date.now();
-    this.voiceFailureTimestamps = [
-      ...this.voiceFailureTimestamps.filter(
-        (timestamp) => now - timestamp <= P2P_VOICE_REACQUIRE_FAILURE_WINDOW_MS,
+    this.microphoneFailureTimestamps = [
+      ...this.microphoneFailureTimestamps.filter(
+        (timestamp) => now - timestamp <= P2P_MICROPHONE_REACQUIRE_FAILURE_WINDOW_MS,
       ),
       now,
     ];
 
-    if (this.voiceFailureTimestamps.length >= P2P_VOICE_REACQUIRE_MAX_FAILURES) {
-      this.giveUpVoiceRecovery(reason, error);
+    if (this.microphoneFailureTimestamps.length >= P2P_MICROPHONE_REACQUIRE_MAX_FAILURES) {
+      this.giveUpMicrophoneRecovery(reason, error);
       return;
     }
 
     const delay = Math.min(
-      P2P_VOICE_REACQUIRE_BASE_DELAY_MS *
-        2 ** Math.max(0, this.voiceFailureTimestamps.length - 1),
-      P2P_VOICE_REACQUIRE_MAX_DELAY_MS,
+      P2P_MICROPHONE_REACQUIRE_BASE_DELAY_MS *
+        2 ** Math.max(0, this.microphoneFailureTimestamps.length - 1),
+      P2P_MICROPHONE_REACQUIRE_MAX_DELAY_MS,
     );
-    this.onVoiceStatusChange("connecting");
+    this.onMicrophoneStatusChange("connecting");
     logDebug("p2p.voice", "schedule re-acquire", {
       delay,
-      failures: this.voiceFailureTimestamps.length,
+      failures: this.microphoneFailureTimestamps.length,
       localParticipantId: this.localParticipant.id,
       reason,
     });
-    this.voiceReacquireTimerId = window.setTimeout(() => {
-      this.voiceReacquireTimerId = null;
-      if (this.disposed || !this.wantsVoiceTalk) {
+    this.microphoneReacquireTimerId = window.setTimeout(() => {
+      this.microphoneReacquireTimerId = null;
+      if (this.disposed || !this.microphonePublishingWanted) {
         return;
       }
-      void this.acquireVoiceTrack(
+      void this.acquireMicrophoneTrack(
         `reacquire:${reason}`,
-        this.voiceIntentGeneration,
+        this.microphoneIntentGeneration,
       );
     }, delay);
   }
 
-  private giveUpVoiceRecovery(reason: string, error?: unknown): void {
-    this.clearVoiceReacquireTimer();
-    this.clearVoiceStableTimer();
-    this.wantsVoiceTalk = false;
-    this.voiceIntentGeneration += 1;
-    this.voiceStartingGeneration = null;
-    this.voiceTalking = false;
-    stopStream(this.localAudioStream);
-    this.localAudioStream = null;
-    this.localAudioTrack = null;
-    logDebug("p2p.voice", "recovery give up", {
-      failures: this.voiceFailureTimestamps.length,
-      localParticipantId: this.localParticipant.id,
-      reason,
-    });
-    for (const peer of this.peers.values()) {
-      this.sendSignal(peer.remoteUserId, { kind: "voice-stop" });
-      void peer.audioTransceiver?.sender
-        .replaceTrack(null)
-        .catch(() => undefined);
-    }
-    this.clearLocalSpeaking();
-    this.updateAudioActivitySampler();
-    this.onVoiceStatusChange("error");
-    this.onVoiceMessageChange(formatVoiceErrorMessage(error));
+  private giveUpMicrophoneRecovery(reason: string, error?: unknown): void {
+    this.failMicrophonePublication(error, "recovery-exhausted", reason);
   }
 
-  private scheduleVoiceStableReset(): void {
-    this.clearVoiceStableTimer();
-    this.voiceStableTimerId = window.setTimeout(() => {
-      this.voiceStableTimerId = null;
-      this.voiceFailureTimestamps = [];
+  private failMicrophonePublication(
+    error: unknown,
+    reason: MicrophoneTerminalFailureReason,
+    recoveryReason?: string,
+  ): void {
+    this.clearMicrophoneReacquireTimer();
+    this.clearMicrophoneStableTimer();
+    this.clearMicReleaseTimer();
+    this.microphonePublishingWanted = false;
+    this.microphoneIntentGeneration += 1;
+    this.microphoneStartingGeneration = null;
+    this.microphonePublishing = false;
+    this.releaseMic();
+    logDebug("p2p.voice", "terminal failure", {
+      failures: this.microphoneFailureTimestamps.length,
+      localParticipantId: this.localParticipant.id,
+      reason,
+      recoveryReason: recoveryReason ?? null,
+      errorName: microphoneErrorName(error) || null,
+    });
+    this.sendMicrophonePublicationStateToAll(false);
+    this.clearLocalSpeaking();
+    this.updateAudioActivitySampler();
+    const message = formatMicrophoneErrorMessage(error);
+    this.onMicrophoneStatusChange("error");
+    this.onVoiceMessageChange(message);
+    this.onMicrophoneTerminalFailure({
+      errorName: microphoneErrorName(error) || null,
+      message,
+      reason,
+    });
+  }
+
+  private scheduleMicrophoneStableReset(): void {
+    this.clearMicrophoneStableTimer();
+    this.microphoneStableTimerId = window.setTimeout(() => {
+      this.microphoneStableTimerId = null;
+      this.microphoneFailureTimestamps = [];
       logDebug("p2p.voice", "stable reset", {
         localParticipantId: this.localParticipant.id,
       });
-    }, P2P_VOICE_STABLE_RESET_MS);
+    }, P2P_MICROPHONE_STABLE_RESET_MS);
   }
 
-  private clearVoiceReacquireTimer(): void {
-    if (this.voiceReacquireTimerId === null) {
+  private clearMicrophoneReacquireTimer(): void {
+    if (this.microphoneReacquireTimerId === null) {
       return;
     }
 
-    window.clearTimeout(this.voiceReacquireTimerId);
-    this.voiceReacquireTimerId = null;
+    window.clearTimeout(this.microphoneReacquireTimerId);
+    this.microphoneReacquireTimerId = null;
   }
 
-  private clearVoiceStableTimer(): void {
-    if (this.voiceStableTimerId === null) {
+  private clearMicrophoneStableTimer(): void {
+    if (this.microphoneStableTimerId === null) {
       return;
     }
 
-    window.clearTimeout(this.voiceStableTimerId);
-    this.voiceStableTimerId = null;
+    window.clearTimeout(this.microphoneStableTimerId);
+    this.microphoneStableTimerId = null;
   }
 
   private releaseMic(): void {
@@ -1547,7 +1619,7 @@ export class P2PMediaController {
         .replaceTrack(null)
         .catch(() => undefined);
     }
-    logDebug("p2p.voice", "released idle mic", {
+    logDebug("p2p.voice", "released microphone", {
       localParticipantId: this.localParticipant.id,
     });
   }
@@ -2168,7 +2240,7 @@ export class P2PMediaController {
   private updateAudioActivitySampler(): void {
     const shouldRun =
       !this.disposed &&
-      (this.voiceTalking || this.remoteAudioExpectedByPeer.size > 0);
+      (this.microphonePublishing || this.remoteAudioExpectedByPeer.size > 0);
 
     if (shouldRun && this.audioActivityTimerId === null) {
       this.audioActivityTimerId = window.setInterval(() => {
@@ -2216,7 +2288,7 @@ export class P2PMediaController {
   private async sampleLocalAudioActivityOnce(): Promise<void> {
     const track = this.localAudioTrack;
     if (
-      !this.voiceTalking ||
+      !this.microphonePublishing ||
       !track ||
       track.readyState !== "live" ||
       !track.enabled
@@ -2250,7 +2322,7 @@ export class P2PMediaController {
 
     if (
       this.disposed ||
-      !this.voiceTalking ||
+      !this.microphonePublishing ||
       this.localAudioTrack !== track ||
       track.readyState !== "live" ||
       !track.enabled
@@ -2580,14 +2652,10 @@ export class P2PMediaController {
     // The Worker snapshot is authoritative and can reset ephemeral camera state
     // during a rejoin. Republish actual local intent only after that snapshot.
     this.onCameraStatus(this.publicCameraEnabled);
-    for (const peer of this.peers.values()) {
-      this.sendSignal(peer.remoteUserId, {
-        kind:
-          this.voiceTalking || this.wantsVoiceTalk
-            ? "voice-start"
-            : "voice-stop",
-      });
-    }
+    this.sendMicrophonePublicationStateToAll(
+      this.isMicrophonePublicationExpected(),
+      true,
+    );
 
     if (!ready.reconnect) {
       return;
@@ -2696,6 +2764,13 @@ export class P2PMediaController {
     });
     this.closePeer(remoteUserId, true, true);
     const replacement = this.ensurePeer(remoteUserId);
+    // `bye` clears the remote publication expectation. The replacement peer
+    // must therefore announce the current state again, even though the local
+    // publication intent itself survived the technical peer rebuild.
+    this.microphonePublicationSignaledByPeer.delete(remoteUserId);
+    if (this.isMicrophonePublicationExpected()) {
+      this.sendMicrophonePublicationState(remoteUserId, true, true);
+    }
     await this.syncPeerMedia(replacement);
     if (this.shouldInitiateOffers(replacement)) {
       await this.createAndSendOffer(replacement);
@@ -2741,15 +2816,16 @@ export class P2PMediaController {
 
     this.disposed = true;
     this.cameraIntentGeneration += 1;
-    this.voiceIntentGeneration += 1;
+    this.microphoneIntentGeneration += 1;
     this.wantsCamera = false;
-    this.wantsVoiceTalk = false;
+    this.microphonePublishingWanted = false;
+    this.microphonePublishing = false;
     this.cameraStartingGeneration = null;
-    this.voiceStartingGeneration = null;
+    this.microphoneStartingGeneration = null;
     this.clearCameraReacquireTimer();
     this.clearCameraStableTimer();
-    this.clearVoiceReacquireTimer();
-    this.clearVoiceStableTimer();
+    this.clearMicrophoneReacquireTimer();
+    this.clearMicrophoneStableTimer();
     this.clearMicReleaseTimer();
     if (this.reconcileTimerId !== null) {
       window.clearInterval(this.reconcileTimerId);
@@ -2816,7 +2892,7 @@ export class P2PMediaController {
     this.publishActiveSpeakerIds();
     this.cameraState = "off";
     this.setPublicCameraEnabled(false, "disconnect");
-    this.onVoiceStatusChange("idle");
+    this.onMicrophoneStatusChange("off");
     this.onVoiceMessageChange(null);
   }
 
@@ -3678,6 +3754,9 @@ export class P2PMediaController {
     }
 
     this.peers.delete(remoteUserId);
+    if (!preserveSignalSource) {
+      this.microphonePublicationSignaledByPeer.delete(remoteUserId);
+    }
     this.clearPeerDisconnectTimer(peer);
     this.clearPeerLingerTimer(peer);
     peer.pc.close();
@@ -4311,17 +4390,46 @@ function formatCameraErrorMessage(error: unknown): string {
   return "Camera is unavailable. Close other apps using it and try again.";
 }
 
-function formatVoiceErrorMessage(error: unknown): string {
-  const name =
-    error && typeof error === "object" && "name" in error
-      ? String((error as { name?: unknown }).name)
-      : "";
+function microphoneErrorName(error: unknown): string {
+  return error && typeof error === "object" && "name" in error
+    ? String((error as { name?: unknown }).name)
+    : "";
+}
+
+export function classifyMicrophoneTerminalFailure(
+  error: unknown,
+): MicrophoneTerminalFailureReason | null {
+  const name = microphoneErrorName(error);
+  if (
+    name === "NotAllowedError" ||
+    name === "PermissionDeniedError"
+  ) {
+    return "permission-denied";
+  }
+  if (name === "SecurityError") {
+    return "security";
+  }
+  if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+    return "device-not-found";
+  }
+  if (
+    name === "OverconstrainedError" ||
+    name === "ConstraintNotSatisfiedError" ||
+    name === "TypeError"
+  ) {
+    return "constraints";
+  }
+  return null;
+}
+
+function formatMicrophoneErrorMessage(error: unknown): string {
+  const name = microphoneErrorName(error);
   if (
     name === "NotAllowedError" ||
     name === "PermissionDeniedError" ||
     name === "SecurityError"
   ) {
-    return "Microphone access is blocked. Allow microphone permission and try again.";
+    return "Microphone access is blocked. Allow microphone access and try again.";
   }
   if (name === "NotFoundError" || name === "DevicesNotFoundError") {
     return "Microphone not found. Connect a microphone and try again.";
@@ -4332,7 +4440,10 @@ function formatVoiceErrorMessage(error: unknown): string {
   if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") {
     return "Microphone settings are not supported by this device.";
   }
-  return "Microphone is unavailable. Release V and try again.";
+  if (name === "TypeError") {
+    return "Microphone settings are invalid. Reload the page and try again.";
+  }
+  return "Microphone is unavailable. Turn it off and try again.";
 }
 
 function toP2PIceCandidate(

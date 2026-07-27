@@ -98,8 +98,9 @@ class Harness {
             userId: self.id,
           });
         },
+        onMicrophoneStatusChange: () => undefined,
+        onMicrophoneTerminalFailure: () => undefined,
         onVoiceMessageChange: () => undefined,
-        onVoiceStatusChange: () => undefined,
         onVideosChange: (videos) => {
           // Attach remote video elements to the DOM so the browser decodes
           // incoming frames (the metric the TTFM assertion reads).
@@ -297,11 +298,11 @@ class Harness {
   }
 
   async startVoice(): Promise<void> {
-    await this.controller?.startVoiceTalk();
+    await this.controller?.setMicrophonePublishing(true, "warm");
   }
 
   async stopVoice(): Promise<void> {
-    await this.controller?.stopVoiceTalk();
+    await this.controller?.setMicrophonePublishing(false, "warm");
   }
 
   dropNextSignal(kind: P2PSignal["kind"]): void {

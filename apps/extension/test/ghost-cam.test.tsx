@@ -1,6 +1,8 @@
 import type { Participant } from "@anidachi/protocol";
 import type {
   IncomingP2PSignal,
+  MicrophoneStatus,
+  MicrophoneTerminalFailure,
   SignalingTransportReady,
 } from "../src/media-types";
 import { act } from "react";
@@ -11,6 +13,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const mockP2PMedia = vi.hoisted(() => {
   const options: Array<{
+    onMicrophoneStatusChange: (status: MicrophoneStatus) => void;
+    onMicrophoneTerminalFailure: (
+      failure: MicrophoneTerminalFailure,
+    ) => void;
     sendSignal: (
       toUserId: string,
       signal: IncomingP2PSignal["signal"],
@@ -23,8 +29,7 @@ const mockP2PMedia = vi.hoisted(() => {
     handleSignalingTransportReady: ReturnType<typeof vi.fn>;
     hasPeer: ReturnType<typeof vi.fn>;
     setCameraEnabled: ReturnType<typeof vi.fn>;
-    startVoiceTalk: ReturnType<typeof vi.fn>;
-    stopVoiceTalk: ReturnType<typeof vi.fn>;
+    setMicrophonePublishing: ReturnType<typeof vi.fn>;
     unlockAudio: ReturnType<typeof vi.fn>;
     updateParticipants: ReturnType<typeof vi.fn>;
   }> = [];
@@ -39,8 +44,7 @@ const mockP2PMedia = vi.hoisted(() => {
       handleSignalingTransportReady: vi.fn(() => Promise.resolve()),
       hasPeer: vi.fn(() => false),
       setCameraEnabled: vi.fn(() => Promise.resolve()),
-      startVoiceTalk: vi.fn(() => Promise.resolve()),
-      stopVoiceTalk: vi.fn(() => Promise.resolve()),
+      setMicrophonePublishing: vi.fn(() => Promise.resolve()),
       unlockAudio: vi.fn(() => Promise.resolve()),
       updateParticipants: vi.fn(),
     };
@@ -68,7 +72,7 @@ vi.mock("../src/p2p-media", () => ({
 }));
 
 import { canReceiveP2PSignalFromParticipant } from "../src/p2p-media";
-import { useGhostCam } from "../src/ghost-cam";
+import { type GhostCamSession, useGhostCam } from "../src/ghost-cam";
 
 function participant(
   id: string,
@@ -97,31 +101,39 @@ const noopCameraStatus = vi.fn();
 const noopSendP2PSignal = vi.fn();
 
 function GhostCamHarness({
+  connected = true,
   incomingP2PSignals = [],
+  onSession,
   participant: activeParticipant,
   participants,
+  roomId = "room-1",
   signalingTransportReady = null,
+  sourceGeneration = 1,
 }: {
+  connected?: boolean;
   incomingP2PSignals?: IncomingP2PSignal[];
+  onSession?: (session: GhostCamSession) => void;
   participant: Participant;
   participants: Participant[];
+  roomId?: string;
   signalingTransportReady?: SignalingTransportReady | null;
+  sourceGeneration?: number;
 }) {
-  useGhostCam({
+  const session = useGhostCam({
     cameraEnabled: true,
-    connected: true,
+    connected,
     incomingP2PSignals,
     onCameraStatus: noopCameraStatus,
     participant: activeParticipant,
     participants,
     roomGeneration: 1,
-    roomId: "room-1",
+    roomId,
     roomToken: "token-1",
     sendP2PSignal: noopSendP2PSignal,
     signalingTransportReady,
-    sourceGeneration: 1,
-    voiceTalkActive: false,
+    sourceGeneration,
   });
+  onSession?.(session);
   return null;
 }
 
@@ -322,6 +334,227 @@ describe("useGhostCam P2P session lifecycle", () => {
       { kind: "bye" },
       "host-media-a",
     );
+
+    await act(async () => root.unmount());
+  });
+
+  it("exposes generic microphone publication and typed terminal failures", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    let session: GhostCamSession | null = null;
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    await act(async () => {
+      await session?.setMicrophonePublishing(true, "immediate");
+    });
+    expect(
+      mockP2PMedia.controllers[0].setMicrophonePublishing,
+    ).toHaveBeenCalledWith(true, "immediate");
+
+    const failure = {
+      errorName: "NotAllowedError",
+      message: "Microphone access is blocked.",
+      reason: "permission-denied",
+    } satisfies MicrophoneTerminalFailure;
+    await act(async () => {
+      mockP2PMedia.options[0].onMicrophoneTerminalFailure(failure);
+      mockP2PMedia.options[0].onMicrophoneStatusChange("error");
+    });
+
+    const renderedSession = session as GhostCamSession | null;
+    if (!renderedSession) {
+      throw new Error("Expected a rendered ghost-cam session.");
+    }
+    expect(renderedSession.microphoneTerminalFailure).toEqual(failure);
+    expect(renderedSession.microphoneStatus).toBe("error");
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+          sourceGeneration={2}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    expect(mockP2PMedia.controllers).toHaveLength(2);
+    expect(
+      mockP2PMedia.controllers[1].setMicrophonePublishing,
+    ).toHaveBeenCalledWith(false, "immediate");
+
+    await act(async () => root.unmount());
+  });
+
+  it("restores explicit microphone publication after a same-room controller replacement", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    let session: GhostCamSession | null = null;
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+          sourceGeneration={1}
+        />,
+      );
+    });
+    await act(async () => undefined);
+    await act(async () => {
+      await session?.setMicrophonePublishing(true, "warm");
+    });
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+          sourceGeneration={2}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    expect(mockP2PMedia.controllers).toHaveLength(2);
+    expect(
+      mockP2PMedia.controllers[1].setMicrophonePublishing,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      mockP2PMedia.controllers[1].setMicrophonePublishing,
+    ).toHaveBeenCalledWith(true, "warm");
+
+    await act(async () => root.unmount());
+  });
+
+  it("does not carry microphone publication into another room", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    let session: GhostCamSession | null = null;
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+          roomId="room-1"
+        />,
+      );
+    });
+    await act(async () => undefined);
+    await act(async () => {
+      await session?.setMicrophonePublishing(true, "warm");
+    });
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+          roomId="room-2"
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    expect(mockP2PMedia.controllers).toHaveLength(2);
+    expect(
+      mockP2PMedia.controllers[1].setMicrophonePublishing,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      mockP2PMedia.controllers[1].setMicrophonePublishing,
+    ).toHaveBeenCalledWith(false, "immediate");
+
+    await act(async () => root.unmount());
+  });
+
+  it("does not restore microphone publication after leaving and rejoining", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const host = participant("host", "Host");
+    let session: GhostCamSession | null = null;
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+    await act(async () => {
+      await session?.setMicrophonePublishing(true, "warm");
+    });
+
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          connected={false}
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+    await act(async () => {
+      root.render(
+        <GhostCamHarness
+          onSession={(value) => {
+            session = value;
+          }}
+          participant={host}
+          participants={[host]}
+        />,
+      );
+    });
+    await act(async () => undefined);
+
+    expect(mockP2PMedia.controllers).toHaveLength(2);
+    expect(
+      mockP2PMedia.controllers[1].setMicrophonePublishing,
+    ).toHaveBeenCalledWith(false, "immediate");
 
     await act(async () => root.unmount());
   });

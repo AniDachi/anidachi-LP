@@ -60,7 +60,7 @@ import {
   saveDiagnosticsFromPage,
 } from "./diagnostic-log";
 import { HOLD_FIRE_SUPER_REACTION_EXPERIMENT, normalizeExperimentFlag } from "./experiments";
-import { type GhostVideo, type LiveVoiceStatus, useGhostCam } from "./ghost-cam";
+import { type GhostVideo, type MicrophoneStatus, useGhostCam } from "./ghost-cam";
 import { getGhostCamGapPx } from "./ghost-cam-size";
 import { getHotkeyAction, shouldStopVoiceTalkOnWindowBlur } from "./hotkeys";
 import type {
@@ -1849,7 +1849,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     onCameraStatus: sendCameraStatus,
     sendP2PSignal,
     signalingTransportReady,
-    voiceTalkActive: liveVoiceTalking,
   });
   const ghostVideos = ghostCamSession.videos;
   const cameraVideoByParticipantId = useMemo(
@@ -1940,7 +1939,10 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     .join(" ");
   const liveVoiceActiveSpeakerIds = ghostCamSession.activeSpeakerIds;
   const remoteLiveVoiceActive = liveVoiceActiveSpeakerIds.some((id) => id !== participant?.id);
-  const liveVoiceStatusText = getLiveVoiceStatusText(ghostCamSession.voiceStatus, liveVoiceTalking);
+  const liveVoiceStatusText = getLiveVoiceStatusText(
+    ghostCamSession.microphoneStatus,
+    liveVoiceTalking,
+  );
 
   const isCurrentHost = useCallback((list = participantsRef.current) => {
     const current = participantRef.current;
@@ -3735,25 +3737,43 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
     liveVoiceKeyDownRef.current = true;
     setLiveVoiceTalking(true);
-    void ghostCamSession.startVoiceTalk();
-  }, [ghostCamSession.startVoiceTalk, localHasMediaSeat, localMediaSeatState, roomId]);
+    void ghostCamSession.setMicrophonePublishing(true, "warm");
+  }, [
+    ghostCamSession.setMicrophonePublishing,
+    localHasMediaSeat,
+    localMediaSeatState,
+    roomId,
+  ]);
 
   const stopLiveVoiceTalk = useCallback(() => {
     liveVoiceKeyDownRef.current = false;
     setLiveVoiceTalking(false);
-    void ghostCamSession.stopVoiceTalk();
-  }, [ghostCamSession.stopVoiceTalk]);
+    void ghostCamSession.setMicrophonePublishing(false, "warm");
+  }, [ghostCamSession.setMicrophonePublishing]);
 
   const stopLiveVoiceTalkForUnmount = useCallback(() => {
     liveVoiceKeyDownRef.current = false;
-    void ghostCamSession.stopVoiceTalk();
-  }, [ghostCamSession.stopVoiceTalk]);
+    void ghostCamSession.setMicrophonePublishing(false, "immediate");
+  }, [ghostCamSession.setMicrophonePublishing]);
 
   useEffect(() => {
-    if (!localHasMediaSeat && liveVoiceTalking) {
-      stopLiveVoiceTalk();
+    if (localHasMediaSeat) {
+      return;
     }
-  }, [liveVoiceTalking, localHasMediaSeat, stopLiveVoiceTalk]);
+
+    liveVoiceKeyDownRef.current = false;
+    setLiveVoiceTalking(false);
+    void ghostCamSession.setMicrophonePublishing(false, "immediate");
+  }, [ghostCamSession.setMicrophonePublishing, localHasMediaSeat]);
+
+  useEffect(() => {
+    if (!ghostCamSession.microphoneTerminalFailure) {
+      return;
+    }
+
+    liveVoiceKeyDownRef.current = false;
+    setLiveVoiceTalking(false);
+  }, [ghostCamSession.microphoneTerminalFailure]);
 
   const unlockLiveVoicePlayback = useCallback(() => {
     void ghostCamSession.unlockAudio();
@@ -5467,7 +5487,10 @@ function clampNumber(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-function getLiveVoiceStatusText(status: LiveVoiceStatus, talking: boolean): string {
+function getLiveVoiceStatusText(
+  status: MicrophoneStatus,
+  talking: boolean,
+): string {
   if (status === "error") {
     return "Mic blocked";
   }
@@ -5476,8 +5499,12 @@ function getLiveVoiceStatusText(status: LiveVoiceStatus, talking: boolean): stri
     return "Connecting";
   }
 
-  if (talking || status === "talking") {
+  if (talking) {
     return "Talking";
+  }
+
+  if (status === "on") {
+    return "Mic on";
   }
 
   return "Hold V";

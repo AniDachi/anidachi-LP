@@ -10,6 +10,19 @@ export type VoiceMode = "push-to-talk" | "open-mic";
 
 export type MicrophoneStatus = "off" | "connecting" | "on" | "error";
 
+export type MicrophoneTerminalFailureReason =
+  | "constraints"
+  | "device-not-found"
+  | "permission-denied"
+  | "recovery-exhausted"
+  | "security";
+
+export interface MicrophoneTerminalFailure {
+  errorName: string | null;
+  message: string;
+  reason: MicrophoneTerminalFailureReason;
+}
+
 export interface MicrophoneIntent {
   mode: VoiceMode;
   openMicEnabled: boolean;
@@ -31,8 +44,6 @@ export function shouldPublishMicrophone(
     ? intent.openMicEnabled
     : intent.pushToTalkHeld;
 }
-
-export type LiveVoiceStatus = "idle" | "connecting" | "talking" | "error";
 
 export type RoomSendDisposition = "sent" | "queued" | "dropped";
 
