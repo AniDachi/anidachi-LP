@@ -111,6 +111,7 @@ import {
 import { PanelCameraControl, RoomPeopleSection } from "./overlay-room-media-controls";
 import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
 import { PanelMicrophoneControl, VoiceSettingsPanel } from "./overlay-voice-controls";
+import { beginVoiceReactionDucking } from "./overlay-voice-ducking";
 import {
   createVoiceSessionState,
   isVoiceSessionPublishing,
@@ -351,7 +352,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const adapterActiveRef = useRef(adapterActive);
   adapterActiveRef.current = adapterActive;
   const stopVoiceRef = useRef<(() => void) | null>(null);
-  const restoreLiveVoiceDuckingRef = useRef<(() => void) | null>(null);
   const restoreVoiceDuckingRef = useRef<(() => void) | null>(null);
   const pendingVoiceTextRef = useRef<string | null>(null);
   const voiceCaptureActiveRef = useRef(false);
@@ -2141,7 +2141,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const localLiveVoiceActive = Boolean(
     participant?.id && liveVoiceActiveSpeakerIds.includes(participant.id),
   );
-  const remoteLiveVoiceActive = liveVoiceActiveSpeakerIds.some((id) => id !== participant?.id);
   const microphonePublishingWanted = isVoiceSessionPublishing(voiceSession);
 
   const isCurrentHost = useCallback((list = participantsRef.current) => {
@@ -3893,33 +3892,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     restoreVoiceDuckingRef.current = null;
   }, []);
 
-  useEffect(() => {
-    restoreLiveVoiceDuckingRef.current?.();
-    restoreLiveVoiceDuckingRef.current = null;
-
-    if (!adapterActive) {
-      return undefined;
-    }
-
-    if (microphonePublishingWanted) {
-      restoreLiveVoiceDuckingRef.current = adapter.duckVolume(0.42);
-      return () => {
-        restoreLiveVoiceDuckingRef.current?.();
-        restoreLiveVoiceDuckingRef.current = null;
-      };
-    }
-
-    if (remoteLiveVoiceActive) {
-      restoreLiveVoiceDuckingRef.current = adapter.duckVolume(0.68);
-      return () => {
-        restoreLiveVoiceDuckingRef.current?.();
-        restoreLiveVoiceDuckingRef.current = null;
-      };
-    }
-
-    return undefined;
-  }, [adapter, adapterActive, microphonePublishingWanted, remoteLiveVoiceActive]);
-
   const startPushToTalk = useCallback(() => {
     if (voiceSession.mode !== "push-to-talk" || !roomId) {
       return;
@@ -4008,7 +3980,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     pendingVoiceTextRef.current = null;
     voiceCaptureActiveRef.current = true;
     voiceStoppingRef.current = false;
-    restoreVoiceDuckingRef.current = adapter.duckVolume();
+    restoreVoiceDuckingRef.current = beginVoiceReactionDucking(adapter);
     setVoiceMessage(null);
     setVoiceListening(true);
 
