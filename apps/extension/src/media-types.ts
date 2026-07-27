@@ -6,6 +6,32 @@ export interface GhostVideo {
   local: boolean;
 }
 
+export type VoiceMode = "push-to-talk" | "open-mic";
+
+export type MicrophoneStatus = "off" | "connecting" | "on" | "error";
+
+export interface MicrophoneIntent {
+  mode: VoiceMode;
+  openMicEnabled: boolean;
+  pushToTalkHeld: boolean;
+}
+
+export function shouldPublishMicrophone(
+  intent: MicrophoneIntent,
+  context: {
+    roomActive: boolean;
+    hasMediaSeat: boolean;
+  },
+): boolean {
+  if (!context.roomActive || !context.hasMediaSeat) {
+    return false;
+  }
+
+  return intent.mode === "open-mic"
+    ? intent.openMicEnabled
+    : intent.pushToTalkHeld;
+}
+
 export type LiveVoiceStatus = "idle" | "connecting" | "talking" | "error";
 
 export type RoomSendDisposition = "sent" | "queued" | "dropped";
