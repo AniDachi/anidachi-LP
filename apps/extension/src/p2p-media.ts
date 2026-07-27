@@ -625,6 +625,7 @@ interface P2PPeer {
   pc: RTCPeerConnection;
   polite: boolean;
   recentSignalFingerprints: Map<string, number>;
+  renegotiationRetryTimerId: number | null;
   remoteVideoExpected: boolean;
   remoteVideoStallSamples: number;
   remoteUserId: string;
@@ -650,6 +651,30 @@ interface P2PMediaControllerOptions {
     signal: P2PSignal,
     metadata: LocalP2PSignalMetadata,
   ) => RoomSendDisposition;
+}
+
+export interface P2PMediaPeerDiagnostics {
+  remoteUserId: string;
+  connectionState: RTCPeerConnectionState;
+  iceRestartCount: number;
+  iceConnectionState: RTCIceConnectionState;
+  signalingState: RTCSignalingState;
+  health: PeerHealth;
+  remoteAudioExpected: boolean;
+  remoteAudioActivity: AudioSpeechActivity;
+  remoteAudioFlowActivity: AudioTransportFlow;
+  remoteVideoActivity: RemoteVideoActivity;
+  participantAudioOutput: ParticipantAudioPreference;
+  statsStatus: "available" | "unavailable";
+  stats: Record<string, unknown>;
+}
+
+export interface P2PMediaDiagnostics {
+  microphonePublishingWanted: boolean;
+  microphonePublishing: boolean;
+  localSpeaking: boolean;
+  remoteAudioExpectedIds: string[];
+  peers: P2PMediaPeerDiagnostics[];
 }
 
 type IceCandidateStatsSnapshot = RTCStats & {
@@ -2097,10 +2122,16 @@ export class P2PMediaController {
     }
   }
 
-  async getStats(): Promise<Record<string, unknown>> {
+  async getStats(): Promise<P2PMediaDiagnostics> {
     const peers = await Promise.all(
       Array.from(this.peers.values()).map(async (peer) => {
-        const stats = summarizeStats(await peer.pc.getStats());
+        let stats: Record<string, unknown> = {};
+        let statsStatus: P2PMediaPeerDiagnostics["statsStatus"] = "available";
+        try {
+          stats = summarizeStats(await peer.pc.getStats());
+        } catch {
+          statsStatus = "unavailable";
+        }
         const rtt = (
           stats.candidatePair as { currentRoundTripTime?: number } | undefined
         )?.currentRoundTripTime;
@@ -2111,6 +2142,9 @@ export class P2PMediaController {
           iceConnectionState: peer.pc.iceConnectionState,
           signalingState: peer.pc.signalingState,
           health: classifyPeerHealth(peer.pc.connectionState, rtt),
+          remoteAudioExpected: this.remoteAudioExpectedByPeer.has(
+            peer.remoteUserId,
+          ),
           remoteAudioActivity:
             this.remoteAudioActivityByPeer.get(peer.remoteUserId) ?? "unknown",
           remoteAudioFlowActivity:
@@ -2118,12 +2152,23 @@ export class P2PMediaController {
             "unknown",
           remoteVideoActivity:
             this.remoteVideoActivityByPeer.get(peer.remoteUserId) ?? "unknown",
+          participantAudioOutput: {
+            ...(this.participantAudioOutputPreferences.get(peer.remoteUserId) ??
+              getDefaultParticipantAudioPreference()),
+          },
+          statsStatus,
           stats,
         };
       }),
     );
 
-    return { peers };
+    return {
+      microphonePublishingWanted: this.microphonePublishingWanted,
+      microphonePublishing: this.microphonePublishing,
+      localSpeaking: this.localSpeaking,
+      remoteAudioExpectedIds: [...this.remoteAudioExpectedByPeer].sort(),
+      peers,
+    };
   }
 
   /** Classify each peer's health and log transitions for observability (Block 5.4). */
@@ -2971,6 +3016,7 @@ export class P2PMediaController {
       pc,
       polite: isPoliteP2PPeer(this.localParticipant.id, remoteUserId),
       recentSignalFingerprints: new Map(),
+      renegotiationRetryTimerId: null,
       remoteVideoExpected: false,
       remoteVideoStallSamples: 0,
       remoteUserId,
@@ -3475,8 +3521,8 @@ export class P2PMediaController {
     }
 
     if (!this.shouldInitiateOffers(peer)) {
-      peer.needsNegotiation = false;
-      this.requestRemoteRenegotiation(peer, _reason);
+      peer.needsNegotiation =
+        this.requestRemoteRenegotiation(peer, _reason) !== "sent";
       return;
     }
 
@@ -3502,8 +3548,8 @@ export class P2PMediaController {
 
   private async createAndSendOffer(peer: P2PPeer): Promise<void> {
     if (!this.shouldInitiateOffers(peer)) {
-      peer.needsNegotiation = false;
-      this.requestRemoteRenegotiation(peer, "offer-attempt");
+      peer.needsNegotiation =
+        this.requestRemoteRenegotiation(peer, "offer-attempt") !== "sent";
       return;
     }
 
@@ -3565,7 +3611,12 @@ export class P2PMediaController {
       remoteUserId: peer.remoteUserId,
       summary: summarizeP2PSdp(peer.pc.localDescription?.sdp ?? ""),
     });
-    return this.sendLocalDescription(peer);
+    const disposition = this.sendLocalDescription(peer);
+    if (disposition !== "dropped") {
+      peer.needsNegotiation = false;
+      this.clearPeerRenegotiationRetryTimer(peer);
+    }
+    return disposition;
   }
 
   private sendLocalDescription(peer: P2PPeer): RoomSendDisposition {
@@ -3807,6 +3858,7 @@ export class P2PMediaController {
     }
     this.clearPeerDisconnectTimer(peer);
     this.clearPeerLingerTimer(peer);
+    this.clearPeerRenegotiationRetryTimer(peer);
     peer.pc.close();
     if (!preserveSignalSource) {
       this.senderConnectionIdsByPeer.delete(remoteUserId);
@@ -4046,9 +4098,14 @@ export class P2PMediaController {
       now - peer.lastRenegotiationRequestAt <
         P2P_RENEGOTIATE_REQUEST_COOLDOWN_MS
     ) {
-      return "dropped";
+      const retryAfterMs =
+        P2P_RENEGOTIATE_REQUEST_COOLDOWN_MS -
+        (now - peer.lastRenegotiationRequestAt);
+      this.schedulePeerRenegotiationRetry(peer, reason, retryAfterMs);
+      return "queued";
     }
 
+    this.clearPeerRenegotiationRetryTimer(peer);
     peer.lastRenegotiationRequestAt = now;
     logDebug("p2p.negotiation", "request remote renegotiate", {
       localParticipantId: this.localParticipant.id,
@@ -4056,6 +4113,50 @@ export class P2PMediaController {
       reason,
     });
     return this.sendSignal(peer.remoteUserId, { kind: "renegotiate" });
+  }
+
+  private schedulePeerRenegotiationRetry(
+    peer: P2PPeer,
+    reason: string,
+    delayMs: number,
+  ): void {
+    if (
+      this.disposed ||
+      this.peers.get(peer.remoteUserId) !== peer ||
+      peer.pc.signalingState === "closed" ||
+      peer.renegotiationRetryTimerId !== null
+    ) {
+      return;
+    }
+
+    logDebug("p2p.negotiation", "defer remote renegotiate", {
+      delayMs,
+      localParticipantId: this.localParticipant.id,
+      reason,
+      remoteUserId: peer.remoteUserId,
+    });
+    peer.renegotiationRetryTimerId = window.setTimeout(() => {
+      peer.renegotiationRetryTimerId = null;
+      if (
+        this.disposed ||
+        this.peers.get(peer.remoteUserId) !== peer ||
+        peer.pc.signalingState === "closed" ||
+        !peer.needsNegotiation
+      ) {
+        return;
+      }
+
+      this.queueNegotiation(peer, `cooldown-retry:${reason}`);
+    }, Math.max(0, delayMs));
+  }
+
+  private clearPeerRenegotiationRetryTimer(peer: P2PPeer): void {
+    if (peer.renegotiationRetryTimerId === null) {
+      return;
+    }
+
+    window.clearTimeout(peer.renegotiationRetryTimerId);
+    peer.renegotiationRetryTimerId = null;
   }
 
   private requestRemoteIceRestart(peer: P2PPeer, reason: string): void {

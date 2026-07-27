@@ -3686,37 +3686,58 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
   const saveDiagnostics = async (mode: DiagnosticMode) => {
     setDiagnosticStatus(`Saving ${mode}...`);
-    logDebug("debug", "diagnostics save requested", {
-      mode,
-      entries: getDebugEntries().length,
-      roomId,
-      status,
-      video: videoDebugSnapshot(adapter.video),
-    });
+    try {
+      const p2pDiagnostics = await ghostCamSession.getDiagnostics();
+      const voiceDiagnostics = {
+        mode: voiceSession.mode,
+        microphoneStatus: ghostCamSession.microphoneStatus,
+        microphonePublishingWanted,
+        localSpeaking: localLiveVoiceActive,
+        p2p: p2pDiagnostics,
+      };
+      logDebug("debug", "diagnostics save requested", {
+        mode,
+        entries: getDebugEntries().length,
+        roomId,
+        status,
+        video: videoDebugSnapshot(adapter.video),
+        voice: voiceDiagnostics,
+      });
 
-    const pageDebugText = mode === "light" ? getCompactDebugLogText() : getDebugLogText();
-    const pageDebug = JSON.parse(pageDebugText) as unknown;
-    const response = await saveDiagnosticsFromPage(mode, {
-      mode,
-      url: location.href,
-      title: document.title,
-      visibilityState: document.visibilityState,
-      adapterId: adapter.id,
-      roomId,
-      status,
-      hasParticipant: Boolean(participant),
-      participantId: participant?.id,
-      video: videoDebugSnapshot(adapter.video),
-      pageDebug,
-    });
+      const pageDebugText =
+        mode === "light" ? getCompactDebugLogText() : getDebugLogText();
+      const pageDebug = JSON.parse(pageDebugText) as unknown;
+      const response = await saveDiagnosticsFromPage(mode, {
+        mode,
+        url: location.href,
+        title: document.title,
+        visibilityState: document.visibilityState,
+        adapterId: adapter.id,
+        roomId,
+        status,
+        hasParticipant: Boolean(participant),
+        participantId: participant?.id,
+        video: videoDebugSnapshot(adapter.video),
+        voice: voiceDiagnostics,
+        pageDebug,
+      });
 
-    if (!response.ok) {
-      setDiagnosticStatus(response.error);
-      return;
+      if (!response.ok) {
+        setDiagnosticStatus(response.error);
+        return;
+      }
+
+      setDebugEntriesCount(getDebugEntries().length);
+      setDiagnosticStatus(
+        `Save dialog opened for ${response.filename ?? `${mode} diagnostics`}`,
+      );
+    } catch (error) {
+      logDebug("debug", "diagnostics save failed", {
+        errorName: error instanceof Error ? error.name : "UnknownError",
+        mode,
+      });
+      setDiagnosticStatus("Could not save diagnostics. Try again.");
     }
-
-    setDebugEntriesCount(getDebugEntries().length);
-    setDiagnosticStatus(`Save dialog opened for ${response.filename ?? `${mode} diagnostics`}`);
   };
 
   const clearDebug = async () => {

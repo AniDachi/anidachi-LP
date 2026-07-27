@@ -242,6 +242,7 @@ function installStatsPeer(
     pendingIceCandidates: [],
     polite: true,
     recentSignalFingerprints: new Map(),
+    renegotiationRetryTimerId: null,
     remoteUserId,
     remoteVideoExpected: false,
     remoteVideoStallSamples: 0,
@@ -884,6 +885,80 @@ describe("P2P initial negotiation ownership", () => {
     harness.controller.disconnect();
   });
 
+  it("coalesces a rapid answerer camera toggle into one cooldown retry", async () => {
+    const harness = createP2PControllerHarness(participant("viewer"));
+    harness.controller.updateParticipants([participant("host", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const internal = harness.controller as unknown as {
+      peers: Map<string, unknown>;
+      queueNegotiation: (peer: unknown, reason: string) => void;
+    };
+    const peer = internal.peers.get("host");
+    if (!peer) {
+      throw new Error("Expected the host peer.");
+    }
+
+    internal.queueNegotiation(peer, "camera-stop");
+    internal.queueNegotiation(peer, "camera-start");
+
+    const renegotiationCount = () =>
+      harness.signals.filter((item) => item.signal.kind === "renegotiate")
+        .length;
+    expect(renegotiationCount()).toBe(1);
+
+    await vi.advanceTimersByTimeAsync(999);
+    expect(renegotiationCount()).toBe(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(renegotiationCount()).toBe(2);
+
+    harness.controller.disconnect();
+  });
+
+  it("cancels a pending answerer retry when an incoming offer includes current media", async () => {
+    const harness = createP2PControllerHarness(participant("viewer"));
+    harness.controller.updateParticipants([participant("host", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const internal = harness.controller as unknown as {
+      peers: Map<string, unknown>;
+      queueNegotiation: (peer: unknown, reason: string) => void;
+    };
+    const peer = internal.peers.get("host");
+    if (!peer) {
+      throw new Error("Expected the host peer.");
+    }
+
+    internal.queueNegotiation(peer, "camera-stop");
+    internal.queueNegotiation(peer, "camera-start");
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "renegotiate"),
+    ).toHaveLength(1);
+
+    await harness.controller.handleSignal(
+      "host",
+      {
+        kind: "offer",
+        sdp: { type: "offer", sdp: "v=0\r\no=current-media-offer\r\n" },
+      },
+      {
+        senderConnectionId: "host-connection-a",
+        senderMediaSessionId: "host-media-a",
+      },
+    );
+
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "renegotiate"),
+    ).toHaveLength(1);
+    expect(
+      harness.signals.filter((item) => item.signal.kind === "answer"),
+    ).toHaveLength(1);
+
+    harness.controller.disconnect();
+  });
+
   it("serializes overlapping media sync before draining negotiation", async () => {
     const harness = createP2PControllerHarness(participant("guest"));
 
@@ -1349,6 +1424,98 @@ describe("P2P peer health classification", () => {
 });
 
 describe("P2P measured audio activity", () => {
+  it("exposes privacy-safe voice and effective output diagnostics", async () => {
+    const { controller } = createP2PControllerHarness();
+    installStatsPeer(controller, "viewer", [
+      statsReportFrom([
+        {
+          id: "viewer-audio",
+          type: "inbound-rtp",
+          kind: "audio",
+          bytesReceived: 100,
+          packetsReceived: 10,
+          audioLevel: 0.03,
+        },
+      ]),
+    ]);
+    installRemoteAudioElement(controller, "viewer");
+    controller.setParticipantAudioOutput("viewer", {
+      muted: true,
+      volume: 0.35,
+    });
+    await controller.handleSignal("viewer", { kind: "voice-start" });
+    await sampleP2PAudioActivity(controller);
+    Object.assign(controller as object, {
+      localSpeaking: true,
+      microphonePublishing: true,
+      microphonePublishingWanted: true,
+    });
+
+    const diagnostics = await controller.getStats();
+
+    expect(diagnostics).toEqual(
+      expect.objectContaining({
+        localSpeaking: true,
+        microphonePublishing: true,
+        microphonePublishingWanted: true,
+        remoteAudioExpectedIds: ["viewer"],
+        peers: [
+          expect.objectContaining({
+            participantAudioOutput: {
+              muted: true,
+              volume: 0.35,
+            },
+            remoteAudioActivity: "active",
+            remoteAudioExpected: true,
+            remoteUserId: "viewer",
+          }),
+        ],
+      }),
+    );
+    controller.disconnect();
+  });
+
+  it("keeps peer diagnostics available when one stats report fails", async () => {
+    const { controller } = createP2PControllerHarness();
+    const failingPeer = installStatsPeer(controller, "failing-viewer", [
+      statsReportFrom([]),
+    ]);
+    installStatsPeer(controller, "healthy-viewer", [
+      statsReportFrom([
+        {
+          id: "healthy-candidate-pair",
+          type: "candidate-pair",
+          state: "succeeded",
+          nominated: true,
+          currentRoundTripTime: 0.04,
+        },
+      ]),
+    ]);
+    failingPeer.getStats.mockRejectedValueOnce(
+      new Error("peer stats unavailable"),
+    );
+
+    const diagnostics = await controller.getStats();
+
+    expect(diagnostics.peers).toEqual([
+      expect.objectContaining({
+        remoteUserId: "failing-viewer",
+        stats: {},
+        statsStatus: "unavailable",
+      }),
+      expect.objectContaining({
+        remoteUserId: "healthy-viewer",
+        statsStatus: "available",
+        stats: expect.objectContaining({
+          candidatePair: expect.objectContaining({
+            currentRoundTripTime: 0.04,
+          }),
+        }),
+      }),
+    ]);
+    controller.disconnect();
+  });
+
   it("runs the fast sampler only while audio publication is expected", async () => {
     const { controller } = createP2PControllerHarness();
     installStatsPeer(controller, "viewer", []);

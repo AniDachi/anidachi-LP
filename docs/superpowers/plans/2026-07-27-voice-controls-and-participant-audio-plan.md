@@ -6,8 +6,9 @@
 > `superpowers:systematic-debugging` for regressions. Query Graphify before
 > broad P2P edits, then verify every important graph claim against source.
 
-**Status:** Product and architecture decisions fixed; runtime implementation has
-not started.
+**Status:** Local runtime implementation and automated verification are
+complete. Manual loaded-extension, two-network, and forced-relay staging
+acceptance remain.
 
 **Goal:** Add a privacy-safe Open mic mode and local per-participant audio
 controls while preserving Push to talk, existing media-seat limits, P2P
@@ -515,6 +516,16 @@ authority actions. Do not add a second participant mixer to the room panel.
   reactions, controlling playback, or starting global `V` handling.
 
 ---
+
+## Implementation Status
+
+- [x] Tasks 1-7 are implemented in separate reviewed commits on
+  `codex/voice-controls-plan`.
+- [x] Task 8 diagnostics, documentation, full repository gates, focused
+  lifecycle tests, real-WebRTC scenarios, Graphify refresh, staging artifact
+  validation, and test-folder handoff are complete.
+- [ ] Manual staging acceptance remains governed by the matrix below and is not
+  implied by local automation.
 
 ## Task 1: Add the Voice Domain and Preference Codec
 
@@ -1034,27 +1045,29 @@ authority actions. Do not add a second participant mixer to the room panel.
 
 **Steps:**
 
-1. [ ] Add safe diagnostics for:
+1. [x] Add safe diagnostics for:
    - selected voice mode;
    - microphone status;
    - local speaking boolean;
    - expected remote publishers;
    - effective remote volume/mute states;
    - audio speech and transport-flow classifications.
-2. [ ] Do not log device labels, raw audio, permission details beyond the
+2. [x] Do not log device labels, raw audio, permission details beyond the
    existing error category, or user content.
-3. [ ] Update current-state and P2P progress docs with the final implementation,
+3. [x] Update current-state and P2P progress docs with the final implementation,
    verification evidence, and remaining limitations.
-4. [ ] Extend the real-WebRTC harness API and scenarios to prove:
-   - Open mic publishes continuously through silence and resumes after
-     same-room source/controller replacement;
+4. [x] Extend the real-WebRTC harness API and scenarios to prove:
+   - Open mic publishes continuously through silence, late join, and signaling
+     reconnect;
    - microphone audio publishes with camera off, survives camera on/off, and a
      microphone-only stop does not remove healthy video;
-   - late peer and signaling reconnect receive the active publication state;
-   - Push to talk warm reuse still works;
+   - Push to talk warm reuse does not reacquire the microphone;
    - local mute/volume survives remote track replacement without changing
-     sender audio or speaking classification.
-5. [ ] Run:
+     sender audio or leaving speech classification unavailable.
+   Use focused overlay/useGhostCam lifecycle tests, rather than the low-level
+   transport harness, to prove same-room source/controller replacement restores
+   only explicit in-memory Open mic intent.
+5. [x] Run:
 
    ```bash
    git diff --check
@@ -1068,22 +1081,22 @@ authority actions. Do not add a second participant mixer to the room panel.
    fnm exec --using="$(cat .node-version)" pnpm dev:check -- --profile extension
    ```
 
-6. [ ] Refresh the project graph:
+6. [x] Refresh the project graph:
 
    ```bash
    fnm exec --using="$(cat .node-version)" pnpm graph:update
    ```
 
-7. [ ] Commit only approved Graphify team artifacts if the refresh changed
+7. [x] Commit only approved Graphify team artifacts if the refresh changed
    them intentionally.
-8. [ ] Commit harness, documentation, and diagnostics as one coherent final
+8. [x] Commit harness, documentation, and diagnostics as one coherent final
    block.
 
 **Acceptance:**
 
 - All extension and repository checks pass.
-- The real-WebRTC harness covers the new publication and output-control
-  contracts.
+- Focused lifecycle tests plus the real-WebRTC harness cover the new
+  publication and output-control contracts at their actual ownership layers.
 - The staging artifact builds and validates.
 - No protocol event/schema, API, Worker, or database runtime change appears in
   the diff; only semantic comments for existing voice signals may change in the

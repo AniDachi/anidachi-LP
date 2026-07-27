@@ -12,6 +12,7 @@ import type {
 import { loadP2PIceServers, refreshP2PIceServers } from "./p2p-ice";
 import {
   canReceiveP2PSignalFromParticipant,
+  type P2PMediaDiagnostics,
   P2PMediaController,
   selectP2PMediaParticipants,
 } from "./p2p-media";
@@ -21,6 +22,7 @@ export type { GhostVideo, MicrophoneStatus } from "./media-types";
 
 export interface GhostCamSession {
   activeSpeakerIds: string[];
+  getDiagnostics: () => Promise<P2PMediaDiagnostics | null>;
   microphoneStatus: MicrophoneStatus;
   microphoneTerminalFailure: MicrophoneTerminalFailure | null;
   setMicrophonePublishing: (
@@ -517,6 +519,10 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     await controllerRef.current?.unlockAudio();
   }, []);
 
+  const getDiagnostics = useCallback(async () => {
+    return (await controllerRef.current?.getStats()) ?? null;
+  }, []);
+
   const setParticipantAudioOutput = useCallback(
     (
       targetParticipantId: string,
@@ -532,6 +538,7 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
 
   return {
     activeSpeakerIds,
+    getDiagnostics,
     microphoneStatus,
     microphoneTerminalFailure,
     setMicrophonePublishing,
