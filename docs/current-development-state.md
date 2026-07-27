@@ -328,10 +328,11 @@ The extension currently supports:
   reload, room/account change, media-seat loss, leave/end, sign-out, and overlay
   teardown keep or return the microphone to the privacy-safe off state according
   to the documented lifecycle contract;
-- local and remote speaking indicators are stats-backed and independent from
+- local and remote speaking indicators are measured independently from
   transport flow: quiet Open mic remains published without appearing to speak
-  or triggering audio-stall recovery, while actual sender/receiver audio levels
-  drive the green speaking treatment;
+  or triggering audio-stall recovery, while sender/receiver audio levels drive
+  the green treatment and a local-track RMS fallback covers the period before
+  a sender exists;
 - per-listener participant audio mix controls: each remote media-seat
   participant can be muted or adjusted locally from the side voice pill or the
   matching video-bubble contour. Preferences are versioned, validated,

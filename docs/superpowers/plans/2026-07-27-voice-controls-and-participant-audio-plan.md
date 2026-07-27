@@ -161,11 +161,13 @@ during implementation.
    indicator.
 4. `voice-start` means that remote audio publication is expected. It must not
    immediately mark that participant as speaking.
-5. Local speaking uses sender `media-source.audioLevel`.
+5. Local speaking prefers sender `media-source.audioLevel` and falls back to
+   RMS measurement of the already-authorized local microphone track while a
+   peer sender is not available or does not expose a level.
 6. Remote speaking uses inbound RTP `audioLevel`.
-7. If a browser does not expose `audioLevel`, voice transport continues but the
-   UI remains conservative: it does not invent speaking activity from packet
-   movement.
+7. If neither WebRTC stats nor the local-track meter exposes a level, voice
+   transport continues but the UI remains conservative: it does not invent
+   speaking activity from packet movement.
 8. Muting a remote participant locally does not suppress their speaking
    indicator.
 9. While Open mic is enabled, the collapsed main AniDachi pill stays minimally

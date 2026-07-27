@@ -1664,6 +1664,28 @@ describe("P2P measured audio activity", () => {
     controller.disconnect();
   });
 
+  it("keeps measuring local speech before a peer sender is available", async () => {
+    const { activeSpeakerChanges, controller } = createP2PControllerHarness();
+    const localTrack = new FakeAudioTrack("local-microphone");
+    const localAudioLevelMeter = {
+      close: vi.fn(),
+      sample: vi.fn(() => 0.03),
+      track: localTrack,
+    };
+    Object.assign(controller as object, {
+      localAudioLevelMeter,
+      localAudioTrack: localTrack,
+      microphonePublishing: true,
+    });
+
+    await sampleP2PAudioActivity(controller);
+
+    expect(localAudioLevelMeter.sample).toHaveBeenCalledTimes(1);
+    expect(activeSpeakerChanges.at(-1)).toEqual(["host"]);
+    controller.disconnect();
+    expect(localAudioLevelMeter.close).toHaveBeenCalledTimes(1);
+  });
+
   it("clears local speaking when no peer sender remains to measure", async () => {
     const { activeSpeakerChanges, controller } = createP2PControllerHarness();
     const localTrack = new FakeAudioTrack("local-microphone");

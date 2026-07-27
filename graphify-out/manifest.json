@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
-    "mtime": 1785168415.4996436,
-    "ast_hash": "a89f8be7f5800e3e089e8f39f02a33bc",
+    "mtime": 1785193169.365564,
+    "ast_hash": "dd376a473983f827db14322854ecc590",
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
@@ -485,8 +485,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
-    "mtime": 1785168374.5911045,
-    "ast_hash": "e2f65fd25de4fcd48ab4b8187814c217",
+    "mtime": 1785193169.4569545,
+    "ast_hash": "5f323b95c9f196e2f9a396e137a2c86b",
     "semantic_hash": ""
   },
   "apps/extension/test/playback-control.test.ts": {
@@ -3050,8 +3050,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1785166940.3328524,
-    "ast_hash": "51d01cc93ab21e490641c7f052afc447",
+    "mtime": 1785192903.7091303,
+    "ast_hash": "a562d0cdbb887af3bfecbacb718e932a",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3215,22 +3215,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1785168907.846195,
+    "mtime": 1785169015.168901,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1785168907.8463206,
+    "mtime": 1785169015.1690514,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1785168907.8465466,
+    "mtime": 1785169015.169157,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1785168907.8467004,
+    "mtime": 1785169015.16927,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -4065,8 +4065,13 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-27-voice-controls-and-participant-audio-plan.md": {
-    "mtime": 1785168815.950491,
-    "ast_hash": "2d1105b777bcd7845c19102af5a6eb21",
+    "mtime": 1785192903.60476,
+    "ast_hash": "48ef104a52d8ba93055e8b055e74c01d",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/local-audio-level-meter.ts": {
+    "mtime": 1785193058.6544497,
+    "ast_hash": "b49ec3ee2f0da324eb9999cbd38c8d53",
     "semantic_hash": ""
   }
 }

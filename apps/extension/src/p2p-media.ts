@@ -4,6 +4,10 @@ import type {
   Participant,
 } from "@anidachi/protocol";
 import { logDebug } from "./debug-log";
+import {
+  createLocalAudioLevelMeter,
+  type LocalAudioLevelMeter,
+} from "./local-audio-level-meter";
 import type {
   GhostVideo,
   MicrophoneStatus,
@@ -763,6 +767,7 @@ export class P2PMediaController {
   private cameraStartingGeneration: number | null = null;
   private cameraState: P2PCameraState = "off";
   private disposed = false;
+  private localAudioLevelMeter: LocalAudioLevelMeter | null = null;
   private localAudioStream: MediaStream | null = null;
   private localAudioTrack: MediaStreamTrack | null = null;
   private microphoneFailureTimestamps: number[] = [];
@@ -1425,6 +1430,9 @@ export class P2PMediaController {
       );
       this.localAudioStream = stream;
       this.localAudioTrack = track;
+      this.replaceLocalAudioLevelMeter(
+        createLocalAudioLevelMeter(stream, track),
+      );
       this.microphonePublishing = true;
       this.scheduleMicrophoneStableReset();
       logDebug("p2p.voice", "local track ready", {
@@ -1535,6 +1543,7 @@ export class P2PMediaController {
     }
 
     this.clearMicrophoneStableTimer();
+    this.replaceLocalAudioLevelMeter(null);
     this.localAudioStream = null;
     this.localAudioTrack = null;
     for (const peer of this.peers.values()) {
@@ -1673,6 +1682,7 @@ export class P2PMediaController {
   }
 
   private releaseMic(): void {
+    this.replaceLocalAudioLevelMeter(null);
     stopStream(this.localAudioStream);
     this.localAudioStream = null;
     this.localAudioTrack = null;
@@ -1684,6 +1694,16 @@ export class P2PMediaController {
     logDebug("p2p.voice", "released microphone", {
       localParticipantId: this.localParticipant.id,
     });
+  }
+
+  private replaceLocalAudioLevelMeter(
+    meter: LocalAudioLevelMeter | null,
+  ): void {
+    if (this.localAudioLevelMeter === meter) {
+      return;
+    }
+    this.localAudioLevelMeter?.close();
+    this.localAudioLevelMeter = meter;
   }
 
   async handleSignal(
@@ -2389,17 +2409,33 @@ export class P2PMediaController {
               candidate.track.id === track.id,
           ),
       );
-    if (!sender) {
+    const localAudioLevelMeter =
+      this.localAudioLevelMeter?.track === track
+        ? this.localAudioLevelMeter
+        : null;
+    if (!sender && !localAudioLevelMeter) {
       this.clearLocalSpeaking();
       return;
     }
 
     let current: AudioActivityStats | undefined;
-    try {
-      const stats = summarizeStats(await sender.getStats());
-      current = stats.audioSource as AudioActivityStats | undefined;
-    } catch {
-      current = undefined;
+    if (sender) {
+      try {
+        const stats = summarizeStats(await sender.getStats());
+        current = stats.audioSource as AudioActivityStats | undefined;
+      } catch {
+        current = undefined;
+      }
+    }
+
+    if (current?.audioLevel === undefined && localAudioLevelMeter) {
+      const audioLevel = localAudioLevelMeter.sample();
+      current =
+        audioLevel === undefined
+          ? undefined
+          : {
+              audioLevel,
+            };
     }
 
     if (
@@ -2940,6 +2976,7 @@ export class P2PMediaController {
     this.retiredSenderMediaSessionIdsByPeer.clear();
     this.lastSignalingTransportReadyId = null;
 
+    this.replaceLocalAudioLevelMeter(null);
     stopStream(this.localVideoStream);
     stopStream(this.localAudioStream);
     this.localVideoStream = null;
