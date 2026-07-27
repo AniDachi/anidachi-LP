@@ -195,6 +195,47 @@ describe("PanelMicrophoneControl", () => {
 
 		await unmount(view.root);
 	});
+
+	it("releases an internal pointer hold after an external PTT stop", async () => {
+		const onPushToTalkChange = vi.fn();
+		const props = panelProps({ onPushToTalkChange });
+		const view = await render(<PanelMicrophoneControl {...props} />);
+		let button = getButton(view.container, "Hold to talk");
+		Object.defineProperty(button, "setPointerCapture", {
+			configurable: true,
+			value: vi.fn(),
+		});
+		Object.defineProperty(button, "hasPointerCapture", {
+			configurable: true,
+			value: vi.fn(() => true),
+		});
+		Object.defineProperty(button, "releasePointerCapture", {
+			configurable: true,
+			value: vi.fn(),
+		});
+
+		await pointer(button, "pointerdown", {
+			button: 0,
+			isPrimary: true,
+			pointerId: 13,
+		});
+		await view.rerender(
+			<PanelMicrophoneControl {...props} microphoneEnabled />,
+		);
+		await view.rerender(
+			<PanelMicrophoneControl {...props} microphoneEnabled={false} />,
+		);
+
+		button = getButton(view.container, "Hold to talk");
+		await pointer(button, "pointerdown", {
+			button: 0,
+			isPrimary: true,
+			pointerId: 14,
+		});
+
+		expect(onPushToTalkChange.mock.calls).toEqual([[true], [false], [true]]);
+		await unmount(view.root);
+	});
 });
 
 describe("VoiceSettingsPanel", () => {
@@ -222,6 +263,24 @@ describe("VoiceSettingsPanel", () => {
 		expect(onModeChange).toHaveBeenCalledWith("open-mic");
 		expect(onModeChange).toHaveBeenCalledTimes(1);
 
+		await unmount(view.root);
+	});
+
+	it("supports arrow-key navigation as one keyboard radio group", async () => {
+		const onModeChange = vi.fn();
+		const view = await render(
+			<VoiceSettingsPanel {...voicePanelProps()} onModeChange={onModeChange} />,
+		);
+		const pushToTalk = getButton(view.container, "Push to talk");
+		const openMic = getButton(view.container, "Open mic");
+
+		expect(pushToTalk.tabIndex).toBe(0);
+		expect(openMic.tabIndex).toBe(-1);
+		pushToTalk.focus();
+		await keyboard(pushToTalk, "keydown", { key: "ArrowRight" });
+
+		expect(onModeChange).toHaveBeenCalledWith("open-mic");
+		expect(document.activeElement).toBe(openMic);
 		await unmount(view.root);
 	});
 

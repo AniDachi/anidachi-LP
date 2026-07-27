@@ -32,23 +32,35 @@ export function PanelMicrophoneControl({
 	onPushToTalkChange,
 	speaking,
 }: PanelMicrophoneControlProps) {
+	const buttonRef = useRef<HTMLButtonElement | null>(null);
 	const holdSourceRef = useRef<HoldSource | null>(null);
 	const onPushToTalkChangeRef = useRef(onPushToTalkChange);
 	onPushToTalkChangeRef.current = onPushToTalkChange;
 
 	const stopPushToTalk = () => {
-		if (!holdSourceRef.current) {
+		const source = holdSourceRef.current;
+		if (!source) {
 			return;
 		}
 		holdSourceRef.current = null;
+		if (
+			source.kind === "pointer" &&
+			buttonRef.current?.hasPointerCapture?.(source.pointerId)
+		) {
+			buttonRef.current.releasePointerCapture?.(source.pointerId);
+		}
 		onPushToTalkChangeRef.current(false);
 	};
 
 	useEffect(() => {
-		if (!available || mode !== "push-to-talk") {
+		if (
+			!available ||
+			mode !== "push-to-talk" ||
+			(!microphoneEnabled && holdSourceRef.current)
+		) {
 			stopPushToTalk();
 		}
-	}, [available, mode]);
+	}, [available, microphoneEnabled, mode]);
 
 	useEffect(
 		() => () => {
@@ -98,9 +110,6 @@ export function PanelMicrophoneControl({
 		}
 
 		stopPushToTalk();
-		if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-			event.currentTarget.releasePointerCapture?.(event.pointerId);
-		}
 	};
 
 	const startKeyboardHold = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
@@ -167,6 +176,7 @@ export function PanelMicrophoneControl({
 			onPointerCancel={stopPointerHold}
 			onPointerDown={startPointerHold}
 			onPointerUp={stopPointerHold}
+			ref={buttonRef}
 			title={!available ? disabledReason : label}
 			type="button"
 		>
@@ -223,16 +233,33 @@ export function VoiceSettingsPanel({
 			<div
 				aria-label="Microphone mode"
 				className="segmented-control voice-mode-control"
+				onKeyDown={(event) => {
+					const nextMode = getNextVoiceMode(event.key);
+					if (!nextMode) {
+						return;
+					}
+					event.preventDefault();
+					event.currentTarget
+						.querySelector<HTMLButtonElement>(
+							`[data-voice-mode="${nextMode}"]`,
+						)
+						?.focus();
+					if (nextMode !== mode) {
+						onModeChange(nextMode);
+					}
+				}}
 				role="radiogroup"
 			>
 				<VoiceModeButton
 					active={mode === "push-to-talk"}
 					label="Push to talk"
+					mode="push-to-talk"
 					onSelect={() => onModeChange("push-to-talk")}
 				/>
 				<VoiceModeButton
 					active={mode === "open-mic"}
 					label="Open mic"
+					mode="open-mic"
 					onSelect={() => onModeChange("open-mic")}
 				/>
 			</div>
@@ -265,26 +292,44 @@ export function VoiceSettingsPanel({
 interface VoiceModeButtonProps {
 	active: boolean;
 	label: string;
+	mode: VoiceMode;
 	onSelect: () => void;
 }
 
-function VoiceModeButton({ active, label, onSelect }: VoiceModeButtonProps) {
+function VoiceModeButton({
+	active,
+	label,
+	mode,
+	onSelect,
+}: VoiceModeButtonProps) {
 	return (
 		<button
 			aria-checked={active}
 			aria-label={label}
 			className={active ? "selected" : undefined}
+			data-voice-mode={mode}
 			onClick={() => {
 				if (!active) {
 					onSelect();
 				}
 			}}
 			role="radio"
+			tabIndex={active ? 0 : -1}
 			type="button"
 		>
 			{label}
 		</button>
 	);
+}
+
+function getNextVoiceMode(key: string): VoiceMode | null {
+	if (key === "ArrowRight" || key === "ArrowDown" || key === "End") {
+		return "open-mic";
+	}
+	if (key === "ArrowLeft" || key === "ArrowUp" || key === "Home") {
+		return "push-to-talk";
+	}
+	return null;
 }
 
 interface VoiceStatusInput {

@@ -145,6 +145,17 @@ describe("overlay voice session", () => {
     expect(isVoiceSessionPublishing(next)).toBe(false);
   });
 
+  it("resets the selected mode while a new account preference store is loading", () => {
+    const next = reduceVoiceSession(connectedState("open-mic"), {
+      type: "context",
+      listenerScope: "account-2",
+      localHasMediaSeat: true,
+      roomId: "room-1",
+    });
+
+    expect(next.mode).toBe("push-to-talk");
+  });
+
   it("clears all microphone intent after a terminal failure", () => {
     const open = reduceVoiceSession(connectedState("open-mic"), {
       type: "open-mic",

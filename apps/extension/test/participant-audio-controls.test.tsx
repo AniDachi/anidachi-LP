@@ -162,6 +162,40 @@ describe("participant audio controls", () => {
 
 		await unmount(view.root);
 	});
+
+	it("ends an inline adjustment if the control unmounts during pointer capture", async () => {
+		const onAdjustmentStart = vi.fn();
+		const onAdjustmentEnd = vi.fn();
+		const view = await render(
+			<ParticipantAudioInlineControl
+				displayName="Remote User"
+				onAdjustmentEnd={onAdjustmentEnd}
+				onAdjustmentStart={onAdjustmentStart}
+				onChange={vi.fn()}
+				preference={{ muted: false, volume: 0.5 }}
+			/>,
+		);
+		const slider = view.container.querySelector<HTMLInputElement>(
+			'input[type="range"]',
+		);
+		if (!slider) {
+			throw new Error("Inline slider missing");
+		}
+		Object.defineProperty(slider, "setPointerCapture", {
+			configurable: true,
+			value: vi.fn(),
+		});
+
+		await pointer(slider, "pointerdown", {
+			button: 0,
+			isPrimary: true,
+			pointerId: 9,
+		});
+		expect(onAdjustmentStart).toHaveBeenCalledOnce();
+
+		await unmount(view.root);
+		expect(onAdjustmentEnd).toHaveBeenCalledOnce();
+	});
 });
 
 async function render(element: ReactNode) {

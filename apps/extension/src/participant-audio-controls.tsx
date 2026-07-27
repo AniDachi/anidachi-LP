@@ -37,6 +37,8 @@ export function ParticipantAudioInlineControl({
 	preference,
 }: ParticipantAudioControlProps) {
 	const adjustmentActiveRef = useRef(false);
+	const onAdjustmentEndRef = useRef(onAdjustmentEnd);
+	onAdjustmentEndRef.current = onAdjustmentEnd;
 	const sliderValue = Math.round(
 		getParticipantAudioSliderValue(preference) * 100,
 	);
@@ -46,8 +48,15 @@ export function ParticipantAudioInlineControl({
 			return;
 		}
 		adjustmentActiveRef.current = false;
-		onAdjustmentEnd?.();
+		onAdjustmentEndRef.current?.();
 	};
+
+	useEffect(
+		() => () => {
+			finishAdjustment();
+		},
+		[],
+	);
 
 	return (
 		<div

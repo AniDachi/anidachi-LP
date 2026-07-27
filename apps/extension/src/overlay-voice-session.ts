@@ -44,8 +44,9 @@ export function reduceVoiceSession(
   action: VoiceSessionAction,
 ): VoiceSessionState {
   if (action.type === "context") {
+    const listenerScopeChanged = action.listenerScope !== state.listenerScope;
     const terminalContextChange =
-      action.listenerScope !== state.listenerScope ||
+      listenerScopeChanged ||
       action.roomId !== state.roomId ||
       (state.localHasMediaSeat && !action.localHasMediaSeat);
     if (terminalContextChange) {
@@ -53,6 +54,7 @@ export function reduceVoiceSession(
         ...state,
         listenerScope: action.listenerScope,
         localHasMediaSeat: action.localHasMediaSeat,
+        mode: listenerScopeChanged ? "push-to-talk" : state.mode,
         openMicEnabled: false,
         pushToTalkHeld: false,
         release: "immediate",

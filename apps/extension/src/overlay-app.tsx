@@ -191,6 +191,7 @@ import {
   getDefaultVoiceAudioPreferences,
   type ParticipantAudioPreference,
   parseVoiceAudioPreferences,
+  resolveVoiceAudioPreferencesForListener,
   updateParticipantAudioPreference,
   updateVoiceMode,
   type VoiceAudioPreferencesV1,
@@ -1372,18 +1373,25 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   }, [clearRoomEndConfirmation, isHost, roomId]);
   const isConnected = status === "connected";
   const participantAudioPreferenceScope = accountUser?.id ?? null;
+  const resolvedVoiceAudioPreferences = useMemo(
+    () =>
+      resolveVoiceAudioPreferencesForListener(
+        loadedVoiceAudioPreferences,
+        participantAudioPreferenceScope,
+      ),
+    [loadedVoiceAudioPreferences, participantAudioPreferenceScope],
+  );
   const participantAudioPreferencesReady =
-    identityLoaded &&
-    loadedVoiceAudioPreferences.listenerUserId === participantAudioPreferenceScope;
+    identityLoaded && resolvedVoiceAudioPreferences.ready;
   useEffect(() => {
     if (!participantAudioPreferencesReady) {
       return;
     }
     dispatchVoiceSession({
       type: "mode",
-      mode: loadedVoiceAudioPreferences.preferences.mode,
+      mode: resolvedVoiceAudioPreferences.preferences.mode,
     });
-  }, [loadedVoiceAudioPreferences.preferences.mode, participantAudioPreferencesReady]);
+  }, [participantAudioPreferencesReady, resolvedVoiceAudioPreferences.preferences.mode]);
   useEffect(() => {
     dispatchVoiceSession({
       type: "context",
@@ -2024,7 +2032,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     participant,
     onCameraStatus: sendCameraStatus,
     participantAudioPreferenceScope,
-    participantAudioPreferences: loadedVoiceAudioPreferences.preferences.participantAudio,
+    participantAudioPreferences: resolvedVoiceAudioPreferences.preferences.participantAudio,
     participantAudioPreferencesReady,
     sendP2PSignal,
     signalingTransportReady,
@@ -2046,9 +2054,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   );
   const getParticipantAudioPreference = useCallback(
     (targetParticipantId: string): ParticipantAudioPreference =>
-      loadedVoiceAudioPreferences.preferences.participantAudio[targetParticipantId] ??
+      resolvedVoiceAudioPreferences.preferences.participantAudio[targetParticipantId] ??
       getDefaultParticipantAudioPreference(),
-    [loadedVoiceAudioPreferences.preferences.participantAudio],
+    [resolvedVoiceAudioPreferences.preferences.participantAudio],
   );
   const ghostVideos = ghostCamSession.videos;
   const cameraVideoByParticipantId = useMemo(

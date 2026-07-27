@@ -18,6 +18,16 @@ export interface VoiceAudioPreferencesV1 {
   participantAudio: Record<string, ParticipantAudioPreference>;
 }
 
+export interface LoadedVoiceAudioPreferences {
+  listenerUserId: string | null;
+  preferences: VoiceAudioPreferencesV1;
+}
+
+export interface ResolvedVoiceAudioPreferences {
+  ready: boolean;
+  preferences: VoiceAudioPreferencesV1;
+}
+
 export function getDefaultParticipantAudioPreference(): ParticipantAudioPreference {
   return {
     muted: false,
@@ -30,6 +40,23 @@ export function getDefaultVoiceAudioPreferences(): VoiceAudioPreferencesV1 {
     version: VOICE_AUDIO_PREFERENCES_VERSION,
     mode: "push-to-talk",
     participantAudio: createParticipantAudioPreferenceRecord(),
+  };
+}
+
+export function resolveVoiceAudioPreferencesForListener(
+  loaded: LoadedVoiceAudioPreferences,
+  listenerUserId: string | null,
+): ResolvedVoiceAudioPreferences {
+  if (!listenerUserId || loaded.listenerUserId !== listenerUserId) {
+    return {
+      ready: false,
+      preferences: getDefaultVoiceAudioPreferences(),
+    };
+  }
+
+  return {
+    ready: true,
+    preferences: loaded.preferences,
   };
 }
 

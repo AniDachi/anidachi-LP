@@ -12,6 +12,7 @@ import {
   getDefaultVoiceAudioPreferences,
   getParticipantAudioSliderValue,
   parseVoiceAudioPreferences,
+  resolveVoiceAudioPreferencesForListener,
   toggleParticipantAudioMute,
   updateParticipantAudioPreference,
   updateVoiceMode,
@@ -67,6 +68,28 @@ describe("voice audio preference codec", () => {
     });
     expect(accountB.participantAudio["remote-user"]).toBeUndefined();
     expect(accountB.mode).toBe("push-to-talk");
+  });
+
+  it("uses safe defaults while a different listener store is loading", () => {
+    const accountA = {
+      listenerUserId: "account-a",
+      preferences: parseVoiceAudioPreferences({
+        version: 1,
+        mode: "open-mic",
+        participantAudio: {
+          "remote-user": { muted: true, volume: 0.35 },
+        },
+      }),
+    };
+
+    expect(resolveVoiceAudioPreferencesForListener(accountA, "account-b")).toEqual({
+      ready: false,
+      preferences: getDefaultVoiceAudioPreferences(),
+    });
+    expect(resolveVoiceAudioPreferencesForListener(accountA, "account-a")).toEqual({
+      ready: true,
+      preferences: accountA.preferences,
+    });
   });
 
   it("falls back field by field when version 1 storage is malformed", () => {
