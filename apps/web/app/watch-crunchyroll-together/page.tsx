@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { HowToJsonLd } from "@/components/json-ld";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
 import {
   PRICING_ASYNC_HOST_SNIPPET,
@@ -11,14 +12,14 @@ import {
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "Watch Crunchyroll Together — Group Watch Party & Sync Guide (2026)",
+  title: "Crunchyroll Watch Party with AniDachi — Sync & Chat (2026)",
   description:
-    "Crunchyroll has no built-in watch party — use AniDachi to create a watchroom with sync, chat, and async support in under 2 minutes. Every Crunchyroll watch party method compared.",
+    "Host a Crunchyroll watch party with AniDachi — synced playback, chat, and async catch-up on each person's account. Crunchyroll has no built-in watch party; start at AniDachi pricing.",
   alternates: { canonical: "/watch-crunchyroll-together" },
   openGraph: {
-    title: "Watch Crunchyroll Together — Group Watch Party (2026)",
+    title: "Crunchyroll Watch Party with AniDachi — Sync & Chat (2026)",
     description:
-      "The complete guide to Crunchyroll group watch parties. Sync, chat, async, and every alternative compared.",
+      "AniDachi Crunchyroll watchrooms: sync, chat, and async — every group-watch method compared.",
     url: "/watch-crunchyroll-together",
   },
 };
@@ -88,7 +89,7 @@ const tocHeadings: TocHeading[] = [
 ];
 
 const howToSteps = [
-  { name: "Get AniDachi", text: "Open /pricing for early access and install the AniDachi Chrome extension. Takes seconds." },
+  { name: "Get AniDachi", text: "Open AniDachi pricing / early access and install the Chrome extension from there. Takes seconds." },
   { name: "Navigate to any Crunchyroll anime", text: "Open any episode on Crunchyroll and click 'Detect Anime' in the AniDachi toolbar." },
   { name: "Create a watchroom", text: "Click 'Create Room' in AniDachi. The room is linked to the detected anime and episode." },
   { name: "Share the invite link", text: "Copy the invite link and share it with friends via Discord, text, or email." },
@@ -114,10 +115,10 @@ export default function WatchCrunchyrollTogetherPage() {
         { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
       ]}
       title="Watch Crunchyroll Together — Sync Anime with Friends"
-      description="The complete guide to watching Crunchyroll with friends using sync, chat, and async watchrooms."
+      description="Host a Crunchyroll watch party with AniDachi — synced playback, chat, and async catch-up on each person's account."
       url="/watch-crunchyroll-together"
       datePublished="2026-04-23"
-      dateModified="2026-07-26"
+      dateModified="2026-07-28"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -134,13 +135,17 @@ export default function WatchCrunchyrollTogetherPage() {
       </h2>
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
-          You can watch Crunchyroll together with friends using AniDachi —
-          a Chrome extension that syncs playback, creates watchrooms, and adds
-          real-time chat on top of your existing Crunchyroll account.
+          Run a Crunchyroll watch party with AniDachi — a Chrome extension that
+          syncs playback, creates watchrooms, and adds real-time chat on top of
+          each person&apos;s Crunchyroll account.
         </strong>{" "}
         Unlike Discord screen sharing, everyone watches in full quality on their
         own account. Unlike Teleparty, you can watch asynchronously — no
-        scheduling required.
+        scheduling required. Start from{" "}
+        <Link href="/pricing" className="text-brand-orange hover:underline">
+          AniDachi pricing / early access
+        </Link>
+        .
       </p>
 
       <h2
@@ -156,6 +161,13 @@ export default function WatchCrunchyrollTogetherPage() {
         sessions. The most popular options are Chrome extensions like AniDachi
         and Crunchyroll Party, or screen sharing via Discord.
       </p>
+
+      <PrimaryCheckoutCta
+        pagePath="/watch-crunchyroll-together"
+        pageTemplate="pillar"
+        placement="content_mid"
+        className="my-10"
+      />
 
       <h2
         id="step-by-step"

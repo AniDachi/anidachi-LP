@@ -47,10 +47,10 @@ export default function TermsPage() {
                 2. Description of Service
               </h2>
               <p>
-                AniDachi provides a platform for watching anime together through
+                AniDachi provides a platform for watching together through
                 watchrooms, real-time chat, playback synchronization, and a
-                Chrome extension that detects anime on supported streaming
-                platforms (e.g., Crunchyroll). Free accounts can join
+                Chrome extension that works on supported streaming platforms
+                (Crunchyroll and YouTube). Free accounts can join
                 friends&apos; watchrooms; Plus and Pro subscriptions unlock
                 hosting without daily limits and larger room capacity.
               </p>

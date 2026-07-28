@@ -60,10 +60,11 @@ export default function PrivacyPage() {
               <p>
                 We collect anonymous analytics (via Google Analytics) such as
                 pages visited, session duration, and device type. The Chrome
-                extension detects the anime title and episode on supported
-                streaming sites (e.g., Crunchyroll) to create watchrooms — this
-                detection happens locally in your browser and is only transmitted
-                when you explicitly create or join a watchroom.
+                extension detects the anime or video title and episode on
+                supported streaming sites (Crunchyroll and YouTube) to create
+                watchrooms — this detection happens locally in your browser and
+                is only transmitted when you explicitly create or join a
+                watchroom.
               </p>
               <h3 className="text-lg font-medium text-foreground mt-6 mb-2">
                 2.3 Chat & Watchroom Data

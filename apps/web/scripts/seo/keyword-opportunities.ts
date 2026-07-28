@@ -1,6 +1,11 @@
 /**
  * Pull top GSC + GA4 pages, then find related Keyword Planner opportunities.
  *
+ * Prefer `pnpm --filter @anidachi/web seo:portfolio` for cohort Keep/Enrich/Merge
+ * decisions. This script is keyword ideation only — it must NOT be used as
+ * permission to publish new URLs. Net-new SEO batches are frozen until the
+ * current cohort finishes a 30/60/90-day portfolio + GSC Coverage review.
+ *
  * Prereqs: Google Ads env vars + reconnect OAuth in CRM (adds Search Console + Analytics scopes).
  *
  * Usage:
@@ -10,10 +15,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { animeList } from "../../lib/anime-data";
 import { generateKeywordIdeas, type KeywordIdeaResult } from "../../lib/google-ads/client";
 import { getGoogleMarketingAuthClient } from "../../lib/google-marketing/auth";
 import { fetchGa4TopPages, type Ga4PageRow } from "../../lib/google-marketing/ga4";
 import { fetchGscTopPages, type GscPageRow } from "../../lib/google-marketing/gsc";
+import { discoverStaticSitemapUrlPaths } from "../../lib/sitemap-discovery";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -216,8 +223,15 @@ async function main() {
   console.log("");
 
   const allIdeas: KeywordIdeaResult[] = [];
-  const existingPaths = new Set(topPages.map((p) => p.path));
+  const existingPaths = new Set([
+    ...discoverStaticSitemapUrlPaths(),
+    ...animeList.map((a) => `/watch/${a.slug}-with-friends`),
+    ...topPages.map((p) => p.path),
+  ]);
 
+  console.log(
+    `Comparing keyword ideas against ${existingPaths.size} known public routes (not top pages only).\n`
+  );
   for (const seed of seeds) {
     const ideas = await generateKeywordIdeas({ keywords: [seed] });
     allIdeas.push(...ideas);

@@ -80,6 +80,12 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as {
       tier?: CheckoutTier;
       planCode?: unknown;
+      /** First-touch SEO/acquisition landing path (session-scoped). */
+      seoLandingPath?: unknown;
+      /** Path where checkout was started. */
+      checkoutPagePath?: unknown;
+      seoReferrer?: unknown;
+      seoUtm?: unknown;
     };
 
     const planCode = checkoutInputToPaidPlanCode(body);
@@ -104,6 +110,30 @@ export async function POST(request: NextRequest) {
       email: authSession.email,
     });
 
+    const seoLandingPath =
+      typeof body.seoLandingPath === "string"
+        ? body.seoLandingPath.slice(0, 200)
+        : undefined;
+    const checkoutPagePath =
+      typeof body.checkoutPagePath === "string"
+        ? body.checkoutPagePath.slice(0, 200)
+        : undefined;
+    const seoReferrer =
+      typeof body.seoReferrer === "string"
+        ? body.seoReferrer.slice(0, 500)
+        : undefined;
+    const seoUtm =
+      typeof body.seoUtm === "string" ? body.seoUtm.slice(0, 400) : undefined;
+
+    const attributionMeta: Record<string, string> = {
+      userId: authSession.userId,
+      planCode,
+    };
+    if (seoLandingPath) attributionMeta.seoLandingPath = seoLandingPath;
+    if (checkoutPagePath) attributionMeta.checkoutPagePath = checkoutPagePath;
+    if (seoReferrer) attributionMeta.seoReferrer = seoReferrer;
+    if (seoUtm) attributionMeta.seoUtm = seoUtm;
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
@@ -119,15 +149,9 @@ export async function POST(request: NextRequest) {
       cancel_url: `${request.nextUrl.origin}/`,
       allow_promotion_codes: true,
       billing_address_collection: "required",
-      metadata: {
-        userId: authSession.userId,
-        planCode,
-      },
+      metadata: attributionMeta,
       subscription_data: {
-        metadata: {
-          userId: authSession.userId,
-          planCode,
-        },
+        metadata: attributionMeta,
       },
     });
 

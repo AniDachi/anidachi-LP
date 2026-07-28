@@ -36,13 +36,13 @@ export const metadata: Metadata = {
     template: "%s | AniDachi",
   },
   description:
-    "AniDachi lets you watch anime together with friends. Create watchrooms, sync Crunchyroll playback, chat in real-time, and track your anime journey — even asynchronously.",
+    "AniDachi lets you watch together with friends on Crunchyroll and YouTube. Create watchrooms, sync playback, chat in real-time, and catch up asynchronously.",
   metadataBase: new URL(getResolvedSiteOrigin()),
   alternates: { canonical: "/" },
   openGraph: {
     title: "AniDachi – Watch Anime Together | Sync Crunchyroll with Friends",
     description:
-      "Create watchrooms, sync Crunchyroll playback with friends, chat in real-time, and track your anime journey — even asynchronously.",
+      "Create watchrooms for Crunchyroll and YouTube, sync with friends, chat in real-time, and track progress — even asynchronously.",
     type: "website",
     siteName: "AniDachi",
   },
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AniDachi – Watch Anime Together",
     description:
-      "Create watchrooms, sync Crunchyroll playback with friends, and chat in real-time.",
+      "Watchrooms for Crunchyroll and YouTube — sync, chat, and async catch-up in desktop Chrome.",
   },
   robots: {
     index: !shouldNoindex,

@@ -10,14 +10,14 @@ import {
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "Watch Anime Together Online — Free Anime Watch Party App (2026)",
+  title: "Watch Anime Together Online — Methods, Sync & Genre Guides (2026)",
   description:
-    "The best way to watch anime together online is AniDachi — Crunchyroll watchrooms with sync, chat, and async support. Free options (Discord, Crunchyroll Party) and paid options compared.",
+    "The hub for watching anime together online: AniDachi Crunchyroll watchrooms, free Discord and Crunchyroll Party options, long-distance tips, and genre pick guides — distinct from the AniDachi homepage product pitch.",
   alternates: { canonical: "/watch-anime-together" },
   openGraph: {
-    title: "Watch Anime Together Online — Free Anime Watch Party (2026)",
+    title: "Watch Anime Together Online — Methods, Sync & Genre Guides (2026)",
     description:
-      "The definitive guide to hosting an anime watch party online, whether live, long-distance, or asynchronously.",
+      "Compare every way to watch anime together — sync tools, free options, long-distance, and genre hubs.",
     url: "/watch-anime-together",
   },
 };
@@ -99,11 +99,11 @@ export default function WatchAnimeTogetherPage() {
         { name: "Home", url: "/" },
         { name: "Watch Anime Together", url: "/watch-anime-together" },
       ]}
-      title="Watch Anime Together Online — Free Anime Watch Party App (2026)"
-      description="Watch anime with friends online — live sync, async, or long-distance. Free and paid options compared."
+      title="Watch Anime Together Online — Methods, Sync & Genre Guides"
+      description="Compare every way to watch anime together online — AniDachi watchrooms, free options, long-distance tips, and genre hubs."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-07-25"
+      dateModified="2026-07-28"
       faq={faq}
       headings={tocHeadings}
       itemList={genreHubItemList(1)}
@@ -125,9 +125,22 @@ export default function WatchAnimeTogetherPage() {
           watchroom tool like AniDachi that syncs playback, adds real-time chat,
           and lets you watch asynchronously.
         </strong>{" "}
-        Whether your friends are across the room or across the world, shared
-        anime experiences are better than watching alone. This guide covers
-        every method — anime watch parties, long-distance viewing, and free options.
+        This hub compares every method — live sync, free Discord nights, and
+        long-distance setups — then routes you to the right platform pillar:{" "}
+        <Link
+          href="/watch-crunchyroll-together"
+          className="text-brand-orange hover:underline"
+        >
+          Crunchyroll watch party
+        </Link>{" "}
+        for anime catalog nights, or{" "}
+        <Link
+          href="/watch-youtube-together"
+          className="text-brand-orange hover:underline"
+        >
+          YouTube watch party
+        </Link>{" "}
+        for video nights.
       </p>
 
       <p className="text-foreground/80 mb-8">

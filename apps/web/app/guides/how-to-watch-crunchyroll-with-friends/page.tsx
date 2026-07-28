@@ -10,14 +10,14 @@ import {
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide (2026)",
+  title: "How to Watch Crunchyroll with Friends — AniDachi Sync Guide (2026)",
   description:
-    "Step-by-step: watch Crunchyroll with friends using AniDachi watchrooms — live sync or async. Free Discord and Crunchyroll Party options compared.",
+    "Watch Crunchyroll with friends in an AniDachi watchroom — live sync or async catch-up. Step-by-step from AniDachi pricing / early access (not the Chrome Web Store).",
   alternates: { canonical: "/guides/how-to-watch-crunchyroll-with-friends" },
   openGraph: {
-    title: "How to Watch Crunchyroll with Friends — Watch Party Guide (2026)",
+    title: "How to Watch Crunchyroll with Friends — AniDachi Sync Guide (2026)",
     description:
-      "Create a Crunchyroll watchroom in minutes — synced playback, chat, and async catch-up.",
+      "Create an AniDachi Crunchyroll watchroom in minutes — synced playback, chat, and async catch-up. Start at pricing.",
     url: "/guides/how-to-watch-crunchyroll-with-friends",
   },
 };
@@ -57,7 +57,7 @@ const tocHeadings: TocHeading[] = [
 const howToSteps = [
   {
     name: "Get AniDachi",
-    text: "Open /pricing for early access and install the AniDachi Chrome extension.",
+    text: "Open AniDachi pricing / early access and install the Chrome extension from there — not a generic Chrome Web Store listing.",
   },
   {
     name: "Open Crunchyroll",
@@ -104,7 +104,7 @@ export default function HowToWatchWithFriendsPage() {
         description="Every method to watch Crunchyroll together, compared and explained."
         url="/guides/how-to-watch-crunchyroll-with-friends"
         datePublished="2026-04-23"
-        dateModified="2026-07-26"
+        dateModified="2026-07-28"
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta
@@ -133,11 +133,11 @@ export default function HowToWatchWithFriendsPage() {
           >
             Watch Crunchyroll Together
           </Link>
-          . Checkout:{" "}
+          . Get the extension from{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
+            AniDachi pricing / early access
           </Link>
-          .
+          — not a fake Chrome Web Store install link.
         </p>
 
         <PrimaryCheckoutCta
@@ -156,7 +156,22 @@ export default function HowToWatchWithFriendsPage() {
         <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
           {howToSteps.map((step) => (
             <li key={step.name}>
-              <strong>{step.name}.</strong> {step.text}
+              <strong>{step.name}.</strong>{" "}
+              {step.name === "Get AniDachi" ? (
+                <>
+                  Open{" "}
+                  <Link
+                    href="/pricing"
+                    className="text-brand-orange hover:underline"
+                  >
+                    AniDachi pricing / early access
+                  </Link>{" "}
+                  and install the Chrome extension from there — not a generic
+                  Chrome Web Store listing.
+                </>
+              ) : (
+                step.text
+              )}
             </li>
           ))}
         </ol>

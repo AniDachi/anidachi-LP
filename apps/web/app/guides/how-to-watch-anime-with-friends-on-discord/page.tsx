@@ -2,25 +2,26 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 export const metadata: Metadata = {
-  title: "How to Stream Anime on Discord & Run an Anime Watch Party (2026)",
+  title: "Watch Anime on Discord Without Screen Share Pain | AniDachi",
   description:
-    "How to stream anime on Discord and run an anime watch party: screen share setup, voice coordination, spoiler-safe channels, and when to switch to synced Crunchyroll playback. Step-by-step guide.",
+    "Discord Go Live compresses anime and drifts. Keep Discord for voice; sync Crunchyroll with AniDachi watchrooms — full quality, no screen-share lag. Start at pricing.",
   alternates: {
     canonical: "/guides/how-to-watch-anime-with-friends-on-discord",
   },
   openGraph: {
-    title: "How to Stream Anime on Discord — Anime Watch Party Guide (2026)",
+    title: "Watch Anime on Discord Without Screen Share Pain | AniDachi",
     description:
-      "Stream anime on Discord or run a full anime watch party. Screen share, voice coordination, and hybrid sync options explained.",
+      "Keep Discord for voice. Sync Crunchyroll with AniDachi — full quality, no Go Live compression.",
     url: "/guides/how-to-watch-anime-with-friends-on-discord",
   },
   twitter: {
     card: "summary_large_image",
-    title: "How to Stream Anime on Discord — Anime Watch Party Guide (2026)",
+    title: "Watch Anime on Discord Without Screen Share Pain | AniDachi",
     description:
-      "Discord anime watch party: screen share, voice sync, and when to upgrade to dedicated watchrooms.",
+      "Discord voice + AniDachi sync beats screen-share lag for anime watch parties.",
   },
 };
 
@@ -53,6 +54,7 @@ const faq = [
 ];
 
 const tocHeadings: TocHeading[] = [
+  { id: "answer", label: "Short answer", level: 2 },
   { id: "why-discord", label: "Why Discord works", level: 2 },
   { id: "method-screen-share", label: "Stream anime on Discord (screen share)", level: 2 },
   { id: "method-voice-sync", label: "Voice + separate streams", level: 2 },
@@ -82,7 +84,7 @@ const howToSteps = [
   },
   {
     name: "Optional: add synced playback",
-    text: "If manual syncing feels messy, move playback to a Crunchyroll watchroom tool and keep Discord open for voice.",
+    text: "If manual syncing feels messy, move playback to an AniDachi Crunchyroll watchroom from pricing / early access and keep Discord open for voice.",
   },
 ];
 
@@ -91,7 +93,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
     <>
       <HowToJsonLd
         name="How to watch anime with friends on Discord"
-        description="Configure Discord voice and text channels, choose screen share or coordinated streams, and optionally pair with synced Crunchyroll playback."
+        description="Configure Discord voice and text channels, choose screen share or coordinated streams, and optionally pair with synced Crunchyroll playback via AniDachi."
         steps={howToSteps}
       />
       <SeoPageLayout
@@ -104,27 +106,51 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
           },
         ]}
         title="How to Watch Anime With Friends on Discord"
-        description="Discord anime watch parties with voice, screen share, and hybrid sync options."
+        description="Discord anime watch parties with voice, screen share, and AniDachi sync when Go Live lags."
         url="/guides/how-to-watch-anime-with-friends-on-discord"
         datePublished="2026-05-01"
-        dateModified="2026-06-08"
+        dateModified="2026-07-28"
         faq={faq}
         headings={tocHeadings}
+        aboveFoldCta
       >
         <h1 className="text-4xl font-bold text-foreground mb-6">
           How to Stream Anime on Discord &amp; Run an Anime Watch Party (2026)
         </h1>
 
+        <h2
+          id="answer"
+          className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
+        >
+          Short Answer
+        </h2>
         <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
-            Most anime groups already live on Discord, so the simplest watch
-            party stack is voice chat plus either screen share or coordinated
-            individual streams.
+            Discord screen share works in a pinch, but compression and drift make
+            anime nights worse — keep Discord for voice and sync Crunchyroll with
+            AniDachi so everyone watches in full quality on their own account.
           </strong>{" "}
-          This guide walks through how to stream anime on Discord, how to run a
-          full Discord anime watch party, and when to add a dedicated sync layer
-          on top of Crunchyroll.
+          This guide covers Go Live setup, voice countdown sync, and the hybrid
+          stack that fixes screen-share pain. Start at{" "}
+          <Link href="/pricing" className="text-brand-orange hover:underline">
+            AniDachi pricing / early access
+          </Link>{" "}
+          or the{" "}
+          <Link
+            href="/watch-crunchyroll-together"
+            className="text-brand-orange hover:underline"
+          >
+            Crunchyroll watch party hub
+          </Link>
+          .
         </p>
+
+        <PrimaryCheckoutCta
+          pagePath="/guides/how-to-watch-anime-with-friends-on-discord"
+          pageTemplate="guide"
+          placement="content_mid"
+          className="my-10"
+        />
 
         <h2
           id="why-discord"
@@ -184,9 +210,14 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
         <p className="text-foreground/80 leading-relaxed mb-4">
           When your group wants sharper video{" "}
           <em>and</em> tighter playback alignment, keep Discord for voice and run
-          playback through a Crunchyroll-focused watch party stack. AniDachi adds
-          watchrooms with chat tied to progress — helpful when half the crew
-          watches live and the rest catches up later without spoiling the thread.
+          playback through AniDachi on Crunchyroll. Watchrooms sync each
+          person&apos;s stream and keep chat tied to progress — helpful when half
+          the crew watches live and the rest catches up later without spoiling
+          the thread. Get the extension from{" "}
+          <Link href="/pricing" className="text-brand-orange hover:underline">
+            AniDachi pricing / early access
+          </Link>
+          .
         </p>
 
         <h2
@@ -268,6 +299,16 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
             </Link>
           </li>
           <li>
+            <Link href="/watch-crunchyroll-together" className="hover:underline">
+              Watch Crunchyroll Together
+            </Link>
+          </li>
+          <li>
+            <Link href="/pricing" className="hover:underline">
+              AniDachi pricing / early access
+            </Link>
+          </li>
+          <li>
             <Link
               href="/guides/how-to-watch-anime-with-friends-online"
               className="hover:underline"
@@ -285,15 +326,10 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
           </li>
           <li>
             <Link
-              href="/guides/how-to-watch-anime-without-spoilers"
+              href="/guides/can-you-screen-share-crunchyroll-on-discord"
               className="hover:underline"
             >
-              How to Watch Anime Without Spoilers
-            </Link>
-          </li>
-          <li>
-            <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-              AniDachi vs Teleparty
+              Can you screen share Crunchyroll on Discord?
             </Link>
           </li>
         </ul>

@@ -156,7 +156,7 @@ export default function BestRomanceAnimeWithFriendsPage() {
       </p>
       <ul className="space-y-4 text-foreground/80 mb-10">
         <li>
-          <strong><Link href="/watch/kaguya-sama-love-is-war-with-friends" className="text-brand-orange hover:underline">Kaguya-sama: Love Is War</Link></strong> — 37 episodes across 3 seasons. Two student council geniuses refuse to confess first and scheme elaborately to make the other break. The comedy format means groups can easily pick it up mid-season — every episode is funny without requiring prior investment. Available on Crunchyroll.
+          <strong><Link href="/watch/kaguya-sama-with-friends" className="text-brand-orange hover:underline">Kaguya-sama: Love Is War</Link></strong> — 37 episodes across 3 seasons. Two student council geniuses refuse to confess first and scheme elaborately to make the other break. The comedy format means groups can easily pick it up mid-season — every episode is funny without requiring prior investment. Available on Crunchyroll.
         </li>
         <li>
           <strong><Link href="/watch/ouran-high-school-host-club-with-friends" className="text-brand-orange hover:underline">Ouran High School Host Club</Link></strong> — 26 episodes. Scholarship student Haruhi accidentally breaks an expensive vase and must repay the debt by joining the Host Club. The gender-flipping comedy and rapid-fire character archetypes ensure every person in the group picks a favourite host by episode 4. Available on Crunchyroll.

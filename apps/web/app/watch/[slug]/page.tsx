@@ -267,6 +267,7 @@ export default async function AnimeWithFriendsPage({ params }: Props) {
       articleImage={posterUrl ?? undefined}
       datePublished="2026-04-23"
       dateModified={dateModified}
+      showEditorialByline={false}
       faq={faq}
       headings={buildToc(relatedAnime.length > 0, anime)}
       itemList={resourceItemList}

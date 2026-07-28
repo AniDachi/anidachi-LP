@@ -1,12 +1,14 @@
 /**
- * Temporary force-index URL paths for GSC bulk re-evaluation.
+ * Temporary cohort discovery URL paths for GSC re-evaluation.
  *
  * Source: GSC Coverage Drilldown 2026-07-17
  * Issue: Discovered - currently not indexed
  * Excludes 9 noindex auth/product routes that must not be indexed.
  *
- * Remove this module, the /force-index-sitemap.xml route, and the
- * second robots.txt sitemap entry once these pages are indexed.
+ * SAFETY: Keep this list, `/force-index-sitemap.xml`, and the robots.txt
+ * sitemap entry live until Coverage shows recovery. Do not delete or noindex
+ * these URLs without owner approval + GSC evidence. The route must NOT emit
+ * a rolling "today" lastmod (freshness theater).
  */
 
 export const FORCE_INDEX_URL_PATHS = [

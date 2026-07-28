@@ -1,256 +1,152 @@
-# AniDachi Programmatic SEO — Content Engine Guidelines
+# AniDachi SEO Content Guidelines
 
-This document is the single source of truth for creating new SEO pages on [anidachi.app](https://anidachi.app). Follow it so every page matches the quality of existing pillars (`/watch-anime-together`, `/watch-crunchyroll-together`), guides under `/guides/`, and comparisons under `/compare/`.
+**Single source of truth** for public marketing SEO on [anidachi.app](https://anidachi.app).  
+Dated keyword volumes and batch plans live in separate plan docs — re-pull Keyword Planner before treating any number as current.
 
-## Context
-
-AniDachi is a Chrome extension for creating **watchrooms**, syncing **Crunchyroll** playback, and discussing episodes **asynchronously**—the main differentiator is **async co-watching** (no shared schedule required).
-
-## Canonical anime URL (Template A)
-
-**Do not** use a nested path like `/anime/.../watch-with-friends`. Production uses a **flat** URL:
-
-- **Pattern:** `/watch/{anime-base-slug}-with-friends`
-- **Example:** `/watch/attack-on-titan-with-friends`
-- **Implementation:** `app/watch/[slug]/page.tsx` — the dynamic `slug` is the full segment (e.g. `attack-on-titan-with-friends`); code strips `-with-friends` to resolve `lib/anime-data.ts`.
-
-**Rationale:** Shorter paths, stable indexed URLs (49+ pages), and avoiding unnecessary 301 chains and crawl budget cost. The phrase `watch-with-friends` as a **suffix** on the slug is enough for relevance; it does not need to be a separate path segment.
+Operational agent: [`.cursor/agents/anidachi-seo-aeo-pages.md`](../../../.cursor/agents/anidachi-seo-aeo-pages.md)  
+Portfolio freeze / safety: [`seo-portfolio-freeze.md`](./seo-portfolio-freeze.md)  
+Editorial standards: [`/editorial-policy`](https://anidachi.app/editorial-policy)
 
 ---
 
-## Page template catalog
+## Product truth
 
-Identify **one** template per page. **Do not mix** templates.
+AniDachi is a Chrome extension + web product for **watchrooms** on:
 
-### Template A — Anime title pages
+- **Crunchyroll** (catalog pages, desktop Chrome)
+- **YouTube** (full `youtube.com/watch` pages, desktop Chrome — not Shorts, embeds, feeds, or native mobile apps)
 
-| | |
-|---|---|
-| **URL** | `/watch/{base-slug}-with-friends` |
-| **Primary keyword** | `watch [Anime Title] with friends` |
-| **Secondary** | `[Anime] watch party`, `[Anime] watchroom`, `[Anime] sync Crunchyroll` |
-| **Word count** | 450–650 |
-| **Schema** | `FAQPage` + `BreadcrumbList` + `Article` |
+Differentiators: sync + async catch-up, chat, progress. Each person uses their own streaming account.  
+**Not supported:** Netflix, Disney+, Hulu, Amazon Prime Video sync.  
+**Not affiliated** with Crunchyroll, Sony, YouTube, or Google.
 
-**Sections (order):**
-
-1. **H1:** `Watch [Anime Title] with Friends — AniDachi Watchrooms` (or equivalent on-brand)
-2. **Lede** (60–80 words, lead with `<strong>`): Why this anime is better shared; reference a **concrete** story moment (finale, twist, cliffhanger)—not generic copy. Synopsis context can be informed by Jikan `GET /v4/anime/{id}` (do not copy-paste MAL/Crunchyroll text verbatim for the lede).
-3. **Step-by-step setup** (5 numbered steps): Standard AniDachi flow; inject `[Anime Title]` in steps 2 and 3.
-4. **Why [Anime] is perfect for async watching** (150–200 words): Episode length, cadence, spoiler/discussion density. Prefer Jikan for `episodes`, `airing`.
-5. **Discussion tips** (3–5 bullets): Evergreen but fan-specific hooks.
-6. **CTA** → `/#pricing`
-7. **Related anime** (3 internal links) → `/watch/{slug}-with-friends` (from Jikan recommendations where possible, matched to your seed list).
-8. **FAQ** (exactly 3) + `FAQPage` schema:
-   - Does [Anime] have a watch party feature on Crunchyroll?
-   - Can I watch [Anime] with friends asynchronously?
-   - Do all my friends need Crunchyroll to watch [Anime] together?
+Primary conversion path: **`/pricing`** until a real Chrome Web Store listing is live. Install how-tos must not invent generic `chromewebstore.google.com` “Add to Chrome” CTAs. Prefer linking the install hub when `/extension` is the live download/store path.
 
 ---
 
-### Template B — Competitor comparison pages
+## Hard safety rules (ranking / indexation)
 
-| | |
-|---|---|
-| **URL** | `/compare/anidachi-vs-[competitor]` |
-| **Primary** | `anidachi vs [competitor]`, `[competitor] alternative for anime` |
-| **Word count** | 550–750 |
-| **Schema** | `FAQPage` + `BreadcrumbList` |
-| **Tone** | Informative, not adversarial |
+Do **not**, without owner approval + GSC evidence:
 
-**Competitors to cover:** `teleparty` (done), `discord`, `crunchyroll-party`, `syncplay`, `watch2gether`, `kast`, `scener`
+- Ship net-new SEO URL batches while the publishing freeze is active (`seo-portfolio-freeze.md`)
+- 301 / Merge / Retire / Delete public marketing URLs
+- Add `noindex` to previously indexable marketing URLs
+- Remove the cohort discovery sitemap while Coverage is recovering
+- Shrink footer/nav crawl paths to existing spokes
+- Rewrite high-traffic pillar H1s or primary intent
 
-**Sections (order):**
+Default: **enrich in place**, additive pages, reversible changes.
 
-1. H1: `AniDachi vs [Competitor]: Which Is Better for Watching Anime Together?`
-2. **TL;DR** + table: columns Feature \| AniDachi \| [Competitor]. Rows: Crunchyroll sync, Async watching, Auto anime detection, Chat, Free tier, Setup time.
-3. **When to use AniDachi** (4–5 bullets)
-4. **When to use [Competitor]** (3–4 bullets, fair)
-5. **Feature deep-dive** (2–3 paragraphs), emphasize async + Crunchyroll fit; verify competitor facts.
-6. CTA
-7. FAQ (3) + schema: free vs; Crunchyroll support; switching
+Evidence order: Google documentation → AniDachi GSC/GA4 → reproducible tests → third-party studies → patents/leaks as hypotheses only.  
+Do **not** treat domain age, WHOIS, dwell time, schema, or “force-index” sitemaps as ranking levers.
 
 ---
 
-### Template C — How-to guides
+## Publishing gate (every new or major SEO URL)
 
-| | |
-|---|---|
-| **URL** | `/guides/[action-slug]` |
-| **Primary** | `how to [action]` (problem-first) |
-| **Word count** | 600–900 |
-| **Schema** | `FAQPage` + `HowTo` (Method 1 steps) + `BreadcrumbList` |
+A page may ship only if **all** are true:
 
-**Priority slugs (build order):**
+1. Previous cohort is healthy enough (or freeze is lifted by owner).
+2. Target query is not already owned (full route inventory + GSC query data — not top pages only). Run `pnpm --filter @anidachi/web seo:portfolio` / `seo:keywords` with full inventory.
+3. Page adds distinct information (not a modifier twin / doorway).
+4. One parent hub + **two contextual inbound links** planned **before** publish; ≤3 clicks from a relevant pillar.
+5. `datePublished` / `dateModified` honest; 30/60/90-day review date recorded in the PR or plan.
+6. Claims match product, pricing, and legal pages; competitor claims have primary sources + verification dates.
+7. CTA and `seo_landing_path` attribution remain intact (see `CONVERSION_METRICS.md`).
 
-1. `how-to-watch-anime-with-friends-online`
-2. `how-to-watch-anime-long-distance`
-3. `how-to-watch-anime-with-friends-in-different-time-zones`
-4. `how-to-watch-anime-without-spoilers`
-5. `how-to-create-an-anime-watch-party`
-6. `how-to-watch-crunchyroll-on-two-screens`
-7. `how-to-sync-crunchyroll-with-someone`
-8. `how-to-watch-anime-with-a-group`
-9. `how-to-share-anime-reactions-with-friends`
-10. `how-to-start-an-anime-club-online`
-
-**Sections (order):**
-
-1. H1 = exact keyword, title case
-2. **Answer-first** (50–70 words, `<strong>`): `[Action] is possible by [method]. The easiest way is [AniDachi] because [benefit].`
-3. **Methods** (2–4): H2 each; Method 1 AniDachi (150–200 words), others shorter, honest
-4. **Numbered steps** for Method 1 (≤10) — feed `HowTo` JSON-LD
-5. CTA
-6. **Related guides** (3–4 internal links)
-7. FAQ (3) + `FAQPage`
+Reject: avg monthly searches &lt; 10 unless clear commercial value **and** unique intent (being a twin of another platform page is **not** enough).
 
 ---
 
-### Template D — “Best anime to watch [modifier]” listicles
+## Information architecture
 
-| | |
-|---|---|
-| **URL** | `/guides/best-anime-to-watch-[modifier]` |
-| **Primary** | `best anime to watch [modifier]` |
-| **Word count** | 1,200–1,800 |
-| **Schema** | `FAQPage` + `ItemList` + `BreadcrumbList` |
-| **Layout** | Use `aboveFoldCta` on `SeoPageLayout` so a CTA appears high on mobile |
+| Cluster | Pillar / hub | Notes |
+|--------|----------------|-------|
+| Anime vertical | `/watch-anime-together` | Genre hubs + `/watch/{slug}-with-friends` (Crunchyroll-first) |
+| Crunchyroll platform | `/watch-crunchyroll-together` | Sibling of anime/YouTube — do not nest YT under anime |
+| YouTube platform | `/watch-youtube-together` | Sibling cluster; crumbs: Home → YouTube Watch Party → … |
+| Trust | `/about`, `/editorial-policy`, `/contact`, `/security` | Additive trust surfaces |
+| Product | `/`, `/pricing`, install hub when live | Conversion |
 
-**Modifier backlog (priority):** `with-friends` (exists), `with-girlfriend`, `with-boyfriend`, `online-together`, `long-distance`, `as-a-group`, `in-a-watch-party`, `for-beginners`, `on-crunchyroll-with-friends`, `asynchronously`
-
-**Sections (order):**
-
-1. H1: `[N] Best Anime to Watch [Modifier] in [Year]`
-2. Intro (80–100 words)
-3. Per anime: H2, poster from Jikan `images.jpg.large_image_url`, `alt="[Title] watch party"`, 60–80 words, link `Watch [Title] with friends →` → `/watch/{slug}-with-friends`
-4. CTA
-5. FAQ (3)
+Related lists: prefer narrow tags (`pillar-watch-youtube` or `pillar-watch-crunchyroll` alone). Avoid OR-ing broad `watch-party` across clusters.
 
 ---
 
-## Global rules
+## Canonical anime URL (programmatic)
 
-### One primary keyword per page
+- Pattern: `/watch/{base-slug}-with-friends`
+- Implementation: `app/watch/[slug]/page.tsx` + `lib/anime-data.ts` + `lib/watch-page-rich-content.ts`
+- Do **not** invent nested `/anime/...` paths or mass-301 for prettier URLs
 
-Check existing routes and Search Console; avoid cannibalization.
-
-Place the primary keyword in: `<title>`, `<h1>`, first ~100 words, at least one `<h2>`, meta description.
-
-- **Title:** `"[Primary Keyword] — AniDachi"` (≤60 characters)
-- **Description:** one sentence answer + CTA (≤155 characters)
-
-### Internal linking (minimum 3 per new page)
-
-- One to `/` or `/#pricing`
-- One to a pillar: `/watch-anime-together` or `/watch-crunchyroll-together`
-- One to a related live page
-- Add every new guide/listicle route to `lib/guide-links.ts` so hub pages can pick it up automatically.
-
-When you add a Template A page, update the **pillar** (e.g. “Popular anime”) so the graph stays bidirectional.
-
-### Schema
-
-Use JSON-LD via the shared components in `components/json-ld.tsx`. Always include **BreadcrumbList**; add **FAQPage** when an FAQ block exists; **HowTo** on Template C; **ItemList** on Template D; **Article** on article-style pages as implemented.
-
-### Content quality
-
-- No filler openers (“In today’s world…”, “Anime fans know…”).
-- Reading level: grade 8–10; paragraphs ≤3 sentences; bullets for steps and comparisons.
-- **Anime facts** (episodes, score, airing) should come from **Jikan** when publishing or refreshing pages—not invented.
-- At least one **anime-specific** detail per Template A page (arc, episode beat, character moment).
-- CTA: visible early on long pages (Template D) **and** at the end.
-
-### URL and file naming
-
-- Lowercase, hyphens, no trailing slash.
-- Drop stop words in slugs unless they are part of the query.
-- App Router examples: `app/watch/[slug]/page.tsx`, `app/guides/.../page.tsx`, `app/compare/.../page.tsx`.
+When adding titles: update `animeList` + MAL ids, hub/listicle backlinks, bump `dateModified` only when content meaningfully changes. Prefer enriching existing titles over unbounded catalog growth while freeze is active.
 
 ---
 
-## Jikan API (`lib/jikan.ts`)
+## Page checklist (new or substantial edit)
 
-The repo includes typed helpers in `lib/jikan.ts` and, for programmatic watch pages, `lib/jikan-for-watch-page.ts` (React `cache` for one Jikan request per page) plus `lib/anime-mal-ids.ts` (slug → MAL id). Server-side fetch uses `next: { revalidate: 86400 }` (24h) for caching. If Jikan is unavailable, pages fall back to the copy in `anime-data.ts` and the static `related` list.
-
-Common endpoints:
-
-- `GET /v4/anime?order_by=members&sort=desc&limit=25`
-- `GET /v4/anime/{id}`
-- `GET /v4/anime/{id}/recommendations`
-- `GET /v4/anime/{id}/episodes`
-
-Respect Jikan’s rate limit (~3 rps). Before production builds, run **`npm run cache:jikan`** (also runs automatically via `npm run build`) to refresh **`lib/anime-jikan-cache.json`**. Watch pages use that file when live Jikan fails during static generation.
+1. `metadata`: title, description, canonical, openGraph, twitter
+2. `SeoPageLayout` (or trust-page article layout for About/Contact/etc.): breadcrumbs, dates, FAQ parity with `FAQPageJsonLd`
+3. Editorial byline via layout (About + Editorial Policy) unless the page already shows equivalent meta
+4. Structured data from `components/json-ld.tsx` (initial HTML — no deferred Script wrapper)
+5. Sitemap: static routes auto-discovered via `lib/sitemap-discovery.ts` — do not maintain a manual static list
+6. Internal links: ≥1 pillar, ≥1 sibling, descriptive anchors
+7. CTA: `/pricing` (or install hub when designated) — keep `PrimaryCheckoutCta` wiring
+8. No Blou / CRM routes in public SEO copy
 
 ---
 
-## `lib/anime-data.ts` (build-time slugs)
+## Templates (intent → shape)
 
-Used for `generateStaticParams` and local copy. Each entry: `slug`, `title`, unique written synopsis, `episodes` string, `genres` (3), `related` (3 slugs to existing entries). Add titles with **≥~100k MAL members** for Template A at scale.
+Use existing gold-standard pages in the agent file. Do **not** treat “do not mix schema types” as a ban on combining Article + FAQ + HowTo when the visible page has those sections.
 
----
+### Programmatic watch pages
 
-## Sitemap (`app/sitemap.ts`)
+- Title-specific value required; avoid sitewide boilerplate FAQs for pricing/platform — centralize those on pillars/`/pricing`
+- Meta descriptions must differ meaningfully across titles (group angle, format, availability, action phrase)
+- Opening copy: answer-first and title-specific — **do not** force one identical three-sentence template on every title
+- Schema may include HowTo, TVSeries/Movie, Article, Breadcrumb, FAQ, ItemList when UI matches
 
-- Template A URLs are generated from the anime list (`/watch/{slug}-with-friends`).
-- New static pages must be added to the static routes list.
-- Priorities: pillar 0.9; compare + guide 0.8; listicle 0.7; anime title 0.6; glossary 0.5 (adjust to match `sitemap.ts` when editing).
+### Guides / compare / listicles
 
----
+- Answer-first; commercial pages: fold CTA + mid `PrimaryCheckoutCta`
+- Compare pages: fair tables + primary sources for competitor claims
+- CTA destination: `/pricing` (not `/#pricing` alone)
 
-## `dateModified` protocol
+### Trust pages
 
-- Set `datePublished` once at launch.
-- Bump `dateModified` on every **meaningful** content edit (use `YYYY-MM-DD` in `SeoPageLayout`).
-- Do not backdate to manipulate freshness.
-
----
-
-## Table of contents (on-page SEO)
-
-Long SEO pages should pass a `headings` array into `SeoPageLayout` so users (and search features) can jump to sections. Each linked section needs a stable **`id` on the corresponding `<h2>`** (or `h3`) that matches the TOC.
-
-**Rationale:** In-page anchor navigation supports “Jump to” style behavior in SERPs when headings are clear and first-party anchor links are consistent.
+- `/about`, `/editorial-policy`, `/contact`, `/security` — no invented founders; no checkout-hard-sell required
 
 ---
 
-## Interactive TOC component
+## Schema honesty
 
-Implementation: `components/table-of-contents.tsx` (client) + `headings` prop on `SeoPageLayout`.
-
-- **Desktop:** sticky “On this page” beside the article.
-- **Mobile:** collapsible “Contents” at the top of the article column.
-- **Active state:** `IntersectionObserver` to highlight the section in view.
-
-All published SEO routes that use `SeoPageLayout` (pillars, guides, compare, glossary, and programmatic `/watch/...-with-friends` pages) pass `headings` with matching `id` / `scroll-mt-24` on section headings so the TOC stays in sync.
+- FAQ/HowTo markup describes on-page content; **do not** promise rich results (FAQ rich results are largely limited; HowTo is desktop-limited)
+- No fake `SearchAction` / site search until a real search endpoint exists
+- Organization `sameAs` = `PUBLIC_SOCIAL_LINKS`; author/publisher may point at `/about`
 
 ---
 
-## 100-page build order (summary)
+## Measurement
 
-| Priority | Template | Count | Notes |
-|----------|----------|-------|--------|
-| 1 | Template A (top anime) | 50 | Highest volume, direct product fit |
-| 2 | Template C (how-tos) | 20 | Snippets + intent |
-| 3 | Template D (listicles) | 15 | Funnel to Template A |
-| 4 | Template B (comparisons) | 10 | Competitor + conversion |
-| 5 | Template A (seasonal / airing) | 5 | Topicality |
+```bash
+pnpm --filter @anidachi/web seo:portfolio
+pnpm --filter @anidachi/web seo:links
+pnpm --filter @anidachi/web seo:keywords
+```
 
-Use the seed list and topic lists in this doc’s Template sections as the working backlog.
+Track: Coverage cohorts, query cannibalization, impressions → clicks → `seo_landing_path` → checkout.  
+Impressions before clicks is normal for new URLs. Prefer enriching winners over shipping more thin spokes.
 
 ---
 
 ## Pre-publish checklist
 
-- [ ] `metadata` title ≤60 chars, description ≤155 chars, canonical = exact path
-- [ ] H1 and **one primary keyword** strategy satisfied; no cannibalization
-- [ ] `SeoPageLayout` props align with `metadata` (title, description, url, dates)
-- [ ] Breadcrumb JSON-LD + any FAQ/HowTo/ItemList/Article as required by template
-- [ ] If TOC: `headings[]` and matching **`id` on sections**
-- [ ] ≥3 internal links (home, pillar, related)
-- [ ] Outbound to a primary source on Template C where applicable
-- [ ] `dateModified` updated if content changed
-- [ ] `npm run build` passes
+- [ ] Freeze / publishing gate passed
+- [ ] No cannibalization of an owned query
+- [ ] Canonical = path; FAQ body ↔ JSON-LD
+- [ ] Product claims truthful (CR + YT limits)
+- [ ] Sources for competitor / absolute claims
+- [ ] Inbound links planned
+- [ ] `pnpm --filter @anidachi/web check` (and build when required)
 
----
-
-*Last updated: 2026-04-24*
+*Last updated: 2026-07-28*

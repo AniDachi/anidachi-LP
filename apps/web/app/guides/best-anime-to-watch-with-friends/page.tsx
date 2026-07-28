@@ -5,10 +5,16 @@ import { ResponsiveDataTable } from "@/components/responsive-data-table";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 export const metadata: Metadata = {
-  title: "Best Anime to Watch with Friends (2026) — 115+ Good Anime for Group Watching",
+  title: "Best Anime to Watch with Friends (2026) — 115+ Group Watch Picks",
   description:
-    "The best anime to watch with friends in 2026 — 115+ picks sorted by vibe. Good anime for watch parties: big-reaction series, comedy, theory-crafting, and long marathons. Includes animes to watch with friends for any group size.",
+    "115+ best anime to watch with friends, sorted by vibe — then host a synced Crunchyroll watchroom with AniDachi. Reactions, comedy, theory nights, and marathons. Start at pricing.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
+  openGraph: {
+    title: "Best Anime to Watch with Friends (2026) — 115+ Group Watch Picks",
+    description:
+      "Pick the right show for your group, then host an AniDachi Crunchyroll watchroom — synced or async.",
+    url: "/guides/best-anime-to-watch-with-friends",
+  },
 };
 
 const faq = [
@@ -102,13 +108,14 @@ export default function BestAnimeWithFriendsPage() {
         { name: "Best Anime with Friends", url: "/guides/best-anime-to-watch-with-friends" },
       ]}
       title="Best Anime to Watch with Friends in 2026 — 115+ Picks"
-      description="115+ best anime to watch with friends, sorted by vibe: reactions, comedy, theory, and marathons."
+      description="115+ best anime to watch with friends, sorted by vibe — then host a synced AniDachi Crunchyroll watchroom."
       url="/guides/best-anime-to-watch-with-friends"
       datePublished="2026-04-23"
-      dateModified="2026-06-08"
+      dateModified="2026-07-28"
       faq={faq}
       headings={headings}
       itemList={itemList}
+      aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
         Best Anime to Watch with Friends in 2026 — 115+ Picks
@@ -122,7 +129,12 @@ export default function BestAnimeWithFriendsPage() {
         Whether that&apos;s a jaw-dropping cliffhanger, a joke that lands harder
         with four people watching, or a twist that sends your chat into chaos —
         the right show turns a viewing session into a shared memory. Here are
-        115+ good anime to watch with friends, sorted by vibe.
+        115+ good anime to watch with friends, sorted by vibe — then host them in
+        an AniDachi Crunchyroll watchroom from{" "}
+        <Link href="/pricing" className="text-brand-orange hover:underline">
+          pricing / early access
+        </Link>
+        .
       </p>
 
       <h2
@@ -155,6 +167,13 @@ export default function BestAnimeWithFriendsPage() {
           Neighbor Totoro — high accessibility, great first impressions.
         </li>
       </ul>
+
+      <PrimaryCheckoutCta
+        pagePath="/guides/best-anime-to-watch-with-friends"
+        pageTemplate="listicle"
+        placement="content_mid"
+        className="my-10"
+      />
 
       <h2
         id="quick-picks"
@@ -269,13 +288,6 @@ export default function BestAnimeWithFriendsPage() {
         <li><strong><Link href="/watch/nisekoi-with-friends" className="text-brand-orange hover:underline">Nisekoi</Link></strong> — Fake-dating yakuza comedy with a running locket mystery; precision-engineered ship-war debates in chat every episode.</li>
         <li><strong><Link href="/watch/my-neighbor-totoro-with-friends" className="text-brand-orange hover:underline">My Neighbor Totoro</Link></strong> — Studio Ghibli&apos;s warmest film; universally accessible for every age and the best one-evening pick when your group includes people who have never seen anime before.</li>
       </ul>
-
-      <PrimaryCheckoutCta
-        pagePath="/guides/best-anime-to-watch-with-friends"
-        pageTemplate="listicle"
-        placement="content_mid"
-        className="my-10"
-      />
 
       <h2
         id="discussion"

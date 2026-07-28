@@ -1,5 +1,5 @@
 import { getResolvedSiteOrigin } from "@/lib/site-url";
-import { DISCORD_SERVER_INVITE_URL } from "@/lib/community-discord";
+import { PUBLIC_SOCIAL_LINKS } from "@/lib/public-social-links";
 
 interface JsonLdProps {
   data: Record<string, unknown> | Record<string, unknown>[];
@@ -19,14 +19,19 @@ export function JsonLd({ data }: JsonLdProps) {
 
 export function OrganizationJsonLd() {
   const siteUrl = getResolvedSiteOrigin();
+  const organizationId = `${siteUrl}/#organization`;
+  const websiteId = `${siteUrl}/#website`;
+  const sameAs = PUBLIC_SOCIAL_LINKS.map((link) => link.href);
+
   const data = [
     {
       "@context": "https://schema.org",
       "@type": "Organization",
+      "@id": organizationId,
       name: "AniDachi",
       url: siteUrl,
       logo: `${siteUrl}/Anidachi_logo.png`,
-      sameAs: [DISCORD_SERVER_INVITE_URL],
+      sameAs,
       contactPoint: {
         "@type": "ContactPoint",
         email: "anidachi.app@gmail.com",
@@ -36,16 +41,12 @@ export function OrganizationJsonLd() {
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
+      "@id": websiteId,
       name: "AniDachi",
       url: siteUrl,
-      potentialAction: {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: `${siteUrl}/watch/{search_term_string}-with-friends`,
-        },
-        "query-input": "required name=search_term_string",
-      },
+      publisher: { "@id": organizationId },
+      // No SearchAction: sitelinks search box is retired, and we have no real
+      // site-search endpoint. Do not reintroduce a fake /watch/{term} template.
     },
   ];
   return <JsonLd data={data} />;
@@ -199,12 +200,15 @@ export function ArticleJsonLd({
     ...(images?.length ? { image: images } : {}),
     author: {
       "@type": "Organization",
+      "@id": `${siteUrl}/#organization`,
       name: "AniDachi",
-      url: siteUrl,
+      url: `${siteUrl}/about`,
     },
     publisher: {
       "@type": "Organization",
+      "@id": `${siteUrl}/#organization`,
       name: "AniDachi",
+      url: `${siteUrl}/about`,
       logo: { "@type": "ImageObject", url: `${siteUrl}/Anidachi_logo.png` },
     },
   };

@@ -37,7 +37,23 @@ export interface SeoPageLayoutProps {
   midContentSlot?: ReactNode;
   /** FAQ items open by default (defaults to pricing/refund question index 4 when FAQ present) */
   faqDefaultOpenIndexes?: number[];
+  /**
+   * Show organizational accountability line (dates + link to About / Editorial Policy).
+   * Defaults to true. Set false only for pages that already render equivalent meta.
+   */
+  showEditorialByline?: boolean;
   children: React.ReactNode;
+}
+
+function formatIsoDate(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 export function SeoPageLayout({
@@ -55,11 +71,33 @@ export function SeoPageLayout({
   articleImage,
   midContentSlot,
   faqDefaultOpenIndexes,
+  showEditorialByline = true,
   children,
 }: SeoPageLayoutProps) {
   const hasToc = headings && headings.length > 0;
   const pageTemplate = conversionTemplate ?? inferPageTemplateFromPath(url);
   const showStickyBar = Boolean(aboveFoldCta || hasToc || (faq && faq.length > 0));
+
+  const editorialByline = showEditorialByline ? (
+    <p className="not-prose mt-8 border-t border-brand-border pt-4 text-xs text-foreground/45 leading-relaxed">
+      Published {formatIsoDate(datePublished)}
+      {dateModified !== datePublished
+        ? ` · Updated ${formatIsoDate(dateModified)}`
+        : null}
+      {" · "}
+      By{" "}
+      <Link href="/about" className="text-brand-orange hover:underline">
+        AniDachi
+      </Link>
+      {" · "}
+      <Link
+        href="/editorial-policy"
+        className="text-brand-orange hover:underline"
+      >
+        Editorial policy
+      </Link>
+    </p>
+  ) : null;
 
   const articleBody = (
     <div className="seo-prose">
@@ -71,6 +109,7 @@ export function SeoPageLayout({
         children
       )}
       {midContentSlot ? <div className="not-prose">{midContentSlot}</div> : null}
+      {editorialByline}
       <div className="not-prose mt-8">
         <PrimaryCheckoutCta
           pagePath={url}

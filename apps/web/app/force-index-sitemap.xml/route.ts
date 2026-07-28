@@ -14,8 +14,12 @@ function escapeXml(value: string): string {
 }
 
 /**
- * Temporary secondary sitemap for GSC bulk re-evaluation of discovered-not-indexed
- * public URLs. Remove once those pages are indexed (see `force-index-urls.ts`).
+ * Temporary secondary sitemap for GSC discovery of the 2026-07-17
+ * Discovered-not-indexed cohort. Keep advertised in robots.txt until Coverage
+ * recovers — do not delete without owner approval.
+ *
+ * Intentionally omits <lastmod>: rewriting every URL to "today" on each request
+ * is freshness theater and must not be restored.
  */
 export function GET(): Response {
   if (isRobotsIndexingDisabled()) {
@@ -23,10 +27,9 @@ export function GET(): Response {
   }
 
   const origin = getResolvedSiteOrigin();
-  const lastmod = new Date().toISOString().slice(0, 10);
   const urls = FORCE_INDEX_URL_PATHS.map((path) => {
     const loc = escapeXml(`${origin}${path}`);
-    return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`;
+    return `  <url>\n    <loc>${loc}</loc>\n  </url>`;
   }).join("\n");
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
