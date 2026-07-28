@@ -20,6 +20,8 @@ dist/
 .output/
 coverage/
 artifacts/
+tmp/
+apps/web/tmp/
 graphify-out/*
 !graphify-out/
 !graphify-out/graph.json

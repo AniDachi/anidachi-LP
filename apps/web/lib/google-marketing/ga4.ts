@@ -8,6 +8,20 @@ export type Ga4PageRow = {
   engagedSessions: number;
 };
 
+export type Ga4LandingChannelRow = {
+  pagePath: string;
+  channelGroup: string;
+  sourceMedium: string;
+  sessions: number;
+  engagedSessions: number;
+};
+
+export type Ga4LandingConversionRow = {
+  pagePath: string;
+  sessions: number;
+  keyEvents: number;
+};
+
 async function resolveGa4PropertyName(
   auth: OAuth2Client,
   override?: string
@@ -89,5 +103,86 @@ export async function fetchGa4TopPages(
     sessions: Number(row.metricValues?.[0]?.value ?? 0),
     views: Number(row.metricValues?.[1]?.value ?? 0),
     engagedSessions: Number(row.metricValues?.[2]?.value ?? 0),
+  }));
+}
+
+/** Landing path × default channel group × source/medium. */
+export async function fetchGa4LandingByChannel(
+  auth: OAuth2Client,
+  options?: { days?: number; limit?: number; propertyId?: string }
+): Promise<Ga4LandingChannelRow[]> {
+  const days = options?.days ?? 28;
+  const limit = options?.limit ?? 5_000;
+  const property = await resolveGa4PropertyName(auth, options?.propertyId);
+  const data = google.analyticsdata({ version: "v1beta", auth });
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - days);
+
+  const res = await data.properties.runReport({
+    property,
+    requestBody: {
+      dateRanges: [
+        {
+          startDate: start.toISOString().slice(0, 10),
+          endDate: end.toISOString().slice(0, 10),
+        },
+      ],
+      dimensions: [
+        { name: "landingPagePlusQueryString" },
+        { name: "sessionDefaultChannelGroup" },
+        { name: "sessionSourceMedium" },
+      ],
+      metrics: [{ name: "sessions" }, { name: "engagedSessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: String(limit),
+    },
+  });
+
+  return (res.data.rows ?? []).map((row) => ({
+    pagePath: row.dimensionValues?.[0]?.value ?? "",
+    channelGroup: row.dimensionValues?.[1]?.value ?? "(not set)",
+    sourceMedium: row.dimensionValues?.[2]?.value ?? "(not set)",
+    sessions: Number(row.metricValues?.[0]?.value ?? 0),
+    engagedSessions: Number(row.metricValues?.[1]?.value ?? 0),
+  }));
+}
+
+/**
+ * Landing path with keyEventCount when the property has key events configured.
+ * Falls back gracefully — callers should treat zero key events as “not configured.”
+ */
+export async function fetchGa4LandingConversions(
+  auth: OAuth2Client,
+  options?: { days?: number; limit?: number; propertyId?: string }
+): Promise<Ga4LandingConversionRow[]> {
+  const days = options?.days ?? 28;
+  const limit = options?.limit ?? 5_000;
+  const property = await resolveGa4PropertyName(auth, options?.propertyId);
+  const data = google.analyticsdata({ version: "v1beta", auth });
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - days);
+
+  const res = await data.properties.runReport({
+    property,
+    requestBody: {
+      dateRanges: [
+        {
+          startDate: start.toISOString().slice(0, 10),
+          endDate: end.toISOString().slice(0, 10),
+        },
+      ],
+      dimensions: [{ name: "landingPagePlusQueryString" }],
+      metrics: [{ name: "sessions" }, { name: "keyEvents" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: String(limit),
+    },
+  });
+
+  return (res.data.rows ?? []).map((row) => ({
+    pagePath: row.dimensionValues?.[0]?.value ?? "",
+    sessions: Number(row.metricValues?.[0]?.value ?? 0),
+    keyEvents: Number(row.metricValues?.[1]?.value ?? 0),
   }));
 }

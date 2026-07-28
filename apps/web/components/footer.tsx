@@ -23,11 +23,12 @@ export function Footer() {
               className="mb-4"
             />
             <p className="mb-4 max-w-md text-sm leading-relaxed text-foreground/50">
-              AniDachi (アニ友) — watch anime with friends on Crunchyroll. Sync,
-              chat, and async watchrooms in one place.
+              AniDachi (アニ友) — watch together with friends on Crunchyroll and
+              YouTube. Sync, chat, and async watchrooms in one place.
             </p>
             <p className="text-xs text-foreground/40">
-              Not affiliated with Crunchyroll, Sony, or any streaming platform.
+              Not affiliated with Crunchyroll, Sony, YouTube, Google, or any
+              streaming platform.
             </p>
           </div>
 
@@ -218,12 +219,36 @@ export function Footer() {
             <h4 className="font-semibold mb-4 text-sm">Company</h4>
             <ul className="space-y-2 text-foreground/50 text-sm">
               <li>
-                <a
-                  href="mailto:anidachi.app@gmail.com"
+                <Link
+                  href="/about"
                   className="hover:text-brand-orange-bright transition-colors"
                 >
-                  Contact Us
-                </a>
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="hover:text-brand-orange-bright transition-colors"
+                >
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/editorial-policy"
+                  className="hover:text-brand-orange-bright transition-colors"
+                >
+                  Editorial Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/security"
+                  className="hover:text-brand-orange-bright transition-colors"
+                >
+                  Security
+                </Link>
               </li>
               <li>
                 <Link

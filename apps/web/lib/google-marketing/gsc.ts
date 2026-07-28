@@ -9,6 +9,23 @@ export type GscPageRow = {
   position: number;
 };
 
+export type GscQueryRow = {
+  query: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+};
+
+export type GscQueryPageRow = {
+  query: string;
+  page: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+};
+
 function pickSiteUrl(
   sites: Array<{ siteUrl?: string | null }>,
   preferredHosts: string[]
@@ -30,6 +47,29 @@ function pickSiteUrl(
   );
 }
 
+async function resolveGscSiteUrl(
+  auth: OAuth2Client,
+  override?: string
+): Promise<string> {
+  if (override?.trim()) return override.trim();
+  const sc = google.searchconsole({ version: "v1", auth });
+  const sites = await sc.sites.list();
+  return pickSiteUrl(sites.data.siteEntry ?? [], [
+    "www.anidachi.app",
+    "anidachi.app",
+  ]);
+}
+
+function dateRange(days: number): { startDate: string; endDate: string } {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - days);
+  return {
+    startDate: start.toISOString().slice(0, 10),
+    endDate: end.toISOString().slice(0, 10),
+  };
+}
+
 export async function listGscSiteUrls(auth: OAuth2Client): Promise<string[]> {
   const sc = google.searchconsole({ version: "v1", auth });
   const res = await sc.sites.list();
@@ -42,27 +82,25 @@ export async function fetchGscTopPages(
   auth: OAuth2Client,
   options?: { days?: number; limit?: number; siteUrl?: string }
 ): Promise<GscPageRow[]> {
+  return fetchGscPages(auth, options);
+}
+
+/** Page-dimension Search Analytics for the full (or capped) property. */
+export async function fetchGscPages(
+  auth: OAuth2Client,
+  options?: { days?: number; limit?: number; siteUrl?: string }
+): Promise<GscPageRow[]> {
   const days = options?.days ?? 28;
-  const limit = options?.limit ?? 25;
+  const limit = options?.limit ?? 25_000;
   const sc = google.searchconsole({ version: "v1", auth });
-
-  const sites = await sc.sites.list();
-  const siteUrl =
-    options?.siteUrl ??
-    pickSiteUrl(sites.data.siteEntry ?? [], [
-      "www.anidachi.app",
-      "anidachi.app",
-    ]);
-
-  const end = new Date();
-  const start = new Date();
-  start.setDate(end.getDate() - days);
+  const siteUrl = await resolveGscSiteUrl(auth, options?.siteUrl);
+  const { startDate, endDate } = dateRange(days);
 
   const res = await sc.searchanalytics.query({
     siteUrl,
     requestBody: {
-      startDate: start.toISOString().slice(0, 10),
-      endDate: end.toISOString().slice(0, 10),
+      startDate,
+      endDate,
       dimensions: ["page"],
       rowLimit: limit,
       dataState: "final",
@@ -71,6 +109,68 @@ export async function fetchGscTopPages(
 
   return (res.data.rows ?? []).map((row) => ({
     page: row.keys?.[0] ?? "",
+    clicks: row.clicks ?? 0,
+    impressions: row.impressions ?? 0,
+    ctr: row.ctr ?? 0,
+    position: row.position ?? 0,
+  }));
+}
+
+export async function fetchGscQueries(
+  auth: OAuth2Client,
+  options?: { days?: number; limit?: number; siteUrl?: string }
+): Promise<GscQueryRow[]> {
+  const days = options?.days ?? 28;
+  const limit = options?.limit ?? 5_000;
+  const sc = google.searchconsole({ version: "v1", auth });
+  const siteUrl = await resolveGscSiteUrl(auth, options?.siteUrl);
+  const { startDate, endDate } = dateRange(days);
+
+  const res = await sc.searchanalytics.query({
+    siteUrl,
+    requestBody: {
+      startDate,
+      endDate,
+      dimensions: ["query"],
+      rowLimit: limit,
+      dataState: "final",
+    },
+  });
+
+  return (res.data.rows ?? []).map((row) => ({
+    query: row.keys?.[0] ?? "",
+    clicks: row.clicks ?? 0,
+    impressions: row.impressions ?? 0,
+    ctr: row.ctr ?? 0,
+    position: row.position ?? 0,
+  }));
+}
+
+/** Query × page pairs for cannibalization detection. */
+export async function fetchGscQueryPagePairs(
+  auth: OAuth2Client,
+  options?: { days?: number; limit?: number; siteUrl?: string }
+): Promise<GscQueryPageRow[]> {
+  const days = options?.days ?? 28;
+  const limit = options?.limit ?? 25_000;
+  const sc = google.searchconsole({ version: "v1", auth });
+  const siteUrl = await resolveGscSiteUrl(auth, options?.siteUrl);
+  const { startDate, endDate } = dateRange(days);
+
+  const res = await sc.searchanalytics.query({
+    siteUrl,
+    requestBody: {
+      startDate,
+      endDate,
+      dimensions: ["query", "page"],
+      rowLimit: limit,
+      dataState: "final",
+    },
+  });
+
+  return (res.data.rows ?? []).map((row) => ({
+    query: row.keys?.[0] ?? "",
+    page: row.keys?.[1] ?? "",
     clicks: row.clicks ?? 0,
     impressions: row.impressions ?? 0,
     ctr: row.ctr ?? 0,

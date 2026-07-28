@@ -162,7 +162,7 @@ export default function BestHorrorAnimeWithFriendsPage() {
         <li>
           <strong>
             <Link
-              href="/watch/promised-neverland-with-friends"
+              href="/watch/the-promised-neverland-with-friends"
               className="text-brand-orange hover:underline"
             >
               The Promised Neverland

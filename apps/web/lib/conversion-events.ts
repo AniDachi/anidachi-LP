@@ -1,4 +1,5 @@
 import { trackEvent } from "@/lib/gtag";
+import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 
 /**
  * Funnel event taxonomy (GA4) — see docs/CONVERSION_METRICS.md
@@ -74,6 +75,7 @@ export function ctaCopyVariantForTemplate(
 
 /**
  * Fire conversion-related GA4 events with consistent page context.
+ * Always attaches first-touch `seo_landing_path` when available in the browser.
  */
 export function trackConversion(
   name: ConversionFunnelEvent,
@@ -84,7 +86,13 @@ export function trackConversion(
     cta_variant?: string;
   } & Record<string, unknown>
 ) {
+  const attribution =
+    typeof window !== "undefined"
+      ? getSeoAttributionFields()
+      : { seo_landing_path: params.page_path };
+
   const payload = {
+    ...attribution,
     ...params,
     cta_experiment: getExperimentVariant(),
   };

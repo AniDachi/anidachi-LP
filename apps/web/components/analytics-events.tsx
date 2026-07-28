@@ -1,12 +1,24 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { initAmplitudeClient } from "@/lib/amplitude";
 import { trackEvent } from "@/lib/gtag";
+import { captureFirstLandingPath } from "@/lib/seo-landing-path";
+import { initWebVitalsReporting } from "@/lib/web-vitals-report";
 
 export function AnalyticsEvents() {
+  const pathname = usePathname();
+
+  // Re-attempt first-touch capture on client navigations (e.g. /login → guide).
+  // Idempotent once a marketing path is stored for the session.
+  useEffect(() => {
+    captureFirstLandingPath();
+  }, [pathname]);
+
   useEffect(() => {
     initAmplitudeClient();
+    const stopVitals = initWebVitalsReporting();
 
     let fired50 = false;
     let fired90 = false;
@@ -27,7 +39,10 @@ export function AnalyticsEvents() {
     }
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      stopVitals();
+    };
   }, []);
 
   return null;

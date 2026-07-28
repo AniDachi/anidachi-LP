@@ -26,6 +26,7 @@ import { isValidEmail } from "@/lib/kreatli-crm/validation";
 import { WaitlistReferralCard } from "@/components/plan-survey/waitlist-referral-card";
 import { JoinDiscordButton } from "@/components/join-discord-button";
 import { DiscordIcon } from "@/components/discord-icon";
+import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 
 export type PlanSurveyOpenContext = {
   placement: string;
@@ -259,10 +260,17 @@ export function PlanSurveyModal({
 
     setIsSubmitting(true);
     try {
+      const attribution = getSeoAttributionFields();
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planCode: tier }),
+        body: JSON.stringify({
+          planCode: tier,
+          seoLandingPath: attribution.seo_landing_path,
+          checkoutPagePath: pagePath,
+          seoReferrer: attribution.seo_referrer,
+          seoUtm: attribution.seo_utm,
+        }),
       });
 
       const data = (await response.json()) as {

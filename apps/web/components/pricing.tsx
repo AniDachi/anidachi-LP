@@ -23,6 +23,7 @@ import {
   type PricingTierId,
 } from "@/lib/pricing-tiers";
 import { PricingSurveyLink } from "@/components/pricing-survey-link";
+import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 
 function FeatureList({ features }: { features: string[] }) {
   return (
@@ -117,10 +118,17 @@ export function Pricing({
     setIsSubmitting(true);
     setSubmittingTier(tier);
     try {
+      const attribution = getSeoAttributionFields();
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planCode: tier }),
+        body: JSON.stringify({
+          planCode: tier,
+          seoLandingPath: attribution.seo_landing_path,
+          checkoutPagePath: pagePath,
+          seoReferrer: attribution.seo_referrer,
+          seoUtm: attribution.seo_utm,
+        }),
       });
 
       const data = (await response.json()) as {

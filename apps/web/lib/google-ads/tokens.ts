@@ -30,11 +30,14 @@ export async function readGoogleAdsTokens(): Promise<GoogleAdsStoredTokens | nul
         access: BLOB_ACCESS,
         token: blobToken,
       });
-      if (!result || result.statusCode !== 200) return null;
-      const text = await new Response(result.stream).text();
-      return JSON.parse(text) as GoogleAdsStoredTokens;
+      if (result && result.statusCode === 200) {
+        const text = await new Response(result.stream).text();
+        return JSON.parse(text) as GoogleAdsStoredTokens;
+      }
+      // Missing blob object — fall back to local crm-data below.
     } catch {
-      return null;
+      // Blob lookup can fail in local dev (or before we ever uploaded tokens).
+      // Fall back to the local crm-data file below.
     }
   }
 
