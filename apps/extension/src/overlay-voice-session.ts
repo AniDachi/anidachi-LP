@@ -103,6 +103,25 @@ export function isVoiceSessionPublishing(state: VoiceSessionState): boolean {
   return state.mode === "open-mic" || state.pushToTalkHeld;
 }
 
+export function getVoiceIndicatorParticipantIds({
+  localParticipantId,
+  measuredSpeakerIds,
+  state,
+}: {
+  localParticipantId: string | null;
+  measuredSpeakerIds: readonly string[];
+  state: VoiceSessionState;
+}): string[] {
+  const indicatorIds = new Set(measuredSpeakerIds);
+  if (localParticipantId && state.mode === "push-to-talk") {
+    indicatorIds.delete(localParticipantId);
+    if (state.pushToTalkHeld && isVoiceSessionPublishing(state)) {
+      indicatorIds.add(localParticipantId);
+    }
+  }
+  return [...indicatorIds];
+}
+
 function stopVoiceSessionImmediately(
   state: VoiceSessionState,
 ): VoiceSessionState {

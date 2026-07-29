@@ -120,7 +120,10 @@ already implemented runtime foundation.
 
 - `VoiceMode` represents the selected room interaction mode.
 - Microphone publication status represents actual capture/publication.
-- Measured speech activity controls the green video ring or side voice pill.
+- Holding `V` in Push to talk activates the local green video ring or side
+  voice pill immediately, even before speech is measured. Open mic and remote
+  participant indicators remain driven by measured speech activity so a quiet
+  published microphone does not appear to be speaking.
 - Push to talk publishes only while `V` is held.
 - Open mic publishes continuously while the restored or newly selected
   room-scoped mode is Open mic.

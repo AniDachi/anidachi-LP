@@ -112,6 +112,7 @@ import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
 import { VoiceSettingsPanel } from "./overlay-voice-controls";
 import {
   createVoiceSessionState,
+  getVoiceIndicatorParticipantIds,
   isVoiceSessionPublishing,
   reduceVoiceSession,
 } from "./overlay-voice-session";
@@ -2253,6 +2254,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     .filter(Boolean)
     .join(" ");
   const liveVoiceActiveSpeakerIds = ghostCamSession.activeSpeakerIds;
+  const voiceIndicatorParticipantIds = useMemo(
+    () =>
+      getVoiceIndicatorParticipantIds({
+        localParticipantId: participant?.id ?? null,
+        measuredSpeakerIds: liveVoiceActiveSpeakerIds,
+        state: voiceSession,
+      }),
+    [liveVoiceActiveSpeakerIds, participant?.id, voiceSession],
+  );
   const localLiveVoiceActive = Boolean(
     participant?.id && liveVoiceActiveSpeakerIds.includes(participant.id),
   );
@@ -4697,7 +4707,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           {roomId && visibleParticipants.length ? (
             <RoomPeopleSection
               currentParticipantId={currentParticipant?.id ?? null}
-              liveVoiceActiveSpeakerIds={liveVoiceActiveSpeakerIds}
+              liveVoiceActiveSpeakerIds={voiceIndicatorParticipantIds}
               maxMediaSeats={roomMediaSeatLimit}
               occupiedMediaSeatCount={occupiedMediaSeatCount}
               onCancelMediaSeatRequest={cancelMediaSeatRequest}
@@ -4996,7 +5006,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                     onAudioPreferenceChange={(preference) =>
                       handleParticipantAudioChange(item.id, preference)
                     }
-                    speaking={liveVoiceActiveSpeakerIds.includes(item.id)}
+                    speaking={voiceIndicatorParticipantIds.includes(item.id)}
                   />
                 );
               })}
@@ -5009,7 +5019,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
               getParticipantAudioPreference={getParticipantAudioPreference}
               onParticipantAudioChange={handleParticipantAudioChange}
               participants={voiceRailParticipants}
-              speakingParticipantIds={liveVoiceActiveSpeakerIds}
+              speakingParticipantIds={voiceIndicatorParticipantIds}
             />
           ) : null}
 

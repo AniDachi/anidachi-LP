@@ -335,7 +335,9 @@ The extension currently supports:
   transport flow: quiet Open mic remains published without appearing to speak
   or triggering audio-stall recovery, while sender/receiver audio levels drive
   the green treatment and a local-track RMS fallback covers the period before
-  a sender exists;
+  a sender exists. The local Push to talk indicator is the deliberate
+  exception: it activates immediately while `V` is held so the user sees that
+  the talk action is engaged before speech is measured;
 - per-listener participant audio mix controls: each remote media-seat
   participant can be muted or adjusted locally from the side voice pill or the
   matching video-bubble contour. Preferences are versioned, validated,

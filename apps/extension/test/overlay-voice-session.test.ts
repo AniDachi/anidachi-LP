@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createVoiceSessionState,
+  getVoiceIndicatorParticipantIds,
   isVoiceSessionPublishing,
   reduceVoiceSession,
 } from "../src/overlay-voice-session";
@@ -34,6 +35,38 @@ describe("overlay voice session", () => {
     expect(isVoiceSessionPublishing(started)).toBe(true);
     expect(isVoiceSessionPublishing(stopped)).toBe(false);
     expect(stopped.release).toBe("warm");
+  });
+
+  it("activates the local visual indicator immediately while Push to talk is held", () => {
+    const held = reduceVoiceSession(connectedState(), {
+      type: "push-to-talk",
+      held: true,
+    });
+
+    expect(
+      getVoiceIndicatorParticipantIds({
+        localParticipantId: "local",
+        measuredSpeakerIds: ["remote"],
+        state: held,
+      }),
+    ).toEqual(["remote", "local"]);
+  });
+
+  it("keeps quiet Open mic and idle Push to talk tied to measured speech", () => {
+    expect(
+      getVoiceIndicatorParticipantIds({
+        localParticipantId: "local",
+        measuredSpeakerIds: ["remote"],
+        state: connectedState("open-mic"),
+      }),
+    ).toEqual(["remote"]);
+    expect(
+      getVoiceIndicatorParticipantIds({
+        localParticipantId: "local",
+        measuredSpeakerIds: ["local"],
+        state: connectedState(),
+      }),
+    ).toEqual([]);
   });
 
   it("selecting Open mic starts publication and selecting Push to talk stops immediately", () => {

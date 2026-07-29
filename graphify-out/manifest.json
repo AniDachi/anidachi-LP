@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1785310131.8733842,
-    "ast_hash": "d685995b761063a20509b6b5a63200e7",
+    "mtime": 1785311815.9760065,
+    "ast_hash": "67e067c2a2ef06f68ee4ffe90e76018d",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -3045,8 +3045,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1785310377.6699016,
-    "ast_hash": "d5952c4084d10565a1faa4adf8e6244c",
+    "mtime": 1785311816.1602685,
+    "ast_hash": "424b6407ac1f55ef0b8243a43558ab09",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3210,23 +3210,23 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1785310421.1211293,
-    "ast_hash": "ab3cdbf2a45c93bf67c87d6a32bf25e1",
+    "mtime": 1785312011.4460163,
+    "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1785310421.1075406,
-    "ast_hash": "e1da66fcc1d20cc991a2881b85a80e1d",
+    "mtime": 1785312011.4461863,
+    "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1785310421.1100748,
-    "ast_hash": "616c4172bb6d9276596bd2e5e2bc7e21",
+    "mtime": 1785312011.4462829,
+    "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1785310421.1131284,
-    "ast_hash": "6a24bc39177cc7c0b49a8b59a8996898",
+    "mtime": 1785312011.44638,
+    "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
   "apps/web/app/apple-icon.png": {
@@ -3900,8 +3900,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-voice-session.ts": {
-    "mtime": 1785309676.0641446,
-    "ast_hash": "3728a324ae1ebde65640a5b49a6f648a",
+    "mtime": 1785311957.4753134,
+    "ast_hash": "4758927bab1ece8dbaa3e5d8c75354b8",
     "semantic_hash": ""
   },
   "apps/extension/src/participant-audio-controls.tsx": {
@@ -3930,8 +3930,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-voice-session.test.ts": {
-    "mtime": 1785309598.2048466,
-    "ast_hash": "15454586507d9e91bec9650a1927eb5c",
+    "mtime": 1785311957.5658543,
+    "ast_hash": "aeeb3ac5c78c4b749fc203144726aa8d",
     "semantic_hash": ""
   },
   "apps/extension/test/participant-audio-controls.test.tsx": {
@@ -4050,8 +4050,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-27-voice-controls-and-participant-audio-plan.md": {
-    "mtime": 1785310620.60184,
-    "ast_hash": "333cb9020b8fae018b1d29a307678c0f",
+    "mtime": 1785311816.0670257,
+    "ast_hash": "23bfbcbed31d12fecca0cd5e2fc254a6",
     "semantic_hash": ""
   },
   "apps/extension/src/local-audio-level-meter.ts": {
