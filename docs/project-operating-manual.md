@@ -134,7 +134,7 @@ live-room permissions, and coordinate realtime events.
 - Shadow DOM overlay;
 - fullscreen-safe UI positioning;
 - Anidachi menu and participant bubbles;
-- reactions, chat input, voice/push-to-talk UI;
+- reactions, chat input, and room-scoped Push to talk/Open mic UI;
 - playback control and drift correction;
 - WebRTC peer connections and media rendering.
 

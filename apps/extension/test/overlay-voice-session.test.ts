@@ -15,11 +15,10 @@ function connectedState(mode: "open-mic" | "push-to-talk" = "push-to-talk") {
 }
 
 describe("overlay voice session", () => {
-  it("never starts microphone capture merely by joining in Open mic mode", () => {
+  it("publishes Open mic immediately when that room mode is selected", () => {
     const state = connectedState("open-mic");
 
-    expect(state.openMicEnabled).toBe(false);
-    expect(isVoiceSessionPublishing(state)).toBe(false);
+    expect(isVoiceSessionPublishing(state)).toBe(true);
   });
 
   it("uses warm release for Push to talk keyup", () => {
@@ -37,62 +36,39 @@ describe("overlay voice session", () => {
     expect(stopped.release).toBe("warm");
   });
 
-  it("uses immediate release when explicit Open mic is turned off", () => {
-    const started = reduceVoiceSession(connectedState("open-mic"), {
-      type: "open-mic",
-      enabled: true,
-    });
-    const stopped = reduceVoiceSession(started, {
-      type: "open-mic",
-      enabled: false,
-    });
-
-    expect(isVoiceSessionPublishing(started)).toBe(true);
-    expect(isVoiceSessionPublishing(stopped)).toBe(false);
-    expect(stopped.release).toBe("immediate");
-  });
-
-  it("does not let Push to talk actions change Open mic state", () => {
-    const open = reduceVoiceSession(connectedState("open-mic"), {
-      type: "open-mic",
-      enabled: true,
-    });
-
-    expect(
-      reduceVoiceSession(open, { type: "push-to-talk", held: true }),
-    ).toEqual(open);
-  });
-
-  it("switches modes without automatically starting capture", () => {
-    const held = reduceVoiceSession(connectedState(), {
-      type: "push-to-talk",
-      held: true,
-    });
-    const openMode = reduceVoiceSession(held, {
+  it("selecting Open mic starts publication and selecting Push to talk stops immediately", () => {
+    const open = reduceVoiceSession(connectedState(), {
       type: "mode",
       mode: "open-mic",
     });
+    const pushToTalk = reduceVoiceSession(open, {
+      type: "mode",
+      mode: "push-to-talk",
+    });
 
-    expect(openMode.mode).toBe("open-mic");
-    expect(openMode.openMicEnabled).toBe(false);
-    expect(openMode.pushToTalkHeld).toBe(false);
-    expect(openMode.release).toBe("immediate");
-    expect(isVoiceSessionPublishing(openMode)).toBe(false);
+    expect(open.mode).toBe("open-mic");
+    expect(open.pushToTalkHeld).toBe(false);
+    expect(isVoiceSessionPublishing(open)).toBe(true);
+    expect(pushToTalk.mode).toBe("push-to-talk");
+    expect(pushToTalk.release).toBe("immediate");
+    expect(isVoiceSessionPublishing(pushToTalk)).toBe(false);
   });
 
-  it("preserves explicit Open mic across same-room reconnect synchronization", () => {
-    const open = reduceVoiceSession(connectedState("open-mic"), {
-      type: "open-mic",
-      enabled: true,
-    });
-    const reconnected = reduceVoiceSession(open, {
+  it("does not let Push to talk actions change Open mic publication", () => {
+    const open = connectedState("open-mic");
+
+    expect(reduceVoiceSession(open, { type: "push-to-talk", held: true })).toEqual(open);
+  });
+
+  it("preserves Open mic across same-room reconnect synchronization", () => {
+    const reconnected = reduceVoiceSession(connectedState("open-mic"), {
       type: "context",
       listenerScope: "account-1",
       localHasMediaSeat: true,
       roomId: "room-1",
     });
 
-    expect(reconnected.openMicEnabled).toBe(true);
+    expect(reconnected.mode).toBe("open-mic");
     expect(isVoiceSessionPublishing(reconnected)).toBe(true);
   });
 
@@ -129,45 +105,27 @@ describe("overlay voice session", () => {
         roomId: "room-1",
       },
     },
-  ])("stops immediately on $label", ({ context }) => {
-    const open = reduceVoiceSession(connectedState("open-mic"), {
-      type: "open-mic",
-      enabled: true,
-    });
-    const next = reduceVoiceSession(open, {
+  ])("returns to Push to talk and stops immediately on $label", ({ context }) => {
+    const next = reduceVoiceSession(connectedState("open-mic"), {
       type: "context",
       ...context,
     });
 
-    expect(next.openMicEnabled).toBe(false);
+    expect(next.mode).toBe("push-to-talk");
     expect(next.pushToTalkHeld).toBe(false);
     expect(next.release).toBe("immediate");
     expect(isVoiceSessionPublishing(next)).toBe(false);
   });
 
-  it("resets the selected mode while a new account preference store is loading", () => {
-    const next = reduceVoiceSession(connectedState("open-mic"), {
-      type: "context",
-      listenerScope: "account-2",
-      localHasMediaSeat: true,
-      roomId: "room-1",
-    });
-
-    expect(next.mode).toBe("push-to-talk");
-  });
-
-  it("clears all microphone intent after a terminal failure", () => {
-    const open = reduceVoiceSession(connectedState("open-mic"), {
-      type: "open-mic",
-      enabled: true,
-    });
-    const failed = reduceVoiceSession(open, {
+  it("returns to Push to talk after a terminal microphone failure", () => {
+    const failed = reduceVoiceSession(connectedState("open-mic"), {
       type: "terminal-failure",
     });
 
-    expect(failed.openMicEnabled).toBe(false);
+    expect(failed.mode).toBe("push-to-talk");
     expect(failed.pushToTalkHeld).toBe(false);
     expect(failed.release).toBe("immediate");
+    expect(isVoiceSessionPublishing(failed)).toBe(false);
   });
 
   it("keeps camera outside the voice state contract", () => {

@@ -7,14 +7,11 @@ import { useOverlayUnmountCleanup } from "../src/overlay-unmount-cleanup";
 
 function CleanupHarness({
   stopMicrophonePublication,
-  stopVoiceCapture,
 }: {
   stopMicrophonePublication: () => void;
-  stopVoiceCapture: (send?: boolean) => void;
 }) {
   useOverlayUnmountCleanup({
     stopMicrophonePublication,
-    stopVoiceCapture,
   });
   return null;
 }
@@ -24,42 +21,33 @@ describe("overlay unmount cleanup", () => {
     document.body.replaceChildren();
   });
 
-  it("does not stop microphone publication when unrelated callback identities change", async () => {
+  it("uses the latest callback and stops microphone publication only on unmount", async () => {
     const container = document.createElement("div");
     document.body.append(container);
     const root: Root = createRoot(container);
-    const stopMicrophonePublication = vi.fn();
-    const firstStopVoiceCapture = vi.fn();
-    const latestStopVoiceCapture = vi.fn();
+    const firstStopMicrophonePublication = vi.fn();
+    const latestStopMicrophonePublication = vi.fn();
 
     await act(async () => {
       root.render(
-        <CleanupHarness
-          stopMicrophonePublication={stopMicrophonePublication}
-          stopVoiceCapture={firstStopVoiceCapture}
-        />,
+        <CleanupHarness stopMicrophonePublication={firstStopMicrophonePublication} />,
       );
     });
 
     await act(async () => {
       root.render(
-        <CleanupHarness
-          stopMicrophonePublication={stopMicrophonePublication}
-          stopVoiceCapture={latestStopVoiceCapture}
-        />,
+        <CleanupHarness stopMicrophonePublication={latestStopMicrophonePublication} />,
       );
     });
 
-    expect(stopMicrophonePublication).not.toHaveBeenCalled();
-    expect(firstStopVoiceCapture).not.toHaveBeenCalled();
-    expect(latestStopVoiceCapture).not.toHaveBeenCalled();
+    expect(firstStopMicrophonePublication).not.toHaveBeenCalled();
+    expect(latestStopMicrophonePublication).not.toHaveBeenCalled();
 
     await act(async () => {
       root.unmount();
     });
 
-    expect(stopMicrophonePublication).toHaveBeenCalledTimes(1);
-    expect(firstStopVoiceCapture).not.toHaveBeenCalled();
-    expect(latestStopVoiceCapture).toHaveBeenCalledWith(false);
+    expect(firstStopMicrophonePublication).not.toHaveBeenCalled();
+    expect(latestStopMicrophonePublication).toHaveBeenCalledTimes(1);
   });
 });

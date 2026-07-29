@@ -323,11 +323,14 @@ The extension currently supports:
   alignment, clears ghosts after Apply, keeps real chat/cameras below the open
   settings panel, and persists changes only after an explicit successful
   `Apply`;
-- one microphone publication lifecycle shared by Push to talk and explicit
-  Open mic. Selecting Open mic mode alone does not start capture; create/join,
-  reload, room/account change, media-seat loss, leave/end, sign-out, and overlay
-  teardown keep or return the microphone to the privacy-safe off state according
-  to the documented lifecycle contract;
+- one microphone publication lifecycle shared by `V`-only Push to talk and
+  explicit Open mic. Selecting Open mic starts continuous publication only
+  after the exact room session, listener, media seat, snapshot, and P2P
+  controller are ready. The selected mode is stored per sender tab in
+  extension-owned session storage, survives same-room source changes and a tab
+  reload, and resets to Push to talk for a new room, leave/end, sign-out,
+  account change, media-seat loss, terminal microphone failure, or full browser
+  restart;
 - local and remote speaking indicators are measured independently from
   transport flow: quiet Open mic remains published without appearing to speak
   or triggering audio-stall recovery, while sender/receiver audio levels drive
@@ -342,8 +345,9 @@ The extension currently supports:
   stop Open mic, microphone stop does not remove healthy video, and rapid
   answerer-side camera transitions coalesce their required renegotiation instead
   of dropping the latest direction change;
-- live P2P voice no longer ducks Crunchyroll or YouTube player volume. Dictate
-  reactions retain their existing bounded duck/restore behavior;
+- live P2P voice does not duck Crunchyroll or YouTube player volume. Dictate
+  reactions and their speech-recognition/player-ducking runtime have been
+  removed;
 - WebRTC P2P media with Cloudflare TURN fallback;
 - no active LiveKit/SFU media path: the legacy extension transport, Worker
   `/livekit/token` route, local `infra/livekit` helper, and `livekit-client`
@@ -444,9 +448,11 @@ These are intentionally not treated as solved:
 - Open mic and participant mix controls have direct-first two-browser coverage
   for silence, late join, signaling reconnect, camera off/on, microphone-only
   stop, Push to talk warm reuse, local mute/volume, and remote track replacement.
-  Manual loaded-extension acceptance is still required for permission denial,
-  account switching, overlay/source replacement, pointer/keyboard controls,
-  four-seat load, and real speaker output on two devices.
+  Room-scoped mode persistence has reducer and revision-guarded storage
+  coverage. Manual loaded-extension acceptance is still required for reload
+  restore timing, media-seat revoke, permission denial, account switching,
+  overlay/source replacement, four-seat load, and real speaker output on two
+  devices.
 - The local real-WebRTC harness usually selects same-machine `host/host`
   candidate pairs. Relay-only TURN harness mode exists and can use either
   explicit short-lived ICE JSON or the real Worker `/ice-servers` path, but a

@@ -620,84 +620,6 @@ export const overlayStyles = `
     box-shadow: 0 0 0 2px rgba(255, 166, 92, 0.38);
   }
 
-  .icon-button.panel-microphone-control {
-    position: relative;
-    width: 48px;
-    height: 26px;
-    box-sizing: border-box;
-    overflow: hidden;
-    padding: 0;
-    flex: 0 0 auto;
-    border-radius: 999px;
-    border: 1px solid var(--ad-border);
-    background: var(--ad-surface);
-    box-shadow: none;
-    touch-action: none;
-  }
-
-  .panel-microphone-control-thumb {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 20px;
-    height: 20px;
-    display: grid;
-    place-items: center;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.09);
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
-    transition:
-      transform 170ms cubic-bezier(0.22, 1, 0.36, 1),
-      background 160ms ease;
-  }
-
-  .icon-button.panel-microphone-control.enabled .panel-microphone-control-thumb {
-    transform: translateX(22px);
-  }
-
-  .panel-microphone-control-icon {
-    flex: 0 0 auto;
-    color: rgba(255, 255, 255, 0.56);
-    transition:
-      color 140ms ease,
-      filter 140ms ease;
-  }
-
-  .icon-button.panel-microphone-control.enabled .panel-microphone-control-icon {
-    color: rgba(255, 190, 132, 0.96);
-  }
-
-  .icon-button.panel-microphone-control.speaking .panel-microphone-control-icon {
-    color: rgba(134, 239, 172, 0.98);
-    filter: drop-shadow(0 0 5px rgba(52, 211, 153, 0.55));
-  }
-
-  .icon-button.panel-microphone-control.speaking .panel-microphone-control-thumb {
-    background: rgba(34, 197, 94, 0.13);
-  }
-
-  .icon-button.panel-microphone-control.unavailable {
-    opacity: 1;
-    cursor: not-allowed;
-  }
-
-  .icon-button.panel-microphone-control.unavailable .panel-microphone-control-icon {
-    color: rgba(248, 113, 113, 0.68);
-  }
-
-  .icon-button.panel-microphone-control:not(:disabled):hover {
-    border-color: rgba(255, 255, 255, 0.16);
-    background: var(--ad-surface-strong);
-  }
-
-  .icon-button.panel-microphone-control:focus {
-    outline: 0;
-  }
-
-  .icon-button.panel-microphone-control:focus-visible {
-    box-shadow: 0 0 0 2px rgba(255, 166, 92, 0.38);
-  }
-
   .section-title {
     margin: 14px 0 7px;
     font-size: 10px;
@@ -2078,49 +2000,11 @@ export const overlayStyles = `
     font-size: 11px;
   }
 
-  .voice-settings-status {
-    min-height: 38px;
-    padding: 8px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.025);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .voice-settings-status.enabled {
-    border-color: rgba(255, 166, 92, 0.18);
-  }
-
-  .voice-settings-status.speaking {
-    border-color: rgba(52, 211, 153, 0.3);
-    background: rgba(34, 197, 94, 0.07);
-  }
-
-  .voice-settings-status.unavailable,
-  .voice-settings-status.error {
-    border-color: rgba(248, 113, 113, 0.16);
-  }
-
-  .voice-settings-status-value {
-    color: rgba(255, 255, 255, 0.56);
-    font-size: 10.5px;
-    font-weight: 680;
-    text-align: right;
-  }
-
-  .voice-settings-status.speaking .voice-settings-status-value {
-    color: rgba(167, 243, 208, 0.94);
-  }
-
-  .voice-settings-dictate-action {
-    display: flex;
-  }
-
-  .voice-settings-guidance {
+  .voice-settings-feedback {
     margin: 0;
+    color: rgba(248, 180, 180, 0.9);
+    font-size: 10.5px;
+    line-height: 1.35;
   }
 
   .current-resource-card {

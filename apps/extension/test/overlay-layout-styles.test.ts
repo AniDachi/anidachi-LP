@@ -87,28 +87,11 @@ describe("overlay layout pointer surfaces", () => {
 		);
 	});
 
-	it("keeps microphone state compact and reserves green for measured speech", () => {
-		const microphoneControl = getRule(".icon-button.panel-microphone-control");
-		expect(microphoneControl).toContain("width: 48px");
-		expect(microphoneControl).toContain("height: 26px");
-		expect(microphoneControl).toContain("overflow: hidden");
-		expect(microphoneControl).toContain("border-radius: 999px");
-		expect(getRule(".panel-microphone-control-thumb")).toContain("width: 20px");
-		expect(
-			getRule(
-				".icon-button.panel-microphone-control.enabled .panel-microphone-control-thumb",
-			),
-		).toContain("transform: translateX(22px)");
-		expect(
-			getRule(
-				".icon-button.panel-microphone-control.enabled .panel-microphone-control-icon",
-			),
-		).not.toContain("134, 239, 172");
-		expect(
-			getRule(
-				".icon-button.panel-microphone-control.speaking .panel-microphone-control-icon",
-			),
-		).toContain("color: rgba(134, 239, 172, 0.98)");
+	it("keeps Voice settings mode-only with exception feedback styling", () => {
+		expect(overlayStyles).not.toContain("panel-microphone-control");
+		expect(overlayStyles).not.toContain("voice-settings-status");
+		expect(overlayStyles).not.toContain("voice-settings-dictate-action");
+		expect(getRule(".voice-settings-feedback")).toContain("font-size: 10.5px");
 	});
 
 	it("keeps the account name flexible and the header actions aligned", () => {

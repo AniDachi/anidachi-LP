@@ -25,7 +25,6 @@ export interface MicrophoneTerminalFailure {
 
 export interface MicrophoneIntent {
   mode: VoiceMode;
-  openMicEnabled: boolean;
   pushToTalkHeld: boolean;
 }
 
@@ -40,9 +39,7 @@ export function shouldPublishMicrophone(
     return false;
   }
 
-  return intent.mode === "open-mic"
-    ? intent.openMicEnabled
-    : intent.pushToTalkHeld;
+  return intent.mode === "open-mic" || intent.pushToTalkHeld;
 }
 
 export type RoomSendDisposition = "sent" | "queued" | "dropped";

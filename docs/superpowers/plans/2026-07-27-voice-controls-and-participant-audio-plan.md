@@ -6,14 +6,13 @@
 > `superpowers:systematic-debugging` for regressions. Query Graphify before
 > broad P2P edits, then verify every important graph claim against source.
 
-**Status:** Local runtime implementation and automated verification are
-complete. Manual loaded-extension, two-network, and forced-relay staging
-acceptance remain.
+**Status:** The original runtime implementation and Voice UX Simplification V2
+are complete in code with automated verification. Manual loaded-extension,
+two-network, and forced-relay staging acceptance remain.
 
-**Goal:** Add a privacy-safe Open mic mode and local per-participant audio
-controls while preserving Push to talk, existing media-seat limits, P2P
-recovery, and speaking indicators. Remove automatic player-volume ducking for
-live P2P voice without removing the separate ducking used by Dictate reactions.
+**Goal:** Keep privacy-safe Open mic and local per-participant audio controls
+while simplifying microphone UX to two room-scoped modes, making Push to talk
+`V`-only, and removing Dictate reactions and its player-ducking runtime.
 
 **Architecture:** Keep voice transport in the existing extension-side WebRTC
 mesh. The local UI owns voice mode and listener preferences.
@@ -66,10 +65,130 @@ Playwright real-WebRTC harness, Chrome MV3 staging builds.
 
 ---
 
-## Fixed Product Decisions
+## Approved Voice UX Simplification V2
 
-These decisions are part of this delivery and must not be silently changed
-during implementation.
+This section is the current implementation contract. It supersedes conflicting
+instructions in the historical V1 decisions, Tasks 1-8, and the V1 staging
+matrix below. The historical sections remain only as an audit trail for the
+already implemented runtime foundation.
+
+### Product Contract
+
+1. The Voice settings surface contains one mutually exclusive segmented
+   selector: **Push to talk** / **Open mic**.
+2. Push to talk is activated only by holding `V`. No panel button, voice pill,
+   video bubble, pointer gesture, `Space`, or `Enter` starts Push to talk.
+3. Selecting Open mic is the explicit user action that starts persistent
+   microphone publication. Selecting Push to talk stops Open mic immediately
+   and releases capture.
+4. Room creation and room join start in Push to talk unless an eligible
+   room-scoped Voice state is restored for that exact room, listener, and tab
+   session.
+5. The panel header has no microphone control. The camera control remains
+   independent and unchanged.
+6. Voice pills and video-bubble rings remain activity and remote-listener
+   volume surfaces. They do not control the local microphone.
+7. Dictate reactions is removed completely, including speech-recognition state,
+   player ducking, UI, styles, tests, and dead support modules.
+8. Participant-local volume and mute behavior remains unchanged.
+9. No persistent microphone status row is shown in Voice settings. Permission,
+   device, and media-seat failures use concise exception-only feedback.
+10. Camera publication, microphone publication, and measured speech remain
+    independent.
+
+### Room-Scoped Voice State
+
+1. The selected mode is stored in extension-owned
+   `chrome.storage.session`, scoped to the exact room, authenticated listener,
+   and sender tab.
+2. Same-room source transitions, provider advertisements, ordinary signaling
+   reconnects, P2P-controller replacement, and a tab reload preserve the mode.
+3. Restored Open mic may publish only after the room session has been
+   revalidated, the listener identity matches, the local participant has a
+   media seat, and the replacement P2P controller is ready.
+4. A new room ID, room leave/end, sign-out, account change, media-seat loss,
+   terminal microphone failure, stale room restore, or explicit switch to Push
+   to talk clears Open mic intent and releases capture immediately.
+5. Full browser restart does not restore Open mic. The safe default is Push to
+   talk.
+6. Restore is idempotent. A stale overlay or controller may not acquire or keep
+   a second microphone track.
+7. The persisted mode is not a global account preference and is not written to
+   the room protocol, API, Worker, database, or durable room state.
+
+### Runtime Contract
+
+- `VoiceMode` represents the selected room interaction mode.
+- Microphone publication status represents actual capture/publication.
+- Measured speech activity controls the green video ring or side voice pill.
+- Push to talk publishes only while `V` is held.
+- Open mic publishes continuously while the restored or newly selected
+  room-scoped mode is Open mic.
+- `voice-start` and `voice-stop` remain wire-compatible publication-expectation
+  signals.
+- Silence never becomes speaking activity and never triggers player-volume
+  ducking.
+
+### V2 Implementation Tasks
+
+#### Task 9: Replace the V1 Voice Interaction Contract (Complete)
+
+1. Write failing reducer, hotkey, and component tests for mode-only Open mic,
+   `V`-only Push to talk, no header microphone control, and no Dictate
+   reactions.
+2. Remove account-global voice-mode persistence while retaining participant
+   volume and mute preferences.
+3. Make selecting Open mic create publication intent and selecting Push to talk
+   clear it immediately.
+4. Preserve the existing separation between mode, publication status, and
+   measured speech.
+
+#### Task 10: Add Room-Scoped Voice Restore (Complete)
+
+1. Extend extension-owned session persistence with a versioned, optional Voice
+   mode owned by the exact room, listener, participant session, and tab.
+2. Restore only after room-session validation and media-seat confirmation.
+3. Clear the state on every terminal lifecycle transition.
+4. Add race tests for stale load, overlapping clear/persist, controller
+   replacement, and duplicate capture prevention.
+
+#### Task 11: Simplify Voice UI and Remove Dictation (Complete)
+
+1. Delete `PanelMicrophoneControl` and its header integration.
+2. Reduce `VoiceSettingsPanel` to an accessible two-option radio group plus
+   exception-only feedback.
+3. Delete Dictate reactions UI and runtime, including recognition and bounded
+   ducking helpers that have no remaining callers.
+4. Remove obsolete CSS and replace obsolete component/style tests.
+5. Preserve camera controls, reaction shortcuts, speaking indicators, and
+   participant output controls.
+
+#### Task 12: Verify and Hand Off (Automated Complete, Manual Pending)
+
+1. Run focused Voice UI, session, hotkey, room-session, media lifecycle, and P2P
+   tests.
+2. Run full extension, API, room, and real-WebRTC quality gates.
+3. Build and validate the staging extension.
+4. Complete the V2 staging matrix below on two clients, including one
+   different-network or relay-backed path.
+5. Refresh Graphify and active development documentation after code settles.
+6. Update approved unpacked test folders only after automated gates pass.
+
+**Automated verification (2026-07-29):**
+
+- repository `check`: 6/6 tasks;
+- repository `test`: 6/6 tasks, including extension 846/846;
+- Cloudflare runtime tests: 11/11;
+- room signaling harness: 39/39;
+- real Chromium WebRTC harness: 26/26;
+- staging extension build and artifact validation: passed.
+
+---
+
+## V1 Product Decisions (Historical)
+
+These decisions describe the original implementation. The approved V2 contract
+above supersedes them where they conflict.
 
 ### Voice Modes
 
@@ -1107,7 +1226,63 @@ authority actions. Do not add a second participant mixer to the room panel.
 
 ---
 
-## Staging Acceptance Matrix
+## V2 Staging Acceptance Matrix
+
+Use two Chrome profiles or the existing Mac/Windows test pair. Run at least one
+test over a different network or relay-backed path before production promotion.
+
+### Mode and Privacy
+
+- [ ] A newly created or joined room starts in Push to talk.
+- [ ] Holding and releasing `V` is the only Push to talk activation path.
+- [ ] Blur, visibility loss, room leave/end, and sign-out cannot leave Push to
+  talk publishing.
+- [ ] Selecting Open mic starts publication only after room, listener,
+  media-seat, and P2P readiness checks pass.
+- [ ] Selecting Push to talk stops Open mic and removes the browser capture
+  indicator promptly.
+- [ ] Permission denial, missing device, terminal capture failure, and
+  media-seat loss fall back to Push to talk without retry loops.
+- [ ] No panel control, voice pill, video bubble, pointer gesture, `Space`, or
+  `Enter` starts the local microphone.
+
+### Room-Scoped Restore
+
+- [ ] Same-room next episode or video preserves Open mic.
+- [ ] Same-room provider advertisement and source-generation replacement
+  preserve Open mic without duplicate capture.
+- [ ] Reloading the tab restores Open mic only after the persisted room session
+  is validated and the local media seat is confirmed.
+- [ ] A stale session, another room ID, another account, another tab owner, or
+  another participant session cannot restore Open mic.
+- [ ] Leave, end room, sign-out, media-seat revoke, and terminal microphone
+  failure clear the stored mode.
+- [ ] Full browser restart returns to Push to talk.
+
+### UI and Indicators
+
+- [ ] The header contains no microphone control.
+- [ ] Voice settings contains only the accessible Push to talk / Open mic
+  selector and exception-only error feedback.
+- [ ] Dictate reactions and its player ducking are absent.
+- [ ] Camera off does not prevent microphone publication.
+- [ ] Camera toggles do not start, stop, or reacquire the microphone.
+- [ ] Measured speech with rendered video uses only the green video ring.
+- [ ] Measured speech without rendered video uses only the side voice pill.
+- [ ] Enabled but quiet Open mic does not show speaking activity.
+- [ ] Remote participant volume and mute survive camera and track transitions.
+
+### Recovery and Load
+
+- [ ] Same-room reconnect and P2P-controller replacement restore exactly one
+  microphone publication.
+- [ ] Quiet Open mic does not cause audio-stall recovery churn.
+- [ ] Source-player volume is unchanged by P2P voice.
+- [ ] CPU usage does not materially regress with four active media seats.
+
+---
+
+## V1 Staging Acceptance Matrix (Historical)
 
 Use two Chrome profiles or the existing Mac/Windows test pair. Run at least one
 test over a different network or relay-backed path before production promotion.
@@ -1222,7 +1397,11 @@ test over a different network or relay-backed path before production promotion.
 ## Final Definition of Done
 
 - Push to talk remains fast and safe.
-- Open mic is explicit, privacy-safe, and stable.
+- Push to talk is activated only by holding `V`.
+- Open mic is explicit, room-scoped, privacy-safe, and stable across same-room
+  source transitions and tab reload.
+- A new room or full browser restart returns to Push to talk.
+- The panel header contains no microphone control.
 - Microphone and camera operate independently without cross-triggering or
   cross-failure cleanup.
 - Speaking indicators represent measured speech rather than microphone intent.
@@ -1231,7 +1410,8 @@ test over a different network or relay-backed path before production promotion.
 - No-video participants use the side voice rail; rendered-video participants
   use the video-bubble contour, with one preference and no duplicate surface.
 - Live voice never changes player volume.
-- Dictate reactions retains its intentional temporary ducking.
+- Dictate reactions and its speech-recognition/player-ducking runtime are
+  removed.
 - No new server behavior, protocol event/schema, database state, or
   provider-adapter policy was added; existing voice signal semantics are
   documented as publication expectation.

@@ -10,7 +10,6 @@ export interface VoiceSessionContext {
 
 export interface VoiceSessionState extends VoiceSessionContext {
   mode: VoiceMode;
-  openMicEnabled: boolean;
   pushToTalkHeld: boolean;
   release: MicrophoneRelease;
 }
@@ -18,7 +17,6 @@ export interface VoiceSessionState extends VoiceSessionContext {
 export type VoiceSessionAction =
   | ({ type: "context" } & VoiceSessionContext)
   | { type: "mode"; mode: VoiceMode }
-  | { type: "open-mic"; enabled: boolean }
   | { type: "push-to-talk"; held: boolean }
   | { type: "terminal-failure" };
 
@@ -32,7 +30,6 @@ export function createVoiceSessionState({
     listenerScope,
     localHasMediaSeat,
     mode,
-    openMicEnabled: false,
     pushToTalkHeld: false,
     release: "immediate",
     roomId,
@@ -54,8 +51,7 @@ export function reduceVoiceSession(
         ...state,
         listenerScope: action.listenerScope,
         localHasMediaSeat: action.localHasMediaSeat,
-        mode: listenerScopeChanged ? "push-to-talk" : state.mode,
-        openMicEnabled: false,
+        mode: "push-to-talk",
         pushToTalkHeld: false,
         release: "immediate",
         roomId: action.roomId,
@@ -76,9 +72,8 @@ export function reduceVoiceSession(
     return {
       ...state,
       mode: action.mode,
-      openMicEnabled: false,
       pushToTalkHeld: false,
-      release: "immediate",
+      release: action.mode === "open-mic" ? "warm" : "immediate",
     };
   }
 
@@ -89,24 +84,13 @@ export function reduceVoiceSession(
   if (
     !state.roomId ||
     !state.localHasMediaSeat ||
-    (action.type === "open-mic" && state.mode !== "open-mic") ||
     (action.type === "push-to-talk" && state.mode !== "push-to-talk")
   ) {
     return state;
   }
 
-  if (action.type === "open-mic") {
-    return {
-      ...state,
-      openMicEnabled: action.enabled,
-      pushToTalkHeld: false,
-      release: action.enabled ? "warm" : "immediate",
-    };
-  }
-
   return {
     ...state,
-    openMicEnabled: false,
     pushToTalkHeld: action.held,
     release: "warm",
   };
@@ -116,9 +100,7 @@ export function isVoiceSessionPublishing(state: VoiceSessionState): boolean {
   if (!state.roomId || !state.localHasMediaSeat) {
     return false;
   }
-  return state.mode === "open-mic"
-    ? state.openMicEnabled
-    : state.pushToTalkHeld;
+  return state.mode === "open-mic" || state.pushToTalkHeld;
 }
 
 function stopVoiceSessionImmediately(
@@ -126,7 +108,7 @@ function stopVoiceSessionImmediately(
 ): VoiceSessionState {
   return {
     ...state,
-    openMicEnabled: false,
+    mode: "push-to-talk",
     pushToTalkHeld: false,
     release: "immediate",
   };

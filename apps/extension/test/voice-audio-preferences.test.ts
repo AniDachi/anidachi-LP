@@ -15,16 +15,14 @@ import {
   resolveVoiceAudioPreferencesForListener,
   toggleParticipantAudioMute,
   updateParticipantAudioPreference,
-  updateVoiceMode,
   VOICE_AUDIO_PREFERENCES_STORAGE_PREFIX,
   voiceAudioPreferencesStorageKeyForUser,
 } from "../src/voice-audio-preferences";
 
 describe("voice audio preference codec", () => {
-  it("defaults to Push to talk with no participant overrides", () => {
+  it("defaults to no participant overrides without storing microphone mode", () => {
     expect(getDefaultVoiceAudioPreferences()).toEqual({
-      version: 1,
-      mode: "push-to-talk",
+      version: 2,
       participantAudio: {},
     });
   });
@@ -61,13 +59,13 @@ describe("voice audio preference codec", () => {
     const accountA = parseVoiceAudioPreferences(persistedByKey[accountAKey]);
     const accountB = parseVoiceAudioPreferences(persistedByKey[accountBKey]);
 
-    expect(accountA.mode).toBe("open-mic");
+    expect(accountA).not.toHaveProperty("mode");
     expect(accountA.participantAudio["remote-user"]).toEqual({
       muted: true,
       volume: 0.35,
     });
     expect(accountB.participantAudio["remote-user"]).toBeUndefined();
-    expect(accountB.mode).toBe("push-to-talk");
+    expect(accountB).not.toHaveProperty("mode");
   });
 
   it("uses safe defaults while a different listener store is loading", () => {
@@ -92,7 +90,7 @@ describe("voice audio preference codec", () => {
     });
   });
 
-  it("falls back field by field when version 1 storage is malformed", () => {
+  it("migrates version 1 participant audio while dropping the legacy global mode", () => {
     expect(
       parseVoiceAudioPreferences({
         version: 1,
@@ -106,8 +104,7 @@ describe("voice audio preference codec", () => {
         },
       }),
     ).toEqual({
-      version: 1,
-      mode: "push-to-talk",
+      version: 2,
       participantAudio: {
         valid: { muted: true, volume: 0.45 },
         low: { muted: false, volume: 0.05 },
@@ -123,7 +120,7 @@ describe("voice audio preference codec", () => {
       null,
       [],
       {},
-      { version: 2, mode: "open-mic" },
+      { version: 3, mode: "open-mic" },
       { version: "1", mode: "open-mic" },
     ]) {
       expect(parseVoiceAudioPreferences(value)).toEqual(getDefaultVoiceAudioPreferences());
@@ -175,8 +172,7 @@ describe("voice audio preference codec", () => {
 
   it("updates one opaque participant key without mutating previous state", () => {
     const previous = {
-      version: 1,
-      mode: "open-mic",
+      version: 2,
       participantAudio: {
         existing: { muted: false, volume: 0.8 },
       },
@@ -247,23 +243,6 @@ describe("voice audio preference codec", () => {
     expect(first).not.toBe(second);
   });
 
-  it("changes voice mode without mutating participant mix preferences", () => {
-    const previous = updateParticipantAudioPreference(
-      getDefaultVoiceAudioPreferences(),
-      "remote-user",
-      { muted: true, volume: 0.35 },
-    );
-
-    const next = updateVoiceMode(previous, "open-mic");
-
-    expect(next).not.toBe(previous);
-    expect(next.mode).toBe("open-mic");
-    expect(next.participantAudio).toBe(previous.participantAudio);
-    expect(next.participantAudio["remote-user"]).toEqual({
-      muted: true,
-      volume: 0.35,
-    });
-  });
 });
 
 describe("microphone publication intent", () => {
@@ -274,7 +253,6 @@ describe("microphone publication intent", () => {
     const statuses: MicrophoneStatus[] = ["off", "connecting", "on", "error"];
     const intent: MicrophoneIntent = {
       mode: modes[0],
-      openMicEnabled: false,
       pushToTalkHeld: false,
     };
 
@@ -286,7 +264,6 @@ describe("microphone publication intent", () => {
   it("publishes Push to talk only while held in an eligible room", () => {
     const intent: MicrophoneIntent = {
       mode: "push-to-talk",
-      openMicEnabled: true,
       pushToTalkHeld: true,
     };
 
@@ -294,21 +271,18 @@ describe("microphone publication intent", () => {
     expect(shouldPublishMicrophone({ ...intent, pushToTalkHeld: false }, context)).toBe(false);
   });
 
-  it("publishes Open mic only after its explicit toggle in an eligible room", () => {
+  it("publishes Open mic continuously in an eligible room", () => {
     const intent: MicrophoneIntent = {
       mode: "open-mic",
-      openMicEnabled: true,
       pushToTalkHeld: false,
     };
 
     expect(shouldPublishMicrophone(intent, context)).toBe(true);
-    expect(shouldPublishMicrophone({ ...intent, openMicEnabled: false }, context)).toBe(false);
   });
 
   it("never publishes without both an active room and a media seat", () => {
     const intent: MicrophoneIntent = {
       mode: "open-mic",
-      openMicEnabled: true,
       pushToTalkHeld: true,
     };
 

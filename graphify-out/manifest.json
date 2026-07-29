@@ -275,8 +275,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/media-types.ts": {
-    "mtime": 1785159277.2096496,
-    "ast_hash": "cea4c307fc0940fa27e3c40facf1e124",
+    "mtime": 1785309676.3612335,
+    "ast_hash": "6385a56b0c172518955981bd6d0812e0",
     "semantic_hash": ""
   },
   "apps/extension/src/message-composer-events.ts": {
@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1785168415.5950468,
-    "ast_hash": "bf0fc161f7cc22466529fb5726a0e6de",
+    "mtime": 1785310131.8733842,
+    "ast_hash": "d685995b761063a20509b6b5a63200e7",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -305,8 +305,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-unmount-cleanup.ts": {
-    "mtime": 1785161960.6435604,
-    "ast_hash": "b3fb587631fd24db112fb95386885e0a",
+    "mtime": 1785310174.2858782,
+    "ast_hash": "ee31223ce9448c3bedf3f5c0a8f20346",
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-ice.ts": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/room-session-storage.ts": {
-    "mtime": 1784676382.3303223,
-    "ast_hash": "55763be2f22c0283892bb946506ab1d7",
+    "mtime": 1785309722.9999182,
+    "ast_hash": "af7d078f46807e5c5aa3153da36a7f78",
     "semantic_hash": ""
   },
   "apps/extension/src/room-tab-lock.ts": {
@@ -380,18 +380,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1785163610.0245445,
-    "ast_hash": "3af103781e15228c369797fc3fe90518",
+    "mtime": 1785310213.617329,
+    "ast_hash": "cd41bcc765ef116f6e2887e1d4e4abe4",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
     "mtime": 1784676382.3318167,
     "ast_hash": "ea34f3e1b426b9d51a8a8ee765eeb3e7",
-    "semantic_hash": ""
-  },
-  "apps/extension/src/voice.ts": {
-    "mtime": 1784676382.3319416,
-    "ast_hash": "0b2b41adf56956be1efc676129d6f79a",
     "semantic_hash": ""
   },
   "apps/extension/src/watch-library-auth.ts": {
@@ -475,8 +470,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-unmount-cleanup.test.tsx": {
-    "mtime": 1785161960.7358286,
-    "ast_hash": "6c0794b8ff5b9911d3e7deed886af14d",
+    "mtime": 1785310174.3770561,
+    "ast_hash": "25af9bcb75646827b3b8bb43fea9cb5c",
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-ice.test.ts": {
@@ -510,8 +505,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/room-session-storage.test.ts": {
-    "mtime": 1784676382.3380506,
-    "ast_hash": "8fa4ad5d79a6ef0e4d888f664016a084",
+    "mtime": 1785309723.0926702,
+    "ast_hash": "3b5d86e98a632609b28fb61b11f0af7a",
     "semantic_hash": ""
   },
   "apps/extension/test/room-tab-lock.test.ts": {
@@ -3050,8 +3045,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1785192903.7091303,
-    "ast_hash": "a562d0cdbb887af3bfecbacb718e932a",
+    "mtime": 1785310377.6699016,
+    "ast_hash": "d5952c4084d10565a1faa4adf8e6244c",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3090,8 +3085,8 @@
     "semantic_hash": ""
   },
   "docs/project-architecture-and-development.md": {
-    "mtime": 1784676382.4149065,
-    "ast_hash": "b6cd9536232e48337ae4103c5205bcce",
+    "mtime": 1785310377.76,
+    "ast_hash": "70da6d0fa66b9f826f3ba3a6225d2a70",
     "semantic_hash": ""
   },
   "docs/project-knowledge-map.md": {
@@ -3100,8 +3095,8 @@
     "semantic_hash": ""
   },
   "docs/project-operating-manual.md": {
-    "mtime": 1784676382.4151192,
-    "ast_hash": "756e02cc3f0b9743befeade9a4aea076",
+    "mtime": 1785310377.8518126,
+    "ast_hash": "9fa86aeb56b42d0b312563930e5dd5bb",
     "semantic_hash": ""
   },
   "docs/release-and-rollback-runbook.md": {
@@ -3215,23 +3210,23 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1785169015.168901,
-    "ast_hash": "8103ec7baee41956510c12b5d5179357",
+    "mtime": 1785310421.1211293,
+    "ast_hash": "ab3cdbf2a45c93bf67c87d6a32bf25e1",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1785169015.1690514,
-    "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
+    "mtime": 1785310421.1075406,
+    "ast_hash": "e1da66fcc1d20cc991a2881b85a80e1d",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1785169015.169157,
-    "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
+    "mtime": 1785310421.1100748,
+    "ast_hash": "616c4172bb6d9276596bd2e5e2bc7e21",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1785169015.16927,
-    "ast_hash": "3b2f03af796edbba914cef26f3a575da",
+    "mtime": 1785310421.1131284,
+    "ast_hash": "6a24bc39177cc7c0b49a8b59a8996898",
     "semantic_hash": ""
   },
   "apps/web/app/apple-icon.png": {
@@ -3380,8 +3375,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-layout-styles.test.ts": {
-    "mtime": 1785163844.5915406,
-    "ast_hash": "fc80de8eb9c34e94f3bfd7b9cfc869d9",
+    "mtime": 1785310213.708802,
+    "ast_hash": "7b6097362ff44df2b4ff4325c2d12fcd",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout-ghost-preview.tsx": {
@@ -3900,18 +3895,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-voice-controls.tsx": {
-    "mtime": 1785165127.6497827,
-    "ast_hash": "dcf37691f9d2581ddd8769e833c48a1e",
-    "semantic_hash": ""
-  },
-  "apps/extension/src/overlay-voice-ducking.ts": {
-    "mtime": 1785164648.1465583,
-    "ast_hash": "a68f04f639ece7e5f9fac7789b349f0e",
+    "mtime": 1785309676.269473,
+    "ast_hash": "09af447f4c58dcc9f95f29beeb67ae1f",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-voice-session.ts": {
-    "mtime": 1785165092.1305337,
-    "ast_hash": "66403263db0ae6c8a1badc25e71a5ea1",
+    "mtime": 1785309676.0641446,
+    "ast_hash": "3728a324ae1ebde65640a5b49a6f648a",
     "semantic_hash": ""
   },
   "apps/extension/src/participant-audio-controls.tsx": {
@@ -3930,23 +3920,18 @@
     "semantic_hash": ""
   },
   "apps/extension/src/voice-audio-preferences.ts": {
-    "mtime": 1785165092.0336633,
-    "ast_hash": "c4d0533c17e976565595e88c33ac2974",
+    "mtime": 1785309903.2335765,
+    "ast_hash": "f59b25d4d6d771d38f25a96889c7b72e",
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-voice-controls.test.tsx": {
-    "mtime": 1785164933.6433778,
-    "ast_hash": "c7538fe9578bf169dcf07bf93f8a9b8f",
-    "semantic_hash": ""
-  },
-  "apps/extension/test/overlay-voice-ducking.test.ts": {
-    "mtime": 1785164614.2214694,
-    "ast_hash": "f46f3ee55a2d8075bb438ea2f767aad1",
+    "mtime": 1785309598.4137242,
+    "ast_hash": "58c7de51aa14791b28aaf7be327a4ca1",
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-voice-session.test.ts": {
-    "mtime": 1785164933.4509442,
-    "ast_hash": "f29cef01c04d79e8a768e0da19be6cd2",
+    "mtime": 1785309598.2048466,
+    "ast_hash": "15454586507d9e91bec9650a1927eb5c",
     "semantic_hash": ""
   },
   "apps/extension/test/participant-audio-controls.test.tsx": {
@@ -3965,8 +3950,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/voice-audio-preferences.test.ts": {
-    "mtime": 1785164933.3560016,
-    "ast_hash": "8835d6f85a90c2846a45b873ca6d0ae0",
+    "mtime": 1785309903.324522,
+    "ast_hash": "14fd05d7d16415db896f2dc8cb0229cb",
     "semantic_hash": ""
   },
   "apps/web/app/guides/best-apps-to-watch-youtube-together/page.tsx": {
@@ -4065,8 +4050,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-27-voice-controls-and-participant-audio-plan.md": {
-    "mtime": 1785192903.60476,
-    "ast_hash": "48ef104a52d8ba93055e8b055e74c01d",
+    "mtime": 1785310620.60184,
+    "ast_hash": "333cb9020b8fae018b1d29a307678c0f",
     "semantic_hash": ""
   },
   "apps/extension/src/local-audio-level-meter.ts": {

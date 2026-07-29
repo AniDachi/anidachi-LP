@@ -1,7 +1,5 @@
-import type { VoiceMode } from "./media-types";
-
 export const VOICE_AUDIO_PREFERENCES_STORAGE_PREFIX = "local:voiceAudioPreferencesV1";
-export const VOICE_AUDIO_PREFERENCES_VERSION = 1 as const;
+export const VOICE_AUDIO_PREFERENCES_VERSION = 2 as const;
 export const DEFAULT_PARTICIPANT_AUDIO_VOLUME = 1;
 export const MIN_PARTICIPANT_AUDIO_VOLUME = 0.05;
 export const MAX_PARTICIPANT_AUDIO_VOLUME = 1;
@@ -12,20 +10,19 @@ export interface ParticipantAudioPreference {
   volume: number;
 }
 
-export interface VoiceAudioPreferencesV1 {
+export interface VoiceAudioPreferences {
   version: typeof VOICE_AUDIO_PREFERENCES_VERSION;
-  mode: VoiceMode;
   participantAudio: Record<string, ParticipantAudioPreference>;
 }
 
 export interface LoadedVoiceAudioPreferences {
   listenerUserId: string | null;
-  preferences: VoiceAudioPreferencesV1;
+  preferences: VoiceAudioPreferences;
 }
 
 export interface ResolvedVoiceAudioPreferences {
   ready: boolean;
-  preferences: VoiceAudioPreferencesV1;
+  preferences: VoiceAudioPreferences;
 }
 
 export function getDefaultParticipantAudioPreference(): ParticipantAudioPreference {
@@ -35,10 +32,9 @@ export function getDefaultParticipantAudioPreference(): ParticipantAudioPreferen
   };
 }
 
-export function getDefaultVoiceAudioPreferences(): VoiceAudioPreferencesV1 {
+export function getDefaultVoiceAudioPreferences(): VoiceAudioPreferences {
   return {
     version: VOICE_AUDIO_PREFERENCES_VERSION,
-    mode: "push-to-talk",
     participantAudio: createParticipantAudioPreferenceRecord(),
   };
 }
@@ -71,8 +67,8 @@ export function voiceAudioPreferencesStorageKeyForUser(listenerUserId: string): 
   )}`;
 }
 
-export function parseVoiceAudioPreferences(value: unknown): VoiceAudioPreferencesV1 {
-  if (!isRecord(value) || value.version !== VOICE_AUDIO_PREFERENCES_VERSION) {
+export function parseVoiceAudioPreferences(value: unknown): VoiceAudioPreferences {
+  if (!isRecord(value) || (value.version !== 1 && value.version !== 2)) {
     return getDefaultVoiceAudioPreferences();
   }
 
@@ -86,7 +82,6 @@ export function parseVoiceAudioPreferences(value: unknown): VoiceAudioPreference
 
   return {
     version: VOICE_AUDIO_PREFERENCES_VERSION,
-    mode: normalizeVoiceMode(value.mode),
     participantAudio: createParticipantAudioPreferenceRecord(participantEntries),
   };
 }
@@ -137,26 +132,16 @@ export function toggleParticipantAudioMute(
 }
 
 export function updateParticipantAudioPreference(
-  preferences: VoiceAudioPreferencesV1,
+  preferences: VoiceAudioPreferences,
   participantId: string,
   preference: ParticipantAudioPreference,
-): VoiceAudioPreferencesV1 {
+): VoiceAudioPreferences {
   return {
     ...preferences,
     participantAudio: createParticipantAudioPreferenceRecord([
       ...Object.entries(preferences.participantAudio),
       [participantId, normalizeParticipantAudioPreference(preference)],
     ]),
-  };
-}
-
-export function updateVoiceMode(
-  preferences: VoiceAudioPreferencesV1,
-  mode: VoiceMode,
-): VoiceAudioPreferencesV1 {
-  return {
-    ...preferences,
-    mode,
   };
 }
 
@@ -168,10 +153,6 @@ function createParticipantAudioPreferenceRecord(
     participantAudio[participantId] = preference;
   }
   return participantAudio;
-}
-
-function normalizeVoiceMode(value: unknown): VoiceMode {
-  return value === "open-mic" || value === "push-to-talk" ? value : "push-to-talk";
 }
 
 export function normalizeParticipantAudioPreference(
