@@ -1,4 +1,7 @@
-import type { P2PSignal } from "@anidachi/protocol";
+import type {
+  P2PSignal,
+  VoiceMode as ProtocolVoiceMode,
+} from "@anidachi/protocol";
 
 export interface GhostVideo {
   participantId: string;
@@ -6,7 +9,7 @@ export interface GhostVideo {
   local: boolean;
 }
 
-export type VoiceMode = "push-to-talk" | "open-mic";
+export type VoiceMode = ProtocolVoiceMode;
 
 export type MicrophoneStatus = "off" | "connecting" | "on" | "error";
 

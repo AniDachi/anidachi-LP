@@ -46,10 +46,10 @@ describe("overlay voice session", () => {
     expect(
       getVoiceIndicatorParticipantIds({
         localParticipantId: "local",
-        measuredSpeakerIds: ["remote"],
+        measuredSpeakerIds: ["remote", "remote-ptt"],
         state: held,
       }),
-    ).toEqual(["remote", "local"]);
+    ).toEqual(["remote", "remote-ptt", "local"]);
   });
 
   it("keeps quiet Open mic and idle Push to talk tied to measured speech", () => {

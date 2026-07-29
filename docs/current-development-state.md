@@ -335,9 +335,8 @@ The extension currently supports:
   transport flow: quiet Open mic remains published without appearing to speak
   or triggering audio-stall recovery, while sender/receiver audio levels drive
   the green treatment and a local-track RMS fallback covers the period before
-  a sender exists. The local Push to talk indicator is the deliberate
-  exception: it activates immediately while `V` is held so the user sees that
-  the talk action is engaged before speech is measured;
+  a sender exists. Push to talk is the deliberate exception: local and remote
+  indicators activate immediately while `V` is held and clear on release;
 - per-listener participant audio mix controls: each remote media-seat
   participant can be muted or adjusted locally from the side voice pill or the
   matching video-bubble contour. Preferences are versioned, validated,
@@ -387,6 +386,10 @@ The extension currently supports:
   can confirm or clear active-speaker state while a remote peer is expected to
   be talking after `voice-start`; after `voice-stop`, residual RTP/DTX movement
   cannot relight the mic badge by itself;
+- Push to talk activity follows the held control on both sides: `voice-start`
+  carries the active microphone mode, so local and remote PTT indicators appear
+  immediately on key-down and clear on `voice-stop`; Open mic indicators remain
+  tied to measured speech;
 - push-to-talk audio is no longer coupled to camera visibility: voice-only room
   participants can enter or remain in the P2P media mesh without requiring
   `cameraEnabled`, so turning a camera off does not tear down the peer connection

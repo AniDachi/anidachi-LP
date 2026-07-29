@@ -561,7 +561,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     sequence: number;
   } | null>(null);
   const pushToTalkHeldRef = useRef(false);
-  const microphonePublicationRef = useRef(false);
+  const microphonePublicationRef = useRef<string | null>(null);
   const roomTokenRef = useRef<string | null>(null);
   const roomShareableLinkRef = useRef<string | null>(null);
   const statusRef = useRef<RoomConnectionStatus>("idle");
@@ -4062,13 +4062,23 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   }, [ghostCamSession.setMicrophonePublishing]);
 
   useEffect(() => {
-    if (microphonePublicationRef.current === microphonePublishingWanted) {
+    const publicationKey = `${microphonePublishingWanted}:${voiceSession.mode}`;
+    if (microphonePublicationRef.current === publicationKey) {
       return;
     }
 
-    microphonePublicationRef.current = microphonePublishingWanted;
-    void ghostCamSession.setMicrophonePublishing(microphonePublishingWanted, voiceSession.release);
-  }, [ghostCamSession.setMicrophonePublishing, microphonePublishingWanted, voiceSession.release]);
+    microphonePublicationRef.current = publicationKey;
+    void ghostCamSession.setMicrophonePublishing(
+      microphonePublishingWanted,
+      voiceSession.release,
+      voiceSession.mode,
+    );
+  }, [
+    ghostCamSession.setMicrophonePublishing,
+    microphonePublishingWanted,
+    voiceSession.mode,
+    voiceSession.release,
+  ]);
 
   useEffect(() => {
     if (!ghostCamSession.microphoneTerminalFailure) {

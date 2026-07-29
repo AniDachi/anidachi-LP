@@ -649,9 +649,10 @@ describe("P2P push-to-talk local-track recovery", () => {
         reason: "permission-denied",
       },
     ]);
-    expect(signals.map((item) => item.signal)).not.toContainEqual({
-      kind: "voice-stop",
-    });
+    expect(signals.map((item) => item.signal)).toEqual([
+      { kind: "voice-start", voiceMode: "push-to-talk" },
+      { kind: "voice-stop" },
+    ]);
     controller.disconnect();
   });
 
@@ -1558,6 +1559,146 @@ describe("P2P measured audio activity", () => {
 
     await sampleP2PAudioActivity(controller);
     expect(activeSpeakerChanges.at(-1)).toEqual(["viewer"]);
+
+    controller.disconnect();
+  });
+
+  it("shows remote push to talk for the full key-held publication", async () => {
+    const { activeSpeakerChanges, controller } = createP2PControllerHarness();
+    installStatsPeer(controller, "viewer", []);
+
+    await controller.handleSignal("viewer", {
+      kind: "voice-start",
+      voiceMode: "push-to-talk",
+    });
+    expect(activeSpeakerChanges.at(-1)).toEqual(["viewer"]);
+
+    await controller.handleSignal("viewer", {
+      kind: "voice-start",
+      voiceMode: "open-mic",
+    });
+    expect(activeSpeakerChanges.at(-1)).toEqual([]);
+
+    await controller.handleSignal("viewer", {
+      kind: "voice-start",
+      voiceMode: "push-to-talk",
+    });
+    expect(activeSpeakerChanges.at(-1)).toEqual(["viewer"]);
+
+    await controller.handleSignal("viewer", { kind: "voice-stop" });
+    expect(activeSpeakerChanges.at(-1)).toEqual([]);
+
+    controller.disconnect();
+  });
+
+  it("ignores stale push-to-talk signals from a retired media session", async () => {
+    const { activeSpeakerChanges, controller } = createP2PControllerHarness();
+    installStatsPeer(controller, "viewer", []);
+
+    await controller.handleSignal(
+      "viewer",
+      { kind: "voice-start", voiceMode: "push-to-talk" },
+      {
+        senderConnectionId: "viewer-connection-a",
+        senderMediaSessionId: "viewer-media-a",
+      },
+    );
+    expect(activeSpeakerChanges.at(-1)).toEqual(["viewer"]);
+
+    await controller.handleSignal(
+      "viewer",
+      { kind: "voice-start", voiceMode: "open-mic" },
+      {
+        senderConnectionId: "viewer-connection-b",
+        senderMediaSessionId: "viewer-media-b",
+      },
+    );
+    expect(activeSpeakerChanges.at(-1)).toEqual([]);
+
+    await controller.handleSignal(
+      "viewer",
+      { kind: "voice-start", voiceMode: "push-to-talk" },
+      {
+        senderConnectionId: "viewer-connection-a",
+        senderMediaSessionId: "viewer-media-a",
+      },
+    );
+    expect(activeSpeakerChanges.at(-1)).toEqual([]);
+
+    await controller.handleSignal(
+      "viewer",
+      { kind: "voice-start", voiceMode: "push-to-talk" },
+      {
+        senderConnectionId: "viewer-connection-b",
+        senderMediaSessionId: "viewer-media-b",
+      },
+    );
+    expect(activeSpeakerChanges.at(-1)).toEqual(["viewer"]);
+
+    await controller.handleSignal(
+      "viewer",
+      { kind: "voice-stop" },
+      {
+        senderConnectionId: "viewer-connection-a",
+        senderMediaSessionId: "viewer-media-a",
+      },
+    );
+    expect(activeSpeakerChanges.at(-1)).toEqual(["viewer"]);
+
+    await controller.handleSignal(
+      "viewer",
+      { kind: "voice-stop" },
+      {
+        senderConnectionId: "viewer-connection-b",
+        senderMediaSessionId: "viewer-media-b",
+      },
+    );
+    expect(activeSpeakerChanges.at(-1)).toEqual([]);
+
+    controller.disconnect();
+  });
+
+  it("clears remote push-to-talk when the participant leaves the media mesh", async () => {
+    const { activeSpeakerChanges, controller } = createP2PControllerHarness();
+    installStatsPeer(controller, "viewer", [
+      statsReportFrom([
+        {
+          id: "viewer-audio",
+          type: "inbound-rtp",
+          kind: "audio",
+          audioLevel: 0.03,
+          bytesReceived: 100,
+          packetsReceived: 10,
+        },
+      ]),
+    ]);
+    installRemoteAudioElement(controller, "viewer");
+
+    await controller.handleSignal("viewer", {
+      kind: "voice-start",
+      voiceMode: "push-to-talk",
+    });
+    await sampleP2PAudioActivity(controller);
+    expect(activeSpeakerChanges.at(-1)).toEqual(["viewer"]);
+
+    controller.updateParticipants([], new Set(["host"]));
+    expect(activeSpeakerChanges.at(-1)).toEqual([]);
+    expect((await controller.getStats()).remoteAudioExpectedIds).toEqual([]);
+
+    controller.disconnect();
+  });
+
+  it("stops remote audio immediately when the participant loses its media seat", async () => {
+    const { controller } = createP2PControllerHarness();
+    installStatsPeer(controller, "viewer", []);
+    const element = installRemoteAudioElement(controller, "viewer");
+    const pause = vi.spyOn(element, "pause");
+
+    controller.updateParticipants([], new Set(["host"]));
+
+    expect(pause).toHaveBeenCalledTimes(1);
+    expect(element.srcObject).toBeNull();
+    expect(controller.hasPeer("viewer")).toBe(false);
 
     controller.disconnect();
   });
@@ -3008,8 +3149,16 @@ describe("P2P idle peer linger", () => {
     await vi.advanceTimersByTimeAsync(0);
     harness.signals.length = 0;
 
-    await harness.controller.setMicrophonePublishing(true, "warm");
-    await harness.controller.setMicrophonePublishing(true, "warm");
+    await harness.controller.setMicrophonePublishing(
+      true,
+      "warm",
+      "push-to-talk",
+    );
+    await harness.controller.setMicrophonePublishing(
+      true,
+      "warm",
+      "push-to-talk",
+    );
     harness.controller.updateParticipants([
       participant("viewer", true),
       participant("late-viewer", true),
@@ -3020,6 +3169,10 @@ describe("P2P idle peer linger", () => {
       (item) => item.signal.kind === "voice-start",
     );
     expect(starts.filter((item) => item.toUserId === "viewer")).toHaveLength(1);
+    expect(starts.find((item) => item.toUserId === "viewer")?.signal).toEqual({
+      kind: "voice-start",
+      voiceMode: "push-to-talk",
+    });
     expect(
       starts.filter((item) => item.toUserId === "late-viewer"),
     ).toHaveLength(1);
@@ -3034,6 +3187,41 @@ describe("P2P idle peer linger", () => {
     expect(
       stops.filter((item) => item.toUserId === "late-viewer"),
     ).toHaveLength(1);
+
+    harness.controller.disconnect();
+  });
+
+  it("republishes microphone mode while audio publication remains enabled", async () => {
+    const track = new FakeAudioTrack("mic");
+    installFakeMediaDevices({
+      addEventListener: vi.fn(),
+      getUserMedia: vi.fn().mockResolvedValue(fakeAudioStream(track)),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaDevices);
+    const harness = createP2PControllerHarness();
+    harness.controller.updateParticipants([participant("viewer", true)]);
+    await vi.advanceTimersByTimeAsync(0);
+    harness.signals.length = 0;
+
+    await harness.controller.setMicrophonePublishing(
+      true,
+      "warm",
+      "push-to-talk",
+    );
+    await harness.controller.setMicrophonePublishing(
+      true,
+      "immediate",
+      "open-mic",
+    );
+
+    expect(
+      harness.signals
+        .filter((item) => item.signal.kind === "voice-start")
+        .map((item) => item.signal),
+    ).toEqual([
+      { kind: "voice-start", voiceMode: "push-to-talk" },
+      { kind: "voice-start", voiceMode: "open-mic" },
+    ]);
 
     harness.controller.disconnect();
   });
@@ -3087,13 +3275,13 @@ describe("P2P idle peer linger", () => {
     await harness.controller.setMicrophonePublishing(true, "warm");
     expect(
       harness.signals.filter((item) => item.signal.kind === "voice-start"),
-    ).toHaveLength(2);
+    ).toHaveLength(4);
 
     voiceDisposition = "sent";
     await harness.controller.setMicrophonePublishing(true, "warm");
     expect(
       harness.signals.filter((item) => item.signal.kind === "voice-start"),
-    ).toHaveLength(3);
+    ).toHaveLength(5);
 
     voiceDisposition = "dropped";
     await harness.controller.setMicrophonePublishing(false, "warm");

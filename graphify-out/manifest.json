@@ -260,8 +260,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/ghost-cam.ts": {
-    "mtime": 1785165363.299319,
-    "ast_hash": "02ff583e52267463af98ad87e5033b3b",
+    "mtime": 1785316902.749758,
+    "ast_hash": "af291ab47f83ff96cbeaeb3a877485ce",
     "semantic_hash": ""
   },
   "apps/extension/src/hotkeys.ts": {
@@ -275,8 +275,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/media-types.ts": {
-    "mtime": 1785309676.3612335,
-    "ast_hash": "6385a56b0c172518955981bd6d0812e0",
+    "mtime": 1785312726.2156756,
+    "ast_hash": "c47325053e3cecf803fdea9021fcaac5",
     "semantic_hash": ""
   },
   "apps/extension/src/message-composer-events.ts": {
@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1785311815.9760065,
-    "ast_hash": "67e067c2a2ef06f68ee4ffe90e76018d",
+    "mtime": 1785313900.3855562,
+    "ast_hash": "4592b52f68e07b56b538615446a47755",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/p2p-media.ts": {
-    "mtime": 1785193169.365564,
-    "ast_hash": "dd376a473983f827db14322854ecc590",
+    "mtime": 1785316885.3242226,
+    "ast_hash": "f2b97a0ffd55e334237d6789c2871a4c",
     "semantic_hash": ""
   },
   "apps/extension/src/playback-control.ts": {
@@ -440,8 +440,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/ghost-cam.test.tsx": {
-    "mtime": 1785161266.2049427,
-    "ast_hash": "283078a21faf5f94b4cc0ed10b14bf00",
+    "mtime": 1785316954.7557755,
+    "ast_hash": "a58ae3ccd72b2bc375a04b276e595294",
     "semantic_hash": ""
   },
   "apps/extension/test/hotkeys.test.ts": {
@@ -480,8 +480,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/p2p-media.test.ts": {
-    "mtime": 1785193169.4569545,
-    "ast_hash": "5f323b95c9f196e2f9a396e137a2c86b",
+    "mtime": 1785315337.7065148,
+    "ast_hash": "7a900a8643d20f239a71ad127038f826",
     "semantic_hash": ""
   },
   "apps/extension/test/playback-control.test.ts": {
@@ -2755,13 +2755,13 @@
     "semantic_hash": ""
   },
   "packages/protocol/src/types.ts": {
-    "mtime": 1785159409.945389,
-    "ast_hash": "a52decc72bb3e2eba224827e8a42b68e",
+    "mtime": 1785312726.1239374,
+    "ast_hash": "4f0066e2c79d1b0ccf3fe7044f2aa82c",
     "semantic_hash": ""
   },
   "packages/protocol/test/protocol.test.ts": {
-    "mtime": 1784676382.4370606,
-    "ast_hash": "0b63a9d14ddcf8691f07c51246a728c7",
+    "mtime": 1785312557.971405,
+    "ast_hash": "f700b50853ea5e44b40a722ad516e1b5",
     "semantic_hash": ""
   },
   "packages/protocol/tsconfig.json": {
@@ -3045,8 +3045,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1785311816.1602685,
-    "ast_hash": "424b6407ac1f55ef0b8243a43558ab09",
+    "mtime": 1785313266.2943966,
+    "ast_hash": "9eb499e6c6dd0a5c55e3202540ca391c",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3210,22 +3210,22 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1785312011.4460163,
+    "mtime": 1785313331.1891649,
     "ast_hash": "8103ec7baee41956510c12b5d5179357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1785312011.4461863,
+    "mtime": 1785313331.1893218,
     "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1785312011.4462829,
+    "mtime": 1785313331.1895163,
     "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1785312011.44638,
+    "mtime": 1785313331.189608,
     "ast_hash": "3b2f03af796edbba914cef26f3a575da",
     "semantic_hash": ""
   },
@@ -3900,7 +3900,7 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-voice-session.ts": {
-    "mtime": 1785311957.4753134,
+    "mtime": 1785313900.475282,
     "ast_hash": "4758927bab1ece8dbaa3e5d8c75354b8",
     "semantic_hash": ""
   },
@@ -3930,8 +3930,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/overlay-voice-session.test.ts": {
-    "mtime": 1785311957.5658543,
-    "ast_hash": "aeeb3ac5c78c4b749fc203144726aa8d",
+    "mtime": 1785313900.564288,
+    "ast_hash": "d899f6de93d04f86eb9b27a13eb980fb",
     "semantic_hash": ""
   },
   "apps/extension/test/participant-audio-controls.test.tsx": {
@@ -4050,8 +4050,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-07-27-voice-controls-and-participant-audio-plan.md": {
-    "mtime": 1785311816.0670257,
-    "ast_hash": "23bfbcbed31d12fecca0cd5e2fc254a6",
+    "mtime": 1785312900.171004,
+    "ast_hash": "1bb297c433994419dbb9519cf6257132",
     "semantic_hash": ""
   },
   "apps/extension/src/local-audio-level-meter.ts": {

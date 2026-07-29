@@ -18,13 +18,12 @@ while simplifying microphone UX to two room-scoped modes, making Push to talk
 mesh. The local UI owns voice mode and listener preferences.
 `P2PMediaController` owns microphone-track publication, audio playback elements,
 voice activity sampling, and media recovery. Existing `voice-start` and
-`voice-stop` P2P signals remain wire-compatible and describe whether a remote
-microphone publication is expected; actual speaking state is derived from
-WebRTC audio-level statistics. No Worker, API, database, room snapshot, or
-protocol event/schema expansion is required. The semantic contract and comments
-for the existing signals must be updated because they no longer mean
-"definitely speaking". Microphone publication and camera publication remain
-independent capabilities even though one P2P controller owns both transports.
+`voice-stop` P2P signal names remain unchanged. `voice-start` carries the active
+microphone mode: Push to talk drives immediate local and remote indicators,
+while Open mic speaking state is derived from WebRTC audio-level statistics.
+No Worker, API, database, or room snapshot state is added. Microphone
+publication and camera publication remain independent capabilities even though
+one P2P controller owns both transports.
 The output-control UI follows the participant's currently rendered surface:
 side voice rail without video, or the video-bubble contour with video.
 
@@ -120,15 +119,15 @@ already implemented runtime foundation.
 
 - `VoiceMode` represents the selected room interaction mode.
 - Microphone publication status represents actual capture/publication.
-- Holding `V` in Push to talk activates the local green video ring or side
-  voice pill immediately, even before speech is measured. Open mic and remote
-  participant indicators remain driven by measured speech activity so a quiet
-  published microphone does not appear to be speaking.
+- Holding `V` in Push to talk activates the green video ring or side voice pill
+  immediately for the local user and every remote participant, even before
+  speech is measured. Open mic indicators remain driven by measured speech
+  activity so a quiet published microphone does not appear to be speaking.
 - Push to talk publishes only while `V` is held.
 - Open mic publishes continuously while the restored or newly selected
   room-scoped mode is Open mic.
-- `voice-start` and `voice-stop` remain wire-compatible publication-expectation
-  signals.
+- `voice-start` includes the active `voiceMode`; `voice-stop` clears both
+  publication expectation and any PTT indicator.
 - Silence never becomes speaking activity and never triggers player-volume
   ducking.
 
@@ -281,8 +280,9 @@ above supersedes them where they conflict.
    Actual rendered-video membership, not a camera status flag, chooses the
    surface so camera startup and teardown do not produce a duplicate or missing
    indicator.
-4. `voice-start` means that remote audio publication is expected. It must not
-   immediately mark that participant as speaking.
+4. `voice-start` means that remote audio publication is expected. In Push to
+   talk it also activates the remote indicator until `voice-stop`; in Open mic
+   it does not replace measured speaking activity.
 5. Local speaking prefers sender `media-source.audioLevel` and falls back to
    RMS measurement of the already-authorized local microphone track while a
    peer sender is not available or does not expose a level.
@@ -381,11 +381,11 @@ Rules:
 - A separate `localSpeaking: boolean` describes measured activity.
 - Status changes and speaking changes must not be inferred from each other.
 
-The existing wire signals remain:
+The wire signals remain ephemeral P2P events:
 
 ```ts
-{ kind: "voice-start" } // microphone publication expected
-{ kind: "voice-stop" }  // microphone publication no longer expected
+{ kind: "voice-start", voiceMode: "push-to-talk" | "open-mic" }
+{ kind: "voice-stop" }
 ```
 
 Internally, new names must refer to microphone publication rather than
@@ -780,7 +780,11 @@ authority actions. Do not add a second participant mixer to the room panel.
    publication lifecycle:
 
    ```ts
-   setMicrophonePublishing(enabled: boolean, release: "warm" | "immediate"):
+   setMicrophonePublishing(
+     enabled: boolean,
+     release: "warm" | "immediate",
+     voiceMode: VoiceMode,
+   ):
      Promise<void>;
    ```
 
@@ -809,8 +813,8 @@ authority actions. Do not add a second participant mixer to the room panel.
    the existing bounded retry policy.
 9. [ ] Update `useGhostCam` to expose generic microphone publication and
    measured speaking state.
-10. [ ] Update protocol comments for `voice-start`/`voice-stop` to describe
-   publication expectation without changing the Zod schema or event names.
+10. [x] Add the active microphone mode to `voice-start` without changing event
+    names or adding durable room state.
 11. [ ] Remove parallel legacy wrappers after all local callers are migrated.
 12. [ ] Run:
 

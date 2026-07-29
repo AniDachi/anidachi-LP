@@ -2,6 +2,7 @@ import type {
   P2PIceCandidate,
   P2PSignal,
   Participant,
+  VoiceMode,
 } from "@anidachi/protocol";
 import { logDebug } from "./debug-log";
 import {
@@ -702,8 +703,11 @@ export class P2PMediaController {
   private readonly refreshIceServers?: () => Promise<RTCIceServer[]>;
   private readonly sendSignalToTransport: P2PMediaControllerOptions["sendSignal"];
   private readonly peers = new Map<string, P2PPeer>();
-  private readonly microphonePublicationSignaledByPeer = new Set<string>();
-  private readonly peerOperationChains = new Map<string, Promise<void>>();
+  private readonly microphonePublicationModeByPeer = new Map<
+    string,
+    VoiceMode
+  >();
+  private readonly peerOperationChains = new Map<string, Promise<unknown>>();
   private readonly senderConnectionIdsByPeer = new Map<string, string>();
   private readonly senderMediaSessionIdsByPeer = new Map<string, string>();
   private readonly retiredSenderConnectionIdsByPeer = new Map<
@@ -723,6 +727,7 @@ export class P2PMediaController {
     string,
     ParticipantAudioPreference
   >();
+  private readonly remotePushToTalkIds = new Set<string>();
   private readonly remoteSpeakingIds = new Set<string>();
   private readonly remoteAudioExpectationGenerationByPeer = new Map<
     string,
@@ -780,6 +785,7 @@ export class P2PMediaController {
   private lastSignalingTransportReadyId: string | null = null;
   private wantsCamera = false;
   private microphonePublishingWanted = false;
+  private microphoneVoiceMode: VoiceMode = "push-to-talk";
   private microphoneStartingGeneration: number | null = null;
   private microphonePublishing = false;
   private localSpeaking = false;
@@ -865,23 +871,37 @@ export class P2PMediaController {
     publishing: boolean,
     force = false,
   ): void {
-    const signaled =
-      this.microphonePublicationSignaledByPeer.has(remoteUserId);
-    if (!force && signaled === publishing) {
+    const signaledMode =
+      this.microphonePublicationModeByPeer.get(remoteUserId);
+    if (
+      !force &&
+      (publishing
+        ? signaledMode === this.microphoneVoiceMode
+        : signaledMode === undefined)
+    ) {
       return;
     }
 
-    const disposition = this.sendSignal(remoteUserId, {
-      kind: publishing ? "voice-start" : "voice-stop",
-    });
+    const disposition = this.sendSignal(
+      remoteUserId,
+      publishing
+        ? {
+            kind: "voice-start",
+            voiceMode: this.microphoneVoiceMode,
+          }
+        : { kind: "voice-stop" },
+    );
     if (disposition === "dropped") {
       return;
     }
 
     if (publishing) {
-      this.microphonePublicationSignaledByPeer.add(remoteUserId);
+      this.microphonePublicationModeByPeer.set(
+        remoteUserId,
+        this.microphoneVoiceMode,
+      );
     } else {
-      this.microphonePublicationSignaledByPeer.delete(remoteUserId);
+      this.microphonePublicationModeByPeer.delete(remoteUserId);
     }
   }
 
@@ -963,7 +983,10 @@ export class P2PMediaController {
     }
   }
 
-  updateParticipants(participants: Participant[]): void {
+  updateParticipants(
+    participants: Participant[],
+    mediaSeatParticipantIds?: ReadonlySet<string>,
+  ): void {
     if (this.disposed) {
       return;
     }
@@ -985,6 +1008,20 @@ export class P2PMediaController {
 
     for (const [remoteId, peer] of this.peers) {
       if (!remoteIdSet.has(remoteId)) {
+        if (
+          mediaSeatParticipantIds &&
+          !mediaSeatParticipantIds.has(remoteId)
+        ) {
+          this.closePeer(remoteId, false);
+          continue;
+        }
+        if (
+          this.remoteAudioExpectedByPeer.has(remoteId) ||
+          this.remotePushToTalkIds.has(remoteId) ||
+          this.remoteSpeakingIds.has(remoteId)
+        ) {
+          this.resetRemoteAudioPublicationState(remoteId, true);
+        }
         this.schedulePeerLingerClose(peer);
       }
     }
@@ -1275,10 +1312,13 @@ export class P2PMediaController {
   async setMicrophonePublishing(
     enabled: boolean,
     release: "warm" | "immediate",
+    voiceMode: VoiceMode = this.microphoneVoiceMode,
   ): Promise<void> {
     if (this.disposed) {
       return;
     }
+
+    this.microphoneVoiceMode = voiceMode;
 
     if (!enabled) {
       const wasPublishing =
@@ -1335,6 +1375,10 @@ export class P2PMediaController {
     this.microphonePublishingWanted = true;
     this.clearMicrophoneReacquireTimer();
     this.clearMicReleaseTimer();
+
+    if (voiceMode === "push-to-talk") {
+      this.sendMicrophonePublicationStateToAll(true);
+    }
 
     if (this.microphonePublishing && this.localAudioTrack?.readyState === "live") {
       this.sendMicrophonePublicationStateToAll(true);
@@ -1710,16 +1754,16 @@ export class P2PMediaController {
     fromUserId: string,
     signal: P2PSignal,
     metadata: P2PSignalMetadata = {},
-  ): Promise<void> {
+  ): Promise<boolean> {
     return this.enqueuePeerOperation(fromUserId, () =>
       this.handleSignalNow(fromUserId, signal, metadata),
     );
   }
 
-  private enqueuePeerOperation(
+  private enqueuePeerOperation<Result>(
     remoteUserId: string,
-    operation: () => Promise<void>,
-  ): Promise<void> {
+    operation: () => Promise<Result>,
+  ): Promise<Result> {
     const previous =
       this.peerOperationChains.get(remoteUserId) ?? Promise.resolve();
     const next = previous.catch(() => undefined).then(operation);
@@ -1737,9 +1781,9 @@ export class P2PMediaController {
     fromUserId: string,
     signal: P2PSignal,
     metadata: P2PSignalMetadata,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (this.disposed || fromUserId === this.localParticipant.id) {
-      return;
+      return false;
     }
 
     logDebug("p2p.signal", "received", {
@@ -1769,7 +1813,7 @@ export class P2PMediaController {
         localParticipantId: this.localParticipant.id,
         remoteUserId: fromUserId,
       });
-      return;
+      return false;
     }
     if (
       incomingSenderMediaSessionId &&
@@ -1786,7 +1830,7 @@ export class P2PMediaController {
         localParticipantId: this.localParticipant.id,
         remoteUserId: fromUserId,
       });
-      return;
+      return false;
     }
 
     const connectionDecision = decideP2PSignalConnection(
@@ -1807,7 +1851,7 @@ export class P2PMediaController {
         reason: connectionDecision.reason,
         remoteUserId: fromUserId,
       });
-      return;
+      return false;
     }
 
     const senderConnectionChanged =
@@ -1889,13 +1933,26 @@ export class P2PMediaController {
     }
 
     if (signal.kind === "voice-start") {
+      const pushToTalkIndicatorChanged =
+        signal.voiceMode === "push-to-talk"
+          ? !this.remotePushToTalkIds.has(fromUserId)
+          : this.remotePushToTalkIds.has(fromUserId);
+      if (signal.voiceMode === "push-to-talk") {
+        this.remotePushToTalkIds.add(fromUserId);
+      } else {
+        this.remotePushToTalkIds.delete(fromUserId);
+      }
+      if (pushToTalkIndicatorChanged) {
+        this.publishActiveSpeakerIds();
+      }
+
       if (this.remoteAudioExpectedByPeer.has(fromUserId)) {
         logDebug("p2p.audio", "remote voice-start ignored", {
           localParticipantId: this.localParticipant.id,
           remoteUserId: fromUserId,
           reason: "already-expected",
         });
-        return;
+        return true;
       }
 
       const peer = this.ensurePeer(fromUserId);
@@ -1919,12 +1976,13 @@ export class P2PMediaController {
         peerIceConnectionState: peer.pc.iceConnectionState,
       });
       this.updateAudioActivitySampler();
-      return;
+      return true;
     }
 
     if (signal.kind === "voice-stop") {
       if (
         !this.remoteAudioExpectedByPeer.has(fromUserId) &&
+        !this.remotePushToTalkIds.has(fromUserId) &&
         !this.remoteSpeakingIds.has(fromUserId)
       ) {
         logDebug("p2p.audio", "remote voice-stop ignored", {
@@ -1932,7 +1990,7 @@ export class P2PMediaController {
           remoteUserId: fromUserId,
           reason: "already-quiet",
         });
-        return;
+        return true;
       }
 
       this.remoteAudioExpectedByPeer.delete(fromUserId);
@@ -1944,6 +2002,7 @@ export class P2PMediaController {
       this.remoteAudioStallSamplesByPeer.set(fromUserId, 0);
       this.remoteAudioActivityByPeer.set(fromUserId, "quiet");
       this.remoteSpeakingHysteresisByPeer.delete(fromUserId);
+      this.remotePushToTalkIds.delete(fromUserId);
       this.remoteSpeakingIds.delete(fromUserId);
       logDebug("p2p.audio", "remote voice stopped", {
         localParticipantId: this.localParticipant.id,
@@ -1951,12 +2010,12 @@ export class P2PMediaController {
       });
       this.publishActiveSpeakerIds();
       this.updateAudioActivitySampler();
-      return;
+      return true;
     }
 
     if (signal.kind === "bye") {
       this.closePeer(fromUserId, false);
-      return;
+      return true;
     }
 
     const peer = this.ensurePeer(fromUserId);
@@ -1990,7 +2049,7 @@ export class P2PMediaController {
           remoteUserId: fromUserId,
         });
       }
-      return;
+      return true;
     }
 
     if (signal.kind === "renegotiate") {
@@ -2006,7 +2065,7 @@ export class P2PMediaController {
           },
         );
       }
-      return;
+      return true;
     }
 
     const dedupeKey = createP2PMediaSignalDedupeKey(fromUserId, signal);
@@ -2023,7 +2082,7 @@ export class P2PMediaController {
         kind: signal.kind,
         fingerprint: dedupeKey,
       });
-      return;
+      return false;
     }
 
     try {
@@ -2053,7 +2112,7 @@ export class P2PMediaController {
               duplicatePending: alreadyQueued,
             },
           );
-          return;
+          return true;
         }
 
         await peer.pc.addIceCandidate(signal.candidate);
@@ -2067,7 +2126,7 @@ export class P2PMediaController {
           remoteUserId: fromUserId,
           candidateType: getCandidateType(signal.candidate.candidate),
         });
-        return;
+        return true;
       }
 
       const description: RTCSessionDescriptionInit = signal.sdp;
@@ -2080,7 +2139,7 @@ export class P2PMediaController {
           fromUserId,
           signalingState: peer.pc.signalingState,
         });
-        return;
+        return false;
       }
       const readyForOffer =
         !peer.makingOffer &&
@@ -2095,7 +2154,7 @@ export class P2PMediaController {
           signalingState: peer.pc.signalingState,
           makingOffer: peer.makingOffer,
         });
-        return;
+        return false;
       }
 
       peer.isSettingRemoteAnswerPending = description.type === "answer";
@@ -2124,9 +2183,10 @@ export class P2PMediaController {
         peer.signalingRecoveryNeeded =
           (await this.createAndSendAnswer(peer)) !== "sent";
       }
+      return true;
     } catch (error) {
       if (peer.ignoreOffer) {
-        return;
+        return false;
       }
 
       if (peer.pc.signalingState === "have-remote-offer") {
@@ -2139,6 +2199,7 @@ export class P2PMediaController {
         kind: signal.kind,
         error: error instanceof Error ? error.message : String(error),
       });
+      return false;
     }
   }
 
@@ -2717,7 +2778,11 @@ export class P2PMediaController {
     this.remoteAudioStatsByPeer.delete(remoteUserId);
     this.remoteAudioStallSamplesByPeer.set(remoteUserId, 0);
     this.remoteSpeakingHysteresisByPeer.delete(remoteUserId);
-    const speakingChanged = this.remoteSpeakingIds.delete(remoteUserId);
+    const pushToTalkChanged =
+      this.remotePushToTalkIds.delete(remoteUserId);
+    const measuredSpeakingChanged =
+      this.remoteSpeakingIds.delete(remoteUserId);
+    const speakingChanged = pushToTalkChanged || measuredSpeakingChanged;
     if (speakingChanged) {
       this.publishActiveSpeakerIds();
     }
@@ -2885,7 +2950,7 @@ export class P2PMediaController {
     // `bye` clears the remote publication expectation. The replacement peer
     // must therefore announce the current state again, even though the local
     // publication intent itself survived the technical peer rebuild.
-    this.microphonePublicationSignaledByPeer.delete(remoteUserId);
+    this.microphonePublicationModeByPeer.delete(remoteUserId);
     if (this.isMicrophonePublicationExpected()) {
       this.sendMicrophonePublicationState(remoteUserId, true, true);
     }
@@ -2925,6 +2990,10 @@ export class P2PMediaController {
   hasPeer(remoteUserId: string): boolean {
     const peer = this.peers.get(remoteUserId);
     return Boolean(peer && peer.pc.signalingState !== "closed");
+  }
+
+  isRemoteVoicePublishing(remoteUserId: string): boolean {
+    return this.remoteAudioExpectedByPeer.has(remoteUserId);
   }
 
   disconnect(): void {
@@ -2988,6 +3057,7 @@ export class P2PMediaController {
       element.remove();
     }
     this.audioElementsByParticipant.clear();
+    this.remotePushToTalkIds.clear();
     this.remoteSpeakingIds.clear();
     this.remoteAudioExpectationGenerationByPeer.clear();
     this.remoteAudioActivityByPeer.clear();
@@ -3818,10 +3888,14 @@ export class P2PMediaController {
   }
 
   private publishActiveSpeakerIds(): void {
-    this.onActiveSpeakerIdsChange([
-      ...(this.localSpeaking ? [this.localParticipant.id] : []),
-      ...Array.from(this.remoteSpeakingIds),
-    ]);
+    const activeSpeakerIds = new Set(this.remoteSpeakingIds);
+    for (const participantId of this.remotePushToTalkIds) {
+      activeSpeakerIds.add(participantId);
+    }
+    if (this.localSpeaking) {
+      activeSpeakerIds.add(this.localParticipant.id);
+    }
+    this.onActiveSpeakerIdsChange(Array.from(activeSpeakerIds));
   }
 
   /**
@@ -3891,7 +3965,7 @@ export class P2PMediaController {
 
     this.peers.delete(remoteUserId);
     if (!preserveSignalSource) {
-      this.microphonePublicationSignaledByPeer.delete(remoteUserId);
+      this.microphonePublicationModeByPeer.delete(remoteUserId);
     }
     this.clearPeerDisconnectTimer(peer);
     this.clearPeerLingerTimer(peer);
@@ -3905,6 +3979,7 @@ export class P2PMediaController {
     }
     this.removeVideo(remoteUserId);
     this.removeAudio(remoteUserId);
+    this.remotePushToTalkIds.delete(remoteUserId);
     this.remoteSpeakingIds.delete(remoteUserId);
     this.remoteAudioExpectationGenerationByPeer.delete(remoteUserId);
     this.remoteAudioActivityByPeer.delete(remoteUserId);
