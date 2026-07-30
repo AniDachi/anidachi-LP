@@ -97,6 +97,7 @@ import {
   persistRoomSessionForCurrentJoin,
 } from "./overlay-media-session";
 import { shouldDismissOverlayPanel, waitForOverlayPaint } from "./overlay-panel-interaction";
+import { InterfaceSettingsPanel } from "./overlay-interface-settings";
 import {
   copyRoomInviteText,
   getPrimaryRoomActionKind,
@@ -175,6 +176,7 @@ import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artw
 import { getDefinitionForProvider } from "./source-adapters/registry";
 import { overlayStyles } from "./styles";
 import { useTopBubbleReveal } from "./top-bubble-reveal";
+import { useInterfacePreferences } from "./use-interface-preferences";
 import {
   authErrorMessage,
   type CurrentParticipantResult,
@@ -523,11 +525,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       roomId: null,
     }),
   );
+  const interfacePreferences = useInterfacePreferences();
   const openMicLauncherVisible =
     voiceSession.mode === "open-mic" && isVoiceSessionPublishing(voiceSession);
   const topBubbleReveal = useTopBubbleReveal({
     bubbleRef: topBubbleRef,
     forceVisible: openMicLauncherVisible,
+    mode: interfacePreferences.preferences.mainControlVisibility,
     overlayRef: overlayRootRef,
     panelOpen,
   });
@@ -4831,6 +4835,16 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                     ))}
                   </div>
                 </div>
+              ) : null}
+
+              {settingsPanelCategory === "interface" ? (
+                <InterfaceSettingsPanel
+                  error={interfacePreferences.error}
+                  onChange={interfacePreferences.update}
+                  preferences={interfacePreferences.preferences}
+                  ready={interfacePreferences.ready}
+                  saving={interfacePreferences.saving}
+                />
               ) : null}
 
               {settingsPanelCategory === "voice" ? (

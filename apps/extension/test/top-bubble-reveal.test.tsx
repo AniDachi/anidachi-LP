@@ -1,6 +1,7 @@
 import { act, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { MainControlVisibility } from "../src/interface-preferences";
 import {
   TOP_BUBBLE_HIDE_DELAY_MS,
   TOP_BUBBLE_REVEAL_DELAY_MS,
@@ -183,15 +184,53 @@ describe("top bubble edge reveal", () => {
     expect(readPhase(view.container)).toBe("hidden");
     await unmount(view.root);
   });
+
+  it("starts and remains visible without edge intent in Always visible mode", async () => {
+    const view = await renderHarness(
+      false,
+      rect(900, 10, 80, 32),
+      false,
+      "always-visible",
+    );
+    expect(readPhase(view.container)).toBe("visible");
+
+    await movePointer(850, 40);
+    expect(readPhase(view.container)).toBe("visible");
+    await movePointer(400, 300);
+    await advance(TOP_BUBBLE_HIDE_DELAY_MS);
+    expect(readPhase(view.container)).toBe("visible");
+
+    await unmount(view.root);
+  });
+
+  it("uses the existing delayed hide when switching back to Auto hide", async () => {
+    const view = await renderHarness(
+      false,
+      rect(900, 10, 80, 32),
+      false,
+      "always-visible",
+    );
+    expect(readPhase(view.container)).toBe("visible");
+
+    await view.rerender(false, false, "auto-hide");
+    await advance(TOP_BUBBLE_HIDE_DELAY_MS - 1);
+    expect(readPhase(view.container)).toBe("visible");
+    await advance(1);
+    expect(readPhase(view.container)).toBe("hidden");
+
+    await unmount(view.root);
+  });
 });
 
 function Harness({
   bubbleRect,
   forceVisible,
+  mode,
   panelOpen,
 }: {
   bubbleRect: DOMRect;
   forceVisible: boolean;
+  mode: MainControlVisibility;
   panelOpen: boolean;
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -199,6 +238,7 @@ function Harness({
   const reveal = useTopBubbleReveal({
     bubbleRef,
     forceVisible,
+    mode,
     overlayRef,
     panelOpen,
   });
@@ -234,9 +274,14 @@ async function renderHarness(
   panelOpen: boolean,
   bubbleRect = rect(900, 10, 80, 32),
   forceVisible = false,
+  mode: MainControlVisibility = "auto-hide",
 ): Promise<{
   container: HTMLDivElement;
-  rerender(panelOpen: boolean, forceVisible?: boolean): Promise<void>;
+  rerender(
+    panelOpen: boolean,
+    forceVisible?: boolean,
+    mode?: MainControlVisibility,
+  ): Promise<void>;
   root: Root;
 }> {
   const container = document.createElement("div");
@@ -244,18 +289,24 @@ async function renderHarness(
   const root = createRoot(container);
   await act(async () =>
     root.render(
-      <Harness bubbleRect={bubbleRect} forceVisible={forceVisible} panelOpen={panelOpen} />,
+      <Harness
+        bubbleRect={bubbleRect}
+        forceVisible={forceVisible}
+        mode={mode}
+        panelOpen={panelOpen}
+      />,
     ),
   );
   return {
     container,
     root,
-    async rerender(nextPanelOpen, nextForceVisible = forceVisible) {
+    async rerender(nextPanelOpen, nextForceVisible = forceVisible, nextMode = mode) {
       await act(async () =>
         root.render(
           <Harness
             bubbleRect={bubbleRect}
             forceVisible={nextForceVisible}
+            mode={nextMode}
             panelOpen={nextPanelOpen}
           />,
         ),

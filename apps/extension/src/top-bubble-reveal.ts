@@ -1,5 +1,10 @@
 import type { FocusEventHandler, RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { MainControlVisibility } from "./interface-preferences";
+import {
+  type MainControlRevealPhase,
+  resolveMainControlPresentation,
+} from "./interface-visibility";
 
 export const TOP_BUBBLE_REVEAL_DELAY_MS = 300;
 export const TOP_BUBBLE_HIDE_DELAY_MS = 620;
@@ -10,11 +15,10 @@ const TOP_EDGE_INTENT_WIDTH_PX = 96;
 const TOP_EDGE_INTENT_HEIGHT_PX = 24;
 const OVERLAY_RECT_MAX_AGE_MS = 250;
 
-type RevealPhase = "hidden" | "glow" | "visible";
-
 interface UseTopBubbleRevealOptions {
   bubbleRef: RefObject<HTMLButtonElement | null>;
   forceVisible?: boolean;
+  mode: MainControlVisibility;
   overlayRef: RefObject<HTMLElement | null>;
   panelOpen: boolean;
 }
@@ -29,14 +33,18 @@ interface TopBubbleRevealState {
 export function useTopBubbleReveal({
   bubbleRef,
   forceVisible = false,
+  mode,
   overlayRef,
   panelOpen,
 }: UseTopBubbleRevealOptions): TopBubbleRevealState {
-  const initiallyVisible = panelOpen || forceVisible;
-  const [phase, setPhaseState] = useState<RevealPhase>(initiallyVisible ? "visible" : "hidden");
-  const phaseRef = useRef<RevealPhase>(initiallyVisible ? "visible" : "hidden");
+  const initiallyVisible = mode === "always-visible" || panelOpen || forceVisible;
+  const [phase, setPhaseState] = useState<MainControlRevealPhase>(
+    initiallyVisible ? "visible" : "hidden",
+  );
+  const phaseRef = useRef<MainControlRevealPhase>(initiallyVisible ? "visible" : "hidden");
   const panelOpenRef = useRef(panelOpen);
   const forceVisibleRef = useRef(forceVisible);
+  const modeRef = useRef(mode);
   const focusedRef = useRef(false);
   const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
   const overlayRectRef = useRef<DOMRect | null>(null);
@@ -44,7 +52,7 @@ export function useTopBubbleReveal({
   const revealTimerRef = useRef<number | null>(null);
   const hideTimerRef = useRef<number | null>(null);
 
-  const setPhase = useCallback((nextPhase: RevealPhase) => {
+  const setPhase = useCallback((nextPhase: MainControlRevealPhase) => {
     if (phaseRef.current === nextPhase) {
       return;
     }
@@ -60,21 +68,28 @@ export function useTopBubbleReveal({
     clearTimer(hideTimerRef);
   }, []);
 
+  const resolveCurrentPresentation = useCallback(
+    (currentPhase = phaseRef.current) =>
+      resolveMainControlPresentation({
+        focused: focusedRef.current,
+        forceVisible: forceVisibleRef.current,
+        mode: modeRef.current,
+        panelOpen: panelOpenRef.current,
+        phase: currentPhase,
+      }),
+    [],
+  );
+
   const hide = useCallback(() => {
-    if (panelOpenRef.current || forceVisibleRef.current || focusedRef.current) {
+    if (!resolveCurrentPresentation().edgeIntentEnabled) {
       return;
     }
     clearRevealTimer();
     setPhase("hidden");
-  }, [clearRevealTimer, setPhase]);
+  }, [clearRevealTimer, resolveCurrentPresentation, setPhase]);
 
   const scheduleHide = useCallback(() => {
-    if (
-      panelOpenRef.current ||
-      forceVisibleRef.current ||
-      focusedRef.current ||
-      hideTimerRef.current !== null
-    ) {
+    if (!resolveCurrentPresentation().edgeIntentEnabled || hideTimerRef.current !== null) {
       return;
     }
     clearRevealTimer();
@@ -82,7 +97,7 @@ export function useTopBubbleReveal({
       hideTimerRef.current = null;
       hide();
     }, TOP_BUBBLE_HIDE_DELAY_MS);
-  }, [clearRevealTimer, hide]);
+  }, [clearRevealTimer, hide, resolveCurrentPresentation]);
 
   const revealImmediately = useCallback(() => {
     clearRevealTimer();
@@ -127,7 +142,7 @@ export function useTopBubbleReveal({
 
   const evaluatePointer = useCallback(
     (clientX: number, clientY: number) => {
-      if (panelOpenRef.current || forceVisibleRef.current || focusedRef.current) {
+      if (!resolveCurrentPresentation().edgeIntentEnabled) {
         return;
       }
 
@@ -177,18 +192,22 @@ export function useTopBubbleReveal({
       scheduleReveal,
       setPhase,
       updateOverlayRect,
+      resolveCurrentPresentation,
     ],
   );
 
   const handlePointerExit = useCallback(() => {
     lastPointerRef.current = null;
+    if (!resolveCurrentPresentation().edgeIntentEnabled) {
+      return;
+    }
     if (phaseRef.current === "visible") {
       scheduleHide();
       return;
     }
     clearRevealTimer();
     setPhase("hidden");
-  }, [clearRevealTimer, scheduleHide, setPhase]);
+  }, [clearRevealTimer, resolveCurrentPresentation, scheduleHide, setPhase]);
 
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
@@ -238,7 +257,16 @@ export function useTopBubbleReveal({
   useEffect(() => {
     panelOpenRef.current = panelOpen;
     forceVisibleRef.current = forceVisible;
-    if (panelOpen || forceVisible) {
+    modeRef.current = mode;
+    if (
+      resolveMainControlPresentation({
+        focused: focusedRef.current,
+        forceVisible,
+        mode,
+        panelOpen,
+        phase: phaseRef.current,
+      }).pinned
+    ) {
       revealImmediately();
       return;
     }
@@ -249,7 +277,7 @@ export function useTopBubbleReveal({
     } else {
       scheduleHide();
     }
-  }, [evaluatePointer, forceVisible, panelOpen, revealImmediately, scheduleHide]);
+  }, [evaluatePointer, forceVisible, mode, panelOpen, revealImmediately, scheduleHide]);
 
   useEffect(
     () => () => {
@@ -269,9 +297,17 @@ export function useTopBubbleReveal({
     scheduleHide();
   }, [scheduleHide]);
 
+  const presentation = resolveMainControlPresentation({
+    focused: focusedRef.current,
+    forceVisible,
+    mode,
+    panelOpen,
+    phase,
+  });
+
   return {
-    bubbleVisible: phase === "visible",
-    edgeGlowVisible: phase === "glow",
+    bubbleVisible: presentation.visible,
+    edgeGlowVisible: presentation.edgeGlowVisible,
     handleBubbleBlur,
     handleBubbleFocus,
   };
