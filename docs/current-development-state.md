@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-07-27.
+Last updated: 2026-07-30.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -251,18 +251,18 @@ selected through build environment variables in the build scripts.
 ## Last Recorded Staging Store Artifact
 
 The last staging artifact explicitly recorded in this document was generated
-from commit `6be6f82`:
+from commit `50c80a0`:
 
 ```txt
 <repo>/anidachi-extension-staging.zip
-<repo>/artifacts/anidachi-extension-staging-6be6f82.zip
+<repo>/artifacts/anidachi-extension-staging-50c80a0.zip
 ```
 
 Manifest checks:
 
 ```txt
 name: Anidachi Staging
-version_name: 6be6f82-staging-20260604040825
+version_name: 50c80a0-staging-20260730171210
 ```
 
 The staging Chrome Web Store reviewer/tester access code is stored in the Chrome
@@ -298,9 +298,17 @@ The extension currently supports:
 - a compact room panel with an edge-intent launcher: while the panel is closed,
   the top pill stays hidden until a deliberate top-right hover reveals it; the
   open panel pins the pill in place as its close control;
-- an active-room-only side voice rail: it is absent before a room exists, and
-  its participant list expands only after a deliberate press against the player
-  edge rather than broad hover near the side;
+- an `Interface` settings section with immediately applied, profile-local
+  visibility preferences stored under `local:interfacePreferencesV1`. The main
+  control can retain its edge-intent auto-hide behavior or remain visible.
+  Open panel, active Open mic publication, and keyboard focus continue to pin
+  it regardless of the selected preference;
+- an active-room-only side voice rail with `Smart` and `Always visible` modes.
+  Smart preserves quiet-hide, speaking-compact, and deliberate edge expansion.
+  Always visible keeps eligible no-video participants compact and expands only
+  the hovered, focused, or actively adjusted participant. Mounted video
+  participants are still excluded, the current user never receives listener
+  controls, and remote volume/mute remains local to the listener;
 - sign-in through the web app with Google/Discord;
 - room creation and invite copying through the website/API/Worker flow;
 - WebSocket room join and playback sync;
@@ -458,6 +466,11 @@ These are intentionally not treated as solved:
   restore timing, media-seat revoke, permission denial, account switching,
   overlay/source replacement, four-seat load, and real speaker output on two
   devices.
+- Interface visibility preferences have unit, component, full-repository,
+  room-harness, and direct-first WebRTC coverage, and the staging artifact is
+  validated. Loaded-extension visual acceptance is still required on YouTube
+  and Crunchyroll across normal, theater, and fullscreen modes before the
+  branch is ready for its PR.
 - The local real-WebRTC harness usually selects same-machine `host/host`
   candidate pairs. Relay-only TURN harness mode exists and can use either
   explicit short-lived ICE JSON or the real Worker `/ice-servers` path, but a
@@ -516,6 +529,10 @@ These are intentionally not treated as solved:
   `docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md`
 - Approved extension voice controls and participant audio implementation plan:
   `docs/superpowers/plans/2026-07-27-voice-controls-and-participant-audio-plan.md`
+- Approved Interface visibility design and implementation plan:
+  `docs/superpowers/specs/2026-07-30-interface-visibility-settings-design.md`
+  and
+  `docs/superpowers/plans/2026-07-30-interface-visibility-settings.md`
 - Historical commercial room/P2P/progress plan:
   `docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`
 - Monorepo migration history:

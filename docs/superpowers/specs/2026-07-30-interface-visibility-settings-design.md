@@ -1,6 +1,6 @@
 # Interface Visibility Settings Design
 
-Status: Design approved in chat; written specification awaiting review
+Status: Implemented; staging visual acceptance pending
 
 ## Summary
 

@@ -14,6 +14,9 @@ pointer, focus, timing, geometry, and participant-audio responsibilities.
 **Tech Stack:** TypeScript, React, WXT storage, Vitest, jsdom, Lucide React,
 extension Shadow DOM CSS.
 
+**Implementation Status:** Tasks 1-6 and automated Task 7 verification are
+complete on `codex/voice-controls-plan`. Staging visual acceptance is pending.
+
 ## Global Constraints
 
 - The approved design is
@@ -81,7 +84,7 @@ export function updateInterfacePreferences(
 
 - Consumes: no runtime or storage dependencies.
 
-- [ ] **Step 1: Write failing normalization tests**
+- [x] **Step 1: Write failing normalization tests**
 
 Create table-driven tests covering the complete default, one valid payload,
 field-by-field fallback, arrays, `null`, unknown versions, and immutable return
@@ -145,7 +148,7 @@ describe("interface preferences", () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test and verify failure**
+- [x] **Step 2: Run the focused test and verify failure**
 
 Run:
 
@@ -155,7 +158,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: FAIL because `interface-preferences.ts` does not exist.
 
-- [ ] **Step 3: Implement the model without legacy migration**
+- [x] **Step 3: Implement the model without legacy migration**
 
 Implement exact enum guards and defensive object creation:
 
@@ -203,7 +206,7 @@ export function updateInterfacePreferences(
 
 Keep `isRecord()` private. Do not read old layout, voice, or overlay keys.
 
-- [ ] **Step 4: Run the focused test and typecheck**
+- [x] **Step 4: Run the focused test and typecheck**
 
 Run:
 
@@ -214,7 +217,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit the model**
+- [x] **Step 5: Commit the model**
 
 ```bash
 git add apps/extension/src/interface-preferences.ts \
@@ -274,7 +277,7 @@ export function resolveParticipantPillPresentation(input: {
 }): ParticipantPillPresentation;
 ```
 
-- [ ] **Step 1: Write failing policy matrices**
+- [x] **Step 1: Write failing policy matrices**
 
 Cover precedence, not implementation details:
 
@@ -367,7 +370,7 @@ describe("participant rail visibility", () => {
 Also test that Smart `edgeExpanded` expands every pill and that
 `always-visible` disables edge intent.
 
-- [ ] **Step 2: Run the focused test and verify failure**
+- [x] **Step 2: Run the focused test and verify failure**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- interface-visibility
@@ -375,7 +378,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: FAIL because the policy module does not exist.
 
-- [ ] **Step 3: Implement deterministic resolvers**
+- [x] **Step 3: Implement deterministic resolvers**
 
 Use the approved precedence directly:
 
@@ -421,7 +424,7 @@ Return complete objects from every resolver. Do not access DOM, React, storage,
 participants, provider adapters, or audio state. Room/panel/participant
 eligibility remains in the existing `shouldRenderRoomRail()` helper.
 
-- [ ] **Step 4: Run policy and existing intent tests**
+- [x] **Step 4: Run policy and existing intent tests**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- interface-visibility room-rail-intent top-bubble-reveal
@@ -429,7 +432,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: PASS without changing existing tests.
 
-- [ ] **Step 5: Commit the policy**
+- [x] **Step 5: Commit the policy**
 
 ```bash
 git add apps/extension/src/interface-visibility.ts \
@@ -471,7 +474,7 @@ export function useInterfacePreferences(
 The default storage adapter reads and writes
 `INTERFACE_PREFERENCES_STORAGE_KEY` through `wxt/utils/storage`.
 
-- [ ] **Step 1: Write failing hook tests with an injected fake store**
+- [x] **Step 1: Write failing hook tests with an injected fake store**
 
 Render a harness exposing state as data attributes and buttons that call
 `update()`. Test:
@@ -511,7 +514,7 @@ expect(readPreferences(container)).toMatchObject({
 });
 ```
 
-- [ ] **Step 2: Run the focused test and verify failure**
+- [x] **Step 2: Run the focused test and verify failure**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- use-interface-preferences
@@ -519,7 +522,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: FAIL because the hook does not exist.
 
-- [ ] **Step 3: Implement initial load and a serialized write queue**
+- [x] **Step 3: Implement initial load and a serialized write queue**
 
 Use refs for:
 
@@ -564,7 +567,7 @@ writeQueueRef.current = writeQueueRef.current
 Capture `preferencesRef.current`, not a stale render value. Keep queue ordering
 so an older write can never land after a newer one.
 
-- [ ] **Step 4: Run hook tests and extension check**
+- [x] **Step 4: Run hook tests and extension check**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- use-interface-preferences interface-preferences
@@ -573,7 +576,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: PASS with no React act warnings.
 
-- [ ] **Step 5: Commit persistence**
+- [x] **Step 5: Commit persistence**
 
 ```bash
 git add apps/extension/src/use-interface-preferences.ts \
@@ -613,7 +616,7 @@ export function InterfaceSettingsPanel(
 ): JSX.Element;
 ```
 
-- [ ] **Step 1: Add the failing navigation expectation**
+- [x] **Step 1: Add the failing navigation expectation**
 
 Change the expected settings IDs to:
 
@@ -635,7 +638,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: FAIL because `interface` is absent.
 
-- [ ] **Step 2: Add the category**
+- [x] **Step 2: Add the category**
 
 Extend `SettingsPanelCategory` and add:
 
@@ -645,7 +648,7 @@ Extend `SettingsPanelCategory` and add:
 
 between `layout` and `voice`.
 
-- [ ] **Step 3: Write failing component tests**
+- [x] **Step 3: Write failing component tests**
 
 Test the following observable behavior:
 
@@ -664,7 +667,7 @@ Test the following observable behavior:
 Use the established `VoiceSettingsPanel` radio-group test helpers instead of
 adding a UI dependency.
 
-- [ ] **Step 4: Run the component test and verify failure**
+- [x] **Step 4: Run the component test and verify failure**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- overlay-interface-settings
@@ -672,7 +675,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: FAIL because `InterfaceSettingsPanel` does not exist.
 
-- [ ] **Step 5: Implement two accessible segmented controls**
+- [x] **Step 5: Implement two accessible segmented controls**
 
 Use real radio semantics:
 
@@ -703,7 +706,7 @@ Repeat the pattern for participant pills. Extract only a local private
 Disable both groups until `ready` is true. Keep the current preview visible
 with default behavior while the local read is pending.
 
-- [ ] **Step 6: Implement the finite preview**
+- [x] **Step 6: Implement the finite preview**
 
 Use a small fixed-aspect preview canvas with semantic state classes:
 
@@ -727,7 +730,7 @@ Mark decorative silhouettes `aria-hidden="true"`. Apply
 `OVERLAY_HOTKEY_BOUNDARY_ATTRIBUTE` to prevent `V` or reaction shortcuts from
 activating while settings controls are focused.
 
-- [ ] **Step 7: Add compact unframed settings styles**
+- [x] **Step 7: Add compact unframed settings styles**
 
 Add focused classes under a new `interface-settings-*` namespace:
 
@@ -741,7 +744,7 @@ Add focused classes under a new `interface-settings-*` namespace:
 - `@media (prefers-reduced-motion: reduce)` disables transitions and
   animations.
 
-- [ ] **Step 8: Run focused tests and check**
+- [x] **Step 8: Run focused tests and check**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- settings-panel-navigation overlay-interface-settings interface-visibility
@@ -750,7 +753,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: PASS.
 
-- [ ] **Step 9: Commit the settings view**
+- [x] **Step 9: Commit the settings view**
 
 ```bash
 git add apps/extension/src/overlay-interface-settings.tsx \
@@ -789,7 +792,7 @@ interface UseTopBubbleRevealOptions {
 }
 ```
 
-- [ ] **Step 1: Extend the launcher harness with a mode**
+- [x] **Step 1: Extend the launcher harness with a mode**
 
 Update `Harness` and `renderHarness` so every existing test explicitly uses
 `"auto-hide"`. Add tests proving:
@@ -800,7 +803,7 @@ Update `Harness` and `renderHarness` so every existing test explicitly uses
 - switching back to `auto-hide` schedules the existing delayed hide;
 - panel-open, focus, and Open mic still pin `auto-hide`.
 
-- [ ] **Step 2: Run the launcher test and verify failure**
+- [x] **Step 2: Run the launcher test and verify failure**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- top-bubble-reveal
@@ -808,7 +811,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: FAIL because the hook does not accept `mode`.
 
-- [ ] **Step 3: Make the hook consume the pure policy**
+- [x] **Step 3: Make the hook consume the pure policy**
 
 Keep the current timers and pointer zones. Add `modeRef`, include the mode in
 initial visibility, and use `resolveMainControlPresentation()` for the returned
@@ -827,7 +830,7 @@ Do not change:
 - provider placement variables;
 - touch-event exclusion.
 
-- [ ] **Step 4: Mount one preference controller in `OverlayApp`**
+- [x] **Step 4: Mount one preference controller in `OverlayApp`**
 
 At the top-level overlay state:
 
@@ -859,7 +862,7 @@ Render `InterfaceSettingsPanel` only for the `interface` category:
 
 Do not move or alter `openMicLauncherVisible`; it remains `forceVisible`.
 
-- [ ] **Step 5: Run launcher, settings, and voice-session tests**
+- [x] **Step 5: Run launcher, settings, and voice-session tests**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- top-bubble-reveal overlay-interface-settings overlay-voice-session
@@ -868,7 +871,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit launcher integration**
+- [x] **Step 6: Commit launcher integration**
 
 ```bash
 git add apps/extension/src/top-bubble-reveal.ts \
@@ -917,7 +920,7 @@ export function RoomRail(props: RoomRailProps): JSX.Element;
   - existing `ParticipantAudioInlineControl`
   - existing `ROOM_RAIL_OPEN_DELAY_MS`
 
-- [ ] **Step 1: Extract the current rail without changing behavior**
+- [x] **Step 1: Extract the current rail without changing behavior**
 
 Move `RoomRail` from `overlay-app.tsx` into
 `overlay-room-rail.tsx`. Keep `visibilityMode` fixed to `"smart"` during this
@@ -933,7 +936,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: PASS with no visual behavior change.
 
-- [ ] **Step 2: Write failing component tests**
+- [x] **Step 2: Write failing component tests**
 
 Use fake timers and participant fixtures to prove:
 
@@ -959,7 +962,7 @@ data-presentation={presentation}
 on each `.room-rail-slot` so tests inspect product state rather than computed
 CSS.
 
-- [ ] **Step 3: Run the rail test and verify failure**
+- [x] **Step 3: Run the rail test and verify failure**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- overlay-room-rail
@@ -967,7 +970,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: FAIL because persistent mode is not implemented.
 
-- [ ] **Step 4: Apply the policy inside the extracted rail**
+- [x] **Step 4: Apply the policy inside the extracted rail**
 
 Maintain:
 
@@ -998,7 +1001,7 @@ Render the compact mute marker only for remote media-seat participants whose
 existing listener preference is muted. Use Lucide `VolumeX`; do not add another
 mute state.
 
-- [ ] **Step 5: Update rail rendering in `OverlayApp`**
+- [x] **Step 5: Update rail rendering in `OverlayApp`**
 
 Pass:
 
@@ -1012,7 +1015,7 @@ Keep `shouldRenderRoomRail()` responsible only for room, panel, and participant
 eligibility. Keep `selectVoiceRailParticipants()` responsible for mounted-video
 deduplication. Do not move either concern into stored preferences.
 
-- [ ] **Step 6: Implement stable compact and expanded styles**
+- [x] **Step 6: Implement stable compact and expanded styles**
 
 Use data/class states generated by the component:
 
@@ -1029,7 +1032,7 @@ Use data/class states generated by the component:
 Do not change rail top/bottom geometry, provider safe insets, participant order,
 or the eight-item cap.
 
-- [ ] **Step 7: Run the complete rail/audio test slice**
+- [x] **Step 7: Run the complete rail/audio test slice**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- overlay-room-rail room-rail-intent overlay-voice-controls participant-audio-controls participant-volume-geometry overlay-room-media-controls
@@ -1038,7 +1041,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit participant-pill integration**
+- [x] **Step 8: Commit participant-pill integration**
 
 ```bash
 git add apps/extension/src/overlay-room-rail.tsx \
@@ -1068,7 +1071,7 @@ git commit -m "feat(extension): add persistent participant pills"
 - Produces one validated staging artifact and two synchronized local test
   folders.
 
-- [ ] **Step 1: Run the focused regression set**
+- [x] **Step 1: Run the focused regression set**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -- \
@@ -1088,7 +1091,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: PASS.
 
-- [ ] **Step 2: Run the full extension gates**
+- [x] **Step 2: Run the full extension gates**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
@@ -1099,7 +1102,7 @@ git diff --check
 
 Expected: all extension tests pass and no whitespace errors are reported.
 
-- [ ] **Step 3: Build and validate the staging artifact**
+- [x] **Step 3: Build and validate the staging artifact**
 
 ```bash
 fnm exec --using="$(cat .node-version)" pnpm build:extension:staging
@@ -1112,7 +1115,7 @@ Expected:
 - the build ID matches the current commit;
 - validation reports no broad production permission regression.
 
-- [ ] **Step 4: Update current-state documentation**
+- [x] **Step 4: Update current-state documentation**
 
 Change the design status to:
 
@@ -1130,7 +1133,7 @@ Add one concise `current-development-state.md` entry covering:
 
 Mark completed checkboxes in this plan only after their commands have passed.
 
-- [ ] **Step 5: Refresh and inspect Graphify**
+- [x] **Step 5: Refresh and inspect Graphify**
 
 ```bash
 pnpm graph:update
@@ -1141,7 +1144,7 @@ Keep only approved team artifacts. Remove only local-only graph outputs created
 by this refresh, such as cost, HTML, wiki, cache, or scoped scratch files. Do
 not touch pre-existing or unrelated user changes.
 
-- [ ] **Step 6: Commit documentation and approved graph artifacts**
+- [x] **Step 6: Commit documentation and approved graph artifacts**
 
 ```bash
 git add docs/current-development-state.md \
@@ -1153,7 +1156,7 @@ git commit -m "docs(extension): record interface visibility behavior"
 
 If Graphify produces no approved artifact change, omit the second `git add`.
 
-- [ ] **Step 7: Synchronize both established test folders**
+- [x] **Step 7: Synchronize both established test folders**
 
 From the worktree root:
 
