@@ -294,6 +294,22 @@ describe("overlay layout pointer surfaces", () => {
 		);
 	});
 
+	it("keeps persistent participant pills compact until direct interaction", () => {
+		expect(getRule(".room-rail.persistent .room-rail-edge")).toContain(
+			"pointer-events: none",
+		);
+		expect(getRule(".room-rail-panel")).toContain("pointer-events: none");
+		expect(getRule('.room-rail-slot[data-presentation="compact"]')).toContain(
+			"pointer-events: auto",
+		);
+		expect(
+			getRule('.room-rail-slot[data-presentation="compact"] .room-rail-pill'),
+		).toContain("width: 64px");
+		expect(
+			getRule('.room-rail-slot[data-presentation="expanded"] .room-rail-pill'),
+		).toContain("width: 162px");
+	});
+
 	it("keeps participant audio controls stable on both rail and camera surfaces", () => {
 		const inlineControl = getRule(".participant-audio-inline-control");
 		expect(inlineControl).toContain("width: 84px");

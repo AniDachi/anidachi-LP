@@ -109,6 +109,7 @@ import {
   shouldConfirmRoomEnd,
 } from "./overlay-room-action-feedback";
 import { PanelCameraControl, RoomPeopleSection } from "./overlay-room-media-controls";
+import { RoomRail } from "./overlay-room-rail";
 import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
 import { VoiceSettingsPanel } from "./overlay-voice-controls";
 import {
@@ -118,10 +119,7 @@ import {
   reduceVoiceSession,
 } from "./overlay-voice-session";
 import { PanelAccountTitle } from "./panel-account-title";
-import {
-  ParticipantAudioContourControl,
-  ParticipantAudioInlineControl,
-} from "./participant-audio-controls";
+import { ParticipantAudioContourControl } from "./participant-audio-controls";
 import { PlaybackSyncController } from "./playback-sync-controller";
 import {
   connectWebsiteRoom,
@@ -134,12 +132,7 @@ import {
   type RoomQuotaSummary,
 } from "./room-client";
 import { applyRoomUsageSnapshot, roomQuotaRemainingSeconds } from "./room-quota-display";
-import {
-  isRoomRailEdgeIntent,
-  ROOM_RAIL_OPEN_DELAY_MS,
-  selectVoiceRailParticipants,
-  shouldRenderRoomRail,
-} from "./room-rail-intent";
+import { selectVoiceRailParticipants, shouldRenderRoomRail } from "./room-rail-intent";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
   clearRoomSession,
@@ -5044,6 +5037,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
               onParticipantAudioChange={handleParticipantAudioChange}
               participants={voiceRailParticipants}
               speakingParticipantIds={voiceIndicatorParticipantIds}
+              visibilityMode={interfacePreferences.preferences.participantPillVisibility}
             />
           ) : null}
 
@@ -5092,210 +5086,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         </>
       ) : null}
     </div>
-  );
-}
-
-function RoomRail({
-  activeParticipantId,
-  getParticipantAudioPreference,
-  onParticipantAudioChange,
-  participants,
-  speakingParticipantIds,
-}: {
-  activeParticipantId?: string;
-  getParticipantAudioPreference: (participantId: string) => ParticipantAudioPreference;
-  onParticipantAudioChange: (participantId: string, preference: ParticipantAudioPreference) => void;
-  participants: Participant[];
-  speakingParticipantIds: string[];
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const [adjustingParticipantId, setAdjustingParticipantId] = useState<string | null>(null);
-  const openTimerRef = useRef<number | undefined>(undefined);
-  const closeTimerRef = useRef<number | undefined>(undefined);
-  const adjustingParticipantIdRef = useRef<string | null>(null);
-  const panelPointerInsideRef = useRef(false);
-  const panelFocusInsideRef = useRef(false);
-  const visibleParticipants = participants.slice(0, 8);
-  const hiddenCount = Math.max(0, participants.length - visibleParticipants.length);
-
-  const clearOpenTimer = useCallback(() => {
-    if (openTimerRef.current !== undefined) {
-      window.clearTimeout(openTimerRef.current);
-      openTimerRef.current = undefined;
-    }
-  }, []);
-
-  const clearCloseTimer = useCallback(() => {
-    if (closeTimerRef.current !== undefined) {
-      window.clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = undefined;
-    }
-  }, []);
-
-  const scheduleOpen = useCallback(() => {
-    clearCloseTimer();
-    if (expanded || openTimerRef.current !== undefined) {
-      return;
-    }
-    openTimerRef.current = window.setTimeout(() => {
-      openTimerRef.current = undefined;
-      setExpanded(true);
-    }, ROOM_RAIL_OPEN_DELAY_MS);
-  }, [clearCloseTimer, expanded]);
-
-  const scheduleClose = useCallback(() => {
-    if (adjustingParticipantIdRef.current !== null) {
-      return;
-    }
-    clearOpenTimer();
-    clearCloseTimer();
-    closeTimerRef.current = window.setTimeout(() => {
-      closeTimerRef.current = undefined;
-      setExpanded(false);
-    }, 340);
-  }, [clearCloseTimer, clearOpenTimer]);
-
-  const handleEdgePointerIntent = useCallback(
-    (event: PointerEvent<HTMLElement>) => {
-      const edgeRight = event.currentTarget.getBoundingClientRect().right;
-      if (!isRoomRailEdgeIntent({ clientX: event.clientX, edgeRight })) {
-        clearOpenTimer();
-        return;
-      }
-      scheduleOpen();
-    },
-    [clearOpenTimer, scheduleOpen],
-  );
-
-  const handleEdgePointerLeave = useCallback(() => {
-    if (adjustingParticipantIdRef.current !== null) {
-      return;
-    }
-    if (expanded) {
-      scheduleClose();
-      return;
-    }
-    clearOpenTimer();
-  }, [clearOpenTimer, expanded, scheduleClose]);
-
-  const startParticipantAudioAdjustment = useCallback(
-    (participantId: string) => {
-      clearCloseTimer();
-      adjustingParticipantIdRef.current = participantId;
-      setAdjustingParticipantId(participantId);
-      setExpanded(true);
-    },
-    [clearCloseTimer],
-  );
-
-  const finishParticipantAudioAdjustment = useCallback(() => {
-    adjustingParticipantIdRef.current = null;
-    setAdjustingParticipantId(null);
-    if (!panelPointerInsideRef.current && !panelFocusInsideRef.current) {
-      scheduleClose();
-    }
-  }, [scheduleClose]);
-
-  useEffect(() => {
-    const participantId = adjustingParticipantIdRef.current;
-    if (participantId !== null && !visibleParticipants.some((item) => item.id === participantId)) {
-      adjustingParticipantIdRef.current = null;
-      setAdjustingParticipantId(null);
-    }
-  }, [visibleParticipants]);
-
-  useEffect(
-    () => () => {
-      adjustingParticipantIdRef.current = null;
-      clearOpenTimer();
-      clearCloseTimer();
-    },
-    [clearCloseTimer, clearOpenTimer],
-  );
-
-  return (
-    <aside className={`room-rail ${expanded ? "open" : ""}`} aria-label="Room participants">
-      <div
-        className="room-rail-edge"
-        onPointerEnter={handleEdgePointerIntent}
-        onPointerLeave={handleEdgePointerLeave}
-        onPointerMove={handleEdgePointerIntent}
-      />
-      <div
-        className={`room-rail-panel ${adjustingParticipantId ? "adjusting-audio" : ""}`}
-        onBlurCapture={(event) => {
-          if (
-            event.relatedTarget instanceof Node &&
-            event.currentTarget.contains(event.relatedTarget)
-          ) {
-            return;
-          }
-          panelFocusInsideRef.current = false;
-          scheduleClose();
-        }}
-        onFocusCapture={() => {
-          panelFocusInsideRef.current = true;
-          clearCloseTimer();
-          setExpanded(true);
-        }}
-        onPointerEnter={() => {
-          panelPointerInsideRef.current = true;
-          if (expanded) {
-            clearCloseTimer();
-          }
-        }}
-        onPointerLeave={() => {
-          panelPointerInsideRef.current = false;
-          scheduleClose();
-        }}
-        onPointerMove={() => {
-          panelPointerInsideRef.current = true;
-          if (expanded) {
-            clearCloseTimer();
-          }
-        }}
-      >
-        <div className="room-rail-list">
-          {visibleParticipants.map((item) => {
-            const speaking = speakingParticipantIds.includes(item.id);
-            const active = item.id === activeParticipantId;
-            const hasParticipantAudioControl = !active && item.mediaSeat === "joined";
-            const roleLabel = item.role === "host" ? "host" : "guest";
-            const statusLabel = speaking ? `${roleLabel} · speaking` : roleLabel;
-
-            return (
-              <div
-                className={`room-rail-slot ${speaking ? "speaking" : ""} ${active ? "active" : ""}`}
-                key={item.id}
-              >
-                <div className={`room-rail-pill ${speaking ? "speaking" : ""}`}>
-                  <span className="room-rail-avatar">{initials(item.displayName)}</span>
-                  <span className="room-rail-voice-bars" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                  </span>
-                  <span className="room-rail-copy">
-                    <span className="room-rail-name">{item.displayName}</span>
-                    <span className="room-rail-status">{statusLabel}</span>
-                  </span>
-                  {hasParticipantAudioControl ? (
-                    <ParticipantAudioInlineControl
-                      displayName={item.displayName}
-                      onAdjustmentEnd={finishParticipantAudioAdjustment}
-                      onAdjustmentStart={() => startParticipantAudioAdjustment(item.id)}
-                      onChange={(preference) => onParticipantAudioChange(item.id, preference)}
-                      preference={getParticipantAudioPreference(item.id)}
-                    />
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
-          {hiddenCount ? <div className="room-rail-more">+{hiddenCount}</div> : null}
-        </div>
-      </div>
-    </aside>
   );
 }
 
