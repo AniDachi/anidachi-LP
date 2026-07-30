@@ -2007,6 +2007,281 @@ export const overlayStyles = `
     line-height: 1.35;
   }
 
+  .interface-settings-panel {
+    gap: 10px;
+  }
+
+  .interface-settings-preview {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    aspect-ratio: 16 / 6.5;
+    min-height: 124px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 8px;
+    background-color: rgba(6, 7, 10, 0.92);
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 28px 28px;
+    isolation: isolate;
+  }
+
+  .interface-settings-silhouette {
+    box-sizing: border-box;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .interface-settings-main-control {
+    position: absolute;
+    z-index: 2;
+    top: 12px;
+    right: 0;
+    width: 64px;
+    height: 22px;
+    padding: 3px 7px 3px 4px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-right: 0;
+    border-radius: 999px 0 0 999px;
+    background: rgba(18, 18, 22, 0.96);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transform: translateX(18px);
+    transition:
+      opacity 180ms ease,
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .interface-settings-main-control.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .interface-settings-main-control > span:first-child {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: rgba(255, 138, 61, 0.92);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.14);
+  }
+
+  .interface-settings-main-control > span:last-child {
+    width: 26px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .interface-settings-edge-glow {
+    position: absolute;
+    z-index: 1;
+    top: -30px;
+    right: -42px;
+    width: 126px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255, 125, 48, 0.22);
+    filter: blur(22px);
+    opacity: 0;
+    transform: scale(0.84);
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease;
+    pointer-events: none;
+  }
+
+  .interface-settings-preview[data-main-glow="true"] .interface-settings-edge-glow {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .interface-settings-participant-stack {
+    position: absolute;
+    z-index: 2;
+    top: 46px;
+    right: 0;
+    display: grid;
+    justify-items: end;
+    gap: 5px;
+    pointer-events: none;
+  }
+
+  .interface-settings-participant-pill {
+    position: relative;
+    width: 0;
+    height: 24px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-right: 0;
+    border-radius: 999px 0 0 999px;
+    background: rgba(18, 18, 22, 0.96);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    opacity: 0;
+    transform: translateX(10px);
+    transition:
+      width 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 160ms ease,
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .interface-settings-participant-pill.is-compact {
+    width: 28px;
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .interface-settings-participant-pill.is-expanded {
+    width: 88px;
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .interface-settings-participant-pill.is-speaking {
+    border-color: rgba(110, 231, 183, 0.72);
+    box-shadow: inset 2px 0 0 rgba(110, 231, 183, 0.72);
+  }
+
+  .interface-settings-participant-avatar {
+    width: 18px;
+    height: 18px;
+    margin-left: 2px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .interface-settings-participant-lines {
+    display: grid;
+    gap: 3px;
+    width: 38px;
+    flex: 0 0 auto;
+  }
+
+  .interface-settings-participant-lines i {
+    display: block;
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.52);
+  }
+
+  .interface-settings-participant-lines i:last-child {
+    width: 68%;
+    background: rgba(255, 255, 255, 0.26);
+  }
+
+  .interface-settings-muted-icon {
+    position: absolute;
+    right: 8px;
+    color: rgba(248, 113, 113, 0.88);
+  }
+
+  .interface-settings-participant-pill.is-compact .interface-settings-muted-icon {
+    right: 3px;
+    padding: 2px;
+    border-radius: 999px;
+    background: rgba(18, 18, 22, 0.9);
+  }
+
+  .interface-settings-replay {
+    position: absolute;
+    z-index: 3;
+    left: 8px;
+    bottom: 8px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(18, 18, 22, 0.88);
+    color: rgba(255, 255, 255, 0.7);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition:
+      border-color 160ms ease,
+      color 160ms ease,
+      background 160ms ease;
+  }
+
+  .interface-settings-replay:hover {
+    border-color: rgba(255, 173, 99, 0.4);
+    background: rgba(28, 25, 24, 0.96);
+    color: rgba(255, 221, 191, 0.96);
+  }
+
+  .interface-settings-replay:focus-visible {
+    outline: 2px solid rgba(255, 184, 122, 0.66);
+    outline-offset: 2px;
+  }
+
+  .interface-settings-controls {
+    display: grid;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .interface-settings-control {
+    min-width: 0;
+    min-height: 48px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: grid;
+    grid-template-columns: minmax(92px, 0.7fr) minmax(164px, 1.3fr);
+    align-items: center;
+    gap: 10px;
+  }
+
+  .interface-settings-control-label {
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 11px;
+    font-weight: 730;
+    line-height: 1.2;
+  }
+
+  .interface-settings-segmented {
+    width: 100%;
+    min-width: 0;
+    height: 36px;
+    padding: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.025);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px;
+  }
+
+  .interface-settings-segmented button {
+    min-width: 0;
+    border-radius: 6px;
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+
+  .interface-settings-segmented button:disabled {
+    cursor: default;
+    opacity: 0.48;
+  }
+
+  .interface-settings-segmented button:focus-visible {
+    outline: 2px solid rgba(255, 184, 122, 0.66);
+    outline-offset: -2px;
+  }
+
+  .interface-settings-feedback {
+    margin: 0;
+    color: rgba(248, 180, 180, 0.9);
+    font-size: 10.5px;
+    line-height: 1.35;
+  }
+
   .current-resource-card {
     display: grid;
     gap: 7px;
@@ -3458,7 +3733,12 @@ export const overlayStyles = `
     .layout-video-slot-v2,
     .layout-chat-preview-v2,
     .layout-object-selector-v2 button,
-    .layout-editor-actions-v2 button {
+    .layout-editor-actions-v2 button,
+    .interface-settings-main-control,
+    .interface-settings-edge-glow,
+    .interface-settings-participant-pill,
+    .interface-settings-replay,
+    .interface-settings-segmented button {
       animation: none;
       transition: none;
     }
