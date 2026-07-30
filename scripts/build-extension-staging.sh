@@ -25,7 +25,7 @@ export WXT_BROAD_HOST_PERMISSIONS
 
 cd "$ROOT_DIR"
 
-pnpm build:extension:icons
+pnpm check:extension:icons
 pnpm --filter @anidachi/extension build
 
 rm -rf "$STAGING_DIR"

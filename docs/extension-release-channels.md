@@ -81,7 +81,15 @@ Outputs:
 - `anidachi-extension-experiment/`
 - `anidachi-extension-experiment.zip`
 
-The build scripts regenerate extension PNG icons before building.
+The build scripts verify that the committed extension PNG icons match the source
+logo without modifying the source tree. After changing
+`apps/extension/public/Anidachi_logo.png`, regenerate and commit the icons before
+building:
+
+```bash
+pnpm build:extension:icons
+pnpm check:extension:icons
+```
 
 Use broad staging permissions only for local development experiments:
 

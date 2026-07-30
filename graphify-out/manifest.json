@@ -2725,8 +2725,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1784676382.4364097,
-    "ast_hash": "fea2545b1fbf3af697ba0a3432d2bb85",
+    "mtime": 1785411738.6854477,
+    "ast_hash": "a7c6461e2f4d08ccafeed20b322f3935",
     "semantic_hash": ""
   },
   "packages/protocol/package.json": {
@@ -2770,13 +2770,13 @@
     "semantic_hash": ""
   },
   "scripts/build-extension-public.sh": {
-    "mtime": 1784676382.4386597,
-    "ast_hash": "bed12f3f2b52dabf0ddbdec4653c18c8",
+    "mtime": 1785411738.8676813,
+    "ast_hash": "6cf094882098ca147dca612dc01a3481",
     "semantic_hash": ""
   },
   "scripts/build-extension-staging.sh": {
-    "mtime": 1784676382.438705,
-    "ast_hash": "5132b6f238b48d8632a3fd7e1a97f842",
+    "mtime": 1785411738.77882,
+    "ast_hash": "9ae9400eecbf5a56141fb17f8928ad70",
     "semantic_hash": ""
   },
   "scripts/dev-check.mjs": {
@@ -2785,8 +2785,8 @@
     "semantic_hash": ""
   },
   "scripts/generate-extension-icons.mjs": {
-    "mtime": 1784676382.4388576,
-    "ast_hash": "176f3af87dd97d036a81804946b5f952",
+    "mtime": 1785411738.5917819,
+    "ast_hash": "b12fece88a7df0a74449077b58548c7c",
     "semantic_hash": ""
   },
   "scripts/linkedin/launch-chrome.sh": {
@@ -3070,8 +3070,8 @@
     "semantic_hash": ""
   },
   "docs/extension-release-channels.md": {
-    "mtime": 1784676382.4143972,
-    "ast_hash": "0f833f7c1920523780a9310e762b10e8",
+    "mtime": 1785411877.0821462,
+    "ast_hash": "0e1906165d61669cce1390d7b305aef5",
     "semantic_hash": ""
   },
   "docs/new-chat-project-context.md": {
@@ -3210,23 +3210,23 @@
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-128.png": {
-    "mtime": 1785411356.6870093,
-    "ast_hash": "8103ec7baee41956510c12b5d5179357",
+    "mtime": 1785411690.4515927,
+    "ast_hash": "ab3cdbf2a45c93bf67c87d6a32bf25e1",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-16.png": {
-    "mtime": 1785411356.6871307,
-    "ast_hash": "e78e0311c32f235dbf58edfe20c35357",
+    "mtime": 1785411893.8774538,
+    "ast_hash": "e1da66fcc1d20cc991a2881b85a80e1d",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-32.png": {
-    "mtime": 1785411356.687228,
-    "ast_hash": "a872077a10c9c1c1d9a2cb8ca33f41be",
+    "mtime": 1785411690.4411573,
+    "ast_hash": "616c4172bb6d9276596bd2e5e2bc7e21",
     "semantic_hash": ""
   },
   "apps/extension/public/icons/icon-48.png": {
-    "mtime": 1785411356.6873245,
-    "ast_hash": "3b2f03af796edbba914cef26f3a575da",
+    "mtime": 1785411690.444064,
+    "ast_hash": "6a24bc39177cc7c0b49a8b59a8996898",
     "semantic_hash": ""
   },
   "apps/web/app/apple-icon.png": {

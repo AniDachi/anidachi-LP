@@ -41364,11 +41364,19 @@
       "_origin": "ast"
     },
     {
+      "id": "package_scripts_check_extension_icons",
+      "label": "check:extension:icons",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
       "id": "package_scripts_check",
       "label": "check",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L16",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
@@ -41376,7 +41384,7 @@
       "label": "dev:api",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L17",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -41384,7 +41392,7 @@
       "label": "dev:check",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -41392,7 +41400,7 @@
       "label": "dev:demo",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -41400,7 +41408,7 @@
       "label": "dev:extension",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "_origin": "ast"
     },
     {
@@ -41408,7 +41416,7 @@
       "label": "dev:extension:local",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -41416,7 +41424,7 @@
       "label": "dev:extension:staging",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "_origin": "ast"
     },
     {
@@ -41424,7 +41432,7 @@
       "label": "dev:extension:staging:narrow",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L23",
+      "source_location": "L24",
       "_origin": "ast"
     },
     {
@@ -41432,7 +41440,7 @@
       "label": "dev:web",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast"
     },
     {
@@ -41440,7 +41448,7 @@
       "label": "graph:baseline",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast"
     },
     {
@@ -41448,7 +41456,7 @@
       "label": "graph:check-update",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "_origin": "ast"
     },
     {
@@ -41456,7 +41464,7 @@
       "label": "graph:codex:install",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -41464,7 +41472,7 @@
       "label": "graph:extract",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "_origin": "ast"
     },
     {
@@ -41472,7 +41480,7 @@
       "label": "graph:hook:install",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L29",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -41480,7 +41488,7 @@
       "label": "graph:hook:status",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L30",
+      "source_location": "L31",
       "_origin": "ast"
     },
     {
@@ -41488,7 +41496,7 @@
       "label": "graph:hook:uninstall",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L31",
+      "source_location": "L32",
       "_origin": "ast"
     },
     {
@@ -41496,7 +41504,7 @@
       "label": "graph:merge-driver:install",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L32",
+      "source_location": "L33",
       "_origin": "ast"
     },
     {
@@ -41504,7 +41512,7 @@
       "label": "graph:query",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L33",
+      "source_location": "L34",
       "_origin": "ast"
     },
     {
@@ -41512,7 +41520,7 @@
       "label": "graph:update",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L34",
+      "source_location": "L35",
       "_origin": "ast"
     },
     {
@@ -41520,7 +41528,7 @@
       "label": "graph:watch",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L35",
+      "source_location": "L36",
       "_origin": "ast"
     },
     {
@@ -41528,7 +41536,7 @@
       "label": "harness:rooms",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L36",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -41536,7 +41544,7 @@
       "label": "linkedin:chrome",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L37",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -41544,7 +41552,7 @@
       "label": "linkedin:connect",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L38",
+      "source_location": "L39",
       "_origin": "ast"
     },
     {
@@ -41552,7 +41560,7 @@
       "label": "format",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L39",
+      "source_location": "L40",
       "_origin": "ast"
     },
     {
@@ -41560,7 +41568,7 @@
       "label": "lint",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L40",
+      "source_location": "L41",
       "_origin": "ast"
     },
     {
@@ -41568,7 +41576,7 @@
       "label": "smoke:worker:staging",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L41",
+      "source_location": "L42",
       "_origin": "ast"
     },
     {
@@ -41576,7 +41584,7 @@
       "label": "test",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L42",
+      "source_location": "L43",
       "_origin": "ast"
     },
     {
@@ -41584,7 +41592,7 @@
       "label": "validate:extension:production",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L43",
+      "source_location": "L44",
       "_origin": "ast"
     },
     {
@@ -41592,7 +41600,7 @@
       "label": "validate:extension:staging",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L44",
+      "source_location": "L45",
       "_origin": "ast"
     },
     {
@@ -41600,7 +41608,7 @@
       "label": "devDependencies",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L46",
+      "source_location": "L47",
       "_origin": "ast"
     },
     {
@@ -41608,7 +41616,7 @@
       "label": "@biomejs/biome",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L47",
+      "source_location": "L48",
       "_origin": "ast"
     },
     {
@@ -41616,7 +41624,7 @@
       "label": "turbo",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L48",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -41624,7 +41632,7 @@
       "label": "typescript",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L49",
+      "source_location": "L50",
       "_origin": "ast"
     },
     {
@@ -41632,7 +41640,7 @@
       "label": "vitest",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L50",
+      "source_location": "L51",
       "_origin": "ast"
     },
     {
@@ -42492,11 +42500,19 @@
       "_origin": "ast"
     },
     {
+      "id": "scripts_generate_extension_icons_check_only",
+      "label": "CHECK_ONLY",
+      "file_type": "code",
+      "source_file": "scripts/generate-extension-icons.mjs",
+      "source_location": "L10",
+      "_origin": "ast"
+    },
+    {
       "id": "scripts_generate_extension_icons_png_signature",
       "label": "PNG_SIGNATURE",
       "file_type": "code",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast"
     },
     {
@@ -42504,7 +42520,7 @@
       "label": "crc32()",
       "file_type": "code",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast"
     },
     {
@@ -42512,15 +42528,15 @@
       "label": "chunk()",
       "file_type": "code",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast"
     },
     {
-      "id": "scripts_generate_extension_icons_writepng",
-      "label": "writePng()",
+      "id": "scripts_generate_extension_icons_encodepng",
+      "label": "encodePng()",
       "file_type": "code",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L33",
+      "source_location": "L34",
       "_origin": "ast"
     },
     {
@@ -42528,7 +42544,7 @@
       "label": "paethPredictor()",
       "file_type": "code",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L61",
+      "source_location": "L59",
       "_origin": "ast"
     },
     {
@@ -42536,7 +42552,7 @@
       "label": "readRgbaPng()",
       "file_type": "code",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L71",
+      "source_location": "L69",
       "_origin": "ast"
     },
     {
@@ -42544,7 +42560,7 @@
       "label": "sampleBilinear()",
       "file_type": "code",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L152",
+      "source_location": "L150",
       "_origin": "ast"
     },
     {
@@ -42552,7 +42568,7 @@
       "label": "resizeLogo()",
       "file_type": "code",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L192",
+      "source_location": "L190",
       "_origin": "ast"
     },
     {
@@ -42561,6 +42577,14 @@
       "file_type": "code",
       "source_file": "scripts/generate-extension-icons.mjs",
       "source_location": "L215",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_generate_extension_icons_stalepaths",
+      "label": "stalePaths",
+      "file_type": "code",
+      "source_file": "scripts/generate-extension-icons.mjs",
+      "source_location": "L216",
       "_origin": "ast"
     },
     {
@@ -47392,7 +47416,7 @@
       "label": "Promotion Flow",
       "file_type": "document",
       "source_file": "docs/extension-release-channels.md",
-      "source_location": "L94",
+      "source_location": "L102",
       "_origin": "ast"
     },
     {
@@ -47400,7 +47424,7 @@
       "label": "Important Invariant",
       "file_type": "document",
       "source_file": "docs/extension-release-channels.md",
-      "source_location": "L107",
+      "source_location": "L115",
       "_origin": "ast"
     },
     {
@@ -47408,7 +47432,7 @@
       "label": "Chrome Web Store Tester Instructions",
       "file_type": "document",
       "source_file": "docs/extension-release-channels.md",
-      "source_location": "L130",
+      "source_location": "L138",
       "_origin": "ast"
     },
     {
@@ -179613,7 +179637,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_check",
+      "target": "package_scripts_check_extension_icons",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179622,7 +179646,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_dev_api",
+      "target": "package_scripts_check",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179631,7 +179655,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_dev_check",
+      "target": "package_scripts_dev_api",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179640,7 +179664,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_dev_demo",
+      "target": "package_scripts_dev_check",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179649,7 +179673,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_dev_extension",
+      "target": "package_scripts_dev_demo",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179658,7 +179682,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_dev_extension_local",
+      "target": "package_scripts_dev_extension",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179667,7 +179691,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_dev_extension_staging",
+      "target": "package_scripts_dev_extension_local",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179676,7 +179700,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_dev_extension_staging_narrow",
+      "target": "package_scripts_dev_extension_staging",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179685,7 +179709,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_dev_web",
+      "target": "package_scripts_dev_extension_staging_narrow",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179694,7 +179718,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_baseline",
+      "target": "package_scripts_dev_web",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179703,7 +179727,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_check_update",
+      "target": "package_scripts_graph_baseline",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179712,7 +179736,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_codex_install",
+      "target": "package_scripts_graph_check_update",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179721,7 +179745,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_extract",
+      "target": "package_scripts_graph_codex_install",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179730,7 +179754,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_hook_install",
+      "target": "package_scripts_graph_extract",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179739,7 +179763,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_hook_status",
+      "target": "package_scripts_graph_hook_install",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179748,7 +179772,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_hook_uninstall",
+      "target": "package_scripts_graph_hook_status",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179757,7 +179781,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_merge_driver_install",
+      "target": "package_scripts_graph_hook_uninstall",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179766,7 +179790,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_query",
+      "target": "package_scripts_graph_merge_driver_install",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179775,7 +179799,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_update",
+      "target": "package_scripts_graph_query",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179784,7 +179808,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_graph_watch",
+      "target": "package_scripts_graph_update",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179793,7 +179817,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_harness_rooms",
+      "target": "package_scripts_graph_watch",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179802,7 +179826,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_linkedin_chrome",
+      "target": "package_scripts_harness_rooms",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179811,7 +179835,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_linkedin_connect",
+      "target": "package_scripts_linkedin_chrome",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179820,7 +179844,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_format",
+      "target": "package_scripts_linkedin_connect",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179829,7 +179853,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_lint",
+      "target": "package_scripts_format",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179838,7 +179862,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_smoke_worker_staging",
+      "target": "package_scripts_lint",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179847,7 +179871,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_test",
+      "target": "package_scripts_smoke_worker_staging",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179856,7 +179880,7 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_validate_extension_production",
+      "target": "package_scripts_test",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -179865,11 +179889,20 @@
     },
     {
       "source": "package_scripts",
-      "target": "package_scripts_validate_extension_staging",
+      "target": "package_scripts_validate_extension_production",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
       "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "package_scripts",
+      "target": "package_scripts_validate_extension_staging",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "package.json",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -179878,7 +179911,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L46",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -179887,7 +179920,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -179896,7 +179929,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "context": "import"
     },
@@ -179906,7 +179939,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -179915,7 +179948,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "context": "import"
     },
@@ -179925,7 +179958,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -179934,7 +179967,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0,
       "context": "import"
     },
@@ -179944,7 +179977,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -179953,7 +179986,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "context": "import"
     },
@@ -181426,11 +181459,20 @@
     },
     {
       "source": "scripts_generate_extension_icons",
+      "target": "scripts_generate_extension_icons_check_only",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate-extension-icons.mjs",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_generate_extension_icons",
       "target": "scripts_generate_extension_icons_png_signature",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -181439,7 +181481,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -181448,16 +181490,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
       "source": "scripts_generate_extension_icons",
-      "target": "scripts_generate_extension_icons_writepng",
+      "target": "scripts_generate_extension_icons_encodepng",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -181466,7 +181508,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L61",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -181475,7 +181517,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L71",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -181484,7 +181526,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L152",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -181493,7 +181535,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L192",
+      "source_location": "L190",
       "weight": 1.0
     },
     {
@@ -181506,23 +181548,32 @@
       "weight": 1.0
     },
     {
+      "source": "scripts_generate_extension_icons",
+      "target": "scripts_generate_extension_icons_stalepaths",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate-extension-icons.mjs",
+      "source_location": "L216",
+      "weight": 1.0
+    },
+    {
       "source": "scripts_generate_extension_icons_chunk",
       "target": "scripts_generate_extension_icons_crc32",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
-      "source": "scripts_generate_extension_icons_writepng",
+      "source": "scripts_generate_extension_icons_encodepng",
       "target": "scripts_generate_extension_icons_chunk",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L54",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -181532,7 +181583,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L141",
+      "source_location": "L139",
       "weight": 1.0
     },
     {
@@ -181542,7 +181593,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "scripts/generate-extension-icons.mjs",
-      "source_location": "L201",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -188559,7 +188610,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/extension-release-channels.md",
-      "source_location": "L94",
+      "source_location": "L102",
       "weight": 1.0
     },
     {
@@ -188568,7 +188619,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/extension-release-channels.md",
-      "source_location": "L107",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -188577,7 +188628,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/extension-release-channels.md",
-      "source_location": "L130",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
