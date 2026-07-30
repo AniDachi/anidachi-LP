@@ -2015,16 +2015,20 @@ export const overlayStyles = `
     position: relative;
     box-sizing: border-box;
     width: 100%;
-    aspect-ratio: 16 / 6.5;
-    min-height: 124px;
+    aspect-ratio: 16 / 7;
+    min-height: 154px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.11);
     border-radius: 8px;
-    background-color: rgba(6, 7, 10, 0.92);
+    background-color: rgba(6, 7, 10, 0.95);
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-    background-size: 28px 28px;
+      radial-gradient(circle at 90% 20%, rgba(255, 138, 61, 0.045), transparent 34%),
+      linear-gradient(rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.032) 1px, transparent 1px);
+    background-size:
+      auto,
+      34px 34px,
+      34px 34px;
     isolation: isolate;
   }
 
@@ -2037,23 +2041,24 @@ export const overlayStyles = `
   .interface-settings-main-control {
     position: absolute;
     z-index: 2;
-    top: 12px;
+    top: 15px;
     right: 0;
-    width: 64px;
-    height: 22px;
-    padding: 3px 7px 3px 4px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    width: 102px;
+    height: 34px;
+    padding: 4px 12px 4px 5px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-right: 0;
     border-radius: 999px 0 0 999px;
-    background: rgba(18, 18, 22, 0.96);
+    background: rgba(18, 18, 22, 0.97);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     opacity: 0;
-    transform: translateX(18px);
+    transform: translateX(28px);
     transition:
       opacity 180ms ease,
       transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
   }
 
   .interface-settings-main-control.is-visible {
@@ -2061,32 +2066,48 @@ export const overlayStyles = `
     transform: translateX(0);
   }
 
-  .interface-settings-main-control > span:first-child {
-    width: 14px;
-    height: 14px;
+  .interface-settings-main-avatar {
+    width: 24px;
+    height: 24px;
     flex: 0 0 auto;
     border-radius: 999px;
     background: rgba(255, 138, 61, 0.92);
-    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.14);
+    color: rgba(20, 13, 10, 0.9);
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 820;
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 255, 255, 0.16),
+      0 2px 8px rgba(0, 0, 0, 0.22);
   }
 
-  .interface-settings-main-control > span:last-child {
-    width: 26px;
-    height: 4px;
+  .interface-settings-main-status {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 auto;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.72);
+    background: rgba(110, 231, 183, 0.92);
+    box-shadow: 0 0 8px rgba(110, 231, 183, 0.42);
+  }
+
+  .interface-settings-main-count {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-weight: 760;
+    line-height: 1;
   }
 
   .interface-settings-edge-glow {
     position: absolute;
     z-index: 1;
-    top: -30px;
-    right: -42px;
-    width: 126px;
-    height: 100px;
+    top: -38px;
+    right: -48px;
+    width: 168px;
+    height: 128px;
     border-radius: 50%;
-    background: rgba(255, 125, 48, 0.22);
-    filter: blur(22px);
+    background: rgba(255, 125, 48, 0.28);
+    filter: blur(28px);
     opacity: 0;
     transform: scale(0.84);
     transition:
@@ -2103,42 +2124,43 @@ export const overlayStyles = `
   .interface-settings-participant-stack {
     position: absolute;
     z-index: 2;
-    top: 46px;
+    top: 66px;
     right: 0;
     display: grid;
     justify-items: end;
-    gap: 5px;
+    gap: 8px;
     pointer-events: none;
   }
 
   .interface-settings-participant-pill {
     position: relative;
     width: 0;
-    height: 24px;
+    height: 34px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-right: 0;
     border-radius: 999px 0 0 999px;
-    background: rgba(18, 18, 22, 0.96);
+    background: rgba(18, 18, 22, 0.97);
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
     opacity: 0;
-    transform: translateX(10px);
+    transform: translateX(16px);
     transition:
       width 220ms cubic-bezier(0.22, 1, 0.36, 1),
       opacity 160ms ease,
       transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
   }
 
   .interface-settings-participant-pill.is-compact {
-    width: 28px;
+    width: 40px;
     opacity: 1;
     transform: translateX(0);
   }
 
   .interface-settings-participant-pill.is-expanded {
-    width: 88px;
+    width: 136px;
     opacity: 1;
     transform: translateX(0);
   }
@@ -2149,76 +2171,104 @@ export const overlayStyles = `
   }
 
   .interface-settings-participant-avatar {
-    width: 18px;
-    height: 18px;
-    margin-left: 2px;
+    width: 26px;
+    height: 26px;
+    margin-left: 3px;
     flex: 0 0 auto;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.14);
-  }
-
-  .interface-settings-participant-lines {
+    color: rgba(255, 255, 255, 0.82);
     display: grid;
-    gap: 3px;
-    width: 38px;
+    place-items: center;
+    font-size: 7px;
+    font-weight: 780;
+    line-height: 1;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .interface-settings-participant-copy {
+    min-width: 0;
+    display: grid;
+    gap: 1px;
+    flex: 1 1 auto;
+    line-height: 1;
+  }
+
+  .interface-settings-participant-name {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 9px;
+    font-weight: 740;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .interface-settings-participant-copy small {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 7px;
+    font-weight: 650;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .interface-settings-speaking-icon {
+    margin-right: 9px;
     flex: 0 0 auto;
-  }
-
-  .interface-settings-participant-lines i {
-    display: block;
-    height: 3px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.52);
-  }
-
-  .interface-settings-participant-lines i:last-child {
-    width: 68%;
-    background: rgba(255, 255, 255, 0.26);
+    color: rgba(110, 231, 183, 0.9);
   }
 
   .interface-settings-muted-icon {
-    position: absolute;
-    right: 8px;
+    margin-right: 9px;
+    flex: 0 0 auto;
     color: rgba(248, 113, 113, 0.88);
   }
 
   .interface-settings-participant-pill.is-compact .interface-settings-muted-icon {
+    position: absolute;
     right: 3px;
+    bottom: 2px;
+    margin: 0;
     padding: 2px;
     border-radius: 999px;
     background: rgba(18, 18, 22, 0.9);
   }
 
-  .interface-settings-replay {
+  .interface-settings-demo-cursor {
     position: absolute;
-    z-index: 3;
-    left: 8px;
-    bottom: 8px;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 999px;
-    background: rgba(18, 18, 22, 0.88);
-    color: rgba(255, 255, 255, 0.7);
-    display: grid;
-    place-items: center;
-    cursor: pointer;
+    z-index: 5;
+    top: 70%;
+    left: 28%;
+    color: rgba(255, 255, 255, 0.9);
+    filter:
+      drop-shadow(0 2px 2px rgba(0, 0, 0, 0.78))
+      drop-shadow(0 0 6px rgba(255, 255, 255, 0.2));
+    pointer-events: none;
+    transform: translate(-2px, -2px) rotate(-8deg);
     transition:
-      border-color 160ms ease,
-      color 160ms ease,
-      background 160ms ease;
+      top 360ms cubic-bezier(0.22, 1, 0.36, 1),
+      left 360ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 120ms ease;
   }
 
-  .interface-settings-replay:hover {
-    border-color: rgba(255, 173, 99, 0.4);
-    background: rgba(28, 25, 24, 0.96);
-    color: rgba(255, 221, 191, 0.96);
+  .interface-settings-preview[data-preview-moment="proximity"]
+    .interface-settings-demo-cursor {
+    top: 8px;
+    left: calc(100% - 30px);
   }
 
-  .interface-settings-replay:focus-visible {
-    outline: 2px solid rgba(255, 184, 122, 0.66);
-    outline-offset: 2px;
+  .interface-settings-preview[data-preview-moment="speaking"]
+    .interface-settings-demo-cursor {
+    top: 88px;
+    left: calc(100% - 72px);
+  }
+
+  .interface-settings-preview[data-preview-moment="interaction"]
+    .interface-settings-demo-cursor {
+    top: 105px;
+    left: calc(100% - 94px);
   }
 
   .interface-settings-controls {
@@ -3809,7 +3859,6 @@ export const overlayStyles = `
     .interface-settings-main-control,
     .interface-settings-edge-glow,
     .interface-settings-participant-pill,
-    .interface-settings-replay,
     .interface-settings-segmented button,
     .room-rail-slot,
     .room-rail-pill,

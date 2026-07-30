@@ -6560,7 +6560,7 @@
       "label": "InterfacePreview()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L111",
+      "source_location": "L116",
       "_origin": "ast"
     },
     {
@@ -6568,7 +6568,7 @@
       "label": "InterfaceSegmentedControl()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L211",
+      "source_location": "L225",
       "_origin": "ast"
     },
     {
@@ -6576,15 +6576,15 @@
       "label": "resolveSegmentedControlIndex()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L288",
+      "source_location": "L308",
       "_origin": "ast"
     },
     {
-      "id": "apps_extension_src_overlay_interface_settings_usefinitepreviewmoment",
-      "label": "useFinitePreviewMoment()",
+      "id": "apps_extension_src_overlay_interface_settings_useloopingpreviewmoment",
+      "label": "useLoopingPreviewMoment()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L308",
+      "source_location": "L328",
       "_origin": "ast"
     },
     {
@@ -6592,7 +6592,7 @@
       "label": "usePrefersReducedMotion()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L344",
+      "source_location": "L359",
       "_origin": "ast"
     },
     {
@@ -17608,7 +17608,7 @@
       "label": "DEFAULT_PREFERENCES",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L16",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -17616,7 +17616,7 @@
       "label": "PanelOverrides",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L187",
+      "source_location": "L227",
       "_origin": "ast"
     },
     {
@@ -17624,7 +17624,7 @@
       "label": "RenderedPanel",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L195",
+      "source_location": "L235",
       "_origin": "ast"
     },
     {
@@ -17632,7 +17632,7 @@
       "label": ".rerender()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L197",
+      "source_location": "L237",
       "_origin": "ast"
     },
     {
@@ -17640,7 +17640,7 @@
       "label": "renderPanel()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L201",
+      "source_location": "L241",
       "_origin": "ast"
     },
     {
@@ -17648,7 +17648,7 @@
       "label": "click()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L228",
+      "source_location": "L272",
       "_origin": "ast"
     },
     {
@@ -17656,7 +17656,7 @@
       "label": "keyboard()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L234",
+      "source_location": "L278",
       "_origin": "ast"
     },
     {
@@ -17664,7 +17664,7 @@
       "label": "advance()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L246",
+      "source_location": "L293",
       "_origin": "ast"
     },
     {
@@ -17672,7 +17672,7 @@
       "label": "unmount()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L252",
+      "source_location": "L299",
       "_origin": "ast"
     },
     {
@@ -17680,7 +17680,7 @@
       "label": "getRadioGroup()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L258",
+      "source_location": "L305",
       "_origin": "ast"
     },
     {
@@ -17688,7 +17688,7 @@
       "label": "getButton()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L262",
+      "source_location": "L312",
       "_origin": "ast"
     },
     {
@@ -17696,7 +17696,7 @@
       "label": "getPreview()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L275",
+      "source_location": "L329",
       "_origin": "ast"
     },
     {
@@ -17704,7 +17704,7 @@
       "label": "isDisabled()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L283",
+      "source_location": "L337",
       "_origin": "ast"
     },
     {
@@ -17712,7 +17712,7 @@
       "label": "mockReducedMotion()",
       "file_type": "code",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L287",
+      "source_location": "L341",
       "_origin": "ast"
     },
     {
@@ -78521,7 +78521,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L111",
+      "source_location": "L116",
       "weight": 1.0
     },
     {
@@ -78530,7 +78530,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L211",
+      "source_location": "L225",
       "weight": 1.0
     },
     {
@@ -78539,16 +78539,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L288",
+      "source_location": "L308",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_overlay_interface_settings",
-      "target": "apps_extension_src_overlay_interface_settings_usefinitepreviewmoment",
+      "target": "apps_extension_src_overlay_interface_settings_useloopingpreviewmoment",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L308",
+      "source_location": "L328",
       "weight": 1.0
     },
     {
@@ -78557,7 +78557,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L344",
+      "source_location": "L359",
       "weight": 1.0
     },
     {
@@ -78572,12 +78572,12 @@
     },
     {
       "source": "apps_extension_src_overlay_interface_settings_interfacesettingspanel",
-      "target": "apps_extension_src_overlay_interface_settings_usefinitepreviewmoment",
+      "target": "apps_extension_src_overlay_interface_settings_useloopingpreviewmoment",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L66",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -78587,7 +78587,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L89",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -78597,7 +78597,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L233",
+      "source_location": "L247",
       "weight": 1.0
     },
     {
@@ -108680,7 +108680,7 @@
     },
     {
       "source": "apps_extension_test_overlay_interface_settings_test",
-      "target": "apps_extension_src_overlay_interface_settings_interfacesettingspanel",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_extension_src_overlay_interface_settings_interface_preview_step_ms",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -108690,7 +108690,7 @@
     },
     {
       "source": "apps_extension_test_overlay_interface_settings_test",
-      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_apps_extension_src_overlay_interface_settings_interface_preview_step_ms",
+      "target": "apps_extension_src_overlay_interface_settings_interfacesettingspanel",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -108704,7 +108704,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -108713,7 +108713,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L187",
+      "source_location": "L227",
       "weight": 1.0
     },
     {
@@ -108722,7 +108722,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L195",
+      "source_location": "L235",
       "weight": 1.0
     },
     {
@@ -108731,7 +108731,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L197",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -108740,7 +108740,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L201",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -108749,7 +108749,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L228",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -108758,7 +108758,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L234",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -108767,7 +108767,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L246",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
@@ -108776,7 +108776,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L252",
+      "source_location": "L299",
       "weight": 1.0
     },
     {
@@ -108785,7 +108785,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L258",
+      "source_location": "L305",
       "weight": 1.0
     },
     {
@@ -108794,7 +108794,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L262",
+      "source_location": "L312",
       "weight": 1.0
     },
     {
@@ -108803,7 +108803,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L275",
+      "source_location": "L329",
       "weight": 1.0
     },
     {
@@ -108812,7 +108812,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L283",
+      "source_location": "L337",
       "weight": 1.0
     },
     {
@@ -108821,7 +108821,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L287",
+      "source_location": "L341",
       "weight": 1.0
     },
     {
@@ -202511,7 +202511,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L189",
+      "source_location": "L229",
       "weight": 1.0
     },
     {
@@ -202521,7 +202521,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L190",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -202531,7 +202531,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/overlay-interface-settings.test.tsx",
-      "source_location": "L197",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -204988,7 +204988,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L122",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -204999,7 +204999,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L134",
+      "source_location": "L137",
       "weight": 1.0
     },
     {
@@ -205010,7 +205010,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L139",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
@@ -216605,17 +216605,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
       "source_location": "L3885",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_overlay_interface_settings_usefinitepreviewmoment",
-      "target": "apps_extension_src_overlay_interface_settings_preview_moments",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/overlay-interface-settings.tsx",
-      "source_location": "L327",
       "weight": 1.0
     },
     {
