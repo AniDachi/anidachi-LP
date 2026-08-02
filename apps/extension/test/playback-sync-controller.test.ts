@@ -603,6 +603,101 @@ describe("PlaybackSyncController", () => {
 		expect(harness.adapter.seek).not.toHaveBeenCalled();
 	});
 
+	it("returns a YouTube guest to the authoritative source after a local SPA video switch", async () => {
+		const ensureRemoteSource = vi.fn(async () => ({
+			status: "navigation-started" as const,
+			targetUrl: "https://www.youtube.com/watch?v=host-video",
+		}));
+		const harness = createHarness({
+			fingerprint: "youtube|host-video",
+			isHost: false,
+			ensureRemoteSource,
+		});
+		const hostSource = watchSource("youtube", "host-video");
+		await harness.controller.handleHostState(
+			playbackState({
+				hostTime: 20,
+				videoFingerprint: hostSource.videoFingerprint,
+			}),
+			hostSource,
+		);
+
+		const guestSelectedVideo = createFakeAdapter({
+			fingerprint: "youtube|guest-video",
+			provider: "youtube",
+		});
+		harness.controller.bindAdapter(guestSelectedVideo);
+		await Promise.resolve();
+
+		expect(ensureRemoteSource).toHaveBeenCalledTimes(1);
+		expect(ensureRemoteSource).toHaveBeenCalledWith(hostSource, {
+			roomId: "room-1",
+			roomProvider: "youtube",
+			signal: expect.any(AbortSignal),
+		});
+		expect(guestSelectedVideo.play).not.toHaveBeenCalled();
+		expect(guestSelectedVideo.seek).not.toHaveBeenCalled();
+	});
+
+	it("does not reuse a remembered YouTube source after the source generation changes", async () => {
+		const ensureRemoteSource = vi.fn(async () => ({
+			status: "navigation-started" as const,
+			targetUrl: "https://www.youtube.com/watch?v=host-video",
+		}));
+		const harness = createHarness({
+			fingerprint: "youtube|host-video",
+			isHost: false,
+			ensureRemoteSource,
+		});
+		const hostSource = watchSource("youtube", "host-video");
+		await harness.controller.handleHostState(
+			playbackState({ videoFingerprint: hostSource.videoFingerprint }),
+			hostSource,
+		);
+
+		harness.controller.setSession(session({ sourceGeneration: 2 }));
+		harness.controller.bindAdapter(
+			createFakeAdapter({
+				fingerprint: "youtube|guest-video",
+				provider: "youtube",
+			}),
+		);
+		await harness.controller.handleHostState(
+			playbackState({ videoFingerprint: hostSource.videoFingerprint }),
+		);
+
+		expect(ensureRemoteSource).not.toHaveBeenCalled();
+	});
+
+	it("does not add source locking to Crunchyroll adapter replacement", async () => {
+		const ensureRemoteSource = vi.fn(async () => ({
+			status: "navigation-started" as const,
+			targetUrl: "https://www.crunchyroll.com/watch/host-video",
+		}));
+		const harness = createHarness({
+			fingerprint: "crunchyroll|host-video",
+			isHost: false,
+			provider: "crunchyroll",
+			roomProvider: "crunchyroll",
+			ensureRemoteSource,
+		});
+		const hostSource = watchSource("crunchyroll", "host-video");
+		await harness.controller.handleHostState(
+			playbackState({ videoFingerprint: hostSource.videoFingerprint }),
+			hostSource,
+		);
+
+		harness.controller.bindAdapter(
+			createFakeAdapter({
+				fingerprint: "crunchyroll|guest-video",
+				provider: "crunchyroll",
+			}),
+		);
+		await Promise.resolve();
+
+		expect(ensureRemoteSource).not.toHaveBeenCalled();
+	});
+
 	it("holds remote playback and applies the newest state after the target adapter binds", async () => {
 		const navigation = deferred<EnsureSourceResult>();
 		const ensureRemoteSource = vi.fn(() => navigation.promise);
@@ -999,6 +1094,7 @@ function createFakeAdapter({
 	return {
 		container: document.createElement("div"),
 		duckVolume: () => () => undefined,
+		enforcesAuthoritativeRoomSource: provider === "youtube",
 		emit: (event) => {
 			if (phase === "content" || phase === "buffering") {
 				confirmedContentTime = currentTime;

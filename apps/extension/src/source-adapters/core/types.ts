@@ -60,6 +60,7 @@ export interface VideoAdapter {
   id: string;
   provider: SourceProvider;
   name: string;
+  enforcesAuthoritativeRoomSource?: boolean;
   video: HTMLVideoElement;
   container: HTMLElement;
   playbackPolicy: AdapterPlaybackPolicy;
