@@ -7,21 +7,21 @@ import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 export const metadata: Metadata = {
   title: "Watch Anime on Discord Without Screen Share Pain | AniDachi",
   description:
-    "Discord Go Live compresses anime and drifts. Keep Discord for voice; sync Crunchyroll with AniDachi watchrooms — full quality, no screen-share lag. Start at pricing.",
+    "Stream anime on Discord without Go Live pain: keep Discord for voice, sync Crunchyroll in an AniDachi watchroom — full quality anime watch party. Start at pricing.",
   alternates: {
     canonical: "/guides/how-to-watch-anime-with-friends-on-discord",
   },
   openGraph: {
     title: "Watch Anime on Discord Without Screen Share Pain | AniDachi",
     description:
-      "Keep Discord for voice. Sync Crunchyroll with AniDachi — full quality, no Go Live compression.",
+      "How to stream anime on Discord the smart way — Discord voice + synced Crunchyroll, not compressed screen share.",
     url: "/guides/how-to-watch-anime-with-friends-on-discord",
   },
   twitter: {
     card: "summary_large_image",
     title: "Watch Anime on Discord Without Screen Share Pain | AniDachi",
     description:
-      "Discord voice + AniDachi sync beats screen-share lag for anime watch parties.",
+      "Stream anime on Discord with voice + AniDachi sync — better than screen-share lag.",
   },
 };
 
@@ -29,12 +29,17 @@ const faq = [
   {
     question: "How do you stream anime on Discord?",
     answer:
-      "To stream anime on Discord: join a voice channel, click the screen icon next to your name at the bottom, choose 'Screen' and select your browser tab with Crunchyroll open, then click Go Live. Your friends in the same voice channel can watch via the screen share. Quality may be capped at 720p on free accounts; Nitro subscribers get 1080p/60fps.",
+      "To stream anime on Discord well: keep Discord for voice, and sync Crunchyroll with AniDachi (or another party extension) so each friend watches on their own account. Pure Go Live also works — join a voice channel, click screen share, pick your Crunchyroll tab — but quality is often capped and only the host controls playback.",
+  },
+  {
+    question: "How do you watch anime together on Discord?",
+    answer:
+      "Join the same Discord voice channel, then either (1) hybrid: everyone opens Crunchyroll in a synced watchroom while Discord carries chat/voice, or (2) one host Go Live screen-shares the episode. Hybrid wins for picture quality and spoiler control.",
   },
   {
     question: "How do you run an anime watch party on Discord?",
     answer:
-      "For a Discord anime watch party: create a dedicated server (or use an existing one), add a voice lounge and a text channel for scheduling. The host streams the anime via Go Live screen share, or each person opens their own Crunchyroll stream and you count down in voice. For larger groups or better sync, pair Discord voice with a Crunchyroll watchroom extension like AniDachi.",
+      "For a Discord anime watch party: create a dedicated server (or use an existing one), add a voice lounge and a text channel for scheduling. Prefer Discord voice + AniDachi Crunchyroll sync over Go Live for longer nights. For larger groups or better sync, pair Discord voice with a Crunchyroll watchroom extension.",
   },
   {
     question: "Is Discord screen share good enough for anime watch parties?",
@@ -109,7 +114,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
         description="Discord anime watch parties with voice, screen share, and AniDachi sync when Go Live lags."
         url="/guides/how-to-watch-anime-with-friends-on-discord"
         datePublished="2026-05-01"
-        dateModified="2026-07-28"
+        dateModified="2026-08-03"
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta

@@ -1,10 +1,127 @@
 ## Background and Motivation
 
+**(Active — 2026-08-03)** Keyword enrichment **implementation** (Executor): FAQ/meta/snippet/internal-link enrich-in-place on approved batch. **No URL structure changes** (freeze). Awaiting user spot-check + Planner confirm.
+
+**(Prior — 2026-08-02)** Keyword positioning & enrichment from 16 GSC page exports + YouTube cluster. Plan: `keyword_enrichment_analysis`. Canvas: `anidachi-keyword-enrichment.canvas.tsx`. Analysis only.
+
+**(Prior — 2026-08-02)** Full SEO analysis (GSC + GA4 + Amplitude) via Composio; deliver canvas report + freeze-safe backlog. Plan: `full_seo_analysis`.
+
+**(Prior — 2026-07-28)** SEO Trust & Authority plan: pause URL growth, portfolio audit, entity trust, agent rewrite. Plan: user-approved `seo_trust_authority` plan.
+
+**(Prior — 2026-07-26)** SEO agent critical fixes (YT + CR parity) — completed, awaiting Planner confirm.
+
+## High-level Task Breakdown
+
+### Full SEO Analysis (Executor 2026-08-02)
+
+1. Connect Amplitude + resolve GA4 `properties/531363877` + GSC `sc-domain:anidachi.app`.
+2. Pull GSC 28d/90d/prior (date, query, page, query×page, device, country, sitemaps).
+3. Pull GA4 channels, organic landings, funnel events, devices.
+4. Pull Amplitude event taxonomy + ordered CTA→checkout funnel.
+5. Join/synthesize winners, CTR traps, cannibalization, backlog.
+6. Ship canvas `anidachi-seo-analysis.canvas.tsx` + scratchpad notes.
+
+### SEO Trust & Authority (Executor 2026-07-28) — historical
+
+1. **Portfolio baseline** — freeze note + `seo:portfolio` audit + first-touch landing path through checkout.
+2. Technical trust cleanup (force-index freshness, SearchAction, CWV, internal links).
+3. Entity trust surfaces (About / editorial / contact / security + schema).
+4. Consolidate/enrich from portfolio evidence (needs live GSC run).
+5. Authority program (real benchmark — blocked until measurements exist).
+6. Rewrite SEO agent + guidelines.
+
+## Project Status Board
+
+### Keyword Enrichment Implementation (2026-08-03) — Executor
+
+- [x] CR pillar FAQ/snippet/meta + Watch2Gether note (no H1/URL/canonical change)
+- [x] CR how-to two-people / Discord / screen-share FAQs + meta
+- [x] Discord guide “stream anime on discord” meta/FAQ
+- [x] Anime pillar friends/website FAQs + LDR handoff to `/best-apps-watch-anime-together-long-distance`
+- [x] vs Teleparty Teleparty×CR meta/FAQ/short answer
+- [x] YouTube P0: extension, Teleparty-YT, Discord screenshare, pillar links
+- [x] `pnpm --filter @anidachi/web check` + build passed
+- [ ] User manual spot-check → Planner confirm
+
+### Keyword Enrichment Analysis (2026-08-02)
+
+- [x] Parse 16 GSC exports → 12 joined path keyword maps
+- [x] Diff vs live title/H1/FAQ
+- [x] YouTube cluster P0–P2 matrix (19 routes)
+- [x] Cannibalization map
+- [x] Canvas delivered — awaiting user verify / Planner confirm
+
+### Full SEO Analysis (2026-08-02)
+
+- [x] Connect Amplitude + confirm GA4/GSC properties
+- [x] Pull GSC 28d/90d/prior + sitemaps + URL inspect samples
+- [x] Pull GA4 organic/funnel (custom dims not registered — gap noted)
+- [x] Pull Amplitude funnel (1375 → 325 → 9 → 2 uniques)
+- [x] Join/synthesize portfolio + backlog
+- [x] Canvas delivered — awaiting user verify / Planner confirm
+
+### SEO Trust & Authority
+
+- [x] Task 1: Portfolio baseline + first-touch attribution (Executor — awaiting user verify)
+- [x] Task 2: Technical trust cleanup — safe subset (awaiting user verify)
+- [x] Task 3: Entity trust surfaces — additive pages + byline (awaiting user verify)
+- [x] Task 4: Consolidate/enrich — top-5 enrich-in-place (user verified 2026-07-28)
+- [x] Task 5: Authority program — **cancelled / ignored** by owner (2026-07-28); no benchmark/outreach for now
+- [x] Task 6: Rewrite SEO agent + guidelines (user verified via overall plan progress)
+
+### SEO agent critical fixes (Executor — awaiting Planner confirm)
+
+- [x] Agent CR parity + language/CTA/tag rules
+- [x] Truth: compare + P0 CR FAQs (YouTube where product-true)
+- [x] CR conversion pages (how-to, Teleparty alts, Discord SS)
+- [x] Pseo CR crumbs + free page enrichment
+- [x] CWS → `/pricing` on CR pillar + key how-tos
+
+## Executor's Feedback or Assistance Requests
+
+- **Executor (2026-08-03):** Keyword enrichment batch implemented (freeze-safe). No URL/canonical/H1 changes.
+  - Pages: `/watch-crunchyroll-together`, `/guides/how-to-watch-crunchyroll-with-friends`, `/guides/how-to-watch-anime-with-friends-on-discord`, `/watch-anime-together`, `/compare/anidachi-vs-teleparty`, `/guides/youtube-watch-party-chrome-extension`, `/guides/does-teleparty-work-with-youtube`, `/guides/can-you-screen-share-youtube-on-discord`, `/watch-youtube-together`.
+  - Changes: meta descriptions, FAQ aliases matching GSC queries, short-answer SERP phrasing, internal handoff links, `dateModified` → 2026-08-03.
+  - Verified: web `check` + `build` OK.
+  - Please spot-check a few pages in the browser (titles/FAQs look right; URLs unchanged). Then Planner can mark the batch complete.
+
+- **Executor (2026-08-02):** Keyword enrichment analysis complete. Canvas: `anidachi-keyword-enrichment.canvas.tsx`.
+  - Joined 16 GSC page exports (3mo) into 12 paths; top enrich: CR pillar does/can/is-there zero-clicks (~500 imp), Discord “stream anime on discord” (166 imp / 0.6% CTR), CR how-to two-people/Discord FAQs, anime pillar friends/website variants, vs Teleparty Teleparty×CR.
+  - Cannibal: home still ranks for watch-anime-together + CR party — defer to pillars via links, not home retarget.
+  - YouTube: P0 = chrome-extension (pos~3), does-teleparty-work-YT, discord screenshare, pillar; no new URLs; wait on crawl for P2 alts.
+  - Please review canvas; approve an Executor enrich-in-place batch if desired (FAQ/meta only first).
+
+- **Executor (2026-08-02):** Full SEO analysis complete (measurement only; no site mutations). Canvas: `anidachi-seo-analysis.canvas.tsx`.
+  - **28d GSC:** 1,172 clicks / 40,722 impressions / 2.88% CTR / pos 9.08 · **MoM clicks +25%**
+  - **90d GSC:** 2,285 clicks / 81,145 impressions
+  - **vs Mar–Jun baseline** (~370 clicks / 7.3k imp): ~3.2× clicks and ~5.6× impressions in one 28d window
+  - **GA4:** Organic 1,286 sessions (51% of 2,532); Direct bounce 86%
+  - **Amplitude funnel:** CTA imp 1,375 → click 325 → checkout start 9 → redirect OK 2
+  - **All checkout starts on `/`** — CR/pillar CTAs do not reach Stripe
+  - **P0 enrich:** `/glossary/ova-meaning` (13.8k imp / 0.02% CTR), `/watch-crunchyroll-together`, CR/Discord how-tos, `/watch-anime-together` CTA→checkout gap
+  - **Gaps:** register GA4 custom dims `seo_landing_path` + `metric_name`; mark key events; confirm Coverage UI (sitemap indexed=0 via API)
+  - Please open the canvas and confirm; Planner should mark the analysis task complete after review. Optional next: Executor enrich-in-place for P0 list only.
+
+- **Planner (2026-07-28):** SEO Trust plan closed for current scope. Task 5 (original benchmark + outreach) explicitly skipped by owner. Safe additive work (1–4, 6) is done. Optional later: CRM Google reconnect for local `seo:portfolio`.
+
+## Lessons
+
+- Composio session_id from latest `COMPOSIO_SEARCH_TOOLS` must be reused (`ants` for 2026-08-02 SEO analysis).
+- GA4 event params are not queryable as `customEvent:*` until registered as custom dimensions in GA4 Admin.
+- GSC sitemap `contents.indexed` often returns `0` even when pages are indexed — use URL Inspection + Coverage UI.
+- `seo:keywords` must compare against the **full** public route inventory, not only top GSC/GA4 pages, or it invents “untapped” intents that already have URLs.
+- Sitemap/`seo:portfolio` scripts must run with cwd `apps/web` (`pnpm --filter @anidachi/web`) so `discoverStaticSitemapUrlPaths` finds `app/`.
+- **Owner constraint (2026-07-28):** Further SEO trust work must not impact core flows or current ranking/indexation. Additive/reversible only. No 301/noindex/URL removal, no force-index sitemap deletion while Coverage recovers, no footer/nav crawl-path shrinkage, no high-traffic H1/intent rewrites — without explicit owner approval + GSC evidence.
+- First-touch `captureFirstLandingPath` must re-run on `usePathname()` changes so `/login` → guide SPA hops still attribute correctly.
+- Do not commit `my-video/`, `apps/web/tmp/`, or incidental `anime-jikan-cache.json` churn from failed Jikan fetches during build.
+
+## Background and Motivation (historical)
+
 **(Active — 2026-07-26)** SEO agent critical fixes (YT + CR parity): agent playbook CR conversion stack + product-truth / mid-CTA / `/pricing` install alignment. Plan: `.cursor/plans/seo_agent_critical_fixes_a6487aa6.plan.md`.
 
 ~~YouTube SEO batch 2… conversion polish~~ (prior; completed — awaiting Planner confirm on polish QA).
 
-## High-level Task Breakdown
+## High-level Task Breakdown (historical)
 
 ### SEO agent critical fixes (Planner → Executor 2026-07-26)
 
@@ -14,16 +131,6 @@
 4. Pseo CR breadcrumbs under CR pillar; enrich `crunchyroll-watch-party-free`.
 5. Align CR pillar + key how-tos install steps to `/pricing` until CWS live.
    - Success: check/build pass; no “only for Crunchyroll” FAQs; CR how-to matches YT density.
-
-## Project Status Board
-
-### SEO agent critical fixes (Executor — awaiting Planner confirm)
-
-- [x] Agent CR parity + language/CTA/tag rules
-- [x] Truth: compare + P0 CR FAQs (YouTube where product-true)
-- [x] CR conversion pages (how-to, Teleparty alts, Discord SS)
-- [x] Pseo CR crumbs + free page enrichment
-- [x] CWS → `/pricing` on CR pillar + key how-tos
 
 ### YouTube conversion polish (Executor — awaiting Planner confirm)
 
@@ -715,6 +822,7 @@ The survey should do more than “collect answers” — it should:
 - Force-index sitemap + noindex cleanup was prior work; ready for production deploy then GSC submit.
 - (Prior) Please submit a test email in the hero survey and confirm the contact appears at `/kreatli-email-crm` with segment `survey_lead`.
 - (Prior) Production needs `BLOB_READ_WRITE_TOKEN` set (same as Gmail tokens) for CRM writes on Vercel.
+- (Apollo / outreach ops) Kreatli: widened default send window `Normal Business Hours` from `8:00-18:00` to `8:00-20:00` America/Los_Angeles (Mon–Fri) to reduce window-ended delays at ~50 emails/day.
 
 ### Lessons
 
