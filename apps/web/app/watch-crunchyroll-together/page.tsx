@@ -14,12 +14,12 @@ import {
 export const metadata: Metadata = {
   title: "Crunchyroll Watch Party with AniDachi — Sync & Chat (2026)",
   description:
-    "Host a Crunchyroll watch party with AniDachi — synced playback, chat, and async catch-up on each person's account. Crunchyroll has no built-in watch party; start at AniDachi pricing.",
+    "Crunchyroll has no built-in watch party. Watch Crunchyroll together with AniDachi — sync, chat, async, or a free live-only party extension. Start at AniDachi pricing.",
   alternates: { canonical: "/watch-crunchyroll-together" },
   openGraph: {
     title: "Crunchyroll Watch Party with AniDachi — Sync & Chat (2026)",
     description:
-      "AniDachi Crunchyroll watchrooms: sync, chat, and async — every group-watch method compared.",
+      "Does Crunchyroll have watch party? No — use AniDachi watchrooms for sync, chat, and async on each person's account.",
     url: "/watch-crunchyroll-together",
   },
 };
@@ -28,22 +28,52 @@ const faq = [
   {
     question: "Does Crunchyroll have a watch party feature?",
     answer:
-      "No. As of 2026, Crunchyroll does not have a built-in watch party or group watch feature. You need a third-party tool like AniDachi, Crunchyroll Party, or Teleparty to watch with friends.",
+      "No. As of 2026, Crunchyroll does not have a built-in watch party, watch together, or group watch feature. You need a third-party Chrome extension such as AniDachi, Crunchyroll Party, or Teleparty to watch with friends on each person's own account.",
+  },
+  {
+    question: "Does Crunchyroll have a watch together feature?",
+    answer:
+      "No native watch-together option exists on Crunchyroll in 2026. Create a watchroom with AniDachi (or another extension) so everyone opens the same episode on their own Crunchyroll tab while playback stays aligned.",
+  },
+  {
+    question: "Can you do a watch party on Crunchyroll?",
+    answer:
+      "Yes — but not with a built-in Crunchyroll button. Install a watch party Chrome extension (AniDachi or Crunchyroll Party), open any anime on Crunchyroll, create a room, and share the invite. Guests join on their own accounts with synced playback.",
+  },
+  {
+    question: "Can you watch together on Crunchyroll?",
+    answer:
+      "Yes. There is a way to watch Crunchyroll together: use AniDachi or a similar extension so each friend streams on their own Crunchyroll session while the room handles sync and chat. Discord screen share is a weaker free fallback.",
+  },
+  {
+    question: "Is there a way to watch Crunchyroll together?",
+    answer:
+      "Yes. Use a dedicated watchroom extension on desktop Chrome. AniDachi adds live sync plus async catch-up; Crunchyroll Party and Teleparty cover live-only nights. Step-by-step setup: /guides/how-to-watch-crunchyroll-with-friends.",
   },
   {
     question: "Can you do a group watch on Crunchyroll?",
     answer:
-      "Yes, but you need a Chrome extension to do it. Install AniDachi or Crunchyroll Party, open any anime on Crunchyroll, and create a watchroom. Everyone in the group watches on their own Crunchyroll account with synced playback.",
+      "Yes, with a Chrome extension. Install AniDachi or Crunchyroll Party, open any anime on Crunchyroll, and create a watchroom. Everyone in the group watches on their own Crunchyroll account with synced playback.",
   },
   {
     question: "Does Teleparty work with Crunchyroll in 2026?",
     answer:
-      "Teleparty does support Crunchyroll, but compatibility can vary by update. AniDachi is built for Crunchyroll anime groups (async, detection, progress) and also supports YouTube watchrooms — Teleparty stays live-only multi-platform. For Crunchyroll nights, AniDachi is usually more reliable and adds async watching Teleparty does not offer.",
+      "Teleparty does support Crunchyroll, but compatibility can vary by update. AniDachi is built for Crunchyroll anime groups (async, detection, progress) and also supports YouTube watchrooms — Teleparty stays live-only multi-platform. For Crunchyroll nights, AniDachi is usually more reliable and adds async watching Teleparty does not offer. Full compare: /compare/anidachi-vs-teleparty.",
+  },
+  {
+    question: "Does Watch2Gether work with Crunchyroll?",
+    answer:
+      "Watch2Gether is a free browser room site that works best for public YouTube-style links — it is not a reliable Crunchyroll account watch party. For licensed Crunchyroll episodes, use an extension watchroom (AniDachi or Crunchyroll Party) so each person streams on their own Crunchyroll login.",
+  },
+  {
+    question: "What is a Crunchyroll watch party Chrome extension?",
+    answer:
+      "A Crunchyroll watch party Chrome extension sits on top of each person's Crunchyroll tab: it creates a shared room, keeps play/pause/seek aligned, and usually adds chat. AniDachi is the async-capable option; Crunchyroll Party is a free live-only party extension.",
   },
   {
     question: "Can you watch Crunchyroll together with friends?",
     answer:
-      "Yes! While Crunchyroll has no built-in watch party feature, tools like AniDachi let you create watchrooms, sync playback, and chat in real-time while watching any anime on Crunchyroll.",
+      "Yes. While Crunchyroll has no built-in watch party feature, tools like AniDachi let you create watchrooms, sync playback, and chat in real-time while watching any anime on Crunchyroll.",
   },
   {
     question: "What is a Crunchyroll group watch?",
@@ -118,7 +148,7 @@ export default function WatchCrunchyrollTogetherPage() {
       description="Host a Crunchyroll watch party with AniDachi — synced playback, chat, and async catch-up on each person's account."
       url="/watch-crunchyroll-together"
       datePublished="2026-04-23"
-      dateModified="2026-07-28"
+      dateModified="2026-08-03"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta
@@ -135,13 +165,21 @@ export default function WatchCrunchyrollTogetherPage() {
       </h2>
       <p className="text-xl text-foreground/80 leading-relaxed mb-8">
         <strong>
-          Run a Crunchyroll watch party with AniDachi — a Chrome extension that
-          syncs playback, creates watchrooms, and adds real-time chat on top of
-          each person&apos;s Crunchyroll account.
+          Crunchyroll has no built-in watch party — but you can still watch
+          Crunchyroll together with AniDachi, a Chrome extension that syncs
+          playback, creates watchrooms, and adds real-time chat on each
+          person&apos;s own Crunchyroll account.
         </strong>{" "}
-        Unlike Discord screen sharing, everyone watches in full quality on their
-        own account. Unlike Teleparty, you can watch asynchronously — no
-        scheduling required. Start from{" "}
+        Unlike Discord screen sharing, everyone watches in full quality.
+        Unlike Teleparty or Watch2Gether-style live rooms, you can also watch
+        asynchronously. Need the how-to walkthrough? See{" "}
+        <Link
+          href="/guides/how-to-watch-crunchyroll-with-friends"
+          className="text-brand-orange hover:underline"
+        >
+          how to watch Crunchyroll with friends
+        </Link>
+        . Start from{" "}
         <Link href="/pricing" className="text-brand-orange hover:underline">
           AniDachi pricing / early access
         </Link>
@@ -233,6 +271,15 @@ export default function WatchCrunchyrollTogetherPage() {
             values: { anidachi: "yes", "crunchyroll-party": "yes", teleparty: "yes", discord: "Voice/Text" },
           },
           {
+            feature: "Party extension on CR tabs",
+            values: {
+              anidachi: "yes",
+              "crunchyroll-party": "yes",
+              teleparty: "yes",
+              discord: "Screen share only",
+            },
+          },
+          {
             feature: "Free",
             values: {
               anidachi: PRICING_EARLY_ACCESS_PRICE,
@@ -243,6 +290,15 @@ export default function WatchCrunchyrollTogetherPage() {
           },
         ]}
       />
+      <p className="text-foreground/80 leading-relaxed mt-4 mb-2">
+        <strong>Watch2Gether note:</strong> W2G is fine for public links, but it
+        is not a Crunchyroll account watch party. Licensed Crunchyroll episodes
+        need a party extension on each person&apos;s Crunchyroll tab — see also{" "}
+        <Link href="/compare/anidachi-vs-watch2gether" className="text-brand-orange hover:underline">
+          AniDachi vs Watch2Gether
+        </Link>
+        .
+      </p>
 
       <h2
         id="group-watch"

@@ -12,7 +12,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Does Teleparty Work With YouTube? (2026 Answer) | AniDachi",
   description:
-    "Yes — Teleparty can sync YouTube for live watch parties. It does not support async catch-up. Compare Teleparty for YouTube vs AniDachi watchrooms.",
+    "Does Teleparty work with YouTube in 2026? Yes for live sync — no async. Teleparty for YouTube vs AniDachi watchrooms compared. Start free at pricing.",
   alternates: { canonical: "/guides/does-teleparty-work-with-youtube" },
   openGraph: {
     title: "Does Teleparty Work With YouTube?",
@@ -34,6 +34,11 @@ const faq = [
     question: "Does Teleparty work with YouTube in 2026?",
     answer:
       "Yes. Teleparty (formerly Netflix Party) supports YouTube for live synchronized playback and shared chat when everyone is online at the same time. Test with a short clip before a long session — player updates can temporarily break extensions.",
+  },
+  {
+    question: "Does Teleparty support YouTube watch parties?",
+    answer:
+      "Yes for live parties. Each person opens the same YouTube video, joins the Teleparty session, and playback stays roughly aligned. Teleparty does not add async catch-up — AniDachi does if your group is staggered.",
   },
   {
     question: "Is Teleparty free for YouTube watch parties?",
@@ -81,7 +86,7 @@ export default function DoesTelepartyWorkWithYoutubePage() {
       description="Yes for live sync; no for async. How Teleparty for YouTube fits — and when AniDachi is better."
       url="/guides/does-teleparty-work-with-youtube"
       datePublished="2026-07-25"
-      dateModified="2026-07-26"
+      dateModified="2026-08-03"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
