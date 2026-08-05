@@ -13,7 +13,6 @@ import {
   Check,
   Copy,
   Mic,
-  MicOff,
   RefreshCw,
   SendHorizontal,
   SmilePlus,
@@ -27,21 +26,12 @@ import type {
   WheelEvent as ReactWheelEvent,
   SyntheticEvent,
 } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { storage } from "wxt/utils/storage";
 import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { AnidachiLogoMark } from "./anidachi-logo-mark";
 import { AUTH_TOKENS_KEY, type AuthenticatedUser } from "./auth-tokens";
 import { ANIDACHI_BUILD_ID, COMPOSER_EMOJI_PACK, EMOJI_PALETTE } from "./constants";
-import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
-import { ensureSourceForProvider } from "./source-adapters/core/source-navigation";
-import {
-  arePlayerOverlayGeometriesEqual,
-  normalizePlayerOverlayGeometry,
-  type PlayerOverlayGeometry,
-} from "./source-adapters/core/overlay-geometry";
-import type { SourceProvider, VideoAdapter } from "./source-adapters/core/types";
-import { getDefinitionForProvider } from "./source-adapters/registry";
 import { CurrentResourcePanel } from "./current-resource-panel";
 import {
   clearDebugLog,
@@ -50,7 +40,6 @@ import {
   getDebugLogText,
   logDebug,
   playerOverlayGeometryDebugSnapshot,
-  playbackStateDebugSnapshot,
   roomEventDebugSnapshot,
   videoDebugSnapshot,
 } from "./debug-log";
@@ -60,22 +49,29 @@ import {
   saveDiagnosticsFromPage,
 } from "./diagnostic-log";
 import { HOLD_FIRE_SUPER_REACTION_EXPERIMENT, normalizeExperimentFlag } from "./experiments";
-import { type GhostVideo, type LiveVoiceStatus, useGhostCam } from "./ghost-cam";
+import { type GhostVideo, useGhostCam } from "./ghost-cam";
 import { getGhostCamGapPx } from "./ghost-cam-size";
-import { getHotkeyAction, shouldStopVoiceTalkOnWindowBlur } from "./hotkeys";
+import {
+  getHotkeyAction,
+  isPushToTalkReleaseEvent,
+  shouldStopVoiceTalkOnWindowBlur,
+} from "./hotkeys";
+import { attachAndPlayVideoElement } from "./media-element-playback";
 import type {
   IncomingP2PSignal,
   RoomSendDisposition,
   SignalingTransportReady,
 } from "./media-types";
-import { attachAndPlayVideoElement } from "./media-element-playback";
 import {
   ANIDACHI_COMPOSER_OPEN_ATTR,
   ANIDACHI_MESSAGE_COMPOSER_SHORTCUT_EVENT,
   ANIDACHI_MESSAGE_COMPOSER_SUBMIT_EVENT,
   isMessageComposerShortcutEvent,
 } from "./message-composer-events";
-import { overlayInteractionBoundaryProps } from "./overlay-interaction-boundary";
+import {
+  isWithinOverlayHotkeyBoundary,
+  overlayInteractionBoundaryProps,
+} from "./overlay-interaction-boundary";
 import { getOverlayChromePlacement, shouldShowCameraStack } from "./overlay-layout";
 import { OverlayLayoutEditor } from "./overlay-layout-editor";
 import { type OverlayLayoutContext, resolveOverlayLayout } from "./overlay-layout-engine";
@@ -100,29 +96,30 @@ import {
   getP2PMediaSessionState,
   persistRoomSessionForCurrentJoin,
 } from "./overlay-media-session";
-import {
-  shouldDismissOverlayPanel,
-  waitForOverlayPaint,
-} from "./overlay-panel-interaction";
+import { shouldDismissOverlayPanel, waitForOverlayPaint } from "./overlay-panel-interaction";
+import { InterfaceSettingsPanel } from "./overlay-interface-settings";
 import {
   copyRoomInviteText,
   getPrimaryRoomActionKind,
   getPrimaryRoomActionLabel,
   isInviteCopiedFeedback,
-  type RoomActionFeedback,
   ROOM_ACTION_FEEDBACK_DURATION_MS,
   ROOM_END_CONFIRMATION_DURATION_MS,
+  type RoomActionFeedback,
   shouldConfirmRoomEnd,
 } from "./overlay-room-action-feedback";
 import { PanelCameraControl, RoomPeopleSection } from "./overlay-room-media-controls";
+import { RoomRail } from "./overlay-room-rail";
 import { useOverlayUnmountCleanup } from "./overlay-unmount-cleanup";
-import { PanelAccountTitle } from "./panel-account-title";
+import { VoiceSettingsPanel } from "./overlay-voice-controls";
 import {
-  isRoomRailEdgeIntent,
-  ROOM_RAIL_OPEN_DELAY_MS,
-  shouldRenderRoomRail,
-} from "./room-rail-intent";
-import { useTopBubbleReveal } from "./top-bubble-reveal";
+  createVoiceSessionState,
+  getVoiceIndicatorParticipantIds,
+  isVoiceSessionPublishing,
+  reduceVoiceSession,
+} from "./overlay-voice-session";
+import { PanelAccountTitle } from "./panel-account-title";
+import { ParticipantAudioContourControl } from "./participant-audio-controls";
 import { PlaybackSyncController } from "./playback-sync-controller";
 import {
   connectWebsiteRoom,
@@ -135,6 +132,7 @@ import {
   type RoomQuotaSummary,
 } from "./room-client";
 import { applyRoomUsageSnapshot, roomQuotaRemainingSeconds } from "./room-quota-display";
+import { selectVoiceRailParticipants, shouldRenderRoomRail } from "./room-rail-intent";
 import { getRoomReconnectDelayMs } from "./room-reconnect";
 import {
   clearRoomSession,
@@ -142,6 +140,7 @@ import {
   migrateLegacyRoomSession,
   persistRoomSession,
   type RoomSessionRecord,
+  updateRoomSessionVoiceMode,
 } from "./room-session-storage";
 import { acquireRoomTabLock, releaseRoomTabLock } from "./room-tab-lock";
 import { buildRoomShareableUrl } from "./room-url";
@@ -159,7 +158,18 @@ import {
   type InviteTargets,
   listInviteTargets,
 } from "./social-client";
+import {
+  arePlayerOverlayGeometriesEqual,
+  normalizePlayerOverlayGeometry,
+  type PlayerOverlayGeometry,
+} from "./source-adapters/core/overlay-geometry";
+import { ensureSourceForProvider } from "./source-adapters/core/source-navigation";
+import type { SourceProvider, VideoAdapter } from "./source-adapters/core/types";
+import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
+import { getDefinitionForProvider } from "./source-adapters/registry";
 import { overlayStyles } from "./styles";
+import { useTopBubbleReveal } from "./top-bubble-reveal";
+import { useInterfacePreferences } from "./use-interface-preferences";
 import {
   authErrorMessage,
   type CurrentParticipantResult,
@@ -170,7 +180,16 @@ import {
   signOutAndClearParticipant,
   trySilentSignIn,
 } from "./user-identity";
-import { isSpeechRecognitionSupported, mapVoiceToEmoji, startVoiceRecognition } from "./voice";
+import {
+  getDefaultParticipantAudioPreference,
+  getDefaultVoiceAudioPreferences,
+  type ParticipantAudioPreference,
+  parseVoiceAudioPreferences,
+  resolveVoiceAudioPreferencesForListener,
+  updateParticipantAudioPreference,
+  type VoiceAudioPreferences,
+  voiceAudioPreferencesStorageKeyForUser,
+} from "./voice-audio-preferences";
 import { resolveWatchLibraryReconcileAuth } from "./watch-library-auth";
 import {
   markWatchLibraryEntriesSynced,
@@ -326,12 +345,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const clientRef = useRef(new RoomClient());
   const adapterActiveRef = useRef(adapterActive);
   adapterActiveRef.current = adapterActive;
-  const stopVoiceRef = useRef<(() => void) | null>(null);
-  const restoreLiveVoiceDuckingRef = useRef<(() => void) | null>(null);
-  const restoreVoiceDuckingRef = useRef<(() => void) | null>(null);
-  const pendingVoiceTextRef = useRef<string | null>(null);
-  const voiceCaptureActiveRef = useRef(false);
-  const voiceStoppingRef = useRef(false);
   const flameTimersRef = useRef<Record<string, number | undefined>>({});
   const fireHoldRef = useRef<FireHoldState | null>(null);
   const liveChatTimersRef = useRef<Record<string, number | undefined>>({});
@@ -364,6 +377,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [authAuthenticated, setAuthAuthenticated] = useState(false);
   const [authAccessToken, setAuthAccessToken] = useState<string | null>(null);
   const [accountUser, setAccountUser] = useState<AuthenticatedUser | null>(null);
+  const [loadedVoiceAudioPreferences, setLoadedVoiceAudioPreferences] = useState<{
+    listenerUserId: string | null;
+    preferences: VoiceAudioPreferences;
+  }>(() => ({
+    listenerUserId: null,
+    preferences: getDefaultVoiceAudioPreferences(),
+  }));
+  const loadedVoiceAudioPreferencesRef = useRef(loadedVoiceAudioPreferences);
+  const pendingVoiceAudioPreferencesWriteRef = useRef<{
+    key: `local:${string}`;
+    preferences: VoiceAudioPreferences;
+  } | null>(null);
+  const voiceAudioPreferencesWriteTimerRef = useRef<number | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [extensionContextInvalidated, setExtensionContextInvalidated] = useState(false);
@@ -387,19 +413,15 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [status, setStatus] = useState<RoomConnectionStatus>("idle");
   const [panelOpen, setPanelOpen] = useState(false);
-  const topBubbleReveal = useTopBubbleReveal({
-    bubbleRef: topBubbleRef,
-    overlayRef: overlayRootRef,
-    panelOpen,
-  });
   const [messageComposerOpen, setMessageComposerOpen] = useState(false);
   const [roomCreatePending, setRoomCreatePending] = useState(false);
   const [roomEndConfirmationPending, setRoomEndConfirmationPending] = useState(false);
   const [roomEndPending, setRoomEndPending] = useState(false);
   const [roomLeavePending, setRoomLeavePending] = useState(false);
   const [roomActionFeedback, setRoomActionFeedback] = useState<RoomActionFeedback | null>(null);
-  const [settingsPanelCategory, setSettingsPanelCategory] =
-    useState<SettingsPanelCategory>(DEFAULT_SETTINGS_PANEL_CATEGORY);
+  const [settingsPanelCategory, setSettingsPanelCategory] = useState<SettingsPanelCategory>(
+    DEFAULT_SETTINGS_PANEL_CATEGORY,
+  );
   const [settingsRailDragging, setSettingsRailDragging] = useState(false);
   const [settingsRailOverflow, setSettingsRailOverflow] = useState({
     left: false,
@@ -487,9 +509,25 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     });
   }
   const playbackSyncController = playbackSyncControllerRef.current;
-  const [liveVoiceTalking, setLiveVoiceTalking] = useState(false);
-  const [voiceListening, setVoiceListening] = useState(false);
-  const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
+  const [voiceSession, dispatchVoiceSession] = useReducer(
+    reduceVoiceSession,
+    createVoiceSessionState({
+      listenerScope: null,
+      localHasMediaSeat: false,
+      mode: "push-to-talk",
+      roomId: null,
+    }),
+  );
+  const interfacePreferences = useInterfacePreferences();
+  const openMicLauncherVisible =
+    voiceSession.mode === "open-mic" && isVoiceSessionPublishing(voiceSession);
+  const topBubbleReveal = useTopBubbleReveal({
+    bubbleRef: topBubbleRef,
+    forceVisible: openMicLauncherVisible,
+    mode: interfacePreferences.preferences.mainControlVisibility,
+    overlayRef: overlayRootRef,
+    panelOpen,
+  });
   const [debugEntriesCount, setDebugEntriesCount] = useState(() => getDebugEntries().length);
   const [diagnosticStatus, setDiagnosticStatus] = useState<string | null>(null);
   const [watchProgressStore, setWatchProgressStore] = useState<WatchProgressStore>(() =>
@@ -509,6 +547,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const settingsRailSuppressClickRef = useRef(false);
   const authAccessTokenRef = useRef<string | null>(null);
   const storedRoomSessionRef = useRef<RoomSessionRecord | null>(null);
+  const hydratedVoiceParticipantSessionRef = useRef<string | null>(null);
+  const hydratingVoiceModeRef = useRef<"open-mic" | "push-to-talk" | null>(null);
+  const voiceModePersistenceQueueRef = useRef<Promise<void>>(Promise.resolve());
   const roomIdRef = useRef<string | null>(null);
   const roomJoinSequenceRef = useRef(0);
   const roomJoinInFlightRef = useRef<{
@@ -516,7 +557,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     roomId: string;
     sequence: number;
   } | null>(null);
-  const liveVoiceKeyDownRef = useRef(false);
+  const pushToTalkHeldRef = useRef(false);
+  const microphonePublicationRef = useRef<string | null>(null);
   const roomTokenRef = useRef<string | null>(null);
   const roomShareableLinkRef = useRef<string | null>(null);
   const statusRef = useRef<RoomConnectionStatus>("idle");
@@ -891,6 +933,62 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     participantsRef.current = participants;
   }, [participants]);
 
+  useEffect(() => {
+    loadedVoiceAudioPreferencesRef.current = loadedVoiceAudioPreferences;
+  }, [loadedVoiceAudioPreferences]);
+
+  const flushVoiceAudioPreferencesWrite = useCallback(() => {
+    if (voiceAudioPreferencesWriteTimerRef.current !== null) {
+      window.clearTimeout(voiceAudioPreferencesWriteTimerRef.current);
+      voiceAudioPreferencesWriteTimerRef.current = null;
+    }
+    const pending = pendingVoiceAudioPreferencesWriteRef.current;
+    pendingVoiceAudioPreferencesWriteRef.current = null;
+    if (!pending) {
+      return;
+    }
+
+    void storage.setItem(pending.key, pending.preferences).catch((error) => {
+      logDebug("p2p.audio-preferences", "persist failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
+  }, []);
+
+  const commitVoiceAudioPreferences = useCallback(
+    (update: (current: VoiceAudioPreferences) => VoiceAudioPreferences) => {
+      const listenerUserId = accountUser?.id ?? null;
+      const current = loadedVoiceAudioPreferencesRef.current;
+      if (!listenerUserId || current.listenerUserId !== listenerUserId) {
+        return;
+      }
+
+      const preferences = update(current.preferences);
+      const next = { listenerUserId, preferences };
+      loadedVoiceAudioPreferencesRef.current = next;
+      setLoadedVoiceAudioPreferences(next);
+      pendingVoiceAudioPreferencesWriteRef.current = {
+        key: voiceAudioPreferencesStorageKeyForUser(listenerUserId),
+        preferences,
+      };
+      if (voiceAudioPreferencesWriteTimerRef.current !== null) {
+        window.clearTimeout(voiceAudioPreferencesWriteTimerRef.current);
+      }
+      voiceAudioPreferencesWriteTimerRef.current = window.setTimeout(
+        flushVoiceAudioPreferencesWrite,
+        120,
+      );
+    },
+    [accountUser?.id, flushVoiceAudioPreferencesWrite],
+  );
+
+  useEffect(
+    () => () => {
+      flushVoiceAudioPreferencesWrite();
+    },
+    [accountUser?.id, flushVoiceAudioPreferencesWrite],
+  );
+
   const clearStoredRoomSession = useCallback(() => {
     storedRoomSessionRef.current = null;
     setStoredRoomSession(null);
@@ -936,6 +1034,52 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       cancelled = true;
     };
   }, [identityLoaded, participant?.id]);
+
+  useEffect(() => {
+    if (!identityLoaded) {
+      return;
+    }
+
+    const listenerUserId = accountUser?.id ?? null;
+    if (!listenerUserId) {
+      setLoadedVoiceAudioPreferences({
+        listenerUserId: null,
+        preferences: getDefaultVoiceAudioPreferences(),
+      });
+      return;
+    }
+
+    let cancelled = false;
+    const storageKey = voiceAudioPreferencesStorageKeyForUser(listenerUserId);
+    void storage
+      .getItem<unknown>(storageKey)
+      .then((stored) => {
+        if (cancelled) {
+          return;
+        }
+        setLoadedVoiceAudioPreferences({
+          listenerUserId,
+          preferences: parseVoiceAudioPreferences(stored),
+        });
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+        logDebug("p2p.audio-preferences", "load failed; using safe defaults", {
+          error: error instanceof Error ? error.message : String(error),
+          listenerUserId,
+        });
+        setLoadedVoiceAudioPreferences({
+          listenerUserId,
+          preferences: getDefaultVoiceAudioPreferences(),
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accountUser?.id, identityLoaded]);
 
   const resetQuotaDisplayElapsed = useCallback(() => {
     quotaMeteredMsRef.current = 0;
@@ -1219,6 +1363,28 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   }, [clearRoomEndConfirmation, isHost, roomId]);
   const isConnected = status === "connected";
+  const participantAudioPreferenceScope = accountUser?.id ?? null;
+  const resolvedVoiceAudioPreferences = useMemo(
+    () =>
+      resolveVoiceAudioPreferencesForListener(
+        loadedVoiceAudioPreferences,
+        participantAudioPreferenceScope,
+      ),
+    [loadedVoiceAudioPreferences, participantAudioPreferenceScope],
+  );
+  const participantAudioPreferencesReady =
+    identityLoaded && resolvedVoiceAudioPreferences.ready;
+  useEffect(() => {
+    dispatchVoiceSession({
+      type: "context",
+      listenerScope: participantAudioPreferenceScope,
+      localHasMediaSeat,
+      roomId,
+    });
+  }, [localHasMediaSeat, participantAudioPreferenceScope, roomId]);
+  useEffect(() => {
+    pushToTalkHeldRef.current = voiceSession.pushToTalkHeld;
+  }, [voiceSession.pushToTalkHeld]);
   const { p2pSessionActive } = getP2PMediaSessionState({
     localHasMediaSeat,
     participantId: currentParticipant?.id ?? null,
@@ -1227,6 +1393,117 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     roomSnapshotReady,
     status,
   });
+  const activeVoiceRoomSession = useMemo(() => {
+    if (
+      !storedRoomSession ||
+      !roomId ||
+      !currentParticipant ||
+      storedRoomSession.roomId !== roomId ||
+      storedRoomSession.ownerUserId !== currentParticipant.id
+    ) {
+      return null;
+    }
+    return storedRoomSession;
+  }, [currentParticipant, roomId, storedRoomSession]);
+  useEffect(() => {
+    if (!activeVoiceRoomSession) {
+      hydratedVoiceParticipantSessionRef.current = null;
+      hydratingVoiceModeRef.current = null;
+      return;
+    }
+    if (
+      !p2pSessionActive ||
+      hydratedVoiceParticipantSessionRef.current ===
+        activeVoiceRoomSession.participantSessionId
+    ) {
+      return;
+    }
+
+    hydratedVoiceParticipantSessionRef.current =
+      activeVoiceRoomSession.participantSessionId;
+    hydratingVoiceModeRef.current = activeVoiceRoomSession.voiceMode;
+    pushToTalkHeldRef.current = false;
+    dispatchVoiceSession({
+      type: "mode",
+      mode: activeVoiceRoomSession.voiceMode,
+    });
+  }, [activeVoiceRoomSession, p2pSessionActive]);
+
+  const enqueueRoomVoiceModePersistence = useCallback(
+    (mode: "open-mic" | "push-to-talk") => {
+      voiceModePersistenceQueueRef.current = voiceModePersistenceQueueRef.current
+        .catch(() => undefined)
+        .then(async () => {
+          for (let attempt = 0; attempt < 3; attempt += 1) {
+            const expected = storedRoomSessionRef.current;
+            const activeParticipantId = participantRef.current?.id ?? null;
+            if (
+              !expected ||
+              hydratedVoiceParticipantSessionRef.current !== expected.participantSessionId ||
+              roomIdRef.current !== expected.roomId ||
+              activeParticipantId !== expected.ownerUserId
+            ) {
+              return;
+            }
+            if (expected.voiceMode === mode) {
+              return;
+            }
+
+            const next = await updateRoomSessionVoiceMode(expected, mode);
+            if (!next) {
+              hydratedVoiceParticipantSessionRef.current = null;
+              return;
+            }
+
+            const stillActive =
+              roomIdRef.current === next.roomId &&
+              participantRef.current?.id === next.ownerUserId &&
+              next.participantSessionId === expected.participantSessionId;
+            if (!stillActive) {
+              hydratedVoiceParticipantSessionRef.current = null;
+              return;
+            }
+
+            storedRoomSessionRef.current = next;
+            setStoredRoomSession(next);
+            if (next.voiceMode === mode) {
+              return;
+            }
+          }
+
+          logDebug("overlay.voice", "room-scoped Voice mode did not converge", {
+            mode,
+            roomId: roomIdRef.current,
+          });
+        })
+        .catch((error) => {
+          logDebug("overlay.voice", "failed to persist room-scoped Voice mode", {
+            error: error instanceof Error ? error.message : String(error),
+            mode,
+          });
+        });
+    },
+    [],
+  );
+  useEffect(() => {
+    if (
+      !activeVoiceRoomSession ||
+      hydratedVoiceParticipantSessionRef.current !==
+        activeVoiceRoomSession.participantSessionId
+    ) {
+      return;
+    }
+
+    const hydratingMode = hydratingVoiceModeRef.current;
+    if (hydratingMode !== null) {
+      if (voiceSession.mode === hydratingMode) {
+        hydratingVoiceModeRef.current = null;
+      }
+      return;
+    }
+
+    enqueueRoomVoiceModePersistence(voiceSession.mode);
+  }, [activeVoiceRoomSession, enqueueRoomVoiceModePersistence, voiceSession.mode]);
   const messageComposerShieldVisible = messageComposerOpen || messageComposerShieldActive;
   const messageComposerShieldLatched = messageComposerShieldActive && !messageComposerOpen;
   const messageComposerShieldClassName = [
@@ -1847,10 +2124,45 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     sourceGeneration,
     participant,
     onCameraStatus: sendCameraStatus,
+    participantAudioPreferenceScope,
+    participantAudioPreferences: resolvedVoiceAudioPreferences.preferences.participantAudio,
+    participantAudioPreferencesReady,
     sendP2PSignal,
     signalingTransportReady,
-    voiceTalkActive: liveVoiceTalking,
   });
+  const handleVoiceModeChange = useCallback(
+    (mode: "open-mic" | "push-to-talk") => {
+      if (mode === "open-mic" && (!roomId || !localHasMediaSeat || !p2pSessionActive)) {
+        setAuthMessage(
+          !roomId
+            ? "Join a room before enabling Open mic."
+            : localMediaSeatState === "requested"
+              ? "Waiting for the host to approve live media."
+              : "A live media seat is required for Open mic.",
+        );
+        return;
+      }
+
+      pushToTalkHeldRef.current = false;
+      dispatchVoiceSession({ type: "mode", mode });
+    },
+    [localHasMediaSeat, localMediaSeatState, p2pSessionActive, roomId],
+  );
+  const handleParticipantAudioChange = useCallback(
+    (targetParticipantId: string, preference: ParticipantAudioPreference) => {
+      ghostCamSession.setParticipantAudioOutput(targetParticipantId, preference);
+      commitVoiceAudioPreferences((current) =>
+        updateParticipantAudioPreference(current, targetParticipantId, preference),
+      );
+    },
+    [commitVoiceAudioPreferences, ghostCamSession.setParticipantAudioOutput],
+  );
+  const getParticipantAudioPreference = useCallback(
+    (targetParticipantId: string): ParticipantAudioPreference =>
+      resolvedVoiceAudioPreferences.preferences.participantAudio[targetParticipantId] ??
+      getDefaultParticipantAudioPreference(),
+    [resolvedVoiceAudioPreferences.preferences.participantAudio],
+  );
   const ghostVideos = ghostCamSession.videos;
   const cameraVideoByParticipantId = useMemo(
     () => new Map(ghostVideos.map((video) => [video.participantId, video])),
@@ -1860,13 +2172,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     () => displayedCameraParticipants.filter((item) => cameraVideoByParticipantId.has(item.id)),
     [cameraVideoByParticipantId, displayedCameraParticipants],
   );
-  const displayedCameraParticipantIds = useMemo(
-    () => new Set(displayedCameraParticipants.map((item) => item.id)),
-    [displayedCameraParticipants],
+  const mountedCameraParticipantIds = useMemo(
+    () => new Set((cameraStackVisible ? renderableCameraParticipants : []).map((item) => item.id)),
+    [cameraStackVisible, renderableCameraParticipants],
   );
   const voiceRailParticipants = useMemo(
-    () => visibleParticipants.filter((item) => !displayedCameraParticipantIds.has(item.id)),
-    [displayedCameraParticipantIds, visibleParticipants],
+    () => selectVoiceRailParticipants(visibleParticipants, mountedCameraParticipantIds),
+    [mountedCameraParticipantIds, visibleParticipants],
   );
   const roomRailVisible = shouldRenderRoomRail({
     participantCount: voiceRailParticipants.length,
@@ -1939,8 +2251,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     .filter(Boolean)
     .join(" ");
   const liveVoiceActiveSpeakerIds = ghostCamSession.activeSpeakerIds;
-  const remoteLiveVoiceActive = liveVoiceActiveSpeakerIds.some((id) => id !== participant?.id);
-  const liveVoiceStatusText = getLiveVoiceStatusText(ghostCamSession.voiceStatus, liveVoiceTalking);
+  const voiceIndicatorParticipantIds = useMemo(
+    () =>
+      getVoiceIndicatorParticipantIds({
+        localParticipantId: participant?.id ?? null,
+        measuredSpeakerIds: liveVoiceActiveSpeakerIds,
+        state: voiceSession,
+      }),
+    [liveVoiceActiveSpeakerIds, participant?.id, voiceSession],
+  );
+  const localLiveVoiceActive = Boolean(
+    participant?.id && liveVoiceActiveSpeakerIds.includes(participant.id),
+  );
+  const microphonePublishingWanted = isVoiceSessionPublishing(voiceSession);
 
   const isCurrentHost = useCallback((list = participantsRef.current) => {
     const current = participantRef.current;
@@ -2086,8 +2409,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           sourceGenerationRef.current = event.sourceGeneration;
           const currentRoomProvider = roomSourceProviderRef.current;
           const snapshotSourceProvider = event.source?.provider ?? null;
-          const snapshotProvider =
-            currentRoomProvider ?? snapshotSourceProvider;
+          const snapshotProvider = currentRoomProvider ?? snapshotSourceProvider;
           if (
             currentRoomProvider &&
             snapshotSourceProvider &&
@@ -2123,7 +2445,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           }
           return;
         }
-        case "SOURCE_CHANGED":
+        case "SOURCE_CHANGED": {
           if (
             isStaleAuthoritativeGeneration(
               roomGenerationRef.current,
@@ -2160,8 +2482,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           }
           roomGenerationRef.current = event.roomGeneration;
           sourceGenerationRef.current = event.sourceGeneration;
-          const sourceChangedProvider =
-            roomSourceProviderRef.current ?? event.source.provider;
+          const sourceChangedProvider = roomSourceProviderRef.current ?? event.source.provider;
           if (
             roomSourceProviderRef.current &&
             roomSourceProviderRef.current !== event.source.provider
@@ -2189,6 +2510,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
             void applyHostState(event.hostState, event.source);
           }
           return;
+        }
         case "PARTICIPANT_JOINED":
           setParticipants((current) => [
             ...current.filter((item) => item.id !== event.participant.id),
@@ -3478,37 +3800,58 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
   const saveDiagnostics = async (mode: DiagnosticMode) => {
     setDiagnosticStatus(`Saving ${mode}...`);
-    logDebug("debug", "diagnostics save requested", {
-      mode,
-      entries: getDebugEntries().length,
-      roomId,
-      status,
-      video: videoDebugSnapshot(adapter.video),
-    });
+    try {
+      const p2pDiagnostics = await ghostCamSession.getDiagnostics();
+      const voiceDiagnostics = {
+        mode: voiceSession.mode,
+        microphoneStatus: ghostCamSession.microphoneStatus,
+        microphonePublishingWanted,
+        localSpeaking: localLiveVoiceActive,
+        p2p: p2pDiagnostics,
+      };
+      logDebug("debug", "diagnostics save requested", {
+        mode,
+        entries: getDebugEntries().length,
+        roomId,
+        status,
+        video: videoDebugSnapshot(adapter.video),
+        voice: voiceDiagnostics,
+      });
 
-    const pageDebugText = mode === "light" ? getCompactDebugLogText() : getDebugLogText();
-    const pageDebug = JSON.parse(pageDebugText) as unknown;
-    const response = await saveDiagnosticsFromPage(mode, {
-      mode,
-      url: location.href,
-      title: document.title,
-      visibilityState: document.visibilityState,
-      adapterId: adapter.id,
-      roomId,
-      status,
-      hasParticipant: Boolean(participant),
-      participantId: participant?.id,
-      video: videoDebugSnapshot(adapter.video),
-      pageDebug,
-    });
+      const pageDebugText =
+        mode === "light" ? getCompactDebugLogText() : getDebugLogText();
+      const pageDebug = JSON.parse(pageDebugText) as unknown;
+      const response = await saveDiagnosticsFromPage(mode, {
+        mode,
+        url: location.href,
+        title: document.title,
+        visibilityState: document.visibilityState,
+        adapterId: adapter.id,
+        roomId,
+        status,
+        hasParticipant: Boolean(participant),
+        participantId: participant?.id,
+        video: videoDebugSnapshot(adapter.video),
+        voice: voiceDiagnostics,
+        pageDebug,
+      });
 
-    if (!response.ok) {
-      setDiagnosticStatus(response.error);
-      return;
+      if (!response.ok) {
+        setDiagnosticStatus(response.error);
+        return;
+      }
+
+      setDebugEntriesCount(getDebugEntries().length);
+      setDiagnosticStatus(
+        `Save dialog opened for ${response.filename ?? `${mode} diagnostics`}`,
+      );
+    } catch (error) {
+      logDebug("debug", "diagnostics save failed", {
+        errorName: error instanceof Error ? error.name : "UnknownError",
+        mode,
+      });
+      setDiagnosticStatus("Could not save diagnostics. Try again.");
     }
-
-    setDebugEntriesCount(getDebugEntries().length);
-    setDiagnosticStatus(`Save dialog opened for ${response.filename ?? `${mode} diagnostics`}`);
   };
 
   const clearDebug = async () => {
@@ -3687,40 +4030,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     [beginFireHold, cancelFireHold, finishFireHold],
   );
 
-  const restoreVoiceDucking = useCallback(() => {
-    restoreVoiceDuckingRef.current?.();
-    restoreVoiceDuckingRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    restoreLiveVoiceDuckingRef.current?.();
-    restoreLiveVoiceDuckingRef.current = null;
-
-    if (!adapterActive) {
-      return undefined;
-    }
-
-    if (liveVoiceTalking) {
-      restoreLiveVoiceDuckingRef.current = adapter.duckVolume(0.42);
-      return () => {
-        restoreLiveVoiceDuckingRef.current?.();
-        restoreLiveVoiceDuckingRef.current = null;
-      };
-    }
-
-    if (remoteLiveVoiceActive) {
-      restoreLiveVoiceDuckingRef.current = adapter.duckVolume(0.68);
-      return () => {
-        restoreLiveVoiceDuckingRef.current?.();
-        restoreLiveVoiceDuckingRef.current = null;
-      };
-    }
-
-    return undefined;
-  }, [adapter, adapterActive, liveVoiceTalking, remoteLiveVoiceActive]);
-
-  const startLiveVoiceTalk = useCallback(() => {
-    if (!roomId) {
+  const startPushToTalk = useCallback(() => {
+    if (voiceSession.mode !== "push-to-talk" || !roomId) {
       return;
     }
     if (!localHasMediaSeat) {
@@ -3733,123 +4044,51 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       return;
     }
 
-    liveVoiceKeyDownRef.current = true;
-    setLiveVoiceTalking(true);
-    void ghostCamSession.startVoiceTalk();
-  }, [ghostCamSession.startVoiceTalk, localHasMediaSeat, localMediaSeatState, roomId]);
+    pushToTalkHeldRef.current = true;
+    dispatchVoiceSession({ type: "push-to-talk", held: true });
+  }, [localHasMediaSeat, localMediaSeatState, roomId, voiceSession.mode]);
 
-  const stopLiveVoiceTalk = useCallback(() => {
-    liveVoiceKeyDownRef.current = false;
-    setLiveVoiceTalking(false);
-    void ghostCamSession.stopVoiceTalk();
-  }, [ghostCamSession.stopVoiceTalk]);
+  const stopPushToTalk = useCallback(() => {
+    pushToTalkHeldRef.current = false;
+    dispatchVoiceSession({ type: "push-to-talk", held: false });
+  }, []);
 
-  const stopLiveVoiceTalkForUnmount = useCallback(() => {
-    liveVoiceKeyDownRef.current = false;
-    void ghostCamSession.stopVoiceTalk();
-  }, [ghostCamSession.stopVoiceTalk]);
+  const stopMicrophoneForUnmount = useCallback(() => {
+    pushToTalkHeldRef.current = false;
+    void ghostCamSession.setMicrophonePublishing(false, "immediate");
+  }, [ghostCamSession.setMicrophonePublishing]);
 
   useEffect(() => {
-    if (!localHasMediaSeat && liveVoiceTalking) {
-      stopLiveVoiceTalk();
+    const publicationKey = `${microphonePublishingWanted}:${voiceSession.mode}`;
+    if (microphonePublicationRef.current === publicationKey) {
+      return;
     }
-  }, [liveVoiceTalking, localHasMediaSeat, stopLiveVoiceTalk]);
+
+    microphonePublicationRef.current = publicationKey;
+    void ghostCamSession.setMicrophonePublishing(
+      microphonePublishingWanted,
+      voiceSession.release,
+      voiceSession.mode,
+    );
+  }, [
+    ghostCamSession.setMicrophonePublishing,
+    microphonePublishingWanted,
+    voiceSession.mode,
+    voiceSession.release,
+  ]);
+
+  useEffect(() => {
+    if (!ghostCamSession.microphoneTerminalFailure) {
+      return;
+    }
+
+    pushToTalkHeldRef.current = false;
+    dispatchVoiceSession({ type: "terminal-failure" });
+  }, [ghostCamSession.microphoneTerminalFailure]);
 
   const unlockLiveVoicePlayback = useCallback(() => {
     void ghostCamSession.unlockAudio();
   }, [ghostCamSession.unlockAudio]);
-
-  const flushVoiceReaction = useCallback(() => {
-    const text = pendingVoiceTextRef.current?.trim();
-    pendingVoiceTextRef.current = null;
-
-    if (!text) {
-      return;
-    }
-
-    const emoji = mapVoiceToEmoji(text);
-    sendReaction(emoji ?? "", text);
-    setVoiceMessage(text);
-  }, [sendReaction]);
-
-  const cleanupVoiceCapture = useCallback(() => {
-    restoreVoiceDucking();
-    stopVoiceRef.current = null;
-    voiceCaptureActiveRef.current = false;
-    voiceStoppingRef.current = false;
-    setVoiceListening(false);
-  }, [restoreVoiceDucking]);
-
-  const startVoiceCapture = useCallback(() => {
-    if (
-      !adapterActiveRef.current ||
-      voiceCaptureActiveRef.current ||
-      !roomId ||
-      !isSpeechRecognitionSupported()
-    ) {
-      return;
-    }
-
-    pendingVoiceTextRef.current = null;
-    voiceCaptureActiveRef.current = true;
-    voiceStoppingRef.current = false;
-    restoreVoiceDuckingRef.current = adapter.duckVolume();
-    setVoiceMessage(null);
-    setVoiceListening(true);
-
-    stopVoiceRef.current = startVoiceRecognition({
-      onText: (text) => {
-        pendingVoiceTextRef.current = text;
-        setVoiceMessage(text);
-
-        if (voiceStoppingRef.current) {
-          flushVoiceReaction();
-        }
-      },
-      onError: setVoiceMessage,
-      onEnd: () => {
-        if (voiceStoppingRef.current) {
-          flushVoiceReaction();
-        }
-
-        cleanupVoiceCapture();
-      },
-    });
-  }, [adapter, cleanupVoiceCapture, flushVoiceReaction, roomId]);
-
-  const stopVoiceCapture = useCallback(
-    (send = true) => {
-      if (!voiceCaptureActiveRef.current && !pendingVoiceTextRef.current) {
-        return;
-      }
-
-      voiceStoppingRef.current = send;
-      restoreVoiceDucking();
-
-      if (send && pendingVoiceTextRef.current) {
-        flushVoiceReaction();
-      }
-
-      const stop = stopVoiceRef.current;
-      stopVoiceRef.current = null;
-
-      if (stop) {
-        stop();
-      } else {
-        cleanupVoiceCapture();
-      }
-    },
-    [cleanupVoiceCapture, flushVoiceReaction, restoreVoiceDucking],
-  );
-
-  const toggleVoice = () => {
-    if (voiceListening) {
-      stopVoiceCapture(true);
-      return;
-    }
-
-    startVoiceCapture();
-  };
 
   const openMessageComposer = useCallback(() => {
     activateMessageComposerGuard();
@@ -4026,9 +4265,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       panelOpen,
       reactionsEnabled,
       roomActive: Boolean(roomId),
+      voiceMode: voiceSession.mode,
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isWithinOverlayHotkeyBoundary(event)) {
+        return;
+      }
+
       if (messageComposerOpen && isEscapeKey(event) && !isFullscreenActive()) {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -4063,14 +4307,29 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       } else if (action.type === "message-composer-open") {
         openMessageComposer();
       } else if (action.type === "voice-start") {
-        liveVoiceKeyDownRef.current = true;
-        startLiveVoiceTalk();
+        startPushToTalk();
       } else if (action.type === "reaction") {
         sendReaction(action.emoji);
       }
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
+      if (
+        isPushToTalkReleaseEvent(event, {
+          held: pushToTalkHeldRef.current,
+          voiceMode: voiceSession.mode,
+        })
+      ) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        stopPushToTalk();
+        return;
+      }
+
+      if (isWithinOverlayHotkeyBoundary(event)) {
+        return;
+      }
+
       if (messageComposerOpen && isEscapeKey(event) && !isFullscreenActive()) {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -4087,28 +4346,33 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       if (action.type === "fire-stop") {
         finishFireHold("hotkey-up");
       } else {
-        liveVoiceKeyDownRef.current = false;
-        stopLiveVoiceTalk();
+        stopPushToTalk();
       }
     };
 
     const handleBlur = () => {
       cancelFireHold("window-blur");
-      if (shouldStopVoiceTalkOnWindowBlur()) {
-        liveVoiceKeyDownRef.current = false;
-        stopLiveVoiceTalk();
+      if (shouldStopVoiceTalkOnWindowBlur(voiceSession.mode)) {
+        stopPushToTalk();
       }
-      stopVoiceCapture(true);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden" && voiceSession.mode === "push-to-talk") {
+        stopPushToTalk();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown, true);
     window.addEventListener("keyup", handleKeyUp, true);
     window.addEventListener("blur", handleBlur);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
       window.removeEventListener("keyup", handleKeyUp, true);
       window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [
     beginFireHold,
@@ -4122,14 +4386,13 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     reactionsEnabled,
     roomId,
     sendReaction,
-    startLiveVoiceTalk,
-    stopLiveVoiceTalk,
-    stopVoiceCapture,
+    startPushToTalk,
+    stopPushToTalk,
+    voiceSession.mode,
   ]);
 
   useOverlayUnmountCleanup({
-    stopLiveVoiceTalk: stopLiveVoiceTalkForUnmount,
-    stopVoiceCapture,
+    stopMicrophonePublication: stopMicrophoneForUnmount,
   });
 
   const roomActionsClassName = [
@@ -4187,7 +4450,9 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         <button
           aria-controls="anidachi-mini-panel"
           aria-expanded={panelOpen}
-          aria-label={panelOpen ? "Close Anidachi controls" : "Open Anidachi controls"}
+          aria-label={`${panelOpen ? "Close" : "Open"} Anidachi controls${
+            openMicLauncherVisible ? ". Open mic is on" : ""
+          }`}
           className="top-bubble"
           onBlur={topBubbleReveal.handleBubbleBlur}
           onFocus={topBubbleReveal.handleBubbleFocus}
@@ -4203,6 +4468,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           }}
         >
           <AnidachiLogoMark className="top-bubble-logo" size={24} />
+          {openMicLauncherVisible ? (
+            <span
+              aria-hidden="true"
+              className={`top-bubble-open-mic ${localLiveVoiceActive ? "speaking" : ""}`}
+            >
+              <Mic size={11} />
+            </span>
+          ) : null}
           <span className={`sync-dot ${isConnected ? "connected" : catchUp ? "warning" : ""}`} />
           <span className="bubble-count">{participantCount}</span>
         </button>
@@ -4330,9 +4603,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                   title={isHost ? "Sync now" : "Only the host can sync"}
                   type="button"
                   onClick={() => playbackSyncController.broadcastHostState()}
-                  disabled={
-                    !isHost || roomCreatePending || roomEndPending || roomLeavePending
-                  }
+                  disabled={!isHost || roomCreatePending || roomEndPending || roomLeavePending}
                   style={{ "--action-index": 2 } as CSSProperties}
                 >
                   <RefreshCw size={14} />
@@ -4443,7 +4714,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           {roomId && visibleParticipants.length ? (
             <RoomPeopleSection
               currentParticipantId={currentParticipant?.id ?? null}
-              liveVoiceActiveSpeakerIds={liveVoiceActiveSpeakerIds}
+              liveVoiceActiveSpeakerIds={voiceIndicatorParticipantIds}
               maxMediaSeats={roomMediaSeatLimit}
               occupiedMediaSeatCount={occupiedMediaSeatCount}
               onCancelMediaSeatRequest={cancelMediaSeatRequest}
@@ -4559,44 +4830,22 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                 </div>
               ) : null}
 
+              {settingsPanelCategory === "interface" ? (
+                <InterfaceSettingsPanel
+                  error={interfacePreferences.error}
+                  onChange={interfacePreferences.update}
+                  preferences={interfacePreferences.preferences}
+                  ready={interfacePreferences.ready}
+                  saving={interfacePreferences.saving}
+                />
+              ) : null}
+
               {settingsPanelCategory === "voice" ? (
-                <div className="settings-panel-stack">
-                  <div className={`live-voice-status ${liveVoiceTalking ? "talking" : ""}`}>
-                    <span className="live-voice-label">
-                      <Mic size={13} />
-                      Push to talk
-                    </span>
-                    <span>{liveVoiceStatusText}</span>
-                  </div>
-                  {isSpeechRecognitionSupported() ? (
-                    <button
-                      className="toggle"
-                      disabled={!roomId || !reactionsEnabled}
-                      onClick={toggleVoice}
-                      title="Speech reaction"
-                      type="button"
-                    >
-                      <span className="toggle-label">
-                        {voiceListening ? <MicOff size={13} /> : <Mic size={13} />}
-                        Dictate reactions
-                      </span>
-                      <span>{voiceListening ? "Listening" : "Off"}</span>
-                    </button>
-                  ) : null}
-                  {voiceMessage ? <div className="footnote">{voiceMessage}</div> : null}
-                  {roomId && !liveMediaAvailable ? (
-                    <div className="footnote">
-                      {roomMediaSeatLimit <= 0
-                        ? "Live media is not included in this room."
-                        : localMediaSeatState === "requested"
-                          ? "Waiting for the host to approve live media."
-                          : "Join a live media seat to use push to talk."}
-                    </div>
-                  ) : null}
-                  {ghostCamSession.voiceMessage ? (
-                    <div className="footnote">{ghostCamSession.voiceMessage}</div>
-                  ) : null}
-                </div>
+                <VoiceSettingsPanel
+                  feedback={ghostCamSession.voiceMessage}
+                  mode={voiceSession.mode}
+                  onModeChange={handleVoiceModeChange}
+                />
               ) : null}
 
               {settingsPanelCategory === "debug" ? (
@@ -4764,11 +5013,17 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
                     participant={item}
                     video={video}
                     active={item.id === participant?.id}
+                    audioPreference={
+                      item.id === participant?.id ? null : getParticipantAudioPreference(item.id)
+                    }
                     fireChargePhase={
                       fireCharge?.participantId === item.id ? fireCharge.phase : null
                     }
                     flaming={flamingParticipantIds.includes(item.id)}
-                    speaking={liveVoiceActiveSpeakerIds.includes(item.id)}
+                    onAudioPreferenceChange={(preference) =>
+                      handleParticipantAudioChange(item.id, preference)
+                    }
+                    speaking={voiceIndicatorParticipantIds.includes(item.id)}
                   />
                 );
               })}
@@ -4778,8 +5033,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           {roomRailVisible ? (
             <RoomRail
               activeParticipantId={participant?.id}
+              getParticipantAudioPreference={getParticipantAudioPreference}
+              onParticipantAudioChange={handleParticipantAudioChange}
               participants={voiceRailParticipants}
-              speakingParticipantIds={liveVoiceActiveSpeakerIds}
+              speakingParticipantIds={voiceIndicatorParticipantIds}
+              visibilityMode={interfacePreferences.preferences.participantPillVisibility}
             />
           ) : null}
 
@@ -4831,144 +5089,23 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   );
 }
 
-function RoomRail({
-  activeParticipantId,
-  participants,
-  speakingParticipantIds,
-}: {
-  activeParticipantId?: string;
-  participants: Participant[];
-  speakingParticipantIds: string[];
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const openTimerRef = useRef<number | undefined>(undefined);
-  const closeTimerRef = useRef<number | undefined>(undefined);
-  const visibleParticipants = participants.slice(0, 8);
-  const hiddenCount = Math.max(0, participants.length - visibleParticipants.length);
-
-  const clearOpenTimer = useCallback(() => {
-    if (openTimerRef.current !== undefined) {
-      window.clearTimeout(openTimerRef.current);
-      openTimerRef.current = undefined;
-    }
-  }, []);
-
-  const clearCloseTimer = useCallback(() => {
-    if (closeTimerRef.current !== undefined) {
-      window.clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = undefined;
-    }
-  }, []);
-
-  const scheduleOpen = useCallback(() => {
-    clearCloseTimer();
-    if (expanded || openTimerRef.current !== undefined) {
-      return;
-    }
-    openTimerRef.current = window.setTimeout(() => {
-      openTimerRef.current = undefined;
-      setExpanded(true);
-    }, ROOM_RAIL_OPEN_DELAY_MS);
-  }, [clearCloseTimer, expanded]);
-
-  const scheduleClose = useCallback(() => {
-    clearOpenTimer();
-    clearCloseTimer();
-    closeTimerRef.current = window.setTimeout(() => {
-      closeTimerRef.current = undefined;
-      setExpanded(false);
-    }, 340);
-  }, [clearCloseTimer, clearOpenTimer]);
-
-  const handleEdgePointerIntent = useCallback(
-    (event: PointerEvent<HTMLElement>) => {
-      const edgeRight = event.currentTarget.getBoundingClientRect().right;
-      if (!isRoomRailEdgeIntent({ clientX: event.clientX, edgeRight })) {
-        clearOpenTimer();
-        return;
-      }
-      scheduleOpen();
-    },
-    [clearOpenTimer, scheduleOpen],
-  );
-
-  const handleEdgePointerLeave = useCallback(() => {
-    if (expanded) {
-      scheduleClose();
-      return;
-    }
-    clearOpenTimer();
-  }, [clearOpenTimer, expanded, scheduleClose]);
-
-  useEffect(
-    () => () => {
-      clearOpenTimer();
-      clearCloseTimer();
-    },
-    [clearCloseTimer, clearOpenTimer],
-  );
-
-  return (
-    <aside className={`room-rail ${expanded ? "open" : ""}`} aria-label="Room participants">
-      <div
-        className="room-rail-edge"
-        onPointerEnter={handleEdgePointerIntent}
-        onPointerLeave={handleEdgePointerLeave}
-        onPointerMove={handleEdgePointerIntent}
-      />
-      <div
-        className="room-rail-panel"
-        onPointerEnter={expanded ? clearCloseTimer : undefined}
-        onPointerLeave={scheduleClose}
-        onPointerMove={expanded ? clearCloseTimer : undefined}
-      >
-        <div className="room-rail-list">
-          {visibleParticipants.map((item) => {
-            const speaking = speakingParticipantIds.includes(item.id);
-            const active = item.id === activeParticipantId;
-            const roleLabel = item.role === "host" ? "host" : "guest";
-            const statusLabel = speaking ? `${roleLabel} · speaking` : roleLabel;
-
-            return (
-              <div
-                className={`room-rail-slot ${speaking ? "speaking" : ""} ${active ? "active" : ""}`}
-                key={item.id}
-              >
-                <div className={`room-rail-pill ${speaking ? "speaking" : ""}`}>
-                  <span className="room-rail-avatar">{initials(item.displayName)}</span>
-                  <span className="room-rail-voice-bars" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                  </span>
-                  <span className="room-rail-copy">
-                    <span className="room-rail-name">{item.displayName}</span>
-                    <span className="room-rail-status">{statusLabel}</span>
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-          {hiddenCount ? <div className="room-rail-more">+{hiddenCount}</div> : null}
-        </div>
-      </div>
-    </aside>
-  );
-}
-
 function CameraBubble({
   participant,
   video,
   active,
+  audioPreference,
   fireChargePhase,
   flaming,
+  onAudioPreferenceChange,
   speaking,
 }: {
   participant: Participant;
   video: GhostVideo;
   active: boolean;
+  audioPreference: ParticipantAudioPreference | null;
   fireChargePhase: FireChargePhase | null;
   flaming: boolean;
+  onAudioPreferenceChange: (preference: ParticipantAudioPreference) => void;
   speaking: boolean;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -5050,6 +5187,13 @@ function CameraBubble({
         <span className="mic-dot" aria-hidden="true">
           <Mic size={11} strokeWidth={2.5} />
         </span>
+      ) : null}
+      {audioPreference ? (
+        <ParticipantAudioContourControl
+          displayName={participant.displayName}
+          onChange={onAudioPreferenceChange}
+          preference={audioPreference}
+        />
       ) : null}
     </div>
   );
@@ -5465,22 +5609,6 @@ function clampNumber(value: number, min: number, max: number): number {
   }
 
   return Math.max(min, Math.min(max, value));
-}
-
-function getLiveVoiceStatusText(status: LiveVoiceStatus, talking: boolean): string {
-  if (status === "error") {
-    return "Mic blocked";
-  }
-
-  if (status === "connecting") {
-    return "Connecting";
-  }
-
-  if (talking || status === "talking") {
-    return "Talking";
-  }
-
-  return "Hold V";
 }
 
 function stopNativeEvent(event: SyntheticEvent<HTMLElement>) {

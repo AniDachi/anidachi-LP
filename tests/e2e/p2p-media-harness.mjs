@@ -14,7 +14,9 @@
  */
 import { spawn } from "node:child_process";
 import { createHmac, randomUUID } from "node:crypto";
+import { rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -38,6 +40,10 @@ const HARNESS_USE_WORKER_ICE_SERVERS =
 const HARNESS_ONE_WAY_SMOKE = parseBooleanEnv(
 	process.env.HARNESS_ONE_WAY_SMOKE,
 );
+const HARNESS_DEBUG_FILTERS = (process.env.HARNESS_DEBUG_FILTER ?? "")
+	.split(",")
+	.map((value) => value.trim())
+	.filter(Boolean);
 
 function b64url(input) {
 	return Buffer.from(input).toString("base64url");
@@ -69,8 +75,42 @@ function record(name, ok, detail = "") {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+function createVoiceTestWav(durationSeconds = 4, sampleRate = 48_000) {
+	const channelCount = 1;
+	const bitsPerSample = 16;
+	const bytesPerSample = bitsPerSample / 8;
+	const dataSize = durationSeconds * sampleRate * channelCount * bytesPerSample;
+	const wav = Buffer.alloc(44 + dataSize);
+	wav.write("RIFF", 0);
+	wav.writeUInt32LE(36 + dataSize, 4);
+	wav.write("WAVE", 8);
+	wav.write("fmt ", 12);
+	wav.writeUInt32LE(16, 16);
+	wav.writeUInt16LE(1, 20);
+	wav.writeUInt16LE(channelCount, 22);
+	wav.writeUInt32LE(sampleRate, 24);
+	wav.writeUInt32LE(sampleRate * channelCount * bytesPerSample, 28);
+	wav.writeUInt16LE(channelCount * bytesPerSample, 32);
+	wav.writeUInt16LE(bitsPerSample, 34);
+	wav.write("data", 36);
+	wav.writeUInt32LE(dataSize, 40);
+	for (let sample = sampleRate; sample < durationSeconds * sampleRate; sample += 1) {
+		const time = sample / sampleRate;
+		const value = Math.round(Math.sin(2 * Math.PI * 440 * time) * 0.2 * 32767);
+		wav.writeInt16LE(value, 44 + sample * bytesPerSample);
+	}
+	return wav;
+}
+
 function parseBooleanEnv(value) {
 	return value === "1" || value === "true" || value === "yes";
+}
+
+function shouldPrintHarnessDebug(message) {
+	return (
+		HARNESS_DEBUG_FILTERS.length === 0 ||
+		HARNESS_DEBUG_FILTERS.some((filter) => message.includes(filter))
+	);
 }
 
 function parseHarnessIceServers(value) {
@@ -317,6 +357,19 @@ async function waitForCameraEnabledCount(page, expectedCount, budgetMs) {
 	return { observedMs: null, state };
 }
 
+async function waitForExactCameraEnabledCount(page, expectedCount, budgetMs) {
+	const t0 = Date.now();
+	while (Date.now() - t0 < budgetMs) {
+		const state = await page.evaluate(() => window.AnidachiHarness.getState());
+		if ((state.cameraEnabledCount ?? 0) === expectedCount) {
+			return { observedMs: Date.now() - t0, state };
+		}
+		await sleep(150);
+	}
+	const state = await page.evaluate(() => window.AnidachiHarness.getState());
+	return { observedMs: null, state };
+}
+
 async function waitForRemoteFramesAbove(
 	page,
 	previousFrames,
@@ -353,6 +406,58 @@ async function waitForRemoteVideoActivity(page, expectedActivity, budgetMs) {
 	return { observedMs: null, state };
 }
 
+async function waitForRemoteAudioActivity(page, expectedActivity, budgetMs) {
+	const t0 = Date.now();
+	while (Date.now() - t0 < budgetMs) {
+		const state = await page.evaluate(() => window.AnidachiHarness.getState());
+		if ((state.remoteAudioActivity ?? []).includes(expectedActivity)) {
+			return { observedMs: Date.now() - t0, state };
+		}
+		await sleep(150);
+	}
+	const state = await page.evaluate(() => window.AnidachiHarness.getState());
+	return { observedMs: null, state };
+}
+
+async function waitForMeasuredRemoteAudioActivity(page, budgetMs) {
+	const t0 = Date.now();
+	while (Date.now() - t0 < budgetMs) {
+		const state = await page.evaluate(() => window.AnidachiHarness.getState());
+		if (
+			(state.remoteAudioActivity ?? []).some(
+				(activity) => activity === "active" || activity === "quiet",
+			)
+		) {
+			return { observedMs: Date.now() - t0, state };
+		}
+		await sleep(150);
+	}
+	const state = await page.evaluate(() => window.AnidachiHarness.getState());
+	return { observedMs: null, state };
+}
+
+async function waitForRemoteAudioBytesAbove(
+	page,
+	previousBytes,
+	budgetMs,
+	minimumNewBytes = 500,
+) {
+	const t0 = Date.now();
+	while (Date.now() - t0 < budgetMs) {
+		const bytes = await page.evaluate(() =>
+			window.AnidachiHarness.remoteAudioBytes(),
+		);
+		if (bytes >= previousBytes + minimumNewBytes) {
+			return { observedMs: Date.now() - t0, bytes };
+		}
+		await sleep(50);
+	}
+	const bytes = await page.evaluate(() =>
+		window.AnidachiHarness.remoteAudioBytes(),
+	);
+	return { observedMs: null, bytes };
+}
+
 async function waitForDroppedSignal(page, kind, previousCount, budgetMs) {
 	const t0 = Date.now();
 	while (Date.now() - t0 < budgetMs) {
@@ -385,6 +490,36 @@ async function getRestartSnapshot(pages) {
 	return entries;
 }
 
+async function closeHarnessServer(server) {
+	if (!server?.listening) {
+		return;
+	}
+	await new Promise((resolveClose) => server.close(() => resolveClose()));
+}
+
+async function stopHarnessWorker(worker) {
+	if (!worker || worker.exitCode !== null || worker.signalCode !== null) {
+		return;
+	}
+	await new Promise((resolveStop) => {
+		const timeout = setTimeout(resolveStop, 3000);
+		worker.once("exit", () => {
+			clearTimeout(timeout);
+			resolveStop();
+		});
+		worker.kill("SIGTERM");
+	});
+}
+
+async function cleanupHarness({ browser, server, worker, audioPath }) {
+	await Promise.allSettled([
+		browser?.close() ?? Promise.resolve(),
+		closeHarnessServer(server),
+		stopHarnessWorker(worker),
+		audioPath ? rm(audioPath, { force: true }) : Promise.resolve(),
+	]);
+}
+
 async function main() {
 	if (
 		HARNESS_FORCE_RELAY &&
@@ -396,35 +531,46 @@ async function main() {
 		);
 	}
 
-	const bundle = await bundleHarness();
-	const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><script>${bundle}</script></body></html>`;
-	const server = createServer((_req, res) => {
-		res.writeHead(200, { "Content-Type": "text/html" });
-		res.end(html);
-	});
-	await new Promise((r) => server.listen(0, "127.0.0.1", r));
-	const pagePort = server.address().port;
-	const pageUrl = `http://127.0.0.1:${pagePort}/`;
-
-	const iceMode = HARNESS_FORCE_RELAY ? "relay-only" : "direct-first";
-	console.log(`booting wrangler dev on :${WORKER_PORT} (${iceMode}) ...`);
-	const worker = spawn("pnpm", buildWorkerArgs(), {
-		cwd: API_DIR,
-		stdio: ["ignore", "pipe", "pipe"],
-	});
+	let browser = null;
+	let server = null;
+	let worker = null;
+	let silentAudioPath = null;
 	let workerLog = "";
-	worker.stdout.on("data", (d) => (workerLog += d));
-	worker.stderr.on("data", (d) => (workerLog += d));
-
-	if (!(await waitForWorker())) {
-		console.error(`wrangler dev not ready:\n${workerLog.slice(-1200)}`);
-		worker.kill("SIGTERM");
-		server.close();
-		process.exit(1);
-	}
-
-	let activeIceServers = HARNESS_ICE_SERVERS_FROM_ENV;
 	try {
+		const bundle = await bundleHarness();
+		silentAudioPath = resolve(
+			tmpdir(),
+			`anidachi-p2p-silence-${process.pid}.wav`,
+		);
+		await writeFile(silentAudioPath, createVoiceTestWav());
+		const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><script>${bundle}</script></body></html>`;
+		server = createServer((_req, res) => {
+			res.writeHead(200, { "Content-Type": "text/html" });
+			res.end(html);
+		});
+		await new Promise((r) => server.listen(0, "127.0.0.1", r));
+		const address = server.address();
+		if (!address || typeof address === "string") {
+			throw new Error("Harness HTTP server did not expose a TCP port.");
+		}
+		const pageUrl = `http://127.0.0.1:${address.port}/`;
+
+		const iceMode = HARNESS_FORCE_RELAY ? "relay-only" : "direct-first";
+		console.log(`booting wrangler dev on :${WORKER_PORT} (${iceMode}) ...`);
+		worker = spawn("pnpm", buildWorkerArgs(), {
+			cwd: API_DIR,
+			stdio: ["ignore", "pipe", "pipe"],
+		});
+		worker.stdout.on("data", (d) => (workerLog += d));
+		worker.stderr.on("data", (d) => (workerLog += d));
+
+		if (!(await waitForWorker())) {
+			throw new Error(
+				`wrangler dev not ready:\n${workerLog.slice(-1200)}`,
+			);
+		}
+
+		let activeIceServers = HARNESS_ICE_SERVERS_FROM_ENV;
 		if (HARNESS_USE_WORKER_ICE_SERVERS) {
 			activeIceServers = await loadIceServersFromWorker(
 				signRoomToken("host", "host"),
@@ -435,24 +581,18 @@ async function main() {
 				"Relay-only harness needs TURN URLs, but the active ICE config has no turn: or turns: server. Configure Cloudflare TURN locally or pass HARNESS_ICE_SERVERS_JSON.",
 			);
 		}
-	} catch (error) {
-		console.error(`harness setup error: ${error.message}`);
-		console.error(`worker log tail:\n${workerLog.slice(-1500)}`);
-		worker.kill("SIGTERM");
-		server.close();
-		process.exit(1);
-	}
 
-	const browser = await chromium.launch({
-		args: [
-			"--disable-features=WebRtcHideLocalIpsWithMdns",
-			"--use-fake-device-for-media-stream",
-			"--use-fake-ui-for-media-stream",
-		],
-	});
+		browser = await chromium.launch({
+			args: [
+				"--disable-features=WebRtcHideLocalIpsWithMdns",
+				"--use-fake-device-for-media-stream",
+				"--use-fake-ui-for-media-stream",
+				`--use-file-for-fake-audio-capture=${silentAudioPath}`,
+			],
+		});
 
-	let failed = 0;
-	try {
+		let failed = 0;
+		try {
 		const hostCtx = await browser.newContext();
 		const guestCtx = await browser.newContext();
 		const hostPage = await hostCtx.newPage();
@@ -466,8 +606,16 @@ async function main() {
 					localStorage.setItem("anidachi:debug-console", "true"),
 				),
 			]);
-			hostPage.on("console", (m) => console.log(`[host] ${m.text()}`));
-			guestPage.on("console", (m) => console.log(`[guest] ${m.text()}`));
+			hostPage.on("console", (m) => {
+				if (shouldPrintHarnessDebug(m.text())) {
+					console.log(`[host] ${m.text()}`);
+				}
+			});
+			guestPage.on("console", (m) => {
+				if (shouldPrintHarnessDebug(m.text())) {
+					console.log(`[guest] ${m.text()}`);
+				}
+			});
 			hostPage.on("pageerror", (e) => console.log(`[host err] ${e.message}`));
 		}
 		await hostPage.goto(pageUrl);
@@ -480,6 +628,20 @@ async function main() {
 			iceServers: activeIceServers,
 			cameraEnabled: !HARNESS_ONE_WAY_SMOKE,
 		});
+		if (!HARNESS_ONE_WAY_SMOKE) {
+			await hostPage.evaluate(() => window.AnidachiHarness.startOpenMic());
+			await sleep(500);
+			const hostOpenMic = await hostPage.evaluate(() =>
+				window.AnidachiHarness.getState(),
+			);
+			record(
+				"Open mic publishes through deterministic silence",
+				hostOpenMic.microphonePublishingWanted === true &&
+					hostOpenMic.microphonePublishing === true &&
+					hostOpenMic.localSpeaking === false,
+				`wanted=${hostOpenMic.microphonePublishingWanted} publishing=${hostOpenMic.microphonePublishing} speaking=${hostOpenMic.localSpeaking}`,
+			);
+		}
 		await startPeer(guestPage, {
 			sub: "guest",
 			role: "viewer",
@@ -596,6 +758,135 @@ async function main() {
 			`host=${JSON.stringify(hostVideoFlow.state.remoteVideoActivity)} guest=${JSON.stringify(guestVideoFlow.state.remoteVideoActivity)}`,
 		);
 
+		const latePeerOpenMic = await waitForRemoteAudioBytesAbove(
+			guestPage,
+			0,
+			RECOVERY_BUDGET_MS,
+		);
+		const latePeerState = await guestPage.evaluate(() =>
+			window.AnidachiHarness.getState(),
+		);
+		record(
+			"late peer receives active Open mic publication",
+			latePeerOpenMic.observedMs !== null &&
+				latePeerState.remoteAudioExpectedIds.includes("host") &&
+				latePeerState.remoteAudioFlowActivity.includes("flowing"),
+			`received=${latePeerOpenMic.bytes} expected=${JSON.stringify(latePeerState.remoteAudioExpectedIds)} flow=${JSON.stringify(latePeerState.remoteAudioFlowActivity)}`,
+		);
+		const latePeerSpeech = await waitForRemoteAudioActivity(
+			guestPage,
+			"active",
+			RECOVERY_BUDGET_MS,
+		);
+		record(
+			"late peer classifies deterministic Open mic speech as active",
+			latePeerSpeech.observedMs !== null,
+			`activity=${JSON.stringify(latePeerSpeech.state.remoteAudioActivity)}`,
+		);
+
+		const beforeOpenMicReconnect = await guestPage.evaluate(() =>
+			window.AnidachiHarness.remoteAudioBytes(),
+		);
+		await hostPage.evaluate(() =>
+			window.AnidachiHarness.reconnect("open-mic-active"),
+		);
+		const afterOpenMicReconnect = await waitForRemoteAudioBytesAbove(
+			guestPage,
+			beforeOpenMicReconnect,
+			RECOVERY_BUDGET_MS,
+		);
+		const hostAfterOpenMicReconnect = await hostPage.evaluate(() =>
+			window.AnidachiHarness.getState(),
+		);
+		record(
+			"Open mic survives signaling reconnect",
+			afterOpenMicReconnect.observedMs !== null &&
+				hostAfterOpenMicReconnect.microphonePublishingWanted === true,
+			`received=${afterOpenMicReconnect.bytes} wanted=${hostAfterOpenMicReconnect.microphonePublishingWanted}`,
+		);
+
+		const beforeCameraOffAudio = await guestPage.evaluate(() =>
+			window.AnidachiHarness.remoteAudioBytes(),
+		);
+		await hostPage.evaluate(() =>
+			window.AnidachiHarness.setCameraEnabled(false),
+		);
+		const cameraOffAudio = await waitForRemoteAudioBytesAbove(
+			guestPage,
+			beforeCameraOffAudio,
+			RECOVERY_BUDGET_MS,
+		);
+		const cameraOffSnapshot = await waitForExactCameraEnabledCount(
+			guestPage,
+			1,
+			RECOVERY_BUDGET_MS,
+		);
+		const cameraOffVideoInactive = await waitForRemoteVideoActivity(
+			guestPage,
+			"not-expected",
+			RECOVERY_BUDGET_MS,
+		);
+		await sleep(500);
+		const cameraOffBaseline = await guestPage.evaluate(() =>
+			window.AnidachiHarness.getState(),
+		);
+		await hostPage.evaluate(() =>
+			window.AnidachiHarness.setCameraEnabled(true),
+		);
+		const beforeCameraOnAudio = cameraOffAudio.bytes;
+		const cameraOnAudio = await waitForRemoteAudioBytesAbove(
+			guestPage,
+			beforeCameraOnAudio,
+			RECOVERY_BUDGET_MS,
+		);
+		const cameraOnSnapshot = await waitForCameraEnabledCount(
+			guestPage,
+			2,
+			RECOVERY_BUDGET_MS,
+		);
+		const cameraOnVideoMounted = await waitForRemoteVideoCount(
+			guestPage,
+			1,
+			RECOVERY_BUDGET_MS,
+		);
+		const cameraOnVideoFlowing = await waitForRemoteVideoActivity(
+			guestPage,
+			"flowing",
+			RECOVERY_BUDGET_MS,
+		);
+		const cameraOnVideo = await waitForRemoteFramesAbove(
+			guestPage,
+			cameraOffBaseline.remoteFramesDecoded,
+			RECOVERY_BUDGET_MS,
+			3,
+		);
+		record(
+			"Open mic audio survives camera off and on",
+			cameraOffAudio.observedMs !== null &&
+				cameraOffSnapshot.observedMs !== null &&
+				cameraOffVideoInactive.observedMs !== null &&
+				cameraOnAudio.observedMs !== null &&
+				cameraOnSnapshot.observedMs !== null &&
+				cameraOnVideoMounted.observedMs !== null &&
+				cameraOnVideoFlowing.observedMs !== null &&
+				cameraOnVideo.recoveredMs !== null,
+			`cameraOffAudio=${cameraOffAudio.observedMs}ms cameraOffSnapshot=${cameraOffSnapshot.observedMs}ms cameraOffActivity=${cameraOffVideoInactive.observedMs}ms cameraOnAudio=${cameraOnAudio.observedMs}ms cameraOnSnapshot=${cameraOnSnapshot.observedMs}ms cameraOnMounted=${cameraOnVideoMounted.observedMs}ms cameraOnActivity=${cameraOnVideoFlowing.observedMs}ms baselineFrames=${cameraOffBaseline.remoteFramesDecoded} videoRecovered=${cameraOnVideo.recoveredMs}ms`,
+		);
+
+		const beforeMicStopVideo = cameraOnVideo.state;
+		await hostPage.evaluate(() => window.AnidachiHarness.stopOpenMic());
+		const afterMicStopVideo = await waitForRemoteFramesAbove(
+			guestPage,
+			beforeMicStopVideo.remoteFramesDecoded,
+			RECOVERY_BUDGET_MS,
+			1,
+		);
+		record(
+			"stopping microphone leaves healthy video publishing",
+			afterMicStopVideo.recoveredMs !== null,
+			`recovered=${afterMicStopVideo.recoveredMs}ms frames=${afterMicStopVideo.state.remoteFramesDecoded}`,
+		);
+
 		// Push-to-talk latency (S6): time from startVoice() to the peer receiving
 		// audio bytes, measured twice to expose mic spin-up cost on repeat presses.
 		async function pressToAudioMs(speaker, listener, budgetMs) {
@@ -614,19 +905,69 @@ async function main() {
 			return null;
 		}
 
+		const captureCountBeforeFirstPress = await hostPage.evaluate(
+			() => window.AnidachiHarness.getState().then((state) => state.microphoneCaptureCount),
+		);
 		const firstPress = await pressToAudioMs(hostPage, guestPage, 9000);
+		const captureCountAfterFirstPress = await hostPage.evaluate(
+			() => window.AnidachiHarness.getState().then((state) => state.microphoneCaptureCount),
+		);
 		record(
 			"push-to-talk audio reaches peer (S6)",
 			firstPress !== null,
-			`press1=${firstPress}ms`,
+			`press1=${firstPress}ms captures=${captureCountAfterFirstPress}`,
 		);
 		await hostPage.evaluate(() => window.AnidachiHarness.stopVoice());
+
+		await hostPage.evaluate(() =>
+			window.AnidachiHarness.setParticipantAudioOutput("guest", {
+				muted: true,
+				volume: 0.25,
+			}),
+		);
+		const beforeMutedGuestAudio = await hostPage.evaluate(() =>
+			window.AnidachiHarness.remoteAudioBytes(),
+		);
+		await guestPage.evaluate(() => window.AnidachiHarness.startOpenMic());
+		const mutedGuestAudio = await waitForRemoteAudioBytesAbove(
+			hostPage,
+			beforeMutedGuestAudio,
+			RECOVERY_BUDGET_MS,
+		);
+		const mutedGuestSpeech = await waitForMeasuredRemoteAudioActivity(
+			hostPage,
+			RECOVERY_BUDGET_MS,
+		);
+		const hostMutedOutput = await hostPage.evaluate(() =>
+			window.AnidachiHarness.getState(),
+		);
+		const guestOutput = hostMutedOutput.participantAudioOutputs.find(
+			(entry) => entry.remoteUserId === "guest",
+		);
+		record(
+			"local mute and volume do not stop incoming RTP",
+			mutedGuestAudio.observedMs !== null &&
+				mutedGuestSpeech.observedMs !== null &&
+				guestOutput?.muted === true &&
+				guestOutput?.volume === 0.25,
+			`received=${mutedGuestAudio.bytes} activity=${JSON.stringify(mutedGuestSpeech.state.remoteAudioActivity)} output=${JSON.stringify(guestOutput)}`,
+		);
+		await guestPage.evaluate(() => window.AnidachiHarness.stopOpenMic());
 		await sleep(500);
 		const secondPress = await pressToAudioMs(hostPage, guestPage, 9000);
+		const captureCountAfterSecondPress = await hostPage.evaluate(
+			() => window.AnidachiHarness.getState().then((state) => state.microphoneCaptureCount),
+		);
 		record(
 			"repeat push-to-talk also reaches peer",
 			secondPress !== null,
 			`press2=${secondPress}ms`,
+		);
+		record(
+			"repeat push-to-talk reuses the warm microphone capture",
+			captureCountAfterFirstPress === captureCountBeforeFirstPress + 1 &&
+				captureCountAfterSecondPress === captureCountAfterFirstPress,
+			`before=${captureCountBeforeFirstPress} first=${captureCountAfterFirstPress} second=${captureCountAfterSecondPress}`,
 		);
 		if (firstPress !== null && secondPress !== null) {
 			console.log(
@@ -738,6 +1079,32 @@ async function main() {
 			sessionId: "guest-sess",
 			iceServers: activeIceServers,
 		});
+		await guestPage.evaluate(() => window.AnidachiHarness.startOpenMic());
+		const replacedTrackAudio = await waitForRemoteAudioBytesAbove(
+			hostPage,
+			0,
+			RECOVERY_BUDGET_MS,
+		);
+		const replacedTrackSpeech = await waitForMeasuredRemoteAudioActivity(
+			hostPage,
+			RECOVERY_BUDGET_MS,
+		);
+		const hostAfterGuestReplacement = await hostPage.evaluate(() =>
+			window.AnidachiHarness.getState(),
+		);
+		const guestOutputAfterReplacement =
+			hostAfterGuestReplacement.participantAudioOutputs.find(
+				(entry) => entry.remoteUserId === "guest",
+			);
+		record(
+			"participant output preference survives remote track replacement",
+			replacedTrackAudio.observedMs !== null &&
+				replacedTrackSpeech.observedMs !== null &&
+				guestOutputAfterReplacement?.muted === true &&
+				guestOutputAfterReplacement?.volume === 0.25,
+			`received=${replacedTrackAudio.bytes} activity=${JSON.stringify(replacedTrackSpeech.state.remoteAudioActivity)} output=${JSON.stringify(guestOutputAfterReplacement)}`,
+		);
+		await guestPage.evaluate(() => window.AnidachiHarness.stopOpenMic());
 		const guestRecovered = await waitForRemoteVideo(
 			guestPage,
 			RECOVERY_BUDGET_MS,
@@ -811,18 +1178,29 @@ async function main() {
 		await hostPage.evaluate(() => window.AnidachiHarness.stop());
 		await guestPage.evaluate(() => window.AnidachiHarness.stop());
 		failed = results.filter((r) => !r.ok).length;
-	} catch (error) {
-		console.error(`harness error: ${error.message}`);
-		console.error(`worker log tail:\n${workerLog.slice(-1500)}`);
-		failed = 1;
-	} finally {
-		await browser.close();
-		worker.kill("SIGTERM");
-		server.close();
-	}
+		} catch (error) {
+			console.error(`harness error: ${error.message}`);
+			console.error(`worker log tail:\n${workerLog.slice(-1500)}`);
+			failed = 1;
+		}
 
-	console.log(`\n${results.length - failed}/${results.length} checks passed`);
-	process.exit(failed ? 1 : 0);
+		console.log(`\n${results.length - failed}/${results.length} checks passed`);
+		process.exitCode = failed ? 1 : 0;
+	} finally {
+		await cleanupHarness({
+			audioPath: silentAudioPath,
+			browser,
+			server,
+			worker,
+		});
+	}
 }
 
-await main();
+try {
+	await main();
+} catch (error) {
+	console.error(
+		`harness setup error: ${error instanceof Error ? error.message : String(error)}`,
+	);
+	process.exitCode = 1;
+}

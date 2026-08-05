@@ -39,6 +39,7 @@ const HASH_IDENTIFIER_ARRAY_FIELDS = new Set([
   "existingPeerIds",
   "participantIds",
   "remoteIds",
+  "remoteAudioExpectedIds",
   "userIds",
 ]);
 

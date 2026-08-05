@@ -5,10 +5,11 @@ import {
 } from "../src/settings-panel-navigation";
 
 describe("settings panel navigation", () => {
-  it("places reactions first and layout second", () => {
+  it("places interface controls between layout and voice", () => {
     expect(SETTINGS_PANEL_CATEGORIES.map((category) => category.id)).toEqual([
       "reactions",
       "layout",
+      "interface",
       "voice",
       "debug",
     ]);

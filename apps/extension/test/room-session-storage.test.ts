@@ -9,6 +9,7 @@ import {
   type RoomSessionRecord,
   type RoomSessionStorageResponse as RoomSessionResponse,
   removeRoomSessionForTab,
+  updateRoomSessionVoiceMode,
 } from "../src/room-session-storage";
 
 interface StorageAreaLike {
@@ -170,6 +171,7 @@ describe("background-owned room session storage", () => {
       roomId: "room-a",
       ownerUserId: "user-a",
       participantSessionId: "session-uuid-1",
+      voiceMode: "push-to-talk",
     });
 
     expect(second.participantSessionId).toBe(first.participantSessionId);
@@ -241,6 +243,67 @@ describe("background-owned room session storage", () => {
     );
 
     expect(restored).toEqual(persisted);
+  });
+
+  it("updates Voice mode only for the exact current room session revision", async () => {
+    const dependencies = backgroundDependencies();
+    const persisted = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(18),
+        dependencies,
+      ),
+    );
+    const updated = await updateRoomSessionVoiceMode(persisted, "open-mic", {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(18), dependencies),
+    });
+
+    expect(updated).toEqual({
+      ...persisted,
+      revision: persisted.revision + 1,
+      voiceMode: "open-mic",
+    });
+
+    const staleAttempt = await updateRoomSessionVoiceMode(persisted, "push-to-talk", {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(18), dependencies),
+    });
+    expect(staleAttempt).toEqual(updated);
+  });
+
+  it("preserves Voice mode for the same room and resets it for a new room", async () => {
+    const dependencies = backgroundDependencies();
+    const first = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(20),
+        dependencies,
+      ),
+    );
+    const open = await updateRoomSessionVoiceMode(first, "open-mic", {
+      sendMessage: (runtimeMessage) =>
+        handleRoomSessionStorageMessage(runtimeMessage, sender(20), dependencies),
+    });
+    expect(open?.voiceMode).toBe("open-mic");
+
+    const sameRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-a", ownerUserId: "user-a" }),
+        sender(20),
+        dependencies,
+      ),
+    );
+    expect(sameRoom.voiceMode).toBe("open-mic");
+
+    const newRoom = expectRecord(
+      await handleRoomSessionStorageMessage(
+        message({ command: "persist", roomId: "room-b", ownerUserId: "user-a" }),
+        sender(20),
+        dependencies,
+      ),
+    );
+    expect(newRoom.voiceMode).toBe("push-to-talk");
   });
 
   it("fails closed and clears a record when the current user is missing", async () => {
@@ -418,6 +481,7 @@ describe("legacy page room session migration", () => {
       roomId: "room-a",
       ownerUserId: "user-a",
       participantSessionId: "session-stable-a",
+      voiceMode: "push-to-talk",
     });
     expect(pageSessionStorage.values.size).toBe(0);
     expect(dependencies.sessionStorage.values.size).toBe(1);
@@ -442,6 +506,7 @@ describe("legacy page room session migration", () => {
       roomId: "legacy-room",
       ownerUserId: "user-a",
       participantSessionId: "legacy-session",
+      voiceMode: "push-to-talk",
     });
     expect(pageSessionStorage.values.size).toBe(0);
   });

@@ -19,6 +19,8 @@ const VideoFingerprintSchema = z.string().min(1).max(MAX_VIDEO_FINGERPRINT_CHARS
 const UrlSchema = z.string().max(MAX_URL_CHARS).url();
 const textEncoder = new TextEncoder();
 
+export const VoiceModeSchema = z.enum(["push-to-talk", "open-mic"]);
+
 function boundedUtf8String(maxBytes: number) {
   return z
     .string()
@@ -146,9 +148,13 @@ export const P2PSignalSchema = z.discriminatedUnion("kind", [
     candidate: P2PIceCandidateSchema,
   }),
   z.object({
+    // Push to talk is active for the lifetime of this publication signal.
+    // Open-mic speaking activity is still measured from WebRTC audio levels.
     kind: z.literal("voice-start"),
+    voiceMode: VoiceModeSchema.optional(),
   }),
   z.object({
+    // The sender no longer expects to publish microphone audio.
     kind: z.literal("voice-stop"),
   }),
   z.object({
@@ -341,6 +347,7 @@ export type ReactionEvent = z.infer<typeof ReactionEventSchema>;
 export type P2PSessionDescription = z.infer<typeof P2PSessionDescriptionSchema>;
 export type P2PIceCandidate = z.infer<typeof P2PIceCandidateSchema>;
 export type P2PSignal = z.infer<typeof P2PSignalSchema>;
+export type VoiceMode = z.infer<typeof VoiceModeSchema>;
 export type ClientEvent = z.infer<typeof ClientEventSchema>;
 export type ServerEvent = z.infer<typeof ServerEventSchema>;
 export type RoomEndReason = z.infer<typeof RoomEndReasonSchema>;

@@ -32,6 +32,7 @@ describe("YouTube source adapter", () => {
     });
     expect(adapter).toBeInstanceOf(YouTubeVideoAdapter);
     expect(adapter?.provider).toBe("youtube");
+    expect(adapter?.enforcesAuthoritativeRoomSource).toBe(true);
     expect(adapter?.container).toBe(player);
     expect(adapter?.getOverlayBinding()).toEqual({
       fillMountTarget: true,

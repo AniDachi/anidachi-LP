@@ -26,3 +26,10 @@ export function isRoomRailEdgeIntent({
   const distanceToEdge = Math.max(0, edgeRight - clientX);
   return distanceToEdge <= ROOM_RAIL_EDGE_INTENT_PX;
 }
+
+export function selectVoiceRailParticipants<T extends { id: string }>(
+  participants: T[],
+  mountedCameraParticipantIds: ReadonlySet<string>,
+): T[] {
+  return participants.filter((participant) => !mountedCameraParticipantIds.has(participant.id));
+}

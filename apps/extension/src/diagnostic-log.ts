@@ -29,6 +29,7 @@ export interface DiagnosticPageSnapshot {
   participantId?: string;
   participantPlan?: string;
   video?: unknown;
+  voice?: unknown;
   pageDebug?: unknown;
 }
 

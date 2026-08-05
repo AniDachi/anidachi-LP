@@ -89,7 +89,7 @@ apps/
   extension/
     WXT Chrome extension. Injects the overlay into supported video pages,
     detects video/player containers, controls playback sync, renders room UI,
-    reactions, chat, Ghost Cam, and push-to-talk audio.
+    reactions, chat, Ghost Cam, Push to talk, and Open mic audio.
 
   api/
     Cloudflare Worker API with Hono, Durable Objects, WebSocket rooms, room token
@@ -349,8 +349,9 @@ WebRTC P2P first, Cloudflare TURN fallback when direct connectivity fails.
 Media responsibilities:
 
 - Ghost Cam publishes camera video as small circular bubbles;
-- push-to-talk publishes microphone audio only while the configured key is held;
-- the UI shows speaking state with a small microphone indicator;
+- Push to talk publishes microphone audio only while `V` is held;
+- Open mic publishes continuously after the user selects that room-scoped mode;
+- speaking indicators reflect measured audio activity, not publication intent;
 - P2P signaling goes through the Worker WebSocket room;
 - STUN/TURN selection is handled by WebRTC ICE negotiation.
 

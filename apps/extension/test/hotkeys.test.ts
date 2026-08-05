@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getHotkeyAction,
+  isPushToTalkReleaseEvent,
   shouldStopVoiceTalkOnWindowBlur,
 } from "../src/hotkeys";
 
@@ -9,6 +10,7 @@ const activeState = {
   panelOpen: false,
   reactionsEnabled: true,
   experimentalSuperReactionsEnabled: true,
+  voiceMode: "push-to-talk" as const,
 };
 
 describe("Anidachi hotkeys", () => {
@@ -102,7 +104,12 @@ describe("Anidachi hotkeys", () => {
   it("ignores repeated Enter keydown events", () => {
     expect(
       getHotkeyAction(
-        keyEvent({ code: "Enter", key: "Enter", repeat: true, type: "keydown" }),
+        keyEvent({
+          code: "Enter",
+          key: "Enter",
+          repeat: true,
+          type: "keydown",
+        }),
         activeState,
       ),
     ).toBeNull();
@@ -111,7 +118,12 @@ describe("Anidachi hotkeys", () => {
   it("ignores Shift+Enter so the composer can own multiline-style behavior later", () => {
     expect(
       getHotkeyAction(
-        keyEvent({ code: "Enter", key: "Enter", shiftKey: true, type: "keydown" }),
+        keyEvent({
+          code: "Enter",
+          key: "Enter",
+          shiftKey: true,
+          type: "keydown",
+        }),
         activeState,
       ),
     ).toBeNull();
@@ -120,7 +132,12 @@ describe("Anidachi hotkeys", () => {
   it("ignores Enter while IME composition is active", () => {
     expect(
       getHotkeyAction(
-        keyEvent({ code: "Enter", isComposing: true, key: "Enter", type: "keydown" }),
+        keyEvent({
+          code: "Enter",
+          isComposing: true,
+          key: "Enter",
+          type: "keydown",
+        }),
         activeState,
       ),
     ).toBeNull();
@@ -131,7 +148,12 @@ describe("Anidachi hotkeys", () => {
 
     expect(
       getHotkeyAction(
-        keyEvent({ code: "Enter", key: "Enter", target: input, type: "keydown" }),
+        keyEvent({
+          code: "Enter",
+          key: "Enter",
+          target: input,
+          type: "keydown",
+        }),
         activeState,
       ),
     ).toBeNull();
@@ -174,7 +196,48 @@ describe("Anidachi hotkeys", () => {
   });
 
   it("stops live voice on visible-window blur while V is still held", () => {
-    expect(shouldStopVoiceTalkOnWindowBlur()).toBe(true);
+    expect(shouldStopVoiceTalkOnWindowBlur("push-to-talk")).toBe(true);
+  });
+
+  it("ignores V voice actions in Open mic mode", () => {
+    const openMicState = {
+      ...activeState,
+      voiceMode: "open-mic" as const,
+    };
+
+    expect(
+      getHotkeyAction(keyEvent({ code: "KeyV", key: "v", type: "keydown" }), openMicState),
+    ).toBeNull();
+    expect(
+      getHotkeyAction(keyEvent({ code: "KeyV", key: "v", type: "keyup" }), openMicState),
+    ).toBeNull();
+    expect(shouldStopVoiceTalkOnWindowBlur("open-mic")).toBe(false);
+  });
+
+  it("recognizes an already-held Push to talk release regardless of focused control", () => {
+    const focusedSlider = document.createElement("input");
+    focusedSlider.type = "range";
+
+    expect(
+      isPushToTalkReleaseEvent(
+        keyEvent({
+          code: "KeyV",
+          key: "v",
+          target: focusedSlider,
+          type: "keyup",
+        }),
+        {
+          held: true,
+          voiceMode: "push-to-talk",
+        },
+      ),
+    ).toBe(true);
+    expect(
+      isPushToTalkReleaseEvent(keyEvent({ code: "KeyV", key: "v", type: "keyup" }), {
+        held: false,
+        voiceMode: "push-to-talk",
+      }),
+    ).toBe(false);
   });
 });
 

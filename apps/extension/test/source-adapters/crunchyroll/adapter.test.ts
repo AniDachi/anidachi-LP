@@ -17,6 +17,7 @@ describe("Crunchyroll adapter definition", () => {
 
 		expect(adapter?.id).toBe("crunchyroll");
 		expect(adapter?.provider).toBe("crunchyroll");
+		expect(adapter?.enforcesAuthoritativeRoomSource).not.toBe(true);
 		expect(adapter?.container.id).toBe("player-container");
 		expect(adapter?.getOverlayBinding()).toEqual({
 			fillMountTarget: true,

@@ -2,14 +2,35 @@ import type {
   P2PIceCandidate,
   P2PSignal,
   Participant,
+  VoiceMode,
 } from "@anidachi/protocol";
 import { logDebug } from "./debug-log";
+import {
+  createLocalAudioLevelMeter,
+  type LocalAudioLevelMeter,
+} from "./local-audio-level-meter";
 import type {
   GhostVideo,
-  LiveVoiceStatus,
+  MicrophoneStatus,
+  MicrophoneTerminalFailure,
+  MicrophoneTerminalFailureReason,
   RoomSendDisposition,
   SignalingTransportReady,
 } from "./media-types";
+import {
+  classifyAudioSpeechActivity,
+  classifyAudioTransportFlow,
+  type AudioActivityStats,
+  type AudioSpeechActivity,
+  type AudioTransportFlow,
+  type SpeakingHysteresisState,
+  updateSpeakingHysteresis,
+} from "./voice-activity";
+import {
+  getDefaultParticipantAudioPreference,
+  normalizeParticipantAudioPreference,
+  type ParticipantAudioPreference,
+} from "./voice-audio-preferences";
 
 const P2P_MAX_REMOTE_PARTICIPANTS = 3;
 const P2P_VIDEO_BITRATE_BPS = 150_000;
@@ -23,10 +44,8 @@ const P2P_AUDIO_TRANSCEIVER_DIRECTION: RTCRtpTransceiverDirection = "sendrecv";
 const P2P_MIC_IDLE_RELEASE_MS = 60_000;
 /** Reconcile desired-vs-actual media/connection state on this cadence (Block 5.3). */
 const P2P_RECONCILE_INTERVAL_MS = 5_000;
-const P2P_AUDIO_ACTIVITY_LEVEL_THRESHOLD = 0.01;
-const P2P_AUDIO_ACTIVITY_MIN_PACKET_DELTA = 2;
-const P2P_AUDIO_ACTIVITY_MIN_BYTE_DELTA = 120;
-const P2P_AUDIO_QUIET_SAMPLES_BEFORE_CLEAR = 2;
+const P2P_AUDIO_ACTIVITY_SAMPLE_INTERVAL_MS = 200;
+const P2P_AUDIO_RECOVERY_GRACE_MS = P2P_DISCONNECTED_RESTART_DELAY_MS;
 const P2P_AUDIO_STALL_SAMPLES_BEFORE_RECOVERY = 2;
 const P2P_AUDIO_FLOW_LOG_INTERVAL_MS = 2_500;
 const P2P_VIDEO_ACTIVITY_MIN_FRAME_DELTA = 1;
@@ -38,11 +57,11 @@ const P2P_CAMERA_REACQUIRE_MAX_DELAY_MS = 8_000;
 const P2P_CAMERA_REACQUIRE_FAILURE_WINDOW_MS = 15_000;
 const P2P_CAMERA_REACQUIRE_MAX_FAILURES = 3;
 const P2P_CAMERA_STABLE_RESET_MS = 30_000;
-const P2P_VOICE_REACQUIRE_BASE_DELAY_MS = 250;
-const P2P_VOICE_REACQUIRE_MAX_DELAY_MS = 2_000;
-const P2P_VOICE_REACQUIRE_FAILURE_WINDOW_MS = 10_000;
-const P2P_VOICE_REACQUIRE_MAX_FAILURES = 3;
-const P2P_VOICE_STABLE_RESET_MS = 20_000;
+const P2P_MICROPHONE_REACQUIRE_BASE_DELAY_MS = 250;
+const P2P_MICROPHONE_REACQUIRE_MAX_DELAY_MS = 2_000;
+const P2P_MICROPHONE_REACQUIRE_FAILURE_WINDOW_MS = 10_000;
+const P2P_MICROPHONE_REACQUIRE_MAX_FAILURES = 3;
+const P2P_MICROPHONE_STABLE_RESET_MS = 20_000;
 const P2P_SIGNAL_DEDUPE_TTL_MS = 30_000;
 const P2P_SIGNAL_DEDUPE_CAP = 240;
 const P2P_RETIRED_SIGNAL_SOURCE_CAP = 8;
@@ -444,88 +463,6 @@ export function summarizeP2PCodecPreferenceOrder(
   return codecs.map((codec) => summarizeP2PCodecCapability(codec));
 }
 
-interface AudioActivityStats {
-  audioLevel?: number;
-  bytesReceived?: number;
-  jitter?: number;
-  packetsReceived?: number;
-}
-
-export type RemoteAudioActivity = "active" | "quiet" | "unknown";
-export type RemoteAudioFlowActivity =
-  | "flowing"
-  | "missing"
-  | "not-expected"
-  | "stalled"
-  | "unknown";
-
-export function classifyRemoteAudioActivity(
-  previous: AudioActivityStats | undefined,
-  current: AudioActivityStats | undefined,
-): RemoteAudioActivity {
-  if (!current) {
-    return "unknown";
-  }
-
-  if (
-    typeof current.audioLevel === "number" &&
-    current.audioLevel >= P2P_AUDIO_ACTIVITY_LEVEL_THRESHOLD
-  ) {
-    return "active";
-  }
-
-  if (!previous) {
-    return "unknown";
-  }
-
-  const packetDelta =
-    typeof current.packetsReceived === "number" &&
-    typeof previous.packetsReceived === "number"
-      ? current.packetsReceived - previous.packetsReceived
-      : 0;
-  const byteDelta =
-    typeof current.bytesReceived === "number" &&
-    typeof previous.bytesReceived === "number"
-      ? current.bytesReceived - previous.bytesReceived
-      : 0;
-
-  if (
-    packetDelta >= P2P_AUDIO_ACTIVITY_MIN_PACKET_DELTA ||
-    byteDelta >= P2P_AUDIO_ACTIVITY_MIN_BYTE_DELTA
-  ) {
-    return "active";
-  }
-
-  return "quiet";
-}
-
-export function classifyRemoteAudioFlowActivity(
-  previous: AudioActivityStats | undefined,
-  current: AudioActivityStats | undefined,
-  remoteAudioExpected: boolean,
-  connectionState: RTCPeerConnectionState,
-): RemoteAudioFlowActivity {
-  if (!remoteAudioExpected) {
-    return "not-expected";
-  }
-
-  if (connectionState !== "connected") {
-    return "unknown";
-  }
-
-  if (!current) {
-    return "missing";
-  }
-
-  if (!previous) {
-    return "unknown";
-  }
-
-  return classifyRemoteAudioActivity(previous, current) === "active"
-    ? "flowing"
-    : "stalled";
-}
-
 interface VideoActivityStats {
   bytesReceived?: number;
   framesDecoded?: number;
@@ -693,6 +630,7 @@ interface P2PPeer {
   pc: RTCPeerConnection;
   polite: boolean;
   recentSignalFingerprints: Map<string, number>;
+  renegotiationRetryTimerId: number | null;
   remoteVideoExpected: boolean;
   remoteVideoStallSamples: number;
   remoteUserId: string;
@@ -706,15 +644,42 @@ interface P2PMediaControllerOptions {
   localParticipant: Participant;
   onActiveSpeakerIdsChange: (ids: string[]) => void;
   onCameraStatus: (enabled: boolean) => void;
+  onMicrophoneTerminalFailure: (
+    failure: MicrophoneTerminalFailure,
+  ) => void;
   onVideosChange: (videos: GhostVideo[]) => void;
   onVoiceMessageChange: (message: string | null) => void;
-  onVoiceStatusChange: (status: LiveVoiceStatus) => void;
+  onMicrophoneStatusChange: (status: MicrophoneStatus) => void;
   refreshIceServers?: () => Promise<RTCIceServer[]>;
   sendSignal: (
     toUserId: string,
     signal: P2PSignal,
     metadata: LocalP2PSignalMetadata,
   ) => RoomSendDisposition;
+}
+
+export interface P2PMediaPeerDiagnostics {
+  remoteUserId: string;
+  connectionState: RTCPeerConnectionState;
+  iceRestartCount: number;
+  iceConnectionState: RTCIceConnectionState;
+  signalingState: RTCSignalingState;
+  health: PeerHealth;
+  remoteAudioExpected: boolean;
+  remoteAudioActivity: AudioSpeechActivity;
+  remoteAudioFlowActivity: AudioTransportFlow;
+  remoteVideoActivity: RemoteVideoActivity;
+  participantAudioOutput: ParticipantAudioPreference;
+  statsStatus: "available" | "unavailable";
+  stats: Record<string, unknown>;
+}
+
+export interface P2PMediaDiagnostics {
+  microphonePublishingWanted: boolean;
+  microphonePublishing: boolean;
+  localSpeaking: boolean;
+  remoteAudioExpectedIds: string[];
+  peers: P2PMediaPeerDiagnostics[];
 }
 
 type IceCandidateStatsSnapshot = RTCStats & {
@@ -729,13 +694,20 @@ export class P2PMediaController {
   private readonly localParticipant: Participant;
   private readonly onActiveSpeakerIdsChange: (ids: string[]) => void;
   private readonly onCameraStatus: (enabled: boolean) => void;
+  private readonly onMicrophoneTerminalFailure: (
+    failure: MicrophoneTerminalFailure,
+  ) => void;
   private readonly onVideosChange: (videos: GhostVideo[]) => void;
   private readonly onVoiceMessageChange: (message: string | null) => void;
-  private readonly onVoiceStatusChange: (status: LiveVoiceStatus) => void;
+  private readonly onMicrophoneStatusChange: (status: MicrophoneStatus) => void;
   private readonly refreshIceServers?: () => Promise<RTCIceServer[]>;
   private readonly sendSignalToTransport: P2PMediaControllerOptions["sendSignal"];
   private readonly peers = new Map<string, P2PPeer>();
-  private readonly peerOperationChains = new Map<string, Promise<void>>();
+  private readonly microphonePublicationModeByPeer = new Map<
+    string,
+    VoiceMode
+  >();
+  private readonly peerOperationChains = new Map<string, Promise<unknown>>();
   private readonly senderConnectionIdsByPeer = new Map<string, string>();
   private readonly senderMediaSessionIdsByPeer = new Map<string, string>();
   private readonly retiredSenderConnectionIdsByPeer = new Map<
@@ -751,22 +723,40 @@ export class P2PMediaController {
     string,
     HTMLAudioElement
   >();
+  private readonly participantAudioOutputPreferences = new Map<
+    string,
+    ParticipantAudioPreference
+  >();
+  private readonly remotePushToTalkIds = new Set<string>();
   private readonly remoteSpeakingIds = new Set<string>();
+  private readonly remoteAudioExpectationGenerationByPeer = new Map<
+    string,
+    number
+  >();
   private readonly remoteAudioActivityByPeer = new Map<
     string,
-    RemoteAudioActivity
+    AudioSpeechActivity
   >();
   private readonly remoteAudioExpectedByPeer = new Set<string>();
+  private readonly remoteAudioExpectedAtByPeer = new Map<string, number>();
   private readonly remoteAudioFlowActivityByPeer = new Map<
     string,
-    RemoteAudioFlowActivity
+    AudioTransportFlow
   >();
+  private readonly remoteAudioFreshnessBaselineByPeer = new Map<
+    string,
+    AudioActivityStats
+  >();
+  private readonly remoteAudioFreshnessRequiredByPeer = new Set<string>();
   private readonly remoteAudioStatsByPeer = new Map<
     string,
     AudioActivityStats
   >();
   private readonly remoteAudioStallSamplesByPeer = new Map<string, number>();
-  private readonly remoteAudioQuietSamplesByPeer = new Map<string, number>();
+  private readonly remoteSpeakingHysteresisByPeer = new Map<
+    string,
+    SpeakingHysteresisState
+  >();
   private readonly remoteVideoActivityByPeer = new Map<
     string,
     RemoteVideoActivity
@@ -782,20 +772,33 @@ export class P2PMediaController {
   private cameraStartingGeneration: number | null = null;
   private cameraState: P2PCameraState = "off";
   private disposed = false;
+  private localAudioLevelMeter: LocalAudioLevelMeter | null = null;
   private localAudioStream: MediaStream | null = null;
   private localAudioTrack: MediaStreamTrack | null = null;
-  private voiceFailureTimestamps: number[] = [];
-  private voiceIntentGeneration = 0;
-  private voiceReacquireTimerId: number | null = null;
-  private voiceStableTimerId: number | null = null;
+  private microphoneFailureTimestamps: number[] = [];
+  private microphoneIntentGeneration = 0;
+  private microphoneReacquireTimerId: number | null = null;
+  private microphoneStableTimerId: number | null = null;
   private localVideoStream: MediaStream | null = null;
   private localVideoTrack: MediaStreamTrack | null = null;
   private publicCameraEnabled = false;
   private lastSignalingTransportReadyId: string | null = null;
   private wantsCamera = false;
-  private wantsVoiceTalk = false;
-  private voiceStartingGeneration: number | null = null;
-  private voiceTalking = false;
+  private microphonePublishingWanted = false;
+  private microphoneVoiceMode: VoiceMode = "push-to-talk";
+  private microphoneStartingGeneration: number | null = null;
+  private microphonePublishing = false;
+  private localSpeaking = false;
+  private localSpeakingHysteresis: SpeakingHysteresisState = {
+    quietSamples: 0,
+    speaking: false,
+  };
+  private audioActivityTimerId: number | null = null;
+  private localAudioActivitySampling = false;
+  private readonly remoteAudioActivitySamplingByPeer = new Map<
+    string,
+    P2PPeer
+  >();
   readonly mediaSessionId = `media-${crypto.randomUUID()}`;
   // The mic track is kept warm between presses (track.enabled toggled) so
   // repeat push-to-talk is instant, then released after an idle timeout for
@@ -820,9 +823,10 @@ export class P2PMediaController {
     this.localParticipant = options.localParticipant;
     this.onActiveSpeakerIdsChange = options.onActiveSpeakerIdsChange;
     this.onCameraStatus = options.onCameraStatus;
+    this.onMicrophoneTerminalFailure = options.onMicrophoneTerminalFailure;
     this.onVideosChange = options.onVideosChange;
     this.onVoiceMessageChange = options.onVoiceMessageChange;
-    this.onVoiceStatusChange = options.onVoiceStatusChange;
+    this.onMicrophoneStatusChange = options.onMicrophoneStatusChange;
     this.refreshIceServers = options.refreshIceServers;
     this.sendSignalToTransport = options.sendSignal;
     this.publicCameraEnabled = options.localParticipant.cameraEnabled;
@@ -860,6 +864,62 @@ export class P2PMediaController {
       });
     }
     return disposition;
+  }
+
+  private sendMicrophonePublicationState(
+    remoteUserId: string,
+    publishing: boolean,
+    force = false,
+  ): void {
+    const signaledMode =
+      this.microphonePublicationModeByPeer.get(remoteUserId);
+    if (
+      !force &&
+      (publishing
+        ? signaledMode === this.microphoneVoiceMode
+        : signaledMode === undefined)
+    ) {
+      return;
+    }
+
+    const disposition = this.sendSignal(
+      remoteUserId,
+      publishing
+        ? {
+            kind: "voice-start",
+            voiceMode: this.microphoneVoiceMode,
+          }
+        : { kind: "voice-stop" },
+    );
+    if (disposition === "dropped") {
+      return;
+    }
+
+    if (publishing) {
+      this.microphonePublicationModeByPeer.set(
+        remoteUserId,
+        this.microphoneVoiceMode,
+      );
+    } else {
+      this.microphonePublicationModeByPeer.delete(remoteUserId);
+    }
+  }
+
+  private sendMicrophonePublicationStateToAll(
+    publishing: boolean,
+    force = false,
+  ): void {
+    for (const peer of this.peers.values()) {
+      this.sendMicrophonePublicationState(
+        peer.remoteUserId,
+        publishing,
+        force,
+      );
+    }
+  }
+
+  private isMicrophonePublicationExpected(): boolean {
+    return this.microphonePublishing || this.microphonePublishingWanted;
   }
 
   /**
@@ -923,7 +983,10 @@ export class P2PMediaController {
     }
   }
 
-  updateParticipants(participants: Participant[]): void {
+  updateParticipants(
+    participants: Participant[],
+    mediaSeatParticipantIds?: ReadonlySet<string>,
+  ): void {
     if (this.disposed) {
       return;
     }
@@ -945,6 +1008,20 @@ export class P2PMediaController {
 
     for (const [remoteId, peer] of this.peers) {
       if (!remoteIdSet.has(remoteId)) {
+        if (
+          mediaSeatParticipantIds &&
+          !mediaSeatParticipantIds.has(remoteId)
+        ) {
+          this.closePeer(remoteId, false);
+          continue;
+        }
+        if (
+          this.remoteAudioExpectedByPeer.has(remoteId) ||
+          this.remotePushToTalkIds.has(remoteId) ||
+          this.remoteSpeakingIds.has(remoteId)
+        ) {
+          this.resetRemoteAudioPublicationState(remoteId, true);
+        }
         this.schedulePeerLingerClose(peer);
       }
     }
@@ -974,8 +1051,8 @@ export class P2PMediaController {
         isNewPeer ? "peer-created" : "participants",
         isNewPeer && this.shouldInitiateOffers(peer),
       );
-      if (isNewPeer && this.voiceTalking) {
-        this.sendSignal(peer.remoteUserId, { kind: "voice-start" });
+      if (isNewPeer && this.isMicrophonePublicationExpected()) {
+        this.sendMicrophonePublicationState(peer.remoteUserId, true);
       }
     }
   }
@@ -1232,25 +1309,85 @@ export class P2PMediaController {
     this.cameraStableTimerId = null;
   }
 
-  async startVoiceTalk(): Promise<void> {
+  async setMicrophonePublishing(
+    enabled: boolean,
+    release: "warm" | "immediate",
+    voiceMode: VoiceMode = this.microphoneVoiceMode,
+  ): Promise<void> {
     if (this.disposed) {
       return;
     }
 
-    if (!this.wantsVoiceTalk) {
-      this.voiceIntentGeneration += 1;
-    }
-    this.wantsVoiceTalk = true;
-    this.clearVoiceReacquireTimer();
-    this.clearMicReleaseTimer();
+    this.microphoneVoiceMode = voiceMode;
 
-    if (this.voiceTalking && this.localAudioTrack?.readyState === "live") {
-      this.onVoiceStatusChange("talking");
+    if (!enabled) {
+      const wasPublishing =
+        this.microphonePublishingWanted ||
+        this.microphoneStartingGeneration !== null ||
+        this.microphonePublishing ||
+        Boolean(this.localAudioTrack?.enabled);
+
+      if (!wasPublishing) {
+        logDebug("p2p.voice", "publication stop ignored", {
+          localParticipantId: this.localParticipant.id,
+          peerCount: this.peers.size,
+          reason: "already-off",
+        });
+        this.sendMicrophonePublicationStateToAll(false);
+        this.onMicrophoneStatusChange("off");
+        return;
+      }
+
+      logDebug("p2p.voice", "publication stop", {
+        localParticipantId: this.localParticipant.id,
+        peerCount: this.peers.size,
+        release,
+      });
+      this.microphoneIntentGeneration += 1;
+      this.microphonePublishingWanted = false;
+      this.microphoneStartingGeneration = null;
+      this.microphonePublishing = false;
+      this.clearLocalSpeaking();
+      this.clearMicrophoneReacquireTimer();
+      this.clearMicrophoneStableTimer();
+
+      // Push to talk keeps a disabled track warm briefly for responsive repeat
+      // presses. Open mic and privacy/terminal paths release capture now.
+      if (this.localAudioTrack) {
+        this.localAudioTrack.enabled = false;
+        if (release === "immediate") {
+          this.clearMicReleaseTimer();
+          this.releaseMic();
+        } else {
+          this.scheduleMicRelease();
+        }
+      }
+
+      this.sendMicrophonePublicationStateToAll(false);
+      this.updateAudioActivitySampler();
+      this.onMicrophoneStatusChange("off");
       return;
     }
 
-    if (this.voiceStartingGeneration === this.voiceIntentGeneration) {
-      this.onVoiceStatusChange("connecting");
+    if (!this.microphonePublishingWanted) {
+      this.microphoneIntentGeneration += 1;
+    }
+    this.microphonePublishingWanted = true;
+    this.clearMicrophoneReacquireTimer();
+    this.clearMicReleaseTimer();
+
+    if (voiceMode === "push-to-talk") {
+      this.sendMicrophonePublicationStateToAll(true);
+    }
+
+    if (this.microphonePublishing && this.localAudioTrack?.readyState === "live") {
+      this.sendMicrophonePublicationStateToAll(true);
+      this.onMicrophoneStatusChange("on");
+      return;
+    }
+
+    if (this.microphoneStartingGeneration === this.microphoneIntentGeneration) {
+      this.onMicrophoneStatusChange("connecting");
       return;
     }
 
@@ -1259,17 +1396,17 @@ export class P2PMediaController {
     // so audio resumes near-instantly (Block 5.2).
     if (this.localAudioTrack && this.localAudioTrack.readyState === "live") {
       this.localAudioTrack.enabled = true;
-      this.voiceTalking = true;
+      this.microphonePublishing = true;
       for (const peer of this.peers.values()) {
         const needsMediaOffer = this.peerNeedsMediaOffer(peer);
         const negotiationNeeded = await this.syncPeerMedia(peer);
         if (needsMediaOffer || negotiationNeeded) {
           this.queueNegotiation(peer, "voice-resume");
         }
-        this.sendSignal(peer.remoteUserId, { kind: "voice-start" });
+        this.sendMicrophonePublicationState(peer.remoteUserId, true);
       }
-      this.publishActiveSpeakerIds();
-      this.onVoiceStatusChange("talking");
+      this.updateAudioActivitySampler();
+      this.onMicrophoneStatusChange("on");
       logDebug("p2p.voice", "resumed warm mic", {
         localParticipantId: this.localParticipant.id,
         peerCount: this.peers.size,
@@ -1277,33 +1414,33 @@ export class P2PMediaController {
       return;
     }
 
-    await this.acquireVoiceTrack("user-request", this.voiceIntentGeneration);
+    await this.acquireMicrophoneTrack("user-request", this.microphoneIntentGeneration);
   }
 
-  private async acquireVoiceTrack(reason: string, intentGeneration: number): Promise<void> {
+  private async acquireMicrophoneTrack(reason: string, intentGeneration: number): Promise<void> {
     if (
       this.disposed ||
-      !this.wantsVoiceTalk ||
-      intentGeneration !== this.voiceIntentGeneration
+      !this.microphonePublishingWanted ||
+      intentGeneration !== this.microphoneIntentGeneration
     ) {
       return;
     }
 
     if (this.localAudioTrack?.readyState === "live") {
       this.localAudioTrack.enabled = true;
-      this.voiceTalking = true;
-      this.publishActiveSpeakerIds();
-      this.onVoiceStatusChange("talking");
+      this.microphonePublishing = true;
+      this.updateAudioActivitySampler();
+      this.onMicrophoneStatusChange("on");
       return;
     }
 
-    if (this.voiceStartingGeneration === intentGeneration) {
-      this.onVoiceStatusChange("connecting");
+    if (this.microphoneStartingGeneration === intentGeneration) {
+      this.onMicrophoneStatusChange("connecting");
       return;
     }
 
-    this.voiceStartingGeneration = intentGeneration;
-    this.onVoiceStatusChange("connecting");
+    this.microphoneStartingGeneration = intentGeneration;
+    this.onMicrophoneStatusChange("connecting");
     this.onVoiceMessageChange(null);
     logDebug("p2p.voice", "getUserMedia start", {
       localParticipantId: this.localParticipant.id,
@@ -1317,8 +1454,8 @@ export class P2PMediaController {
       );
       if (
         this.disposed ||
-        !this.wantsVoiceTalk ||
-        intentGeneration !== this.voiceIntentGeneration
+        !this.microphonePublishingWanted ||
+        intentGeneration !== this.microphoneIntentGeneration
       ) {
         stopStream(stream);
         return;
@@ -1337,8 +1474,11 @@ export class P2PMediaController {
       );
       this.localAudioStream = stream;
       this.localAudioTrack = track;
-      this.voiceTalking = true;
-      this.scheduleVoiceStableReset();
+      this.replaceLocalAudioLevelMeter(
+        createLocalAudioLevelMeter(stream, track),
+      );
+      this.microphonePublishing = true;
+      this.scheduleMicrophoneStableReset();
       logDebug("p2p.voice", "local track ready", {
         localParticipantId: this.localParticipant.id,
         reason,
@@ -1352,13 +1492,13 @@ export class P2PMediaController {
         if (needsMediaOffer || negotiationNeeded) {
           this.queueNegotiation(peer, "voice-start");
         }
-        this.sendSignal(peer.remoteUserId, { kind: "voice-start" });
+        this.sendMicrophonePublicationState(peer.remoteUserId, true);
       }
 
-      this.publishActiveSpeakerIds();
-      this.onVoiceStatusChange("talking");
+      this.updateAudioActivitySampler();
+      this.onMicrophoneStatusChange("on");
     } catch (error) {
-      if (intentGeneration !== this.voiceIntentGeneration) {
+      if (intentGeneration !== this.microphoneIntentGeneration) {
         return;
       }
       logDebug("p2p.voice", "failed", {
@@ -1366,68 +1506,56 @@ export class P2PMediaController {
         error: error instanceof Error ? error.message : String(error),
         reason,
       });
-      if (this.wantsVoiceTalk && !this.disposed) {
-        this.scheduleVoiceReacquire("get-user-media-failed", error);
+      const terminalReason = classifyMicrophoneTerminalFailure(error);
+      if (terminalReason) {
+        this.failMicrophonePublication(error, terminalReason);
+      } else if (this.microphonePublishingWanted && !this.disposed) {
+        this.scheduleMicrophoneReacquire("get-user-media-failed", error);
       } else {
-        this.voiceTalking = false;
-        this.onVoiceStatusChange("error");
-        this.onVoiceMessageChange(formatVoiceErrorMessage(error));
+        this.microphonePublishing = false;
+        this.clearLocalSpeaking();
+        this.updateAudioActivitySampler();
+        this.onMicrophoneStatusChange("error");
+        this.onVoiceMessageChange(formatMicrophoneErrorMessage(error));
       }
     } finally {
-      if (this.voiceStartingGeneration === intentGeneration) {
-        this.voiceStartingGeneration = null;
+      if (this.microphoneStartingGeneration === intentGeneration) {
+        this.microphoneStartingGeneration = null;
       }
     }
-  }
-
-  async stopVoiceTalk(): Promise<void> {
-    const wasVoiceActive =
-      this.wantsVoiceTalk ||
-      this.voiceStartingGeneration !== null ||
-      this.voiceTalking ||
-      Boolean(this.localAudioTrack?.enabled);
-
-    if (!wasVoiceActive) {
-      logDebug("p2p.voice", "stop ignored", {
-        localParticipantId: this.localParticipant.id,
-        peerCount: this.peers.size,
-        reason: "already-idle",
-      });
-      this.onVoiceStatusChange("idle");
-      return;
-    }
-
-    logDebug("p2p.voice", "stop", {
-      localParticipantId: this.localParticipant.id,
-      peerCount: this.peers.size,
-    });
-    this.voiceIntentGeneration += 1;
-    this.wantsVoiceTalk = false;
-    this.voiceStartingGeneration = null;
-    this.voiceTalking = false;
-    this.clearVoiceReacquireTimer();
-    this.clearVoiceStableTimer();
-
-    // Mute by disabling the track (DTX sends ~no bytes) but keep it warm so a
-    // repeat press resumes instantly. Release the mic after an idle timeout for
-    // privacy (Block 5.2). The audio transceiver/sender are untouched, so this
-    // never renegotiates.
-    if (this.localAudioTrack) {
-      this.localAudioTrack.enabled = false;
-      this.scheduleMicRelease();
-    }
-
-    for (const peer of this.peers.values()) {
-      this.sendSignal(peer.remoteUserId, { kind: "voice-stop" });
-    }
-
-    this.publishActiveSpeakerIds();
-    this.onVoiceStatusChange("idle");
   }
 
   async unlockAudio(): Promise<void> {
-    for (const element of this.audioElementsByParticipant.values()) {
+    for (const [participantId, element] of this.audioElementsByParticipant) {
+      this.applyParticipantAudioOutput(participantId, element);
       await element.play().catch(() => undefined);
+    }
+  }
+
+  setParticipantAudioOutput(
+    participantId: string,
+    preference: ParticipantAudioPreference,
+  ): void {
+    const normalized = normalizeParticipantAudioPreference(preference);
+    this.participantAudioOutputPreferences.set(participantId, normalized);
+    const element = this.audioElementsByParticipant.get(participantId);
+    if (element) {
+      this.applyParticipantAudioOutput(participantId, element);
+    }
+  }
+
+  replaceParticipantAudioOutputs(
+    preferences: Readonly<Record<string, ParticipantAudioPreference>>,
+  ): void {
+    this.participantAudioOutputPreferences.clear();
+    for (const [participantId, preference] of Object.entries(preferences)) {
+      this.participantAudioOutputPreferences.set(
+        participantId,
+        normalizeParticipantAudioPreference(preference),
+      );
+    }
+    for (const [participantId, element] of this.audioElementsByParticipant) {
+      this.applyParticipantAudioOutput(participantId, element);
     }
   }
 
@@ -1435,7 +1563,7 @@ export class P2PMediaController {
     this.clearMicReleaseTimer();
     this.micReleaseTimerId = window.setTimeout(() => {
       this.micReleaseTimerId = null;
-      if (!this.voiceTalking && !this.disposed) {
+      if (!this.microphonePublishing && !this.disposed) {
         this.releaseMic();
       }
     }, P2P_MIC_IDLE_RELEASE_MS);
@@ -1451,14 +1579,15 @@ export class P2PMediaController {
   private handleLocalAudioTrackEnded(track: MediaStreamTrack): void {
     logDebug("p2p.voice", "local track ended", {
       localParticipantId: this.localParticipant.id,
-      wantsVoiceTalk: this.wantsVoiceTalk,
-      voiceTalking: this.voiceTalking,
+      microphonePublishingWanted: this.microphonePublishingWanted,
+      microphonePublishing: this.microphonePublishing,
     });
     if (this.localAudioTrack !== track) {
       return;
     }
 
-    this.clearVoiceStableTimer();
+    this.clearMicrophoneStableTimer();
+    this.replaceLocalAudioLevelMeter(null);
     this.localAudioStream = null;
     this.localAudioTrack = null;
     for (const peer of this.peers.values()) {
@@ -1467,123 +1596,137 @@ export class P2PMediaController {
         .catch(() => undefined);
     }
 
-    if (this.wantsVoiceTalk && !this.disposed) {
+    if (this.microphonePublishingWanted && !this.disposed) {
       // Holding V is the user's intent. A transient MediaStreamTrack ended event
       // should recover the mic, not publish voice-stop and make the remote side
       // flicker.
-      this.voiceTalking = true;
-      this.publishActiveSpeakerIds();
-      this.onVoiceStatusChange("connecting");
-      this.scheduleVoiceReacquire("track-ended");
+      this.microphonePublishing = true;
+      this.clearLocalSpeaking();
+      this.updateAudioActivitySampler();
+      this.onMicrophoneStatusChange("connecting");
+      this.scheduleMicrophoneReacquire("track-ended");
       return;
     }
 
-    this.voiceTalking = false;
-    this.publishActiveSpeakerIds();
-    this.onVoiceStatusChange("idle");
+    this.microphonePublishing = false;
+    this.clearLocalSpeaking();
+    this.updateAudioActivitySampler();
+    this.onMicrophoneStatusChange("off");
   }
 
-  private scheduleVoiceReacquire(reason: string, error?: unknown): void {
-    if (this.disposed || !this.wantsVoiceTalk) {
+  private scheduleMicrophoneReacquire(reason: string, error?: unknown): void {
+    if (this.disposed || !this.microphonePublishingWanted) {
       return;
     }
-    if (this.voiceReacquireTimerId !== null) {
+    if (this.microphoneReacquireTimerId !== null) {
       return;
     }
 
     const now = Date.now();
-    this.voiceFailureTimestamps = [
-      ...this.voiceFailureTimestamps.filter(
-        (timestamp) => now - timestamp <= P2P_VOICE_REACQUIRE_FAILURE_WINDOW_MS,
+    this.microphoneFailureTimestamps = [
+      ...this.microphoneFailureTimestamps.filter(
+        (timestamp) => now - timestamp <= P2P_MICROPHONE_REACQUIRE_FAILURE_WINDOW_MS,
       ),
       now,
     ];
 
-    if (this.voiceFailureTimestamps.length >= P2P_VOICE_REACQUIRE_MAX_FAILURES) {
-      this.giveUpVoiceRecovery(reason, error);
+    if (this.microphoneFailureTimestamps.length >= P2P_MICROPHONE_REACQUIRE_MAX_FAILURES) {
+      this.giveUpMicrophoneRecovery(reason, error);
       return;
     }
 
     const delay = Math.min(
-      P2P_VOICE_REACQUIRE_BASE_DELAY_MS *
-        2 ** Math.max(0, this.voiceFailureTimestamps.length - 1),
-      P2P_VOICE_REACQUIRE_MAX_DELAY_MS,
+      P2P_MICROPHONE_REACQUIRE_BASE_DELAY_MS *
+        2 ** Math.max(0, this.microphoneFailureTimestamps.length - 1),
+      P2P_MICROPHONE_REACQUIRE_MAX_DELAY_MS,
     );
-    this.onVoiceStatusChange("connecting");
+    this.onMicrophoneStatusChange("connecting");
     logDebug("p2p.voice", "schedule re-acquire", {
       delay,
-      failures: this.voiceFailureTimestamps.length,
+      failures: this.microphoneFailureTimestamps.length,
       localParticipantId: this.localParticipant.id,
       reason,
     });
-    this.voiceReacquireTimerId = window.setTimeout(() => {
-      this.voiceReacquireTimerId = null;
-      if (this.disposed || !this.wantsVoiceTalk) {
+    this.microphoneReacquireTimerId = window.setTimeout(() => {
+      this.microphoneReacquireTimerId = null;
+      if (this.disposed || !this.microphonePublishingWanted) {
         return;
       }
-      void this.acquireVoiceTrack(
+      void this.acquireMicrophoneTrack(
         `reacquire:${reason}`,
-        this.voiceIntentGeneration,
+        this.microphoneIntentGeneration,
       );
     }, delay);
   }
 
-  private giveUpVoiceRecovery(reason: string, error?: unknown): void {
-    this.clearVoiceReacquireTimer();
-    this.clearVoiceStableTimer();
-    this.wantsVoiceTalk = false;
-    this.voiceIntentGeneration += 1;
-    this.voiceStartingGeneration = null;
-    this.voiceTalking = false;
-    stopStream(this.localAudioStream);
-    this.localAudioStream = null;
-    this.localAudioTrack = null;
-    logDebug("p2p.voice", "recovery give up", {
-      failures: this.voiceFailureTimestamps.length,
-      localParticipantId: this.localParticipant.id,
-      reason,
-    });
-    for (const peer of this.peers.values()) {
-      this.sendSignal(peer.remoteUserId, { kind: "voice-stop" });
-      void peer.audioTransceiver?.sender
-        .replaceTrack(null)
-        .catch(() => undefined);
-    }
-    this.publishActiveSpeakerIds();
-    this.onVoiceStatusChange("error");
-    this.onVoiceMessageChange(formatVoiceErrorMessage(error));
+  private giveUpMicrophoneRecovery(reason: string, error?: unknown): void {
+    this.failMicrophonePublication(error, "recovery-exhausted", reason);
   }
 
-  private scheduleVoiceStableReset(): void {
-    this.clearVoiceStableTimer();
-    this.voiceStableTimerId = window.setTimeout(() => {
-      this.voiceStableTimerId = null;
-      this.voiceFailureTimestamps = [];
+  private failMicrophonePublication(
+    error: unknown,
+    reason: MicrophoneTerminalFailureReason,
+    recoveryReason?: string,
+  ): void {
+    this.clearMicrophoneReacquireTimer();
+    this.clearMicrophoneStableTimer();
+    this.clearMicReleaseTimer();
+    this.microphonePublishingWanted = false;
+    this.microphoneIntentGeneration += 1;
+    this.microphoneStartingGeneration = null;
+    this.microphonePublishing = false;
+    this.releaseMic();
+    logDebug("p2p.voice", "terminal failure", {
+      failures: this.microphoneFailureTimestamps.length,
+      localParticipantId: this.localParticipant.id,
+      reason,
+      recoveryReason: recoveryReason ?? null,
+      errorName: microphoneErrorName(error) || null,
+    });
+    this.sendMicrophonePublicationStateToAll(false);
+    this.clearLocalSpeaking();
+    this.updateAudioActivitySampler();
+    const message = formatMicrophoneErrorMessage(error);
+    this.onMicrophoneStatusChange("error");
+    this.onVoiceMessageChange(message);
+    this.onMicrophoneTerminalFailure({
+      errorName: microphoneErrorName(error) || null,
+      message,
+      reason,
+    });
+  }
+
+  private scheduleMicrophoneStableReset(): void {
+    this.clearMicrophoneStableTimer();
+    this.microphoneStableTimerId = window.setTimeout(() => {
+      this.microphoneStableTimerId = null;
+      this.microphoneFailureTimestamps = [];
       logDebug("p2p.voice", "stable reset", {
         localParticipantId: this.localParticipant.id,
       });
-    }, P2P_VOICE_STABLE_RESET_MS);
+    }, P2P_MICROPHONE_STABLE_RESET_MS);
   }
 
-  private clearVoiceReacquireTimer(): void {
-    if (this.voiceReacquireTimerId === null) {
+  private clearMicrophoneReacquireTimer(): void {
+    if (this.microphoneReacquireTimerId === null) {
       return;
     }
 
-    window.clearTimeout(this.voiceReacquireTimerId);
-    this.voiceReacquireTimerId = null;
+    window.clearTimeout(this.microphoneReacquireTimerId);
+    this.microphoneReacquireTimerId = null;
   }
 
-  private clearVoiceStableTimer(): void {
-    if (this.voiceStableTimerId === null) {
+  private clearMicrophoneStableTimer(): void {
+    if (this.microphoneStableTimerId === null) {
       return;
     }
 
-    window.clearTimeout(this.voiceStableTimerId);
-    this.voiceStableTimerId = null;
+    window.clearTimeout(this.microphoneStableTimerId);
+    this.microphoneStableTimerId = null;
   }
 
   private releaseMic(): void {
+    this.replaceLocalAudioLevelMeter(null);
     stopStream(this.localAudioStream);
     this.localAudioStream = null;
     this.localAudioTrack = null;
@@ -1592,25 +1735,35 @@ export class P2PMediaController {
         .replaceTrack(null)
         .catch(() => undefined);
     }
-    logDebug("p2p.voice", "released idle mic", {
+    logDebug("p2p.voice", "released microphone", {
       localParticipantId: this.localParticipant.id,
     });
+  }
+
+  private replaceLocalAudioLevelMeter(
+    meter: LocalAudioLevelMeter | null,
+  ): void {
+    if (this.localAudioLevelMeter === meter) {
+      return;
+    }
+    this.localAudioLevelMeter?.close();
+    this.localAudioLevelMeter = meter;
   }
 
   async handleSignal(
     fromUserId: string,
     signal: P2PSignal,
     metadata: P2PSignalMetadata = {},
-  ): Promise<void> {
+  ): Promise<boolean> {
     return this.enqueuePeerOperation(fromUserId, () =>
       this.handleSignalNow(fromUserId, signal, metadata),
     );
   }
 
-  private enqueuePeerOperation(
+  private enqueuePeerOperation<Result>(
     remoteUserId: string,
-    operation: () => Promise<void>,
-  ): Promise<void> {
+    operation: () => Promise<Result>,
+  ): Promise<Result> {
     const previous =
       this.peerOperationChains.get(remoteUserId) ?? Promise.resolve();
     const next = previous.catch(() => undefined).then(operation);
@@ -1628,9 +1781,9 @@ export class P2PMediaController {
     fromUserId: string,
     signal: P2PSignal,
     metadata: P2PSignalMetadata,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (this.disposed || fromUserId === this.localParticipant.id) {
-      return;
+      return false;
     }
 
     logDebug("p2p.signal", "received", {
@@ -1660,7 +1813,7 @@ export class P2PMediaController {
         localParticipantId: this.localParticipant.id,
         remoteUserId: fromUserId,
       });
-      return;
+      return false;
     }
     if (
       incomingSenderMediaSessionId &&
@@ -1677,7 +1830,7 @@ export class P2PMediaController {
         localParticipantId: this.localParticipant.id,
         remoteUserId: fromUserId,
       });
-      return;
+      return false;
     }
 
     const connectionDecision = decideP2PSignalConnection(
@@ -1698,7 +1851,7 @@ export class P2PMediaController {
         reason: connectionDecision.reason,
         remoteUserId: fromUserId,
       });
-      return;
+      return false;
     }
 
     const senderConnectionChanged =
@@ -1725,7 +1878,7 @@ export class P2PMediaController {
         existingPeer.remoteVideoStallSamples = 0;
       }
       this.remoteVideoStatsByPeer.delete(fromUserId);
-      this.remoteAudioStatsByPeer.delete(fromUserId);
+      this.resetRemoteAudioPublicationState(fromUserId, true);
       logDebug("p2p.signal", "media session changed", {
         incomingSenderMediaSessionId,
         localParticipantId: this.localParticipant.id,
@@ -1780,13 +1933,26 @@ export class P2PMediaController {
     }
 
     if (signal.kind === "voice-start") {
+      const pushToTalkIndicatorChanged =
+        signal.voiceMode === "push-to-talk"
+          ? !this.remotePushToTalkIds.has(fromUserId)
+          : this.remotePushToTalkIds.has(fromUserId);
+      if (signal.voiceMode === "push-to-talk") {
+        this.remotePushToTalkIds.add(fromUserId);
+      } else {
+        this.remotePushToTalkIds.delete(fromUserId);
+      }
+      if (pushToTalkIndicatorChanged) {
+        this.publishActiveSpeakerIds();
+      }
+
       if (this.remoteAudioExpectedByPeer.has(fromUserId)) {
         logDebug("p2p.audio", "remote voice-start ignored", {
           localParticipantId: this.localParticipant.id,
           remoteUserId: fromUserId,
           reason: "already-expected",
         });
-        return;
+        return true;
       }
 
       const peer = this.ensurePeer(fromUserId);
@@ -1794,24 +1960,29 @@ export class P2PMediaController {
         void this.syncPeerMediaAndNegotiate(peer, "remote-voice-start", false);
       }
       this.remoteAudioExpectedByPeer.add(fromUserId);
+      this.advanceRemoteAudioExpectationGeneration(fromUserId);
+      this.remoteAudioExpectedAtByPeer.set(fromUserId, Date.now());
       this.remoteAudioFlowActivityByPeer.set(fromUserId, "unknown");
       this.remoteAudioStallSamplesByPeer.set(fromUserId, 0);
-      this.remoteAudioQuietSamplesByPeer.set(fromUserId, 0);
-      this.remoteAudioActivityByPeer.set(fromUserId, "active");
-      this.remoteSpeakingIds.add(fromUserId);
+      this.remoteSpeakingHysteresisByPeer.set(fromUserId, {
+        quietSamples: 0,
+        speaking: false,
+      });
+      this.remoteAudioActivityByPeer.set(fromUserId, "unknown");
       logDebug("p2p.audio", "remote voice expected", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: fromUserId,
         peerConnectionState: peer.pc.connectionState,
         peerIceConnectionState: peer.pc.iceConnectionState,
       });
-      this.publishActiveSpeakerIds();
-      return;
+      this.updateAudioActivitySampler();
+      return true;
     }
 
     if (signal.kind === "voice-stop") {
       if (
         !this.remoteAudioExpectedByPeer.has(fromUserId) &&
+        !this.remotePushToTalkIds.has(fromUserId) &&
         !this.remoteSpeakingIds.has(fromUserId)
       ) {
         logDebug("p2p.audio", "remote voice-stop ignored", {
@@ -1819,29 +1990,32 @@ export class P2PMediaController {
           remoteUserId: fromUserId,
           reason: "already-quiet",
         });
-        return;
+        return true;
       }
 
       this.remoteAudioExpectedByPeer.delete(fromUserId);
+      this.advanceRemoteAudioExpectationGeneration(fromUserId);
+      this.remoteAudioExpectedAtByPeer.delete(fromUserId);
       this.remoteAudioFlowActivityByPeer.set(fromUserId, "not-expected");
+      this.remoteAudioFreshnessBaselineByPeer.delete(fromUserId);
+      this.remoteAudioFreshnessRequiredByPeer.delete(fromUserId);
       this.remoteAudioStallSamplesByPeer.set(fromUserId, 0);
       this.remoteAudioActivityByPeer.set(fromUserId, "quiet");
-      this.remoteAudioQuietSamplesByPeer.set(
-        fromUserId,
-        P2P_AUDIO_QUIET_SAMPLES_BEFORE_CLEAR,
-      );
+      this.remoteSpeakingHysteresisByPeer.delete(fromUserId);
+      this.remotePushToTalkIds.delete(fromUserId);
       this.remoteSpeakingIds.delete(fromUserId);
       logDebug("p2p.audio", "remote voice stopped", {
         localParticipantId: this.localParticipant.id,
         remoteUserId: fromUserId,
       });
       this.publishActiveSpeakerIds();
-      return;
+      this.updateAudioActivitySampler();
+      return true;
     }
 
     if (signal.kind === "bye") {
       this.closePeer(fromUserId, false);
-      return;
+      return true;
     }
 
     const peer = this.ensurePeer(fromUserId);
@@ -1875,7 +2049,7 @@ export class P2PMediaController {
           remoteUserId: fromUserId,
         });
       }
-      return;
+      return true;
     }
 
     if (signal.kind === "renegotiate") {
@@ -1891,7 +2065,7 @@ export class P2PMediaController {
           },
         );
       }
-      return;
+      return true;
     }
 
     const dedupeKey = createP2PMediaSignalDedupeKey(fromUserId, signal);
@@ -1908,7 +2082,7 @@ export class P2PMediaController {
         kind: signal.kind,
         fingerprint: dedupeKey,
       });
-      return;
+      return false;
     }
 
     try {
@@ -1938,7 +2112,7 @@ export class P2PMediaController {
               duplicatePending: alreadyQueued,
             },
           );
-          return;
+          return true;
         }
 
         await peer.pc.addIceCandidate(signal.candidate);
@@ -1952,7 +2126,7 @@ export class P2PMediaController {
           remoteUserId: fromUserId,
           candidateType: getCandidateType(signal.candidate.candidate),
         });
-        return;
+        return true;
       }
 
       const description: RTCSessionDescriptionInit = signal.sdp;
@@ -1965,7 +2139,7 @@ export class P2PMediaController {
           fromUserId,
           signalingState: peer.pc.signalingState,
         });
-        return;
+        return false;
       }
       const readyForOffer =
         !peer.makingOffer &&
@@ -1980,7 +2154,7 @@ export class P2PMediaController {
           signalingState: peer.pc.signalingState,
           makingOffer: peer.makingOffer,
         });
-        return;
+        return false;
       }
 
       peer.isSettingRemoteAnswerPending = description.type === "answer";
@@ -2009,9 +2183,10 @@ export class P2PMediaController {
         peer.signalingRecoveryNeeded =
           (await this.createAndSendAnswer(peer)) !== "sent";
       }
+      return true;
     } catch (error) {
       if (peer.ignoreOffer) {
-        return;
+        return false;
       }
 
       if (peer.pc.signalingState === "have-remote-offer") {
@@ -2024,13 +2199,20 @@ export class P2PMediaController {
         kind: signal.kind,
         error: error instanceof Error ? error.message : String(error),
       });
+      return false;
     }
   }
 
-  async getStats(): Promise<Record<string, unknown>> {
+  async getStats(): Promise<P2PMediaDiagnostics> {
     const peers = await Promise.all(
       Array.from(this.peers.values()).map(async (peer) => {
-        const stats = summarizeStats(await peer.pc.getStats());
+        let stats: Record<string, unknown> = {};
+        let statsStatus: P2PMediaPeerDiagnostics["statsStatus"] = "available";
+        try {
+          stats = summarizeStats(await peer.pc.getStats());
+        } catch {
+          statsStatus = "unavailable";
+        }
         const rtt = (
           stats.candidatePair as { currentRoundTripTime?: number } | undefined
         )?.currentRoundTripTime;
@@ -2041,6 +2223,9 @@ export class P2PMediaController {
           iceConnectionState: peer.pc.iceConnectionState,
           signalingState: peer.pc.signalingState,
           health: classifyPeerHealth(peer.pc.connectionState, rtt),
+          remoteAudioExpected: this.remoteAudioExpectedByPeer.has(
+            peer.remoteUserId,
+          ),
           remoteAudioActivity:
             this.remoteAudioActivityByPeer.get(peer.remoteUserId) ?? "unknown",
           remoteAudioFlowActivity:
@@ -2048,12 +2233,23 @@ export class P2PMediaController {
             "unknown",
           remoteVideoActivity:
             this.remoteVideoActivityByPeer.get(peer.remoteUserId) ?? "unknown",
+          participantAudioOutput: {
+            ...(this.participantAudioOutputPreferences.get(peer.remoteUserId) ??
+              getDefaultParticipantAudioPreference()),
+          },
+          statsStatus,
           stats,
         };
       }),
     );
 
-    return { peers };
+    return {
+      microphonePublishingWanted: this.microphonePublishingWanted,
+      microphonePublishing: this.microphonePublishing,
+      localSpeaking: this.localSpeaking,
+      remoteAudioExpectedIds: [...this.remoteAudioExpectedByPeer].sort(),
+      peers,
+    };
   }
 
   /** Classify each peer's health and log transitions for observability (Block 5.4). */
@@ -2075,7 +2271,6 @@ export class P2PMediaController {
       }
 
       if (stats) {
-        this.updateRemoteAudioActivityFromStats(peer, stats);
         this.updateRemoteVideoActivityFromStats(peer, stats);
       }
 
@@ -2205,19 +2400,183 @@ export class P2PMediaController {
     this.queueNegotiation(peer, `media-missing:${activity}`);
   }
 
-  private updateRemoteAudioActivityFromStats(
-    peer: P2PPeer,
-    stats: Record<string, unknown>,
-  ): void {
-    const current = stats.audioInbound as AudioActivityStats | undefined;
-    const previous = this.remoteAudioStatsByPeer.get(peer.remoteUserId);
-    const activity = classifyRemoteAudioActivity(previous, current);
-    this.updateRemoteAudioFlowActivityFromStats(peer, previous, current);
-    const remoteAudioExpected = this.remoteAudioExpectedByPeer.has(
-      peer.remoteUserId,
+  private updateAudioActivitySampler(): void {
+    const shouldRun =
+      !this.disposed &&
+      (this.microphonePublishing || this.remoteAudioExpectedByPeer.size > 0);
+
+    if (shouldRun && this.audioActivityTimerId === null) {
+      this.audioActivityTimerId = window.setInterval(() => {
+        void this.sampleAudioActivity();
+      }, P2P_AUDIO_ACTIVITY_SAMPLE_INTERVAL_MS);
+      return;
+    }
+
+    if (!shouldRun && this.audioActivityTimerId !== null) {
+      window.clearInterval(this.audioActivityTimerId);
+      this.audioActivityTimerId = null;
+    }
+  }
+
+  private async sampleAudioActivity(): Promise<void> {
+    if (this.disposed) {
+      return;
+    }
+
+    try {
+      await Promise.all([
+        this.sampleLocalAudioActivity(),
+        ...Array.from(this.remoteAudioExpectedByPeer, (remoteUserId) =>
+          this.sampleRemoteAudioActivity(remoteUserId),
+        ),
+      ]);
+    } finally {
+      this.updateAudioActivitySampler();
+    }
+  }
+
+  private async sampleLocalAudioActivity(): Promise<void> {
+    if (this.localAudioActivitySampling) {
+      return;
+    }
+
+    this.localAudioActivitySampling = true;
+    try {
+      await this.sampleLocalAudioActivityOnce();
+    } finally {
+      this.localAudioActivitySampling = false;
+    }
+  }
+
+  private async sampleLocalAudioActivityOnce(): Promise<void> {
+    const track = this.localAudioTrack;
+    if (
+      !this.microphonePublishing ||
+      !track ||
+      track.readyState !== "live" ||
+      !track.enabled
+    ) {
+      this.clearLocalSpeaking();
+      return;
+    }
+
+    const sender = Array.from(this.peers.values())
+      .map((peer) => peer.audioTransceiver?.sender)
+      .find(
+        (candidate): candidate is RTCRtpSender =>
+          Boolean(
+            candidate?.track &&
+              candidate.track.kind === "audio" &&
+              candidate.track.id === track.id,
+          ),
+      );
+    const localAudioLevelMeter =
+      this.localAudioLevelMeter?.track === track
+        ? this.localAudioLevelMeter
+        : null;
+    if (!sender && !localAudioLevelMeter) {
+      this.clearLocalSpeaking();
+      return;
+    }
+
+    let current: AudioActivityStats | undefined;
+    if (sender) {
+      try {
+        const stats = summarizeStats(await sender.getStats());
+        current = stats.audioSource as AudioActivityStats | undefined;
+      } catch {
+        current = undefined;
+      }
+    }
+
+    if (current?.audioLevel === undefined && localAudioLevelMeter) {
+      const audioLevel = localAudioLevelMeter.sample();
+      current =
+        audioLevel === undefined
+          ? undefined
+          : {
+              audioLevel,
+            };
+    }
+
+    if (
+      this.disposed ||
+      !this.microphonePublishing ||
+      this.localAudioTrack !== track ||
+      track.readyState !== "live" ||
+      !track.enabled
+    ) {
+      return;
+    }
+
+    const activity = classifyAudioSpeechActivity(current);
+    const next = updateSpeakingHysteresis(
+      this.localSpeakingHysteresis,
+      activity,
     );
+    this.localSpeakingHysteresis = next;
+    if (this.localSpeaking !== next.speaking) {
+      this.localSpeaking = next.speaking;
+      this.publishActiveSpeakerIds();
+    }
+  }
+
+  private async sampleRemoteAudioActivity(
+    remoteUserId: string,
+  ): Promise<void> {
+    const peer = this.peers.get(remoteUserId);
+    if (!peer) {
+      return;
+    }
+
+    if (this.remoteAudioActivitySamplingByPeer.get(remoteUserId) === peer) {
+      return;
+    }
+
+    this.remoteAudioActivitySamplingByPeer.set(remoteUserId, peer);
+    try {
+      await this.sampleRemoteAudioActivityOnce(remoteUserId);
+    } finally {
+      if (this.remoteAudioActivitySamplingByPeer.get(remoteUserId) === peer) {
+        this.remoteAudioActivitySamplingByPeer.delete(remoteUserId);
+      }
+    }
+  }
+
+  private async sampleRemoteAudioActivityOnce(
+    remoteUserId: string,
+  ): Promise<void> {
+    const peer = this.peers.get(remoteUserId);
+    if (!peer || !this.remoteAudioExpectedByPeer.has(remoteUserId)) {
+      return;
+    }
+    const expectationGeneration =
+      this.remoteAudioExpectationGenerationByPeer.get(remoteUserId) ?? 0;
+
+    let current: AudioActivityStats | undefined;
+    const receiver = peer.audioTransceiver?.receiver;
+    try {
+      const stats = receiver
+        ? summarizeStats(await receiver.getStats())
+        : {};
+      current = stats.audioInbound as AudioActivityStats | undefined;
+    } catch {
+      current = undefined;
+    }
+
+    if (
+      this.disposed ||
+      this.peers.get(remoteUserId) !== peer ||
+      !this.remoteAudioExpectedByPeer.has(remoteUserId) ||
+      this.remoteAudioExpectationGenerationByPeer.get(remoteUserId) !==
+        expectationGeneration
+    ) {
+      return;
+    }
+
+    const previous = this.remoteAudioStatsByPeer.get(remoteUserId);
     if (current) {
-      this.remoteAudioStatsByPeer.set(peer.remoteUserId, {
+      this.remoteAudioStatsByPeer.set(remoteUserId, {
         audioLevel: current.audioLevel,
         bytesReceived: current.bytesReceived,
         jitter: current.jitter,
@@ -2225,97 +2584,91 @@ export class P2PMediaController {
       });
     }
 
-    if (!remoteAudioExpected) {
-      this.remoteAudioActivityByPeer.set(peer.remoteUserId, "quiet");
-      this.remoteAudioQuietSamplesByPeer.set(
-        peer.remoteUserId,
-        P2P_AUDIO_QUIET_SAMPLES_BEFORE_CLEAR,
-      );
-      if (this.remoteSpeakingIds.delete(peer.remoteUserId)) {
-        logDebug("p2p.audio", "remote activity ignored while voice is not expected", {
+    const element = this.audioElementsByParticipant.get(remoteUserId);
+    const receiverTrack = getAudioTrackFromElement(element);
+    const flowActivity = classifyAudioTransportFlow({
+      connectionState: peer.pc.connectionState,
+      current,
+      expected: true,
+      previous,
+      receiverTrackMuted: receiverTrack?.muted ?? false,
+      receiverTrackState: receiverTrack?.readyState ?? "missing",
+    });
+    this.updateRemoteAudioFlowActivity(
+      peer,
+      flowActivity,
+      current,
+    );
+
+    const freshForSpeech = this.acceptRemoteAudioStatsFreshness(
+      remoteUserId,
+      current,
+    );
+    const speechActivity = freshForSpeech
+      ? classifyAudioSpeechActivity(current)
+      : "unknown";
+    this.remoteAudioActivityByPeer.set(remoteUserId, speechActivity);
+    const previousHysteresis =
+      this.remoteSpeakingHysteresisByPeer.get(remoteUserId) ?? {
+        quietSamples: 0,
+        speaking: false,
+      };
+    const nextHysteresis = updateSpeakingHysteresis(
+      previousHysteresis,
+      speechActivity,
+    );
+    this.remoteSpeakingHysteresisByPeer.set(
+      remoteUserId,
+      nextHysteresis,
+    );
+
+    const wasPublishedAsSpeaking = this.remoteSpeakingIds.has(remoteUserId);
+    if (nextHysteresis.speaking) {
+      this.remoteSpeakingIds.add(remoteUserId);
+    } else {
+      this.remoteSpeakingIds.delete(remoteUserId);
+    }
+    if (wasPublishedAsSpeaking !== nextHysteresis.speaking) {
+      logDebug(
+        "p2p.audio",
+        nextHysteresis.speaking
+          ? "remote activity detected"
+          : "remote activity quiet",
+        {
           localParticipantId: this.localParticipant.id,
-          remoteUserId: peer.remoteUserId,
-          source: "stats",
+          remoteUserId,
+          quietSamples: nextHysteresis.quietSamples,
+          source: "audio-sampler",
           stats: current ?? null,
-        });
-        this.publishActiveSpeakerIds();
-      }
-      return;
-    }
-
-    if (activity === "unknown") {
-      return;
-    }
-
-    this.remoteAudioActivityByPeer.set(peer.remoteUserId, activity);
-
-    if (activity === "active") {
-      this.remoteAudioQuietSamplesByPeer.set(peer.remoteUserId, 0);
-      if (!this.remoteSpeakingIds.has(peer.remoteUserId)) {
-        this.remoteSpeakingIds.add(peer.remoteUserId);
-        logDebug("p2p.audio", "remote activity detected", {
-          localParticipantId: this.localParticipant.id,
-          remoteUserId: peer.remoteUserId,
-          source: "stats",
-          stats: current,
-        });
-        this.publishActiveSpeakerIds();
-      }
-      return;
-    }
-
-    const quietSamples =
-      (this.remoteAudioQuietSamplesByPeer.get(peer.remoteUserId) ?? 0) + 1;
-    this.remoteAudioQuietSamplesByPeer.set(peer.remoteUserId, quietSamples);
-    if (
-      quietSamples >= P2P_AUDIO_QUIET_SAMPLES_BEFORE_CLEAR &&
-      this.remoteSpeakingIds.delete(peer.remoteUserId)
-    ) {
-      logDebug("p2p.audio", "remote activity quiet", {
-        localParticipantId: this.localParticipant.id,
-        remoteUserId: peer.remoteUserId,
-        quietSamples,
-        source: "stats",
-      });
+        },
+      );
       this.publishActiveSpeakerIds();
     }
   }
 
-  private updateRemoteAudioFlowActivityFromStats(
+  private updateRemoteAudioFlowActivity(
     peer: P2PPeer,
-    previous: AudioActivityStats | undefined,
+    flowActivity: AudioTransportFlow,
     current: AudioActivityStats | undefined,
   ): void {
     const previousFlowActivity =
       this.remoteAudioFlowActivityByPeer.get(peer.remoteUserId);
-    const flowActivity = classifyRemoteAudioFlowActivity(
-      previous,
-      current,
-      this.remoteAudioExpectedByPeer.has(peer.remoteUserId),
-      peer.pc.connectionState,
-    );
-
     this.remoteAudioFlowActivityByPeer.set(peer.remoteUserId, flowActivity);
-    const remoteAudioExpected = this.remoteAudioExpectedByPeer.has(
-      peer.remoteUserId,
-    );
 
-    if (remoteAudioExpected) {
-      const now = Date.now();
-      if (
-        previousFlowActivity !== flowActivity ||
-        now - peer.lastAudioFlowLogAt >= P2P_AUDIO_FLOW_LOG_INTERVAL_MS
-      ) {
-        peer.lastAudioFlowLogAt = now;
-        logDebug("p2p.audio", "remote flow sample", {
-          localParticipantId: this.localParticipant.id,
-          remoteUserId: peer.remoteUserId,
-          activity: flowActivity,
-          connectionState: peer.pc.connectionState,
-          iceConnectionState: peer.pc.iceConnectionState,
-          stats: current ?? null,
-        });
-      }
+    const now = Date.now();
+    if (
+      previousFlowActivity !== flowActivity ||
+      now - peer.lastAudioFlowLogAt >= P2P_AUDIO_FLOW_LOG_INTERVAL_MS
+    ) {
+      peer.lastAudioFlowLogAt = now;
+      logDebug("p2p.audio", "remote flow sample", {
+        localParticipantId: this.localParticipant.id,
+        remoteUserId: peer.remoteUserId,
+        activity: flowActivity,
+        connectionState: peer.pc.connectionState,
+        iceConnectionState: peer.pc.iceConnectionState,
+        stats: current ?? null,
+      });
     }
 
     if (flowActivity === "flowing" || flowActivity === "not-expected") {
@@ -2324,6 +2677,13 @@ export class P2PMediaController {
     }
 
     if (flowActivity === "unknown") {
+      return;
+    }
+
+    const expectedAt =
+      this.remoteAudioExpectedAtByPeer.get(peer.remoteUserId) ?? now;
+    if (now - expectedAt < P2P_AUDIO_RECOVERY_GRACE_MS) {
+      this.remoteAudioStallSamplesByPeer.set(peer.remoteUserId, 0);
       return;
     }
 
@@ -2345,7 +2705,6 @@ export class P2PMediaController {
       return;
     }
 
-    const now = Date.now();
     if (
       now - peer.lastAudioStallRecoveryAt <
       P2P_MEDIA_STALL_RECOVERY_COOLDOWN_MS
@@ -2362,6 +2721,81 @@ export class P2PMediaController {
       reason: "audio-stall",
     });
     void this.restartPeerIce(peer, `media-stall:audio-${flowActivity}`);
+  }
+
+  private acceptRemoteAudioStatsFreshness(
+    remoteUserId: string,
+    current: AudioActivityStats | undefined,
+  ): boolean {
+    if (!this.remoteAudioFreshnessRequiredByPeer.has(remoteUserId)) {
+      return true;
+    }
+
+    if (!current) {
+      return false;
+    }
+
+    const baseline =
+      this.remoteAudioFreshnessBaselineByPeer.get(remoteUserId);
+    if (!baseline) {
+      this.remoteAudioFreshnessBaselineByPeer.set(remoteUserId, current);
+      return false;
+    }
+
+    if (!audioActivityStatsChanged(baseline, current)) {
+      return false;
+    }
+
+    this.remoteAudioFreshnessRequiredByPeer.delete(remoteUserId);
+    this.remoteAudioFreshnessBaselineByPeer.delete(remoteUserId);
+    return true;
+  }
+
+  private resetRemoteAudioPublicationState(
+    remoteUserId: string,
+    requireFreshStats = false,
+  ): void {
+    const previousStats = this.remoteAudioStatsByPeer.get(remoteUserId);
+    if (requireFreshStats) {
+      this.remoteAudioFreshnessRequiredByPeer.add(remoteUserId);
+      if (previousStats) {
+        this.remoteAudioFreshnessBaselineByPeer.set(
+          remoteUserId,
+          previousStats,
+        );
+      } else {
+        this.remoteAudioFreshnessBaselineByPeer.delete(remoteUserId);
+      }
+    } else {
+      this.remoteAudioFreshnessRequiredByPeer.delete(remoteUserId);
+      this.remoteAudioFreshnessBaselineByPeer.delete(remoteUserId);
+    }
+    this.remoteAudioExpectedByPeer.delete(remoteUserId);
+    this.advanceRemoteAudioExpectationGeneration(remoteUserId);
+    this.remoteAudioExpectedAtByPeer.delete(remoteUserId);
+    this.remoteAudioActivityByPeer.set(remoteUserId, "quiet");
+    this.remoteAudioFlowActivityByPeer.set(remoteUserId, "not-expected");
+    this.remoteAudioStatsByPeer.delete(remoteUserId);
+    this.remoteAudioStallSamplesByPeer.set(remoteUserId, 0);
+    this.remoteSpeakingHysteresisByPeer.delete(remoteUserId);
+    const pushToTalkChanged =
+      this.remotePushToTalkIds.delete(remoteUserId);
+    const measuredSpeakingChanged =
+      this.remoteSpeakingIds.delete(remoteUserId);
+    const speakingChanged = pushToTalkChanged || measuredSpeakingChanged;
+    if (speakingChanged) {
+      this.publishActiveSpeakerIds();
+    }
+    this.updateAudioActivitySampler();
+  }
+
+  private advanceRemoteAudioExpectationGeneration(
+    remoteUserId: string,
+  ): number {
+    const next =
+      (this.remoteAudioExpectationGenerationByPeer.get(remoteUserId) ?? 0) + 1;
+    this.remoteAudioExpectationGenerationByPeer.set(remoteUserId, next);
+    return next;
   }
 
   notifyPageLeaving(reason: string): void {
@@ -2401,14 +2835,10 @@ export class P2PMediaController {
     // The Worker snapshot is authoritative and can reset ephemeral camera state
     // during a rejoin. Republish actual local intent only after that snapshot.
     this.onCameraStatus(this.publicCameraEnabled);
-    for (const peer of this.peers.values()) {
-      this.sendSignal(peer.remoteUserId, {
-        kind:
-          this.voiceTalking || this.wantsVoiceTalk
-            ? "voice-start"
-            : "voice-stop",
-      });
-    }
+    this.sendMicrophonePublicationStateToAll(
+      this.isMicrophonePublicationExpected(),
+      true,
+    );
 
     if (!ready.reconnect) {
       return;
@@ -2517,6 +2947,13 @@ export class P2PMediaController {
     });
     this.closePeer(remoteUserId, true, true);
     const replacement = this.ensurePeer(remoteUserId);
+    // `bye` clears the remote publication expectation. The replacement peer
+    // must therefore announce the current state again, even though the local
+    // publication intent itself survived the technical peer rebuild.
+    this.microphonePublicationModeByPeer.delete(remoteUserId);
+    if (this.isMicrophonePublicationExpected()) {
+      this.sendMicrophonePublicationState(remoteUserId, true, true);
+    }
     await this.syncPeerMedia(replacement);
     if (this.shouldInitiateOffers(replacement)) {
       await this.createAndSendOffer(replacement);
@@ -2555,6 +2992,10 @@ export class P2PMediaController {
     return Boolean(peer && peer.pc.signalingState !== "closed");
   }
 
+  isRemoteVoicePublishing(remoteUserId: string): boolean {
+    return this.remoteAudioExpectedByPeer.has(remoteUserId);
+  }
+
   disconnect(): void {
     if (this.disposed) {
       return;
@@ -2562,19 +3003,24 @@ export class P2PMediaController {
 
     this.disposed = true;
     this.cameraIntentGeneration += 1;
-    this.voiceIntentGeneration += 1;
+    this.microphoneIntentGeneration += 1;
     this.wantsCamera = false;
-    this.wantsVoiceTalk = false;
+    this.microphonePublishingWanted = false;
+    this.microphonePublishing = false;
     this.cameraStartingGeneration = null;
-    this.voiceStartingGeneration = null;
+    this.microphoneStartingGeneration = null;
     this.clearCameraReacquireTimer();
     this.clearCameraStableTimer();
-    this.clearVoiceReacquireTimer();
-    this.clearVoiceStableTimer();
+    this.clearMicrophoneReacquireTimer();
+    this.clearMicrophoneStableTimer();
     this.clearMicReleaseTimer();
     if (this.reconcileTimerId !== null) {
       window.clearInterval(this.reconcileTimerId);
       this.reconcileTimerId = null;
+    }
+    if (this.audioActivityTimerId !== null) {
+      window.clearInterval(this.audioActivityTimerId);
+      this.audioActivityTimerId = null;
     }
     navigator.mediaDevices?.removeEventListener?.(
       "devicechange",
@@ -2599,6 +3045,7 @@ export class P2PMediaController {
     this.retiredSenderMediaSessionIdsByPeer.clear();
     this.lastSignalingTransportReadyId = null;
 
+    this.replaceLocalAudioLevelMeter(null);
     stopStream(this.localVideoStream);
     stopStream(this.localAudioStream);
     this.localVideoStream = null;
@@ -2610,20 +3057,31 @@ export class P2PMediaController {
       element.remove();
     }
     this.audioElementsByParticipant.clear();
+    this.remotePushToTalkIds.clear();
     this.remoteSpeakingIds.clear();
+    this.remoteAudioExpectationGenerationByPeer.clear();
     this.remoteAudioActivityByPeer.clear();
+    this.remoteAudioActivitySamplingByPeer.clear();
     this.remoteAudioExpectedByPeer.clear();
+    this.remoteAudioExpectedAtByPeer.clear();
     this.remoteAudioFlowActivityByPeer.clear();
+    this.remoteAudioFreshnessBaselineByPeer.clear();
+    this.remoteAudioFreshnessRequiredByPeer.clear();
     this.remoteAudioStatsByPeer.clear();
     this.remoteAudioStallSamplesByPeer.clear();
-    this.remoteAudioQuietSamplesByPeer.clear();
+    this.remoteSpeakingHysteresisByPeer.clear();
     this.remoteVideoActivityByPeer.clear();
     this.remoteVideoStatsByPeer.clear();
+    this.localSpeaking = false;
+    this.localSpeakingHysteresis = {
+      quietSamples: 0,
+      speaking: false,
+    };
     this.onVideosChange([]);
     this.publishActiveSpeakerIds();
     this.cameraState = "off";
     this.setPublicCameraEnabled(false, "disconnect");
-    this.onVoiceStatusChange("idle");
+    this.onMicrophoneStatusChange("off");
     this.onVoiceMessageChange(null);
   }
 
@@ -2665,6 +3123,7 @@ export class P2PMediaController {
       pc,
       polite: isPoliteP2PPeer(this.localParticipant.id, remoteUserId),
       recentSignalFingerprints: new Map(),
+      renegotiationRetryTimerId: null,
       remoteVideoExpected: false,
       remoteVideoStallSamples: 0,
       remoteUserId,
@@ -2764,6 +3223,10 @@ export class P2PMediaController {
         connectionState: pc.connectionState,
       });
       if (["failed", "closed"].includes(pc.connectionState)) {
+        this.remoteSpeakingHysteresisByPeer.set(remoteUserId, {
+          quietSamples: 0,
+          speaking: false,
+        });
         this.remoteSpeakingIds.delete(remoteUserId);
         this.publishActiveSpeakerIds();
       }
@@ -2845,7 +3308,7 @@ export class P2PMediaController {
         this.removeAudio(remoteUserId);
         const element = document.createElement("audio");
         element.autoplay = true;
-        element.volume = 1;
+        this.applyParticipantAudioOutput(remoteUserId, element);
         element.srcObject = stream;
         this.audioElementsByParticipant.set(remoteUserId, element);
         void element.play().catch(() => {
@@ -3165,8 +3628,8 @@ export class P2PMediaController {
     }
 
     if (!this.shouldInitiateOffers(peer)) {
-      peer.needsNegotiation = false;
-      this.requestRemoteRenegotiation(peer, _reason);
+      peer.needsNegotiation =
+        this.requestRemoteRenegotiation(peer, _reason) !== "sent";
       return;
     }
 
@@ -3192,8 +3655,8 @@ export class P2PMediaController {
 
   private async createAndSendOffer(peer: P2PPeer): Promise<void> {
     if (!this.shouldInitiateOffers(peer)) {
-      peer.needsNegotiation = false;
-      this.requestRemoteRenegotiation(peer, "offer-attempt");
+      peer.needsNegotiation =
+        this.requestRemoteRenegotiation(peer, "offer-attempt") !== "sent";
       return;
     }
 
@@ -3255,7 +3718,12 @@ export class P2PMediaController {
       remoteUserId: peer.remoteUserId,
       summary: summarizeP2PSdp(peer.pc.localDescription?.sdp ?? ""),
     });
-    return this.sendLocalDescription(peer);
+    const disposition = this.sendLocalDescription(peer);
+    if (disposition !== "dropped") {
+      peer.needsNegotiation = false;
+      this.clearPeerRenegotiationRetryTimer(peer);
+    }
+    return disposition;
   }
 
   private sendLocalDescription(peer: P2PPeer): RoomSendDisposition {
@@ -3368,10 +3836,21 @@ export class P2PMediaController {
     this.remoteAudioFlowActivityByPeer.delete(participantId);
     this.remoteAudioStatsByPeer.delete(participantId);
     this.remoteAudioStallSamplesByPeer.delete(participantId);
-    this.remoteAudioQuietSamplesByPeer.delete(participantId);
+    this.remoteSpeakingHysteresisByPeer.delete(participantId);
     if (this.remoteSpeakingIds.delete(participantId)) {
       this.publishActiveSpeakerIds();
     }
+  }
+
+  private applyParticipantAudioOutput(
+    participantId: string,
+    element: HTMLAudioElement,
+  ): void {
+    const preference =
+      this.participantAudioOutputPreferences.get(participantId) ??
+      getDefaultParticipantAudioPreference();
+    element.volume = preference.volume;
+    element.muted = preference.muted;
   }
 
   private videoElementUsesTrack(
@@ -3396,11 +3875,27 @@ export class P2PMediaController {
     this.onVideosChange(Array.from(this.videosByParticipant.values()));
   }
 
+  private clearLocalSpeaking(): void {
+    const changed = this.localSpeaking;
+    this.localSpeaking = false;
+    this.localSpeakingHysteresis = {
+      quietSamples: 0,
+      speaking: false,
+    };
+    if (changed) {
+      this.publishActiveSpeakerIds();
+    }
+  }
+
   private publishActiveSpeakerIds(): void {
-    this.onActiveSpeakerIdsChange([
-      ...(this.voiceTalking ? [this.localParticipant.id] : []),
-      ...Array.from(this.remoteSpeakingIds),
-    ]);
+    const activeSpeakerIds = new Set(this.remoteSpeakingIds);
+    for (const participantId of this.remotePushToTalkIds) {
+      activeSpeakerIds.add(participantId);
+    }
+    if (this.localSpeaking) {
+      activeSpeakerIds.add(this.localParticipant.id);
+    }
+    this.onActiveSpeakerIdsChange(Array.from(activeSpeakerIds));
   }
 
   /**
@@ -3469,8 +3964,12 @@ export class P2PMediaController {
     }
 
     this.peers.delete(remoteUserId);
+    if (!preserveSignalSource) {
+      this.microphonePublicationModeByPeer.delete(remoteUserId);
+    }
     this.clearPeerDisconnectTimer(peer);
     this.clearPeerLingerTimer(peer);
+    this.clearPeerRenegotiationRetryTimer(peer);
     peer.pc.close();
     if (!preserveSignalSource) {
       this.senderConnectionIdsByPeer.delete(remoteUserId);
@@ -3480,16 +3979,23 @@ export class P2PMediaController {
     }
     this.removeVideo(remoteUserId);
     this.removeAudio(remoteUserId);
+    this.remotePushToTalkIds.delete(remoteUserId);
     this.remoteSpeakingIds.delete(remoteUserId);
+    this.remoteAudioExpectationGenerationByPeer.delete(remoteUserId);
     this.remoteAudioActivityByPeer.delete(remoteUserId);
+    this.remoteAudioActivitySamplingByPeer.delete(remoteUserId);
     this.remoteAudioExpectedByPeer.delete(remoteUserId);
+    this.remoteAudioExpectedAtByPeer.delete(remoteUserId);
     this.remoteAudioFlowActivityByPeer.delete(remoteUserId);
+    this.remoteAudioFreshnessBaselineByPeer.delete(remoteUserId);
+    this.remoteAudioFreshnessRequiredByPeer.delete(remoteUserId);
     this.remoteAudioStatsByPeer.delete(remoteUserId);
     this.remoteAudioStallSamplesByPeer.delete(remoteUserId);
-    this.remoteAudioQuietSamplesByPeer.delete(remoteUserId);
+    this.remoteSpeakingHysteresisByPeer.delete(remoteUserId);
     this.remoteVideoActivityByPeer.delete(remoteUserId);
     this.remoteVideoStatsByPeer.delete(remoteUserId);
     this.publishActiveSpeakerIds();
+    this.updateAudioActivitySampler();
   }
 
   private async flushPendingIceCandidates(peer: P2PPeer): Promise<void> {
@@ -3704,9 +4210,14 @@ export class P2PMediaController {
       now - peer.lastRenegotiationRequestAt <
         P2P_RENEGOTIATE_REQUEST_COOLDOWN_MS
     ) {
-      return "dropped";
+      const retryAfterMs =
+        P2P_RENEGOTIATE_REQUEST_COOLDOWN_MS -
+        (now - peer.lastRenegotiationRequestAt);
+      this.schedulePeerRenegotiationRetry(peer, reason, retryAfterMs);
+      return "queued";
     }
 
+    this.clearPeerRenegotiationRetryTimer(peer);
     peer.lastRenegotiationRequestAt = now;
     logDebug("p2p.negotiation", "request remote renegotiate", {
       localParticipantId: this.localParticipant.id,
@@ -3714,6 +4225,50 @@ export class P2PMediaController {
       reason,
     });
     return this.sendSignal(peer.remoteUserId, { kind: "renegotiate" });
+  }
+
+  private schedulePeerRenegotiationRetry(
+    peer: P2PPeer,
+    reason: string,
+    delayMs: number,
+  ): void {
+    if (
+      this.disposed ||
+      this.peers.get(peer.remoteUserId) !== peer ||
+      peer.pc.signalingState === "closed" ||
+      peer.renegotiationRetryTimerId !== null
+    ) {
+      return;
+    }
+
+    logDebug("p2p.negotiation", "defer remote renegotiate", {
+      delayMs,
+      localParticipantId: this.localParticipant.id,
+      reason,
+      remoteUserId: peer.remoteUserId,
+    });
+    peer.renegotiationRetryTimerId = window.setTimeout(() => {
+      peer.renegotiationRetryTimerId = null;
+      if (
+        this.disposed ||
+        this.peers.get(peer.remoteUserId) !== peer ||
+        peer.pc.signalingState === "closed" ||
+        !peer.needsNegotiation
+      ) {
+        return;
+      }
+
+      this.queueNegotiation(peer, `cooldown-retry:${reason}`);
+    }, Math.max(0, delayMs));
+  }
+
+  private clearPeerRenegotiationRetryTimer(peer: P2PPeer): void {
+    if (peer.renegotiationRetryTimerId === null) {
+      return;
+    }
+
+    window.clearTimeout(peer.renegotiationRetryTimerId);
+    peer.renegotiationRetryTimerId = null;
   }
 
   private requestRemoteIceRestart(peer: P2PPeer, reason: string): void {
@@ -4014,6 +4569,16 @@ function mediaElementUsesTrack(
   );
 }
 
+function getAudioTrackFromElement(
+  element: HTMLAudioElement | undefined,
+): MediaStreamTrack | null {
+  const stream = element?.srcObject;
+  if (!(stream instanceof MediaStream)) {
+    return null;
+  }
+  return stream.getAudioTracks()[0] ?? null;
+}
+
 function findMediaTransceiver(
   pc: RTCPeerConnection,
   kind: "audio" | "video",
@@ -4086,17 +4651,46 @@ function formatCameraErrorMessage(error: unknown): string {
   return "Camera is unavailable. Close other apps using it and try again.";
 }
 
-function formatVoiceErrorMessage(error: unknown): string {
-  const name =
-    error && typeof error === "object" && "name" in error
-      ? String((error as { name?: unknown }).name)
-      : "";
+function microphoneErrorName(error: unknown): string {
+  return error && typeof error === "object" && "name" in error
+    ? String((error as { name?: unknown }).name)
+    : "";
+}
+
+export function classifyMicrophoneTerminalFailure(
+  error: unknown,
+): MicrophoneTerminalFailureReason | null {
+  const name = microphoneErrorName(error);
+  if (
+    name === "NotAllowedError" ||
+    name === "PermissionDeniedError"
+  ) {
+    return "permission-denied";
+  }
+  if (name === "SecurityError") {
+    return "security";
+  }
+  if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+    return "device-not-found";
+  }
+  if (
+    name === "OverconstrainedError" ||
+    name === "ConstraintNotSatisfiedError" ||
+    name === "TypeError"
+  ) {
+    return "constraints";
+  }
+  return null;
+}
+
+function formatMicrophoneErrorMessage(error: unknown): string {
+  const name = microphoneErrorName(error);
   if (
     name === "NotAllowedError" ||
     name === "PermissionDeniedError" ||
     name === "SecurityError"
   ) {
-    return "Microphone access is blocked. Allow microphone permission and try again.";
+    return "Microphone access is blocked. Allow microphone access and try again.";
   }
   if (name === "NotFoundError" || name === "DevicesNotFoundError") {
     return "Microphone not found. Connect a microphone and try again.";
@@ -4107,7 +4701,10 @@ function formatVoiceErrorMessage(error: unknown): string {
   if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") {
     return "Microphone settings are not supported by this device.";
   }
-  return "Microphone is unavailable. Release V and try again.";
+  if (name === "TypeError") {
+    return "Microphone settings are invalid. Reload the page and try again.";
+  }
+  return "Microphone is unavailable. Turn it off and try again.";
 }
 
 function toP2PIceCandidate(
@@ -4498,6 +5095,18 @@ function maxOptionalNumbers(
   return typeof left === "number" ? left : right;
 }
 
+function audioActivityStatsChanged(
+  previous: AudioActivityStats,
+  current: AudioActivityStats,
+): boolean {
+  return (
+    previous.audioLevel !== current.audioLevel ||
+    previous.bytesReceived !== current.bytesReceived ||
+    previous.jitter !== current.jitter ||
+    previous.packetsReceived !== current.packetsReceived
+  );
+}
+
 function mergeVideoInboundStats(
   current: VideoInboundStats | undefined,
   next: VideoInboundStats,
@@ -4508,6 +5117,24 @@ function mergeVideoInboundStats(
     framesPerSecond: maxOptionalNumbers(
       current?.framesPerSecond,
       next.framesPerSecond,
+    ),
+  };
+}
+
+function mergeAudioInboundStats(
+  current: AudioActivityStats | undefined,
+  next: AudioActivityStats,
+): AudioActivityStats {
+  return {
+    audioLevel: maxOptionalNumbers(current?.audioLevel, next.audioLevel),
+    bytesReceived: addOptionalNumbers(
+      current?.bytesReceived,
+      next.bytesReceived,
+    ),
+    jitter: maxOptionalNumbers(current?.jitter, next.jitter),
+    packetsReceived: addOptionalNumbers(
+      current?.packetsReceived,
+      next.packetsReceived,
     ),
   };
 }
@@ -4568,13 +5195,22 @@ export function summarizeStats(report: RTCStatsReport): Record<string, unknown> 
       };
     }
 
-    if (stat.type === "inbound-rtp" && stat.kind === "audio") {
-      summary.audioInbound = {
-        bytesReceived: stat.bytesReceived,
-        packetsReceived: stat.packetsReceived,
+    if (stat.type === "media-source" && stat.kind === "audio") {
+      summary.audioSource = {
         audioLevel: stat.audioLevel,
-        jitter: stat.jitter,
       };
+    }
+
+    if (stat.type === "inbound-rtp" && stat.kind === "audio") {
+      summary.audioInbound = mergeAudioInboundStats(
+        summary.audioInbound as AudioActivityStats | undefined,
+        {
+          audioLevel: stat.audioLevel,
+          bytesReceived: stat.bytesReceived,
+          jitter: stat.jitter,
+          packetsReceived: stat.packetsReceived,
+        },
+      );
     }
   }
 
