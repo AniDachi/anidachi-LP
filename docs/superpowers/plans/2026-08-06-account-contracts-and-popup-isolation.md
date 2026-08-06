@@ -645,7 +645,7 @@ git commit -m "feat(extension): validate account api responses"
 - Produces: `AccountRequestToken`, `createAccountRequestGate`, `AccountOwnedState<T>`, `accountLoadingState`, `accountReadyState`, `accountErrorState`, and `signedOutAccountState`.
 - Consumes: authenticated AniDachi user IDs from extension auth; it does not inspect access-token strings.
 
-- [ ] **Step 1: Write failing identity and stale-response tests**
+- [x] **Step 1: Write failing identity and stale-response tests**
 
 Create `apps/extension/test/account-sync.test.ts`:
 
@@ -699,7 +699,7 @@ describe("account-owned state", () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and confirm the module is missing**
+- [x] **Step 2: Run the test and confirm the module is missing**
 
 Run:
 
@@ -709,7 +709,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: FAIL because `account-sync.ts` does not exist.
 
-- [ ] **Step 3: Implement a gate that cannot reactivate a stale caller**
+- [x] **Step 3: Implement a gate that cannot reactivate a stale caller**
 
 Create `apps/extension/src/account-sync.ts` with this public contract:
 
@@ -762,7 +762,7 @@ export type AccountOwnedState<T> =
 
 `accountLoadingState` and `accountErrorState` preserve `current.data` only when `current.ownerUserId === userId`. `accountReadyState` always sets the supplied owner. `signedOutAccountState` removes both owner and data.
 
-- [ ] **Step 4: Run the focused test and extension check**
+- [x] **Step 4: Run the focused test and extension check**
 
 Run:
 
@@ -773,7 +773,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit the account-sync primitive**
+- [x] **Step 5: Commit the account-sync primitive**
 
 ```bash
 git add apps/extension/src/account-sync.ts apps/extension/test/account-sync.test.ts
