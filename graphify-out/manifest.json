@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/popup-app.tsx": {
-    "mtime": 1784683105.3609476,
-    "ast_hash": "1695d3c87a6ac54065587716ac2ecb4f",
+    "mtime": 1786020920.3709474,
+    "ast_hash": "7435422857cd810451b326889b5b47b1",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-styles.ts": {
@@ -375,8 +375,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/social-client.ts": {
-    "mtime": 1784676382.3310587,
-    "ast_hash": "25131f79c508a3228e8ff1d40c61f88e",
+    "mtime": 1786016829.753102,
+    "ast_hash": "95e63d7f9cfd350f0c9f11b0e4136826",
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
@@ -395,8 +395,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/watch-library-client.ts": {
-    "mtime": 1784676382.3320549,
-    "ast_hash": "9e45e368b546846e0aa70a22619f512c",
+    "mtime": 1786016867.4200394,
+    "ast_hash": "eca9302f977e3e00487aeb1c1e1c077c",
     "semantic_hash": ""
   },
   "apps/extension/src/watch-progress-entry.ts": {
@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/watch-progress.ts": {
-    "mtime": 1784676382.3329642,
-    "ast_hash": "785c26623d6d5ca0ad680b88a3afd819",
+    "mtime": 1786020883.586881,
+    "ast_hash": "e72773fd19e70a8a9b09aa80e8ec62ad",
     "semantic_hash": ""
   },
   "apps/extension/test/auth-client.test.ts": {
@@ -525,8 +525,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/social-client.test.ts": {
-    "mtime": 1784676382.339066,
-    "ast_hash": "11960a15b4fd52e47b776646b8935d91",
+    "mtime": 1786016715.0410259,
+    "ast_hash": "d8233d55255606df3031be3223838c23",
     "semantic_hash": ""
   },
   "apps/extension/test/video-adapter.test.ts": {
@@ -540,8 +540,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/watch-library-client.test.ts": {
-    "mtime": 1784676382.3395076,
-    "ast_hash": "9a70758f66ec63f65d12e4b268b5f40d",
+    "mtime": 1786016867.505739,
+    "ast_hash": "faa202aeabe536c406094ad1e094a677",
     "semantic_hash": ""
   },
   "apps/extension/test/watch-progress-entry.test.ts": {
@@ -550,8 +550,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/watch-progress.test.ts": {
-    "mtime": 1784676382.3398407,
-    "ast_hash": "15300833473181fb6e0c157cb06c9302",
+    "mtime": 1786020892.8716009,
+    "ast_hash": "3da6ca85abf8ab6ca38e73ec6bcdd8e8",
     "semantic_hash": ""
   },
   "apps/extension/tsconfig.json": {
@@ -790,8 +790,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/friends/route.ts": {
-    "mtime": 1784676382.347175,
-    "ast_hash": "f64ea11a893525a526fc27e207d00904",
+    "mtime": 1786016583.6529264,
+    "ast_hash": "39903f0abde30af8c6062356afb567a3",
     "semantic_hash": ""
   },
   "apps/web/app/api/google-ads/oauth/callback/route.ts": {
@@ -820,8 +820,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/groups/route.ts": {
-    "mtime": 1784676382.3482037,
-    "ast_hash": "9d8054275ae8fc03ac0c933c1b80dd19",
+    "mtime": 1786016583.7424529,
+    "ast_hash": "224da649861d818456074cb2834accec",
     "semantic_hash": ""
   },
   "apps/web/app/api/internal/rooms/[roomId]/ended/route.ts": {
@@ -840,8 +840,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/invites/route.ts": {
-    "mtime": 1784676382.3489966,
-    "ast_hash": "5c1d178c1bbdd7d4d2bc9cb6bbc91414",
+    "mtime": 1786016583.829681,
+    "ast_hash": "f7c7bb0cee0d5f338acd5e373fe62afe",
     "semantic_hash": ""
   },
   "apps/web/app/api/kreatli-crm/gmail/callback/route.ts": {
@@ -2155,8 +2155,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-library.ts": {
-    "mtime": 1784676382.3907695,
-    "ast_hash": "06da197eff256c0b904d80645a720acf",
+    "mtime": 1786016583.5646672,
+    "ast_hash": "c1ddbcd8c71b6c1533d77bbc2b785242",
     "semantic_hash": ""
   },
   "apps/web/lib/anime-data.ts": {
@@ -2735,8 +2735,8 @@
     "semantic_hash": ""
   },
   "packages/protocol/src/index.ts": {
-    "mtime": 1784676382.43677,
-    "ast_hash": "1d46c08f8d459ea52ebbc11ce526c73f",
+    "mtime": 1786016269.0290635,
+    "ast_hash": "81e3cec3e74f669f3f717cdeeb227ad8",
     "semantic_hash": ""
   },
   "packages/protocol/src/limits.ts": {
@@ -4162,6 +4162,56 @@
   "apps/web/docs/seo-portfolio-freeze.md": {
     "mtime": 1785929708.2929585,
     "ast_hash": "4c8ffefe1c99a1b8f6aaaeac85276828",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md": {
+    "mtime": 1786014198.5386698,
+    "ast_hash": "f031f2bffc5bd598a386ed1b6dcbf5d6",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md": {
+    "mtime": 1786021053.6021678,
+    "ast_hash": "b6ca7105812413df5fab64b950b5cc0e",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/account-sync.ts": {
+    "mtime": 1786020900.8104248,
+    "ast_hash": "ed6f38c9ac4b5f0df8b4cdbae0ec3066",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/social-snapshot-cache.ts": {
+    "mtime": 1786017139.7526338,
+    "ast_hash": "2af7fc88114ffe0ba71e67b70caf3b9f",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/account-sync.test.ts": {
+    "mtime": 1786020096.3445716,
+    "ast_hash": "da3df775e55b1a2597c6387fc71d99ef",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/social-snapshot-cache.test.ts": {
+    "mtime": 1786017098.0752144,
+    "ast_hash": "751254624b7d4af33d95d062e75a6265",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/account-response.test.ts": {
+    "mtime": 1786016453.5913403,
+    "ast_hash": "f5d48a659ac7106fb62400cd8caf1791",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/account-response.ts": {
+    "mtime": 1786016473.4221127,
+    "ast_hash": "7bdba169f6e6230019ebb47a0c1abde9",
+    "semantic_hash": ""
+  },
+  "packages/protocol/src/account.ts": {
+    "mtime": 1786016268.9424922,
+    "ast_hash": "1eeb7fa09b2014dfac4acb6f05f15f57",
+    "semantic_hash": ""
+  },
+  "packages/protocol/test/account.test.ts": {
+    "mtime": 1786016292.0084999,
+    "ast_hash": "3bf70755d2b3e1e641b76fdd4467ca57",
     "semantic_hash": ""
   }
 }

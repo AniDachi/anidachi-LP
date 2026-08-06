@@ -1,4 +1,6 @@
+import type { RoomInvitesResponse } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
+import { createAccountResponseMeta } from "@/lib/anidachi-auth/account-response";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
 import {
   cleanInviteMessage,
@@ -16,7 +18,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    return NextResponse.json(await listRoomInvites(session.userId));
+    const data = await listRoomInvites(session.userId);
+    const response: RoomInvitesResponse = {
+      meta: createAccountResponseMeta(),
+      ...data,
+    };
+    return NextResponse.json(response);
   } catch (error) {
     return socialErrorResponse(error);
   }

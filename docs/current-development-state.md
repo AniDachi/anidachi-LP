@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-07-30.
+Last updated: 2026-08-06.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -162,6 +162,27 @@ Supabase query failures propagate as server errors and must never be collapsed
 into an invalid-token response. Startup reconciliation and cookie-change events
 are coalesced by the background worker; strict cookie policies use the existing
 silent browser flow as a fallback.
+
+## Account Read Contracts And Popup Isolation
+
+Account read responses for friends, groups, invites, and watch-library data use
+shared versioned protocol schemas. Their metadata identifies the schema version,
+server generation time, and authenticated account owner so extension clients can
+reject malformed, incompatible, or cross-account responses before rendering or
+caching them.
+
+The Popup treats the active extension session as the owner of all account data.
+Social and watch snapshots are cached per account, visible state is cleared
+immediately on account change or sign-out, and generation gates prevent late
+requests, poster hydration, social actions, and history operations from writing
+into a newer account session. Popup snapshot I/O does not claim ownership of the
+content script's active playback progress.
+
+This is the first isolation and read-contract slice. It does not redesign the
+database, social mutations, canonical watch-history reconciliation, durable
+notification counters, or the final Popup and account-page product surfaces.
+Loaded two-account staging acceptance is still required before this slice is
+promoted to production.
 
 ## Runtime Environments
 
@@ -498,9 +519,9 @@ These are intentionally not treated as solved:
   `sourceGeneration` bumps are implemented, but durable Supabase source
   persistence, room-create source descriptor plumbing, and explicit
   source-switch UI/commands are still pending.
-- Watch progress persistence now has a backend-backed watch-library foundation
-  on the Phase 6 branch, but staging acceptance across real browser profiles is
-  still required before treating it as finished product behavior.
+- Watch progress persistence has a backend-backed watch-library foundation and
+  account-scoped Popup snapshots, but staging acceptance across real browser
+  profiles is still required before treating it as finished product behavior.
 - Custom API domain for hiding the Cloudflare account subdomain is deferred.
 - Stripe production webhook appears wired, but end-to-end subscription testing is
   still a separate follow-up.

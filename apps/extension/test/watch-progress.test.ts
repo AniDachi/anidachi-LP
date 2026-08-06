@@ -1,15 +1,22 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildProviderFolders,
   createEmptyWatchProgressStore,
   formatProgressClock,
+  loadWatchProgressStoreForUser,
   normalizeWatchProgressStore,
   recordWatchProgressInStore,
+  saveWatchProgressStoreForUser,
+  WATCH_PROGRESS_ACTIVE_OWNER_STORAGE_KEY,
   WATCH_PROGRESS_STORAGE_KEY,
   watchProgressOwnerForUser,
   watchProgressStorageKeyForUser,
   type WatchProgressEntry,
 } from "../src/watch-progress";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("watch progress store", () => {
   it("scopes local watch progress storage by signed-in user", () => {
@@ -19,6 +26,33 @@ describe("watch progress store", () => {
       watchProgressStorageKeyForUser("user-b"),
     );
     expect(watchProgressStorageKeyForUser("user-a")).toContain(encodeURIComponent("user:user-a"));
+  });
+
+  it("allows popup snapshot I/O without changing the active playback owner", async () => {
+    const values = new Map<string, unknown>();
+    const set = vi.fn(async (items: Record<string, unknown>) => {
+      for (const [key, value] of Object.entries(items)) values.set(key, value);
+    });
+    vi.stubGlobal("chrome", {
+      storage: {
+        local: {
+          get: vi.fn(async (key: string) => {
+            if (key.includes("reset.crunchyroll-regroup")) return { [key]: true };
+            return values.has(key) ? { [key]: values.get(key) } : {};
+          }),
+          set,
+          remove: vi.fn(async () => undefined),
+        },
+      },
+    });
+
+    const store = createEmptyWatchProgressStore();
+    await saveWatchProgressStoreForUser("user-a", store, { setActiveOwner: false });
+    await loadWatchProgressStoreForUser("user-a", { setActiveOwner: false });
+
+    expect(set).not.toHaveBeenCalledWith(
+      expect.objectContaining({ [WATCH_PROGRESS_ACTIVE_OWNER_STORAGE_KEY]: expect.anything() }),
+    );
   });
 
   it("clamps and upserts Crunchyroll episode progress", () => {

@@ -17,20 +17,30 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { SocialSnapshotSchema, type SocialSnapshot } from "@anidachi/protocol";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  accountIdentityChanged,
+  accountErrorState,
+  accountLoadingState,
+  accountReadyState,
+  createAccountRequestGate,
+  createAsyncGenerationGate,
+  signedOutAccountState,
+  type AccountOwnedState,
+  type AccountRequestToken,
+  type AccountScopeToken,
+} from "./account-sync";
 import {
   getCachedExtensionSession,
   requestCurrentExtensionSession,
   requestSilentWebsiteSignIn,
   requestWebsiteSignIn,
 } from "./auth-client";
-import type { ExtensionAuthTokens } from "./auth-tokens";
+import { AUTH_TOKENS_STORAGE_KEY, normalizeExtensionAuthTokens, type ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
-import {
-  inferCrunchyrollSeasonFromSourceUrl,
-  seasonNumberFromTitle,
-} from "./source-adapters/crunchyroll/season";
+import { inferCrunchyrollSeasonFromSourceUrl, seasonNumberFromTitle } from "./source-adapters/crunchyroll/season";
 import { popupStyles } from "./popup-styles";
 import {
   acceptRoomInvite,
@@ -45,9 +55,13 @@ import {
   type FriendListItem,
   type InviteTargets,
   type RoomInvite,
-  type RoomInvitesResponse,
   updateFriendGroup,
 } from "./social-client";
+import {
+  getCachedSocialSnapshotForUser,
+  isSocialSnapshotCacheFresh,
+  setCachedSocialSnapshotForUser,
+} from "./social-snapshot-cache";
 import {
   buildProviderFolders,
   clearWatchProgressStoreForUser,
@@ -101,10 +115,7 @@ type LibraryFilterOptions = {
   groupMemberUserIds?: Set<string>;
 };
 
-type SocialPanelData = {
-  targets: InviteTargets;
-  invites: RoomInvitesResponse;
-};
+type SocialPanelData = SocialSnapshot;
 
 type PopupNotice = {
   tone: "success" | "error";
@@ -122,23 +133,26 @@ type EpisodeSeasonGroup = {
   episodes: StoredEpisodeProgress[];
 };
 
-type SocialPanelState =
-  | { status: "loading"; data: SocialPanelData | null; error: null }
-  | { status: "signed-out"; data: null; error: null }
-  | { status: "ready"; data: SocialPanelData; error: null }
-  | { status: "error"; data: SocialPanelData | null; error: string };
+type SocialPanelState = AccountOwnedState<SocialPanelData>;
 
-type WatchLibraryState =
-  | { status: "loading"; data: WatchLibraryResponse | null; error: null }
-  | { status: "signed-out"; data: null; error: null }
-  | { status: "ready"; data: WatchLibraryResponse; error: null }
-  | { status: "error"; data: WatchLibraryResponse | null; error: string };
+type WatchLibraryState = AccountOwnedState<WatchLibraryResponse>;
 
 type AuthSessionState =
   | { status: "loading"; tokens: null; error: null }
   | { status: "signed-out"; tokens: null; error: null }
   | { status: "ready"; tokens: ExtensionAuthTokens; error: null }
   | { status: "error"; tokens: null; error: string };
+
+const POPUP_WATCH_PROGRESS_ACCESS = { setActiveOwner: false } as const;
+
+function trackPopupTask<T>(tasks: Set<Promise<unknown>>, task: Promise<T>): Promise<T> {
+  tasks.add(task);
+  void task.then(
+    () => tasks.delete(task),
+    () => tasks.delete(task),
+  );
+  return task;
+}
 
 export function PopupApp() {
   const [store, setStore] = useState<WatchProgressStore>(() => createEmptyWatchProgressStore());
@@ -148,16 +162,8 @@ export function PopupApp() {
     tokens: null,
     error: null,
   });
-  const [socialState, setSocialState] = useState<SocialPanelState>({
-    status: "loading",
-    data: null,
-    error: null,
-  });
-  const [watchLibraryState, setWatchLibraryState] = useState<WatchLibraryState>({
-    status: "loading",
-    data: null,
-    error: null,
-  });
+  const [socialState, setSocialState] = useState<SocialPanelState>(() => signedOutAccountState());
+  const [watchLibraryState, setWatchLibraryState] = useState<WatchLibraryState>(() => signedOutAccountState());
   const [busyInviteId, setBusyInviteId] = useState<string | null>(null);
   const [busySocialAction, setBusySocialAction] = useState<string | null>(null);
   const [socialNotice, setSocialNotice] = useState<PopupNotice | null>(null);
@@ -170,9 +176,46 @@ export function PopupApp() {
   });
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
   const posterRequestsRef = useRef<Record<string, boolean>>({});
+  const storeRef = useRef(store);
   const storeUserIdRef = useRef<string | null>(null);
-  const watchLibraryUserIdRef = useRef<string | null>(null);
+  const storeReadyRef = useRef(false);
+  const accountGateRef = useRef(createAccountRequestGate());
+  const popupSyncGateRef = useRef(createAsyncGenerationGate());
+  const storeLoadGateRef = useRef(createAsyncGenerationGate());
+  const socialLoadGateRef = useRef(createAsyncGenerationGate());
+  const watchLibraryLoadGateRef = useRef(createAsyncGenerationGate());
+  const posterHydrationGateRef = useRef(createAsyncGenerationGate());
+  const watchLibraryTasksRef = useRef<Set<Promise<unknown>>>(new Set());
+  const posterHydrationTasksRef = useRef<Set<Promise<unknown>>>(new Set());
+  const historyClearScopeRef = useRef<AccountScopeToken | null>(null);
+  const activateAccount = useCallback((userId: string | null): AccountRequestToken | null => {
+    const previousUserId = accountGateRef.current.currentUserId();
+    accountGateRef.current.activate(userId);
+
+    setSocialState((current) => (userId ? accountLoadingState(userId, current) : signedOutAccountState()));
+    setWatchLibraryState((current) => (userId ? accountLoadingState(userId, current) : signedOutAccountState()));
+    setSocialNotice(null);
+
+    if (previousUserId !== userId) {
+      storeLoadGateRef.current.begin();
+      socialLoadGateRef.current.begin();
+      watchLibraryLoadGateRef.current.begin();
+      posterHydrationGateRef.current.begin();
+      storeUserIdRef.current = userId;
+      storeReadyRef.current = false;
+      setStore(createEmptyWatchProgressStore());
+      setBusyInviteId(null);
+      setBusySocialAction(null);
+      setBusyWatchSessionId(null);
+      setClearingHistory(false);
+    }
+
+    return userId ? accountGateRef.current.capture(userId) : null;
+  }, []);
   const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
+  useEffect(() => {
+    storeRef.current = store;
+  }, [store]);
   const folders = useMemo(() => buildProviderFolders(store), [store]);
   const libraryEpisodesByKey = useMemo(
     () => buildLibraryEpisodeIndex(watchLibraryState.data),
@@ -188,7 +231,9 @@ export function PopupApp() {
       activity: libraryActivityFilter,
       person,
       ...(selectedGroup
-        ? { groupMemberUserIds: new Set(selectedGroup.members.map((member) => member.user.userId)) }
+        ? {
+            groupMemberUserIds: new Set(selectedGroup.members.map((member) => member.user.userId)),
+          }
         : {}),
     };
   }, [libraryActivityFilter, libraryPersonFilter, socialState.data?.targets.groups]);
@@ -225,142 +270,196 @@ export function PopupApp() {
     socialState.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)).length ?? 0;
 
   const ensureStoreForUser = useCallback(
-    async (
-      userId: string | null,
-      currentStore: WatchProgressStore,
-    ): Promise<WatchProgressStore> => {
-      if (storeUserIdRef.current === userId) {
+    async (userId: string | null, currentStore: WatchProgressStore): Promise<WatchProgressStore> => {
+      const accountScope = accountGateRef.current.captureCurrent();
+      if (accountScope.userId !== userId || !accountGateRef.current.isCurrent(accountScope)) {
+        return createEmptyWatchProgressStore();
+      }
+      if (storeReadyRef.current && storeUserIdRef.current === userId) {
         return currentStore;
       }
 
-      const scopedStore = await loadWatchProgressStoreForUser(userId);
+      const loadGeneration = storeLoadGateRef.current.begin();
+      const isCurrent = () =>
+        accountGateRef.current.isCurrent(accountScope) && storeLoadGateRef.current.isCurrent(loadGeneration);
+
+      const scopedStore = await loadWatchProgressStoreForUser(userId, POPUP_WATCH_PROGRESS_ACCESS);
+      if (!isCurrent()) {
+        return createEmptyWatchProgressStore();
+      }
       storeUserIdRef.current = userId;
+      storeReadyRef.current = true;
       setStore(scopedStore);
       return scopedStore;
     },
     [],
   );
 
-  const loadSocialForTokens = useCallback(async (tokens: ExtensionAuthTokens) => {
-    setSocialState((current) => ({
-      status: "loading",
-      data: current.data,
-      error: null,
-    }));
-    try {
-      const [targets, invites] = await Promise.all([
-        listInviteTargets(tokens.accessToken),
-        listRoomInvites(tokens.accessToken),
-      ]);
-      setSocialState({
-        status: "ready",
-        data: { targets, invites },
-        error: null,
-      });
-    } catch (error) {
-      setSocialState((current) => ({
-        status: "error",
-        data: current.data,
-        error: error instanceof Error ? error.message : "Could not load friends",
-      }));
-    }
-  }, []);
+  const loadSocialForTokens = useCallback(
+    async (tokens: ExtensionAuthTokens, parentIsCurrent: () => boolean = () => true) => {
+      const request = accountGateRef.current.capture(tokens.user.id);
+      if (!request) return false;
+      const loadGeneration = socialLoadGateRef.current.begin();
+      const isCurrent = () =>
+        parentIsCurrent() &&
+        accountGateRef.current.isCurrent(request) &&
+        socialLoadGateRef.current.isCurrent(loadGeneration);
+
+      if (!isCurrent()) return false;
+      setSocialState((current) => accountLoadingState(tokens.user.id, current));
+      try {
+        const cached = await getCachedSocialSnapshotForUser(tokens.user.id);
+        if (!isCurrent()) return false;
+        if (cached) {
+          setSocialState(
+            isSocialSnapshotCacheFresh(cached)
+              ? accountReadyState(tokens.user.id, cached.data)
+              : {
+                  status: "loading",
+                  ownerUserId: tokens.user.id,
+                  data: cached.data,
+                  error: null,
+                },
+          );
+        }
+
+        const [targets, invites] = await Promise.all([
+          listInviteTargets(tokens.accessToken),
+          listRoomInvites(tokens.accessToken),
+        ]);
+        if (!isCurrent()) return false;
+        const snapshot = SocialSnapshotSchema.parse({ targets, invites });
+        if (!isCurrent()) return false;
+        await setCachedSocialSnapshotForUser(tokens.user.id, snapshot);
+        if (!isCurrent()) return false;
+        setSocialState(accountReadyState(tokens.user.id, snapshot));
+        return true;
+      } catch (error) {
+        if (!isCurrent()) return false;
+        setSocialState((current) =>
+          accountErrorState(tokens.user.id, current, error instanceof Error ? error.message : "Could not load friends"),
+        );
+        return false;
+      }
+    },
+    [],
+  );
 
   const applyWatchLibraryToLocalStore = useCallback(
     async (
       userId: string,
       library: WatchLibraryResponse,
       baseStore?: WatchProgressStore,
+      isRequestCurrent?: () => boolean,
     ): Promise<WatchProgressStore> => {
-      if (storeUserIdRef.current !== userId) {
+      const isCurrent = () =>
+        Boolean(isRequestCurrent?.()) && storeReadyRef.current && storeUserIdRef.current === userId;
+      if (!isCurrent()) {
         return baseStore ?? createEmptyWatchProgressStore();
       }
 
-      const latestStore = baseStore ?? (await loadWatchProgressStoreForUser(userId));
+      const latestStore = baseStore ?? (await loadWatchProgressStoreForUser(userId, POPUP_WATCH_PROGRESS_ACCESS));
+      if (!isCurrent()) return latestStore;
       const mergedStore = mergeWatchLibraryIntoProgressStore(latestStore, library);
-      if (storeUserIdRef.current !== userId) {
-        return latestStore;
-      }
+      if (!isCurrent()) return latestStore;
 
       if (mergedStore !== latestStore) {
-        await saveWatchProgressStoreForUser(userId, mergedStore);
+        if (!isCurrent()) return latestStore;
+        await saveWatchProgressStoreForUser(userId, mergedStore, POPUP_WATCH_PROGRESS_ACCESS);
+        if (!isCurrent()) return latestStore;
       }
-      if (storeUserIdRef.current === userId) {
-        setStore(mergedStore);
-      }
+      if (!isCurrent()) return latestStore;
+      setStore(mergedStore);
       return mergedStore;
     },
     [],
   );
 
   const loadWatchLibraryForTokens = useCallback(
-    async (tokens: ExtensionAuthTokens, localStore: WatchProgressStore, useCachedSnapshot = true) => {
-      try {
-        const cached = useCachedSnapshot
-          ? await getCachedWatchLibraryForUser(tokens.user.id)
-          : null;
-        const freshCached = cached && isWatchLibraryCacheFresh(cached) ? cached : null;
-        const syncLedger = await getWatchLibrarySyncLedger(tokens.user.id);
-        const outboundEntries = watchProgressEntriesFromStoreForSync(localStore, "reconcile", syncLedger);
-        if (useCachedSnapshot) {
-          if (cached) {
-            await applyWatchLibraryToLocalStore(tokens.user.id, cached.library, localStore);
-            await markWatchLibraryEntriesSynced(
-              tokens.user.id,
-              watchProgressEntriesFromWatchLibrary(cached.library),
-            );
-            if (storeUserIdRef.current !== tokens.user.id) {
-              return;
+    (
+      tokens: ExtensionAuthTokens,
+      localStore: WatchProgressStore,
+      useCachedSnapshot = true,
+      parentIsCurrent: () => boolean = () => true,
+    ) => {
+      const task = (async () => {
+        const request = accountGateRef.current.capture(tokens.user.id);
+        if (!request) return;
+        const loadGeneration = watchLibraryLoadGateRef.current.begin();
+        const isCurrent = () =>
+          parentIsCurrent() &&
+          accountGateRef.current.isCurrent(request) &&
+          watchLibraryLoadGateRef.current.isCurrent(loadGeneration);
+
+        if (!isCurrent()) return;
+        setWatchLibraryState((current) => accountLoadingState(tokens.user.id, current));
+        try {
+          if (!isCurrent()) return;
+          const cached = useCachedSnapshot ? await getCachedWatchLibraryForUser(tokens.user.id) : null;
+          if (!isCurrent()) return;
+          const freshCached = cached && isWatchLibraryCacheFresh(cached) ? cached : null;
+          if (!isCurrent()) return;
+          const syncLedger = await getWatchLibrarySyncLedger(tokens.user.id);
+          if (!isCurrent()) return;
+          const outboundEntries = watchProgressEntriesFromStoreForSync(localStore, "reconcile", syncLedger);
+          if (useCachedSnapshot) {
+            if (cached) {
+              if (!isCurrent()) return;
+              await applyWatchLibraryToLocalStore(tokens.user.id, cached.library, localStore, isCurrent);
+              if (!isCurrent()) return;
+              await markWatchLibraryEntriesSynced(tokens.user.id, watchProgressEntriesFromWatchLibrary(cached.library));
+              if (!isCurrent()) return;
+              setWatchLibraryState(
+                freshCached
+                  ? accountReadyState(tokens.user.id, cached.library)
+                  : {
+                      status: "loading",
+                      ownerUserId: tokens.user.id,
+                      data: cached.library,
+                      error: null,
+                    },
+              );
+            } else {
+              setWatchLibraryState((current) => accountLoadingState(tokens.user.id, current));
             }
-            watchLibraryUserIdRef.current = tokens.user.id;
-            setWatchLibraryState({
-              status: freshCached ? "ready" : "loading",
-              data: cached.library,
-              error: null,
-            });
           } else {
-            setWatchLibraryState((current) => ({
-              status: "loading",
-              data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
-              error: null,
-            }));
+            setWatchLibraryState((current) => accountLoadingState(tokens.user.id, current));
           }
-        } else {
-          setWatchLibraryState((current) => ({
-            status: "loading",
-            data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
-            error: null,
-          }));
-        }
 
-        // The overlay reconciles progress live during playback, so the popup
-        // only needs to backfill local progress newer than our last successful
-        // sync instead of re-sending the entire local store on every open.
-        if (freshCached && outboundEntries.length === 0) {
-          return;
-        }
+          // The overlay reconciles progress live during playback, so the popup
+          // only needs to backfill local progress newer than our last successful
+          // sync instead of re-sending the entire local store on every open.
+          if (freshCached && outboundEntries.length === 0) {
+            return;
+          }
 
-        const library = outboundEntries.length
-          ? await reconcileWatchProgress(tokens.accessToken, outboundEntries)
-          : await listWatchLibrary(tokens.accessToken);
-        await markWatchLibraryEntriesSynced(tokens.user.id, [
-          ...outboundEntries,
-          ...watchProgressEntriesFromWatchLibrary(library),
-        ]);
-        await setCachedWatchLibraryForUser(tokens.user.id, library);
-        await applyWatchLibraryToLocalStore(tokens.user.id, library);
-        if (storeUserIdRef.current !== tokens.user.id) {
-          return;
+          if (!isCurrent()) return;
+          const library = outboundEntries.length
+            ? await reconcileWatchProgress(tokens.accessToken, outboundEntries)
+            : await listWatchLibrary(tokens.accessToken);
+          if (!isCurrent()) return;
+          await markWatchLibraryEntriesSynced(tokens.user.id, [
+            ...outboundEntries,
+            ...watchProgressEntriesFromWatchLibrary(library),
+          ]);
+          if (!isCurrent()) return;
+          await setCachedWatchLibraryForUser(tokens.user.id, library);
+          if (!isCurrent()) return;
+          await applyWatchLibraryToLocalStore(tokens.user.id, library, undefined, isCurrent);
+          if (!isCurrent()) return;
+          setWatchLibraryState(accountReadyState(tokens.user.id, library));
+        } catch (error) {
+          if (!isCurrent()) return;
+          setWatchLibraryState((current) =>
+            accountErrorState(
+              tokens.user.id,
+              current,
+              error instanceof Error ? error.message : "Could not sync watch history",
+            ),
+          );
         }
-        watchLibraryUserIdRef.current = tokens.user.id;
-        setWatchLibraryState({ status: "ready", data: library, error: null });
-      } catch (error) {
-        setWatchLibraryState((current) => ({
-          status: "error",
-          data: watchLibraryUserIdRef.current === tokens.user.id ? current.data : null,
-          error: error instanceof Error ? error.message : "Could not sync watch history",
-        }));
-      }
+      })();
+      return trackPopupTask(watchLibraryTasksRef.current, task);
     },
     [applyWatchLibraryToLocalStore],
   );
@@ -374,13 +473,29 @@ export function PopupApp() {
         useCachedSnapshot?: boolean;
       } = {},
     ): Promise<ExtensionAuthTokens | null> => {
+      const activeClearScope = historyClearScopeRef.current;
+      if (activeClearScope && accountGateRef.current.isCurrent(activeClearScope)) return null;
+      const syncGeneration = popupSyncGateRef.current.begin();
+      const isCurrentSync = () => {
+        const clearScope = historyClearScopeRef.current;
+        return (
+          (!clearScope || !accountGateRef.current.isCurrent(clearScope)) &&
+          popupSyncGateRef.current.isCurrent(syncGeneration)
+        );
+      };
       try {
         let currentStore = localStore;
         if (!options.tokens && !options.interactive) {
           const cachedTokens = await getCachedExtensionSession();
-          if (cachedTokens) {
+          if (!isCurrentSync()) return null;
+          if (cachedTokens && activateAccount(cachedTokens.user.id)) {
+            setAuthSession({
+              status: "ready",
+              tokens: cachedTokens,
+              error: null,
+            });
             currentStore = await ensureStoreForUser(cachedTokens.user.id, localStore);
-            setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
+            if (!isCurrentSync()) return null;
           }
         }
 
@@ -388,144 +503,140 @@ export function PopupApp() {
           options.tokens ??
           (options.interactive
             ? await requestWebsiteSignIn()
-            : (await requestCurrentExtensionSession()) ??
-              (await requestSilentWebsiteSignIn()));
+            : ((await requestCurrentExtensionSession()) ?? (await requestSilentWebsiteSignIn())));
+        if (!isCurrentSync()) return null;
         if (!tokens) {
-          await ensureStoreForUser(null, localStore);
-          watchLibraryUserIdRef.current = null;
+          activateAccount(null);
           setAuthSession({ status: "signed-out", tokens: null, error: null });
-          setSocialState({ status: "signed-out", data: null, error: null });
-          setWatchLibraryState({
-            status: "signed-out",
-            data: null,
-            error: null,
-          });
+          await ensureStoreForUser(null, createEmptyWatchProgressStore());
+          if (!isCurrentSync()) return null;
           return null;
         }
 
-        const scopedStore = await ensureStoreForUser(tokens.user.id, currentStore);
+        const request = activateAccount(tokens.user.id);
+        if (!request) return null;
         setAuthSession({ status: "ready", tokens, error: null });
+        const scopedStore = await ensureStoreForUser(tokens.user.id, currentStore);
+        if (!isCurrentSync() || !accountGateRef.current.isCurrent(request)) return null;
         await Promise.all([
-          loadWatchLibraryForTokens(tokens, scopedStore, options.useCachedSnapshot ?? true),
-          loadSocialForTokens(tokens),
+          loadWatchLibraryForTokens(tokens, scopedStore, options.useCachedSnapshot ?? true, isCurrentSync),
+          loadSocialForTokens(tokens, isCurrentSync),
         ]);
+        if (!isCurrentSync() || !accountGateRef.current.isCurrent(request)) return null;
         return tokens;
       } catch (error) {
+        if (!isCurrentSync()) return null;
         const message = error instanceof Error ? error.message : "Could not sync account";
-        const cachedTokens = await getCachedExtensionSession();
-        watchLibraryUserIdRef.current = cachedTokens?.user.id ?? null;
-        setAuthSession(
-          cachedTokens
-            ? { status: "ready", tokens: cachedTokens, error: null }
-            : { status: "error", tokens: null, error: message },
-        );
-        setSocialState((current) => ({
-          status: "error",
-          data: current.data,
-          error: message,
-        }));
-        setWatchLibraryState((current) => ({
-          status: "error",
-          data: current.data,
-          error: message,
-        }));
+        const cachedTokens = await getCachedExtensionSession().catch(() => null);
+        if (!isCurrentSync()) return null;
+        const activeUserId = accountGateRef.current.currentUserId();
+        if (activeUserId && cachedTokens?.user.id === activeUserId) {
+          const request = accountGateRef.current.capture(activeUserId);
+          if (!request || !accountGateRef.current.isCurrent(request)) return null;
+          setAuthSession({
+            status: "ready",
+            tokens: cachedTokens,
+            error: null,
+          });
+          setSocialState((current) => accountErrorState(activeUserId, current, message));
+          setWatchLibraryState((current) => accountErrorState(activeUserId, current, message));
+        } else {
+          activateAccount(null);
+          setAuthSession({ status: "error", tokens: null, error: message });
+        }
         return null;
       }
     },
-    [ensureStoreForUser, loadSocialForTokens, loadWatchLibraryForTokens],
+    [activateAccount, ensureStoreForUser, loadSocialForTokens, loadWatchLibraryForTokens],
+  );
+
+  const transitionToResolvedSession = useCallback(
+    (tokens: ExtensionAuthTokens | null) => {
+      popupSyncGateRef.current.begin();
+      if (!tokens) {
+        activateAccount(null);
+        setAuthSession({ status: "signed-out", tokens: null, error: null });
+        void ensureStoreForUser(null, createEmptyWatchProgressStore());
+        return;
+      }
+
+      activateAccount(tokens.user.id);
+      setAuthSession({ status: "ready", tokens, error: null });
+      void syncPopupData(storeRef.current, {
+        tokens,
+        useCachedSnapshot: true,
+      });
+    },
+    [activateAccount, ensureStoreForUser, syncPopupData],
   );
 
   const acceptInvite = useCallback(
     async (inviteId: string) => {
+      const activeUserId = accountGateRef.current.currentUserId();
+      const request = activeUserId ? accountGateRef.current.capture(activeUserId) : null;
+      if (!request) return;
       setBusyInviteId(inviteId);
       try {
         const tokens = await requestCurrentExtensionSession();
-        if (!tokens) {
-          setSocialState({ status: "signed-out", data: null, error: null });
+        if (!accountGateRef.current.isCurrent(request)) return;
+        if (tokens?.user.id !== request.userId) {
+          transitionToResolvedSession(tokens);
           return;
         }
         const accepted = await acceptRoomInvite(tokens.accessToken, inviteId);
+        if (!accountGateRef.current.isCurrent(request)) return;
         setAuthSession({ status: "ready", tokens, error: null });
         await loadSocialForTokens(tokens);
+        if (!accountGateRef.current.isCurrent(request)) return;
         await chrome.tabs.create({ url: accepted.joinUrl });
       } catch (error) {
-        setSocialState((current) => ({
-          status: "error",
-          data: current.data,
-          error: error instanceof Error ? error.message : "Could not accept invite",
-        }));
+        if (!accountGateRef.current.isCurrent(request)) return;
+        setSocialState((current) =>
+          accountErrorState(
+            request.userId,
+            current,
+            error instanceof Error ? error.message : "Could not accept invite",
+          ),
+        );
       } finally {
-        setBusyInviteId(null);
+        if (accountGateRef.current.isCurrent(request)) setBusyInviteId(null);
       }
     },
-    [loadSocialForTokens],
+    [loadSocialForTokens, transitionToResolvedSession],
   );
 
   const declineInvite = useCallback(
     async (inviteId: string) => {
+      const activeUserId = accountGateRef.current.currentUserId();
+      const request = activeUserId ? accountGateRef.current.capture(activeUserId) : null;
+      if (!request) return;
       setBusyInviteId(inviteId);
       try {
         const tokens = await requestCurrentExtensionSession();
-        if (!tokens) {
-          setSocialState({ status: "signed-out", data: null, error: null });
+        if (!accountGateRef.current.isCurrent(request)) return;
+        if (tokens?.user.id !== request.userId) {
+          transitionToResolvedSession(tokens);
           return;
         }
         await declineRoomInvite(tokens.accessToken, inviteId);
+        if (!accountGateRef.current.isCurrent(request)) return;
         setAuthSession({ status: "ready", tokens, error: null });
         await loadSocialForTokens(tokens);
       } catch (error) {
-        setSocialState((current) => ({
-          status: "error",
-          data: current.data,
-          error: error instanceof Error ? error.message : "Could not decline invite",
-        }));
+        if (!accountGateRef.current.isCurrent(request)) return;
+        setSocialState((current) =>
+          accountErrorState(
+            request.userId,
+            current,
+            error instanceof Error ? error.message : "Could not decline invite",
+          ),
+        );
       } finally {
-        setBusyInviteId(null);
+        if (accountGateRef.current.isCurrent(request)) setBusyInviteId(null);
       }
     },
-    [loadSocialForTokens],
+    [loadSocialForTokens, transitionToResolvedSession],
   );
-
-  const upsertSocialGroup = useCallback((group: FriendGroup) => {
-    setSocialState((current) => {
-      if (!current.data) return current;
-      const groups = current.data.targets.groups.some((item) => item.id === group.id)
-        ? current.data.targets.groups.map((item) => (item.id === group.id ? group : item))
-        : [group, ...current.data.targets.groups];
-      return {
-        ...current,
-        data: {
-          ...current.data,
-          targets: {
-            ...current.data.targets,
-            groups: groups.filter((item) => !item.archivedAt),
-          },
-        },
-      };
-    });
-  }, []);
-
-  const patchSocialGroup = useCallback((groupId: string, updater: (group: FriendGroup) => FriendGroup) => {
-    let previous: FriendGroup | null = null;
-    setSocialState((current) => {
-      if (!current.data) return current;
-      return {
-        ...current,
-        data: {
-          ...current.data,
-          targets: {
-            ...current.data.targets,
-            groups: current.data.targets.groups.map((group) => {
-              if (group.id !== groupId) return group;
-              previous = group;
-              return updater(group);
-            }),
-          },
-        },
-      };
-    });
-    return previous;
-  }, []);
 
   const runSocialAction = useCallback(
     async (
@@ -534,30 +645,41 @@ export function PopupApp() {
       success: string,
       fallbackError: string,
     ): Promise<boolean> => {
+      const activeUserId = accountGateRef.current.currentUserId();
+      const request = activeUserId ? accountGateRef.current.capture(activeUserId) : null;
+      if (!request) return false;
       setBusySocialAction(key);
       setSocialNotice(null);
       try {
         const tokens = await requestCurrentExtensionSession();
-        if (!tokens) {
-          setSocialState({ status: "signed-out", data: null, error: null });
+        if (!accountGateRef.current.isCurrent(request)) {
+          return false;
+        }
+        if (tokens?.user.id !== request.userId) {
+          transitionToResolvedSession(tokens);
           return false;
         }
 
         setAuthSession({ status: "ready", tokens, error: null });
         await action(tokens.accessToken);
+        if (!accountGateRef.current.isCurrent(request)) return false;
+        const refreshed = await loadSocialForTokens(tokens);
+        if (!accountGateRef.current.isCurrent(request)) return false;
+        if (!refreshed) return false;
         setSocialNotice({ tone: "success", text: success });
         return true;
       } catch (error) {
+        if (!accountGateRef.current.isCurrent(request)) return false;
         setSocialNotice({
           tone: "error",
           text: error instanceof Error ? error.message : fallbackError,
         });
         return false;
       } finally {
-        setBusySocialAction(null);
+        if (accountGateRef.current.isCurrent(request)) setBusySocialAction(null);
       }
     },
-    [],
+    [loadSocialForTokens, transitionToResolvedSession],
   );
 
   const createGroup = useCallback(
@@ -565,13 +687,12 @@ export function PopupApp() {
       runSocialAction(
         "create-group",
         async (accessToken) => {
-          const group = await createFriendGroup(accessToken, { name });
-          upsertSocialGroup(group);
+          await createFriendGroup(accessToken, { name });
         },
         "Group created.",
         "Could not create group",
       ),
-    [runSocialAction, upsertSocialGroup],
+    [runSocialAction],
   );
 
   const renameGroup = useCallback(
@@ -579,24 +700,12 @@ export function PopupApp() {
       runSocialAction(
         `rename-group:${groupId}`,
         async (accessToken) => {
-          const updatedAt = new Date().toISOString();
-          const previous = patchSocialGroup(groupId, (group) => ({
-            ...group,
-            name,
-            updatedAt,
-          }));
-          try {
-            const group = await updateFriendGroup(accessToken, { groupId, name });
-            upsertSocialGroup(group);
-          } catch (error) {
-            if (previous) upsertSocialGroup(previous);
-            throw error;
-          }
+          await updateFriendGroup(accessToken, { groupId, name });
         },
         "Group renamed.",
         "Could not rename group",
       ),
-    [patchSocialGroup, runSocialAction, upsertSocialGroup],
+    [runSocialAction],
   );
 
   const archiveGroup = useCallback(
@@ -604,35 +713,12 @@ export function PopupApp() {
       runSocialAction(
         `archive-group:${groupId}`,
         async (accessToken) => {
-          let previous: FriendGroup | null = null;
-          setSocialState((current) => {
-            if (!current.data) return current;
-            return {
-              ...current,
-              data: {
-                ...current.data,
-                targets: {
-                  ...current.data.targets,
-                  groups: current.data.targets.groups.filter((group) => {
-                    if (group.id !== groupId) return true;
-                    previous = group;
-                    return false;
-                  }),
-                },
-              },
-            };
-          });
-          try {
-            await archiveFriendGroup(accessToken, groupId);
-          } catch (error) {
-            if (previous) upsertSocialGroup(previous);
-            throw error;
-          }
+          await archiveFriendGroup(accessToken, groupId);
         },
         "Group archived.",
         "Could not archive group",
       ),
-    [runSocialAction, upsertSocialGroup],
+    [runSocialAction],
   );
 
   const addGroupMember = useCallback(
@@ -640,26 +726,12 @@ export function PopupApp() {
       runSocialAction(
         `add-member:${groupId}:${userId}`,
         async (accessToken) => {
-          const friend = socialState.data?.targets.friends.find(
-            (item) => item.user.userId === userId,
-          );
-          const previous = friend
-            ? patchSocialGroup(groupId, (group) =>
-                addOptimisticMember(group, friend, new Date().toISOString()),
-              )
-            : null;
-          try {
-            const group = await addFriendGroupMember(accessToken, { groupId, userId });
-            upsertSocialGroup(group);
-          } catch (error) {
-            if (previous) upsertSocialGroup(previous);
-            throw error;
-          }
+          await addFriendGroupMember(accessToken, { groupId, userId });
         },
         "Friend added.",
         "Could not add friend",
       ),
-    [patchSocialGroup, runSocialAction, socialState.data?.targets.friends, upsertSocialGroup],
+    [runSocialAction],
   );
 
   const removeGroupMember = useCallback(
@@ -667,79 +739,80 @@ export function PopupApp() {
       runSocialAction(
         `remove-member:${groupId}:${userId}`,
         async (accessToken) => {
-          const previous = patchSocialGroup(groupId, (group) =>
-            removeOptimisticMember(group, userId, new Date().toISOString()),
-          );
-          try {
-            const group = await removeFriendGroupMember(accessToken, { groupId, userId });
-            upsertSocialGroup(group);
-          } catch (error) {
-            if (previous) upsertSocialGroup(previous);
-            throw error;
-          }
+          await removeFriendGroupMember(accessToken, { groupId, userId });
         },
         "Member removed.",
         "Could not remove member",
       ),
-    [patchSocialGroup, runSocialAction, upsertSocialGroup],
+    [runSocialAction],
   );
 
-  const createRoomFromSession = useCallback(async (session: WatchLibrarySession, sourceUrl: string) => {
-    setBusyWatchSessionId(session.id);
-    try {
-      const tokens = await requestCurrentExtensionSession();
-      if (!tokens) {
-        watchLibraryUserIdRef.current = null;
-        setWatchLibraryState({
-          status: "signed-out",
-          data: null,
-          error: null,
-        });
-        return;
-      }
-      setAuthSession({ status: "ready", tokens, error: null });
+  const createRoomFromSession = useCallback(
+    async (session: WatchLibrarySession, sourceUrl: string) => {
+      const request = accountGateRef.current.captureCurrent();
+      const userId = request.userId;
+      if (!userId) return;
+      setBusyWatchSessionId(session.id);
+      try {
+        const tokens = await requestCurrentExtensionSession();
+        if (!accountGateRef.current.isCurrent(request)) return;
+        if (tokens?.user.id !== userId) {
+          transitionToResolvedSession(tokens);
+          return;
+        }
+        setAuthSession({ status: "ready", tokens, error: null });
 
-      const room = await createRoomFromWatchSession({
-        accessToken: tokens.accessToken,
-        sessionId: session.id,
-        clientRequestId: `watch-library:${session.id}:${Date.now()}`,
-      });
-      await chrome.tabs.create({
-        url: buildWatchRoomLaunchUrl(sourceUrl, room.roomId),
-      });
-      window.close();
-    } catch (error) {
-      setWatchLibraryState((current) => ({
-        status: "error",
-        data: current.data,
-        error: error instanceof Error ? error.message : "Could not create room",
-      }));
-    } finally {
-      setBusyWatchSessionId(null);
-    }
-  }, []);
+        const room = await createRoomFromWatchSession({
+          accessToken: tokens.accessToken,
+          sessionId: session.id,
+          clientRequestId: `watch-library:${session.id}:${Date.now()}`,
+        });
+        if (!accountGateRef.current.isCurrent(request)) return;
+        await chrome.tabs.create({
+          url: buildWatchRoomLaunchUrl(sourceUrl, room.roomId),
+        });
+        if (!accountGateRef.current.isCurrent(request)) return;
+        window.close();
+      } catch (error) {
+        if (!accountGateRef.current.isCurrent(request)) return;
+        setWatchLibraryState((current) =>
+          accountErrorState(userId, current, error instanceof Error ? error.message : "Could not create room"),
+        );
+      } finally {
+        if (accountGateRef.current.isCurrent(request)) setBusyWatchSessionId(null);
+      }
+    },
+    [transitionToResolvedSession],
+  );
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const cachedTokens = await getCachedExtensionSession();
-      const initialUserId = cachedTokens?.user.id ?? null;
-      const loadedStore = await loadWatchProgressStoreForUser(initialUserId);
-      if (cancelled) return;
-      storeUserIdRef.current = initialUserId;
-      setStore(loadedStore);
-      if (cachedTokens) {
-        setAuthSession({ status: "ready", tokens: cachedTokens, error: null });
-      }
-      void syncPopupData(loadedStore, {
-        useCachedSnapshot: true,
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    void syncPopupData(createEmptyWatchProgressStore(), {
+      useCachedSnapshot: true,
+    });
   }, [syncPopupData]);
+
+  useEffect(() => {
+    const handleAuthStorageChange = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
+      if (areaName !== "local" || !changes[AUTH_TOKENS_STORAGE_KEY]) {
+        return;
+      }
+
+      const tokens = normalizeExtensionAuthTokens(changes[AUTH_TOKENS_STORAGE_KEY].newValue);
+      if (!accountIdentityChanged(accountGateRef.current.currentUserId(), tokens?.user.id ?? null)) {
+        setAuthSession(
+          tokens ? { status: "ready", tokens, error: null } : { status: "signed-out", tokens: null, error: null },
+        );
+        return;
+      }
+
+      transitionToResolvedSession(tokens);
+    };
+
+    chrome.storage.onChanged.addListener(handleAuthStorageChange);
+    return () => {
+      chrome.storage.onChanged.removeListener(handleAuthStorageChange);
+    };
+  }, [transitionToResolvedSession]);
 
   useEffect(() => {
     const expectedUserId = accountUser?.id ?? null;
@@ -748,7 +821,13 @@ export function PopupApp() {
       if (areaName !== "local" || !changes[storageKey]) {
         return;
       }
-      if (storeUserIdRef.current !== expectedUserId) {
+      const request = accountGateRef.current.captureCurrent();
+      if (
+        request.userId !== expectedUserId ||
+        !accountGateRef.current.isCurrent(request) ||
+        !storeReadyRef.current ||
+        storeUserIdRef.current !== expectedUserId
+      ) {
         return;
       }
 
@@ -789,138 +868,190 @@ export function PopupApp() {
   const watchLibraryFirstPaintPending =
     totalItems === 0 &&
     (authChecking ||
-      (authSession.status === "ready" &&
-        watchLibraryState.status === "loading" &&
-        watchLibraryState.data === null));
+      (authSession.status === "ready" && watchLibraryState.status === "loading" && watchLibraryState.data === null));
   useEffect(() => {
-    if (watchLibraryFirstPaintPending) {
+    const accountScope = accountGateRef.current.captureCurrent();
+    const posterGeneration = posterHydrationGateRef.current.capture();
+    const isCurrentScope = () => {
+      const clearScope = historyClearScopeRef.current;
+      return (
+        (!clearScope || !accountGateRef.current.isCurrent(clearScope)) &&
+        accountGateRef.current.isCurrent(accountScope) &&
+        posterHydrationGateRef.current.isCurrent(posterGeneration) &&
+        storeReadyRef.current &&
+        storeUserIdRef.current === accountScope.userId
+      );
+    };
+    if (watchLibraryFirstPaintPending || !isCurrentScope()) {
       return;
     }
 
     const missingPosters = folders
       .flatMap((folder) => folder.items)
-      .filter(
-        (item) =>
+      .filter((item) => {
+        const requestKey = getArtworkRequestKey(item);
+        const scopedRequestKey = requestKey
+          ? `${accountScope.generation}:${posterGeneration}:${accountScope.userId ?? "signed-out"}:${requestKey}`
+          : null;
+        return (
           item.provider === "crunchyroll" &&
           !item.artworkUrl &&
-          Boolean(getArtworkRequestKey(item)) &&
-          !posterRequestsRef.current[getArtworkRequestKey(item) ?? ""],
-      );
+          Boolean(scopedRequestKey) &&
+          !posterRequestsRef.current[scopedRequestKey ?? ""]
+        );
+      });
 
     for (const item of missingPosters) {
       const requestKey = getArtworkRequestKey(item);
       if (!requestKey) {
         continue;
       }
+      const scopedRequestKey = `${accountScope.generation}:${posterGeneration}:${accountScope.userId ?? "signed-out"}:${requestKey}`;
 
-      posterRequestsRef.current[requestKey] = true;
-      void loadCrunchyrollPosterArtwork({
+      posterRequestsRef.current[scopedRequestKey] = true;
+      const task = loadCrunchyrollPosterArtwork({
         contentId: item.contentId ?? getCrunchyrollWatchId(item.sourceUrl),
         seriesId: item.seriesId,
-      }).then(async (posterUrl) => {
-        if (!posterUrl) {
-          delete posterRequestsRef.current[requestKey];
-          return;
-        }
-
-        const currentUserId = storeUserIdRef.current;
-        const latestStore = await loadWatchProgressStoreForUser(currentUserId);
-        const latestItem = latestStore.providers.crunchyroll.items[item.id];
-        if (latestItem?.artworkUrl) {
-          return;
-        }
-
-        const nextStore = structuredClone(latestStore);
-        const nextItem = structuredClone(latestItem ?? item);
-        nextItem.artworkUrl = posterUrl;
-        nextStore.providers.crunchyroll.items[item.id] = nextItem;
-        await saveWatchProgressStoreForUser(currentUserId, nextStore);
-        if (storeUserIdRef.current !== currentUserId) {
-          return;
-        }
-        setStore(nextStore);
-
-        const tokens = authSession.status === "ready" ? authSession.tokens : null;
-        if (tokens?.user.id !== currentUserId) {
-          return;
-        }
-        const entries = tokens ? watchProgressEntriesFromItem(nextItem, "reconcile") : [];
-        if (!tokens || entries.length === 0) {
-          return;
-        }
-
-        try {
-          const library = await reconcileWatchProgress(tokens.accessToken, entries);
-          await markWatchLibraryEntriesSynced(tokens.user.id, [
-            ...entries,
-            ...watchProgressEntriesFromWatchLibrary(library),
-          ]);
-          await setCachedWatchLibraryForUser(tokens.user.id, library);
-          if (storeUserIdRef.current !== tokens.user.id) {
+      })
+        .then(async (posterUrl) => {
+          if (!posterUrl || !isCurrentScope()) {
+            delete posterRequestsRef.current[scopedRequestKey];
             return;
           }
-          watchLibraryUserIdRef.current = tokens.user.id;
-          setWatchLibraryState({ status: "ready", data: library, error: null });
-        } catch {
-          // Local artwork is already cached; the next normal sync can retry the server update.
-        }
-      });
+
+          const currentUserId = accountScope.userId;
+          const latestStore = await loadWatchProgressStoreForUser(currentUserId, POPUP_WATCH_PROGRESS_ACCESS);
+          if (!isCurrentScope()) {
+            delete posterRequestsRef.current[scopedRequestKey];
+            return;
+          }
+          const latestItem = latestStore.providers.crunchyroll.items[item.id];
+          if (!latestItem || latestItem.artworkUrl) {
+            return;
+          }
+
+          const nextStore = structuredClone(latestStore);
+          const nextItem = structuredClone(latestItem);
+          nextItem.artworkUrl = posterUrl;
+          nextStore.providers.crunchyroll.items[item.id] = nextItem;
+          if (!isCurrentScope()) return;
+          await saveWatchProgressStoreForUser(currentUserId, nextStore, POPUP_WATCH_PROGRESS_ACCESS);
+          if (!isCurrentScope()) return;
+          setStore(nextStore);
+
+          const tokens = authSession.status === "ready" ? authSession.tokens : null;
+          if (!currentUserId || tokens?.user.id !== currentUserId) {
+            return;
+          }
+          const entries = watchProgressEntriesFromItem(nextItem, "reconcile");
+          if (entries.length === 0) {
+            return;
+          }
+
+          try {
+            if (!isCurrentScope()) return;
+            const library = await reconcileWatchProgress(tokens.accessToken, entries);
+            if (!isCurrentScope()) return;
+            await markWatchLibraryEntriesSynced(tokens.user.id, [
+              ...entries,
+              ...watchProgressEntriesFromWatchLibrary(library),
+            ]);
+            if (!isCurrentScope()) return;
+            await setCachedWatchLibraryForUser(tokens.user.id, library);
+            if (!isCurrentScope()) return;
+            setWatchLibraryState(accountReadyState(tokens.user.id, library));
+          } catch {
+            // Local artwork is already cached; the next normal sync can retry the server update.
+          }
+        })
+        .catch(() => undefined)
+        .finally(() => {
+          delete posterRequestsRef.current[scopedRequestKey];
+        });
+      void trackPopupTask(posterHydrationTasksRef.current, task);
     }
-  }, [authSession, folders, watchLibraryFirstPaintPending]);
+  }, [authSession, clearingHistory, folders, watchLibraryFirstPaintPending]);
 
   const clearHistory = async () => {
-    if (clearingHistory || !canClearHistory) return;
-    const confirmed = window.confirm(
-      "Clear watch history for this AniDachi account and this browser?",
-    );
+    const pendingClearScope = historyClearScopeRef.current;
+    if (
+      (pendingClearScope && accountGateRef.current.isCurrent(pendingClearScope)) ||
+      clearingHistory ||
+      !canClearHistory
+    )
+      return;
+    const confirmed = window.confirm("Clear watch history for this AniDachi account and this browser?");
     if (!confirmed) return;
+    popupSyncGateRef.current.begin();
+    watchLibraryLoadGateRef.current.begin();
+    posterHydrationGateRef.current.begin();
 
+    const request = accountGateRef.current.captureCurrent();
+    const userId = request.userId;
+    const isCurrent = () =>
+      accountGateRef.current.isCurrent(request) && storeReadyRef.current && storeUserIdRef.current === userId;
+    if (!isCurrent()) return;
+
+    historyClearScopeRef.current = request;
     setClearingHistory(true);
-    setWatchLibraryState((current) =>
-      current.data ? { status: "loading", data: current.data, error: null } : current,
-    );
+    if (userId) {
+      setWatchLibraryState((current) => accountLoadingState(userId, current));
+    }
     try {
-      const tokens = authSession.status === "ready" ? authSession.tokens : await getCachedExtensionSession();
-      const currentUserId = tokens?.user.id ?? storeUserIdRef.current;
+      await Promise.allSettled([...watchLibraryTasksRef.current, ...posterHydrationTasksRef.current]);
+      if (!isCurrent()) return;
+
+      const tokens = userId ? await requestCurrentExtensionSession() : null;
+      if (!isCurrent()) return;
+      if (userId && tokens?.user.id !== userId) {
+        transitionToResolvedSession(tokens);
+        return;
+      }
       const clearedLibrary = tokens ? await clearWatchLibrary(tokens.accessToken) : null;
 
       await Promise.all([
-        clearWatchProgressStoreForUser(currentUserId),
-        clearCachedWatchLibraryForUser(currentUserId),
-        clearWatchLibrarySyncStateForUser(currentUserId),
+        clearWatchProgressStoreForUser(userId),
+        clearCachedWatchLibraryForUser(userId),
+        clearWatchLibrarySyncStateForUser(userId),
       ]);
-
-      const emptyStore = createEmptyWatchProgressStore();
-      storeUserIdRef.current = currentUserId;
-      setStore(emptyStore);
       if (tokens && clearedLibrary) {
         await setCachedWatchLibraryForUser(tokens.user.id, clearedLibrary);
-        watchLibraryUserIdRef.current = tokens.user.id;
-        setWatchLibraryState({ status: "ready", data: clearedLibrary, error: null });
+      }
+      if (!isCurrent()) return;
+
+      const emptyStore = createEmptyWatchProgressStore();
+      storeUserIdRef.current = userId;
+      storeReadyRef.current = true;
+      setStore(emptyStore);
+      if (tokens && clearedLibrary) {
+        setWatchLibraryState(accountReadyState(tokens.user.id, clearedLibrary));
       } else {
-        watchLibraryUserIdRef.current = null;
-        setWatchLibraryState({ status: "signed-out", data: null, error: null });
+        setWatchLibraryState(signedOutAccountState());
       }
     } catch (error) {
-      setWatchLibraryState((current) => ({
-        status: "error",
-        data: current.data,
-        error: error instanceof Error ? error.message : "Could not clear watch history",
-      }));
+      if (!isCurrent() || !userId) return;
+      setWatchLibraryState((current) =>
+        accountErrorState(userId, current, error instanceof Error ? error.message : "Could not clear watch history"),
+      );
     } finally {
-      setClearingHistory(false);
+      if (historyClearScopeRef.current === request) {
+        historyClearScopeRef.current = null;
+      }
+      if (isCurrent()) setClearingHistory(false);
     }
   };
 
   const openAccount = async () => {
     const tokens =
-      authSession.status === "ready"
+      authSession.status === "ready" && accountGateRef.current.currentUserId() === authSession.tokens.user.id
         ? authSession.tokens
         : await syncPopupData(store, {
             interactive: true,
             useCachedSnapshot: true,
           });
     if (!tokens) return;
+    const request = accountGateRef.current.capture(tokens.user.id);
+    if (!request || !accountGateRef.current.isCurrent(request)) return;
     await chrome.tabs.create({
       url: new URL("/account", WEB_HTTP_BASE).toString(),
     });
@@ -1327,10 +1458,7 @@ function getTogetherFilterLabel(
   return companion?.displayName ?? "Person";
 }
 
-function continueCompanionLabel(
-  participants: WatchLibraryParticipantLike[],
-  viewerUserId: string | null,
-): string {
+function continueCompanionLabel(participants: WatchLibraryParticipantLike[], viewerUserId: string | null): string {
   const names = participants
     .filter((participant) => !viewerUserId || participant.user.userId !== viewerUserId)
     .map((participant) => participant.user.displayName)
@@ -1625,12 +1753,7 @@ function SocialTargets({
             placeholder="New group"
             value={groupName}
           />
-          <button
-            aria-label="Create group"
-            className="popup-primary-button"
-            disabled={createDisabled}
-            type="submit"
-          >
+          <button aria-label="Create group" className="popup-primary-button" disabled={createDisabled} type="submit">
             <UserPlus size={13} />
             Create
           </button>
@@ -1699,10 +1822,7 @@ function SocialGroupRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(group.name);
-  const memberIds = useMemo(
-    () => new Set(group.members.map((member) => member.user.userId)),
-    [group.members],
-  );
+  const memberIds = useMemo(() => new Set(group.members.map((member) => member.user.userId)), [group.members]);
   const addableFriends = friends.filter((friend) => !memberIds.has(friend.user.userId));
   const renameBusy = busyAction === `rename-group:${group.id}`;
   const archiveBusy = busyAction === `archive-group:${group.id}`;
@@ -1800,10 +1920,7 @@ function SocialGroupRow({
             const removeKey = `remove-member:${group.id}:${member.user.userId}`;
             return (
               <div className="popup-group-member-row" key={member.user.userId}>
-                <ProfileAvatar
-                  avatarUrl={member.user.avatarUrl}
-                  displayName={member.user.displayName}
-                />
+                <ProfileAvatar avatarUrl={member.user.avatarUrl} displayName={member.user.displayName} />
                 <span>{member.user.displayName}</span>
                 <button
                   aria-label={`Remove ${member.user.displayName}`}
@@ -1867,40 +1984,6 @@ function formatInviteExpiry(expiresAt: string): string {
   if (hours < 24) return `${hours}h left`;
   const days = Math.ceil(hours / 24);
   return `${days}d left`;
-}
-
-function sortGroupMembers(members: FriendGroup["members"]): FriendGroup["members"] {
-  return [...members].sort((a, b) => a.user.displayName.localeCompare(b.user.displayName));
-}
-
-function addOptimisticMember(
-  group: FriendGroup,
-  friend: FriendListItem,
-  addedAt: string,
-): FriendGroup {
-  if (group.members.some((member) => member.user.userId === friend.user.userId)) {
-    return group;
-  }
-
-  return {
-    ...group,
-    updatedAt: addedAt,
-    members: sortGroupMembers([
-      ...group.members,
-      {
-        user: friend.user,
-        addedAt,
-      },
-    ]),
-  };
-}
-
-function removeOptimisticMember(group: FriendGroup, userId: string, updatedAt: string): FriendGroup {
-  return {
-    ...group,
-    updatedAt,
-    members: group.members.filter((member) => member.user.userId !== userId),
-  };
 }
 
 function ProfileAvatar({ avatarUrl, displayName }: { avatarUrl: string | null; displayName: string }) {
@@ -1995,8 +2078,8 @@ function LibraryEmptyState({
   const message =
     activity === "together"
       ? personFilter === "all"
-      ? "No shared watch history yet."
-      : "No shared sessions with this person yet."
+        ? "No shared watch history yet."
+        : "No shared sessions with this person yet."
       : activity === "solo"
         ? "No personal watch progress yet."
         : "Progress will appear here after watching.";
@@ -2069,10 +2152,7 @@ function getFilteredWatchItemLastWatchedAt(
 ): number {
   if (item.kind === "movie") {
     const libraryEpisode = libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, item.id));
-    return (
-      getFilteredLibraryEpisodeLastWatchedAt(libraryEpisode, filters) ||
-      item.lastWatchedAt
-    );
+    return getFilteredLibraryEpisodeLastWatchedAt(libraryEpisode, filters) || item.lastWatchedAt;
   }
 
   const episodeTimes = Object.values(item.episodes ?? {}).map((episode) => {
@@ -2165,9 +2245,7 @@ function getDisplayLibraryEpisode(
       return session.participants.some((participant) => participant.user.userId === userId);
     }
     if (filters.person.startsWith("group:")) {
-      return session.participants.some((participant) =>
-        filters.groupMemberUserIds?.has(participant.user.userId),
-      );
+      return session.participants.some((participant) => filters.groupMemberUserIds?.has(participant.user.userId));
     }
     return false;
   });
@@ -2226,7 +2304,9 @@ function buildCompanionFilters(
     .sort(
       (a, b) =>
         b.sessionCount - a.sessionCount ||
-        a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }),
+        a.displayName.localeCompare(b.displayName, undefined, {
+          sensitivity: "base",
+        }),
     )
     .slice(0, 12);
 }
@@ -2439,23 +2519,23 @@ function WatchItemRow({
             ))}
           </div>
         ) : (
-        <div className="popup-episode-list">
-          {episodesByOrder.map((episode, index) => (
-            <EpisodeRow
-              busyWatchSessionId={busyWatchSessionId}
-              episode={episode}
-              episodeIndex={index}
-              selected={episode.id === latestEpisode?.id}
-              key={episode.id}
-              libraryEpisode={getDisplayLibraryEpisode(
-                libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, episode.id)),
-                filters,
-              )}
-              onCreateRoomFromSession={onCreateRoomFromSession}
-              viewerUserId={viewerUserId}
-            />
-          ))}
-        </div>
+          <div className="popup-episode-list">
+            {episodesByOrder.map((episode, index) => (
+              <EpisodeRow
+                busyWatchSessionId={busyWatchSessionId}
+                episode={episode}
+                episodeIndex={index}
+                selected={episode.id === latestEpisode?.id}
+                key={episode.id}
+                libraryEpisode={getDisplayLibraryEpisode(
+                  libraryEpisodesByKey.get(libraryEpisodeKey(item.provider, item.id, episode.id)),
+                  filters,
+                )}
+                onCreateRoomFromSession={onCreateRoomFromSession}
+                viewerUserId={viewerUserId}
+              />
+            ))}
+          </div>
         )
       ) : null}
     </div>
@@ -2488,7 +2568,9 @@ function SeasonGroup({
     (latest, episode) => (!latest || episode.lastWatchedAt > latest.lastWatchedAt ? episode : latest),
     null,
   );
-  const latestEpisodeIndex = latestEpisode ? group.episodes.findIndex((episode) => episode.id === latestEpisode.id) : -1;
+  const latestEpisodeIndex = latestEpisode
+    ? group.episodes.findIndex((episode) => episode.id === latestEpisode.id)
+    : -1;
 
   useEffect(() => {
     setOpen(defaultOpen);
@@ -2921,7 +3003,10 @@ function compareEpisodesByDisplayOrder(a: StoredEpisodeProgress, b: StoredEpisod
   if (aNumber === null && bNumber !== null) {
     return 1;
   }
-  return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" });
+  return a.title.localeCompare(b.title, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
 }
 
 function buildEpisodeSeasonGroups(episodes: StoredEpisodeProgress[], itemTitle: string): EpisodeSeasonGroup[] {
@@ -2964,7 +3049,10 @@ function compareSeasonGroups(a: EpisodeSeasonGroup, b: EpisodeSeasonGroup): numb
   if (a.sortNumber === null && b.sortNumber !== null) {
     return 1;
   }
-  return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" });
+  return a.title.localeCompare(b.title, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
 }
 
 function episodeSeasonKey(episode: StoredEpisodeProgress, itemTitle: string): string {

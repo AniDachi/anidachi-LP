@@ -1,4 +1,6 @@
+import type { FriendListResponse } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
+import { createAccountResponseMeta } from "@/lib/anidachi-auth/account-response";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
 import { listFriends } from "@/lib/anidachi-auth/social";
 import { socialErrorResponse } from "@/lib/anidachi-auth/social-routes";
@@ -12,7 +14,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    return NextResponse.json(await listFriends(session.userId));
+    const data = await listFriends(session.userId);
+    const response: FriendListResponse = {
+      meta: createAccountResponseMeta(),
+      ...data,
+    };
+    return NextResponse.json(response);
   } catch (error) {
     return socialErrorResponse(error);
   }
