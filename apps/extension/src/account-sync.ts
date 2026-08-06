@@ -1,18 +1,48 @@
-export type AccountRequestToken = Readonly<{
-  userId: string;
+export type AccountScopeToken = Readonly<{
+  userId: string | null;
   generation: number;
 }>;
+
+export type AccountRequestToken = AccountScopeToken & Readonly<{ userId: string }>;
+
+export type AsyncGenerationGate = {
+  begin(): number;
+  capture(): number;
+  isCurrent(generation: number): boolean;
+};
+
+export function createAsyncGenerationGate(): AsyncGenerationGate {
+  let generation = 0;
+  return {
+    begin() {
+      generation += 1;
+      return generation;
+    },
+    capture() {
+      return generation;
+    },
+    isCurrent(candidate) {
+      return candidate === generation;
+    },
+  };
+}
+
+export function accountIdentityChanged(
+  currentUserId: string | null,
+  nextUserId: string | null,
+): boolean {
+  return currentUserId !== nextUserId;
+}
 
 export type AccountRequestGate = {
   activate(userId: string | null): void;
   capture(userId: string): AccountRequestToken | null;
-  isCurrent(token: AccountRequestToken): boolean;
+  captureCurrent(): AccountScopeToken;
+  isCurrent(token: AccountScopeToken): boolean;
   currentUserId(): string | null;
 };
 
-export function createAccountRequestGate(
-  initialUserId: string | null = null,
-): AccountRequestGate {
+export function createAccountRequestGate(initialUserId: string | null = null): AccountRequestGate {
   let activeUserId = initialUserId;
   let generation = 0;
 
@@ -24,6 +54,9 @@ export function createAccountRequestGate(
     },
     capture(userId) {
       return userId === activeUserId ? { userId, generation } : null;
+    },
+    captureCurrent() {
+      return { userId: activeUserId, generation };
     },
     isCurrent(token) {
       return token.userId === activeUserId && token.generation === generation;

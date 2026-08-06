@@ -882,13 +882,24 @@ git commit -m "feat(extension): cache social snapshots per account"
 
 **Files:**
 - Modify: `apps/extension/src/popup-app.tsx`
+- Modify: `apps/extension/src/account-sync.ts`
+- Modify: `apps/extension/src/watch-progress.ts`
 - Modify: `apps/extension/test/account-sync.test.ts`
+- Modify: `apps/extension/test/watch-progress.test.ts`
 
 **Interfaces:**
 - Consumes: the account request gate, account-owned state helpers, validated clients, and social snapshot cache.
 - Produces: Popup behavior where only the active account can own visible social/watch data or complete account actions.
 
-- [ ] **Step 1: Extend the pure state tests for the Popup transition sequence**
+**Implementation finding:** the initial audit found additional account-owned async paths outside
+the first draft of this task. The implementation therefore also gates the local watch store,
+parallel auth flows, bootstrap, poster hydration, history clearing, storage events, account
+dashboard opening, and room creation from history. Social group mutations now refresh the
+validated snapshot instead of applying cross-generation optimistic rollbacks. Popup snapshot
+I/O no longer claims the active playback owner, so late background work cannot change the
+owner selected by the player overlay.
+
+- [x] **Step 1: Extend the pure state tests for the Popup transition sequence**
 
 Add this transition test to `account-sync.test.ts`:
 
@@ -905,7 +916,7 @@ it("hides account A data before account B finishes loading", () => {
 });
 ```
 
-- [ ] **Step 2: Replace unowned Popup remote states**
+- [x] **Step 2: Replace unowned Popup remote states**
 
 In `popup-app.tsx`:
 
@@ -922,7 +933,7 @@ const accountGateRef = useRef(createAccountRequestGate());
 
 The account switch must occur before starting account reads. Do not wait for `ensureStoreForUser` or cache I/O before hiding previous-account state.
 
-- [ ] **Step 3: Make social loading cache-first and generation-safe**
+- [x] **Step 3: Make social loading cache-first and generation-safe**
 
 Refactor `loadSocialForTokens` to this sequence:
 
@@ -938,7 +949,7 @@ Refactor `loadSocialForTokens` to this sequence:
 
 An old request must not write a cache after the account changed.
 
-- [ ] **Step 4: Guard every watch-library side effect**
+- [x] **Step 4: Guard every watch-library side effect**
 
 At the start of `loadWatchLibraryForTokens`, capture an account request token. Check it before and after every awaited side effect that can write account state:
 
@@ -951,7 +962,7 @@ At the start of `loadWatchLibraryForTokens`, capture an account request token. C
 
 Retain `storeUserIdRef` only for the local watch-progress partition because that store already uses it. The request gate is the authority for remote response freshness.
 
-- [ ] **Step 5: Activate identity from one auth flow**
+- [x] **Step 5: Activate identity from one auth flow**
 
 In `syncPopupData`:
 
@@ -962,7 +973,7 @@ In `syncPopupData`:
 
 The auth effect and storage/session listeners must use the same activation helper, not mutate owner refs independently.
 
-- [ ] **Step 6: Guard social mutations and post-action effects**
+- [x] **Step 6: Guard social mutations and post-action effects**
 
 For accept/decline invite, group create/update/archive/member changes, and invite creation:
 
@@ -973,7 +984,7 @@ For accept/decline invite, group create/update/archive/member changes, and invit
 
 This prevents a late accepted invite from account A opening a room after the Popup has switched to account B.
 
-- [ ] **Step 7: Run focused and full extension tests**
+- [x] **Step 7: Run focused and full extension tests**
 
 Run:
 
@@ -985,10 +996,10 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: all commands PASS.
 
-- [ ] **Step 8: Commit Popup isolation**
+- [x] **Step 8: Commit Popup isolation**
 
 ```bash
-git add apps/extension/src/popup-app.tsx apps/extension/test/account-sync.test.ts
+git add apps/extension/src/account-sync.ts apps/extension/src/popup-app.tsx apps/extension/src/watch-progress.ts apps/extension/test/account-sync.test.ts apps/extension/test/watch-progress.test.ts docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md
 git commit -m "fix(extension): isolate popup data by account"
 ```
 
