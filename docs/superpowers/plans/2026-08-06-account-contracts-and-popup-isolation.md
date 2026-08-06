@@ -1016,7 +1016,7 @@ git commit -m "fix(extension): isolate popup data by account"
 - Consumes: completed Tasks 1-6.
 - Produces: one reviewable branch and staging artifact with documented two-account evidence.
 
-- [ ] **Step 1: Run cross-plane automated checks**
+- [x] **Step 1: Run cross-plane automated checks**
 
 Run in this order:
 
@@ -1033,7 +1033,12 @@ git diff --check
 
 Expected: every check PASS and `git diff --check` prints nothing.
 
-- [ ] **Step 2: Build and validate the staging extension artifact**
+Result: protocol `35/35`, web `102/102`, and extension `938/938` tests pass;
+all three typechecks, `pnpm dev:check`, and `git diff --check` pass. The
+additional API `95/95`, Workers runtime `11/11`, and room harness `39/39`
+checks also pass because the shared protocol export is consumed cross-plane.
+
+- [x] **Step 2: Build and validate the staging extension artifact**
 
 Run:
 
@@ -1043,6 +1048,9 @@ fnm exec --using="$(cat .node-version)" pnpm validate:extension:staging
 ```
 
 Expected: staging artifact builds and validates without added permissions.
+
+Result: the staging artifact built from `e9ce77c` and passed the channel
+validator without permission changes.
 
 - [ ] **Step 3: Deploy the additive web response before loading the new extension**
 
@@ -1064,7 +1072,7 @@ Use two real AniDachi accounts in separate authenticated browser profiles:
 
 Record the two profile names, deployed staging commit, extension artifact version, and result in the PR staging-evidence section. Do not record emails, tokens, or full user IDs.
 
-- [ ] **Step 5: Refresh Graphify after the code shape is final**
+- [x] **Step 5: Refresh Graphify after the code shape is final**
 
 Run:
 
@@ -1074,6 +1082,10 @@ git diff --check
 ```
 
 Review `graphify-out/graph.json` and `graphify-out/manifest.json`; do not add local Graphify outputs.
+
+Result: the AST graph rebuilt to 7,823 nodes and 16,960 edges. The review query
+traced versioned account responses through protocol validation, extension
+generation gating, and account-scoped social/watch caches.
 
 - [ ] **Step 6: Commit intentional docs or graph changes**
 
