@@ -4163,5 +4163,10 @@
     "mtime": 1785929708.2929585,
     "ast_hash": "4c8ffefe1c99a1b8f6aaaeac85276828",
     "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md": {
+    "mtime": 1786014198.5386698,
+    "ast_hash": "f031f2bffc5bd598a386ed1b6dcbf5d6",
+    "semantic_hash": ""
   }
 }
