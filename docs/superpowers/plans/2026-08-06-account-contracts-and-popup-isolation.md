@@ -546,7 +546,7 @@ git commit -m "feat(web): version account read responses"
 - Consumes: account schemas and inferred types from `@anidachi/protocol`.
 - Produces: validated `WatchLibraryResponse`, `InviteTargets`, `RoomInvitesResponse`, `FriendGroup`, `RoomInvite`, and `AcceptedRoomInviteResponse` values to Popup and overlay callers.
 
-- [ ] **Step 1: Write failing tests for malformed server payloads**
+- [x] **Step 1: Write failing tests for malformed server payloads**
 
 In `watch-library-client.test.ts`, add a mocked successful HTTP response with `schemaVersion: 2` and assert `listWatchLibraryFromApi` rejects. Add another response whose nested participant has an invalid user ID and assert rejection.
 
@@ -572,7 +572,7 @@ it("rejects an invalid invite nested inside a successful response", async () => 
 });
 ```
 
-- [ ] **Step 2: Run focused extension tests and confirm permissive parsing fails the assertions**
+- [x] **Step 2: Run focused extension tests and confirm permissive parsing fails the assertions**
 
 Run:
 
@@ -582,7 +582,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: FAIL because the clients currently cast or normalize malformed bodies.
 
-- [ ] **Step 3: Replace duplicate read DTOs and permissive watch normalization**
+- [x] **Step 3: Replace duplicate read DTOs and permissive watch normalization**
 
 In `watch-library-client.ts`:
 
@@ -601,7 +601,7 @@ function parseWatchLibraryResponse(value: unknown): WatchLibraryResponse {
 6. Change the watch-library cache storage key from `anidachi.watchLibraryCache.v1` to `anidachi.watchLibraryCache.v2`. Do not migrate or display the unvalidated v1 snapshot; leave it inert so the new cache can be rolled back independently.
 7. Parse the cache envelope structurally, require `userId`, `cachedAt`, and a valid `WatchLibraryResponse`, and return `null` on any cache parse failure.
 
-- [ ] **Step 4: Parse social read responses and shared entities**
+- [x] **Step 4: Parse social read responses and shared entities**
 
 In `social-client.ts`:
 
@@ -615,7 +615,7 @@ In `social-client.ts`:
 
 Do not change overlay UI or room-invite behavior; this task changes validation only.
 
-- [ ] **Step 5: Run extension client tests and checks**
+- [x] **Step 5: Run extension client tests and checks**
 
 Run:
 
@@ -626,7 +626,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: focused tests and extension type checking PASS.
 
-- [ ] **Step 6: Commit validated extension clients**
+- [x] **Step 6: Commit validated extension clients**
 
 ```bash
 git add apps/extension/src/watch-library-client.ts apps/extension/test/watch-library-client.test.ts apps/extension/src/social-client.ts apps/extension/test/social-client.test.ts

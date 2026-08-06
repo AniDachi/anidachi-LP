@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   acceptInviteHttpMessage,
   addGroupMemberHttpMessage,
@@ -9,11 +9,56 @@ import {
   isSocialHttpMessage,
   listInvitesHttpMessage,
   listInviteTargetsHttpMessage,
+  listInviteTargetsFromApi,
+  listRoomInvitesFromApi,
   removeGroupMemberHttpMessage,
   updateGroupHttpMessage,
 } from "../src/social-client";
 
+const NOW = "2026-08-06T12:00:00.000Z";
+
+function jsonResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe("extension social HTTP bridge", () => {
+  it("rejects a friends response without account metadata", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ friends: [] }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          meta: { serverTime: NOW, schemaVersion: 1 },
+          groups: [],
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(listInviteTargetsFromApi("access-1")).rejects.toThrow();
+  });
+
+  it("rejects an invalid invite nested inside a successful response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          meta: { serverTime: NOW, schemaVersion: 1 },
+          inbox: [{ id: "not-a-uuid" }],
+          sent: [],
+        }),
+      ),
+    );
+
+    await expect(listRoomInvitesFromApi("access-1")).rejects.toThrow();
+  });
+
   it("accepts list invite target messages", () => {
     expect(isSocialHttpMessage(listInviteTargetsHttpMessage("access-1"))).toBe(true);
   });
