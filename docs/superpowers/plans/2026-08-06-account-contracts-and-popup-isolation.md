@@ -63,7 +63,7 @@
 - Produces: `ACCOUNT_RESPONSE_SCHEMA_VERSION`, `AccountResponseMetaSchema`, `PublicProfileSchema`, `FriendListItemSchema`, `FriendGroupSchema`, `FriendListResponseSchema`, `FriendGroupsResponseSchema`, `InviteTargetsSchema`, `RoomInviteSchema`, `RoomInvitesResponseSchema`, `AcceptedRoomInviteResponseSchema`, `SocialSnapshotSchema`, `WatchLibraryResponseSchema`, and their inferred TypeScript types.
 - Consumes: Zod 4 only; this module has no database, React, browser, or provider-observation imports.
 
-- [ ] **Step 1: Write failing protocol tests for the canonical fixtures**
+- [x] **Step 1: Write failing protocol tests for the canonical fixtures**
 
 Create `packages/protocol/test/account.test.ts` with fixed UUIDs and timestamps. The fixture must exercise a shared watch session, one accepted friend, one active group, one pending room invite, and response metadata:
 
@@ -202,7 +202,7 @@ describe("account response contracts", () => {
 });
 ```
 
-- [ ] **Step 2: Run protocol tests and confirm the new exports are missing**
+- [x] **Step 2: Run protocol tests and confirm the new exports are missing**
 
 Run:
 
@@ -212,7 +212,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/protocol test --
 
 Expected: FAIL because `../src` does not export the account schemas.
 
-- [ ] **Step 3: Implement bounded Zod schemas and inferred types**
+- [x] **Step 3: Implement bounded Zod schemas and inferred types**
 
 Create `packages/protocol/src/account.ts`. Use strict objects at HTTP boundaries, `z.iso.datetime()` for server timestamps, UUIDs for durable user/friend/group/invite/session identifiers, a bounded string for room IDs, URL validation for non-null URL fields, non-negative finite numbers for playback values, and `z.number().min(0).max(1)` for progress.
 
@@ -337,7 +337,7 @@ Add this line to `packages/protocol/src/index.ts`:
 export * from "./account";
 ```
 
-- [ ] **Step 4: Add rejection tests for unsafe and incompatible payloads**
+- [x] **Step 4: Add rejection tests for unsafe and incompatible payloads**
 
 Extend `account.test.ts` with assertions that reject:
 
@@ -365,7 +365,7 @@ it("rejects unsafe nested records instead of dropping them", () => {
 });
 ```
 
-- [ ] **Step 5: Run protocol check and tests**
+- [x] **Step 5: Run protocol check and tests**
 
 Run:
 
@@ -376,7 +376,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/protocol test
 
 Expected: both commands PASS.
 
-- [ ] **Step 6: Commit the protocol boundary**
+- [x] **Step 6: Commit the protocol boundary**
 
 ```bash
 git add packages/protocol/src/account.ts packages/protocol/src/index.ts packages/protocol/test/account.test.ts
