@@ -792,7 +792,7 @@ git commit -m "feat(extension): add account request generation gate"
 - Consumes: `SocialSnapshotSchema` and `SocialSnapshot` from `@anidachi/protocol`; WXT `storage`.
 - Produces: `getCachedSocialSnapshotForUser(userId)`, `setCachedSocialSnapshotForUser(userId, data)`, `clearCachedSocialSnapshotForUser(userId)`, `isSocialSnapshotCacheFresh(cache, nowMs?)`, and `socialSnapshotCacheKeyForUser(userId)`.
 
-- [ ] **Step 1: Write failing cache partition and corruption tests**
+- [x] **Step 1: Write failing cache partition and corruption tests**
 
 Create `apps/extension/test/social-snapshot-cache.test.ts` using the same mocked `wxt/utils/storage` pattern as `watch-library-client.test.ts`. Cover these exact behaviors:
 
@@ -820,7 +820,7 @@ it("discards corrupt and incompatible cache entries", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test and confirm the cache module is missing**
+- [x] **Step 2: Run the focused test and confirm the cache module is missing**
 
 Run:
 
@@ -830,7 +830,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension test -
 
 Expected: FAIL because `social-snapshot-cache.ts` does not exist.
 
-- [ ] **Step 3: Implement the versioned cache envelope**
+- [x] **Step 3: Implement the versioned cache envelope**
 
 Create `apps/extension/src/social-snapshot-cache.ts` with:
 
@@ -858,7 +858,7 @@ export function socialSnapshotCacheKeyForUser(userId: string): `local:${string}`
 
 `getCachedSocialSnapshotForUser` must parse with `safeParse`, verify `parsed.data.userId === userId`, remove the corrupt partition on parse or owner failure, and return `null`. It must never read a global fallback key. `setCachedSocialSnapshotForUser` writes only after `SocialSnapshotSchema.parse(data)`. `isSocialSnapshotCacheFresh` compares `cachedAt` against 60 seconds.
 
-- [ ] **Step 4: Run the cache tests and extension check**
+- [x] **Step 4: Run the cache tests and extension check**
 
 Run:
 
@@ -869,7 +869,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/extension check
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit the social cache**
+- [x] **Step 5: Commit the social cache**
 
 ```bash
 git add apps/extension/src/social-snapshot-cache.ts apps/extension/test/social-snapshot-cache.test.ts
