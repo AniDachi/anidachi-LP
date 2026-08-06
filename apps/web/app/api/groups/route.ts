@@ -1,4 +1,6 @@
+import type { FriendGroupsResponse } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
+import { createAccountResponseMeta } from "@/lib/anidachi-auth/account-response";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
 import {
   cleanGroupName,
@@ -16,8 +18,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const groups = await listFriendGroups(session.userId);
-    return NextResponse.json({ groups });
+    const response: FriendGroupsResponse = {
+      meta: createAccountResponseMeta(),
+      groups: await listFriendGroups(session.userId),
+    };
+    return NextResponse.json(response);
   } catch (error) {
     return socialErrorResponse(error);
   }

@@ -400,7 +400,7 @@ git commit -m "feat(protocol): add account read contracts"
 - Consumes: `AccountResponseMeta`, `FriendListResponse`, `FriendGroupsResponse`, `RoomInvitesResponse`, and `WatchLibraryResponse` from `@anidachi/protocol`.
 - Produces: `createAccountResponseMeta(now?: Date): AccountResponseMeta` and additive read responses carrying `meta`.
 
-- [ ] **Step 1: Write the failing metadata factory test**
+- [x] **Step 1: Write the failing metadata factory test**
 
 Create `apps/web/lib/anidachi-auth/account-response.test.ts`:
 
@@ -418,7 +418,7 @@ describe("createAccountResponseMeta", () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test and confirm the helper is missing**
+- [x] **Step 2: Run the focused test and confirm the helper is missing**
 
 Run:
 
@@ -428,7 +428,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/web test -- acco
 
 Expected: FAIL because `account-response.ts` does not exist.
 
-- [ ] **Step 3: Implement the metadata factory**
+- [x] **Step 3: Implement the metadata factory**
 
 Create `apps/web/lib/anidachi-auth/account-response.ts`:
 
@@ -446,7 +446,7 @@ export function createAccountResponseMeta(now = new Date()): AccountResponseMeta
 }
 ```
 
-- [ ] **Step 4: Make watch-library output use the shared contract**
+- [x] **Step 4: Make watch-library output use the shared contract**
 
 In `apps/web/lib/anidachi-auth/watch-library.ts`:
 
@@ -482,7 +482,7 @@ return WatchLibraryResponseSchema.parse({
 
 Update `watch-library.test.ts` so every expected library includes `meta`, and add one assertion that `library.meta.serverTime === library.generatedAt`.
 
-- [ ] **Step 5: Add metadata to the social read routes**
+- [x] **Step 5: Add metadata to the social read routes**
 
 Modify only the `GET` branches; leave mutations and database calls unchanged.
 
@@ -514,7 +514,7 @@ return NextResponse.json(response);
 
 Use imported shared response types so a route cannot omit a field silently.
 
-- [ ] **Step 6: Run web tests and type checking**
+- [x] **Step 6: Run web tests and type checking**
 
 Run:
 
@@ -525,7 +525,7 @@ fnm exec --using="$(cat .node-version)" pnpm --filter @anidachi/web check
 
 Expected: both commands PASS; watch-library tests confirm the canonical builder parses.
 
-- [ ] **Step 7: Commit the additive web contract**
+- [x] **Step 7: Commit the additive web contract**
 
 ```bash
 git add apps/web/lib/anidachi-auth/account-response.ts apps/web/lib/anidachi-auth/account-response.test.ts apps/web/lib/anidachi-auth/watch-library.ts apps/web/lib/anidachi-auth/watch-library.test.ts apps/web/app/api/friends/route.ts apps/web/app/api/groups/route.ts apps/web/app/api/invites/route.ts
