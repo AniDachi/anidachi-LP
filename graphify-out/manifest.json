@@ -375,8 +375,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/social-client.ts": {
-    "mtime": 1786016829.753102,
-    "ast_hash": "95e63d7f9cfd350f0c9f11b0e4136826",
+    "mtime": 1786024355.6480703,
+    "ast_hash": "9ff4a77d88c0ca70a5a40d985d8e175d",
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
@@ -525,8 +525,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/social-client.test.ts": {
-    "mtime": 1786016715.0410259,
-    "ast_hash": "d8233d55255606df3031be3223838c23",
+    "mtime": 1786024446.7654343,
+    "ast_hash": "44522f983ca09525fbadda763abd539f",
     "semantic_hash": ""
   },
   "apps/extension/test/video-adapter.test.ts": {
@@ -3045,8 +3045,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1785929709.036092,
-    "ast_hash": "f5113818fe1b4cdac22dd60999a2a97c",
+    "mtime": 1786021453.288853,
+    "ast_hash": "c90cb1b85c7dce9b953da1fbc671108b",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -4170,8 +4170,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md": {
-    "mtime": 1786021053.6021678,
-    "ast_hash": "b6ca7105812413df5fab64b950b5cc0e",
+    "mtime": 1786021539.547086,
+    "ast_hash": "3212e165705cd882258a92d12a48b057",
     "semantic_hash": ""
   },
   "apps/extension/src/account-sync.ts": {
@@ -4205,13 +4205,13 @@
     "semantic_hash": ""
   },
   "packages/protocol/src/account.ts": {
-    "mtime": 1786016268.9424922,
-    "ast_hash": "1eeb7fa09b2014dfac4acb6f05f15f57",
+    "mtime": 1786024184.645215,
+    "ast_hash": "47ee69769e01549db2934b707ab43b0d",
     "semantic_hash": ""
   },
   "packages/protocol/test/account.test.ts": {
-    "mtime": 1786016292.0084999,
-    "ast_hash": "3bf70755d2b3e1e641b76fdd4467ca57",
+    "mtime": 1786024048.29144,
+    "ast_hash": "308f81a39cf5689f209da86e6af57eca",
     "semantic_hash": ""
   }
 }

@@ -8,14 +8,16 @@ import {
   declineInviteHttpMessage,
   isSocialHttpMessage,
   listInvitesHttpMessage,
-  listInviteTargetsHttpMessage,
   listInviteTargetsFromApi,
+  listInviteTargetsHttpMessage,
   listRoomInvitesFromApi,
   removeGroupMemberHttpMessage,
   updateGroupHttpMessage,
 } from "../src/social-client";
 
 const NOW = "2026-08-06T12:00:00.000Z";
+const USER_ID = "11111111-1111-4111-8111-111111111111";
+const INVITE_ID = "22222222-2222-4222-8222-222222222222";
 
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -41,7 +43,10 @@ describe("extension social HTTP bridge", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(listInviteTargetsFromApi("access-1")).rejects.toThrow();
+    await expect(listInviteTargetsFromApi("access-1")).rejects.toMatchObject({
+      code: "INVALID_ACCOUNT_RESPONSE",
+      message: "Account data is temporarily unavailable. Try again.",
+    });
   });
 
   it("rejects an invalid invite nested inside a successful response", async () => {
@@ -56,7 +61,59 @@ describe("extension social HTTP bridge", () => {
       ),
     );
 
-    await expect(listRoomInvitesFromApi("access-1")).rejects.toThrow();
+    await expect(listRoomInvitesFromApi("access-1")).rejects.toMatchObject({
+      code: "INVALID_ACCOUNT_RESPONSE",
+      message: "Account data is temporarily unavailable. Try again.",
+    });
+  });
+
+  it("accepts invite timestamps returned with an explicit UTC offset", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          meta: { serverTime: NOW, schemaVersion: 1 },
+          inbox: [
+            {
+              id: INVITE_ID,
+              roomId: "room-1",
+              sender: {
+                userId: USER_ID,
+                handle: "ren",
+                displayName: "Ren",
+                avatarUrl: null,
+              },
+              targetKind: "direct",
+              targetGroupId: null,
+              message: null,
+              roomTitle: null,
+              sourceUrl: null,
+              videoFingerprint: null,
+              createdAt: "2026-08-06T12:00:00.000+00:00",
+              expiresAt: "2026-08-06T13:00:00.000+00:00",
+              recipients: [
+                {
+                  user: {
+                    userId: USER_ID,
+                    handle: "ren",
+                    displayName: "Ren",
+                    avatarUrl: null,
+                  },
+                  status: "pending",
+                  updatedAt: "2026-08-06T12:00:00.000+00:00",
+                  respondedAt: null,
+                },
+              ],
+            },
+          ],
+          sent: [],
+        }),
+      ),
+    );
+
+    await expect(listRoomInvitesFromApi("access-1")).resolves.toMatchObject({
+      inbox: [{ id: INVITE_ID }],
+    });
   });
 
   it("accepts list invite target messages", () => {

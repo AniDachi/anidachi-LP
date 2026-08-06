@@ -12828,11 +12828,35 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_extension_src_social_client_socialcontractissue",
+      "label": "SocialContractIssue",
+      "file_type": "code",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L23",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_social_client_socialcontractschema",
+      "label": "SocialContractSchema",
+      "file_type": "code",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L28",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_social_client_socialcontractschema_safeparse",
+      "label": ".safeParse()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L29",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_extension_src_social_client_createroominviteinput",
       "label": "CreateRoomInviteInput",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L31",
+      "source_location": "L44",
       "_origin": "ast"
     },
     {
@@ -12840,7 +12864,7 @@
       "label": "CreateFriendGroupInput",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L37",
+      "source_location": "L50",
       "_origin": "ast"
     },
     {
@@ -12848,7 +12872,7 @@
       "label": "UpdateFriendGroupInput",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L41",
+      "source_location": "L54",
       "_origin": "ast"
     },
     {
@@ -12856,7 +12880,7 @@
       "label": "FriendGroupMemberInput",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L46",
+      "source_location": "L59",
       "_origin": "ast"
     },
     {
@@ -12864,7 +12888,7 @@
       "label": "SocialHttpMessage",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L51",
+      "source_location": "L64",
       "_origin": "ast"
     },
     {
@@ -12872,7 +12896,7 @@
       "label": "SocialHttpMessageResponse",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L99",
+      "source_location": "L112",
       "_origin": "ast"
     },
     {
@@ -12880,7 +12904,7 @@
       "label": "listInviteTargetsHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L108",
+      "source_location": "L121",
       "_origin": "ast"
     },
     {
@@ -12888,7 +12912,7 @@
       "label": "createInviteHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L116",
+      "source_location": "L129",
       "_origin": "ast"
     },
     {
@@ -12896,7 +12920,7 @@
       "label": "createGroupHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L128",
+      "source_location": "L141",
       "_origin": "ast"
     },
     {
@@ -12904,7 +12928,7 @@
       "label": "updateGroupHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L140",
+      "source_location": "L153",
       "_origin": "ast"
     },
     {
@@ -12912,7 +12936,7 @@
       "label": "archiveGroupHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L152",
+      "source_location": "L165",
       "_origin": "ast"
     },
     {
@@ -12920,7 +12944,7 @@
       "label": "addGroupMemberHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L164",
+      "source_location": "L177",
       "_origin": "ast"
     },
     {
@@ -12928,7 +12952,7 @@
       "label": "removeGroupMemberHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L176",
+      "source_location": "L189",
       "_origin": "ast"
     },
     {
@@ -12936,7 +12960,7 @@
       "label": "listInvitesHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L188",
+      "source_location": "L201",
       "_origin": "ast"
     },
     {
@@ -12944,7 +12968,7 @@
       "label": "acceptInviteHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L196",
+      "source_location": "L209",
       "_origin": "ast"
     },
     {
@@ -12952,7 +12976,7 @@
       "label": "declineInviteHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L208",
+      "source_location": "L221",
       "_origin": "ast"
     },
     {
@@ -12960,7 +12984,7 @@
       "label": "isSocialHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L220",
+      "source_location": "L233",
       "_origin": "ast"
     },
     {
@@ -12968,7 +12992,15 @@
       "label": "socialHttpError()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L269",
+      "source_location": "L282",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_social_client_parsesocialcontract",
+      "label": "parseSocialContract()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L299",
       "_origin": "ast"
     },
     {
@@ -12976,7 +13008,7 @@
       "label": "listInviteTargetsFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L286",
+      "source_location": "L317",
       "_origin": "ast"
     },
     {
@@ -12984,7 +13016,7 @@
       "label": "listRoomInvitesFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L312",
+      "source_location": "L355",
       "_origin": "ast"
     },
     {
@@ -12992,7 +13024,7 @@
       "label": "createRoomInviteFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L327",
+      "source_location": "L370",
       "_origin": "ast"
     },
     {
@@ -13000,7 +13032,7 @@
       "label": "createFriendGroupFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L350",
+      "source_location": "L397",
       "_origin": "ast"
     },
     {
@@ -13008,7 +13040,7 @@
       "label": "updateFriendGroupFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L368",
+      "source_location": "L419",
       "_origin": "ast"
     },
     {
@@ -13016,7 +13048,7 @@
       "label": "archiveFriendGroupFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L392",
+      "source_location": "L447",
       "_origin": "ast"
     },
     {
@@ -13024,7 +13056,7 @@
       "label": "addFriendGroupMemberFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L410",
+      "source_location": "L465",
       "_origin": "ast"
     },
     {
@@ -13032,7 +13064,7 @@
       "label": "removeFriendGroupMemberFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L434",
+      "source_location": "L493",
       "_origin": "ast"
     },
     {
@@ -13040,7 +13072,7 @@
       "label": "acceptRoomInviteFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L461",
+      "source_location": "L524",
       "_origin": "ast"
     },
     {
@@ -13048,7 +13080,7 @@
       "label": "declineRoomInviteFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L481",
+      "source_location": "L548",
       "_origin": "ast"
     },
     {
@@ -13056,7 +13088,7 @@
       "label": "handleSocialHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L501",
+      "source_location": "L572",
       "_origin": "ast"
     },
     {
@@ -13064,7 +13096,7 @@
       "label": "sendSocialHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L569",
+      "source_location": "L640",
       "_origin": "ast"
     },
     {
@@ -13072,7 +13104,7 @@
       "label": "assertSocialHttpResponse()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L575",
+      "source_location": "L646",
       "_origin": "ast"
     },
     {
@@ -13080,7 +13112,7 @@
       "label": "socialBridgeError()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L584",
+      "source_location": "L655",
       "_origin": "ast"
     },
     {
@@ -13088,7 +13120,7 @@
       "label": "listInviteTargets()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L588",
+      "source_location": "L659",
       "_origin": "ast"
     },
     {
@@ -13096,7 +13128,7 @@
       "label": "listRoomInvites()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L597",
+      "source_location": "L668",
       "_origin": "ast"
     },
     {
@@ -13104,7 +13136,7 @@
       "label": "createRoomInvite()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L606",
+      "source_location": "L677",
       "_origin": "ast"
     },
     {
@@ -13112,7 +13144,7 @@
       "label": "createFriendGroup()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L618",
+      "source_location": "L689",
       "_origin": "ast"
     },
     {
@@ -13120,7 +13152,7 @@
       "label": "updateFriendGroup()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L630",
+      "source_location": "L701",
       "_origin": "ast"
     },
     {
@@ -13128,7 +13160,7 @@
       "label": "archiveFriendGroup()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L642",
+      "source_location": "L713",
       "_origin": "ast"
     },
     {
@@ -13136,7 +13168,7 @@
       "label": "addFriendGroupMember()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L655",
+      "source_location": "L726",
       "_origin": "ast"
     },
     {
@@ -13144,7 +13176,7 @@
       "label": "removeFriendGroupMember()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L667",
+      "source_location": "L738",
       "_origin": "ast"
     },
     {
@@ -13152,7 +13184,7 @@
       "label": "acceptRoomInvite()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L679",
+      "source_location": "L750",
       "_origin": "ast"
     },
     {
@@ -13160,7 +13192,7 @@
       "label": "declineRoomInvite()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L693",
+      "source_location": "L768",
       "_origin": "ast"
     },
     {
@@ -13168,7 +13200,7 @@
       "label": "responseField()",
       "file_type": "code",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L705",
+      "source_location": "L780",
       "_origin": "ast"
     },
     {
@@ -19344,7 +19376,7 @@
       "label": "jsonResponse()",
       "file_type": "code",
       "source_file": "apps/extension/test/social-client.test.ts",
-      "source_location": "L20",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -43384,7 +43416,7 @@
       "label": "meta",
       "file_type": "code",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L20",
+      "source_location": "L21",
       "_origin": "ast"
     },
     {
@@ -43392,7 +43424,7 @@
       "label": "userB",
       "file_type": "code",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -43400,7 +43432,7 @@
       "label": "friend",
       "file_type": "code",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -43408,7 +43440,7 @@
       "label": "group",
       "file_type": "code",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -43416,7 +43448,7 @@
       "label": "invite",
       "file_type": "code",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L44",
+      "source_location": "L45",
       "_origin": "ast"
     },
     {
@@ -43424,7 +43456,7 @@
       "label": "watchLibraryFixture()",
       "file_type": "code",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L66",
+      "source_location": "L67",
       "_origin": "ast"
     },
     {
@@ -48300,11 +48332,19 @@
       "_origin": "ast"
     },
     {
+      "id": "docs_current_development_state_account_read_contracts_and_popup_isolation",
+      "label": "Account Read Contracts And Popup Isolation",
+      "file_type": "document",
+      "source_file": "docs/current-development-state.md",
+      "source_location": "L166",
+      "_origin": "ast"
+    },
+    {
       "id": "docs_current_development_state_runtime_environments",
       "label": "Runtime Environments",
       "file_type": "document",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L166",
+      "source_location": "L187",
       "_origin": "ast"
     },
     {
@@ -48312,7 +48352,7 @@
       "label": "Extension Channels",
       "file_type": "document",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L212",
+      "source_location": "L233",
       "_origin": "ast"
     },
     {
@@ -48320,7 +48360,7 @@
       "label": "Last Recorded Staging Store Artifact",
       "file_type": "document",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L251",
+      "source_location": "L272",
       "_origin": "ast"
     },
     {
@@ -48328,7 +48368,7 @@
       "label": "Current Product Behavior",
       "file_type": "document",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L274",
+      "source_location": "L295",
       "_origin": "ast"
     },
     {
@@ -48336,7 +48376,7 @@
       "label": "Known Fragile Areas",
       "file_type": "document",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L448",
+      "source_location": "L469",
       "_origin": "ast"
     },
     {
@@ -48344,7 +48384,7 @@
       "label": "Documentation Map",
       "file_type": "document",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L508",
+      "source_location": "L529",
       "_origin": "ast"
     },
     {
@@ -53448,7 +53488,7 @@
       "label": "Completion Boundary",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
-      "source_location": "L1112",
+      "source_location": "L1127",
       "_origin": "ast"
     },
     {
@@ -98602,7 +98642,27 @@
     },
     {
       "source": "apps_extension_src_social_client",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_acceptedroominviteresponse",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
       "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_acceptedroominviteresponseschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_friendgroup",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -98642,57 +98702,17 @@
     },
     {
       "source": "apps_extension_src_social_client",
-      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_invitetargetsschema",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client",
-      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_roominviteschema",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client",
-      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_roominvitesresponseschema",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client",
-      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_acceptedroominviteresponse",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client",
-      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_friendgroup",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client",
       "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_invitetargets",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_invitetargetsschema",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -98712,7 +98732,27 @@
     },
     {
       "source": "apps_extension_src_social_client",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_roominviteschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
       "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_roominvitesresponse",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
+      "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_roominvitesresponseschema",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -98792,12 +98832,39 @@
     },
     {
       "source": "apps_extension_src_social_client",
+      "target": "apps_extension_src_social_client_socialcontractissue",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
+      "target": "apps_extension_src_social_client_socialcontractschema",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_socialcontractschema",
+      "target": "apps_extension_src_social_client_socialcontractschema_safeparse",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
       "target": "users_vladyslavhulyi_codex_worktrees_ffbc_anidachi_lp_monorepo_packages_protocol_src_index_acceptedroominviteresponse",
       "relation": "re_exports",
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L21",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -98807,7 +98874,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L21",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -98817,7 +98884,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L21",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -98827,7 +98894,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L21",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -98837,7 +98904,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L21",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -98847,7 +98914,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L21",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -98857,7 +98924,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L21",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -98866,7 +98933,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L31",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -98875,7 +98942,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L37",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -98884,7 +98951,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L41",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -98893,7 +98960,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L46",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -98902,7 +98969,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L51",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -98911,7 +98978,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L99",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -98920,7 +98987,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L108",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -98929,7 +98996,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L116",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
@@ -98938,7 +99005,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L128",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -98947,7 +99014,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L140",
+      "source_location": "L153",
       "weight": 1.0
     },
     {
@@ -98956,7 +99023,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L152",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -98965,7 +99032,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L164",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -98974,7 +99041,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L176",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -98983,7 +99050,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L188",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -98992,7 +99059,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L196",
+      "source_location": "L209",
       "weight": 1.0
     },
     {
@@ -99001,7 +99068,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L208",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -99010,7 +99077,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L220",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -99019,7 +99086,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L269",
+      "source_location": "L282",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L299",
       "weight": 1.0
     },
     {
@@ -99028,7 +99104,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L286",
+      "source_location": "L317",
       "weight": 1.0
     },
     {
@@ -99037,7 +99113,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L312",
+      "source_location": "L355",
       "weight": 1.0
     },
     {
@@ -99046,7 +99122,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L327",
+      "source_location": "L370",
       "weight": 1.0
     },
     {
@@ -99055,7 +99131,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L350",
+      "source_location": "L397",
       "weight": 1.0
     },
     {
@@ -99064,7 +99140,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L368",
+      "source_location": "L419",
       "weight": 1.0
     },
     {
@@ -99073,7 +99149,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L392",
+      "source_location": "L447",
       "weight": 1.0
     },
     {
@@ -99082,7 +99158,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L410",
+      "source_location": "L465",
       "weight": 1.0
     },
     {
@@ -99091,7 +99167,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L434",
+      "source_location": "L493",
       "weight": 1.0
     },
     {
@@ -99100,7 +99176,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L461",
+      "source_location": "L524",
       "weight": 1.0
     },
     {
@@ -99109,7 +99185,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L481",
+      "source_location": "L548",
       "weight": 1.0
     },
     {
@@ -99118,7 +99194,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L501",
+      "source_location": "L572",
       "weight": 1.0
     },
     {
@@ -99127,7 +99203,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L569",
+      "source_location": "L640",
       "weight": 1.0
     },
     {
@@ -99136,7 +99212,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L575",
+      "source_location": "L646",
       "weight": 1.0
     },
     {
@@ -99145,7 +99221,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L584",
+      "source_location": "L655",
       "weight": 1.0
     },
     {
@@ -99154,7 +99230,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L588",
+      "source_location": "L659",
       "weight": 1.0
     },
     {
@@ -99163,7 +99239,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L597",
+      "source_location": "L668",
       "weight": 1.0
     },
     {
@@ -99172,7 +99248,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L606",
+      "source_location": "L677",
       "weight": 1.0
     },
     {
@@ -99181,7 +99257,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L618",
+      "source_location": "L689",
       "weight": 1.0
     },
     {
@@ -99190,7 +99266,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L630",
+      "source_location": "L701",
       "weight": 1.0
     },
     {
@@ -99199,7 +99275,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L642",
+      "source_location": "L713",
       "weight": 1.0
     },
     {
@@ -99208,7 +99284,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L655",
+      "source_location": "L726",
       "weight": 1.0
     },
     {
@@ -99217,7 +99293,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L667",
+      "source_location": "L738",
       "weight": 1.0
     },
     {
@@ -99226,7 +99302,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L679",
+      "source_location": "L750",
       "weight": 1.0
     },
     {
@@ -99235,7 +99311,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L693",
+      "source_location": "L768",
       "weight": 1.0
     },
     {
@@ -99244,7 +99320,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L705",
+      "source_location": "L780",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_parsesocialcontract",
+      "target": "apps_extension_src_social_client_socialcontractschema_safeparse",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L304",
       "weight": 1.0
     },
     {
@@ -99254,7 +99340,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L298",
+      "source_location": "L329",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_listinvitetargetsfromapi",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L335",
       "weight": 1.0
     },
     {
@@ -99264,7 +99360,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L321",
+      "source_location": "L364",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_listroominvitesfromapi",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L367",
       "weight": 1.0
     },
     {
@@ -99274,7 +99380,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L344",
+      "source_location": "L387",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_createroominvitefromapi",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L390",
       "weight": 1.0
     },
     {
@@ -99284,7 +99400,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L347",
+      "source_location": "L392",
       "weight": 1.0
     },
     {
@@ -99294,7 +99410,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L362",
+      "source_location": "L409",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_createfriendgroupfromapi",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L412",
       "weight": 1.0
     },
     {
@@ -99304,7 +99430,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L365",
+      "source_location": "L414",
       "weight": 1.0
     },
     {
@@ -99314,7 +99440,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L386",
+      "source_location": "L437",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_updatefriendgroupfromapi",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L440",
       "weight": 1.0
     },
     {
@@ -99324,7 +99460,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L389",
+      "source_location": "L442",
       "weight": 1.0
     },
     {
@@ -99334,7 +99470,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L406",
+      "source_location": "L461",
       "weight": 1.0
     },
     {
@@ -99344,7 +99480,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L428",
+      "source_location": "L483",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_addfriendgroupmemberfromapi",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L486",
       "weight": 1.0
     },
     {
@@ -99354,7 +99500,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L431",
+      "source_location": "L488",
       "weight": 1.0
     },
     {
@@ -99364,7 +99510,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L455",
+      "source_location": "L514",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_removefriendgroupmemberfromapi",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L517",
       "weight": 1.0
     },
     {
@@ -99374,7 +99530,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L458",
+      "source_location": "L519",
       "weight": 1.0
     },
     {
@@ -99384,7 +99540,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L475",
+      "source_location": "L538",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_acceptroominvitefromapi",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L541",
       "weight": 1.0
     },
     {
@@ -99394,7 +99560,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L495",
+      "source_location": "L562",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_declineroominvitefromapi",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L565",
       "weight": 1.0
     },
     {
@@ -99404,7 +99580,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L498",
+      "source_location": "L567",
       "weight": 1.0
     },
     {
@@ -99414,7 +99590,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L506",
+      "source_location": "L577",
       "weight": 1.0
     },
     {
@@ -99424,7 +99600,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L509",
+      "source_location": "L580",
       "weight": 1.0
     },
     {
@@ -99434,7 +99610,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L514",
+      "source_location": "L585",
       "weight": 1.0
     },
     {
@@ -99444,7 +99620,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L520",
+      "source_location": "L591",
       "weight": 1.0
     },
     {
@@ -99454,7 +99630,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L526",
+      "source_location": "L597",
       "weight": 1.0
     },
     {
@@ -99464,7 +99640,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L532",
+      "source_location": "L603",
       "weight": 1.0
     },
     {
@@ -99474,7 +99650,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L538",
+      "source_location": "L609",
       "weight": 1.0
     },
     {
@@ -99484,7 +99660,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L542",
+      "source_location": "L613",
       "weight": 1.0
     },
     {
@@ -99494,7 +99670,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L548",
+      "source_location": "L619",
       "weight": 1.0
     },
     {
@@ -99504,7 +99680,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L554",
+      "source_location": "L625",
       "weight": 1.0
     },
     {
@@ -99514,7 +99690,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L589",
+      "source_location": "L660",
       "weight": 1.0
     },
     {
@@ -99524,7 +99700,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L590",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -99534,7 +99710,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L590",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -99544,7 +99720,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L592",
+      "source_location": "L663",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_listinvitetargets",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L665",
       "weight": 1.0
     },
     {
@@ -99554,7 +99740,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L598",
+      "source_location": "L669",
       "weight": 1.0
     },
     {
@@ -99564,7 +99750,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L599",
+      "source_location": "L670",
       "weight": 1.0
     },
     {
@@ -99574,7 +99760,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L599",
+      "source_location": "L670",
       "weight": 1.0
     },
     {
@@ -99584,7 +99770,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L601",
+      "source_location": "L672",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_listroominvites",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L674",
       "weight": 1.0
     },
     {
@@ -99594,7 +99790,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L610",
+      "source_location": "L681",
       "weight": 1.0
     },
     {
@@ -99604,7 +99800,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L611",
+      "source_location": "L682",
       "weight": 1.0
     },
     {
@@ -99614,7 +99810,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L611",
+      "source_location": "L682",
       "weight": 1.0
     },
     {
@@ -99624,7 +99820,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L613",
+      "source_location": "L684",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_createroominvite",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L686",
       "weight": 1.0
     },
     {
@@ -99634,7 +99840,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L622",
+      "source_location": "L693",
       "weight": 1.0
     },
     {
@@ -99644,7 +99850,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L623",
+      "source_location": "L694",
       "weight": 1.0
     },
     {
@@ -99654,7 +99860,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L623",
+      "source_location": "L694",
       "weight": 1.0
     },
     {
@@ -99664,7 +99870,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L625",
+      "source_location": "L696",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_createfriendgroup",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L698",
       "weight": 1.0
     },
     {
@@ -99674,7 +99890,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L634",
+      "source_location": "L705",
       "weight": 1.0
     },
     {
@@ -99684,7 +99900,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L635",
+      "source_location": "L706",
       "weight": 1.0
     },
     {
@@ -99694,7 +99910,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L635",
+      "source_location": "L706",
       "weight": 1.0
     },
     {
@@ -99704,7 +99920,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L637",
+      "source_location": "L708",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_updatefriendgroup",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L710",
       "weight": 1.0
     },
     {
@@ -99714,7 +99940,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L646",
+      "source_location": "L717",
       "weight": 1.0
     },
     {
@@ -99724,7 +99950,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L647",
+      "source_location": "L718",
       "weight": 1.0
     },
     {
@@ -99734,7 +99960,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L647",
+      "source_location": "L718",
       "weight": 1.0
     },
     {
@@ -99744,7 +99970,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L649",
+      "source_location": "L720",
       "weight": 1.0
     },
     {
@@ -99754,7 +99980,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L659",
+      "source_location": "L730",
       "weight": 1.0
     },
     {
@@ -99764,7 +99990,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L660",
+      "source_location": "L731",
       "weight": 1.0
     },
     {
@@ -99774,7 +100000,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L660",
+      "source_location": "L731",
       "weight": 1.0
     },
     {
@@ -99784,7 +100010,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L662",
+      "source_location": "L733",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_addfriendgroupmember",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L735",
       "weight": 1.0
     },
     {
@@ -99794,7 +100030,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L671",
+      "source_location": "L742",
       "weight": 1.0
     },
     {
@@ -99804,7 +100040,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L672",
+      "source_location": "L743",
       "weight": 1.0
     },
     {
@@ -99814,7 +100050,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L672",
+      "source_location": "L743",
       "weight": 1.0
     },
     {
@@ -99824,7 +100060,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L674",
+      "source_location": "L745",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_removefriendgroupmember",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L747",
       "weight": 1.0
     },
     {
@@ -99834,7 +100080,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L683",
+      "source_location": "L754",
       "weight": 1.0
     },
     {
@@ -99844,7 +100090,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L684",
+      "source_location": "L755",
       "weight": 1.0
     },
     {
@@ -99854,7 +100100,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L684",
+      "source_location": "L755",
       "weight": 1.0
     },
     {
@@ -99864,7 +100110,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L686",
+      "source_location": "L757",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_acceptroominvite",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L761",
       "weight": 1.0
     },
     {
@@ -99874,7 +100130,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L697",
+      "source_location": "L772",
       "weight": 1.0
     },
     {
@@ -99884,7 +100140,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L698",
+      "source_location": "L773",
       "weight": 1.0
     },
     {
@@ -99894,7 +100150,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L698",
+      "source_location": "L773",
       "weight": 1.0
     },
     {
@@ -99904,7 +100160,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L700",
+      "source_location": "L775",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_declineroominvite",
+      "target": "apps_extension_src_social_client_parsesocialcontract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L777",
       "weight": 1.0
     },
     {
@@ -116110,7 +116376,7 @@
     },
     {
       "source": "apps_extension_test_social_client_test",
-      "target": "apps_extension_src_social_client_listinvitetargetshttpmessage",
+      "target": "apps_extension_src_social_client_listinvitetargetsfromapi",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -116120,7 +116386,7 @@
     },
     {
       "source": "apps_extension_test_social_client_test",
-      "target": "apps_extension_src_social_client_listinvitetargetsfromapi",
+      "target": "apps_extension_src_social_client_listinvitetargetshttpmessage",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -116164,7 +116430,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/social-client.test.ts",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -186207,7 +186473,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -186216,7 +186482,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -186225,7 +186491,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -186234,7 +186500,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -186243,7 +186509,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L44",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -186252,7 +186518,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/protocol/test/account.test.ts",
-      "source_location": "L66",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -193786,7 +194052,7 @@
     },
     {
       "source": "docs_current_development_state_current_development_state",
-      "target": "docs_current_development_state_runtime_environments",
+      "target": "docs_current_development_state_account_read_contracts_and_popup_isolation",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/current-development-state.md",
@@ -193795,11 +194061,20 @@
     },
     {
       "source": "docs_current_development_state_current_development_state",
+      "target": "docs_current_development_state_runtime_environments",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/current-development-state.md",
+      "source_location": "L187",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_current_development_state_current_development_state",
       "target": "docs_current_development_state_extension_channels",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L212",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -193808,7 +194083,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L251",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -193817,7 +194092,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L274",
+      "source_location": "L295",
       "weight": 1.0
     },
     {
@@ -193826,7 +194101,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L448",
+      "source_location": "L469",
       "weight": 1.0
     },
     {
@@ -193835,7 +194110,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/current-development-state.md",
-      "source_location": "L508",
+      "source_location": "L529",
       "weight": 1.0
     },
     {
@@ -199271,7 +199546,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
-      "source_location": "L1112",
+      "source_location": "L1127",
       "weight": 1.0
     },
     {
@@ -200448,7 +200723,7 @@
       "context": "export",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L21",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -201493,7 +201768,27 @@
     },
     {
       "source": "apps_extension_src_social_client",
+      "target": "packages_protocol_src_account_acceptedroominviteresponse",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
       "target": "packages_protocol_src_account_acceptedroominviteresponseschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
+      "target": "packages_protocol_src_account_friendgroup",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -201533,57 +201828,17 @@
     },
     {
       "source": "apps_extension_src_social_client",
-      "target": "packages_protocol_src_account_invitetargetsschema",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client",
-      "target": "packages_protocol_src_account_roominviteschema",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client",
-      "target": "packages_protocol_src_account_roominvitesresponseschema",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client",
-      "target": "packages_protocol_src_account_acceptedroominviteresponse",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client",
-      "target": "packages_protocol_src_account_friendgroup",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client",
       "target": "packages_protocol_src_account_invitetargets",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
+      "target": "packages_protocol_src_account_invitetargetsschema",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -201603,7 +201858,27 @@
     },
     {
       "source": "apps_extension_src_social_client",
+      "target": "packages_protocol_src_account_roominviteschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
       "target": "packages_protocol_src_account_roominvitesresponse",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client",
+      "target": "packages_protocol_src_account_roominvitesresponseschema",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -204849,6 +205124,16 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-app.tsx",
       "source_location": "L1034",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_parsesocialcontract",
+      "target": "apps_extension_src_debug_log_logdebug",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L307",
       "weight": 1.0
     },
     {
@@ -213892,7 +214177,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L287",
+      "source_location": "L318",
       "weight": 1.0
     },
     {
@@ -213903,7 +214188,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L290",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -213914,7 +214199,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L315",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -213925,7 +214210,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L317",
+      "source_location": "L360",
       "weight": 1.0
     },
     {
@@ -213936,7 +214221,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L331",
+      "source_location": "L374",
       "weight": 1.0
     },
     {
@@ -213947,67 +214232,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L339",
+      "source_location": "L382",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_social_client_createfriendgroupfromapi",
       "target": "apps_extension_src_debug_log_logdebug",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L354",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_createfriendgroupfromapi",
-      "target": "apps_extension_src_room_client_createwebsiteroomheaders",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L357",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_updatefriendgroupfromapi",
-      "target": "apps_extension_src_debug_log_logdebug",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L372",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_updatefriendgroupfromapi",
-      "target": "apps_extension_src_room_client_createwebsiteroomheaders",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L380",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_archivefriendgroupfromapi",
-      "target": "apps_extension_src_debug_log_logdebug",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L396",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_archivefriendgroupfromapi",
-      "target": "apps_extension_src_room_client_createwebsiteroomheaders",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -214017,6 +214247,61 @@
       "weight": 1.0
     },
     {
+      "source": "apps_extension_src_social_client_createfriendgroupfromapi",
+      "target": "apps_extension_src_room_client_createwebsiteroomheaders",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L404",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_updatefriendgroupfromapi",
+      "target": "apps_extension_src_debug_log_logdebug",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L423",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_updatefriendgroupfromapi",
+      "target": "apps_extension_src_room_client_createwebsiteroomheaders",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L431",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_archivefriendgroupfromapi",
+      "target": "apps_extension_src_debug_log_logdebug",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L451",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_social_client_archivefriendgroupfromapi",
+      "target": "apps_extension_src_room_client_createwebsiteroomheaders",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/social-client.ts",
+      "source_location": "L456",
+      "weight": 1.0
+    },
+    {
       "source": "apps_extension_src_social_client_addfriendgroupmemberfromapi",
       "target": "apps_extension_src_debug_log_logdebug",
       "relation": "calls",
@@ -214024,7 +214309,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L414",
+      "source_location": "L469",
       "weight": 1.0
     },
     {
@@ -214035,7 +214320,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L422",
+      "source_location": "L477",
       "weight": 1.0
     },
     {
@@ -214046,7 +214331,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L438",
+      "source_location": "L497",
       "weight": 1.0
     },
     {
@@ -214057,7 +214342,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L450",
+      "source_location": "L509",
       "weight": 1.0
     },
     {
@@ -214068,7 +214353,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L465",
+      "source_location": "L528",
       "weight": 1.0
     },
     {
@@ -214079,7 +214364,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L470",
+      "source_location": "L533",
       "weight": 1.0
     },
     {
@@ -214090,7 +214375,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L485",
+      "source_location": "L552",
       "weight": 1.0
     },
     {
@@ -214101,7 +214386,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L490",
+      "source_location": "L557",
       "weight": 1.0
     },
     {
@@ -224442,226 +224727,6 @@
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/room-session-storage.ts",
       "source_location": "L631",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_listinvitetargetsfromapi",
-      "target": "packages_protocol_src_account_friendlistresponseschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L304",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_listinvitetargetsfromapi",
-      "target": "packages_protocol_src_account_friendgroupsresponseschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L305",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_listinvitetargetsfromapi",
-      "target": "packages_protocol_src_account_invitetargetsschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L306",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_listroominvitesfromapi",
-      "target": "packages_protocol_src_account_roominvitesresponseschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L324",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_createroominvitefromapi",
-      "target": "packages_protocol_src_account_roominviteschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L347",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_createfriendgroupfromapi",
-      "target": "packages_protocol_src_account_friendgroupschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L365",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_updatefriendgroupfromapi",
-      "target": "packages_protocol_src_account_friendgroupschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L389",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_addfriendgroupmemberfromapi",
-      "target": "packages_protocol_src_account_friendgroupschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L431",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_removefriendgroupmemberfromapi",
-      "target": "packages_protocol_src_account_friendgroupschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L458",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_acceptroominvitefromapi",
-      "target": "packages_protocol_src_account_acceptedroominviteresponseschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L478",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_declineroominvitefromapi",
-      "target": "packages_protocol_src_account_roominviteschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L498",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_listinvitetargets",
-      "target": "packages_protocol_src_account_invitetargetsschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L594",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_listroominvites",
-      "target": "packages_protocol_src_account_roominvitesresponseschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L603",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_createroominvite",
-      "target": "packages_protocol_src_account_roominviteschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L615",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_createfriendgroup",
-      "target": "packages_protocol_src_account_friendgroupschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L627",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_updatefriendgroup",
-      "target": "packages_protocol_src_account_friendgroupschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L639",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_addfriendgroupmember",
-      "target": "packages_protocol_src_account_friendgroupschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L664",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_removefriendgroupmember",
-      "target": "packages_protocol_src_account_friendgroupschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L676",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_acceptroominvite",
-      "target": "packages_protocol_src_account_acceptedroominviteresponseschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L690",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_social_client_declineroominvite",
-      "target": "packages_protocol_src_account_roominviteschema",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/extension/src/social-client.ts",
-      "source_location": "L702",
       "weight": 1.0
     },
     {

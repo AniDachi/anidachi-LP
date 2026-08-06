@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const ACCOUNT_RESPONSE_SCHEMA_VERSION = 1 as const;
 
-const TimestampSchema = z.iso.datetime();
+const TimestampSchema = z.iso.datetime({ offset: true });
 const DurableIdSchema = z.uuid();
 const RoomIdSchema = z.string().trim().min(1).max(128);
 const HttpUrlSchema = z.url({ protocol: /^https?$/ }).max(2048);
