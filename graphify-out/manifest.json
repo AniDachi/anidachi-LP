@@ -4168,5 +4168,10 @@
     "mtime": 1786014198.5386698,
     "ast_hash": "f031f2bffc5bd598a386ed1b6dcbf5d6",
     "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md": {
+    "mtime": 1786015732.5032823,
+    "ast_hash": "29201c81162fb145efaa504f66dc7aca",
+    "semantic_hash": ""
   }
 }

@@ -52716,6 +52716,118 @@
       "_origin": "ast"
     },
     {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation",
+      "label": "2026-08-06-account-contracts-and-popup-isolation.md",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_account_contracts_and_popup_isolation_implementation_plan",
+      "label": "Account Contracts And Popup Isolation Implementation Plan",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_global_constraints",
+      "label": "Global Constraints",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L11",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "label": "File Map",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L26",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_new_files",
+      "label": "New files",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L28",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_existing_files_to_modify",
+      "label": "Existing files to modify",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L39",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_1_shared_account_read_contracts",
+      "label": "Task 1: Shared Account Read Contracts",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L55",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_2_versioned_web_read_responses",
+      "label": "Task 2: Versioned Web Read Responses",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L388",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_3_runtime_validation_in_extension_clients",
+      "label": "Task 3: Runtime Validation In Extension Clients",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L537",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_4_account_generation_and_owned_state_primitives",
+      "label": "Task 4: Account Generation And Owned State Primitives",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L638",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_5_account_scoped_social_snapshot_cache",
+      "label": "Task 5: Account-Scoped Social Snapshot Cache",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L785",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_6_popup_account_isolation_integration",
+      "label": "Task 6: Popup Account Isolation Integration",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L881",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_7_cross_plane_verification_and_staging_evidence",
+      "label": "Task 7: Cross-Plane Verification And Staging Evidence",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L997",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_completion_boundary",
+      "label": "Completion Boundary",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L1101",
+      "_origin": "ast"
+    },
+    {
       "id": "docs_superpowers_plans_readme",
       "label": "README.md",
       "file_type": "document",
@@ -196469,6 +196581,123 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-07-30-interface-visibility-settings.md",
       "source_location": "L1058",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_account_contracts_and_popup_isolation_implementation_plan",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_account_contracts_and_popup_isolation_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_global_constraints",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_account_contracts_and_popup_isolation_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_new_files",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_existing_files_to_modify",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_1_shared_account_read_contracts",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_2_versioned_web_read_responses",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L388",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_3_runtime_validation_in_extension_clients",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L537",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_4_account_generation_and_owned_state_primitives",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L638",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_5_account_scoped_social_snapshot_cache",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L785",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_6_popup_account_isolation_integration",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L881",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_file_map",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_task_7_cross_plane_verification_and_staging_evidence",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L997",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_account_contracts_and_popup_isolation_implementation_plan",
+      "target": "docs_superpowers_plans_2026_08_06_account_contracts_and_popup_isolation_completion_boundary",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md",
+      "source_location": "L1101",
       "weight": 1.0
     },
     {
