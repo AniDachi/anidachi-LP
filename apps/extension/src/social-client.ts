@@ -1,22 +1,35 @@
 import {
+  type AcceptedRoomInviteResponse,
   AcceptedRoomInviteResponseSchema,
+  type FriendGroup,
   FriendGroupSchema,
   FriendGroupsResponseSchema,
   FriendListResponseSchema,
-  InviteTargetsSchema,
-  RoomInviteSchema,
-  RoomInvitesResponseSchema,
-  type AcceptedRoomInviteResponse,
-  type FriendGroup,
   type InviteTargets,
+  InviteTargetsSchema,
   type RoomInvite,
+  RoomInviteSchema,
   type RoomInvitesResponse,
+  RoomInvitesResponseSchema,
 } from "@anidachi/protocol";
 import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
 import { createWebsiteRoomHeaders, RoomApiError } from "./room-client";
 
 const SOCIAL_HTTP_MESSAGE_TYPE = "ANIDACHI_SOCIAL_HTTP";
+const INVALID_ACCOUNT_RESPONSE_MESSAGE =
+  "Account data is temporarily unavailable. Try again.";
+
+interface SocialContractIssue {
+  readonly code: string;
+  readonly path: readonly PropertyKey[];
+}
+
+interface SocialContractSchema<T> {
+  safeParse(value: unknown):
+    | { success: true; data: T }
+    | { success: false; error: { issues: readonly SocialContractIssue[] } };
+}
 
 export type {
   AcceptedRoomInviteResponse,
@@ -283,6 +296,24 @@ async function socialHttpError(response: Response, fallback: string): Promise<Ro
   );
 }
 
+function parseSocialContract<T>(
+  schema: SocialContractSchema<T>,
+  value: unknown,
+  responseName: string,
+): T {
+  const result = schema.safeParse(value);
+  if (result.success) return result.data;
+
+  logDebug("social.http", "invalid account response", {
+    responseName,
+    issues: result.error.issues.map((issue) => ({
+      code: issue.code,
+      path: issue.path.join("."),
+    })),
+  });
+  throw new RoomApiError(INVALID_ACCOUNT_RESPONSE_MESSAGE, "INVALID_ACCOUNT_RESPONSE");
+}
+
 export async function listInviteTargetsFromApi(accessToken: string): Promise<InviteTargets> {
   logDebug("social.http", "list invite targets request", { webHttpBase: WEB_HTTP_BASE });
   const [friendsResponse, groupsResponse] = await Promise.all([
@@ -301,12 +332,24 @@ export async function listInviteTargetsFromApi(accessToken: string): Promise<Inv
     throw await socialHttpError(groupsResponse, "Failed to load groups");
   }
 
-  const friendsBody = FriendListResponseSchema.parse(await friendsResponse.json());
-  const groupsBody = FriendGroupsResponseSchema.parse(await groupsResponse.json());
-  return InviteTargetsSchema.parse({
-    friends: friendsBody.friends,
-    groups: groupsBody.groups.filter((group) => !group.archivedAt),
-  });
+  const friendsBody = parseSocialContract(
+    FriendListResponseSchema,
+    await friendsResponse.json(),
+    "friends",
+  );
+  const groupsBody = parseSocialContract(
+    FriendGroupsResponseSchema,
+    await groupsResponse.json(),
+    "groups",
+  );
+  return parseSocialContract(
+    InviteTargetsSchema,
+    {
+      friends: friendsBody.friends,
+      groups: groupsBody.groups.filter((group) => !group.archivedAt),
+    },
+    "invite targets",
+  );
 }
 
 export async function listRoomInvitesFromApi(
@@ -321,7 +364,7 @@ export async function listRoomInvitesFromApi(
     throw await socialHttpError(response, "Failed to load invites");
   }
 
-  return RoomInvitesResponseSchema.parse(await response.json());
+  return parseSocialContract(RoomInvitesResponseSchema, await response.json(), "invites");
 }
 
 export async function createRoomInviteFromApi(
@@ -344,7 +387,11 @@ export async function createRoomInviteFromApi(
     throw await socialHttpError(response, "Failed to create invite");
   }
 
-  return RoomInviteSchema.parse(responseField(await response.json(), "invite", "invite"));
+  return parseSocialContract(
+    RoomInviteSchema,
+    responseField(await response.json(), "invite", "invite"),
+    "created invite",
+  );
 }
 
 export async function createFriendGroupFromApi(
@@ -362,7 +409,11 @@ export async function createFriendGroupFromApi(
     throw await socialHttpError(response, "Failed to create group");
   }
 
-  return FriendGroupSchema.parse(responseField(await response.json(), "group", "group"));
+  return parseSocialContract(
+    FriendGroupSchema,
+    responseField(await response.json(), "group", "group"),
+    "created group",
+  );
 }
 
 export async function updateFriendGroupFromApi(
@@ -386,7 +437,11 @@ export async function updateFriendGroupFromApi(
     throw await socialHttpError(response, "Failed to update group");
   }
 
-  return FriendGroupSchema.parse(responseField(await response.json(), "group", "group"));
+  return parseSocialContract(
+    FriendGroupSchema,
+    responseField(await response.json(), "group", "group"),
+    "updated group",
+  );
 }
 
 export async function archiveFriendGroupFromApi(
@@ -428,7 +483,11 @@ export async function addFriendGroupMemberFromApi(
     throw await socialHttpError(response, "Failed to add group member");
   }
 
-  return FriendGroupSchema.parse(responseField(await response.json(), "group", "group"));
+  return parseSocialContract(
+    FriendGroupSchema,
+    responseField(await response.json(), "group", "group"),
+    "group member update",
+  );
 }
 
 export async function removeFriendGroupMemberFromApi(
@@ -455,7 +514,11 @@ export async function removeFriendGroupMemberFromApi(
     throw await socialHttpError(response, "Failed to remove group member");
   }
 
-  return FriendGroupSchema.parse(responseField(await response.json(), "group", "group"));
+  return parseSocialContract(
+    FriendGroupSchema,
+    responseField(await response.json(), "group", "group"),
+    "group member update",
+  );
 }
 
 export async function acceptRoomInviteFromApi(
@@ -475,7 +538,11 @@ export async function acceptRoomInviteFromApi(
     throw await socialHttpError(response, "Failed to accept invite");
   }
 
-  return AcceptedRoomInviteResponseSchema.parse(await response.json());
+  return parseSocialContract(
+    AcceptedRoomInviteResponseSchema,
+    await response.json(),
+    "accepted invite",
+  );
 }
 
 export async function declineRoomInviteFromApi(
@@ -495,7 +562,11 @@ export async function declineRoomInviteFromApi(
     throw await socialHttpError(response, "Failed to decline invite");
   }
 
-  return RoomInviteSchema.parse(responseField(await response.json(), "invite", "invite"));
+  return parseSocialContract(
+    RoomInviteSchema,
+    responseField(await response.json(), "invite", "invite"),
+    "declined invite",
+  );
 }
 
 export async function handleSocialHttpMessage(
@@ -591,7 +662,7 @@ export async function listInviteTargets(accessToken: string): Promise<InviteTarg
   );
   if (!response.ok) throw socialBridgeError(response);
   if (!("targets" in response)) throw new Error("Social bridge response is missing targets");
-  return InviteTargetsSchema.parse(response.targets);
+  return parseSocialContract(InviteTargetsSchema, response.targets, "invite targets bridge");
 }
 
 export async function listRoomInvites(accessToken: string): Promise<RoomInvitesResponse> {
@@ -600,7 +671,7 @@ export async function listRoomInvites(accessToken: string): Promise<RoomInvitesR
   );
   if (!response.ok) throw socialBridgeError(response);
   if (!("invites" in response)) throw new Error("Social bridge response is missing invites");
-  return RoomInvitesResponseSchema.parse(response.invites);
+  return parseSocialContract(RoomInvitesResponseSchema, response.invites, "invites bridge");
 }
 
 export async function createRoomInvite(
@@ -612,7 +683,7 @@ export async function createRoomInvite(
   );
   if (!response.ok) throw socialBridgeError(response);
   if (!("invite" in response)) throw new Error("Social bridge response is missing invite");
-  return RoomInviteSchema.parse(response.invite);
+  return parseSocialContract(RoomInviteSchema, response.invite, "created invite bridge");
 }
 
 export async function createFriendGroup(
@@ -624,7 +695,7 @@ export async function createFriendGroup(
   );
   if (!response.ok) throw socialBridgeError(response);
   if (!("group" in response)) throw new Error("Social bridge response is missing group");
-  return FriendGroupSchema.parse(response.group);
+  return parseSocialContract(FriendGroupSchema, response.group, "created group bridge");
 }
 
 export async function updateFriendGroup(
@@ -636,7 +707,7 @@ export async function updateFriendGroup(
   );
   if (!response.ok) throw socialBridgeError(response);
   if (!("group" in response)) throw new Error("Social bridge response is missing group");
-  return FriendGroupSchema.parse(response.group);
+  return parseSocialContract(FriendGroupSchema, response.group, "updated group bridge");
 }
 
 export async function archiveFriendGroup(
@@ -661,7 +732,7 @@ export async function addFriendGroupMember(
   );
   if (!response.ok) throw socialBridgeError(response);
   if (!("group" in response)) throw new Error("Social bridge response is missing group");
-  return FriendGroupSchema.parse(response.group);
+  return parseSocialContract(FriendGroupSchema, response.group, "group member bridge");
 }
 
 export async function removeFriendGroupMember(
@@ -673,7 +744,7 @@ export async function removeFriendGroupMember(
   );
   if (!response.ok) throw socialBridgeError(response);
   if (!("group" in response)) throw new Error("Social bridge response is missing group");
-  return FriendGroupSchema.parse(response.group);
+  return parseSocialContract(FriendGroupSchema, response.group, "group member bridge");
 }
 
 export async function acceptRoomInvite(
@@ -687,7 +758,11 @@ export async function acceptRoomInvite(
   if (!("acceptedInvite" in response)) {
     throw new Error("Social bridge response is missing accepted invite");
   }
-  return AcceptedRoomInviteResponseSchema.parse(response.acceptedInvite);
+  return parseSocialContract(
+    AcceptedRoomInviteResponseSchema,
+    response.acceptedInvite,
+    "accepted invite bridge",
+  );
 }
 
 export async function declineRoomInvite(
@@ -699,7 +774,7 @@ export async function declineRoomInvite(
   );
   if (!response.ok) throw socialBridgeError(response);
   if (!("invite" in response)) throw new Error("Social bridge response is missing invite");
-  return RoomInviteSchema.parse(response.invite);
+  return parseSocialContract(RoomInviteSchema, response.invite, "declined invite bridge");
 }
 
 function responseField(value: unknown, key: string, label: string): unknown {

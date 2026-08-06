@@ -9,6 +9,7 @@ import {
 } from "../src";
 
 const NOW = "2026-08-06T12:00:00.000Z";
+const NOW_WITH_OFFSET = "2026-08-06T12:00:00.000+00:00";
 const USER_A = "11111111-1111-4111-8111-111111111111";
 const USER_B = "22222222-2222-4222-8222-222222222222";
 const FRIENDSHIP_ID = "33333333-3333-4333-8333-333333333333";
@@ -158,6 +159,38 @@ describe("account response contracts", () => {
 
   it("parses a versioned watch library response", () => {
     expect(() => WatchLibraryResponseSchema.parse(watchLibraryFixture())).not.toThrow();
+  });
+
+  it("accepts RFC3339 timestamps with an explicit UTC offset", () => {
+    expect(() =>
+      RoomInvitesResponseSchema.parse({
+        meta: { ...meta, serverTime: NOW_WITH_OFFSET },
+        inbox: [
+          {
+            ...invite,
+            createdAt: NOW_WITH_OFFSET,
+            expiresAt: "2026-08-06T13:00:00.000+00:00",
+            recipients: [
+              {
+                ...invite.recipients[0],
+                updatedAt: NOW_WITH_OFFSET,
+                respondedAt: NOW_WITH_OFFSET,
+              },
+            ],
+          },
+        ],
+        sent: [],
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects timestamps without an explicit timezone", () => {
+    expect(() =>
+      FriendGroupsResponseSchema.parse({
+        meta: { serverTime: "2026-08-06T12:00:00.000", schemaVersion: 1 },
+        groups: [],
+      }),
+    ).toThrow();
   });
 
   it.each([
