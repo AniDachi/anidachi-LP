@@ -1087,7 +1087,7 @@ Result: the AST graph rebuilt to 7,823 nodes and 16,960 edges. The review query
 traced versioned account responses through protocol validation, extension
 generation gating, and account-scoped social/watch caches.
 
-- [ ] **Step 6: Commit intentional docs or graph changes**
+- [x] **Step 6: Commit intentional docs or graph changes**
 
 If current process truth changed, update `docs/current-development-state.md` with only the new implemented state. Then commit the approved generated graph artifacts separately:
 
@@ -1099,6 +1099,9 @@ git commit -m "chore(graphify): refresh account sync graph"
 ```
 
 If the current-state doc did not need a change, omit the first commit. Never commit `graphify-out/cost.json`, HTML, wiki, cache, or scratch outputs.
+
+Result: current process truth was recorded in `874273e`; only the approved
+team graph artifacts were committed separately in `848a583`.
 
 - [ ] **Step 7: Final branch and PR audit**
 
