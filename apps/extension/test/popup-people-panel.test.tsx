@@ -31,6 +31,7 @@ import {
   type PopupPeoplePanelProps,
   type PopupPeoplePresentationState,
 } from "../src/popup-people-panel";
+import { buildPopupInboxModel } from "../src/popup-people-model";
 import {
   acceptFriendRequest,
   createFriendGroup,
@@ -187,7 +188,7 @@ describe("PopupPeoplePanel", () => {
       input.form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
       await flushPromises();
     });
-    expect(onCreateGroup).toHaveBeenCalledWith("Weekend");
+    expect(onCreateGroup).toHaveBeenCalledWith("Weekend", expect.any(String));
 
     await unmount(view.root);
   });
@@ -275,8 +276,9 @@ describe("PopupPeoplePanel", () => {
 
     await submit(input.form!);
     expect(input.value).toBe("");
-    expect(onCreateGroup).toHaveBeenNthCalledWith(1, "Weekend");
-    expect(onCreateGroup).toHaveBeenNthCalledWith(2, "Weekend");
+    expect(onCreateGroup).toHaveBeenNthCalledWith(1, "Weekend", expect.any(String));
+    expect(onCreateGroup).toHaveBeenNthCalledWith(2, "Weekend", expect.any(String));
+    expect(onCreateGroup.mock.calls[1]?.[1]).toBe(onCreateGroup.mock.calls[0]?.[1]);
 
     await unmount(view.root);
   });
@@ -369,7 +371,7 @@ describe("Popup People integration boundaries", () => {
     const view = await renderElement(
       <PopupNavigation
         activeTab="resources"
-        inboxCount={popupActionableInboxCount(snapshot)}
+        inboxCount={popupActionableInboxCount(buildPopupInboxModel(snapshot, Date.parse(NOW)))}
         onSelect={onSelect}
         watchCount={7}
       />,
@@ -413,6 +415,7 @@ describe("Popup People integration boundaries", () => {
         onOpenDashboard={vi.fn()}
         onRefresh={vi.fn()}
         onSignIn={vi.fn()}
+        model={buildPopupInboxModel(snapshot, Date.parse(NOW))}
         state={{ status: "ready", ownerUserId: "viewer-1", data: snapshot, error: null }}
       />,
     );
@@ -433,6 +436,68 @@ describe("Popup People integration boundaries", () => {
     expect(onAcceptInvite).toHaveBeenCalledWith("invite-pending");
     expect(onDeclineInvite).toHaveBeenCalledWith("invite-pending");
 
+    await unmount(view.root);
+  });
+
+  it("renders the same stable-ID-deduplicated inbox rows used by the badge", async () => {
+    const request = friend("incoming", "friendship-incoming", "Incoming", "pending");
+    const invite = roomInvite("invite-pending", "pending");
+    const snapshot = socialSnapshot({
+      directory: directory({ incomingRequests: [request, { ...request }] }),
+      invites: roomInvites([invite, { ...invite }]),
+    });
+    const model = buildPopupInboxModel(snapshot, Date.parse(NOW));
+    const view = await renderElement(
+      <PopupInboxPanel
+        busyFriendRequestActionKey={null}
+        busyInviteId={null}
+        model={model}
+        onAcceptFriendRequest={vi.fn()}
+        onAcceptInvite={vi.fn()}
+        onDeclineFriendRequest={vi.fn()}
+        onDeclineInvite={vi.fn()}
+        onOpenDashboard={vi.fn()}
+        onRefresh={vi.fn()}
+        onSignIn={vi.fn()}
+        state={{ status: "ready", ownerUserId: "viewer-1", data: snapshot, error: null }}
+      />,
+    );
+
+    expect(popupActionableInboxCount(model)).toBe(2);
+    expect(view.container.querySelectorAll(".popup-inbox-row")).toHaveLength(1);
+    expect(view.container.querySelectorAll(".popup-inbox-card")).toHaveLength(1);
+    await unmount(view.root);
+  });
+
+  it("marks cached inbox data stale and disables actions until refresh settles", async () => {
+    const snapshot = socialSnapshot({
+      directory: directory({
+        incomingRequests: [friend("incoming", "friendship-incoming", "Incoming", "pending")],
+      }),
+      invites: roomInvites([roomInvite("invite-pending", "pending")]),
+    });
+    const view = await renderElement(
+      <PopupInboxPanel
+        busyFriendRequestActionKey={null}
+        busyInviteId={null}
+        model={buildPopupInboxModel(snapshot, Date.parse(NOW))}
+        onAcceptFriendRequest={vi.fn()}
+        onAcceptInvite={vi.fn()}
+        onDeclineFriendRequest={vi.fn()}
+        onDeclineInvite={vi.fn()}
+        onOpenDashboard={vi.fn()}
+        onRefresh={vi.fn()}
+        onSignIn={vi.fn()}
+        state={{ status: "loading", ownerUserId: "viewer-1", data: snapshot, error: null }}
+      />,
+    );
+
+    expect(view.container.querySelector('[data-state="stale"]')?.textContent).toContain(
+      "Refreshing inbox",
+    );
+    for (const button of view.container.querySelectorAll<HTMLButtonElement>(".popup-inbox-actions button")) {
+      expect(button.disabled).toBe(true);
+    }
     await unmount(view.root);
   });
 });
@@ -499,7 +564,55 @@ describe("PopupApp social mutations", () => {
     const input = getGroupInput(view.container);
     await setInputValue(input, "Weekend");
     await submit(input.form!);
-    await waitFor(() => expect(createFriendGroup).toHaveBeenCalledWith("access-1", { name: "Weekend" }));
+    await waitFor(() =>
+      expect(createFriendGroup).toHaveBeenCalledWith("access-1", {
+        name: "Weekend",
+        clientRequestId: expect.any(String),
+      }),
+    );
+    await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(2));
+  });
+
+  it("acknowledges a committed group when refresh fails and clears the form", async () => {
+    vi.mocked(listSocialDirectory)
+      .mockResolvedValueOnce(directory())
+      .mockRejectedValueOnce(new Error("Refresh offline"));
+    const view = await renderPopupApp();
+    root = view.root;
+
+    await click(await findButton(view.container, "People"));
+    await click(await findButton(view.container, "Groups"));
+    const input = getGroupInput(view.container);
+    await setInputValue(input, "Weekend");
+    await submit(input.form!);
+
+    await waitFor(() => expect(input.value).toBe(""));
+    await waitFor(() =>
+      expect(view.container.textContent).toContain("Group created. Latest data could not be refreshed."),
+    );
+  });
+
+  it("serializes concurrent Popup social mutations with a synchronous mutex", async () => {
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    let finishCreate!: (value: FriendGroup) => void;
+    vi.mocked(createFriendGroup).mockImplementation(
+      () => new Promise<FriendGroup>((resolve) => { finishCreate = resolve; }),
+    );
+    const view = await renderPopupApp();
+    root = view.root;
+
+    await click(await findButton(view.container, "People"));
+    await click(await findButton(view.container, "Groups"));
+    const input = getGroupInput(view.container);
+    await setInputValue(input, "Weekend");
+    await act(async () => {
+      input.form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      input.form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      await Promise.resolve();
+    });
+
+    expect(createFriendGroup).toHaveBeenCalledTimes(1);
+    finishCreate(group("new-group", null, "Weekend", []));
     await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(2));
   });
 

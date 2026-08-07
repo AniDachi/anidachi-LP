@@ -45,6 +45,11 @@ import {
   type PopupPeopleActionNotice,
   type PopupPeoplePresentationState,
 } from "./popup-people-panel";
+import {
+  buildPopupInboxModel,
+  type PopupInboxInvite,
+  type PopupInboxModel,
+} from "./popup-people-model";
 import { popupStyles } from "./popup-styles";
 import {
   acceptFriendRequest,
@@ -57,7 +62,6 @@ import {
   sendFriendRequest,
   type FriendGroup,
   type FriendListItem,
-  type RoomInvite,
 } from "./social-client";
 import {
   getCachedSocialSnapshotForUser,
@@ -123,7 +127,7 @@ type PopupSocialActionKey = PopupPeopleActionKey | `accept-friend:${string}` | `
 
 type PopupNotice = {
   actionKey: PopupSocialActionKey;
-  tone: "success" | "error";
+  tone: "success" | "warning" | "error";
   text: string;
 };
 
@@ -169,13 +173,8 @@ export function mapSocialStateToPeoplePresentation(
   }
 }
 
-export function popupActionableInboxCount(snapshot: SocialSnapshot | null): number {
-  if (!snapshot) return 0;
-  const pendingFriendRequests = snapshot.directory.incomingRequests.filter(
-    (request) => request.status === "pending",
-  ).length;
-  const pendingRoomInvites = snapshot.invites.inbox.filter(roomInviteCanBeAccepted).length;
-  return pendingFriendRequests + pendingRoomInvites;
+export function popupActionableInboxCount(model: PopupInboxModel | null): number {
+  return model?.actionableCount ?? 0;
 }
 
 function trackPopupTask<T>(tasks: Set<Promise<unknown>>, task: Promise<T>): Promise<T> {
@@ -221,6 +220,7 @@ export function PopupApp() {
   const watchLibraryTasksRef = useRef<Set<Promise<unknown>>>(new Set());
   const posterHydrationTasksRef = useRef<Set<Promise<unknown>>>(new Set());
   const historyClearScopeRef = useRef<AccountScopeToken | null>(null);
+  const socialMutationInFlightRef = useRef(false);
   const activateAccount = useCallback((userId: string | null): AccountRequestToken | null => {
     const previousUserId = accountGateRef.current.currentUserId();
     accountGateRef.current.activate(userId);
@@ -296,7 +296,11 @@ export function PopupApp() {
     }),
     [folders, libraryEpisodesByKey],
   );
-  const actionableInboxCount = popupActionableInboxCount(socialState.data);
+  const inboxModel = useMemo(
+    () => buildPopupInboxModel(socialState.data),
+    [socialState.data],
+  );
+  const actionableInboxCount = popupActionableInboxCount(inboxModel);
   const peoplePresentationState = mapSocialStateToPeoplePresentation(socialState);
   const peoplePendingActionKey = isPopupPeopleActionKey(busySocialAction) ? busySocialAction : null;
   const peopleActionNotice = isPopupPeopleActionNotice(socialNotice) ? socialNotice : null;
@@ -604,9 +608,14 @@ export function PopupApp() {
 
   const acceptInvite = useCallback(
     async (inviteId: string) => {
+      if (socialMutationInFlightRef.current) return;
+      socialMutationInFlightRef.current = true;
       const activeUserId = accountGateRef.current.currentUserId();
       const request = activeUserId ? accountGateRef.current.capture(activeUserId) : null;
-      if (!request) return;
+      if (!request) {
+        socialMutationInFlightRef.current = false;
+        return;
+      }
       setBusyInviteId(inviteId);
       try {
         const tokens = await requestCurrentExtensionSession();
@@ -631,6 +640,7 @@ export function PopupApp() {
           ),
         );
       } finally {
+        socialMutationInFlightRef.current = false;
         if (accountGateRef.current.isCurrent(request)) setBusyInviteId(null);
       }
     },
@@ -639,9 +649,14 @@ export function PopupApp() {
 
   const declineInvite = useCallback(
     async (inviteId: string) => {
+      if (socialMutationInFlightRef.current) return;
+      socialMutationInFlightRef.current = true;
       const activeUserId = accountGateRef.current.currentUserId();
       const request = activeUserId ? accountGateRef.current.capture(activeUserId) : null;
-      if (!request) return;
+      if (!request) {
+        socialMutationInFlightRef.current = false;
+        return;
+      }
       setBusyInviteId(inviteId);
       try {
         const tokens = await requestCurrentExtensionSession();
@@ -664,6 +679,7 @@ export function PopupApp() {
           ),
         );
       } finally {
+        socialMutationInFlightRef.current = false;
         if (accountGateRef.current.isCurrent(request)) setBusyInviteId(null);
       }
     },
@@ -677,9 +693,14 @@ export function PopupApp() {
       success: string,
       fallbackError: string,
     ): Promise<boolean> => {
+      if (socialMutationInFlightRef.current) return false;
+      socialMutationInFlightRef.current = true;
       const activeUserId = accountGateRef.current.currentUserId();
       const request = activeUserId ? accountGateRef.current.capture(activeUserId) : null;
-      if (!request) return false;
+      if (!request) {
+        socialMutationInFlightRef.current = false;
+        return false;
+      }
       setBusySocialAction(key);
       setSocialNotice(null);
       try {
@@ -697,7 +718,14 @@ export function PopupApp() {
         if (!accountGateRef.current.isCurrent(request)) return false;
         const refreshed = await loadSocialForTokens(tokens);
         if (!accountGateRef.current.isCurrent(request)) return false;
-        if (!refreshed) return false;
+        if (!refreshed) {
+          setSocialNotice({
+            actionKey: key,
+            tone: "warning",
+            text: `${success} Latest data could not be refreshed.`,
+          });
+          return true;
+        }
         setSocialNotice({ actionKey: key, tone: "success", text: success });
         return true;
       } catch (error) {
@@ -709,6 +737,7 @@ export function PopupApp() {
         });
         return false;
       } finally {
+        socialMutationInFlightRef.current = false;
         if (accountGateRef.current.isCurrent(request)) setBusySocialAction(null);
       }
     },
@@ -716,11 +745,11 @@ export function PopupApp() {
   );
 
   const createGroup = useCallback(
-    async (name: string) =>
+    async (name: string, clientRequestId: string) =>
       runSocialAction(
         "create-group",
         async (accessToken) => {
-          await createFriendGroup(accessToken, { name });
+          await createFriendGroup(accessToken, { name, clientRequestId });
         },
         "Group created.",
         "Could not create group",
@@ -1258,6 +1287,7 @@ export function PopupApp() {
           actionNotice={socialNotice}
           busyFriendRequestActionKey={busySocialAction}
           busyInviteId={busyInviteId}
+          model={inboxModel}
           onAcceptFriendRequest={(friendshipId) => void acceptIncomingFriendRequest(friendshipId)}
           onAcceptInvite={(inviteId) => void acceptInvite(inviteId)}
           onDeclineFriendRequest={(friendshipId) => void declineIncomingFriendRequest(friendshipId)}
@@ -1540,6 +1570,7 @@ export function PopupInboxPanel({
   actionNotice = null,
   busyFriendRequestActionKey,
   busyInviteId,
+  model,
   onAcceptFriendRequest,
   onAcceptInvite,
   onDeclineFriendRequest,
@@ -1552,6 +1583,7 @@ export function PopupInboxPanel({
   actionNotice?: PopupNotice | null;
   busyFriendRequestActionKey: string | null;
   busyInviteId: string | null;
+  model: PopupInboxModel | null;
   onAcceptFriendRequest: (friendshipId: string) => void;
   onAcceptInvite: (inviteId: string) => void;
   onDeclineFriendRequest: (friendshipId: string) => void;
@@ -1561,9 +1593,10 @@ export function PopupInboxPanel({
   onSignIn: () => void;
   state: SocialPanelState;
 }) {
-  const pendingFriendRequests =
-    state.data?.directory.incomingRequests.filter((request) => request.status === "pending") ?? [];
-  const pendingInvites = state.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)) ?? [];
+  const pendingFriendRequests = model?.friendRequests ?? [];
+  const pendingInvites = model?.roomInvites ?? [];
+  const actionsDisabled = state.status !== "ready";
+  const showsCachedData = Boolean(model) && (state.status === "loading" || state.status === "error");
   const inboxActionNotice = actionNotice && isFriendRequestActionKey(actionNotice.actionKey)
     ? actionNotice
     : null;
@@ -1594,7 +1627,7 @@ export function PopupInboxPanel({
         </div>
       ) : null}
 
-      {state.status === "error" ? (
+      {state.status === "error" && !state.data ? (
         <div className="popup-social-empty" data-tone="error">
           <span>{state.error}</span>
           <button className="popup-primary-button" type="button" onClick={onRefresh}>
@@ -1605,6 +1638,25 @@ export function PopupInboxPanel({
 
       {state.status === "loading" && !state.data ? <div className="popup-empty">Loading inbox...</div> : null}
 
+      {showsCachedData ? (
+        <div
+          className="popup-people-status"
+          data-state={state.status === "error" ? "error" : "stale"}
+          role="status"
+        >
+          <span>
+            {state.status === "error"
+              ? `${state.error} Saved inbox data may be out of date.`
+              : "Refreshing inbox. Saved data may be out of date."}
+          </span>
+          {state.status === "error" ? (
+            <button className="popup-secondary-button" type="button" onClick={onRefresh}>
+              Retry
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       <div aria-live="polite" className="popup-social-notice-slot">
         {inboxActionNotice ? (
           <div className="popup-social-notice" data-tone={inboxActionNotice.tone} role="status">
@@ -1613,12 +1665,13 @@ export function PopupInboxPanel({
         ) : null}
       </div>
 
-      {state.data ? (
+      {model ? (
         <div className="popup-inbox-sections">
           <PopupInboxSection count={pendingFriendRequests.length} label="Friend requests">
             {pendingFriendRequests.length ? (
               pendingFriendRequests.map((request) => (
                 <FriendRequestInboxRow
+                  actionsDisabled={actionsDisabled}
                   busyActionKey={busyFriendRequestActionKey}
                   key={request.friendshipId}
                   request={request}
@@ -1635,6 +1688,7 @@ export function PopupInboxPanel({
             {pendingInvites.length ? (
               pendingInvites.map((invite) => (
                 <InviteInboxRow
+                  actionsDisabled={actionsDisabled}
                   busy={busyInviteId === invite.id}
                   invite={invite}
                   key={invite.id}
@@ -1669,11 +1723,13 @@ function PopupInboxSection({ children, count, label }: { children: ReactNode; co
 }
 
 function FriendRequestInboxRow({
+  actionsDisabled,
   busyActionKey,
   onAccept,
   onDecline,
   request,
 }: {
+  actionsDisabled: boolean;
   busyActionKey: string | null;
   onAccept: () => void;
   onDecline: () => void;
@@ -1695,7 +1751,7 @@ function FriendRequestInboxRow({
         <button
           aria-label={`Accept friend request from ${request.user.displayName}`}
           className="popup-primary-button"
-          disabled={busy}
+          disabled={actionsDisabled || busy}
           type="button"
           onClick={onAccept}
         >
@@ -1705,7 +1761,7 @@ function FriendRequestInboxRow({
         <button
           aria-label={`Decline friend request from ${request.user.displayName}`}
           className="popup-secondary-button"
-          disabled={busy}
+          disabled={actionsDisabled || busy}
           type="button"
           onClick={onDecline}
         >
@@ -1718,13 +1774,15 @@ function FriendRequestInboxRow({
 }
 
 function InviteInboxRow({
+  actionsDisabled,
   busy,
   invite,
   onAccept,
   onDecline,
 }: {
+  actionsDisabled: boolean;
   busy: boolean;
-  invite: RoomInvite;
+  invite: PopupInboxInvite;
   onAccept: () => void;
   onDecline: () => void;
 }) {
@@ -1744,7 +1802,7 @@ function InviteInboxRow({
         <button
           aria-label={`Join room invite from ${invite.sender.displayName}`}
           className="popup-primary-button"
-          disabled={busy}
+          disabled={actionsDisabled || busy}
           type="button"
           onClick={onAccept}
         >
@@ -1754,7 +1812,7 @@ function InviteInboxRow({
         <button
           aria-label={`Decline room invite from ${invite.sender.displayName}`}
           className="popup-secondary-button"
-          disabled={busy}
+          disabled={actionsDisabled || busy}
           type="button"
           onClick={onDecline}
         >
@@ -1778,18 +1836,6 @@ function isPopupPeopleActionNotice(
 
 function isFriendRequestActionKey(value: string): boolean {
   return value.startsWith("accept-friend:") || value.startsWith("decline-friend:");
-}
-
-function getViewerInviteStatus(invite: RoomInvite): string {
-  return invite.recipients[0]?.status ?? "pending";
-}
-
-function roomInviteCanBeAccepted(invite: RoomInvite): boolean {
-  return getViewerInviteStatus(invite) === "pending" && !roomInviteExpired(invite);
-}
-
-function roomInviteExpired(invite: RoomInvite): boolean {
-  return new Date(invite.expiresAt).getTime() <= Date.now();
 }
 
 function formatInviteExpiry(expiresAt: string): string {

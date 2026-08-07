@@ -1,6 +1,6 @@
 import type { SocialDirectory } from "@anidachi/protocol";
 import { FolderPlus, RefreshCw, UserPlus, Users } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import {
   buildPopupPeopleModel,
   type PopupPeopleFriend,
@@ -21,7 +21,7 @@ export type PopupPeopleActionKey = "create-group" | `add-friend:${string}`;
 
 export type PopupPeopleActionNotice = Readonly<{
   actionKey: PopupPeopleActionKey;
-  tone: "success" | "error";
+  tone: "success" | "warning" | "error";
   text: string;
 }>;
 
@@ -29,7 +29,7 @@ export type PopupPeoplePanelProps = {
   actionNotice: PopupPeopleActionNotice | null;
   pendingActionKey: PopupPeopleActionKey | null;
   onAddFriend: (userId: string) => Promise<boolean>;
-  onCreateGroup: (name: string) => Promise<boolean>;
+  onCreateGroup: (name: string, clientRequestId: string) => Promise<boolean>;
   onOpenDashboard: () => void;
   onRefresh: () => void;
   onSignIn: () => void;
@@ -235,17 +235,26 @@ function GroupsMode({
 }: {
   groups: readonly PopupPeopleGroup[];
   pendingActionKey: PopupPeopleActionKey | null;
-  onCreateGroup: (name: string) => Promise<boolean>;
+  onCreateGroup: (name: string, clientRequestId: string) => Promise<boolean>;
 }) {
   const createPending = pendingActionKey === "create-group";
+  const requestRef = useRef<{ name: string; clientRequestId: string } | null>(null);
 
   const submitCreateGroup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
     const name = new FormData(form).get("group-name");
     if (createPending || typeof name !== "string" || !name.trim()) return;
+    const normalizedName = name.trim();
+    const pendingRequest = requestRef.current?.name === normalizedName
+      ? requestRef.current
+      : { name: normalizedName, clientRequestId: crypto.randomUUID() };
+    requestRef.current = pendingRequest;
     try {
-      if (await onCreateGroup(name.trim())) form.reset();
+      if (await onCreateGroup(normalizedName, pendingRequest.clientRequestId)) {
+        requestRef.current = null;
+        form.reset();
+      }
     } catch {
       // The parent owns the visible action error state.
     }

@@ -3,7 +3,9 @@ import type {
   FriendListItem,
   PublicProfile,
   RecentPerson,
+  RoomInvite,
   SocialDirectory,
+  SocialSnapshot,
 } from "@anidachi/protocol";
 
 export type PopupPeopleProfile = Readonly<PublicProfile>;
@@ -31,6 +33,19 @@ export type PopupPeopleRecentPerson = Readonly<
   }
 >;
 
+export type PopupInboxInviteRecipient = Readonly<
+  Omit<RoomInvite["recipients"][number], "user"> & {
+    user: PopupPeopleProfile;
+  }
+>;
+
+export type PopupInboxInvite = Readonly<
+  Omit<RoomInvite, "recipients" | "sender"> & {
+    sender: PopupPeopleProfile;
+    recipients: readonly PopupInboxInviteRecipient[];
+  }
+>;
+
 export type PopupPeopleIdSet = Readonly<{
   size: number;
   has(value: string): boolean;
@@ -50,6 +65,12 @@ export type PopupPeopleModel = Readonly<{
   outgoingRequestUserIds: PopupPeopleIdSet;
   groups: readonly PopupPeopleGroup[];
   recentPeople: readonly PopupPeopleRecentPerson[];
+}>;
+
+export type PopupInboxModel = Readonly<{
+  friendRequests: readonly PopupPeopleFriend[];
+  roomInvites: readonly PopupInboxInvite[];
+  actionableCount: number;
 }>;
 
 /**
@@ -83,6 +104,27 @@ export function buildPopupPeopleModel(directory: SocialDirectory): PopupPeopleMo
     outgoingRequestUserIds: new ImmutableIdSet(outgoingRequestIds),
     groups: frozenArray(groupRows.map(cloneGroup)),
     recentPeople: frozenArray(recentRows.map(cloneRecentPerson)),
+  });
+}
+
+export function buildPopupInboxModel(
+  snapshot: SocialSnapshot | null,
+  nowMs = Date.now(),
+): PopupInboxModel | null {
+  if (!snapshot) return null;
+  const friendRequests = uniqueById(
+    snapshot.directory.incomingRequests.filter((request) => request.status === "pending"),
+    (request) => request.friendshipId,
+  ).map(cloneFriend);
+  const roomInvites = uniqueById(
+    snapshot.invites.inbox.filter((invite) => roomInviteIsActionable(invite, nowMs)),
+    (invite) => invite.id,
+  ).map(cloneRoomInvite);
+
+  return Object.freeze({
+    friendRequests: frozenArray(friendRequests),
+    roomInvites: frozenArray(roomInvites),
+    actionableCount: friendRequests.length + roomInvites.length,
   });
 }
 
@@ -126,6 +168,25 @@ function cloneGroup(group: FriendGroup): PopupPeopleGroup {
 
 function cloneRecentPerson(person: RecentPerson): PopupPeopleRecentPerson {
   return Object.freeze({ ...person, user: cloneProfile(person.user) });
+}
+
+function cloneRoomInvite(invite: RoomInvite): PopupInboxInvite {
+  return Object.freeze({
+    ...invite,
+    sender: cloneProfile(invite.sender),
+    recipients: frozenArray(
+      invite.recipients.map((recipient) =>
+        Object.freeze({ ...recipient, user: cloneProfile(recipient.user) }),
+      ),
+    ),
+  });
+}
+
+function roomInviteIsActionable(invite: RoomInvite, nowMs: number): boolean {
+  return (
+    invite.recipients[0]?.status === "pending" &&
+    new Date(invite.expiresAt).getTime() > nowMs
+  );
 }
 
 function frozenArray<T>(items: T[]): readonly T[] {

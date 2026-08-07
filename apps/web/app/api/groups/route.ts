@@ -5,6 +5,7 @@ import { getApiSession } from "@/lib/anidachi-auth/api-session";
 import {
   cleanGroupName,
   createFriendGroup,
+  isUuid,
   listFriendGroups,
 } from "@/lib/anidachi-auth/social";
 import { readJsonBody, socialErrorResponse } from "@/lib/anidachi-auth/social-routes";
@@ -44,8 +45,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid group name" }, { status: 400 });
   }
 
+  const rawClientRequestId =
+    body && typeof body === "object"
+      ? (body as Record<string, unknown>).clientRequestId
+      : undefined;
+  if (
+    rawClientRequestId !== undefined &&
+    (typeof rawClientRequestId !== "string" || !isUuid(rawClientRequestId))
+  ) {
+    return NextResponse.json({ error: "Invalid client request id" }, { status: 400 });
+  }
+
   try {
-    const group = await createFriendGroup({ ownerUserId: session.userId, name });
+    const group = await createFriendGroup({
+      ownerUserId: session.userId,
+      name,
+      clientRequestId: typeof rawClientRequestId === "string" ? rawClientRequestId : undefined,
+    });
     return NextResponse.json({ group });
   } catch (error) {
     return socialErrorResponse(error);

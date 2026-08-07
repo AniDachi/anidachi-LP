@@ -24,6 +24,8 @@ import { createWebsiteRoomHeaders, RoomApiError } from "./room-client";
 const SOCIAL_HTTP_MESSAGE_TYPE = "ANIDACHI_SOCIAL_HTTP";
 const INVALID_ACCOUNT_RESPONSE_MESSAGE =
   "Account data is temporarily unavailable. Try again.";
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 interface SocialContractIssue {
   readonly code: string;
@@ -55,6 +57,7 @@ export interface CreateRoomInviteInput {
 
 export interface CreateFriendGroupInput {
   name: string;
+  clientRequestId?: string;
 }
 
 export interface UpdateFriendGroupInput {
@@ -330,7 +333,12 @@ export function isSocialHttpMessage(value: unknown): value is SocialHttpMessage 
   }
   if (message.command === "create-group") {
     const input = message.input as Partial<CreateFriendGroupInput> | undefined;
-    return typeof input?.name === "string" && Boolean(input.name.trim());
+    return (
+      typeof input?.name === "string" &&
+      Boolean(input.name.trim()) &&
+      (input.clientRequestId === undefined ||
+        (typeof input.clientRequestId === "string" && UUID_PATTERN.test(input.clientRequestId)))
+    );
   }
   if (message.command === "update-group") {
     const input = message.input as Partial<UpdateFriendGroupInput> | undefined;
@@ -554,7 +562,7 @@ export async function createFriendGroupFromApi(
 
   return parseSocialContract(
     FriendGroupSchema,
-    responseField(await response.json(), "group"),
+    responseField(await decodeSocialAccountResponse(response, "created group"), "group"),
     "created group",
   );
 }
@@ -582,7 +590,7 @@ export async function updateFriendGroupFromApi(
 
   return parseSocialContract(
     FriendGroupSchema,
-    responseField(await response.json(), "group"),
+    responseField(await decodeSocialAccountResponse(response, "updated group"), "group"),
     "updated group",
   );
 }
@@ -628,7 +636,7 @@ export async function addFriendGroupMemberFromApi(
 
   return parseSocialContract(
     FriendGroupSchema,
-    responseField(await response.json(), "group"),
+    responseField(await decodeSocialAccountResponse(response, "group member update"), "group"),
     "group member update",
   );
 }
@@ -659,7 +667,7 @@ export async function removeFriendGroupMemberFromApi(
 
   return parseSocialContract(
     FriendGroupSchema,
-    responseField(await response.json(), "group"),
+    responseField(await decodeSocialAccountResponse(response, "group member update"), "group"),
     "group member update",
   );
 }

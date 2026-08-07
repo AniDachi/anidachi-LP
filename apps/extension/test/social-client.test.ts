@@ -3,8 +3,10 @@ import {
   acceptFriendRequest,
   acceptFriendRequestHttpMessage,
   acceptInviteHttpMessage,
+  addFriendGroupMemberFromApi,
   addGroupMemberHttpMessage,
   archiveGroupHttpMessage,
+  createFriendGroupFromApi,
   createGroupHttpMessage,
   createInviteHttpMessage,
   declineFriendRequest,
@@ -19,11 +21,13 @@ import {
   listInviteTargetsFromApi,
   listInviteTargetsHttpMessage,
   listRoomInvitesFromApi,
+  removeFriendGroupMemberFromApi,
   removeGroupMemberHttpMessage,
   sendFriendRequest,
   sendFriendRequestFromApi,
   sendFriendRequestHttpMessage,
   updateGroupHttpMessage,
+  updateFriendGroupFromApi,
 } from "../src/social-client";
 
 const NOW = "2026-08-06T12:00:00.000Z";
@@ -414,6 +418,14 @@ describe("extension social HTTP bridge", () => {
     );
     expect(
       isSocialHttpMessage(
+        createGroupHttpMessage("access-1", {
+          name: "Friday anime",
+          clientRequestId: GROUP_ID,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isSocialHttpMessage(
         updateGroupHttpMessage("access-1", {
           groupId: "group-1",
           name: "Weekend anime",
@@ -462,6 +474,14 @@ describe("extension social HTTP bridge", () => {
     expect(
       isSocialHttpMessage({
         type: "ANIDACHI_SOCIAL_HTTP",
+        command: "create-group",
+        accessToken: "access-1",
+        input: { name: "Friday anime", clientRequestId: "not-a-uuid" },
+      }),
+    ).toBe(false);
+    expect(
+      isSocialHttpMessage({
+        type: "ANIDACHI_SOCIAL_HTTP",
         command: "update-group",
         accessToken: "access-1",
         input: { groupId: "group-1", name: "" },
@@ -475,6 +495,44 @@ describe("extension social HTTP bridge", () => {
         input: { groupId: "group-1" },
       }),
     ).toBe(false);
+  });
+
+  it("sends the group creation request key to the web API", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ group: friendGroup(GROUP_ID, null) }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createFriendGroupFromApi("access-1", {
+      name: "Friday anime",
+      clientRequestId: GROUP_ID,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(URL),
+      expect.objectContaining({
+        body: JSON.stringify({ name: "Friday anime", clientRequestId: GROUP_ID }),
+      }),
+    );
+  });
+
+  it.each([
+    ["create", () => createFriendGroupFromApi("access-1", { name: "Friday anime" })],
+    ["rename", () => updateFriendGroupFromApi("access-1", { groupId: GROUP_ID, name: "Weekend" })],
+    ["add member", () => addFriendGroupMemberFromApi("access-1", { groupId: GROUP_ID, userId: USER_ID })],
+    ["remove member", () => removeFriendGroupMemberFromApi("access-1", { groupId: GROUP_ID, userId: USER_ID })],
+  ])("rejects empty, HTML, and malformed-success %s group responses", async (_name, operation) => {
+    const responses = [
+      () => new Response(null, { status: 200 }),
+      () => textResponse("<html>signed out</html>"),
+      () => jsonResponse({ group: { id: "not-a-group" } }),
+    ];
+
+    for (const response of responses) {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response()));
+      await expect(operation()).rejects.toMatchObject({
+        code: "INVALID_ACCOUNT_RESPONSE",
+        message: "Account data is temporarily unavailable. Try again.",
+      });
+    }
   });
 
   it("rejects malformed invite response messages", () => {

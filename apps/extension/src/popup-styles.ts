@@ -377,6 +377,12 @@ export const popupStyles = `
     color: rgba(254, 202, 202, 0.92);
   }
 
+  .popup-social-notice[data-tone="warning"] {
+    border-color: rgba(251, 191, 36, 0.24);
+    background: rgba(245, 158, 11, 0.1);
+    color: rgba(254, 243, 199, 0.94);
+  }
+
   .popup-inbox-card {
     display: grid;
     gap: 8px;
@@ -3905,5 +3911,11 @@ export const popupStyles = `
     border-left-color: rgba(248, 113, 113, 0.78);
     background: rgba(239, 68, 68, 0.08);
     color: rgba(254, 202, 202, 0.92);
+  }
+
+  .popup-people-action-notice[data-tone="warning"] {
+    border-left-color: rgba(251, 191, 36, 0.78);
+    background: rgba(245, 158, 11, 0.08);
+    color: rgba(254, 243, 199, 0.94);
   }
 `;

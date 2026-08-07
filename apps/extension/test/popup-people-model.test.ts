@@ -1,6 +1,12 @@
-import type { FriendGroup, FriendListItem, RecentPerson } from "@anidachi/protocol";
+import type {
+  FriendGroup,
+  FriendListItem,
+  RecentPerson,
+  RoomInvite,
+  SocialSnapshot,
+} from "@anidachi/protocol";
 import { describe, expect, it } from "vitest";
-import { buildPopupPeopleModel } from "../src/popup-people-model";
+import { buildPopupInboxModel, buildPopupPeopleModel } from "../src/popup-people-model";
 
 const NOW = "2026-08-07T12:00:00.000Z";
 
@@ -118,6 +124,51 @@ describe("buildPopupPeopleModel", () => {
   });
 });
 
+describe("buildPopupInboxModel", () => {
+  it("deduplicates actionable rows by stable ID for both count and consumers", () => {
+    const pendingRequest = friend("incoming", "friendship-a");
+    const pendingInvite = roomInvite("invite-a", "pending");
+    const model = buildPopupInboxModel(
+      snapshot({
+        incomingRequests: [pendingRequest, { ...pendingRequest }],
+        invites: [pendingInvite, { ...pendingInvite }],
+      }),
+      Date.parse(NOW),
+    );
+    expect(model).not.toBeNull();
+
+    expect(model!.friendRequests.map((request) => request.friendshipId)).toEqual(["friendship-a"]);
+    expect(model!.roomInvites.map((invite) => invite.id)).toEqual(["invite-a"]);
+    expect(model!.actionableCount).toBe(2);
+  });
+
+  it("excludes completed and expired rows without changing stable server order", () => {
+    const model = buildPopupInboxModel(
+      snapshot({
+        incomingRequests: [
+          friend("first", "friendship-first"),
+          friend("accepted", "friendship-accepted", "accepted", "accepted"),
+          friend("last", "friendship-last"),
+        ],
+        invites: [
+          roomInvite("invite-first", "pending"),
+          { ...roomInvite("invite-expired", "pending"), expiresAt: "2026-08-07T12:00:00.000Z" },
+          roomInvite("invite-declined", "declined"),
+          roomInvite("invite-last", "pending"),
+        ],
+      }),
+      Date.parse(NOW),
+    );
+    expect(model).not.toBeNull();
+
+    expect(model!.friendRequests.map((request) => request.friendshipId)).toEqual([
+      "friendship-first",
+      "friendship-last",
+    ]);
+    expect(model!.roomInvites.map((invite) => invite.id)).toEqual(["invite-first", "invite-last"]);
+  });
+});
+
 function friend(
   userId: string,
   friendshipId: string,
@@ -154,5 +205,52 @@ function recent(userId: string, displayName = userId): RecentPerson {
     user: { userId, handle: null, displayName, avatarUrl: null },
     lastWatchedAt: NOW,
     sharedRoomCount: 1,
+  };
+}
+
+function snapshot({
+  incomingRequests = [],
+  invites = [],
+}: {
+  incomingRequests?: FriendListItem[];
+  invites?: RoomInvite[];
+}): SocialSnapshot {
+  return {
+    directory: {
+      friends: [],
+      incomingRequests,
+      outgoingRequests: [],
+      groups: [],
+      recentPeople: [],
+    },
+    invites: {
+      meta: { serverTime: NOW, schemaVersion: 1 },
+      inbox: invites,
+      sent: [],
+    },
+  };
+}
+
+function roomInvite(id: string, status: "pending" | "accepted" | "declined"): RoomInvite {
+  return {
+    id,
+    roomId: `room-${id}`,
+    sender: { userId: "host", handle: null, displayName: "Host", avatarUrl: null },
+    targetKind: "direct",
+    targetGroupId: null,
+    message: null,
+    roomTitle: "Watch room",
+    sourceUrl: "https://www.youtube.com/watch?v=video",
+    videoFingerprint: "youtube:video",
+    createdAt: NOW,
+    expiresAt: "2099-08-08T12:00:00.000Z",
+    recipients: [
+      {
+        user: { userId: "viewer", handle: null, displayName: "Viewer", avatarUrl: null },
+        status,
+        updatedAt: NOW,
+        respondedAt: status === "pending" ? null : NOW,
+      },
+    ],
   };
 }
