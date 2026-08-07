@@ -1262,7 +1262,7 @@ export function PopupApp() {
           onAcceptInvite={(inviteId) => void acceptInvite(inviteId)}
           onDeclineFriendRequest={(friendshipId) => void declineIncomingFriendRequest(friendshipId)}
           onDeclineInvite={(inviteId) => void declineInvite(inviteId)}
-          onOpenDashboard={() => void openAccount("/account/friends")}
+          onOpenDashboard={() => void openAccount("/account/invites")}
           onRefresh={() => void syncPopupData(store, { useCachedSnapshot: true })}
           onSignIn={() =>
             void syncPopupData(store, {

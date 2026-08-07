@@ -517,6 +517,20 @@ describe("PopupApp social mutations", () => {
     );
   });
 
+  it("opens the authenticated room-invite dashboard from Inbox", async () => {
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    const view = await renderPopupApp();
+    root = view.root;
+
+    await click(await findButton(view.container, "Inbox"));
+    await click(await findButton(view.container, "Open dashboard"));
+    await waitFor(() =>
+      expect(chrome.tabs.create).toHaveBeenCalledWith({
+        url: "http://localhost:3003/account/invites",
+      }),
+    );
+  });
+
   it("accepts and declines incoming requests by friendship ID and refreshes after each action", async () => {
     vi.mocked(listSocialDirectory).mockResolvedValue(
       directory({
