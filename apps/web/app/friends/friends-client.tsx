@@ -22,6 +22,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
+import type { RecentPerson, RecentPeopleResponse } from "@anidachi/protocol";
 import { api } from "@/lib/client-api";
 
 type CurrentUser = {
@@ -60,13 +61,6 @@ type FriendGroup = {
   }>;
 };
 
-type RecentPerson = {
-  user: PublicProfile;
-  lastWatchedAt: string;
-  sharedRoomCount: number;
-  relationshipStatus: string;
-};
-
 type FriendsResponse = {
   friends: FriendListItem[];
   incomingRequests: FriendListItem[];
@@ -76,10 +70,6 @@ type FriendsResponse = {
 
 type GroupsResponse = {
   groups: FriendGroup[];
-};
-
-type RecentPeopleResponse = {
-  people: RecentPerson[];
 };
 
 type FriendInviteLinkResponse = {
@@ -175,17 +165,6 @@ function removeOptimisticMember(group: FriendGroup, userId: string, updatedAt: s
     updatedAt,
     members: group.members.filter((member) => member.user.userId !== userId),
   };
-}
-
-function canRequestFromRecent(status: string) {
-  return status === "none" || status === "declined" || status === "removed";
-}
-
-function recentStatusLabel(status: string) {
-  if (status === "accepted") return "Friends";
-  if (status === "pending") return "Pending";
-  if (status === "blocked") return "Blocked";
-  return "";
 }
 
 function PersonRow({
@@ -583,39 +562,30 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
               {loading ? (
                 <p className="py-4 text-sm text-foreground/50">Loading...</p>
               ) : recentPeople.length ? (
-                recentPeople.slice(0, 5).map((person) => {
-                  const statusLabel = recentStatusLabel(person.relationshipStatus);
-                  return (
-                    <PersonRow
-                      action={
-                        <>
-                          {canRequestFromRecent(person.relationshipStatus) ? (
-                            <IconButton
-                              disabled={busyKey !== null}
-                              icon={<UserPlus className="h-4 w-4" aria-hidden />}
-                              onClick={() => void sendFriendRequest(person.user.userId)}
-                              title="Add friend"
-                              tone="primary"
-                            />
-                          ) : statusLabel ? (
-                            <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs font-semibold text-foreground/70">
-                              {statusLabel}
-                            </span>
-                          ) : null}
-                          <IconButton
-                            disabled={busyKey !== null}
-                            icon={<EyeOff className="h-4 w-4" aria-hidden />}
-                            onClick={() => void hideRecent(person.user.userId)}
-                            title="Hide from recent"
-                          />
-                        </>
-                      }
-                      key={person.user.userId}
-                      meta={formatRecentMeta(person)}
-                      user={person.user}
-                    />
-                  );
-                })
+                recentPeople.slice(0, 5).map((person) => (
+                  <PersonRow
+                    action={
+                      <>
+                        <IconButton
+                          disabled={busyKey !== null}
+                          icon={<UserPlus className="h-4 w-4" aria-hidden />}
+                          onClick={() => void sendFriendRequest(person.user.userId)}
+                          title="Add friend"
+                          tone="primary"
+                        />
+                        <IconButton
+                          disabled={busyKey !== null}
+                          icon={<EyeOff className="h-4 w-4" aria-hidden />}
+                          onClick={() => void hideRecent(person.user.userId)}
+                          title="Hide from recent"
+                        />
+                      </>
+                    }
+                    key={person.user.userId}
+                    meta={formatRecentMeta(person)}
+                    user={person.user}
+                  />
+                ))
               ) : (
                 <p className="py-4 text-sm text-foreground/50">No shared watch history yet.</p>
               )}

@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "crypto";
+import type { RecentPerson } from "@anidachi/protocol";
 import { db, getRoomById, getUserById, type UserRow } from "./db";
 import { getPlanEntitlements } from "./plan-entitlements";
 
@@ -112,13 +113,6 @@ export type FriendListItem = {
   updatedAt: string;
 };
 
-export type RecentPerson = {
-  user: PublicProfile;
-  lastWatchedAt: string;
-  sharedRoomCount: number;
-  relationshipStatus: FriendshipStatus | "none";
-};
-
 export type FriendInviteLink = {
   token: string;
   url: string;
@@ -194,6 +188,10 @@ export function cleanInviteMessage(value: unknown): string | null {
 
 export function friendshipPairKey(userA: string, userB: string): [string, string] {
   return userA < userB ? [userA, userB] : [userB, userA];
+}
+
+export function isRecentRelationshipEligible(status: FriendshipStatus | undefined): boolean {
+  return status === undefined || status === "declined" || status === "removed";
 }
 
 export function isUuid(value: string): boolean {
@@ -852,7 +850,7 @@ export async function listRecentPeople(viewerUserId: string): Promise<RecentPers
   for (const member of (otherMembers as { room_id: string; user_id: string; joined_at: string }[] | null) ?? []) {
     if (hidden.has(member.user_id)) continue;
     const relationship = relationshipByUserId.get(member.user_id);
-    if (relationship?.status === "blocked") continue;
+    if (!isRecentRelationshipEligible(relationship?.status)) continue;
     const current = aggregate.get(member.user_id);
     if (!current) {
       aggregate.set(member.user_id, {
@@ -873,14 +871,12 @@ export async function listRecentPeople(viewerUserId: string): Promise<RecentPers
 
   return userIds
     .map((userId) => {
-      const relationship = relationshipByUserId.get(userId);
       const recent = aggregate.get(userId);
       if (!recent) return null;
       return {
         user: publicProfileFromRows(userId, profiles.get(userId), users.get(userId)),
         lastWatchedAt: recent.lastWatchedAt,
         sharedRoomCount: recent.roomIds.size,
-        relationshipStatus: relationship?.status ?? "none",
       } satisfies RecentPerson;
     })
     .filter((person): person is RecentPerson => person !== null)

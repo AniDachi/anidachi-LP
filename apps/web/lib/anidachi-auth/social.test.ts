@@ -6,6 +6,7 @@ import {
   cleanGroupName,
   cleanInviteMessage,
   friendshipPairKey,
+  isRecentRelationshipEligible,
   isUuid,
   normalizeHandle,
   publicProfileFromRows,
@@ -48,6 +49,15 @@ test("invite messages trim whitespace and keep a sane maximum", () => {
 test("friendship pair key is stable for unordered pairs", () => {
   assert.deepEqual(friendshipPairKey("user_b", "user_a"), ["user_a", "user_b"]);
   assert.deepEqual(friendshipPairKey("user_a", "user_b"), ["user_a", "user_b"]);
+});
+
+test("recent people include only relationships eligible for discovery", () => {
+  assert.equal(isRecentRelationshipEligible(undefined), true);
+  assert.equal(isRecentRelationshipEligible("declined"), true);
+  assert.equal(isRecentRelationshipEligible("removed"), true);
+  assert.equal(isRecentRelationshipEligible("pending"), false);
+  assert.equal(isRecentRelationshipEligible("accepted"), false);
+  assert.equal(isRecentRelationshipEligible("blocked"), false);
 });
 
 test("social APIs validate UUID-shaped ids before hitting Supabase", () => {

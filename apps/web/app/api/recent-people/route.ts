@@ -1,4 +1,6 @@
+import type { RecentPeopleResponse } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
+import { createAccountResponseMeta } from "@/lib/anidachi-auth/account-response";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
 import { listRecentPeople } from "@/lib/anidachi-auth/social";
 import { socialErrorResponse } from "@/lib/anidachi-auth/social-routes";
@@ -12,8 +14,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const people = await listRecentPeople(session.userId);
-    return NextResponse.json({ people });
+    const response: RecentPeopleResponse = {
+      meta: createAccountResponseMeta(),
+      people: await listRecentPeople(session.userId),
+    };
+    return NextResponse.json(response);
   } catch (error) {
     return socialErrorResponse(error);
   }
