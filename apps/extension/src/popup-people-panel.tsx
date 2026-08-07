@@ -1,39 +1,56 @@
-import type { FriendGroup, FriendListItem, PublicProfile, RecentPerson, SocialDirectory } from "@anidachi/protocol";
+import type { SocialDirectory } from "@anidachi/protocol";
 import { FolderPlus, RefreshCw, UserPlus, Users } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { buildPopupPeopleModel } from "./popup-people-model";
+import {
+  buildPopupPeopleModel,
+  type PopupPeopleFriend,
+  type PopupPeopleGroup,
+  type PopupPeopleProfile,
+  type PopupPeopleRecentPerson,
+} from "./popup-people-model";
 
-export type PopupPeoplePanelStatus = "signed-out" | "loading" | "ready" | "error";
+export type PopupPeoplePresentationState =
+  | Readonly<{ status: "signed-out" }>
+  | Readonly<{ status: "loading" }>
+  | Readonly<{ status: "error"; errorMessage: string }>
+  | Readonly<{ status: "ready"; directory: SocialDirectory }>
+  | Readonly<{ status: "stale"; directory: SocialDirectory }>
+  | Readonly<{ status: "stale-error"; directory: SocialDirectory; errorMessage: string }>;
+
+export type PopupPeopleActionKey = "create-group" | `add-friend:${string}`;
+
+export type PopupPeopleActionNotice = Readonly<{
+  actionKey: PopupPeopleActionKey;
+  tone: "success" | "error";
+  text: string;
+}>;
 
 export type PopupPeoplePanelProps = {
-  directory: SocialDirectory | null;
-  errorMessage?: string;
-  isStale?: boolean;
-  onAddFriend: (userId: string) => void;
-  onCreateGroup: (name: string) => void;
+  actionNotice: PopupPeopleActionNotice | null;
+  pendingActionKey: PopupPeopleActionKey | null;
+  onAddFriend: (userId: string) => Promise<boolean>;
+  onCreateGroup: (name: string) => Promise<boolean>;
   onOpenDashboard: () => void;
   onRefresh: () => void;
   onSignIn: () => void;
-  status: PopupPeoplePanelStatus;
+  state: PopupPeoplePresentationState;
 };
 
 type PopupPeopleMode = "friends" | "groups";
 
 export function PopupPeoplePanel({
-  directory,
-  errorMessage = "Unable to load people.",
-  isStale = false,
+  actionNotice,
+  pendingActionKey,
   onAddFriend,
   onCreateGroup,
   onOpenDashboard,
   onRefresh,
   onSignIn,
-  status,
+  state,
 }: PopupPeoplePanelProps) {
   const [mode, setMode] = useState<PopupPeopleMode>("friends");
-  const model = directory ? buildPopupPeopleModel(directory) : null;
-  const hasUsableDirectory = status !== "signed-out" && model !== null;
-  const showsStaleData = hasUsableDirectory && (isStale || status === "error" || status === "loading");
+  const model = stateHasDirectory(state) ? buildPopupPeopleModel(state.directory) : null;
+  const showsStaleData = state.status === "stale" || state.status === "stale-error";
 
   return (
     <section className="popup-section popup-people-panel" aria-label="People">
@@ -42,7 +59,7 @@ export function PopupPeoplePanel({
         <button
           aria-label="Refresh people"
           className="popup-mini-button"
-          disabled={status === "loading"}
+          disabled={state.status === "loading"}
           title="Refresh people"
           type="button"
           onClick={onRefresh}
@@ -56,55 +73,93 @@ export function PopupPeoplePanel({
         <PeopleModeButton active={mode === "groups"} label="Groups" onClick={() => setMode("groups")} />
       </div>
 
-      {status === "signed-out" ? (
-        <div className="popup-people-state" data-state="signed-out">
-          <Users size={17} />
-          <span>Sign in to see your people.</span>
-          <button className="popup-primary-button" type="button" onClick={onSignIn}>
-            Sign in
-          </button>
-        </div>
-      ) : null}
+      <div className="popup-people-content" data-presentation-state={state.status}>
+        {state.status === "signed-out" ? (
+          <div className="popup-people-state" data-state="signed-out">
+            <Users size={17} />
+            <span>Sign in to see your people.</span>
+            <button className="popup-primary-button" type="button" onClick={onSignIn}>
+              Sign in
+            </button>
+          </div>
+        ) : null}
 
-      {status === "loading" && !model ? (
-        <div className="popup-people-state" data-state="loading">
-          Loading people...
-        </div>
-      ) : null}
+        {state.status === "loading" ? (
+          <div className="popup-people-state" data-state="loading">
+            Loading people...
+          </div>
+        ) : null}
 
-      {status === "error" && !model ? (
-        <div className="popup-people-state" data-state="error">
-          <span>{errorMessage}</span>
-          <button className="popup-primary-button" type="button" onClick={onRefresh}>
-            Retry
-          </button>
-        </div>
-      ) : null}
-
-      {showsStaleData ? (
-        <div className="popup-people-status" data-state={status === "error" ? "error" : "stale"} role="status">
-          <span>{status === "error" ? errorMessage : "Showing saved people while we reconnect."}</span>
-          {status === "error" ? (
-            <button className="popup-secondary-button" type="button" onClick={onRefresh}>
+        {state.status === "error" ? (
+          <div className="popup-people-state" data-state="error">
+            <span>{state.errorMessage}</span>
+            <button className="popup-primary-button" type="button" onClick={onRefresh}>
               Retry
             </button>
-          ) : null}
-        </div>
-      ) : null}
+          </div>
+        ) : null}
 
-      {hasUsableDirectory && model ? (
-        mode === "friends" ? (
-          <FriendsMode friends={model.friends} recentPeople={model.recentPeople} onAddFriend={onAddFriend} />
-        ) : (
-          <GroupsMode groups={model.groups} onCreateGroup={onCreateGroup} />
-        )
-      ) : null}
+        {showsStaleData ? (
+          <div
+            className="popup-people-status"
+            data-state={state.status === "stale-error" ? "error" : "stale"}
+            role="status"
+          >
+            <span>
+              {state.status === "stale-error"
+                ? state.errorMessage
+                : "Showing saved people while we reconnect."}
+            </span>
+            {state.status === "stale-error" ? (
+              <button className="popup-secondary-button" type="button" onClick={onRefresh}>
+                Retry
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {model ? (
+          mode === "friends" ? (
+            <FriendsMode
+              friends={model.friends}
+              pendingActionKey={pendingActionKey}
+              recentPeople={model.recentPeople}
+              onAddFriend={onAddFriend}
+            />
+          ) : (
+            <GroupsMode
+              groups={model.groups}
+              pendingActionKey={pendingActionKey}
+              onCreateGroup={onCreateGroup}
+            />
+          )
+        ) : null}
+      </div>
+
+      <div aria-atomic="true" aria-live="polite" className="popup-people-action-notice-slot">
+        {actionNotice ? (
+          <div
+            className="popup-people-action-notice"
+            data-action-key={actionNotice.actionKey}
+            data-tone={actionNotice.tone}
+            role="status"
+          >
+            {actionNotice.text}
+          </div>
+        ) : null}
+      </div>
 
       <button className="popup-dashboard-button" type="button" onClick={onOpenDashboard}>
         Open dashboard
       </button>
     </section>
   );
+}
+
+function stateHasDirectory(
+  state: PopupPeoplePresentationState,
+): state is Extract<PopupPeoplePresentationState, { directory: SocialDirectory }> {
+  return state.status === "ready" || state.status === "stale" || state.status === "stale-error";
 }
 
 function PeopleModeButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
@@ -117,12 +172,14 @@ function PeopleModeButton({ active, label, onClick }: { active: boolean; label: 
 
 function FriendsMode({
   friends,
+  pendingActionKey,
   recentPeople,
   onAddFriend,
 }: {
-  friends: readonly FriendListItem[];
-  recentPeople: readonly RecentPerson[];
-  onAddFriend: (userId: string) => void;
+  friends: readonly PopupPeopleFriend[];
+  pendingActionKey: PopupPeopleActionKey | null;
+  recentPeople: readonly PopupPeopleRecentPerson[];
+  onAddFriend: (userId: string) => Promise<boolean>;
 }) {
   return (
     <div className="popup-people-list">
@@ -136,43 +193,84 @@ function FriendsMode({
       {recentPeople.length ? (
         <div className="popup-people-recent">
           <PeopleHeading count={recentPeople.length} label="Watched with recently" />
-          {recentPeople.map((person) => (
-            <PersonRow
-              action={
-                <button className="popup-people-add-button" type="button" onClick={() => onAddFriend(person.user.userId)}>
-                  <UserPlus size={13} />
-                  Add friend
-                </button>
-              }
-              key={person.user.userId}
-              profile={person.user}
-              subtitle={`${person.sharedRoomCount} shared ${person.sharedRoomCount === 1 ? "room" : "rooms"}`}
-            />
-          ))}
+          {recentPeople.map((person) => {
+            const actionKey = addFriendActionKey(person.user.userId);
+            const pending = pendingActionKey === actionKey;
+            return (
+              <PersonRow
+                action={
+                  <button
+                    className="popup-people-add-button"
+                    disabled={pending}
+                    type="button"
+                    onClick={async () => {
+                      if (pending) return;
+                      try {
+                        await onAddFriend(person.user.userId);
+                      } catch {
+                        // The parent owns the visible action error state.
+                      }
+                    }}
+                  >
+                    {pending ? <RefreshCw size={13} /> : <UserPlus size={13} />}
+                    {pending ? "Adding..." : "Add friend"}
+                  </button>
+                }
+                key={person.user.userId}
+                profile={person.user}
+                subtitle={`${person.sharedRoomCount} shared ${person.sharedRoomCount === 1 ? "room" : "rooms"}`}
+              />
+            );
+          })}
         </div>
       ) : null}
     </div>
   );
 }
 
-function GroupsMode({ groups, onCreateGroup }: { groups: readonly FriendGroup[]; onCreateGroup: (name: string) => void }) {
-  const submitCreateGroup = (event: FormEvent<HTMLFormElement>) => {
+function GroupsMode({
+  groups,
+  pendingActionKey,
+  onCreateGroup,
+}: {
+  groups: readonly PopupPeopleGroup[];
+  pendingActionKey: PopupPeopleActionKey | null;
+  onCreateGroup: (name: string) => Promise<boolean>;
+}) {
+  const createPending = pendingActionKey === "create-group";
+
+  const submitCreateGroup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
     const name = new FormData(form).get("group-name");
-    if (typeof name !== "string" || !name.trim()) return;
-    onCreateGroup(name.trim());
-    form.reset();
+    if (createPending || typeof name !== "string" || !name.trim()) return;
+    try {
+      if (await onCreateGroup(name.trim())) form.reset();
+    } catch {
+      // The parent owns the visible action error state.
+    }
   };
 
   return (
     <div className="popup-people-list">
       <form className="popup-people-create-form" onSubmit={submitCreateGroup}>
         <label className="popup-sr-only" htmlFor="popup-people-group-name">Group name</label>
-        <input id="popup-people-group-name" maxLength={80} name="group-name" placeholder="New group" required />
-        <button aria-label="Create group" className="popup-people-create-button" type="submit">
-          <FolderPlus size={13} />
-          Create
+        <input
+          disabled={createPending}
+          id="popup-people-group-name"
+          maxLength={80}
+          name="group-name"
+          placeholder="New group"
+          required
+        />
+        <button
+          aria-label="Create group"
+          className="popup-people-create-button"
+          disabled={createPending}
+          type="submit"
+        >
+          {createPending ? <RefreshCw size={13} /> : <FolderPlus size={13} />}
+          {createPending ? "Creating..." : "Create"}
         </button>
       </form>
 
@@ -195,7 +293,15 @@ function PeopleHeading({ count, label }: { count: number; label: string }) {
   );
 }
 
-function PersonRow({ action, profile, subtitle }: { action?: React.ReactNode; profile: PublicProfile; subtitle?: string }) {
+function PersonRow({
+  action,
+  profile,
+  subtitle,
+}: {
+  action?: React.ReactNode;
+  profile: PopupPeopleProfile;
+  subtitle?: string;
+}) {
   return (
     <div className="popup-people-row">
       <ProfileAvatar profile={profile} />
@@ -208,7 +314,7 @@ function PersonRow({ action, profile, subtitle }: { action?: React.ReactNode; pr
   );
 }
 
-function GroupSummary({ group }: { group: FriendGroup }) {
+function GroupSummary({ group }: { group: PopupPeopleGroup }) {
   const memberCount = group.members.length;
   return (
     <div className="popup-people-row popup-people-group-row">
@@ -221,7 +327,7 @@ function GroupSummary({ group }: { group: FriendGroup }) {
   );
 }
 
-function ProfileAvatar({ profile }: { profile: PublicProfile }) {
+function ProfileAvatar({ profile }: { profile: PopupPeopleProfile }) {
   if (profile.avatarUrl) return <img alt="" className="popup-people-avatar" loading="lazy" src={profile.avatarUrl} />;
   return <span className="popup-people-avatar">{initials(profile.displayName)}</span>;
 }
@@ -233,4 +339,8 @@ function initials(name: string): string {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("") || "A";
+}
+
+function addFriendActionKey(userId: string): PopupPeopleActionKey {
+  return `add-friend:${userId}`;
 }

@@ -38,6 +38,19 @@ describe("buildPopupPeopleModel", () => {
     expect(model.recentPeople.map((item) => item.user.userId)).toEqual(["eligible"]);
   });
 
+  it("excludes a recent person named by a non-accepted friends row", () => {
+    const model = buildPopupPeopleModel({
+      friends: [friend("stale-friend", "stale-friendship", "Stale Friend", "removed")],
+      incomingRequests: [],
+      outgoingRequests: [],
+      groups: [],
+      recentPeople: [recent("stale-friend"), recent("eligible")],
+    });
+
+    expect(model.friends).toEqual([]);
+    expect(model.recentPeople.map((item) => item.user.userId)).toEqual(["eligible"]);
+  });
+
   it("omits archived groups without changing the ordering of active groups", () => {
     const model = buildPopupPeopleModel({
       friends: [],
@@ -48,6 +61,60 @@ describe("buildPopupPeopleModel", () => {
     });
 
     expect(model.groups.map((item) => item.id)).toEqual(["first", "last"]);
+  });
+
+  it("exports request ID sets that cannot be mutated through a writable cast", () => {
+    const model = buildPopupPeopleModel({
+      friends: [],
+      incomingRequests: [friend("incoming", "incoming")],
+      outgoingRequests: [friend("outgoing", "outgoing")],
+      groups: [],
+      recentPeople: [],
+    });
+
+    expect(() => (model.incomingRequestUserIds as unknown as Set<string>).add("injected")).toThrow(TypeError);
+    expect(() => (model.outgoingRequestUserIds as unknown as Set<string>).delete("outgoing")).toThrow(TypeError);
+    expect([...model.incomingRequestUserIds]).toEqual(["incoming"]);
+    expect([...model.outgoingRequestUserIds]).toEqual(["outgoing"]);
+  });
+
+  it("clones and freezes nested projections without mutating canonical input", () => {
+    const sourceFriend = friend("friend", "friendship", "Friend", "accepted");
+    const sourceGroup = group("group", null, "Group", ["Member"]);
+    const sourceRecent = recent("recent", "Recent");
+    const directory = {
+      friends: [sourceFriend],
+      incomingRequests: [],
+      outgoingRequests: [],
+      groups: [sourceGroup],
+      recentPeople: [sourceRecent],
+    };
+
+    const model = buildPopupPeopleModel(directory);
+
+    expect(() => {
+      (model.friends[0] as FriendListItem).user.displayName = "Changed friend";
+    }).toThrow(TypeError);
+    expect(() => {
+      (model.groups[0] as FriendGroup).members[0]!.user.displayName = "Changed member";
+    }).toThrow(TypeError);
+    expect(() => {
+      (model.recentPeople[0] as RecentPerson).user.displayName = "Changed recent";
+    }).toThrow(TypeError);
+
+    expect(model.friends[0]?.user.displayName).toBe("Friend");
+    expect(model.groups[0]?.members[0]?.user.displayName).toBe("Member");
+    expect(model.recentPeople[0]?.user.displayName).toBe("Recent");
+    expect(sourceFriend.user.displayName).toBe("Friend");
+    expect(sourceGroup.members[0]?.user.displayName).toBe("Member");
+    expect(sourceRecent.user.displayName).toBe("Recent");
+
+    sourceFriend.user.displayName = "Canonical friend";
+    sourceGroup.members[0]!.user.displayName = "Canonical member";
+    sourceRecent.user.displayName = "Canonical recent";
+    expect(model.friends[0]?.user.displayName).toBe("Friend");
+    expect(model.groups[0]?.members[0]?.user.displayName).toBe("Member");
+    expect(model.recentPeople[0]?.user.displayName).toBe("Recent");
   });
 });
 
@@ -68,14 +135,17 @@ function friend(
   };
 }
 
-function group(id: string, archivedAt: string | null, name = id): FriendGroup {
+function group(id: string, archivedAt: string | null, name = id, memberNames: string[] = []): FriendGroup {
   return {
     id,
     name,
     archivedAt,
     createdAt: NOW,
     updatedAt: NOW,
-    members: [],
+    members: memberNames.map((displayName, index) => ({
+      user: { userId: `${id}-member-${index}`, handle: null, displayName, avatarUrl: null },
+      addedAt: NOW,
+    })),
   };
 }
 

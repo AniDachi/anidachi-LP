@@ -3806,6 +3806,12 @@ export const popupStyles = `
     min-width: 0;
   }
 
+  .popup-people-content {
+    display: grid;
+    min-width: 0;
+    gap: 10px;
+  }
+
   .popup-people-mode-tabs {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3942,6 +3948,17 @@ export const popupStyles = `
     background: rgba(255, 122, 26, 0.2);
   }
 
+  .popup-people-add-button:disabled,
+  .popup-people-create-button:disabled {
+    cursor: default;
+    opacity: 0.56;
+  }
+
+  .popup-people-add-button:disabled svg,
+  .popup-people-create-button:disabled svg {
+    animation: popup-spin 900ms linear infinite;
+  }
+
   .popup-people-create-form {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -3964,6 +3981,11 @@ export const popupStyles = `
   .popup-people-create-form input:focus-visible {
     outline: 2px solid rgba(255, 190, 99, 0.86);
     outline-offset: 1px;
+  }
+
+  .popup-people-create-form input:disabled {
+    cursor: default;
+    opacity: 0.56;
   }
 
   .popup-people-empty,
@@ -4018,5 +4040,23 @@ export const popupStyles = `
     min-height: 26px;
     padding: 0 8px;
     font-size: 10.5px;
+  }
+
+  .popup-people-action-notice-slot:empty {
+    display: none;
+  }
+
+  .popup-people-action-notice {
+    padding: 7px 9px;
+    border-left: 2px solid rgba(74, 222, 128, 0.72);
+    background: rgba(74, 222, 128, 0.07);
+    color: rgba(220, 252, 231, 0.9);
+    font-size: 11.5px;
+  }
+
+  .popup-people-action-notice[data-tone="error"] {
+    border-left-color: rgba(248, 113, 113, 0.78);
+    background: rgba(239, 68, 68, 0.08);
+    color: rgba(254, 202, 202, 0.92);
   }
 `;
