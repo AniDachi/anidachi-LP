@@ -1,14 +1,116 @@
-import type { FriendGroup, FriendListItem, RecentPerson, SocialDirectory } from "@anidachi/protocol";
-import { act } from "react";
+import type {
+  FriendGroup,
+  FriendListItem,
+  RecentPerson,
+  RoomInvite,
+  RoomInvitesResponse,
+  SocialDirectory,
+  SocialSnapshot,
+  WatchLibraryResponse,
+} from "@anidachi/protocol";
+import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { AccountOwnedState } from "../src/account-sync";
+import {
+  getCachedExtensionSession,
+  requestCurrentExtensionSession,
+  requestSilentWebsiteSignIn,
+  requestWebsiteSignIn,
+} from "../src/auth-client";
+import type { ExtensionAuthTokens } from "../src/auth-tokens";
+import {
+  PopupApp,
+  PopupInboxPanel,
+  PopupNavigation,
+  mapSocialStateToPeoplePresentation,
+  popupActionableInboxCount,
+} from "../src/popup-app";
 import {
   PopupPeoplePanel,
   type PopupPeoplePanelProps,
   type PopupPeoplePresentationState,
 } from "../src/popup-people-panel";
+import {
+  acceptFriendRequest,
+  createFriendGroup,
+  declineFriendRequest,
+  listRoomInvites,
+  listSocialDirectory,
+  sendFriendRequest,
+} from "../src/social-client";
+import {
+  getCachedSocialSnapshotForUser,
+  setCachedSocialSnapshotForUser,
+} from "../src/social-snapshot-cache";
+import {
+  createEmptyWatchProgressStore,
+  loadWatchProgressStoreForUser,
+  saveWatchProgressStoreForUser,
+} from "../src/watch-progress";
+import {
+  getCachedWatchLibraryForUser,
+  getWatchLibrarySyncLedger,
+  listWatchLibrary,
+  markWatchLibraryEntriesSynced,
+  setCachedWatchLibraryForUser,
+} from "../src/watch-library-client";
+
+vi.mock("../src/auth-client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/auth-client")>()),
+  getCachedExtensionSession: vi.fn(),
+  requestCurrentExtensionSession: vi.fn(),
+  requestSilentWebsiteSignIn: vi.fn(),
+  requestWebsiteSignIn: vi.fn(),
+}));
+
+vi.mock("../src/social-client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/social-client")>()),
+  acceptFriendRequest: vi.fn(),
+  createFriendGroup: vi.fn(),
+  declineFriendRequest: vi.fn(),
+  listRoomInvites: vi.fn(),
+  listSocialDirectory: vi.fn(),
+  sendFriendRequest: vi.fn(),
+}));
+
+vi.mock("../src/social-snapshot-cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/social-snapshot-cache")>()),
+  getCachedSocialSnapshotForUser: vi.fn(),
+  setCachedSocialSnapshotForUser: vi.fn(),
+}));
+
+vi.mock("../src/watch-progress", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/watch-progress")>()),
+  loadWatchProgressStoreForUser: vi.fn(),
+  saveWatchProgressStoreForUser: vi.fn(),
+}));
+
+vi.mock("../src/watch-library-client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/watch-library-client")>()),
+  getCachedWatchLibraryForUser: vi.fn(),
+  getWatchLibrarySyncLedger: vi.fn(),
+  listWatchLibrary: vi.fn(),
+  markWatchLibraryEntriesSynced: vi.fn(),
+  setCachedWatchLibraryForUser: vi.fn(),
+}));
 
 const NOW = "2026-08-07T12:00:00.000Z";
+const VIEWER_ID = "00000000-0000-4000-8000-000000000001";
+const RECENT_USER_ID = "00000000-0000-4000-8000-000000000002";
+const INCOMING_USER_ID = "00000000-0000-4000-8000-000000000003";
+const INCOMING_FRIENDSHIP_ID = "00000000-0000-4000-8000-000000000004";
+const TOKENS: ExtensionAuthTokens = {
+  accessToken: "access-1",
+  refreshToken: "refresh-1",
+  user: {
+    id: VIEWER_ID,
+    email: "viewer@example.com",
+    displayName: "Viewer",
+    avatarUrl: null,
+    plan: "plus",
+  },
+};
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -206,6 +308,235 @@ describe("PopupPeoplePanel", () => {
   });
 });
 
+describe("Popup People integration boundaries", () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    vi.restoreAllMocks();
+  });
+
+  it("maps every account-owned social state to the approved People presentation state", () => {
+    const snapshot = socialSnapshot();
+    const cases: Array<{
+      state: AccountOwnedState<SocialSnapshot>;
+      expected: PopupPeoplePresentationState;
+    }> = [
+      {
+        state: { status: "signed-out", ownerUserId: null, data: null, error: null },
+        expected: { status: "signed-out" },
+      },
+      {
+        state: { status: "loading", ownerUserId: "viewer-1", data: null, error: null },
+        expected: { status: "loading" },
+      },
+      {
+        state: { status: "loading", ownerUserId: "viewer-1", data: snapshot, error: null },
+        expected: { status: "stale", directory: snapshot.directory },
+      },
+      {
+        state: { status: "error", ownerUserId: "viewer-1", data: null, error: "Offline" },
+        expected: { status: "error", errorMessage: "Offline" },
+      },
+      {
+        state: { status: "error", ownerUserId: "viewer-1", data: snapshot, error: "Offline" },
+        expected: { status: "stale-error", directory: snapshot.directory, errorMessage: "Offline" },
+      },
+      {
+        state: { status: "ready", ownerUserId: "viewer-1", data: snapshot, error: null },
+        expected: { status: "ready", directory: snapshot.directory },
+      },
+    ];
+
+    for (const testCase of cases) {
+      expect(mapSocialStateToPeoplePresentation(testCase.state)).toEqual(testCase.expected);
+    }
+  });
+
+  it("renders Watch, People, and Inbox with no People badge and the actionable Inbox count", async () => {
+    const onSelect = vi.fn();
+    const snapshot = socialSnapshot({
+      directory: directory({
+        incomingRequests: [
+          friend("incoming", "friendship-incoming", "Incoming", "pending"),
+          friend("accepted", "friendship-accepted", "Accepted", "accepted"),
+        ],
+      }),
+      invites: roomInvites([
+        roomInvite("invite-pending", "pending"),
+        roomInvite("invite-declined", "declined"),
+        { ...roomInvite("invite-expired", "pending"), expiresAt: "2026-08-07T11:00:00.000Z" },
+      ]),
+    });
+    const view = await renderElement(
+      <PopupNavigation
+        activeTab="resources"
+        inboxCount={popupActionableInboxCount(snapshot)}
+        onSelect={onSelect}
+        watchCount={7}
+      />,
+    );
+
+    const tabs = [...view.container.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    expect(tabs.map((tab) => tab.querySelector(".popup-tab-label")?.textContent)).toEqual([
+      "Watch",
+      "People",
+      "Inbox",
+    ]);
+    expect(tabs[0]?.querySelector(".popup-tab-count")?.textContent).toBe("7");
+    expect(tabs[1]?.querySelector(".popup-tab-count")).toBeNull();
+    expect(tabs[2]?.querySelector(".popup-tab-count")?.textContent).toBe("2");
+
+    await click(tabs[2]!);
+    expect(onSelect).toHaveBeenCalledWith("inbox");
+    await unmount(view.root);
+  });
+
+  it("renders incoming friend requests before room invites without an outgoing subsection", async () => {
+    const onAcceptFriendRequest = vi.fn();
+    const onDeclineFriendRequest = vi.fn();
+    const onAcceptInvite = vi.fn();
+    const onDeclineInvite = vi.fn();
+    const snapshot = socialSnapshot({
+      directory: directory({
+        incomingRequests: [friend("incoming", "friendship-incoming", "A very long incoming display name", "pending")],
+        outgoingRequests: [friend("outgoing", "friendship-outgoing", "Outgoing Person", "pending")],
+      }),
+      invites: roomInvites([roomInvite("invite-pending", "pending")]),
+    });
+    const view = await renderElement(
+      <PopupInboxPanel
+        busyFriendRequestActionKey={null}
+        busyInviteId={null}
+        onAcceptFriendRequest={onAcceptFriendRequest}
+        onAcceptInvite={onAcceptInvite}
+        onDeclineFriendRequest={onDeclineFriendRequest}
+        onDeclineInvite={onDeclineInvite}
+        onOpenDashboard={vi.fn()}
+        onRefresh={vi.fn()}
+        onSignIn={vi.fn()}
+        state={{ status: "ready", ownerUserId: "viewer-1", data: snapshot, error: null }}
+      />,
+    );
+
+    const headings = [...view.container.querySelectorAll(".popup-inbox-heading")].map(
+      (heading) => heading.textContent?.trim(),
+    );
+    expect(headings).toEqual(["Friend requests1", "Room invites1"]);
+    expect(view.container.textContent).not.toContain("Outgoing Person");
+    expect(view.container.textContent).not.toContain("Outgoing requests");
+
+    await click(getButton(view.container, "Accept friend request from A very long incoming display name"));
+    await click(getButton(view.container, "Decline friend request from A very long incoming display name"));
+    await click(getButton(view.container, "Join room invite from Room Host"));
+    await click(getButton(view.container, "Decline room invite from Room Host"));
+    expect(onAcceptFriendRequest).toHaveBeenCalledWith("friendship-incoming");
+    expect(onDeclineFriendRequest).toHaveBeenCalledWith("friendship-incoming");
+    expect(onAcceptInvite).toHaveBeenCalledWith("invite-pending");
+    expect(onDeclineInvite).toHaveBeenCalledWith("invite-pending");
+
+    await unmount(view.root);
+  });
+});
+
+describe("PopupApp social mutations", () => {
+  let root: Root | null = null;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    installPopupChrome();
+    vi.mocked(getCachedExtensionSession).mockResolvedValue(TOKENS);
+    vi.mocked(requestCurrentExtensionSession).mockResolvedValue(TOKENS);
+    vi.mocked(requestSilentWebsiteSignIn).mockResolvedValue(null);
+    vi.mocked(requestWebsiteSignIn).mockResolvedValue(TOKENS);
+    vi.mocked(getCachedSocialSnapshotForUser).mockResolvedValue(null);
+    vi.mocked(setCachedSocialSnapshotForUser).mockResolvedValue(undefined);
+    vi.mocked(loadWatchProgressStoreForUser).mockResolvedValue(createEmptyWatchProgressStore());
+    vi.mocked(saveWatchProgressStoreForUser).mockResolvedValue(undefined);
+    vi.mocked(getCachedWatchLibraryForUser).mockResolvedValue(null);
+    vi.mocked(getWatchLibrarySyncLedger).mockResolvedValue({});
+    vi.mocked(listWatchLibrary).mockResolvedValue(emptyWatchLibrary());
+    vi.mocked(markWatchLibraryEntriesSynced).mockResolvedValue({});
+    vi.mocked(setCachedWatchLibraryForUser).mockResolvedValue(undefined);
+    vi.mocked(listRoomInvites).mockResolvedValue(roomInvites([]));
+    vi.mocked(sendFriendRequest).mockResolvedValue(
+      friend(RECENT_USER_ID, "00000000-0000-4000-8000-000000000005", "Recent Person", "pending"),
+    );
+    vi.mocked(createFriendGroup).mockResolvedValue(group("new-group", null, "Weekend", []));
+    vi.mocked(acceptFriendRequest).mockResolvedValue(
+      friend(INCOMING_USER_ID, INCOMING_FRIENDSHIP_ID, "Incoming", "accepted"),
+    );
+    vi.mocked(declineFriendRequest).mockResolvedValue(
+      friend(INCOMING_USER_ID, INCOMING_FRIENDSHIP_ID, "Incoming", "declined"),
+    );
+  });
+
+  afterEach(async () => {
+    if (root) await unmount(root);
+    root = null;
+    document.body.replaceChildren();
+    vi.unstubAllGlobals();
+  });
+
+  it("sends one recent-person request and refreshes the canonical social snapshot", async () => {
+    vi.mocked(listSocialDirectory).mockResolvedValue(
+      directory({ recentPeople: [recent(RECENT_USER_ID, "Recent Person")] }),
+    );
+    const view = await renderPopupApp();
+    root = view.root;
+
+    await click(await findButton(view.container, "People"));
+    await click(await findButton(view.container, "Add friend"));
+    await waitFor(() => expect(sendFriendRequest).toHaveBeenCalledWith("access-1", RECENT_USER_ID));
+    await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(2));
+  });
+
+  it("quick-creates one group and refreshes the canonical social snapshot", async () => {
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    const view = await renderPopupApp();
+    root = view.root;
+
+    await click(await findButton(view.container, "People"));
+    await click(await findButton(view.container, "Groups"));
+    const input = getGroupInput(view.container);
+    await setInputValue(input, "Weekend");
+    await submit(input.form!);
+    await waitFor(() => expect(createFriendGroup).toHaveBeenCalledWith("access-1", { name: "Weekend" }));
+    await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(2));
+  });
+
+  it("opens the authenticated friends dashboard from People", async () => {
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    const view = await renderPopupApp();
+    root = view.root;
+
+    await click(await findButton(view.container, "People"));
+    await click(await findButton(view.container, "Open dashboard"));
+    await waitFor(() =>
+      expect(chrome.tabs.create).toHaveBeenCalledWith({
+        url: "http://localhost:3003/account/friends",
+      }),
+    );
+  });
+
+  it("accepts and declines incoming requests by friendship ID and refreshes after each action", async () => {
+    vi.mocked(listSocialDirectory).mockResolvedValue(
+      directory({
+        incomingRequests: [friend(INCOMING_USER_ID, INCOMING_FRIENDSHIP_ID, "Incoming", "pending")],
+      }),
+    );
+    const view = await renderPopupApp();
+    root = view.root;
+
+    await click(await findButton(view.container, "Inbox"));
+    await click(await findButton(view.container, "Accept friend request from Incoming"));
+    await waitFor(() => expect(acceptFriendRequest).toHaveBeenCalledWith("access-1", INCOMING_FRIENDSHIP_ID));
+    await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(2));
+
+    await click(await findButton(view.container, "Decline friend request from Incoming"));
+    await waitFor(() => expect(declineFriendRequest).toHaveBeenCalledWith("access-1", INCOMING_FRIENDSHIP_ID));
+    await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(3));
+  });
+});
+
 type PanelProps = Partial<Omit<PopupPeoplePanelProps, "state">> & {
   state?: PopupPeoplePresentationState;
 };
@@ -237,6 +568,23 @@ async function renderPanel(props: PanelProps = {}): Promise<RenderedView> {
   return { container, root };
 }
 
+async function renderElement(element: ReactNode): Promise<RenderedView> {
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  await act(async () => {
+    root.render(element);
+  });
+  return { container, root };
+}
+
+async function renderPopupApp(): Promise<RenderedView> {
+  const view = await renderElement(<PopupApp />);
+  await findButton(view.container, "Watch");
+  await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(1));
+  return view;
+}
+
 function readyState(directoryValue: SocialDirectory): PopupPeoplePresentationState {
   return { status: "ready", directory: directoryValue };
 }
@@ -260,6 +608,61 @@ function directory(overrides: Partial<SocialDirectory> = {}): SocialDirectory {
     groups: [],
     recentPeople: [],
     ...overrides,
+  };
+}
+
+function socialSnapshot(overrides: Partial<SocialSnapshot> = {}): SocialSnapshot {
+  return {
+    directory: directory(),
+    invites: roomInvites([]),
+    ...overrides,
+  };
+}
+
+function roomInvites(inbox: RoomInvite[]): RoomInvitesResponse {
+  return {
+    meta: { serverTime: NOW, schemaVersion: 1 },
+    inbox,
+    sent: [],
+  };
+}
+
+function roomInvite(id: string, status: "pending" | "accepted" | "declined"): RoomInvite {
+  return {
+    id,
+    roomId: `room-${id}`,
+    sender: { userId: "host-1", handle: "host", displayName: "Room Host", avatarUrl: null },
+    targetKind: "direct",
+    targetGroupId: null,
+    message: "Ready to watch?",
+    roomTitle: "Friday watch",
+    sourceUrl: "https://www.youtube.com/watch?v=video",
+    videoFingerprint: "youtube:video",
+    createdAt: NOW,
+    expiresAt: "2099-08-08T13:00:00.000Z",
+    recipients: [
+      {
+        user: { userId: "viewer-1", handle: "viewer", displayName: "Viewer", avatarUrl: null },
+        status,
+        updatedAt: NOW,
+        respondedAt: status === "pending" ? null : NOW,
+      },
+    ],
+  };
+}
+
+function emptyWatchLibrary(): WatchLibraryResponse {
+  return {
+    meta: { serverTime: NOW, schemaVersion: 1 },
+    generatedAt: NOW,
+    limits: {
+      planCode: "plus",
+      maxActiveTrackedTitles: 15,
+      activeTrackedTitleCount: 0,
+      historyRetentionDays: 92,
+      retainedSince: "2026-05-07T12:00:00.000Z",
+    },
+    items: [],
   };
 }
 
@@ -333,6 +736,32 @@ async function flushPromises(): Promise<void> {
   await Promise.resolve();
 }
 
+async function waitFor(assertion: () => void): Promise<void> {
+  await act(async () => {
+    await vi.waitFor(assertion, { timeout: 2_000 });
+  });
+}
+
+async function findButton(container: HTMLElement, name: string): Promise<HTMLButtonElement> {
+  let button: HTMLButtonElement | null = null;
+  await waitFor(() => {
+    button = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+      (candidate) =>
+        candidate.getAttribute("aria-label") === name ||
+        candidate.querySelector(".popup-tab-label")?.textContent === name ||
+        candidate.textContent?.trim() === name,
+    ) ?? null;
+    if (!button) {
+      const available = [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .map((candidate) => candidate.getAttribute("aria-label") ?? candidate.textContent?.trim())
+        .filter(Boolean)
+        .join(", ");
+      throw new Error(`Button not found: ${name}. Available: ${available}`);
+    }
+  });
+  return button!;
+}
+
 function getButton(container: HTMLElement, name: string): HTMLButtonElement {
   const button = [...container.querySelectorAll("button")].find(
     (candidate) => candidate.getAttribute("aria-label") === name || candidate.textContent?.trim() === name,
@@ -343,4 +772,18 @@ function getButton(container: HTMLElement, name: string): HTMLButtonElement {
 
 async function unmount(root: Root): Promise<void> {
   await act(async () => root.unmount());
+}
+
+function installPopupChrome(): void {
+  vi.stubGlobal("chrome", {
+    storage: {
+      onChanged: {
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      },
+    },
+    tabs: {
+      create: vi.fn().mockResolvedValue(undefined),
+    },
+  });
 }
