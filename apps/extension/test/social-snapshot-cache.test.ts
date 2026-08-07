@@ -23,7 +23,13 @@ import {
 
 const NOW = "2026-08-06T12:00:00.000Z";
 const socialSnapshotFixture = {
-  targets: { friends: [], groups: [] },
+  directory: {
+    friends: [],
+    incomingRequests: [],
+    outgoingRequests: [],
+    groups: [],
+    recentPeople: [],
+  },
   invites: {
     meta: { serverTime: NOW, schemaVersion: 1 as const },
     inbox: [],
@@ -51,6 +57,13 @@ describe("social snapshot cache", () => {
     expect(await getCachedSocialSnapshotForUser("user-b")).toBeNull();
   });
 
+  it("hides the previous account snapshot immediately after an account switch", async () => {
+    await setCachedSocialSnapshotForUser("user-a", socialSnapshotFixture);
+
+    expect((await getCachedSocialSnapshotForUser("user-a"))?.userId).toBe("user-a");
+    expect(await getCachedSocialSnapshotForUser("user-b")).toBeNull();
+  });
+
   it("discards a valid snapshot whose envelope names another owner", async () => {
     const key = socialSnapshotCacheKeyForUser("user-b");
     storageMap.set(key, {
@@ -64,20 +77,45 @@ describe("social snapshot cache", () => {
     expect(storageMap.has(key)).toBe(false);
   });
 
-  it("discards corrupt and incompatible cache entries", async () => {
+  it("rejects and removes the legacy targets snapshot shape", async () => {
     const key = socialSnapshotCacheKeyForUser("user-a");
     storageMap.set(key, {
       schemaVersion: 1,
       userId: "user-a",
       cachedAt: NOW,
       data: {
-        targets: { friends: [{ friendshipId: "bad" }], groups: [] },
-        invites: {},
+        targets: { friends: [], groups: [] },
+        invites: socialSnapshotFixture.invites,
       },
     });
 
     expect(await getCachedSocialSnapshotForUser("user-a")).toBeNull();
     expect(storageMap.has(key)).toBe(false);
+  });
+
+  it("rejects and removes invalid timestamps or account metadata without exposing validation errors", async () => {
+    const invalidTimestampKey = socialSnapshotCacheKeyForUser("user-a");
+    const missingMetadataKey = socialSnapshotCacheKeyForUser("user-b");
+    storageMap.set(invalidTimestampKey, {
+      schemaVersion: 1,
+      userId: "user-a",
+      cachedAt: "not-a-timestamp",
+      data: socialSnapshotFixture,
+    });
+    storageMap.set(missingMetadataKey, {
+      schemaVersion: 1,
+      userId: "user-b",
+      cachedAt: NOW,
+      data: {
+        directory: socialSnapshotFixture.directory,
+        invites: { inbox: [], sent: [] },
+      },
+    });
+
+    await expect(getCachedSocialSnapshotForUser("user-a")).resolves.toBeNull();
+    await expect(getCachedSocialSnapshotForUser("user-b")).resolves.toBeNull();
+    expect(storageMap.has(invalidTimestampKey)).toBe(false);
+    expect(storageMap.has(missingMetadataKey)).toBe(false);
   });
 
   it("treats snapshots as fresh for no more than sixty seconds", async () => {

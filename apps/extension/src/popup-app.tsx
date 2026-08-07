@@ -48,13 +48,13 @@ import {
   archiveFriendGroup,
   createFriendGroup,
   declineRoomInvite,
-  listInviteTargets,
+  listSocialDirectory,
   listRoomInvites,
   removeFriendGroupMember,
   type FriendGroup,
   type FriendListItem,
-  type InviteTargets,
   type RoomInvite,
+  type SocialDirectory,
   updateFriendGroup,
 } from "./social-client";
 import {
@@ -225,7 +225,7 @@ export function PopupApp() {
     const person = libraryActivityFilter === "together" ? libraryPersonFilter : "all";
     const selectedGroupId = person.startsWith("group:") ? person.slice("group:".length) : null;
     const selectedGroup = selectedGroupId
-      ? socialState.data?.targets.groups.find((group) => group.id === selectedGroupId)
+      ? socialState.data?.directory.groups.find((group) => group.id === selectedGroupId)
       : null;
     return {
       activity: libraryActivityFilter,
@@ -236,7 +236,7 @@ export function PopupApp() {
           }
         : {}),
     };
-  }, [libraryActivityFilter, libraryPersonFilter, socialState.data?.targets.groups]);
+  }, [libraryActivityFilter, libraryPersonFilter, socialState.data?.directory.groups]);
   const filteredFolders = useMemo(
     () => filterProviderFolders(folders, libraryEpisodesByKey, libraryFilterOptions),
     [folders, libraryEpisodesByKey, libraryFilterOptions],
@@ -264,7 +264,7 @@ export function PopupApp() {
     [folders, libraryEpisodesByKey],
   );
   const socialCount = socialState.data
-    ? socialState.data.targets.friends.length + socialState.data.targets.groups.length
+    ? socialState.data.directory.friends.length + socialState.data.directory.groups.length
     : 0;
   const pendingInviteCount =
     socialState.data?.invites.inbox.filter((invite) => roomInviteCanBeAccepted(invite)).length ?? 0;
@@ -323,12 +323,12 @@ export function PopupApp() {
           );
         }
 
-        const [targets, invites] = await Promise.all([
-          listInviteTargets(tokens.accessToken),
+        const [directory, invites] = await Promise.all([
+          listSocialDirectory(tokens.accessToken),
           listRoomInvites(tokens.accessToken),
         ]);
         if (!isCurrent()) return false;
-        const snapshot = SocialSnapshotSchema.parse({ targets, invites });
+        const snapshot = SocialSnapshotSchema.parse({ directory, invites });
         if (!isCurrent()) return false;
         await setCachedSocialSnapshotForUser(tokens.user.id, snapshot);
         if (!isCurrent()) return false;
@@ -850,11 +850,11 @@ export function PopupApp() {
     if (
       libraryPersonFilter !== "all" &&
       !companionFilters.some((filter) => filter.value === libraryPersonFilter) &&
-      !socialState.data?.targets.groups.some((group) => `group:${group.id}` === libraryPersonFilter)
+      !socialState.data?.directory.groups.some((group) => `group:${group.id}` === libraryPersonFilter)
     ) {
       setLibraryPersonFilter("all");
     }
-  }, [companionFilters, libraryPersonFilter, socialState.data?.targets.groups]);
+  }, [companionFilters, libraryPersonFilter, socialState.data?.directory.groups]);
 
   const totalItems = folders.reduce((sum, folder) => sum + folder.items.length, 0);
   const filteredItemsCount = filteredFolders.reduce((sum, folder) => sum + folder.items.length, 0);
@@ -1177,7 +1177,7 @@ export function PopupApp() {
             {libraryActivityFilter === "together" ? (
               <TogetherFilterBar
                 companions={companionFilters}
-                groups={socialState.data?.targets.groups ?? []}
+                groups={socialState.data?.directory.groups ?? []}
                 selectedValue={libraryPersonFilter}
                 onSelect={setLibraryPersonFilter}
               />
@@ -1568,7 +1568,7 @@ function SocialPanel({
           onRemoveGroupMember={onRemoveGroupMember}
           onRenameGroup={onRenameGroup}
           onSubmitCreateGroup={submitCreateGroup}
-          targets={data.targets}
+          directory={data.directory}
         />
       ) : null}
     </section>
@@ -1712,7 +1712,7 @@ function SocialTargets({
   onRemoveGroupMember,
   onRenameGroup,
   onSubmitCreateGroup,
-  targets,
+  directory,
 }: {
   busyAction: string | null;
   createDisabled: boolean;
@@ -1723,17 +1723,17 @@ function SocialTargets({
   onRemoveGroupMember: (groupId: string, userId: string) => Promise<boolean>;
   onRenameGroup: (groupId: string, name: string) => Promise<boolean>;
   onSubmitCreateGroup: (event: FormEvent<HTMLFormElement>) => void;
-  targets: InviteTargets;
+  directory: SocialDirectory;
 }) {
   return (
     <div className="popup-social-list">
       <div className="popup-social-block">
         <div className="popup-social-heading">
           <span>Friends</span>
-          <span>{targets.friends.length}</span>
+          <span>{directory.friends.length}</span>
         </div>
-        {targets.friends.length ? (
-          targets.friends.map((friend) => <SocialFriendRow friend={friend} key={friend.friendshipId} />)
+        {directory.friends.length ? (
+          directory.friends.map((friend) => <SocialFriendRow friend={friend} key={friend.friendshipId} />)
         ) : (
           <div className="popup-empty">No friends yet.</div>
         )}
@@ -1742,7 +1742,7 @@ function SocialTargets({
       <div className="popup-social-block">
         <div className="popup-social-heading">
           <span>Groups</span>
-          <span>{targets.groups.length}</span>
+          <span>{directory.groups.length}</span>
         </div>
         <form className="popup-group-create-form" onSubmit={onSubmitCreateGroup}>
           <input
@@ -1758,11 +1758,11 @@ function SocialTargets({
             Create
           </button>
         </form>
-        {targets.groups.length ? (
-          targets.groups.map((group) => (
+        {directory.groups.length ? (
+          directory.groups.map((group) => (
             <SocialGroupRow
               busyAction={busyAction}
-              friends={targets.friends}
+              friends={directory.friends}
               group={group}
               key={group.id}
               onAddGroupMember={onAddGroupMember}
