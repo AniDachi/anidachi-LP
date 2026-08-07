@@ -311,30 +311,52 @@ is allowed.
 AniDachi supports direct friend requests and authenticated personal friend
 invite links.
 
-Relationship states remain explicit:
+The user-facing MVP relationship flow remains explicit and small:
 
 ```txt
 pending -> accepted
 pending -> declined
 accepted -> removed
-any eligible relationship -> blocked
-blocked -> removed/unblocked
 ```
 
-The exact unblock result is `removed`, not automatically `accepted`. Users must
-send a new request after unblocking.
+Existing persisted `blocked` states remain readable for compatibility and are
+excluded from social suggestions. This slice does not expose new block/unblock
+controls and does not remove the existing backend state as an unrelated risky
+refactor.
 
 Transactional RPCs handle:
 
 - friend-link consumption plus friendship creation;
 - accept or decline only when the persisted state is still `pending`;
 - remove;
-- block plus removal from current personal groups in both directions;
-- unblock to `removed`.
+- removal from current personal groups when a friendship is removed.
+
+Removing a friend preserves historical solo/shared watch sessions and allows a
+new request later. Repeated idempotent requests return the current canonical
+state.
 
 Friend-link tokens remain high-entropy and stored only as hashes. Direct
 requests and link creation receive per-account rate limits and bounded active
-link counts. Repeated idempotent requests return the current canonical state.
+link counts.
+
+## Recent People
+
+Recent people is a discovery aid derived from successful authenticated shared
+watch sessions, not a second relationship type.
+
+Rules:
+
+- keep one canonical row per other user, ordered by the latest shared session;
+- exclude the active user, accepted friends, pending friend relationships, and
+  compatibility-blocked or explicitly hidden users;
+- never duplicate the same user between Friends and Recent people;
+- allow an eligible recent person to receive a friend request;
+- preserve the shared watch history when a person is hidden or a friendship is
+  later removed.
+
+The popup receives recent people through the same versioned, account-owned
+social snapshot as friends and groups. It must not make an unvalidated side
+request or maintain a separate recent-people cache.
 
 ## Personal Groups
 
@@ -459,10 +481,44 @@ Popup responsibilities:
 
 - recent resources and resume actions;
 - recent solo/shared sessions;
-- lightweight friend and group selection;
+- accepted friends and contextual recent-people discovery;
+- lightweight group creation, selection, and invite targeting;
 - pending inbox actions;
 - current server-derived counts and plan-limit feedback;
 - offline, stale, loading, empty, syncing, and error states.
+
+### Popup Social Information Architecture
+
+The popup top-level navigation is:
+
+```txt
+Watch | People | Inbox
+```
+
+`People` has two internal modes, not three equal permanent tabs:
+
+```txt
+Friends | Groups
+```
+
+The `Friends` mode is the default. It shows accepted friends first, then a
+compact `Watched with recently` section only when eligible recent people exist.
+The recent section is contextual discovery, so it disappears entirely when
+empty instead of leaving an empty navigation destination. Incoming friend
+requests remain actionable in `Inbox`; outgoing request status does not create
+another popup subsection.
+
+The `Groups` mode shows personal groups and supports only quick creation,
+selection, and invite use. Rename, archive, bulk membership editing, limits,
+and other full management belong to the web account.
+
+The `People` top-level tab has no aggregate numeric badge. Adding friend and
+group counts together is not a meaningful people count. `Inbox` may show the
+canonical server-derived actionable count.
+
+Rows are deduplicated by user ID before rendering. The popup remains a compact,
+scrollable quick-action surface and always provides an `Open dashboard` escape
+hatch for full management.
 
 The current monolithic popup component should be split only along domain
 boundaries needed by this work: account sync, resources/history, social/groups,
@@ -479,7 +535,8 @@ Web responsibilities:
 
 - complete cursor-paginated solo/shared history;
 - full tracked-title management;
-- detailed friend requests, friends, blocked users, and recent people;
+- detailed friend requests, friends, compatibility-blocked state where needed,
+  and recent people;
 - full group editing and archive management;
 - complete invite inbox and sent history;
 - account, billing, devices, and privacy management.
@@ -621,8 +678,8 @@ Recommended slices:
    - room generation/source generation inputs;
    - paginated canonical reads and cross-surface rendering.
 4. **Friends and groups**
-   - transactional transitions, block/unblock, group-limit enforcement, and
-     membership cleanup.
+   - transactional transitions, compatibility handling for existing blocked
+     state, group-limit enforcement, and membership cleanup.
 5. **Durable inbox and room invites**
    - transactional creation/response, `seen_at`, aggregation, TTL, and counts.
 6. **Background notification delivery**
