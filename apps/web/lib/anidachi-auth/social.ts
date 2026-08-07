@@ -485,10 +485,14 @@ export function friendRequestConflictResolution(
 export function resolveFriendRequestTransitionReread(
   viewerUserId: string,
   friendship: FriendshipRow | null,
+  expectedStatus: "accepted" | "declined",
 ): FriendshipRow {
   if (!friendship) throw new SocialApiError(404, "Friend request not found");
   if (friendship.addressee_user_id !== viewerUserId) {
     throw new SocialApiError(403, "Only the addressee can respond to this request");
+  }
+  if (friendship.status !== expectedStatus) {
+    throw new SocialApiError(409, "Friend request was already resolved");
   }
   return friendship;
 }
@@ -617,11 +621,16 @@ export async function sendFriendRequest(params: {
     updated_at: now,
   };
 
-  const query = existing
-    ? db().from("friendships").update(payload).eq("id", existing.id)
-    : db().from("friendships").insert(payload);
-
-  const { data, error } = await query.select().single();
+  const result = existing
+    ? await db()
+        .from("friendships")
+        .update(payload)
+        .eq("id", existing.id)
+        .in("status", ["declined", "removed"])
+        .select()
+        .maybeSingle()
+    : await db().from("friendships").insert(payload).select().single();
+  const { data, error } = result;
   if (error) {
     if (error.code === UNIQUE_VIOLATION) {
       const canonical = await getFriendshipBetween(
@@ -644,6 +653,21 @@ export async function sendFriendRequest(params: {
       return itemForFriendship(params.requesterUserId, canonical);
     }
     throw new Error(`Failed to send friend request: ${error.message}`);
+  }
+  if (!data && existing) {
+    const canonical = await getFriendshipBetween(
+      params.requesterUserId,
+      params.addresseeUserId,
+    );
+    if (!canonical) throw new Error("Failed to resolve concurrent friend request");
+    const resolution = friendRequestConflictResolution(params.requesterUserId, canonical);
+    if (resolution === "blocked") {
+      throw new SocialApiError(403, "This relationship is blocked");
+    }
+    if (resolution === "accept-reciprocal") {
+      return acceptFriendRequest(params.requesterUserId, canonical.id);
+    }
+    return itemForFriendship(params.requesterUserId, canonical);
   }
   return itemForFriendship(params.requesterUserId, data as FriendshipRow);
 }
@@ -847,6 +871,7 @@ export async function acceptFriendRequest(
     : resolveFriendRequestTransitionReread(
         viewerUserId,
         await getFriendshipById(friendshipId),
+        "accepted",
       );
   return itemForFriendship(viewerUserId, canonical);
 }
@@ -876,6 +901,7 @@ export async function declineFriendRequest(
     : resolveFriendRequestTransitionReread(
         viewerUserId,
         await getFriendshipById(friendshipId),
+        "declined",
       );
   return itemForFriendship(viewerUserId, canonical);
 }

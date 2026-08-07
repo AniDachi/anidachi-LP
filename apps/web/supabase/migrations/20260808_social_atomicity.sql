@@ -43,8 +43,24 @@ as $$
     max(shared_room.last_watched_at) as last_watched_at,
     count(*)::integer as shared_room_count
   from shared_rooms as shared_room
+  where not exists (
+    select 1
+    from public.recent_people_hidden as hidden_person
+    where hidden_person.user_id = p_viewer_user_id
+      and hidden_person.hidden_user_id = shared_room.user_id
+  )
+    and not exists (
+      select 1
+      from public.friendships as friendship
+      where least(friendship.requester_user_id, friendship.addressee_user_id) =
+        least(p_viewer_user_id, shared_room.user_id)
+        and greatest(friendship.requester_user_id, friendship.addressee_user_id) =
+          greatest(p_viewer_user_id, shared_room.user_id)
+        and friendship.status in ('pending', 'accepted', 'blocked')
+    )
   group by shared_room.user_id
-  order by max(shared_room.last_watched_at) desc;
+  order by max(shared_room.last_watched_at) desc
+  limit 50;
 $$;
 
 revoke all on function public.list_recent_people_evidence(uuid)
@@ -111,7 +127,7 @@ begin
   where friend_group.id = p_group_id;
 
   if found then
-    if existing_group.owner_user_id <> p_owner_user_id then
+    if existing_group.owner_user_id <> p_owner_user_id or existing_group.name <> p_name then
       raise exception 'friend_group_request_id_conflict' using errcode = 'P0001';
     end if;
     return query select

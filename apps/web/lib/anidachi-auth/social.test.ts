@@ -132,17 +132,25 @@ test("friend request conflict resolution returns canonical duplicate state and a
 test("friend request transition reread is idempotent for canonical completed states", () => {
   const accepted = friendship({ status: "accepted" });
   const declined = friendship({ status: "declined" });
-  assert.equal(resolveFriendRequestTransitionReread(OTHER_ID, accepted), accepted);
-  assert.equal(resolveFriendRequestTransitionReread(OTHER_ID, declined), declined);
+  assert.equal(resolveFriendRequestTransitionReread(OTHER_ID, accepted, "accepted"), accepted);
+  assert.equal(resolveFriendRequestTransitionReread(OTHER_ID, declined, "declined"), declined);
+  assert.throws(
+    () => resolveFriendRequestTransitionReread(OTHER_ID, accepted, "declined"),
+    (error) => error instanceof SocialApiError && error.status === 409,
+  );
+  assert.throws(
+    () => resolveFriendRequestTransitionReread(OTHER_ID, declined, "accepted"),
+    (error) => error instanceof SocialApiError && error.status === 409,
+  );
 });
 
 test("friend request transition reread preserves authorization and not-found semantics", () => {
   assert.throws(
-    () => resolveFriendRequestTransitionReread(VIEWER_ID, friendship()),
+    () => resolveFriendRequestTransitionReread(VIEWER_ID, friendship(), "accepted"),
     (error) => error instanceof SocialApiError && error.status === 403,
   );
   assert.throws(
-    () => resolveFriendRequestTransitionReread(OTHER_ID, null),
+    () => resolveFriendRequestTransitionReread(OTHER_ID, null, "accepted"),
     (error) => error instanceof SocialApiError && error.status === 404,
   );
 });
