@@ -21,6 +21,7 @@ import {
   listRoomInvitesFromApi,
   removeGroupMemberHttpMessage,
   sendFriendRequest,
+  sendFriendRequestFromApi,
   sendFriendRequestHttpMessage,
   updateGroupHttpMessage,
 } from "../src/social-client";
@@ -36,6 +37,13 @@ function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
     headers: { "content-type": "application/json" },
+  });
+}
+
+function textResponse(body: string): Response {
+  return new Response(body, {
+    status: 200,
+    headers: { "content-type": "text/html" },
   });
 }
 
@@ -189,6 +197,32 @@ describe("extension social HTTP bridge", () => {
       ok: false,
       code: "INVALID_ACCOUNT_RESPONSE",
       error: expect.stringContaining("Account data is temporarily unavailable"),
+    });
+  });
+
+  it("returns the safe account error for non-JSON social directory responses", async () => {
+    const [, groupsResponse, recentPeopleResponse] = socialDirectoryResponses();
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(textResponse("<html>sign in</html>"))
+        .mockResolvedValueOnce(jsonResponse(groupsResponse))
+        .mockResolvedValueOnce(jsonResponse(recentPeopleResponse)),
+    );
+
+    await expect(listSocialDirectoryFromApi("access-1")).rejects.toMatchObject({
+      code: "INVALID_ACCOUNT_RESPONSE",
+      message: "Account data is temporarily unavailable. Try again.",
+    });
+  });
+
+  it("returns the safe account error for non-JSON friend request responses", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(textResponse("<html>sign in</html>")));
+
+    await expect(sendFriendRequestFromApi("access-1", USER_ID)).rejects.toMatchObject({
+      code: "INVALID_ACCOUNT_RESPONSE",
+      message: "Account data is temporarily unavailable. Try again.",
     });
   });
 

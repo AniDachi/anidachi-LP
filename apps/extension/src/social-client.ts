@@ -391,6 +391,18 @@ function parseSocialContract<T>(
   throw new RoomApiError(INVALID_ACCOUNT_RESPONSE_MESSAGE, "INVALID_ACCOUNT_RESPONSE");
 }
 
+async function decodeSocialAccountResponse(response: Response, responseName: string): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    logDebug("social.http", "invalid account response", {
+      responseName,
+      issues: [{ code: "invalid_json", path: "" }],
+    });
+    throw new RoomApiError(INVALID_ACCOUNT_RESPONSE_MESSAGE, "INVALID_ACCOUNT_RESPONSE");
+  }
+}
+
 export async function listInviteTargetsFromApi(accessToken: string): Promise<InviteTargets> {
   logDebug("social.http", "list invite targets request", { webHttpBase: WEB_HTTP_BASE });
   const [friendsResponse, groupsResponse] = await Promise.all([
@@ -454,11 +466,19 @@ export async function listSocialDirectoryFromApi(accessToken: string): Promise<S
   }
 
   const [friendsBody, groupsBody, recentPeopleBody] = [
-    parseSocialContract(FriendListResponseSchema, await friendsResponse.json(), "friends"),
-    parseSocialContract(FriendGroupsResponseSchema, await groupsResponse.json(), "groups"),
+    parseSocialContract(
+      FriendListResponseSchema,
+      await decodeSocialAccountResponse(friendsResponse, "friends"),
+      "friends",
+    ),
+    parseSocialContract(
+      FriendGroupsResponseSchema,
+      await decodeSocialAccountResponse(groupsResponse, "groups"),
+      "groups",
+    ),
     parseSocialContract(
       RecentPeopleResponseSchema,
-      await recentPeopleResponse.json(),
+      await decodeSocialAccountResponse(recentPeopleResponse, "recent people"),
       "recent people",
     ),
   ];
@@ -512,7 +532,7 @@ export async function createRoomInviteFromApi(
 
   return parseSocialContract(
     RoomInviteSchema,
-    responseField(await response.json(), "invite", "invite"),
+    responseField(await response.json(), "invite"),
     "created invite",
   );
 }
@@ -534,7 +554,7 @@ export async function createFriendGroupFromApi(
 
   return parseSocialContract(
     FriendGroupSchema,
-    responseField(await response.json(), "group", "group"),
+    responseField(await response.json(), "group"),
     "created group",
   );
 }
@@ -562,7 +582,7 @@ export async function updateFriendGroupFromApi(
 
   return parseSocialContract(
     FriendGroupSchema,
-    responseField(await response.json(), "group", "group"),
+    responseField(await response.json(), "group"),
     "updated group",
   );
 }
@@ -608,7 +628,7 @@ export async function addFriendGroupMemberFromApi(
 
   return parseSocialContract(
     FriendGroupSchema,
-    responseField(await response.json(), "group", "group"),
+    responseField(await response.json(), "group"),
     "group member update",
   );
 }
@@ -639,7 +659,7 @@ export async function removeFriendGroupMemberFromApi(
 
   return parseSocialContract(
     FriendGroupSchema,
-    responseField(await response.json(), "group", "group"),
+    responseField(await response.json(), "group"),
     "group member update",
   );
 }
@@ -687,7 +707,7 @@ export async function declineRoomInviteFromApi(
 
   return parseSocialContract(
     RoomInviteSchema,
-    responseField(await response.json(), "invite", "invite"),
+    responseField(await response.json(), "invite"),
     "declined invite",
   );
 }
@@ -709,7 +729,7 @@ export async function sendFriendRequestFromApi(
 
   return parseSocialContract(
     FriendListItemSchema,
-    responseField(await response.json(), "request", "friend request"),
+    responseField(await decodeSocialAccountResponse(response, "friend request"), "request"),
     "sent friend request",
   );
 }
@@ -733,7 +753,7 @@ export async function acceptFriendRequestFromApi(
 
   return parseSocialContract(
     FriendListItemSchema,
-    responseField(await response.json(), "friendship", "friend request"),
+    responseField(await decodeSocialAccountResponse(response, "friend request"), "friendship"),
     "accepted friend request",
   );
 }
@@ -757,7 +777,7 @@ export async function declineFriendRequestFromApi(
 
   return parseSocialContract(
     FriendListItemSchema,
-    responseField(await response.json(), "friendship", "friend request"),
+    responseField(await decodeSocialAccountResponse(response, "friend request"), "friendship"),
     "declined friend request",
   );
 }
@@ -1030,7 +1050,7 @@ export async function declineRoomInvite(
   return parseSocialContract(RoomInviteSchema, response.invite, "declined invite bridge");
 }
 
-function responseField(value: unknown, key: string, label: string): unknown {
+function responseField(value: unknown, key: string): unknown {
   if (!value || typeof value !== "object" || !(key in value)) return undefined;
   return (value as Record<string, unknown>)[key];
 }
