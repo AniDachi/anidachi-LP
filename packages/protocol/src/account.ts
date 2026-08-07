@@ -93,6 +93,25 @@ export const FriendGroupsResponseSchema = z.strictObject({
   groups: z.array(FriendGroupSchema),
 });
 
+export const RecentPersonSchema = z.strictObject({
+  user: PublicProfileSchema,
+  lastWatchedAt: TimestampSchema,
+  sharedRoomCount: z.number().int().positive(),
+});
+
+export const RecentPeopleResponseSchema = z.strictObject({
+  meta: AccountResponseMetaSchema,
+  people: z.array(RecentPersonSchema),
+});
+
+export const SocialDirectorySchema = z.strictObject({
+  friends: z.array(FriendListItemSchema),
+  incomingRequests: z.array(FriendListItemSchema),
+  outgoingRequests: z.array(FriendListItemSchema),
+  groups: z.array(FriendGroupSchema),
+  recentPeople: z.array(RecentPersonSchema),
+});
+
 export const InviteTargetsSchema = z.strictObject({
   friends: z.array(FriendListItemSchema),
   groups: z.array(FriendGroupSchema),
@@ -135,7 +154,7 @@ export const AcceptedRoomInviteResponseSchema = z.strictObject({
 });
 
 export const SocialSnapshotSchema = z.strictObject({
-  targets: InviteTargetsSchema,
+  directory: SocialDirectorySchema,
   invites: RoomInvitesResponseSchema,
 });
 
@@ -216,6 +235,9 @@ export type FriendListItem = z.infer<typeof FriendListItemSchema>;
 export type FriendGroup = z.infer<typeof FriendGroupSchema>;
 export type FriendListResponse = z.infer<typeof FriendListResponseSchema>;
 export type FriendGroupsResponse = z.infer<typeof FriendGroupsResponseSchema>;
+export type RecentPerson = z.infer<typeof RecentPersonSchema>;
+export type RecentPeopleResponse = z.infer<typeof RecentPeopleResponseSchema>;
+export type SocialDirectory = z.infer<typeof SocialDirectorySchema>;
 export type InviteTargets = z.infer<typeof InviteTargetsSchema>;
 export type RoomInvite = z.infer<typeof RoomInviteSchema>;
 export type RoomInvitesResponse = z.infer<typeof RoomInvitesResponseSchema>;
