@@ -22,9 +22,10 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.PRODUCTION_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3
         with:
-          version: latest
+          # Keep production on the same staging-verified CLI release.
+          version: 2.111.0
       - name: Link production project
         run: supabase --workdir apps/web link --project-ref "$SUPABASE_PROJECT_ID"
       - name: Show pending migrations (dry run)
