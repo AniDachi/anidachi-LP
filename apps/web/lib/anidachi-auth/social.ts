@@ -1,4 +1,5 @@
-import { createHash, randomBytes } from "crypto";
+import { createHash, randomBytes, randomUUID } from "crypto";
+import type { RecentPerson } from "@anidachi/protocol";
 import { db, getRoomById, getUserById, type UserRow } from "./db";
 import { getPlanEntitlements } from "./plan-entitlements";
 
@@ -43,6 +44,25 @@ export type RecentPeopleHiddenRow = {
   hidden_at: string;
 };
 
+export type RecentPeopleCheckpointEvidenceRow = {
+  session_id: string;
+  user_id: string;
+  room_id: string;
+  observed_at: string;
+};
+
+export type RecentPeopleEvidence = {
+  userId: string;
+  lastWatchedAt: string;
+  sharedRoomCount: number;
+};
+
+type RecentPeopleAggregateRow = {
+  user_id: string;
+  last_watched_at: string;
+  shared_room_count: number;
+};
+
 export type FriendGroupRow = {
   id: string;
   owner_user_id: string;
@@ -50,6 +70,16 @@ export type FriendGroupRow = {
   archived_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type FriendGroupCreateOutcomeRow = {
+  outcome: "created" | "existing" | "limit_reached";
+  group_id: string | null;
+  group_owner_user_id: string | null;
+  group_name: string | null;
+  group_archived_at: string | null;
+  group_created_at: string | null;
+  group_updated_at: string | null;
 };
 
 export type FriendGroupMemberRow = {
@@ -110,13 +140,6 @@ export type FriendListItem = {
   requestedAt: string;
   respondedAt: string | null;
   updatedAt: string;
-};
-
-export type RecentPerson = {
-  user: PublicProfile;
-  lastWatchedAt: string;
-  sharedRoomCount: number;
-  relationshipStatus: FriendshipStatus | "none";
 };
 
 export type FriendInviteLink = {
@@ -194,6 +217,53 @@ export function cleanInviteMessage(value: unknown): string | null {
 
 export function friendshipPairKey(userA: string, userB: string): [string, string] {
   return userA < userB ? [userA, userB] : [userB, userA];
+}
+
+export function isRecentRelationshipEligible(status: FriendshipStatus | undefined): boolean {
+  return status === undefined || status === "declined" || status === "removed";
+}
+
+export function deriveRecentPeopleEvidence(
+  viewerUserId: string,
+  checkpoints: readonly RecentPeopleCheckpointEvidenceRow[],
+): RecentPeopleEvidence[] {
+  const viewerEvidenceBySessionRoom = new Map<string, string>();
+  for (const checkpoint of checkpoints) {
+    if (checkpoint.user_id !== viewerUserId || !checkpoint.room_id) continue;
+    const key = `${checkpoint.session_id}\u0000${checkpoint.room_id}`;
+    const current = viewerEvidenceBySessionRoom.get(key);
+    if (!current || checkpoint.observed_at > current) {
+      viewerEvidenceBySessionRoom.set(key, checkpoint.observed_at);
+    }
+  }
+
+  const aggregate = new Map<string, { lastWatchedAt: string; roomIds: Set<string> }>();
+  for (const checkpoint of checkpoints) {
+    if (checkpoint.user_id === viewerUserId || !checkpoint.room_id) continue;
+    const key = `${checkpoint.session_id}\u0000${checkpoint.room_id}`;
+    const viewerObservedAt = viewerEvidenceBySessionRoom.get(key);
+    if (!viewerObservedAt) continue;
+
+    const sharedObservedAt = checkpoint.observed_at > viewerObservedAt
+      ? checkpoint.observed_at
+      : viewerObservedAt;
+    const current = aggregate.get(checkpoint.user_id);
+    if (!current) {
+      aggregate.set(checkpoint.user_id, {
+        lastWatchedAt: sharedObservedAt,
+        roomIds: new Set([checkpoint.room_id]),
+      });
+      continue;
+    }
+    current.roomIds.add(checkpoint.room_id);
+    if (sharedObservedAt > current.lastWatchedAt) current.lastWatchedAt = sharedObservedAt;
+  }
+
+  return Array.from(aggregate, ([userId, evidence]) => ({
+    userId,
+    lastWatchedAt: evidence.lastWatchedAt,
+    sharedRoomCount: evidence.roomIds.size,
+  })).sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt));
 }
 
 export function isUuid(value: string): boolean {
@@ -392,6 +462,69 @@ export class SocialApiError extends Error {
   }
 }
 
+export function friendRequestConflictResolution(
+  requesterUserId: string,
+  friendship: FriendshipRow,
+): "return-current" | "accept-reciprocal" | "blocked" {
+  if (
+    friendship.requester_user_id !== requesterUserId &&
+    friendship.addressee_user_id !== requesterUserId
+  ) {
+    throw new Error("Friendship does not include requester");
+  }
+  if (friendship.status === "blocked") return "blocked";
+  if (
+    friendship.status === "pending" &&
+    friendship.addressee_user_id === requesterUserId
+  ) {
+    return "accept-reciprocal";
+  }
+  return "return-current";
+}
+
+export function resolveFriendRequestTransitionReread(
+  viewerUserId: string,
+  friendship: FriendshipRow | null,
+  expectedStatus: "accepted" | "declined",
+): FriendshipRow {
+  if (!friendship) throw new SocialApiError(404, "Friend request not found");
+  if (friendship.addressee_user_id !== viewerUserId) {
+    throw new SocialApiError(403, "Only the addressee can respond to this request");
+  }
+  if (friendship.status !== expectedStatus) {
+    throw new SocialApiError(409, "Friend request was already resolved");
+  }
+  return friendship;
+}
+
+export function resolveFriendGroupCreateOutcome(
+  result: FriendGroupCreateOutcomeRow | null,
+  plan: string,
+): FriendGroupRow {
+  if (result?.outcome === "limit_reached") {
+    throw new SocialApiError(403, `Group limit reached for ${plan}`);
+  }
+  if (
+    !result ||
+    (result.outcome !== "created" && result.outcome !== "existing") ||
+    !result.group_id ||
+    !result.group_owner_user_id ||
+    !result.group_name ||
+    !result.group_created_at ||
+    !result.group_updated_at
+  ) {
+    throw new Error("Failed to create group: invalid database response");
+  }
+  return {
+    id: result.group_id,
+    owner_user_id: result.group_owner_user_id,
+    name: result.group_name,
+    archived_at: result.group_archived_at,
+    created_at: result.group_created_at,
+    updated_at: result.group_updated_at,
+  };
+}
+
 export async function listFriends(viewerUserId: string): Promise<{
   friends: FriendListItem[];
   incomingRequests: FriendListItem[];
@@ -488,12 +621,54 @@ export async function sendFriendRequest(params: {
     updated_at: now,
   };
 
-  const query = existing
-    ? db().from("friendships").update(payload).eq("id", existing.id)
-    : db().from("friendships").insert(payload);
-
-  const { data, error } = await query.select().single();
-  if (error) throw new Error(`Failed to send friend request: ${error.message}`);
+  const result = existing
+    ? await db()
+        .from("friendships")
+        .update(payload)
+        .eq("id", existing.id)
+        .in("status", ["declined", "removed"])
+        .select()
+        .maybeSingle()
+    : await db().from("friendships").insert(payload).select().single();
+  const { data, error } = result;
+  if (error) {
+    if (error.code === UNIQUE_VIOLATION) {
+      const canonical = await getFriendshipBetween(
+        params.requesterUserId,
+        params.addresseeUserId,
+      );
+      if (!canonical) {
+        throw new Error("Failed to resolve concurrent friend request");
+      }
+      const resolution = friendRequestConflictResolution(
+        params.requesterUserId,
+        canonical,
+      );
+      if (resolution === "blocked") {
+        throw new SocialApiError(403, "This relationship is blocked");
+      }
+      if (resolution === "accept-reciprocal") {
+        return acceptFriendRequest(params.requesterUserId, canonical.id);
+      }
+      return itemForFriendship(params.requesterUserId, canonical);
+    }
+    throw new Error(`Failed to send friend request: ${error.message}`);
+  }
+  if (!data && existing) {
+    const canonical = await getFriendshipBetween(
+      params.requesterUserId,
+      params.addresseeUserId,
+    );
+    if (!canonical) throw new Error("Failed to resolve concurrent friend request");
+    const resolution = friendRequestConflictResolution(params.requesterUserId, canonical);
+    if (resolution === "blocked") {
+      throw new SocialApiError(403, "This relationship is blocked");
+    }
+    if (resolution === "accept-reciprocal") {
+      return acceptFriendRequest(params.requesterUserId, canonical.id);
+    }
+    return itemForFriendship(params.requesterUserId, canonical);
+  }
   return itemForFriendship(params.requesterUserId, data as FriendshipRow);
 }
 
@@ -677,27 +852,28 @@ export async function acceptFriendRequest(
 ): Promise<FriendListItem> {
   assertUuid(viewerUserId, "viewerUserId");
   assertUuid(friendshipId, "requestId");
-  const friendship = await getFriendshipById(friendshipId);
-  if (!friendship) throw new SocialApiError(404, "Friend request not found");
-  if (friendship.addressee_user_id !== viewerUserId) {
-    throw new SocialApiError(403, "Only the addressee can accept this request");
-  }
-  if (friendship.status !== "pending") {
-    throw new SocialApiError(409, "Friend request is not pending");
-  }
-
+  const now = new Date().toISOString();
   const { data, error } = await db()
     .from("friendships")
     .update({
       status: "accepted",
-      responded_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      responded_at: now,
+      updated_at: now,
     })
     .eq("id", friendshipId)
+    .eq("addressee_user_id", viewerUserId)
+    .eq("status", "pending")
     .select()
-    .single();
+    .maybeSingle();
   if (error) throw new Error(`Failed to accept friend request: ${error.message}`);
-  return itemForFriendship(viewerUserId, data as FriendshipRow);
+  const canonical = data
+    ? data as FriendshipRow
+    : resolveFriendRequestTransitionReread(
+        viewerUserId,
+        await getFriendshipById(friendshipId),
+        "accepted",
+      );
+  return itemForFriendship(viewerUserId, canonical);
 }
 
 export async function declineFriendRequest(
@@ -706,27 +882,28 @@ export async function declineFriendRequest(
 ): Promise<FriendListItem> {
   assertUuid(viewerUserId, "viewerUserId");
   assertUuid(friendshipId, "requestId");
-  const friendship = await getFriendshipById(friendshipId);
-  if (!friendship) throw new SocialApiError(404, "Friend request not found");
-  if (friendship.addressee_user_id !== viewerUserId) {
-    throw new SocialApiError(403, "Only the addressee can decline this request");
-  }
-  if (friendship.status !== "pending") {
-    throw new SocialApiError(409, "Friend request is not pending");
-  }
-
+  const now = new Date().toISOString();
   const { data, error } = await db()
     .from("friendships")
     .update({
       status: "declined",
-      responded_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      responded_at: now,
+      updated_at: now,
     })
     .eq("id", friendshipId)
+    .eq("addressee_user_id", viewerUserId)
+    .eq("status", "pending")
     .select()
-    .single();
+    .maybeSingle();
   if (error) throw new Error(`Failed to decline friend request: ${error.message}`);
-  return itemForFriendship(viewerUserId, data as FriendshipRow);
+  const canonical = data
+    ? data as FriendshipRow
+    : resolveFriendRequestTransitionReread(
+        viewerUserId,
+        await getFriendshipById(friendshipId),
+        "declined",
+      );
+  return itemForFriendship(viewerUserId, canonical);
 }
 
 export async function removeFriendship(
@@ -816,75 +993,55 @@ export async function hideRecentPerson(
 }
 
 export async function listRecentPeople(viewerUserId: string): Promise<RecentPerson[]> {
-  const { data: memberships, error: membershipError } = await db()
-    .from("room_members")
-    .select("room_id, joined_at")
-    .eq("user_id", viewerUserId)
-    .order("joined_at", { ascending: false })
-    .limit(100);
-  if (membershipError) {
-    throw new Error(`Failed to load viewer room memberships: ${membershipError.message}`);
-  }
-
-  const roomIds = Array.from(
-    new Set(((memberships as { room_id: string }[] | null) ?? []).map((row) => row.room_id))
-  );
-  if (roomIds.length === 0) return [];
-
-  const [{ data: otherMembers, error: memberError }, hiddenRows, relationships] =
+  assertUuid(viewerUserId, "viewerUserId");
+  const [{ data: evidenceRows, error: evidenceError }, hiddenRows, relationships] =
     await Promise.all([
-      db()
-        .from("room_members")
-        .select("room_id, user_id, joined_at")
-        .in("room_id", roomIds)
-        .neq("user_id", viewerUserId),
+      db().rpc("list_recent_people_evidence", {
+        p_viewer_user_id: viewerUserId,
+      }),
       listHiddenRecentPeople(viewerUserId),
       listFriendshipsForViewer(viewerUserId),
     ]);
-  if (memberError) throw new Error(`Failed to load recent people: ${memberError.message}`);
+  if (evidenceError) {
+    throw new Error(`Failed to load recent watch evidence: ${evidenceError.message}`);
+  }
 
   const hidden = new Set(hiddenRows.map((row) => row.hidden_user_id));
   const relationshipByUserId = new Map(
     relationships.map((relationship) => [otherUserId(viewerUserId, relationship), relationship])
   );
 
-  const aggregate = new Map<string, { lastWatchedAt: string; roomIds: Set<string> }>();
-  for (const member of (otherMembers as { room_id: string; user_id: string; joined_at: string }[] | null) ?? []) {
-    if (hidden.has(member.user_id)) continue;
-    const relationship = relationshipByUserId.get(member.user_id);
-    if (relationship?.status === "blocked") continue;
-    const current = aggregate.get(member.user_id);
-    if (!current) {
-      aggregate.set(member.user_id, {
-        lastWatchedAt: member.joined_at,
-        roomIds: new Set([member.room_id]),
-      });
-      continue;
-    }
-    current.roomIds.add(member.room_id);
-    if (member.joined_at > current.lastWatchedAt) current.lastWatchedAt = member.joined_at;
-  }
+  const evidence = ((evidenceRows as RecentPeopleAggregateRow[] | null) ?? [])
+    .map((row) => ({
+      userId: row.user_id,
+      lastWatchedAt: row.last_watched_at,
+      sharedRoomCount: row.shared_room_count,
+    }))
+    .filter((person) => {
+      if (hidden.has(person.userId)) return false;
+      const relationship = relationshipByUserId.get(person.userId);
+      return isRecentRelationshipEligible(relationship?.status);
+    });
 
-  const userIds = Array.from(aggregate.keys());
+  const userIds = evidence.map((person) => person.userId);
+  if (userIds.length === 0) return [];
   const [profiles, users] = await Promise.all([
     getProfilesByUserIds(userIds),
     getUsersByIds(userIds),
   ]);
 
-  return userIds
-    .map((userId) => {
-      const relationship = relationshipByUserId.get(userId);
-      const recent = aggregate.get(userId);
-      if (!recent) return null;
+  return evidence
+    .map((recent) => {
       return {
-        user: publicProfileFromRows(userId, profiles.get(userId), users.get(userId)),
+        user: publicProfileFromRows(
+          recent.userId,
+          profiles.get(recent.userId),
+          users.get(recent.userId),
+        ),
         lastWatchedAt: recent.lastWatchedAt,
-        sharedRoomCount: recent.roomIds.size,
-        relationshipStatus: relationship?.status ?? "none",
+        sharedRoomCount: recent.sharedRoomCount,
       } satisfies RecentPerson;
     })
-    .filter((person): person is RecentPerson => person !== null)
-    .sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt))
     .slice(0, 50);
 }
 
@@ -979,34 +1136,37 @@ async function friendGroupViewFromRow(group: FriendGroupRow): Promise<FriendGrou
 export async function createFriendGroup(params: {
   ownerUserId: string;
   name: string;
+  clientRequestId?: string;
 }): Promise<FriendGroup> {
   assertUuid(params.ownerUserId, "ownerUserId");
+  const groupId = params.clientRequestId ?? randomUUID();
+  assertUuid(groupId, "clientRequestId");
   const user = await getUserById(params.ownerUserId);
   if (!user) throw new SocialApiError(404, "User not found");
 
-  await archiveGroupsOverLimit(params.ownerUserId);
-  const activeCount = await countActiveGroups(params.ownerUserId);
   const maxGroups = getPlanEntitlements(user.plan).account.maxOwnedGroups;
-  if (activeCount >= maxGroups) {
-    throw new SocialApiError(403, `Group limit reached for ${user.plan}`);
+  const { data, error } = await db().rpc("create_friend_group_atomic", {
+    p_group_id: groupId,
+    p_owner_user_id: params.ownerUserId,
+    p_name: params.name,
+    p_max_groups: maxGroups,
+  });
+  if (error) {
+    if (error.message.includes("friend_group_request_id_conflict")) {
+      throw new SocialApiError(409, "Group request id is already in use");
+    }
+    throw new Error(`Failed to create group: ${error.message}`);
   }
 
-  const { data, error } = await db()
-    .from("friend_groups")
-    .insert({
-      owner_user_id: params.ownerUserId,
-      name: params.name,
-    })
-    .select()
-    .single();
-  if (error) throw new Error(`Failed to create group: ${error.message}`);
+  const result = (Array.isArray(data) ? data[0] : data) as FriendGroupCreateOutcomeRow | null;
+  const group = resolveFriendGroupCreateOutcome(result, user.plan);
 
   return {
-    id: (data as FriendGroupRow).id,
-    name: (data as FriendGroupRow).name,
-    archivedAt: (data as FriendGroupRow).archived_at,
-    createdAt: (data as FriendGroupRow).created_at,
-    updatedAt: (data as FriendGroupRow).updated_at,
+    id: group.id,
+    name: group.name,
+    archivedAt: group.archived_at,
+    createdAt: group.created_at,
+    updatedAt: group.updated_at,
     members: [],
   };
 }
@@ -1500,16 +1660,6 @@ async function touchFriendGroupUpdatedAt(
     .single();
   if (error) throw new Error(`Failed to update group timestamp: ${error.message}`);
   return data as FriendGroupRow;
-}
-
-async function countActiveGroups(ownerUserId: string): Promise<number> {
-  const { count, error } = await db()
-    .from("friend_groups")
-    .select("id", { count: "exact", head: true })
-    .eq("owner_user_id", ownerUserId)
-    .is("archived_at", null);
-  if (error) throw new Error(`Failed to count active groups: ${error.message}`);
-  return count ?? 0;
 }
 
 async function archiveGroupsOverLimit(ownerUserId: string): Promise<void> {

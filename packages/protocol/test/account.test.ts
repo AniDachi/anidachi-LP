@@ -3,7 +3,10 @@ import {
   ACCOUNT_RESPONSE_SCHEMA_VERSION,
   FriendGroupsResponseSchema,
   FriendListResponseSchema,
+  RecentPeopleResponseSchema,
+  RecentPersonSchema,
   RoomInvitesResponseSchema,
+  SocialDirectorySchema,
   SocialSnapshotSchema,
   WatchLibraryResponseSchema,
 } from "../src";
@@ -41,6 +44,11 @@ const group = {
   createdAt: NOW,
   updatedAt: NOW,
   members: [{ user: userB, addedAt: NOW }],
+};
+const recentPerson = {
+  user: userB,
+  lastWatchedAt: NOW,
+  sharedRoomCount: 3,
 };
 const invite = {
   id: INVITE_ID,
@@ -130,7 +138,38 @@ function watchLibraryFixture() {
 }
 
 describe("account response contracts", () => {
-  it("round-trips matching social records across public read schemas", () => {
+  it("accepts a recent person with public profile and positive shared room count", () => {
+    expect(RecentPersonSchema.parse(recentPerson)).toEqual(recentPerson);
+    expect(() =>
+      RecentPersonSchema.parse({ ...recentPerson, sharedRoomCount: 0 }),
+    ).toThrow();
+  });
+
+  it("requires versioned account metadata for recent people responses", () => {
+    expect(() =>
+      RecentPeopleResponseSchema.parse({ people: [recentPerson] }),
+    ).toThrow();
+    expect(
+      RecentPeopleResponseSchema.parse({ meta, people: [recentPerson] }),
+    ).toEqual({ meta, people: [recentPerson] });
+  });
+
+  it("contains each social directory section exactly once", () => {
+    const directory = {
+      friends: [friend],
+      incomingRequests: [],
+      outgoingRequests: [],
+      groups: [group],
+      recentPeople: [recentPerson],
+    };
+
+    expect(SocialDirectorySchema.parse(directory)).toEqual(directory);
+    expect(() =>
+      SocialDirectorySchema.parse({ ...directory, blocked: [] }),
+    ).toThrow();
+  });
+
+  it("accepts directory social snapshots and rejects legacy targets snapshots", () => {
     const friends = FriendListResponseSchema.parse({
       meta,
       friends: [friend],
@@ -147,13 +186,31 @@ describe("account response contracts", () => {
 
     expect(
       SocialSnapshotSchema.parse({
-        targets: { friends: friends.friends, groups: groups.groups },
+        directory: {
+          friends: friends.friends,
+          incomingRequests: [],
+          outgoingRequests: [],
+          groups: groups.groups,
+          recentPeople: [recentPerson],
+        },
         invites,
       }),
     ).toEqual({
-      targets: { friends: [friend], groups: [group] },
+      directory: {
+        friends: [friend],
+        incomingRequests: [],
+        outgoingRequests: [],
+        groups: [group],
+        recentPeople: [recentPerson],
+      },
       invites,
     });
+    expect(() =>
+      SocialSnapshotSchema.parse({
+        targets: { friends: friends.friends, groups: groups.groups },
+        invites,
+      }),
+    ).toThrow();
     expect(ACCOUNT_RESPONSE_SCHEMA_VERSION).toBe(1);
   });
 
