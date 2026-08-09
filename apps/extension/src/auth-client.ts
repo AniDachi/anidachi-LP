@@ -1,14 +1,16 @@
-import { WEB_HTTP_BASE } from "./constants";
+import { clearCachedAccountInboxForUser } from "./account-inbox-cache";
 import {
+  type AuthenticatedUser,
   clearStoredAuthTokens,
+  type ExtensionAuthTokens,
   getStoredAuthTokens,
   normalizeAuthenticatedUser,
   normalizeExtensionAuthTokens,
   setStoredAuthTokens,
-  type AuthenticatedUser,
-  type ExtensionAuthTokens,
 } from "./auth-tokens";
+import { WEB_HTTP_BASE } from "./constants";
 import { recordDiagnosticEvent } from "./diagnostic-log";
+import { clearCachedSocialSnapshotForUser } from "./social-snapshot-cache";
 
 const AUTH_CALLBACK_PATH = "auth";
 const LOGOUT_CALLBACK_PATH = "logout";
@@ -66,6 +68,7 @@ export interface ExtensionSessionRefreshDependencies {
   resolveUser: (accessToken: string) => Promise<AuthenticatedUser | null>;
   setStored: (tokens: ExtensionAuthTokens) => Promise<void>;
   clearStored: () => Promise<void>;
+  clearAccountData?: (userId: string) => Promise<void>;
 }
 
 export interface ExtensionSessionDependencies {
@@ -216,12 +219,7 @@ export async function exchangeExtensionAuthCode(
   });
 
   if (!response.ok) {
-    recordDiagnosticEvent(
-      "auth.exchange",
-      "failed",
-      { status: response.status },
-      "warn",
-    );
+    recordDiagnosticEvent("auth.exchange", "failed", { status: response.status }, "warn");
     throw new Error(`Extension auth exchange failed: ${response.status}`);
   }
 
@@ -270,6 +268,7 @@ const defaultRefreshDependencies: ExtensionSessionRefreshDependencies = {
   resolveUser: fetchAuthenticatedUser,
   setStored: setStoredAuthTokens,
   clearStored: clearStoredAuthTokens,
+  clearAccountData: clearCachedAccountDataForUser,
 };
 
 let sessionRefreshInFlight: Promise<ExtensionAuthTokens | null> | null = null;
@@ -301,6 +300,7 @@ async function performExtensionSessionRefresh(
       "warn",
     );
     await dependencies.clearStored();
+    await dependencies.clearAccountData?.(stored.user.id);
     return null;
   }
 
@@ -382,11 +382,13 @@ async function revokeExtensionRefreshToken(refreshToken: string): Promise<void> 
 interface ConditionalSessionClearDependencies {
   getStored: () => Promise<ExtensionAuthTokens | null>;
   clearStored: () => Promise<void>;
+  clearAccountData?: (userId: string) => Promise<void>;
 }
 
 const defaultConditionalClearDependencies: ConditionalSessionClearDependencies = {
   getStored: getStoredAuthTokens,
   clearStored: clearStoredAuthTokens,
+  clearAccountData: clearCachedAccountDataForUser,
 };
 
 export async function clearExtensionSessionIfCurrent(
@@ -399,10 +401,20 @@ export async function clearExtensionSessionIfCurrent(
   }
 
   await dependencies.clearStored();
+  await dependencies.clearAccountData?.(current.user.id);
   return true;
 }
 
-export async function fetchAuthenticatedUser(accessToken: string): Promise<AuthenticatedUser | null> {
+async function clearCachedAccountDataForUser(userId: string): Promise<void> {
+  await Promise.allSettled([
+    clearCachedSocialSnapshotForUser(userId),
+    clearCachedAccountInboxForUser(userId),
+  ]);
+}
+
+export async function fetchAuthenticatedUser(
+  accessToken: string,
+): Promise<AuthenticatedUser | null> {
   let response: Response;
   try {
     response = await fetch(buildWebUrl("/api/me"), {
@@ -413,11 +425,18 @@ export async function fetchAuthenticatedUser(accessToken: string): Promise<Authe
     return null;
   }
   if (!response.ok) {
-    recordDiagnosticEvent("auth.me", "failed with bearer token", { status: response.status }, "warn");
+    recordDiagnosticEvent(
+      "auth.me",
+      "failed with bearer token",
+      { status: response.status },
+      "warn",
+    );
     return null;
   }
 
-  const body = (await response.json().catch(() => null)) as { user?: unknown } | null;
+  const body = (await response.json().catch(() => null)) as {
+    user?: unknown;
+  } | null;
   return normalizeAuthenticatedUser(body?.user);
 }
 
@@ -472,11 +491,18 @@ export async function fetchWebsiteSessionProbe(
   }
 
   if (!response.ok) {
-    recordDiagnosticEvent("auth.website-probe", "unexpected status", { status: response.status }, "warn");
+    recordDiagnosticEvent(
+      "auth.website-probe",
+      "unexpected status",
+      { status: response.status },
+      "warn",
+    );
     return { status: "unknown" };
   }
 
-  const body = (await response.json().catch(() => null)) as { user?: unknown } | null;
+  const body = (await response.json().catch(() => null)) as {
+    user?: unknown;
+  } | null;
   const user = normalizeAuthenticatedUser(body?.user);
   if (!user) {
     recordDiagnosticEvent("auth.website-probe", "malformed user", undefined, "warn");
@@ -518,7 +544,7 @@ async function ensureWebsiteSessionStillMatches(
   );
   await revokeExtensionRefreshToken(stored.refreshToken).catch(() => undefined);
   const cleared = await clearExtensionSessionIfCurrent(stored.refreshToken);
-  return !cleared && Boolean(await getStoredAuthTokens()) ? "matches" : "cleared";
+  return !cleared && (await getStoredAuthTokens()) ? "matches" : "cleared";
 }
 
 export async function getCachedExtensionSession(): Promise<ExtensionAuthTokens | null> {
@@ -590,8 +616,7 @@ async function performWebsiteSessionReconciliation(
 
 export function reconcileExtensionSessionAgainstWebsite(
   options: { adoptIfMissing?: boolean } = {},
-  dependencies: WebsiteSessionReconciliationDependencies =
-    defaultWebsiteReconciliationDependencies,
+  dependencies: WebsiteSessionReconciliationDependencies = defaultWebsiteReconciliationDependencies,
 ): Promise<ExtensionAuthTokens | null> {
   if (websiteReconciliationInFlight) {
     return websiteReconciliationInFlight;
@@ -618,7 +643,10 @@ async function runWebsiteAuthFlow(interactive: boolean): Promise<ExtensionAuthTo
   const redirectUri = chrome.identity.getRedirectURL(AUTH_CALLBACK_PATH);
   const state = cryptoRandomState();
   const url = buildExtensionConnectUrl(redirectUri, state);
-  const redirectUrl = await chrome.identity.launchWebAuthFlow({ url, interactive });
+  const redirectUrl = await chrome.identity.launchWebAuthFlow({
+    url,
+    interactive,
+  });
   if (!redirectUrl) {
     if (interactive) throw new Error("Extension auth flow was cancelled");
     return null;
@@ -699,16 +727,23 @@ async function attemptWebsiteLogoutFlow(): Promise<void> {
 }
 
 export async function signOutWithWebsite(): Promise<void> {
-  await runWebsiteSignOutSequence({
-    getStoredTokens: getStoredAuthTokens,
-    revokeRefreshToken: revokeExtensionRefreshToken,
-    attemptWebsiteLogout: attemptWebsiteLogoutFlow,
-    clearTokens: async (expectedRefreshToken) => {
-      if (expectedRefreshToken) {
-        await clearExtensionSessionIfCurrent(expectedRefreshToken);
-      }
-    },
-  });
+  const stored = await getStoredAuthTokens();
+  try {
+    await runWebsiteSignOutSequence({
+      getStoredTokens: async () => stored,
+      revokeRefreshToken: revokeExtensionRefreshToken,
+      attemptWebsiteLogout: attemptWebsiteLogoutFlow,
+      clearTokens: async (expectedRefreshToken) => {
+        if (expectedRefreshToken) {
+          await clearExtensionSessionIfCurrent(expectedRefreshToken);
+        }
+      },
+    });
+  } finally {
+    if (stored) {
+      await clearCachedAccountDataForUser(stored.user.id);
+    }
+  }
 }
 
 export async function getFastSessionAndRefreshInBackground({
@@ -747,10 +782,14 @@ export async function handleWebsiteAuthCookieChange(
   }
 
   if (shouldSyncExtensionSessionForWebsiteCookieChange(changeInfo)) {
-    recordDiagnosticEvent("auth.cookie", "website refresh cookie changed; syncing extension session", {
-      cause: changeInfo.cause,
-      domain: changeInfo.cookie.domain,
-    });
+    recordDiagnosticEvent(
+      "auth.cookie",
+      "website refresh cookie changed; syncing extension session",
+      {
+        cause: changeInfo.cause,
+        domain: changeInfo.cookie.domain,
+      },
+    );
     await reconcileExtensionSessionAgainstWebsite().catch(() => undefined);
   }
 }

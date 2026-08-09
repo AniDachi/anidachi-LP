@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ACCOUNT_RESPONSE_SCHEMA_VERSION,
+  AccountInboxResponseSchema,
   FriendGroupsResponseSchema,
   FriendListResponseSchema,
   RecentPeopleResponseSchema,
@@ -20,6 +21,7 @@ const GROUP_ID = "44444444-4444-4444-8444-444444444444";
 const INVITE_ID = "55555555-5555-4555-8555-555555555555";
 const ROOM_ID = "room-1";
 const SESSION_ID = "77777777-7777-4777-8777-777777777777";
+const MISSED_INVITE_ID = "88888888-8888-4888-8888-888888888888";
 
 const meta = { serverTime: NOW, schemaVersion: 1 as const };
 const userB = {
@@ -154,6 +156,112 @@ describe("account response contracts", () => {
     ).toEqual({ meta, people: [recentPerson] });
   });
 
+  it("accepts an owner-bound account inbox with active, missed, and friend-request items", () => {
+    const response = {
+      meta: { ...meta, ownerUserId: USER_A },
+      items: [
+        {
+          kind: "room-invite" as const,
+          inviteId: INVITE_ID,
+          roomId: ROOM_ID,
+          sender: userB,
+          targetKind: "direct" as const,
+          targetGroupId: null,
+          targetGroupName: null,
+          message: null,
+          roomTitle: "One-Punch Man",
+          sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+          videoFingerprint: "youtube:abcdefghijk",
+          state: "active" as const,
+          createdAt: NOW,
+          activityAt: NOW,
+          seenAt: null,
+          missedAt: null,
+        },
+        {
+          kind: "room-invite" as const,
+          inviteId: MISSED_INVITE_ID,
+          roomId: "room-ended",
+          sender: userB,
+          targetKind: "group" as const,
+          targetGroupId: GROUP_ID,
+          targetGroupName: "Friday anime",
+          message: "Join us",
+          roomTitle: null,
+          sourceUrl: null,
+          videoFingerprint: null,
+          state: "missed" as const,
+          createdAt: "2026-08-06T10:00:00.000Z",
+          activityAt: "2026-08-06T11:00:00.000Z",
+          seenAt: NOW,
+          missedAt: "2026-08-06T11:00:00.000Z",
+        },
+        {
+          kind: "friend-request" as const,
+          friendshipId: FRIENDSHIP_ID,
+          sender: userB,
+          state: "pending" as const,
+          createdAt: NOW,
+          activityAt: NOW,
+          seenAt: null,
+        },
+      ],
+      counts: {
+        unseen: 2,
+        actionable: 2,
+        activeRoomInvites: 1,
+        pendingFriendRequests: 1,
+      },
+      nextCursor: null,
+    };
+
+    expect(AccountInboxResponseSchema.parse(response)).toEqual(response);
+  });
+
+  it("rejects account inboxes without an owner or with inconsistent room lifecycle fields", () => {
+    const activeInvite = {
+      kind: "room-invite" as const,
+      inviteId: INVITE_ID,
+      roomId: ROOM_ID,
+      sender: userB,
+      targetKind: "direct" as const,
+      targetGroupId: null,
+      targetGroupName: null,
+      message: null,
+      roomTitle: null,
+      sourceUrl: null,
+      videoFingerprint: null,
+      state: "active" as const,
+      createdAt: NOW,
+      activityAt: NOW,
+      seenAt: null,
+      missedAt: null,
+    };
+    const counts = {
+      unseen: 1,
+      actionable: 1,
+      activeRoomInvites: 1,
+      pendingFriendRequests: 0,
+    };
+
+    expect(() =>
+      AccountInboxResponseSchema.parse({
+        meta,
+        items: [activeInvite],
+        counts,
+        nextCursor: null,
+      }),
+    ).toThrow();
+    expect(() =>
+      AccountInboxResponseSchema.parse({
+        meta: { ...meta, ownerUserId: USER_A },
+        items: [{ ...activeInvite, missedAt: NOW }],
+        counts,
+        nextCursor: null,
+      }),
+    ).toThrow();
+  });
+
   it("contains each social directory section exactly once", () => {
     const directory = {
       friends: [friend],
@@ -215,7 +323,9 @@ describe("account response contracts", () => {
   });
 
   it("parses a versioned watch library response", () => {
-    expect(() => WatchLibraryResponseSchema.parse(watchLibraryFixture())).not.toThrow();
+    expect(() =>
+      WatchLibraryResponseSchema.parse(watchLibraryFixture()),
+    ).not.toThrow();
   });
 
   it("accepts RFC3339 timestamps with an explicit UTC offset", () => {

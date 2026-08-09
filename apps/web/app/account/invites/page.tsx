@@ -14,5 +14,5 @@ export default async function AccountInvitesPage() {
   const session = await getSession();
   if (!session) redirect("/login?next=%2Faccount%2Finvites");
 
-  return <InvitesClient />;
+  return <InvitesClient key={session.userId} ownerUserId={session.userId} />;
 }

@@ -1,4 +1,5 @@
 import type {
+  AccountInboxResponse,
   FriendGroup,
   FriendListItem,
   RecentPerson,
@@ -11,6 +12,11 @@ import type {
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  getCachedAccountInboxForUser,
+  setCachedAccountInboxForUser,
+} from "../src/account-inbox-cache";
+import { listAccountInbox, markAccountInboxItemsSeen } from "../src/account-inbox-client";
 import type { AccountOwnedState } from "../src/account-sync";
 import {
   getCachedExtensionSession,
@@ -20,18 +26,18 @@ import {
 } from "../src/auth-client";
 import type { ExtensionAuthTokens } from "../src/auth-tokens";
 import {
+  mapSocialStateToPeoplePresentation,
   PopupApp,
   PopupInboxPanel,
   PopupNavigation,
-  mapSocialStateToPeoplePresentation,
-  popupActionableInboxCount,
+  popupInboxBadgeCount,
 } from "../src/popup-app";
+import { buildPopupInboxModel } from "../src/popup-people-model";
 import {
   PopupPeoplePanel,
   type PopupPeoplePanelProps,
   type PopupPeoplePresentationState,
 } from "../src/popup-people-panel";
-import { buildPopupInboxModel } from "../src/popup-people-model";
 import {
   acceptFriendRequest,
   createFriendGroup,
@@ -45,17 +51,17 @@ import {
   setCachedSocialSnapshotForUser,
 } from "../src/social-snapshot-cache";
 import {
-  createEmptyWatchProgressStore,
-  loadWatchProgressStoreForUser,
-  saveWatchProgressStoreForUser,
-} from "../src/watch-progress";
-import {
   getCachedWatchLibraryForUser,
   getWatchLibrarySyncLedger,
   listWatchLibrary,
   markWatchLibraryEntriesSynced,
   setCachedWatchLibraryForUser,
 } from "../src/watch-library-client";
+import {
+  createEmptyWatchProgressStore,
+  loadWatchProgressStoreForUser,
+  saveWatchProgressStoreForUser,
+} from "../src/watch-progress";
 
 vi.mock("../src/auth-client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../src/auth-client")>()),
@@ -63,6 +69,18 @@ vi.mock("../src/auth-client", async (importOriginal) => ({
   requestCurrentExtensionSession: vi.fn(),
   requestSilentWebsiteSignIn: vi.fn(),
   requestWebsiteSignIn: vi.fn(),
+}));
+
+vi.mock("../src/account-inbox-client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/account-inbox-client")>()),
+  listAccountInbox: vi.fn(),
+  markAccountInboxItemsSeen: vi.fn(),
+}));
+
+vi.mock("../src/account-inbox-cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/account-inbox-cache")>()),
+  getCachedAccountInboxForUser: vi.fn(),
+  setCachedAccountInboxForUser: vi.fn(),
 }));
 
 vi.mock("../src/social-client", async (importOriginal) => ({
@@ -101,6 +119,8 @@ const VIEWER_ID = "00000000-0000-4000-8000-000000000001";
 const RECENT_USER_ID = "00000000-0000-4000-8000-000000000002";
 const INCOMING_USER_ID = "00000000-0000-4000-8000-000000000003";
 const INCOMING_FRIENDSHIP_ID = "00000000-0000-4000-8000-000000000004";
+const INBOX_INVITE_ID = "00000000-0000-4000-8000-000000000005";
+const MISSED_INVITE_ID = "00000000-0000-4000-8000-000000000006";
 const TOKENS: ExtensionAuthTokens = {
   accessToken: "access-1",
   refreshToken: "refresh-1",
@@ -123,7 +143,11 @@ describe("PopupPeoplePanel", () => {
 
   it("defaults to Friends and exposes only Friends and Groups modes", async () => {
     const view = await renderPanel({
-      state: readyState(directory({ friends: [friend("friend", "friendship", "Friend", "accepted")] })),
+      state: readyState(
+        directory({
+          friends: [friend("friend", "friendship", "Friend", "accepted")],
+        }),
+      ),
     });
 
     const tabs = [...view.container.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
@@ -148,7 +172,9 @@ describe("PopupPeoplePanel", () => {
     const onAddFriend = vi.fn(async () => true);
     const view = await renderPanel({
       state: readyState(
-        directory({ recentPeople: [recent("recent-a", "Recent A"), recent("recent-b", "Recent B")] }),
+        directory({
+          recentPeople: [recent("recent-a", "Recent A"), recent("recent-b", "Recent B")],
+        }),
       ),
       onAddFriend,
     });
@@ -166,7 +192,11 @@ describe("PopupPeoplePanel", () => {
   it("shows quick group creation and read-only summaries without group editors", async () => {
     const onCreateGroup = vi.fn(async () => true);
     const view = await renderPanel({
-      state: readyState(directory({ groups: [group("group", null, "Friday crew", ["A", "B"])] })),
+      state: readyState(
+        directory({
+          groups: [group("group", null, "Friday crew", ["A", "B"])],
+        }),
+      ),
       onCreateGroup,
     });
 
@@ -203,28 +233,48 @@ describe("PopupPeoplePanel", () => {
 
   it("keeps signed-out, loading, error, stale, and empty presentation states explicit", async () => {
     const signedOut = await renderPanel({ state: { status: "signed-out" } });
-    expect(signedOut.container.querySelector('[data-state="signed-out"]')?.textContent).toContain("Sign in to see your people.");
+    expect(signedOut.container.querySelector('[data-state="signed-out"]')?.textContent).toContain(
+      "Sign in to see your people.",
+    );
     await unmount(signedOut.root);
 
     const loading = await renderPanel({ state: { status: "loading" } });
-    expect(loading.container.querySelector('[data-state="loading"]')?.textContent).toContain("Loading people...");
+    expect(loading.container.querySelector('[data-state="loading"]')?.textContent).toContain(
+      "Loading people...",
+    );
     await unmount(loading.root);
 
-    const error = await renderPanel({ state: { status: "error", errorMessage: "Could not load people." } });
-    expect(error.container.querySelector('[data-state="error"]')?.textContent).toContain("Could not load people.");
+    const error = await renderPanel({
+      state: { status: "error", errorMessage: "Could not load people." },
+    });
+    expect(error.container.querySelector('[data-state="error"]')?.textContent).toContain(
+      "Could not load people.",
+    );
     expect(getButton(error.container, "Retry")).not.toBeNull();
     await unmount(error.root);
 
     const cachedError = await renderPanel({
-      state: { status: "stale-error", directory: directory(), errorMessage: "Could not refresh people." },
+      state: {
+        status: "stale-error",
+        directory: directory(),
+        errorMessage: "Could not refresh people.",
+      },
     });
-    expect(cachedError.container.querySelector('[data-state="error"]')?.textContent).toContain("Could not refresh people.");
+    expect(cachedError.container.querySelector('[data-state="error"]')?.textContent).toContain(
+      "Could not refresh people.",
+    );
     expect(getButton(cachedError.container, "Retry")).not.toBeNull();
     await unmount(cachedError.root);
 
-    const stale = await renderPanel({ state: { status: "stale", directory: directory() } });
-    expect(stale.container.querySelector('[data-state="stale"]')?.textContent).toContain("Showing saved people while we reconnect.");
-    expect(stale.container.querySelector('[data-state="empty"]')?.textContent).toContain("No friends yet.");
+    const stale = await renderPanel({
+      state: { status: "stale", directory: directory() },
+    });
+    expect(stale.container.querySelector('[data-state="stale"]')?.textContent).toContain(
+      "Showing saved people while we reconnect.",
+    );
+    expect(stale.container.querySelector('[data-state="empty"]')?.textContent).toContain(
+      "No friends yet.",
+    );
     await unmount(stale.root);
   });
 
@@ -232,13 +282,17 @@ describe("PopupPeoplePanel", () => {
     const onAddFriend = vi.fn(async () => true);
     const view = await renderPanel({
       state: readyState(
-        directory({ recentPeople: [recent("recent-a", "Recent A"), recent("recent-b", "Recent B")] }),
+        directory({
+          recentPeople: [recent("recent-a", "Recent A"), recent("recent-b", "Recent B")],
+        }),
       ),
       pendingActionKey: "add-friend:recent-a",
       onAddFriend,
     });
 
-    const buttons = [...view.container.querySelectorAll<HTMLButtonElement>(".popup-people-add-button")];
+    const buttons = [
+      ...view.container.querySelectorAll<HTMLButtonElement>(".popup-people-add-button"),
+    ];
     expect(buttons).toHaveLength(2);
     expect(buttons[0]?.disabled).toBe(true);
     expect(buttons[0]?.textContent).toContain("Adding...");
@@ -263,7 +317,8 @@ describe("PopupPeoplePanel", () => {
   });
 
   it("preserves a failed group name and resets it only after explicit success", async () => {
-    const onCreateGroup = vi.fn<PopupPeoplePanelProps["onCreateGroup"]>()
+    const onCreateGroup = vi
+      .fn<PopupPeoplePanelProps["onCreateGroup"]>()
       .mockResolvedValueOnce(false)
       .mockResolvedValueOnce(true);
     const view = await renderPanel({ onCreateGroup });
@@ -323,27 +378,61 @@ describe("Popup People integration boundaries", () => {
       expected: PopupPeoplePresentationState;
     }> = [
       {
-        state: { status: "signed-out", ownerUserId: null, data: null, error: null },
+        state: {
+          status: "signed-out",
+          ownerUserId: null,
+          data: null,
+          error: null,
+        },
         expected: { status: "signed-out" },
       },
       {
-        state: { status: "loading", ownerUserId: "viewer-1", data: null, error: null },
+        state: {
+          status: "loading",
+          ownerUserId: "viewer-1",
+          data: null,
+          error: null,
+        },
         expected: { status: "loading" },
       },
       {
-        state: { status: "loading", ownerUserId: "viewer-1", data: snapshot, error: null },
+        state: {
+          status: "loading",
+          ownerUserId: "viewer-1",
+          data: snapshot,
+          error: null,
+        },
         expected: { status: "stale", directory: snapshot.directory },
       },
       {
-        state: { status: "error", ownerUserId: "viewer-1", data: null, error: "Offline" },
+        state: {
+          status: "error",
+          ownerUserId: "viewer-1",
+          data: null,
+          error: "Offline",
+        },
         expected: { status: "error", errorMessage: "Offline" },
       },
       {
-        state: { status: "error", ownerUserId: "viewer-1", data: snapshot, error: "Offline" },
-        expected: { status: "stale-error", directory: snapshot.directory, errorMessage: "Offline" },
+        state: {
+          status: "error",
+          ownerUserId: "viewer-1",
+          data: snapshot,
+          error: "Offline",
+        },
+        expected: {
+          status: "stale-error",
+          directory: snapshot.directory,
+          errorMessage: "Offline",
+        },
       },
       {
-        state: { status: "ready", ownerUserId: "viewer-1", data: snapshot, error: null },
+        state: {
+          status: "ready",
+          ownerUserId: "viewer-1",
+          data: snapshot,
+          error: null,
+        },
         expected: { status: "ready", directory: snapshot.directory },
       },
     ];
@@ -353,25 +442,25 @@ describe("Popup People integration boundaries", () => {
     }
   });
 
-  it("renders Watch, People, and Inbox with no People badge and the actionable Inbox count", async () => {
+  it("renders Watch, People, and Inbox with only the unseen Inbox count", async () => {
     const onSelect = vi.fn();
-    const snapshot = socialSnapshot({
-      directory: directory({
-        incomingRequests: [
-          friend("incoming", "friendship-incoming", "Incoming", "pending"),
-          friend("accepted", "friendship-accepted", "Accepted", "accepted"),
-        ],
-      }),
-      invites: roomInvites([
-        roomInvite("invite-pending", "pending"),
-        roomInvite("invite-declined", "declined"),
-        { ...roomInvite("invite-expired", "pending"), expiresAt: "2026-08-07T11:00:00.000Z" },
-      ]),
-    });
+    const inbox = accountInbox(
+      [
+        inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", null),
+        inboxRoomInvite(INBOX_INVITE_ID, "active", null),
+        inboxRoomInvite(MISSED_INVITE_ID, "missed", NOW),
+      ],
+      {
+        actionable: 2,
+        unseen: 2,
+        activeRoomInvites: 1,
+        pendingFriendRequests: 1,
+      },
+    );
     const view = await renderElement(
       <PopupNavigation
         activeTab="resources"
-        inboxCount={popupActionableInboxCount(buildPopupInboxModel(snapshot, Date.parse(NOW)))}
+        inboxCount={popupInboxBadgeCount(buildPopupInboxModel(inbox))}
         onSelect={onSelect}
         watchCount={7}
       />,
@@ -397,13 +486,16 @@ describe("Popup People integration boundaries", () => {
     const onDeclineFriendRequest = vi.fn();
     const onAcceptInvite = vi.fn();
     const onDeclineInvite = vi.fn();
-    const snapshot = socialSnapshot({
-      directory: directory({
-        incomingRequests: [friend("incoming", "friendship-incoming", "A very long incoming display name", "pending")],
-        outgoingRequests: [friend("outgoing", "friendship-outgoing", "Outgoing Person", "pending")],
-      }),
-      invites: roomInvites([roomInvite("invite-pending", "pending")]),
-    });
+    const inbox = accountInbox([
+      inboxFriendRequest(
+        INCOMING_FRIENDSHIP_ID,
+        INCOMING_USER_ID,
+        "A very long incoming display name",
+        NOW,
+      ),
+      inboxRoomInvite(INBOX_INVITE_ID, "active", NOW),
+      inboxRoomInvite(MISSED_INVITE_ID, "missed", NOW),
+    ]);
     const view = await renderElement(
       <PopupInboxPanel
         busyFriendRequestActionKey={null}
@@ -415,38 +507,46 @@ describe("Popup People integration boundaries", () => {
         onOpenDashboard={vi.fn()}
         onRefresh={vi.fn()}
         onSignIn={vi.fn()}
-        model={buildPopupInboxModel(snapshot, Date.parse(NOW))}
-        state={{ status: "ready", ownerUserId: "viewer-1", data: snapshot, error: null }}
+        model={buildPopupInboxModel(inbox)}
+        state={{
+          status: "ready",
+          ownerUserId: VIEWER_ID,
+          data: inbox,
+          error: null,
+        }}
       />,
     );
 
-    const headings = [...view.container.querySelectorAll(".popup-inbox-heading")].map(
-      (heading) => heading.textContent?.trim(),
+    const headings = [...view.container.querySelectorAll(".popup-inbox-heading")].map((heading) =>
+      heading.textContent?.trim(),
     );
-    expect(headings).toEqual(["Friend requests1", "Room invites1"]);
+    expect(headings).toEqual(["Friend requests1", "Room invites1", "Missed1"]);
     expect(view.container.textContent).not.toContain("Outgoing Person");
     expect(view.container.textContent).not.toContain("Outgoing requests");
 
-    await click(getButton(view.container, "Accept friend request from A very long incoming display name"));
-    await click(getButton(view.container, "Decline friend request from A very long incoming display name"));
+    await click(
+      getButton(view.container, "Accept friend request from A very long incoming display name"),
+    );
+    await click(
+      getButton(view.container, "Decline friend request from A very long incoming display name"),
+    );
     await click(getButton(view.container, "Join room invite from Room Host"));
     await click(getButton(view.container, "Decline room invite from Room Host"));
-    expect(onAcceptFriendRequest).toHaveBeenCalledWith("friendship-incoming");
-    expect(onDeclineFriendRequest).toHaveBeenCalledWith("friendship-incoming");
-    expect(onAcceptInvite).toHaveBeenCalledWith("invite-pending");
-    expect(onDeclineInvite).toHaveBeenCalledWith("invite-pending");
+    expect(onAcceptFriendRequest).toHaveBeenCalledWith(INCOMING_FRIENDSHIP_ID);
+    expect(onDeclineFriendRequest).toHaveBeenCalledWith(INCOMING_FRIENDSHIP_ID);
+    expect(onAcceptInvite).toHaveBeenCalledWith(INBOX_INVITE_ID);
+    expect(onDeclineInvite).toHaveBeenCalledWith(INBOX_INVITE_ID);
+    expect(view.container.textContent).toContain("Missed invite");
 
     await unmount(view.root);
   });
 
-  it("renders the same stable-ID-deduplicated inbox rows used by the badge", async () => {
-    const request = friend("incoming", "friendship-incoming", "Incoming", "pending");
-    const invite = roomInvite("invite-pending", "pending");
-    const snapshot = socialSnapshot({
-      directory: directory({ incomingRequests: [request, { ...request }] }),
-      invites: roomInvites([invite, { ...invite }]),
-    });
-    const model = buildPopupInboxModel(snapshot, Date.parse(NOW));
+  it("uses the canonical unseen count for the navigation badge", async () => {
+    const inbox = accountInbox([
+      inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", NOW),
+      inboxRoomInvite(INBOX_INVITE_ID, "active", NOW),
+    ]);
+    const model = buildPopupInboxModel(inbox);
     const view = await renderElement(
       <PopupInboxPanel
         busyFriendRequestActionKey={null}
@@ -459,28 +559,31 @@ describe("Popup People integration boundaries", () => {
         onOpenDashboard={vi.fn()}
         onRefresh={vi.fn()}
         onSignIn={vi.fn()}
-        state={{ status: "ready", ownerUserId: "viewer-1", data: snapshot, error: null }}
+        state={{
+          status: "ready",
+          ownerUserId: VIEWER_ID,
+          data: inbox,
+          error: null,
+        }}
       />,
     );
 
-    expect(popupActionableInboxCount(model)).toBe(2);
+    expect(popupInboxBadgeCount(model)).toBe(0);
     expect(view.container.querySelectorAll(".popup-inbox-row")).toHaveLength(1);
     expect(view.container.querySelectorAll(".popup-inbox-card")).toHaveLength(1);
     await unmount(view.root);
   });
 
   it("marks cached inbox data stale and disables actions until refresh settles", async () => {
-    const snapshot = socialSnapshot({
-      directory: directory({
-        incomingRequests: [friend("incoming", "friendship-incoming", "Incoming", "pending")],
-      }),
-      invites: roomInvites([roomInvite("invite-pending", "pending")]),
-    });
+    const inbox = accountInbox([
+      inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", NOW),
+      inboxRoomInvite(INBOX_INVITE_ID, "active", NOW),
+    ]);
     const view = await renderElement(
       <PopupInboxPanel
         busyFriendRequestActionKey={null}
         busyInviteId={null}
-        model={buildPopupInboxModel(snapshot, Date.parse(NOW))}
+        model={buildPopupInboxModel(inbox)}
         onAcceptFriendRequest={vi.fn()}
         onAcceptInvite={vi.fn()}
         onDeclineFriendRequest={vi.fn()}
@@ -488,14 +591,21 @@ describe("Popup People integration boundaries", () => {
         onOpenDashboard={vi.fn()}
         onRefresh={vi.fn()}
         onSignIn={vi.fn()}
-        state={{ status: "loading", ownerUserId: "viewer-1", data: snapshot, error: null }}
+        state={{
+          status: "loading",
+          ownerUserId: VIEWER_ID,
+          data: inbox,
+          error: null,
+        }}
       />,
     );
 
     expect(view.container.querySelector('[data-state="stale"]')?.textContent).toContain(
       "Refreshing inbox",
     );
-    for (const button of view.container.querySelectorAll<HTMLButtonElement>(".popup-inbox-actions button")) {
+    for (const button of view.container.querySelectorAll<HTMLButtonElement>(
+      ".popup-inbox-actions button",
+    )) {
       expect(button.disabled).toBe(true);
     }
     await unmount(view.root);
@@ -512,6 +622,17 @@ describe("PopupApp social mutations", () => {
     vi.mocked(requestCurrentExtensionSession).mockResolvedValue(TOKENS);
     vi.mocked(requestSilentWebsiteSignIn).mockResolvedValue(null);
     vi.mocked(requestWebsiteSignIn).mockResolvedValue(TOKENS);
+    vi.mocked(getCachedAccountInboxForUser).mockResolvedValue(null);
+    vi.mocked(setCachedAccountInboxForUser).mockResolvedValue(true);
+    vi.mocked(listAccountInbox).mockResolvedValue(accountInbox([]));
+    vi.mocked(markAccountInboxItemsSeen).mockImplementation(async (_accessToken, _items) =>
+      accountInbox([], {
+        actionable: 0,
+        unseen: 0,
+        activeRoomInvites: 0,
+        pendingFriendRequests: 0,
+      }),
+    );
     vi.mocked(getCachedSocialSnapshotForUser).mockResolvedValue(null);
     vi.mocked(setCachedSocialSnapshotForUser).mockResolvedValue(undefined);
     vi.mocked(loadWatchProgressStoreForUser).mockResolvedValue(createEmptyWatchProgressStore());
@@ -588,7 +709,9 @@ describe("PopupApp social mutations", () => {
 
     await waitFor(() => expect(input.value).toBe(""));
     await waitFor(() =>
-      expect(view.container.textContent).toContain("Group created. Latest data could not be refreshed."),
+      expect(view.container.textContent).toContain(
+        "Group created. Latest data could not be refreshed.",
+      ),
     );
   });
 
@@ -596,7 +719,10 @@ describe("PopupApp social mutations", () => {
     vi.mocked(listSocialDirectory).mockResolvedValue(directory());
     let finishCreate!: (value: FriendGroup) => void;
     vi.mocked(createFriendGroup).mockImplementation(
-      () => new Promise<FriendGroup>((resolve) => { finishCreate = resolve; }),
+      () =>
+        new Promise<FriendGroup>((resolve) => {
+          finishCreate = resolve;
+        }),
     );
     const view = await renderPopupApp();
     root = view.root;
@@ -645,22 +771,116 @@ describe("PopupApp social mutations", () => {
   });
 
   it("accepts and declines incoming requests by friendship ID and refreshes after each action", async () => {
-    vi.mocked(listSocialDirectory).mockResolvedValue(
-      directory({
-        incomingRequests: [friend(INCOMING_USER_ID, INCOMING_FRIENDSHIP_ID, "Incoming", "pending")],
-      }),
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    vi.mocked(listAccountInbox).mockResolvedValue(
+      accountInbox([inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", NOW)]),
     );
     const view = await renderPopupApp();
     root = view.root;
 
     await click(await findButton(view.container, "Inbox"));
     await click(await findButton(view.container, "Accept friend request from Incoming"));
-    await waitFor(() => expect(acceptFriendRequest).toHaveBeenCalledWith("access-1", INCOMING_FRIENDSHIP_ID));
+    await waitFor(() =>
+      expect(acceptFriendRequest).toHaveBeenCalledWith("access-1", INCOMING_FRIENDSHIP_ID),
+    );
     await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(2));
 
     await click(await findButton(view.container, "Decline friend request from Incoming"));
-    await waitFor(() => expect(declineFriendRequest).toHaveBeenCalledWith("access-1", INCOMING_FRIENDSHIP_ID));
+    await waitFor(() =>
+      expect(declineFriendRequest).toHaveBeenCalledWith("access-1", INCOMING_FRIENDSHIP_ID),
+    );
     await waitFor(() => expect(listSocialDirectory).toHaveBeenCalledTimes(3));
+  });
+
+  it("marks displayed unseen inbox items seen once when Inbox opens", async () => {
+    const unseen = accountInbox(
+      [
+        inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", null),
+        inboxRoomInvite(INBOX_INVITE_ID, "active", null),
+        inboxRoomInvite(MISSED_INVITE_ID, "missed", NOW),
+      ],
+      {
+        actionable: 2,
+        unseen: 2,
+        activeRoomInvites: 1,
+        pendingFriendRequests: 1,
+      },
+    );
+    const seen = accountInbox(
+      unseen.items.map((item) => ({ ...item, seenAt: NOW })),
+      { ...unseen.counts, unseen: 0 },
+    );
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    vi.mocked(listAccountInbox).mockResolvedValue(unseen);
+    vi.mocked(markAccountInboxItemsSeen).mockResolvedValue(seen);
+    const view = await renderPopupApp();
+    root = view.root;
+
+    await click(await findButton(view.container, "Inbox"));
+    await waitFor(() =>
+      expect(markAccountInboxItemsSeen).toHaveBeenCalledWith("access-1", [
+        { kind: "friend-request", id: INCOMING_FRIENDSHIP_ID },
+        { kind: "room-invite", id: INBOX_INVITE_ID },
+      ]),
+    );
+    await waitFor(() => expect(setCachedAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, seen));
+    expect(markAccountInboxItemsSeen).toHaveBeenCalledTimes(1);
+    const inboxTab = await findButton(view.container, "Inbox");
+    await waitFor(() => expect(inboxTab.querySelector(".popup-tab-count")).toBeNull());
+  });
+
+  it("ignores a late mark-seen response after a newer inbox refresh", async () => {
+    const unseen = accountInbox(
+      [inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", null)],
+      {
+        actionable: 1,
+        unseen: 1,
+        activeRoomInvites: 0,
+        pendingFriendRequests: 1,
+      },
+    );
+    const refreshed = accountInbox(
+      [inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Refreshed person", NOW)],
+      {
+        actionable: 1,
+        unseen: 0,
+        activeRoomInvites: 0,
+        pendingFriendRequests: 1,
+      },
+    );
+    const staleSeen = accountInbox([], {
+      actionable: 0,
+      unseen: 0,
+      activeRoomInvites: 0,
+      pendingFriendRequests: 0,
+    });
+    let resolveSeen!: (value: AccountInboxResponse) => void;
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    vi.mocked(listAccountInbox).mockResolvedValueOnce(unseen).mockResolvedValueOnce(refreshed);
+    vi.mocked(markAccountInboxItemsSeen).mockImplementation(
+      () =>
+        new Promise<AccountInboxResponse>((resolve) => {
+          resolveSeen = resolve;
+        }),
+    );
+    const view = await renderPopupApp();
+    root = view.root;
+
+    await click(await findButton(view.container, "Inbox"));
+    await waitFor(() => expect(markAccountInboxItemsSeen).toHaveBeenCalledTimes(1));
+    await click(await findButton(view.container, "Sync popup data"));
+    await waitFor(() => expect(listAccountInbox).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(view.container.textContent).toContain("Refreshed person"));
+    await waitFor(() =>
+      expect(setCachedAccountInboxForUser).toHaveBeenCalledWith(VIEWER_ID, refreshed),
+    );
+    vi.mocked(setCachedAccountInboxForUser).mockClear();
+
+    resolveSeen(staleSeen);
+    await flushPromises();
+
+    expect(view.container.textContent).toContain("Refreshed person");
+    expect(setCachedAccountInboxForUser).not.toHaveBeenCalledWith(VIEWER_ID, staleSeen);
   });
 });
 
@@ -723,7 +943,11 @@ function legalPresentationStates(): PopupPeoplePresentationState[] {
     { status: "error", errorMessage: "Could not load people." },
     { status: "ready", directory: directory() },
     { status: "stale", directory: directory() },
-    { status: "stale-error", directory: directory(), errorMessage: "Could not refresh people." },
+    {
+      status: "stale-error",
+      directory: directory(),
+      errorMessage: "Could not refresh people.",
+    },
   ];
 }
 
@@ -754,27 +978,70 @@ function roomInvites(inbox: RoomInvite[]): RoomInvitesResponse {
   };
 }
 
-function roomInvite(id: string, status: "pending" | "accepted" | "declined"): RoomInvite {
+function accountInbox(
+  items: AccountInboxResponse["items"],
+  counts: AccountInboxResponse["counts"] = {
+    unseen: items.filter((item) => item.seenAt === null).length,
+    actionable: items.filter((item) => item.state !== "missed").length,
+    activeRoomInvites: items.filter(
+      (item) => item.kind === "room-invite" && item.state === "active",
+    ).length,
+    pendingFriendRequests: items.filter((item) => item.kind === "friend-request").length,
+  },
+): AccountInboxResponse {
   return {
-    id,
-    roomId: `room-${id}`,
-    sender: { userId: "host-1", handle: "host", displayName: "Room Host", avatarUrl: null },
-    targetKind: "direct",
+    meta: { serverTime: NOW, schemaVersion: 1, ownerUserId: VIEWER_ID },
+    items,
+    counts,
+    nextCursor: null,
+  };
+}
+
+function inboxRoomInvite(
+  inviteId: string,
+  state: "active" | "missed",
+  seenAt: string | null,
+): Extract<AccountInboxResponse["items"][number], { kind: "room-invite" }> {
+  const item = {
+    kind: "room-invite" as const,
+    inviteId,
+    roomId: `room-${inviteId}`,
+    sender: {
+      userId: RECENT_USER_ID,
+      handle: "host",
+      displayName: "Room Host",
+      avatarUrl: null,
+    },
+    targetKind: "direct" as const,
     targetGroupId: null,
+    targetGroupName: null,
     message: "Ready to watch?",
     roomTitle: "Friday watch",
     sourceUrl: "https://www.youtube.com/watch?v=video",
     videoFingerprint: "youtube:video",
     createdAt: NOW,
-    expiresAt: "2099-08-08T13:00:00.000Z",
-    recipients: [
-      {
-        user: { userId: "viewer-1", handle: "viewer", displayName: "Viewer", avatarUrl: null },
-        status,
-        updatedAt: NOW,
-        respondedAt: status === "pending" ? null : NOW,
-      },
-    ],
+    activityAt: NOW,
+    seenAt,
+  };
+  return state === "active"
+    ? { ...item, state: "active", missedAt: null }
+    : { ...item, state: "missed", missedAt: NOW };
+}
+
+function inboxFriendRequest(
+  friendshipId: string,
+  userId: string,
+  displayName: string,
+  seenAt: string | null,
+): Extract<AccountInboxResponse["items"][number], { kind: "friend-request" }> {
+  return {
+    kind: "friend-request",
+    friendshipId,
+    sender: { userId, handle: null, displayName, avatarUrl: null },
+    state: "pending",
+    createdAt: NOW,
+    activityAt: NOW,
+    seenAt,
   };
 }
 
@@ -810,7 +1077,12 @@ function friend(
   };
 }
 
-function group(id: string, archivedAt: string | null, name: string, memberNames: string[]): FriendGroup {
+function group(
+  id: string,
+  archivedAt: string | null,
+  name: string,
+  memberNames: string[],
+): FriendGroup {
   return {
     id,
     name,
@@ -818,7 +1090,12 @@ function group(id: string, archivedAt: string | null, name: string, memberNames:
     createdAt: NOW,
     updatedAt: NOW,
     members: memberNames.map((displayName, index) => ({
-      user: { userId: `${id}-member-${index}`, handle: null, displayName, avatarUrl: null },
+      user: {
+        userId: `${id}-member-${index}`,
+        handle: null,
+        displayName,
+        avatarUrl: null,
+      },
       addedAt: NOW,
     })),
   };
@@ -872,12 +1149,13 @@ async function waitFor(assertion: () => void): Promise<void> {
 async function findButton(container: HTMLElement, name: string): Promise<HTMLButtonElement> {
   let button: HTMLButtonElement | null = null;
   await waitFor(() => {
-    button = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
-      (candidate) =>
-        candidate.getAttribute("aria-label") === name ||
-        candidate.querySelector(".popup-tab-label")?.textContent === name ||
-        candidate.textContent?.trim() === name,
-    ) ?? null;
+    button =
+      [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+        (candidate) =>
+          candidate.getAttribute("aria-label") === name ||
+          candidate.querySelector(".popup-tab-label")?.textContent === name ||
+          candidate.textContent?.trim() === name,
+      ) ?? null;
     if (!button) {
       const available = [...container.querySelectorAll<HTMLButtonElement>("button")]
         .map((candidate) => candidate.getAttribute("aria-label") ?? candidate.textContent?.trim())
@@ -891,7 +1169,8 @@ async function findButton(container: HTMLElement, name: string): Promise<HTMLBut
 
 function getButton(container: HTMLElement, name: string): HTMLButtonElement {
   const button = [...container.querySelectorAll("button")].find(
-    (candidate) => candidate.getAttribute("aria-label") === name || candidate.textContent?.trim() === name,
+    (candidate) =>
+      candidate.getAttribute("aria-label") === name || candidate.textContent?.trim() === name,
   );
   if (!(button instanceof HTMLButtonElement)) throw new Error(`Button not found: ${name}`);
   return button;

@@ -1,5 +1,9 @@
 import { defineBackground } from "wxt/utils/define-background";
 import {
+  handleAccountInboxHttpMessage,
+  isAccountInboxHttpMessage,
+} from "../src/account-inbox-client";
+import {
   handleAuthMessage,
   handleWebsiteAuthCookieChange,
   isAuthMessage,
@@ -38,6 +42,11 @@ export default defineBackground(() => {
       return true;
     }
 
+    if (isAccountInboxHttpMessage(message)) {
+      void handleAccountInboxHttpMessage(message).then(sendResponse);
+      return true;
+    }
+
     if (isWatchLibraryHttpMessage(message)) {
       void handleWatchLibraryHttpMessage(message).then(sendResponse);
       return true;
@@ -56,9 +65,9 @@ export default defineBackground(() => {
   });
 
   const reconcileStoredWebsiteSession = () => {
-    void reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false }).catch(
-      () => undefined,
-    );
+    void reconcileExtensionSessionAgainstWebsite({
+      adoptIfMissing: false,
+    }).catch(() => undefined);
   };
   chrome.runtime.onStartup?.addListener(reconcileStoredWebsiteSession);
   chrome.runtime.onInstalled?.addListener(reconcileStoredWebsiteSession);
