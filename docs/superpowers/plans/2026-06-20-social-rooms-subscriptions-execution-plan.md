@@ -1559,6 +1559,21 @@ Acceptance:
 
 ## Progress Log
 
+- [x] 2026-08-09: Implemented the additive durable account-inbox foundation on
+  `codex/room-invite-notification-foundation`. Added owner-bound protocol
+  contracts, one authenticated account-inbox read endpoint, a seen-state
+  mutation, and a compatible Supabase migration for durable room-invite and
+  friend-request unread state. Inbox entries and counters come from one
+  keyset-paginated database snapshot after an atomic lifecycle reconcile;
+  missed room invites retain their first transition time for 24 hours, and
+  pending invites that can no longer be accepted are excluded from actionable
+  results. The existing invite writer and `/api/invites` consumers remain
+  unchanged in this rollout, so extension permissions, Web Push delivery,
+  browser notifications, badge updates, and popup routing are still separate
+  follow-up work. Local migration replay and a migration-first staging rollout
+  remain merge gates; the current Colima store cannot start while its container
+  data is unhealthy.
+
 - [x] 2026-08-09: Room-invite notification product and delivery direction was
   approved and consolidated in
   `docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md`.
