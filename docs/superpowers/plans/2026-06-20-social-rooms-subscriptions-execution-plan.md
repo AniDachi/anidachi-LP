@@ -7,6 +7,13 @@ watch library/history are implemented on staging-oriented feature branches.
 Stripe staging setup is deferred until Test Mode products, prices, and webhook
 secrets are available.
 
+**Notification delivery decision:** updated 2026-08-09. The approved design in
+`2026-08-06-account-data-history-social-inbox-design.md` supersedes every
+unimplemented Chrome GCM, frequent inbox polling, and independent 30-60 minute
+room-invite expiry proposal in this plan. Implementation uses standards-based
+Web Push as an `inbox_changed` signal, lifecycle reconciliation, and one daily
+maintenance check while the durable inbox remains authoritative.
+
 **Product surface review:** updated 2026-06-21 to make the final product shape
 explicit: the extension popup is the fast watch-control surface, while the web
 account dashboard is the full management surface. The current standalone
@@ -71,8 +78,10 @@ Official docs checked on 2026-06-20:
   `https://supabase.com/docs/guides/database/postgres/row-level-security`
 - Supabase Realtime Broadcast:
   `https://supabase.com/docs/guides/realtime/broadcast`
-- Chrome extension `gcm` API:
-  `https://developer.chrome.com/docs/extensions/reference/api/gcm`
+- Chrome extension Web Push:
+  `https://developer.chrome.com/docs/extensions/how-to/integrate/web-push`
+- Chrome extension real-time updates:
+  `https://developer.chrome.com/docs/extensions/develop/concepts/real-time`
 - Chrome extension `notifications` API:
   `https://developer.chrome.com/docs/extensions/reference/api/notifications`
 - Firebase Cloud Messaging token management:
@@ -88,8 +97,8 @@ Official docs rechecked on 2026-06-21:
 
 - Chrome extension `sidePanel` API:
   `https://developer.chrome.com/docs/extensions/reference/api/sidePanel`
-- Chrome extension `gcm` API:
-  `https://developer.chrome.com/docs/extensions/reference/api/gcm`
+- Chrome extension Web Push:
+  `https://developer.chrome.com/docs/extensions/how-to/integrate/web-push`
 - Chrome extension `notifications` API:
   `https://developer.chrome.com/docs/extensions/reference/api/notifications`
 - Firebase Cloud Messaging token management:
@@ -120,7 +129,7 @@ Official docs rechecked on 2026-06-21:
 - Do not leave a standalone `/friends` page as the final product shape. Friends,
   groups, invites, devices, billing, and watch library belong under the account
   dashboard.
-- Do not add `sidePanel`, `gcm`, or `notifications` permissions to store builds
+- Do not add `sidePanel`, `alarms`, or `notifications` permissions to store builds
   until the corresponding UX, privacy copy, and Chrome Web Store listing impact
   are ready.
 
@@ -359,14 +368,15 @@ But these gaps must be fixed before the social layer can be reliable:
 - Stripe webhook currently sends a subscription alert email but does not update
   the user's plan or subscription state.
 - There is no durable `subscriptions` or `billing_customers` table.
-- There are no `profiles`, `friendships`, `groups`, invite-recipient, push-token,
+- There are no `profiles`, `friendships`, `groups`, invite-recipient,
+  push-subscription,
   or production watch-session tables.
 - Worker has one hardcoded `MAX_ROOM_PARTICIPANTS = 4` and no split between
   total participants and media seats.
 - `Participant.cameraEnabled` is a client-visible flag, not a server-enforced
   entitlement or seat reservation.
 - Current protocol snapshots do not carry room capabilities.
-- Extension permissions do not include `gcm` or `notifications` yet.
+- Extension permissions do not include notification-delivery permissions yet.
 - The staging `/friends` page is functional but not the final account
   dashboard UX.
 - Friend request UX must avoid manual codes. The MVP friend-add paths are
@@ -635,7 +645,7 @@ watch_invites (
   source_group_id uuid references friend_groups(id),
   message text,
   status text not null default 'active' check (status in ('active', 'canceled', 'expired')),
-  expires_at timestamptz not null,
+  expires_at timestamptz not null, -- compatibility field during migration
   created_at timestamptz not null default now()
 )
 
@@ -658,15 +668,20 @@ Rules:
 - Named direct/group invites require authenticated recipients.
 - Accepting an invite must still re-check room state and active caps.
 - Invites are not the source of live presence. Worker room state is.
+- The current deployed schema and accept path use a 12-hour `expires_at` value.
+  Preserve that field while consumers migrate additively, but do not treat it
+  as the final product validity rule. The approved target follows room
+  lifecycle and retains ended unresolved invites as `Missed` for 24 hours.
 
-### Devices And Push Tokens
+### Devices And Web Push Subscriptions
 
 Extend the existing `devices` table rather than inventing a second device model:
 
 ```sql
-alter table devices add column push_provider text;
-alter table devices add column push_token text;
-alter table devices add column push_token_updated_at timestamptz;
+alter table devices add column push_endpoint text;
+alter table devices add column push_p256dh text;
+alter table devices add column push_auth text;
+alter table devices add column push_subscription_updated_at timestamptz;
 alter table devices add column notifications_enabled boolean not null default false;
 alter table devices add column revoked_at timestamptz;
 alter table devices add column last_delivery_error text;
@@ -675,10 +690,13 @@ alter table devices add column last_delivery_error text;
 Rules:
 
 - One user can have multiple extension devices.
-- Store token timestamps and prune stale tokens.
-- Mark tokens revoked when FCM/Chrome returns permanent delivery errors.
-- Push payloads should contain only ids and small display snippets. The
-  extension fetches invite details after the user clicks.
+- Store subscription timestamps and prune endpoints after permanent HTTP 404 or
+  410 delivery errors.
+- Treat endpoint and encryption material as sensitive operational data even
+  though the durable inbox remains the source of truth.
+- The VAPID private key remains server-only.
+- Push payloads contain only the `inbox_changed` invalidation signal. The
+  extension fetches and validates canonical inbox data before displaying it.
 
 ### Watch History And Tracking
 
@@ -806,7 +824,8 @@ Group creation must enforce `maxOwnedGroups`.
   - Creates link/direct/group/recent invites.
   - Enforces host push-invite entitlement.
   - Creates recipient rows.
-  - Enqueues push delivery for eligible devices.
+  - Sends best-effort `inbox_changed` Web Push after the durable transaction
+    commits; push failure never rolls back or loses the invite.
 - `GET /api/watch-invites/inbox`
   - Source of truth for pending invites.
 - `POST /api/watch-invites/:inviteId/accept`
@@ -814,11 +833,11 @@ Group creation must enforce `maxOwnedGroups`.
 
 ### Devices
 
-- `POST /api/devices/push-token`
-  - Extension registers or refreshes a Chrome GCM registration token.
+- `POST /api/devices/push-subscription`
+  - Extension registers or refreshes its standards-based `PushSubscription`.
   - Requires extension access token.
-  - Updates `last_seen_at` and token timestamp.
-- `DELETE /api/devices/:deviceId/push-token`
+  - Updates `last_seen_at` and subscription timestamp.
+- `DELETE /api/devices/:deviceId/push-subscription`
   - Disable notifications for a device.
 
 ### Watch History
@@ -989,7 +1008,7 @@ The extension should explain limits through actions, not long text:
 
 ### Notification Permission
 
-Do not add `gcm` and `notifications` to store builds until push invites are
+Do not add `alarms` and `notifications` to store builds until push invites are
 actually implemented and the Chrome Web Store listing/privacy policy are updated.
 
 When the permission lands:
@@ -1072,7 +1091,7 @@ The dashboard should show extension installs/devices after push registration:
 - device label where available;
 - last seen;
 - notification enabled/disabled;
-- revoke push token;
+- revoke push subscription;
 - delivery error state;
 - explanation of why notifications exist.
 
@@ -1089,27 +1108,22 @@ watch_invites + watch_invite_recipients
 Delivery channels:
 
 - extension inbox fetch;
-- Chrome GCM push;
+- standards-based Web Push invalidation;
 - future in-app realtime channel if needed.
 
 Rules:
 
 - Every push invite must have a durable invite row first.
-- Push payload contains `inviteId`, `roomId`, sender display name, and small
-  source title text if safe.
-- Extension fetches full invite details after click.
-- Use targeted registration tokens, not public topics.
-- Set push TTL to match invite expiry. Do not rely on FCM's default multi-week
-  storage for live watch invites.
-- Expired invites should disappear from inbox and click-through should show a
-  clean expired state.
-- Store token timestamps and prune stale/revoked tokens.
-
-Suggested TTLs:
-
-- live "watch now" invite: 30-60 minutes;
-- scheduled/resume invite: product decision later, likely several hours;
-- do not use 4-week default for room invites.
+- Push payload contains only `inbox_changed`; canonical invite details are
+  fetched through the authenticated inbox contract before display.
+- Send with a 24-hour TTL and one replacement topic such as `inbox-sync` so
+  multiple offline invalidations collapse into one wake-up.
+- Do not run minute- or five-minute inbox polling. Reconcile on push, Chrome
+  startup, sign-in/account change, popup open, successful invite mutation, and
+  one daily maintenance alarm.
+- A room invite remains actionable while the room is active. When the room
+  ends, present an unresolved recipient as `Missed` for 24 hours.
+- Prune stale or revoked subscriptions after permanent delivery errors.
 
 ## Watch History And Continue Together
 
@@ -1159,7 +1173,7 @@ and invite metadata. That means:
 - privacy policy must describe collected data and why;
 - data must move over HTTPS/WSS;
 - extension permissions must stay narrow;
-- new `gcm` and `notifications` permissions need a clear user-facing reason;
+- new `alarms` and `notifications` permissions need a clear user-facing reason;
 - watch activity data must be used only for Anidachi user-facing features, not
   ads or unrelated monetization.
 
@@ -1169,8 +1183,9 @@ and invite metadata. That means:
 - Keep service-role access server-side only.
 - Add indexes used by every friendship/group/invite/history query.
 - Avoid relying on RLS policies as query filters; add explicit filters in code.
-- If Supabase Realtime is introduced for inbox updates, use private channels and
-  RLS policies. It is optional and not a replacement for push.
+- Supabase Realtime is not part of the MVP inbox delivery path. Reconsider it
+  only for a separately proven live-dashboard requirement, never as a
+  replacement for durable inbox state or Web Push.
 
 ### Abuse Controls
 
@@ -1395,9 +1410,10 @@ Acceptance:
 - [x] Add extension friend/group invite send panel backed by durable inbox.
 - [x] Add durable inbox list to the extension popup.
 - [x] Add durable invites section to the web dashboard.
-- [ ] Add device push-token registration.
-- [ ] Add Chrome GCM sender configuration.
-- [ ] Add extension notification/inbox handlers.
+- [ ] Add device Web Push subscription registration and server-side VAPID
+  delivery.
+- [ ] Add `inbox_changed` push handling, lifecycle reconciliation, daily
+  maintenance, badge, notification aggregation, and popup-first click routing.
 - [ ] Update extension permissions and Chrome Web Store privacy/listing copy
   only when the feature is ready.
 
@@ -1406,8 +1422,9 @@ Acceptance:
 - Direct friend invite creates inbox row.
 - Group invite snapshots recipients.
 - Dashboard and popup both show pending invites from the same backend rows.
-- Push notification click fetches invite and joins if valid.
-- Expired push cannot join.
+- Push notification click opens the matching popup inbox item and never joins
+  automatically.
+- An ended-room or `Missed` invitation cannot join.
 - Free receives paid host invites.
 
 ### Phase 6 - Watch Library, History, And Continue Together
@@ -1541,6 +1558,16 @@ Acceptance:
   continue-together paths before production promotion.
 
 ## Progress Log
+
+- [x] 2026-08-09: Room-invite notification product and delivery direction was
+  approved and consolidated in
+  `docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md`.
+  The durable inbox remains authoritative; Web Push carries only an
+  `inbox_changed` invalidation; lifecycle reconciliation replaces frequent
+  polling; notification clicks route to the popup inbox without joining; and
+  room lifecycle replaces independent invite expiry after an additive,
+  staging-tested transition from the current 12-hour runtime behavior. Runtime
+  notification delivery remains unimplemented.
 
 - [x] 2026-06-21: Started auth persistence hardening on
   `codex/auth-session-refresh-hardening` after staging testing showed website
