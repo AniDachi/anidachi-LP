@@ -1,6 +1,6 @@
 # Account Data, Watch History, Social, And Inbox Foundation Design
 
-Status: User-approved product direction; notification implementation pending
+Status: Durable inbox rollout in progress; Web Push notification delivery pending
 
 Date: 2026-08-06
 
@@ -621,8 +621,9 @@ selection, and invite use. Rename, archive, bulk membership editing, limits,
 and other full management belong to the web account.
 
 The `People` top-level tab has no aggregate numeric badge. Adding friend and
-group counts together is not a meaningful people count. `Inbox` may show the
-canonical server-derived actionable count.
+group counts together is not a meaningful people count. `Inbox` shows the
+canonical server-derived unseen count; actionable counts remain inside the
+Inbox surface.
 
 Rows are deduplicated by user ID before rendering. The popup remains a compact,
 scrollable quick-action surface and always provides an `Open dashboard` escape

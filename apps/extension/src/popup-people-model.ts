@@ -1,11 +1,10 @@
 import type {
+  AccountInboxResponse,
   FriendGroup,
   FriendListItem,
   PublicProfile,
   RecentPerson,
-  RoomInvite,
   SocialDirectory,
-  SocialSnapshot,
 } from "@anidachi/protocol";
 
 export type PopupPeopleProfile = Readonly<PublicProfile>;
@@ -33,18 +32,11 @@ export type PopupPeopleRecentPerson = Readonly<
   }
 >;
 
-export type PopupInboxInviteRecipient = Readonly<
-  Omit<RoomInvite["recipients"][number], "user"> & {
-    user: PopupPeopleProfile;
-  }
+type AccountInboxItem = AccountInboxResponse["items"][number];
+export type PopupInboxFriendRequest = Readonly<
+  Extract<AccountInboxItem, { kind: "friend-request" }>
 >;
-
-export type PopupInboxInvite = Readonly<
-  Omit<RoomInvite, "recipients" | "sender"> & {
-    sender: PopupPeopleProfile;
-    recipients: readonly PopupInboxInviteRecipient[];
-  }
->;
+export type PopupInboxInvite = Readonly<Extract<AccountInboxItem, { kind: "room-invite" }>>;
 
 export type PopupPeopleIdSet = Readonly<{
   size: number;
@@ -68,8 +60,10 @@ export type PopupPeopleModel = Readonly<{
 }>;
 
 export type PopupInboxModel = Readonly<{
-  friendRequests: readonly PopupPeopleFriend[];
-  roomInvites: readonly PopupInboxInvite[];
+  friendRequests: readonly PopupInboxFriendRequest[];
+  activeRoomInvites: readonly PopupInboxInvite[];
+  missedRoomInvites: readonly PopupInboxInvite[];
+  unseenCount: number;
   actionableCount: number;
 }>;
 
@@ -82,8 +76,12 @@ export function buildPopupPeopleModel(directory: SocialDirectory): PopupPeopleMo
     directory.friends.filter((friend) => friend.status === "accepted"),
     (friend) => friend.user.userId,
   );
-  const incomingRequestIds = uniqueIds(directory.incomingRequests.map((request) => request.user.userId));
-  const outgoingRequestIds = uniqueIds(directory.outgoingRequests.map((request) => request.user.userId));
+  const incomingRequestIds = uniqueIds(
+    directory.incomingRequests.map((request) => request.user.userId),
+  );
+  const outgoingRequestIds = uniqueIds(
+    directory.outgoingRequests.map((request) => request.user.userId),
+  );
   const groupRows = uniqueById(
     directory.groups.filter((group) => group.archivedAt === null),
     (group) => group.id,
@@ -108,23 +106,34 @@ export function buildPopupPeopleModel(directory: SocialDirectory): PopupPeopleMo
 }
 
 export function buildPopupInboxModel(
-  snapshot: SocialSnapshot | null,
-  nowMs = Date.now(),
+  response: AccountInboxResponse | null,
 ): PopupInboxModel | null {
-  if (!snapshot) return null;
-  const friendRequests = uniqueById(
-    snapshot.directory.incomingRequests.filter((request) => request.status === "pending"),
-    (request) => request.friendshipId,
-  ).map(cloneFriend);
-  const roomInvites = uniqueById(
-    snapshot.invites.inbox.filter((invite) => roomInviteIsActionable(invite, nowMs)),
-    (invite) => invite.id,
-  ).map(cloneRoomInvite);
+  if (!response) return null;
+  const friendRequests = response.items
+    .filter(
+      (item): item is Extract<AccountInboxItem, { kind: "friend-request" }> =>
+        item.kind === "friend-request",
+    )
+    .map(cloneInboxItem);
+  const activeRoomInvites = response.items
+    .filter(
+      (item): item is Extract<AccountInboxItem, { kind: "room-invite"; state: "active" }> =>
+        item.kind === "room-invite" && item.state === "active",
+    )
+    .map(cloneInboxItem);
+  const missedRoomInvites = response.items
+    .filter(
+      (item): item is Extract<AccountInboxItem, { kind: "room-invite"; state: "missed" }> =>
+        item.kind === "room-invite" && item.state === "missed",
+    )
+    .map(cloneInboxItem);
 
   return Object.freeze({
     friendRequests: frozenArray(friendRequests),
-    roomInvites: frozenArray(roomInvites),
-    actionableCount: friendRequests.length + roomInvites.length,
+    activeRoomInvites: frozenArray(activeRoomInvites),
+    missedRoomInvites: frozenArray(missedRoomInvites),
+    unseenCount: response.counts.unseen,
+    actionableCount: response.counts.actionable,
   });
 }
 
@@ -170,23 +179,11 @@ function cloneRecentPerson(person: RecentPerson): PopupPeopleRecentPerson {
   return Object.freeze({ ...person, user: cloneProfile(person.user) });
 }
 
-function cloneRoomInvite(invite: RoomInvite): PopupInboxInvite {
+function cloneInboxItem<T extends AccountInboxItem>(item: T): T {
   return Object.freeze({
-    ...invite,
-    sender: cloneProfile(invite.sender),
-    recipients: frozenArray(
-      invite.recipients.map((recipient) =>
-        Object.freeze({ ...recipient, user: cloneProfile(recipient.user) }),
-      ),
-    ),
-  });
-}
-
-function roomInviteIsActionable(invite: RoomInvite, nowMs: number): boolean {
-  return (
-    invite.recipients[0]?.status === "pending" &&
-    new Date(invite.expiresAt).getTime() > nowMs
-  );
+    ...item,
+    sender: cloneProfile(item.sender),
+  }) as T;
 }
 
 function frozenArray<T>(items: T[]): readonly T[] {

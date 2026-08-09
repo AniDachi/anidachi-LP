@@ -1559,6 +1559,19 @@ Acceptance:
 
 ## Progress Log
 
+- [x] 2026-08-09: Moved the extension Popup Inbox and the web account incoming
+  invite surface to the canonical owner-bound account inbox. The Popup now uses
+  an account-scoped cache, refreshes on open and mutations, shows the unseen
+  badge, acknowledges displayed items only after the server accepts the seen
+  mutation, and rejects stale or cross-account responses. The web account uses
+  the same response, guards concurrent refreshes and account ownership, and
+  exposes cursor pagination while preserving the existing sent-invite history.
+  Explicit extension sign-out clears social and inbox caches for that account.
+  The additive migration was deployed to staging in PR #161; application code
+  rollout is tracked in PR #160, with extension and web staging acceptance
+  still required before production promotion.
+  Web Push and OS notifications remain a separate later slice.
+
 - [x] 2026-08-09: Implemented the additive durable account-inbox foundation on
   `codex/room-invite-notification-foundation`. Added owner-bound protocol
   contracts, one authenticated account-inbox read endpoint, a seen-state

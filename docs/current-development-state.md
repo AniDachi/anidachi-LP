@@ -172,27 +172,30 @@ reject malformed, incompatible, or cross-account responses before rendering or
 caching them.
 
 The Popup treats the active extension session as the owner of all account data.
-Social and watch snapshots are cached per account, visible state is cleared
-immediately on account change or sign-out, and generation gates prevent late
-requests, poster hydration, social actions, and history operations from writing
-into a newer account session. Popup snapshot I/O does not claim ownership of the
-content script's active playback progress.
+Social, inbox, and watch snapshots are cached per account, visible state is
+cleared immediately on account change or sign-out, and generation gates prevent
+late requests, seen acknowledgements, poster hydration, social actions, and
+history operations from writing into a newer account session. Popup snapshot I/O
+does not claim ownership of the content script's active playback progress.
 
-This is the first isolation and read-contract slice. It does not redesign the
-database, social mutations, canonical watch-history reconciliation, durable
-notification counters, or the final Popup and account-page product surfaces.
-Loaded two-account staging acceptance is still required before this slice is
-promoted to production.
+The additive durable inbox migration is applied on staging. The current account
+inbox rollout moves both the Popup Inbox and `/account/invites` incoming surface
+to the same owner-bound `/api/account/inbox` response, including server counts,
+seen state, missed room invites, and cursor pagination in the full web surface.
+Application rollout is tracked in PR #160. Loaded two-account staging
+acceptance remains required before production promotion.
 
 ## Room Invite Notification Direction
 
-The product direction is approved; delivery is not implemented yet. Durable
-room-invite and inbox rows remain authoritative. Standards-based Web Push will
-send only an `inbox_changed` invalidation so the extension can run its existing
-authenticated inbox sync, update the unread badge, and display minimal English
-room-invite notifications. There is no frequent background inbox polling,
-Chrome GCM, Supabase Realtime subscription, persistent notification WebSocket,
-or separate notification-event platform.
+The product direction is approved. Durable room-invite and inbox rows remain
+authoritative, and the authenticated HTTP inbox, account-scoped Popup cache,
+unseen badge, seen acknowledgement, and shared web incoming surface are
+implemented in the current rollout. Standards-based Web Push delivery and OS
+notifications remain a later slice. Web Push will send only an `inbox_changed`
+invalidation so the extension can run the same inbox sync and display minimal
+English room-invite notifications. There is no frequent background inbox
+polling, Chrome GCM, Supabase Realtime subscription, persistent notification
+WebSocket, or separate notification-event platform.
 
 Recovery uses reconciliation on push receipt, Chrome startup, account/session
 change, popup open, and successful invite mutation, plus one daily maintenance
@@ -202,10 +205,11 @@ lifecycle; unresolved invites become a non-actionable `Missed` presentation for
 in
 `docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md`.
 
-The current deployed invite schema still assigns `expires_at` with a 12-hour
-default, and the existing accept path enforces it. The future notification and
-room-lifecycle slice must replace that behavior additively and prove the new
-contract on staging before the compatibility field or check is removed.
+The invite schema still assigns `expires_at` with a 12-hour default, and the
+existing accept path enforces it. The staging inbox foundation preserves that
+field as a compatibility lifecycle signal. A later room-lifecycle slice must
+replace the independent expiry behavior additively and prove the new contract on
+staging before the compatibility field or check is removed.
 
 ## Runtime Environments
 

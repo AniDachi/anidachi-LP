@@ -1,7 +1,10 @@
 import { MarkAccountInboxSeenRequestSchema } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
 import { markAccountInboxItemsSeen } from "@/lib/anidachi-auth/account-inbox";
-import { accountInboxErrorResponse } from "@/lib/anidachi-auth/account-inbox-routes";
+import {
+	accountInboxErrorResponse,
+	accountInboxPageLimit,
+} from "@/lib/anidachi-auth/account-inbox-routes";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
 import { readJsonBody } from "@/lib/anidachi-auth/social-routes";
 
@@ -25,6 +28,7 @@ export async function POST(request: NextRequest) {
 			await markAccountInboxItemsSeen({
 				ownerUserId: session.userId,
 				items: payload.data.items,
+				limit: accountInboxPageLimit(request.nextUrl.searchParams.get("limit")),
 			}),
 		);
 	} catch (error) {

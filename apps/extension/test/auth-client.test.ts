@@ -167,9 +167,7 @@ describe("extension auth client", () => {
     });
 
     expect(request).toHaveBeenCalledTimes(1);
-    expect(new URL(request.mock.calls[0][0]).pathname).toBe(
-      "/api/extension/auth/website-session",
-    );
+    expect(new URL(request.mock.calls[0][0]).pathname).toBe("/api/extension/auth/website-session");
   });
 
   it("falls back to browser auth when cookie blocking hides an existing website session", async () => {
@@ -177,9 +175,9 @@ describe("extension auth client", () => {
       Response.json({ error: "Unauthorized" }, { status: 401 }),
     );
 
-    await expect(
-      fetchWebsiteSessionProbe(request, async () => true),
-    ).resolves.toEqual({ status: "browser-flow-required" });
+    await expect(fetchWebsiteSessionProbe(request, async () => true)).resolves.toEqual({
+      status: "browser-flow-required",
+    });
   });
 
   it("keeps storage but rejects actions when refresh is temporarily unavailable", async () => {
@@ -202,6 +200,7 @@ describe("extension auth client", () => {
 
   it("clears the cached session only when the refresh token is invalid", async () => {
     const clearStored = vi.fn(async () => undefined);
+    const clearAccountData = vi.fn(async () => undefined);
 
     await expect(
       refreshExtensionSession({
@@ -210,16 +209,16 @@ describe("extension auth client", () => {
         resolveUser: async () => null,
         setStored: vi.fn(async () => undefined),
         clearStored,
+        clearAccountData,
       }),
     ).resolves.toBeNull();
 
     expect(clearStored).toHaveBeenCalledTimes(1);
+    expect(clearAccountData).toHaveBeenCalledWith(storedTokens.user.id);
   });
 
   it("coalesces concurrent refresh requests into one operation", async () => {
-    let resolveRefresh:
-      | ((result: { kind: "success"; accessToken: string }) => void)
-      | undefined;
+    let resolveRefresh: ((result: { kind: "success"; accessToken: string }) => void) | undefined;
     const requestRefresh = vi.fn(
       () =>
         new Promise<{ kind: "success"; accessToken: string }>((resolve) => {
@@ -327,6 +326,22 @@ describe("extension auth client", () => {
     ).resolves.toBe(false);
 
     expect(clearStored).not.toHaveBeenCalled();
+  });
+
+  it("clears account-scoped data together with the matching session", async () => {
+    const clearStored = vi.fn(async () => undefined);
+    const clearAccountData = vi.fn(async () => undefined);
+
+    await expect(
+      clearExtensionSessionIfCurrent(storedTokens.refreshToken, {
+        getStored: async () => storedTokens,
+        clearStored,
+        clearAccountData,
+      }),
+    ).resolves.toBe(true);
+
+    expect(clearStored).toHaveBeenCalledTimes(1);
+    expect(clearAccountData).toHaveBeenCalledWith(storedTokens.user.id);
   });
 
   it("does not mint an extension session during startup when none is stored", async () => {

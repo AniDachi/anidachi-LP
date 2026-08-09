@@ -210,6 +210,7 @@ export function buildAccountInboxResponseFromDatabase(params: {
 export async function markAccountInboxItemsSeen(params: {
 	ownerUserId: string;
 	items: ReadonlyArray<{ kind: "room-invite" | "friend-request"; id: string }>;
+	limit?: number;
 	now?: Date;
 }): Promise<AccountInboxResponse> {
 	if (!isUuid(params.ownerUserId)) {
@@ -235,7 +236,11 @@ export async function markAccountInboxItemsSeen(params: {
 	});
 	if (error) throw accountInboxDatabaseError("mark account inbox seen", error);
 
-	return listAccountInbox({ ownerUserId: params.ownerUserId, now });
+	return listAccountInbox({
+		ownerUserId: params.ownerUserId,
+		limit: params.limit,
+		now,
+	});
 }
 
 function accountInboxPageRpcData(value: unknown): AccountInboxPageRpcData {
