@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-06.
+Last updated: 2026-08-09.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -183,6 +183,29 @@ database, social mutations, canonical watch-history reconciliation, durable
 notification counters, or the final Popup and account-page product surfaces.
 Loaded two-account staging acceptance is still required before this slice is
 promoted to production.
+
+## Room Invite Notification Direction
+
+The product direction is approved; delivery is not implemented yet. Durable
+room-invite and inbox rows remain authoritative. Standards-based Web Push will
+send only an `inbox_changed` invalidation so the extension can run its existing
+authenticated inbox sync, update the unread badge, and display minimal English
+room-invite notifications. There is no frequent background inbox polling,
+Chrome GCM, Supabase Realtime subscription, persistent notification WebSocket,
+or separate notification-event platform.
+
+Recovery uses reconciliation on push receipt, Chrome startup, account/session
+change, popup open, and successful invite mutation, plus one daily maintenance
+alarm for long-running browser sessions. Invite actionability follows the room
+lifecycle; unresolved invites become a non-actionable `Missed` presentation for
+24 hours after room end. The canonical product and implementation details live
+in
+`docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md`.
+
+The current deployed invite schema still assigns `expires_at` with a 12-hour
+default, and the existing accept path enforces it. The future notification and
+room-lifecycle slice must replace that behavior additively and prove the new
+contract on staging before the compatibility field or check is removed.
 
 ## Runtime Environments
 

@@ -1,8 +1,10 @@
 # Account Data, Watch History, Social, And Inbox Foundation Design
 
-Status: Proposed; user-approved product direction, implementation plan pending
+Status: User-approved product direction; notification implementation pending
 
 Date: 2026-08-06
+
+Last updated: 2026-08-09
 
 ## Summary
 
@@ -24,14 +26,16 @@ The MVP covers:
 - consistent values across the web dashboard and extension popup.
 
 This design deliberately avoids Supabase Realtime, Firebase/GCM, a new sync
-service, a generic notification-event platform, and visual changes to the
-in-player panel.
+service, a generic notification-event platform, frequent inbox polling, and
+visual changes to the in-player panel. Standards-based Web Push is a wake-up
+signal for the existing durable inbox, not a second data channel.
 
 For the existing
 `2026-06-20-social-rooms-subscriptions-execution-plan.md`, this design preserves
 the implemented friends, groups, room-invite tables, popup inbox, and web inbox.
-It supersedes only the unimplemented GCM, push-token registration, and push
-delivery portions with the lighter alarm-based MVP channel described below.
+It supersedes the unimplemented GCM, push-token registration, short independent
+invite expiry, and alarm-polling portions with the event-driven Web Push channel
+and room-lifecycle invite semantics described below.
 
 ## Fixed Product Decisions
 
@@ -47,12 +51,17 @@ delivery portions with the lighter alarm-based MVP channel described below.
    values on both surfaces. The popup may request a smaller result window.
 7. Social relationships, groups, invites, and unread state never use local
    extension storage as their source of truth.
-8. Room invites expire after 60 minutes.
-9. Notification delivery is derived from the durable inbox. Missing a browser
-   notification never loses an invite.
-10. MVP background delivery uses `chrome.alarms` plus
-    `chrome.notifications`, not GCM or Realtime.
-11. The existing in-player panel and its visual behavior are outside this
+8. A room invite remains actionable while its room is active and its recipient
+   state is pending. There is no separate product expiry timer.
+9. When the room ends, a pending invite becomes a non-actionable `Missed`
+   presentation for 24 hours, then leaves the inbox.
+10. Notification delivery is derived from the durable inbox. Missing a browser
+    notification never loses an invite.
+11. MVP background delivery uses standards-based Web Push for immediate
+    invalidation, lifecycle reconciliation for recovery, and
+    `chrome.notifications` for display. It does not use GCM, Realtime, or
+    frequent polling.
+12. The existing in-player panel and its visual behavior are outside this
     scope. Internal progress publication may change without changing that UI.
 
 ## Goals
@@ -63,8 +72,8 @@ delivery portions with the lighter alarm-based MVP channel described below.
 - Make friend, group, and invite state transitions atomic and idempotent.
 - Prevent data from one account appearing after an account switch.
 - Give the website and popup shared runtime-validated contracts.
-- Add durable unread state and useful room-invite notifications without a push
-  platform.
+- Add durable unread state and useful room-invite notifications without a
+  parallel realtime or polling platform.
 - Preserve current provider adapters, room synchronization, P2P media, and
   player-overlay behavior.
 - Ship the work as small staging-first slices with explicit rollback paths.
@@ -73,6 +82,7 @@ delivery portions with the lighter alarm-based MVP channel described below.
 
 - Real-time updates in an already-open account dashboard.
 - Firebase Cloud Messaging, Chrome GCM, or Supabase Realtime.
+- A persistent background WebSocket or frequent inbox polling.
 - A universal notification table or event-sourcing platform.
 - Community groups, shared group admins, group chat, public groups, or roles.
 - Writing live playback position to Postgres every few seconds.
@@ -80,6 +90,23 @@ delivery portions with the lighter alarm-based MVP channel described below.
 - Replacing Cloudflare Durable Objects as the live-room authority.
 - Changing room playback sync, provider adapters, media seats, audio, video, or
   the visual in-player panel.
+
+## Notification Delivery References
+
+Official sources rechecked on 2026-08-09:
+
+- Chrome extension Web Push:
+  `https://developer.chrome.com/docs/extensions/how-to/integrate/web-push`
+- Chrome extension real-time update options:
+  `https://developer.chrome.com/docs/extensions/develop/concepts/real-time`
+- Chrome extension alarms:
+  `https://developer.chrome.com/docs/extensions/reference/api/alarms`
+- Chrome extension notifications:
+  `https://developer.chrome.com/docs/extensions/reference/api/notifications`
+- Chrome action popup opening:
+  `https://developer.chrome.com/docs/extensions/reference/api/action`
+- HTTP Web Push delivery, TTL, urgency, and topic replacement:
+  `https://www.rfc-editor.org/rfc/rfc8030.html`
 
 ## Existing Foundation To Reuse
 
@@ -173,8 +200,8 @@ On account change or sign-out:
 3. late responses from previous generations are ignored;
 4. the previous user's durable local partitions remain inaccessible but are not
    destructively mixed with the new account;
-5. background alarms stop authenticated fetching until a valid current session
-   exists.
+5. push delivery, subscription maintenance, and authenticated reconciliation
+   stop until a valid current session exists.
 
 Cached social data may be shown only when its stored owner ID matches the
 current token user ID. Mutations never complete against a token that no longer
@@ -399,15 +426,42 @@ Only one concurrent response can win.
 
 Before accept:
 
-- expiration is checked server-side;
+- the recipient must still be pending;
 - current friendship is checked;
 - room existence and ended state are checked;
 - room capacity is checked by the existing room admission path.
 
-An ended room changes the recipient state to `expired`. A temporarily full room
-returns a clear `ROOM_FULL` result without converting the pending invite. An
-accepted invite returns the canonical join target but does not bypass normal
-room admission.
+An ended room changes the recipient state to `expired`, which clients present
+as `Missed` for 24 hours. A temporarily full room returns a clear `ROOM_FULL`
+result without converting the pending invite. An accepted invite returns the
+canonical join target but does not bypass normal room admission.
+
+Only one semantic invitation may exist for the same recipient and room.
+Overlapping direct and group targeting, retries, and repeated host actions
+return the existing recipient state and never create another notification. A
+recipient who declines cannot be invited to that same room again, but can be
+invited normally to a future room.
+
+### Compatibility With The Current Invite Runtime
+
+The deployed invite foundation still has a mandatory `expires_at` value with a
+12-hour default, and the current accept path rejects an invite when that value
+passes. This is current runtime behavior, not the approved final product rule.
+
+The room-lifecycle slice must migrate additively:
+
+1. add the room-state and missed-presentation read path without removing
+   `expires_at`;
+2. keep old clients and rows readable while web and extension consumers move to
+   the new contract;
+3. stop using `expires_at` as product actionability only after staging proves
+   room-end handling, dedupe, and 24-hour `Missed` retention across both
+   surfaces;
+4. make the column nullable or remove it only in a later cleanup migration after
+   every deployed consumer no longer depends on it.
+
+No implementation may silently reinterpret existing rows or remove the current
+server check in isolation.
 
 ## Durable Account Inbox
 
@@ -415,6 +469,7 @@ The inbox is an aggregated contract over domain records, not a second copy of
 them. The MVP includes:
 
 - incoming room invites;
+- room invites that became `Missed` within the last 24 hours;
 - incoming friend requests;
 - server-derived pending and unread counts.
 
@@ -423,8 +478,9 @@ for incoming friend requests. Marking items seen is an authenticated,
 idempotent server mutation. Accepting or declining also makes the item seen.
 
 `AccountInboxResponse` returns normalized items ordered by server time, the next
-cursor, counts, and response metadata. Expired room invites are omitted from
-actionable counts even before physical cleanup.
+cursor, counts, and response metadata. `Missed` room invites are omitted from
+actionable counts and remain available only for their 24-hour presentation
+window before physical cleanup.
 
 The web account and popup use the same inbox builder. No surface maintains an
 independent unread counter.
@@ -433,37 +489,89 @@ independent unread counter.
 
 ### MVP Channel
 
-The extension background service worker uses `chrome.alarms` for a lightweight
-inbox check approximately once per minute. It must not use `setInterval`, because
-Manifest V3 workers may terminate. The alarm is checked and recreated on
-extension startup and browser startup.
+The extension uses the standards-based Push API as an immediate invalidation
+channel. After a durable invite transaction commits, the server sends each
+enabled extension installation a minimal `inbox_changed` Web Push. A suspended
+Manifest V3 service worker wakes, runs the same authenticated `syncInbox()` used
+by the popup, and derives the badge and notification from the validated server
+response. Push data never becomes authoritative account state.
 
-The extension requests only incremental actionable inbox data after its last
-acknowledged cursor. A cursor advances only after a response is validated and
-processed.
+The signal uses a 24-hour TTL and one replacement topic such as `inbox-sync`.
+Multiple signals queued for one offline installation therefore collapse into
+one wake-up, after which the extension fetches every unseen inbox item. The
+payload contains no invite token, room token, sender name, group name, media
+title, message body, or other private display data.
+
+There is no minute- or five-minute inbox poll. Reconciliation runs when:
+
+- a push event arrives;
+- Chrome starts;
+- an extension session is established or changes;
+- the popup opens;
+- an invite mutation succeeds;
+- a once-per-24-hours `chrome.alarms` maintenance event verifies a long-running
+  installation's subscription and catches stale state.
+
+The daily alarm is a maintenance safety net, not the user-facing delivery path.
+It must be checked and recreated on extension and browser startup because
+Manifest V3 workers and alarms are not a durable process. A cursor advances
+only after a response is schema-validated, stored for the active account, and
+fully processed.
+
+Each browser profile registers one Web Push subscription against the existing
+account device model. Sign-in and notification enablement ensure the current
+subscription is registered. Sign-out or explicit disablement revokes it,
+unsubscribes locally, clears account-scoped dedupe state, and clears the badge.
+Permanent push endpoint failures such as HTTP 404 or 410 prune the server-side
+subscription. The VAPID private key remains server-only.
 
 ### Browser Notifications
 
-The MVP displays system notifications for new room invites. Incoming friend
-requests update the action badge and popup inbox first; system notifications for
-friend requests can be considered later if users need them.
+The MVP displays system notifications only for explicit room invitations sent
+by a host to accepted friends or a personal group snapshot. Room creation,
+friend activity, presence, and ordinary friend requests do not produce system
+notifications. Incoming friend requests update the action badge and popup inbox
+only.
 
 Notification rules:
 
-- payloads contain no private message body beyond the minimum display copy;
-- local dedupe is account- and browser-profile-scoped;
-- two signed-in devices may each notify, which is expected;
-- clicking opens the canonical invite detail/account route;
-- clicking never accepts or joins automatically;
-- disabled permission leaves the durable inbox and badge functional;
-- sign-out cancels authenticated polling and clears the visible badge.
+- all user-facing notification, status, and error copy is English;
+- a direct invite uses copy such as `Vladislav invited you to watch together`;
+- a group invite uses `Vladislav invited you to watch with a group`; the exact
+  private group name appears only inside the authenticated inbox;
+- one unseen active invite may identify the inviter, while multiple unseen or
+  offline invites produce one count-based summary instead of an OS notification
+  burst;
+- an invite discovered after room end uses neutral missed copy and has no join
+  action;
+- notifications contain no custom sound and use the operating system's normal
+  notification behavior;
+- notifications have no inline `Join` or `Decline` buttons;
+- clicking records an account-scoped popup route intent, attempts to open the
+  extension action popup on `Invites`, and falls back to the canonical web inbox
+  in a new tab if popup opening is unavailable;
+- clicking never accepts, declines, joins, leaves, or switches rooms;
+- joining from the inbox while already in another room is labeled `Switch room`
+  and requires confirmation before the current room is left;
+- local notification display dedupe is account- and browser-profile-scoped;
+- every signed-in enabled device may notify, while server-owned `seen_at` keeps
+  unread state consistent across devices;
+- the action badge represents unseen items, not every pending action; opening
+  `Invites` marks displayed items seen and clears the badge after the server
+  acknowledges the mutation;
+- disabled permission or preference leaves the durable inbox and badge
+  functional;
+- MVP exposes one `Room invite notifications` toggle, enabled by default, with
+  no per-group mute, schedule, custom sound, or additional notification modes.
 
-The local notification preference is per browser profile. `alarms` and
-`notifications` permissions are added only in the notification slice, together
-with user-facing controls, privacy copy, and Chrome Web Store listing updates.
+The local notification preference is per browser profile. Push subscription
+fields remain tied to the authenticated account device. `alarms` and
+`notifications` permissions are added only in the complete notification slice,
+together with user-facing controls, privacy copy, and Chrome Web Store listing
+updates.
 
-Firebase/GCM and push-token registration remain deferred. Realtime remains
-unnecessary for an MV3 worker that may sleep.
+Firebase/GCM and Supabase Realtime remain unnecessary. Web Push wakes the MV3
+worker; the durable inbox and lifecycle reconciliation recover missed delivery.
 
 ## Surface Behavior
 
@@ -596,7 +704,9 @@ Add privacy-safe structured events for:
 - progress outbox enqueue, compact, retry, acknowledgement, and rejection;
 - reconcile batch size, duplicate count, and stale count;
 - friend/group/invite mutation result codes;
-- inbox poll success, failure, item count, and notification display result;
+- push subscription register, refresh, revoke, and permanent delivery failure;
+- push receipt, inbox reconciliation reason, item count, and notification display
+  result;
 - contract parse failures and account-generation drops.
 
 Do not log access tokens, invite tokens, room tokens, message text, raw URLs with
@@ -624,7 +734,7 @@ redaction and hashed identifiers.
 - concurrent friend and room-invite responses;
 - concurrent group creation at plan limits;
 - remove/block cleanup of active group membership;
-- invite snapshot, expiration, ended room, and full room;
+- invite snapshot, room-lifecycle validity, missed retention, and full room;
 - retention, plan downgrade, and history pagination beyond 250 sessions.
 
 ### Extension
@@ -634,15 +744,18 @@ redaction and hashed identifiers.
 - account switching during in-flight social and history requests;
 - same-account cache reuse and cross-account cache rejection;
 - invalid response parsing;
-- alarm recreation after service-worker restart;
-- notification dedupe, permission disabled, click routing, and sign-out badge
-  cleanup.
+- push subscription recovery and daily maintenance-alarm recreation after
+  service-worker restart;
+- queued push replacement, notification aggregation, dedupe, permission
+  disabled, popup/fallback routing, and sign-out badge cleanup.
 
 ### Cross-Surface Acceptance
 
 - website and popup fixtures render identical entity values and counts;
 - popup recent subset matches the same records in full web history;
 - inbox pending and unread counts agree after refresh;
+- opening `Invites` on one device clears unread badge state on the other after
+  reconciliation without removing pending actions;
 - solo viewing creates no shared participants;
 - two-account room viewing creates one shared session with two self-written
   participant records;
@@ -681,10 +794,14 @@ Recommended slices:
    - transactional transitions, compatibility handling for existing blocked
      state, group-limit enforcement, and membership cleanup.
 5. **Durable inbox and room invites**
-   - transactional creation/response, `seen_at`, aggregation, TTL, and counts.
+   - transactional creation/response, `seen_at`, room-lifecycle validity,
+     24-hour missed presentation, semantic recipient-and-room dedupe,
+     aggregation, counts, and an additive transition from the current 12-hour
+     `expires_at` behavior.
 6. **Background notification delivery**
-   - alarms, incremental poll, badge, notification, controls, and store/privacy
-     updates.
+   - Push API subscription, `inbox_changed` invalidation, lifecycle and daily
+     maintenance reconciliation, badge, notification, controls, and
+     store/privacy updates.
 7. **Web dashboard completion**
    - full management routes and visibility refresh.
 8. **Popup product pass**
@@ -720,7 +837,8 @@ The foundation is complete when:
 - account switching cannot expose previous-account social or watch data;
 - friend, group, and invite multi-write operations are atomic and idempotent;
 - direct/group room invites survive missed notification delivery;
-- browser notifications work after service-worker and browser restart;
+- browser notifications arrive through Web Push without frequent polling and
+  recover after offline time, service-worker restart, and browser restart;
 - current plan retention and limits are consistently enforced server-side;
 - integration and staging tests cover two accounts and real supported provider
   playback;
