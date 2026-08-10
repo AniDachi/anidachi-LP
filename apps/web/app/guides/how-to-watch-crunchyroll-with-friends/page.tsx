@@ -12,12 +12,12 @@ import {
 export const metadata: Metadata = {
   title: "How to Watch Crunchyroll with Friends — AniDachi Sync Guide (2026)",
   description:
-    "Watch Crunchyroll with friends in an AniDachi watchroom — live sync or async catch-up. Step-by-step from AniDachi pricing / early access (not the Chrome Web Store).",
+    "How to watch Crunchyroll with friends — two people or a group, same time or async. AniDachi syncs each Crunchyroll tab; Discord voice stays optional. Start at pricing.",
   alternates: { canonical: "/guides/how-to-watch-crunchyroll-with-friends" },
   openGraph: {
     title: "How to Watch Crunchyroll with Friends — AniDachi Sync Guide (2026)",
     description:
-      "Create an AniDachi Crunchyroll watchroom in minutes — synced playback, chat, and async catch-up. Start at pricing.",
+      "Step-by-step: watch Crunchyroll together with friends — live sync, Discord hybrid, or async catch-up.",
     url: "/guides/how-to-watch-crunchyroll-with-friends",
   },
 };
@@ -26,12 +26,27 @@ const faq = [
   {
     question: "Does Crunchyroll have a watch party feature in 2026?",
     answer:
-      "No. As of 2026, Crunchyroll still does not have a built-in watch party or group watch feature. You need a third-party tool — AniDachi, Crunchyroll Party, or Discord screen sharing.",
+      "No. As of 2026, Crunchyroll still does not have a built-in watch party or group watch feature. You need a third-party tool — AniDachi, Crunchyroll Party, or Discord screen sharing. Full hub: /watch-crunchyroll-together.",
   },
   {
     question: "How do I watch Crunchyroll with friends online?",
     answer:
       "Open /pricing for AniDachi early access, install the Chrome extension, open any anime on Crunchyroll, detect the show, and create a watchroom. Share the invite link so each friend joins on their own Crunchyroll account.",
+  },
+  {
+    question: "How do two people watch Crunchyroll at the same time?",
+    answer:
+      "Both open the same episode on their own Crunchyroll accounts, then join one AniDachi (or Crunchyroll Party) watchroom so play/pause stays aligned. Keep Discord or FaceTime for voice if you want to talk — video stays on each person's Crunchyroll tab, not a shared screen.",
+  },
+  {
+    question: "Can you watch Crunchyroll with friends on Discord?",
+    answer:
+      "Yes as a hybrid: Discord for voice, AniDachi for synced Crunchyroll playback. Pure Discord Go Live screen share works but compresses video and only the host controls the player. Prefer Discord voice + watchroom sync for quality. See /guides/how-to-watch-anime-with-friends-on-discord.",
+  },
+  {
+    question: "Can you screen share Crunchyroll for a group watch?",
+    answer:
+      "You can screen-share a Crunchyroll tab on Discord, but quality and control suffer. For a real group watch, use a party extension so everyone streams on their own account. Dedicated guide: /guides/can-you-screen-share-crunchyroll-on-discord.",
   },
   {
     question: "Does Crunchyroll have a group watch or watch together option?",
@@ -104,7 +119,7 @@ export default function HowToWatchWithFriendsPage() {
         description="Every method to watch Crunchyroll together, compared and explained."
         url="/guides/how-to-watch-crunchyroll-with-friends"
         datePublished="2026-04-23"
-        dateModified="2026-07-28"
+        dateModified="2026-08-03"
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta
@@ -122,11 +137,12 @@ export default function HowToWatchWithFriendsPage() {
         </h2>
         <p className="text-xl text-foreground/80 leading-relaxed mb-8">
           <strong>
-            Create an AniDachi Crunchyroll watchroom, share the invite, and watch
-            on each person&apos;s own Crunchyroll tab — synced for live hangs,
-            async when schedules conflict.
+            How to watch Crunchyroll with friends: create an AniDachi watchroom,
+            share the invite, and watch on each person&apos;s own Crunchyroll tab
+            — synced for two people or a group live, async when schedules
+            conflict.
           </strong>{" "}
-          Full hub:{" "}
+          Full hub for party nouns (does/can/is-there):{" "}
           <Link
             href="/watch-crunchyroll-together"
             className="text-brand-orange hover:underline"
@@ -190,6 +206,13 @@ export default function HowToWatchWithFriendsPage() {
             className="text-brand-orange hover:underline"
           >
             can you screen share Crunchyroll on Discord
+          </Link>{" "}
+          and the full hybrid setup in{" "}
+          <Link
+            href="/guides/how-to-watch-anime-with-friends-on-discord"
+            className="text-brand-orange hover:underline"
+          >
+            how to watch anime with friends on Discord
           </Link>
           .
         </p>

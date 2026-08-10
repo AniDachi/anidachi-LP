@@ -19,7 +19,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "YouTube Watch Party — Watch YouTube Together With Friends (2026)",
   description:
-    "YouTube has no native watch party. Host AniDachi watchrooms on full YouTube videos with sync, chat, and async catch-up — start free at pricing.",
+    "YouTube watch party hub: sync full videos with friends via Chrome extension, Teleparty, or Discord — AniDachi adds async catch-up. Start free at pricing.",
   alternates: { canonical: "/watch-youtube-together" },
   openGraph: {
     title: "YouTube Watch Party — Watch YouTube Together",
@@ -46,7 +46,7 @@ const faq = [
   {
     question: "What is the best YouTube watch party app?",
     answer:
-      "For groups that want a Chrome extension watchroom with live sync and async catch-up, AniDachi is the strongest fit. Watch2Gether wins for free browser-only live rooms. Teleparty works if you already use it for Netflix nights.",
+      "For groups that want a Chrome extension watchroom with live sync and async catch-up, AniDachi is the strongest fit. Watch2Gether wins for free browser-only live rooms. Teleparty works if you already use it for Netflix nights. Extension deep-dive: /guides/youtube-watch-party-chrome-extension.",
   },
   {
     question: "How do I watch YouTube together with friends?",
@@ -65,7 +65,7 @@ const faq = [
   {
     question: "Does Teleparty work with YouTube?",
     answer:
-      "Yes for live sync. Teleparty does not offer AniDachi-style async YouTube watchrooms. See our Teleparty for YouTube guide for details.",
+      "Yes for live sync. Teleparty does not offer AniDachi-style async YouTube watchrooms. See /guides/does-teleparty-work-with-youtube for details.",
   },
 ];
 
@@ -142,6 +142,14 @@ export default function WatchYoutubeTogetherPage() {
     { href: "/watch-anime-together", label: "Watch Anime Together" },
     { href: "/watch-crunchyroll-together", label: "Crunchyroll Watch Party" },
     {
+      href: "/guides/youtube-watch-party-chrome-extension",
+      label: "YouTube watch party Chrome extension",
+    },
+    {
+      href: "/guides/does-teleparty-work-with-youtube",
+      label: "Does Teleparty work with YouTube?",
+    },
+    {
       href: "/guides/how-to-watch-youtube-with-friends",
       label: "How to watch YouTube with friends",
     },
@@ -202,7 +210,7 @@ export default function WatchYoutubeTogetherPage() {
         description="The complete guide to YouTube watch parties: sync, chat, async, and every alternative compared."
         url="/watch-youtube-together"
         datePublished="2026-07-25"
-        dateModified="2026-07-26"
+        dateModified="2026-08-03"
         faq={faq}
         headings={tocHeadings}
         itemList={startHereItemList}
@@ -228,6 +236,13 @@ export default function WatchYoutubeTogetherPage() {
           YouTube has no native co-watching feature. Start from{" "}
           <Link href="/pricing" className="text-brand-orange hover:underline">
             pricing / early access
+          </Link>
+          . Extension details:{" "}
+          <Link
+            href="/guides/youtube-watch-party-chrome-extension"
+            className="text-brand-orange hover:underline"
+          >
+            YouTube watch party Chrome extension
           </Link>
           . Compare free live-only tools below after you know the AniDachi path.
         </p>

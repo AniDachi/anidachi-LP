@@ -12,12 +12,12 @@ import {
 export const metadata: Metadata = {
   title: "Watch Anime Together Online — Methods, Sync & Genre Guides (2026)",
   description:
-    "The hub for watching anime together online: AniDachi Crunchyroll watchrooms, free Discord and Crunchyroll Party options, long-distance tips, and genre pick guides — distinct from the AniDachi homepage product pitch.",
+    "How to watch anime with friends online — websites and apps compared. AniDachi watchrooms, free Discord and Crunchyroll Party options, long-distance tips, and genre guides.",
   alternates: { canonical: "/watch-anime-together" },
   openGraph: {
     title: "Watch Anime Together Online — Methods, Sync & Genre Guides (2026)",
     description:
-      "Compare every way to watch anime together — sync tools, free options, long-distance, and genre hubs.",
+      "Watch anime with friends: sync tools, free website options, long-distance, and genre hubs.",
     url: "/watch-anime-together",
   },
 };
@@ -27,6 +27,16 @@ const faq = [
     question: "What is the best way to watch anime together online?",
     answer:
       "The best method depends on your group. For Crunchyroll users, AniDachi offers watchrooms with sync, chat, and async support. For cross-platform groups, Teleparty works across Netflix, Disney+, and Crunchyroll. For a free option, Discord screen sharing works in a pinch.",
+  },
+  {
+    question: "How do you watch anime with friends online?",
+    answer:
+      "Pick a platform (usually Crunchyroll), then either install a watchroom extension so everyone syncs on their own account, or use Discord Go Live for a free but lower-quality share. AniDachi and Crunchyroll Party cover the extension path; Discord is the free fallback.",
+  },
+  {
+    question: "Is there a website to watch anime together?",
+    answer:
+      "Most licensed anime lives on streaming sites like Crunchyroll — there is no single free 'watch anime together' website that replaces each person's subscription. Tools like AniDachi and Crunchyroll Party sit on top of those sites as a Chrome watchroom. Browser room sites (e.g. Watch2Gether) fit public YouTube-style links better than Crunchyroll catalog titles.",
   },
   {
     question: "Is there a free anime watch party app?",
@@ -41,7 +51,7 @@ const faq = [
   {
     question: "Can you watch anime together long distance for free?",
     answer:
-      "Yes — for free, Discord screen sharing works over any distance. For a more polished long-distance anime watch party, Crunchyroll Party (free) or AniDachi (Free limited hosting; Plus for unlimited hosting) give everyone full-quality streams and proper sync. AniDachi also supports async watching, so long-distance friends in different time zones never need to schedule.",
+      "Yes — for free, Discord screen sharing works over any distance. For a more polished long-distance anime watch party, Crunchyroll Party (free) or AniDachi (Free limited hosting; Plus for unlimited hosting) give everyone full-quality streams and proper sync. AniDachi also supports async watching, so long-distance friends in different time zones never need to schedule. Dedicated hub: /best-apps-watch-anime-together-long-distance.",
   },
   {
     question: "How do you stream anime together online?",
@@ -103,7 +113,7 @@ export default function WatchAnimeTogetherPage() {
       description="Compare every way to watch anime together online — AniDachi watchrooms, free options, long-distance tips, and genre hubs."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-07-28"
+      dateModified="2026-08-03"
       faq={faq}
       headings={tocHeadings}
       itemList={genreHubItemList(1)}
@@ -328,11 +338,16 @@ export default function WatchAnimeTogetherPage() {
         See our full guide:{" "}
         <Link href="/guides/how-to-watch-anime-long-distance" className="text-brand-orange hover:underline">
           How to watch anime long distance
-        </Link>{" "}
-        and{" "}
+        </Link>
+        ,{" "}
         <Link href="/guides/how-to-watch-anime-with-friends-in-different-time-zones" className="text-brand-orange hover:underline">
           watching anime across time zones
-        </Link>.
+        </Link>
+        , and the ranked long-distance app list:{" "}
+        <Link href="/best-apps-watch-anime-together-long-distance" className="text-brand-orange hover:underline">
+          best apps to watch anime together long distance
+        </Link>
+        .
       </p>
 
       <h2
