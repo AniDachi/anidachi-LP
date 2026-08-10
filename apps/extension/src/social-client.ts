@@ -1,6 +1,8 @@
 import {
   type AcceptedRoomInviteResponse,
   AcceptedRoomInviteResponseSchema,
+  type CreateRoomInviteResponse,
+  CreateRoomInviteResponseSchema,
   type CreateRoomInviteRequest,
   CreateRoomInviteRequestSchema,
   type FriendGroup,
@@ -42,6 +44,7 @@ interface SocialContractSchema<T> {
 
 export type {
   AcceptedRoomInviteResponse,
+  CreateRoomInviteResponse,
   FriendGroup,
   FriendListItem,
   InviteTargets,
@@ -139,6 +142,7 @@ export type SocialHttpMessageResponse =
   | { ok: true; directory: SocialDirectory }
   | { ok: true; targets: InviteTargets }
   | { ok: true; invite: RoomInvite }
+  | { ok: true; inviteResult: CreateRoomInviteResponse }
   | { ok: true; group: FriendGroup }
   | { ok: true; archivedGroupId: string }
   | { ok: true; invites: RoomInvitesResponse }
@@ -515,7 +519,7 @@ export async function listRoomInvitesFromApi(
 export async function createRoomInviteFromApi(
   accessToken: string,
   input: CreateRoomInviteInput,
-): Promise<RoomInvite> {
+): Promise<CreateRoomInviteResponse> {
   logDebug("social.http", "create invite request", {
     webHttpBase: WEB_HTTP_BASE,
     roomId: input.roomId,
@@ -534,8 +538,8 @@ export async function createRoomInviteFromApi(
   }
 
   return parseSocialContract(
-    RoomInviteSchema,
-    responseField(await response.json(), "invite"),
+    CreateRoomInviteResponseSchema,
+    await response.json(),
     "created invite",
   );
 }
@@ -828,7 +832,7 @@ export async function handleSocialHttpMessage(
     if (message.command === "create-invite") {
       return {
         ok: true,
-        invite: await createRoomInviteFromApi(message.accessToken, message.input),
+        inviteResult: await createRoomInviteFromApi(message.accessToken, message.input),
       };
     }
     if (message.command === "create-group") {
@@ -953,13 +957,19 @@ export async function listRoomInvites(accessToken: string): Promise<RoomInvitesR
 export async function createRoomInvite(
   accessToken: string,
   input: CreateRoomInviteInput,
-): Promise<RoomInvite> {
+): Promise<CreateRoomInviteResponse> {
   const response = assertSocialHttpResponse(
     await sendSocialHttpMessage(createInviteHttpMessage(accessToken, input)),
   );
   if (!response.ok) throw socialBridgeError(response);
-  if (!("invite" in response)) throw new Error("Social bridge response is missing invite");
-  return parseSocialContract(RoomInviteSchema, response.invite, "created invite bridge");
+  if (!("inviteResult" in response)) {
+    throw new Error("Social bridge response is missing invite result");
+  }
+  return parseSocialContract(
+    CreateRoomInviteResponseSchema,
+    response.inviteResult,
+    "created invite bridge",
+  );
 }
 
 export async function createFriendGroup(

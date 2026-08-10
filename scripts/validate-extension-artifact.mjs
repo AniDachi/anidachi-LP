@@ -80,8 +80,12 @@ if (!permissions.includes("alarms")) {
   throw new Error("Missing alarms permission required for notification recovery");
 }
 
-if (!optionalPermissions.includes("notifications")) {
-  throw new Error("Notifications must be declared as an optional permission");
+if (!permissions.includes("notifications")) {
+  throw new Error("Missing notifications permission required for default-on invite alerts");
+}
+
+if (optionalPermissions.includes("notifications")) {
+  throw new Error("Notifications must not be duplicated in optional permissions");
 }
 
 if (Number.parseInt(manifest.minimum_chrome_version ?? "0", 10) < 121) {

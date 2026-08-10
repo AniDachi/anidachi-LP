@@ -169,6 +169,11 @@ export const RoomInviteSchema = z.strictObject({
     .max(100),
 });
 
+export const CreateRoomInviteResponseSchema = z.strictObject({
+  invite: RoomInviteSchema,
+  created: z.boolean().default(true),
+});
+
 export const RoomInvitesResponseSchema = z.strictObject({
   meta: AccountResponseMetaSchema,
   inbox: z.array(RoomInviteSchema),
@@ -361,6 +366,7 @@ export type SocialDirectory = z.infer<typeof SocialDirectorySchema>;
 export type InviteTargets = z.infer<typeof InviteTargetsSchema>;
 export type CreateRoomInviteRequest = z.infer<typeof CreateRoomInviteRequestSchema>;
 export type RoomInvite = z.infer<typeof RoomInviteSchema>;
+export type CreateRoomInviteResponse = z.infer<typeof CreateRoomInviteResponseSchema>;
 export type RoomInvitesResponse = z.infer<typeof RoomInvitesResponseSchema>;
 export type AccountInboxItem = z.infer<typeof AccountInboxItemSchema>;
 export type AccountInboxCounts = z.infer<typeof AccountInboxCountsSchema>;

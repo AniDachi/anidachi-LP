@@ -442,6 +442,15 @@ return the existing recipient state and never create another notification. A
 recipient who declines cannot be invited to that same room again, but can be
 invited normally to a future room.
 
+The host invite panel reads the same canonical sent-invite state when it opens.
+Targets already invited to the active room remain visibly labeled `Pending`,
+`Accepted`, or `Invited` instead of returning to an ambiguous `Invite` action.
+The create response also reports whether the transactional RPC created a new
+recipient snapshot, so a retry can say that an invite already exists rather
+than claiming another delivery. During the additive deployment bridge, clients
+parse a missing `created` field from an older web deployment as `true`; new web
+deployments always return the explicit boolean.
+
 The implemented MVP bound is 100 resolved recipients per request and 20 new
 invite actions per sender per minute. New extension clients keep one UUID
 `clientActionId` for a failed request retry; the web API generates a fallback
@@ -587,10 +596,11 @@ Notification rules:
   no per-group mute, schedule, custom sound, or additional notification modes.
 
 The local notification preference is per browser profile. Push subscription
-fields remain tied to the authenticated account device. `alarms` and
-`notifications` permissions are added only in the complete notification slice,
-together with user-facing controls, privacy copy, and Chrome Web Store listing
-updates.
+fields remain tied to the authenticated account device. The release manifest
+declares `notifications` as a required permission so the default-on preference
+can register a Web Push device immediately after sign-in; the local toggle
+unsubscribes that browser without changing the durable inbox. The Chrome Web
+Store listing must explain the permission before public release.
 
 Firebase/GCM and Supabase Realtime remain unnecessary. Web Push wakes the MV3
 worker; the durable inbox and lifecycle reconciliation recover missed delivery.

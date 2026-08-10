@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import {
+  type CreateRoomInviteResponse,
   CreateRoomInviteRequestSchema,
   type RoomInvitesResponse,
 } from "@anidachi/protocol";
@@ -67,7 +68,8 @@ export async function POST(request: NextRequest) {
         }
       });
     }
-    return NextResponse.json({ invite });
+    const response: CreateRoomInviteResponse = { invite, created };
+    return NextResponse.json(response);
   } catch (error) {
     return socialErrorResponse(error);
   }

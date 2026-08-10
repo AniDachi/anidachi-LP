@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1786356430.3101223,
-    "ast_hash": "73d6696ee754c997957061a9f05f0e34",
+    "mtime": 1786364382.5863955,
+    "ast_hash": "ce1a8cbcff80ca4c9eea4d3556d6ed3f",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -375,13 +375,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/social-client.ts": {
-    "mtime": 1786356430.2673953,
-    "ast_hash": "cb567d78db955373c8b09b6e1560de48",
+    "mtime": 1786363616.9405243,
+    "ast_hash": "13f1ab2298ced7e30617a115fb71db95",
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
-    "mtime": 1785929709.0682175,
-    "ast_hash": "e88ba3f00ce79e01d054eba75ecba881",
+    "mtime": 1786362889.1416621,
+    "ast_hash": "54f005e253c84fd56cf40beb568b380c",
     "semantic_hash": ""
   },
   "apps/extension/src/user-identity.ts": {
@@ -525,8 +525,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/social-client.test.ts": {
-    "mtime": 1786356862.6021914,
-    "ast_hash": "3993da55bdfaf8cd29137cbf1809dbbe",
+    "mtime": 1786363628.6973367,
+    "ast_hash": "c33f0d86be9deac0ca1aac4ae0d4e098",
     "semantic_hash": ""
   },
   "apps/extension/test/video-adapter.test.ts": {
@@ -565,8 +565,8 @@
     "semantic_hash": ""
   },
   "apps/extension/wxt.config.ts": {
-    "mtime": 1786341221.1913145,
-    "ast_hash": "5b8f9a73f3ff87415fc63760524067d6",
+    "mtime": 1786363598.7282076,
+    "ast_hash": "2197827ebdd323549eb1a3df057913a3",
     "semantic_hash": ""
   },
   "apps/web/app/account/account-nav.tsx": {
@@ -840,8 +840,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/invites/route.ts": {
-    "mtime": 1786356713.906239,
-    "ast_hash": "01483ce7adef6052f419af436aa0a3f8",
+    "mtime": 1786363587.8725111,
+    "ast_hash": "0bdb5605f587ba3078e088f3b6b7e693",
     "semantic_hash": ""
   },
   "apps/web/app/api/kreatli-crm/gmail/callback/route.ts": {
@@ -1105,8 +1105,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-teleparty/page.tsx": {
-    "mtime": 1785149374.8466067,
-    "ast_hash": "8944d0ee099f7c0882f8a14bc5a261bc",
+    "mtime": 1786361943.000341,
+    "ast_hash": "5813ab0dbe90e1e321a2659b39d430d0",
     "semantic_hash": ""
   },
   "apps/web/app/compare/anidachi-vs-watch2gether/page.tsx": {
@@ -1430,8 +1430,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-anime-with-friends-on-discord/page.tsx": {
-    "mtime": 1785929708.2898817,
-    "ast_hash": "78185d12163dac0a4b9e94b9f6944341",
+    "mtime": 1786361943.0015419,
+    "ast_hash": "a7716870737b94cab3fa68e69b636fc8",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-anime-with-friends-online/page.tsx": {
@@ -1450,8 +1450,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-crunchyroll-with-friends/page.tsx": {
-    "mtime": 1785929708.2901287,
-    "ast_hash": "cb7b1752876c925ffe547dc51e915ade",
+    "mtime": 1786361943.001828,
+    "ast_hash": "a95120f3b9198498ac0fefd73edef6ad",
     "semantic_hash": ""
   },
   "apps/web/app/guides/how-to-watch-seasonal-anime-together/page.tsx": {
@@ -1615,8 +1615,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/watch-anime-together/page.tsx": {
-    "mtime": 1785929708.2907736,
-    "ast_hash": "aa947f87657896036055a056a1f5a68f",
+    "mtime": 1786361943.0023408,
+    "ast_hash": "75bf3af72f486b5f788f39a821b9881f",
     "semantic_hash": ""
   },
   "apps/web/app/watch-comedy-anime-with-friends/page.tsx": {
@@ -1630,8 +1630,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/watch-crunchyroll-together/page.tsx": {
-    "mtime": 1785929708.2908785,
-    "ast_hash": "3964c7b4dc401249428ef07e37ce190e",
+    "mtime": 1786361943.00255,
+    "ast_hash": "deb2dec81486285e819c954cb47fa85e",
     "semantic_hash": ""
   },
   "apps/web/app/watch-fantasy-anime-with-friends/page.tsx": {
@@ -2830,8 +2830,8 @@
     "semantic_hash": ""
   },
   "scripts/validate-extension-artifact.mjs": {
-    "mtime": 1786342077.0094175,
-    "ast_hash": "c382e47ef336059ed798e516b1737ad5",
+    "mtime": 1786364064.3438869,
+    "ast_hash": "d6daf51207747ed330824ae0953636dd",
     "semantic_hash": ""
   },
   "tests/e2e/harness-entry.ts": {
@@ -2915,8 +2915,8 @@
     "semantic_hash": ""
   },
   ".cursor/scratchpad.md": {
-    "mtime": 1785149374.845295,
-    "ast_hash": "8a75399cf6254334cc7cf5886765ee86",
+    "mtime": 1786361942.9998746,
+    "ast_hash": "32f765e0fa24a9252b478211d6d37033",
     "semantic_hash": ""
   },
   ".github/pull_request_template.md": {
@@ -3045,8 +3045,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1786357095.5035298,
-    "ast_hash": "560d1a3a136b8a5d9a20084e5984f4a1",
+    "mtime": 1786363181.6853588,
+    "ast_hash": "0bd8f2e3c76443eb7a52383c2b3137ae",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3070,8 +3070,8 @@
     "semantic_hash": ""
   },
   "docs/extension-release-channels.md": {
-    "mtime": 1786350193.721795,
-    "ast_hash": "1740755249d859c956c31101f15ed794",
+    "mtime": 1786364064.3848736,
+    "ast_hash": "2ad3c32829f4c95def2a358259979614",
     "semantic_hash": ""
   },
   "docs/new-chat-project-context.md": {
@@ -3965,13 +3965,13 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/can-you-screen-share-youtube-on-discord/page.tsx": {
-    "mtime": 1785149374.8530142,
-    "ast_hash": "cae67b305e1567f73bd405c60794e57c",
+    "mtime": 1786361943.000755,
+    "ast_hash": "e8f9d2d0d87d77233cb06cc7078ed5a5",
     "semantic_hash": ""
   },
   "apps/web/app/guides/does-teleparty-work-with-youtube/page.tsx": {
-    "mtime": 1785149374.8545134,
-    "ast_hash": "d2bc46d226d0a37b127a17f6be9f0544",
+    "mtime": 1786361943.0012877,
+    "ast_hash": "e047646e6c15e3e4abe25e86201161a1",
     "semantic_hash": ""
   },
   "apps/web/app/guides/does-youtube-have-watch-party/page.tsx": {
@@ -4025,8 +4025,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/guides/youtube-watch-party-chrome-extension/page.tsx": {
-    "mtime": 1785149374.859332,
-    "ast_hash": "17b8b3ef8690d9ed0e77ecdb0f40cdad",
+    "mtime": 1786361943.0020678,
+    "ast_hash": "7572e1ad5f2505fe30fcc258bfe4e44e",
     "semantic_hash": ""
   },
   "apps/web/app/guides/youtube-watch-party-free/page.tsx": {
@@ -4040,8 +4040,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/watch-youtube-together/page.tsx": {
-    "mtime": 1785149374.860624,
-    "ast_hash": "eef15059e0e08abfb3ca66f598961f1c",
+    "mtime": 1786361943.0027409,
+    "ast_hash": "25dcb9f9bb417510c57590d6caec9ed8",
     "semantic_hash": ""
   },
   ".cursor/plans/yt-seo-conversion-polish.plan.md": {
@@ -4165,8 +4165,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md": {
-    "mtime": 1786357095.5413556,
-    "ast_hash": "b4214606a357950b5e34658da59206b4",
+    "mtime": 1786364243.8032088,
+    "ast_hash": "2023ae2c0e78270a136ae8119f413d30",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md": {
@@ -4205,13 +4205,13 @@
     "semantic_hash": ""
   },
   "packages/protocol/src/account.ts": {
-    "mtime": 1786356217.0095458,
-    "ast_hash": "989e62a016aeab5d78f5da3e969b1eac",
+    "mtime": 1786364232.227231,
+    "ast_hash": "5aef7da40f3b043a973bba7f9e73fa9b",
     "semantic_hash": ""
   },
   "packages/protocol/test/account.test.ts": {
-    "mtime": 1786356217.0487309,
-    "ast_hash": "acd4dae417a41af18fdf6305bd808362",
+    "mtime": 1786364232.267502,
+    "ast_hash": "14c0a8946f5ea02c17ac567343a4ad10",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-people-model.ts": {
@@ -4357,6 +4357,16 @@
   "apps/web/supabase/migrations/20260810190000_room_invite_atomicity.sql": {
     "mtime": 1786357733.6167772,
     "ast_hash": "0e6a5f064e8498bc59a70ea350c6f570",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/room-invite-target-status.ts": {
+    "mtime": 1786363866.3206654,
+    "ast_hash": "8e16075c623ed80c925927baa20a4dcf",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/room-invite-target-status.test.ts": {
+    "mtime": 1786363866.3606777,
+    "ast_hash": "d115af8508306ac2397f1832db97aa6f",
     "semantic_hash": ""
   }
 }

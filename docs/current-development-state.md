@@ -190,8 +190,11 @@ acceptance remains required before production promotion.
 Durable room-invite and inbox rows remain authoritative. The authenticated HTTP
 inbox, account-scoped Popup cache, unseen badge, seen acknowledgement, and
 shared web incoming surface are deployed. Standards-based Web Push delivery and
-OS notifications are implemented on `codex/room-invite-web-push` and remain
-pending staging environment, deployment, and two-account acceptance. The
+OS notifications are implemented and remain pending loaded-artifact,
+two-account staging acceptance. The extension release manifest grants the
+notification permission up front so the default-on local preference can
+register a push device automatically after sign-in; the existing local toggle
+still disables and revokes that browser's subscription. The
 additive `devices` Web Push migration is already applied and verified on the
 staging Supabase project; production remains unchanged until staging acceptance.
 Web Push sends only an `inbox_changed` invalidation so the extension runs the
@@ -225,6 +228,11 @@ resolved recipients. Repeated direct/group targeting for the same room and
 recipient returns existing state, including declined or expired state, and does
 not schedule another push invalidation. The migration is additive: historical
 invite rows remain readable and are not destructively rewritten.
+
+The host invite panel reloads canonical sent invites when opened and keeps each
+target labeled `Pending`, `Accepted`, or `Invited`. The create response exposes
+whether a new recipient snapshot was created, allowing the UI to distinguish a
+real send from an idempotent or semantic duplicate.
 
 The invite schema still assigns `expires_at` with a 12-hour default, and the
 existing accept path enforces it. The staging inbox foundation preserves that
