@@ -1,6 +1,6 @@
 # Anidachi Extension Release Channels
 
-Last updated: 2026-06-04.
+Last updated: 2026-08-10.
 
 This document describes the current Chrome extension release setup. Treat it as the
 source of truth for the current implementation, not as a permanent product contract.
@@ -70,9 +70,16 @@ Outputs:
 Generate the production extension artifact:
 
 ```bash
-pnpm build:extension:public
+WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
+
+The production VAPID public key must match the production web app's
+`ANIDACHI_VAPID_PUBLIC_KEY`. Keep `ANIDACHI_VAPID_PRIVATE_KEY` server-only in
+Vercel Production. GitHub Actions reads the public key from the
+`WXT_VAPID_PUBLIC_KEY` variable in the `production` environment and refuses to
+build the `main` artifact when that variable is missing. Staging uses its own
+key and remains isolated from production subscriptions.
 
 Outputs:
 
@@ -132,6 +139,8 @@ Pre-upload checklist:
   or `<all_urls>`.
 - `content_scripts.matches` does not contain broad patterns.
 - Web/API hosts match the channel.
+- The production build uses the public half of the production VAPID key pair;
+  the corresponding private key exists only in the production web environment.
 - `alarms` is present for daily notification recovery and `notifications` is an
   optional permission requested only from the Popup setting.
 - `minimum_chrome_version` is at least 121 for extension Web Push support.

@@ -2770,8 +2770,8 @@
     "semantic_hash": ""
   },
   "scripts/build-extension-public.sh": {
-    "mtime": 1785929709.1101873,
-    "ast_hash": "6cf094882098ca147dca612dc01a3481",
+    "mtime": 1786350193.6195016,
+    "ast_hash": "29492bc5af354783fe5434dd1e1133a3",
     "semantic_hash": ""
   },
   "scripts/build-extension-staging.sh": {
@@ -2925,8 +2925,8 @@
     "semantic_hash": ""
   },
   ".github/workflows/build-extension.yml": {
-    "mtime": 1784676382.306914,
-    "ast_hash": "38bc4236e5fb507ef25f67205c2ceebd",
+    "mtime": 1786350193.5504172,
+    "ast_hash": "cd7336ed216732c2d1ca883f5c15915f",
     "semantic_hash": ""
   },
   ".github/workflows/ci.yml": {
@@ -3070,8 +3070,8 @@
     "semantic_hash": ""
   },
   "docs/extension-release-channels.md": {
-    "mtime": 1786342115.0551033,
-    "ast_hash": "48dd390c3ab5a1e48156c0ec3e0de65a",
+    "mtime": 1786350193.721795,
+    "ast_hash": "1740755249d859c956c31101f15ed794",
     "semantic_hash": ""
   },
   "docs/new-chat-project-context.md": {

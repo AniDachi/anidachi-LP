@@ -63,10 +63,14 @@ jobs:
           WXT_WEB_HTTP_BASE: ${{ vars.WXT_WEB_HTTP_BASE }}
           WXT_API_HTTP_BASE: ${{ vars.WXT_API_HTTP_BASE }}
           WXT_API_WS_BASE: ${{ vars.WXT_API_WS_BASE }}
+          CONFIGURED_VAPID_PUBLIC_KEY: ${{ vars.WXT_VAPID_PUBLIC_KEY }}
         run: |
           test -n "${WXT_WEB_HTTP_BASE}"
           test -n "${WXT_API_HTTP_BASE}"
           test -n "${WXT_API_WS_BASE}"
+          if [[ "$EXTENSION_CHANNEL" == "production" ]]; then
+            test -n "${CONFIGURED_VAPID_PUBLIC_KEY}"
+          fi
 
       - name: Build extension
         env:
@@ -76,7 +80,12 @@ jobs:
           WXT_API_HTTP_BASE: ${{ vars.WXT_API_HTTP_BASE }}
           WXT_API_WS_BASE: ${{ vars.WXT_API_WS_BASE }}
           WXT_BUILD_ID: ${{ github.sha }}-${{ env.EXTENSION_CHANNEL }}-${{ github.run_number }}
-        run: pnpm --filter @anidachi/extension build
+          CONFIGURED_VAPID_PUBLIC_KEY: ${{ vars.WXT_VAPID_PUBLIC_KEY }}
+        run: |
+          if [[ -n "${CONFIGURED_VAPID_PUBLIC_KEY}" ]]; then
+            export WXT_VAPID_PUBLIC_KEY="${CONFIGURED_VAPID_PUBLIC_KEY}"
+          fi
+          pnpm --filter @anidachi/extension build
 
       - name: Validate extension artifact
         run: node scripts/validate-extension-artifact.mjs --channel "$EXTENSION_CHANNEL" --dir apps/extension/.output/chrome-mv3
