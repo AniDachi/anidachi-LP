@@ -442,7 +442,15 @@ return the existing recipient state and never create another notification. A
 recipient who declines cannot be invited to that same room again, but can be
 invited normally to a future room.
 
-### Compatibility With The Current Invite Runtime
+The implemented MVP bound is 100 resolved recipients per request and 20 new
+invite actions per sender per minute. New extension clients keep one UUID
+`clientActionId` for a failed request retry; the web API generates a fallback
+UUID for older extension builds. The database still performs room-recipient
+deduplication, so a legacy retry cannot create or notify a second semantic
+invite. Push invalidation is scheduled only when the RPC creates at least one
+new recipient snapshot.
+
+### Compatibility With The Invite Runtime
 
 The deployed invite foundation still has a mandatory `expires_at` value with a
 12-hour default, and the current accept path rejects an invite when that value

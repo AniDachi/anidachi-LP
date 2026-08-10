@@ -442,6 +442,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [inviteTargetsLoading, setInviteTargetsLoading] = useState(false);
   const [inviteSendingTarget, setInviteSendingTarget] = useState<string | null>(null);
   const [inviteStatusMessage, setInviteStatusMessage] = useState<string | null>(null);
+  const inviteActionIdsRef = useRef(new Map<string, string>());
   const [messageComposerGuardActive, setMessageComposerGuardActive] = useState(false);
   const [messageComposerShieldActive, setMessageComposerShieldActive] = useState(false);
   const [messageComposerShieldReleasing, setMessageComposerShieldReleasing] = useState(false);
@@ -897,6 +898,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
   useEffect(() => {
     roomIdRef.current = roomId;
+    inviteActionIdsRef.current.clear();
     if (!roomId) {
       setRoomCapabilities(null);
       setInvitePanelOpen(false);
@@ -3759,8 +3761,19 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
       setInviteSendingTarget(targetKey);
       setInviteStatusMessage(null);
+      const requestKey = `${activeRoomId}:${targetKey}`;
+      const clientActionId =
+        inviteActionIdsRef.current.get(requestKey) ?? crypto.randomUUID();
+      inviteActionIdsRef.current.set(requestKey, clientActionId);
       try {
-        await createRoomInvite(accessToken, { roomId: activeRoomId, ...input });
+        await createRoomInvite(accessToken, {
+          roomId: activeRoomId,
+          clientActionId,
+          ...input,
+        });
+        if (inviteActionIdsRef.current.get(requestKey) === clientActionId) {
+          inviteActionIdsRef.current.delete(requestKey);
+        }
         setInviteStatusMessage(`Invite sent to ${label}.`);
         logDebug("overlay.invite", "sent", {
           roomId: activeRoomId,

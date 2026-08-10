@@ -9,6 +9,7 @@ import {
   createFriendGroupFromApi,
   createGroupHttpMessage,
   createInviteHttpMessage,
+  createRoomInviteFromApi,
   declineFriendRequest,
   declineFriendRequestHttpMessage,
   declineInviteHttpMessage,
@@ -36,6 +37,7 @@ const INVITE_ID = "22222222-2222-4222-8222-222222222222";
 const FRIENDSHIP_ID = "33333333-3333-4333-8333-333333333333";
 const GROUP_ID = "44444444-4444-4444-8444-444444444444";
 const ARCHIVED_GROUP_ID = "55555555-5555-4555-8555-555555555555";
+const CLIENT_ACTION_ID = "66666666-6666-4666-8666-666666666666";
 
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -77,6 +79,40 @@ function friendGroup(id: string, archivedAt: string | null) {
     createdAt: NOW,
     updatedAt: NOW,
     members: [],
+  };
+}
+
+function roomInvite() {
+  return {
+    id: INVITE_ID,
+    roomId: "room-1",
+    sender: {
+      userId: USER_ID,
+      handle: "ren",
+      displayName: "Ren",
+      avatarUrl: null,
+    },
+    targetKind: "direct",
+    targetGroupId: null,
+    message: null,
+    roomTitle: "Friday anime",
+    sourceUrl: "https://www.youtube.com/watch?v=video-1",
+    videoFingerprint: "youtube:video-1",
+    createdAt: NOW,
+    expiresAt: "2026-08-07T00:00:00.000Z",
+    recipients: [
+      {
+        user: {
+          userId: USER_ID,
+          handle: "ren",
+          displayName: "Ren",
+          avatarUrl: null,
+        },
+        status: "pending",
+        updatedAt: NOW,
+        respondedAt: null,
+      },
+    ],
   };
 }
 
@@ -389,7 +425,8 @@ describe("extension social HTTP bridge", () => {
       isSocialHttpMessage(
         createInviteHttpMessage("access-1", {
           roomId: "room-1",
-          recipientUserIds: ["user-1"],
+          clientActionId: CLIENT_ACTION_ID,
+          recipientUserIds: [USER_ID],
         }),
       ),
     ).toBe(true);
@@ -400,10 +437,33 @@ describe("extension social HTTP bridge", () => {
       isSocialHttpMessage(
         createInviteHttpMessage("access-1", {
           roomId: "room-1",
-          groupId: "group-1",
+          clientActionId: CLIENT_ACTION_ID,
+          groupId: GROUP_ID,
         }),
       ),
     ).toBe(true);
+  });
+
+  it("sends the stable invite action id to the web API", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ invite: roomInvite() }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createRoomInviteFromApi("access-1", {
+      roomId: "room-1",
+      clientActionId: CLIENT_ACTION_ID,
+      recipientUserIds: [USER_ID],
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(URL),
+      expect.objectContaining({
+        body: JSON.stringify({
+          roomId: "room-1",
+          clientActionId: CLIENT_ACTION_ID,
+          recipientUserIds: [USER_ID],
+        }),
+      }),
+    );
   });
 
   it("accepts durable inbox list and response messages", () => {
@@ -458,6 +518,27 @@ describe("extension social HTTP bridge", () => {
         command: "create-invite",
         accessToken: "access-1",
         input: { roomId: "room-1", recipientUserIds: [123] },
+      }),
+    ).toBe(false);
+    expect(
+      isSocialHttpMessage({
+        type: "ANIDACHI_SOCIAL_HTTP",
+        command: "create-invite",
+        accessToken: "access-1",
+        input: { roomId: "room-1", recipientUserIds: [USER_ID] },
+      }),
+    ).toBe(false);
+    expect(
+      isSocialHttpMessage({
+        type: "ANIDACHI_SOCIAL_HTTP",
+        command: "create-invite",
+        accessToken: "access-1",
+        input: {
+          roomId: "room-1",
+          clientActionId: CLIENT_ACTION_ID,
+          recipientUserIds: [USER_ID],
+          groupId: GROUP_ID,
+        },
       }),
     ).toBe(false);
   });

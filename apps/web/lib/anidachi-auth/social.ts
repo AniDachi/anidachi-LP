@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "crypto";
 import type { RecentPerson } from "@anidachi/protocol";
-import { db, getRoomById, getUserById, type UserRow } from "./db";
+import { db, getUserById, type UserRow } from "./db";
 import { getPlanEntitlements } from "./plan-entitlements";
 
 const UNIQUE_VIOLATION = "23505";
@@ -80,6 +80,11 @@ export type FriendGroupCreateOutcomeRow = {
   group_archived_at: string | null;
   group_created_at: string | null;
   group_updated_at: string | null;
+};
+
+export type RoomInviteCreateOutcomeRow = {
+  outcome: "created" | "existing";
+  invite_id: string | null;
 };
 
 export type FriendGroupMemberRow = {
@@ -523,6 +528,44 @@ export function resolveFriendGroupCreateOutcome(
     created_at: result.group_created_at,
     updated_at: result.group_updated_at,
   };
+}
+
+export function resolveRoomInviteCreateOutcome(
+  result: RoomInviteCreateOutcomeRow | null,
+): { inviteId: string; created: boolean } {
+  if (
+    !result ||
+    (result.outcome !== "created" && result.outcome !== "existing") ||
+    !result.invite_id ||
+    !isUuid(result.invite_id)
+  ) {
+    throw new Error("Failed to create invite: invalid database response");
+  }
+  return {
+    inviteId: result.invite_id,
+    created: result.outcome === "created",
+  };
+}
+
+export function roomInviteCreateError(message: string): SocialApiError | null {
+  const mappings: Array<[string, number, string]> = [
+    ["room_invite_request_id_conflict", 409, "Invite request id is already in use"],
+    ["room_invite_rate_limit", 429, "Too many invite requests. Try again shortly"],
+    ["room_invite_room_not_found", 404, "Room not found"],
+    ["room_invite_host_required", 403, "Only the host can invite people to this room"],
+    ["room_invite_room_ended", 409, "Ended rooms cannot receive new invites"],
+    ["room_invite_group_not_found", 404, "Group not found"],
+    ["room_invite_group_archived", 409, "Archived groups cannot be invited"],
+    ["room_invite_recipient_forbidden", 403, "Direct invites can target accepted friends only"],
+    ["room_invite_self_recipient", 400, "Cannot invite yourself"],
+    ["room_invite_no_recipients", 400, "Invite has no eligible recipients"],
+    ["room_invite_recipient_limit", 400, "Invite can target at most 100 people"],
+    ["room_invite_target_invalid", 400, "Provide either recipientUserIds or groupId"],
+    ["room_invite_message_invalid", 400, "Invite message is invalid"],
+    ["room_invite_request_invalid", 400, "Invite request is invalid"],
+  ];
+  const mapping = mappings.find(([code]) => message.includes(code));
+  return mapping ? new SocialApiError(mapping[1], mapping[2]) : null;
 }
 
 export async function listFriends(viewerUserId: string): Promise<{
@@ -1280,66 +1323,53 @@ export async function removeFriendGroupMember(params: {
 
 export async function createRoomInvite(params: {
   senderUserId: string;
+  clientActionId: string;
   roomId: string;
   recipientUserIds?: string[];
   groupId?: string;
   message?: string | null;
-}): Promise<RoomInvite> {
+}): Promise<{ invite: RoomInvite; created: boolean }> {
   assertUuid(params.senderUserId, "senderUserId");
-  const room = await getRoomById(params.roomId);
-  if (!room) throw new SocialApiError(404, "Room not found");
-  if (room.host_user_id !== params.senderUserId) {
-    throw new SocialApiError(403, "Only the host can invite people to this room");
-  }
-  if (room.status === "ended") {
-    throw new SocialApiError(409, "Ended rooms cannot receive new invites");
-  }
+  assertUuid(params.clientActionId, "clientActionId");
+  if (!params.roomId.trim()) throw new SocialApiError(400, "Missing roomId");
+  params.recipientUserIds?.forEach((recipientUserId) =>
+    assertUuid(recipientUserId, "recipientUserId"),
+  );
+  if (params.groupId) assertUuid(params.groupId, "groupId");
 
-  const hasDirectTargets = Boolean(params.recipientUserIds?.length);
-  const hasGroupTarget = Boolean(params.groupId);
-  if (hasDirectTargets === hasGroupTarget) {
-    throw new SocialApiError(400, "Provide either recipientUserIds or groupId");
-  }
-
-  const targetKind: InviteTargetKind = hasGroupTarget ? "group" : "direct";
-  const recipientUserIds = hasGroupTarget
-    ? await recipientIdsForGroupInvite(params.senderUserId, params.groupId ?? "")
-    : await recipientIdsForDirectInvite(params.senderUserId, params.recipientUserIds ?? []);
-  if (recipientUserIds.length === 0) {
-    throw new SocialApiError(400, "Invite has no eligible recipients");
+  const { data, error } = await db().rpc("create_room_invite_atomic", {
+    p_sender_user_id: params.senderUserId,
+    p_client_action_id: params.clientActionId,
+    p_room_id: params.roomId.trim(),
+    p_direct_recipient_user_ids: params.recipientUserIds ?? null,
+    p_group_id: params.groupId ?? null,
+    p_message: params.message ?? null,
+  });
+  if (error) {
+    const publicError = roomInviteCreateError(error.message);
+    if (publicError) throw publicError;
+    throw new Error(`Failed to create invite: ${error.message}`);
   }
 
-  const { data: inviteData, error: inviteError } = await db()
-    .from("room_invites")
-    .insert({
-      room_id: room.room_id,
-      sender_user_id: params.senderUserId,
-      target_kind: targetKind,
-      target_group_id: params.groupId ?? null,
-      message: params.message ?? null,
-      room_title: room.title,
-      source_url: room.source_url,
-      video_fingerprint: room.video_fingerprint,
-    })
-    .select()
-    .single();
-  if (inviteError) throw new Error(`Failed to create invite: ${inviteError.message}`);
-
-  const invite = inviteData as RoomInviteRow;
-  const { data: recipientsData, error: recipientsError } = await db()
-    .from("room_invite_recipients")
-    .insert(
-      recipientUserIds.map((recipientUserId) => ({
-        invite_id: invite.id,
-        recipient_user_id: recipientUserId,
-      }))
-    )
-    .select();
+  const result = (Array.isArray(data) ? data[0] : data) as RoomInviteCreateOutcomeRow | null;
+  const outcome = resolveRoomInviteCreateOutcome(result);
+  const [{ data: inviteData, error: inviteError }, { data: recipientsData, error: recipientsError }] =
+    await Promise.all([
+      db().from("room_invites").select("*").eq("id", outcome.inviteId).single(),
+      db().from("room_invite_recipients").select("*").eq("invite_id", outcome.inviteId),
+    ]);
+  if (inviteError) throw new Error(`Failed to load created invite: ${inviteError.message}`);
   if (recipientsError) {
-    throw new Error(`Failed to create invite recipients: ${recipientsError.message}`);
+    throw new Error(`Failed to load created invite recipients: ${recipientsError.message}`);
   }
 
-  return inviteView(invite, (recipientsData as RoomInviteRecipientRow[] | null) ?? []);
+  return {
+    invite: await inviteView(
+      inviteData as RoomInviteRow,
+      (recipientsData as RoomInviteRecipientRow[] | null) ?? [],
+    ),
+    created: outcome.created,
+  };
 }
 
 export async function listRoomInvites(viewerUserId: string): Promise<{
@@ -1452,64 +1482,6 @@ export async function declineRoomInvite(
     .single();
   if (error) throw new Error(`Failed to decline invite: ${error.message}`);
   return inviteView(invite, [data as RoomInviteRecipientRow]);
-}
-
-async function recipientIdsForDirectInvite(
-  senderUserId: string,
-  recipientUserIds: string[]
-): Promise<string[]> {
-  const uniqueRecipientIds = Array.from(
-    new Set(recipientUserIds.map((id) => id.trim()).filter(Boolean))
-  );
-  if (uniqueRecipientIds.length === 0) return [];
-
-  const relationships = await listFriendshipsForViewer(senderUserId);
-  const relationshipByUserId = new Map(
-    relationships.map((relationship) => [otherUserId(senderUserId, relationship), relationship])
-  );
-
-  const acceptedRecipients: string[] = [];
-  for (const recipientUserId of uniqueRecipientIds) {
-    assertUuid(recipientUserId, "recipientUserId");
-    if (recipientUserId === senderUserId) {
-      throw new SocialApiError(400, "Cannot invite yourself");
-    }
-    const relationship = relationshipByUserId.get(recipientUserId);
-    if (relationship?.status !== "accepted") {
-      throw new SocialApiError(403, "Direct invites can target accepted friends only");
-    }
-    acceptedRecipients.push(recipientUserId);
-  }
-
-  return acceptedRecipients;
-}
-
-async function recipientIdsForGroupInvite(
-  ownerUserId: string,
-  groupId: string
-): Promise<string[]> {
-  assertUuid(groupId, "groupId");
-  const group = await getOwnedGroup(ownerUserId, groupId);
-  if (!group) throw new SocialApiError(404, "Group not found");
-  if (group.archived_at) throw new SocialApiError(409, "Archived groups cannot be invited");
-
-  const { data, error } = await db()
-    .from("friend_group_members")
-    .select("*")
-    .eq("group_id", groupId);
-  if (error) throw new Error(`Failed to load group invite members: ${error.message}`);
-
-  const memberIds = ((data as FriendGroupMemberRow[] | null) ?? []).map(
-    (member) => member.friend_user_id
-  );
-  if (memberIds.length === 0) return [];
-
-  const relationships = await listFriendshipsForViewer(ownerUserId);
-  const relationshipByUserId = new Map(
-    relationships.map((relationship) => [otherUserId(ownerUserId, relationship), relationship])
-  );
-
-  return memberIds.filter((memberId) => relationshipByUserId.get(memberId)?.status === "accepted");
 }
 
 function inviteExpired(invite: RoomInviteRow): boolean {

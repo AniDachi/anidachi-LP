@@ -14,6 +14,8 @@ import {
   publicProfileFromRows,
   resolveFriendGroupCreateOutcome,
   resolveFriendRequestTransitionReread,
+  resolveRoomInviteCreateOutcome,
+  roomInviteCreateError,
   SocialApiError,
   type FriendshipRow,
 } from "./social";
@@ -22,6 +24,7 @@ const VIEWER_ID = "00000000-0000-4000-8000-000000000001";
 const OTHER_ID = "00000000-0000-4000-8000-000000000002";
 const LOBBY_ONLY_ID = "00000000-0000-4000-8000-000000000003";
 const FRIENDSHIP_ID = "00000000-0000-4000-8000-000000000004";
+const INVITE_ID = "00000000-0000-4000-8000-000000000005";
 
 test("friend invite tokens accept only URL-safe opaque values", () => {
   assert.equal(
@@ -169,6 +172,37 @@ test("atomic group creation maps a committed plan-limit outcome to the public er
   );
 });
 
+test("atomic room invite creation distinguishes a new write from an idempotent result", () => {
+  assert.deepEqual(resolveRoomInviteCreateOutcome(atomicInviteOutcome("created")), {
+    inviteId: INVITE_ID,
+    created: true,
+  });
+  assert.deepEqual(resolveRoomInviteCreateOutcome(atomicInviteOutcome("existing")), {
+    inviteId: INVITE_ID,
+    created: false,
+  });
+  assert.throws(
+    () => resolveRoomInviteCreateOutcome(null),
+    /invalid database response/,
+  );
+});
+
+test("atomic room invite errors preserve public authorization, conflict, and rate semantics", () => {
+  assert.deepEqual(roomInviteErrorShape("room_invite_host_required"), {
+    status: 403,
+    message: "Only the host can invite people to this room",
+  });
+  assert.deepEqual(roomInviteErrorShape("room_invite_request_id_conflict"), {
+    status: 409,
+    message: "Invite request id is already in use",
+  });
+  assert.deepEqual(roomInviteErrorShape("room_invite_rate_limit"), {
+    status: 429,
+    message: "Too many invite requests. Try again shortly",
+  });
+  assert.equal(roomInviteCreateError("unrelated database error"), null);
+});
+
 test("social APIs validate UUID-shaped ids before hitting Supabase", () => {
   assert.equal(isUuid("3f0f56ec-a97f-4f1f-a648-e0f1034d75d0"), true);
   assert.equal(isUuid("not-a-user-id"), false);
@@ -229,4 +263,14 @@ function atomicGroupOutcome(outcome: "created" | "existing" | "limit_reached") {
     group_created_at: hasGroup ? "2026-08-08T10:00:00.000Z" : null,
     group_updated_at: hasGroup ? "2026-08-08T10:00:00.000Z" : null,
   };
+}
+
+function atomicInviteOutcome(outcome: "created" | "existing") {
+  return { outcome, invite_id: INVITE_ID };
+}
+
+function roomInviteErrorShape(code: string) {
+  const error = roomInviteCreateError(`database exception: ${code}`);
+  assert.ok(error);
+  return { status: error.status, message: error.message };
 }

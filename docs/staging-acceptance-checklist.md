@@ -45,6 +45,9 @@ Minimum for room/P2P changes:
       `https://staging.anidachi.app`.
 - [ ] Host creates a room from a supported video page.
 - [ ] Host can copy invite.
+- [ ] Host can invite a direct friend and a personal group.
+- [ ] Retrying the same invite or overlapping direct/group targets creates no
+      duplicate inbox item or second OS notification.
 - [ ] Guest opens invite and joins.
 - [ ] Guest is not left on a dead-end page.
 - [ ] Both participants see remote Ghost Cam video when enabled.

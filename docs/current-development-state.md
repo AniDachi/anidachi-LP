@@ -215,13 +215,16 @@ Permanent failures are pruned without exposing push endpoints or raw provider
 responses to clients. Supporting another browser requires an explicit provider
 allowlist addition and staging proof rather than accepting arbitrary push URLs.
 
-The existing invite writer still persists `room_invites` and
-`room_invite_recipients` in two database requests. Push delivery starts only
-after both writes succeed, so a failed recipient write never emits a false OS
-notification, but the first write can currently leave a non-actionable orphan.
-Moving invite plus recipient-snapshot creation into one idempotent Postgres RPC
-remains a separate server-hardening slice and is required before this flow is
-described as transactionally complete.
+Room invite creation now uses the service-role-only
+`create_room_invite_atomic` Postgres RPC. Room validation, accepted-friend or
+group recipient resolution, invite creation, and recipient-snapshot creation
+commit in one transaction. A sender-scoped action ledger makes the extension's
+stable `clientActionId` retryable, caps new actions at 20 per minute, and keeps
+the request payload bound to that identifier. Requests are capped at 100
+resolved recipients. Repeated direct/group targeting for the same room and
+recipient returns existing state, including declined or expired state, and does
+not schedule another push invalidation. The migration is additive: historical
+invite rows remain readable and are not destructively rewritten.
 
 The invite schema still assigns `expires_at` with a 12-hour default, and the
 existing accept path enforces it. The staging inbox foundation preserves that

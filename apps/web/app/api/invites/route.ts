@@ -1,4 +1,8 @@
-import type { RoomInvitesResponse } from "@anidachi/protocol";
+import { randomUUID } from "node:crypto";
+import {
+  CreateRoomInviteRequestSchema,
+  type RoomInvitesResponse,
+} from "@anidachi/protocol";
 import { after, type NextRequest, NextResponse } from "next/server";
 import { createAccountResponseMeta } from "@/lib/anidachi-auth/account-response";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
@@ -37,36 +41,32 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await readJsonBody(request);
-  const payload = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
-  const roomId = typeof payload.roomId === "string" ? payload.roomId.trim() : "";
-  const groupId = typeof payload.groupId === "string" ? payload.groupId.trim() : undefined;
-  const recipientUserIds = Array.isArray(payload.recipientUserIds)
-    ? payload.recipientUserIds.filter((value): value is string => typeof value === "string")
-    : undefined;
-  const message = cleanInviteMessage(payload.message);
-
-  if (!roomId) {
-    return NextResponse.json({ error: "Missing roomId" }, { status: 400 });
+  const parsed = CreateRoomInviteRequestSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid invite request" }, { status: 400 });
   }
 
   try {
-    const invite = await createRoomInvite({
+    const { invite, created } = await createRoomInvite({
       senderUserId: session.userId,
-      roomId,
-      groupId,
-      recipientUserIds,
-      message,
+      clientActionId: parsed.data.clientActionId ?? randomUUID(),
+      roomId: parsed.data.roomId,
+      groupId: parsed.data.groupId,
+      recipientUserIds: parsed.data.recipientUserIds,
+      message: cleanInviteMessage(parsed.data.message),
     });
-    const inviteRecipientUserIds = invite.recipients.map(
-      (recipient) => recipient.user.userId,
-    );
-    after(async () => {
-      try {
-        await sendInboxChangedPushToUsers(inviteRecipientUserIds);
-      } catch {
-        console.error("[anidachi/invites] Failed to deliver inbox invalidation");
-      }
-    });
+    if (created) {
+      const inviteRecipientUserIds = invite.recipients.map(
+        (recipient) => recipient.user.userId,
+      );
+      after(async () => {
+        try {
+          await sendInboxChangedPushToUsers(inviteRecipientUserIds);
+        } catch {
+          console.error("[anidachi/invites] Failed to deliver inbox invalidation");
+        }
+      });
+    }
     return NextResponse.json({ invite });
   } catch (error) {
     return socialErrorResponse(error);

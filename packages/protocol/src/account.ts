@@ -125,6 +125,26 @@ export const InviteTargetsSchema = z.strictObject({
   groups: z.array(FriendGroupSchema),
 });
 
+export const CreateRoomInviteRequestSchema = z
+  .strictObject({
+    roomId: RoomIdSchema,
+    clientActionId: DurableIdSchema.optional(),
+    recipientUserIds: z.array(DurableIdSchema).min(1).max(100).optional(),
+    groupId: DurableIdSchema.optional(),
+    message: z.string().trim().max(180).nullable().optional(),
+  })
+  .superRefine((value, context) => {
+    const hasDirectTarget = value.recipientUserIds !== undefined;
+    const hasGroupTarget = value.groupId !== undefined;
+    if (hasDirectTarget === hasGroupTarget) {
+      context.addIssue({
+        code: "custom",
+        message: "Provide either recipientUserIds or groupId",
+        path: ["recipientUserIds"],
+      });
+    }
+  });
+
 export const RoomInviteSchema = z.strictObject({
   id: DurableIdSchema,
   roomId: RoomIdSchema,
@@ -339,6 +359,7 @@ export type RecentPerson = z.infer<typeof RecentPersonSchema>;
 export type RecentPeopleResponse = z.infer<typeof RecentPeopleResponseSchema>;
 export type SocialDirectory = z.infer<typeof SocialDirectorySchema>;
 export type InviteTargets = z.infer<typeof InviteTargetsSchema>;
+export type CreateRoomInviteRequest = z.infer<typeof CreateRoomInviteRequestSchema>;
 export type RoomInvite = z.infer<typeof RoomInviteSchema>;
 export type RoomInvitesResponse = z.infer<typeof RoomInvitesResponseSchema>;
 export type AccountInboxItem = z.infer<typeof AccountInboxItemSchema>;
