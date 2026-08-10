@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1785929709.0304315,
-    "ast_hash": "1f6de18b83957b80f5a4dcc12ffc8629",
+    "mtime": 1786356430.3101223,
+    "ast_hash": "73d6696ee754c997957061a9f05f0e34",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -375,8 +375,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/social-client.ts": {
-    "mtime": 1786128689.2501242,
-    "ast_hash": "f61a699f557e7013c20aa93e362370b5",
+    "mtime": 1786356430.2673953,
+    "ast_hash": "cb567d78db955373c8b09b6e1560de48",
     "semantic_hash": ""
   },
   "apps/extension/src/styles.ts": {
@@ -525,8 +525,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/social-client.test.ts": {
-    "mtime": 1786128437.5483549,
-    "ast_hash": "8877a6f281d807b73b28855878363746",
+    "mtime": 1786356862.6021914,
+    "ast_hash": "3993da55bdfaf8cd29137cbf1809dbbe",
     "semantic_hash": ""
   },
   "apps/extension/test/video-adapter.test.ts": {
@@ -840,8 +840,8 @@
     "semantic_hash": ""
   },
   "apps/web/app/api/invites/route.ts": {
-    "mtime": 1786340814.2905276,
-    "ast_hash": "6d3f1b5ee7c620c67d322c8fbf4f7dbf",
+    "mtime": 1786356713.906239,
+    "ast_hash": "01483ce7adef6052f419af436aa0a3f8",
     "semantic_hash": ""
   },
   "apps/web/app/api/kreatli-crm/gmail/callback/route.ts": {
@@ -2095,13 +2095,13 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/social.test.ts": {
-    "mtime": 1786129717.466104,
-    "ast_hash": "2a58c493c606a6e40ea25ad3303a33b3",
+    "mtime": 1786356753.345451,
+    "ast_hash": "7bd7b112a052cfcfd5beac7b9ff83106",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/social.ts": {
-    "mtime": 1786271213.7871385,
-    "ast_hash": "ab4d5f622788c62aee794b7298112136",
+    "mtime": 1786356713.946505,
+    "ast_hash": "0566aff9a5cc6a0a5a5ca4aeaf7b7745",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/stripe-env.test.ts": {
@@ -3045,8 +3045,8 @@
     "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1786344126.6634479,
-    "ast_hash": "3575b03441fd5a8f794826bbadb9cc33",
+    "mtime": 1786357095.5035298,
+    "ast_hash": "560d1a3a136b8a5d9a20084e5984f4a1",
     "semantic_hash": ""
   },
   "docs/development-environments.md": {
@@ -3120,8 +3120,8 @@
     "semantic_hash": ""
   },
   "docs/staging-acceptance-checklist.md": {
-    "mtime": 1784676382.4157736,
-    "ast_hash": "bf3f328c6b2cb03e2c6957d371db48df",
+    "mtime": 1786357095.5794013,
+    "ast_hash": "b40363e5b4a2897379158e830f33e73b",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-05-26-resources-progress-menu.md": {
@@ -4165,8 +4165,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md": {
-    "mtime": 1786344126.7068748,
-    "ast_hash": "b295b3f60594ea2acc2bdeb4b52e5532",
+    "mtime": 1786357095.5413556,
+    "ast_hash": "b4214606a357950b5e34658da59206b4",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-08-06-account-contracts-and-popup-isolation.md": {
@@ -4205,13 +4205,13 @@
     "semantic_hash": ""
   },
   "packages/protocol/src/account.ts": {
-    "mtime": 1786340349.2567825,
-    "ast_hash": "245fdeea0a03c2bfbf5e8840bc33c7d8",
+    "mtime": 1786356217.0095458,
+    "ast_hash": "989e62a016aeab5d78f5da3e969b1eac",
     "semantic_hash": ""
   },
   "packages/protocol/test/account.test.ts": {
-    "mtime": 1786340302.7449205,
-    "ast_hash": "29ad37b2c69770b53855070b4f79ec7a",
+    "mtime": 1786356217.0487309,
+    "ast_hash": "acd4dae417a41af18fdf6305bd808362",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-people-model.ts": {
@@ -4352,6 +4352,11 @@
   "apps/web/supabase/migrations/20260810061205_device_web_push.sql": {
     "mtime": 1786341683.0037303,
     "ast_hash": "761c742894ad16b4b6d44e6892344c8b",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20260810190000_room_invite_atomicity.sql": {
+    "mtime": 1786357733.6167772,
+    "ast_hash": "0e6a5f064e8498bc59a70ea350c6f570",
     "semantic_hash": ""
   }
 }

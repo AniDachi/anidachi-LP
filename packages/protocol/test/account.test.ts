@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ACCOUNT_RESPONSE_SCHEMA_VERSION,
   AccountInboxResponseSchema,
+  CreateRoomInviteRequestSchema,
   DevicePushSubscriptionResponseSchema,
   ExtensionPushSubscriptionRequestSchema,
   FriendGroupsResponseSchema,
@@ -22,6 +23,7 @@ const USER_B = "22222222-2222-4222-8222-222222222222";
 const FRIENDSHIP_ID = "33333333-3333-4333-8333-333333333333";
 const GROUP_ID = "44444444-4444-4444-8444-444444444444";
 const INVITE_ID = "55555555-5555-4555-8555-555555555555";
+const CLIENT_ACTION_ID = "66666666-6666-4666-8666-666666666666";
 const ROOM_ID = "room-1";
 const SESSION_ID = "77777777-7777-4777-8777-777777777777";
 const MISSED_INVITE_ID = "88888888-8888-4888-8888-888888888888";
@@ -390,6 +392,57 @@ describe("account response contracts", () => {
     expect(() =>
       WatchLibraryResponseSchema.parse(watchLibraryFixture()),
     ).not.toThrow();
+  });
+
+  it("accepts one bounded room invite target and an optional idempotency key", () => {
+    expect(
+      CreateRoomInviteRequestSchema.parse({
+        roomId: ROOM_ID,
+        clientActionId: CLIENT_ACTION_ID,
+        recipientUserIds: [USER_B],
+      }),
+    ).toEqual({
+      roomId: ROOM_ID,
+      clientActionId: CLIENT_ACTION_ID,
+      recipientUserIds: [USER_B],
+    });
+    expect(
+      CreateRoomInviteRequestSchema.parse({
+        roomId: ROOM_ID,
+        groupId: GROUP_ID,
+        message: "Watch together",
+      }),
+    ).toEqual({
+      roomId: ROOM_ID,
+      groupId: GROUP_ID,
+      message: "Watch together",
+    });
+  });
+
+  it("rejects ambiguous, empty, oversized, and malformed room invite requests", () => {
+    expect(() =>
+      CreateRoomInviteRequestSchema.parse({
+        roomId: ROOM_ID,
+        recipientUserIds: [USER_B],
+        groupId: GROUP_ID,
+      }),
+    ).toThrow();
+    expect(() =>
+      CreateRoomInviteRequestSchema.parse({ roomId: ROOM_ID }),
+    ).toThrow();
+    expect(() =>
+      CreateRoomInviteRequestSchema.parse({
+        roomId: ROOM_ID,
+        recipientUserIds: Array.from({ length: 101 }, () => USER_B),
+      }),
+    ).toThrow();
+    expect(() =>
+      CreateRoomInviteRequestSchema.parse({
+        roomId: ROOM_ID,
+        clientActionId: "not-a-uuid",
+        recipientUserIds: [USER_B],
+      }),
+    ).toThrow();
   });
 
   it("accepts RFC3339 timestamps with an explicit UTC offset", () => {

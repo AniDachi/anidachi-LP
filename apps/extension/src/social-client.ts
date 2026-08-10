@@ -1,6 +1,8 @@
 import {
   type AcceptedRoomInviteResponse,
   AcceptedRoomInviteResponseSchema,
+  type CreateRoomInviteRequest,
+  CreateRoomInviteRequestSchema,
   type FriendGroup,
   FriendGroupSchema,
   FriendGroupsResponseSchema,
@@ -49,11 +51,9 @@ export type {
   SocialDirectory,
 } from "@anidachi/protocol";
 
-export interface CreateRoomInviteInput {
-  roomId: string;
-  recipientUserIds?: string[];
-  groupId?: string;
-}
+export type CreateRoomInviteInput = Omit<CreateRoomInviteRequest, "clientActionId"> & {
+  clientActionId: string;
+};
 
 export interface CreateFriendGroupInput {
   name: string;
@@ -322,14 +322,8 @@ export function isSocialHttpMessage(value: unknown): value is SocialHttpMessage 
     return typeof message.requestId === "string" && Boolean(message.requestId.trim());
   }
   if (message.command === "create-invite") {
-    const input = message.input as Partial<CreateRoomInviteInput> | undefined;
-    return (
-      typeof input?.roomId === "string" &&
-      (input.recipientUserIds === undefined ||
-        (Array.isArray(input.recipientUserIds) &&
-          input.recipientUserIds.every((item) => typeof item === "string"))) &&
-      (input.groupId === undefined || typeof input.groupId === "string")
-    );
+    const result = CreateRoomInviteRequestSchema.safeParse(message.input);
+    return result.success && typeof result.data.clientActionId === "string";
   }
   if (message.command === "create-group") {
     const input = message.input as Partial<CreateFriendGroupInput> | undefined;
@@ -525,6 +519,7 @@ export async function createRoomInviteFromApi(
   logDebug("social.http", "create invite request", {
     webHttpBase: WEB_HTTP_BASE,
     roomId: input.roomId,
+    clientActionId: input.clientActionId,
     groupId: input.groupId ?? null,
     recipientCount: input.recipientUserIds?.length ?? 0,
   });
