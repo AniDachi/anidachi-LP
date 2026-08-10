@@ -4349,7 +4349,7 @@
     "ast_hash": "358ff279c86b04038167b33620e251d6",
     "semantic_hash": ""
   },
-  "apps/web/supabase/migrations/20260810_device_web_push.sql": {
+  "apps/web/supabase/migrations/20260810061205_device_web_push.sql": {
     "mtime": 1786341683.0037303,
     "ast_hash": "761c742894ad16b4b6d44e6892344c8b",
     "semantic_hash": ""
