@@ -4320,13 +4320,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/room-invite-notifications.ts": {
-    "mtime": 1786343557.6756513,
-    "ast_hash": "7e9272d71c95f7e8e898a40e5b3a3eba",
+    "mtime": 1786371566.539222,
+    "ast_hash": "0c675fce6aee7b984ad6385da80c9626",
     "semantic_hash": ""
   },
   "apps/extension/test/room-invite-notifications.test.ts": {
-    "mtime": 1786343383.497094,
-    "ast_hash": "6cba05464c7dde09e0cb0a2bc536c376",
+    "mtime": 1786371265.016582,
+    "ast_hash": "25b0386a4c5f04db662cf34ebc2b8e06",
     "semantic_hash": ""
   },
   "apps/web/app/api/devices/[deviceId]/push-subscription/route.ts": {

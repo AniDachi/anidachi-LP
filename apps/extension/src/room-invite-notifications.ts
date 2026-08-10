@@ -51,6 +51,12 @@ export type RoomInviteNotificationStatus = {
   subscribed: boolean;
 };
 
+type RoomInviteNotificationDestinationDependencies = {
+  getLastFocusedWindow: () => Promise<{ id?: number }>;
+  openPopup: (options: { windowId: number }) => Promise<void>;
+  openWebInbox: () => Promise<void>;
+};
+
 export type RoomInviteNotificationMessage = {
   type: typeof MESSAGE_TYPE;
   command: "status" | "enable" | "disable" | "reconcile";
@@ -344,10 +350,33 @@ export async function handleRoomInviteNotificationClick(notificationId: string):
       createdAt: new Date().toISOString(),
     } satisfies PopupRouteIntent);
   }
+
+  await openRoomInviteNotificationDestination({
+    getLastFocusedWindow: () =>
+      chrome.windows.getLastFocused({
+        windowTypes: ["normal"],
+      }),
+    openPopup: (options) => chrome.action.openPopup(options),
+    openWebInbox: async () => {
+      await chrome.tabs.create({ url: new URL("/account/invites", WEB_HTTP_BASE).toString() });
+    },
+  });
+}
+
+export async function openRoomInviteNotificationDestination(
+  dependencies: RoomInviteNotificationDestinationDependencies,
+): Promise<"popup" | "web"> {
   try {
-    await chrome.action.openPopup();
+    const targetWindow = await dependencies.getLastFocusedWindow();
+    const windowId = targetWindow.id;
+    if (typeof windowId !== "number" || !Number.isInteger(windowId) || windowId < 0) {
+      throw new Error("No normal Chrome window is available");
+    }
+    await dependencies.openPopup({ windowId });
+    return "popup";
   } catch {
-    await chrome.tabs.create({ url: new URL("/account/invites", WEB_HTTP_BASE).toString() });
+    await dependencies.openWebInbox();
+    return "web";
   }
 }
 

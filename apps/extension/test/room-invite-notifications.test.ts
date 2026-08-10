@@ -1,8 +1,9 @@
 import type { AccountInboxResponse } from "@anidachi/protocol";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   applicationServerKeyMatches,
   buildRoomInviteNotificationPlan,
+  openRoomInviteNotificationDestination,
   parseInboxChangedPushPayload,
   pruneRememberedRoomInviteIds,
 } from "../src/room-invite-notifications";
@@ -11,6 +12,38 @@ const NOW = "2026-08-10T08:00:00.000Z";
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 
 describe("room invite notification planning", () => {
+  it("opens the action popup in the last focused normal Chrome window", async () => {
+    const getLastFocusedWindow = vi.fn().mockResolvedValue({ id: 42 });
+    const openPopup = vi.fn().mockResolvedValue(undefined);
+    const openWebInbox = vi.fn().mockResolvedValue(undefined);
+
+    await expect(
+      openRoomInviteNotificationDestination({
+        getLastFocusedWindow,
+        openPopup,
+        openWebInbox,
+      }),
+    ).resolves.toBe("popup");
+
+    expect(getLastFocusedWindow).toHaveBeenCalledOnce();
+    expect(openPopup).toHaveBeenCalledWith({ windowId: 42 });
+    expect(openWebInbox).not.toHaveBeenCalled();
+  });
+
+  it("opens the web inbox only when Chrome cannot open the action popup", async () => {
+    const openWebInbox = vi.fn().mockResolvedValue(undefined);
+
+    await expect(
+      openRoomInviteNotificationDestination({
+        getLastFocusedWindow: vi.fn().mockResolvedValue({ id: 42 }),
+        openPopup: vi.fn().mockRejectedValue(new Error("Popup unavailable")),
+        openWebInbox,
+      }),
+    ).resolves.toBe("web");
+
+    expect(openWebInbox).toHaveBeenCalledOnce();
+  });
+
   it("uses direct and group copy without leaking private room data", () => {
     const direct = buildRoomInviteNotificationPlan(inbox([roomInvite("invite-a", "direct")]));
     expect(direct).toEqual({
