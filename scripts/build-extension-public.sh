@@ -13,12 +13,18 @@ PACKAGE_EXTENSION_VERSION="$(node -e "console.log(require('$ROOT_DIR/apps/extens
 : "${WXT_API_WS_BASE:=wss://anidachi-api-production.vladislav-gul7.workers.dev}"
 : "${WXT_BUILD_ID:=$(git rev-parse --short HEAD 2>/dev/null || echo local)-production-$(date +%Y%m%d%H%M%S)}"
 
+if [[ -z "${WXT_VAPID_PUBLIC_KEY:-}" ]]; then
+  echo "WXT_VAPID_PUBLIC_KEY is required for production extension builds" >&2
+  exit 1
+fi
+
 export WXT_EXTENSION_CHANNEL
 export WXT_EXTENSION_VERSION
 export WXT_WEB_HTTP_BASE
 export WXT_API_HTTP_BASE
 export WXT_API_WS_BASE
 export WXT_BUILD_ID
+export WXT_VAPID_PUBLIC_KEY
 
 cd "$ROOT_DIR"
 
