@@ -113,14 +113,17 @@ export default defineConfig({
     short_name: extensionShortName,
     description: extensionDescription,
     version: extensionVersion,
+    minimum_chrome_version: "121",
     ...(buildId ? { version_name: buildId } : {}),
     permissions: unique([
       "storage",
+      "alarms",
       "clipboardWrite",
       "identity",
       "cookies",
       extensionChannel === "production" ? null : "downloads",
     ]),
+    optional_permissions: ["notifications"],
     host_permissions: hostPermissions,
     icons: extensionIcons,
     web_accessible_resources: [

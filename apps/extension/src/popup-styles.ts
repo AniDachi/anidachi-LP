@@ -23,6 +23,143 @@ export const popupStyles = `
     font: inherit;
   }
 
+  .popup-local-settings {
+    position: relative;
+    z-index: 4;
+    margin: 0 0 10px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    background: rgba(13, 15, 25, 0.96);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.3);
+  }
+
+  .popup-local-settings-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .popup-local-settings-heading > div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .popup-local-settings-heading strong {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .popup-local-settings-heading span {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .popup-local-settings-close {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.58);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  .popup-notification-setting {
+    width: 100%;
+    min-height: 58px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.045);
+    color: rgba(255, 255, 255, 0.9);
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 38px;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .popup-notification-setting:disabled {
+    cursor: default;
+    opacity: 0.62;
+  }
+
+  .popup-notification-setting-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.58);
+  }
+
+  .popup-notification-setting[data-enabled="true"] .popup-notification-setting-icon {
+    color: #ff9b55;
+    background: rgba(255, 122, 26, 0.12);
+  }
+
+  .popup-notification-setting-copy {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .popup-notification-setting-copy strong {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .popup-notification-setting-copy span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .popup-notification-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.13);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  .popup-notification-switch span {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.72);
+    transition: transform 160ms ease, background 160ms ease;
+  }
+
+  .popup-notification-setting[data-enabled="true"] .popup-notification-switch {
+    background: rgba(255, 122, 26, 0.38);
+  }
+
+  .popup-notification-setting[data-enabled="true"] .popup-notification-switch span {
+    transform: translateX(16px);
+    background: #ff9b55;
+  }
+
+  .popup-local-settings-error {
+    margin: 8px 2px 0;
+    font-size: 10px;
+    line-height: 1.35;
+    color: #ff9aa8;
+  }
+
   .popup-sr-only {
     position: absolute;
     width: 1px;

@@ -26,6 +26,8 @@ const hostPermissions = manifest.host_permissions ?? [];
 const contentMatches = (manifest.content_scripts ?? []).flatMap(
   (script) => script.matches ?? [],
 );
+const permissions = manifest.permissions ?? [];
+const optionalPermissions = manifest.optional_permissions ?? [];
 
 const broadPatterns = new Set(["http://*/*", "https://*/*", "file:///*", "<all_urls>"]);
 for (const value of [...hostPermissions, ...contentMatches]) {
@@ -72,6 +74,18 @@ for (const size of ["16", "32", "48", "128"]) {
   if (!manifest.icons?.[size]) {
     throw new Error(`Missing icon size ${size}`);
   }
+}
+
+if (!permissions.includes("alarms")) {
+  throw new Error("Missing alarms permission required for notification recovery");
+}
+
+if (!optionalPermissions.includes("notifications")) {
+  throw new Error("Notifications must be declared as an optional permission");
+}
+
+if (Number.parseInt(manifest.minimum_chrome_version ?? "0", 10) < 121) {
+  throw new Error("minimum_chrome_version must support extension Web Push");
 }
 
 console.log(`Validated ${channel} extension artifact at ${manifestPath}`);

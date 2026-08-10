@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   ACCOUNT_RESPONSE_SCHEMA_VERSION,
   AccountInboxResponseSchema,
+  DevicePushSubscriptionResponseSchema,
+  ExtensionPushSubscriptionRequestSchema,
   FriendGroupsResponseSchema,
   FriendListResponseSchema,
+  InboxChangedPushPayloadSchema,
   RecentPeopleResponseSchema,
   RecentPersonSchema,
   RoomInvitesResponseSchema,
@@ -216,6 +219,67 @@ describe("account response contracts", () => {
     };
 
     expect(AccountInboxResponseSchema.parse(response)).toEqual(response);
+  });
+
+  it("accepts the minimal extension push registration contract", () => {
+    const request = {
+      installationId: "99999999-9999-4999-8999-999999999999",
+      endpoint: "https://push.example.test/subscriptions/device-1",
+      expirationTime: null,
+      keys: {
+        p256dh:
+          "BEl62iUYgUivxIkv69yViEuiBIa40HIhZbGzOCh6vTZMeYKv4A6eQHHuQNaO8h-SS5kxtR7U7I3F4R5y6T7u8V9",
+        auth: "BTBZMqHH6r4Tts7J_aSIgg",
+      },
+    };
+
+    expect(ExtensionPushSubscriptionRequestSchema.parse(request)).toEqual(request);
+    expect(
+      DevicePushSubscriptionResponseSchema.parse({
+        deviceId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        notificationsEnabled: true,
+        updatedAt: NOW,
+      }),
+    ).toEqual({
+      deviceId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      notificationsEnabled: true,
+      updatedAt: NOW,
+    });
+    expect(InboxChangedPushPayloadSchema.parse({ type: "inbox_changed" })).toEqual({
+      type: "inbox_changed",
+    });
+  });
+
+  it("rejects unsafe or incomplete extension push registrations", () => {
+    const valid = {
+      installationId: "99999999-9999-4999-8999-999999999999",
+      endpoint: "https://push.example.test/subscriptions/device-1",
+      expirationTime: null,
+      keys: {
+        p256dh:
+          "BEl62iUYgUivxIkv69yViEuiBIa40HIhZbGzOCh6vTZMeYKv4A6eQHHuQNaO8h-SS5kxtR7U7I3F4R5y6T7u8V9",
+        auth: "BTBZMqHH6r4Tts7J_aSIgg",
+      },
+    };
+
+    expect(() =>
+      ExtensionPushSubscriptionRequestSchema.parse({
+        ...valid,
+        endpoint: "http://push.example.test/subscriptions/device-1",
+      }),
+    ).toThrow();
+    expect(() =>
+      ExtensionPushSubscriptionRequestSchema.parse({
+        ...valid,
+        keys: { ...valid.keys, auth: "not base64!" },
+      }),
+    ).toThrow();
+    expect(() =>
+      InboxChangedPushPayloadSchema.parse({
+        type: "inbox_changed",
+        inviteId: INVITE_ID,
+      }),
+    ).toThrow();
   });
 
   it("rejects account inboxes without an owner or with inconsistent room lifecycle fields", () => {

@@ -132,6 +132,9 @@ Pre-upload checklist:
   or `<all_urls>`.
 - `content_scripts.matches` does not contain broad patterns.
 - Web/API hosts match the channel.
+- `alarms` is present for daily notification recovery and `notifications` is an
+  optional permission requested only from the Popup setting.
+- `minimum_chrome_version` is at least 121 for extension Web Push support.
 - Icons exist at 16, 32, 48, and 128 px.
 - The zip root contains `manifest.json` at the top level.
 

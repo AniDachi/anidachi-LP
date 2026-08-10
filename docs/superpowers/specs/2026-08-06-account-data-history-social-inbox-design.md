@@ -1,6 +1,6 @@
 # Account Data, Watch History, Social, And Inbox Foundation Design
 
-Status: Durable inbox rollout in progress; Web Push notification delivery pending
+Status: Durable inbox deployed; Web Push implementation pending staging acceptance
 
 Date: 2026-08-06
 
@@ -520,10 +520,24 @@ fully processed.
 
 Each browser profile registers one Web Push subscription against the existing
 account device model. Sign-in and notification enablement ensure the current
-subscription is registered. Sign-out or explicit disablement revokes it,
-unsubscribes locally, clears account-scoped dedupe state, and clears the badge.
-Permanent push endpoint failures such as HTTP 404 or 410 prune the server-side
-subscription. The VAPID private key remains server-only.
+subscription is registered. Explicit disablement revokes the subscription and
+stops OS notifications while preserving the durable inbox, its badge, and local
+display dedupe. Sign-out additionally clears account-scoped dedupe and badge
+state. Permanent push endpoint failures such as HTTP 404 or 410 prune the
+server-side subscription. The VAPID private key remains server-only.
+
+The Chrome MVP accepts only HTTPS subscriptions on Chrome's FCM push host and
+allows at most five active push-enabled extension installations per account.
+Delivery uses bounded concurrency and a request timeout. Stored endpoints are
+validated again before delivery; invalid or permanently failed subscriptions
+are disabled without making an outbound request. Another browser provider is
+added only through an explicit allowlist change with its own staging evidence.
+
+Current-state compatibility note: the deployed invite writer predates the
+transactional RPC defined in this specification and still writes the invite and
+recipient snapshot separately. The notification hook runs only after both
+writes succeed, but atomic, idempotent invite creation remains a required
+follow-up server slice rather than a completed guarantee of this rollout.
 
 ### Browser Notifications
 

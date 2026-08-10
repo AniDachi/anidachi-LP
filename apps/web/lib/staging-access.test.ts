@@ -262,6 +262,30 @@ test("staging gate bypasses extension token endpoints and allowed bearer API cal
   );
   assert.equal(
     canBypassStagingGate({
+      pathname: "/api/devices/push-subscription",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/devices/device_1/push-subscription",
+      method: "DELETE",
+      authorization: "Bearer token",
+    }),
+    true,
+  );
+  assert.equal(
+    canBypassStagingGate({
+      pathname: "/api/devices/device_1/push-subscription",
+      method: "POST",
+      authorization: "Bearer token",
+    }),
+    false,
+  );
+  assert.equal(
+    canBypassStagingGate({
       pathname: "/api/watch-library",
       method: "GET",
       authorization: "Bearer token",
