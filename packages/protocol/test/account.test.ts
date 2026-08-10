@@ -3,6 +3,7 @@ import {
   ACCOUNT_RESPONSE_SCHEMA_VERSION,
   AccountInboxResponseSchema,
   CreateRoomInviteRequestSchema,
+  CreateRoomInviteResponseSchema,
   DevicePushSubscriptionResponseSchema,
   ExtensionPushSubscriptionRequestSchema,
   FriendGroupsResponseSchema,
@@ -386,6 +387,21 @@ describe("account response contracts", () => {
       }),
     ).toThrow();
     expect(ACCOUNT_RESPONSE_SCHEMA_VERSION).toBe(1);
+  });
+
+  it("distinguishes a newly created room invite from an idempotent replay", () => {
+    expect(CreateRoomInviteResponseSchema.parse({ invite, created: true })).toEqual({
+      invite,
+      created: true,
+    });
+    expect(CreateRoomInviteResponseSchema.parse({ invite, created: false })).toEqual({
+      invite,
+      created: false,
+    });
+    expect(CreateRoomInviteResponseSchema.parse({ invite })).toEqual({
+      invite,
+      created: true,
+    });
   });
 
   it("parses a versioned watch library response", () => {

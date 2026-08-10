@@ -121,9 +121,9 @@ export default defineConfig({
       "clipboardWrite",
       "identity",
       "cookies",
+      "notifications",
       extensionChannel === "production" ? null : "downloads",
     ]),
-    optional_permissions: ["notifications"],
     host_permissions: hostPermissions,
     icons: extensionIcons,
     web_accessible_resources: [

@@ -445,14 +445,18 @@ describe("extension social HTTP bridge", () => {
   });
 
   it("sends the stable invite action id to the web API", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ invite: roomInvite() }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ invite: roomInvite(), created: true }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await createRoomInviteFromApi("access-1", {
-      roomId: "room-1",
-      clientActionId: CLIENT_ACTION_ID,
-      recipientUserIds: [USER_ID],
-    });
+    await expect(
+      createRoomInviteFromApi("access-1", {
+        roomId: "room-1",
+        clientActionId: CLIENT_ACTION_ID,
+        recipientUserIds: [USER_ID],
+      }),
+    ).resolves.toMatchObject({ created: true, invite: { id: INVITE_ID } });
 
     expect(fetchMock).toHaveBeenCalledWith(
       expect.any(URL),

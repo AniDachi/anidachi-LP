@@ -1468,6 +1468,41 @@ export const overlayStyles = `
     font-weight: 720;
   }
 
+  .invite-status-message {
+    margin-top: 8px;
+    padding: 7px 9px;
+    border: 1px solid rgba(255, 138, 61, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 138, 61, 0.07);
+    color: rgba(255, 242, 232, 0.78);
+    font-size: 10.5px;
+    line-height: 1.35;
+  }
+
+  .invite-target-action {
+    min-width: 66px;
+    justify-content: center;
+  }
+
+  .invite-target-action[data-state="pending"]:disabled {
+    border-color: rgba(255, 163, 92, 0.22);
+    background: rgba(255, 138, 61, 0.08);
+    color: rgba(255, 211, 179, 0.76);
+    opacity: 1;
+  }
+
+  .invite-target-action[data-state="accepted"]:disabled {
+    border-color: rgba(110, 231, 183, 0.2);
+    background: rgba(52, 211, 153, 0.07);
+    color: rgba(167, 243, 208, 0.76);
+    opacity: 1;
+  }
+
+  .invite-target-action[data-state="invited"]:disabled {
+    color: rgba(255, 255, 255, 0.48);
+    opacity: 1;
+  }
+
   .participant-main {
     display: flex;
     align-items: center;

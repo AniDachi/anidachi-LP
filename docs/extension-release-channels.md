@@ -81,6 +81,12 @@ Vercel Production. GitHub Actions reads the public key from the
 build the `main` artifact when that variable is missing. Staging uses its own
 key and remains isolated from production subscriptions.
 
+The release manifest includes Chrome's `notifications` permission. This lets
+the default-on room-invite preference register a Web Push subscription after
+sign-in without hiding a second activation step in extension settings. Turning
+the preference off revokes the local subscription while durable Inbox data and
+the action badge continue to work.
+
 Outputs:
 
 - `anidachi-extension-public/`
@@ -141,8 +147,9 @@ Pre-upload checklist:
 - Web/API hosts match the channel.
 - The production build uses the public half of the production VAPID key pair;
   the corresponding private key exists only in the production web environment.
-- `alarms` is present for daily notification recovery and `notifications` is an
-  optional permission requested only from the Popup setting.
+- `alarms` is present for daily notification recovery and `notifications` is a
+  required manifest permission for default-on invite alerts. The Popup setting
+  controls the local subscription rather than requesting another permission.
 - `minimum_chrome_version` is at least 121 for extension Web Push support.
 - Icons exist at 16, 32, 48, and 128 px.
 - The zip root contains `manifest.json` at the top level.
