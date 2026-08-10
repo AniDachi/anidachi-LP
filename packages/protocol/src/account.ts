@@ -6,7 +6,9 @@ const TimestampSchema = z.iso.datetime({ offset: true });
 const DurableIdSchema = z.uuid();
 const RoomIdSchema = z.string().trim().min(1).max(128);
 const HttpUrlSchema = z.url({ protocol: /^https?$/ }).max(2048);
+const HttpsUrlSchema = z.url({ protocol: /^https$/ }).max(4096);
 const NullableHttpUrlSchema = HttpUrlSchema.nullable();
+const Base64UrlSchema = z.string().trim().regex(/^[A-Za-z0-9_-]+$/);
 const PlaybackSecondsSchema = z.number().finite().nonnegative();
 const PlaybackProgressSchema = z.number().finite().min(0).max(1);
 
@@ -224,6 +226,26 @@ export const MarkAccountInboxSeenRequestSchema = z.strictObject({
     .max(100),
 });
 
+export const ExtensionPushSubscriptionRequestSchema = z.strictObject({
+  installationId: DurableIdSchema,
+  endpoint: HttpsUrlSchema,
+  expirationTime: z.number().finite().nonnegative().nullable(),
+  keys: z.strictObject({
+    p256dh: Base64UrlSchema.min(80).max(256),
+    auth: Base64UrlSchema.min(16).max(128),
+  }),
+});
+
+export const DevicePushSubscriptionResponseSchema = z.strictObject({
+  deviceId: DurableIdSchema,
+  notificationsEnabled: z.literal(true),
+  updatedAt: TimestampSchema,
+});
+
+export const InboxChangedPushPayloadSchema = z.strictObject({
+  type: z.literal("inbox_changed"),
+});
+
 export const AcceptedRoomInviteResponseSchema = z.strictObject({
   invite: RoomInviteSchema,
   roomId: RoomIdSchema,
@@ -325,6 +347,13 @@ export type AccountInboxResponse = z.infer<typeof AccountInboxResponseSchema>;
 export type MarkAccountInboxSeenRequest = z.infer<
   typeof MarkAccountInboxSeenRequestSchema
 >;
+export type ExtensionPushSubscriptionRequest = z.infer<
+  typeof ExtensionPushSubscriptionRequestSchema
+>;
+export type DevicePushSubscriptionResponse = z.infer<
+  typeof DevicePushSubscriptionResponseSchema
+>;
+export type InboxChangedPushPayload = z.infer<typeof InboxChangedPushPayloadSchema>;
 export type AcceptedRoomInviteResponse = z.infer<
   typeof AcceptedRoomInviteResponseSchema
 >;

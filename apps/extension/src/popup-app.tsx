@@ -6,6 +6,8 @@ import {
 } from "@anidachi/protocol";
 import {
   Check,
+  Bell,
+  BellOff,
   ChevronDown,
   Film,
   Filter,
@@ -62,6 +64,14 @@ import {
   type PopupPeoplePresentationState,
 } from "./popup-people-panel";
 import { popupStyles } from "./popup-styles";
+import {
+  consumePopupRouteIntent,
+  requestRoomInviteNotificationPermission,
+  requestRoomInviteNotificationStatus,
+  setRoomInviteNotificationsEnabled,
+  type RoomInviteNotificationStatus,
+  updateInboxBadge,
+} from "./room-invite-notifications";
 import {
   acceptFriendRequest,
   acceptRoomInvite,
@@ -224,6 +234,11 @@ function trackPopupTask<T>(tasks: Set<Promise<unknown>>, task: Promise<T>): Prom
 export function PopupApp() {
   const [store, setStore] = useState<WatchProgressStore>(() => createEmptyWatchProgressStore());
   const [activeTab, setActiveTab] = useState<PopupTab>("resources");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [notificationStatus, setNotificationStatus] =
+    useState<RoomInviteNotificationStatus | null>(null);
+  const [notificationSettingsBusy, setNotificationSettingsBusy] = useState(false);
+  const [notificationSettingsError, setNotificationSettingsError] = useState<string | null>(null);
   const [authSession, setAuthSession] = useState<AuthSessionState>({
     status: "loading",
     tokens: null,
@@ -261,6 +276,7 @@ export function PopupApp() {
   const historyClearScopeRef = useRef<AccountScopeToken | null>(null);
   const socialMutationInFlightRef = useRef(false);
   const seenInboxSignatureRef = useRef<string | null>(null);
+  const consumedRouteIntentUserIdRef = useRef<string | null>(null);
   const activateAccount = useCallback((userId: string | null): AccountRequestToken | null => {
     const previousUserId = accountGateRef.current.currentUserId();
     accountGateRef.current.activate(userId);
@@ -979,6 +995,23 @@ export function PopupApp() {
   }, [syncPopupData]);
 
   useEffect(() => {
+    if (authSession.status !== "ready") return;
+    const userId = authSession.tokens.user.id;
+    if (consumedRouteIntentUserIdRef.current === userId) return;
+    consumedRouteIntentUserIdRef.current = userId;
+    void consumePopupRouteIntent(userId)
+      .then((intent) => {
+        if (intent?.tab === "inbox") setActiveTab("inbox");
+      })
+      .catch(() => undefined);
+  }, [authSession]);
+
+  useEffect(() => {
+    if (!inboxState.data) return;
+    void updateInboxBadge(inboxState.data.counts.unseen).catch(() => undefined);
+  }, [inboxState.data]);
+
+  useEffect(() => {
     if (
       activeTab !== "inbox" ||
       authSession.status !== "ready" ||
@@ -1322,6 +1355,48 @@ export function PopupApp() {
     });
   };
 
+  const toggleSettings = async () => {
+    const nextOpen = !settingsOpen;
+    setSettingsOpen(nextOpen);
+    setNotificationSettingsError(null);
+    if (!nextOpen) return;
+    setNotificationSettingsBusy(true);
+    try {
+      setNotificationStatus(await requestRoomInviteNotificationStatus());
+    } catch (error) {
+      setNotificationSettingsError(
+        error instanceof Error ? error.message : "Could not load notification settings",
+      );
+    } finally {
+      setNotificationSettingsBusy(false);
+    }
+  };
+
+  const toggleRoomInviteNotifications = async () => {
+    if (notificationSettingsBusy || !notificationStatus) return;
+    setNotificationSettingsBusy(true);
+    setNotificationSettingsError(null);
+    try {
+      if (notificationStatus.enabled) {
+        setNotificationStatus(await setRoomInviteNotificationsEnabled(false));
+      } else {
+        const granted =
+          notificationStatus.permissionGranted ||
+          (await requestRoomInviteNotificationPermission());
+        if (!granted) {
+          throw new Error("Chrome notification permission was not granted");
+        }
+        setNotificationStatus(await setRoomInviteNotificationsEnabled(true));
+      }
+    } catch (error) {
+      setNotificationSettingsError(
+        error instanceof Error ? error.message : "Could not update notification settings",
+      );
+    } finally {
+      setNotificationSettingsBusy(false);
+    }
+  };
+
   return (
     <main className="popup-shell">
       <style>{popupStyles}</style>
@@ -1387,13 +1462,66 @@ export function PopupApp() {
             aria-label="Open settings"
             className="popup-command-button"
             type="button"
-            onClick={() => void openAccount()}
+            aria-expanded={settingsOpen}
+            onClick={() => void toggleSettings()}
           >
             <Settings size={18} />
             <span>Settings</span>
           </button>
         </div>
       </header>
+
+      {settingsOpen ? (
+        <section className="popup-local-settings" aria-label="Extension settings">
+          <div className="popup-local-settings-heading">
+            <div>
+              <strong>Extension settings</strong>
+              <span>This browser only</span>
+            </div>
+            <button
+              aria-label="Close settings"
+              className="popup-local-settings-close"
+              type="button"
+              onClick={() => setSettingsOpen(false)}
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <button
+            className="popup-notification-setting"
+            type="button"
+            disabled={
+              notificationSettingsBusy ||
+              !notificationStatus?.supported ||
+              !notificationStatus?.configured
+            }
+            data-enabled={notificationStatus?.enabled ?? false}
+            onClick={() => void toggleRoomInviteNotifications()}
+          >
+            <span className="popup-notification-setting-icon">
+              {notificationStatus?.enabled ? <Bell size={17} /> : <BellOff size={17} />}
+            </span>
+            <span className="popup-notification-setting-copy">
+              <strong>Room invite notifications</strong>
+              <span>
+                {!notificationStatus
+                  ? "Checking this browser..."
+                  : !notificationStatus.configured
+                    ? "Unavailable in this build"
+                    : notificationStatus.enabled
+                      ? "Chrome alerts are on"
+                      : "Get notified when someone invites you"}
+              </span>
+            </span>
+            <span className="popup-notification-switch" aria-hidden="true">
+              <span />
+            </span>
+          </button>
+          {notificationSettingsError ? (
+            <p className="popup-local-settings-error">{notificationSettingsError}</p>
+          ) : null}
+        </section>
+      ) : null}
 
       <PopupNavigation
         activeTab={activeTab}

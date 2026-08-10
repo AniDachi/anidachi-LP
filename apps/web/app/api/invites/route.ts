@@ -1,7 +1,8 @@
 import type { RoomInvitesResponse } from "@anidachi/protocol";
-import { type NextRequest, NextResponse } from "next/server";
+import { after, type NextRequest, NextResponse } from "next/server";
 import { createAccountResponseMeta } from "@/lib/anidachi-auth/account-response";
 import { getApiSession } from "@/lib/anidachi-auth/api-session";
+import { sendInboxChangedPushToUsers } from "@/lib/anidachi-auth/device-push";
 import {
   cleanInviteMessage,
   createRoomInvite,
@@ -55,6 +56,16 @@ export async function POST(request: NextRequest) {
       groupId,
       recipientUserIds,
       message,
+    });
+    const inviteRecipientUserIds = invite.recipients.map(
+      (recipient) => recipient.user.userId,
+    );
+    after(async () => {
+      try {
+        await sendInboxChangedPushToUsers(inviteRecipientUserIds);
+      } catch {
+        console.error("[anidachi/invites] Failed to deliver inbox invalidation");
+      }
     });
     return NextResponse.json({ invite });
   } catch (error) {

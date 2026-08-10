@@ -1410,12 +1410,15 @@ Acceptance:
 - [x] Add extension friend/group invite send panel backed by durable inbox.
 - [x] Add durable inbox list to the extension popup.
 - [x] Add durable invites section to the web dashboard.
-- [ ] Add device Web Push subscription registration and server-side VAPID
+- [~] Add device Web Push subscription registration and server-side VAPID
   delivery.
-- [ ] Add `inbox_changed` push handling, lifecycle reconciliation, daily
+- [~] Add `inbox_changed` push handling, lifecycle reconciliation, daily
   maintenance, badge, notification aggregation, and popup-first click routing.
-- [ ] Update extension permissions and Chrome Web Store privacy/listing copy
+- [x] Update extension permissions and Chrome Web Store privacy/listing copy
   only when the feature is ready.
+- [ ] Replace the current two-write room-invite creator with one idempotent
+  Postgres RPC before claiming transactionally complete invite delivery. Web
+  Push remains post-success and must never notify after a partial write.
 
 Acceptance:
 
@@ -1558,6 +1561,23 @@ Acceptance:
   continue-together paths before production promotion.
 
 ## Progress Log
+
+- [~] 2026-08-10: Implemented the Chrome room-invite notification slice on
+  `codex/room-invite-web-push`. The server registers owner-bound Web Push
+  subscriptions in the existing `devices` model, permits only Chrome FCM
+  endpoints, caps active notification devices, and sends a best-effort minimal
+  `inbox_changed` invalidation after invite creation succeeds. The extension
+  reconciles the canonical inbox on push, lifecycle events, popup open, invite
+  mutation, and one daily maintenance alarm; derives the badge and minimal OS
+  notification from authenticated inbox data; serializes account changes; and
+  revokes local/server subscriptions on disable, permission removal, and
+  sign-out. Notification clicks open the Popup Inbox and never join a room.
+  Protocol, API, web, extension, Worker runtime, room harness, staging build,
+  and artifact validation pass locally. The additive staging database migration
+  is applied and verified; Vercel Preview environment configuration, deployed
+  staging proof, and two-account browser acceptance remain open. Atomic,
+  idempotent invite-plus-recipient creation is tracked as a separate server
+  hardening slice because the existing writer still uses two database requests.
 
 - [x] 2026-08-09: Moved the extension Popup Inbox and the web account incoming
   invite surface to the canonical owner-bound account inbox. The Popup now uses

@@ -187,15 +187,18 @@ acceptance remains required before production promotion.
 
 ## Room Invite Notification Direction
 
-The product direction is approved. Durable room-invite and inbox rows remain
-authoritative, and the authenticated HTTP inbox, account-scoped Popup cache,
-unseen badge, seen acknowledgement, and shared web incoming surface are
-implemented in the current rollout. Standards-based Web Push delivery and OS
-notifications remain a later slice. Web Push will send only an `inbox_changed`
-invalidation so the extension can run the same inbox sync and display minimal
-English room-invite notifications. There is no frequent background inbox
-polling, Chrome GCM, Supabase Realtime subscription, persistent notification
-WebSocket, or separate notification-event platform.
+Durable room-invite and inbox rows remain authoritative. The authenticated HTTP
+inbox, account-scoped Popup cache, unseen badge, seen acknowledgement, and
+shared web incoming surface are deployed. Standards-based Web Push delivery and
+OS notifications are implemented on `codex/room-invite-web-push` and remain
+pending staging environment, deployment, and two-account acceptance. The
+additive `devices` Web Push migration is already applied and verified on the
+staging Supabase project; production remains unchanged until staging acceptance.
+Web Push sends only an `inbox_changed` invalidation so the extension runs the
+same inbox sync and displays minimal English room-invite notifications. There
+is no frequent background inbox polling, Chrome GCM, Supabase Realtime
+subscription, persistent notification WebSocket, or separate notification
+event platform.
 
 Recovery uses reconciliation on push receipt, Chrome startup, account/session
 change, popup open, and successful invite mutation, plus one daily maintenance
@@ -204,6 +207,21 @@ lifecycle; unresolved invites become a non-actionable `Missed` presentation for
 24 hours after room end. The canonical product and implementation details live
 in
 `docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md`.
+
+The current Chrome-only delivery slice accepts only HTTPS subscriptions on
+Chrome's FCM push host, caps active push-enabled extension installations at five
+per account, and uses bounded delivery concurrency with a network timeout.
+Permanent failures are pruned without exposing push endpoints or raw provider
+responses to clients. Supporting another browser requires an explicit provider
+allowlist addition and staging proof rather than accepting arbitrary push URLs.
+
+The existing invite writer still persists `room_invites` and
+`room_invite_recipients` in two database requests. Push delivery starts only
+after both writes succeed, so a failed recipient write never emits a false OS
+notification, but the first write can currently leave a non-actionable orphan.
+Moving invite plus recipient-snapshot creation into one idempotent Postgres RPC
+remains a separate server-hardening slice and is required before this flow is
+described as transactionally complete.
 
 The invite schema still assigns `expires_at` with a 12-hour default, and the
 existing accept path enforces it. The staging inbox foundation preserves that
