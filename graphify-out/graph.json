@@ -12916,11 +12916,19 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_extension_src_room_invite_notifications_roominvitenotificationdestinationdependencies",
+      "label": "RoomInviteNotificationDestinationDependencies",
+      "file_type": "code",
+      "source_file": "apps/extension/src/room-invite-notifications.ts",
+      "source_location": "L54",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_extension_src_room_invite_notifications_roominvitenotificationmessage",
       "label": "roomInviteNotificationMessage",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L154",
+      "source_location": "L160",
       "_origin": "ast"
     },
     {
@@ -12928,7 +12936,7 @@
       "label": "RoomInviteNotificationMessageResponse",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L59",
+      "source_location": "L65",
       "_origin": "ast"
     },
     {
@@ -12936,7 +12944,7 @@
       "label": "AccountInboxRoomInvite",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L63",
+      "source_location": "L69",
       "_origin": "ast"
     },
     {
@@ -12944,7 +12952,7 @@
       "label": "ExtensionPushEvent",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L68",
+      "source_location": "L74",
       "_origin": "ast"
     },
     {
@@ -12952,7 +12960,7 @@
       "label": "buildRoomInviteNotificationPlan()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L72",
+      "source_location": "L78",
       "_origin": "ast"
     },
     {
@@ -12960,7 +12968,7 @@
       "label": "pruneRememberedRoomInviteIds()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L115",
+      "source_location": "L121",
       "_origin": "ast"
     },
     {
@@ -12968,7 +12976,7 @@
       "label": "parseInboxChangedPushPayload()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L130",
+      "source_location": "L136",
       "_origin": "ast"
     },
     {
@@ -12976,7 +12984,7 @@
       "label": "isRoomInviteNotificationMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L140",
+      "source_location": "L146",
       "_origin": "ast"
     },
     {
@@ -12984,7 +12992,7 @@
       "label": "requestRoomInviteNotificationPermission()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L160",
+      "source_location": "L166",
       "_origin": "ast"
     },
     {
@@ -12992,7 +13000,7 @@
       "label": "requestRoomInviteNotificationStatus()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L164",
+      "source_location": "L170",
       "_origin": "ast"
     },
     {
@@ -13000,7 +13008,7 @@
       "label": "setRoomInviteNotificationsEnabled()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L174",
+      "source_location": "L180",
       "_origin": "ast"
     },
     {
@@ -13008,7 +13016,7 @@
       "label": "handleRoomInviteNotificationMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L186",
+      "source_location": "L192",
       "_origin": "ast"
     },
     {
@@ -13016,7 +13024,7 @@
       "label": "getRoomInviteNotificationStatus()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L213",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -13024,7 +13032,7 @@
       "label": "reconcileRoomInviteNotifications()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L231",
+      "source_location": "L237",
       "_origin": "ast"
     },
     {
@@ -13032,7 +13040,7 @@
       "label": "reconcileRoomInviteNotificationsNow()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L240",
+      "source_location": "L246",
       "_origin": "ast"
     },
     {
@@ -13040,7 +13048,7 @@
       "label": "handleRoomInvitePush()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L295",
+      "source_location": "L301",
       "_origin": "ast"
     },
     {
@@ -13048,7 +13056,7 @@
       "label": "disableRoomInviteNotifications()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L300",
+      "source_location": "L306",
       "_origin": "ast"
     },
     {
@@ -13056,7 +13064,7 @@
       "label": "handleRoomInviteNotificationPermissionRemoved()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L324",
+      "source_location": "L330",
       "_origin": "ast"
     },
     {
@@ -13064,7 +13072,15 @@
       "label": "handleRoomInviteNotificationClick()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L337",
+      "source_location": "L343",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_room_invite_notifications_openroominvitenotificationdestination",
+      "label": "openRoomInviteNotificationDestination()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/room-invite-notifications.ts",
+      "source_location": "L366",
       "_origin": "ast"
     },
     {
@@ -13072,7 +13088,7 @@
       "label": "consumePopupRouteIntent()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L354",
+      "source_location": "L383",
       "_origin": "ast"
     },
     {
@@ -13080,7 +13096,7 @@
       "label": "createRoomInviteNotificationMaintenanceAlarm()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L362",
+      "source_location": "L391",
       "_origin": "ast"
     },
     {
@@ -13088,7 +13104,7 @@
       "label": "isRoomInviteNotificationMaintenanceAlarm()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L372",
+      "source_location": "L401",
       "_origin": "ast"
     },
     {
@@ -13096,7 +13112,7 @@
       "label": "handleAuthSessionChanged()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L376",
+      "source_location": "L405",
       "_origin": "ast"
     },
     {
@@ -13104,7 +13120,7 @@
       "label": "enqueueNotificationWork()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L394",
+      "source_location": "L423",
       "_origin": "ast"
     },
     {
@@ -13112,7 +13128,7 @@
       "label": "isCurrentReconciliation()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L400",
+      "source_location": "L429",
       "_origin": "ast"
     },
     {
@@ -13120,7 +13136,7 @@
       "label": "ensureRegisteredPushSubscription()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L409",
+      "source_location": "L438",
       "_origin": "ast"
     },
     {
@@ -13128,7 +13144,7 @@
       "label": "registerPushSubscriptionFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L451",
+      "source_location": "L480",
       "_origin": "ast"
     },
     {
@@ -13136,7 +13152,7 @@
       "label": "revokePushSubscriptionFromApi()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L464",
+      "source_location": "L493",
       "_origin": "ast"
     },
     {
@@ -13144,7 +13160,7 @@
       "label": "pushHttpError()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L474",
+      "source_location": "L503",
       "_origin": "ast"
     },
     {
@@ -13152,7 +13168,7 @@
       "label": "notificationPreference()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L481",
+      "source_location": "L510",
       "_origin": "ast"
     },
     {
@@ -13160,7 +13176,7 @@
       "label": "extensionInstallationId()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L485",
+      "source_location": "L514",
       "_origin": "ast"
     },
     {
@@ -13168,7 +13184,7 @@
       "label": "containsNotificationsPermission()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L493",
+      "source_location": "L522",
       "_origin": "ast"
     },
     {
@@ -13176,7 +13192,7 @@
       "label": "setInboxBadge()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L497",
+      "source_location": "L526",
       "_origin": "ast"
     },
     {
@@ -13184,7 +13200,7 @@
       "label": "updateInboxBadge()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L502",
+      "source_location": "L531",
       "_origin": "ast"
     },
     {
@@ -13192,7 +13208,7 @@
       "label": "rememberedInvitesKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L506",
+      "source_location": "L535",
       "_origin": "ast"
     },
     {
@@ -13200,7 +13216,7 @@
       "label": "getRememberedInvites()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L510",
+      "source_location": "L539",
       "_origin": "ast"
     },
     {
@@ -13208,7 +13224,7 @@
       "label": "setRememberedInvites()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L523",
+      "source_location": "L552",
       "_origin": "ast"
     },
     {
@@ -13216,7 +13232,7 @@
       "label": "clearRememberedInvites()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L527",
+      "source_location": "L556",
       "_origin": "ast"
     },
     {
@@ -13224,7 +13240,7 @@
       "label": "normalizeStoredRegistration()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L531",
+      "source_location": "L560",
       "_origin": "ast"
     },
     {
@@ -13232,7 +13248,7 @@
       "label": "normalizePopupRouteIntent()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L544",
+      "source_location": "L573",
       "_origin": "ast"
     },
     {
@@ -13240,7 +13256,7 @@
       "label": "base64UrlToUint8Array()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L558",
+      "source_location": "L587",
       "_origin": "ast"
     },
     {
@@ -13248,7 +13264,7 @@
       "label": "applicationServerKeyMatches()",
       "file_type": "code",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L569",
+      "source_location": "L598",
       "_origin": "ast"
     },
     {
@@ -20736,7 +20752,7 @@
       "label": "inbox()",
       "file_type": "code",
       "source_file": "apps/extension/test/room-invite-notifications.test.ts",
-      "source_location": "L108",
+      "source_location": "L141",
       "_origin": "ast"
     },
     {
@@ -20744,7 +20760,7 @@
       "label": "roomInvite()",
       "file_type": "code",
       "source_file": "apps/extension/test/room-invite-notifications.test.ts",
-      "source_location": "L124",
+      "source_location": "L157",
       "_origin": "ast"
     },
     {
@@ -20752,7 +20768,7 @@
       "label": "friendRequest()",
       "file_type": "code",
       "source_file": "apps/extension/test/room-invite-notifications.test.ts",
-      "source_location": "L156",
+      "source_location": "L189",
       "_origin": "ast"
     },
     {
@@ -102391,7 +102407,7 @@
     },
     {
       "source": "apps_extension_src_room_invite_notifications",
-      "target": "apps_extension_src_room_invite_notifications_roominvitenotificationmessage",
+      "target": "apps_extension_src_room_invite_notifications_roominvitenotificationdestinationdependencies",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
@@ -102400,11 +102416,20 @@
     },
     {
       "source": "apps_extension_src_room_invite_notifications",
+      "target": "apps_extension_src_room_invite_notifications_roominvitenotificationmessage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/room-invite-notifications.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_room_invite_notifications",
       "target": "apps_extension_src_room_invite_notifications_roominvitenotificationmessageresponse",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L59",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -102413,7 +102438,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L63",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -102422,7 +102447,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L68",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -102431,7 +102456,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L72",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -102440,7 +102465,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L115",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -102449,7 +102474,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L130",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -102458,7 +102483,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L140",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -102467,7 +102492,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L160",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -102476,7 +102501,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L164",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -102485,7 +102510,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L174",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -102494,7 +102519,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L186",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -102503,7 +102528,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L213",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
@@ -102512,7 +102537,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L231",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -102521,7 +102546,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L240",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -102530,7 +102555,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L295",
+      "source_location": "L301",
       "weight": 1.0
     },
     {
@@ -102539,7 +102564,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L300",
+      "source_location": "L306",
       "weight": 1.0
     },
     {
@@ -102548,7 +102573,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L324",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -102557,7 +102582,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L337",
+      "source_location": "L343",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_room_invite_notifications",
+      "target": "apps_extension_src_room_invite_notifications_openroominvitenotificationdestination",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/room-invite-notifications.ts",
+      "source_location": "L366",
       "weight": 1.0
     },
     {
@@ -102566,7 +102600,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L354",
+      "source_location": "L383",
       "weight": 1.0
     },
     {
@@ -102575,7 +102609,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L362",
+      "source_location": "L391",
       "weight": 1.0
     },
     {
@@ -102584,7 +102618,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L372",
+      "source_location": "L401",
       "weight": 1.0
     },
     {
@@ -102593,7 +102627,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L376",
+      "source_location": "L405",
       "weight": 1.0
     },
     {
@@ -102602,7 +102636,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L394",
+      "source_location": "L423",
       "weight": 1.0
     },
     {
@@ -102611,7 +102645,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L400",
+      "source_location": "L429",
       "weight": 1.0
     },
     {
@@ -102620,7 +102654,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L409",
+      "source_location": "L438",
       "weight": 1.0
     },
     {
@@ -102629,7 +102663,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L451",
+      "source_location": "L480",
       "weight": 1.0
     },
     {
@@ -102638,7 +102672,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L464",
+      "source_location": "L493",
       "weight": 1.0
     },
     {
@@ -102647,7 +102681,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L474",
+      "source_location": "L503",
       "weight": 1.0
     },
     {
@@ -102656,7 +102690,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L481",
+      "source_location": "L510",
       "weight": 1.0
     },
     {
@@ -102665,7 +102699,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L485",
+      "source_location": "L514",
       "weight": 1.0
     },
     {
@@ -102674,7 +102708,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L493",
+      "source_location": "L522",
       "weight": 1.0
     },
     {
@@ -102683,7 +102717,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L497",
+      "source_location": "L526",
       "weight": 1.0
     },
     {
@@ -102692,7 +102726,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L502",
+      "source_location": "L531",
       "weight": 1.0
     },
     {
@@ -102701,7 +102735,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L506",
+      "source_location": "L535",
       "weight": 1.0
     },
     {
@@ -102710,7 +102744,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L510",
+      "source_location": "L539",
       "weight": 1.0
     },
     {
@@ -102719,7 +102753,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L523",
+      "source_location": "L552",
       "weight": 1.0
     },
     {
@@ -102728,7 +102762,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L527",
+      "source_location": "L556",
       "weight": 1.0
     },
     {
@@ -102737,7 +102771,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L531",
+      "source_location": "L560",
       "weight": 1.0
     },
     {
@@ -102746,7 +102780,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L544",
+      "source_location": "L573",
       "weight": 1.0
     },
     {
@@ -102755,7 +102789,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L558",
+      "source_location": "L587",
       "weight": 1.0
     },
     {
@@ -102764,32 +102798,12 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L569",
+      "source_location": "L598",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_room_invite_notifications_handleroominvitenotificationmessage",
       "target": "apps_extension_src_room_invite_notifications_reconcileroominvitenotifications",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L192",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_room_invite_notifications_handleroominvitenotificationmessage",
-      "target": "apps_extension_src_room_invite_notifications_enqueuenotificationwork",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L197",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_room_invite_notifications_handleroominvitenotificationmessage",
-      "target": "apps_extension_src_room_invite_notifications_disableroominvitenotifications",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -102799,12 +102813,32 @@
     },
     {
       "source": "apps_extension_src_room_invite_notifications_handleroominvitenotificationmessage",
+      "target": "apps_extension_src_room_invite_notifications_enqueuenotificationwork",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/room-invite-notifications.ts",
+      "source_location": "L203",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_room_invite_notifications_handleroominvitenotificationmessage",
+      "target": "apps_extension_src_room_invite_notifications_disableroominvitenotifications",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/room-invite-notifications.ts",
+      "source_location": "L204",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_room_invite_notifications_handleroominvitenotificationmessage",
       "target": "apps_extension_src_room_invite_notifications_reconcileroominvitenotificationsnow",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L199",
+      "source_location": "L205",
       "weight": 1.0
     },
     {
@@ -102814,7 +102848,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L204",
+      "source_location": "L210",
       "weight": 1.0
     },
     {
@@ -102824,7 +102858,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L216",
+      "source_location": "L222",
       "weight": 1.0
     },
     {
@@ -102834,7 +102868,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L217",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -102844,7 +102878,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L235",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -102854,7 +102888,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L236",
+      "source_location": "L242",
       "weight": 1.0
     },
     {
@@ -102864,7 +102898,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L247",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -102874,32 +102908,12 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L251",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_room_invite_notifications_reconcileroominvitenotificationsnow",
       "target": "apps_extension_src_room_invite_notifications_containsnotificationspermission",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L252",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_room_invite_notifications_reconcileroominvitenotificationsnow",
-      "target": "apps_extension_src_room_invite_notifications_ensureregisteredpushsubscription",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L254",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_room_invite_notifications_reconcileroominvitenotificationsnow",
-      "target": "apps_extension_src_room_invite_notifications_iscurrentreconciliation",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -102909,12 +102923,32 @@
     },
     {
       "source": "apps_extension_src_room_invite_notifications_reconcileroominvitenotificationsnow",
+      "target": "apps_extension_src_room_invite_notifications_ensureregisteredpushsubscription",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/room-invite-notifications.ts",
+      "source_location": "L260",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_room_invite_notifications_reconcileroominvitenotificationsnow",
+      "target": "apps_extension_src_room_invite_notifications_iscurrentreconciliation",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/room-invite-notifications.ts",
+      "source_location": "L264",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_room_invite_notifications_reconcileroominvitenotificationsnow",
       "target": "apps_extension_src_room_invite_notifications_setinboxbadge",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L267",
+      "source_location": "L273",
       "weight": 1.0
     },
     {
@@ -102924,7 +102958,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L270",
+      "source_location": "L276",
       "weight": 1.0
     },
     {
@@ -102934,7 +102968,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L271",
+      "source_location": "L277",
       "weight": 1.0
     },
     {
@@ -102944,7 +102978,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L278",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -102954,7 +102988,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L292",
+      "source_location": "L298",
       "weight": 1.0
     },
     {
@@ -102964,7 +102998,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L296",
+      "source_location": "L302",
       "weight": 1.0
     },
     {
@@ -102974,7 +103008,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L297",
+      "source_location": "L303",
       "weight": 1.0
     },
     {
@@ -102984,7 +103018,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L305",
+      "source_location": "L311",
       "weight": 1.0
     },
     {
@@ -102994,7 +103028,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L307",
+      "source_location": "L313",
       "weight": 1.0
     },
     {
@@ -103004,7 +103038,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L319",
+      "source_location": "L325",
       "weight": 1.0
     },
     {
@@ -103014,7 +103048,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L331",
+      "source_location": "L337",
       "weight": 1.0
     },
     {
@@ -103024,7 +103058,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L332",
+      "source_location": "L338",
       "weight": 1.0
     },
     {
@@ -103034,7 +103068,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L333",
+      "source_location": "L339",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_room_invite_notifications_handleroominvitenotificationclick",
+      "target": "apps_extension_src_room_invite_notifications_openroominvitenotificationdestination",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/room-invite-notifications.ts",
+      "source_location": "L354",
       "weight": 1.0
     },
     {
@@ -103044,7 +103088,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L355",
+      "source_location": "L384",
       "weight": 1.0
     },
     {
@@ -103054,7 +103098,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L382",
+      "source_location": "L411",
       "weight": 1.0
     },
     {
@@ -103064,7 +103108,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L384",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -103074,7 +103118,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L387",
+      "source_location": "L416",
       "weight": 1.0
     },
     {
@@ -103084,7 +103128,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L411",
+      "source_location": "L440",
       "weight": 1.0
     },
     {
@@ -103094,7 +103138,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L415",
+      "source_location": "L444",
       "weight": 1.0
     },
     {
@@ -103104,7 +103148,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L434",
+      "source_location": "L463",
       "weight": 1.0
     },
     {
@@ -103114,7 +103158,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L438",
+      "source_location": "L467",
       "weight": 1.0
     },
     {
@@ -103124,7 +103168,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L443",
+      "source_location": "L472",
       "weight": 1.0
     },
     {
@@ -103134,7 +103178,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L460",
+      "source_location": "L489",
       "weight": 1.0
     },
     {
@@ -103144,7 +103188,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L470",
+      "source_location": "L499",
       "weight": 1.0
     },
     {
@@ -103154,7 +103198,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L503",
+      "source_location": "L532",
       "weight": 1.0
     },
     {
@@ -103164,7 +103208,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L511",
+      "source_location": "L540",
       "weight": 1.0
     },
     {
@@ -103174,7 +103218,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L524",
+      "source_location": "L553",
       "weight": 1.0
     },
     {
@@ -103184,7 +103228,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L528",
+      "source_location": "L557",
       "weight": 1.0
     },
     {
@@ -123912,6 +123956,16 @@
     },
     {
       "source": "apps_extension_test_room_invite_notifications_test",
+      "target": "apps_extension_src_room_invite_notifications_openroominvitenotificationdestination",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/room-invite-notifications.test.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_room_invite_notifications_test",
       "target": "apps_extension_src_room_invite_notifications_parseinboxchangedpushpayload",
       "relation": "imports",
       "context": "import",
@@ -123936,7 +123990,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/room-invite-notifications.test.ts",
-      "source_location": "L108",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -123945,7 +123999,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/room-invite-notifications.test.ts",
-      "source_location": "L124",
+      "source_location": "L157",
       "weight": 1.0
     },
     {
@@ -123954,7 +124008,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/room-invite-notifications.test.ts",
-      "source_location": "L156",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -217851,7 +217905,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L245",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
@@ -217861,7 +217915,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L260",
+      "source_location": "L266",
       "weight": 1.0
     },
     {
@@ -217871,7 +217925,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L265",
+      "source_location": "L271",
       "weight": 1.0
     },
     {
@@ -217881,7 +217935,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L405",
+      "source_location": "L434",
       "weight": 1.0
     },
     {
@@ -217891,7 +217945,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L457",
+      "source_location": "L486",
       "weight": 1.0
     },
     {
@@ -217901,7 +217955,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L467",
+      "source_location": "L496",
       "weight": 1.0
     },
     {
@@ -227192,7 +227246,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L304",
+      "source_location": "L310",
       "weight": 1.0
     },
     {
@@ -227203,7 +227257,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L339",
+      "source_location": "L345",
       "weight": 1.0
     },
     {
@@ -238258,7 +238312,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L133",
+      "source_location": "L139",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_room_invite_notifications_openroominvitenotificationdestination",
+      "target": "apps_extension_src_room_invite_notifications_roominvitenotificationdestinationdependencies",
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/room-invite-notifications.ts",
+      "source_location": "L370",
       "weight": 1.0
     },
     {
@@ -238269,7 +238334,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/room-invite-notifications.ts",
-      "source_location": "L461",
+      "source_location": "L490",
       "weight": 1.0
     },
     {
