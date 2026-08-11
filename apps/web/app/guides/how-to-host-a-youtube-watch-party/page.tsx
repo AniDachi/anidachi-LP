@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -118,7 +119,7 @@ export default function HowToHostAYoutubeWatchPartyPage() {
         description="Host framing for YouTube watchrooms — who pays, plan limits, and steps."
         url="/guides/how-to-host-a-youtube-watch-party"
         datePublished="2026-07-26"
-        dateModified="2026-07-26"
+        dateModified="2026-08-11"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -161,6 +162,13 @@ export default function HowToHostAYoutubeWatchPartyPage() {
             </li>
           ))}
         </ol>
+
+        <PrimaryCheckoutCta
+          pagePath="/guides/how-to-host-a-youtube-watch-party"
+          pageTemplate="guide"
+          placement="content_mid"
+          className="my-10"
+        />
 
         <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
           Related Guides

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
@@ -86,7 +87,7 @@ export default function DoesTelepartyWorkWithYoutubePage() {
       description="Yes for live sync; no for async. How Teleparty for YouTube fits — and when AniDachi is better."
       url="/guides/does-teleparty-work-with-youtube"
       datePublished="2026-07-25"
-      dateModified="2026-08-03"
+      dateModified="2026-08-11"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -153,6 +154,13 @@ export default function DoesTelepartyWorkWithYoutubePage() {
         </li>
       </ul>
 
+      <PrimaryCheckoutCta
+        pagePath="/guides/does-teleparty-work-with-youtube"
+        pageTemplate="guide"
+        placement="content_mid"
+        className="my-10"
+      />
+
       <h2
         id="when-to-switch"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
@@ -183,6 +191,14 @@ export default function DoesTelepartyWorkWithYoutubePage() {
         Related guides
       </h2>
       <ul className="space-y-2 text-brand-orange">
+        <li>
+          <Link
+            href="/guides/teleparty-not-working-youtube"
+            className="hover:underline"
+          >
+            Teleparty not working on YouTube
+          </Link>
+        </li>
         <li>
           <Link
             href="/guides/does-teleparty-work-with-crunchyroll"

@@ -2,7 +2,7 @@ import { CheckCircle2, Shield, Sparkles } from "lucide-react";
 
 const trustItems = [
   { icon: Shield, label: "Secure Stripe checkout" },
-  { icon: CheckCircle2, label: "Everyone keeps their own Crunchyroll login" },
+  { icon: CheckCircle2, label: "Everyone keeps their own Crunchyroll or YouTube login" },
   { icon: Sparkles, label: "Pre-launch rate locked forever" },
 ];
 

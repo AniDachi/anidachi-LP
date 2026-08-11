@@ -90,7 +90,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
       description="Often blocked or poor quality — why Discord Go Live struggles with Crunchyroll and what to use instead."
       url="/guides/can-you-screen-share-crunchyroll-on-discord"
       datePublished="2026-07-19"
-      dateModified="2026-07-26"
+      dateModified="2026-08-11"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -211,6 +211,14 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         Related guides
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link
+            href="/guides/how-to-watch-crunchyroll-together-without-screen-share"
+            className="hover:underline"
+          >
+            Watch Crunchyroll without screen share
+          </Link>
+        </li>
         <li>
           <Link
             href="/guides/how-to-watch-anime-together-without-screen-share"

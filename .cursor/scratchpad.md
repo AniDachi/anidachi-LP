@@ -1,6 +1,8 @@
 ## Background and Motivation
 
-**(Active — 2026-08-03)** Keyword enrichment **implementation** (Executor): FAQ/meta/snippet/internal-link enrich-in-place on approved batch. **No URL structure changes** (freeze). Awaiting user spot-check + Planner confirm.
+**(Active — 2026-08-11)** AniDachi SEO audit remediation (Addy Osmani skill + freeze Phase 2 + owner-approved 5 commercial guides). Plan: `anidachi_seo_audit_9d0fb571.plan.md`. Hard gate: no URL path/slug/redirect/canonical-retarget on ranked pages (new URLs only via owner exception).
+
+**(Prior — 2026-08-03)** Keyword enrichment **implementation** (Executor): FAQ/meta/snippet/internal-link enrich-in-place on approved batch. **No URL structure changes** (freeze). Awaiting user spot-check + Planner confirm.
 
 **(Prior — 2026-08-02)** Keyword positioning & enrichment from 16 GSC page exports + YouTube cluster. Plan: `keyword_enrichment_analysis`. Canvas: `anidachi-keyword-enrichment.canvas.tsx`. Analysis only.
 
@@ -11,6 +13,16 @@
 **(Prior — 2026-07-26)** SEO agent critical fixes (YT + CR parity) — completed, awaiting Planner confirm.
 
 ## High-level Task Breakdown
+
+### AniDachi SEO audit (Planner → Executor 2026-08-11)
+
+1. Install Addy Osmani `seo` skill; fix critical product-truth + root title/OG + home HowTo.
+2. Sync SEO agent + guidelines + freeze docs (15 genre hubs, www origin, URL stability, winner queue, exit criteria).
+3. P0 / Phase 2 enrich mid CTAs + home FAQ dual-platform (same URLs only).
+4. Attempt `seo:portfolio`; document OAuth blocker if needed.
+5. Verify check/build; zero SEO route rename/delete of ranked URLs.
+6. Owner-approved 5 commercial long-tail guides + inbound wiring.
+   - Success: check/build pass; no false AniDachi CR-only claims; freeze docs include URL stability.
 
 ### Full SEO Analysis (Executor 2026-08-02)
 
@@ -31,6 +43,18 @@
 6. Rewrite SEO agent + guidelines.
 
 ## Project Status Board
+
+### AniDachi SEO audit (Executor — awaiting Planner confirm)
+
+- [x] Install Addy Osmani seo skill (local `.agents/skills/seo`, untracked)
+- [x] Critical truth: movies LDR FAQ, root title/OG, home HowTo
+- [x] Agent + guidelines + freeze docs (URL stability, winner queue, exit criteria)
+- [x] P0/Phase2 enrich: mid CTAs on commercial winners; home FAQ leads with CR+YT
+- [x] `seo:portfolio` blocked — Google OAuth insufficient scopes (reconnect Kreatli CRM Google)
+- [x] Web `check` + `build` pass; no ranked URL rename/delete
+- [x] Home dual-platform from Compare onward (compare table, features, pricing, social proof, survey)
+- [x] **Owner-approved 5-page commercial batch (2026-08-11):** netflix-party-for-crunchyroll, best-way-to-watch-youtube-with-friends, teleparty-not-working-youtube, how-to-watch-crunchyroll-together-without-screen-share, does-rave-work-with-youtube + guide-links + parent inbounds
+- [ ] Planner/manual QA confirm
 
 ### Keyword Enrichment Implementation (2026-08-03) — Executor
 
@@ -78,6 +102,8 @@
 - [x] CWS → `/pricing` on CR pillar + key how-tos
 
 ## Executor's Feedback or Assistance Requests
+
+- **Executor (2026-08-11):** SEO audit + dual-platform home + 5 commercial guides committed. Please spot-check new URLs + home Compare→FAQ. Planner confirm when QA looks good.
 
 - **Executor (2026-08-03):** Keyword enrichment batch implemented (freeze-safe). No URL/canonical/H1 changes.
   - Pages: `/watch-crunchyroll-together`, `/guides/how-to-watch-crunchyroll-with-friends`, `/guides/how-to-watch-anime-with-friends-on-discord`, `/watch-anime-together`, `/compare/anidachi-vs-teleparty`, `/guides/youtube-watch-party-chrome-extension`, `/guides/does-teleparty-work-with-youtube`, `/guides/can-you-screen-share-youtube-on-discord`, `/watch-youtube-together`.

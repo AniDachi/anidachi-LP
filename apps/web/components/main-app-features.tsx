@@ -52,11 +52,12 @@ export function MainAppFeatures() {
             Features
           </div>
           <h2 className="mb-3 text-3xl font-bold text-foreground md:text-5xl">
-            Your Asynchronous Anime Hub
+            Your Watchroom Hub
           </h2>
           <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
           <p className="mx-auto max-w-xl text-base text-foreground/70">
-            Watch together on your schedule — sync, chat, and progress built in.
+            Crunchyroll anime nights and YouTube hangs — sync, chat, and progress
+            on your schedule.
           </p>
         </div>
 

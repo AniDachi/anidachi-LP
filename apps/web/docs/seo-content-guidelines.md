@@ -1,11 +1,11 @@
 # AniDachi SEO Content Guidelines
 
-**Single source of truth** for public marketing SEO on [anidachi.app](https://anidachi.app).  
+**Single source of truth** for public marketing SEO on [www.anidachi.app](https://www.anidachi.app) (apex redirects to www).  
 Dated keyword volumes and batch plans live in separate plan docs — re-pull Keyword Planner before treating any number as current.
 
 Operational agent: [`.cursor/agents/anidachi-seo-aeo-pages.md`](../../../.cursor/agents/anidachi-seo-aeo-pages.md)  
 Portfolio freeze / safety: [`seo-portfolio-freeze.md`](./seo-portfolio-freeze.md)  
-Editorial standards: [`/editorial-policy`](https://anidachi.app/editorial-policy)
+Editorial standards: [`/editorial-policy`](https://www.anidachi.app/editorial-policy)
 
 ---
 
@@ -30,15 +30,18 @@ Do **not**, without owner approval + GSC evidence:
 
 - Ship net-new SEO URL batches while the publishing freeze is active (`seo-portfolio-freeze.md`)
 - 301 / Merge / Retire / Delete public marketing URLs
+- Change URL structure on ranked pages (slug renames, path moves, canonical retarget to another path)
 - Add `noindex` to previously indexable marketing URLs
 - Remove the cohort discovery sitemap while Coverage is recovering
 - Shrink footer/nav crawl paths to existing spokes
 - Rewrite high-traffic pillar H1s or primary intent
 
-Default: **enrich in place**, additive pages, reversible changes.
+Default: **enrich in place on the same URL**, additive pages, reversible changes. Ranked pages keep their paths so Google does not re-associate equity.
 
 Evidence order: Google documentation → AniDachi GSC/GA4 → reproducible tests → third-party studies → patents/leaks as hypotheses only.  
 Do **not** treat domain age, WHOIS, dwell time, schema, or “force-index” sitemaps as ranking levers.
+
+While freeze is active, backlog = `seo:portfolio` Keep/Enrich winners (same URLs), not new Keyword Planner URL ideas.
 
 ---
 
@@ -142,6 +145,7 @@ Impressions before clicks is normal for new URLs. Prefer enriching winners over 
 ## Pre-publish checklist
 
 - [ ] Freeze / publishing gate passed
+- [ ] URL stability: same path (no slug/redirect/canonical retarget)
 - [ ] No cannibalization of an owned query
 - [ ] Canonical = path; FAQ body ↔ JSON-LD
 - [ ] Product claims truthful (CR + YT limits)
@@ -149,4 +153,4 @@ Impressions before clicks is normal for new URLs. Prefer enriching winners over 
 - [ ] Inbound links planned
 - [ ] `pnpm --filter @anidachi/web check` (and build when required)
 
-*Last updated: 2026-07-28*
+*Last updated: 2026-08-11*

@@ -226,6 +226,14 @@ export default function AniDachiVsRavePage() {
       <ul className="space-y-2 text-brand-orange">
         <li>
           <Link
+            href="/guides/does-rave-work-with-youtube"
+            className="hover:underline"
+          >
+            Does Rave work with YouTube?
+          </Link>
+        </li>
+        <li>
+          <Link
             href="/guides/rave-alternatives-for-anime"
             className="hover:underline"
           >

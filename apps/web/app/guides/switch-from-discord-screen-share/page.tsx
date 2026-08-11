@@ -211,6 +211,14 @@ export default function SwitchFromDiscordScreenSharePage() {
         <ul className="space-y-2 text-brand-orange mb-8">
           <li>
             <Link
+              href="/guides/how-to-watch-crunchyroll-together-without-screen-share"
+              className="hover:underline"
+            >
+              Watch Crunchyroll without screen share
+            </Link>
+          </li>
+          <li>
+            <Link
               href="/guides/can-you-screen-share-crunchyroll-on-discord"
               className="hover:underline"
             >

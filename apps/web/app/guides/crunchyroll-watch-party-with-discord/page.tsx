@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -111,7 +112,7 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
         description="Discord voice + AniDachi sync — the hybrid setup anime groups prefer over Go Live."
         url="/guides/crunchyroll-watch-party-with-discord"
         datePublished="2026-07-22"
-        dateModified="2026-07-22"
+        dateModified="2026-08-11"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -182,6 +183,13 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
             </li>
           ))}
         </ol>
+
+        <PrimaryCheckoutCta
+          pagePath="/guides/crunchyroll-watch-party-with-discord"
+          pageTemplate="guide"
+          placement="content_mid"
+          className="my-10"
+        />
 
         <h2
           id="tips"

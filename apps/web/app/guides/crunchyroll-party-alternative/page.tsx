@@ -86,7 +86,7 @@ export default function CrunchyrollPartyAlternativePage() {
       description="Upgrade from free Crunchyroll Party live sync to AniDachi async watchrooms."
       url="/guides/crunchyroll-party-alternative"
       datePublished="2026-07-19"
-      dateModified="2026-07-19"
+      dateModified="2026-08-11"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -191,6 +191,14 @@ export default function CrunchyrollPartyAlternativePage() {
         Related guides
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
+        <li>
+          <Link
+            href="/guides/netflix-party-for-crunchyroll"
+            className="hover:underline"
+          >
+            Netflix Party for Crunchyroll
+          </Link>
+        </li>
         <li>
           <Link
             href="/compare/anidachi-vs-crunchyroll-party"

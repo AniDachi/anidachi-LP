@@ -31,7 +31,7 @@ const faq = [
   {
     question: "Is there a way to watch movies together long distance for free?",
     answer:
-      `Yes — Rave and Crunchyroll Party are free. Watch2Gether is free for YouTube. Discord screen share is free for any platform. Teleparty has a free tier. AniDachi is Crunchyroll-specific with a Free tier to join rooms; ${PRICING_COMPARE_OVERVIEW}`,
+      `Yes — Rave and Crunchyroll Party are free. Watch2Gether is free for YouTube. Discord screen share is free for any platform. Teleparty has a free tier. AniDachi supports Crunchyroll and YouTube watchrooms with a Free tier to join rooms; ${PRICING_COMPARE_OVERVIEW}`,
   },
   {
     question: "Does Netflix have a built-in watch party?",
@@ -68,7 +68,7 @@ export default function WatchMoviesTogetherLongDistancePage() {
       description="All methods compared — Teleparty, Rave, Discord, and AniDachi for anime."
       url="/watch-movies-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-06-23"
+      dateModified="2026-08-11"
       faq={faq}
       headings={tocHeadings}
       aboveFoldCta

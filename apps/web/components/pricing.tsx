@@ -227,8 +227,8 @@ export function Pricing({
           </HeadingTag>
           <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
           <p className="mx-auto max-w-2xl text-base text-foreground/70">
-            Friends join free. Subscribe when you want to host without limits —
-            your pre-launch rate stays forever.
+            Friends join free. Host Crunchyroll or YouTube watchrooms without
+            limits — your pre-launch rate stays forever.
           </p>
 
           {checkoutError && (

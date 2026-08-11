@@ -37,7 +37,7 @@ export function HomeClient({ waitlistCount }: { waitlistCount: number | null }) 
         getCtaLabelForTier={(tier) => pricingCtaLabelForTier({ tier, survey })}
       />
       <SocialProof />
-      <FAQSection questions={homeFAQ} defaultOpenIndexes={[4]} />
+      <FAQSection questions={homeFAQ} defaultOpenIndexes={[0]} />
     </main>
   );
 }

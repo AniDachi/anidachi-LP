@@ -14,16 +14,16 @@ import { usePlanSurvey } from "@/components/plan-survey/use-plan-survey";
 
 const COPY = {
   default: {
-    body: "Lock in pre-launch pricing before we go public.",
+    body: "Lock in pre-launch pricing — watchrooms for Crunchyroll and YouTube.",
   },
   guide: {
-    body: "Pre-launch rate locked forever — same Crunchyroll account you already use.",
+    body: "Pre-launch rate locked forever — same Crunchyroll or YouTube account you already use.",
   },
   compare: {
     body: "Prices go up at public launch. Secure checkout in under a minute.",
   },
   anime: {
-    body: "Start watchrooms on any Crunchyroll title — each viewer keeps their own login.",
+    body: "Start watchrooms on Crunchyroll or YouTube — each viewer keeps their own login.",
   },
   listicle: {
     body: "Subscribe before launch and keep your rate forever.",

@@ -763,6 +763,53 @@ export const guideLinks: GuideLinkItem[] = [
 		label: "How to Watch Netflix Together Long Distance",
 		tags: ["how-to-core", "long-distance", "online"],
 	},
+	{
+		href: "/guides/netflix-party-for-crunchyroll",
+		label: "Netflix Party for Crunchyroll",
+		tags: [
+			"template-c",
+			"crunchyroll",
+			"watch-party",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/best-way-to-watch-youtube-with-friends",
+		label: "Best Way to Watch YouTube With Friends",
+		tags: [
+			"template-c",
+			"listicle",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+		],
+	},
+	{
+		href: "/guides/teleparty-not-working-youtube",
+		label: "Teleparty Not Working on YouTube",
+		tags: [
+			"template-c",
+			"youtube",
+			"watch-party",
+			"pillar-watch-youtube",
+		],
+	},
+	{
+		href: "/guides/how-to-watch-crunchyroll-together-without-screen-share",
+		label: "Watch Crunchyroll Without Screen Share",
+		tags: [
+			"template-c",
+			"how-to-core",
+			"crunchyroll",
+			"discord",
+			"pillar-watch-crunchyroll",
+		],
+	},
+	{
+		href: "/guides/does-rave-work-with-youtube",
+		label: "Does Rave Work With YouTube?",
+		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
+	},
 ];
 
 export function getGuideLinks({

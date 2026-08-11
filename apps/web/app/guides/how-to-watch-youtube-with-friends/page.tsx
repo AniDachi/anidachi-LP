@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -111,7 +112,7 @@ export default function HowToWatchYoutubeWithFriendsPage() {
         description="Step-by-step YouTube watchroom setup — live sync or async catch-up."
         url="/guides/how-to-watch-youtube-with-friends"
         datePublished="2026-07-25"
-        dateModified="2026-07-26"
+        dateModified="2026-08-11"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -160,6 +161,13 @@ export default function HowToWatchYoutubeWithFriendsPage() {
             </li>
           ))}
         </ol>
+
+        <PrimaryCheckoutCta
+          pagePath="/guides/how-to-watch-youtube-with-friends"
+          pageTemplate="guide"
+          placement="content_mid"
+          className="my-10"
+        />
 
         <h2
           id="together"
@@ -220,6 +228,14 @@ export default function HowToWatchYoutubeWithFriendsPage() {
           Related
         </h2>
         <ul className="space-y-2 text-brand-orange">
+          <li>
+            <Link
+              href="/guides/best-way-to-watch-youtube-with-friends"
+              className="hover:underline"
+            >
+              Best way to watch YouTube with friends
+            </Link>
+          </li>
           <li>
             <Link href="/watch-youtube-together" className="hover:underline">
               YouTube watch party hub

@@ -235,6 +235,14 @@ export default function BestTelepartyAlternativesForYoutubePage() {
         Related Guides
       </h2>
       <ul className="space-y-2 mb-8">
+        <li>
+          <Link
+            href="/guides/teleparty-not-working-youtube"
+            className="text-brand-orange hover:underline"
+          >
+            Teleparty not working on YouTube
+          </Link>
+        </li>
         {relatedGuideLinks.map((guide) => (
           <li key={guide.href}>
             <Link href={guide.href} className="text-brand-orange hover:underline">

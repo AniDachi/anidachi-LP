@@ -86,7 +86,7 @@ export default function RaveAlternativesForYoutubePage() {
       description="Qualify Rave for YouTube co-watching and ranked alternatives led by AniDachi."
       url="/guides/rave-alternatives-for-youtube"
       datePublished="2026-07-26"
-      dateModified="2026-07-26"
+      dateModified="2026-08-11"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -203,6 +203,14 @@ export default function RaveAlternativesForYoutubePage() {
         Related Guides
       </h2>
       <ul className="space-y-2 mb-8">
+        <li>
+          <Link
+            href="/guides/does-rave-work-with-youtube"
+            className="text-brand-orange hover:underline"
+          >
+            Does Rave work with YouTube?
+          </Link>
+        </li>
         {relatedGuideLinks.map((guide) => (
           <li key={guide.href}>
             <Link href={guide.href} className="text-brand-orange hover:underline">

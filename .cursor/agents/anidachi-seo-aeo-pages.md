@@ -25,12 +25,26 @@ Without **owner approval + GSC evidence**, do **not**:
 
 - Ship net-new SEO URL **batches** while the freeze is active
 - 301 / Merge / Retire / delete public marketing URLs
+- Change URL **structure** on ranked pages (slug renames, path moves, canonical retarget to a different path)
 - Add `noindex` to previously indexable marketing URLs
 - Delete the cohort / force-index discovery sitemap while Coverage recovers
 - Shrink footer/nav crawl paths to existing spokes
 - Rewrite high-traffic pillar H1s or primary intent
 
-Default: **enrich in place**, additive trust/docs/tools, reversible changes. Prefer winners over more thin spokes.
+Default: **enrich in place on the same URL**, additive trust/docs/tools, reversible changes. Prefer winners over more thin spokes. Ranked pages must keep their current paths so Google does not re-associate equity.
+
+### URL stability gate (mandatory)
+
+Pages are already ranked. **Never** implement SEO work that changes public URL structure:
+
+- No new marketing paths while freeze is active (and no renaming ranked ones after)
+- No redirects / Merge / Retire of marketing URLs in normal agent work
+- Self-canonical on the **same** path only — never retarget `alternates.canonical` to another page
+- Diff check: zero create/rename/delete of SEO `app/**/page.tsx` route folders unless the owner explicitly approved a new URL after freeze lift
+
+### Winner queue (while freeze is active)
+
+Default backlog = `seo:portfolio` **Keep / Enrich** list (same URLs), not Keyword Planner ideas for new paths. Cap enrichment waves; skip Merge/301 suggestions (report-only). Keep `/force-index-sitemap.xml` and `FORCE_INDEX_URL_PATHS` advertised until Coverage recovers.
 
 ### Publishing gate (new or major SEO URL)
 
@@ -58,16 +72,29 @@ pnpm --filter @anidachi/web google-ads:keywords "<seeds…>"
 ## Hard boundaries
 
 - **Platforms (locked):** AniDachi Chrome extension supports **full watchrooms on Crunchyroll and YouTube** (rooms are pinned to one provider per session). **Published product limits** (use this wording, never agent jargon): Crunchyroll catalog pages in desktop Chrome; full `youtube.com/watch` pages in desktop Chrome — **not** YouTube Shorts, embeds, homepage feeds, or the native mobile apps. Do **not** invent Netflix/Disney/Hulu support. **Never** publish the words `soft-pedal` or unexplained `provider-pinned` in FAQs or body copy.
-- **Include**: `app/page.tsx`, `app/about/**`, `app/editorial-policy/**`, `app/contact/**`, `app/security/**`, `app/guides/**`, `app/glossary/**`, `app/resources/**`, `app/watch-party-starter/**`, `app/anime-watch-party-toolkit/**`, `app/watch-crunchyroll-together/**`, `app/watch-youtube-together/**`, `app/watch-youtube-together-long-distance/**`, `app/watch-anime-together/**`, **genre hub pages** (`app/watch-action-anime-with-friends/**`, `app/watch-romance-anime-with-friends/**`, `app/watch-comedy-anime-with-friends/**`, `app/watch-sports-anime-with-friends/**`, `app/watch-mystery-anime-with-friends/**`), `app/compare/**`, `app/watch/[slug]/**`, `lib/anime-data.ts` (`animeList`, `isMovieEntry`, `getAnimeByGenre`), `lib/watch-page-rich-content.ts` (HowTo steps, `buildWatchPageMetaDescription`, `buildWatchPageFaq`, `watchPageResourceItemList`, genre/pacing helpers), `lib/guide-links.ts` (tags + entries for **`getGuideLinks`** on pillars/toolkits), `lib/sitemap-discovery.ts` (static URL discovery, exclusions, default `priority` / `changeFrequency` for sitemap), `lib/site-url.ts` (canonical origin, preview robots, optional AI-crawler blocks), `components/seo-page-layout.tsx`, `components/json-ld.tsx`, `components/primary-checkout-cta.tsx`, `app/sitemap.ts`, `components/footer.tsx`, `components/nav-bar.tsx` when adding crawl paths or hub links; docs under `apps/web/docs/seo-*.md`.
+- **Include**: `app/page.tsx`, `app/about/**`, `app/editorial-policy/**`, `app/contact/**`, `app/security/**`, `app/guides/**`, `app/glossary/**`, `app/resources/**`, `app/watch-party-starter/**`, `app/anime-watch-party-toolkit/**`, `app/watch-crunchyroll-together/**`, `app/watch-youtube-together/**`, `app/watch-youtube-together-long-distance/**`, `app/watch-anime-together/**`, **all 15 genre hub pages** under `app/watch-*-anime-with-friends/**` (action, comedy, fantasy, horror, isekai, mecha, mystery, psychological, romance, sci-fi, shonen, shoujo, slice-of-life, sports, supernatural), `app/compare/**`, `app/watch/[slug]/**`, `lib/anime-data.ts` (`animeList`, `isMovieEntry`, `getAnimeByGenre`), `lib/watch-page-rich-content.ts` (HowTo steps, `buildWatchPageMetaDescription`, `buildWatchPageFaq`, `watchPageResourceItemList`, genre/pacing helpers), `lib/guide-links.ts` (tags + entries for **`getGuideLinks`** on pillars/toolkits), `lib/sitemap-discovery.ts` (static URL discovery, exclusions, default `priority` / `changeFrequency` for sitemap), `lib/site-url.ts` (canonical origin, preview robots, optional AI-crawler blocks), `components/seo-page-layout.tsx`, `components/json-ld.tsx`, `components/primary-checkout-cta.tsx`, `app/sitemap.ts`, `components/footer.tsx`, `components/nav-bar.tsx` when adding crawl paths or hub links; docs under `apps/web/docs/seo-*.md`.
 - **Exclude from SEO work**: Blou (`app/blou/**`), internal CRM (`app/kreatli-email-crm/**`), APIs — **do not** mention Blou in marketing copy, footers for discovery, or sitemap entries beyond whatever already exists for unrelated routing; treat Blou as intentionally hidden from acquisition surfaces. Do **not** change checkout/auth/room/billing **behavior** beyond optional attribution metadata.
 
 ## Technical defaults
 
 - **JSON-LD must stay in the initial HTML** — `components/json-ld.tsx` should emit a plain `<script type="application/ld+json">` via `dangerouslySetInnerHTML` (no deferred Next.js `Script` / `afterInteractive`). Do not reintroduce deferred wrappers. Schema describes on-page content; **do not** promise rich results. No fake `SearchAction` until a real site search exists. Validate material schema changes with Google's Rich Results Test when practical.
 
-- Site URL resolves via **`getResolvedSiteOrigin()`** in **`lib/site-url.ts`** (`NEXT_PUBLIC_SITE_URL` when set—trimmed, trailing slashes stripped, protocol defaulted; else **`VERCEL_URL`** on Vercel; else **`https://anidachi.app`**). Used by `components/json-ld.tsx`, `app/sitemap.ts`, `app/robots.ts`, root `app/layout.tsx` **metadataBase**. Paths in `Metadata` should use **root-relative** canonicals (e.g. `/guides/foo`) consistent with existing pages.
+- Site URL resolves via **`getResolvedSiteOrigin()`** in **`lib/site-url.ts`** (`NEXT_PUBLIC_SITE_URL` when set—trimmed, trailing slashes stripped, protocol defaulted; else **`VERCEL_URL`** on Vercel; else **`https://www.anidachi.app`**). Used by `components/json-ld.tsx`, `app/sitemap.ts`, `app/robots.ts`, root `app/layout.tsx` **metadataBase**. Paths in `Metadata` should use **root-relative** canonicals (e.g. `/guides/foo`) consistent with existing pages. Apex `anidachi.app` redirects to `www` in production — prefer www in docs when citing the live origin.
 - Keep on-page FAQ text **identical** to FAQ items passed into `FAQPageJsonLd` (usually the same `faq` array fed to `SeoPageLayout` and `FAQSection`).
 - **Locale**: Marketing site is **English-first**; do **not** add `hreflang` unless localized copies of pages exist—avoid implying multi-language URLs that are not shipped.
+
+### Addy Osmani / technical SEO gate
+
+Before shipping SEO content or infra edits, confirm:
+
+- HTTPS + mobile viewport unchanged
+- `robots.txt` allows crawling on production; staging stays noindex / empty sitemap
+- No accidental `noindex` on important marketing URLs
+- Unique title + single H1 per page; self-canonical on the **same** path
+- Meta description present and aligned with on-page intent
+- Structured data in initial HTML; FAQ/HowTo match visible copy; no fake `SearchAction`
+- Sitemap lists only canonical, indexable URLs; force-index cohort stays until Coverage recovers
+- Descriptive internal links; do not fix cannibalization with redirects
 
 ## Search intent → page template
 
