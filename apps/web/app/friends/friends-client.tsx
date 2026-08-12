@@ -518,7 +518,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
         ) : null}
 
         <section className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
+          <div className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
@@ -555,7 +555,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
             </div>
           </div>
 
-          <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
+          <div className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Watched together</h2>
@@ -603,7 +603,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
+          <div className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-foreground">Incoming</h2>
               <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
@@ -661,7 +661,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
             </div>
           </div>
 
-          <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
+          <div className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-foreground">Friends</h2>
               <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
@@ -703,7 +703,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
           </div>
         </section>
 
-        <section id="groups" className="rounded-lg border border-brand-border bg-brand-surface p-5">
+        <section id="groups" className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <h2 className="text-lg font-semibold text-foreground">Groups</h2>
@@ -738,7 +738,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
                 const addableFriends = friendOptionsForGroup(group);
                 return (
                   <div
-                    className="rounded-lg border border-brand-border bg-brand-surface/60 p-4"
+                    className="rounded-2xl border border-brand-border/80 bg-brand-surface/60 p-4"
                     key={group.id}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -916,7 +916,7 @@ export function FriendsClient({ currentUser }: { currentUser: CurrentUser }) {
         </section>
 
         {friendsData.outgoingRequests.length ? (
-          <section className="rounded-lg border border-brand-border bg-brand-surface p-5">
+          <section className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5">
             <h2 className="text-lg font-semibold text-foreground">Outgoing</h2>
             <div className="mt-3">
               {friendsData.outgoingRequests.map((request) => (

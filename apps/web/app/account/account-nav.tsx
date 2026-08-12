@@ -3,13 +3,18 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { BookOpen, Inbox, User, Users } from "lucide-react";
+import { BookOpen, Inbox, Lightbulb, User, Users } from "lucide-react";
 
 const ITEMS = [
   { href: "/account", label: "Overview", icon: User },
   { href: "/account/watch-library", label: "Watch Library", icon: BookOpen },
   { href: "/account/friends", label: "Friends & Groups", icon: Users },
   { href: "/account/invites", label: "Invites", icon: Inbox },
+  {
+    href: "/account/feature-requests",
+    label: "Feature Requests",
+    icon: Lightbulb,
+  },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {
@@ -29,7 +34,11 @@ export function AccountNav() {
     const navRect = nav.getBoundingClientRect();
     const activeRect = activeEl.getBoundingClientRect();
     if (activeRect.left < navRect.left || activeRect.right > navRect.right) {
-      activeEl.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      activeEl.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
     }
   }, [pathname]);
 
@@ -46,7 +55,7 @@ export function AccountNav() {
       <nav
         ref={navRef}
         aria-label="Account sections"
-        className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden"
+        className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-col lg:gap-1.5 lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden"
       >
         {ITEMS.map((item) => {
           const Icon = item.icon;
@@ -54,10 +63,10 @@ export function AccountNav() {
           return (
             <Link
               ref={active ? activeRef : undefined}
-              className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition ${
+              className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-semibold tracking-[-0.01em] transition-[transform,background-color,color] duration-200 ease-out ${
                 active
                   ? "bg-brand-orange text-primary-foreground"
-                  : "text-foreground/70 hover:bg-brand-orange hover:text-primary-foreground"
+                  : "text-foreground/70 hover:bg-brand-orange hover:text-primary-foreground active:scale-[0.98]"
               }`}
               href={item.href}
               key={item.href}

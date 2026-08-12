@@ -129,16 +129,23 @@ export function SeoPageLayout({
           showStickyBar && "pb-mobile-sticky-bar md:pb-0",
         )}
       >
-        <nav aria-label="Breadcrumb" className="border-b border-brand-border bg-brand-surface">
-          <div className="container mx-auto px-4 py-3">
-            <ol className="flex flex-wrap items-center gap-2 text-sm text-foreground/50">
+        <nav
+          aria-label="Breadcrumb"
+          className="border-b border-brand-border/80 bg-brand-surface/80"
+        >
+          <div className="container mx-auto px-4 py-3.5">
+            <ol className="flex flex-wrap items-center gap-2 text-sm tracking-[-0.01em] text-foreground/50">
               {breadcrumbs.map((crumb, i) => (
                 <li key={crumb.url} className="flex items-center gap-2">
-                  {i > 0 && <span aria-hidden="true">/</span>}
+                  {i > 0 && (
+                    <span className="text-foreground/30" aria-hidden="true">
+                      /
+                    </span>
+                  )}
                   {i < breadcrumbs.length - 1 ? (
                     <Link
                       href={crumb.url}
-                      className="transition-colors hover:text-brand-orange"
+                      className="transition-colors duration-200 hover:text-brand-orange-bright"
                     >
                       {crumb.name}
                     </Link>
@@ -154,8 +161,8 @@ export function SeoPageLayout({
         </nav>
 
         {hasToc ? (
-          <div className="container mx-auto max-w-6xl px-4 py-10 lg:py-14">
-            <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
+          <div className="container mx-auto max-w-6xl px-4 py-10 lg:py-16">
+            <div className="flex flex-col gap-10 lg:flex-row lg:gap-14">
               <aside
                 className="order-1 w-full flex-shrink-0 lg:order-2 lg:w-64"
                 aria-label="Table of contents"
@@ -168,7 +175,7 @@ export function SeoPageLayout({
             </div>
           </div>
         ) : (
-          <article className="container mx-auto max-w-3xl px-4 py-10 lg:py-14">
+          <article className="container mx-auto max-w-3xl px-4 py-10 lg:py-16">
             {articleBody}
           </article>
         )}

@@ -29,13 +29,15 @@ function StatPanel({
   value: string | number;
 }) {
   return (
-    <div className="rounded-lg border border-brand-border bg-brand-surface p-5">
+    <div className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5 transition-[border-color] duration-200 hover:border-brand-border">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-orange/15 text-brand-orange">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-orange/15 text-brand-orange">
           {icon}
         </span>
         <div>
-          <p className="text-2xl font-bold text-foreground">{value}</p>
+          <p className="text-2xl font-bold tracking-[-0.02em] text-foreground tabular-nums">
+            {value}
+          </p>
           <p className="text-sm text-foreground/50">{label}</p>
         </div>
       </div>
@@ -56,7 +58,9 @@ export default async function AccountOverviewPage() {
   const activeGroups = groups.filter((group) => !group.archivedAt);
   const pendingInvites = invites.inbox.filter((invite) =>
     invite.recipients.some(
-      (recipient) => recipient.user.userId === session.userId && recipient.status === "pending",
+      (recipient) =>
+        recipient.user.userId === session.userId &&
+        recipient.status === "pending",
     ),
   );
 
@@ -69,16 +73,18 @@ export default async function AccountOverviewPage() {
           referralCount={waitlist.referralCount}
         />
       ) : (
-        <section className="rounded-lg border border-brand-border bg-brand-surface p-5">
+        <section className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5 sm:p-6">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Join the waitlist</h2>
+              <h2 className="text-lg font-semibold tracking-[-0.01em] text-foreground">
+                Join the waitlist
+              </h2>
               <p className="mt-1 text-sm text-foreground/50">
                 Sign up to get early access and see your place in line.
               </p>
             </div>
             <Link
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-brand-orange px-4 text-sm font-semibold text-primary-foreground transition hover:bg-brand-orange-deep"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-brand-orange px-4 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-200 hover:bg-brand-orange-deep active:scale-[0.98]"
               href="/join"
             >
               Sign up
@@ -105,16 +111,18 @@ export default async function AccountOverviewPage() {
         />
       </section>
 
-      <section className="rounded-lg border border-brand-border bg-brand-surface p-5">
+      <section className="rounded-2xl border border-brand-border/80 bg-brand-surface p-5 sm:p-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Friends & Groups</h2>
+            <h2 className="text-lg font-semibold tracking-[-0.01em] text-foreground">
+              Friends & Groups
+            </h2>
             <p className="mt-1 text-sm text-foreground/50">
               Manage friend requests and watch groups.
             </p>
           </div>
           <Link
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-primary-foreground transition hover:bg-brand-orange-deep"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-orange px-4 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-200 hover:bg-brand-orange-deep active:scale-[0.98]"
             href="/account/friends"
           >
             Open

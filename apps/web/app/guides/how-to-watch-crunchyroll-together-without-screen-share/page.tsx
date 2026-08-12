@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
+import {
+  SeoGuideAnswer,
+  SeoGuideNote,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -33,10 +40,10 @@ export const metadata: Metadata = {
   },
 };
 
-const howToSteps = [
+const howToStepsPlain = [
   {
     name: "Get AniDachi from pricing",
-    text: "Open /pricing for early access and install the AniDachi Chrome extension — do not hunt a generic Chrome Web Store “Add to Chrome” link.",
+    text: 'Open /pricing for early access and install the AniDachi Chrome extension — do not hunt a generic Chrome Web Store "Add to Chrome" link.',
   },
   {
     name: "Open Crunchyroll",
@@ -54,6 +61,20 @@ const howToSteps = [
     name: "Stream locally",
     text: "Each person watches on their own Crunchyroll tab while the room syncs playback. Use Discord for voice only.",
   },
+];
+
+const howToSteps = [
+  {
+    name: howToStepsPlain[0].name,
+    text: (
+      <>
+        Open <Link href="/pricing">/pricing</Link> for early access and install
+        the AniDachi Chrome extension — do not hunt a generic Chrome Web Store
+        &quot;Add to Chrome&quot; link.
+      </>
+    ),
+  },
+  ...howToStepsPlain.slice(1),
 ];
 
 const faq = [
@@ -99,7 +120,7 @@ export default function HowToWatchCrunchyrollTogetherWithoutScreenSharePage() {
       <HowToJsonLd
         name="How to watch Crunchyroll together without screen share"
         description="Set up an AniDachi Crunchyroll watchroom so everyone streams locally."
-        steps={howToSteps}
+        steps={howToStepsPlain}
       />
       <SeoPageLayout
         breadcrumbs={[
@@ -117,51 +138,36 @@ export default function HowToWatchCrunchyrollTogetherWithoutScreenSharePage() {
         description="Synced Crunchyroll watchrooms so everyone streams locally — Discord for voice only."
         url="/guides/how-to-watch-crunchyroll-together-without-screen-share"
         datePublished="2026-08-11"
-        dateModified="2026-08-11"
+        dateModified="2026-08-12"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-foreground mb-6">
+        <SeoGuideTitle>
           How to Watch Crunchyroll Together Without Screen Share
-        </h1>
+        </SeoGuideTitle>
 
-        <h2
-          id="why-not-screen-share"
-          className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-        >
+        <h2 id="why-not-screen-share" className="scroll-mt-24">
           Why avoid screen share?
         </h2>
-        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
+        <SeoGuideAnswer>
           <strong>
             Discord Go Live and screen share compress Crunchyroll, put one host
             in control of pause/seek, and often break mid-episode.
           </strong>{" "}
           A watchroom lets everyone stream from their own Crunchyroll account in
           full quality while AniDachi keeps playback aligned. Capability check:{" "}
-          <Link
-            href="/guides/can-you-screen-share-crunchyroll-on-discord"
-            className="text-brand-orange hover:underline"
-          >
+          <Link href="/guides/can-you-screen-share-crunchyroll-on-discord">
             can you screen share Crunchyroll on Discord?
           </Link>
           .
-        </p>
+        </SeoGuideAnswer>
 
-        <h2
-          id="steps"
-          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-        >
+        <h2 id="steps" className="scroll-mt-24">
           Step-by-step setup
         </h2>
-        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
-          {howToSteps.map((step) => (
-            <li key={step.name}>
-              <strong>{step.name}.</strong> {step.text}
-            </li>
-          ))}
-        </ol>
+        <SeoGuideSteps steps={howToSteps} />
 
         <PrimaryCheckoutCta
           pagePath="/guides/how-to-watch-crunchyroll-together-without-screen-share"
@@ -170,51 +176,37 @@ export default function HowToWatchCrunchyrollTogetherWithoutScreenSharePage() {
           className="my-10"
         />
 
-        <h2
-          id="discord"
-          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-        >
+        <h2 id="discord" className="scroll-mt-24">
           Discord voice note
         </h2>
-        <p className="text-foreground/80 leading-relaxed mb-8">
+        <SeoGuideNote>
           Keep Discord for voice and reactions. Do not Go Live the Crunchyroll
           tab. Hybrid pattern:{" "}
-          <Link
-            href="/guides/crunchyroll-watch-party-with-discord"
-            className="text-brand-orange hover:underline"
-          >
+          <Link href="/guides/crunchyroll-watch-party-with-discord">
             Crunchyroll watch party with Discord
           </Link>
           . Switching from Go Live permanently?{" "}
-          <Link
-            href="/guides/switch-from-discord-screen-share"
-            className="text-brand-orange hover:underline"
-          >
+          <Link href="/guides/switch-from-discord-screen-share">
             Switch from Discord screen share
           </Link>
           .
-        </p>
+        </SeoGuideNote>
 
-        <h2
-          id="related"
-          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-        >
+        <h2 id="related" className="scroll-mt-24">
           Related guides
         </h2>
-        <ul className="space-y-2 text-brand-orange">
-          <li>
-            <Link href="/watch-crunchyroll-together" className="hover:underline">
-              Crunchyroll watch party hub
-            </Link>
-          </li>
-          {relatedGuideLinks.map((g) => (
-            <li key={g.href}>
-              <Link href={g.href} className="hover:underline">
-                {g.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <SeoGuideRelated
+          links={[
+            {
+              href: "/watch-crunchyroll-together",
+              label: "Crunchyroll watch party hub",
+            },
+            ...relatedGuideLinks.map((g) => ({
+              href: g.href,
+              label: g.label,
+            })),
+          ]}
+        />
       </SeoPageLayout>
     </>
   );

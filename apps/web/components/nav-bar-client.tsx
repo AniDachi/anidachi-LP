@@ -238,6 +238,144 @@ function isWatchClusterPath(pathname: string | null): boolean {
       pathname.includes("anime"));
 }
 
+function ContactNavMenu({
+  variant,
+  onNavigate,
+}: {
+  variant: "desktop" | "tablet" | "mobile";
+  onNavigate?: () => void;
+}) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLLIElement>(null);
+  const links = [
+    {
+      href: "/contact",
+      label: "Contact",
+      description: "Support, privacy, security, press",
+    },
+    {
+      href: "/feature-requests",
+      label: "Feature Requests",
+      description: "Suggest watchroom product ideas",
+    },
+  ] as const;
+  const active = pathname === "/contact" || pathname === "/feature-requests";
+  const menuId = "contact-menu";
+
+  useEffect(() => {
+    if (variant === "mobile") return;
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open, variant]);
+
+  useEffect(() => {
+    if (!open || variant === "mobile") return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, variant]);
+
+  if (variant === "mobile") {
+    return (
+      <li>
+        <p
+          id="mobile-contact-nav-label"
+          className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-foreground/40"
+        >
+          Contact
+        </p>
+        <ul
+          className="flex flex-col gap-1"
+          aria-labelledby="mobile-contact-nav-label"
+        >
+          {links.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className={cn(
+                  "flex min-h-11 items-center rounded-lg px-3 text-base transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  pathname === link.href
+                    ? "text-brand-orange-bright"
+                    : "text-foreground/70",
+                )}
+                onClick={onNavigate}
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </li>
+    );
+  }
+
+  return (
+    <li
+      ref={ref}
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-controls={menuId}
+        className={cn(
+          "inline-flex min-h-11 items-center gap-1 transition-colors hover:text-brand-orange-bright",
+          active || open ? "text-brand-orange-bright" : "text-foreground/70",
+        )}
+        onClick={() => setOpen((o) => !o)}
+        onFocus={() => setOpen(true)}
+      >
+        Contact
+        <ChevronDown
+          className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+      {open ? (
+        <div
+          id={menuId}
+          role="menu"
+          aria-label="Contact options"
+          className="absolute left-0 top-full z-[100] w-72 pt-2"
+        >
+          <div className="rounded-xl border border-brand-border bg-brand-surface p-2 shadow-2xl">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                role="menuitem"
+                className={cn(
+                  "flex flex-col rounded-lg px-3 py-2.5 transition-colors hover:bg-brand-orange hover:text-primary-foreground",
+                  pathname === link.href &&
+                    "bg-brand-orange/10 text-brand-orange-bright",
+                )}
+                onClick={() => {
+                  setOpen(false);
+                  onNavigate?.();
+                }}
+              >
+                <span className="text-sm font-semibold">{link.label}</span>
+                <span className="text-xs opacity-70">{link.description}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
 function WatchNavMenu({
   variant,
   onNavigate,
@@ -426,14 +564,7 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
             </Link>
           </li>
           <WatchNavMenu variant="desktop" />
-          <li>
-            <a
-              href="mailto:anidachi.app@gmail.com"
-              className="inline-flex min-h-11 items-center text-foreground/70 transition-colors hover:text-brand-orange-bright"
-            >
-              Contact
-            </a>
-          </li>
+          <ContactNavMenu variant="desktop" />
           <li>
             <JoinDiscordButton variant="nav" placement="nav" />
           </li>
@@ -494,6 +625,7 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
             </Link>
           </li>
           <WatchNavMenu variant="tablet" />
+          <ContactNavMenu variant="tablet" />
           <li>
             <JoinDiscordButton variant="nav" placement="nav_tablet" />
           </li>
@@ -544,15 +676,10 @@ export function NavBarClient({ user: initialUser }: { user?: NavUser | null }) {
                 variant="mobile"
                 onNavigate={() => setMenuOpen(false)}
               />
-              <li>
-                <a
-                  href="mailto:anidachi.app@gmail.com"
-                  className="flex min-h-11 items-center rounded-lg px-3 text-base text-foreground/70 transition-colors hover:bg-brand-orange hover:text-primary-foreground"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Contact
-                </a>
-              </li>
+              <ContactNavMenu
+                variant="mobile"
+                onNavigate={() => setMenuOpen(false)}
+              />
               <li>
                 <JoinDiscordButton
                   variant="nav"

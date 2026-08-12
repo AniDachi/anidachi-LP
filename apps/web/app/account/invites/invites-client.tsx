@@ -326,14 +326,11 @@ export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <header className="flex flex-col justify-between gap-4 border-b border-brand-border pb-6 md:flex-row md:items-end">
+      <header className="flex flex-col justify-between gap-4 border-b border-brand-border/80 pb-6 md:flex-row md:items-end">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-orange">
-            AniDachi
-          </p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <h2 className="text-2xl font-bold tracking-[-0.02em] text-foreground sm:text-3xl">
             Invites
-          </h1>
+          </h2>
           <p className="mt-2 text-sm text-foreground/50">
             Friend requests, room invitations, and recent missed invitations.
           </p>

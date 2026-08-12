@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { HowToJsonLd } from "@/components/json-ld";
@@ -210,42 +219,31 @@ export default function WatchYoutubeTogetherPage() {
         description="The complete guide to YouTube watch parties: sync, chat, async, and every alternative compared."
         url="/watch-youtube-together"
         datePublished="2026-07-25"
-        dateModified="2026-08-03"
+        dateModified="2026-08-12"
         faq={faq}
         headings={tocHeadings}
         itemList={startHereItemList}
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
-        <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-          YouTube Watch Party — Watch YouTube Together With Friends
-        </h1>
+        <SeoGuideTitle>YouTube Watch Party — Watch YouTube Together With Friends</SeoGuideTitle>
 
-        <h2
-          id="answer"
-          className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-        >
+        <h2 id="answer" className="scroll-mt-24">
           Short Answer
         </h2>
-        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
+        <SeoGuideAnswer>
           <strong>
             Host a YouTube watch party with AniDachi — a Chrome extension that
             creates watchrooms on full YouTube videos with synced playback, chat,
             and async catch-up.
           </strong>{" "}
           YouTube has no native co-watching feature. Start from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing / early access
-          </Link>
-          . Extension details:{" "}
-          <Link
-            href="/guides/youtube-watch-party-chrome-extension"
-            className="text-brand-orange hover:underline"
-          >
+          <Link href="/pricing">pricing / early access</Link>. Extension details:{" "}
+          <Link href="/guides/youtube-watch-party-chrome-extension">
             YouTube watch party Chrome extension
           </Link>
           . Compare free live-only tools below after you know the AniDachi path.
-        </p>
+        </SeoGuideAnswer>
 
         <h2
           id="start-here"
@@ -253,15 +251,17 @@ export default function WatchYoutubeTogetherPage() {
         >
           Start Here
         </h2>
-        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          {startHereItemList.map((item) => (
-            <li key={item.url}>
-              <Link href={item.url} className="text-brand-orange hover:underline">
-                {item.name}
-              </Link>
-            </li>
-          ))}
-        </ol>
+        <SeoGuideSteps
+          steps={startHereItemList.map((item) => ({
+            name: item.name,
+            text: (
+              <>
+                Open{" "}
+                <Link href={item.url}>{item.name}</Link>.
+              </>
+            ),
+          }))}
+        />
 
         <PrimaryCheckoutCta
           pagePath="/watch-youtube-together"
@@ -297,18 +297,7 @@ export default function WatchYoutubeTogetherPage() {
         >
           How to Watch YouTube Together (Step by Step)
         </h2>
-        <ol className="space-y-4 text-foreground/80 mb-8">
-          {howToSteps.map((step, index) => (
-            <li key={step.name} className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-orange/15 text-brand-orange text-sm font-bold flex items-center justify-center">
-                {index + 1}
-              </span>
-              <span>
-                <strong>{step.name}.</strong> {step.text}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <SeoGuideSteps steps={howToSteps} />
         <p className="text-foreground/80 leading-relaxed mb-8">
           Prefer a dedicated how-to? See{" "}
           <Link
@@ -419,28 +408,15 @@ export default function WatchYoutubeTogetherPage() {
           .
         </p>
 
-        <h2
-          id="related"
-          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
-        >
+        <h2 id="related" className="scroll-mt-24">
           Related Guides
         </h2>
-        <ul className="space-y-2 text-brand-orange mb-4">
-          {hardCodedRelated.map((link) => (
-            <li key={link.href}>
-              <Link href={link.href} className="hover:underline">
-                {link.label}
-              </Link>
-            </li>
-          ))}
-          {dynamicRelated.map((guide) => (
-            <li key={guide.href}>
-              <Link href={guide.href} className="hover:underline">
-                {guide.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <SeoGuideRelated
+          links={[
+            ...hardCodedRelated.map((l) => ({ href: l.href, label: l.label })),
+            ...dynamicRelated.map((g) => ({ href: g.href, label: g.label })),
+          ]}
+        />
       </SeoPageLayout>
     </>
   );

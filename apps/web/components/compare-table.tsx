@@ -2,6 +2,7 @@ import {
   ResponsiveCompareTable,
   type CompareTableRow,
 } from "@/components/responsive-compare-table";
+import { HomeSectionHeader } from "@/components/home-section-header";
 
 const columns = [
   { id: "anidachi", label: "AniDachi", highlight: true },
@@ -78,21 +79,12 @@ const rows: CompareTableRow[] = [
 
 export function CompareTable() {
   return (
-    <section id="compare" className="bg-brand-surface py-16 lg:py-20">
+    <section id="compare" className="bg-brand-surface py-16 lg:py-24">
       <div className="container mx-auto px-4">
-        <div className="mb-8 text-center">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide text-brand-orange">
-            Compare
-          </div>
-          <h2 className="mb-3 text-3xl font-bold text-foreground md:text-4xl">
-            How AniDachi Compares
-          </h2>
-          <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
-          <p className="mx-auto max-w-xl text-base text-foreground/70">
-            Watchrooms for Crunchyroll and YouTube — sync, chat, and async catch-up,
-            not generic screen share.
-          </p>
-        </div>
+        <HomeSectionHeader
+          title="How AniDachi compares"
+          description="Watchrooms for Crunchyroll and YouTube — sync, chat, and async catch-up, not generic screen share."
+        />
         <div className="mx-auto max-w-4xl">
           <ResponsiveCompareTable columns={columns} rows={rows} />
         </div>

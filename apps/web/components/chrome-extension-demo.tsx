@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Calendar, Clock, Link2, Mic2, MessageSquareQuote, Tv } from "lucide-react";
 import { ChromeExtensionDemoMobile } from "@/components/chrome-extension-demo-mobile";
 import {
   ASYNC_STEP_LABELS,
@@ -15,6 +14,7 @@ import {
   DemoOverlayLayer,
   useDemoOverlaySequence,
 } from "@/components/chrome-extension-demo-overlay";
+import { HomeSectionHeader } from "@/components/home-section-header";
 import { trackEvent } from "@/lib/gtag";
 
 const YT_VIDEO_ID = "M_OauHnAFc8";
@@ -29,19 +29,14 @@ const LIVE_STEP_LABELS = [
   "Sync",
 ];
 
-const SECTION_COPY: Record<
-  DemoMode,
-  { eyebrow: string; headline: string; subcopy: string }
-> = {
+const SECTION_COPY: Record<DemoMode, { headline: string; subcopy: string }> = {
   live: {
-    eyebrow: "Live Demo",
-    headline: "See It In Action",
+    headline: "See it in action",
     subcopy:
       "The overlay sits on any Crunchyroll or YouTube player. Create a room, share the link, you're in.",
   },
   async: {
-    eyebrow: "Async Demo",
-    headline: "Catch Up Without Losing the Moment",
+    headline: "Catch up without losing the moment",
     subcopy:
       "Comments and reactions pin to episode timestamps — not a live chat log.",
   },
@@ -140,56 +135,6 @@ function DemoModeToggle({
   );
 }
 
-function DemoFeaturePills({ mode }: { mode: DemoMode }) {
-  if (mode === "async") {
-    return (
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-foreground/50">
-        <span className="inline-flex items-center gap-1.5">
-          <MessageSquareQuote className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
-          Time-stamped reactions
-        </span>
-        <span className="text-brand-border/80" aria-hidden="true">
-          ·
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <Clock className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
-          Progress tracking
-        </span>
-        <span className="text-brand-border/80" aria-hidden="true">
-          ·
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <Calendar className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
-          Watch on your schedule
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-foreground/50">
-      <span className="inline-flex items-center gap-1.5">
-        <Tv className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
-        Any video
-      </span>
-      <span className="text-brand-border/80" aria-hidden="true">
-        ·
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <Link2 className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
-        One invite link
-      </span>
-      <span className="text-brand-border/80" aria-hidden="true">
-        ·
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <Mic2 className="h-4 w-4 text-brand-orange/70" aria-hidden="true" />
-        Push-to-talk reactions
-      </span>
-    </div>
-  );
-}
-
 function ChromeExtensionDemoDesktopLive({ visible }: { visible: boolean }) {
   const demo = useDemoOverlaySequence(visible);
 
@@ -197,18 +142,20 @@ function ChromeExtensionDemoDesktopLive({ visible }: { visible: boolean }) {
     <>
       <DemoOverlayKeyframes />
       <StepIndicator labels={LIVE_STEP_LABELS} current={demo.currentStep} />
-      <div className="w-[90%] max-w-full mx-auto rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+      <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-2xl border border-brand-border/80 bg-black shadow-[0_24px_80px_-32px_oklch(0.71_0.20_45_/_0.35)]">
         <div className="relative aspect-video bg-black">
           <iframe
             src={YT_EMBED_SRC}
             title="Anidachi live demo background video"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            className="absolute inset-0 h-full w-full border-0 pointer-events-none"
+            className="pointer-events-none absolute inset-0 h-full w-full border-0"
           />
           <DemoOverlayLayer demo={demo} />
         </div>
-        <div className="bg-background/80 px-5 py-4 border-t border-brand-border">
-          <p className="text-sm text-foreground/60 text-center min-h-[1.25rem]">{demo.caption}</p>
+        <div className="border-t border-brand-border bg-background/90 px-5 py-4">
+          <p className="min-h-[1.25rem] text-center text-sm text-foreground/60">
+            {demo.caption}
+          </p>
         </div>
       </div>
     </>
@@ -222,7 +169,7 @@ function ChromeExtensionDemoDesktopAsync({ visible }: { visible: boolean }) {
     <>
       <AsyncDemoOverlayKeyframes />
       <StepIndicator labels={ASYNC_STEP_LABELS} current={demo.stepIndicatorIndex} />
-      <div className="w-[90%] max-w-full mx-auto rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+      <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-2xl border border-brand-border/80 bg-black shadow-[0_24px_80px_-32px_oklch(0.71_0.20_45_/_0.35)]">
         <div
           className={`relative aspect-video bg-black transition-[filter] duration-700 ${
             demo.dimVideo ? "brightness-[0.55]" : "brightness-100"
@@ -233,12 +180,14 @@ function ChromeExtensionDemoDesktopAsync({ visible }: { visible: boolean }) {
             src={YT_EMBED_SRC}
             title="Anidachi async demo background video"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            className="absolute inset-0 h-full w-full border-0 pointer-events-none"
+            className="pointer-events-none absolute inset-0 h-full w-full border-0"
           />
           <AsyncDemoOverlayLayer demo={demo} platformLabel="Crunchyroll" />
         </div>
-        <div className="bg-background/80 px-5 py-4 border-t border-brand-border">
-          <p className="text-sm text-foreground/60 text-center min-h-[1.25rem]">{demo.caption}</p>
+        <div className="border-t border-brand-border bg-background/90 px-5 py-4">
+          <p className="min-h-[1.25rem] text-center text-sm text-foreground/60">
+            {demo.caption}
+          </p>
         </div>
       </div>
     </>
@@ -278,22 +227,17 @@ export function ChromeExtensionDemo() {
   const copy = SECTION_COPY[mode];
 
   return (
-    <section className="overflow-hidden bg-background py-16 text-foreground lg:py-20">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1600px]">
-        <div className="mb-8 text-center">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide text-brand-orange">
-            {copy.eyebrow}
-          </div>
-          <h2 className="mb-3 text-3xl font-bold md:text-4xl">{copy.headline}</h2>
-          <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
-          <p className="mx-auto max-w-xl text-base text-foreground/70">{copy.subcopy}</p>
-        </div>
+    <section
+      id="demo"
+      className="overflow-hidden bg-background pb-16 pt-2 text-foreground md:pt-4 lg:pb-20"
+    >
+      <div className="container mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        <HomeSectionHeader title={copy.headline} description={copy.subcopy} />
 
         <DemoModeToggle mode={mode} onChange={setMode} />
 
         <ChromeExtensionDemoMobile key={mode} mode={mode} />
         <ChromeExtensionDemoDesktop mode={mode} />
-        <DemoFeaturePills mode={mode} />
       </div>
     </section>
   );

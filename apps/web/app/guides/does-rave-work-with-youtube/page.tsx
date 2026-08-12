@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
+import {
+  SeoGuideAnswer,
+  SeoGuideBulletList,
+  SeoGuideRelated,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
@@ -82,23 +88,18 @@ export default function DoesRaveWorkWithYoutubePage() {
       description="Rave can sync YouTube live — compare limits vs AniDachi watchrooms."
       url="/guides/does-rave-work-with-youtube"
       datePublished="2026-08-11"
-      dateModified="2026-08-11"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        Does Rave Work With YouTube?
-      </h1>
+      <SeoGuideTitle>Does Rave Work With YouTube?</SeoGuideTitle>
 
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
         <strong>
           Yes — Rave can work with YouTube for live, synchronized watch parties
           when everyone is online together.
@@ -106,48 +107,44 @@ export default function DoesRaveWorkWithYoutubePage() {
         It does not offer async catch-up for staggered schedules. If your group
         watches YouTube across time zones — or also needs Crunchyroll anime
         nights — you will outgrow Rave for those sessions. Hub:{" "}
-        <Link
-          href="/watch-youtube-together"
-          className="text-brand-orange hover:underline"
-        >
-          YouTube watch party
-        </Link>
-        .
-      </p>
+        <Link href="/watch-youtube-together">YouTube watch party</Link>.
+      </SeoGuideAnswer>
 
-      <h2
-        id="how-it-works"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="how-it-works" className="scroll-mt-24">
         How Rave + YouTube works
       </h2>
-      <p className="text-foreground/80 leading-relaxed mb-8">
+      <p>
         Each person joins a Rave room, opens the same YouTube video, and Rave
         keeps play/pause roughly aligned. Voice or video calling may be built
         in, which is why some groups prefer it over Teleparty for casual hangs.
         Full watch pages work best — treat Shorts and embeds as unreliable.
       </p>
 
-      <h2
-        id="limits"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="limits" className="scroll-mt-24">
         Where Rave falls short
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
-        <li>Live-only — no async YouTube watchrooms.</li>
-        <li>Not built around Crunchyroll anime detection or episode progress.</li>
-        <li>
-          Not the same dual Crunchyroll + YouTube workflow as{" "}
-          <Link
-            href="/watch-youtube-together"
-            className="text-brand-orange hover:underline"
-          >
-            AniDachi’s YouTube hub
-          </Link>
-          .
-        </li>
-      </ul>
+      <SeoGuideBulletList
+        items={[
+          { body: "Live-only — no async YouTube watchrooms." },
+          {
+            body: "Not built around Crunchyroll anime detection or episode progress.",
+          },
+          {
+            body: (
+              <>
+                Not the same dual Crunchyroll + YouTube workflow as{" "}
+                <Link
+                  href="/watch-youtube-together"
+                  className="font-medium text-brand-orange hover:underline"
+                >
+                  AniDachi’s YouTube hub
+                </Link>
+                .
+              </>
+            ),
+          },
+        ]}
+      />
 
       <PrimaryCheckoutCta
         pagePath="/guides/does-rave-work-with-youtube"
@@ -156,13 +153,10 @@ export default function DoesRaveWorkWithYoutubePage() {
         className="my-10"
       />
 
-      <h2
-        id="when-to-switch"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="when-to-switch" className="scroll-mt-24">
         When to switch tools
       </h2>
-      <p className="text-foreground/80 leading-relaxed mb-8">
+      <p>
         Stay on Rave if live YouTube nights with built-in calling already work.
         Switch to AniDachi when you need async catch-up or also host Crunchyroll.
         Compare:{" "}
@@ -186,26 +180,15 @@ export default function DoesRaveWorkWithYoutubePage() {
         .
       </p>
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-brand-orange">
-        <li>
-          <Link href="/watch-youtube-together" className="hover:underline">
-            YouTube watch party hub
-          </Link>
-        </li>
-        {relatedGuideLinks.map((g) => (
-          <li key={g.href}>
-            <Link href={g.href} className="hover:underline">
-              {g.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/watch-youtube-together", label: "YouTube watch party hub" },
+          ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label })),
+        ]}
+      />
     </SeoPageLayout>
   );
 }

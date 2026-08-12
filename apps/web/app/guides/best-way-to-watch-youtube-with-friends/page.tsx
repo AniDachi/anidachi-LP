@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -88,23 +95,20 @@ export default function BestWayToWatchYoutubeWithFriendsPage() {
       description="Method verdict: sync vs async vs screen share for YouTube watch parties."
       url="/guides/best-way-to-watch-youtube-with-friends"
       datePublished="2026-08-11"
-      dateModified="2026-08-11"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
+      <SeoGuideTitle>
         Best Way to Watch YouTube With Friends (2026 Verdict)
-      </h1>
+      </SeoGuideTitle>
 
-      <h2
-        id="verdict"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <h2 id="verdict" className="scroll-mt-24">
         Verdict
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
         <strong>
           The best way for most groups is AniDachi: everyone streams a full
           youtube.com/watch page in their own browser while a watchroom handles
@@ -113,58 +117,57 @@ export default function BestWayToWatchYoutubeWithFriendsPage() {
         Screen share loses on quality. Live-only free tools are fine for
         same-time nights — until schedules diverge. This is a decision page, not
         a clone of the{" "}
-        <Link
-          href="/guides/how-to-watch-youtube-with-friends"
-          className="text-brand-orange hover:underline"
-        >
+        <Link href="/guides/how-to-watch-youtube-with-friends">
           how to watch YouTube with friends
         </Link>{" "}
         setup guide. Shorts, embeds, and the native mobile apps are not
         supported.
-      </p>
-      <p className="text-foreground/80 leading-relaxed mb-8">
+      </SeoGuideAnswer>
+      <p>
         {PRICING_COMPARE_OVERVIEW_YOUTUBE} Full details on{" "}
-        <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
+        <Link
+          href="/pricing"
+          className="font-medium text-brand-orange hover:underline"
+        >
           /pricing
         </Link>
         .
       </p>
 
-      <h2
-        id="methods"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="methods" className="scroll-mt-24">
         Method comparison
       </h2>
-      <ResponsiveCompareTable
-        columns={[
-          { id: "anidachi", label: "AniDachi", highlight: true },
-          { id: "livefree", label: "Live-only tool" },
-          { id: "screenshare", label: "Screen share" },
-        ]}
-        rows={[
-          {
-            feature: "Full YouTube quality",
-            values: { anidachi: "yes", livefree: "yes", screenshare: "no" },
-          },
-          {
-            feature: "Live sync",
-            values: { anidachi: "yes", livefree: "yes", screenshare: "partial" },
-          },
-          {
-            feature: "Async catch-up",
-            values: { anidachi: "yes", livefree: "no", screenshare: "no" },
-          },
-          {
-            feature: "Everyone has own controls",
-            values: { anidachi: "yes", livefree: "yes", screenshare: "no" },
-          },
-          {
-            feature: "Best for time zones",
-            values: { anidachi: "yes", livefree: "no", screenshare: "no" },
-          },
-        ]}
-      />
+      <div className="not-prose mb-10">
+        <ResponsiveCompareTable
+          columns={[
+            { id: "anidachi", label: "AniDachi", highlight: true },
+            { id: "livefree", label: "Live-only tool" },
+            { id: "screenshare", label: "Screen share" },
+          ]}
+          rows={[
+            {
+              feature: "Full YouTube quality",
+              values: { anidachi: "yes", livefree: "yes", screenshare: "no" },
+            },
+            {
+              feature: "Live sync",
+              values: { anidachi: "yes", livefree: "yes", screenshare: "partial" },
+            },
+            {
+              feature: "Async catch-up",
+              values: { anidachi: "yes", livefree: "no", screenshare: "no" },
+            },
+            {
+              feature: "Everyone has own controls",
+              values: { anidachi: "yes", livefree: "yes", screenshare: "no" },
+            },
+            {
+              feature: "Best for time zones",
+              values: { anidachi: "yes", livefree: "no", screenshare: "no" },
+            },
+          ]}
+        />
+      </div>
 
       <PrimaryCheckoutCta
         pagePath="/guides/best-way-to-watch-youtube-with-friends"
@@ -173,83 +176,78 @@ export default function BestWayToWatchYoutubeWithFriendsPage() {
         className="my-10"
       />
 
-      <h2
-        id="decision"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="decision" className="scroll-mt-24">
         Decision tree
       </h2>
-      <ul className="list-disc pl-6 space-y-3 text-foreground/80 mb-8">
-        <li>
-          <strong>Everyone can start within 5 minutes tonight?</strong> Live sync
-          (AniDachi, Teleparty, or Watch2Gether) is enough.
-        </li>
-        <li>
-          <strong>Someone always watches tomorrow?</strong> Pick AniDachi async —
-          do not rely on Discord Go Live recordings.
-        </li>
-        <li>
-          <strong>Only need voice + any video?</strong> Discord Go Live works, but
-          quality suffers — keep Discord for voice and sync the YouTube tabs.
-        </li>
-      </ul>
+      <SeoGuideOptions
+        options={[
+          {
+            title: "Everyone can start within 5 minutes tonight?",
+            body: "Live sync (AniDachi, Teleparty, or Watch2Gether) is enough.",
+          },
+          {
+            title: "Someone always watches tomorrow?",
+            highlight: true,
+            body: "Pick AniDachi async — do not rely on Discord Go Live recordings.",
+          },
+          {
+            title: "Only need voice + any video?",
+            body: "Discord Go Live works, but quality suffers — keep Discord for voice and sync the YouTube tabs.",
+          },
+        ]}
+      />
 
-      <h2
-        id="next"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="next" className="scroll-mt-24">
         What to do next
       </h2>
-      <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-        <li>
-          Open{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            AniDachi pricing / early access
-          </Link>{" "}
-          and install the Chrome extension.
-        </li>
-        <li>
-          Follow the step-by-step{" "}
-          <Link
-            href="/guides/how-to-watch-youtube-with-friends"
-            className="text-brand-orange hover:underline"
-          >
-            how to watch YouTube with friends
-          </Link>{" "}
-          guide.
-        </li>
-        <li>
-          Browse more tools in{" "}
-          <Link
-            href="/guides/best-apps-to-watch-youtube-together"
-            className="text-brand-orange hover:underline"
-          >
-            best apps to watch YouTube together
-          </Link>
-          .
-        </li>
-      </ol>
+      <SeoGuideSteps
+        steps={[
+          {
+            name: "Open pricing / early access",
+            text: (
+              <>
+                Start at{" "}
+                <Link href="/pricing">AniDachi pricing / early access</Link> and
+                install the Chrome extension.
+              </>
+            ),
+          },
+          {
+            name: "Follow the setup how-to",
+            text: (
+              <>
+                Walk through{" "}
+                <Link href="/guides/how-to-watch-youtube-with-friends">
+                  how to watch YouTube with friends
+                </Link>
+                .
+              </>
+            ),
+          },
+          {
+            name: "Compare more tools if needed",
+            text: (
+              <>
+                Browse{" "}
+                <Link href="/guides/best-apps-to-watch-youtube-together">
+                  best apps to watch YouTube together
+                </Link>
+                .
+              </>
+            ),
+          },
+        ]}
+      />
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related guides
       </h2>
-      <ul className="space-y-2 text-brand-orange">
-        <li>
-          <Link href="/watch-youtube-together" className="hover:underline">
-            YouTube watch party hub
-          </Link>
-        </li>
-        {relatedGuideLinks.map((g) => (
-          <li key={g.href}>
-            <Link href={g.href} className="hover:underline">
-              {g.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/watch-youtube-together", label: "YouTube watch party hub" },
+          ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label })),
+        ]}
+      />
     </SeoPageLayout>
   );
 }

@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -82,20 +91,16 @@ export default function AniDachiVsTelepartyPage() {
       description="Side-by-side comparison for anime watch parties."
       url="/compare/anidachi-vs-teleparty"
       datePublished="2026-04-23"
-      dateModified="2026-08-03"
+      dateModified="2026-08-12"
       faq={faq}
       headings={headings}
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        AniDachi vs Teleparty: Which Is Better for Anime Watch Parties?
-      </h1>
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <SeoGuideTitle>AniDachi vs Teleparty: Which Is Better for Anime Watch Parties?</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           Teleparty works with Crunchyroll for live sync — but AniDachi is
           purpose-built for anime fans who want async watchrooms and progress
@@ -103,7 +108,8 @@ export default function AniDachiVsTelepartyPage() {
           tool that works across many streaming services.
         </strong>{" "}
         Here&apos;s a detailed comparison to help you decide.
-      </p>
+      
+      </SeoGuideAnswer>
 
       <h2
         id="tldr"
@@ -220,54 +226,22 @@ export default function AniDachiVsTelepartyPage() {
         .
       </p>
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-brand-orange">
-        <li>
-          <Link href="/pricing" className="hover:underline">
-            See pricing — Free to join, Plus from $7.99/mo to host
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/does-teleparty-work-with-crunchyroll"
-            className="hover:underline"
-          >
-            Does Teleparty work with Crunchyroll?
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/best-teleparty-alternatives-for-anime"
-            className="hover:underline"
-          >
-            Best Teleparty alternatives for anime
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/teleparty-not-working-crunchyroll"
-            className="hover:underline"
-          >
-            Teleparty not working on Crunchyroll
-          </Link>
-        </li>
-        <li><Link href="/best-apps-watch-anime-together-long-distance" className="hover:underline">Best Apps for Watching Anime Together Long Distance</Link></li>
-        <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll Together (Complete Guide)</Link></li>
-        <li><Link href="/guides/crunchyroll-watch-party-chrome-extension" className="hover:underline">Best Crunchyroll Watch Party Chrome Extensions</Link></li>
-        <li><Link href="/guides/asynchronous-vs-live-watch-party" className="hover:underline">Async vs Live Watch Parties</Link></li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/pricing", label: "See pricing — Free to join, Plus from $7.99/mo to host" },
+                    { href: "/guides/does-teleparty-work-with-crunchyroll", label: "Does Teleparty work with Crunchyroll?" },
+                    { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives for anime" },
+                    { href: "/guides/teleparty-not-working-crunchyroll", label: "Teleparty not working on Crunchyroll" },
+                    { href: "/best-apps-watch-anime-together-long-distance", label: "Best Apps for Watching Anime Together Long Distance" },
+                    { href: "/watch-crunchyroll-together", label: "Watch Crunchyroll Together (Complete Guide)" },
+                    { href: "/guides/crunchyroll-watch-party-chrome-extension", label: "Best Crunchyroll Watch Party Chrome Extensions" },
+                    { href: "/guides/asynchronous-vs-live-watch-party", label: "Async vs Live Watch Parties" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
     </SeoPageLayout>
   );
 }

@@ -236,6 +236,14 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/feature-requests"
+                  className="hover:text-brand-orange-bright transition-colors"
+                >
+                  Feature Requests
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/editorial-policy"
                   className="hover:text-brand-orange-bright transition-colors"
                 >

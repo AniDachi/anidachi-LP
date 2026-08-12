@@ -1,11 +1,5 @@
-import {
-  Chrome,
-  Search,
-  Users,
-  MessageSquare,
-  MousePointer,
-  FolderSyncIcon as Sync,
-} from "lucide-react";
+import { Chrome, Search, Users, MessageSquare } from "lucide-react";
+import { HomeSectionHeader } from "@/components/home-section-header";
 
 const steps = [
   {
@@ -34,101 +28,49 @@ const steps = [
   },
 ];
 
-const extensionHighlights = [
-  {
-    icon: Chrome,
-    title: "Auto detection",
-    description: "Finds Crunchyroll anime or YouTube videos — no URL pasting.",
-  },
-  {
-    icon: MousePointer,
-    title: "One-click rooms",
-    description: "Create a watchroom and share the invite instantly.",
-  },
-  {
-    icon: Sync,
-    title: "Stay in sync",
-    description: "Playback stays aligned when you watch live together.",
-  },
-];
-
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="bg-brand-surface py-16 lg:py-20">
+    <section id="how-it-works" className="bg-brand-surface py-16 lg:py-24">
       <div className="container mx-auto px-4">
-        <div className="mb-10 text-center">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange/15 px-4 py-1.5 text-sm font-semibold uppercase tracking-wide text-brand-orange">
-            Setup
-          </div>
-          <h2 className="mb-3 text-3xl font-bold text-foreground md:text-4xl">
-            How AniDachi Works
-          </h2>
-          <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
-          <p className="mx-auto max-w-xl text-base text-foreground/70">
-            From install to your first shared episode in under two minutes.
-          </p>
-        </div>
+        <HomeSectionHeader
+          title="How AniDachi works"
+          description="From install to your first shared episode in under two minutes."
+        />
 
-        <ol className="mx-auto max-w-3xl space-y-4">
+        <ol id="extension" className="mx-auto max-w-2xl space-y-0">
           {steps.map((step, i) => (
-            <li
-              key={i}
-              className="group flex animate-fade-in-up gap-4 sm:gap-5"
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
-              <div className="flex shrink-0 flex-col items-center pt-5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-border bg-background text-sm font-bold text-foreground/80 transition-all duration-300 group-hover:border-brand-orange group-hover:bg-brand-orange group-hover:text-primary-foreground">
+            <li key={step.title} className="flex gap-4 sm:gap-5">
+              <div className="flex shrink-0 flex-col items-center">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange/15 font-mono text-sm font-semibold tabular-nums text-brand-orange-bright">
                   {i + 1}
                 </span>
                 {i < steps.length - 1 ? (
                   <span
-                    className="mt-2 min-h-4 w-px flex-1 bg-brand-border transition-colors duration-300 group-hover:bg-brand-orange/40"
+                    className="my-1 w-px flex-1 bg-brand-border"
                     aria-hidden
                   />
                 ) : null}
               </div>
 
-              <div className="min-w-0 flex-1 rounded-lg border border-brand-border bg-background p-5 transition-all duration-300 hover:shadow-lg group-hover:-translate-y-0.5 group-hover:border-brand-orange/50">
-                <div className="mb-1 flex items-center gap-3">
+              <div
+                className={`min-w-0 flex-1 ${i === steps.length - 1 ? "pb-0" : "pb-8"}`}
+              >
+                <div className="mb-1.5 flex items-center gap-2.5">
                   <step.icon
-                    className="h-5 w-5 text-foreground/50 transition-colors duration-300 group-hover:text-brand-orange"
+                    className="h-4 w-4 text-brand-orange/80"
                     aria-hidden="true"
                   />
-                  <h3 className="text-lg font-semibold text-foreground transition-colors duration-300 group-hover:text-brand-orange">
+                  <h3 className="text-lg font-semibold tracking-[-0.01em] text-foreground">
                     {step.title}
                   </h3>
                 </div>
-                <p className="text-sm leading-relaxed text-foreground/70">
+                <p className="text-[0.95rem] leading-relaxed text-foreground/70">
                   {step.description}
                 </p>
               </div>
             </li>
           ))}
         </ol>
-
-        <div id="extension" className="mx-auto mt-10 max-w-4xl">
-          <div className="grid gap-4 sm:grid-cols-3">
-            {extensionHighlights.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-lg border border-brand-border bg-background p-4 text-center"
-              >
-                <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-orange/15">
-                  <item.icon
-                    className="h-5 w-5 text-brand-orange"
-                    aria-hidden="true"
-                  />
-                </div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  {item.title}
-                </h3>
-                <p className="mt-1 text-xs leading-relaxed text-foreground/60">
-                  {item.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );

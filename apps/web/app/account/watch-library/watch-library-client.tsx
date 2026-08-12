@@ -261,14 +261,16 @@ function WatchItemCard({
     item.itemKind === "series" && (seasonGroups.length > 1 || seasonGroups.some((group) => group.known));
 
   return (
-    <section className="overflow-hidden rounded-lg border border-brand-border bg-brand-surface">
-      <div className="flex items-center gap-4 border-b border-brand-border p-4">
+    <section className="overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface">
+      <div className="flex items-center gap-4 border-b border-brand-border/80 p-4">
         <Poster item={item} />
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-orange">
+          <p className="text-xs font-semibold tracking-[0.1em] text-brand-orange">
             {providerLabel(item.provider)} · {item.itemKind}
           </p>
-          <h3 className="mt-1 truncate text-lg font-bold text-foreground">{item.itemTitle}</h3>
+          <h3 className="mt-1 truncate text-lg font-bold tracking-[-0.01em] text-foreground">
+            {item.itemTitle}
+          </h3>
           <p className="mt-1 text-sm text-foreground/50">
             Last watched {formatDate(item.lastWatchedAt)}
           </p>

@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -90,23 +99,19 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
       description="Often blocked or poor quality — why Discord Go Live struggles with Crunchyroll and what to use instead."
       url="/guides/can-you-screen-share-crunchyroll-on-discord"
       datePublished="2026-07-19"
-      dateModified="2026-08-11"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta={true}
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        Can You Screen Share Crunchyroll on Discord?
-      </h1>
+      <SeoGuideTitle>Can You Screen Share Crunchyroll on Discord?</SeoGuideTitle>
 
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           Often no — or only with poor quality. Discord Go Live of Crunchyroll is
           frequently blocked (black screen), bitrate-starved, and limited to one
@@ -115,7 +120,8 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         Even when capture works, friends do not get their own player controls or
         full Crunchyroll quality. For weekly anime nights, screen share is the
         wrong tool.
-      </p>
+      
+      </SeoGuideAnswer>
 
       <PrimaryCheckoutCta
         pagePath="/guides/can-you-screen-share-crunchyroll-on-discord"
@@ -204,58 +210,19 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         .
       </p>
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related guides
       </h2>
-      <ul className="space-y-2 text-brand-orange mb-8">
-        <li>
-          <Link
-            href="/guides/how-to-watch-crunchyroll-together-without-screen-share"
-            className="hover:underline"
-          >
-            Watch Crunchyroll without screen share
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/how-to-watch-anime-together-without-screen-share"
-            className="hover:underline"
-          >
-            How to watch anime together without screen share
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/switch-from-discord-screen-share"
-            className="hover:underline"
-          >
-            Switch from Discord screen share
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/compare/anidachi-vs-discord-screen-share"
-            className="hover:underline"
-          >
-            AniDachi vs Discord screen share
-          </Link>
-        </li>
-        <li>
-          <Link href="/pricing" className="hover:underline">
-            AniDachi pricing
-          </Link>
-        </li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/guides/how-to-watch-crunchyroll-together-without-screen-share", label: "Watch Crunchyroll without screen share" },
+                    { href: "/guides/how-to-watch-anime-together-without-screen-share", label: "How to watch anime together without screen share" },
+                    { href: "/guides/switch-from-discord-screen-share", label: "Switch from Discord screen share" },
+                    { href: "/compare/anidachi-vs-discord-screen-share", label: "AniDachi vs Discord screen share" },
+                    { href: "/pricing", label: "AniDachi pricing" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
     </SeoPageLayout>
   );
 }

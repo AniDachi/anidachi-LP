@@ -41,17 +41,23 @@ export function AccountWaitlistCard({
   }, [referralLink]);
 
   return (
-    <section className="rounded-lg border border-brand-orange/35 bg-brand-orange/10 p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <section className="relative overflow-hidden rounded-2xl border border-brand-orange/30 bg-brand-surface p-5 sm:p-6">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(100%_80%_at_0%_0%,oklch(0.71_0.20_45_/_0.16),transparent_55%)]"
+      />
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand-orange/90">
-            Early access waitlist
+          <p className="text-xs font-semibold tracking-[0.12em] text-brand-orange">
+            EARLY ACCESS WAITLIST
           </p>
-          <p className="mt-1 text-3xl font-bold text-foreground">
+          <p className="mt-2 text-3xl font-bold tracking-[-0.02em] text-foreground tabular-nums">
             #{waitlistPosition}
-            <span className="ml-2 text-base font-medium text-foreground/50">in line</span>
+            <span className="ml-2 text-base font-medium tracking-normal text-foreground/50">
+              in line
+            </span>
           </p>
-          <p className="mt-1 text-sm text-foreground/60">
+          <p className="mt-1.5 text-sm leading-relaxed text-foreground/60">
             {referralCount > 0
               ? `${referralCount} friend${referralCount === 1 ? "" : "s"} joined via your link.`
               : "Invite friends to move up 10 spots per signup."}
@@ -59,7 +65,7 @@ export function AccountWaitlistCard({
         </div>
         <Button
           type="button"
-          className="shrink-0 bg-brand-orange font-semibold text-primary-foreground hover:bg-brand-orange-deep"
+          className="shrink-0 bg-brand-orange font-semibold text-primary-foreground transition-[transform,background-color] duration-200 hover:bg-brand-orange-deep active:scale-[0.98]"
           onClick={inviteFriends}
         >
           {copied ? (

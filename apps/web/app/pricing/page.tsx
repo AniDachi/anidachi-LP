@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Pricing } from "@/components/pricing";
 import { FAQSection } from "@/components/faq-section";
 import { BreadcrumbJsonLd, FAQPageJsonLd } from "@/components/json-ld";
+import { SocialProof } from "@/components/social-proof";
 import {
   PRICING_FRIENDS_NEED_SUBSCRIPTION_ANSWER,
   PRICING_IS_ANIDACHI_FREE_ANSWER,
@@ -14,19 +15,19 @@ import {
 export const metadata: Metadata = {
   title: "AniDachi Pricing — Free, Plus & Pro Plans (2026)",
   description:
-    "AniDachi pricing for anime watch parties on Crunchyroll. Friends join free. Plus and Pro unlock unlimited hosting, async rooms, and larger groups — pre-launch rates locked forever.",
+    "AniDachi pricing for Crunchyroll and YouTube watchrooms. Friends join free. Plus and Pro unlock unlimited hosting, async rooms, and larger groups — pre-launch rates locked forever.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "AniDachi Pricing — Free, Plus & Pro",
     description:
-      "Compare Free, Plus, and Pro. Pre-launch pricing locked forever with a full refund before launch.",
+      "Compare Free, Plus, and Pro for Crunchyroll and YouTube watchrooms. Pre-launch pricing locked forever.",
     url: "/pricing",
   },
   twitter: {
     card: "summary_large_image",
     title: "AniDachi Pricing — Free, Plus & Pro",
     description:
-      "Friends join free. Hosts upgrade for unlimited Crunchyroll watchrooms starting at " +
+      "Friends join free. Hosts upgrade for unlimited Crunchyroll or YouTube watchrooms starting at " +
       PRICING_STARTING_AT +
       ".",
   },
@@ -50,9 +51,9 @@ const faq = [
     answer: PRICING_REFUND_NOTE,
   },
   {
-    question: "Do I still need Crunchyroll?",
+    question: "Do I still need Crunchyroll or YouTube?",
     answer:
-      "Yes. Each person streams anime under their own Crunchyroll account. AniDachi adds watchrooms, sync, chat, and async progress on top — it does not replace a streaming subscription.",
+      "Yes. Each person streams under their own Crunchyroll or YouTube account. AniDachi adds watchrooms, sync, chat, and async progress on top — it does not replace a streaming subscription.",
   },
 ];
 
@@ -69,19 +70,35 @@ export default function PricingPage() {
       <main className="min-h-screen bg-background">
         <nav
           aria-label="Breadcrumb"
-          className="container mx-auto px-4 pt-8 text-sm text-foreground/50"
+          className="border-b border-brand-border/80 bg-brand-surface/80"
         >
-          <ol className="flex flex-wrap items-center gap-2">
-            <li>
-              <Link href="/" className="hover:text-brand-orange transition-colors">
-                Home
-              </Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li className="text-foreground/80">Pricing</li>
-          </ol>
+          <div className="container mx-auto px-4 py-3.5 text-sm tracking-[-0.01em] text-foreground/50">
+            <ol className="flex flex-wrap items-center gap-2">
+              <li>
+                <Link
+                  href="/"
+                  className="transition-colors duration-200 hover:text-brand-orange-bright"
+                >
+                  Home
+                </Link>
+              </li>
+              <li className="text-foreground/30" aria-hidden="true">
+                /
+              </li>
+              <li className="font-medium text-foreground">Pricing</li>
+            </ol>
+          </div>
         </nav>
+
+        <div className="container mx-auto max-w-3xl px-4 pb-2 pt-10 text-center lg:pt-14">
+          <p className="mx-auto max-w-2xl text-pretty text-base leading-relaxed text-foreground/70 md:text-lg">
+            Pre-launch rates for Crunchyroll anime nights and YouTube hangs —
+            friends join free while hosts unlock unlimited rooms.
+          </p>
+        </div>
+
         <Pricing headingLevel={1} />
+        <SocialProof />
         <FAQSection
           title="Pricing FAQ"
           questions={faq}
@@ -91,22 +108,22 @@ export default function PricingPage() {
           <p>
             Looking for how watch parties work? See{" "}
             <Link
-              href="/anime-watch-party"
-              className="text-brand-orange font-medium hover:underline"
+              href="/watch-crunchyroll-together"
+              className="font-medium text-brand-orange hover:underline"
             >
-              anime watch party
+              watch Crunchyroll together
             </Link>
             ,{" "}
             <Link
-              href="/watch-crunchyroll-together"
-              className="text-brand-orange font-medium hover:underline"
+              href="/watch-youtube-together"
+              className="font-medium text-brand-orange hover:underline"
             >
-              watch Crunchyroll together
+              YouTube watch party
             </Link>
             , or{" "}
             <Link
               href="/guides/best-watch-party-apps-for-anime"
-              className="text-brand-orange font-medium hover:underline"
+              className="font-medium text-brand-orange hover:underline"
             >
               best watch party apps for anime
             </Link>
