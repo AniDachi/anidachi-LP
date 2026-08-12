@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 import {
@@ -69,27 +78,24 @@ export default function AnidachiVsDiscordScreenSharePage() {
       description="Compare Discord Go Live setups with synced Crunchyroll watchrooms."
       url="/compare/anidachi-vs-discord-screen-share"
       datePublished="2026-05-08"
-      dateModified="2026-07-22"
+      dateModified="2026-08-12"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        AniDachi vs Discord screen share for anime watch parties
-      </h1>
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <SeoGuideTitle>AniDachi vs Discord screen share for anime watch parties</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           Discord is unbeatable for cozy voice chats; screen share is unbeatable for a
           two-minute peek. Serious weekly anime nights usually outgrow bandwidth caps
           and drift issues—then synced per-user playback wins.
         </strong>
-      </p>
+      
+      </SeoGuideAnswer>
 
       <h2 id="tldr" className="text-2xl font-bold text-foreground mt-10 mb-3 scroll-mt-24">
         At a glance
@@ -148,50 +154,19 @@ export default function AnidachiVsDiscordScreenSharePage() {
         playbook.
       </p>
 
-      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-brand-orange mb-8">
-        <li>
-          <Link
-            href="/guides/crunchyroll-watch-party-with-discord"
-            className="hover:underline"
-          >
-            Crunchyroll watch party with Discord
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/can-you-screen-share-crunchyroll-on-discord"
-            className="hover:underline"
-          >
-            Can you screen share Crunchyroll on Discord?
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/switch-from-discord-screen-share"
-            className="hover:underline"
-          >
-            Switch from Discord screen share
-          </Link>
-        </li>
-        <li>
-          <Link href="/guides/how-to-watch-anime-with-friends-on-discord" className="hover:underline">
-            How to watch anime with friends on Discord
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-            AniDachi vs Teleparty
-          </Link>
-        </li>
-        <li>
-          <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="hover:underline">
-            How to watch Crunchyroll with friends
-          </Link>
-        </li>
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/guides/crunchyroll-watch-party-with-discord", label: "Crunchyroll watch party with Discord" },
+                    { href: "/guides/can-you-screen-share-crunchyroll-on-discord", label: "Can you screen share Crunchyroll on Discord?" },
+                    { href: "/guides/switch-from-discord-screen-share", label: "Switch from Discord screen share" },
+                    { href: "/guides/how-to-watch-anime-with-friends-on-discord", label: "How to watch anime with friends on Discord" },
+                    { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+                    { href: "/guides/how-to-watch-crunchyroll-with-friends", label: "How to watch Crunchyroll with friends" }
+        ]}
+      />
     </SeoPageLayout>
   );
 }

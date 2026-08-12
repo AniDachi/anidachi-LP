@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Star, Zap, Lock } from "lucide-react";
+import { Check, Star, Lock } from "lucide-react";
 import {
   inferPageTemplateFromPath,
   trackConversion,
@@ -23,6 +23,7 @@ import {
   type PricingTierId,
 } from "@/lib/pricing-tiers";
 import { PricingSurveyLink } from "@/components/pricing-survey-link";
+import { HomeSectionHeader } from "@/components/home-section-header";
 import { getSeoAttributionFields } from "@/lib/seo-landing-path";
 
 function FeatureList({ features }: { features: string[] }) {
@@ -53,7 +54,6 @@ export function Pricing({
   /** Use 1 on the dedicated /pricing page so the page has a single H1. */
   headingLevel?: 1 | 2;
 } = {}) {
-  const HeadingTag = headingLevel === 1 ? "h1" : "h2";
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittingTier, setSubmittingTier] = useState<CheckoutTier | null>(null);
@@ -216,32 +216,23 @@ export function Pricing({
         className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 w-[600px] h-[400px] bg-brand-orange/8 blur-[100px]"
         aria-hidden
       />
-      <div className="container mx-auto px-4 relative">
-        <div className="mb-10 text-center">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange/15 px-4 py-2 text-sm font-medium text-brand-orange">
-            <Zap className="h-4 w-4" aria-hidden="true" />
-            Pre-Launch Pricing
+      <div className="container relative mx-auto px-4">
+        <HomeSectionHeader
+          titleAs={headingLevel === 1 ? "h1" : "h2"}
+          title="Pre-launch pricing. Locked in forever."
+          description="Friends join free. Host Crunchyroll or YouTube watchrooms without limits — your pre-launch rate stays forever."
+        />
+
+        {checkoutError ? (
+          <div
+            className="mx-auto mb-8 max-w-lg rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-center text-sm text-destructive"
+            role="alert"
+          >
+            {checkoutError}
           </div>
-          <HeadingTag className="mb-3 text-3xl font-bold text-foreground md:text-5xl">
-            Pre-launch pricing. Locked in forever.
-          </HeadingTag>
-          <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
-          <p className="mx-auto max-w-2xl text-base text-foreground/70">
-            Friends join free. Host Crunchyroll or YouTube watchrooms without
-            limits — your pre-launch rate stays forever.
-          </p>
+        ) : null}
 
-          {checkoutError && (
-            <div
-              className="mx-auto mb-6 mt-4 max-w-lg rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-              role="alert"
-            >
-              {checkoutError}
-            </div>
-          )}
-        </div>
-
-        <div className="mx-auto mb-12 grid max-w-6xl items-stretch gap-6 pt-6 md:grid-cols-3 lg:gap-8">
+        <div className="mx-auto mb-12 grid max-w-6xl items-stretch gap-6 pt-2 md:grid-cols-3 lg:gap-8">
           {PRICING_TIERS.map((tier, index) => {
             const highlighted = isHighlighted(tier.id);
             const recommended = isRecommended(tier.id);

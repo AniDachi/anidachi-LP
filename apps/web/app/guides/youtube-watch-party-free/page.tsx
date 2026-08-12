@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -90,20 +99,19 @@ export default function YoutubeWatchPartyFreePage() {
       description="Free YouTube watch party tools and AniDachi Free tier limits — when hosts upgrade."
       url="/guides/youtube-watch-party-free"
       datePublished="2026-07-26"
-      dateModified="2026-07-26"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        Free YouTube Watch Party Options (2026)
-      </h1>
+      <SeoGuideTitle>Free YouTube Watch Party Options (2026)</SeoGuideTitle>
 
-      <h2 id="answer" className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24">
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           Yes — you can run a free YouTube watch party with AniDachi Free (
           {PRICING_FREE_TIER_TABLE.toLowerCase()}), Teleparty, or Watch2Gether.
@@ -111,15 +119,16 @@ export default function YoutubeWatchPartyFreePage() {
         Free usually means live-only sync and host caps. When your group needs unlimited
         hosting or async catch-up, the{" "}
         <strong>host</strong> upgrades on{" "}
-        <Link href="/pricing" className="text-brand-orange hover:underline">
+        <Link href="/pricing">
           /pricing
         </Link>{" "}
         while guests stay Free. Hub:{" "}
-        <Link href="/watch-youtube-together" className="text-brand-orange hover:underline">
+        <Link href="/watch-youtube-together">
           YouTube Watch Party
         </Link>
         .
-      </p>
+      
+      </SeoGuideAnswer>
 
       <h2 id="options" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Free Options Compared
@@ -174,26 +183,15 @@ export default function YoutubeWatchPartyFreePage() {
         .
       </p>
 
-      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="scroll-mt-24">
         Related Guides
       </h2>
-      <ul className="space-y-2 mb-8">
-        <li>
-          <Link
-            href="/guides/best-apps-to-watch-youtube-together"
-            className="text-brand-orange hover:underline"
-          >
-            Best apps to watch YouTube together
-          </Link>
-        </li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="text-brand-orange hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/guides/best-apps-to-watch-youtube-together", label: "Best apps to watch YouTube together" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
     </SeoPageLayout>
   );
 }

@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -91,23 +100,19 @@ export default function CrunchyrollWatchPartyFreePage() {
       description="Free Crunchyroll watch party tools and AniDachi Free tier limits — when hosts upgrade."
       url="/guides/crunchyroll-watch-party-free"
       datePublished="2026-07-12"
-      dateModified="2026-07-26"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        Free Crunchyroll Watch Party Options (2026)
-      </h1>
+      <SeoGuideTitle>Free Crunchyroll Watch Party Options (2026)</SeoGuideTitle>
 
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           Yes — you can run a free Crunchyroll watch party with AniDachi Free (
           {PRICING_FREE_TIER_TABLE.toLowerCase()}), Crunchyroll Party, or Discord
@@ -116,18 +121,18 @@ export default function CrunchyrollWatchPartyFreePage() {
         Free usually means live-only sync and host caps. When your group needs
         unlimited hosting or async catch-up, the <strong>host</strong> upgrades
         on{" "}
-        <Link href="/pricing" className="text-brand-orange hover:underline">
+        <Link href="/pricing">
           /pricing
         </Link>{" "}
         while guests stay Free. Hub:{" "}
         <Link
           href="/watch-crunchyroll-together"
-          className="text-brand-orange hover:underline"
         >
           Watch Crunchyroll Together
         </Link>
         .
-      </p>
+      
+      </SeoGuideAnswer>
 
       <h2
         id="options"
@@ -192,39 +197,17 @@ export default function CrunchyrollWatchPartyFreePage() {
         .
       </p>
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related Guides
       </h2>
-      <ul className="space-y-2 mb-8 text-brand-orange">
-        <li>
-          <Link href="/watch-crunchyroll-together" className="hover:underline">
-            Watch Crunchyroll Together
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/how-to-watch-crunchyroll-with-friends"
-            className="hover:underline"
-          >
-            How to watch Crunchyroll with friends
-          </Link>
-        </li>
-        <li>
-          <Link href="/pricing" className="hover:underline">
-            AniDachi pricing
-          </Link>
-        </li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/watch-crunchyroll-together", label: "Watch Crunchyroll Together" },
+                    { href: "/guides/how-to-watch-crunchyroll-with-friends", label: "How to watch Crunchyroll with friends" },
+                    { href: "/pricing", label: "AniDachi pricing" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
     </SeoPageLayout>
   );
 }

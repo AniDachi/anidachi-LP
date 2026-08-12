@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
@@ -112,23 +121,19 @@ export default function HowToWatchYoutubeWithFriendsPage() {
         description="Step-by-step YouTube watchroom setup — live sync or async catch-up."
         url="/guides/how-to-watch-youtube-with-friends"
         datePublished="2026-07-25"
-        dateModified="2026-08-11"
+        dateModified="2026-08-12"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-foreground mb-6">
-          How to Watch YouTube With Friends
-        </h1>
+        <SeoGuideTitle>How to Watch YouTube With Friends</SeoGuideTitle>
 
-        <h2
-          id="answer"
-          className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-        >
-          Short Answer
-        </h2>
-        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
+        <h2 id="answer" className="scroll-mt-24">
+        Short Answer
+      </h2>
+      <SeoGuideAnswer>
+
           <strong>
             Create an AniDachi YouTube watchroom, share the invite, and watch on
             each person’s own YouTube tab — synced for live hangs, async when
@@ -137,16 +142,16 @@ export default function HowToWatchYoutubeWithFriendsPage() {
           Full hub:{" "}
           <Link
             href="/watch-youtube-together"
-            className="text-brand-orange hover:underline"
           >
             YouTube watch party
           </Link>
           . Checkout:{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
+          <Link href="/pricing">
             pricing / early access
           </Link>
           .
-        </p>
+        
+      </SeoGuideAnswer>
 
         <h2
           id="steps"
@@ -154,13 +159,7 @@ export default function HowToWatchYoutubeWithFriendsPage() {
         >
           Step-by-step
         </h2>
-        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
-          {howToSteps.map((step) => (
-            <li key={step.name}>
-              <strong>{step.name}.</strong> {step.text}
-            </li>
-          ))}
-        </ol>
+      <SeoGuideSteps steps={howToSteps} />
 
         <PrimaryCheckoutCta
           pagePath="/guides/how-to-watch-youtube-with-friends"
@@ -221,50 +220,18 @@ export default function HowToWatchYoutubeWithFriendsPage() {
           </li>
         </ul>
 
-        <h2
-          id="related"
-          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-        >
-          Related
-        </h2>
-        <ul className="space-y-2 text-brand-orange">
-          <li>
-            <Link
-              href="/guides/best-way-to-watch-youtube-with-friends"
-              className="hover:underline"
-            >
-              Best way to watch YouTube with friends
-            </Link>
-          </li>
-          <li>
-            <Link href="/watch-youtube-together" className="hover:underline">
-              YouTube watch party hub
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/guides/youtube-watch-party-chrome-extension"
-              className="hover:underline"
-            >
-              YouTube watch party Chrome extension
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/guides/best-apps-to-watch-youtube-together"
-              className="hover:underline"
-            >
-              Best apps to watch YouTube together
-            </Link>
-          </li>
-          {relatedGuideLinks.map((g) => (
-            <li key={g.href}>
-              <Link href={g.href} className="hover:underline">
-                {g.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <h2 id="related" className="scroll-mt-24">
+        Related
+      </h2>
+      <SeoGuideRelated
+        links={[
+          { href: "/guides/best-way-to-watch-youtube-with-friends", label: "Best way to watch YouTube with friends" },
+                    { href: "/watch-youtube-together", label: "YouTube watch party hub" },
+                    { href: "/guides/youtube-watch-party-chrome-extension", label: "YouTube watch party Chrome extension" },
+                    { href: "/guides/best-apps-to-watch-youtube-together", label: "Best apps to watch YouTube together" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
       </SeoPageLayout>
     </>
   );

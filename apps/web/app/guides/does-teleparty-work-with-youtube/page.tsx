@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -87,23 +96,19 @@ export default function DoesTelepartyWorkWithYoutubePage() {
       description="Yes for live sync; no for async. How Teleparty for YouTube fits — and when AniDachi is better."
       url="/guides/does-teleparty-work-with-youtube"
       datePublished="2026-07-25"
-      dateModified="2026-08-11"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        Does Teleparty Work With YouTube?
-      </h1>
+      <SeoGuideTitle>Does Teleparty Work With YouTube?</SeoGuideTitle>
 
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           Yes — Teleparty can work with YouTube for live, synchronized watch
           parties when everyone is online together.
@@ -113,12 +118,12 @@ export default function DoesTelepartyWorkWithYoutubePage() {
         you will outgrow Teleparty for those nights — see{" "}
         <Link
           href="/guides/best-teleparty-alternatives-for-youtube"
-          className="text-brand-orange hover:underline"
         >
           best Teleparty alternatives for YouTube
         </Link>
         .
-      </p>
+      
+      </SeoGuideAnswer>
 
       <h2
         id="how-it-works"
@@ -184,53 +189,18 @@ export default function DoesTelepartyWorkWithYoutubePage() {
         .
       </p>
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related guides
       </h2>
-      <ul className="space-y-2 text-brand-orange">
-        <li>
-          <Link
-            href="/guides/teleparty-not-working-youtube"
-            className="hover:underline"
-          >
-            Teleparty not working on YouTube
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/does-teleparty-work-with-crunchyroll"
-            className="hover:underline"
-          >
-            Does Teleparty work with Crunchyroll?
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/netflix-party-for-youtube"
-            className="hover:underline"
-          >
-            Netflix Party for YouTube
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/watch2gether-alternatives-for-youtube"
-            className="hover:underline"
-          >
-            Watch2Gether alternatives for YouTube
-          </Link>
-        </li>
-        {relatedGuideLinks.map((g) => (
-          <li key={g.href}>
-            <Link href={g.href} className="hover:underline">
-              {g.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/guides/teleparty-not-working-youtube", label: "Teleparty not working on YouTube" },
+                    { href: "/guides/does-teleparty-work-with-crunchyroll", label: "Does Teleparty work with Crunchyroll?" },
+                    { href: "/guides/netflix-party-for-youtube", label: "Netflix Party for YouTube" },
+                    { href: "/guides/watch2gether-alternatives-for-youtube", label: "Watch2Gether alternatives for YouTube" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
     </SeoPageLayout>
   );
 }

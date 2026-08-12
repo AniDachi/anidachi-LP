@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -114,46 +123,41 @@ export default function YoutubeWatchPartyChromeExtensionPage() {
         description="AniDachi’s Chrome extension for YouTube watchrooms — install path and limits."
         url="/guides/youtube-watch-party-chrome-extension"
         datePublished="2026-07-25"
-        dateModified="2026-08-03"
+        dateModified="2026-08-12"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-foreground mb-6">
-          YouTube Watch Party Chrome Extension
-        </h1>
+        <SeoGuideTitle>YouTube Watch Party Chrome Extension</SeoGuideTitle>
 
-        <h2
-          id="answer"
-          className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-        >
-          Short Answer
-        </h2>
-        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
+        <h2 id="answer" className="scroll-mt-24">
+        Short Answer
+      </h2>
+      <SeoGuideAnswer>
+
           <strong>
             AniDachi is a YouTube watch party Chrome extension: open a full watch
             page, create a watchroom, and sync with friends — live or async.
           </strong>{" "}
           Soft launch starts at{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
+          <Link href="/pricing">
             pricing / early access
           </Link>
           , not a fabricated Store badge. Hub:{" "}
           <Link
             href="/watch-youtube-together"
-            className="text-brand-orange hover:underline"
           >
             YouTube watch party
           </Link>
           . Teleparty compare:{" "}
           <Link
             href="/guides/does-teleparty-work-with-youtube"
-            className="text-brand-orange hover:underline"
           >
             Does Teleparty work with YouTube?
           </Link>
-        </p>
+        
+      </SeoGuideAnswer>
 
         <h2
           id="what-it-does"
@@ -182,13 +186,7 @@ export default function YoutubeWatchPartyChromeExtensionPage() {
         >
           How to install
         </h2>
-        <ol className="list-decimal pl-6 space-y-2 text-foreground/80 mb-8">
-          {howToSteps.map((step) => (
-            <li key={step.name}>
-              <strong>{step.name}.</strong> {step.text}
-            </li>
-          ))}
-        </ol>
+      <SeoGuideSteps steps={howToSteps} />
 
         <h2
           id="limits"
@@ -202,34 +200,16 @@ export default function YoutubeWatchPartyChromeExtensionPage() {
           extension overlay.
         </p>
 
-        <h2
-          id="related"
-          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-        >
-          Related
-        </h2>
-        <ul className="space-y-2 text-brand-orange">
-          <li>
-            <Link href="/watch-youtube-together" className="hover:underline">
-              YouTube watch party hub
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/guides/how-to-watch-youtube-with-friends"
-              className="hover:underline"
-            >
-              How to watch YouTube with friends
-            </Link>
-          </li>
-          {relatedGuideLinks.map((g) => (
-            <li key={g.href}>
-              <Link href={g.href} className="hover:underline">
-                {g.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <h2 id="related" className="scroll-mt-24">
+        Related
+      </h2>
+      <SeoGuideRelated
+        links={[
+          { href: "/watch-youtube-together", label: "YouTube watch party hub" },
+                    { href: "/guides/how-to-watch-youtube-with-friends", label: "How to watch YouTube with friends" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
       </SeoPageLayout>
     </>
   );

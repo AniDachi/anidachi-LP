@@ -23,7 +23,7 @@ export function HomeClient({ waitlistCount }: { waitlistCount: number | null }) 
       <HowItWorks />
       <CompareTable />
       <MainAppFeatures />
-      <div className="container mx-auto mb-8 px-4">
+      <div className="container mx-auto mb-10 px-4 md:mb-12">
         <PrimaryCheckoutCta
           pagePath="/"
           pageTemplate="home"

@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
@@ -86,23 +95,19 @@ export default function BestTelepartyAlternativesForAnimePage() {
       description="Ranked Teleparty alternatives for Crunchyroll anime nights — not a 1:1 clone of the AniDachi vs Teleparty page."
       url="/guides/best-teleparty-alternatives-for-anime"
       datePublished="2026-07-19"
-      dateModified="2026-07-26"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta={true}
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        Best Teleparty Alternatives for Anime (2026)
-      </h1>
+      <SeoGuideTitle>Best Teleparty Alternatives for Anime (2026)</SeoGuideTitle>
 
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           The best Teleparty alternative for anime is AniDachi — Crunchyroll-first
           watchrooms with live sync and async catch-up.
@@ -112,12 +117,12 @@ export default function BestTelepartyAlternativesForAnimePage() {
         ranks options by anime fit; for a side-by-side with Teleparty alone, see{" "}
         <Link
           href="/compare/anidachi-vs-teleparty"
-          className="text-brand-orange hover:underline"
         >
           AniDachi vs Teleparty
         </Link>
         .
-      </p>
+      
+      </SeoGuideAnswer>
 
       <PrimaryCheckoutCta
         pagePath="/guides/best-teleparty-alternatives-for-anime"
@@ -260,44 +265,18 @@ export default function BestTelepartyAlternativesForAnimePage() {
         </Link>
       </p>
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related guides
       </h2>
-      <ul className="space-y-2 text-brand-orange mb-8">
-        <li>
-          <Link
-            href="/guides/does-teleparty-work-with-crunchyroll"
-            className="hover:underline"
-          >
-            Does Teleparty work with Crunchyroll?
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-            AniDachi vs Teleparty
-          </Link>
-        </li>
-        <li>
-          <Link href="/guides/best-watch-party-apps-for-anime" className="hover:underline">
-            Best watch party apps for anime
-          </Link>
-        </li>
-        <li>
-          <Link href="/pricing" className="hover:underline">
-            AniDachi pricing
-          </Link>
-        </li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/guides/does-teleparty-work-with-crunchyroll", label: "Does Teleparty work with Crunchyroll?" },
+                    { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+                    { href: "/guides/best-watch-party-apps-for-anime", label: "Best watch party apps for anime" },
+                    { href: "/pricing", label: "AniDachi pricing" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
     </SeoPageLayout>
   );
 }

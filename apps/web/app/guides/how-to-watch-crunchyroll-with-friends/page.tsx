@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
@@ -119,23 +128,18 @@ export default function HowToWatchWithFriendsPage() {
         description="Every method to watch Crunchyroll together, compared and explained."
         url="/guides/how-to-watch-crunchyroll-with-friends"
         datePublished="2026-04-23"
-        dateModified="2026-08-03"
+        dateModified="2026-08-12"
         faq={faq}
         headings={tocHeadings}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-foreground mb-6">
-          How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide
-          (2026)
-        </h1>
+        <SeoGuideTitle>How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide (2026)</SeoGuideTitle>
 
-        <h2
-          id="answer"
-          className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-        >
-          Short Answer
-        </h2>
-        <p className="text-xl text-foreground/80 leading-relaxed mb-8">
+        <h2 id="answer" className="scroll-mt-24">
+        Short Answer
+      </h2>
+      <SeoGuideAnswer>
+
           <strong>
             How to watch Crunchyroll with friends: create an AniDachi watchroom,
             share the invite, and watch on each person&apos;s own Crunchyroll tab
@@ -145,16 +149,16 @@ export default function HowToWatchWithFriendsPage() {
           Full hub for party nouns (does/can/is-there):{" "}
           <Link
             href="/watch-crunchyroll-together"
-            className="text-brand-orange hover:underline"
           >
             Watch Crunchyroll Together
           </Link>
           . Get the extension from{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
+          <Link href="/pricing">
             AniDachi pricing / early access
           </Link>
           — not a fake Chrome Web Store install link.
-        </p>
+        
+      </SeoGuideAnswer>
 
         <PrimaryCheckoutCta
           pagePath="/guides/how-to-watch-crunchyroll-with-friends"
@@ -169,28 +173,22 @@ export default function HowToWatchWithFriendsPage() {
         >
           Step-by-step (AniDachi)
         </h2>
-        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
-          {howToSteps.map((step) => (
-            <li key={step.name}>
-              <strong>{step.name}.</strong>{" "}
-              {step.name === "Get AniDachi" ? (
-                <>
-                  Open{" "}
-                  <Link
-                    href="/pricing"
-                    className="text-brand-orange hover:underline"
-                  >
-                    AniDachi pricing / early access
-                  </Link>{" "}
-                  and install the Chrome extension from there — not a generic
-                  Chrome Web Store listing.
-                </>
-              ) : (
-                step.text
-              )}
-            </li>
-          ))}
-        </ol>
+        <SeoGuideSteps
+          steps={howToSteps.map((step) =>
+            step.name === "Get AniDachi"
+              ? {
+                  name: step.name,
+                  text: (
+                    <>
+                      Open <Link href="/pricing">AniDachi pricing / early access</Link>{" "}
+                      and install the Chrome extension from there — not a generic
+                      Chrome Web Store listing.
+                    </>
+                  ),
+                }
+              : step,
+          )}
+        />
 
         <h2
           id="method-discord"
@@ -248,39 +246,17 @@ export default function HowToWatchWithFriendsPage() {
           </li>
         </ul>
 
-        <h2
-          id="related"
-          className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
-        >
-          Related Guides
-        </h2>
-        <ul className="space-y-2 text-brand-orange">
-          <li>
-            <Link href="/watch-crunchyroll-together" className="hover:underline">
-              Watch Crunchyroll Together (Pillar Guide)
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/guides/crunchyroll-watch-party-free"
-              className="hover:underline"
-            >
-              Free Crunchyroll watch party options
-            </Link>
-          </li>
-          <li>
-            <Link href="/pricing" className="hover:underline">
-              AniDachi pricing
-            </Link>
-          </li>
-          {relatedGuideLinks.map((guide) => (
-            <li key={guide.href}>
-              <Link href={guide.href} className="hover:underline">
-                {guide.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <h2 id="related" className="scroll-mt-24">
+        Related Guides
+      </h2>
+      <SeoGuideRelated
+        links={[
+          { href: "/watch-crunchyroll-together", label: "Watch Crunchyroll Together (Pillar Guide)" },
+                    { href: "/guides/crunchyroll-watch-party-free", label: "Free Crunchyroll watch party options" },
+                    { href: "/pricing", label: "AniDachi pricing" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
       </SeoPageLayout>
     </>
   );
