@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -96,20 +105,19 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
       description="Yes, but quality suffers. Sync YouTube watchrooms and keep Discord for voice."
       url="/guides/can-you-screen-share-youtube-on-discord"
       datePublished="2026-07-26"
-      dateModified="2026-08-03"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        Can You Screen Share YouTube on Discord?
-      </h1>
+      <SeoGuideTitle>Can You Screen Share YouTube on Discord?</SeoGuideTitle>
 
-      <h2 id="answer" className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24">
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           Yes — Discord can usually screen-share a YouTube tab — but it is a weak YouTube
           watch party.
@@ -117,18 +125,18 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
         Only the host controls the player, guests watch a compressed stream, and long
         videos eat the host&apos;s upload. Better: everyone opens the same full watch
         page,{" "}
-        <Link href="/watch-youtube-together" className="text-brand-orange hover:underline">
+        <Link href="/watch-youtube-together">
           AniDachi syncs the room
         </Link>
         , and Discord stays for voice. See{" "}
         <Link
           href="/guides/youtube-watch-party-with-discord"
-          className="text-brand-orange hover:underline"
         >
           YouTube watch party with Discord
         </Link>
         .
-      </p>
+      
+      </SeoGuideAnswer>
 
       <h2 id="limits" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
         Limits of Discord Go Live for YouTube
@@ -184,18 +192,12 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
         .
       </p>
 
-      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="scroll-mt-24">
         Related Guides
       </h2>
-      <ul className="space-y-2 mb-8">
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="text-brand-orange hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))}
+      />
     </SeoPageLayout>
   );
 }

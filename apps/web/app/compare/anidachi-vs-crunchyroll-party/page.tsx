@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
@@ -73,27 +82,24 @@ export default function AniDachiVsCrunchyrollPartyPage() {
       description="Side-by-side comparison for Crunchyroll watch parties."
       url="/compare/anidachi-vs-crunchyroll-party"
       datePublished="2026-05-11"
-      dateModified="2026-07-22"
+      dateModified="2026-08-12"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        AniDachi vs Crunchyroll Party for anime watch parties
-      </h1>
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <SeoGuideTitle>AniDachi vs Crunchyroll Party for anime watch parties</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           Crunchyroll Party is great when everyone can watch live. AniDachi is built
           for real friend groups: mixed schedules, time zones, and long-running
           shows where progress and spoiler boundaries matter.
         </strong>
-      </p>
+      
+      </SeoGuideAnswer>
 
       <h2 id="tldr" className="text-2xl font-bold text-foreground mt-10 mb-3 scroll-mt-24">
         At a glance
@@ -192,45 +198,18 @@ export default function AniDachiVsCrunchyrollPartyPage() {
         .
       </p>
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-brand-orange mb-8">
-        <li>
-          <Link
-            href="/guides/is-crunchyroll-party-worth-it"
-            className="hover:underline"
-          >
-            Is Crunchyroll Party worth it?
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/crunchyroll-party-alternative"
-            className="hover:underline"
-          >
-            Crunchyroll Party alternative
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-            AniDachi vs Teleparty
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-discord-screen-share" className="hover:underline">
-            AniDachi vs Discord screen share
-          </Link>
-        </li>
-        <li>
-          <Link href="/guides/crunchyroll-watch-party-chrome-extension" className="hover:underline">
-            Best Crunchyroll watch party Chrome extensions
-          </Link>
-        </li>
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/guides/is-crunchyroll-party-worth-it", label: "Is Crunchyroll Party worth it?" },
+                    { href: "/guides/crunchyroll-party-alternative", label: "Crunchyroll Party alternative" },
+                    { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+                    { href: "/compare/anidachi-vs-discord-screen-share", label: "AniDachi vs Discord screen share" },
+                    { href: "/guides/crunchyroll-watch-party-chrome-extension", label: "Best Crunchyroll watch party Chrome extensions" }
+        ]}
+      />
     </SeoPageLayout>
   );
 }

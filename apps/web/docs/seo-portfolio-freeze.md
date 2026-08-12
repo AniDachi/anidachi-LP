@@ -7,6 +7,7 @@ Net-new SEO route batches are **frozen** until the current public cohort complet
 Do **not** risk current ranking, indexation, or core product flows.
 
 - Allowed: enrich **existing** URLs in place, additive docs/tools/pages (non-SEO or owner-approved), analytics attribution, agent rules, stop *false* freshness while keeping discovery sitemaps live.
+- Owner-approved additive surfaces (not SEO growth bait): `/feature-requests` (public product feedback form).
 - Forbidden without explicit owner approval + GSC evidence: 301/Merge/Retire, **slug/path renames or canonical retargets**, new `noindex` on marketing URLs, deleting the cohort/force-index sitemap while Coverage recovers, shrinking footer/nav crawl paths, high-traffic H1/intent rewrites, checkout/auth/room/billing behavior changes beyond optional metadata.
 
 ### URL stability (ranked pages)
@@ -61,4 +62,4 @@ First-touch `seo_landing_path` is captured in session storage and attached to GA
 SEO agent operating contract + publishing gates: [`.cursor/agents/anidachi-seo-aeo-pages.md`](../../../.cursor/agents/anidachi-seo-aeo-pages.md)  
 Durable SoT: [`seo-content-guidelines.md`](./seo-content-guidelines.md)
 
-*Last reviewed: 2026-08-11 — URL stability + winner queue + exit criteria added.*
+*Last reviewed: 2026-08-12 — owner-approved `/feature-requests`; prior URL stability + winner queue + exit criteria.*

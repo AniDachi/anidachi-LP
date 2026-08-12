@@ -10,7 +10,10 @@ export function getCrmDataDir(): string {
   return path.join(process.cwd(), "crm-data");
 }
 
-const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as "public" | "private";
+// AniDachi CRM Blob store is public; private access breaks writes ("Cannot use
+// private access on a public store"). Override with BLOB_ACCESS=private only
+// if you migrate to a private store.
+const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "public") as "public" | "private";
 const CONTACTS_BLOB_PATH = "kreatli-crm/contacts.json";
 const TOUCHES_BLOB_PATH = "kreatli-crm/touches.jsonl";
 const META_BLOB_PATH = "kreatli-crm/meta.json";

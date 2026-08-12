@@ -108,11 +108,15 @@ export function PrimaryCheckoutCta({
   return (
     <div
       ref={rootRef}
-      className={`not-prose mx-auto w-full max-w-4xl rounded-lg border border-brand-border border-l-2 border-l-brand-orange/70 bg-brand-surface/60 px-4 py-4 sm:px-5 ${className}`.trim()}
+      className={`not-prose relative mx-auto w-full max-w-4xl overflow-hidden rounded-2xl border border-brand-border/80 bg-brand-surface px-5 py-5 sm:px-6 ${className}`.trim()}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(100%_80%_at_0%_0%,oklch(0.71_0.20_45_/_0.12),transparent_55%)]"
+      />
+      <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
         <div className="min-w-0 flex-1 text-left">
-          <p className="text-base font-semibold text-foreground">
+          <p className="text-base font-semibold tracking-[-0.01em] text-foreground">
             {PRICING_CTA_LABEL}
           </p>
           <p className="mt-0.5 text-sm leading-snug text-foreground/60">
@@ -126,7 +130,7 @@ export function PrimaryCheckoutCta({
 
         <Button
           size="touch"
-          className="w-full shrink-0 bg-brand-orange px-5 text-sm font-semibold text-primary-foreground glow-orange-sm transition-all duration-300 hover:bg-brand-orange-deep hover:glow-orange sm:w-auto"
+          className="w-full shrink-0 bg-brand-orange px-5 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-200 ease-out hover:bg-brand-orange-deep active:scale-[0.98] sm:w-auto"
           asChild
         >
           <Link

@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -88,28 +97,25 @@ export default function AniDachiVsRavePage() {
       description="Side-by-side comparison for Crunchyroll anime watch parties."
       url="/compare/anidachi-vs-rave"
       datePublished="2026-06-08"
-      dateModified="2026-07-19"
+      dateModified="2026-08-12"
       faq={faq}
       headings={headings}
       articleImage={articleImageAbsolute}
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        AniDachi vs Rave: Which Is Better for Anime Watch Parties?
-      </h1>
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <SeoGuideTitle>AniDachi vs Rave: Which Is Better for Anime Watch Parties?</SeoGuideTitle>
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           AniDachi is built for Crunchyroll anime groups who need async
           watchrooms and progress tracking — and also supports YouTube
           watchrooms. Rave is a general multi-platform watch
           party tool with live sync and voice chat across many streaming services.
         </strong>
-      </p>
+      
+      </SeoGuideAnswer>
 
       <h2
         id="tldr"
@@ -217,57 +223,20 @@ export default function AniDachiVsRavePage() {
         .
       </p>
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-brand-orange">
-        <li>
-          <Link
-            href="/guides/does-rave-work-with-youtube"
-            className="hover:underline"
-          >
-            Does Rave work with YouTube?
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/rave-alternatives-for-anime"
-            className="hover:underline"
-          >
-            Rave alternatives for anime
-          </Link>
-        </li>
-        <li>
-          <Link href="/best-apps-watch-anime-together-long-distance" className="hover:underline">
-            Best Apps for Watching Anime Together Long Distance
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-            AniDachi vs Teleparty
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-watch2gether" className="hover:underline">
-            AniDachi vs Watch2Gether
-          </Link>
-        </li>
-        <li>
-          <Link href="/guides/crunchyroll-watch-party-chrome-extension" className="hover:underline">
-            Best Crunchyroll watch party Chrome extensions
-          </Link>
-        </li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/guides/does-rave-work-with-youtube", label: "Does Rave work with YouTube?" },
+                    { href: "/guides/rave-alternatives-for-anime", label: "Rave alternatives for anime" },
+                    { href: "/best-apps-watch-anime-together-long-distance", label: "Best Apps for Watching Anime Together Long Distance" },
+                    { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+                    { href: "/compare/anidachi-vs-watch2gether", label: "AniDachi vs Watch2Gether" },
+                    { href: "/guides/crunchyroll-watch-party-chrome-extension", label: "Best Crunchyroll watch party Chrome extensions" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
     </SeoPageLayout>
   );
 }

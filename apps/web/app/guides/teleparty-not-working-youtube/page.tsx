@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
+import {
+  SeoGuideAnswer,
+  SeoGuideBulletList,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -122,23 +129,20 @@ export default function TelepartyNotWorkingYoutubePage() {
         description="Fix Teleparty sync drift, extension updates, and detection failures on YouTube."
         url="/guides/teleparty-not-working-youtube"
         datePublished="2026-08-11"
-        dateModified="2026-08-11"
+        dateModified="2026-08-12"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
         aboveFoldCta
       >
-        <h1 className="text-4xl font-bold text-foreground mb-6">
+        <SeoGuideTitle>
           Teleparty Not Working on YouTube? Here&apos;s How to Fix It
-        </h1>
+        </SeoGuideTitle>
 
-        <h2
-          id="answer"
-          className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-        >
+        <h2 id="answer" className="scroll-mt-24">
           Short Answer
         </h2>
-        <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+        <SeoGuideAnswer>
           <strong>
             When Teleparty stops syncing on YouTube, the fix is usually confirm
             the watch URL, update the extension, resync manually, and eliminate
@@ -147,54 +151,40 @@ export default function TelepartyNotWorkingYoutubePage() {
           If sync breaks every session after YouTube player updates, evaluate a
           YouTube watchroom instead of fighting live-only drift. Capability
           overview:{" "}
-          <Link
-            href="/guides/does-teleparty-work-with-youtube"
-            className="text-brand-orange hover:underline"
-          >
+          <Link href="/guides/does-teleparty-work-with-youtube">
             does Teleparty work with YouTube?
           </Link>
           .
-        </p>
+        </SeoGuideAnswer>
 
-        <h2
-          id="symptoms"
-          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-        >
+        <h2 id="symptoms" className="scroll-mt-24">
           Common symptoms
         </h2>
-        <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
-          <li>
-            <strong>Sync drift</strong> — chat reactions land before the punchline
-            on someone&apos;s screen.
-          </li>
-          <li>
-            <strong>Teleparty won&apos;t detect YouTube</strong> — popup shows no
-            video even with a watch page playing.
-          </li>
-          <li>
-            <strong>Party disconnects on tab switch</strong> — refreshing YouTube
-            kicks everyone out.
-          </li>
-          <li>
-            <strong>Works on Netflix but not YouTube</strong> — multi-platform
-            extension updated for one service before the other.
-          </li>
-        </ul>
+        <SeoGuideBulletList
+          items={[
+            {
+              title: "Sync drift",
+              body: "chat reactions land before the punchline on someone's screen.",
+            },
+            {
+              title: "Teleparty won't detect YouTube",
+              body: "popup shows no video even with a watch page playing.",
+            },
+            {
+              title: "Party disconnects on tab switch",
+              body: "refreshing YouTube kicks everyone out.",
+            },
+            {
+              title: "Works on Netflix but not YouTube",
+              body: "multi-platform extension updated for one service before the other.",
+            },
+          ]}
+        />
 
-        <h2
-          id="howto"
-          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-        >
+        <h2 id="howto" className="scroll-mt-24">
           HowTo: fix Teleparty on YouTube
         </h2>
-        <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
-          {howToSteps.map((step) => (
-            <li key={step.name}>
-              <span className="font-medium text-foreground">{step.name}.</span>{" "}
-              {step.text}
-            </li>
-          ))}
-        </ol>
+        <SeoGuideSteps steps={howToSteps} />
 
         <PrimaryCheckoutCta
           pagePath="/guides/teleparty-not-working-youtube"
@@ -203,26 +193,20 @@ export default function TelepartyNotWorkingYoutubePage() {
           className="my-10"
         />
 
-        <h2
-          id="updates"
-          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-        >
+        <h2 id="updates" className="scroll-mt-24">
           Extension and player updates
         </h2>
-        <p className="text-foreground/80 leading-relaxed mb-8">
+        <p>
           Teleparty hooks into YouTube&apos;s HTML5 player. When YouTube ships a
           player refactor, sync can break until Teleparty releases a matching
           update — the main reason &quot;it worked last week.&quot; Smoke-test
           before invite night.
         </p>
 
-        <h2
-          id="when-to-switch"
-          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-        >
+        <h2 id="when-to-switch" className="scroll-mt-24">
           When to switch tools
         </h2>
-        <p className="text-foreground/80 leading-relaxed mb-4">
+        <p>
           Stay on Teleparty if live multi-service nights already work. Switch to
           AniDachi when you need async YouTube catch-up or also host Crunchyroll
           anime nights in one extension. Ranked options:{" "}
@@ -239,26 +223,21 @@ export default function TelepartyNotWorkingYoutubePage() {
           .
         </p>
 
-        <h2
-          id="related"
-          className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-        >
+        <h2 id="related" className="scroll-mt-24">
           Related guides
         </h2>
-        <ul className="space-y-2 text-brand-orange">
-          <li>
-            <Link href="/watch-youtube-together" className="hover:underline">
-              YouTube watch party hub
-            </Link>
-          </li>
-          {relatedGuideLinks.map((g) => (
-            <li key={g.href}>
-              <Link href={g.href} className="hover:underline">
-                {g.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <SeoGuideRelated
+          links={[
+            {
+              href: "/watch-youtube-together",
+              label: "YouTube watch party hub",
+            },
+            ...relatedGuideLinks.map((g) => ({
+              href: g.href,
+              label: g.label,
+            })),
+          ]}
+        />
       </SeoPageLayout>
     </>
   );

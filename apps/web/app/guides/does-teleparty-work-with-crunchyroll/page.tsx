@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -83,23 +92,19 @@ export default function DoesTelepartyWorkWithCrunchyrollPage() {
       description="Yes for live sync; no for async. How Teleparty for Crunchyroll fits anime groups — and when AniDachi is the better fit."
       url="/guides/does-teleparty-work-with-crunchyroll"
       datePublished="2026-07-19"
-      dateModified="2026-08-11"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta={true}
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        Does Teleparty Work With Crunchyroll?
-      </h1>
+      <SeoGuideTitle>Does Teleparty Work With Crunchyroll?</SeoGuideTitle>
 
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           Yes — Teleparty can work with Crunchyroll for live, synchronized watch
           parties when everyone is online together.
@@ -107,7 +112,8 @@ export default function DoesTelepartyWorkWithCrunchyrollPage() {
         It does not offer async catch-up, per-episode progress, or
         anime-specific spoiler controls. If your group watches Crunchyroll on
         staggered schedules, you will outgrow Teleparty for Crunchyroll nights.
-      </p>
+      
+      </SeoGuideAnswer>
 
       <h2
         id="how-it-works"
@@ -193,52 +199,19 @@ export default function DoesTelepartyWorkWithCrunchyrollPage() {
         limits.
       </p>
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related guides
       </h2>
-      <ul className="space-y-2 text-brand-orange mb-8">
-        <li>
-          <Link
-            href="/guides/netflix-party-for-crunchyroll"
-            className="hover:underline"
-          >
-            Netflix Party for Crunchyroll
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/best-teleparty-alternatives-for-anime"
-            className="hover:underline"
-          >
-            Best Teleparty alternatives for anime
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-            AniDachi vs Teleparty
-          </Link>
-        </li>
-        <li>
-          <Link href="/watch-crunchyroll-together" className="hover:underline">
-            Watch Crunchyroll together
-          </Link>
-        </li>
-        <li>
-          <Link href="/pricing" className="hover:underline">
-            AniDachi pricing
-          </Link>
-        </li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/guides/netflix-party-for-crunchyroll", label: "Netflix Party for Crunchyroll" },
+                    { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives for anime" },
+                    { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+                    { href: "/watch-crunchyroll-together", label: "Watch Crunchyroll together" },
+                    { href: "/pricing", label: "AniDachi pricing" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
     </SeoPageLayout>
   );
 }

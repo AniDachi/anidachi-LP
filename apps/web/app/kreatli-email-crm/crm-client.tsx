@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import type { GmailUiStatus } from "@/lib/kreatli-crm/gmail-ui";
 import { isContactDue } from "@/lib/kreatli-crm/queue";
 import type { ImportPreviewLine } from "@/lib/kreatli-crm/import-merge";
+import type { FeatureRequestRecord } from "@/lib/kreatli-crm/feature-request-shared";
+import type { ContactMessageRecord } from "@/lib/kreatli-crm/contact-message-shared";
 import {
   formatSurveyValue,
   isHighIntentTiming,
@@ -43,7 +45,11 @@ function groupTouches(touches: Touch[]): Record<string, Touch[]> {
   return m;
 }
 
-type CrmTab = "contacts" | "survey_leads";
+type CrmTab =
+  | "contacts"
+  | "survey_leads"
+  | "contact_forms"
+  | "feature_requests";
 
 type SurveyDateRange = "all" | "7" | "30";
 
@@ -398,11 +404,15 @@ export function CrmClient({
   touches,
   templateSlugs,
   gmailStatus,
+  contactMessages,
+  featureRequests,
 }: {
   contacts: Contact[];
   touches: Touch[];
   templateSlugs: string[];
   gmailStatus: GmailUiStatus;
+  contactMessages: ContactMessageRecord[];
+  featureRequests: FeatureRequestRecord[];
 }) {
   const byContact = useMemo(() => groupTouches(touches), [touches]);
   const outreachContacts = useMemo(
@@ -419,6 +429,8 @@ export function CrmClient({
   );
   const [activeTab, setActiveTab] = useState<CrmTab>("contacts");
   const [segmentFilter, setSegmentFilter] = useState("");
+  const [formInboxFilter, setFormInboxFilter] = useState("");
+  const [expandedFormId, setExpandedFormId] = useState<string | null>(null);
   const [surveyFilters, setSurveyFilters] =
     useState<SurveyFilters>(DEFAULT_SURVEY_FILTERS);
   const [surveySortKey, setSurveySortKey] =
@@ -426,6 +438,28 @@ export function CrmClient({
   const [surveySortDir, setSurveySortDir] = useState<"asc" | "desc">("desc");
   const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
   const [copyTsvMsg, setCopyTsvMsg] = useState<string | null>(null);
+
+  const filteredContactMessages = useMemo(() => {
+    const q = formInboxFilter.trim().toLowerCase();
+    if (!q) return contactMessages;
+    return contactMessages.filter((row) =>
+      [row.name, row.email, row.subject, row.message, row.category]
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [contactMessages, formInboxFilter]);
+
+  const filteredFeatureRequests = useMemo(() => {
+    const q = formInboxFilter.trim().toLowerCase();
+    if (!q) return featureRequests;
+    return featureRequests.filter((row) =>
+      [row.name, row.email, row.title, row.description, row.category]
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [featureRequests, formInboxFilter]);
 
   const surveyStats = useMemo(() => {
     const now = Date.now();
@@ -685,9 +719,17 @@ export function CrmClient({
                 npm run crm -- doctor
               </code>
             </p>
-          ) : (
+          ) : activeTab === "survey_leads" ? (
             <p className="text-sm text-foreground/70">
               Homepage plan survey leads — review, filter, and export.
+            </p>
+          ) : activeTab === "contact_forms" ? (
+            <p className="text-sm text-foreground/70">
+              Messages from the public /contact form.
+            </p>
+          ) : (
+            <p className="text-sm text-foreground/70">
+              Submissions from /feature-requests and account feature requests.
             </p>
           )}
         </div>
@@ -701,7 +743,7 @@ export function CrmClient({
             >
               Export CSV
             </Button>
-          ) : (
+          ) : activeTab === "survey_leads" ? (
             <>
               <Button
                 type="button"
@@ -728,6 +770,15 @@ export function CrmClient({
                 Export survey leads
               </Button>
             </>
+          ) : (
+            <Button
+              type="button"
+              variant="secondary"
+              className="border border-brand-border bg-background text-foreground/80 hover:bg-brand-surface"
+              onClick={() => router.refresh()}
+            >
+              Refresh
+            </Button>
           )}
           <LogoutButton />
         </div>
@@ -792,6 +843,40 @@ export function CrmClient({
           }}
         >
           Survey leads ({surveyLeads.length})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "contact_forms"}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "contact_forms"
+              ? "bg-brand-orange text-primary-foreground shadow-sm"
+              : "text-foreground/60 hover:bg-brand-orange/10"
+          }`}
+          onClick={() => {
+            setActiveTab("contact_forms");
+            setFormInboxFilter("");
+            setExpandedFormId(null);
+          }}
+        >
+          Contact forms ({contactMessages.length})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "feature_requests"}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "feature_requests"
+              ? "bg-brand-orange text-primary-foreground shadow-sm"
+              : "text-foreground/60 hover:bg-brand-orange/10"
+          }`}
+          onClick={() => {
+            setActiveTab("feature_requests");
+            setFormInboxFilter("");
+            setExpandedFormId(null);
+          }}
+        >
+          Feature requests ({featureRequests.length})
         </button>
       </div>
 
@@ -1061,7 +1146,7 @@ export function CrmClient({
         </div>
       </section>
         </>
-      ) : (
+      ) : activeTab === "survey_leads" ? (
         <section aria-labelledby="survey-leads-heading">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -1231,8 +1316,152 @@ export function CrmClient({
             />
           )}
         </section>
+      ) : activeTab === "contact_forms" ? (
+        <FormInboxSection
+          kind="contact"
+          rows={filteredContactMessages}
+          totalCount={contactMessages.length}
+          search={formInboxFilter}
+          onSearchChange={setFormInboxFilter}
+          expandedId={expandedFormId}
+          onToggleExpand={(id) =>
+            setExpandedFormId((cur) => (cur === id ? null : id))
+          }
+        />
+      ) : (
+        <FormInboxSection
+          kind="feature"
+          rows={filteredFeatureRequests}
+          totalCount={featureRequests.length}
+          search={formInboxFilter}
+          onSearchChange={setFormInboxFilter}
+          expandedId={expandedFormId}
+          onToggleExpand={(id) =>
+            setExpandedFormId((cur) => (cur === id ? null : id))
+          }
+        />
       )}
     </main>
+  );
+}
+
+function FormInboxSection(
+  props:
+    | {
+        kind: "contact";
+        rows: ContactMessageRecord[];
+        totalCount: number;
+        search: string;
+        onSearchChange: (value: string) => void;
+        expandedId: string | null;
+        onToggleExpand: (id: string) => void;
+      }
+    | {
+        kind: "feature";
+        rows: FeatureRequestRecord[];
+        totalCount: number;
+        search: string;
+        onSearchChange: (value: string) => void;
+        expandedId: string | null;
+        onToggleExpand: (id: string) => void;
+      },
+) {
+  const {
+    kind,
+    rows,
+    totalCount,
+    search,
+    onSearchChange,
+    expandedId,
+    onToggleExpand,
+  } = props;
+  const isContact = kind === "contact";
+  const title = isContact ? "Contact forms" : "Feature requests";
+  const emptyHint = isContact
+    ? "No contact form messages yet. They appear here when someone submits /contact."
+    : "No feature requests yet. They appear here when someone submits /feature-requests.";
+
+  return (
+    <section aria-labelledby={`${kind}-inbox-heading`}>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2
+            id={`${kind}-inbox-heading`}
+            className="text-lg font-semibold text-foreground"
+          >
+            {title} ({rows.length}
+            {rows.length !== totalCount ? ` of ${totalCount}` : ""})
+          </h2>
+          <p className="mt-1 text-sm text-foreground/70">
+            Stored in Vercel Blob JSONL and mirrored onto CRM contacts for
+            search.
+          </p>
+        </div>
+        <div className="w-full sm:max-w-xs">
+          <label className="mb-1 block text-xs font-medium text-foreground/80">
+            Search
+          </label>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder={
+              isContact ? "email, subject, message…" : "email, title, description…"
+            }
+            className="w-full rounded-md border border-brand-border px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-brand-orange/20"
+          />
+        </div>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="rounded-xl border border-brand-border bg-brand-surface p-6 text-sm text-foreground/60">
+          {totalCount === 0 ? emptyHint : "No rows match your search."}
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {rows.map((row) => {
+            const expanded = expandedId === row.id;
+            const headline = isContact
+              ? (row as ContactMessageRecord).subject
+              : (row as FeatureRequestRecord).title;
+            const body = isContact
+              ? (row as ContactMessageRecord).message
+              : (row as FeatureRequestRecord).description;
+            return (
+              <li
+                key={row.id}
+                className="rounded-xl border border-brand-border/80 bg-brand-surface"
+              >
+                <button
+                  type="button"
+                  className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left"
+                  onClick={() => onToggleExpand(row.id)}
+                  aria-expanded={expanded}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {headline}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-foreground/55">
+                      {row.name} · {row.email} · {row.category} ·{" "}
+                      {formatCapturedAt(row.created_at)}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs text-foreground/45">
+                    {expanded ? "Hide" : "Open"}
+                  </span>
+                </button>
+                {expanded ? (
+                  <div className="border-t border-brand-border/70 px-4 py-3 text-sm text-foreground/80">
+                    <p className="whitespace-pre-wrap leading-relaxed">{body}</p>
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
 

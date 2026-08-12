@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
@@ -81,23 +87,20 @@ export default function NetflixPartyForCrunchyrollPage() {
       description="What people mean by Netflix Party for Crunchyroll — and the best tools in 2026."
       url="/guides/netflix-party-for-crunchyroll"
       datePublished="2026-08-11"
-      dateModified="2026-08-11"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
+      <SeoGuideTitle>
         Netflix Party for Crunchyroll — How to Co-Watch Anime in 2026
-      </h1>
+      </SeoGuideTitle>
 
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
+      <SeoGuideAnswer>
         <strong>
           “Netflix Party for Crunchyroll” usually means Teleparty (the old Netflix
           Party brand) syncing a Crunchyroll episode — or a purpose-built anime
@@ -105,19 +108,13 @@ export default function NetflixPartyForCrunchyrollPage() {
         </strong>{" "}
         AniDachi does not sync Netflix. It does host full Crunchyroll and YouTube
         watchrooms. Start at{" "}
-        <Link href="/pricing" className="text-brand-orange hover:underline">
-          pricing / early access
-        </Link>
-        .
-      </p>
+        <Link href="/pricing">pricing / early access</Link>.
+      </SeoGuideAnswer>
 
-      <h2
-        id="name"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="name" className="scroll-mt-24">
         What “Netflix Party” means now
       </h2>
-      <p className="text-foreground/80 leading-relaxed mb-8">
+      <p>
         Netflix Party rebranded to Teleparty years ago. Searchers still type
         “netflix party crunchyroll” when they want co-watching on Crunchyroll.
         That is different from watching Netflix itself — see{" "}
@@ -137,47 +134,48 @@ export default function NetflixPartyForCrunchyrollPage() {
         .
       </p>
 
-      <h2
-        id="options"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="options" className="scroll-mt-24">
         Your options for Crunchyroll
       </h2>
-      <ul className="list-disc pl-6 space-y-3 text-foreground/80 mb-8">
-        <li>
-          <strong>AniDachi</strong> — Crunchyroll watchrooms with live sync and
-          async catch-up; same extension as{" "}
-          <Link
-            href="/watch-youtube-together"
-            className="text-brand-orange hover:underline"
-          >
-            YouTube
-          </Link>
-          .
-        </li>
-        <li>
-          <strong>Teleparty</strong> — multi-platform live sync including
-          Crunchyroll (
-          <Link
-            href="/guides/does-teleparty-work-with-crunchyroll"
-            className="text-brand-orange hover:underline"
-          >
-            does Teleparty work with Crunchyroll?
-          </Link>
-          ).
-        </li>
-        <li>
-          <strong>Crunchyroll Party</strong> — free live sync built for Crunchyroll
-          only (
-          <Link
-            href="/guides/crunchyroll-party-alternative"
-            className="text-brand-orange hover:underline"
-          >
-            Crunchyroll Party alternative
-          </Link>
-          ).
-        </li>
-      </ul>
+      <SeoGuideOptions
+        options={[
+          {
+            title: "AniDachi",
+            highlight: true,
+            body: (
+              <>
+                Crunchyroll watchrooms with live sync and async catch-up; same
+                extension as{" "}
+                <Link href="/watch-youtube-together">YouTube</Link>.
+              </>
+            ),
+          },
+          {
+            title: "Teleparty",
+            body: (
+              <>
+                Multi-platform live sync including Crunchyroll (
+                <Link href="/guides/does-teleparty-work-with-crunchyroll">
+                  does Teleparty work with Crunchyroll?
+                </Link>
+                ).
+              </>
+            ),
+          },
+          {
+            title: "Crunchyroll Party",
+            body: (
+              <>
+                Free live sync built for Crunchyroll only (
+                <Link href="/guides/crunchyroll-party-alternative">
+                  Crunchyroll Party alternative
+                </Link>
+                ).
+              </>
+            ),
+          },
+        ]}
+      />
 
       <PrimaryCheckoutCta
         pagePath="/guides/netflix-party-for-crunchyroll"
@@ -186,39 +184,26 @@ export default function NetflixPartyForCrunchyrollPage() {
         className="my-10"
       />
 
-      <h2
-        id="related"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
+      <h2 id="related" className="scroll-mt-24">
         Related
       </h2>
-      <ul className="space-y-2 text-brand-orange">
-        <li>
-          <Link href="/watch-crunchyroll-together" className="hover:underline">
-            Crunchyroll watch party hub
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/how-to-watch-crunchyroll-with-friends"
-            className="hover:underline"
-          >
-            How to watch Crunchyroll with friends
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-            AniDachi vs Teleparty
-          </Link>
-        </li>
-        {relatedGuideLinks.map((g) => (
-          <li key={g.href}>
-            <Link href={g.href} className="hover:underline">
-              {g.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          {
+            href: "/watch-crunchyroll-together",
+            label: "Crunchyroll watch party hub",
+          },
+          {
+            href: "/guides/how-to-watch-crunchyroll-with-friends",
+            label: "How to watch Crunchyroll with friends",
+          },
+          {
+            href: "/compare/anidachi-vs-teleparty",
+            label: "AniDachi vs Teleparty",
+          },
+          ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label })),
+        ]}
+      />
     </SeoPageLayout>
   );
 }

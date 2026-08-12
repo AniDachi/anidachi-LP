@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -88,20 +97,19 @@ export default function BestTelepartyAlternativesForYoutubePage() {
       description="Ranked Teleparty alternatives for YouTube watch parties — when to pick each tool."
       url="/guides/best-teleparty-alternatives-for-youtube"
       datePublished="2026-07-26"
-      dateModified="2026-07-26"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
       aboveFoldCta
     >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        Best Teleparty Alternatives for YouTube (2026)
-      </h1>
+      <SeoGuideTitle>Best Teleparty Alternatives for YouTube (2026)</SeoGuideTitle>
 
-      <h2 id="answer" className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24">
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
+      <SeoGuideAnswer>
+
         <strong>
           The best Teleparty alternative for YouTube is AniDachi — watchrooms with live
           sync and async catch-up.
@@ -110,19 +118,18 @@ export default function BestTelepartyAlternativesForYoutubePage() {
         nights, and Discord for voice only. Side-by-side with Teleparty:{" "}
         <Link
           href="/compare/anidachi-vs-teleparty"
-          className="text-brand-orange hover:underline"
         >
           AniDachi vs Teleparty
         </Link>
         . Confirm Teleparty still works for you first:{" "}
         <Link
           href="/guides/does-teleparty-work-with-youtube"
-          className="text-brand-orange hover:underline"
         >
           Does Teleparty work with YouTube?
         </Link>
         .
-      </p>
+      
+      </SeoGuideAnswer>
 
       <PrimaryCheckoutCta
         pagePath="/guides/best-teleparty-alternatives-for-youtube"
@@ -231,26 +238,15 @@ export default function BestTelepartyAlternativesForYoutubePage() {
         </li>
       </ul>
 
-      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
+      <h2 id="related" className="scroll-mt-24">
         Related Guides
       </h2>
-      <ul className="space-y-2 mb-8">
-        <li>
-          <Link
-            href="/guides/teleparty-not-working-youtube"
-            className="text-brand-orange hover:underline"
-          >
-            Teleparty not working on YouTube
-          </Link>
-        </li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="text-brand-orange hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/guides/teleparty-not-working-youtube", label: "Teleparty not working on YouTube" },
+                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+        ]}
+      />
     </SeoPageLayout>
   );
 }

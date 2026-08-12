@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  SeoGuideAnswer,
+  SeoGuideBulletList,
+  SeoGuideNote,
+  SeoGuideOptions,
+  SeoGuideRelated,
+  SeoGuideSteps,
+  SeoGuideTitle,
+} from "@/components/seo-guide-blocks";
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -114,23 +123,19 @@ export default function WatchAnimeTogetherPage() {
       description="Compare every way to watch anime together online — AniDachi watchrooms, free options, long-distance tips, and genre hubs."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-08-11"
+      dateModified="2026-08-12"
       faq={faq}
       headings={tocHeadings}
       itemList={genreHubItemList(1)}
       aboveFoldCta
     >
-      <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-        Watch Anime Together Online
-      </h1>
+      <SeoGuideTitle>Watch Anime Together Online</SeoGuideTitle>
 
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
+      <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-8">
+      <SeoGuideAnswer>
+
         <strong>
           The best way to watch anime together online is with a dedicated
           watchroom tool like AniDachi that syncs playback, adds real-time chat,
@@ -140,19 +145,18 @@ export default function WatchAnimeTogetherPage() {
         long-distance setups — then routes you to the right platform pillar:{" "}
         <Link
           href="/watch-crunchyroll-together"
-          className="text-brand-orange hover:underline"
         >
           Crunchyroll watch party
         </Link>{" "}
         for anime catalog nights, or{" "}
         <Link
           href="/watch-youtube-together"
-          className="text-brand-orange hover:underline"
         >
           YouTube watch party
         </Link>{" "}
         for video nights.
-      </p>
+      
+      </SeoGuideAnswer>
 
       <p className="text-foreground/80 mb-8">
         Ready to try the Crunchyroll-first option?{" "}
@@ -182,29 +186,30 @@ export default function WatchAnimeTogetherPage() {
         (videos, essays, music) — not where most groups stream anime catalog
         titles.
       </p>
-      <ul className="space-y-3 text-foreground/80 mb-8">
-        <li>
-          <Link
-            href="/watch-crunchyroll-together"
-            className="text-brand-orange font-semibold hover:underline"
-          >
-            Crunchyroll Watch Party
-          </Link>
-          {" — "}
-          primary hub for synced and async anime watchrooms on Crunchyroll.
-        </li>
-        <li>
-          <Link
-            href="/watch-youtube-together"
-            className="text-brand-orange hover:underline"
-          >
-            YouTube Watch Party
-          </Link>
-          {" — "}
-          also host YouTube nights in AniDachi (same extension; different intent
-          cluster).
-        </li>
-      </ul>
+      <SeoGuideOptions
+        options={[
+          {
+            title: "Crunchyroll Watch Party",
+            highlight: true,
+            body: (
+              <>
+                Primary hub for synced and async anime watchrooms —{" "}
+                <Link href="/watch-crunchyroll-together">open the Crunchyroll pillar</Link>.
+              </>
+            ),
+          },
+          {
+            title: "YouTube Watch Party",
+            body: (
+              <>
+                Also host YouTube nights in AniDachi (same extension; different intent
+                cluster) —{" "}
+                <Link href="/watch-youtube-together">open the YouTube pillar</Link>.
+              </>
+            ),
+          },
+        ]}
+      />
 
       <h2
         id="why-watch"
@@ -232,28 +237,33 @@ export default function WatchAnimeTogetherPage() {
         episode at the same time, with reactions and chat flying in real-time.
         Here are the main options ranked by quality:
       </p>
-      <ul className="space-y-3 text-foreground/80 mb-6">
-        <li>
-          <strong>AniDachi (Best):</strong> Crunchyroll-focused watchrooms with
-          live sync, real-time chat, and unique async support. Each person
-          streams on their own account in full quality. Free to join; Plus for
-          hosts starts at {PRICING_STARTING_AT}.
-        </li>
-        <li>
-          <strong>Crunchyroll Party (Free):</strong> A free Chrome extension for
-          live-sync anime watch parties on Crunchyroll. No async, no progress
-          tracking, but free and easy to set up.
-        </li>
-        <li>
-          <strong>Teleparty (Freemium):</strong> Works across Crunchyroll,
-          Netflix, and Disney+. Good for mixed-platform groups.
-        </li>
-        <li>
-          <strong>Discord Screen Share (Free):</strong> Share your browser tab
-          for free. Quality is capped and there&apos;s no playback sync, but
-          it&apos;s the quickest zero-setup option.
-        </li>
-      </ul>
+      <SeoGuideOptions
+        options={[
+          {
+            title: "AniDachi (Best)",
+            highlight: true,
+            body: (
+              <>
+                Crunchyroll-focused watchrooms with live sync, real-time chat, and
+                unique async support. Each person streams on their own account in
+                full quality. Free to join; Plus for hosts starts at {PRICING_STARTING_AT}.
+              </>
+            ),
+          },
+          {
+            title: "Crunchyroll Party (Free)",
+            body: "A free Chrome extension for live-sync anime watch parties on Crunchyroll. No async, no progress tracking, but free and easy to set up.",
+          },
+          {
+            title: "Teleparty (Freemium)",
+            body: "Works across Crunchyroll, Netflix, and Disney+. Good for mixed-platform groups.",
+          },
+          {
+            title: "Discord Screen Share (Free)",
+            body: "Share your browser tab for free. Quality is capped and there is no playback sync, but it is the quickest zero-setup option.",
+          },
+        ]}
+      />
       <p className="text-foreground/80 mb-6">
         Want a step-by-step walkthrough?{" "}
         <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="text-brand-orange hover:underline">
@@ -427,23 +437,14 @@ export default function WatchAnimeTogetherPage() {
       >
         All Guides
       </h2>
-      <ul className="space-y-2 text-brand-orange">
-        <li><Link href="/watch-crunchyroll-together" className="hover:underline">Watch Crunchyroll Together</Link></li>
-        <li><Link href="/watch-youtube-together" className="hover:underline">YouTube Watch Party</Link></li>
-        <li>
-          <Link href="/pricing" className="hover:underline">
-            See pricing — Free to join, Plus from $7.99/mo to host
-          </Link>
-        </li>
-        <li><Link href="/compare/anidachi-vs-teleparty" className="hover:underline">AniDachi vs Teleparty</Link></li>
-        {allGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <SeoGuideRelated
+        links={[
+          { href: "/watch-crunchyroll-together", label: "Watch Crunchyroll Together" },
+                    { href: "/watch-youtube-together", label: "YouTube Watch Party" },
+                    { href: "/pricing", label: "See pricing — Free to join, Plus from $7.99/mo to host" },
+                    { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" }
+        ]}
+      />
     </SeoPageLayout>
   );
 }
