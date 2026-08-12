@@ -10,6 +10,22 @@
 import type { Participant, P2PSignal, ServerEvent } from "@anidachi/protocol";
 import { RoomClient, type RoomConnectionStatus } from "../../apps/extension/src/room-client";
 import { P2PMediaController, selectP2PMediaParticipants } from "../../apps/extension/src/p2p-media";
+import type { ParticipantAudioPreference } from "../../apps/extension/src/voice-audio-preferences";
+
+const nativeGetUserMedia = navigator.mediaDevices.getUserMedia.bind(
+  navigator.mediaDevices,
+);
+let microphoneCaptureCount = 0;
+navigator.mediaDevices.getUserMedia = async (constraints) => {
+  if (
+    typeof constraints === "object" &&
+    constraints !== null &&
+    Boolean(constraints.audio)
+  ) {
+    microphoneCaptureCount += 1;
+  }
+  return nativeGetUserMedia(constraints);
+};
 
 interface StartOptions {
   roomId: string;
@@ -30,7 +46,18 @@ interface HarnessState {
   candidatePairTypes: string[];
   iceRestartCounts: number[];
   peerHealth: string[];
+  microphonePublishingWanted: boolean;
+  microphonePublishing: boolean;
+  microphoneCaptureCount: number;
+  localSpeaking: boolean;
+  remoteAudioExpectedIds: string[];
+  remoteAudioActivity: string[];
   remoteAudioFlowActivity: string[];
+  participantAudioOutputs: Array<{
+    remoteUserId: string;
+    muted: boolean;
+    volume: number;
+  }>;
   remoteVideoActivity: string[];
 }
 
@@ -98,8 +125,9 @@ class Harness {
             userId: self.id,
           });
         },
+        onMicrophoneStatusChange: () => undefined,
+        onMicrophoneTerminalFailure: () => undefined,
         onVoiceMessageChange: () => undefined,
-        onVoiceStatusChange: () => undefined,
         onVideosChange: (videos) => {
           // Attach remote video elements to the DOM so the browser decodes
           // incoming frames (the metric the TTFM assertion reads).
@@ -248,18 +276,20 @@ class Harness {
     const candidatePairTypes: string[] = [];
     const iceRestartCounts: number[] = [];
     const peerHealth: string[] = [];
+    const remoteAudioActivity: string[] = [];
     const remoteAudioFlowActivity: string[] = [];
+    const participantAudioOutputs: HarnessState["participantAudioOutputs"] = [];
     const remoteVideoActivity: string[] = [];
+    let microphonePublishingWanted = false;
+    let microphonePublishing = false;
+    let localSpeaking = false;
+    let remoteAudioExpectedIds: string[] = [];
     if (this.controller) {
-      const stats = (await this.controller.getStats()) as {
-        peers?: Array<{
-          iceRestartCount?: number;
-          stats?: Record<string, unknown>;
-          health?: string;
-          remoteAudioFlowActivity?: string;
-          remoteVideoActivity?: string;
-        }>;
-      };
+      const stats = await this.controller.getStats();
+      microphonePublishingWanted = stats.microphonePublishingWanted;
+      microphonePublishing = stats.microphonePublishing;
+      localSpeaking = stats.localSpeaking;
+      remoteAudioExpectedIds = stats.remoteAudioExpectedIds;
       for (const peer of stats.peers ?? []) {
         const inbound = peer.stats?.videoInbound as { framesDecoded?: number } | undefined;
         if (inbound?.framesDecoded) {
@@ -273,9 +303,14 @@ class Harness {
         }
         if (typeof peer.iceRestartCount === "number") iceRestartCounts.push(peer.iceRestartCount);
         if (peer.health) peerHealth.push(peer.health);
+        remoteAudioActivity.push(peer.remoteAudioActivity);
         if (peer.remoteAudioFlowActivity) {
           remoteAudioFlowActivity.push(peer.remoteAudioFlowActivity);
         }
+        participantAudioOutputs.push({
+          remoteUserId: peer.remoteUserId,
+          ...peer.participantAudioOutput,
+        });
         if (peer.remoteVideoActivity) {
           remoteVideoActivity.push(peer.remoteVideoActivity);
         }
@@ -291,17 +326,39 @@ class Harness {
       candidatePairTypes,
       iceRestartCounts,
       peerHealth,
+      microphonePublishingWanted,
+      microphonePublishing,
+      microphoneCaptureCount,
+      localSpeaking,
+      remoteAudioExpectedIds,
+      remoteAudioActivity,
       remoteAudioFlowActivity,
+      participantAudioOutputs,
       remoteVideoActivity,
     };
   }
 
   async startVoice(): Promise<void> {
-    await this.controller?.startVoiceTalk();
+    await this.controller?.setMicrophonePublishing(true, "warm");
   }
 
   async stopVoice(): Promise<void> {
-    await this.controller?.stopVoiceTalk();
+    await this.controller?.setMicrophonePublishing(false, "warm");
+  }
+
+  async startOpenMic(): Promise<void> {
+    await this.controller?.setMicrophonePublishing(true, "immediate");
+  }
+
+  async stopOpenMic(): Promise<void> {
+    await this.controller?.setMicrophonePublishing(false, "immediate");
+  }
+
+  setParticipantAudioOutput(
+    participantId: string,
+    preference: ParticipantAudioPreference,
+  ): void {
+    this.controller?.setParticipantAudioOutput(participantId, preference);
   }
 
   dropNextSignal(kind: P2PSignal["kind"]): void {
@@ -320,9 +377,7 @@ class Harness {
   async remoteAudioBytes(): Promise<number> {
     let bytes = 0;
     if (this.controller) {
-      const stats = (await this.controller.getStats()) as {
-        peers?: Array<{ stats?: Record<string, unknown> }>;
-      };
+      const stats = await this.controller.getStats();
       for (const peer of stats.peers ?? []) {
         const inbound = peer.stats?.audioInbound as { bytesReceived?: number } | undefined;
         if (inbound?.bytesReceived) bytes = Math.max(bytes, inbound.bytesReceived);

@@ -1,3 +1,7 @@
+import {
+  WatchLibraryResponseSchema,
+  type WatchLibraryResponse,
+} from "@anidachi/protocol";
 import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
 import { createWebsiteRoomHeaders, RoomApiError, type CreatedRoom } from "./room-client";
@@ -11,7 +15,7 @@ import {
 } from "./watch-progress";
 
 const WATCH_LIBRARY_HTTP_MESSAGE_TYPE = "ANIDACHI_WATCH_LIBRARY_HTTP";
-export const WATCH_LIBRARY_CACHE_STORAGE_KEY = "anidachi.watchLibraryCache.v1";
+export const WATCH_LIBRARY_CACHE_STORAGE_KEY = "anidachi.watchLibraryCache.v2";
 export const WATCH_LIBRARY_CACHE_KEY = `local:${WATCH_LIBRARY_CACHE_STORAGE_KEY}` as const;
 export const WATCH_LIBRARY_CACHE_MAX_AGE_MS = 60_000;
 
@@ -22,72 +26,13 @@ export type WatchProgressReconcileEntry = WatchProgressEntry & {
   observedAt?: string | number;
 };
 
-export interface WatchLibraryParticipant {
-  user: {
-    userId: string;
-    handle: string | null;
-    displayName: string;
-    avatarUrl: string | null;
-  };
-  role: "host" | "viewer";
-  currentTime: number;
-  progress: number;
-  joinedAt: string;
-  leftAt: string | null;
-  updatedAt: string;
-}
-
-export interface WatchLibrarySession {
-  id: string;
-  roomId: string | null;
-  hostUserId: string;
-  kind: "solo" | "shared";
-  currentTime: number;
-  duration: number;
-  progress: number;
-  startedAt: string;
-  endedAt: string | null;
-  lastWatchedAt: string;
-  participants: WatchLibraryParticipant[];
-}
-
-export interface WatchLibraryEpisode {
-  episodeKey: string;
-  episodeTitle: string;
-  seasonId: string | null;
-  seasonTitle: string | null;
-  seasonNumber: number | null;
-  sourceUrl: string;
-  currentTime: number;
-  duration: number;
-  progress: number;
-  lastWatchedAt: string;
-  sessions: WatchLibrarySession[];
-}
-
-export interface WatchLibraryItem {
-  provider: ResourceProvider;
-  itemKey: string;
-  itemKind: "series" | "movie";
-  itemTitle: string;
-  sourceUrl: string;
-  artworkUrl: string | null;
-  active: boolean;
-  lastWatchedAt: string;
-  episodes: WatchLibraryEpisode[];
-}
-
-export interface WatchLibraryResponse {
-  generatedAt: string;
-  limits: {
-    planCode: string;
-    maxActiveTrackedTitles: number;
-    activeTrackedTitleCount: number;
-    historyRetentionDays: number;
-    retainedSince: string;
-  };
-  items: WatchLibraryItem[];
-}
+export type {
+  WatchLibraryEpisode,
+  WatchLibraryItem,
+  WatchLibraryParticipant,
+  WatchLibraryResponse,
+  WatchLibrarySession,
+} from "@anidachi/protocol";
 
 export interface CachedWatchLibrary {
   userId: string;
@@ -296,14 +241,14 @@ export function mergeWatchLibraryIntoProgressStore(
 }
 
 export async function getCachedWatchLibraryForUser(userId: string): Promise<CachedWatchLibrary | null> {
-  const cached = normalizeCachedWatchLibrary(
+  const cached = parseCachedWatchLibrary(
     await storage.getItem<unknown>(watchLibraryCacheKeyForUser(userId)),
   );
   if (cached?.userId === userId) {
     return cached;
   }
 
-  const legacyCached = normalizeCachedWatchLibrary(await storage.getItem<unknown>(WATCH_LIBRARY_CACHE_KEY));
+  const legacyCached = parseCachedWatchLibrary(await storage.getItem<unknown>(WATCH_LIBRARY_CACHE_KEY));
   return legacyCached?.userId === userId ? legacyCached : null;
 }
 
@@ -316,10 +261,11 @@ export function isWatchLibraryCacheFresh(
 }
 
 export async function setCachedWatchLibraryForUser(userId: string, library: WatchLibraryResponse): Promise<void> {
+  const validatedLibrary = parseWatchLibraryResponse(library);
   await storage.setItem(watchLibraryCacheKeyForUser(userId), {
     userId,
     cachedAt: new Date().toISOString(),
-    library: normalizeWatchLibraryResponse(library),
+    library: validatedLibrary,
   } satisfies CachedWatchLibrary);
 }
 
@@ -442,7 +388,7 @@ export async function listWatchLibraryFromApi(accessToken: string): Promise<Watc
   if (!response.ok) {
     throw await watchLibraryHttpError(response, "Failed to load watch library");
   }
-  return normalizeWatchLibraryResponse(await response.json());
+  return parseWatchLibraryResponse(await response.json());
 }
 
 export async function clearWatchLibraryFromApi(accessToken: string): Promise<WatchLibraryResponse> {
@@ -456,7 +402,7 @@ export async function clearWatchLibraryFromApi(accessToken: string): Promise<Wat
   if (!response.ok) {
     throw await watchLibraryHttpError(response, "Failed to clear watch library");
   }
-  return normalizeWatchLibraryResponse(await response.json());
+  return parseWatchLibraryResponse(await response.json());
 }
 
 export async function reconcileWatchProgressFromApi(
@@ -475,7 +421,7 @@ export async function reconcileWatchProgressFromApi(
   if (!response.ok) {
     throw await watchLibraryHttpError(response, "Failed to reconcile watch progress");
   }
-  return normalizeWatchLibraryResponse(await response.json());
+  return parseWatchLibraryResponse(await response.json());
 }
 
 export async function createRoomFromWatchSessionFromApi(params: {
@@ -566,7 +512,7 @@ export async function listWatchLibrary(accessToken: string): Promise<WatchLibrar
   if (!("library" in response)) {
     throw new Error("Watch library bridge response is missing library");
   }
-  return response.library;
+  return parseWatchLibraryResponse(response.library);
 }
 
 export async function clearWatchLibrary(accessToken: string): Promise<WatchLibraryResponse> {
@@ -577,7 +523,7 @@ export async function clearWatchLibrary(accessToken: string): Promise<WatchLibra
   if (!("library" in response)) {
     throw new Error("Watch library bridge response is missing library");
   }
-  return response.library;
+  return parseWatchLibraryResponse(response.library);
 }
 
 export async function reconcileWatchProgress(
@@ -591,7 +537,7 @@ export async function reconcileWatchProgress(
   if (!("library" in response)) {
     throw new Error("Watch library bridge response is missing library");
   }
-  return response.library;
+  return parseWatchLibraryResponse(response.library);
 }
 
 export async function createRoomFromWatchSession(params: {
@@ -678,35 +624,30 @@ async function watchLibraryHttpError(response: Response, fallback: string): Prom
   );
 }
 
-function normalizeWatchLibraryResponse(value: unknown): WatchLibraryResponse {
-  const payload = value as Partial<WatchLibraryResponse>;
-  return {
-    generatedAt: typeof payload.generatedAt === "string" ? payload.generatedAt : new Date().toISOString(),
-    limits:
-      payload.limits && typeof payload.limits === "object"
-        ? payload.limits
-        : {
-            planCode: "free",
-            maxActiveTrackedTitles: 0,
-            activeTrackedTitleCount: 0,
-            historyRetentionDays: 0,
-            retainedSince: new Date(0).toISOString(),
-          },
-    items: Array.isArray(payload.items) ? (payload.items as WatchLibraryItem[]) : [],
-  };
+function parseWatchLibraryResponse(value: unknown): WatchLibraryResponse {
+  return WatchLibraryResponseSchema.parse(value);
 }
 
-function normalizeCachedWatchLibrary(value: unknown): CachedWatchLibrary | null {
+function parseCachedWatchLibrary(value: unknown): CachedWatchLibrary | null {
   if (!value || typeof value !== "object") return null;
   const payload = value as Partial<CachedWatchLibrary>;
-  if (typeof payload.userId !== "string" || typeof payload.cachedAt !== "string") {
+  if (
+    typeof payload.userId !== "string" ||
+    !payload.userId.trim() ||
+    typeof payload.cachedAt !== "string" ||
+    !Number.isFinite(Date.parse(payload.cachedAt))
+  ) {
     return null;
   }
-  return {
-    userId: payload.userId,
-    cachedAt: payload.cachedAt,
-    library: normalizeWatchLibraryResponse(payload.library),
-  };
+  try {
+    return {
+      userId: payload.userId,
+      cachedAt: payload.cachedAt,
+      library: parseWatchLibraryResponse(payload.library),
+    };
+  } catch {
+    return null;
+  }
 }
 
 function normalizeSyncWatermark(value: unknown): WatchLibrarySyncWatermark | null {

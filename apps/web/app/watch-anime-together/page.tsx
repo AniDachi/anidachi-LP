@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { animeList } from "@/lib/anime-data";
@@ -26,7 +27,7 @@ const faq = [
   {
     question: "What is the best way to watch anime together online?",
     answer:
-      "The best method depends on your group. For Crunchyroll users, AniDachi offers watchrooms with sync, chat, and async support. For cross-platform groups, Teleparty works across Netflix, Disney+, and Crunchyroll. For a free option, Discord screen sharing works in a pinch.",
+      "The best method depends on your group. For Crunchyroll anime, AniDachi offers watchrooms with sync, chat, and async support (YouTube watchrooms are available for video nights). For cross-platform groups, Teleparty works across Netflix, Disney+, and Crunchyroll. For a free option, Discord screen sharing works in a pinch.",
   },
   {
     question: "How do you watch anime with friends online?",
@@ -113,7 +114,7 @@ export default function WatchAnimeTogetherPage() {
       description="Compare every way to watch anime together online — AniDachi watchrooms, free options, long-distance tips, and genre hubs."
       url="/watch-anime-together"
       datePublished="2026-04-23"
-      dateModified="2026-08-03"
+      dateModified="2026-08-11"
       faq={faq}
       headings={tocHeadings}
       itemList={genreHubItemList(1)}
@@ -161,6 +162,13 @@ export default function WatchAnimeTogetherPage() {
         — early-access pricing with a clear refund path, then create your first
         watchroom in minutes.
       </p>
+
+      <PrimaryCheckoutCta
+        pagePath="/watch-anime-together"
+        pageTemplate="pillar"
+        placement="content_mid"
+        className="my-10"
+      />
 
       <h2
         id="platform-hubs"

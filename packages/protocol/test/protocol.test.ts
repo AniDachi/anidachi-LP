@@ -709,7 +709,7 @@ describe("room protocol schemas", () => {
       senderConnectionId: "connection-1",
       senderMediaSessionId: "media-session-1",
       toUserId: "user-2",
-      signal: { kind: "voice-start" },
+      signal: { kind: "voice-start", voiceMode: "push-to-talk" },
     });
     const currentServerEvent = ServerEventSchema.parse({
       type: "P2P_SIGNAL",
@@ -729,6 +729,10 @@ describe("room protocol schemas", () => {
     expect(legacyClientEvent).not.toHaveProperty("senderMediaSessionId");
     expect(currentClientEvent).toMatchObject({
       senderMediaSessionId: "media-session-1",
+      signal: {
+        kind: "voice-start",
+        voiceMode: "push-to-talk",
+      },
     });
     expect(currentServerEvent).toMatchObject({
       senderMediaSessionId: "media-session-1",

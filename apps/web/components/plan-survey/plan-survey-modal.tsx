@@ -884,7 +884,7 @@ export function PlanSurveyModal({
                       </li>
                       <li className="flex items-start gap-2">
                         <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-orange" aria-hidden="true" />
-                        Works with Crunchyroll — no extra subscription needed
+                        Works with Crunchyroll and YouTube — no extra streaming subscription needed
                       </li>
                     </>
                   )}

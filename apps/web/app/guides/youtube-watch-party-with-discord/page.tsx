@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -108,7 +109,7 @@ export default function YoutubeWatchPartyWithDiscordPage() {
         description="Discord voice + AniDachi YouTube sync — hybrid co-watch without Go Live."
         url="/guides/youtube-watch-party-with-discord"
         datePublished="2026-07-25"
-        dateModified="2026-07-25"
+        dateModified="2026-08-11"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -150,6 +151,13 @@ export default function YoutubeWatchPartyWithDiscordPage() {
             </li>
           ))}
         </ol>
+
+        <PrimaryCheckoutCta
+          pagePath="/guides/youtube-watch-party-with-discord"
+          pageTemplate="guide"
+          placement="content_mid"
+          className="my-10"
+        />
 
         <h2
           id="why-not-golive"

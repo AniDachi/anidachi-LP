@@ -28,6 +28,7 @@ export class YouTubeVideoAdapter extends Html5VideoAdapter {
   override readonly id = "youtube";
   override readonly provider = "youtube" as const;
   override readonly name = "YouTube";
+  readonly enforcesAuthoritativeRoomSource = true;
   private readonly playbackPhaseTracker: YouTubePlaybackPhaseTracker;
 
   constructor(video: HTMLVideoElement, container: HTMLElement) {

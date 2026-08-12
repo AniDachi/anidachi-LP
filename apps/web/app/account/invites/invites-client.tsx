@@ -1,48 +1,25 @@
 "use client";
 
 import {
-  Check,
-  Inbox,
-  RefreshCw,
-  Send,
-  User,
-  Users,
-  X,
-} from "lucide-react";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+  type AccountInboxResponse,
+  type PublicProfile,
+  type RoomInvite,
+  RoomInvitesResponseSchema,
+} from "@anidachi/protocol";
+import { Check, Inbox, RefreshCw, Send, User, Users, X } from "lucide-react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  accountInboxSeenItems,
+  appendAccountInboxPage,
+  applyAccountInboxSeenAcknowledgement,
+  parseOwnedAccountInboxResponse,
+} from "@/lib/anidachi-auth/account-inbox-client";
 import { api } from "@/lib/client-api";
 
-type PublicProfile = {
-  userId: string;
-  handle: string | null;
-  displayName: string;
-  avatarUrl: string | null;
-};
-
-type RoomInvite = {
-  id: string;
-  roomId: string;
-  sender: PublicProfile;
-  targetKind: "direct" | "group";
-  targetGroupId: string | null;
-  message: string | null;
-  roomTitle: string | null;
-  sourceUrl: string | null;
-  videoFingerprint: string | null;
-  createdAt: string;
-  expiresAt: string;
-  recipients: Array<{
-    user: PublicProfile;
-    status: string;
-    updatedAt: string;
-    respondedAt: string | null;
-  }>;
-};
-
-type InvitesResponse = {
-  inbox: RoomInvite[];
-  sent: RoomInvite[];
-};
+type AccountInboxItem = AccountInboxResponse["items"][number];
+type ActiveRoomInvite = Extract<AccountInboxItem, { kind: "room-invite"; state: "active" }>;
+type MissedRoomInvite = Extract<AccountInboxItem, { kind: "room-invite"; state: "missed" }>;
+type InboxFriendRequest = Extract<AccountInboxItem, { kind: "friend-request" }>;
 
 type AcceptInviteResponse = {
   invite: RoomInvite;
@@ -53,11 +30,6 @@ type AcceptInviteResponse = {
 type Notice = {
   tone: "success" | "error";
   text: string;
-};
-
-const EMPTY_INVITES: InvitesResponse = {
-  inbox: [],
-  sent: [],
 };
 
 function initials(name: string): string {
@@ -74,11 +46,7 @@ function initials(name: string): string {
 function Avatar({ user }: { user: PublicProfile }) {
   if (user.avatarUrl) {
     return (
-      <img
-        alt=""
-        className="h-10 w-10 shrink-0 rounded-full object-cover"
-        src={user.avatarUrl}
-      />
+      <img alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" src={user.avatarUrl} />
     );
   }
 
@@ -126,18 +94,6 @@ function IconButton({
   );
 }
 
-function inviteStatus(invite: RoomInvite): string {
-  return invite.recipients[0]?.status ?? "pending";
-}
-
-function isExpired(invite: RoomInvite): boolean {
-  return new Date(invite.expiresAt).getTime() <= Date.now();
-}
-
-function canRespond(invite: RoomInvite): boolean {
-  return inviteStatus(invite) === "pending" && !isExpired(invite);
-}
-
 function formatDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Unknown date";
@@ -156,80 +112,213 @@ function statusTone(status: string): string {
   return "bg-brand-orange/15 text-brand-orange";
 }
 
-function statusLabel(status: string, expired: boolean): string {
-  if (expired && status === "pending") return "expired";
-  return status;
+async function acknowledgeInboxPageSeen(
+  page: AccountInboxResponse,
+  ownerUserId: string,
+): Promise<AccountInboxResponse> {
+  const unseenItems = accountInboxSeenItems(page);
+  if (unseenItems.length === 0) return page;
+
+  const payload = await api<unknown>("/api/account/inbox/seen?limit=100", {
+    method: "POST",
+    body: JSON.stringify({ items: unseenItems }),
+  });
+  const acknowledgement = parseOwnedAccountInboxResponse(payload, ownerUserId);
+  return applyAccountInboxSeenAcknowledgement(page, acknowledgement);
 }
 
-export function InvitesClient() {
-  const [data, setData] = useState<InvitesResponse>(EMPTY_INVITES);
+export function InvitesClient({ ownerUserId }: { ownerUserId: string }) {
+  const [inbox, setInbox] = useState<AccountInboxResponse | null>(null);
+  const [sentInvites, setSentInvites] = useState<RoomInvite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const refreshGenerationRef = useRef(0);
+  const ownerUserIdRef = useRef<string | null>(ownerUserId);
 
-  const pendingInbox = useMemo(
-    () => data.inbox.filter((invite) => canRespond(invite)),
-    [data.inbox],
+  const friendRequests = useMemo(
+    () =>
+      inbox?.items.filter((item): item is InboxFriendRequest => item.kind === "friend-request") ??
+      [],
+    [inbox],
+  );
+  const activeRoomInvites = useMemo(
+    () =>
+      inbox?.items.filter(
+        (item): item is ActiveRoomInvite => item.kind === "room-invite" && item.state === "active",
+      ) ?? [],
+    [inbox],
+  );
+  const missedRoomInvites = useMemo(
+    () =>
+      inbox?.items.filter(
+        (item): item is MissedRoomInvite => item.kind === "room-invite" && item.state === "missed",
+      ) ?? [],
+    [inbox],
   );
 
   const refresh = useCallback(async () => {
+    const generation = ++refreshGenerationRef.current;
+    const isCurrent = () => refreshGenerationRef.current === generation;
     setLoading(true);
+    setNotice(null);
     try {
-      const payload = await api<InvitesResponse>("/api/invites");
-      setData({
-        inbox: Array.isArray(payload.inbox) ? payload.inbox : [],
-        sent: Array.isArray(payload.sent) ? payload.sent : [],
-      });
+      const [inboxPayload, invitesPayload] = await Promise.all([
+        api<unknown>("/api/account/inbox?limit=100"),
+        api<unknown>("/api/invites"),
+      ]);
+      const nextInbox = parseOwnedAccountInboxResponse(inboxPayload, ownerUserId);
+      const invites = RoomInvitesResponseSchema.parse(invitesPayload);
+      if (!isCurrent()) return;
+      setSentInvites(invites.sent);
+
+      let displayInbox = nextInbox;
+      try {
+        displayInbox = await acknowledgeInboxPageSeen(nextInbox, ownerUserId);
+      } catch {
+        if (!isCurrent()) return;
+        setNotice({
+          tone: "error",
+          text: "Inbox loaded, but read status could not be updated.",
+        });
+      }
+      if (!isCurrent()) return;
+      setInbox(displayInbox);
     } catch (error) {
+      if (!isCurrent()) return;
       setNotice({
         tone: "error",
         text: error instanceof Error ? error.message : "Could not load invites",
       });
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
-  }, []);
+  }, [ownerUserId]);
+
+  const loadMore = useCallback(async () => {
+    const cursor = inbox?.nextCursor;
+    if (!cursor || loading || loadingMore || busyKey !== null) return;
+    const generation = ++refreshGenerationRef.current;
+    const isCurrent = () => refreshGenerationRef.current === generation;
+    setLoadingMore(true);
+    setNotice(null);
+    try {
+      const pagePayload = await api<unknown>(
+        `/api/account/inbox?limit=100&cursor=${encodeURIComponent(cursor)}`,
+      );
+      let page = parseOwnedAccountInboxResponse(pagePayload, ownerUserId);
+      try {
+        page = await acknowledgeInboxPageSeen(page, ownerUserId);
+      } catch {
+        if (!isCurrent()) return;
+        setNotice({
+          tone: "error",
+          text: "Invites loaded, but read status could not be updated.",
+        });
+      }
+      if (!isCurrent()) return;
+      setInbox((current) => (current ? appendAccountInboxPage(current, page) : page));
+    } catch (error) {
+      if (!isCurrent()) return;
+      setNotice({
+        tone: "error",
+        text: error instanceof Error ? error.message : "Could not load more invites",
+      });
+    } finally {
+      if (isCurrent()) setLoadingMore(false);
+    }
+  }, [busyKey, inbox?.nextCursor, loading, loadingMore, ownerUserId]);
 
   useEffect(() => {
+    ownerUserIdRef.current = ownerUserId;
+    refreshGenerationRef.current += 1;
+    setInbox(null);
+    setSentInvites([]);
+    setNotice(null);
+    setLoading(false);
+    setLoadingMore(false);
+    setBusyKey(null);
     void refresh();
+    return () => {
+      refreshGenerationRef.current += 1;
+      ownerUserIdRef.current = null;
+    };
   }, [refresh]);
 
   const runAction = useCallback(
-    async (key: string, action: () => Promise<void>) => {
+    async <T,>(
+      key: string,
+      action: () => Promise<T>,
+      onSuccess?: (result: T) => void | Promise<void>,
+    ) => {
+      if (loading || loadingMore || busyKey !== null) return;
+      const actionOwnerUserId = ownerUserId;
+      const isCurrentOwner = () => ownerUserIdRef.current === actionOwnerUserId;
+      if (!isCurrentOwner()) return;
       setBusyKey(key);
       setNotice(null);
       try {
-        await action();
+        const result = await action();
+        if (!isCurrentOwner()) return;
+        await onSuccess?.(result);
+        if (!isCurrentOwner()) return;
         await refresh();
       } catch (error) {
+        if (!isCurrentOwner()) return;
         setNotice({
           tone: "error",
           text: error instanceof Error ? error.message : "Action failed",
         });
       } finally {
-        setBusyKey(null);
+        if (isCurrentOwner()) setBusyKey(null);
       }
     },
-    [refresh],
+    [busyKey, loading, loadingMore, ownerUserId, refresh],
   );
 
   const acceptInvite = useCallback(
     async (inviteId: string) => {
-      await runAction(`accept:${inviteId}`, async () => {
-        const payload = await api<AcceptInviteResponse>(`/api/invites/${inviteId}/accept`, {
-          method: "POST",
-        });
-        window.location.assign(payload.joinUrl);
-      });
+      await runAction(
+        `accept:${inviteId}`,
+        () =>
+          api<AcceptInviteResponse>(`/api/invites/${inviteId}/accept`, {
+            method: "POST",
+          }),
+        (payload) => window.location.assign(payload.joinUrl),
+      );
     },
     [runAction],
   );
 
   const declineInvite = useCallback(
     async (inviteId: string) => {
-      await runAction(`decline:${inviteId}`, async () => {
-        await api(`/api/invites/${inviteId}/decline`, { method: "POST" });
-        setNotice({ tone: "success", text: "Invite declined." });
+      await runAction(
+        `decline:${inviteId}`,
+        () => api(`/api/invites/${inviteId}/decline`, { method: "POST" }),
+        () => setNotice({ tone: "success", text: "Invite declined." }),
+      );
+    },
+    [runAction],
+  );
+
+  const acceptFriendRequest = useCallback(
+    async (friendshipId: string) => {
+      await runAction(`accept-friend:${friendshipId}`, async () => {
+        await api(`/api/friends/requests/${friendshipId}/accept`, {
+          method: "POST",
+        });
+      });
+    },
+    [runAction],
+  );
+
+  const declineFriendRequest = useCallback(
+    async (friendshipId: string) => {
+      await runAction(`decline-friend:${friendshipId}`, async () => {
+        await api(`/api/friends/requests/${friendshipId}/decline`, {
+          method: "POST",
+        });
       });
     },
     [runAction],
@@ -246,11 +335,11 @@ export function InvitesClient() {
             Invites
           </h1>
           <p className="mt-2 text-sm text-foreground/50">
-            Room invites from friends and group sends.
+            Friend requests, room invitations, and recent missed invitations.
           </p>
         </div>
         <IconButton
-          disabled={loading}
+          disabled={loading || loadingMore || busyKey !== null}
           icon={<RefreshCw className="h-4 w-4" aria-hidden />}
           onClick={() => void refresh()}
           title="Refresh"
@@ -272,10 +361,27 @@ export function InvitesClient() {
         </div>
       ) : null}
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <SummaryTile icon={<Inbox className="h-5 w-5" aria-hidden />} label="Pending" value={pendingInbox.length} />
-        <SummaryTile icon={<Users className="h-5 w-5" aria-hidden />} label="Inbox" value={data.inbox.length} />
-        <SummaryTile icon={<Send className="h-5 w-5" aria-hidden />} label="Sent" value={data.sent.length} />
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryTile
+          icon={<Inbox className="h-5 w-5" aria-hidden />}
+          label="Actionable"
+          value={inbox?.counts.actionable ?? 0}
+        />
+        <SummaryTile
+          icon={<Users className="h-5 w-5" aria-hidden />}
+          label="Room invites"
+          value={inbox?.counts.activeRoomInvites ?? 0}
+        />
+        <SummaryTile
+          icon={<User className="h-5 w-5" aria-hidden />}
+          label="Friend requests"
+          value={inbox?.counts.pendingFriendRequests ?? 0}
+        />
+        <SummaryTile
+          icon={<Send className="h-5 w-5" aria-hidden />}
+          label="Sent"
+          value={sentInvites.length}
+        />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
@@ -283,24 +389,54 @@ export function InvitesClient() {
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-foreground">Inbox</h2>
             <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
-              {data.inbox.length}
+              {inbox?.items.length ?? 0}
             </span>
           </div>
           <div className="mt-3">
             {loading ? (
               <p className="py-4 text-sm text-foreground/50">Loading...</p>
-            ) : data.inbox.length ? (
-              data.inbox.map((invite) => (
-                <InboxInviteRow
-                  busyKey={busyKey}
-                  invite={invite}
-                  key={invite.id}
-                  onAccept={() => void acceptInvite(invite.id)}
-                  onDecline={() => void declineInvite(invite.id)}
-                />
-              ))
+            ) : inbox?.items.length ? (
+              <div className="divide-y divide-brand-border">
+                <InboxSubsection count={friendRequests.length} label="Friend requests">
+                  {friendRequests.map((request) => (
+                    <FriendRequestRow
+                      busyKey={loadingMore ? "inbox:loading" : busyKey}
+                      key={request.friendshipId}
+                      request={request}
+                      onAccept={() => void acceptFriendRequest(request.friendshipId)}
+                      onDecline={() => void declineFriendRequest(request.friendshipId)}
+                    />
+                  ))}
+                </InboxSubsection>
+                <InboxSubsection count={activeRoomInvites.length} label="Room invites">
+                  {activeRoomInvites.map((invite) => (
+                    <InboxInviteRow
+                      busyKey={loadingMore ? "inbox:loading" : busyKey}
+                      invite={invite}
+                      key={invite.inviteId}
+                      onAccept={() => void acceptInvite(invite.inviteId)}
+                      onDecline={() => void declineInvite(invite.inviteId)}
+                    />
+                  ))}
+                </InboxSubsection>
+                <InboxSubsection count={missedRoomInvites.length} label="Missed">
+                  {missedRoomInvites.map((invite) => (
+                    <MissedInviteRow invite={invite} key={invite.inviteId} />
+                  ))}
+                </InboxSubsection>
+                {inbox.nextCursor ? (
+                  <button
+                    className="mt-4 min-h-11 w-full rounded-lg border border-brand-border bg-brand-surface px-4 text-sm font-semibold text-foreground/80 transition hover:border-brand-orange/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={loadingMore || busyKey !== null}
+                    onClick={() => void loadMore()}
+                    type="button"
+                  >
+                    {loadingMore ? "Loading..." : "Load more"}
+                  </button>
+                ) : null}
+              </div>
             ) : (
-              <p className="py-4 text-sm text-foreground/50">No room invites yet.</p>
+              <p className="py-4 text-sm text-foreground/50">Your inbox is clear.</p>
             )}
           </div>
         </div>
@@ -309,14 +445,14 @@ export function InvitesClient() {
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-foreground">Sent</h2>
             <span className="rounded-full bg-brand-surface px-2.5 py-1 text-xs text-foreground/70">
-              {data.sent.length}
+              {sentInvites.length}
             </span>
           </div>
           <div className="mt-3">
             {loading ? (
               <p className="py-4 text-sm text-foreground/50">Loading...</p>
-            ) : data.sent.length ? (
-              data.sent.map((invite) => <SentInviteRow invite={invite} key={invite.id} />)
+            ) : sentInvites.length ? (
+              sentInvites.map((invite) => <SentInviteRow invite={invite} key={invite.id} />)
             ) : (
               <p className="py-4 text-sm text-foreground/50">No sent invites yet.</p>
             )}
@@ -327,15 +463,7 @@ export function InvitesClient() {
   );
 }
 
-function SummaryTile({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: number;
-}) {
+function SummaryTile({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-brand-border bg-brand-surface p-4">
       <div className="flex items-center gap-3">
@@ -349,6 +477,77 @@ function SummaryTile({
   );
 }
 
+function InboxSubsection({
+  children,
+  count,
+  label,
+}: {
+  children: ReactNode;
+  count: number;
+  label: string;
+}) {
+  return (
+    <section className="py-3 first:pt-0 last:pb-0" aria-label={label}>
+      <div className="flex items-center justify-between gap-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-foreground/45">
+        <span>{label}</span>
+        <span>{count}</span>
+      </div>
+      {count ? children : <p className="py-3 text-sm text-foreground/40">Nothing here.</p>}
+    </section>
+  );
+}
+
+function FriendRequestRow({
+  busyKey,
+  onAccept,
+  onDecline,
+  request,
+}: {
+  busyKey: string | null;
+  onAccept: () => void;
+  onDecline: () => void;
+  request: InboxFriendRequest;
+}) {
+  const busy =
+    busyKey === `accept-friend:${request.friendshipId}` ||
+    busyKey === `decline-friend:${request.friendshipId}`;
+  return (
+    <div className="flex flex-col justify-between gap-3 py-4 sm:flex-row sm:items-center">
+      <div className="flex min-w-0 items-center gap-3">
+        <Avatar user={request.sender} />
+        <div className="min-w-0">
+          <h3 className="truncate text-base font-semibold text-foreground">
+            {request.sender.displayName}
+          </h3>
+          <p className="mt-1 text-sm text-foreground/50">
+            {request.sender.handle ? `@${request.sender.handle}` : "Wants to be friends"} ·{" "}
+            {formatDate(request.activityAt)}
+          </p>
+        </div>
+      </div>
+      <div className="flex shrink-0 gap-2">
+        <IconButton
+          disabled={busyKey !== null}
+          icon={<Check className="h-4 w-4" aria-hidden />}
+          onClick={onAccept}
+          title="Accept friend request"
+          tone="primary"
+        >
+          Accept
+        </IconButton>
+        <IconButton
+          disabled={busyKey !== null}
+          icon={<X className="h-4 w-4" aria-hidden />}
+          onClick={onDecline}
+          title="Decline friend request"
+        >
+          {busy ? "Working" : "Decline"}
+        </IconButton>
+      </div>
+    </div>
+  );
+}
+
 function InboxInviteRow({
   busyKey,
   invite,
@@ -356,13 +555,11 @@ function InboxInviteRow({
   onDecline,
 }: {
   busyKey: string | null;
-  invite: RoomInvite;
+  invite: ActiveRoomInvite;
   onAccept: () => void;
   onDecline: () => void;
 }) {
-  const status = inviteStatus(invite);
-  const expired = isExpired(invite);
-  const disabled = busyKey !== null || !canRespond(invite);
+  const disabled = busyKey !== null;
 
   return (
     <div className="border-b border-brand-border py-4 last:border-b-0">
@@ -374,16 +571,13 @@ function InboxInviteRow({
               <h3 className="truncate text-base font-semibold text-foreground">
                 {invite.roomTitle ?? "Watch room invite"}
               </h3>
-              <span
-                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(
-                  statusLabel(status, expired),
-                )}`}
-              >
-                {statusLabel(status, expired)}
+              <span className="rounded-full bg-brand-orange/15 px-2.5 py-1 text-xs font-semibold text-brand-orange">
+                active
               </span>
             </div>
             <p className="mt-1 text-sm text-foreground/50">
-              From {invite.sender.displayName} · expires {formatDate(invite.expiresAt)}
+              {invite.targetGroupName ? `${invite.targetGroupName} · ` : ""}
+              From {invite.sender.displayName} · {formatDate(invite.activityAt)}
             </p>
             {invite.message ? (
               <p className="mt-2 rounded-lg bg-brand-surface px-3 py-2 text-sm text-foreground/70">
@@ -410,6 +604,32 @@ function InboxInviteRow({
           >
             Decline
           </IconButton>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MissedInviteRow({ invite }: { invite: MissedRoomInvite }) {
+  return (
+    <div className="py-4">
+      <div className="flex min-w-0 gap-3">
+        <Avatar user={invite.sender} />
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="truncate text-base font-semibold text-foreground">
+              {invite.roomTitle ?? "Missed room invite"}
+            </h3>
+            <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-200">
+              missed
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-foreground/50">
+            From {invite.sender.displayName} · {formatDate(invite.missedAt)}
+          </p>
+          {invite.message ? (
+            <p className="mt-2 text-sm text-foreground/65">{invite.message}</p>
+          ) : null}
         </div>
       </div>
     </div>

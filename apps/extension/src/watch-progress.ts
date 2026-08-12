@@ -66,6 +66,10 @@ export interface ProviderFolder {
   items: StoredWatchItem[];
 }
 
+export type WatchProgressStorageAccessOptions = Readonly<{
+  setActiveOwner?: boolean;
+}>;
+
 export const WATCH_PROGRESS_STORAGE_KEY = "anidachi.watchProgress.v1";
 export const WATCH_PROGRESS_GUEST_OWNER_ID = "guest";
 export const WATCH_PROGRESS_ACTIVE_OWNER_STORAGE_KEY = "anidachi.watchProgress.activeOwner.v1";
@@ -192,10 +196,13 @@ export async function loadWatchProgressStore(): Promise<WatchProgressStore> {
 
 export async function loadWatchProgressStoreForUser(
   userId: string | null | undefined,
+  options: WatchProgressStorageAccessOptions = {},
 ): Promise<WatchProgressStore> {
   await clearLegacyWatchProgressIfNeeded();
   const key = watchProgressStorageKeyForUser(userId);
-  await setActiveWatchProgressOwner(userId);
+  if (options.setActiveOwner !== false) {
+    await setActiveWatchProgressOwner(userId);
+  }
   const raw = await chrome.storage.local.get(key);
   return normalizeWatchProgressStore(raw[key]);
 }
@@ -207,9 +214,12 @@ export async function saveWatchProgressStore(store: WatchProgressStore): Promise
 export async function saveWatchProgressStoreForUser(
   userId: string | null | undefined,
   store: WatchProgressStore,
+  options: WatchProgressStorageAccessOptions = {},
 ): Promise<void> {
   const key = watchProgressStorageKeyForUser(userId);
-  await setActiveWatchProgressOwner(userId);
+  if (options.setActiveOwner !== false) {
+    await setActiveWatchProgressOwner(userId);
+  }
   await chrome.storage.local.set({ [key]: store });
 }
 

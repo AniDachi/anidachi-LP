@@ -32,7 +32,8 @@ const shouldNoindex = isRobotsIndexingDisabled();
 
 export const metadata: Metadata = {
   title: {
-    default: "AniDachi – Watch Anime Together | Sync Crunchyroll with Friends",
+    default:
+      "AniDachi – Watch Together | Sync Crunchyroll & YouTube with Friends",
     template: "%s | AniDachi",
   },
   description:
@@ -40,7 +41,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(getResolvedSiteOrigin()),
   alternates: { canonical: "/" },
   openGraph: {
-    title: "AniDachi – Watch Anime Together | Sync Crunchyroll with Friends",
+    title:
+      "AniDachi – Watch Together | Sync Crunchyroll & YouTube with Friends",
     description:
       "Create watchrooms for Crunchyroll and YouTube, sync with friends, chat in real-time, and track progress — even asynchronously.",
     type: "website",

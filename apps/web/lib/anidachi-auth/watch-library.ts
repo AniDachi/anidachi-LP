@@ -1,4 +1,12 @@
 import {
+  WatchLibraryResponseSchema,
+  type WatchItemKind,
+  type WatchLibraryItem,
+  type WatchLibraryResponse,
+  type WatchLibrarySession,
+  type WatchProvider,
+} from "@anidachi/protocol";
+import {
   createRoom,
   db,
   getRoomById,
@@ -19,10 +27,17 @@ import {
   type ProfileRow,
   type PublicProfile,
 } from "./social";
+import { createAccountResponseMeta } from "./account-response";
 import { inferCrunchyrollSeasonFromSourceUrl } from "../watch-season-inference";
 
-export type WatchProvider = "crunchyroll" | "netflix" | "youtube" | "amazon";
-export type WatchItemKind = "series" | "movie";
+export type {
+  WatchLibraryEpisode,
+  WatchLibraryItem,
+  WatchLibraryParticipant,
+  WatchLibraryResponse,
+  WatchLibrarySession,
+} from "@anidachi/protocol";
+
 export type WatchCheckpointKind =
   | "local"
   | "room"
@@ -137,68 +152,6 @@ type UserTrackedTitleRow = {
   last_watched_at: string;
   created_at: string;
   updated_at: string;
-};
-
-export type WatchLibraryParticipant = {
-  user: PublicProfile;
-  role: "host" | "viewer";
-  currentTime: number;
-  progress: number;
-  joinedAt: string;
-  leftAt: string | null;
-  updatedAt: string;
-};
-
-export type WatchLibrarySession = {
-  id: string;
-  roomId: string | null;
-  hostUserId: string;
-  kind: "solo" | "shared";
-  currentTime: number;
-  duration: number;
-  progress: number;
-  startedAt: string;
-  endedAt: string | null;
-  lastWatchedAt: string;
-  participants: WatchLibraryParticipant[];
-};
-
-export type WatchLibraryEpisode = {
-  episodeKey: string;
-  episodeTitle: string;
-  seasonId: string | null;
-  seasonTitle: string | null;
-  seasonNumber: number | null;
-  sourceUrl: string;
-  currentTime: number;
-  duration: number;
-  progress: number;
-  lastWatchedAt: string;
-  sessions: WatchLibrarySession[];
-};
-
-export type WatchLibraryItem = {
-  provider: WatchProvider;
-  itemKey: string;
-  itemKind: WatchItemKind;
-  itemTitle: string;
-  sourceUrl: string;
-  artworkUrl: string | null;
-  active: boolean;
-  lastWatchedAt: string;
-  episodes: WatchLibraryEpisode[];
-};
-
-export type WatchLibraryResponse = {
-  generatedAt: string;
-  limits: {
-    planCode: PlanCode;
-    maxActiveTrackedTitles: number;
-    activeTrackedTitleCount: number;
-    historyRetentionDays: number;
-    retainedSince: string;
-  };
-  items: WatchLibraryItem[];
 };
 
 export type WatchSessionRoomSource = {
@@ -428,8 +381,10 @@ export async function listWatchLibrary(userId: string): Promise<WatchLibraryResp
   ]);
   const profiles = await publicProfilesForParticipants(allParticipants);
 
-  return {
-    generatedAt: now.toISOString(),
+  const generatedAt = now.toISOString();
+  return WatchLibraryResponseSchema.parse({
+    meta: createAccountResponseMeta(now),
+    generatedAt,
     limits: {
       planCode: entitlements.planCode,
       maxActiveTrackedTitles: entitlements.account.maxActiveTrackedTitles,
@@ -445,7 +400,7 @@ export async function listWatchLibrary(userId: string): Promise<WatchLibraryResp
       allParticipants,
       profiles,
     }),
-  };
+  });
 }
 
 export async function clearWatchLibrary(userId: string): Promise<WatchLibraryResponse> {

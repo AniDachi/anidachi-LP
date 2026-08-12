@@ -87,6 +87,14 @@ interface PendingSourceNavigation {
 	token: number;
 }
 
+interface AuthoritativeRoomSource {
+	connectionGeneration: number;
+	roomGeneration: number;
+	roomId: string;
+	source: WatchSourceDescriptor;
+	sourceGeneration: number;
+}
+
 const EMPTY_SESSION: PlaybackSyncSession = {
 	connectionGeneration: 0,
 	isHost: false,
@@ -100,6 +108,7 @@ const EMPTY_SESSION: PlaybackSyncSession = {
 export class PlaybackSyncController {
 	private adapter: VideoAdapter | null = null;
 	private adapterActive = false;
+	private authoritativeRoomSource: AuthoritativeRoomSource | null = null;
 	private asyncGeneration = 0;
 	private disposed = false;
 	private heartbeatIntervalId: number | null = null;
@@ -175,6 +184,7 @@ export class PlaybackSyncController {
 			this.refreshPlaybackPhase(adapter);
 		}
 		this.completeSourceNavigationForAdapter(adapter);
+		this.restoreAuthoritativeSourceForAdapter(adapter);
 		this.restartHeartbeatTimer();
 	}
 
@@ -188,6 +198,7 @@ export class PlaybackSyncController {
 		this.lastRemoteCommand = null;
 		this.lastRemoteSeekAttempt = null;
 		this.latestHostState = null;
+		this.authoritativeRoomSource = null;
 		this.pendingRemoteSeek = null;
 		this.playbackBarrier = null;
 		this.hostInterstitialHoldSent = false;
@@ -284,8 +295,13 @@ export class PlaybackSyncController {
 				});
 				return Promise.resolve();
 			}
+			this.rememberAuthoritativeRoomSource(adapter, source);
+		}
+		const navigationSource =
+			source ?? this.getRememberedAuthoritativeRoomSource(state);
+		if (navigationSource) {
 			if (state.videoFingerprint !== adapter.getFingerprint()) {
-				this.queueSourceNavigation(source, state);
+				this.queueSourceNavigation(navigationSource, state);
 				return Promise.resolve();
 			}
 			this.clearPendingSourceNavigation();
@@ -578,6 +594,7 @@ export class PlaybackSyncController {
 		this.clearPendingLocalSeek();
 		this.adapter = null;
 		this.latestHostState = null;
+		this.authoritativeRoomSource = null;
 		this.lastConfirmedContentState = null;
 		this.lastPlaybackPhase = null;
 		this.pendingRemoteSeek = null;
@@ -623,6 +640,74 @@ export class PlaybackSyncController {
 		const latestHostState = pending.latestHostState;
 		this.clearPendingSourceNavigation();
 		void this.applyHostState(latestHostState);
+	}
+
+	private getRememberedAuthoritativeRoomSource(
+		state: PlaybackState,
+	): WatchSourceDescriptor | null {
+		const remembered = this.authoritativeRoomSource;
+		if (
+			!remembered ||
+			this.session.isHost ||
+			remembered.connectionGeneration !== this.session.connectionGeneration ||
+			remembered.roomGeneration !== this.session.roomGeneration ||
+			remembered.roomId !== this.session.roomId ||
+			remembered.sourceGeneration !== this.session.sourceGeneration ||
+			remembered.source.provider !== this.session.roomProvider ||
+			remembered.source.videoFingerprint !== state.videoFingerprint
+		) {
+			return null;
+		}
+		return remembered.source;
+	}
+
+	private rememberAuthoritativeRoomSource(
+		adapter: VideoAdapter,
+		source: WatchSourceDescriptor,
+	): void {
+		if (
+			!adapter.enforcesAuthoritativeRoomSource ||
+			this.session.isHost ||
+			!this.session.roomId
+		) {
+			return;
+		}
+		this.authoritativeRoomSource = {
+			connectionGeneration: this.session.connectionGeneration,
+			roomGeneration: this.session.roomGeneration,
+			roomId: this.session.roomId,
+			source,
+			sourceGeneration: this.session.sourceGeneration,
+		};
+	}
+
+	private restoreAuthoritativeSourceForAdapter(
+		adapter: VideoAdapter | null,
+	): void {
+		const state = this.latestHostState;
+		if (
+			!adapter?.enforcesAuthoritativeRoomSource ||
+			!state ||
+			this.session.isHost ||
+			!this.hasProviderBoundRoomSession() ||
+			adapter.getFingerprint() === state.videoFingerprint
+		) {
+			return;
+		}
+		const source = this.getRememberedAuthoritativeRoomSource(state);
+		if (!source) {
+			return;
+		}
+
+		logDebug("sync.source", "guest source drift detected", {
+			action: "guest-source-restore",
+			adapterId: adapter.id,
+			provider: adapter.provider,
+			roomGeneration: this.session.roomGeneration,
+			sourceGeneration: this.session.sourceGeneration,
+		});
+		this.onStatus({ kind: "host-controls-playback" });
+		this.queueSourceNavigation(source, state);
 	}
 
 	private cancelPendingRemotePlayback(): void {

@@ -22,8 +22,8 @@
     "test": "tsx --test \"lib/**/*.test.ts\""
   },
   "dependencies": {
-    "@anidachi/protocol": "workspace:*",
     "@amplitude/unified": "^1.1.1",
+    "@anidachi/protocol": "workspace:*",
     "@radix-ui/react-slot": "^1.2.3",
     "@supabase/supabase-js": "^2.106.2",
     "@vercel/blob": "^2.3.0",
@@ -38,7 +38,8 @@
     "react-dom": "^19.0.0",
     "sharp": "^0.34.5",
     "stripe": "^18.3.0",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -46,6 +47,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "15.5.12",
     "tailwindcss": "^4",

@@ -1,12 +1,31 @@
 import { defineBackground } from "wxt/utils/define-background";
 import {
+  handleAccountInboxHttpMessage,
+  isAccountInboxHttpMessage,
+} from "../src/account-inbox-client";
+import {
   handleAuthMessage,
   handleWebsiteAuthCookieChange,
   isAuthMessage,
   reconcileExtensionSessionAgainstWebsite,
 } from "../src/auth-client";
+import {
+  AUTH_TOKENS_STORAGE_KEY,
+  normalizeExtensionAuthTokens,
+} from "../src/auth-tokens";
 import { handleDiagnosticMessage, isDiagnosticMessage } from "../src/diagnostic-log";
 import { handleRoomHttpMessage, isRoomHttpMessage } from "../src/room-client";
+import {
+  createRoomInviteNotificationMaintenanceAlarm,
+  handleAuthSessionChanged,
+  handleRoomInviteNotificationPermissionRemoved,
+  handleRoomInviteNotificationClick,
+  handleRoomInviteNotificationMessage,
+  handleRoomInvitePush,
+  isRoomInviteNotificationMaintenanceAlarm,
+  isRoomInviteNotificationMessage,
+  reconcileRoomInviteNotifications,
+} from "../src/room-invite-notifications";
 import {
   handleRoomSessionStorageRuntimeMessage,
   removeRoomSessionForTab,
@@ -28,6 +47,11 @@ export default defineBackground(() => {
       return true;
     }
 
+    if (isRoomInviteNotificationMessage(message)) {
+      void handleRoomInviteNotificationMessage(message).then(sendResponse);
+      return true;
+    }
+
     if (isRoomHttpMessage(message)) {
       void handleRoomHttpMessage(message).then(sendResponse);
       return true;
@@ -35,6 +59,11 @@ export default defineBackground(() => {
 
     if (isSocialHttpMessage(message)) {
       void handleSocialHttpMessage(message).then(sendResponse);
+      return true;
+    }
+
+    if (isAccountInboxHttpMessage(message)) {
+      void handleAccountInboxHttpMessage(message).then(sendResponse);
       return true;
     }
 
@@ -55,15 +84,56 @@ export default defineBackground(() => {
     void handleWebsiteAuthCookieChange(changeInfo);
   });
 
-  const reconcileStoredWebsiteSession = () => {
-    void reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false }).catch(
-      () => undefined,
-    );
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "local" || !changes[AUTH_TOKENS_STORAGE_KEY]) return;
+    const change = changes[AUTH_TOKENS_STORAGE_KEY];
+    void handleAuthSessionChanged(
+      normalizeExtensionAuthTokens(change.oldValue),
+      normalizeExtensionAuthTokens(change.newValue),
+    ).catch(() => undefined);
+  });
+
+  workerScope().addEventListener("push", (event) => {
+    event.waitUntil(handleRoomInvitePush(event).catch(() => undefined));
+  });
+
+  chrome.notifications?.onClicked?.addListener((notificationId) => {
+    void handleRoomInviteNotificationClick(notificationId).catch(() => undefined);
+  });
+
+  chrome.permissions.onRemoved.addListener((permissions) => {
+    void handleRoomInviteNotificationPermissionRemoved(permissions).catch(() => undefined);
+  });
+
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (!isRoomInviteNotificationMaintenanceAlarm(alarm.name)) return;
+    void reconcileRoomInviteNotifications({ notify: true }).catch(() => undefined);
+  });
+
+  const reconcileStoredWebsiteSession = (notify: boolean) => {
+    void reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false })
+      .then(() => reconcileRoomInviteNotifications({ notify }))
+      .catch(() => undefined);
   };
-  chrome.runtime.onStartup?.addListener(reconcileStoredWebsiteSession);
-  chrome.runtime.onInstalled?.addListener(reconcileStoredWebsiteSession);
+  chrome.runtime.onStartup?.addListener(() => reconcileStoredWebsiteSession(true));
+  chrome.runtime.onInstalled?.addListener(() => reconcileStoredWebsiteSession(false));
+
+  void createRoomInviteNotificationMaintenanceAlarm().catch(() => undefined);
 
   chrome.tabs.onRemoved.addListener((tabId) => {
     void removeRoomSessionForTab(tabId).catch(() => undefined);
   });
 });
+
+type BackgroundPushEvent = {
+  data?: { text: () => string } | null;
+  waitUntil: (promise: Promise<unknown>) => void;
+};
+
+function workerScope(): {
+  addEventListener: (type: "push", listener: (event: BackgroundPushEvent) => void) => void;
+} {
+  return self as unknown as {
+    addEventListener: (type: "push", listener: (event: BackgroundPushEvent) => void) => void;
+  };
+}

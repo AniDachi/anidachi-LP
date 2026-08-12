@@ -147,6 +147,21 @@ describe("diagnostic log", () => {
         mode: "full",
         url: "https://www.crunchyroll.com/watch?token=secret",
         participantId: "user-1",
+        voice: {
+          mode: "open-mic",
+          microphoneStatus: "on",
+          localSpeaking: false,
+          p2p: {
+            remoteAudioExpectedIds: ["remote-user-1"],
+            peers: [
+              {
+                remoteUserId: "remote-user-1",
+                remoteAudioExpected: true,
+                participantAudioOutput: { muted: true, volume: 0.35 },
+              },
+            ],
+          },
+        },
         pageDebug,
       },
     };
@@ -171,7 +186,24 @@ describe("diagnostic log", () => {
     const bundle = parseDownloadedBundle(download) as {
       format: string;
       mode: string;
-      page: { url: string; participantId: string; pageDebug: { entries: unknown[] } };
+      page: {
+        url: string;
+        participantId: string;
+        voice: {
+          mode: string;
+          microphoneStatus: string;
+          localSpeaking: boolean;
+          p2p: {
+            remoteAudioExpectedIds: string[];
+            peers: Array<{
+              remoteUserId: string;
+              remoteAudioExpected: boolean;
+              participantAudioOutput: { muted: boolean; volume: number };
+            }>;
+          };
+        };
+        pageDebug: { entries: unknown[] };
+      };
       storage: {
         keys: string[];
         auth: {
@@ -186,6 +218,23 @@ describe("diagnostic log", () => {
     expect(bundle.mode).toBe("full");
     expect(bundle.page.url).toBe("https://www.crunchyroll.com/watch?<redacted>");
     expect(bundle.page.participantId).toMatch(/^id_[a-z0-9]+$/);
+    expect(bundle.page.voice).toEqual({
+      mode: "open-mic",
+      microphoneStatus: "on",
+      localSpeaking: false,
+      p2p: {
+        remoteAudioExpectedIds: [
+          expect.stringMatching(/^id_[a-z0-9]+$/),
+        ],
+        peers: [
+          {
+            remoteUserId: expect.stringMatching(/^id_[a-z0-9]+$/),
+            remoteAudioExpected: true,
+            participantAudioOutput: { muted: true, volume: 0.35 },
+          },
+        ],
+      },
+    });
     expect(bundle.page.pageDebug.entries).toHaveLength(500);
     expect(bundle.storage.auth.hasAccessToken).toBe(true);
     expect(bundle.storage.auth.hasRefreshToken).toBe(true);
@@ -201,6 +250,7 @@ describe("diagnostic log", () => {
     expect(bundleText).not.toContain("access-secret");
     expect(bundleText).not.toContain("refresh-secret");
     expect(bundleText).not.toContain("user-1");
+    expect(bundleText).not.toContain("remote-user-1");
     expect(bundleText).not.toContain("token=secret");
   });
 

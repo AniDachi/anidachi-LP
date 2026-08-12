@@ -21,6 +21,15 @@ const rows: CompareTableRow[] = [
     },
   },
   {
+    feature: "YouTube sync",
+    values: {
+      anidachi: "yes",
+      teleparty: "yes",
+      crunchyrollParty: "no",
+      discord: "partial",
+    },
+  },
+  {
     feature: "Asynchronous watching",
     values: {
       anidachi: "yes",
@@ -30,7 +39,7 @@ const rows: CompareTableRow[] = [
     },
   },
   {
-    feature: "Auto anime detection",
+    feature: "Auto title detection",
     values: {
       anidachi: "yes",
       teleparty: "no",
@@ -80,7 +89,8 @@ export function CompareTable() {
           </h2>
           <div className="mx-auto mb-3 h-0.5 w-12 rounded-full bg-gradient-to-r from-brand-orange to-brand-orange-bright" />
           <p className="mx-auto max-w-xl text-base text-foreground/70">
-            Built for anime watch parties, not generic screen share.
+            Watchrooms for Crunchyroll and YouTube — sync, chat, and async catch-up,
+            not generic screen share.
           </p>
         </div>
         <div className="mx-auto max-w-4xl">

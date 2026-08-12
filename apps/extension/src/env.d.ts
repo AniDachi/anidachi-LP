@@ -9,6 +9,7 @@ interface ImportMetaEnv {
   readonly WXT_P2P_ENABLE_OPEN_RELAY_TURN?: string;
   readonly WXT_P2P_FORCE_RELAY?: string;
   readonly WXT_P2P_ICE_SERVERS_JSON?: string;
+  readonly WXT_VAPID_PUBLIC_KEY?: string;
 }
 
 interface ImportMeta {

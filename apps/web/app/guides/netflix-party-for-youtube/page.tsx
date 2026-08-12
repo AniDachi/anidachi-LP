@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
@@ -80,7 +81,7 @@ export default function NetflixPartyForYoutubePage() {
       description="What people mean by Netflix Party for YouTube — and the best tools in 2026."
       url="/guides/netflix-party-for-youtube"
       datePublished="2026-07-25"
-      dateModified="2026-07-25"
+      dateModified="2026-08-11"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
@@ -161,6 +162,13 @@ export default function NetflixPartyForYoutubePage() {
           <strong>Watch2Gether</strong> — free browser room for casual live hangs.
         </li>
       </ul>
+
+      <PrimaryCheckoutCta
+        pagePath="/guides/netflix-party-for-youtube"
+        pageTemplate="guide"
+        placement="content_mid"
+        className="my-10"
+      />
 
       <h2
         id="related"

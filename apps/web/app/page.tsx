@@ -14,8 +14,8 @@ export default function Home() {
       <SoftwareApplicationJsonLd />
       <FAQPageJsonLd questions={homeFAQ} />
       <HowToJsonLd
-        name="How to Watch Anime Together with AniDachi"
-        description="Set up shared anime watchrooms on Crunchyroll in 4 easy steps."
+        name="How to Watch Together with AniDachi"
+        description="Set up shared watchrooms on Crunchyroll or YouTube in 4 easy steps."
         steps={howToSteps}
       />
     </>

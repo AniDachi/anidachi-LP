@@ -1,6 +1,6 @@
 # Anidachi Extension Release Channels
 
-Last updated: 2026-06-04.
+Last updated: 2026-08-10.
 
 This document describes the current Chrome extension release setup. Treat it as the
 source of truth for the current implementation, not as a permanent product contract.
@@ -70,9 +70,22 @@ Outputs:
 Generate the production extension artifact:
 
 ```bash
-pnpm build:extension:public
+WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
+
+The production VAPID public key must match the production web app's
+`ANIDACHI_VAPID_PUBLIC_KEY`. Keep `ANIDACHI_VAPID_PRIVATE_KEY` server-only in
+Vercel Production. GitHub Actions reads the public key from the
+`WXT_VAPID_PUBLIC_KEY` variable in the `production` environment and refuses to
+build the `main` artifact when that variable is missing. Staging uses its own
+key and remains isolated from production subscriptions.
+
+The release manifest includes Chrome's `notifications` permission. This lets
+the default-on room-invite preference register a Web Push subscription after
+sign-in without hiding a second activation step in extension settings. Turning
+the preference off revokes the local subscription while durable Inbox data and
+the action badge continue to work.
 
 Outputs:
 
@@ -81,7 +94,15 @@ Outputs:
 - `anidachi-extension-experiment/`
 - `anidachi-extension-experiment.zip`
 
-The build scripts regenerate extension PNG icons before building.
+The build scripts verify that the committed extension PNG icons match the source
+logo without modifying the source tree. After changing
+`apps/extension/public/Anidachi_logo.png`, regenerate and commit the icons before
+building:
+
+```bash
+pnpm build:extension:icons
+pnpm check:extension:icons
+```
 
 Use broad staging permissions only for local development experiments:
 
@@ -124,6 +145,12 @@ Pre-upload checklist:
   or `<all_urls>`.
 - `content_scripts.matches` does not contain broad patterns.
 - Web/API hosts match the channel.
+- The production build uses the public half of the production VAPID key pair;
+  the corresponding private key exists only in the production web environment.
+- `alarms` is present for daily notification recovery and `notifications` is a
+  required manifest permission for default-on invite alerts. The Popup setting
+  controls the local subscription rather than requesting another permission.
+- `minimum_chrome_version` is at least 121 for extension Web Push support.
 - Icons exist at 16, 32, 48, and 128 px.
 - The zip root contains `manifest.json` at the top level.
 

@@ -30,6 +30,7 @@ export const PRICING_TIERS: PricingTierMarketing[] = [
     audience: "Try AniDachi and join friends in their rooms",
     summary: "Join watchrooms, sync, and chat — pay only when you want to host without limits",
     features: [
+      "Crunchyroll & YouTube watchrooms",
       "Join friends' watchrooms for free",
       "Sync, chat & reactions",
       "Chrome extension access",

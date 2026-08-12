@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { deflateSync, inflateSync } from "node:zlib";
 
@@ -7,6 +7,7 @@ const ROOT_DIR = resolve(new URL("..", import.meta.url).pathname);
 const SOURCE_LOGO_PATH = resolve(ROOT_DIR, "apps/extension/public/Anidachi_logo.png");
 const OUTPUT_DIR = resolve(ROOT_DIR, "apps/extension/public/icons");
 const SIZES = [16, 32, 48, 128];
+const CHECK_ONLY = process.argv.includes("--check");
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
@@ -30,7 +31,7 @@ function chunk(type, data) {
   return Buffer.concat([length, typeBuffer, data, crc]);
 }
 
-function writePng(path, width, height, pixels) {
+function encodePng(width, height, pixels) {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(width, 0);
   header.writeUInt32BE(height, 4);
@@ -47,15 +48,12 @@ function writePng(path, width, height, pixels) {
     pixels.copy(scanlines, rowOffset + 1, y * width * 4, (y + 1) * width * 4);
   }
 
-  writeFileSync(
-    path,
-    Buffer.concat([
-      PNG_SIGNATURE,
-      chunk("IHDR", header),
-      chunk("IDAT", deflateSync(scanlines, { level: 9 })),
-      chunk("IEND", Buffer.alloc(0)),
-    ]),
-  );
+  return Buffer.concat([
+    PNG_SIGNATURE,
+    chunk("IHDR", header),
+    chunk("IDAT", deflateSync(scanlines, { level: 9 })),
+    chunk("IEND", Buffer.alloc(0)),
+  ]);
 }
 
 function paethPredictor(left, up, upLeft) {
@@ -210,13 +208,39 @@ function resizeLogo(source, size) {
   return pixels;
 }
 
-mkdirSync(OUTPUT_DIR, { recursive: true });
+if (!CHECK_ONLY) {
+  mkdirSync(OUTPUT_DIR, { recursive: true });
+}
 
 const sourceLogo = readRgbaPng(SOURCE_LOGO_PATH);
+const stalePaths = [];
+
 for (const size of SIZES) {
   const pixels = resizeLogo(sourceLogo, size);
   const path = resolve(OUTPUT_DIR, `icon-${size}.png`);
+  const expected = encodePng(size, size, pixels);
+  const current = existsSync(path) ? readFileSync(path) : null;
+
+  if (current?.equals(expected)) {
+    console.log(`${CHECK_ONLY ? "Verified" : "Unchanged"} ${path}`);
+    continue;
+  }
+
+  if (CHECK_ONLY) {
+    stalePaths.push(path);
+    continue;
+  }
+
   mkdirSync(dirname(path), { recursive: true });
-  writePng(path, size, size, pixels);
-  console.log(`Wrote ${path}`);
+  writeFileSync(path, expected);
+  console.log(`Updated ${path}`);
+}
+
+if (stalePaths.length > 0) {
+  console.error("Extension icons are missing or stale:");
+  for (const path of stalePaths) {
+    console.error(`- ${path}`);
+  }
+  console.error("Run `pnpm build:extension:icons` and commit the generated icons.");
+  process.exitCode = 1;
 }

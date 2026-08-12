@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-07-23.
+Last updated: 2026-08-09.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -163,6 +163,83 @@ into an invalid-token response. Startup reconciliation and cookie-change events
 are coalesced by the background worker; strict cookie policies use the existing
 silent browser flow as a fallback.
 
+## Account Read Contracts And Popup Isolation
+
+Account read responses for friends, groups, invites, and watch-library data use
+shared versioned protocol schemas. Their metadata identifies the schema version,
+server generation time, and authenticated account owner so extension clients can
+reject malformed, incompatible, or cross-account responses before rendering or
+caching them.
+
+The Popup treats the active extension session as the owner of all account data.
+Social, inbox, and watch snapshots are cached per account, visible state is
+cleared immediately on account change or sign-out, and generation gates prevent
+late requests, seen acknowledgements, poster hydration, social actions, and
+history operations from writing into a newer account session. Popup snapshot I/O
+does not claim ownership of the content script's active playback progress.
+
+The additive durable inbox migration is applied on staging. The current account
+inbox rollout moves both the Popup Inbox and `/account/invites` incoming surface
+to the same owner-bound `/api/account/inbox` response, including server counts,
+seen state, missed room invites, and cursor pagination in the full web surface.
+Application rollout is tracked in PR #160. Loaded two-account staging
+acceptance remains required before production promotion.
+
+## Room Invite Notification Direction
+
+Durable room-invite and inbox rows remain authoritative. The authenticated HTTP
+inbox, account-scoped Popup cache, unseen badge, seen acknowledgement, and
+shared web incoming surface are deployed. Standards-based Web Push delivery and
+OS notifications are implemented and remain pending loaded-artifact,
+two-account staging acceptance. The extension release manifest grants the
+notification permission up front so the default-on local preference can
+register a push device automatically after sign-in; the existing local toggle
+still disables and revokes that browser's subscription. The
+additive `devices` Web Push migration is already applied and verified on the
+staging Supabase project; production remains unchanged until staging acceptance.
+Web Push sends only an `inbox_changed` invalidation so the extension runs the
+same inbox sync and displays minimal English room-invite notifications. There
+is no frequent background inbox polling, Chrome GCM, Supabase Realtime
+subscription, persistent notification WebSocket, or separate notification
+event platform.
+
+Recovery uses reconciliation on push receipt, Chrome startup, account/session
+change, popup open, and successful invite mutation, plus one daily maintenance
+alarm for long-running browser sessions. Invite actionability follows the room
+lifecycle; unresolved invites become a non-actionable `Missed` presentation for
+24 hours after room end. The canonical product and implementation details live
+in
+`docs/superpowers/specs/2026-08-06-account-data-history-social-inbox-design.md`.
+
+The current Chrome-only delivery slice accepts only HTTPS subscriptions on
+Chrome's FCM push host, caps active push-enabled extension installations at five
+per account, and uses bounded delivery concurrency with a network timeout.
+Permanent failures are pruned without exposing push endpoints or raw provider
+responses to clients. Supporting another browser requires an explicit provider
+allowlist addition and staging proof rather than accepting arbitrary push URLs.
+
+Room invite creation now uses the service-role-only
+`create_room_invite_atomic` Postgres RPC. Room validation, accepted-friend or
+group recipient resolution, invite creation, and recipient-snapshot creation
+commit in one transaction. A sender-scoped action ledger makes the extension's
+stable `clientActionId` retryable, caps new actions at 20 per minute, and keeps
+the request payload bound to that identifier. Requests are capped at 100
+resolved recipients. Repeated direct/group targeting for the same room and
+recipient returns existing state, including declined or expired state, and does
+not schedule another push invalidation. The migration is additive: historical
+invite rows remain readable and are not destructively rewritten.
+
+The host invite panel reloads canonical sent invites when opened and keeps each
+target labeled `Pending`, `Accepted`, or `Invited`. The create response exposes
+whether a new recipient snapshot was created, allowing the UI to distinguish a
+real send from an idempotent or semantic duplicate.
+
+The invite schema still assigns `expires_at` with a 12-hour default, and the
+existing accept path enforces it. The staging inbox foundation preserves that
+field as a compatibility lifecycle signal. A later room-lifecycle slice must
+replace the independent expiry behavior additively and prove the new contract on
+staging before the compatibility field or check is removed.
+
 ## Runtime Environments
 
 Local development:
@@ -251,18 +328,18 @@ selected through build environment variables in the build scripts.
 ## Last Recorded Staging Store Artifact
 
 The last staging artifact explicitly recorded in this document was generated
-from commit `6be6f82`:
+from commit `50c80a0`:
 
 ```txt
 <repo>/anidachi-extension-staging.zip
-<repo>/artifacts/anidachi-extension-staging-6be6f82.zip
+<repo>/artifacts/anidachi-extension-staging-50c80a0.zip
 ```
 
 Manifest checks:
 
 ```txt
 name: Anidachi Staging
-version_name: 6be6f82-staging-20260604040825
+version_name: 50c80a0-staging-20260730171210
 ```
 
 The staging Chrome Web Store reviewer/tester access code is stored in the Chrome
@@ -298,9 +375,17 @@ The extension currently supports:
 - a compact room panel with an edge-intent launcher: while the panel is closed,
   the top pill stays hidden until a deliberate top-right hover reveals it; the
   open panel pins the pill in place as its close control;
-- an active-room-only side voice rail: it is absent before a room exists, and
-  its participant list expands only after a deliberate press against the player
-  edge rather than broad hover near the side;
+- an `Interface` settings section with immediately applied, profile-local
+  visibility preferences stored under `local:interfacePreferencesV1`. The main
+  control can retain its edge-intent auto-hide behavior or remain visible.
+  Open panel, active Open mic publication, and keyboard focus continue to pin
+  it regardless of the selected preference;
+- an active-room-only side voice rail with `Smart` and `Always visible` modes.
+  Smart preserves quiet-hide, speaking-compact, and deliberate edge expansion.
+  Always visible keeps eligible no-video participants compact and expands only
+  the hovered, focused, or actively adjusted participant. Mounted video
+  participants are still excluded, the current user never receives listener
+  controls, and remote volume/mute remains local to the listener;
 - sign-in through the web app with Google/Discord;
 - room creation and invite copying through the website/API/Worker flow;
 - WebSocket room join and playback sync;
@@ -323,7 +408,32 @@ The extension currently supports:
   alignment, clears ghosts after Apply, keeps real chat/cameras below the open
   settings panel, and persists changes only after an explicit successful
   `Apply`;
-- push-to-talk audio;
+- one microphone publication lifecycle shared by `V`-only Push to talk and
+  explicit Open mic. Selecting Open mic starts continuous publication only
+  after the exact room session, listener, media seat, snapshot, and P2P
+  controller are ready. The selected mode is stored per sender tab in
+  extension-owned session storage, survives same-room source changes and a tab
+  reload, and resets to Push to talk for a new room, leave/end, sign-out,
+  account change, media-seat loss, terminal microphone failure, or full browser
+  restart;
+- local and remote speaking indicators are measured independently from
+  transport flow: quiet Open mic remains published without appearing to speak
+  or triggering audio-stall recovery, while sender/receiver audio levels drive
+  the green treatment and a local-track RMS fallback covers the period before
+  a sender exists. Push to talk is the deliberate exception: local and remote
+  indicators activate immediately while `V` is held and clear on release;
+- per-listener participant audio mix controls: each remote media-seat
+  participant can be muted or adjusted locally from the side voice pill or the
+  matching video-bubble contour. Preferences are versioned, validated,
+  account-scoped, applied before remote playback, and survive camera/track
+  replacement without changing the remote microphone or RTP flow;
+- camera and microphone publication are independent. Camera off/on does not
+  stop Open mic, microphone stop does not remove healthy video, and rapid
+  answerer-side camera transitions coalesce their required renegotiation instead
+  of dropping the latest direction change;
+- live P2P voice does not duck Crunchyroll or YouTube player volume. Dictate
+  reactions and their speech-recognition/player-ducking runtime have been
+  removed;
 - WebRTC P2P media with Cloudflare TURN fallback;
 - no active LiveKit/SFU media path: the legacy extension transport, Worker
   `/livekit/token` route, local `infra/livekit` helper, and `livekit-client`
@@ -361,6 +471,10 @@ The extension currently supports:
   can confirm or clear active-speaker state while a remote peer is expected to
   be talking after `voice-start`; after `voice-stop`, residual RTP/DTX movement
   cannot relight the mic badge by itself;
+- Push to talk activity follows the held control on both sides: `voice-start`
+  carries the active microphone mode, so local and remote PTT indicators appear
+  immediately on key-down and clear on `voice-stop`; Open mic indicators remain
+  tied to measured speech;
 - push-to-talk audio is no longer coupled to camera visibility: voice-only room
   participants can enter or remain in the P2P media mesh without requiring
   `cameraEnabled`, so turning a camera off does not tear down the peer connection
@@ -421,6 +535,19 @@ These are intentionally not treated as solved:
   acceptance beyond the local harness. The local harness now waits until both
   peers have received a room snapshot with both cameras enabled before measuring
   TTFM, which removes one false-start class but is not a real-network proof.
+- Open mic and participant mix controls have direct-first two-browser coverage
+  for silence, late join, signaling reconnect, camera off/on, microphone-only
+  stop, Push to talk warm reuse, local mute/volume, and remote track replacement.
+  Room-scoped mode persistence has reducer and revision-guarded storage
+  coverage. Manual loaded-extension acceptance is still required for reload
+  restore timing, media-seat revoke, permission denial, account switching,
+  overlay/source replacement, four-seat load, and real speaker output on two
+  devices.
+- Interface visibility preferences have unit, component, full-repository,
+  room-harness, and direct-first WebRTC coverage, and the staging artifact is
+  validated. Loaded-extension visual acceptance is still required on YouTube
+  and Crunchyroll across normal, theater, and fullscreen modes before the
+  branch is ready for its PR.
 - The local real-WebRTC harness usually selects same-machine `host/host`
   candidate pairs. Relay-only TURN harness mode exists and can use either
   explicit short-lived ICE JSON or the real Worker `/ice-servers` path, but a
@@ -448,9 +575,9 @@ These are intentionally not treated as solved:
   `sourceGeneration` bumps are implemented, but durable Supabase source
   persistence, room-create source descriptor plumbing, and explicit
   source-switch UI/commands are still pending.
-- Watch progress persistence now has a backend-backed watch-library foundation
-  on the Phase 6 branch, but staging acceptance across real browser profiles is
-  still required before treating it as finished product behavior.
+- Watch progress persistence has a backend-backed watch-library foundation and
+  account-scoped Popup snapshots, but staging acceptance across real browser
+  profiles is still required before treating it as finished product behavior.
 - Custom API domain for hiding the Cloudflare account subdomain is deferred.
 - Stripe production webhook appears wired, but end-to-end subscription testing is
   still a separate follow-up.
@@ -477,6 +604,12 @@ These are intentionally not treated as solved:
 - Active execution program for that roadmap (SLOs, verified defects, e2e harness,
   block-by-block plan):
   `docs/superpowers/plans/2026-06-12-room-flow-p2p-flawless-execution-plan.md`
+- Approved extension voice controls and participant audio implementation plan:
+  `docs/superpowers/plans/2026-07-27-voice-controls-and-participant-audio-plan.md`
+- Approved Interface visibility design and implementation plan:
+  `docs/superpowers/specs/2026-07-30-interface-visibility-settings-design.md`
+  and
+  `docs/superpowers/plans/2026-07-30-interface-visibility-settings.md`
 - Historical commercial room/P2P/progress plan:
   `docs/superpowers/plans/2026-06-03-commercial-room-p2p-progress-architecture.md`
 - Monorepo migration history:

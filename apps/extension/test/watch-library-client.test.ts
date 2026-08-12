@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   clearWatchLibraryHttpMessage,
   createRoomFromWatchSessionHttpMessage,
   isWatchLibraryCacheFresh,
   isWatchLibraryHttpMessage,
+  listWatchLibraryFromApi,
   mergeWatchLibraryIntoProgressStore,
   reconcileWatchProgressHttpMessage,
   WATCH_LIBRARY_CACHE_MAX_AGE_MS,
@@ -19,16 +20,128 @@ import {
 } from "../src/watch-library-client";
 import { createEmptyWatchProgressStore, recordWatchProgressInStore, type WatchProgressStore } from "../src/watch-progress";
 
+const NOW = "2026-08-06T12:00:00.000Z";
+
+function jsonResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe("extension watch library HTTP bridge", () => {
+  it("rejects an unknown account response schema version", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          meta: { serverTime: NOW, schemaVersion: 2 },
+          generatedAt: NOW,
+          limits: {
+            planCode: "free",
+            maxActiveTrackedTitles: 3,
+            activeTrackedTitleCount: 0,
+            historyRetentionDays: 7,
+            retainedSince: "2026-07-30T12:00:00.000Z",
+          },
+          items: [],
+        }),
+      ),
+    );
+
+    await expect(listWatchLibraryFromApi("access-1")).rejects.toThrow();
+  });
+
+  it("rejects an invalid participant nested inside a successful response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          meta: { serverTime: NOW, schemaVersion: 1 },
+          generatedAt: NOW,
+          limits: {
+            planCode: "plus",
+            maxActiveTrackedTitles: 15,
+            activeTrackedTitleCount: 1,
+            historyRetentionDays: 92,
+            retainedSince: "2026-05-06T12:00:00.000Z",
+          },
+          items: [
+            {
+              provider: "youtube",
+              itemKey: "youtube:video-1",
+              itemKind: "movie",
+              itemTitle: "Video",
+              sourceUrl: "https://www.youtube.com/watch?v=video-1",
+              artworkUrl: null,
+              active: true,
+              lastWatchedAt: NOW,
+              episodes: [
+                {
+                  episodeKey: "video-1",
+                  episodeTitle: "Video",
+                  seasonId: null,
+                  seasonTitle: null,
+                  seasonNumber: null,
+                  sourceUrl: "https://www.youtube.com/watch?v=video-1",
+                  currentTime: 20,
+                  duration: 200,
+                  progress: 0.1,
+                  lastWatchedAt: NOW,
+                  sessions: [
+                    {
+                      id: "11111111-1111-4111-8111-111111111111",
+                      roomId: null,
+                      hostUserId: "22222222-2222-4222-8222-222222222222",
+                      kind: "shared",
+                      currentTime: 20,
+                      duration: 200,
+                      progress: 0.1,
+                      startedAt: NOW,
+                      endedAt: null,
+                      lastWatchedAt: NOW,
+                      participants: [
+                        {
+                          user: {
+                            userId: "not-a-uuid",
+                            handle: null,
+                            displayName: "Broken user",
+                            avatarUrl: null,
+                          },
+                          role: "viewer",
+                          currentTime: 20,
+                          progress: 0.1,
+                          joinedAt: NOW,
+                          leftAt: null,
+                          updatedAt: NOW,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      ),
+    );
+
+    await expect(listWatchLibraryFromApi("access-1")).rejects.toThrow();
+  });
+
   it("keeps the watch library cache in extension-local storage", () => {
-    expect(WATCH_LIBRARY_CACHE_STORAGE_KEY).toBe("anidachi.watchLibraryCache.v1");
-    expect(WATCH_LIBRARY_CACHE_KEY).toBe("local:anidachi.watchLibraryCache.v1");
+    expect(WATCH_LIBRARY_CACHE_STORAGE_KEY).toBe("anidachi.watchLibraryCache.v2");
+    expect(WATCH_LIBRARY_CACHE_KEY).toBe("local:anidachi.watchLibraryCache.v2");
     expect(WATCH_LIBRARY_CACHE_MAX_AGE_MS).toBe(60_000);
   });
 
   it("scopes watch library cache snapshots by signed-in user", () => {
     expect(watchLibraryCacheKeyForUser("user-a")).toBe(
-      "local:anidachi.watchLibraryCache.v1.user-a",
+      "local:anidachi.watchLibraryCache.v2.user-a",
     );
     expect(watchLibraryCacheKeyForUser("user-a")).not.toBe(
       watchLibraryCacheKeyForUser("user-b"),
@@ -55,6 +168,10 @@ describe("extension watch library HTTP bridge", () => {
       userId: "user-1",
       cachedAt: "2026-06-25T00:00:00.000Z",
       library: {
+        meta: {
+          serverTime: "2026-06-25T00:00:00.000Z",
+          schemaVersion: 1,
+        },
         generatedAt: "2026-06-25T00:00:00.000Z",
         limits: {
           planCode: "free",
@@ -200,6 +317,10 @@ describe("extension watch library HTTP bridge", () => {
 
   it("merges server watch library into local progress for instant future popup renders", () => {
     const library: WatchLibraryResponse = {
+      meta: {
+        serverTime: "2026-06-25T00:00:00.000Z",
+        schemaVersion: 1,
+      },
       generatedAt: "2026-06-25T00:00:00.000Z",
       limits: {
         planCode: "plus",
@@ -287,6 +408,10 @@ describe("extension watch library HTTP bridge", () => {
       Date.parse("2026-06-25T00:03:00.000Z"),
     );
     const library: WatchLibraryResponse = {
+      meta: {
+        serverTime: "2026-06-25T00:00:00.000Z",
+        schemaVersion: 1,
+      },
       generatedAt: "2026-06-25T00:00:00.000Z",
       limits: {
         planCode: "plus",

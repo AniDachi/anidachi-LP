@@ -1,30 +1,42 @@
-import type { Participant } from "@anidachi/protocol";
+import type { Participant, VoiceMode } from "@anidachi/protocol";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { logDebug } from "./debug-log";
 import type {
   GhostVideo,
   IncomingP2PSignal,
-  LiveVoiceStatus,
+  MicrophoneStatus,
+  MicrophoneTerminalFailure,
   RoomSendDisposition,
   SignalingTransportReady,
 } from "./media-types";
 import { loadP2PIceServers, refreshP2PIceServers } from "./p2p-ice";
 import {
   canReceiveP2PSignalFromParticipant,
+  type P2PMediaDiagnostics,
   P2PMediaController,
   selectP2PMediaParticipants,
 } from "./p2p-media";
+import type { ParticipantAudioPreference } from "./voice-audio-preferences";
 
-export type { GhostVideo, LiveVoiceStatus } from "./media-types";
+export type { GhostVideo, MicrophoneStatus } from "./media-types";
 
 export interface GhostCamSession {
   activeSpeakerIds: string[];
-  startVoiceTalk: () => Promise<void>;
-  stopVoiceTalk: () => Promise<void>;
+  getDiagnostics: () => Promise<P2PMediaDiagnostics | null>;
+  microphoneStatus: MicrophoneStatus;
+  microphoneTerminalFailure: MicrophoneTerminalFailure | null;
+  setMicrophonePublishing: (
+    enabled: boolean,
+    release: "warm" | "immediate",
+    voiceMode?: VoiceMode,
+  ) => Promise<void>;
+  setParticipantAudioOutput: (
+    participantId: string,
+    preference: ParticipantAudioPreference,
+  ) => void;
   unlockAudio: () => Promise<void>;
   videos: GhostVideo[];
   voiceMessage: string | null;
-  voiceStatus: LiveVoiceStatus;
 }
 
 interface GhostCamOptions {
@@ -33,6 +45,11 @@ interface GhostCamOptions {
   incomingP2PSignals: IncomingP2PSignal[];
   onCameraStatus: (enabled: boolean) => void;
   participant: Participant | null;
+  participantAudioPreferenceScope: string | null;
+  participantAudioPreferences: Readonly<
+    Record<string, ParticipantAudioPreference>
+  >;
+  participantAudioPreferencesReady: boolean;
   participants: Participant[];
   roomGeneration: number;
   roomId: string | null;
@@ -40,7 +57,6 @@ interface GhostCamOptions {
   sendP2PSignal: IncomingP2PSignalSender;
   signalingTransportReady: SignalingTransportReady | null;
   sourceGeneration: number;
-  voiceTalkActive: boolean;
 }
 
 type IncomingP2PSignalSender = (
@@ -60,6 +76,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     incomingP2PSignals,
     onCameraStatus,
     participant,
+    participantAudioPreferenceScope,
+    participantAudioPreferences,
+    participantAudioPreferencesReady,
     participants,
     roomId,
     roomToken,
@@ -67,10 +86,12 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     sendP2PSignal,
     signalingTransportReady,
     sourceGeneration,
-    voiceTalkActive,
   } = options;
   const [videos, setVideos] = useState<GhostVideo[]>([]);
-  const [voiceStatus, setVoiceStatus] = useState<LiveVoiceStatus>("idle");
+  const [microphoneStatus, setMicrophoneStatus] =
+    useState<MicrophoneStatus>("off");
+  const [microphoneTerminalFailure, setMicrophoneTerminalFailure] =
+    useState<MicrophoneTerminalFailure | null>(null);
   const [voiceMessage, setVoiceMessage] = useState<string | null>(null);
   const [activeSpeakerIds, setActiveSpeakerIds] = useState<string[]>([]);
   const controllerRef = useRef<P2PMediaController | null>(null);
@@ -83,7 +104,11 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const sendP2PSignalRef = useRef(sendP2PSignal);
   const signalingTransportReadyRef = useRef(signalingTransportReady);
   const sourceGenerationRef = useRef(sourceGeneration);
-  const voiceTalkActiveRef = useRef(voiceTalkActive);
+  const microphonePublishingRef = useRef(false);
+  const microphoneReleaseRef = useRef<"warm" | "immediate">("warm");
+  const microphoneVoiceModeRef = useRef<VoiceMode>("push-to-talk");
+  const microphoneScopeKeyRef = useRef<string | null>(null);
+  const participantAudioPreferencesRef = useRef(participantAudioPreferences);
   const remoteVoiceParticipantIdsRef = useRef<Set<string>>(new Set());
   const lastSignalSequenceRef = useRef(0);
   const participantId = participant?.id ?? null;
@@ -92,13 +117,12 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   const iceAuthRef = useRef<{ roomId: string; roomToken: string } | null>(null);
   iceAuthRef.current = roomId && roomToken ? { roomId, roomToken } : null;
 
-  // Live-voice participants: remotes that announced voice-start, plus the
-  // local user while push-to-talk is held. selectP2PMediaParticipants pairs a
-  // talking participant with everyone in the room, so nobody else needs to be
-  // force-added here.
+  // Publication participants: remotes that announced voice-start, plus the
+  // local user while microphone publication is wanted. Measured speaking is a
+  // separate concern and must not decide whether the media peer exists.
   const getVoiceParticipantIds = useCallback((activeParticipant: Participant) => {
     const voiceParticipantIds = new Set(remoteVoiceParticipantIdsRef.current);
-    if (voiceTalkActiveRef.current) {
+    if (microphonePublishingRef.current) {
       voiceParticipantIds.add(activeParticipant.id);
     }
     return voiceParticipantIds;
@@ -115,15 +139,39 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     [getVoiceParticipantIds],
   );
 
+  const getMediaSeatParticipantIds = useCallback(
+    (activeParticipant: Participant) =>
+      new Set(
+        (
+          participantsRef.current.length
+            ? participantsRef.current
+            : [activeParticipant]
+        )
+          .filter((item) => item.mediaSeat === "joined")
+          .map((item) => item.id),
+      ),
+    [],
+  );
+
   const updateControllerParticipants = useCallback(
     (activeParticipant: Participant | null = participantRef.current) => {
       if (!activeParticipant) {
-        controllerRef.current?.updateParticipants([]);
+        controllerRef.current?.updateParticipants([], new Set());
         return;
       }
-      controllerRef.current?.updateParticipants(getMediaParticipants(activeParticipant));
+      const mediaSeatParticipantIds =
+        getMediaSeatParticipantIds(activeParticipant);
+      for (const participantId of remoteVoiceParticipantIdsRef.current) {
+        if (!mediaSeatParticipantIds.has(participantId)) {
+          remoteVoiceParticipantIdsRef.current.delete(participantId);
+        }
+      }
+      controllerRef.current?.updateParticipants(
+        getMediaParticipants(activeParticipant),
+        mediaSeatParticipantIds,
+      );
     },
-    [getMediaParticipants],
+    [getMediaParticipants, getMediaSeatParticipantIds],
   );
 
   useEffect(() => {
@@ -141,6 +189,15 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   useEffect(() => {
     participantRef.current = participant;
   }, [participant]);
+
+  useEffect(() => {
+    participantAudioPreferencesRef.current = participantAudioPreferences;
+    if (participantAudioPreferencesReady) {
+      controllerRef.current?.replaceParticipantAudioOutputs(
+        participantAudioPreferences,
+      );
+    }
+  }, [participantAudioPreferences, participantAudioPreferencesReady]);
 
   useEffect(() => {
     participantsRef.current = participants;
@@ -169,17 +226,36 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
   }, [roomGeneration, sourceGeneration]);
 
   useEffect(() => {
-    voiceTalkActiveRef.current = voiceTalkActive;
-  }, [voiceTalkActive]);
+    const microphoneScopeKey =
+      shouldConnect &&
+      roomId &&
+      participantId &&
+      participantAudioPreferencesReady
+        ? `${roomId}\u0000${participantId}\u0000${
+            participantAudioPreferenceScope ?? "anonymous"
+          }`
+        : null;
+    if (microphoneScopeKeyRef.current !== microphoneScopeKey) {
+      microphonePublishingRef.current = false;
+      microphoneReleaseRef.current = "immediate";
+      microphoneVoiceModeRef.current = "push-to-talk";
+      microphoneScopeKeyRef.current = microphoneScopeKey;
+      setMicrophoneTerminalFailure(null);
+    }
 
-  useEffect(() => {
-    if (!shouldConnect || !roomId || !participantId) {
+    if (
+      !shouldConnect ||
+      !roomId ||
+      !participantId ||
+      !participantAudioPreferencesReady
+    ) {
       controllerRef.current?.disconnect();
       controllerRef.current = null;
       remoteVoiceParticipantIdsRef.current.clear();
       setVideos([]);
       setActiveSpeakerIds([]);
-      setVoiceStatus("idle");
+      setMicrophoneStatus("off");
+      setMicrophoneTerminalFailure(null);
       setVoiceMessage(null);
       lastSignalSequenceRef.current = 0;
       return;
@@ -193,7 +269,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     }
     const sessionParticipant: Participant = activeParticipant;
     remoteVoiceParticipantIdsRef.current.clear();
-    setVoiceStatus("connecting");
+    setMicrophoneStatus(
+      microphonePublishingRef.current ? "connecting" : "off",
+    );
 
     async function connectP2P() {
       let iceServers: RTCIceServer[];
@@ -207,7 +285,9 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         logDebug("p2p.ice-config", "initial setup failed", {
           error: error instanceof Error ? error.message : String(error),
         });
-        setVoiceStatus("error");
+        setMicrophoneStatus(
+          microphonePublishingRef.current ? "error" : "off",
+        );
         setVoiceMessage("Media relay is temporarily unavailable.");
         return;
       }
@@ -221,45 +301,58 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         localParticipant: sessionParticipant,
         onActiveSpeakerIdsChange: setActiveSpeakerIds,
         onCameraStatus: (enabled) => onCameraStatusRef.current(enabled),
+        onMicrophoneTerminalFailure: (failure) => {
+          microphonePublishingRef.current = false;
+          microphoneReleaseRef.current = "immediate";
+          setMicrophoneTerminalFailure(failure);
+          updateControllerParticipants(sessionParticipant);
+        },
         onVideosChange: setVideos,
         onVoiceMessageChange: setVoiceMessage,
-        onVoiceStatusChange: setVoiceStatus,
+        onMicrophoneStatusChange: setMicrophoneStatus,
         refreshIceServers: () => refreshP2PIceServers(iceAuthRef.current ?? undefined),
         sendSignal: (toUserId, signal, metadata) =>
           sendP2PSignalRef.current(toUserId, signal, metadata.senderMediaSessionId),
       });
+      controller.replaceParticipantAudioOutputs(
+        participantAudioPreferencesRef.current,
+      );
 
       ownedController = controller;
       controllerRef.current = controller;
-      rememberPendingVoiceParticipants(
-        incomingP2PSignalsRef.current,
-        remoteVoiceParticipantIdsRef.current,
-        participantsRef.current.length ? participantsRef.current : [sessionParticipant],
-        sessionParticipant.id,
-        roomGeneration,
-        sourceGeneration,
-      );
       await controller.setCameraEnabled(cameraEnabledRef.current);
       if (disposed) {
         return;
       }
-      controller.updateParticipants(getMediaParticipants(sessionParticipant));
-      replayPendingP2PSignals(
+      controller.updateParticipants(
+        getMediaParticipants(sessionParticipant),
+        getMediaSeatParticipantIds(sessionParticipant),
+      );
+      await replayPendingP2PSignals(
         controller,
         incomingP2PSignalsRef.current,
         lastSignalSequenceRef,
+        participantsRef.current.length
+          ? participantsRef.current
+          : [sessionParticipant],
+        sessionParticipant.id,
+        remoteVoiceParticipantIdsRef.current,
         roomGeneration,
         sourceGeneration,
+      );
+      controller.updateParticipants(
+        getMediaParticipants(sessionParticipant),
+        getMediaSeatParticipantIds(sessionParticipant),
       );
       const readyTransport = signalingTransportReadyRef.current;
       if (readyTransport) {
         await controller.handleSignalingTransportReady(readyTransport);
       }
-      if (voiceTalkActiveRef.current) {
-        void controller.startVoiceTalk();
-      } else {
-        setVoiceStatus("idle");
-      }
+      await controller.setMicrophonePublishing(
+        microphonePublishingRef.current,
+        microphoneReleaseRef.current,
+        microphoneVoiceModeRef.current,
+      );
     }
 
     void connectP2P();
@@ -273,7 +366,10 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     };
   }, [
     getMediaParticipants,
+    getMediaSeatParticipantIds,
     participantId,
+    participantAudioPreferenceScope,
+    participantAudioPreferencesReady,
     roomGeneration,
     roomId,
     shouldConnect,
@@ -282,13 +378,13 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
 
   useEffect(() => {
     if (!participantId) {
-      controllerRef.current?.updateParticipants([]);
+      controllerRef.current?.updateParticipants([], new Set());
       return;
     }
 
     const activeParticipant = participantRef.current;
     if (!activeParticipant || activeParticipant.id !== participantId) {
-      controllerRef.current?.updateParticipants([]);
+      controllerRef.current?.updateParticipants([], new Set());
       return;
     }
 
@@ -308,19 +404,6 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
 
     updateControllerParticipants(activeParticipant);
   }, [cameraEnabled, participantId, updateControllerParticipants]);
-
-  useEffect(() => {
-    if (!voiceTalkActive) {
-      void (async () => {
-        await controllerRef.current?.stopVoiceTalk();
-        updateControllerParticipants();
-      })();
-      return;
-    }
-
-    updateControllerParticipants();
-    void controllerRef.current?.startVoiceTalk();
-  }, [updateControllerParticipants, voiceTalkActive]);
 
   useEffect(() => {
     const controller = controllerRef.current;
@@ -358,40 +441,73 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         continue;
       }
 
+      const voiceParticipantIds = getVoiceParticipantIds(activeParticipant);
+      const canReceiveSignal = canReceiveP2PSignalFromParticipant(
+        activeParticipants,
+        participantId,
+        item.fromUserId,
+        cameraEnabledRef.current,
+        voiceParticipantIds,
+      );
+
       if (item.signal.kind === "voice-start") {
-        remoteVoiceParticipantIdsRef.current.add(item.fromUserId);
-        updateControllerParticipants(activeParticipant);
-        void controller.handleSignal(
-          item.fromUserId,
-          item.signal,
-          p2pSignalMetadata(item),
-        );
+        if (!canReceiveSignal) {
+          logDebug("p2p.signal", "drop voice from inactive media participant", {
+            fromUserId: item.fromUserId,
+            kind: item.signal.kind,
+            localParticipantId: participantId,
+          });
+          continue;
+        }
+        void controller
+          .handleSignal(
+            item.fromUserId,
+            item.signal,
+            p2pSignalMetadata(item),
+          )
+          .then((accepted) => {
+            if (!accepted) {
+              return;
+            }
+            if (
+              syncRemoteVoiceParticipant(
+                controller,
+                item.fromUserId,
+                remoteVoiceParticipantIdsRef.current,
+              )
+            ) {
+              updateControllerParticipants();
+            }
+          });
         continue;
       }
 
       if (item.signal.kind === "voice-stop") {
-        void controller.handleSignal(
-          item.fromUserId,
-          item.signal,
-          p2pSignalMetadata(item),
-        );
-        remoteVoiceParticipantIdsRef.current.delete(item.fromUserId);
-        updateControllerParticipants(activeParticipant);
+        void controller
+          .handleSignal(
+            item.fromUserId,
+            item.signal,
+            p2pSignalMetadata(item),
+          )
+          .then((accepted) => {
+            if (!accepted) {
+              return;
+            }
+            if (
+              syncRemoteVoiceParticipant(
+                controller,
+                item.fromUserId,
+                remoteVoiceParticipantIdsRef.current,
+              )
+            ) {
+              updateControllerParticipants();
+            }
+          });
         continue;
       }
 
-      const voiceParticipantIds = getVoiceParticipantIds(activeParticipant);
       const hasExistingPeer = controller.hasPeer(item.fromUserId);
-      if (
-        !hasExistingPeer &&
-        !canReceiveP2PSignalFromParticipant(
-          activeParticipants,
-          participantId,
-          item.fromUserId,
-          cameraEnabledRef.current,
-          voiceParticipantIds,
-        )
-      ) {
+      if (!hasExistingPeer && !canReceiveSignal) {
         logDebug("p2p.signal", "drop inactive media participant", {
           localParticipantId: participantId,
           fromUserId: item.fromUserId,
@@ -407,11 +523,24 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
         continue;
       }
 
-      void controller.handleSignal(
-        item.fromUserId,
-        item.signal,
-        p2pSignalMetadata(item),
-      );
+      void controller
+        .handleSignal(
+          item.fromUserId,
+          item.signal,
+          p2pSignalMetadata(item),
+        )
+        .then((accepted) => {
+          if (
+            accepted &&
+            syncRemoteVoiceParticipant(
+              controller,
+              item.fromUserId,
+              remoteVoiceParticipantIdsRef.current,
+            )
+          ) {
+            updateControllerParticipants();
+          }
+        });
     }
   }, [
     getVoiceParticipantIds,
@@ -451,60 +580,73 @@ function useP2PGhostCam(options: GhostCamOptions): GhostCamSession {
     };
   }, [shouldConnect]);
 
-  const startVoiceTalk = useCallback(async () => {
-    await controllerRef.current?.startVoiceTalk();
-  }, []);
-
-  const stopVoiceTalk = useCallback(async () => {
-    await controllerRef.current?.stopVoiceTalk();
-  }, []);
+  const setMicrophonePublishing = useCallback(
+    async (
+      enabled: boolean,
+      release: "warm" | "immediate",
+      voiceMode: VoiceMode = microphoneVoiceModeRef.current,
+    ) => {
+      microphonePublishingRef.current = enabled;
+      microphoneReleaseRef.current = release;
+      microphoneVoiceModeRef.current = voiceMode;
+      if (enabled) {
+        setMicrophoneTerminalFailure(null);
+      }
+      updateControllerParticipants();
+      await controllerRef.current?.setMicrophonePublishing(
+        enabled,
+        release,
+        voiceMode,
+      );
+      updateControllerParticipants();
+    },
+    [updateControllerParticipants],
+  );
 
   const unlockAudio = useCallback(async () => {
     await controllerRef.current?.unlockAudio();
   }, []);
 
+  const getDiagnostics = useCallback(async () => {
+    return (await controllerRef.current?.getStats()) ?? null;
+  }, []);
+
+  const setParticipantAudioOutput = useCallback(
+    (
+      targetParticipantId: string,
+      preference: ParticipantAudioPreference,
+    ) => {
+      controllerRef.current?.setParticipantAudioOutput(
+        targetParticipantId,
+        preference,
+      );
+    },
+    [],
+  );
+
   return {
     activeSpeakerIds,
-    startVoiceTalk,
-    stopVoiceTalk,
+    getDiagnostics,
+    microphoneStatus,
+    microphoneTerminalFailure,
+    setMicrophonePublishing,
+    setParticipantAudioOutput,
     unlockAudio,
     videos,
     voiceMessage,
-    voiceStatus,
   };
 }
 
-function rememberPendingVoiceParticipants(
-  incomingP2PSignals: IncomingP2PSignal[],
-  remoteVoiceParticipantIds: Set<string>,
-  participants: Participant[],
-  localParticipantId: string,
-  roomGeneration: number,
-  sourceGeneration: number,
-): void {
-  const participantIds = new Set(participants.map((participant) => participant.id));
-  for (const item of incomingP2PSignals) {
-    if (!p2pSignalMatchesActiveGeneration(item, roomGeneration, sourceGeneration)) {
-      continue;
-    }
-    if (item.fromUserId === localParticipantId || !participantIds.has(item.fromUserId)) {
-      continue;
-    }
-    if (item.signal.kind === "voice-start") {
-      remoteVoiceParticipantIds.add(item.fromUserId);
-    } else if (item.signal.kind === "voice-stop") {
-      remoteVoiceParticipantIds.delete(item.fromUserId);
-    }
-  }
-}
-
-function replayPendingP2PSignals(
+async function replayPendingP2PSignals(
   controller: P2PMediaController,
   incomingP2PSignals: IncomingP2PSignal[],
   lastSignalSequenceRef: { current: number },
+  participants: Participant[],
+  localParticipantId: string,
+  remoteVoiceParticipantIds: Set<string>,
   roomGeneration: number,
   sourceGeneration: number,
-): void {
+): Promise<void> {
   for (const item of incomingP2PSignals) {
     if (item.sequence <= lastSignalSequenceRef.current) {
       continue;
@@ -514,14 +656,47 @@ function replayPendingP2PSignals(
     if (!p2pSignalMatchesActiveGeneration(item, roomGeneration, sourceGeneration)) {
       continue;
     }
+    if (
+      item.signal.kind !== "voice-stop" &&
+      !canReceiveP2PSignalFromParticipant(
+        participants,
+        localParticipantId,
+        item.fromUserId,
+        false,
+      )
+    ) {
+      continue;
+    }
 
-    void controller.handleSignal(item.fromUserId, item.signal, {
+    const accepted = await controller.handleSignal(item.fromUserId, item.signal, {
       senderConnectionId: item.senderConnectionId,
       ...(item.senderMediaSessionId
         ? { senderMediaSessionId: item.senderMediaSessionId }
         : {}),
     });
+    if (!accepted) {
+      continue;
+    }
+    syncRemoteVoiceParticipant(
+      controller,
+      item.fromUserId,
+      remoteVoiceParticipantIds,
+    );
   }
+}
+
+function syncRemoteVoiceParticipant(
+  controller: P2PMediaController,
+  participantId: string,
+  remoteVoiceParticipantIds: Set<string>,
+): boolean {
+  const publishing = controller.isRemoteVoicePublishing(participantId);
+  if (publishing) {
+    const size = remoteVoiceParticipantIds.size;
+    remoteVoiceParticipantIds.add(participantId);
+    return remoteVoiceParticipantIds.size !== size;
+  }
+  return remoteVoiceParticipantIds.delete(participantId);
 }
 
 function p2pSignalMetadata(item: IncomingP2PSignal) {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { HowToJsonLd } from "@/components/json-ld";
 import { getGuideLinks } from "@/lib/guide-links";
@@ -119,7 +120,7 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
         description="CR-specific host playbook with plan limits — distinct from general anime watch party creation."
         url="/guides/how-to-host-a-crunchyroll-watch-party"
         datePublished="2026-07-19"
-        dateModified="2026-07-19"
+        dateModified="2026-08-11"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImageAbsolute}
@@ -186,6 +187,13 @@ export default function HowToHostACrunchyrollWatchPartyPage() {
             </li>
           ))}
         </ol>
+
+        <PrimaryCheckoutCta
+          pagePath="/guides/how-to-host-a-crunchyroll-watch-party"
+          pageTemplate="guide"
+          placement="content_mid"
+          className="my-10"
+        />
 
         <h2
           id="limits"

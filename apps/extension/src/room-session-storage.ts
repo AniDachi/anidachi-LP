@@ -1,3 +1,5 @@
+import type { VoiceMode } from "./media-types";
+
 export const ROOM_SESSION_INSTALL_ID_STORAGE_KEY = "anidachi:extension-install-id:v1";
 export const ROOM_SESSION_STORAGE_MESSAGE_TYPE = "ANIDACHI_ROOM_SESSION_STORAGE";
 
@@ -13,6 +15,7 @@ export interface RoomSessionRecord {
   roomId: string;
   ownerUserId: string;
   participantSessionId: string;
+  voiceMode: VoiceMode;
 }
 
 interface LegacyRoomSessionRecord {
@@ -43,6 +46,12 @@ export type RoomSessionStorageMessage =
   | {
       type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
       command: "clear-if-match";
+      record: RoomSessionRecord;
+    }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "set-voice-mode";
+      mode: VoiceMode;
       record: RoomSessionRecord;
     }
   | { type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE; command: "clear" };
@@ -100,6 +109,8 @@ export function isRoomSessionStorageMessage(value: unknown): value is RoomSessio
       );
     case "clear-if-match":
       return parseRoomSessionRecord(value.record) !== null;
+    case "set-voice-mode":
+      return isVoiceMode(value.mode) && parseRoomSessionRecord(value.record) !== null;
     default:
       return false;
   }
@@ -195,6 +206,16 @@ export async function handleRoomSessionStorageMessage(
               message.record,
             ),
           };
+        case "set-voice-mode":
+          return {
+            ok: true,
+            record: await setRoomSessionVoiceModeForTab(
+              sessionStorage,
+              resolvedTabId,
+              message.record,
+              message.mode,
+            ),
+          };
         case "clear":
           await removeRoomSessionForTabNow(resolvedTabId, sessionStorage);
           return { ok: true, record: null };
@@ -285,6 +306,23 @@ export async function clearRoomSessionIfMatch(
   );
 }
 
+export async function updateRoomSessionVoiceMode(
+  record: RoomSessionRecord,
+  mode: VoiceMode,
+  dependencies: RoomSessionClientDependencies = {},
+): Promise<RoomSessionRecord | null> {
+  const response = await sendRoomSessionMessage(
+    {
+      type: ROOM_SESSION_STORAGE_MESSAGE_TYPE,
+      command: "set-voice-mode",
+      mode,
+      record,
+    },
+    dependencies.sendMessage,
+  );
+  return response.record;
+}
+
 export async function migrateLegacyRoomSession(
   currentUserId: string | null,
   dependencies: RoomSessionClientDependencies = {},
@@ -363,6 +401,10 @@ async function persistRecord(
       existing?.roomId === roomId && existing.ownerUserId === ownerUserId
         ? existing.participantSessionId
         : createParticipantSessionId(randomUUID),
+    voiceMode:
+      existing?.roomId === roomId && existing.ownerUserId === ownerUserId
+        ? existing.voiceMode
+        : "push-to-talk",
   };
   await storage.set({ [key]: record });
   return record;
@@ -403,6 +445,11 @@ async function migrateRecord(
           existing.ownerUserId === legacyRecord.ownerUserId
         ? existing.participantSessionId
         : createParticipantSessionId(randomUUID),
+    voiceMode:
+      existing?.roomId === legacyRecord.roomId &&
+      existing.ownerUserId === legacyRecord.ownerUserId
+        ? existing.voiceMode
+        : "push-to-talk",
   };
   await storage.set({ [key]: record });
   return record;
@@ -447,6 +494,37 @@ async function clearRoomSessionIfMatchForTab(
   return null;
 }
 
+async function setRoomSessionVoiceModeForTab(
+  storage: StorageAreaLike,
+  tabId: number,
+  expected: RoomSessionRecord,
+  mode: VoiceMode,
+): Promise<RoomSessionRecord | null> {
+  const key = roomSessionStorageKey(tabId);
+  const stored = await storage.get(key);
+  const current = parseRoomSessionRecord(stored[key]);
+  if (!current) {
+    if (stored[key] !== undefined) {
+      await storage.remove(key);
+    }
+    return null;
+  }
+  if (!roomSessionRecordsMatch(current, expected)) {
+    return current;
+  }
+  if (current.voiceMode === mode) {
+    return current;
+  }
+
+  const next: RoomSessionRecord = {
+    ...current,
+    revision: nextRoomSessionRevision(current),
+    voiceMode: mode,
+  };
+  await storage.set({ [key]: next });
+  return next;
+}
+
 function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null {
   const revision =
     isObject(value) && value.revision === undefined
@@ -474,6 +552,7 @@ function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null {
     roomId: value.roomId,
     ownerUserId: value.ownerUserId,
     participantSessionId: value.participantSessionId,
+    voiceMode: isVoiceMode(value.voiceMode) ? value.voiceMode : "push-to-talk",
   };
 }
 
@@ -494,8 +573,13 @@ function roomSessionRecordsMatch(
     current.revision === expected.revision &&
     current.roomId === expected.roomId &&
     current.ownerUserId === expected.ownerUserId &&
-    current.participantSessionId === expected.participantSessionId
+    current.participantSessionId === expected.participantSessionId &&
+    current.voiceMode === expected.voiceMode
   );
+}
+
+function isVoiceMode(value: unknown): value is VoiceMode {
+  return value === "push-to-talk" || value === "open-mic";
 }
 
 function legacyStorageGroups(prefix: string | null): Array<{
