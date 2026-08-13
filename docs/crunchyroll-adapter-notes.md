@@ -2,6 +2,42 @@
 
 Date: 2026-05-25
 
+## Catalog Observation
+
+Date: 2026-08-13
+
+The current authenticated extension path was re-audited before adding catalog
+progress. The page bridge can observe the active `/watch/{id}` identity and an
+already-requested CMS object used for artwork and conditional `series_id`
+metadata. That is enough to identify the active episode for resume progress, but
+it is not enough to prove a complete series catalog.
+
+The current runtime does **not** yet provide verified evidence for all of these
+catalog requirements together:
+
+- canonical season IDs rather than generated `season-N` keys;
+- complete season and episode pagination;
+- released and currently available episode filtering;
+- canonical identity for locale, audio, or subtitle variants;
+- a completeness signal that proves no season or episode page is missing.
+
+Therefore the watch-history v2 foundation must report Crunchyroll catalog state
+as `unavailable` until a real authenticated, sanitized multi-season response
+proves those fields. It must not derive exact season/title denominators from
+observed watch history, titles, episode numbers, or generated season keys. Resume
+progress for the active episode remains valid and independent of this catalog
+gate.
+
+No catalog fixtures are committed at this stage because the available test
+payloads are handwritten artwork fixtures rather than sanitized captures of a
+complete provider response. When a reliable source is observed, fixtures must be
+reduced from that real response and must exclude cookies, authorization headers,
+tokens, account identifiers, and unrelated private fields.
+
+Crunchyroll endpoint paths and payload shapes remain private implementation
+details of the Crunchyroll adapter. They are not shared AniDachi protocol
+contracts and may change without affecting other provider adapters.
+
 ## Live CDP Research: Navigation and Player Lifecycle
 
 Date: 2026-05-26 test
