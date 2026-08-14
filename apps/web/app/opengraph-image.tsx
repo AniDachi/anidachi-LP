@@ -14,7 +14,8 @@ export default async function OgImage() {
   return new Response(imageBuffer, {
     headers: {
       "Content-Type": "image/png",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "public, max-age=3600, must-revalidate",
+      "X-AniDachi-OG": "20260814",
     },
   });
 }
