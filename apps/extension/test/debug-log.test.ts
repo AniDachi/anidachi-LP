@@ -5,6 +5,7 @@ import {
   getDebugLogText,
   logDebug,
   playerOverlayGeometryDebugSnapshot,
+  roomEventDebugSnapshot,
 } from "../src/debug-log";
 
 function createStorageMock(): Storage {
@@ -93,6 +94,29 @@ describe("debug log", () => {
       launcher: { topPx: 54, rightPx: 22 },
       panel: { topPx: 92, rightPx: 22 },
     });
+  });
+
+  it("omits room history attestation from event debug snapshots", () => {
+    const attestation = "header.private-payload.signature";
+    const snapshot = roomEventDebugSnapshot({
+      type: "ROOM_HISTORY_AUTHORITY",
+      roomId: "room-1",
+      participantSessionId: "participant-session-1",
+      roomGeneration: 2,
+      sourceGeneration: 3,
+      attestation,
+    });
+
+    expect(snapshot).toEqual({
+      type: "ROOM_HISTORY_AUTHORITY",
+      roomId: "room-1",
+      participantSessionId: "participant-session-1",
+      roomGeneration: 2,
+      sourceGeneration: 3,
+    });
+    expect(snapshot).not.toHaveProperty("attestation");
+    expect(JSON.stringify(snapshot)).not.toContain(attestation);
+    expect(JSON.stringify(snapshot)).not.toContain("private-payload");
   });
 
   it("hashes P2P participant identifiers and redacts ICE addresses", () => {
