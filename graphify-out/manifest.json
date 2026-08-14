@@ -4465,8 +4465,8 @@
     "semantic_hash": ""
   },
   "packages/protocol/test/watch-history.test.ts": {
-    "mtime": 1786711546.8277113,
-    "ast_hash": "538964accdfdb57a5927f734ad1a7db6",
+    "mtime": 1786714369.5591033,
+    "ast_hash": "38a2a8183b3738803d0df1df263d6e44",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-08-13-watch-history-catalog-progress-implementation.md": {
@@ -4535,18 +4535,18 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-v2-sql.test.ts": {
-    "mtime": 1786712354.5411775,
-    "ast_hash": "fb5ba1fddc71d9a55e5a537548b9dc09",
+    "mtime": 1786716738.7719572,
+    "ast_hash": "a5038515b5faaa9cd498323690e739f1",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-v2.test.ts": {
-    "mtime": 1786712354.5042155,
-    "ast_hash": "2f77e194784f211b8debcb176e29ba47",
+    "mtime": 1786715081.2287142,
+    "ast_hash": "c80ee7de095c67efa3892080ed3e907e",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-v2.ts": {
-    "mtime": 1786712302.436011,
-    "ast_hash": "55da07bd149d99fef1b0de304266130e",
+    "mtime": 1786715246.688333,
+    "ast_hash": "17ac7a487671fbd50f490722e85c7b36",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-library-v1-v2-coexistence.test.ts": {
@@ -4555,8 +4555,8 @@
     "semantic_hash": ""
   },
   "apps/web/supabase/migrations/20260814010000_watch_history_v2_foundation.sql": {
-    "mtime": 1786711835.6933272,
-    "ast_hash": "3cad1e02d00d5a1e663f57465566428d",
+    "mtime": 1786716649.2532716,
+    "ast_hash": "b1f39ede252d0c7de98d73ab623ada40",
     "semantic_hash": ""
   }
 }
