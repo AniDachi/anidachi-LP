@@ -103,8 +103,24 @@ test("receipt retention is exactly fourteen days and acknowledgements are bounde
   assert.match(table, /kind text not null check \(kind in \('progress', 'delete'\)\)/);
   assert.match(table, /check \(expires_at = accepted_at \+ interval '14 days'\)/);
   assert.match(table, /jsonb_typeof\(acknowledgement\) = 'object'/);
-  assert.match(table, /pg_column_size\(acknowledgement\) <= 262144/);
+  assert.match(table, /octet_length\(acknowledgement::text\) <= 1048576/);
   assert.doesNotMatch(sql, /interval '(?!14 days)[^']+'[^;]*receipt/);
+});
+
+test("season constraints consistently allow zero and reject values above 1000", () => {
+  const sql = normalizedSql();
+  assert.match(
+    sql,
+    /watch_episode_progress[\s\S]*season_number integer check \(season_number is null or season_number between 0 and 1000\)/,
+  );
+  assert.match(
+    sql,
+    /drop constraint if exists watch_sessions_season_number_check; alter table public\.watch_sessions add constraint watch_sessions_season_number_check check \(season_number is null or season_number between 0 and 1000\)/,
+  );
+  assert.match(
+    sql,
+    /drop constraint if exists watch_progress_checkpoints_season_number_check; alter table public\.watch_progress_checkpoints add constraint watch_progress_checkpoints_season_number_check check \(season_number is null or season_number between 0 and 1000\)/,
+  );
 });
 
 test("deletion fences encode unambiguous all, title, and episode scopes", () => {
@@ -171,6 +187,71 @@ test("v2 session identity is additive and excludes discriminator-one rows", () =
   assert.match(sql, /where schema_version = 2/);
 });
 
+test("participant evidence is discriminator-two on every v2 write, read, and delete path", () => {
+  const sql = normalizedSql();
+  const applyDefinition = functionDefinition("apply_watch_progress_v2");
+  const deleteDefinition = functionDefinition("delete_watch_history_v2");
+  assert.match(
+    sql,
+    /alter table public\.watch_session_participants add column if not exists schema_version smallint not null default 1/,
+  );
+  assert.match(sql, /watch_session_participants_schema_version_check/);
+  assert.match(
+    applyDefinition,
+    /insert into public\.watch_session_participants \( session_id, user_id, role, joined_at, left_at, current_time_seconds, progress, updated_at, schema_version \)[\s\S]*?server_accepted_at, 2 \) on conflict/,
+  );
+  assert.match(
+    applyDefinition,
+    /current_participant\.session_id = session_id_value and current_participant\.user_id = p_user_id and current_participant\.schema_version = 2/,
+  );
+  assert.match(
+    applyDefinition,
+    /other_participant\.session_id = session_id_value and other_participant\.user_id <> p_user_id and other_participant\.schema_version = 2/,
+  );
+  assert.match(
+    applyDefinition,
+    /where participant\.session_id = session\.id and participant\.schema_version = 2/,
+  );
+  assert.match(
+    applyDefinition,
+    /owner_participant\.user_id = p_user_id and owner_participant\.schema_version = 2/,
+  );
+  assert.equal(
+    deleteDefinition.match(/participant\.schema_version = 2/g)?.length,
+    3,
+  );
+});
+
+test("viewer conflicts resolve shared identity without rewriting host-owned session content", () => {
+  const definition = functionDefinition("apply_watch_progress_v2");
+  for (const column of [
+    "provider",
+    "item_key",
+    "item_kind",
+    "item_title",
+    "episode_key",
+    "episode_title",
+    "season_key",
+    "season_title",
+    "season_number",
+    "source_url",
+    "artwork_url",
+    "duration_seconds",
+    "current_time_seconds",
+    "progress",
+    "ended_at",
+    "last_checkpoint_at",
+    "updated_at",
+  ]) {
+    assert.match(
+      definition,
+      new RegExp(
+        `${column} = case when participant_role = 'host' then [\\s\\S]*? else public\\.watch_sessions\\.${column} end`,
+      ),
+    );
+  }
+});
+
 test("v2 transactions leave active v1 tracked-title rows untouched", () => {
   for (const name of ["apply_watch_progress_v2", "delete_watch_history_v2"]) {
     assert.doesNotMatch(functionDefinition(name), /public\.user_tracked_titles/);
@@ -209,7 +290,7 @@ test("recent-person pair groups are acquired in one global order", () => {
   const definition = functionDefinition("apply_watch_progress_v2");
   assert.match(
     definition,
-    /for other_user_id in select other_participant\.user_id from public\.watch_session_participants as other_participant where other_participant\.session_id = session_id_value and other_participant\.user_id <> p_user_id order by least\(p_user_id, other_participant\.user_id\), greatest\(p_user_id, other_participant\.user_id\) loop/,
+    /for other_user_id in select other_participant\.user_id from public\.watch_session_participants as other_participant where other_participant\.session_id = session_id_value and other_participant\.user_id <> p_user_id and other_participant\.schema_version = 2 order by least\(p_user_id, other_participant\.user_id\), greatest\(p_user_id, other_participant\.user_id\) loop/,
   );
 });
 

@@ -311,7 +311,7 @@ export const WatchLibraryEpisodeSchema = z.strictObject({
   episodeTitle: z.string().trim().min(1).max(300),
   seasonId: z.string().trim().min(1).max(220).nullable(),
   seasonTitle: z.string().trim().min(1).max(300).nullable(),
-  seasonNumber: z.number().int().nonnegative().nullable(),
+  seasonNumber: z.number().int().min(0).max(1000).nullable(),
   sourceUrl: HttpUrlSchema,
   currentTime: PlaybackSecondsSchema,
   duration: PlaybackSecondsSchema,

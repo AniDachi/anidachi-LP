@@ -21,12 +21,14 @@ const NullableHttpUrlSchema = HttpUrlSchema.nullable();
 const PlaybackSecondsSchema = z.number().finite().nonnegative();
 const PlaybackProgressSchema = z.number().finite().min(0).max(1);
 const AccountGenerationSchema = z.number().int().positive();
-const StableCursorIdSchema = z
+const SeasonNumberSchema = z.number().int().min(0).max(1000);
+
+export const WatchHistoryOpaqueCursorSchema = z
   .string()
   .trim()
-  .min(3)
-  .max(260)
-  .regex(/^(crunchyroll|netflix|youtube|amazon):[^\s:][^\s]*$/);
+  .min(1)
+  .max(512)
+  .regex(/^[A-Za-z0-9_-]+$/);
 
 export const WatchHistoryResponseMetaSchema = AccountOwnedResponseMetaSchema.extend({
   schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
@@ -87,7 +89,7 @@ export const WatchCatalogSeasonSchema = z.strictObject({
   seasonKey: StableKeySchema,
   providerSeasonId: StableKeySchema.nullable(),
   title: DisplayTitleSchema,
-  seasonNumber: z.number().int().nonnegative().nullable(),
+  seasonNumber: SeasonNumberSchema.nullable(),
   order: z.number().int().nonnegative(),
   episodes: z.array(WatchCatalogEpisodeSchema).max(500),
 });
@@ -207,7 +209,7 @@ export const WatchProgressEventSchema = z.strictObject({
   episodeTitle: DisplayTitleSchema,
   seasonKey: StableKeySchema.nullable(),
   seasonTitle: NullableDisplayTitleSchema,
-  seasonNumber: z.number().int().nonnegative().nullable(),
+  seasonNumber: SeasonNumberSchema.nullable(),
   episodeNumber: z.number().finite().nonnegative().nullable(),
   sourceUrl: HttpUrlSchema,
   currentTime: PlaybackSecondsSchema,
@@ -275,7 +277,7 @@ export const WatchHistoryEpisodeSchema = z.strictObject({
   episodeTitle: DisplayTitleSchema,
   seasonKey: StableKeySchema.nullable(),
   seasonTitle: NullableDisplayTitleSchema,
-  seasonNumber: z.number().int().nonnegative().nullable(),
+  seasonNumber: SeasonNumberSchema.nullable(),
   episodeNumber: z.number().finite().nonnegative().nullable(),
   sourceUrl: HttpUrlSchema,
   currentTime: PlaybackSecondsSchema,
@@ -291,7 +293,7 @@ export const WatchHistoryNextEpisodeSchema = z.strictObject({
   episodeTitle: DisplayTitleSchema,
   seasonKey: StableKeySchema.nullable(),
   seasonTitle: NullableDisplayTitleSchema,
-  seasonNumber: z.number().int().nonnegative().nullable(),
+  seasonNumber: SeasonNumberSchema.nullable(),
   episodeNumber: z.number().finite().nonnegative().nullable(),
   sourceUrl: HttpUrlSchema,
   releasedAt: TimestampSchema.nullable(),
@@ -349,10 +351,10 @@ function addAggregateIssues(
 export const WatchHistorySeasonSchema = z.strictObject({
   seasonKey: StableKeySchema,
   seasonTitle: DisplayTitleSchema,
-  seasonNumber: z.number().int().nonnegative().nullable(),
+  seasonNumber: SeasonNumberSchema.nullable(),
   order: z.number().int().nonnegative(),
   aggregate: WatchHistoryAggregateSchema,
-  episodes: z.array(WatchHistoryEpisodeSchema).max(500),
+  episodes: z.array(WatchHistoryEpisodeSchema),
   nextEpisode: WatchHistoryNextEpisodeSchema.nullable(),
 });
 
@@ -375,7 +377,7 @@ export const WatchHistoryItemSchema = z
     artworkUrl: NullableHttpUrlSchema,
     catalogState: WatchCatalogStateSchema,
     aggregate: WatchHistoryAggregateSchema,
-    seasons: z.array(WatchHistorySeasonSchema).max(100),
+    seasons: z.array(WatchHistorySeasonSchema),
     sessions: z.array(WatchHistorySessionSchema).max(20),
     latestActivity: WatchHistoryLatestActivitySchema,
     lastWatchedAt: TimestampSchema,
@@ -431,17 +433,12 @@ export const WatchHistoryItemSchema = z
     });
   });
 
-export const WatchHistoryCursorSchema = z.strictObject({
-  lastWatchedAt: TimestampSchema,
-  stableId: StableCursorIdSchema,
-});
-
 export const WatchHistoryResponseSchema = z.strictObject({
   meta: WatchHistoryResponseMetaSchema,
   generatedAt: TimestampSchema,
   totalTitleCount: z.number().int().nonnegative(),
   items: z.array(WatchHistoryItemSchema).max(100),
-  nextCursor: WatchHistoryCursorSchema.nullable(),
+  nextCursor: WatchHistoryOpaqueCursorSchema.nullable(),
 });
 
 export const WatchProgressAckSchema = z
@@ -530,7 +527,6 @@ export type WatchHistoryLatestActivity = z.infer<
   typeof WatchHistoryLatestActivitySchema
 >;
 export type WatchHistoryItem = z.infer<typeof WatchHistoryItemSchema>;
-export type WatchHistoryCursor = z.infer<typeof WatchHistoryCursorSchema>;
 export type WatchHistoryResponse = z.infer<typeof WatchHistoryResponseSchema>;
 export type WatchProgressAck = z.infer<typeof WatchProgressAckSchema>;
 export type WatchHistoryPreferences = z.infer<typeof WatchHistoryPreferencesSchema>;

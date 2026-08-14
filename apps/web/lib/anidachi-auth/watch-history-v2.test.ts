@@ -4,6 +4,7 @@ import type {
   WatchHistoryDeletionAck,
   WatchProgressAck,
 } from "@anidachi/protocol";
+import * as watchHistoryV2Module from "./watch-history-v2";
 import {
   applyWatchProgressV2,
   buildWatchHistoryV2Response,
@@ -20,6 +21,33 @@ const USER_ID = "11111111-1111-4111-8111-111111111111";
 const EVENT_ID = "22222222-2222-4222-8222-222222222222";
 const SESSION_ID = "33333333-3333-4333-8333-333333333333";
 const NOW = "2026-08-14T12:00:00.000Z";
+
+function progressRow(overrides: Record<string, unknown> = {}) {
+  return {
+    user_id: USER_ID,
+    provider: "crunchyroll",
+    title_key: "series-one",
+    episode_key: "episode-one",
+    item_kind: "series",
+    title: "Series One",
+    artwork_url: null,
+    episode_title: "Episode One",
+    season_key: "season-one",
+    season_title: "Season One",
+    season_number: 1,
+    episode_number: 1,
+    source_url: "https://www.crunchyroll.com/watch/episode-one/demo",
+    current_time: 600,
+    duration: 1_200,
+    progress: 0.5,
+    completed_at: null,
+    latest_session_id: SESSION_ID,
+    observed_at: NOW,
+    server_order: 1,
+    history_generation: 1,
+    ...overrides,
+  };
+}
 
 function progressEvent(overrides: Record<string, unknown> = {}) {
   return {
@@ -349,8 +377,8 @@ test("canonical read includes every meaningful v2 session associated with the vi
       },
     ],
     sessions: [
-      { session: session(), provider: "crunchyroll", titleKey: "series-one", episodeKey: "episode-one" },
-      { session: earlierSession, provider: "crunchyroll", titleKey: "series-one", episodeKey: "episode-one" },
+      { session: session(), ownerProvider: "crunchyroll", ownerTitleKey: "series-one", ownerEpisodeKey: "episode-one" },
+      { session: earlierSession, ownerProvider: "crunchyroll", ownerTitleKey: "series-one", ownerEpisodeKey: "episode-one" },
     ],
   });
   assert.deepEqual(
@@ -360,6 +388,195 @@ test("canonical read includes every meaningful v2 session associated with the vi
   assert.deepEqual(
     response.items[0]?.seasons[0]?.episodes[0]?.sessions.map((value) => value.id),
     [SESSION_ID, earlierSession.id],
+  );
+});
+
+test("canonical read associates sessions only through owner-derived progress provenance", () => {
+  const response = buildWatchHistoryV2Response({
+    userId: USER_ID,
+    accountGeneration: 1,
+    generatedAt: new Date(NOW),
+    limit: 100,
+    progressRows: [progressRow()],
+    sessions: [
+      {
+        session: session(),
+        ownerProvider: "crunchyroll",
+        ownerTitleKey: "series-one",
+        ownerEpisodeKey: "episode-one",
+      },
+    ],
+  });
+
+  assert.equal(response.items[0]?.titleKey, "series-one");
+  assert.equal(response.items[0]?.sessions[0]?.id, SESSION_ID);
+});
+
+test("canonical read validates and returns an encoded reusable cursor", () => {
+  const response = buildWatchHistoryV2Response({
+    userId: USER_ID,
+    accountGeneration: 1,
+    generatedAt: new Date(NOW),
+    limit: 1,
+    progressRows: [
+      progressRow(),
+      progressRow({
+        title_key: "series-two",
+        episode_key: "episode-two",
+        title: "Series Two",
+        episode_title: "Episode Two",
+        latest_session_id: null,
+        observed_at: "2026-08-14T11:00:00.000Z",
+        server_order: 2,
+      }),
+    ],
+    sessions: [],
+  });
+
+  assert.equal(typeof response.nextCursor, "string");
+  assert.deepEqual(decodeWatchHistoryCursor(response.nextCursor!), {
+    lastWatchedAt: NOW,
+    stableId: "crunchyroll:series-one",
+  });
+});
+
+test("observed history supports 101 seasons and 501 episodes exactly", () => {
+  const seasons = buildWatchHistoryV2Response({
+    userId: USER_ID,
+    accountGeneration: 1,
+    generatedAt: new Date(NOW),
+    limit: 100,
+    progressRows: Array.from({ length: 101 }, (_, index) =>
+      progressRow({
+        episode_key: `season-${index}-episode`,
+        episode_title: `Episode ${index}`,
+        season_key: `season-${index}`,
+        season_title: `Season ${index}`,
+        season_number: index,
+        episode_number: 1,
+        latest_session_id: null,
+        server_order: index + 1,
+      }),
+    ),
+    sessions: [],
+  });
+  assert.equal(seasons.items[0]?.seasons.length, 101);
+
+  const episodes = buildWatchHistoryV2Response({
+    userId: USER_ID,
+    accountGeneration: 1,
+    generatedAt: new Date(NOW),
+    limit: 100,
+    progressRows: Array.from({ length: 501 }, (_, index) =>
+      progressRow({
+        episode_key: `episode-${index}`,
+        episode_title: `Episode ${index}`,
+        episode_number: index,
+        latest_session_id: null,
+        server_order: index + 1,
+      }),
+    ),
+    sessions: [],
+  });
+  assert.equal(episodes.items[0]?.seasons[0]?.episodes.length, 501);
+});
+
+test("history progress loading exhausts explicit PostgREST ranges", async () => {
+  const loadAll = (
+    watchHistoryV2Module as unknown as {
+      loadAllWatchHistoryProgressRows?: (
+        loadRange: (from: number, to: number) => Promise<unknown[]>,
+      ) => Promise<unknown[]>;
+    }
+  ).loadAllWatchHistoryProgressRows;
+  assert.equal(typeof loadAll, "function");
+  const ranges: Array<[number, number]> = [];
+  const rows = await loadAll!(async (from, to) => {
+    ranges.push([from, to]);
+    return ranges.length === 1
+      ? Array.from({ length: 1_000 }, (_, index) => ({ index }))
+      : [{ index: 1_000 }, { index: 1_001 }];
+  });
+
+  assert.deepEqual(ranges, [
+    [0, 999],
+    [1_000, 1_999],
+  ]);
+  assert.equal(rows.length, 1_002);
+});
+
+test("room recreation uses only the owner's current-generation progress mapping", () => {
+  const buildSource = (
+    watchHistoryV2Module as unknown as {
+      buildOwnerDerivedWatchHistoryRoomSource?: (params: unknown) => unknown;
+    }
+  ).buildOwnerDerivedWatchHistoryRoomSource;
+  assert.equal(typeof buildSource, "function");
+  assert.deepEqual(
+    buildSource!({
+      userId: USER_ID,
+      sessionId: SESSION_ID,
+      accountGeneration: 7,
+      participant: {
+        session_id: SESSION_ID,
+        user_id: USER_ID,
+        schema_version: 2,
+      },
+      session: {
+        id: SESSION_ID,
+        schema_version: 2,
+        room_id: "room-one",
+        client_session_key: null,
+      },
+      progress: {
+        user_id: USER_ID,
+        latest_session_id: SESSION_ID,
+        history_generation: 7,
+        title_key: "owner-series",
+        episode_key: "owner-episode",
+        source_url: "https://www.crunchyroll.com/watch/owner-episode/demo",
+        title: "Owner Series",
+        episode_title: "Owner Episode",
+        item_kind: "series",
+      },
+    }),
+    {
+      sessionId: SESSION_ID,
+      showId: "owner-series",
+      episodeId: "owner-episode",
+      sourceUrl: "https://www.crunchyroll.com/watch/owner-episode/demo",
+      title: "Owner Series - Owner Episode",
+    },
+  );
+  assert.equal(
+    buildSource!({
+      userId: USER_ID,
+      sessionId: SESSION_ID,
+      accountGeneration: 8,
+      participant: {
+        session_id: SESSION_ID,
+        user_id: USER_ID,
+        schema_version: 2,
+      },
+      session: {
+        id: SESSION_ID,
+        schema_version: 2,
+        room_id: "room-one",
+        client_session_key: null,
+      },
+      progress: {
+        user_id: USER_ID,
+        latest_session_id: SESSION_ID,
+        history_generation: 7,
+        title_key: "owner-series",
+        episode_key: "owner-episode",
+        source_url: "https://www.crunchyroll.com/watch/owner-episode/demo",
+        title: "Owner Series",
+        episode_title: "Owner Episode",
+        item_kind: "series",
+      },
+    }),
+    null,
   );
 });
 

@@ -1,11 +1,10 @@
 import {
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesUpdateSchema,
-  type WatchHistoryCursor,
-  WatchHistoryDeletionAck,
-  WatchHistoryPreferencesResponse,
-  WatchHistoryResponse,
-  WatchProgressAck,
+  type WatchHistoryDeletionAck,
+  type WatchHistoryPreferencesResponse,
+  type WatchHistoryResponse,
+  type WatchProgressAck,
 } from "@anidachi/protocol";
 import { type NextRequest, NextResponse } from "next/server";
 import { getApiSession, type ApiSession } from "./api-session";
@@ -35,6 +34,7 @@ import {
   supabaseWatchHistoryV2Store,
   updateWatchHistoryPreferencesV2,
   WatchHistoryV2ApiError,
+  type WatchHistoryCursor,
 } from "./watch-history-v2";
 
 const PROGRESS_BODY_BYTES = 64 * 1_024;
@@ -129,6 +129,7 @@ export function createWatchHistoryV2RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateEmptyQuery(request.nextUrl.searchParams);
         return NextResponse.json(
           await dependencies.getPreferences({ userId: session.userId }),
         );
@@ -329,6 +330,16 @@ async function readBoundedJson(request: Request, maxBytes: number): Promise<unkn
     return JSON.parse(text);
   } catch {
     throw new WatchHistoryV2ApiError(400, "INVALID_JSON", "Request body must be valid JSON");
+  }
+}
+
+function validateEmptyQuery(searchParams: URLSearchParams): void {
+  if (searchParams.size > 0) {
+    throw new WatchHistoryV2ApiError(
+      400,
+      "INVALID_QUERY",
+      "Preferences query is invalid",
+    );
   }
 }
 

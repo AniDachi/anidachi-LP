@@ -594,6 +594,10 @@ describe("room protocol schemas", () => {
 
     expect(source.provider).toBe("crunchyroll");
     expect(source.episodeNumber).toBe(2);
+    expect(WatchSourceDescriptorSchema.parse({ ...source, seasonNumber: 0 }).seasonNumber).toBe(0);
+    expect(() =>
+      WatchSourceDescriptorSchema.parse({ ...source, seasonNumber: 1001 }),
+    ).toThrow();
 
     const event = ServerEventSchema.parse({
       type: "SOURCE_CHANGED",

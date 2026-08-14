@@ -3,7 +3,6 @@ import {
   MAX_ROOM_HISTORY_ATTESTATION_CHARS,
   WATCH_HISTORY_SCHEMA_VERSION,
   WatchCatalogSnapshotInputSchema,
-  WatchHistoryCursorSchema,
   WatchHistoryDeletionAckSchema,
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesSchema,
@@ -529,10 +528,7 @@ describe("watch history v2 read and mutation contracts", () => {
           lastWatchedAt: NOW,
         },
       ],
-      nextCursor: {
-        lastWatchedAt: NOW,
-        stableId: "youtube:abcdefghijk",
-      },
+      nextCursor: "opaque_cursor-v2",
     };
   }
 
@@ -675,16 +671,169 @@ describe("watch history v2 read and mutation contracts", () => {
     );
   });
 
-  it("requires a stable provider:title cursor identity", () => {
-    const cursor = {
-      lastWatchedAt: NOW,
-      stableId: "crunchyroll:series-one",
-    };
-    const serialized = JSON.stringify(WatchHistoryCursorSchema.parse(cursor));
-    expect(WatchHistoryCursorSchema.parse(JSON.parse(serialized))).toEqual(cursor);
+  it("exposes only a bounded opaque base64url cursor", () => {
+    const response = responseFixture();
+    expect(WatchHistoryResponseSchema.parse(response).nextCursor).toBe(
+      "opaque_cursor-v2",
+    );
     expect(() =>
-      WatchHistoryCursorSchema.parse({ lastWatchedAt: NOW, stableId: "series-one" }),
+      WatchHistoryResponseSchema.parse({ ...response, nextCursor: "not opaque" }),
     ).toThrow();
+    expect(() =>
+      WatchHistoryResponseSchema.parse({ ...response, nextCursor: "a".repeat(513) }),
+    ).toThrow();
+    expect(() =>
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        nextCursor: { lastWatchedAt: NOW, stableId: "crunchyroll:series-one" },
+      }),
+    ).toThrow();
+  });
+
+  it("keeps observed history exact beyond the former nested array caps", () => {
+    const response = responseFixture();
+    const unavailableItem = response.items[1];
+    if (!unavailableItem) {
+      throw new Error("Response fixture must include an unavailable item");
+    }
+    const observedEpisode = {
+      ...canonicalEpisodeState(),
+      sessions: [],
+    };
+    const observedSeason = {
+      seasonKey: "season-0",
+      seasonTitle: "Season 0",
+      seasonNumber: 0,
+      order: 0,
+      aggregate: {
+        completedEpisodes: 0,
+        availableEpisodes: null,
+        progress: null,
+      },
+      episodes: [observedEpisode],
+      nextEpisode: null,
+    };
+    const seasons = Array.from({ length: 101 }, (_, index) => ({
+      ...observedSeason,
+      seasonKey: `season-${index}`,
+      seasonTitle: `Season ${index}`,
+      seasonNumber: index,
+      order: index,
+      episodes: [
+        {
+          ...observedEpisode,
+          episodeKey: `season-${index}-episode-1`,
+          seasonKey: `season-${index}`,
+          seasonTitle: `Season ${index}`,
+          seasonNumber: index,
+        },
+      ],
+    }));
+    expect(
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        items: [{ ...unavailableItem, itemKind: "series", seasons }],
+        nextCursor: null,
+      }).items[0]?.seasons,
+    ).toHaveLength(101);
+
+    const episodes = Array.from({ length: 501 }, (_, index) => ({
+      ...observedEpisode,
+      episodeKey: `episode-${index}`,
+      episodeTitle: `Episode ${index}`,
+      seasonKey: "season-0",
+      seasonTitle: "Season 0",
+      seasonNumber: 0,
+      episodeNumber: index,
+    }));
+    expect(
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        items: [
+          {
+            ...unavailableItem,
+            itemKind: "series",
+            seasons: [{ ...observedSeason, episodes }],
+          },
+        ],
+        nextCursor: null,
+      }).items[0]?.seasons[0]?.episodes,
+    ).toHaveLength(501);
+  });
+
+  it("accepts season zero and rejects season numbers above 1000", () => {
+    expect(
+      WatchProgressEventSchema.parse({ ...progressEvent(), seasonNumber: 0 })
+        .seasonNumber,
+    ).toBe(0);
+    expect(() =>
+      WatchProgressEventSchema.parse({ ...progressEvent(), seasonNumber: 1001 }),
+    ).toThrow();
+  });
+
+  it("keeps a maximum-shape 20-session acknowledgement below one MiB", () => {
+    const maxUrl = (label: string) => {
+      const prefix = `https://example.com/${label}/`;
+      return prefix + "a".repeat(2_048 - prefix.length);
+    };
+    const uuid = (index: number) =>
+      `00000000-0000-4000-8000-${index.toString(16).padStart(12, "0")}`;
+    const sessions = Array.from({ length: 20 }, (_, sessionIndex) => ({
+      id: uuid(sessionIndex + 10),
+      roomId: "r".repeat(128),
+      roomGeneration: sessionIndex + 1,
+      hostUserId: HOST_ID,
+      kind: "shared" as const,
+      sourceGeneration: sessionIndex + 1,
+      currentTime: Number.MAX_SAFE_INTEGER,
+      duration: Number.MAX_SAFE_INTEGER,
+      progress: 1,
+      startedAt: EARLIER,
+      endedAt: NOW,
+      lastWatchedAt: NOW,
+      participants: Array.from({ length: 15 }, (_, participantIndex) => ({
+        user: {
+          userId: uuid(100 + sessionIndex * 15 + participantIndex),
+          handle: "h".repeat(24),
+          displayName: "D".repeat(80),
+          avatarUrl: maxUrl(`avatar-${sessionIndex}-${participantIndex}`),
+        },
+        role: participantIndex === 0 ? ("host" as const) : ("viewer" as const),
+        currentTime: Number.MAX_SAFE_INTEGER,
+        progress: 1,
+        joinedAt: EARLIER,
+        leftAt: NOW,
+        updatedAt: NOW,
+      })),
+    }));
+    const maximumShape = WatchProgressAckSchema.parse({
+      meta: accountMeta(),
+      schemaVersion: WATCH_HISTORY_SCHEMA_VERSION,
+      acceptedEventId: EVENT_ID,
+      acceptedAt: NOW,
+      accountGeneration: 4,
+      duplicate: false,
+      episode: {
+        episodeKey: "e".repeat(220),
+        episodeTitle: "E".repeat(300),
+        seasonKey: "s".repeat(220),
+        seasonTitle: "S".repeat(300),
+        seasonNumber: 1000,
+        episodeNumber: Number.MAX_SAFE_INTEGER,
+        sourceUrl: maxUrl("episode"),
+        currentTime: Number.MAX_SAFE_INTEGER,
+        duration: Number.MAX_SAFE_INTEGER,
+        progress: 1,
+        completedAt: NOW,
+        lastWatchedAt: NOW,
+        sessions,
+      },
+    });
+    const acknowledgementBytes = new TextEncoder().encode(
+      JSON.stringify(maximumShape),
+    ).byteLength;
+    expect(acknowledgementBytes).toBeGreaterThan(256 * 1_024);
+    expect(acknowledgementBytes).toBeLessThan(1_024 * 1_024);
   });
 
   it("keeps the strict v1 watch library contract separate from v2", () => {

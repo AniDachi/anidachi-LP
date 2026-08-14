@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/debug-log.ts": {
-    "mtime": 1786689011.2498336,
-    "ast_hash": "61788804d309bc97fe8a0c562e44b5c7",
+    "mtime": 1786704242.2232566,
+    "ast_hash": "7159eaf048d0fc7767a5adc34ccbd9fb",
     "semantic_hash": ""
   },
   "apps/extension/src/debug-probe.ts": {
@@ -425,8 +425,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/debug-log.test.ts": {
-    "mtime": 1786689011.2592576,
-    "ast_hash": "e2ce2b06eb6541eeefe75f5683d0bde3",
+    "mtime": 1786704221.4692066,
+    "ast_hash": "b2a85362fa94e8716d9c533f6ae9056c",
     "semantic_hash": ""
   },
   "apps/extension/test/diagnostic-log.test.ts": {
@@ -2095,8 +2095,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/social.test.ts": {
-    "mtime": 1786689011.3122585,
-    "ast_hash": "7bd7b112a052cfcfd5beac7b9ff83106",
+    "mtime": 1786706918.6330159,
+    "ast_hash": "a5c601dada3aa84d806f0277bf35b8a8",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/social.ts": {
@@ -2155,8 +2155,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-library.ts": {
-    "mtime": 1786689011.3130026,
-    "ast_hash": "c1ddbcd8c71b6c1533d77bbc2b785242",
+    "mtime": 1786711953.1886635,
+    "ast_hash": "c4ab582c37534f92d75e614da3514443",
     "semantic_hash": ""
   },
   "apps/web/lib/anime-data.ts": {
@@ -2755,13 +2755,13 @@
     "semantic_hash": ""
   },
   "packages/protocol/src/types.ts": {
-    "mtime": 1786702685.2464135,
-    "ast_hash": "c30aaec8aadbdadfa7084e834a3ba701",
+    "mtime": 1786711770.2265434,
+    "ast_hash": "4c2559bd6aeb5a48b63189b46b2b6b8d",
     "semantic_hash": ""
   },
   "packages/protocol/test/protocol.test.ts": {
-    "mtime": 1786702741.6498594,
-    "ast_hash": "15f8791f04ff776731f9c63d6b340340",
+    "mtime": 1786711567.8288643,
+    "ast_hash": "53b5cc2df10f852815681577e693e299",
     "semantic_hash": ""
   },
   "packages/protocol/tsconfig.json": {
@@ -4205,13 +4205,13 @@
     "semantic_hash": ""
   },
   "packages/protocol/src/account.ts": {
-    "mtime": 1786689011.3761303,
-    "ast_hash": "5aef7da40f3b043a973bba7f9e73fa9b",
+    "mtime": 1786711770.2647564,
+    "ast_hash": "71a991f5786e402709129f0af12082e9",
     "semantic_hash": ""
   },
   "packages/protocol/test/account.test.ts": {
-    "mtime": 1786689011.376549,
-    "ast_hash": "14c0a8946f5ea02c17ac567343a4ad10",
+    "mtime": 1786711567.8666985,
+    "ast_hash": "ef7fa0ef2660a99c421e2dc89bf52fe5",
     "semantic_hash": ""
   },
   "apps/extension/src/popup-people-model.ts": {
@@ -4460,13 +4460,13 @@
     "semantic_hash": ""
   },
   "packages/protocol/src/watch-history.ts": {
-    "mtime": 1786702685.2839806,
-    "ast_hash": "279eb18d55d04e2ae2a6e7f0bfea74b9",
+    "mtime": 1786711770.1889815,
+    "ast_hash": "0dcb9ca311789ac15ef2f8f5a56bb389",
     "semantic_hash": ""
   },
   "packages/protocol/test/watch-history.test.ts": {
-    "mtime": 1786702741.6131918,
-    "ast_hash": "899b39a59c6b779e92b02134816dc869",
+    "mtime": 1786711546.8277113,
+    "ast_hash": "538964accdfdb57a5927f734ad1a7db6",
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-08-13-watch-history-catalog-progress-implementation.md": {
@@ -4487,6 +4487,76 @@
   "docs/superpowers/specs/2026-08-14-watch-history-room-authority-threat-model.md": {
     "mtime": 1786702409.9848459,
     "ast_hash": "0652b987ca30daadae036129f5d56ec7",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/watch-history/v2/delete/route.ts": {
+    "mtime": 1786708426.8929203,
+    "ast_hash": "3312ca22b667b81ed5916256c2c6a2ec",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/watch-history/v2/preferences/route.ts": {
+    "mtime": 1786708426.8340318,
+    "ast_hash": "43239bc3352c8f82783e68e99820450d",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/watch-history/v2/progress/route.ts": {
+    "mtime": 1786708426.7750127,
+    "ast_hash": "78c644b16d0411b84495a74bded3698a",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/watch-history/v2/rooms/route.ts": {
+    "mtime": 1786708426.9524808,
+    "ast_hash": "4d0e7485356816d2b020402f38442470",
+    "semantic_hash": ""
+  },
+  "apps/web/app/api/watch-history/v2/route.ts": {
+    "mtime": 1786708426.7150505,
+    "ast_hash": "dbff277e0a82fa27277abe065d4c63d8",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/watch-history-authority.test.ts": {
+    "mtime": 1786708749.8748672,
+    "ast_hash": "591a9ef9e4b4e3d06cf1172e0b1d921e",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/watch-history-authority.ts": {
+    "mtime": 1786708767.688843,
+    "ast_hash": "f121077805bc147d400aec8f6cb89ce1",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/watch-history-v2-routes.test.ts": {
+    "mtime": 1786711645.7747664,
+    "ast_hash": "05415d3ec4dfbe0f27f7cc572e2120e6",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/watch-history-v2-routes.ts": {
+    "mtime": 1786712107.8429773,
+    "ast_hash": "84c7502bf304026f452c6e1456a4b286",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/watch-history-v2-sql.test.ts": {
+    "mtime": 1786712354.5411775,
+    "ast_hash": "fb5ba1fddc71d9a55e5a537548b9dc09",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/watch-history-v2.test.ts": {
+    "mtime": 1786712354.5042155,
+    "ast_hash": "2f77e194784f211b8debcb176e29ba47",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/watch-history-v2.ts": {
+    "mtime": 1786712302.436011,
+    "ast_hash": "55da07bd149d99fef1b0de304266130e",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/watch-library-v1-v2-coexistence.test.ts": {
+    "mtime": 1786711628.142381,
+    "ast_hash": "1985ee19bdd5cbd6bef4823948caaba7",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20260814010000_watch_history_v2_foundation.sql": {
+    "mtime": 1786711835.6933272,
+    "ast_hash": "3cad1e02d00d5a1e663f57465566428d",
     "semantic_hash": ""
   }
 }

@@ -22,7 +22,7 @@ create table public.watch_episode_progress (
   episode_title text not null check (char_length(episode_title) between 1 and 300),
   season_key text check (season_key is null or char_length(season_key) between 1 and 220),
   season_title text check (season_title is null or char_length(season_title) between 1 and 300),
-  season_number integer check (season_number is null or season_number >= 0),
+  season_number integer check (season_number is null or season_number between 0 and 1000),
   episode_number double precision check (episode_number is null or episode_number >= 0),
   source_url text not null check (char_length(source_url) between 1 and 2048),
   current_time double precision not null check (current_time >= 0),
@@ -39,6 +39,10 @@ create table public.watch_episode_progress (
 );
 
 -- Receipts are exact canonical acknowledgements retained for exactly 14 days.
+-- The maximum protocol shape is one episode with 20 sessions x 15 participants
+-- and maximum-sized bounded fields. Its UTF-8 fixture is above 256 KiB and below
+-- 1 MiB, so 1 MiB is the smallest power-of-two bound with margin; octet_length
+-- keeps the SQL check in the same serialized-byte unit as that fixture.
 -- Cleanup is opportunistic inside later account-locked write transactions.
 create table public.watch_history_receipts (
   user_id uuid not null references public.users (id) on delete cascade,
@@ -46,7 +50,7 @@ create table public.watch_history_receipts (
   kind text not null check (kind in ('progress', 'delete')),
   acknowledgement jsonb not null check (
     pg_catalog.jsonb_typeof(acknowledgement) = 'object'
-    and pg_catalog.pg_column_size(acknowledgement) <= 262144
+    and pg_catalog.octet_length(acknowledgement::text) <= 1048576
   ),
   accepted_at timestamptz not null default pg_catalog.transaction_timestamp(),
   expires_at timestamptz not null default (
@@ -183,6 +187,27 @@ alter table public.watch_sessions
         and ended_at is not null
       )
     );
+
+alter table public.watch_sessions
+  drop constraint if exists watch_sessions_season_number_check;
+
+alter table public.watch_sessions
+  add constraint watch_sessions_season_number_check
+    check (season_number is null or season_number between 0 and 1000);
+
+alter table public.watch_progress_checkpoints
+  drop constraint if exists watch_progress_checkpoints_season_number_check;
+
+alter table public.watch_progress_checkpoints
+  add constraint watch_progress_checkpoints_season_number_check
+    check (season_number is null or season_number between 0 and 1000);
+
+alter table public.watch_session_participants
+  add column if not exists schema_version smallint not null default 1;
+
+alter table public.watch_session_participants
+  add constraint watch_session_participants_schema_version_check
+    check (schema_version in (1, 2));
 
 alter table public.user_tracked_titles
   add column if not exists schema_version smallint not null default 1,
@@ -616,23 +641,42 @@ begin
     on conflict (room_id, room_generation, source_generation)
       where schema_version = 2 and room_id is not null
     do update set
-      provider = excluded.provider,
-      item_key = excluded.item_key,
-      item_kind = excluded.item_kind,
-      item_title = excluded.item_title,
-      episode_key = excluded.episode_key,
-      episode_title = excluded.episode_title,
-      season_key = excluded.season_key,
-      season_title = excluded.season_title,
-      season_number = excluded.season_number,
-      source_url = excluded.source_url,
-      artwork_url = coalesce(excluded.artwork_url, public.watch_sessions.artwork_url),
-      duration_seconds = excluded.duration_seconds,
-      current_time_seconds = excluded.current_time_seconds,
-      progress = excluded.progress,
-      ended_at = coalesce(excluded.ended_at, public.watch_sessions.ended_at),
-      last_checkpoint_at = excluded.last_checkpoint_at,
-      updated_at = excluded.updated_at,
+      provider = case when participant_role = 'host'
+        then excluded.provider else public.watch_sessions.provider end,
+      item_key = case when participant_role = 'host'
+        then excluded.item_key else public.watch_sessions.item_key end,
+      item_kind = case when participant_role = 'host'
+        then excluded.item_kind else public.watch_sessions.item_kind end,
+      item_title = case when participant_role = 'host'
+        then excluded.item_title else public.watch_sessions.item_title end,
+      episode_key = case when participant_role = 'host'
+        then excluded.episode_key else public.watch_sessions.episode_key end,
+      episode_title = case when participant_role = 'host'
+        then excluded.episode_title else public.watch_sessions.episode_title end,
+      season_key = case when participant_role = 'host'
+        then excluded.season_key else public.watch_sessions.season_key end,
+      season_title = case when participant_role = 'host'
+        then excluded.season_title else public.watch_sessions.season_title end,
+      season_number = case when participant_role = 'host'
+        then excluded.season_number else public.watch_sessions.season_number end,
+      source_url = case when participant_role = 'host'
+        then excluded.source_url else public.watch_sessions.source_url end,
+      artwork_url = case when participant_role = 'host'
+        then coalesce(excluded.artwork_url, public.watch_sessions.artwork_url)
+        else public.watch_sessions.artwork_url end,
+      duration_seconds = case when participant_role = 'host'
+        then excluded.duration_seconds else public.watch_sessions.duration_seconds end,
+      current_time_seconds = case when participant_role = 'host'
+        then excluded.current_time_seconds else public.watch_sessions.current_time_seconds end,
+      progress = case when participant_role = 'host'
+        then excluded.progress else public.watch_sessions.progress end,
+      ended_at = case when participant_role = 'host'
+        then coalesce(excluded.ended_at, public.watch_sessions.ended_at)
+        else public.watch_sessions.ended_at end,
+      last_checkpoint_at = case when participant_role = 'host'
+        then excluded.last_checkpoint_at else public.watch_sessions.last_checkpoint_at end,
+      updated_at = case when participant_role = 'host'
+        then excluded.updated_at else public.watch_sessions.updated_at end,
       history_generation = public.watch_sessions.history_generation
     returning id into session_id_value;
   end if;
@@ -645,7 +689,8 @@ begin
     left_at,
     current_time_seconds,
     progress,
-    updated_at
+    updated_at,
+    schema_version
   ) values (
     session_id_value,
     p_user_id,
@@ -655,21 +700,30 @@ begin
       then server_accepted_at else null end,
     least(pg_catalog.floor((p_event ->> 'currentTime')::double precision), 2147483647)::integer,
     (p_event ->> 'progress')::double precision,
-    server_accepted_at
+    server_accepted_at,
+    2
   )
   on conflict (session_id, user_id) do update set
     role = excluded.role,
     left_at = excluded.left_at,
     current_time_seconds = excluded.current_time_seconds,
     progress = excluded.progress,
-    updated_at = excluded.updated_at;
+    updated_at = excluded.updated_at,
+    schema_version = excluded.schema_version;
 
-  if room_row.room_id is not null then
+  if room_row.room_id is not null and exists (
+    select 1
+    from public.watch_session_participants as current_participant
+    where current_participant.session_id = session_id_value
+      and current_participant.user_id = p_user_id
+      and current_participant.schema_version = 2
+  ) then
     for other_user_id in
       select other_participant.user_id
       from public.watch_session_participants as other_participant
       where other_participant.session_id = session_id_value
         and other_participant.user_id <> p_user_id
+        and other_participant.schema_version = 2
       order by
         least(p_user_id, other_participant.user_id),
         greatest(p_user_id, other_participant.user_id)
@@ -839,6 +893,7 @@ begin
                 left join public.profiles as profile
                   on profile.user_id = participant.user_id
                 where participant.session_id = session.id
+                  and participant.schema_version = 2
                 order by participant.joined_at, participant.user_id
                 limit 15
               ) as bounded_participant
@@ -848,6 +903,7 @@ begin
         inner join public.watch_session_participants as owner_participant
           on owner_participant.session_id = session.id
           and owner_participant.user_id = p_user_id
+          and owner_participant.schema_version = 2
         where session.schema_version = 2
           and (
             session.room_id is not null
@@ -1057,6 +1113,7 @@ begin
     using public.watch_sessions as session
     where participant.session_id = session.id
       and participant.user_id = p_user_id
+      and participant.schema_version = 2
       and session.schema_version = 2;
 
     delete from public.watch_history_deletions as old_deletion
@@ -1129,6 +1186,7 @@ begin
     using public.watch_sessions as session
     where participant.session_id = session.id
       and participant.user_id = p_user_id
+      and participant.schema_version = 2
       and session.schema_version = 2
       and session.provider = provider_value
       and session.item_key = title_key_value;
@@ -1180,6 +1238,7 @@ begin
     using public.watch_sessions as session
     where participant.session_id = session.id
       and participant.user_id = p_user_id
+      and participant.schema_version = 2
       and session.schema_version = 2
       and session.provider = provider_value
       and session.item_key = title_key_value

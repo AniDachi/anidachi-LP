@@ -5,6 +5,7 @@ import {
   createWatchHistoryV2RouteHandlers,
   type WatchHistoryV2RouteDependencies,
 } from "./watch-history-v2-routes";
+import { encodeWatchHistoryCursor } from "./watch-history-v2";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const EVENT_ID = "22222222-2222-4222-8222-222222222222";
@@ -222,6 +223,39 @@ test("history validates limit and opaque cursor boundaries", async () => {
   }
 });
 
+test("history returns an opaque cursor that round-trips unchanged over HTTP", async () => {
+  const opaqueCursor = encodeWatchHistoryCursor({
+    lastWatchedAt: NOW,
+    stableId: "crunchyroll:series-one",
+  });
+  const receivedCursors: unknown[] = [];
+  const deps = dependencies();
+  const routes = createWatchHistoryV2RouteHandlers({
+    ...deps,
+    listHistory: async (params) => {
+      receivedCursors.push(params.cursor);
+      return {
+        ...(await deps.listHistory(params)),
+        nextCursor: receivedCursors.length === 1 ? opaqueCursor : null,
+      };
+    },
+  });
+
+  const first = await routes.getHistory(request("/api/watch-history/v2?limit=1"));
+  assert.equal(first.status, 200);
+  const firstBody = await first.json();
+  assert.equal(firstBody.nextCursor, opaqueCursor);
+
+  const second = await routes.getHistory(
+    request(`/api/watch-history/v2?limit=1&cursor=${firstBody.nextCursor}`),
+  );
+  assert.equal(second.status, 200);
+  assert.deepEqual(receivedCursors, [
+    null,
+    { lastWatchedAt: NOW, stableId: "crunchyroll:series-one" },
+  ]);
+});
+
 test("history rejects unknown and duplicate query parameters", async () => {
   const routes = createWatchHistoryV2RouteHandlers(dependencies());
   for (const query of [
@@ -252,6 +286,14 @@ test("preferences expose only the YouTube flag and reject unknown fields", async
   );
   assert.equal(patchResponse.status, 400);
   assert.equal((await patchResponse.json()).code, "INVALID_REQUEST");
+
+  for (const query of ["unused=1", "youtubeHistoryEnabled=true"]) {
+    const getWithQuery = await routes.getPreferences(
+      request(`/api/watch-history/v2/preferences?${query}`),
+    );
+    assert.equal(getWithQuery.status, 400);
+    assert.equal((await getWithQuery.json()).code, "INVALID_QUERY");
+  }
 });
 
 test("delete and room recreation require strict bodies and return only service results", async () => {

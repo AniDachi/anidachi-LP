@@ -92,7 +92,7 @@ export const WatchSourceDescriptorSchema = z.object({
   title: z.string().min(1).max(MAX_WATCH_TITLE_CHARS),
   seriesTitle: z.string().min(1).max(MAX_WATCH_TITLE_CHARS).optional(),
   episodeTitle: z.string().min(1).max(MAX_WATCH_TITLE_CHARS).optional(),
-  seasonNumber: z.number().int().positive().optional(),
+  seasonNumber: z.number().int().min(0).max(1000).optional(),
   episodeNumber: z.number().int().nonnegative().optional(),
   duration: z.number().nonnegative().optional(),
   posterUrl: UrlSchema.optional(),
