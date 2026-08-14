@@ -5,6 +5,7 @@ import {
   WatchItemKindSchema,
   WatchProviderSchema,
 } from "./account";
+import { RoomHistoryAuthoritySchema } from "./types";
 
 export const WATCH_HISTORY_SCHEMA_VERSION = 2 as const;
 export const WATCH_CATALOG_MAX_BYTES = 512 * 1_024;
@@ -29,6 +30,7 @@ const StableCursorIdSchema = z
 
 export const WatchHistoryResponseMetaSchema = AccountOwnedResponseMetaSchema.extend({
   schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
+  accountGeneration: AccountGenerationSchema,
 });
 
 export const WatchCatalogCompletenessSchema = z.enum(["complete", "partial"]);
@@ -189,10 +191,7 @@ export const WatchCatalogAckSchema = z.strictObject({
   retainedOlderComplete: z.boolean(),
 });
 
-export const WatchSharedRoomProofSchema = z.strictObject({
-  roomId: RoomIdSchema,
-  sourceGeneration: z.number().int().positive(),
-});
+export const WatchSharedRoomAuthoritySchema = RoomHistoryAuthoritySchema;
 
 export const WatchProgressEventSchema = z.strictObject({
   schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
@@ -216,7 +215,7 @@ export const WatchProgressEventSchema = z.strictObject({
   progress: PlaybackProgressSchema,
   observedAt: TimestampSchema,
   kind: WatchProgressEventKindSchema,
-  sharedRoom: WatchSharedRoomProofSchema.nullable().optional(),
+  sharedRoom: WatchSharedRoomAuthoritySchema.nullable().optional(),
 });
 
 export const WatchHistoryParticipantSchema = z.strictObject({
@@ -233,6 +232,7 @@ export const WatchHistorySessionSchema = z
   .strictObject({
     id: DurableIdSchema,
     roomId: RoomIdSchema.nullable(),
+    roomGeneration: z.number().int().positive().nullable(),
     hostUserId: DurableIdSchema,
     kind: z.enum(["solo", "shared"]),
     sourceGeneration: z.number().int().positive().nullable(),
@@ -246,17 +246,21 @@ export const WatchHistorySessionSchema = z
   })
   .superRefine((session, context) => {
     const hasSharedIdentity =
-      session.roomId !== null && session.sourceGeneration !== null;
+      session.roomId !== null &&
+      session.roomGeneration !== null &&
+      session.sourceGeneration !== null;
     if (session.kind === "shared" && !hasSharedIdentity) {
       context.addIssue({
         code: "custom",
-        message: "Shared sessions require roomId and sourceGeneration",
+        message: "Shared sessions require roomId, roomGeneration, and sourceGeneration",
         path: ["roomId"],
       });
     }
     if (
       session.kind === "solo" &&
-      (session.roomId !== null || session.sourceGeneration !== null)
+      (session.roomId !== null ||
+        session.roomGeneration !== null ||
+        session.sourceGeneration !== null)
     ) {
       context.addIssue({
         code: "custom",
@@ -440,15 +444,20 @@ export const WatchHistoryResponseSchema = z.strictObject({
   nextCursor: WatchHistoryCursorSchema.nullable(),
 });
 
-export const WatchProgressAckSchema = z.strictObject({
-  meta: WatchHistoryResponseMetaSchema,
-  schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
-  acceptedEventId: DurableIdSchema,
-  acceptedAt: TimestampSchema,
-  accountGeneration: AccountGenerationSchema,
-  duplicate: z.boolean(),
-  episode: WatchHistoryEpisodeSchema,
-});
+export const WatchProgressAckSchema = z
+  .strictObject({
+    meta: WatchHistoryResponseMetaSchema,
+    schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
+    acceptedEventId: DurableIdSchema,
+    acceptedAt: TimestampSchema,
+    accountGeneration: AccountGenerationSchema,
+    duplicate: z.boolean(),
+    episode: WatchHistoryEpisodeSchema,
+  })
+  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+    message: "Acknowledgement generation must match response metadata",
+    path: ["meta", "accountGeneration"],
+  });
 
 export const WatchHistoryPreferencesSchema = z.strictObject({
   youtubeHistoryEnabled: z.boolean().default(false),
@@ -471,14 +480,19 @@ export const WatchHistoryDeletionRequestSchema = z.strictObject({
   requestedAt: TimestampSchema,
 });
 
-export const WatchHistoryDeletionAckSchema = z.strictObject({
-  meta: WatchHistoryResponseMetaSchema,
-  schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
-  clientMutationId: DurableIdSchema,
-  accountGeneration: AccountGenerationSchema,
-  target: WatchHistoryDeleteScopeSchema,
-  deletedAt: TimestampSchema,
-});
+export const WatchHistoryDeletionAckSchema = z
+  .strictObject({
+    meta: WatchHistoryResponseMetaSchema,
+    schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
+    clientMutationId: DurableIdSchema,
+    accountGeneration: AccountGenerationSchema,
+    target: WatchHistoryDeleteScopeSchema,
+    deletedAt: TimestampSchema,
+  })
+  .refine((ack) => ack.meta.accountGeneration === ack.accountGeneration, {
+    message: "Deletion generation must match response metadata",
+    path: ["meta", "accountGeneration"],
+  });
 
 export type WatchHistoryResponseMeta = z.infer<
   typeof WatchHistoryResponseMetaSchema
@@ -498,7 +512,9 @@ export type WatchCatalogSnapshotInput = z.infer<
   typeof WatchCatalogSnapshotInputSchema
 >;
 export type WatchCatalogAck = z.infer<typeof WatchCatalogAckSchema>;
-export type WatchSharedRoomProof = z.infer<typeof WatchSharedRoomProofSchema>;
+export type WatchSharedRoomAuthority = z.infer<
+  typeof WatchSharedRoomAuthoritySchema
+>;
 export type WatchProgressEvent = z.infer<typeof WatchProgressEventSchema>;
 export type WatchHistoryParticipant = z.infer<
   typeof WatchHistoryParticipantSchema

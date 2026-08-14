@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  MAX_ROOM_HISTORY_ATTESTATION_CHARS,
   WATCH_HISTORY_SCHEMA_VERSION,
   WatchCatalogSnapshotInputSchema,
   WatchHistoryCursorSchema,
@@ -26,6 +27,7 @@ function accountMeta() {
     serverTime: NOW,
     schemaVersion: WATCH_HISTORY_SCHEMA_VERSION,
     ownerUserId: USER_ID,
+    accountGeneration: 4,
   };
 }
 
@@ -293,7 +295,7 @@ describe("watch history v2 catalog contracts", () => {
 });
 
 describe("watch history v2 progress contracts", () => {
-  it("accepts meaningful event kinds including backward seeks and shared room proof", () => {
+  it("accepts meaningful event kinds including backward seeks and shared room authority", () => {
     expect(WatchProgressEventSchema.parse(progressEvent())).toEqual(progressEvent());
     expect(
       WatchProgressEventSchema.parse({
@@ -307,9 +309,23 @@ describe("watch history v2 progress contracts", () => {
       WatchProgressEventSchema.parse({
         ...progressEvent(),
         kind: "pause",
-        sharedRoom: { roomId: "room-one", sourceGeneration: 3 },
+        sharedRoom: {
+          roomId: "room-one",
+          participantSessionId: "participant-session-one",
+          roomGeneration: 2,
+          sourceGeneration: 3,
+          attestation: "opaque.signed.attestation",
+        },
       }),
-    ).toMatchObject({ sharedRoom: { roomId: "room-one", sourceGeneration: 3 } });
+    ).toMatchObject({
+      sharedRoom: {
+        roomId: "room-one",
+        participantSessionId: "participant-session-one",
+        roomGeneration: 2,
+        sourceGeneration: 3,
+        attestation: "opaque.signed.attestation",
+      },
+    });
     expect(
       WatchProgressEventSchema.parse({
         ...progressEvent(),
@@ -318,6 +334,84 @@ describe("watch history v2 progress contracts", () => {
         progress: 1,
       }),
     ).toMatchObject({ kind: "ended", progress: 1 });
+  });
+
+  it("rejects the saved room/source proof and requires the complete authority tuple", () => {
+    expect(() =>
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
+        sharedRoom: { roomId: "room-one", sourceGeneration: 3 },
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
+        sharedRoom: {
+          roomId: "room-one",
+          roomGeneration: 2,
+          sourceGeneration: 3,
+          attestation: "opaque.signed.attestation",
+        },
+      }),
+    ).toThrow();
+  });
+
+  it("keeps purpose and audience inside the signed opaque authority", () => {
+    const sharedRoom = {
+      roomId: "room-one",
+      participantSessionId: "participant-session-one",
+      roomGeneration: 2,
+      sourceGeneration: 3,
+      attestation: "opaque.signed.attestation",
+    };
+
+    expect(() =>
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
+        sharedRoom: { ...sharedRoom, purpose: "room" },
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
+        sharedRoom: { ...sharedRoom, audience: "anidachi-worker" },
+      }),
+    ).toThrow();
+  });
+
+  it("rejects invalid generations, oversized authority, and undeclared sequencing", () => {
+    const sharedRoom = {
+      roomId: "room-one",
+      participantSessionId: "participant-session-one",
+      roomGeneration: 2,
+      sourceGeneration: 3,
+      attestation: "opaque.signed.attestation",
+    };
+
+    expect(() =>
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
+        sharedRoom: { ...sharedRoom, roomGeneration: 0 },
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
+        sharedRoom: { ...sharedRoom, sourceGeneration: 0 },
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchProgressEventSchema.parse({
+        ...progressEvent(),
+        sharedRoom: {
+          ...sharedRoom,
+          attestation: "a".repeat(MAX_ROOM_HISTORY_ATTESTATION_CHARS + 1),
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchProgressEventSchema.parse({ ...progressEvent(), clientSequence: 1 }),
+    ).toThrow();
   });
 
   it("rejects client-provided ownership", () => {
@@ -338,6 +432,12 @@ describe("watch history v2 progress contracts", () => {
     };
 
     expect(WatchProgressAckSchema.parse(ack)).toEqual(ack);
+    expect(() =>
+      WatchProgressAckSchema.parse({
+        ...ack,
+        meta: { ...ack.meta, accountGeneration: 3 },
+      }),
+    ).toThrow();
   });
 });
 
@@ -346,6 +446,7 @@ describe("watch history v2 read and mutation contracts", () => {
     const crunchSession = {
       id: SESSION_ID,
       roomId: "room-one",
+      roomGeneration: 2,
       hostUserId: HOST_ID,
       kind: "shared" as const,
       sourceGeneration: 3,
@@ -438,6 +539,29 @@ describe("watch history v2 read and mutation contracts", () => {
   it("accepts complete Crunchyroll series and movie-like YouTube items", () => {
     const response = responseFixture();
     expect(WatchHistoryResponseSchema.parse(response)).toEqual(response);
+    expect(() =>
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        meta: { ...response.meta, accountGeneration: undefined },
+      }),
+    ).toThrow();
+  });
+
+  it("requires every shared session to retain both room generations", () => {
+    const response = responseFixture();
+    const item = response.items[0];
+    const session = item?.sessions[0];
+    if (!item || !session) {
+      throw new Error("Response fixture must include a shared session");
+    }
+
+    const { roomGeneration: _roomGeneration, ...withoutRoomGeneration } = session;
+    expect(() =>
+      WatchHistoryResponseSchema.parse({
+        ...response,
+        items: [{ ...item, sessions: [withoutRoomGeneration] }, ...response.items.slice(1)],
+      }),
+    ).toThrow();
   });
 
   it("rejects fabricated denominators and inconsistent aggregates", () => {
@@ -531,7 +655,7 @@ describe("watch history v2 read and mutation contracts", () => {
     ).toMatchObject({ target: { scope: "all" } });
 
     const ack = {
-      meta: accountMeta(),
+      meta: { ...accountMeta(), accountGeneration: 5 },
       schemaVersion: WATCH_HISTORY_SCHEMA_VERSION,
       clientMutationId: MUTATION_ID,
       accountGeneration: 5,
@@ -552,12 +676,12 @@ describe("watch history v2 read and mutation contracts", () => {
   });
 
   it("requires a stable provider:title cursor identity", () => {
-    expect(
-      WatchHistoryCursorSchema.parse({
-        lastWatchedAt: NOW,
-        stableId: "crunchyroll:series-one",
-      }),
-    ).toEqual({ lastWatchedAt: NOW, stableId: "crunchyroll:series-one" });
+    const cursor = {
+      lastWatchedAt: NOW,
+      stableId: "crunchyroll:series-one",
+    };
+    const serialized = JSON.stringify(WatchHistoryCursorSchema.parse(cursor));
+    expect(WatchHistoryCursorSchema.parse(JSON.parse(serialized))).toEqual(cursor);
     expect(() =>
       WatchHistoryCursorSchema.parse({ lastWatchedAt: NOW, stableId: "series-one" }),
     ).toThrow();
