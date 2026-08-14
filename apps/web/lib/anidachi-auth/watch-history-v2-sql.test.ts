@@ -170,3 +170,53 @@ test("v2 session identity is additive and excludes discriminator-one rows", () =
   assert.match(sql, /unique index uniq_watch_sessions_v2_shared/);
   assert.match(sql, /where schema_version = 2/);
 });
+
+test("v2 transactions leave active v1 tracked-title rows untouched", () => {
+  for (const name of ["apply_watch_progress_v2", "delete_watch_history_v2"]) {
+    assert.doesNotMatch(functionDefinition(name), /public\.user_tracked_titles/);
+  }
+  assert.match(
+    normalizedSql(),
+    /alter table public\.user_tracked_titles add column if not exists schema_version/,
+  );
+});
+
+test("deleted rooms may preserve only ended shared v2 session identities", () => {
+  const sql = normalizedSql();
+  assert.match(
+    sql,
+    /room_id is null and client_session_key is null and room_generation is not null and source_generation is not null and ended_at is not null/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /room_id is null and client_session_key is null and room_generation is not null and source_generation is not null\s*\)/,
+  );
+});
+
+test("recent-person pair locks and winning room metadata are deterministic", () => {
+  const definition = functionDefinition("apply_watch_progress_v2");
+  assert.match(
+    definition,
+    /from \( values \(p_user_id, other_user_id\), \(other_user_id, p_user_id\) \) as directional_pair\(user_id, other_user_id\) order by directional_pair\.user_id, directional_pair\.other_user_id/,
+  );
+  assert.match(
+    definition,
+    /last_room_id = case when excluded\.last_watched_at > public\.recent_people_evidence\.last_watched_at then excluded\.last_room_id else public\.recent_people_evidence\.last_room_id end/,
+  );
+});
+
+test("canonical receipt sessions bound participants deterministically", () => {
+  const definition = functionDefinition("apply_watch_progress_v2");
+  assert.match(
+    definition,
+    /order by participant\.joined_at, participant\.user_id limit 15/,
+  );
+  assert.match(definition, /jsonb_agg\(\s*bounded_participant\.payload/);
+});
+
+test("receipt cleanup index starts with the locked account boundary", () => {
+  assert.match(
+    normalizedSql(),
+    /index idx_watch_history_receipts_expiry on public\.watch_history_receipts \(user_id, expires_at\)/,
+  );
+});

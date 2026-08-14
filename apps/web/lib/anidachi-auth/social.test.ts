@@ -139,8 +139,14 @@ test("watch history v2 recent-person evidence is pair-owned and requires two par
   )?.[0];
   assert.ok(applyFunction);
   assert.match(applyFunction, /other_participant\.user_id <> p_user_id/);
-  assert.match(applyFunction, /values \(p_user_id, other_user_id/);
-  assert.match(applyFunction, /values \(other_user_id, p_user_id/);
+  assert.match(
+    applyFunction,
+    /values \(p_user_id, other_user_id\), \(other_user_id, p_user_id\)/,
+  );
+  assert.match(
+    applyFunction,
+    /order by directional_pair\.user_id, directional_pair\.other_user_id/,
+  );
 });
 
 test("friend request conflict resolution returns canonical duplicate state and accepts reciprocal pending", () => {

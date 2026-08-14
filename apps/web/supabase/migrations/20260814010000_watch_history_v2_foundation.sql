@@ -109,7 +109,7 @@ create index idx_watch_episode_progress_latest_session
   where latest_session_id is not null;
 
 create index idx_watch_history_receipts_expiry
-  on public.watch_history_receipts (expires_at, user_id);
+  on public.watch_history_receipts (user_id, expires_at);
 
 create index idx_watch_history_deletions_lookup
   on public.watch_history_deletions (
@@ -175,6 +175,13 @@ alter table public.watch_sessions
         and room_generation is not null
         and source_generation is not null
       )
+      or (
+        room_id is null
+        and client_session_key is null
+        and room_generation is not null
+        and source_generation is not null
+        and ended_at is not null
+      )
     );
 
 alter table public.user_tracked_titles
@@ -194,17 +201,6 @@ create unique index uniq_watch_sessions_v2_solo
 create unique index uniq_watch_sessions_v2_shared
   on public.watch_sessions (room_id, room_generation, source_generation)
   where schema_version = 2 and room_id is not null;
-
-create index idx_user_tracked_titles_v2_page
-  on public.user_tracked_titles (
-    user_id,
-    schema_version,
-    history_generation,
-    active,
-    last_watched_at desc,
-    provider,
-    title_key
-  );
 
 alter table public.user_watch_settings enable row level security;
 alter table public.watch_episode_progress enable row level security;
@@ -680,22 +676,22 @@ begin
         other_user_id,
         last_room_id,
         last_watched_at
-      ) values (p_user_id, other_user_id, room_row.room_id, server_accepted_at)
+      )
+      select
+        directional_pair.user_id,
+        directional_pair.other_user_id,
+        room_row.room_id,
+        server_accepted_at
+      from (
+        values (p_user_id, other_user_id), (other_user_id, p_user_id)
+      ) as directional_pair(user_id, other_user_id)
+      order by directional_pair.user_id, directional_pair.other_user_id
       on conflict (user_id, other_user_id) do update set
-        last_room_id = excluded.last_room_id,
-        last_watched_at = greatest(
-          public.recent_people_evidence.last_watched_at,
-          excluded.last_watched_at
-        );
-
-      insert into public.recent_people_evidence (
-        user_id,
-        other_user_id,
-        last_room_id,
-        last_watched_at
-      ) values (other_user_id, p_user_id, room_row.room_id, server_accepted_at)
-      on conflict (user_id, other_user_id) do update set
-        last_room_id = excluded.last_room_id,
+        last_room_id = case
+          when excluded.last_watched_at > public.recent_people_evidence.last_watched_at
+            then excluded.last_room_id
+          else public.recent_people_evidence.last_room_id
+        end,
         last_watched_at = greatest(
           public.recent_people_evidence.last_watched_at,
           excluded.last_watched_at
@@ -780,52 +776,6 @@ begin
     history_generation = excluded.history_generation,
     updated_at = excluded.updated_at;
 
-  insert into public.user_tracked_titles (
-    user_id,
-    provider,
-    title_key,
-    item_kind,
-    item_title,
-    source_url,
-    artwork_url,
-    active,
-    archived_reason,
-    latest_session_id,
-    last_watched_at,
-    created_at,
-    updated_at,
-    schema_version,
-    history_generation
-  ) values (
-    p_user_id,
-    provider_value,
-    title_key_value,
-    p_event ->> 'itemKind',
-    p_event ->> 'title',
-    source_url_value,
-    nullif(p_event ->> 'artworkUrl', ''),
-    true,
-    null,
-    session_id_value,
-    normalized_observed_at,
-    server_accepted_at,
-    server_accepted_at,
-    2,
-    account_generation
-  )
-  on conflict (user_id, provider, title_key) do update set
-    item_kind = excluded.item_kind,
-    item_title = excluded.item_title,
-    source_url = excluded.source_url,
-    artwork_url = coalesce(excluded.artwork_url, public.user_tracked_titles.artwork_url),
-    active = true,
-    archived_reason = null,
-    latest_session_id = excluded.latest_session_id,
-    last_watched_at = excluded.last_watched_at,
-    updated_at = excluded.updated_at,
-    schema_version = 2,
-    history_generation = excluded.history_generation;
-
   select pg_catalog.jsonb_build_object(
     'episodeKey', episode.episode_key,
     'episodeTitle', episode.episode_title,
@@ -859,7 +809,14 @@ begin
             'lastWatchedAt', session.last_checkpoint_at,
             'participants', coalesce((
               select pg_catalog.jsonb_agg(
-                pg_catalog.jsonb_build_object(
+                bounded_participant.payload
+                order by bounded_participant.joined_at, bounded_participant.user_id
+              )
+              from (
+                select
+                  participant.joined_at,
+                  participant.user_id,
+                  pg_catalog.jsonb_build_object(
                   'user', pg_catalog.jsonb_build_object(
                     'userId', participant.user_id,
                     'handle', profile.handle,
@@ -872,14 +829,16 @@ begin
                   'joinedAt', participant.joined_at,
                   'leftAt', participant.left_at,
                   'updatedAt', participant.updated_at
-                ) order by participant.joined_at, participant.user_id
-              )
-              from public.watch_session_participants as participant
-              inner join public.users as participant_user
-                on participant_user.id = participant.user_id
-              left join public.profiles as profile
-                on profile.user_id = participant.user_id
-              where participant.session_id = session.id
+                  ) as payload
+                from public.watch_session_participants as participant
+                inner join public.users as participant_user
+                  on participant_user.id = participant.user_id
+                left join public.profiles as profile
+                  on profile.user_id = participant.user_id
+                where participant.session_id = session.id
+                order by participant.joined_at, participant.user_id
+                limit 15
+              ) as bounded_participant
             ), '[]'::jsonb)
           ) as payload
         from public.watch_sessions as session
@@ -1093,10 +1052,6 @@ begin
       and participant.user_id = p_user_id
       and session.schema_version = 2;
 
-    delete from public.user_tracked_titles as tracked_title
-    where tracked_title.user_id = p_user_id
-      and tracked_title.schema_version = 2;
-
     delete from public.watch_history_deletions as old_deletion
     where old_deletion.user_id = p_user_id
       and old_deletion.history_generation < resulting_generation;
@@ -1171,11 +1126,6 @@ begin
       and session.provider = provider_value
       and session.item_key = title_key_value;
 
-    delete from public.user_tracked_titles as tracked_title
-    where tracked_title.user_id = p_user_id
-      and tracked_title.provider = provider_value
-      and tracked_title.title_key = title_key_value
-      and tracked_title.schema_version = 2;
   elsif scope_value = 'episode' then
     if provider_value not in ('crunchyroll', 'youtube')
       or title_key_value is null
@@ -1228,39 +1178,6 @@ begin
       and session.item_key = title_key_value
       and session.episode_key = episode_key_value;
 
-    update public.user_tracked_titles as tracked_title
-    set
-      latest_session_id = remaining.latest_session_id,
-      last_watched_at = remaining.last_watched_at,
-      updated_at = server_accepted_at
-    from (
-      select
-        episode.latest_session_id,
-        episode.observed_at as last_watched_at
-      from public.watch_episode_progress as episode
-      where episode.user_id = p_user_id
-        and episode.provider = provider_value
-        and episode.title_key = title_key_value
-      order by episode.observed_at desc, episode.server_order desc
-      limit 1
-    ) as remaining
-    where tracked_title.user_id = p_user_id
-      and tracked_title.provider = provider_value
-      and tracked_title.title_key = title_key_value
-      and tracked_title.schema_version = 2;
-
-    delete from public.user_tracked_titles as tracked_title
-    where tracked_title.user_id = p_user_id
-      and tracked_title.provider = provider_value
-      and tracked_title.title_key = title_key_value
-      and tracked_title.schema_version = 2
-      and not exists (
-        select 1
-        from public.watch_episode_progress as remaining_episode
-        where remaining_episode.user_id = p_user_id
-          and remaining_episode.provider = provider_value
-          and remaining_episode.title_key = title_key_value
-      );
   else
     raise exception 'watch_history_delete_invalid' using errcode = '22023';
   end if;
