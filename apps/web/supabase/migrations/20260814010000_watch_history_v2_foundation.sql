@@ -670,6 +670,9 @@ begin
       from public.watch_session_participants as other_participant
       where other_participant.session_id = session_id_value
         and other_participant.user_id <> p_user_id
+      order by
+        least(p_user_id, other_participant.user_id),
+        greatest(p_user_id, other_participant.user_id)
     loop
       insert into public.recent_people_evidence (
         user_id,
@@ -846,6 +849,10 @@ begin
           on owner_participant.session_id = session.id
           and owner_participant.user_id = p_user_id
         where session.schema_version = 2
+          and (
+            session.room_id is not null
+            or session.client_session_key is not null
+          )
           and session.provider = provider_value
           and session.item_key = title_key_value
           and session.episode_key = episode_key_value

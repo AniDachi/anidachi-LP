@@ -205,6 +205,14 @@ test("recent-person pair locks and winning room metadata are deterministic", () 
   );
 });
 
+test("recent-person pair groups are acquired in one global order", () => {
+  const definition = functionDefinition("apply_watch_progress_v2");
+  assert.match(
+    definition,
+    /for other_user_id in select other_participant\.user_id from public\.watch_session_participants as other_participant where other_participant\.session_id = session_id_value and other_participant\.user_id <> p_user_id order by least\(p_user_id, other_participant\.user_id\), greatest\(p_user_id, other_participant\.user_id\) loop/,
+  );
+});
+
 test("canonical receipt sessions bound participants deterministically", () => {
   const definition = functionDefinition("apply_watch_progress_v2");
   assert.match(
@@ -212,6 +220,14 @@ test("canonical receipt sessions bound participants deterministically", () => {
     /order by participant\.joined_at, participant\.user_id limit 15/,
   );
   assert.match(definition, /jsonb_agg\(\s*bounded_participant\.payload/);
+});
+
+test("canonical acknowledgements omit roomless shared tombstones", () => {
+  const definition = functionDefinition("apply_watch_progress_v2");
+  assert.match(
+    definition,
+    /where session\.schema_version = 2 and \( session\.room_id is not null or session\.client_session_key is not null \) and session\.provider = provider_value/,
+  );
 });
 
 test("receipt cleanup index starts with the locked account boundary", () => {
