@@ -333,30 +333,34 @@ test("acknowledgement profiles guarantee JavaScript contract-safe fields", () =>
   assert.ok(Buffer.byteLength("AniDachi User", "utf8") <= 80);
 });
 
-test("acknowledgement avatar predicate excludes invalid numeric authorities", () => {
+test("acknowledgement avatar predicate is a conservative public-profile subset", () => {
   const definition = functionDefinition("apply_watch_progress_v2");
   const avatarPattern = definition.match(
     /profile\.avatar_url ~\* '([^']+)'/,
   )?.[1];
-  const numericAuthorityPattern = definition.match(
-    /profile\.avatar_url !~\* '([^']+)'/,
-  )?.[1];
   const participantAvatarPattern = definition.match(
     /participant_user\.avatar_url ~\* '([^']+)'/,
   )?.[1];
-  const participantNumericAuthorityPattern = definition.match(
-    /participant_user\.avatar_url !~\* '([^']+)'/,
-  )?.[1];
+  const excludedAvatarPatterns = Array.from(
+    definition.matchAll(/profile\.avatar_url !~\* '([^']+)'/g),
+    (match) => match[1],
+  );
+  const participantExcludedAvatarPatterns = Array.from(
+    definition.matchAll(/participant_user\.avatar_url !~\* '([^']+)'/g),
+    (match) => match[1],
+  );
   assert.ok(avatarPattern);
-  assert.ok(numericAuthorityPattern);
+  assert.ok(excludedAvatarPatterns.length > 0);
   assert.equal(participantAvatarPattern, avatarPattern);
-  assert.equal(participantNumericAuthorityPattern, numericAuthorityPattern);
+  assert.deepEqual(participantExcludedAvatarPatterns, excludedAvatarPatterns);
 
   const sqlSafeAvatar = (value: string) =>
     value.length <= 2_048 &&
     Buffer.byteLength(value, "utf8") === Array.from(value).length &&
     new RegExp(avatarPattern, "i").test(value) &&
-    !new RegExp(numericAuthorityPattern, "i").test(value);
+    excludedAvatarPatterns.every(
+      (pattern) => !new RegExp(pattern, "i").test(value),
+    );
   const profileWithAvatar = (avatarUrl: string) =>
     PublicProfileSchema.safeParse({
       userId: "00000000-0000-4000-8000-000000000001",
@@ -377,9 +381,42 @@ test("acknowledgement avatar predicate excludes invalid numeric authorities", ()
     assert.equal(sqlSafeAvatar(avatarUrl), false, avatarUrl);
   }
 
-  const validAvatar = "https://cdn.example.com/avatar/user_1.png";
-  assert.equal(profileWithAvatar(validAvatar), true);
-  assert.equal(sqlSafeAvatar(validAvatar), true);
+  const invalidHostnameFixtures = [
+    "https://example.123/",
+    "https://foo.09/",
+    "https://1a.2/",
+    "https://foo.0x10/",
+    "https://xn--.com/",
+  ];
+  assert.deepEqual(
+    invalidHostnameFixtures.filter(profileWithAvatar),
+    [],
+    "fixtures must remain invalid under PublicProfileSchema",
+  );
+  assert.deepEqual(
+    invalidHostnameFixtures.filter(sqlSafeAvatar),
+    [],
+    "the SQL predicate must not emit a URL rejected by PublicProfileSchema",
+  );
+
+  const validPunycodeFallbackFixtures = [
+    "https://xn--bcher-kva.example.com/avatar",
+    "https://assets.xn--bcher-kva.example.com/avatar",
+  ];
+  for (const avatarUrl of validPunycodeFallbackFixtures) {
+    assert.equal(profileWithAvatar(avatarUrl), true, avatarUrl);
+    assert.equal(sqlSafeAvatar(avatarUrl), false, avatarUrl);
+  }
+
+  const allowedAvatarFixtures = [
+    "https://cdn.example.com/avatar/user_1.png",
+    "https://1a.example.co/avatar",
+    `https://cdn.example.${"a".repeat(63)}/avatar`,
+  ];
+  for (const avatarUrl of allowedAvatarFixtures) {
+    assert.equal(profileWithAvatar(avatarUrl), true, avatarUrl);
+    assert.equal(sqlSafeAvatar(avatarUrl), true, avatarUrl);
+  }
 });
 
 test("acknowledgement display-name predicate follows JavaScript trim semantics", () => {

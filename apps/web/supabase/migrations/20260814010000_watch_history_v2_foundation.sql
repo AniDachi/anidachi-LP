@@ -942,15 +942,15 @@ begin
                         and char_length(profile.avatar_url) <= 2048
                         and pg_catalog.octet_length(profile.avatar_url)
                           = char_length(profile.avatar_url)
-                        and profile.avatar_url ~* '^https?://[A-Za-z0-9][A-Za-z0-9-]{0,62}([.][A-Za-z0-9][A-Za-z0-9-]{0,62})+(/[A-Za-z0-9._~!$&()*+,;=:@%/?#-]*)?$'
-                        and profile.avatar_url !~* '^https?://[0-9]+([.][0-9]+)+(/|$)'
+                        and profile.avatar_url ~* '^https?://[A-Za-z0-9][A-Za-z0-9-]{0,62}([.][A-Za-z0-9][A-Za-z0-9-]{0,62})*[.][A-Za-z]{2,63}(/[A-Za-z0-9._~!$&()*+,;=:@%/?#-]*)?$'
+                        and profile.avatar_url !~* '^https?://([A-Za-z0-9-]+[.])*xn--'
                       then profile.avatar_url
                       when participant_user.avatar_url is not null
                         and char_length(participant_user.avatar_url) <= 2048
                         and pg_catalog.octet_length(participant_user.avatar_url)
                           = char_length(participant_user.avatar_url)
-                        and participant_user.avatar_url ~* '^https?://[A-Za-z0-9][A-Za-z0-9-]{0,62}([.][A-Za-z0-9][A-Za-z0-9-]{0,62})+(/[A-Za-z0-9._~!$&()*+,;=:@%/?#-]*)?$'
-                        and participant_user.avatar_url !~* '^https?://[0-9]+([.][0-9]+)+(/|$)'
+                        and participant_user.avatar_url ~* '^https?://[A-Za-z0-9][A-Za-z0-9-]{0,62}([.][A-Za-z0-9][A-Za-z0-9-]{0,62})*[.][A-Za-z]{2,63}(/[A-Za-z0-9._~!$&()*+,;=:@%/?#-]*)?$'
+                        and participant_user.avatar_url !~* '^https?://([A-Za-z0-9-]+[.])*xn--'
                       then participant_user.avatar_url
                       else null
                     end
