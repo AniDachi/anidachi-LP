@@ -99,6 +99,7 @@ export function createWatchHistoryV2RouteHandlers(
       const session = await dependencies.getSession(request);
       if (!session) return unauthorizedResponse();
       try {
+        validateHistoryQuery(request.nextUrl.searchParams);
         const limit = parseLimit(request.nextUrl.searchParams.get("limit"));
         const rawCursor = request.nextUrl.searchParams.get("cursor");
         const cursor = rawCursor ? decodeWatchHistoryCursor(rawCursor) : null;
@@ -292,14 +293,55 @@ async function readBoundedJson(request: Request, maxBytes: number): Promise<unkn
   if (contentLength && /^\d+$/.test(contentLength) && Number(contentLength) > maxBytes) {
     throw new WatchHistoryV2ApiError(413, "PAYLOAD_TOO_LARGE", "Request body is too large");
   }
-  const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > maxBytes) {
-    throw new WatchHistoryV2ApiError(413, "PAYLOAD_TOO_LARGE", "Request body is too large");
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  const reader = request.body?.getReader();
+  if (reader) {
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        totalBytes += value.byteLength;
+        if (totalBytes > maxBytes) {
+          await reader.cancel().catch(() => undefined);
+          throw new WatchHistoryV2ApiError(
+            413,
+            "PAYLOAD_TOO_LARGE",
+            "Request body is too large",
+          );
+        }
+        chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
   }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  let text: string;
   try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     return JSON.parse(text);
   } catch {
     throw new WatchHistoryV2ApiError(400, "INVALID_JSON", "Request body must be valid JSON");
+  }
+}
+
+function validateHistoryQuery(searchParams: URLSearchParams): void {
+  const allowed = new Set(["limit", "cursor"]);
+  for (const key of searchParams.keys()) {
+    if (!allowed.has(key) || searchParams.getAll(key).length > 1) {
+      throw new WatchHistoryV2ApiError(
+        400,
+        "INVALID_QUERY",
+        "History query is invalid",
+      );
+    }
   }
 }
 

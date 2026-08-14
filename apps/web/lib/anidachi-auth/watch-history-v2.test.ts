@@ -10,6 +10,7 @@ import {
   decodeWatchHistoryCursor,
   deleteWatchHistoryV2,
   encodeWatchHistoryCursor,
+  isMeaningfulWatchHistoryV2SessionIdentity,
   parseWatchProgressEventV2,
   WatchHistoryV2ApiError,
   type WatchHistoryV2Store,
@@ -238,6 +239,30 @@ test("cursor is opaque base64url data and rejects malformed values", () => {
   assert.throws(() => decodeWatchHistoryCursor("a".repeat(513)), hasCode("INVALID_CURSOR"));
 });
 
+test("v2 session identity excludes roomless shared tombstones", () => {
+  assert.equal(
+    isMeaningfulWatchHistoryV2SessionIdentity({
+      roomId: null,
+      clientSessionKey: null,
+    }),
+    false,
+  );
+  assert.equal(
+    isMeaningfulWatchHistoryV2SessionIdentity({
+      roomId: "room-one",
+      clientSessionKey: null,
+    }),
+    true,
+  );
+  assert.equal(
+    isMeaningfulWatchHistoryV2SessionIdentity({
+      roomId: null,
+      clientSessionKey: "solo-session-one",
+    }),
+    true,
+  );
+});
+
 test("canonical read derives observed-only titles, seasons, episodes, and sessions from v2 rows", () => {
   const response = buildWatchHistoryV2Response({
     userId: USER_ID,
@@ -265,6 +290,7 @@ test("canonical read derives observed-only titles, seasons, episodes, and sessio
         completed_at: null,
         latest_session_id: SESSION_ID,
         observed_at: NOW,
+        server_order: 1,
         history_generation: 1,
       },
     ],
@@ -318,6 +344,7 @@ test("canonical read includes every meaningful v2 session associated with the vi
         completed_at: null,
         latest_session_id: SESSION_ID,
         observed_at: NOW,
+        server_order: 1,
         history_generation: 1,
       },
     ],
@@ -334,6 +361,55 @@ test("canonical read includes every meaningful v2 session associated with the vi
     response.items[0]?.seasons[0]?.episodes[0]?.sessions.map((value) => value.id),
     [SESSION_ID, earlierSession.id],
   );
+});
+
+test("canonical latest activity uses server order when normalized observation times tie", () => {
+  const common = {
+    user_id: USER_ID,
+    provider: "crunchyroll" as const,
+    title_key: "series-one",
+    item_kind: "series" as const,
+    title: "Series One",
+    artwork_url: null,
+    episode_title: "Episode One",
+    season_key: "season-one",
+    season_title: "Season One",
+    season_number: 1,
+    episode_number: 1,
+    source_url: "https://www.crunchyroll.com/watch/episode-one/demo",
+    duration: 1_200,
+    progress: 0.5,
+    completed_at: null,
+    latest_session_id: null,
+    observed_at: NOW,
+    history_generation: 1,
+  };
+  const response = buildWatchHistoryV2Response({
+    userId: USER_ID,
+    accountGeneration: 1,
+    generatedAt: new Date(NOW),
+    limit: 100,
+    progressRows: [
+      {
+        ...common,
+        episode_key: "episode-one",
+        current_time: 300,
+        server_order: 10,
+      },
+      {
+        ...common,
+        episode_key: "episode-two",
+        episode_title: "Episode Two",
+        episode_number: 2,
+        current_time: 900,
+        server_order: 11,
+      },
+    ],
+    sessions: [],
+  });
+
+  assert.equal(response.items[0]?.latestActivity.episodeKey, "episode-two");
+  assert.equal(response.items[0]?.latestActivity.currentTime, 900);
 });
 
 test("delete parses exact duplicate acknowledgement and never reports optimistic success", async () => {

@@ -162,6 +162,38 @@ test("progress rejects malformed, extra-field, and oversized JSON before service
   assert.equal(calls, 0);
 });
 
+test("progress stops reading a chunked body immediately after the actual byte limit", async () => {
+  let pulls = 0;
+  let cancelled = false;
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      pulls += 1;
+      if (pulls <= 100) {
+        controller.enqueue(new Uint8Array(1_024));
+      } else {
+        controller.close();
+      }
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const routes = createWatchHistoryV2RouteHandlers(dependencies());
+  const response = await routes.postProgress(
+    request("/api/watch-history/v2/progress", {
+      method: "POST",
+      headers: { "content-length": "1" },
+      body: stream,
+      duplex: "half",
+    }),
+  );
+
+  assert.equal(response.status, 413);
+  assert.equal((await response.json()).code, "PAYLOAD_TOO_LARGE");
+  assert.equal(cancelled, true);
+  assert.ok(pulls < 100);
+});
+
 test("progress derives ownership from the authenticated session", async () => {
   let receivedUserId = "";
   const deps = dependencies();
@@ -187,6 +219,21 @@ test("history validates limit and opaque cursor boundaries", async () => {
   for (const query of ["limit=0", "limit=101", "limit=1.5", "cursor=not-a-cursor"]) {
     const response = await routes.getHistory(request(`/api/watch-history/v2?${query}`));
     assert.equal(response.status, 400);
+  }
+});
+
+test("history rejects unknown and duplicate query parameters", async () => {
+  const routes = createWatchHistoryV2RouteHandlers(dependencies());
+  for (const query of [
+    "unknown=value",
+    "limit=1&limit=2",
+    "cursor=value&cursor=value",
+  ]) {
+    const response = await routes.getHistory(
+      request(`/api/watch-history/v2?${query}`),
+    );
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).code, "INVALID_QUERY");
   }
 });
 

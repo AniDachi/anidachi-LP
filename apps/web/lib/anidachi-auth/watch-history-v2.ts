@@ -52,6 +52,7 @@ export type WatchHistoryProgressRow = {
   completed_at: string | null;
   latest_session_id: string | null;
   observed_at: string;
+  server_order: number;
   history_generation: number;
 };
 
@@ -60,6 +61,7 @@ type SessionDatabaseRow = {
   provider: "crunchyroll" | "youtube";
   item_key: string;
   episode_key: string;
+  client_session_key: string | null;
   room_id: string | null;
   room_generation: number | null;
   host_user_id: string;
@@ -126,6 +128,13 @@ export class WatchHistoryV2ApiError extends Error {
   ) {
     super(message);
   }
+}
+
+export function isMeaningfulWatchHistoryV2SessionIdentity(identity: {
+  roomId: string | null;
+  clientSessionKey: string | null;
+}): boolean {
+  return identity.roomId !== null || identity.clientSessionKey !== null;
 }
 
 export function parseWatchProgressEventV2(input: unknown): WatchProgressEvent {
@@ -282,7 +291,7 @@ export function buildWatchHistoryV2Response(params: {
 
   const summaries = Array.from(groups.entries()).map(([stableId, titleRows]) => {
     titleRows.sort(compareEpisodeRows);
-    const latest = [...titleRows].sort((a, b) => b.observed_at.localeCompare(a.observed_at))[0]!;
+    const latest = [...titleRows].sort(compareObservationDescending)[0]!;
     const seasonRows = new Map<string, WatchHistoryProgressRow[]>();
     if (latest.item_kind === "series") {
       for (const row of titleRows) {
@@ -543,7 +552,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
     const progressResult = await db()
       .from("watch_episode_progress")
       .select(
-        "user_id,provider,title_key,episode_key,item_kind,title,artwork_url,episode_title,season_key,season_title,season_number,episode_number,source_url,current_time,duration,progress,completed_at,latest_session_id,observed_at,history_generation",
+        "user_id,provider,title_key,episode_key,item_kind,title,artwork_url,episode_title,season_key,season_title,season_number,episode_number,source_url,current_time,duration,progress,completed_at,latest_session_id,observed_at,server_order,history_generation",
       )
       .eq("user_id", userId)
       .eq("history_generation", preferences.accountGeneration)
@@ -629,9 +638,10 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
     if (!participant.data) return null;
     const result = await db()
       .from("watch_sessions")
-      .select("id,item_key,episode_key,source_url,item_title,episode_title,schema_version")
+      .select("id,item_key,episode_key,source_url,item_title,episode_title,schema_version,room_id,client_session_key")
       .eq("id", sessionId)
       .eq("schema_version", 2)
+      .or("room_id.not.is.null,client_session_key.not.is.null")
       .maybeSingle();
     if (result.error) throw result.error;
     if (!isRecord(result.data)) return null;
@@ -643,7 +653,14 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
       !isHttpsUrl(row.source_url, 2048) ||
       !isBoundedString(row.item_title, 300) ||
       !isBoundedString(row.episode_title, 300) ||
-      row.schema_version !== 2
+      row.schema_version !== 2 ||
+      !(row.room_id === null || isBoundedString(row.room_id, 128)) ||
+      !(row.client_session_key === null ||
+        isBoundedString(row.client_session_key, 220)) ||
+      !isMeaningfulWatchHistoryV2SessionIdentity({
+        roomId: row.room_id,
+        clientSessionKey: row.client_session_key,
+      })
     ) {
       return null;
     }
@@ -677,13 +694,30 @@ async function loadCanonicalSessions(
   const sessionResult = await db()
     .from("watch_sessions")
     .select(
-      "id,provider,item_key,episode_key,room_id,room_generation,host_user_id,source_generation,current_time_seconds,duration_seconds,progress,started_at,ended_at,last_checkpoint_at",
+      "id,provider,item_key,episode_key,client_session_key,room_id,room_generation,host_user_id,source_generation,current_time_seconds,duration_seconds,progress,started_at,ended_at,last_checkpoint_at",
     )
     .in("id", boundedIds)
-    .eq("schema_version", 2);
+    .eq("schema_version", 2)
+    .or("room_id.not.is.null,client_session_key.not.is.null");
   if (sessionResult.error) throw sessionResult.error;
-  const sessionRows = ((sessionResult.data as unknown[] | null) ?? []).map(
-    parseSessionDatabaseRow,
+  const sessionRows = ((sessionResult.data as unknown[] | null) ?? []).flatMap(
+    (value) => {
+      if (!isRecord(value)) throw invalidDatabaseResponse();
+      const roomId = value.room_id;
+      const clientSessionKey = value.client_session_key;
+      if (
+        !(roomId === null || isBoundedString(roomId, 128)) ||
+        !(clientSessionKey === null || isBoundedString(clientSessionKey, 220))
+      ) {
+        throw invalidDatabaseResponse();
+      }
+      return isMeaningfulWatchHistoryV2SessionIdentity({
+        roomId,
+        clientSessionKey,
+      })
+        ? [parseSessionDatabaseRow(value)]
+        : [];
+    },
   );
   const participantUserIds = Array.from(
     new Set(
@@ -762,8 +796,18 @@ function compareEpisodeRows(a: WatchHistoryProgressRow, b: WatchHistoryProgressR
       (b.season_number ?? Number.MAX_SAFE_INTEGER) ||
     (a.episode_number ?? Number.MAX_SAFE_INTEGER) -
       (b.episode_number ?? Number.MAX_SAFE_INTEGER) ||
-    b.observed_at.localeCompare(a.observed_at) ||
+    compareObservationDescending(a, b) ||
     a.episode_key.localeCompare(b.episode_key)
+  );
+}
+
+function compareObservationDescending(
+  a: WatchHistoryProgressRow,
+  b: WatchHistoryProgressRow,
+): number {
+  return (
+    b.observed_at.localeCompare(a.observed_at) ||
+    b.server_order - a.server_order
   );
 }
 
@@ -822,6 +866,7 @@ function parseProgressRow(value: unknown): WatchHistoryProgressRow {
       "completed_at",
       "latest_session_id",
       "observed_at",
+      "server_order",
       "history_generation",
     ]) ||
     !isUuid(row.user_id) ||
@@ -843,6 +888,7 @@ function parseProgressRow(value: unknown): WatchHistoryProgressRow {
     !(row.completed_at === null || isTimestamp(row.completed_at)) ||
     !(row.latest_session_id === null || isUuid(row.latest_session_id)) ||
     !isTimestamp(row.observed_at) ||
+    !isPositiveInteger(row.server_order) ||
     !isPositiveInteger(row.history_generation)
   ) {
     throw invalidDatabaseResponse();
@@ -859,6 +905,7 @@ function parseSessionDatabaseRow(value: unknown): SessionDatabaseRow {
       "provider",
       "item_key",
       "episode_key",
+      "client_session_key",
       "room_id",
       "room_generation",
       "host_user_id",
@@ -874,6 +921,8 @@ function parseSessionDatabaseRow(value: unknown): SessionDatabaseRow {
     (row.provider !== "crunchyroll" && row.provider !== "youtube") ||
     !isBoundedString(row.item_key, 220) ||
     !isBoundedString(row.episode_key, 220) ||
+    !(row.client_session_key === null ||
+      isBoundedString(row.client_session_key, 220)) ||
     !(row.room_id === null || isBoundedString(row.room_id, 128)) ||
     !(row.room_generation === null || isPositiveInteger(row.room_generation)) ||
     !isUuid(row.host_user_id) ||
@@ -883,7 +932,11 @@ function parseSessionDatabaseRow(value: unknown): SessionDatabaseRow {
     !isProgress(row.progress) ||
     !isTimestamp(row.started_at) ||
     !(row.ended_at === null || isTimestamp(row.ended_at)) ||
-    !isTimestamp(row.last_checkpoint_at)
+    !isTimestamp(row.last_checkpoint_at) ||
+    !isMeaningfulWatchHistoryV2SessionIdentity({
+      roomId: row.room_id,
+      clientSessionKey: row.client_session_key,
+    })
   ) {
     throw invalidDatabaseResponse();
   }
