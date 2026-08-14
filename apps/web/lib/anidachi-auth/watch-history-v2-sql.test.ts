@@ -222,8 +222,10 @@ test("participant evidence is discriminator-two on every v2 write, read, and del
   );
 });
 
-test("viewer shared events reject missing or mismatched host provenance before mutation", () => {
+test("both shared roles lock and validate immutable source identity before mutation", () => {
   const definition = functionDefinition("apply_watch_progress_v2");
+  const lookupAt = definition.indexOf("select session.* into shared_session_row");
+  const viewerBranchAt = definition.indexOf("participant_role = 'viewer'");
   const pendingAt = definition.indexOf("watch_history_shared_session_pending");
   const mismatchAt = definition.indexOf("watch_history_shared_source_mismatch");
   const orderAt = definition.indexOf("next_server_order =");
@@ -232,6 +234,8 @@ test("viewer shared events reject missing or mismatched host provenance before m
   );
   const progressAt = definition.indexOf("insert into public.watch_episode_progress");
   const receiptAt = definition.indexOf("insert into public.watch_history_receipts");
+  assert.ok(lookupAt >= 0);
+  assert.ok(lookupAt < viewerBranchAt);
   for (const rejectionAt of [pendingAt, mismatchAt]) {
     assert.ok(rejectionAt >= 0);
     assert.ok(rejectionAt < orderAt);
@@ -241,7 +245,7 @@ test("viewer shared events reject missing or mismatched host provenance before m
   }
   assert.match(
     definition,
-    /where session\.schema_version = 2 and session\.room_id = room_row\.room_id and session\.room_generation = .*?'roomgeneration'.*? and session\.source_generation = .*?'sourcegeneration'/,
+    /where session\.schema_version = 2 and session\.room_id = room_row\.room_id and session\.room_generation = .*?'roomgeneration'.*? and session\.source_generation = .*?'sourcegeneration'.*? for update/,
   );
   assert.match(
     definition,
@@ -249,20 +253,54 @@ test("viewer shared events reject missing or mismatched host provenance before m
   );
 });
 
-test("only the host inserts or updates a shared global session row", () => {
+test("shared insert races never rewrite immutable source identity", () => {
   const definition = functionDefinition("apply_watch_progress_v2");
   assert.match(
     definition,
-    /if participant_role = 'host' then insert into public\.watch_sessions[\s\S]*?on conflict \(room_id, room_generation, source_generation\)[\s\S]*?do update set[\s\S]*?returning id into session_id_value; end if; end if; insert into public\.watch_session_participants/,
+    /insert into public\.watch_sessions[\s\S]*?on conflict \(room_id, room_generation, source_generation\) where schema_version = 2 and room_id is not null do nothing returning id into session_id_value/,
   );
-  assert.match(
-    definition,
-    /if participant_role = 'viewer' then select session\.\* into shared_session_row from public\.watch_sessions as session[\s\S]*?session_id_value := shared_session_row\.id; end if;/,
+  assert.equal(
+    definition.match(/watch_history_shared_source_mismatch/g)?.length,
+    2,
   );
-  assert.doesNotMatch(definition, /case when participant_role = 'host'/);
 });
 
-test("acknowledgement profiles sanitize every bounded public field", () => {
+test("host updates only shared playback and lifecycle fields", () => {
+  const definition = functionDefinition("apply_watch_progress_v2");
+  const update = definition.match(
+    /if participant_role = 'host' then update public\.watch_sessions as session set ([\s\S]*?) where session\.id = session_id_value; end if;/,
+  )?.[1];
+  assert.ok(update);
+  for (const field of [
+    "duration_seconds",
+    "current_time_seconds",
+    "progress",
+    "ended_at",
+    "last_checkpoint_at",
+    "updated_at",
+  ]) {
+    assert.match(update, new RegExp(`${field} =`));
+  }
+  for (const immutableField of [
+    "provider",
+    "item_key",
+    "item_kind",
+    "item_title",
+    "episode_key",
+    "episode_title",
+    "season_key",
+    "season_title",
+    "season_number",
+    "source_url",
+    "artwork_url",
+    "started_at",
+    "history_generation",
+  ]) {
+    assert.doesNotMatch(update, new RegExp(`${immutableField} =`));
+  }
+});
+
+test("acknowledgement profiles guarantee JavaScript contract-safe fields", () => {
   const definition = functionDefinition("apply_watch_progress_v2");
   assert.match(
     definition,
@@ -270,13 +308,28 @@ test("acknowledgement profiles sanitize every bounded public field", () => {
   );
   assert.match(
     definition,
-    /else 'anidachi user' end\s*,\s*'avatarurl'/,
+    /octet_length\(\s*pg_catalog\.btrim\(profile\.display_name\)\s*\) <= 80[\s\S]*?octet_length\(\s*pg_catalog\.btrim\(participant_user\.display_name\)\s*\) <= 80[\s\S]*?else 'anidachi user' end\s*,\s*'avatarurl'/,
   );
   assert.match(
     definition,
-    /char_length\(profile\.avatar_url\) <= 2048[\s\S]*?profile\.avatar_url ~ '\^https\?:\/\/'/,
+    /char_length\(profile\.avatar_url\) <= 2048[\s\S]*?octet_length\(profile\.avatar_url\) = char_length\(profile\.avatar_url\)[\s\S]*?profile\.avatar_url ~\* '\^https\?:\/\//,
   );
   assert.doesNotMatch(definition, /left\([^)]*avatar_url|substring\([^)]*avatar_url/);
+
+  const avatarPattern = definition.match(
+    /profile\.avatar_url ~\* '([^']+)'/,
+  )?.[1];
+  assert.ok(avatarPattern);
+  const sqlSafeAvatar = (value: string) =>
+    value.length <= 2_048 &&
+    Buffer.byteLength(value, "utf8") === Array.from(value).length &&
+    new RegExp(avatarPattern, "i").test(value);
+  assert.equal(sqlSafeAvatar("https://"), false);
+  assert.equal(sqlSafeAvatar("https://["), false);
+  assert.equal(sqlSafeAvatar(`https://cdn.example.com/${"😀".repeat(1_024)}`), false);
+  assert.equal(sqlSafeAvatar("https://cdn.example.com/avatar/user_1.png"), true);
+  assert.ok(Buffer.byteLength("😀".repeat(41), "utf8") > 80);
+  assert.ok(Buffer.byteLength("AniDachi User", "utf8") <= 80);
 });
 
 test("v2 transactions leave active v1 tracked-title rows untouched", () => {

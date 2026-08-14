@@ -32,6 +32,11 @@ const PUBLIC_HANDLE_PATTERN = /^[a-z0-9_]{3,24}$/;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+type WatchHistoryRangePage = {
+  rows: unknown[];
+  total: number | null;
+};
+
 export type WatchHistoryProgressRow = {
   user_id: string;
   provider: "crunchyroll" | "youtube";
@@ -463,25 +468,47 @@ export function decodeWatchHistoryCursor(value: string): WatchHistoryCursor {
 }
 
 export async function loadAllWatchHistoryProgressRows(
-  loadRange: (from: number, to: number) => Promise<unknown[]>,
+  loadRange: (from: number, to: number) => Promise<WatchHistoryRangePage>,
 ): Promise<unknown[]> {
   return loadAllWatchHistoryRangePages(loadRange);
 }
 
 async function loadAllWatchHistoryRangePages(
-  loadRange: (from: number, to: number) => Promise<unknown[]>,
+  loadRange: (from: number, to: number) => Promise<WatchHistoryRangePage>,
 ): Promise<unknown[]> {
   const rows: unknown[] = [];
-  for (let from = 0; ; from += POSTGREST_HISTORY_PAGE_SIZE) {
+  let expectedTotal: number | undefined;
+  for (let from = 0; ; ) {
     const page = await loadRange(from, from + POSTGREST_HISTORY_PAGE_SIZE - 1);
-    rows.push(...page);
-    if (page.length < POSTGREST_HISTORY_PAGE_SIZE) return rows;
+    if (
+      !isRecord(page) ||
+      !Array.isArray(page.rows) ||
+      !isNonnegativeInteger(page.total)
+    ) {
+      throw invalidDatabaseResponse();
+    }
+    if (expectedTotal === undefined) expectedTotal = page.total;
+    if (
+      page.total !== expectedTotal ||
+      from > expectedTotal ||
+      page.rows.length > expectedTotal - from ||
+      (page.rows.length === 0 && from < expectedTotal)
+    ) {
+      throw invalidDatabaseResponse();
+    }
+    rows.push(...page.rows);
+    from += page.rows.length;
+    if (from === expectedTotal) return rows;
   }
 }
 
 async function loadWatchHistoryBatches(
   ids: string[],
-  loadRange: (ids: string[], from: number, to: number) => Promise<unknown[]>,
+  loadRange: (
+    ids: string[],
+    from: number,
+    to: number,
+  ) => Promise<WatchHistoryRangePage>,
   keyOf: (value: unknown) => string,
 ): Promise<unknown[]> {
   const rows = new Map<string, unknown>();
@@ -625,6 +652,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
         .from("watch_episode_progress")
         .select(
           "user_id,provider,title_key,episode_key,item_kind,title,artwork_url,episode_title,season_key,season_title,season_number,episode_number,source_url,current_time,duration,progress,completed_at,latest_session_id,observed_at,server_order,history_generation",
+          { count: "exact" },
         )
         .eq("user_id", userId)
         .eq("history_generation", preferences.accountGeneration)
@@ -632,7 +660,10 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
         .order("server_order", { ascending: false })
         .range(from, to);
       if (progressResult.error) throw progressResult.error;
-      return (progressResult.data as unknown[] | null) ?? [];
+      return {
+        rows: (progressResult.data as unknown[] | null) ?? [],
+        total: progressResult.count,
+      };
     });
     progressRows.forEach(parseProgressRow);
     const sessions = await loadCanonicalSessions(userId);
@@ -764,11 +795,11 @@ export function buildHostAuthoritativeWatchHistoryRoomSource(params: {
 }
 
 export async function loadExactWatchHistorySessionEnrichment(params: {
-  loadOwnerParticipants: (from: number, to: number) => Promise<unknown[]>;
-  loadSessions: (ids: string[], from: number, to: number) => Promise<unknown[]>;
-  loadParticipants: (ids: string[], from: number, to: number) => Promise<unknown[]>;
-  loadUsers: (ids: string[], from: number, to: number) => Promise<unknown[]>;
-  loadProfiles: (ids: string[], from: number, to: number) => Promise<unknown[]>;
+  loadOwnerParticipants: (from: number, to: number) => Promise<WatchHistoryRangePage>;
+  loadSessions: (ids: string[], from: number, to: number) => Promise<WatchHistoryRangePage>;
+  loadParticipants: (ids: string[], from: number, to: number) => Promise<WatchHistoryRangePage>;
+  loadUsers: (ids: string[], from: number, to: number) => Promise<WatchHistoryRangePage>;
+  loadProfiles: (ids: string[], from: number, to: number) => Promise<WatchHistoryRangePage>;
 }): Promise<{
   sessions: unknown[];
   participants: unknown[];
@@ -827,20 +858,21 @@ async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessio
     loadOwnerParticipants: async (from, to) => {
       const result = await db()
         .from("watch_session_participants")
-        .select("session_id")
+        .select("session_id", { count: "exact" })
         .eq("user_id", userId)
         .eq("schema_version", 2)
         .order("updated_at", { ascending: false })
         .order("session_id", { ascending: true })
         .range(from, to);
       if (result.error) throw result.error;
-      return (result.data as unknown[] | null) ?? [];
+      return { rows: (result.data as unknown[] | null) ?? [], total: result.count };
     },
     loadSessions: async (ids, from, to) => {
       const result = await db()
         .from("watch_sessions")
         .select(
           "id,provider,item_key,episode_key,client_session_key,room_id,room_generation,host_user_id,source_generation,current_time_seconds,duration_seconds,progress,started_at,ended_at,last_checkpoint_at",
+          { count: "exact" },
         )
         .in("id", ids)
         .eq("schema_version", 2)
@@ -848,13 +880,14 @@ async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessio
         .order("id", { ascending: true })
         .range(from, to);
       if (result.error) throw result.error;
-      return (result.data as unknown[] | null) ?? [];
+      return { rows: (result.data as unknown[] | null) ?? [], total: result.count };
     },
     loadParticipants: async (ids, from, to) => {
       const result = await db()
         .from("watch_session_participants")
         .select(
           "session_id,user_id,schema_version,role,current_time_seconds,progress,joined_at,left_at,updated_at",
+          { count: "exact" },
         )
         .in("session_id", ids)
         .eq("schema_version", 2)
@@ -863,27 +896,27 @@ async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessio
         .order("user_id", { ascending: true })
         .range(from, to);
       if (result.error) throw result.error;
-      return (result.data as unknown[] | null) ?? [];
+      return { rows: (result.data as unknown[] | null) ?? [], total: result.count };
     },
     loadUsers: async (ids, from, to) => {
       const result = await db()
         .from("users")
-        .select("id,display_name,avatar_url")
+        .select("id,display_name,avatar_url", { count: "exact" })
         .in("id", ids)
         .order("id", { ascending: true })
         .range(from, to);
       if (result.error) throw result.error;
-      return (result.data as unknown[] | null) ?? [];
+      return { rows: (result.data as unknown[] | null) ?? [], total: result.count };
     },
     loadProfiles: async (ids, from, to) => {
       const result = await db()
         .from("profiles")
-        .select("user_id,handle,display_name,avatar_url")
+        .select("user_id,handle,display_name,avatar_url", { count: "exact" })
         .in("user_id", ids)
         .order("user_id", { ascending: true })
         .range(from, to);
       if (result.error) throw result.error;
-      return (result.data as unknown[] | null) ?? [];
+      return { rows: (result.data as unknown[] | null) ?? [], total: result.count };
     },
   });
   const participantRows = enrichment.participants.map(parseParticipantDatabaseRow);

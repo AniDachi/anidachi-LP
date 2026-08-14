@@ -495,7 +495,9 @@ begin
     raise exception 'watch_history_observation_stale' using errcode = 'P0001';
   end if;
 
-  if participant_role = 'viewer' then
+  if p_event -> 'sharedRoom' is not null
+    and pg_catalog.jsonb_typeof(p_event -> 'sharedRoom') <> 'null'
+  then
     select session.*
     into shared_session_row
     from public.watch_sessions as session
@@ -503,19 +505,102 @@ begin
       and session.room_id = room_row.room_id
       and session.room_generation = (p_room_authority ->> 'roomGeneration')::bigint
       and session.source_generation = (p_room_authority ->> 'sourceGeneration')::bigint
-    for share;
+    for update;
 
-    if not found then
+    if found then
+      if shared_session_row.provider <> provider_value
+        or shared_session_row.item_key <> title_key_value
+        or shared_session_row.episode_key <> episode_key_value
+        or shared_session_row.source_url <> source_url_value
+      then
+        raise exception 'watch_history_shared_source_mismatch' using errcode = 'P0001';
+      end if;
+      session_id_value := shared_session_row.id;
+    elsif participant_role = 'viewer' then
       raise exception 'watch_history_shared_session_pending' using errcode = 'P0001';
+    else
+      insert into public.watch_sessions (
+        room_id,
+        host_user_id,
+        provider,
+        item_key,
+        item_kind,
+        item_title,
+        episode_key,
+        episode_title,
+        season_key,
+        season_title,
+        season_number,
+        source_url,
+        artwork_url,
+        duration_seconds,
+        current_time_seconds,
+        progress,
+        started_at,
+        ended_at,
+        last_checkpoint_at,
+        updated_at,
+        schema_version,
+        history_generation,
+        client_session_key,
+        room_generation,
+        source_generation
+      ) values (
+        room_row.room_id,
+        room_row.host_user_id,
+        provider_value,
+        title_key_value,
+        p_event ->> 'itemKind',
+        p_event ->> 'title',
+        episode_key_value,
+        p_event ->> 'episodeTitle',
+        nullif(p_event ->> 'seasonKey', ''),
+        nullif(p_event ->> 'seasonTitle', ''),
+        (p_event ->> 'seasonNumber')::integer,
+        source_url_value,
+        nullif(p_event ->> 'artworkUrl', ''),
+        least(pg_catalog.floor((p_event ->> 'duration')::double precision), 2147483647)::integer,
+        least(pg_catalog.floor((p_event ->> 'currentTime')::double precision), 2147483647)::integer,
+        (p_event ->> 'progress')::double precision,
+        normalized_observed_at,
+        case when event_kind_value in ('source_change', 'room_end', 'ended')
+          then server_accepted_at else null end,
+        normalized_observed_at,
+        server_accepted_at,
+        2,
+        account_generation,
+        null,
+        (p_room_authority ->> 'roomGeneration')::bigint,
+        (p_room_authority ->> 'sourceGeneration')::bigint
+      )
+      on conflict (room_id, room_generation, source_generation)
+        where schema_version = 2 and room_id is not null
+      do nothing
+      returning id into session_id_value;
+
+      if not found then
+        select session.*
+        into shared_session_row
+        from public.watch_sessions as session
+        where session.schema_version = 2
+          and session.room_id = room_row.room_id
+          and session.room_generation = (p_room_authority ->> 'roomGeneration')::bigint
+          and session.source_generation = (p_room_authority ->> 'sourceGeneration')::bigint
+        for update;
+
+        if not found then
+          raise exception 'watch_history_shared_session_pending' using errcode = 'P0001';
+        end if;
+        if shared_session_row.provider <> provider_value
+          or shared_session_row.item_key <> title_key_value
+          or shared_session_row.episode_key <> episode_key_value
+          or shared_session_row.source_url <> source_url_value
+        then
+          raise exception 'watch_history_shared_source_mismatch' using errcode = 'P0001';
+        end if;
+        session_id_value := shared_session_row.id;
+      end if;
     end if;
-    if shared_session_row.provider <> provider_value
-      or shared_session_row.item_key <> title_key_value
-      or shared_session_row.episode_key <> episode_key_value
-      or shared_session_row.source_url <> source_url_value
-    then
-      raise exception 'watch_history_shared_source_mismatch' using errcode = 'P0001';
-    end if;
-    session_id_value := shared_session_row.id;
   end if;
 
   delete from public.watch_history_receipts as expired_receipt
@@ -610,82 +695,25 @@ begin
     returning id into session_id_value;
   else
     if participant_role = 'host' then
-    insert into public.watch_sessions (
-      room_id,
-      host_user_id,
-      provider,
-      item_key,
-      item_kind,
-      item_title,
-      episode_key,
-      episode_title,
-      season_key,
-      season_title,
-      season_number,
-      source_url,
-      artwork_url,
-      duration_seconds,
-      current_time_seconds,
-      progress,
-      started_at,
-      ended_at,
-      last_checkpoint_at,
-      updated_at,
-      schema_version,
-      history_generation,
-      client_session_key,
-      room_generation,
-      source_generation
-    ) values (
-      room_row.room_id,
-      room_row.host_user_id,
-      provider_value,
-      title_key_value,
-      p_event ->> 'itemKind',
-      p_event ->> 'title',
-      episode_key_value,
-      p_event ->> 'episodeTitle',
-      nullif(p_event ->> 'seasonKey', ''),
-      nullif(p_event ->> 'seasonTitle', ''),
-      (p_event ->> 'seasonNumber')::integer,
-      source_url_value,
-      nullif(p_event ->> 'artworkUrl', ''),
-      least(pg_catalog.floor((p_event ->> 'duration')::double precision), 2147483647)::integer,
-      least(pg_catalog.floor((p_event ->> 'currentTime')::double precision), 2147483647)::integer,
-      (p_event ->> 'progress')::double precision,
-      normalized_observed_at,
-      case when event_kind_value in ('source_change', 'room_end', 'ended')
-        then server_accepted_at else null end,
-      normalized_observed_at,
-      server_accepted_at,
-      2,
-      account_generation,
-      null,
-      (p_room_authority ->> 'roomGeneration')::bigint,
-      (p_room_authority ->> 'sourceGeneration')::bigint
-    )
-    on conflict (room_id, room_generation, source_generation)
-      where schema_version = 2 and room_id is not null
-    do update set
-      provider = excluded.provider,
-      item_key = excluded.item_key,
-      item_kind = excluded.item_kind,
-      item_title = excluded.item_title,
-      episode_key = excluded.episode_key,
-      episode_title = excluded.episode_title,
-      season_key = excluded.season_key,
-      season_title = excluded.season_title,
-      season_number = excluded.season_number,
-      source_url = excluded.source_url,
-      artwork_url = coalesce(excluded.artwork_url, public.watch_sessions.artwork_url),
-      duration_seconds = excluded.duration_seconds,
-      current_time_seconds = excluded.current_time_seconds,
-      progress = excluded.progress,
-      ended_at = coalesce(excluded.ended_at, public.watch_sessions.ended_at),
-      last_checkpoint_at = excluded.last_checkpoint_at,
-      updated_at = excluded.updated_at,
-      history_generation = excluded.history_generation
-    returning id into session_id_value;
+      update public.watch_sessions as session
+      set
+        duration_seconds = least(
+          pg_catalog.floor((p_event ->> 'duration')::double precision),
+          2147483647
+        )::integer,
+        current_time_seconds = least(
+          pg_catalog.floor((p_event ->> 'currentTime')::double precision),
+          2147483647
+        )::integer,
+        progress = (p_event ->> 'progress')::double precision,
+        ended_at = coalesce(
+          case when event_kind_value in ('source_change', 'room_end', 'ended')
+            then server_accepted_at else null end,
+          session.ended_at
+        ),
+        last_checkpoint_at = normalized_observed_at,
+        updated_at = server_accepted_at
+      where session.id = session_id_value;
     end if;
   end if;
 
@@ -893,22 +921,30 @@ begin
                     'displayName', case
                       when profile.display_name is not null
                         and char_length(pg_catalog.btrim(profile.display_name)) between 1 and 80
+                        and pg_catalog.octet_length(
+                          pg_catalog.btrim(profile.display_name)
+                        ) <= 80
                       then pg_catalog.btrim(profile.display_name)
                       when participant_user.display_name is not null
                         and char_length(pg_catalog.btrim(participant_user.display_name)) between 1 and 80
+                        and pg_catalog.octet_length(
+                          pg_catalog.btrim(participant_user.display_name)
+                        ) <= 80
                       then pg_catalog.btrim(participant_user.display_name)
                       else 'AniDachi user'
                     end,
                     'avatarUrl', case
                       when profile.avatar_url is not null
                         and char_length(profile.avatar_url) <= 2048
-                        and profile.avatar_url ~ '^https?://'
-                        and profile.avatar_url !~ '[[:space:]]'
+                        and pg_catalog.octet_length(profile.avatar_url)
+                          = char_length(profile.avatar_url)
+                        and profile.avatar_url ~* '^https?://[A-Za-z0-9][A-Za-z0-9-]{0,62}([.][A-Za-z0-9][A-Za-z0-9-]{0,62})+(/[A-Za-z0-9._~!$&()*+,;=:@%/?#-]*)?$'
                       then profile.avatar_url
                       when participant_user.avatar_url is not null
                         and char_length(participant_user.avatar_url) <= 2048
-                        and participant_user.avatar_url ~ '^https?://'
-                        and participant_user.avatar_url !~ '[[:space:]]'
+                        and pg_catalog.octet_length(participant_user.avatar_url)
+                          = char_length(participant_user.avatar_url)
+                        and participant_user.avatar_url ~* '^https?://[A-Za-z0-9][A-Za-z0-9-]{0,62}([.][A-Za-z0-9][A-Za-z0-9-]{0,62})+(/[A-Za-z0-9._~!$&()*+,;=:@%/?#-]*)?$'
                       then participant_user.avatar_url
                       else null
                     end

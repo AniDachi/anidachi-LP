@@ -513,39 +513,77 @@ test("observed history supports 101 seasons and 501 episodes exactly", () => {
   assert.equal(episodes.items[0]?.seasons[0]?.episodes.length, 501);
 });
 
-test("history progress loading exhausts explicit PostgREST ranges", async () => {
+test("history progress loading advances by capped page length until exact total", async () => {
   const loadAll = (
     watchHistoryV2Module as unknown as {
       loadAllWatchHistoryProgressRows?: (
-        loadRange: (from: number, to: number) => Promise<unknown[]>,
+        loadRange: (
+          from: number,
+          to: number,
+        ) => Promise<{ rows: unknown[]; total: number | null }>,
       ) => Promise<unknown[]>;
     }
   ).loadAllWatchHistoryProgressRows;
   assert.equal(typeof loadAll, "function");
   const ranges: Array<[number, number]> = [];
+  const sourceRows = Array.from({ length: 2_005 }, (_, index) => ({ index }));
   const rows = await loadAll!(async (from, to) => {
     ranges.push([from, to]);
-    return ranges.length === 1
-      ? Array.from({ length: 1_000 }, (_, index) => ({ index }))
-      : [{ index: 1_000 }, { index: 1_001 }];
+    return {
+      rows: sourceRows.slice(from, Math.min(from + 137, to + 1)),
+      total: sourceRows.length,
+    };
   });
 
-  assert.deepEqual(ranges, [
+  assert.deepEqual(ranges.slice(0, 3), [
     [0, 999],
-    [1_000, 1_999],
+    [137, 1_136],
+    [274, 1_273],
   ]);
-  assert.equal(rows.length, 1_002);
+  assert.deepEqual(rows, sourceRows);
+});
+
+test("history range loading fails closed on incomplete or unstable exact counts", async () => {
+  const loadAll = (
+    watchHistoryV2Module as unknown as {
+      loadAllWatchHistoryProgressRows?: (
+        loadRange: (
+          from: number,
+          to: number,
+        ) => Promise<{ rows: unknown[]; total: unknown }>,
+      ) => Promise<unknown[]>;
+    }
+  ).loadAllWatchHistoryProgressRows;
+  assert.equal(typeof loadAll, "function");
+
+  await assert.rejects(
+    () => loadAll!(async () => ({ rows: [], total: 2 })),
+    hasCode("INVALID_DATABASE_RESPONSE"),
+  );
+  await assert.rejects(
+    () => loadAll!(async () => ({ rows: [], total: null })),
+    hasCode("INVALID_DATABASE_RESPONSE"),
+  );
+  let request = 0;
+  await assert.rejects(
+    () =>
+      loadAll!(async () => ({
+        rows: [{ request: request++ }],
+        total: request === 1 ? 2 : 3,
+      })),
+    hasCode("INVALID_DATABASE_RESPONSE"),
+  );
 });
 
 test("session enrichment exhausts more than 2000 owners with bounded IN batches", async () => {
   const loadExact = (
     watchHistoryV2Module as unknown as {
       loadExactWatchHistorySessionEnrichment?: (params: {
-        loadOwnerParticipants: (from: number, to: number) => Promise<unknown[]>;
-        loadSessions: (ids: string[], from: number, to: number) => Promise<unknown[]>;
-        loadParticipants: (ids: string[], from: number, to: number) => Promise<unknown[]>;
-        loadUsers: (ids: string[], from: number, to: number) => Promise<unknown[]>;
-        loadProfiles: (ids: string[], from: number, to: number) => Promise<unknown[]>;
+        loadOwnerParticipants: (from: number, to: number) => Promise<unknown>;
+        loadSessions: (ids: string[], from: number, to: number) => Promise<unknown>;
+        loadParticipants: (ids: string[], from: number, to: number) => Promise<unknown>;
+        loadUsers: (ids: string[], from: number, to: number) => Promise<unknown>;
+        loadProfiles: (ids: string[], from: number, to: number) => Promise<unknown>;
       }) => Promise<{
         sessions: unknown[];
         participants: unknown[];
@@ -564,22 +602,24 @@ test("session enrichment exhausts more than 2000 owners with bounded IN batches"
   const ownerRanges: Array<[number, number]> = [];
   const batchSizes: number[] = [];
   const participantRanges: Array<[number, number]> = [];
-  const slice = (values: unknown[], from: number, to: number) =>
-    values.slice(from, to + 1);
+  const page = (values: unknown[], from: number, to: number) => ({
+    rows: values.slice(from, Math.min(from + 137, to + 1)),
+    total: values.length,
+  });
 
   const enrichment = await loadExact!({
     loadOwnerParticipants: async (from, to) => {
       ownerRanges.push([from, to]);
-      return slice(sessionIds.map((session_id) => ({ session_id })), from, to);
+      return page(sessionIds.map((session_id) => ({ session_id })), from, to);
     },
     loadSessions: async (ids, from, to) => {
       batchSizes.push(ids.length);
-      return slice(ids.map((id) => ({ id })), from, to);
+      return page(ids.map((id) => ({ id })), from, to);
     },
     loadParticipants: async (ids, from, to) => {
       batchSizes.push(ids.length);
       participantRanges.push([from, to]);
-      return slice(
+      return page(
         ids.flatMap((session_id) =>
           participantIds.map((user_id) => ({ session_id, user_id })),
         ),
@@ -589,21 +629,21 @@ test("session enrichment exhausts more than 2000 owners with bounded IN batches"
     },
     loadUsers: async (ids, from, to) => {
       batchSizes.push(ids.length);
-      return slice(ids.map((id) => ({ id })), from, to);
+      return page(ids.map((id) => ({ id })), from, to);
     },
     loadProfiles: async (ids, from, to) => {
       batchSizes.push(ids.length);
-      return slice(ids.map((user_id) => ({ user_id })), from, to);
+      return page(ids.map((user_id) => ({ user_id })), from, to);
     },
   });
 
-  assert.deepEqual(ownerRanges, [
+  assert.deepEqual(ownerRanges.slice(0, 3), [
     [0, 999],
-    [1_000, 1_999],
-    [2_000, 2_999],
+    [137, 1_136],
+    [274, 1_273],
   ]);
   assert.equal(Math.max(...batchSizes), 100);
-  assert.ok(participantRanges.some(([from]) => from === 1_000));
+  assert.ok(participantRanges.some(([from]) => from === 137));
   assert.equal(enrichment.sessions.length, 2_005);
   assert.equal(enrichment.participants.length, 2_005 * 11);
 });
