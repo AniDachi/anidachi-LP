@@ -103,7 +103,7 @@ test("receipt retention is exactly fourteen days and acknowledgements are bounde
   assert.match(table, /kind text not null check \(kind in \('progress', 'delete'\)\)/);
   assert.match(table, /check \(expires_at = accepted_at \+ interval '14 days'\)/);
   assert.match(table, /jsonb_typeof\(acknowledgement\) = 'object'/);
-  assert.match(table, /octet_length\(acknowledgement::text\) <= 1048576/);
+  assert.match(table, /octet_length\(acknowledgement::text\) <= 2097152/);
   assert.doesNotMatch(sql, /interval '(?!14 days)[^']+'[^;]*receipt/);
 });
 
@@ -222,34 +222,61 @@ test("participant evidence is discriminator-two on every v2 write, read, and del
   );
 });
 
-test("viewer conflicts resolve shared identity without rewriting host-owned session content", () => {
+test("viewer shared events reject missing or mismatched host provenance before mutation", () => {
   const definition = functionDefinition("apply_watch_progress_v2");
-  for (const column of [
-    "provider",
-    "item_key",
-    "item_kind",
-    "item_title",
-    "episode_key",
-    "episode_title",
-    "season_key",
-    "season_title",
-    "season_number",
-    "source_url",
-    "artwork_url",
-    "duration_seconds",
-    "current_time_seconds",
-    "progress",
-    "ended_at",
-    "last_checkpoint_at",
-    "updated_at",
-  ]) {
-    assert.match(
-      definition,
-      new RegExp(
-        `${column} = case when participant_role = 'host' then [\\s\\S]*? else public\\.watch_sessions\\.${column} end`,
-      ),
-    );
+  const pendingAt = definition.indexOf("watch_history_shared_session_pending");
+  const mismatchAt = definition.indexOf("watch_history_shared_source_mismatch");
+  const orderAt = definition.indexOf("next_server_order =");
+  const participantAt = definition.indexOf(
+    "insert into public.watch_session_participants",
+  );
+  const progressAt = definition.indexOf("insert into public.watch_episode_progress");
+  const receiptAt = definition.indexOf("insert into public.watch_history_receipts");
+  for (const rejectionAt of [pendingAt, mismatchAt]) {
+    assert.ok(rejectionAt >= 0);
+    assert.ok(rejectionAt < orderAt);
+    assert.ok(rejectionAt < participantAt);
+    assert.ok(rejectionAt < progressAt);
+    assert.ok(rejectionAt < receiptAt);
   }
+  assert.match(
+    definition,
+    /where session\.schema_version = 2 and session\.room_id = room_row\.room_id and session\.room_generation = .*?'roomgeneration'.*? and session\.source_generation = .*?'sourcegeneration'/,
+  );
+  assert.match(
+    definition,
+    /shared_session_row\.provider <> provider_value or shared_session_row\.item_key <> title_key_value or shared_session_row\.episode_key <> episode_key_value or shared_session_row\.source_url <> source_url_value/,
+  );
+});
+
+test("only the host inserts or updates a shared global session row", () => {
+  const definition = functionDefinition("apply_watch_progress_v2");
+  assert.match(
+    definition,
+    /if participant_role = 'host' then insert into public\.watch_sessions[\s\S]*?on conflict \(room_id, room_generation, source_generation\)[\s\S]*?do update set[\s\S]*?returning id into session_id_value; end if; end if; insert into public\.watch_session_participants/,
+  );
+  assert.match(
+    definition,
+    /if participant_role = 'viewer' then select session\.\* into shared_session_row from public\.watch_sessions as session[\s\S]*?session_id_value := shared_session_row\.id; end if;/,
+  );
+  assert.doesNotMatch(definition, /case when participant_role = 'host'/);
+});
+
+test("acknowledgement profiles sanitize every bounded public field", () => {
+  const definition = functionDefinition("apply_watch_progress_v2");
+  assert.match(
+    definition,
+    /case when profile\.handle is not null and pg_catalog\.btrim\(profile\.handle\) ~ '\^\[a-z0-9_\]\{3,24\}\$' then pg_catalog\.btrim\(profile\.handle\) else null end/,
+  );
+  assert.match(
+    definition,
+    /else 'anidachi user' end\s*,\s*'avatarurl'/,
+  );
+  assert.match(
+    definition,
+    /char_length\(profile\.avatar_url\) <= 2048[\s\S]*?profile\.avatar_url ~ '\^https\?:\/\/'/,
+  );
+  assert.doesNotMatch(definition, /left\([^)]*avatar_url|substring\([^)]*avatar_url/);
 });
 
 test("v2 transactions leave active v1 tracked-title rows untouched", () => {
@@ -307,7 +334,7 @@ test("canonical acknowledgements omit roomless shared tombstones", () => {
   const definition = functionDefinition("apply_watch_progress_v2");
   assert.match(
     definition,
-    /where session\.schema_version = 2 and \( session\.room_id is not null or session\.client_session_key is not null \) and session\.provider = provider_value/,
+    /where session\.schema_version = 2 and \( session\.room_id is not null or session\.client_session_key is not null \) and session\.provider = provider_value and session\.item_key = title_key_value and session\.episode_key = episode_key_value/,
   );
 });
 

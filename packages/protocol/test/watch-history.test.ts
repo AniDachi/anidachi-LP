@@ -771,16 +771,20 @@ describe("watch history v2 read and mutation contracts", () => {
     ).toThrow();
   });
 
-  it("keeps a maximum-shape 20-session acknowledgement below one MiB", () => {
+  it("keeps a maximum-Unicode 20-session acknowledgement below two MiB", () => {
+    const unicode = "😀";
+    const maxUnicode = (maxCodeUnits: number) =>
+      unicode.repeat(Math.floor(maxCodeUnits / unicode.length)) +
+      "a".repeat(maxCodeUnits % unicode.length);
     const maxUrl = (label: string) => {
       const prefix = `https://example.com/${label}/`;
-      return prefix + "a".repeat(2_048 - prefix.length);
+      return prefix + maxUnicode(2_048 - prefix.length);
     };
     const uuid = (index: number) =>
       `00000000-0000-4000-8000-${index.toString(16).padStart(12, "0")}`;
     const sessions = Array.from({ length: 20 }, (_, sessionIndex) => ({
       id: uuid(sessionIndex + 10),
-      roomId: "r".repeat(128),
+      roomId: maxUnicode(128),
       roomGeneration: sessionIndex + 1,
       hostUserId: HOST_ID,
       kind: "shared" as const,
@@ -795,7 +799,7 @@ describe("watch history v2 read and mutation contracts", () => {
         user: {
           userId: uuid(100 + sessionIndex * 15 + participantIndex),
           handle: "h".repeat(24),
-          displayName: "D".repeat(80),
+          displayName: maxUnicode(80),
           avatarUrl: maxUrl(`avatar-${sessionIndex}-${participantIndex}`),
         },
         role: participantIndex === 0 ? ("host" as const) : ("viewer" as const),
@@ -814,10 +818,10 @@ describe("watch history v2 read and mutation contracts", () => {
       accountGeneration: 4,
       duplicate: false,
       episode: {
-        episodeKey: "e".repeat(220),
-        episodeTitle: "E".repeat(300),
-        seasonKey: "s".repeat(220),
-        seasonTitle: "S".repeat(300),
+        episodeKey: maxUnicode(220),
+        episodeTitle: maxUnicode(300),
+        seasonKey: maxUnicode(220),
+        seasonTitle: maxUnicode(300),
         seasonNumber: 1000,
         episodeNumber: Number.MAX_SAFE_INTEGER,
         sourceUrl: maxUrl("episode"),
@@ -829,11 +833,23 @@ describe("watch history v2 read and mutation contracts", () => {
         sessions,
       },
     });
+    const postgresJsonText = (value: unknown): string => {
+      if (Array.isArray(value)) {
+        return `[${value.map(postgresJsonText).join(", ")}]`;
+      }
+      if (value !== null && typeof value === "object") {
+        return `{${Object.entries(value)
+          .map(([key, item]) => `${JSON.stringify(key)}: ${postgresJsonText(item)}`)
+          .join(", ")}}`;
+      }
+      return JSON.stringify(value);
+    };
     const acknowledgementBytes = new TextEncoder().encode(
-      JSON.stringify(maximumShape),
+      postgresJsonText(maximumShape),
     ).byteLength;
-    expect(acknowledgementBytes).toBeGreaterThan(256 * 1_024);
-    expect(acknowledgementBytes).toBeLessThan(1_024 * 1_024);
+    expect(acknowledgementBytes).toBe(1_383_287);
+    expect(acknowledgementBytes).toBeGreaterThan(1_024 * 1_024);
+    expect(acknowledgementBytes).toBeLessThan(2 * 1_024 * 1_024);
   });
 
   it("keeps the strict v1 watch library contract separate from v2", () => {

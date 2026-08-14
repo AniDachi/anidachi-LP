@@ -252,6 +252,31 @@ test("domain failures map to bounded stable public errors", async () => {
   }
 });
 
+test("shared session host-order failures map to retryable bounded conflicts", async () => {
+  for (const [databaseMessage, publicCode] of [
+    ["watch_history_shared_session_pending", "SHARED_SESSION_PENDING"],
+    ["watch_history_shared_source_mismatch", "SHARED_SOURCE_MISMATCH"],
+  ] as const) {
+    await assert.rejects(
+      () =>
+        applyWatchProgressV2({
+          userId: USER_ID,
+          input: progressEvent(),
+          store: storeStub({
+            applyProgress: async () => {
+              throw { message: databaseMessage, detail: "private" };
+            },
+          }),
+        }),
+      (error) =>
+        error instanceof WatchHistoryV2ApiError &&
+        error.status === 409 &&
+        error.code === publicCode &&
+        !error.message.includes("private"),
+    );
+  }
+});
+
 test("cursor is opaque base64url data and rejects malformed values", () => {
   const encoded = encodeWatchHistoryCursor({
     lastWatchedAt: NOW,
@@ -322,7 +347,14 @@ test("canonical read derives observed-only titles, seasons, episodes, and sessio
         history_generation: 1,
       },
     ],
-    sessions: [session()],
+    sessions: [
+      {
+        session: session(),
+        provider: "crunchyroll",
+        titleKey: "series-one",
+        episodeKey: "episode-one",
+      },
+    ],
   });
 
   assert.equal(response.totalTitleCount, 1);
@@ -377,8 +409,8 @@ test("canonical read includes every meaningful v2 session associated with the vi
       },
     ],
     sessions: [
-      { session: session(), ownerProvider: "crunchyroll", ownerTitleKey: "series-one", ownerEpisodeKey: "episode-one" },
-      { session: earlierSession, ownerProvider: "crunchyroll", ownerTitleKey: "series-one", ownerEpisodeKey: "episode-one" },
+      { session: session(), provider: "crunchyroll", titleKey: "series-one", episodeKey: "episode-one" },
+      { session: earlierSession, provider: "crunchyroll", titleKey: "series-one", episodeKey: "episode-one" },
     ],
   });
   assert.deepEqual(
@@ -391,19 +423,19 @@ test("canonical read includes every meaningful v2 session associated with the vi
   );
 });
 
-test("canonical read associates sessions only through owner-derived progress provenance", () => {
+test("canonical read uses durable host provenance instead of the latest-session pointer", () => {
   const response = buildWatchHistoryV2Response({
     userId: USER_ID,
     accountGeneration: 1,
     generatedAt: new Date(NOW),
     limit: 100,
-    progressRows: [progressRow()],
+    progressRows: [progressRow({ latest_session_id: null })],
     sessions: [
       {
         session: session(),
-        ownerProvider: "crunchyroll",
-        ownerTitleKey: "series-one",
-        ownerEpisodeKey: "episode-one",
+        provider: "crunchyroll",
+        titleKey: "series-one",
+        episodeKey: "episode-one",
       },
     ],
   });
@@ -505,78 +537,139 @@ test("history progress loading exhausts explicit PostgREST ranges", async () => 
   assert.equal(rows.length, 1_002);
 });
 
-test("room recreation uses only the owner's current-generation progress mapping", () => {
+test("session enrichment exhausts more than 2000 owners with bounded IN batches", async () => {
+  const loadExact = (
+    watchHistoryV2Module as unknown as {
+      loadExactWatchHistorySessionEnrichment?: (params: {
+        loadOwnerParticipants: (from: number, to: number) => Promise<unknown[]>;
+        loadSessions: (ids: string[], from: number, to: number) => Promise<unknown[]>;
+        loadParticipants: (ids: string[], from: number, to: number) => Promise<unknown[]>;
+        loadUsers: (ids: string[], from: number, to: number) => Promise<unknown[]>;
+        loadProfiles: (ids: string[], from: number, to: number) => Promise<unknown[]>;
+      }) => Promise<{
+        sessions: unknown[];
+        participants: unknown[];
+      }>;
+    }
+  ).loadExactWatchHistorySessionEnrichment;
+  assert.equal(typeof loadExact, "function");
+
+  const uuid = (index: number) =>
+    `00000000-0000-4000-8000-${index.toString(16).padStart(12, "0")}`;
+  const sessionIds = Array.from({ length: 2_005 }, (_, index) => uuid(index + 10));
+  const participantIds = [
+    USER_ID,
+    ...Array.from({ length: 10 }, (_, index) => uuid(index + 4_000)),
+  ];
+  const ownerRanges: Array<[number, number]> = [];
+  const batchSizes: number[] = [];
+  const participantRanges: Array<[number, number]> = [];
+  const slice = (values: unknown[], from: number, to: number) =>
+    values.slice(from, to + 1);
+
+  const enrichment = await loadExact!({
+    loadOwnerParticipants: async (from, to) => {
+      ownerRanges.push([from, to]);
+      return slice(sessionIds.map((session_id) => ({ session_id })), from, to);
+    },
+    loadSessions: async (ids, from, to) => {
+      batchSizes.push(ids.length);
+      return slice(ids.map((id) => ({ id })), from, to);
+    },
+    loadParticipants: async (ids, from, to) => {
+      batchSizes.push(ids.length);
+      participantRanges.push([from, to]);
+      return slice(
+        ids.flatMap((session_id) =>
+          participantIds.map((user_id) => ({ session_id, user_id })),
+        ),
+        from,
+        to,
+      );
+    },
+    loadUsers: async (ids, from, to) => {
+      batchSizes.push(ids.length);
+      return slice(ids.map((id) => ({ id })), from, to);
+    },
+    loadProfiles: async (ids, from, to) => {
+      batchSizes.push(ids.length);
+      return slice(ids.map((user_id) => ({ user_id })), from, to);
+    },
+  });
+
+  assert.deepEqual(ownerRanges, [
+    [0, 999],
+    [1_000, 1_999],
+    [2_000, 2_999],
+  ]);
+  assert.equal(Math.max(...batchSizes), 100);
+  assert.ok(participantRanges.some(([from]) => from === 1_000));
+  assert.equal(enrichment.sessions.length, 2_005);
+  assert.equal(enrichment.participants.length, 2_005 * 11);
+});
+
+test("room recreation uses durable host metadata for old and new owned sessions", () => {
   const buildSource = (
     watchHistoryV2Module as unknown as {
-      buildOwnerDerivedWatchHistoryRoomSource?: (params: unknown) => unknown;
+      buildHostAuthoritativeWatchHistoryRoomSource?: (params: unknown) => unknown;
     }
-  ).buildOwnerDerivedWatchHistoryRoomSource;
+  ).buildHostAuthoritativeWatchHistoryRoomSource;
   assert.equal(typeof buildSource, "function");
-  assert.deepEqual(
-    buildSource!({
+  for (const sessionId of [SESSION_ID, "44444444-4444-4444-8444-444444444444"]) {
+    assert.deepEqual(buildSource!({
       userId: USER_ID,
-      sessionId: SESSION_ID,
-      accountGeneration: 7,
+      sessionId,
       participant: {
-        session_id: SESSION_ID,
+        session_id: sessionId,
         user_id: USER_ID,
         schema_version: 2,
       },
       session: {
-        id: SESSION_ID,
+        id: sessionId,
         schema_version: 2,
         room_id: "room-one",
         client_session_key: null,
-      },
-      progress: {
-        user_id: USER_ID,
-        latest_session_id: SESSION_ID,
-        history_generation: 7,
-        title_key: "owner-series",
-        episode_key: "owner-episode",
+        provider: "crunchyroll",
+        item_key: "host-series",
+        episode_key: "host-episode",
         source_url: "https://www.crunchyroll.com/watch/owner-episode/demo",
-        title: "Owner Series",
-        episode_title: "Owner Episode",
+        item_title: "Host Series",
+        episode_title: "Host Episode",
         item_kind: "series",
       },
+    }), {
+      sessionId,
+      showId: "host-series",
+      episodeId: "host-episode",
+      sourceUrl: "https://www.crunchyroll.com/watch/owner-episode/demo",
+      title: "Host Series - Host Episode",
+    });
+  }
+});
+
+test("session profile enrichment replaces malformed public fields safely", () => {
+  const normalize = (
+    watchHistoryV2Module as unknown as {
+      normalizeWatchHistoryPublicProfile?: (params: unknown) => unknown;
+    }
+  ).normalizeWatchHistoryPublicProfile;
+  assert.equal(typeof normalize, "function");
+  assert.deepEqual(
+    normalize!({
+      userId: USER_ID,
+      profile: {
+        handle: "Bad Handle",
+        display_name: "D".repeat(81),
+        avatar_url: `https://example.com/${"a".repeat(2_100)}`,
+      },
+      user: { display_name: "   ", avatar_url: "javascript:alert(1)" },
     }),
     {
-      sessionId: SESSION_ID,
-      showId: "owner-series",
-      episodeId: "owner-episode",
-      sourceUrl: "https://www.crunchyroll.com/watch/owner-episode/demo",
-      title: "Owner Series - Owner Episode",
-    },
-  );
-  assert.equal(
-    buildSource!({
       userId: USER_ID,
-      sessionId: SESSION_ID,
-      accountGeneration: 8,
-      participant: {
-        session_id: SESSION_ID,
-        user_id: USER_ID,
-        schema_version: 2,
-      },
-      session: {
-        id: SESSION_ID,
-        schema_version: 2,
-        room_id: "room-one",
-        client_session_key: null,
-      },
-      progress: {
-        user_id: USER_ID,
-        latest_session_id: SESSION_ID,
-        history_generation: 7,
-        title_key: "owner-series",
-        episode_key: "owner-episode",
-        source_url: "https://www.crunchyroll.com/watch/owner-episode/demo",
-        title: "Owner Series",
-        episode_title: "Owner Episode",
-        item_kind: "series",
-      },
-    }),
-    null,
+      handle: null,
+      displayName: "AniDachi user",
+      avatarUrl: null,
+    },
   );
 });
 

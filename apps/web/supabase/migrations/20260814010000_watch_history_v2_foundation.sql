@@ -40,9 +40,9 @@ create table public.watch_episode_progress (
 
 -- Receipts are exact canonical acknowledgements retained for exactly 14 days.
 -- The maximum protocol shape is one episode with 20 sessions x 15 participants
--- and maximum-sized bounded fields. Its UTF-8 fixture is above 256 KiB and below
--- 1 MiB, so 1 MiB is the smallest power-of-two bound with margin; octet_length
--- keeps the SQL check in the same serialized-byte unit as that fixture.
+-- and maximum-sized bounded Unicode fields. Its four-byte UTF-8 fixture is
+-- 1,383,287 serialized bytes, so 2 MiB is the smallest sufficient power-of-two
+-- bound; octet_length uses the same serialized-byte unit as that fixture.
 -- Cleanup is opportunistic inside later account-locked write transactions.
 create table public.watch_history_receipts (
   user_id uuid not null references public.users (id) on delete cascade,
@@ -50,7 +50,7 @@ create table public.watch_history_receipts (
   kind text not null check (kind in ('progress', 'delete')),
   acknowledgement jsonb not null check (
     pg_catalog.jsonb_typeof(acknowledgement) = 'object'
-    and pg_catalog.octet_length(acknowledgement::text) <= 1048576
+    and pg_catalog.octet_length(acknowledgement::text) <= 2097152
   ),
   accepted_at timestamptz not null default pg_catalog.transaction_timestamp(),
   expires_at timestamptz not null default (
@@ -261,6 +261,7 @@ declare
   settings_row public.user_watch_settings%rowtype;
   existing_receipt public.watch_history_receipts%rowtype;
   existing_progress public.watch_episode_progress%rowtype;
+  shared_session_row public.watch_sessions%rowtype;
   room_row public.rooms%rowtype;
   member_joined_at timestamptz;
   authority_issued_at timestamptz;
@@ -301,15 +302,12 @@ begin
   where settings.user_id = p_user_id
   for update;
 
-  delete from public.watch_history_receipts as expired_receipt
-  where expired_receipt.user_id = p_user_id
-    and expired_receipt.expires_at <= server_accepted_at;
-
   select receipt.*
   into existing_receipt
   from public.watch_history_receipts as receipt
   where receipt.user_id = p_user_id
-    and receipt.client_id = client_event_id;
+    and receipt.client_id = client_event_id
+    and receipt.expires_at > server_accepted_at;
 
   if found then
     if existing_receipt.kind <> 'progress' then
@@ -497,6 +495,33 @@ begin
     raise exception 'watch_history_observation_stale' using errcode = 'P0001';
   end if;
 
+  if participant_role = 'viewer' then
+    select session.*
+    into shared_session_row
+    from public.watch_sessions as session
+    where session.schema_version = 2
+      and session.room_id = room_row.room_id
+      and session.room_generation = (p_room_authority ->> 'roomGeneration')::bigint
+      and session.source_generation = (p_room_authority ->> 'sourceGeneration')::bigint
+    for share;
+
+    if not found then
+      raise exception 'watch_history_shared_session_pending' using errcode = 'P0001';
+    end if;
+    if shared_session_row.provider <> provider_value
+      or shared_session_row.item_key <> title_key_value
+      or shared_session_row.episode_key <> episode_key_value
+      or shared_session_row.source_url <> source_url_value
+    then
+      raise exception 'watch_history_shared_source_mismatch' using errcode = 'P0001';
+    end if;
+    session_id_value := shared_session_row.id;
+  end if;
+
+  delete from public.watch_history_receipts as expired_receipt
+  where expired_receipt.user_id = p_user_id
+    and expired_receipt.expires_at <= server_accepted_at;
+
   update public.user_watch_settings as settings
   set
     next_server_order = settings.next_server_order + 1,
@@ -584,6 +609,7 @@ begin
       history_generation = excluded.history_generation
     returning id into session_id_value;
   else
+    if participant_role = 'host' then
     insert into public.watch_sessions (
       room_id,
       host_user_id,
@@ -641,44 +667,26 @@ begin
     on conflict (room_id, room_generation, source_generation)
       where schema_version = 2 and room_id is not null
     do update set
-      provider = case when participant_role = 'host'
-        then excluded.provider else public.watch_sessions.provider end,
-      item_key = case when participant_role = 'host'
-        then excluded.item_key else public.watch_sessions.item_key end,
-      item_kind = case when participant_role = 'host'
-        then excluded.item_kind else public.watch_sessions.item_kind end,
-      item_title = case when participant_role = 'host'
-        then excluded.item_title else public.watch_sessions.item_title end,
-      episode_key = case when participant_role = 'host'
-        then excluded.episode_key else public.watch_sessions.episode_key end,
-      episode_title = case when participant_role = 'host'
-        then excluded.episode_title else public.watch_sessions.episode_title end,
-      season_key = case when participant_role = 'host'
-        then excluded.season_key else public.watch_sessions.season_key end,
-      season_title = case when participant_role = 'host'
-        then excluded.season_title else public.watch_sessions.season_title end,
-      season_number = case when participant_role = 'host'
-        then excluded.season_number else public.watch_sessions.season_number end,
-      source_url = case when participant_role = 'host'
-        then excluded.source_url else public.watch_sessions.source_url end,
-      artwork_url = case when participant_role = 'host'
-        then coalesce(excluded.artwork_url, public.watch_sessions.artwork_url)
-        else public.watch_sessions.artwork_url end,
-      duration_seconds = case when participant_role = 'host'
-        then excluded.duration_seconds else public.watch_sessions.duration_seconds end,
-      current_time_seconds = case when participant_role = 'host'
-        then excluded.current_time_seconds else public.watch_sessions.current_time_seconds end,
-      progress = case when participant_role = 'host'
-        then excluded.progress else public.watch_sessions.progress end,
-      ended_at = case when participant_role = 'host'
-        then coalesce(excluded.ended_at, public.watch_sessions.ended_at)
-        else public.watch_sessions.ended_at end,
-      last_checkpoint_at = case when participant_role = 'host'
-        then excluded.last_checkpoint_at else public.watch_sessions.last_checkpoint_at end,
-      updated_at = case when participant_role = 'host'
-        then excluded.updated_at else public.watch_sessions.updated_at end,
-      history_generation = public.watch_sessions.history_generation
+      provider = excluded.provider,
+      item_key = excluded.item_key,
+      item_kind = excluded.item_kind,
+      item_title = excluded.item_title,
+      episode_key = excluded.episode_key,
+      episode_title = excluded.episode_title,
+      season_key = excluded.season_key,
+      season_title = excluded.season_title,
+      season_number = excluded.season_number,
+      source_url = excluded.source_url,
+      artwork_url = coalesce(excluded.artwork_url, public.watch_sessions.artwork_url),
+      duration_seconds = excluded.duration_seconds,
+      current_time_seconds = excluded.current_time_seconds,
+      progress = excluded.progress,
+      ended_at = coalesce(excluded.ended_at, public.watch_sessions.ended_at),
+      last_checkpoint_at = excluded.last_checkpoint_at,
+      updated_at = excluded.updated_at,
+      history_generation = excluded.history_generation
     returning id into session_id_value;
+    end if;
   end if;
 
   insert into public.watch_session_participants (
@@ -876,9 +884,34 @@ begin
                   pg_catalog.jsonb_build_object(
                   'user', pg_catalog.jsonb_build_object(
                     'userId', participant.user_id,
-                    'handle', profile.handle,
-                    'displayName', coalesce(profile.display_name, participant_user.display_name),
-                    'avatarUrl', coalesce(profile.avatar_url, participant_user.avatar_url)
+                    'handle', case
+                      when profile.handle is not null
+                        and pg_catalog.btrim(profile.handle) ~ '^[a-z0-9_]{3,24}$'
+                      then pg_catalog.btrim(profile.handle)
+                      else null
+                    end,
+                    'displayName', case
+                      when profile.display_name is not null
+                        and char_length(pg_catalog.btrim(profile.display_name)) between 1 and 80
+                      then pg_catalog.btrim(profile.display_name)
+                      when participant_user.display_name is not null
+                        and char_length(pg_catalog.btrim(participant_user.display_name)) between 1 and 80
+                      then pg_catalog.btrim(participant_user.display_name)
+                      else 'AniDachi user'
+                    end,
+                    'avatarUrl', case
+                      when profile.avatar_url is not null
+                        and char_length(profile.avatar_url) <= 2048
+                        and profile.avatar_url ~ '^https?://'
+                        and profile.avatar_url !~ '[[:space:]]'
+                      then profile.avatar_url
+                      when participant_user.avatar_url is not null
+                        and char_length(participant_user.avatar_url) <= 2048
+                        and participant_user.avatar_url ~ '^https?://'
+                        and participant_user.avatar_url !~ '[[:space:]]'
+                      then participant_user.avatar_url
+                      else null
+                    end
                   ),
                   'role', participant.role,
                   'currentTime', participant.current_time_seconds,

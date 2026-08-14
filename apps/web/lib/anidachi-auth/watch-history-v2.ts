@@ -24,9 +24,10 @@ import {
 } from "./watch-history-authority";
 
 const MAX_CURSOR_CHARS = 512;
-const MAX_SESSION_IDS = 2_000;
 const POSTGREST_HISTORY_PAGE_SIZE = 1_000;
+const WATCH_HISTORY_QUERY_BATCH_SIZE = 100;
 const MVP_PROVIDERS = new Set(["crunchyroll", "youtube"]);
+const PUBLIC_HANDLE_PATTERN = /^[a-z0-9_]{3,24}$/;
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -57,6 +58,9 @@ export type WatchHistoryProgressRow = {
 
 type SessionDatabaseRow = {
   id: string;
+  provider: "crunchyroll" | "youtube";
+  item_key: string;
+  episode_key: string;
   client_session_key: string | null;
   room_id: string | null;
   room_generation: number | null;
@@ -72,9 +76,9 @@ type SessionDatabaseRow = {
 
 type WatchHistorySessionRecord = {
   session: WatchHistorySession;
-  ownerProvider: "crunchyroll" | "youtube" | null;
-  ownerTitleKey: string | null;
-  ownerEpisodeKey: string | null;
+  provider: "crunchyroll" | "youtube";
+  titleKey: string;
+  episodeKey: string;
 };
 
 type ParticipantDatabaseRow = {
@@ -303,15 +307,11 @@ export function buildWatchHistoryV2Response(params: {
         seasonRows.set(seasonKey, group);
       }
     }
-    const latestSessionIds = new Set(
-      titleRows.flatMap((row) => (row.latest_session_id ? [row.latest_session_id] : [])),
-    );
     const titleSessions = sessionRecords
       .filter(
         (record) =>
-          (record.ownerProvider === latest.provider &&
-            record.ownerTitleKey === latest.title_key) ||
-          (record.ownerProvider === null && latestSessionIds.has(record.session.id)),
+          record.provider === latest.provider &&
+          record.titleKey === latest.title_key,
       )
       .map((record) => record.session)
       .sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt))
@@ -363,11 +363,9 @@ export function buildWatchHistoryV2Response(params: {
                 sessions: sessionRecords
                   .filter(
                     (record) =>
-                      (record.ownerProvider === row.provider &&
-                        record.ownerTitleKey === row.title_key &&
-                        record.ownerEpisodeKey === row.episode_key) ||
-                      (record.ownerProvider === null &&
-                        record.session.id === row.latest_session_id),
+                      record.provider === row.provider &&
+                      record.titleKey === row.title_key &&
+                      record.episodeKey === row.episode_key,
                   )
                   .map((record) => record.session)
                   .sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt))
@@ -467,12 +465,69 @@ export function decodeWatchHistoryCursor(value: string): WatchHistoryCursor {
 export async function loadAllWatchHistoryProgressRows(
   loadRange: (from: number, to: number) => Promise<unknown[]>,
 ): Promise<unknown[]> {
+  return loadAllWatchHistoryRangePages(loadRange);
+}
+
+async function loadAllWatchHistoryRangePages(
+  loadRange: (from: number, to: number) => Promise<unknown[]>,
+): Promise<unknown[]> {
   const rows: unknown[] = [];
   for (let from = 0; ; from += POSTGREST_HISTORY_PAGE_SIZE) {
     const page = await loadRange(from, from + POSTGREST_HISTORY_PAGE_SIZE - 1);
     rows.push(...page);
     if (page.length < POSTGREST_HISTORY_PAGE_SIZE) return rows;
   }
+}
+
+async function loadWatchHistoryBatches(
+  ids: string[],
+  loadRange: (ids: string[], from: number, to: number) => Promise<unknown[]>,
+  keyOf: (value: unknown) => string,
+): Promise<unknown[]> {
+  const rows = new Map<string, unknown>();
+  for (let offset = 0; offset < ids.length; offset += WATCH_HISTORY_QUERY_BATCH_SIZE) {
+    const batch = ids.slice(offset, offset + WATCH_HISTORY_QUERY_BATCH_SIZE);
+    const pageRows = await loadAllWatchHistoryRangePages((from, to) =>
+      loadRange(batch, from, to),
+    );
+    for (const value of pageRows) rows.set(keyOf(value), value);
+  }
+  return Array.from(rows.values());
+}
+
+function databaseRowKey(value: unknown, field: string): string {
+  if (!isRecord(value) || !isUuid(value[field])) throw invalidDatabaseResponse();
+  return value[field];
+}
+
+export function normalizeWatchHistoryPublicProfile(params: {
+  userId: string;
+  profile?: Record<string, unknown>;
+  user?: Record<string, unknown>;
+}): {
+  userId: string;
+  handle: string | null;
+  displayName: string;
+  avatarUrl: string | null;
+} {
+  if (!isUuid(params.userId)) throw invalidDatabaseResponse();
+  const rawHandle = params.profile?.handle;
+  const handle = typeof rawHandle === "string" ? rawHandle.trim() : "";
+  const displayName = [params.profile?.display_name, params.user?.display_name]
+    .flatMap((value) => {
+      if (typeof value !== "string") return [];
+      const normalized = value.trim();
+      return normalized.length >= 1 && normalized.length <= 80 ? [normalized] : [];
+    })[0];
+  const avatarUrl = [params.profile?.avatar_url, params.user?.avatar_url].find(
+    (value): value is string => isHttpUrl(value, 2048),
+  );
+  return {
+    userId: params.userId,
+    handle: PUBLIC_HANDLE_PATTERN.test(handle) ? handle : null,
+    displayName: displayName ?? "AniDachi user",
+    avatarUrl: avatarUrl ?? null,
+  };
 }
 
 export async function getWatchHistoryPreferencesV2(params: {
@@ -580,28 +635,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
       return (progressResult.data as unknown[] | null) ?? [];
     });
     progressRows.forEach(parseProgressRow);
-    const ownerSessionsResult = await db()
-      .from("watch_session_participants")
-      .select("session_id")
-      .eq("user_id", userId)
-      .eq("schema_version", 2)
-      .order("updated_at", { ascending: false })
-      .limit(MAX_SESSION_IDS);
-    if (ownerSessionsResult.error) throw ownerSessionsResult.error;
-    const sessionIds = Array.from(
-      new Set(
-        ((ownerSessionsResult.data as Array<{ session_id?: unknown }> | null) ?? []).map(
-          (row) => {
-            if (!isUuid(row.session_id)) throw invalidDatabaseResponse();
-            return row.session_id;
-          },
-        ),
-      ),
-    );
-    const sessions =
-      sessionIds.length > 0
-        ? await loadCanonicalSessions(userId, sessionIds, progressRows)
-        : [];
+    const sessions = await loadCanonicalSessions(userId);
     return {
       accountGeneration: preferences.accountGeneration,
       progressRows,
@@ -652,7 +686,6 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
   },
 
   async getRoomSource(userId, sessionId) {
-    const preferences = await this.getPreferences(userId);
     const participant = await db()
       .from("watch_session_participants")
       .select("session_id,user_id,schema_version")
@@ -664,58 +697,40 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
     if (!participant.data) return null;
     const session = await db()
       .from("watch_sessions")
-      .select("id,schema_version,room_id,client_session_key")
+      .select(
+        "id,schema_version,room_id,client_session_key,provider,item_key,item_kind,item_title,episode_key,episode_title,source_url",
+      )
       .eq("id", sessionId)
       .eq("schema_version", 2)
       .or("room_id.not.is.null,client_session_key.not.is.null")
       .maybeSingle();
     if (session.error) throw session.error;
     if (!session.data) return null;
-    const progress = await db()
-      .from("watch_episode_progress")
-      .select(
-        "user_id,latest_session_id,history_generation,title_key,episode_key,source_url,title,episode_title,item_kind",
-      )
-      .eq("user_id", userId)
-      .eq("history_generation", preferences.accountGeneration)
-      .eq("latest_session_id", sessionId)
-      .order("observed_at", { ascending: false })
-      .order("server_order", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (progress.error) throw progress.error;
-    return buildOwnerDerivedWatchHistoryRoomSource({
+    return buildHostAuthoritativeWatchHistoryRoomSource({
       userId,
       sessionId,
-      accountGeneration: preferences.accountGeneration,
       participant: participant.data,
       session: session.data,
-      progress: progress.data,
     });
   },
 };
 
-export function buildOwnerDerivedWatchHistoryRoomSource(params: {
+export function buildHostAuthoritativeWatchHistoryRoomSource(params: {
   userId: string;
   sessionId: string;
-  accountGeneration: number;
   participant: unknown;
   session: unknown;
-  progress: unknown;
 }): WatchHistoryV2RoomSource | null {
   if (
     !isUuid(params.userId) ||
     !isUuid(params.sessionId) ||
-    !isPositiveInteger(params.accountGeneration) ||
     !isRecord(params.participant) ||
-    !isRecord(params.session) ||
-    !isRecord(params.progress)
+    !isRecord(params.session)
   ) {
     return null;
   }
   const participant = params.participant;
   const session = params.session;
-  const progress = params.progress;
   if (
     participant.session_id !== params.sessionId ||
     participant.user_id !== params.userId ||
@@ -729,108 +744,161 @@ export function buildOwnerDerivedWatchHistoryRoomSource(params: {
       roomId: session.room_id,
       clientSessionKey: session.client_session_key,
     }) ||
-    progress.user_id !== params.userId ||
-    progress.latest_session_id !== params.sessionId ||
-    progress.history_generation !== params.accountGeneration ||
-    !isBoundedString(progress.title_key, 220) ||
-    !isBoundedString(progress.episode_key, 220) ||
-    !isHttpsUrl(progress.source_url, 2048) ||
-    !isBoundedString(progress.title, 300) ||
-    !isBoundedString(progress.episode_title, 300) ||
-    (progress.item_kind !== "series" && progress.item_kind !== "movie")
+    (session.provider !== "crunchyroll" && session.provider !== "youtube") ||
+    !isBoundedString(session.item_key, 220) ||
+    !isBoundedString(session.episode_key, 220) ||
+    !isHttpsUrl(session.source_url, 2048) ||
+    !isBoundedString(session.item_title, 300) ||
+    !isBoundedString(session.episode_title, 300) ||
+    (session.item_kind !== "series" && session.item_kind !== "movie")
   ) {
     return null;
   }
   return {
     sessionId: params.sessionId,
-    showId: progress.title_key,
-    episodeId: progress.episode_key,
-    sourceUrl: progress.source_url,
-    title: `${progress.title} - ${progress.episode_title}`,
+    showId: session.item_key,
+    episodeId: session.episode_key,
+    sourceUrl: session.source_url,
+    title: `${session.item_title} - ${session.episode_title}`,
   };
 }
 
-async function loadCanonicalSessions(
-  userId: string,
-  sessionIds: string[],
-  progressRows: unknown[],
-): Promise<WatchHistorySessionRecord[]> {
-  const ownerAssociations = new Map<
-    string,
-    Pick<WatchHistoryProgressRow, "provider" | "title_key" | "episode_key">
-  >();
-  for (const value of progressRows) {
-    const row = parseProgressRow(value);
-    if (
-      row.user_id === userId &&
-      row.latest_session_id &&
-      !ownerAssociations.has(row.latest_session_id)
-    ) {
-      ownerAssociations.set(row.latest_session_id, row);
-    }
-  }
-  const participantResult = await db()
-    .from("watch_session_participants")
-    .select(
-      "session_id,user_id,schema_version,role,current_time_seconds,progress,joined_at,left_at,updated_at",
-    )
-    .in("session_id", sessionIds)
-    .eq("schema_version", 2);
-  if (participantResult.error) throw participantResult.error;
-  const participantRows = ((participantResult.data as unknown[] | null) ?? []).map(
-    parseParticipantDatabaseRow,
+export async function loadExactWatchHistorySessionEnrichment(params: {
+  loadOwnerParticipants: (from: number, to: number) => Promise<unknown[]>;
+  loadSessions: (ids: string[], from: number, to: number) => Promise<unknown[]>;
+  loadParticipants: (ids: string[], from: number, to: number) => Promise<unknown[]>;
+  loadUsers: (ids: string[], from: number, to: number) => Promise<unknown[]>;
+  loadProfiles: (ids: string[], from: number, to: number) => Promise<unknown[]>;
+}): Promise<{
+  sessions: unknown[];
+  participants: unknown[];
+  users: unknown[];
+  profiles: unknown[];
+}> {
+  const ownerParticipants = await loadAllWatchHistoryRangePages(
+    params.loadOwnerParticipants,
   );
-  const visibleSessionIds = new Set(
-    participantRows.filter((row) => row.user_id === userId).map((row) => row.session_id),
-  );
-  const boundedIds = sessionIds.filter((id) => visibleSessionIds.has(id));
-  if (boundedIds.length === 0) return [];
-  const sessionResult = await db()
-    .from("watch_sessions")
-    .select(
-      "id,client_session_key,room_id,room_generation,host_user_id,source_generation,current_time_seconds,duration_seconds,progress,started_at,ended_at,last_checkpoint_at",
-    )
-    .in("id", boundedIds)
-    .eq("schema_version", 2)
-    .or("room_id.not.is.null,client_session_key.not.is.null");
-  if (sessionResult.error) throw sessionResult.error;
-  const sessionRows = ((sessionResult.data as unknown[] | null) ?? []).flatMap(
-    (value) => {
-      if (!isRecord(value)) throw invalidDatabaseResponse();
-      const roomId = value.room_id;
-      const clientSessionKey = value.client_session_key;
-      if (
-        !(roomId === null || isBoundedString(roomId, 128)) ||
-        !(clientSessionKey === null || isBoundedString(clientSessionKey, 220))
-      ) {
-        throw invalidDatabaseResponse();
-      }
-      return isMeaningfulWatchHistoryV2SessionIdentity({
-        roomId,
-        clientSessionKey,
-      })
-        ? [parseSessionDatabaseRow(value)]
-        : [];
-    },
-  );
-  const participantUserIds = Array.from(
+  const sessionIds = Array.from(
     new Set(
-      participantRows
-        .filter((row) => visibleSessionIds.has(row.session_id))
-        .map((row) => row.user_id),
+      ownerParticipants.map((value) => {
+        if (!isRecord(value) || !isUuid(value.session_id)) {
+          throw invalidDatabaseResponse();
+        }
+        return value.session_id;
+      }),
     ),
   );
-  const [usersResult, profilesResult] = await Promise.all([
-    db().from("users").select("id,display_name,avatar_url").in("id", participantUserIds),
-    db().from("profiles").select("user_id,handle,display_name,avatar_url").in("user_id", participantUserIds),
+  if (sessionIds.length === 0) {
+    return { sessions: [], participants: [], users: [], profiles: [] };
+  }
+
+  // These bounded transport requests are exact for a quiescent database. During
+  // active playback, independent PostgREST pages are intentionally eventually consistent.
+  const sessions = await loadWatchHistoryBatches(
+    sessionIds,
+    params.loadSessions,
+    (value) => databaseRowKey(value, "id"),
+  );
+  const participants = await loadWatchHistoryBatches(
+    sessionIds,
+    params.loadParticipants,
+    (value) => `${databaseRowKey(value, "session_id")}:${databaseRowKey(value, "user_id")}`,
+  );
+  const participantUserIds = Array.from(
+    new Set(participants.map((value) => databaseRowKey(value, "user_id"))),
+  );
+  const [users, profiles] = await Promise.all([
+    loadWatchHistoryBatches(
+      participantUserIds,
+      params.loadUsers,
+      (value) => databaseRowKey(value, "id"),
+    ),
+    loadWatchHistoryBatches(
+      participantUserIds,
+      params.loadProfiles,
+      (value) => databaseRowKey(value, "user_id"),
+    ),
   ]);
-  if (usersResult.error) throw usersResult.error;
-  if (profilesResult.error) throw profilesResult.error;
+  return { sessions, participants, users, profiles };
+}
+
+async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessionRecord[]> {
+  const enrichment = await loadExactWatchHistorySessionEnrichment({
+    loadOwnerParticipants: async (from, to) => {
+      const result = await db()
+        .from("watch_session_participants")
+        .select("session_id")
+        .eq("user_id", userId)
+        .eq("schema_version", 2)
+        .order("updated_at", { ascending: false })
+        .order("session_id", { ascending: true })
+        .range(from, to);
+      if (result.error) throw result.error;
+      return (result.data as unknown[] | null) ?? [];
+    },
+    loadSessions: async (ids, from, to) => {
+      const result = await db()
+        .from("watch_sessions")
+        .select(
+          "id,provider,item_key,episode_key,client_session_key,room_id,room_generation,host_user_id,source_generation,current_time_seconds,duration_seconds,progress,started_at,ended_at,last_checkpoint_at",
+        )
+        .in("id", ids)
+        .eq("schema_version", 2)
+        .or("room_id.not.is.null,client_session_key.not.is.null")
+        .order("id", { ascending: true })
+        .range(from, to);
+      if (result.error) throw result.error;
+      return (result.data as unknown[] | null) ?? [];
+    },
+    loadParticipants: async (ids, from, to) => {
+      const result = await db()
+        .from("watch_session_participants")
+        .select(
+          "session_id,user_id,schema_version,role,current_time_seconds,progress,joined_at,left_at,updated_at",
+        )
+        .in("session_id", ids)
+        .eq("schema_version", 2)
+        .order("session_id", { ascending: true })
+        .order("joined_at", { ascending: true })
+        .order("user_id", { ascending: true })
+        .range(from, to);
+      if (result.error) throw result.error;
+      return (result.data as unknown[] | null) ?? [];
+    },
+    loadUsers: async (ids, from, to) => {
+      const result = await db()
+        .from("users")
+        .select("id,display_name,avatar_url")
+        .in("id", ids)
+        .order("id", { ascending: true })
+        .range(from, to);
+      if (result.error) throw result.error;
+      return (result.data as unknown[] | null) ?? [];
+    },
+    loadProfiles: async (ids, from, to) => {
+      const result = await db()
+        .from("profiles")
+        .select("user_id,handle,display_name,avatar_url")
+        .in("user_id", ids)
+        .order("user_id", { ascending: true })
+        .range(from, to);
+      if (result.error) throw result.error;
+      return (result.data as unknown[] | null) ?? [];
+    },
+  });
+  const participantRows = enrichment.participants.map(parseParticipantDatabaseRow);
+  const sessionRows = enrichment.sessions.map(parseSessionDatabaseRow);
   const users = new Map(
-    ((usersResult.data as Array<Record<string, unknown>> | null) ?? []).map((row) => [row.id, row]),
+    enrichment.users.map((value) => {
+      if (!isRecord(value) || !isUuid(value.id)) throw invalidDatabaseResponse();
+      return [value.id, value] as const;
+    }),
   );
   const profiles = new Map(
-    ((profilesResult.data as Array<Record<string, unknown>> | null) ?? []).map((row) => [row.user_id, row]),
+    enrichment.profiles.map((value) => {
+      if (!isRecord(value) || !isUuid(value.user_id)) throw invalidDatabaseResponse();
+      return [value.user_id, value] as const;
+    }),
   );
   return sessionRows.map((row) => {
     const participants = participantRows
@@ -838,20 +906,12 @@ async function loadCanonicalSessions(
       .map((participant) => {
         const user = users.get(participant.user_id);
         const profile = profiles.get(participant.user_id);
-        const displayName = profile?.display_name ?? user?.display_name;
-        if (typeof displayName !== "string") throw invalidDatabaseResponse();
         return {
-          user: {
+          user: normalizeWatchHistoryPublicProfile({
             userId: participant.user_id,
-            handle: typeof profile?.handle === "string" ? profile.handle : null,
-            displayName,
-            avatarUrl:
-              typeof profile?.avatar_url === "string"
-                ? profile.avatar_url
-                : typeof user?.avatar_url === "string"
-                  ? user.avatar_url
-                  : null,
-          },
+            profile,
+            user,
+          }),
           role: participant.role,
           currentTime: participant.current_time_seconds,
           progress: participant.progress,
@@ -859,7 +919,8 @@ async function loadCanonicalSessions(
           leftAt: participant.left_at,
           updatedAt: participant.updated_at,
         };
-      });
+      })
+      .slice(0, 15);
     const session = WatchHistorySessionSchema.parse({
       id: row.id,
       roomId: row.room_id,
@@ -875,12 +936,11 @@ async function loadCanonicalSessions(
       lastWatchedAt: row.last_checkpoint_at,
       participants,
     });
-    const association = ownerAssociations.get(row.id);
     return {
       session,
-      ownerProvider: association?.provider ?? null,
-      ownerTitleKey: association?.title_key ?? null,
-      ownerEpisodeKey: association?.episode_key ?? null,
+      provider: row.provider,
+      titleKey: row.item_key,
+      episodeKey: row.episode_key,
     };
   });
 }
@@ -909,45 +969,25 @@ function compareObservationDescending(
 function parseHistorySessionRecord(value: unknown): WatchHistorySessionRecord {
   if (
     isRecord(value) &&
-    hasOnlyKeys(value, [
-      "session",
-      "ownerProvider",
-      "ownerTitleKey",
-      "ownerEpisodeKey",
-    ])
+    hasOnlyKeys(value, ["session", "provider", "titleKey", "episodeKey"])
   ) {
     const session = WatchHistorySessionSchema.safeParse(value.session);
-    const hasOwnerAssociation =
-      (value.ownerProvider === "crunchyroll" || value.ownerProvider === "youtube") &&
-      isBoundedString(value.ownerTitleKey, 220) &&
-      isBoundedString(value.ownerEpisodeKey, 220);
-    const hasNoOwnerAssociation =
-      value.ownerProvider === null &&
-      value.ownerTitleKey === null &&
-      value.ownerEpisodeKey === null;
     if (
       !session.success ||
-      (!hasOwnerAssociation && !hasNoOwnerAssociation)
+      (value.provider !== "crunchyroll" && value.provider !== "youtube") ||
+      !isBoundedString(value.titleKey, 220) ||
+      !isBoundedString(value.episodeKey, 220)
     ) {
       throw invalidDatabaseResponse();
     }
     return {
       session: session.data,
-      ownerProvider: hasOwnerAssociation
-        ? (value.ownerProvider as "crunchyroll" | "youtube")
-        : null,
-      ownerTitleKey: hasOwnerAssociation ? (value.ownerTitleKey as string) : null,
-      ownerEpisodeKey: hasOwnerAssociation ? (value.ownerEpisodeKey as string) : null,
+      provider: value.provider,
+      titleKey: value.titleKey,
+      episodeKey: value.episodeKey,
     };
   }
-  const session = WatchHistorySessionSchema.safeParse(value);
-  if (!session.success) throw invalidDatabaseResponse();
-  return {
-    session: session.data,
-    ownerProvider: null,
-    ownerTitleKey: null,
-    ownerEpisodeKey: null,
-  };
+  throw invalidDatabaseResponse();
 }
 
 function parseProgressRow(value: unknown): WatchHistoryProgressRow {
@@ -1013,6 +1053,9 @@ function parseSessionDatabaseRow(value: unknown): SessionDatabaseRow {
   if (
     !hasOnlyKeys(row, [
       "id",
+      "provider",
+      "item_key",
+      "episode_key",
       "client_session_key",
       "room_id",
       "room_generation",
@@ -1026,6 +1069,9 @@ function parseSessionDatabaseRow(value: unknown): SessionDatabaseRow {
       "last_checkpoint_at",
     ]) ||
     !isUuid(row.id) ||
+    (row.provider !== "crunchyroll" && row.provider !== "youtube") ||
+    !isBoundedString(row.item_key, 220) ||
+    !isBoundedString(row.episode_key, 220) ||
     !(row.client_session_key === null ||
       isBoundedString(row.client_session_key, 220)) ||
     !(row.room_id === null || isBoundedString(row.room_id, 128)) ||
@@ -1136,7 +1182,11 @@ function isProgress(value: unknown): value is number {
 }
 
 function isHttpUrl(value: unknown, maxLength: number): value is string {
-  if (typeof value !== "string" || value.length > maxLength) return false;
+  if (
+    typeof value !== "string" ||
+    value.length > maxLength ||
+    /\s/.test(value)
+  ) return false;
   try {
     const url = new URL(value);
     return url.protocol === "http:" || url.protocol === "https:";
@@ -1165,6 +1215,8 @@ function publicDatabaseError(error: unknown): WatchHistoryV2ApiError {
       ? (error as { message: string }).message
       : "";
   const mappings: Array<[string, number, string, string]> = [
+    ["watch_history_shared_session_pending", 409, "SHARED_SESSION_PENDING", "Shared session is waiting for the host"],
+    ["watch_history_shared_source_mismatch", 409, "SHARED_SOURCE_MISMATCH", "Shared source does not match the host session"],
     ["watch_history_room_unknown", 404, "UNKNOWN_ROOM", "Shared room was not found"],
     ["watch_history_room_member_required", 403, "ROOM_MEMBERSHIP_REQUIRED", "Room membership is required"],
     ["watch_history_authority_after_end", 403, "AUTHORITY_AFTER_ROOM_END", "Shared room authority is outside the room lifecycle"],
