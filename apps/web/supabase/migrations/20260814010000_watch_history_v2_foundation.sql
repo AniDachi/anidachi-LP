@@ -924,12 +924,16 @@ begin
                         and pg_catalog.octet_length(
                           pg_catalog.btrim(profile.display_name)
                         ) <= 80
+                        and pg_catalog.btrim(profile.display_name)
+                          ~ U&'[^\0009\000A\000B\000C\000D\0020\00A0\1680\2000-\200A\2028\2029\202F\205F\3000\FEFF]'
                       then pg_catalog.btrim(profile.display_name)
                       when participant_user.display_name is not null
                         and char_length(pg_catalog.btrim(participant_user.display_name)) between 1 and 80
                         and pg_catalog.octet_length(
                           pg_catalog.btrim(participant_user.display_name)
                         ) <= 80
+                        and pg_catalog.btrim(participant_user.display_name)
+                          ~ U&'[^\0009\000A\000B\000C\000D\0020\00A0\1680\2000-\200A\2028\2029\202F\205F\3000\FEFF]'
                       then pg_catalog.btrim(participant_user.display_name)
                       else 'AniDachi user'
                     end,
@@ -939,12 +943,14 @@ begin
                         and pg_catalog.octet_length(profile.avatar_url)
                           = char_length(profile.avatar_url)
                         and profile.avatar_url ~* '^https?://[A-Za-z0-9][A-Za-z0-9-]{0,62}([.][A-Za-z0-9][A-Za-z0-9-]{0,62})+(/[A-Za-z0-9._~!$&()*+,;=:@%/?#-]*)?$'
+                        and profile.avatar_url !~* '^https?://[0-9]+([.][0-9]+)+(/|$)'
                       then profile.avatar_url
                       when participant_user.avatar_url is not null
                         and char_length(participant_user.avatar_url) <= 2048
                         and pg_catalog.octet_length(participant_user.avatar_url)
                           = char_length(participant_user.avatar_url)
                         and participant_user.avatar_url ~* '^https?://[A-Za-z0-9][A-Za-z0-9-]{0,62}([.][A-Za-z0-9][A-Za-z0-9-]{0,62})+(/[A-Za-z0-9._~!$&()*+,;=:@%/?#-]*)?$'
+                        and participant_user.avatar_url !~* '^https?://[0-9]+([.][0-9]+)+(/|$)'
                       then participant_user.avatar_url
                       else null
                     end

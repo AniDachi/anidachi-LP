@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { PublicProfileSchema } from "@anidachi/protocol";
 
 const MIGRATION_URL = new URL(
   "../../supabase/migrations/20260814010000_watch_history_v2_foundation.sql",
@@ -330,6 +331,128 @@ test("acknowledgement profiles guarantee JavaScript contract-safe fields", () =>
   assert.equal(sqlSafeAvatar("https://cdn.example.com/avatar/user_1.png"), true);
   assert.ok(Buffer.byteLength("😀".repeat(41), "utf8") > 80);
   assert.ok(Buffer.byteLength("AniDachi User", "utf8") <= 80);
+});
+
+test("acknowledgement avatar predicate excludes invalid numeric authorities", () => {
+  const definition = functionDefinition("apply_watch_progress_v2");
+  const avatarPattern = definition.match(
+    /profile\.avatar_url ~\* '([^']+)'/,
+  )?.[1];
+  const numericAuthorityPattern = definition.match(
+    /profile\.avatar_url !~\* '([^']+)'/,
+  )?.[1];
+  const participantAvatarPattern = definition.match(
+    /participant_user\.avatar_url ~\* '([^']+)'/,
+  )?.[1];
+  const participantNumericAuthorityPattern = definition.match(
+    /participant_user\.avatar_url !~\* '([^']+)'/,
+  )?.[1];
+  assert.ok(avatarPattern);
+  assert.ok(numericAuthorityPattern);
+  assert.equal(participantAvatarPattern, avatarPattern);
+  assert.equal(participantNumericAuthorityPattern, numericAuthorityPattern);
+
+  const sqlSafeAvatar = (value: string) =>
+    value.length <= 2_048 &&
+    Buffer.byteLength(value, "utf8") === Array.from(value).length &&
+    new RegExp(avatarPattern, "i").test(value) &&
+    !new RegExp(numericAuthorityPattern, "i").test(value);
+  const profileWithAvatar = (avatarUrl: string) =>
+    PublicProfileSchema.safeParse({
+      userId: "00000000-0000-4000-8000-000000000001",
+      handle: null,
+      displayName: "AniDachi user",
+      avatarUrl,
+    }).success;
+
+  for (const avatarUrl of [
+    "https://999.999",
+    "https://999.999/",
+    "https://999.999/avatar.png",
+    "https://1.2.3.999",
+    "https://1.2.3.999/",
+    "https://1.2.3.999/avatar.png",
+  ]) {
+    assert.equal(profileWithAvatar(avatarUrl), false, avatarUrl);
+    assert.equal(sqlSafeAvatar(avatarUrl), false, avatarUrl);
+  }
+
+  const validAvatar = "https://cdn.example.com/avatar/user_1.png";
+  assert.equal(profileWithAvatar(validAvatar), true);
+  assert.equal(sqlSafeAvatar(validAvatar), true);
+});
+
+test("acknowledgement display-name predicate follows JavaScript trim semantics", () => {
+  const definition = functionDefinition("apply_watch_progress_v2");
+  const postgresUnicodePattern = definition.match(
+    /pg_catalog\.btrim\(profile\.display_name\) ~ u&'([^']+)'/,
+  )?.[1];
+  const participantPostgresUnicodePattern = definition.match(
+    /pg_catalog\.btrim\(participant_user\.display_name\) ~ u&'([^']+)'/,
+  )?.[1];
+  assert.ok(postgresUnicodePattern);
+  assert.equal(participantPostgresUnicodePattern, postgresUnicodePattern);
+  const javascriptPattern = postgresUnicodePattern.replace(
+    /\\([0-9a-f]{4})/gi,
+    (_match, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)),
+  );
+  const containsNonTrimCharacter = new RegExp(javascriptPattern, "u");
+  const sqlSafeDisplayName = (value: string) => {
+    const postgresTrimmed = value.replace(/^ +| +$/g, "");
+    const characterLength = Array.from(postgresTrimmed).length;
+    return (
+      characterLength >= 1 &&
+      characterLength <= 80 &&
+      Buffer.byteLength(postgresTrimmed, "utf8") <= 80 &&
+      containsNonTrimCharacter.test(postgresTrimmed)
+    );
+  };
+  const profileWithDisplayName = (displayName: string) =>
+    PublicProfileSchema.safeParse({
+      userId: "00000000-0000-4000-8000-000000000001",
+      handle: null,
+      displayName,
+      avatarUrl: null,
+    }).success;
+
+  const javascriptTrimWhitespace = [
+    "\u0009",
+    "\u000a",
+    "\u000b",
+    "\u000c",
+    "\u000d",
+    "\u0020",
+    "\u00a0",
+    "\u1680",
+    "\u2000",
+    "\u2001",
+    "\u2002",
+    "\u2003",
+    "\u2004",
+    "\u2005",
+    "\u2006",
+    "\u2007",
+    "\u2008",
+    "\u2009",
+    "\u200a",
+    "\u2028",
+    "\u2029",
+    "\u202f",
+    "\u205f",
+    "\u3000",
+    "\ufeff",
+  ];
+  for (const whitespace of javascriptTrimWhitespace) {
+    const displayName = whitespace.repeat(2);
+    assert.equal(profileWithDisplayName(displayName), false);
+    assert.equal(sqlSafeDisplayName(displayName), false);
+  }
+
+  for (const displayName of ["猫", "😀", "猫と😀"]) {
+    assert.equal(Buffer.byteLength(displayName, "utf8") <= 80, true);
+    assert.equal(profileWithDisplayName(displayName), true);
+    assert.equal(sqlSafeDisplayName(displayName), true);
+  }
 });
 
 test("v2 transactions leave active v1 tracked-title rows untouched", () => {
