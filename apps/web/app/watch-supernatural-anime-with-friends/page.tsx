@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Supernatural anime power reveals hit harder together — AniDachi syncs Crunchyroll watchrooms for your group live or async. Fullmetal Alchemist, Jujutsu Kaisen, Noragami, and more.",
   alternates: { canonical: "/watch-supernatural-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Supernatural Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for the best supernatural anime on Crunchyroll — synced playback, power-system debates, and async catch-up.",

@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Submit product ideas for AniDachi watchrooms on Crunchyroll and YouTube. We read every request.",
   alternates: { canonical: "/feature-requests" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Feature Requests — AniDachi",
     description:
       "Tell us what would make your Crunchyroll or YouTube watch parties better.",

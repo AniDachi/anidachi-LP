@@ -4,7 +4,7 @@ import { SeoPageLayout } from "@/components/seo-page-layout";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 /** `home` template applies only to `/` in `inferPageTemplateFromPath`; this page overrides for the same CTA/analytics variant on a dedicated starter URL. */

@@ -7,6 +7,15 @@ export const metadata: Metadata = {
     "How AniDachi handles accounts, Chrome extension permissions, data flow, and security vulnerability reports.",
   alternates: { canonical: "/security" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Security & Extension Permissions | AniDachi",
     description:
       "Extension permissions, data flow, and how to report security issues for AniDachi.",

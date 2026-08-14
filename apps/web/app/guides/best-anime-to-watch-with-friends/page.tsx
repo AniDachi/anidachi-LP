@@ -10,6 +10,15 @@ export const metadata: Metadata = {
     "115+ best anime to watch with friends, sorted by vibe — then host a synced Crunchyroll watchroom with AniDachi. Reactions, comedy, theory nights, and marathons. Start at pricing.",
   alternates: { canonical: "/guides/best-anime-to-watch-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Best Anime to Watch with Friends (2026) — 115+ Group Watch Picks",
     description:
       "Pick the right show for your group, then host an AniDachi Crunchyroll watchroom — synced or async.",

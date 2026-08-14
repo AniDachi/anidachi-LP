@@ -25,6 +25,15 @@ export const metadata: Metadata = {
     "Does Teleparty work with YouTube in 2026? Yes for live sync — no async. Teleparty for YouTube vs AniDachi watchrooms compared. Start free at pricing.",
   alternates: { canonical: "/guides/does-teleparty-work-with-youtube" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Does Teleparty Work With YouTube?",
     description:
       "Teleparty supports YouTube live sync — but not async watchrooms. When to switch.",
@@ -32,6 +41,7 @@ export const metadata: Metadata = {
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Does Teleparty Work With YouTube?",
     description: "Live sync yes; async no. How Teleparty for YouTube compares to AniDachi.",

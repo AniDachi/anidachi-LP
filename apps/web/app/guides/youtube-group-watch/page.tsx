@@ -16,6 +16,15 @@ export const metadata: Metadata = {
     "YouTube group watch without a native feature: run AniDachi watchrooms on full YouTube pages for synced playback, chat, and async catch-up.",
   alternates: { canonical: "/guides/youtube-group-watch" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "YouTube Group Watch",
     description:
       "Set up a YouTube group watch with synced watchrooms — live or async.",
@@ -23,6 +32,7 @@ export const metadata: Metadata = {
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "YouTube Group Watch",
     description: "Synced YouTube group nights with AniDachi watchrooms.",

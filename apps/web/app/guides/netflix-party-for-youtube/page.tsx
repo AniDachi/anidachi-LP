@@ -16,6 +16,15 @@ export const metadata: Metadata = {
     "Searching “Netflix Party YouTube”? Teleparty (formerly Netflix Party) can sync YouTube live. AniDachi adds YouTube watchrooms with async catch-up.",
   alternates: { canonical: "/guides/netflix-party-for-youtube" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Netflix Party for YouTube",
     description:
       "What “Netflix Party for YouTube” means in 2026 — Teleparty live sync vs AniDachi watchrooms.",
@@ -23,6 +32,7 @@ export const metadata: Metadata = {
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Netflix Party for YouTube",
     description: "Teleparty lineage + AniDachi YouTube watchrooms explained.",

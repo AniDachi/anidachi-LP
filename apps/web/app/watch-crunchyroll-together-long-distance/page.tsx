@@ -11,6 +11,15 @@ export const metadata: Metadata = {
     "Short answer: Crunchyroll has no built-in watch party. Long-distance couples use AniDachi to sync Crunchyroll across devices, react in real time, and catch up on separate schedules without spoilers.",
   alternates: { canonical: "/watch-crunchyroll-together-long-distance" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Crunchyroll Together Long Distance | AniDachi",
     description:
       "Sync Crunchyroll with your long-distance partner — live when your schedules align, async when they don't.",

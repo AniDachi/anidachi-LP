@@ -8,12 +8,23 @@ export const metadata: Metadata = {
     "Anime filler is content not adapted from the original manga — non-canon episodes added to avoid catching up with the source material. Learn how to skip filler when watching with friends.",
   alternates: { canonical: "/glossary/anime-filler" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "What Is Anime Filler? — AniDachi Glossary",
     description:
       "Anime filler episodes are non-canon content added to avoid catching the anime up to the manga. Learn which series have the most filler and how to skip it.",
     url: "/glossary/anime-filler",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
+
     card: "summary",
     title: "What Is Anime Filler? — AniDachi Glossary",
     description:

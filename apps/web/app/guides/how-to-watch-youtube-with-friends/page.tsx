@@ -26,6 +26,15 @@ export const metadata: Metadata = {
     "Step-by-step: how to watch YouTube with friends (and how to watch YouTube together) using AniDachi watchrooms — live sync or async. Free alternatives included.",
   alternates: { canonical: "/guides/how-to-watch-youtube-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch YouTube With Friends",
     description:
       "Create a YouTube watchroom in minutes — synced playback, chat, and async catch-up.",
@@ -33,6 +42,7 @@ export const metadata: Metadata = {
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "How to Watch YouTube With Friends",
     description: "Synced YouTube watchrooms with AniDachi — live or async.",

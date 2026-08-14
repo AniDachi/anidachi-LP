@@ -12,12 +12,22 @@ export const metadata: Metadata = {
       "/guides/how-to-watch-anime-with-friends-in-different-time-zones",
   },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch Anime With Friends, Different Time Zones — 2026",
     description:
       "Keep global anime clubs social with async-friendly Crunchyroll watchrooms and clear chat rules.",
     url: "/guides/how-to-watch-anime-with-friends-in-different-time-zones",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "How to Watch Anime With Friends, Different Time Zones — 2026",
     description:

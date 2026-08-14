@@ -24,6 +24,15 @@ export const metadata: Metadata = {
     "How to watch Crunchyroll with friends — two people or a group, same time or async. AniDachi syncs each Crunchyroll tab; Discord voice stays optional. Start at pricing.",
   alternates: { canonical: "/guides/how-to-watch-crunchyroll-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch Crunchyroll with Friends — AniDachi Sync Guide (2026)",
     description:
       "Step-by-step: watch Crunchyroll together with friends — live sync, Discord hybrid, or async catch-up.",

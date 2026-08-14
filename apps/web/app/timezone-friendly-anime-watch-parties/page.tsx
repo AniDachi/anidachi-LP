@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Async anime watching means each person watches on their own schedule while reactions, progress, and spoiler boundaries stay shared. Here is exactly how it works.",
   alternates: { canonical: "/timezone-friendly-anime-watch-parties" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Anime Watch Parties Across Time Zones | AniDachi",
     description:
       "The definitive guide to watching anime with friends in different time zones — live sync vs async explained.",

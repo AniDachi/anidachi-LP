@@ -9,12 +9,22 @@ export const metadata: Metadata = {
     "The easiest way is AniDachi episode-aware chat plus clear ground rules. Add mute habits and synced pacing. Takes under 2 minutes to start.",
   alternates: { canonical: "/guides/how-to-watch-anime-without-spoilers" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch Anime Without Spoilers — 2026",
     description:
       "Protect your group watch with async pacing, labeled chat, and disciplined social feeds.",
     url: "/guides/how-to-watch-anime-without-spoilers",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "How to Watch Anime Without Spoilers — 2026",
     description:

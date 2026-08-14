@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Cozy up with slice of life anime and friends on Crunchyroll — sync live sessions or async watching with AniDachi. A-Silent-Voice, Toradora, Violet Evergarden, and more.",
   alternates: { canonical: "/watch-slice-of-life-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Slice of Life Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for slice of life anime on Crunchyroll — synced cozy sessions, low-pressure async catch-up, and shared moments that feel even warmer together.",

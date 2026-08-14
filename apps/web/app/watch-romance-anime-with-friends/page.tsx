@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "The best romance anime to watch with friends on Crunchyroll — sync tearjerker moments live or catch up at your own pace with AniDachi. Your Lie in April, Toradora, Clannad, and more.",
   alternates: { canonical: "/watch-romance-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Romance Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for romance anime on Crunchyroll — spoiler-safe shipping debates, emotional sync sessions, and async catch-up.",

@@ -31,6 +31,15 @@ export const metadata: Metadata = {
     "YouTube watch party hub: sync full videos with friends via Chrome extension, Teleparty, or Discord — AniDachi adds async catch-up. Start free at pricing.",
   alternates: { canonical: "/watch-youtube-together" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "YouTube Watch Party — Watch YouTube Together",
     description:
       "Create a YouTube watch party with sync, chat, and async. Start from pricing.",
@@ -38,6 +47,7 @@ export const metadata: Metadata = {
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "YouTube Watch Party — Watch YouTube Together",
     description:

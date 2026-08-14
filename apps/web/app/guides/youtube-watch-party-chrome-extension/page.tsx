@@ -27,6 +27,15 @@ export const metadata: Metadata = {
     canonical: "/guides/youtube-watch-party-chrome-extension",
   },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "YouTube Watch Party Chrome Extension",
     description:
       "Chrome extension for YouTube watch parties — AniDachi sync + async on full watch pages.",
@@ -34,6 +43,7 @@ export const metadata: Metadata = {
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "YouTube Watch Party Chrome Extension",
     description: "Synced YouTube watchrooms in Chrome with AniDachi.",

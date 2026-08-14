@@ -19,6 +19,15 @@ export const metadata: Metadata = {
     canonical: "/guides/youtube-watch-party-with-discord",
   },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "YouTube Watch Party With Discord",
     description:
       "Voice on Discord, sync on AniDachi — the hybrid YouTube watch party workflow.",
@@ -26,6 +35,7 @@ export const metadata: Metadata = {
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "YouTube Watch Party With Discord",
     description: "Discord voice + AniDachi YouTube sync (skip Go Live).",

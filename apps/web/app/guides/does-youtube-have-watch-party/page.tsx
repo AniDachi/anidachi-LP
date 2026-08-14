@@ -15,6 +15,15 @@ export const metadata: Metadata = {
     "No — YouTube has no native watch party. Sync full videos with AniDachi watchrooms (live or async) and start free at pricing.",
   alternates: { canonical: "/guides/does-youtube-have-watch-party" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Does YouTube Have a Watch Party Feature?",
     description:
       "YouTube has no native watch party. Here's how to watch YouTube together with AniDachi.",
@@ -22,6 +31,7 @@ export const metadata: Metadata = {
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Does YouTube Have a Watch Party?",
     description: "No native feature — AniDachi watchrooms fill the gap.",

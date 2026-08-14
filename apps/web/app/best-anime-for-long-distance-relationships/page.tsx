@@ -8,6 +8,15 @@ export const metadata: Metadata = {
     "15 anime picks curated for LDR couples — series about separation, letters across distance, reunion, and emotional bonds that survive geography.",
   alternates: { canonical: "/best-anime-for-long-distance-relationships" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Best Anime for Long Distance Relationships (2026) | AniDachi",
     description:
       "The LDR anime list — 15 series about distance, longing, and connection that resonate differently when you're watching with someone you miss.",

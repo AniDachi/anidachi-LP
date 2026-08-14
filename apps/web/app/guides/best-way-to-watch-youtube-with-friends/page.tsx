@@ -29,6 +29,15 @@ export const metadata: Metadata = {
     canonical: "/guides/best-way-to-watch-youtube-with-friends",
   },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Best Way to Watch YouTube With Friends",
     description:
       "Method decision page: live sync vs async vs screen share — and why AniDachi wins for most crews.",
@@ -36,6 +45,7 @@ export const metadata: Metadata = {
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Best Way to Watch YouTube With Friends",
     description: "Sync vs async vs screen share — clear verdict for YouTube groups.",

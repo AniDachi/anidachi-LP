@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "AniDachi is the best way to watch action anime with friends on Crunchyroll — synced fight scenes, spoiler-safe reactions, and async catch-up. Attack on Titan, Demon Slayer, Jujutsu Kaisen, and more.",
   alternates: { canonical: "/watch-action-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Action Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for the best action anime on Crunchyroll — synced playback, spoiler-safe chat, and async catch-up.",

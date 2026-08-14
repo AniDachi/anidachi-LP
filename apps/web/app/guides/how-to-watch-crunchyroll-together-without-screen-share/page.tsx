@@ -26,6 +26,15 @@ export const metadata: Metadata = {
     canonical: "/guides/how-to-watch-crunchyroll-together-without-screen-share",
   },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Crunchyroll Without Screen Share",
     description:
       "Skip low-quality Discord Go Live — sync local Crunchyroll playback instead.",
@@ -33,6 +42,7 @@ export const metadata: Metadata = {
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Watch Crunchyroll Without Screen Share",
     description: "Synced Crunchyroll watchrooms beat Discord Go Live for quality.",

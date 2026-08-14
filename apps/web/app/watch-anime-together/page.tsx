@@ -25,6 +25,15 @@ export const metadata: Metadata = {
     "How to watch anime with friends online — websites and apps compared. AniDachi watchrooms, free Discord and Crunchyroll Party options, long-distance tips, and genre guides.",
   alternates: { canonical: "/watch-anime-together" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Anime Together Online — Methods, Sync & Genre Guides (2026)",
     description:
       "Watch anime with friends: sync tools, free website options, long-distance, and genre hubs.",

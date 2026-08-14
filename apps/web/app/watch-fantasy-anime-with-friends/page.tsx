@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "AniDachi lets you watch fantasy anime with friends on Crunchyroll in sync or async. Share every world-building reveal with your group. Frieren, Hunter x Hunter, Made in Abyss, and more.",
   alternates: { canonical: "/watch-fantasy-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Fantasy Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for fantasy anime on Crunchyroll — synced playback, spoiler-safe reactions, and async catch-up for epic adventures.",

@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Short answer: K-dramas have no native watch party feature. Long-distance couples use Teleparty, Rave, or general sync methods for most platforms — and AniDachi if you watch anime on Crunchyroll.",
   alternates: { canonical: "/watch-kdrama-together-long-distance" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch K-Dramas Together Long Distance | AniDachi",
     description:
       "K-drama watch party options for long-distance couples — which tools work, which don't, and how to build a routine.",

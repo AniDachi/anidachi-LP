@@ -10,12 +10,22 @@ export const metadata: Metadata = {
     "The easiest way is AniDachi async watchrooms on Crunchyroll. Keep chat and progress aligned when you are far apart. Takes under 2 minutes.",
   alternates: { canonical: "/guides/how-to-watch-anime-long-distance" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch Anime Long Distance — 2026",
     description:
       "Stay close to your watch group across cities with synced or async Crunchyroll watchrooms.",
     url: "/guides/how-to-watch-anime-long-distance",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "How to Watch Anime Long Distance — 2026",
     description:

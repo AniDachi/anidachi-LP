@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Watch sci-fi anime with friends on Crunchyroll — sync mind-bending reveals live or catch up at your own pace with AniDachi. Steins;Gate, Vivy, Ghost in the Shell, and more.",
   alternates: { canonical: "/watch-sci-fi-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Sci-Fi Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for the best sci-fi anime on Crunchyroll — synced playback, theory chat, and async catch-up.",

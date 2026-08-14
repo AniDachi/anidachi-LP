@@ -23,6 +23,15 @@ export const metadata: Metadata = {
     "Does Teleparty work with Crunchyroll? Yes for live sync. AniDachi is better for Crunchyroll anime groups who need async. Full AniDachi vs Teleparty comparison.",
   alternates: { canonical: "/compare/anidachi-vs-teleparty" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "AniDachi vs Teleparty — Anime Watch Party Comparison",
     description:
       "Teleparty for Crunchyroll vs AniDachi: live multi-platform sync vs async anime watchrooms.",

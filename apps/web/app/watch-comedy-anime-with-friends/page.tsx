@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Laugh louder together — AniDachi watchrooms let you sync Crunchyroll comedy anime live or timestamp favorite gags for friends who catch up later. Spy x Family, KonoSuba, Gintama, and more.",
   alternates: { canonical: "/watch-comedy-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Comedy Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for comedy anime on Crunchyroll — share gag reactions, async catch-up, and watch at your own pace.",
