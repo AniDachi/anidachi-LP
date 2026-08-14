@@ -1,5 +1,9 @@
 # Watch History Catalog And Progress Implementation Plan
 
+> **Status: Superseded.** Do not execute this plan. It is retained as
+> historical context and is replaced by
+> [Watch History v2 Clean MVP Implementation Plan](./2026-08-14-watch-history-v2-clean-mvp-implementation.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > `superpowers:subagent-driven-development` (recommended) or
 > `superpowers:executing-plans` to implement this plan task-by-task. Steps use
