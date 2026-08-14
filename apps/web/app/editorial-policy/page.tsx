@@ -7,6 +7,15 @@ export const metadata: Metadata = {
     "How AniDachi researches, updates, sources, and corrects product and watch-together guidance on anidachi.app.",
   alternates: { canonical: "/editorial-policy" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Editorial Policy | AniDachi",
     description:
       "Sourcing, corrections, AI use, and update rules for AniDachi marketing and help content.",

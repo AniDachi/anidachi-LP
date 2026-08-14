@@ -9,12 +9,22 @@ export const metadata: Metadata = {
     "The easiest way is AniDachi watchrooms on Crunchyroll. Compare Discord, extensions, and async tools. Takes under 2 minutes to start.",
   alternates: { canonical: "/guides/how-to-watch-anime-with-friends-online" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch Anime With Friends Online — 2026",
     description:
       "Watch anime with friends online: async watchrooms, live sync, and free alternatives.",
     url: "/guides/how-to-watch-anime-with-friends-online",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "How to Watch Anime With Friends Online — 2026",
     description:

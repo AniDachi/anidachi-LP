@@ -22,7 +22,7 @@ import {
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -31,18 +31,26 @@ export const metadata: Metadata = {
     "YouTube watch party hub: sync full videos with friends via Chrome extension, Teleparty, or Discord — AniDachi adds async catch-up. Start free at pricing.",
   alternates: { canonical: "/watch-youtube-together" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "YouTube Watch Party — Watch YouTube Together",
     description:
       "Create a YouTube watch party with sync, chat, and async. Start from pricing.",
     url: "/watch-youtube-together",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "YouTube Watch Party — Watch YouTube Together",
     description:
       "Synced YouTube watchrooms with AniDachi — live or async. Start free.",
-    images: [BRAND_OG_PATH],
   },
 };
 

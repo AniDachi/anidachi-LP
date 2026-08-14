@@ -8,6 +8,15 @@ export const metadata: Metadata = {
     "Short answer: Netflix has no native watch party feature. Long-distance couples use Teleparty or Rave for Netflix sync — and AniDachi if you also watch anime on Crunchyroll.",
   alternates: { canonical: "/watch-netflix-together-long-distance" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch Netflix Together Long Distance | AniDachi",
     description:
       "The 2026 guide to Netflix watch parties for long-distance couples — Teleparty, Rave, and what to use for anime.",

@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Watch sports anime match nights with friends on Crunchyroll — sync every comeback live or catch up at your own pace with AniDachi. Haikyuu, Kuroko's Basketball, Ping Pong, and more.",
   alternates: { canonical: "/watch-sports-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Sports Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for sports anime on Crunchyroll — match-night scheduling, bracket tracking, and spoiler-free catch-up.",

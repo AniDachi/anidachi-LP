@@ -18,7 +18,7 @@ import {
 } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -29,17 +29,25 @@ export const metadata: Metadata = {
     canonical: "/guides/best-way-to-watch-youtube-with-friends",
   },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Best Way to Watch YouTube With Friends",
     description:
       "Method decision page: live sync vs async vs screen share — and why AniDachi wins for most crews.",
     url: "/guides/best-way-to-watch-youtube-with-friends",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Best Way to Watch YouTube With Friends",
     description: "Sync vs async vs screen share — clear verdict for YouTube groups.",
-    images: [BRAND_OG_PATH],
   },
 };
 

@@ -10,6 +10,15 @@ export const metadata: Metadata = {
     "Best apps to watch anime together long distance: AniDachi (Crunchyroll + async), Teleparty, Rave, Scener, and Discord screen share — compared by LDR couple needs.",
   alternates: { canonical: "/best-apps-watch-anime-together-long-distance" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "7 Best Apps to Watch Anime Together Long Distance (2026)",
     description:
       "Every major watch-together app compared for long-distance couples — Crunchyroll support, async mode, group size, and price.",

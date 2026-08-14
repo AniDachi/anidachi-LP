@@ -12,12 +12,22 @@ export const metadata: Metadata = {
     canonical: "/guides/how-to-watch-anime-with-friends-on-discord",
   },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Anime on Discord Without Screen Share Pain | AniDachi",
     description:
       "How to stream anime on Discord the smart way — Discord voice + synced Crunchyroll, not compressed screen share.",
     url: "/guides/how-to-watch-anime-with-friends-on-discord",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Watch Anime on Discord Without Screen Share Pain | AniDachi",
     description:

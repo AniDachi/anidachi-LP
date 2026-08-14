@@ -5,7 +5,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -14,18 +14,26 @@ export const metadata: Metadata = {
     "YouTube has no native watch party. Long-distance couples use AniDachi for synced YouTube watchrooms (live or async) — or Watch2Gether/Teleparty for free live-only sync.",
   alternates: { canonical: "/watch-youtube-together-long-distance" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch YouTube Together Long Distance | AniDachi",
     description:
       "Sync YouTube with your long-distance partner — AniDachi watchrooms, free live tools, and async catch-up when schedules don’t match.",
     url: "/watch-youtube-together-long-distance",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Watch YouTube Together Long Distance",
     description:
       "AniDachi YouTube watchrooms for LDR couples — live sync or async reactions.",
-    images: [BRAND_OG_PATH],
   },
 };
 

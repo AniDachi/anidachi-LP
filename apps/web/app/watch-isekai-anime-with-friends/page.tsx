@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Watch isekai anime with friends on Crunchyroll using AniDachi — synced playthroughs, async catch-up, and spoiler controls. Re:Zero, KonoSuba, Mushoku Tensei, and more.",
   alternates: { canonical: "/watch-isekai-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Isekai Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for the best isekai anime on Crunchyroll — synced playback, spoiler-safe reactions, and async catch-up for transported-to-another-world adventures.",

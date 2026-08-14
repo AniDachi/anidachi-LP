@@ -8,6 +8,15 @@ export const metadata: Metadata = {
     "Who operates AniDachi, what the product does on Crunchyroll and YouTube, and how we stay independent of streaming platforms.",
   alternates: { canonical: "/about" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "About AniDachi",
     description:
       "AniDachi helps friends watch together on Crunchyroll and YouTube with synced watchrooms — built by an independent team.",

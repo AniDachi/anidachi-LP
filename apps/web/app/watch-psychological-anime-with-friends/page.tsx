@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Watch psychological anime twists with friends in real-time using AniDachi on Crunchyroll. Synced reveals, spoiler-safe chat, and async catch-up. Death Note, Paranoia Agent, Psycho-Pass, and more.",
   alternates: { canonical: "/watch-psychological-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Psychological Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for psychological anime on Crunchyroll — synced playback, theory-tracking chat, and spoiler-safe async for mind-bending series.",

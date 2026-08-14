@@ -8,6 +8,15 @@ export const metadata: Metadata = {
     "12 creative anime date night ideas for long-distance couples — from weekly sync rituals to themed watch parties, async reactions, and planning a reunion around a convention.",
   alternates: { canonical: "/long-distance-anime-date-night-ideas" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "12 Anime Date Night Ideas for Long-Distance Couples",
     description:
       "Turn anime into a regular LDR ritual — 12 date night formats that work across time zones.",

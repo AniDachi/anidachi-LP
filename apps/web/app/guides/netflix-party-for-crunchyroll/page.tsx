@@ -13,7 +13,7 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 import { PRICING_TELEPARTY_COMPARE_FAQ } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -22,17 +22,25 @@ export const metadata: Metadata = {
     "Searching “Netflix Party Crunchyroll”? Teleparty (formerly Netflix Party) can sync Crunchyroll live. AniDachi adds anime watchrooms with async catch-up.",
   alternates: { canonical: "/guides/netflix-party-for-crunchyroll" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Netflix Party for Crunchyroll",
     description:
       "What “Netflix Party for Crunchyroll” means in 2026 — Teleparty live sync vs AniDachi watchrooms.",
     url: "/guides/netflix-party-for-crunchyroll",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Netflix Party for Crunchyroll",
     description: "Teleparty lineage + AniDachi Crunchyroll watchrooms explained.",
-    images: [BRAND_OG_PATH],
   },
 };
 

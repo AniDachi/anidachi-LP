@@ -6,7 +6,7 @@ import { getGuideLinks } from "@/lib/guide-links";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const ARTICLE_IMAGE = `${SITE_URL}${BRAND_OG_PATH}`;
 
 type AnimePick = {

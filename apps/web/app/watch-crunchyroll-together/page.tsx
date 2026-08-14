@@ -25,6 +25,15 @@ export const metadata: Metadata = {
     "Crunchyroll has no built-in watch party. Watch Crunchyroll together with AniDachi — sync, chat, async, or a free live-only party extension. Start at AniDachi pricing.",
   alternates: { canonical: "/watch-crunchyroll-together" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Crunchyroll Watch Party with AniDachi — Sync & Chat (2026)",
     description:
       "Does Crunchyroll have watch party? No — use AniDachi watchrooms for sync, chat, and async on each person's account.",

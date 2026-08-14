@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Experience every jump scare and twist simultaneously — AniDachi syncs horror anime on Crunchyroll for your group. Higurashi, Elfen Lied, Junji Ito, and more.",
   alternates: { canonical: "/watch-horror-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Horror Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for horror anime on Crunchyroll — synced playback, shared scares, and spoiler-safe reactions for the most intense anime series.",

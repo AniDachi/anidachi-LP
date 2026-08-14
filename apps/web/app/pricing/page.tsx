@@ -18,12 +18,21 @@ export const metadata: Metadata = {
     "AniDachi pricing for Crunchyroll and YouTube watchrooms. Friends join free. Plus and Pro unlock unlimited hosting, async rooms, and larger groups — pre-launch rates locked forever.",
   alternates: { canonical: "/pricing" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
     title: "AniDachi Pricing — Free, Plus & Pro",
     description:
       "Compare Free, Plus, and Pro for Crunchyroll and YouTube watchrooms. Pre-launch pricing locked forever.",
     url: "/pricing",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "AniDachi Pricing — Free, Plus & Pro",
     description:

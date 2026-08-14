@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Watch mecha anime battles with friends in real-time sync or async on Crunchyroll. AniDachi watchrooms keep everyone at the same robot reveal. Gurren Lagann, Evangelion, Code Geass, and more.",
   alternates: { canonical: "/watch-mecha-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Mecha Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for mecha anime on Crunchyroll — synced robot battles, shared lore debates, and spoiler-safe reactions for the most ambitious anime series.",

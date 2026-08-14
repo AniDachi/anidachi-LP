@@ -17,7 +17,7 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 import { PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -26,17 +26,25 @@ export const metadata: Metadata = {
     "Step-by-step: how to watch YouTube with friends (and how to watch YouTube together) using AniDachi watchrooms — live sync or async. Free alternatives included.",
   alternates: { canonical: "/guides/how-to-watch-youtube-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch YouTube With Friends",
     description:
       "Create a YouTube watchroom in minutes — synced playback, chat, and async catch-up.",
     url: "/guides/how-to-watch-youtube-with-friends",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "How to Watch YouTube With Friends",
     description: "Synced YouTube watchrooms with AniDachi — live or async.",
-    images: [BRAND_OG_PATH],
   },
 };
 

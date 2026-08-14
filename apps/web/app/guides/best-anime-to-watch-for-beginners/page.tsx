@@ -8,12 +8,23 @@ export const metadata: Metadata = {
     "30 beginner-friendly anime with clear hooks, strong pacing, and easy onboarding. Action, comedy, sports, and short classics — plus watch-party tips with AniDachi.",
   alternates: { canonical: "/guides/best-anime-to-watch-for-beginners" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Best Anime for Beginners (2026) — 29 Starter-Friendly Picks",
     description:
       "Starter anime picks for first-time viewers and mixed-experience watch groups.",
     url: "/guides/best-anime-to-watch-for-beginners",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
+
     card: "summary_large_image",
     title: "Best Anime for Beginners (2026) — 29 Starter-Friendly Picks",
     description:

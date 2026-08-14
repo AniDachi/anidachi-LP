@@ -9,12 +9,23 @@ export const metadata: Metadata = {
     "Watch Crunchyroll on two screens with synced playback — AniDachi keeps laptops and TVs aligned, or use casting with a sync extension for group sessions.",
   alternates: { canonical: "/guides/how-to-watch-crunchyroll-on-two-screens" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch Crunchyroll on Two Screens — 2026",
     description:
       "Sync Crunchyroll across two devices or two viewers with watchroom tools.",
     url: "/guides/how-to-watch-crunchyroll-on-two-screens",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
+
     card: "summary_large_image",
     title: "How to Watch Crunchyroll on Two Screens — 2026",
     description: "Keep Crunchyroll aligned when watching on multiple screens.",

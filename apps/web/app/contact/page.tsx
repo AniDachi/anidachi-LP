@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Contact AniDachi for product support, privacy requests, security reports, and press questions.",
   alternates: { canonical: "/contact" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Contact AniDachi",
     description:
       "Support, privacy, security, and press contact channels for AniDachi.",

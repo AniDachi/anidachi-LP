@@ -9,12 +9,23 @@ export const metadata: Metadata = {
     "Sync Crunchyroll playback with friends using AniDachi watchrooms — each person streams full quality on their own account. Setup takes under two minutes.",
   alternates: { canonical: "/guides/how-to-sync-crunchyroll-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Sync Crunchyroll With Friends — 2026",
     description:
       "Keep Crunchyroll episodes aligned across your group with synced watchrooms and chat.",
     url: "/guides/how-to-sync-crunchyroll-with-friends",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
+
     card: "summary_large_image",
     title: "How to Sync Crunchyroll With Friends — 2026",
     description: "Step-by-step Crunchyroll sync for anime watch parties.",

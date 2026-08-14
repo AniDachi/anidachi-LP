@@ -6,6 +6,15 @@ export const metadata: Metadata = {
     "AniDachi terms of service — the rules and conditions for using our anime watchroom platform and Chrome extension.",
   alternates: { canonical: "/terms" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Terms of Service | AniDachi",
     description:
       "Rules and conditions for using the AniDachi platform.",

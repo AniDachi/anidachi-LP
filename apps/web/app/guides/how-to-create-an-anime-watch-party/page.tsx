@@ -9,12 +9,22 @@ export const metadata: Metadata = {
     "The easiest way is AniDachi: detect the show on Crunchyroll, create a watchroom, and share one link. Takes under 2 minutes for hosts.",
   alternates: { canonical: "/guides/how-to-create-an-anime-watch-party" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Create an Anime Watch Party — 2026",
     description:
       "Host a Crunchyroll anime watch party with invites, chat, and optional async pacing.",
     url: "/guides/how-to-create-an-anime-watch-party",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "How to Create an Anime Watch Party — 2026",
     description:

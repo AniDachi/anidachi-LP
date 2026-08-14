@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Mystery anime is the ultimate group watch — theorize together live or async with AniDachi on Crunchyroll. Death Note, Steins;Gate, Erased, and more.",
   alternates: { canonical: "/watch-mystery-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Mystery Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for mystery and psychological anime on Crunchyroll — theory threads, spoiler-safe chat, and twist-reaction sessions.",

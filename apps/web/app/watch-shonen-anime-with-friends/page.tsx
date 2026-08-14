@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Watch shonen anime with friends on Crunchyroll — Demon Slayer, Jujutsu Kaisen, Haikyuu, Hunter x Hunter, and more. Synced watchrooms with spoiler-safe chat and async catch-up.",
   alternates: { canonical: "/watch-shonen-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Shonen Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for shonen anime on Crunchyroll — battles, sports rivalries, and long-run marathons.",

@@ -8,12 +8,23 @@ export const metadata: Metadata = {
     "OVA stands for Original Video Animation — anime released directly to home video, not broadcast TV. What does OVA mean in anime, how OVAs differ from TV episodes, and famous OVAs like Haikyuu, Demon Slayer, and Attack on Titan explained.",
   alternates: { canonical: "/glossary/ova-meaning" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "What Does OVA Mean in Anime? Full Form & Examples",
     description:
       "OVA (Original Video Animation) is anime released directly to video. Learn the OVA meaning, how it differs from TV anime, and which OVAs are worth watching.",
     url: "/glossary/ova-meaning",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
+
     card: "summary",
     title: "What Does OVA Mean in Anime? — AniDachi Glossary",
     description:

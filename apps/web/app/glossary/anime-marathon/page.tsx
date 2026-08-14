@@ -8,12 +8,23 @@ export const metadata: Metadata = {
     "An anime marathon is a session where you watch multiple episodes or an entire series in a single sitting. What anime marathon means, how to run one with friends, and the best anime for marathon watching.",
   alternates: { canonical: "/glossary/anime-marathon" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "What Is an Anime Marathon? Meaning & Group Watch Tips",
     description:
       "Anime marathon meaning, definition, and tips for running a group anime marathon — best series, session length, and how to manage energy.",
     url: "/glossary/anime-marathon",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
+
     card: "summary",
     title: "What Is an Anime Marathon? — AniDachi Glossary",
     description:

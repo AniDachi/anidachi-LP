@@ -8,6 +8,15 @@ export const metadata: Metadata = {
     "Does Crunchyroll have a watch party or group watch feature? Short answer: no — but AniDachi adds full watch party functionality to Crunchyroll. Here is what Crunchyroll offers natively and what AniDachi adds.",
   alternates: { canonical: "/guides/does-crunchyroll-have-watch-party" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Does Crunchyroll Have a Watch Party Feature?",
     description:
       "Crunchyroll does not have a native watch party feature as of 2026. Learn what AniDachi adds to fill that gap.",

@@ -19,6 +19,10 @@ import {
 import { HowToJsonLd, TvSeriesJsonLd, MovieJsonLd } from "@/components/json-ld";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import {
+  ANIDACHI_OG_IMAGE_ALT,
+  ANIDACHI_OG_IMAGE_PATH,
+} from "@/lib/brand";
+import {
   buildWatchHowToSteps,
   buildWatchPageFaq,
   buildWatchPageMetaDescription,
@@ -101,33 +105,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `Watch ${anime.title} with Friends | AniDachi`,
       description: metaDescription,
       url: `/watch/${rawSlug}`,
-      ...(posterUrl
-        ? {
-            images: [
-              {
-                url: posterUrl,
-                alt: `${anime.title} anime poster — watch together with friends`,
-              },
-            ],
-          }
-        : {}),
+      images: posterUrl
+        ? [
+            {
+              url: posterUrl,
+              alt: `${anime.title} anime poster — watch together with friends`,
+            },
+          ]
+        : [
+            {
+              url: ANIDACHI_OG_IMAGE_PATH,
+              width: 1200,
+              height: 630,
+              alt: ANIDACHI_OG_IMAGE_ALT,
+            },
+          ],
     },
-    ...(posterUrl
-      ? {
-          twitter: {
-            card: "summary_large_image",
-            title: `Watch ${anime.title} with Friends | AniDachi`,
-            description: metaDescription,
-            images: [posterUrl],
-          },
-        }
-      : {
-          twitter: {
-            card: "summary_large_image",
-            title: `Watch ${anime.title} with Friends | AniDachi`,
-            description: metaDescription,
-          },
-        }),
+    twitter: {
+      card: "summary_large_image",
+      title: `Watch ${anime.title} with Friends | AniDachi`,
+      description: metaDescription,
+      images: posterUrl ? [posterUrl] : [ANIDACHI_OG_IMAGE_PATH],
+    },
   };
 }
 

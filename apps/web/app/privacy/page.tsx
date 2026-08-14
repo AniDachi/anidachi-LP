@@ -6,6 +6,15 @@ export const metadata: Metadata = {
     "AniDachi privacy policy — how we collect, use, and protect your data when you use our anime watchroom platform and Chrome extension.",
   alternates: { canonical: "/privacy" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Privacy Policy | AniDachi",
     description:
       "How AniDachi collects, uses, and protects your data.",

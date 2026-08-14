@@ -16,7 +16,7 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 import { PRICING_TELEPARTY_COMPARE_FAQ } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {

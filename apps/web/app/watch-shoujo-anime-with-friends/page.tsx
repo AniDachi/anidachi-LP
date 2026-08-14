@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "Shoujo anime is made for shared emotional moments — sync heartfelt episodes live or async on Crunchyroll with AniDachi. Fruits Basket, Sailor Moon, Nana, and more.",
   alternates: { canonical: "/watch-shoujo-anime-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Shoujo Anime With Friends (2026) | AniDachi",
     description:
       "Group watchroom guides for the best shoujo anime on Crunchyroll — synced playback, emotional reactions, and async catch-up.",

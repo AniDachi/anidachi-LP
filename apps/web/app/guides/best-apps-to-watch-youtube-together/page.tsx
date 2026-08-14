@@ -11,7 +11,7 @@ import {
 } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -22,17 +22,25 @@ export const metadata: Metadata = {
     canonical: "/guides/best-apps-to-watch-youtube-together",
   },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Best Apps to Watch YouTube Together",
     description:
       "Ranked YouTube co-watch apps for 2026 — sync, async, and free options.",
     url: "/guides/best-apps-to-watch-youtube-together",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Best Apps to Watch YouTube Together",
     description: "AniDachi, Watch2Gether, Teleparty, Discord — ranked.",
-    images: [BRAND_OG_PATH],
   },
 };
 

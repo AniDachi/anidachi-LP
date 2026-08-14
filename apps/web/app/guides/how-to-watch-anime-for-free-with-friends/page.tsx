@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     "How to watch anime for free with friends online — free tier options on Crunchyroll and other platforms, free watch party tools, and how AniDachi's watchroom sync layer works on top of free accounts.",
   alternates: { canonical: "/guides/how-to-watch-anime-for-free-with-friends" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch Anime for Free With Friends Online",
     description:
       "Free anime streaming options, free watch party tools, and how to watch Crunchyroll together without paying for extra features.",

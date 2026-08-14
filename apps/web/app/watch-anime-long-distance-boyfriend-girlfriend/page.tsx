@@ -10,6 +10,15 @@ export const metadata: Metadata = {
     "The best way to watch anime with a long-distance boyfriend or girlfriend: sync Crunchyroll live or async, set up a weekly anime date night, and never spoil each other.",
   alternates: { canonical: "/watch-anime-long-distance-boyfriend-girlfriend" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Watch Anime With Your Long Distance Partner | AniDachi",
     description:
       "Set up an LDR anime ritual that works — live when schedules align, async when they don't.",

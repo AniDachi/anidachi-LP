@@ -14,6 +14,15 @@ export const metadata: Metadata = {
     "Compare the top Crunchyroll watch party Chrome extensions: AniDachi, Crunchyroll Party, Teleparty, Roll Together, and Anime Watch Parties. Features, pricing, and setup guide.",
   alternates: { canonical: "/guides/crunchyroll-watch-party-chrome-extension" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "Best Crunchyroll Watch Party Chrome Extensions (2026)",
     description:
       "Detailed comparison of every Chrome extension for watching Crunchyroll with friends.",

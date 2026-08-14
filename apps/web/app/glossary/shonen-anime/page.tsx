@@ -8,12 +8,23 @@ export const metadata: Metadata = {
     "Shonen anime targets teenage male audiences and focuses on action, friendship, and personal growth. What shonen means, famous shonen series, and which shonen anime are best for group watching with friends.",
   alternates: { canonical: "/glossary/shonen-anime" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "What Is Shonen Anime? Shonen Meaning & Examples",
     description:
       "Shonen anime meaning, definition, famous examples like Demon Slayer and Naruto, and why shonen is the best group-watch genre.",
     url: "/glossary/shonen-anime",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
+
     card: "summary",
     title: "What Is Shonen Anime? — AniDachi Glossary",
     description:

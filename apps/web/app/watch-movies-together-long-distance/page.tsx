@@ -10,6 +10,15 @@ export const metadata: Metadata = {
     "Watching movies and TV shows together long distance: Teleparty (Netflix), Rave (multi-platform), press-play-together, and AniDachi for Crunchyroll anime — compared by use case.",
   alternates: { canonical: "/watch-movies-together-long-distance" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch Movies & TV Together Long Distance | AniDachi",
     description:
       "Every method for watching movies and TV with someone long distance — Teleparty, Rave, Discord, and when to use each.",

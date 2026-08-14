@@ -9,12 +9,22 @@ export const metadata: Metadata = {
     "Watch anime together as a bigger crew without chaotic chat. Room caps, co-host duties, async vs live rules, and AniDachi watchrooms on Crunchyroll.",
   alternates: { canonical: "/guides/how-to-watch-anime-with-a-group" },
   openGraph: {
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AniDachi – watch anime together, in perfect sync",
+      },
+    ],
+
     title: "How to Watch Anime With a Group — 2026",
     description:
       "Coordinate larger anime groups with clear roles, invites, and playback etiquette.",
     url: "/guides/how-to-watch-anime-with-a-group",
   },
   twitter: {
+    images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "How to Watch Anime With a Group — 2026",
     description:
