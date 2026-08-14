@@ -51,7 +51,7 @@ export type WatchHistoryProgressRow = {
   season_number: number | null;
   episode_number: number | null;
   source_url: string;
-  current_time: number;
+  current_time_seconds: number;
   duration: number;
   progress: number;
   completed_at: string | null;
@@ -360,7 +360,7 @@ export function buildWatchHistoryV2Response(params: {
                 seasonNumber: row.season_number,
                 episodeNumber: row.episode_number,
                 sourceUrl: row.source_url,
-                currentTime: row.current_time,
+                currentTime: row.current_time_seconds,
                 duration: row.duration,
                 progress: row.progress,
                 completedAt: row.completed_at,
@@ -388,7 +388,7 @@ export function buildWatchHistoryV2Response(params: {
         sessions: titleSessions,
         latestActivity: {
           episodeKey: latest.episode_key,
-          currentTime: latest.current_time,
+          currentTime: latest.current_time_seconds,
           duration: latest.duration,
           progress: latest.progress,
           completedAt: latest.completed_at,
@@ -651,7 +651,7 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
       const progressResult = await db()
         .from("watch_episode_progress")
         .select(
-          "user_id,provider,title_key,episode_key,item_kind,title,artwork_url,episode_title,season_key,season_title,season_number,episode_number,source_url,current_time,duration,progress,completed_at,latest_session_id,observed_at,server_order,history_generation",
+          "user_id,provider,title_key,episode_key,item_kind,title,artwork_url,episode_title,season_key,season_title,season_number,episode_number,source_url,current_time_seconds,duration,progress,completed_at,latest_session_id,observed_at,server_order,history_generation",
           { count: "exact" },
         )
         .eq("user_id", userId)
@@ -1041,7 +1041,7 @@ function parseProgressRow(value: unknown): WatchHistoryProgressRow {
       "season_number",
       "episode_number",
       "source_url",
-      "current_time",
+      "current_time_seconds",
       "duration",
       "progress",
       "completed_at",
@@ -1066,7 +1066,7 @@ function parseProgressRow(value: unknown): WatchHistoryProgressRow {
     ) ||
     !(row.episode_number === null || isNonnegativeNumber(row.episode_number)) ||
     !isHttpUrl(row.source_url, 2048) ||
-    !isNonnegativeNumber(row.current_time) ||
+    !isNonnegativeNumber(row.current_time_seconds) ||
     !isNonnegativeNumber(row.duration) ||
     !isProgress(row.progress) ||
     !(row.completed_at === null || isTimestamp(row.completed_at)) ||

@@ -25,7 +25,7 @@ create table public.watch_episode_progress (
   season_number integer check (season_number is null or season_number between 0 and 1000),
   episode_number double precision check (episode_number is null or episode_number >= 0),
   source_url text not null check (char_length(source_url) between 1 and 2048),
-  current_time double precision not null check (current_time >= 0),
+  current_time_seconds double precision not null check (current_time_seconds >= 0),
   duration double precision not null check (duration >= 0),
   progress double precision not null check (progress between 0 and 1),
   completed_at timestamptz,
@@ -180,27 +180,39 @@ alter table public.watch_sessions
         and source_generation is not null
       )
       or (
+        -- A hard-deleted room applies the legacy ON DELETE SET NULL action.
+        -- Generations keep this internal tombstone distinct from a solo session;
+        -- canonical reads require room_id or client_session_key and omit it.
         room_id is null
         and client_session_key is null
         and room_generation is not null
         and source_generation is not null
-        and ended_at is not null
       )
     );
 
 alter table public.watch_sessions
   drop constraint if exists watch_sessions_season_number_check;
 
+-- Keep the AccessExclusive DROP/ADD phases brief. Validation still checks all
+-- legacy rows, but PostgreSQL performs it under the less restrictive validation lock.
 alter table public.watch_sessions
   add constraint watch_sessions_season_number_check
-    check (season_number is null or season_number between 0 and 1000);
+    check (season_number is null or season_number between 0 and 1000)
+    not valid;
+
+alter table public.watch_sessions
+  validate constraint watch_sessions_season_number_check;
 
 alter table public.watch_progress_checkpoints
   drop constraint if exists watch_progress_checkpoints_season_number_check;
 
 alter table public.watch_progress_checkpoints
   add constraint watch_progress_checkpoints_season_number_check
-    check (season_number is null or season_number between 0 and 1000);
+    check (season_number is null or season_number between 0 and 1000)
+    not valid;
+
+alter table public.watch_progress_checkpoints
+  validate constraint watch_progress_checkpoints_season_number_check;
 
 alter table public.watch_session_participants
   add column if not exists schema_version smallint not null default 1;
@@ -277,7 +289,7 @@ declare
   server_order_value bigint;
   session_id_value uuid;
   participant_role text;
-  other_user_id uuid;
+  other_user_id_value uuid;
   completion_value timestamptz;
   episode_payload jsonb;
   acknowledgement_value jsonb;
@@ -754,7 +766,7 @@ begin
       and current_participant.user_id = p_user_id
       and current_participant.schema_version = 2
   ) then
-    for other_user_id in
+    for other_user_id_value in
       select other_participant.user_id
       from public.watch_session_participants as other_participant
       where other_participant.session_id = session_id_value
@@ -776,7 +788,9 @@ begin
         room_row.room_id,
         server_accepted_at
       from (
-        values (p_user_id, other_user_id), (other_user_id, p_user_id)
+        values
+          (p_user_id, other_user_id_value),
+          (other_user_id_value, p_user_id)
       ) as directional_pair(user_id, other_user_id)
       order by directional_pair.user_id, directional_pair.other_user_id
       on conflict (user_id, other_user_id) do update set
@@ -813,7 +827,7 @@ begin
     season_number,
     episode_number,
     source_url,
-    current_time,
+    current_time_seconds,
     duration,
     progress,
     completed_at,
@@ -858,7 +872,7 @@ begin
     season_number = excluded.season_number,
     episode_number = excluded.episode_number,
     source_url = excluded.source_url,
-    current_time = excluded.current_time,
+    current_time_seconds = excluded.current_time_seconds,
     duration = excluded.duration,
     progress = excluded.progress,
     completed_at = coalesce(public.watch_episode_progress.completed_at, excluded.completed_at),
@@ -877,7 +891,7 @@ begin
     'seasonNumber', episode.season_number,
     'episodeNumber', episode.episode_number,
     'sourceUrl', episode.source_url,
-    'currentTime', episode.current_time,
+    'currentTime', episode.current_time_seconds,
     'duration', episode.duration,
     'progress', episode.progress,
     'completedAt', episode.completed_at,

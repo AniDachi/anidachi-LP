@@ -116,11 +116,11 @@ test("season constraints consistently allow zero and reject values above 1000", 
   );
   assert.match(
     sql,
-    /drop constraint if exists watch_sessions_season_number_check; alter table public\.watch_sessions add constraint watch_sessions_season_number_check check \(season_number is null or season_number between 0 and 1000\)/,
+    /drop constraint if exists watch_sessions_season_number_check; alter table public\.watch_sessions add constraint watch_sessions_season_number_check check \(season_number is null or season_number between 0 and 1000\) not valid; alter table public\.watch_sessions validate constraint watch_sessions_season_number_check/,
   );
   assert.match(
     sql,
-    /drop constraint if exists watch_progress_checkpoints_season_number_check; alter table public\.watch_progress_checkpoints add constraint watch_progress_checkpoints_season_number_check check \(season_number is null or season_number between 0 and 1000\)/,
+    /drop constraint if exists watch_progress_checkpoints_season_number_check; alter table public\.watch_progress_checkpoints add constraint watch_progress_checkpoints_season_number_check check \(season_number is null or season_number between 0 and 1000\) not valid; alter table public\.watch_progress_checkpoints validate constraint watch_progress_checkpoints_season_number_check/,
   );
 });
 
@@ -502,13 +502,9 @@ test("v2 transactions leave active v1 tracked-title rows untouched", () => {
   );
 });
 
-test("deleted rooms may preserve only ended shared v2 session identities", () => {
+test("deleted rooms preserve an internal shared v2 tombstone", () => {
   const sql = normalizedSql();
   assert.match(
-    sql,
-    /room_id is null and client_session_key is null and room_generation is not null and source_generation is not null and ended_at is not null/,
-  );
-  assert.doesNotMatch(
     sql,
     /room_id is null and client_session_key is null and room_generation is not null and source_generation is not null\s*\)/,
   );
@@ -518,7 +514,7 @@ test("recent-person pair locks and winning room metadata are deterministic", () 
   const definition = functionDefinition("apply_watch_progress_v2");
   assert.match(
     definition,
-    /from \( values \(p_user_id, other_user_id\), \(other_user_id, p_user_id\) \) as directional_pair\(user_id, other_user_id\) order by directional_pair\.user_id, directional_pair\.other_user_id/,
+    /from \( values \(p_user_id, other_user_id_value\), \(other_user_id_value, p_user_id\) \) as directional_pair\(user_id, other_user_id\) order by directional_pair\.user_id, directional_pair\.other_user_id/,
   );
   assert.match(
     definition,
@@ -530,7 +526,7 @@ test("recent-person pair groups are acquired in one global order", () => {
   const definition = functionDefinition("apply_watch_progress_v2");
   assert.match(
     definition,
-    /for other_user_id in select other_participant\.user_id from public\.watch_session_participants as other_participant where other_participant\.session_id = session_id_value and other_participant\.user_id <> p_user_id and other_participant\.schema_version = 2 order by least\(p_user_id, other_participant\.user_id\), greatest\(p_user_id, other_participant\.user_id\) loop/,
+    /for other_user_id_value in select other_participant\.user_id from public\.watch_session_participants as other_participant where other_participant\.session_id = session_id_value and other_participant\.user_id <> p_user_id and other_participant\.schema_version = 2 order by least\(p_user_id, other_participant\.user_id\), greatest\(p_user_id, other_participant\.user_id\) loop/,
   );
 });
 

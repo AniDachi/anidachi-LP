@@ -141,7 +141,7 @@ test("watch history v2 recent-person evidence is pair-owned and requires two par
   assert.match(applyFunction, /other_participant\.user_id <> p_user_id/);
   assert.match(
     applyFunction,
-    /values \(p_user_id, other_user_id\), \(other_user_id, p_user_id\)/,
+    /values \(p_user_id, other_user_id_value\), \(other_user_id_value, p_user_id\)/,
   );
   assert.match(
     applyFunction,

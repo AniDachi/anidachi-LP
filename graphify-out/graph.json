@@ -59216,7 +59216,15 @@
       "label": "Task 4: Add The Authenticated V2 Web Service And Routes",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L647",
+      "source_location": "L653",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_superpowers_plans_2026_08_14_watch_history_v2_clean_mvp_implementation_wave_2_local_postgresql_acceptance_2026_08_14",
+      "label": "Wave 2 local PostgreSQL acceptance — 2026-08-14",
+      "file_type": "document",
+      "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
+      "source_location": "L740",
       "_origin": "ast"
     },
     {
@@ -59224,7 +59232,7 @@
       "label": "Task 5: Add The Background-Owned Cache, Outbox, And V2 Client",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L734",
+      "source_location": "L768",
       "_origin": "ast"
     },
     {
@@ -59232,7 +59240,7 @@
       "label": "Task 6: Add Solo Provider Policies And The Meaningful-Progress Controller",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L818",
+      "source_location": "L852",
       "_origin": "ast"
     },
     {
@@ -59240,7 +59248,7 @@
       "label": "Task 7: Issue Room Authority And Enable Shared Publication",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L902",
+      "source_location": "L936",
       "_origin": "ast"
     },
     {
@@ -59248,7 +59256,7 @@
       "label": "Task 8: Move Popup And Website To One Canonical Read Model",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L990",
+      "source_location": "L1024",
       "_origin": "ast"
     },
     {
@@ -59256,7 +59264,7 @@
       "label": "Task 9: Perform The Logical Clean Pre-Release Cutover",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L1072",
+      "source_location": "L1106",
       "_origin": "ast"
     },
     {
@@ -59264,7 +59272,7 @@
       "label": "Task 10: Full Automated Gates And Staging Acceptance",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L1148",
+      "source_location": "L1182",
       "_origin": "ast"
     },
     {
@@ -59272,7 +59280,7 @@
       "label": "Deferred Catalog Evidence Gate (Not Part Of Core MVP Execution)",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L1247",
+      "source_location": "L1281",
       "_origin": "ast"
     },
     {
@@ -59280,7 +59288,7 @@
       "label": "MVP Acceptance Criteria",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L1268",
+      "source_location": "L1302",
       "_origin": "ast"
     },
     {
@@ -59288,7 +59296,7 @@
       "label": "Current External Constraints Rechecked For This Plan",
       "file_type": "document",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L1303",
+      "source_location": "L1337",
       "_origin": "ast"
     },
     {
@@ -225678,7 +225686,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L647",
+      "source_location": "L653",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_superpowers_plans_2026_08_14_watch_history_v2_clean_mvp_implementation_task_4_add_the_authenticated_v2_web_service_and_routes",
+      "target": "docs_superpowers_plans_2026_08_14_watch_history_v2_clean_mvp_implementation_wave_2_local_postgresql_acceptance_2026_08_14",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
+      "source_location": "L740",
       "weight": 1.0
     },
     {
@@ -225687,7 +225704,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L734",
+      "source_location": "L768",
       "weight": 1.0
     },
     {
@@ -225696,7 +225713,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L818",
+      "source_location": "L852",
       "weight": 1.0
     },
     {
@@ -225705,7 +225722,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L902",
+      "source_location": "L936",
       "weight": 1.0
     },
     {
@@ -225714,7 +225731,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L990",
+      "source_location": "L1024",
       "weight": 1.0
     },
     {
@@ -225723,7 +225740,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L1072",
+      "source_location": "L1106",
       "weight": 1.0
     },
     {
@@ -225732,7 +225749,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L1148",
+      "source_location": "L1182",
       "weight": 1.0
     },
     {
@@ -225741,7 +225758,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L1247",
+      "source_location": "L1281",
       "weight": 1.0
     },
     {
@@ -225750,7 +225767,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L1268",
+      "source_location": "L1302",
       "weight": 1.0
     },
     {
@@ -225759,7 +225776,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md",
-      "source_location": "L1303",
+      "source_location": "L1337",
       "weight": 1.0
     },
     {

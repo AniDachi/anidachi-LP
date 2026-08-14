@@ -2095,8 +2095,8 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/social.test.ts": {
-    "mtime": 1786706918.6330159,
-    "ast_hash": "a5c601dada3aa84d806f0277bf35b8a8",
+    "mtime": 1786721241.681652,
+    "ast_hash": "661bb5d0fda7e61476d6afcd04a748ba",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/social.ts": {
@@ -4475,8 +4475,8 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md": {
-    "mtime": 1786699696.3319435,
-    "ast_hash": "786be09b899e2c7c55ce99688c0c814f",
+    "mtime": 1786721404.404396,
+    "ast_hash": "40d6fc84f037485ad89926593ea138a5",
     "semantic_hash": ""
   },
   "docs/superpowers/specs/2026-08-13-watch-history-catalog-progress-design.md": {
@@ -4535,18 +4535,18 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-v2-sql.test.ts": {
-    "mtime": 1786716738.7719572,
-    "ast_hash": "a5038515b5faaa9cd498323690e739f1",
+    "mtime": 1786720746.796659,
+    "ast_hash": "e6b0857b4792ce79c84292aa7d4b49bf",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-v2.test.ts": {
-    "mtime": 1786715081.2287142,
-    "ast_hash": "c80ee7de095c67efa3892080ed3e907e",
+    "mtime": 1786719810.8524172,
+    "ast_hash": "d5e46356512c15e5d6a8b7358723d80d",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-v2.ts": {
-    "mtime": 1786715246.688333,
-    "ast_hash": "17ac7a487671fbd50f490722e85c7b36",
+    "mtime": 1786719810.7970932,
+    "ast_hash": "bb6b881ef3ed4debe14ed8b3999a2aab",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-library-v1-v2-coexistence.test.ts": {
@@ -4555,8 +4555,13 @@
     "semantic_hash": ""
   },
   "apps/web/supabase/migrations/20260814010000_watch_history_v2_foundation.sql": {
-    "mtime": 1786716649.2532716,
-    "ast_hash": "b1f39ede252d0c7de98d73ab623ada40",
+    "mtime": 1786721056.382234,
+    "ast_hash": "e76d40be7d7d8d9d56dde3107b96756f",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/tests/watch_history_v2.test.sql": {
+    "mtime": 1786721073.2375002,
+    "ast_hash": "470a537b1c360889500887591bfedc8b",
     "semantic_hash": ""
   }
 }

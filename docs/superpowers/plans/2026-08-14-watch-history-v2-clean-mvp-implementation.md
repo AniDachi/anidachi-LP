@@ -527,6 +527,7 @@ protocol shape is not implemented.
 **Files:**
 
 - Create: `apps/web/supabase/migrations/20260814010000_watch_history_v2_foundation.sql`
+- Create: `apps/web/supabase/tests/watch_history_v2.test.sql`
 - Create: `apps/web/lib/anidachi-auth/watch-history-v2-sql.test.ts`
 - Modify: `apps/web/lib/anidachi-auth/social.test.ts`
 
@@ -634,8 +635,13 @@ RPCs. It does not backfill or read v1 checkpoints.
   ```bash
   pnpm --filter @anidachi/web test -- watch-history-v2-sql.test.ts social.test.ts
   pnpm --filter @anidachi/web check
-  supabase --workdir apps/web db push --dry-run
+  supabase --workdir apps/web db reset --local --no-seed
+  test -f apps/web/supabase/tests/watch_history_v2.test.sql
+  supabase --workdir apps/web test db --local  # require Files=1, never NOTESTS
+  supabase --workdir apps/web db lint --local --schema public --level warning --fail-on error
+  supabase --workdir apps/web db push --local --dry-run
   git add apps/web/supabase/migrations/20260814010000_watch_history_v2_foundation.sql \
+    apps/web/supabase/tests/watch_history_v2.test.sql \
     apps/web/lib/anidachi-auth/watch-history-v2-sql.test.ts \
     apps/web/lib/anidachi-auth/social.test.ts
   git commit -m "feat(web): add watch history v2 storage"
@@ -730,6 +736,34 @@ it does not authorize Worker publication or shared extension writes.
     apps/web/app/api/watch-history/v2
   git commit -m "feat(web): add canonical watch history v2 API"
   ```
+
+### Wave 2 local PostgreSQL acceptance — 2026-08-14
+
+- PostgreSQL 17 replayed the complete 21-migration chain from an empty local
+  Supabase database. A separate reset to `20260810190000` proved the pre-v2
+  rollback boundary; local dry-run then listed only
+  `20260814010000_watch_history_v2_foundation.sql`, and forward push succeeded.
+- The real database gate passes 34 pgTAP assertions for schema privileges/RLS,
+  RPCs, receipts, deletion fences, shared two-writer evidence, hard room
+  deletion, account-generation clearing, and late-failure transaction rollback.
+  Eight concurrent same-account events produced eight distinct receipts,
+  server orders 1-8, one canonical episode row at order 8, and no deadlock.
+- Revalidating the two broadened season constraints over 100,000 synthetic rows
+  took about 8.3 ms and 4.9 ms locally. The migration now uses `NOT VALID` plus
+  `VALIDATE CONSTRAINT` so the full scan does not retain the initial
+  `ACCESS EXCLUSIVE` DDL lock. Staging still needs its own dry-run and lock/size
+  observation before deployment.
+- The current GET remains exact but loads the complete account progress/session
+  snapshot before title pagination. A synthetic in-process probe took about
+  123 ms and 209 MiB total RSS for 50,000 rows, and 230 ms and 292 MiB for
+  100,000 rows, excluding PostgREST transfer and session enrichment. This is an
+  explicit pre-release, test-volume-only acceptance; before public release the
+  read path must use a server-bounded title-page query or pass a separately
+  approved staging data-volume/memory bound. Do not describe the current path as
+  large-history safe.
+- Local PostgreSQL acceptance closes the Wave 2 source/integration gate only.
+  Staging migration dry-run and two-account cookie/bearer/shared-room acceptance
+  remain mandatory before deployment. Wave 3 still requires a separate approval.
 
 ## Task 5: Add The Background-Owned Cache, Outbox, And V2 Client
 
