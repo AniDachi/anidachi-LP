@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   cleanFriendInviteToken,
@@ -25,6 +26,11 @@ const OTHER_ID = "00000000-0000-4000-8000-000000000002";
 const LOBBY_ONLY_ID = "00000000-0000-4000-8000-000000000003";
 const FRIENDSHIP_ID = "00000000-0000-4000-8000-000000000004";
 const INVITE_ID = "00000000-0000-4000-8000-000000000005";
+
+const WATCH_HISTORY_V2_MIGRATION_URL = new URL(
+  "../../supabase/migrations/20260814010000_watch_history_v2_foundation.sql",
+  import.meta.url,
+);
 
 test("friend invite tokens accept only URL-safe opaque values", () => {
   assert.equal(
@@ -108,6 +114,33 @@ test("recent people count a shared room once across repeated watch sessions", ()
       sharedRoomCount: 1,
     },
   ]);
+});
+
+test("watch history v2 recent-person evidence is pair-owned and requires two participant writes", () => {
+  let sql = "";
+  try {
+    sql = readFileSync(WATCH_HISTORY_V2_MIGRATION_URL, "utf8")
+      .replace(/--.*$/gm, " ")
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+
+  const evidenceTable = sql.match(
+    /create table public\.recent_people_evidence \([\s\S]*?\);/,
+  )?.[0];
+  assert.ok(evidenceTable);
+  assert.match(evidenceTable, /primary key \(user_id, other_user_id\)/);
+  assert.doesNotMatch(evidenceTable, /shared_room_count|room_generation|source_generation/);
+
+  const applyFunction = sql.match(
+    /create or replace function public\.apply_watch_progress_v2\b[\s\S]*?\$\$[\s\S]*?\$\$\s*;/,
+  )?.[0];
+  assert.ok(applyFunction);
+  assert.match(applyFunction, /other_participant\.user_id <> p_user_id/);
+  assert.match(applyFunction, /values \(p_user_id, other_user_id/);
+  assert.match(applyFunction, /values \(other_user_id, p_user_id/);
 });
 
 test("friend request conflict resolution returns canonical duplicate state and accepts reciprocal pending", () => {
