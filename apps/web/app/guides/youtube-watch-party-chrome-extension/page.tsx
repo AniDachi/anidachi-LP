@@ -16,7 +16,7 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 import { PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -40,14 +40,12 @@ export const metadata: Metadata = {
     description:
       "Chrome extension for YouTube watch parties — AniDachi sync + async on full watch pages.",
     url: "/guides/youtube-watch-party-chrome-extension",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "YouTube Watch Party Chrome Extension",
     description: "Synced YouTube watchrooms in Chrome with AniDachi.",
-    images: [BRAND_OG_PATH],
   },
 };
 

@@ -7,7 +7,7 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 import { PRICING_YT_PRICING_SNIPPET } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -29,14 +29,12 @@ export const metadata: Metadata = {
     description:
       "Set up a YouTube group watch with synced watchrooms — live or async.",
     url: "/guides/youtube-group-watch",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "YouTube Group Watch",
     description: "Synced YouTube group nights with AniDachi watchrooms.",
-    images: [BRAND_OG_PATH],
   },
 };
 

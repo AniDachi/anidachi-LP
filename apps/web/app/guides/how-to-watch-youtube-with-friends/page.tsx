@@ -17,7 +17,7 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 import { PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -39,14 +39,12 @@ export const metadata: Metadata = {
     description:
       "Create a YouTube watchroom in minutes — synced playback, chat, and async catch-up.",
     url: "/guides/how-to-watch-youtube-with-friends",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "How to Watch YouTube With Friends",
     description: "Synced YouTube watchrooms with AniDachi — live or async.",
-    images: [BRAND_OG_PATH],
   },
 };
 

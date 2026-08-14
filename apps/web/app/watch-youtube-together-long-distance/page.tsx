@@ -5,7 +5,7 @@ import { HowToJsonLd } from "@/components/json-ld";
 import { getResolvedSiteOrigin } from "@/lib/site-url";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -27,7 +27,6 @@ export const metadata: Metadata = {
     description:
       "Sync YouTube with your long-distance partner — AniDachi watchrooms, free live tools, and async catch-up when schedules don’t match.",
     url: "/watch-youtube-together-long-distance",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     images: ["/opengraph-image.png"],
@@ -35,7 +34,6 @@ export const metadata: Metadata = {
     title: "Watch YouTube Together Long Distance",
     description:
       "AniDachi YouTube watchrooms for LDR couples — live sync or async reactions.",
-    images: [BRAND_OG_PATH],
   },
 };
 

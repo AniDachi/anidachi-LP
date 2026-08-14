@@ -15,7 +15,7 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 import { PRICING_CR_PRICING_SNIPPET } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -39,14 +39,12 @@ export const metadata: Metadata = {
     description:
       "Skip low-quality Discord Go Live — sync local Crunchyroll playback instead.",
     url: "/guides/how-to-watch-crunchyroll-together-without-screen-share",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Watch Crunchyroll Without Screen Share",
     description: "Synced Crunchyroll watchrooms beat Discord Go Live for quality.",
-    images: [BRAND_OG_PATH],
   },
 };
 

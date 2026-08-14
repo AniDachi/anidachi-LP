@@ -7,7 +7,7 @@ import { getResolvedSiteOrigin } from "@/lib/site-url";
 import { PRICING_TELEPARTY_COMPARE_FAQ } from "@/lib/pricing-copy";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -29,14 +29,12 @@ export const metadata: Metadata = {
     description:
       "What “Netflix Party for YouTube” means in 2026 — Teleparty live sync vs AniDachi watchrooms.",
     url: "/guides/netflix-party-for-youtube",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     images: ["/opengraph-image.png"],
     card: "summary_large_image",
     title: "Netflix Party for YouTube",
     description: "Teleparty lineage + AniDachi YouTube watchrooms explained.",
-    images: [BRAND_OG_PATH],
   },
 };
 

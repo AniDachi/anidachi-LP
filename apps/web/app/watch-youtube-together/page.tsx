@@ -22,7 +22,7 @@ import {
 import { PrimaryCheckoutCta } from "@/components/primary-checkout-cta";
 
 const SITE_URL = getResolvedSiteOrigin();
-const BRAND_OG_PATH = "/Anidachi_logo.png";
+const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
@@ -44,7 +44,6 @@ export const metadata: Metadata = {
     description:
       "Create a YouTube watch party with sync, chat, and async. Start from pricing.",
     url: "/watch-youtube-together",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     images: ["/opengraph-image.png"],
@@ -52,7 +51,6 @@ export const metadata: Metadata = {
     title: "YouTube Watch Party — Watch YouTube Together",
     description:
       "Synced YouTube watchrooms with AniDachi — live or async. Start free.",
-    images: [BRAND_OG_PATH],
   },
 };
 
