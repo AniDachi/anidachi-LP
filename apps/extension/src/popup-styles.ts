@@ -3118,6 +3118,42 @@ ${extensionThemeTokens}
     border-bottom: 1px solid rgba(255, 255, 255, 0.045);
   }
 
+  .popup-watch-controls-spacer {
+    width: 68px;
+  }
+
+  .popup-watch-preferences {
+    display: flex;
+    min-height: 24px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: -4px;
+  }
+
+  .popup-watch-preferences button {
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    padding: 0 2px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.44);
+    cursor: pointer;
+    font-size: 9.5px;
+    font-weight: 720;
+  }
+
+  .popup-watch-preferences button span:last-child {
+    color: #ffc453;
+    font-weight: 840;
+  }
+
+  .popup-watch-preferences button:disabled {
+    cursor: default;
+    opacity: 0.42;
+  }
+
   .popup-watch-search {
     min-width: 0;
     width: 148px;

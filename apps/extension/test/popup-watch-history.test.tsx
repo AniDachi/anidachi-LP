@@ -342,6 +342,20 @@ describe("Popup Watch History v2", () => {
     expect(view.container.textContent).toContain("Episode 2 - The Promise");
     await unmount(view.root);
   });
+
+  it("keeps each redesigned provider section independently collapsible", async () => {
+    const view = await renderPanel(
+      clientFixture({ cached: null, request: requestForHistory(historyFixture()) }),
+    );
+    const provider = await findButton(view.container, "Toggle Crunchyroll history");
+
+    expect(provider.getAttribute("aria-expanded")).toBe("true");
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    await click(provider);
+    expect(provider.getAttribute("aria-expanded")).toBe("false");
+    expect(view.container.textContent).not.toContain("Episode 1 - The Journey");
+    await unmount(view.root);
+  });
 });
 
 function clientFixture(overrides: {

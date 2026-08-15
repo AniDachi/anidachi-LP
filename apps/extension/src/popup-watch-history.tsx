@@ -10,7 +10,7 @@ import {
   type WatchHistorySession,
   type WatchProgressEvent,
 } from "@anidachi/protocol";
-import { RefreshCw, Search, X } from "lucide-react";
+import { ChevronDown, RefreshCw, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createListWatchHistoryMessage,
@@ -337,30 +337,14 @@ export function PopupWatchHistoryPanel({
       ) : providerGroups.length ? (
         <div className="popup-resource-list">
           {providerGroups.map((group) => (
-            <section className="popup-provider" data-provider={group.provider} key={group.provider}>
-              <div className="popup-provider-row">
-                <ProviderLogo label={group.label} provider={group.provider} />
-                <span className="popup-provider-main">
-                  <strong className="popup-provider-name">{group.label}</strong>
-                  <span className="popup-provider-meta">
-                    {group.items.length} {group.items.length === 1 ? "title" : "titles"}
-                  </span>
-                </span>
-                <span aria-hidden="true" className="popup-provider-chevron" />
-              </div>
-              <div className="popup-provider-body">
-                {group.items.map((item) => (
-                  <PopupWatchHistoryItem
-                    item={item}
-                    key={`${item.provider}:${item.titleKey}`}
-                    busyAction={busyAction}
-                    onCreateRoom={createRoom}
-                    onDelete={deleteTarget}
-                    pendingByEpisode={pendingByEpisode}
-                  />
-                ))}
-              </div>
-            </section>
+            <PopupProviderSection
+              busyAction={busyAction}
+              group={group}
+              key={group.provider}
+              onCreateRoom={createRoom}
+              onDelete={deleteTarget}
+              pendingByEpisode={pendingByEpisode}
+            />
           ))}
         </div>
       ) : history?.items.length && searchQuery.trim() ? (
@@ -384,6 +368,59 @@ export function PopupWatchHistoryPanel({
         >
           Clear watch history
         </button>
+      ) : null}
+    </section>
+  );
+}
+
+function PopupProviderSection({
+  busyAction,
+  group,
+  onCreateRoom,
+  onDelete,
+  pendingByEpisode,
+}: {
+  busyAction: string | null;
+  group: PopupProviderGroup;
+  onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void;
+  onDelete: (target: WatchHistoryDeleteScope) => void;
+  pendingByEpisode: Map<string, WatchProgressEvent>;
+}) {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <section className="popup-provider" data-provider={group.provider}>
+      <button
+        aria-expanded={open}
+        aria-label={`Toggle ${group.label} history`}
+        className="popup-provider-row"
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+      >
+        <ProviderLogo label={group.label} provider={group.provider} />
+        <span className="popup-provider-main">
+          <strong className="popup-provider-name">{group.label}</strong>
+          <span className="popup-provider-meta">
+            {group.items.length} {group.items.length === 1 ? "title" : "titles"}
+          </span>
+        </span>
+        <span aria-hidden="true" className="popup-provider-chevron" data-open={open}>
+          <ChevronDown size={18} />
+        </span>
+      </button>
+      {open ? (
+        <div className="popup-provider-body">
+          {group.items.map((item) => (
+            <PopupWatchHistoryItem
+              item={item}
+              key={`${item.provider}:${item.titleKey}`}
+              busyAction={busyAction}
+              onCreateRoom={onCreateRoom}
+              onDelete={onDelete}
+              pendingByEpisode={pendingByEpisode}
+            />
+          ))}
+        </div>
       ) : null}
     </section>
   );
