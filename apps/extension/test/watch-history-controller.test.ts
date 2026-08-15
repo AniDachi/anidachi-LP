@@ -72,6 +72,171 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.local).toHaveLength(3);
   });
 
+  it("publishes meaningful shared progress only after exact room authority arrives", async () => {
+    const fixture = createFixture({
+      roomActive: true,
+      sessionKeys: ["11111111-1111-4111-8111-111111111111"],
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued).toEqual([]);
+
+    await fixture.controller.setRoomHistoryAuthority(roomAuthority());
+    expect(fixture.roomAuthorityStates).toEqual(["ready"]);
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(13);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued).toEqual([
+      expect.objectContaining({
+        currentTime: 13,
+        clientSessionKey: "11111111-1111-4111-8111-111111111111",
+        sharedRoom: roomAuthority(),
+      }),
+    ]);
+  });
+
+  it("keeps a new generation recoverably waiting until the adapter observes the new source", async () => {
+    const fixture = createFixture({
+      roomActive: true,
+      sessionKeys: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ],
+    });
+    await fixture.controller.start();
+    await fixture.controller.setRoomHistoryAuthority(roomAuthority());
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+
+    await fixture.controller.setRoomHistoryAuthority(null);
+    await fixture.controller.setRoomHistoryAuthority(roomAuthority(2));
+    fixture.setTime(13);
+    await fixture.controller.observe("heartbeat");
+    fixture.setSource({
+      titleKey: "crunchyroll-series:other",
+      episodeKey: "episode-2",
+      sourceUrl: "https://www.crunchyroll.com/watch/episode-2",
+    });
+    fixture.setTime(14);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(15);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued.map((event) => [
+      event.kind,
+      event.currentTime,
+      event.titleKey,
+      event.sharedRoom?.sourceGeneration,
+    ])).toEqual([
+      ["heartbeat", 12, "crunchyroll-series:show", 1],
+      ["source_change", 12, "crunchyroll-series:show", 1],
+      ["heartbeat", 15, "crunchyroll-series:other", 2],
+    ]);
+    expect(fixture.roomAuthorityStates).toContain("waiting");
+    expect(fixture.roomAuthorityStates.at(-1)).toBe("ready");
+  });
+
+  it("finalizes the prior shared source with its old authority before activating a new generation", async () => {
+    const fixture = createFixture({
+      roomActive: true,
+      sessionKeys: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ],
+    });
+    await fixture.controller.start();
+    await fixture.controller.setRoomHistoryAuthority(roomAuthority());
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+
+    await fixture.controller.setRoomHistoryAuthority(null);
+    fixture.setSource({
+      titleKey: "crunchyroll-series:other",
+      episodeKey: "episode-2",
+      sourceUrl: "https://www.crunchyroll.com/watch/episode-2",
+    });
+    fixture.setTime(13);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.setRoomHistoryAuthority(roomAuthority(2));
+    fixture.setTime(14);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(15);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued.map((event) => [
+      event.kind,
+      event.currentTime,
+      event.clientSessionKey,
+      event.sharedRoom?.sourceGeneration,
+    ])).toEqual([
+      ["heartbeat", 12, "11111111-1111-4111-8111-111111111111", 1],
+      ["source_change", 12, "11111111-1111-4111-8111-111111111111", 1],
+      ["heartbeat", 15, "22222222-2222-4222-8222-222222222222", 2],
+    ]);
+  });
+
+  it("reuses the shared session for a replacement proof with the same tuple", async () => {
+    const fixture = createFixture({ roomActive: true });
+    await fixture.controller.start();
+    await fixture.controller.setRoomHistoryAuthority(roomAuthority());
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.setRoomHistoryAuthority(roomAuthority(1, "replacement-proof"));
+    fixture.setTime(13);
+    await fixture.controller.observe("pause");
+
+    expect(fixture.enqueued.map((event) => [
+      event.kind,
+      event.clientSessionKey,
+      event.sharedRoom?.attestation,
+    ])).toEqual([
+      ["heartbeat", "11111111-1111-4111-8111-111111111111", "proof-1"],
+      ["pause", "11111111-1111-4111-8111-111111111111", "replacement-proof"],
+    ]);
+  });
+
+  it("publishes room leave with the retained authority then requires a fresh solo gate", async () => {
+    const fixture = createFixture({
+      roomActive: true,
+      sessionKeys: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ],
+    });
+    await fixture.controller.start();
+    await fixture.controller.setRoomHistoryAuthority(roomAuthority());
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+    fixture.setRoomActive(false);
+    await fixture.controller.setRoomActive(false);
+    fixture.setTime(13);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(14);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued.map((event) => [
+      event.kind,
+      event.currentTime,
+      event.clientSessionKey,
+      event.sharedRoom?.sourceGeneration ?? null,
+    ])).toEqual([
+      ["heartbeat", 12, "11111111-1111-4111-8111-111111111111", 1],
+      ["room_leave", 12, "11111111-1111-4111-8111-111111111111", 1],
+      ["heartbeat", 14, "22222222-2222-4222-8222-222222222222", null],
+    ]);
+  });
+
   it("creates a unique logical playback session while keeping one key stable within that session", async () => {
     const first = createFixture({ sessionKeys: ["11111111-1111-4111-8111-111111111111"] });
     await first.controller.start();
@@ -582,6 +747,16 @@ describe("watch history meaningful-progress controller", () => {
   });
 });
 
+function roomAuthority(sourceGeneration = 1, attestation = `proof-${sourceGeneration}`) {
+  return {
+    roomId: "room-1",
+    participantSessionId: "participant-session-1",
+    roomGeneration: 1,
+    sourceGeneration,
+    attestation,
+  };
+}
+
 function createFixture(options: {
   roomActive?: boolean;
   sessionKeys?: string[];
@@ -609,6 +784,7 @@ function createFixture(options: {
   const local: WatchProgressEvent[] = [];
   const enqueued: WatchProgressEvent[] = [];
   const current: Array<HistoryObservation | null> = [];
+  const roomAuthorityStates: Array<"solo" | "waiting" | "ready"> = [];
   let enqueueConcurrency = 0;
   let maxEnqueueConcurrency = 0;
   let enqueueCount = 0;
@@ -676,6 +852,7 @@ function createFixture(options: {
       enqueueConcurrency -= 1;
     },
     onObservation: (entry) => { current.push(entry); },
+    onRoomHistoryAuthorityState: (state) => { roomAuthorityStates.push(state); },
     now: () => now,
     createEventId: () => "11111111-1111-4111-8111-111111111111",
     createSessionKey: () => sessionKeys.shift() ?? "33333333-3333-4333-8333-333333333333",
@@ -687,6 +864,7 @@ function createFixture(options: {
     local,
     enqueued,
     current,
+    roomAuthorityStates,
     get maxEnqueueConcurrency() { return maxEnqueueConcurrency; },
     get localFailures() { return localFailures; },
     get enqueueFailures() { return enqueueFailures; },

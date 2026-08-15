@@ -109,7 +109,7 @@ describe("RoomState", () => {
     expect(changedSnapshot.source?.title).toBe("Episode 2");
   });
 
-  it("publishes source initialization to participants already in the room", () => {
+  it("publishes source initialization and refreshes private history authority", async () => {
     const room = new RoomState("room-1");
     room.join(participant("host", "host"));
     room.join(participant("viewer"));
@@ -119,6 +119,7 @@ describe("RoomState", () => {
       broadcast,
       participantsBySocket: new Map([[hostSocket, "host"]]),
       persistRoomState: vi.fn(),
+      refreshRoomHistoryAuthorities: vi.fn().mockResolvedValue(undefined),
       room,
       send: vi.fn(),
     };
@@ -139,17 +140,18 @@ describe("RoomState", () => {
       ),
     };
 
-    (
+    await (
       RoomDurableObject.prototype as unknown as {
         handleHostState(
           this: typeof fakeRoomObject,
           socket: WebSocket,
           value: Extract<ClientEvent, { type: "HOST_STATE" }>,
-        ): void;
+        ): Promise<void>;
       }
     ).handleHostState.call(fakeRoomObject, hostSocket, event);
 
     expect(fakeRoomObject.persistRoomState).toHaveBeenCalledOnce();
+    expect(fakeRoomObject.refreshRoomHistoryAuthorities).toHaveBeenCalledOnce();
     expect(broadcast).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "SOURCE_CHANGED",
