@@ -9,7 +9,11 @@ import {
 } from "@anidachi/protocol";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { verifyRoomToken, type VerifiedRoomToken } from "./auth";
+import {
+  signRoomHistoryAttestation,
+  verifyRoomToken,
+  type VerifiedRoomToken,
+} from "./auth";
 import { createIceServersPayload } from "./ice-servers";
 import { hasValidInternalAuthorization } from "./internal-auth";
 import { notifyWebRoomEnded } from "./internal-web-client";
@@ -862,7 +866,7 @@ export class RoomDurableObject {
         await this.handleJoin(socket, event);
         return;
       case "HOST_STATE":
-        this.handleHostState(socket, event);
+        await this.handleHostState(socket, event);
         return;
       case "REACTION":
         this.handleReaction(socket, event);
@@ -1040,6 +1044,7 @@ export class RoomDurableObject {
       ...this.currentRoomSnapshot(replayAt),
       ...(p2pResyncRequired ? { p2pResyncRequired: true } : {}),
     });
+    await this.sendRoomHistoryAuthority(socket);
     this.replayP2PSignals(socket, joined.id, lastSeenP2PServerSeq, replayAt);
     this.broadcast({ type: "PARTICIPANT_JOINED", participant: joined }, socket);
     this.track("join", { role: joined.role, value: this.room.participants.length });
@@ -1062,10 +1067,10 @@ export class RoomDurableObject {
     this.broadcast({ type: "REACTION", reaction: event.reaction });
   }
 
-  private handleHostState(
+  private async handleHostState(
     socket: WebSocket,
     event: Extract<ClientEvent, { type: "HOST_STATE" }>,
-  ): void {
+  ): Promise<void> {
     const userId = this.participantsBySocket.get(socket);
     const result = userId
       ? this.room.updateHostState(userId, event.state, event.source)
@@ -1104,7 +1109,94 @@ export class RoomDurableObject {
       this.broadcast(this.currentRoomSnapshot());
     }
 
+    if (result.sourceChanged) {
+      await this.refreshRoomHistoryAuthorities();
+    }
+
     this.broadcast({ type: "HOST_STATE", state: event.state }, socket);
+  }
+
+  private async refreshRoomHistoryAuthorities(): Promise<void> {
+    for (const socket of this.socketsByParticipant.values()) {
+      await this.sendRoomHistoryAuthority(socket);
+    }
+  }
+
+  private async sendRoomHistoryAuthority(socket: WebSocket): Promise<void> {
+    if (this.endedTombstone || this.roomEndInProgress) {
+      return;
+    }
+
+    const lifecycleBeforeSigning = await readStoredRoomLifecycle(this.state.storage);
+    if (
+      lifecycleBeforeSigning?.status === "ending" ||
+      lifecycleBeforeSigning?.status === "ended" ||
+      this.endedTombstone ||
+      this.roomEndInProgress
+    ) {
+      return;
+    }
+
+    const verified = this.verifiedBySocket.get(socket);
+    const participantId = this.participantsBySocket.get(socket);
+    const participantSessionId = this.sessionIdBySocket.get(socket);
+    const attachment = this.getSocketAttachment(socket);
+    if (
+      !verified ||
+      !participantId ||
+      !participantSessionId ||
+      participantId !== verified.sub ||
+      this.socketsByParticipant.get(participantId) !== socket ||
+      !this.room.hasParticipant(participantId) ||
+      attachment?.participant?.id !== participantId ||
+      attachment.participantSessionId !== participantSessionId ||
+      attachment.verified.sub !== verified.sub
+    ) {
+      return;
+    }
+
+    const roomGeneration = this.room.roomGeneration;
+    const sourceGeneration = this.room.sourceGeneration;
+    let attestation: string;
+    try {
+      attestation = await signRoomHistoryAttestation(
+        {
+          sub: verified.sub,
+          roomId: this.room.roomId,
+          participantSessionId,
+          roomGeneration,
+          sourceGeneration,
+        },
+        this.env,
+      );
+    } catch {
+      return;
+    }
+
+    const lifecycleAfterSigning = await readStoredRoomLifecycle(this.state.storage);
+    if (
+      lifecycleAfterSigning?.status === "ending" ||
+      lifecycleAfterSigning?.status === "ended" ||
+      this.endedTombstone ||
+      this.roomEndInProgress ||
+      this.room.roomGeneration !== roomGeneration ||
+      this.room.sourceGeneration !== sourceGeneration ||
+      this.verifiedBySocket.get(socket)?.sub !== verified.sub ||
+      this.participantsBySocket.get(socket) !== participantId ||
+      this.sessionIdBySocket.get(socket) !== participantSessionId ||
+      this.socketsByParticipant.get(participantId) !== socket
+    ) {
+      return;
+    }
+
+    this.send(socket, {
+      type: "ROOM_HISTORY_AUTHORITY",
+      roomId: this.room.roomId,
+      participantSessionId,
+      roomGeneration,
+      sourceGeneration,
+      attestation,
+    });
   }
 
   private handlePlaybackCommand(

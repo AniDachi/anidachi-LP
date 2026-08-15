@@ -1855,11 +1855,24 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         return response.ok ? ({ ok: true } as const) : response as WatchHistoryCaptureResult;
       },
       onObservation: setCurrentResourceEntry,
+      onRoomHistoryAuthorityState: (state) => {
+        logDebug("watch.history", "room authority state", {
+          roomId: roomIdRef.current,
+          state,
+        });
+      },
       isPlaying: () => !adapter.video.paused && !adapter.video.ended,
       isSeeking: () => adapter.video.seeking,
     });
     watchHistoryControllerRef.current = controller;
-    void controller.start().then(() => controller.recover()).catch(() => undefined);
+    void controller.start().then(async () => {
+      await controller.setRoomActive(watchHistoryRoomSuppressedRef.current);
+      const retainedRoomAuthority = clientRef.current.historyAuthority;
+      if (retainedRoomAuthority?.roomId === roomIdRef.current) {
+        await controller.setRoomHistoryAuthority(retainedRoomAuthority);
+      }
+      await controller.recover();
+    }).catch(() => undefined);
     const removeHistoryListeners = bindWatchHistoryPlaybackListeners({
       video: adapter.video,
       controller,
@@ -2663,6 +2676,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         videoFingerprint: adapter.getFingerprint(),
         onEvent: (event) => handleServerEventRef.current(event),
         onStatus: setRoomStatus,
+        onHistoryAuthority: (authority) => {
+          void watchHistoryControllerRef.current
+            ?.setRoomHistoryAuthority(authority)
+            .catch(() => undefined);
+        },
         onTerminalClose: () => terminateRoomSession("Watch room ended."),
         onTransportReady: setSignalingTransportReady,
       });

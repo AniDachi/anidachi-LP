@@ -87,6 +87,52 @@ function roomSnapshot(roomId = "room-1") {
   };
 }
 
+function roomHistoryAuthority(sourceGeneration = 1, attestation = `proof-${sourceGeneration}`) {
+  return {
+    type: "ROOM_HISTORY_AUTHORITY" as const,
+    roomId: "room-1",
+    participantSessionId: "participant-session-1",
+    roomGeneration: 1,
+    sourceGeneration,
+    attestation,
+  };
+}
+
+function roomHistoryAuthorityPayload(
+  sourceGeneration = 1,
+  attestation = `proof-${sourceGeneration}`,
+) {
+  const { type: _type, ...authority } = roomHistoryAuthority(sourceGeneration, attestation);
+  return authority;
+}
+
+function sourceChanged(sourceGeneration: number) {
+  const source = {
+    provider: "crunchyroll" as const,
+    sourceUrl: `https://www.crunchyroll.com/watch/episode-${sourceGeneration}`,
+    canonicalUrl: `https://www.crunchyroll.com/watch/episode-${sourceGeneration}`,
+    videoFingerprint: `crunchyroll|series-a|s1|e${sourceGeneration}`,
+    title: `Episode ${sourceGeneration}`,
+  };
+  return {
+    type: "SOURCE_CHANGED" as const,
+    roomId: "room-1",
+    roomGeneration: 1,
+    sourceGeneration,
+    serverSeq: sourceGeneration,
+    serverReceivedAt: 1_000,
+    source,
+    hostState: {
+      videoFingerprint: source.videoFingerprint,
+      sourceUrl: source.sourceUrl,
+      playing: true,
+      hostTime: 10,
+      updatedAt: 1_000,
+      playbackRate: 1,
+    },
+  };
+}
+
 function installControlledWebSocket(): void {
   ControlledWebSocket.instances = [];
   vi.stubGlobal("WebSocket", ControlledWebSocket);
@@ -444,6 +490,95 @@ describe("authenticated room client", () => {
     expect(warn).not.toHaveBeenCalled();
 
     client.close();
+  });
+
+  it("retains only private history authority matching the current room session and generations", () => {
+    installControlledWebSocket();
+    const authorities: Array<ReturnType<typeof roomHistoryAuthorityPayload> | null> = [];
+    const client = new RoomClient();
+
+    client.connect({
+      roomId: "room-1",
+      roomToken: "room-token-1",
+      participant: roomParticipant,
+      participantSessionId: "participant-session-1",
+      videoFingerprint: "video-1",
+      onEvent: vi.fn(),
+      onStatus: vi.fn(),
+      onHistoryAuthority: (authority) => authorities.push(authority),
+    });
+    const socket = ControlledWebSocket.instances[0];
+    socket?.open();
+
+    socket?.message(roomHistoryAuthority());
+    expect(authorities).toEqual([]);
+
+    socket?.message(roomSnapshot());
+    expect(authorities).toEqual([null]);
+
+    socket?.message({
+      ...roomHistoryAuthority(),
+      participantSessionId: "other-session",
+      attestation: "wrong-session-proof",
+    });
+    socket?.message({
+      ...roomHistoryAuthority(),
+      sourceGeneration: 2,
+      attestation: "future-proof",
+    });
+    expect(authorities).toEqual([null]);
+
+    socket?.message(roomHistoryAuthority());
+    expect(authorities).toEqual([null, roomHistoryAuthorityPayload()]);
+
+    socket?.message(sourceChanged(2));
+    expect(authorities).toEqual([null, roomHistoryAuthorityPayload(), null]);
+
+    socket?.message(roomHistoryAuthority(1, "stale-proof"));
+    expect(authorities).toEqual([null, roomHistoryAuthorityPayload(), null]);
+
+    socket?.message(roomHistoryAuthority(2));
+    expect(authorities).toEqual([
+      null,
+      roomHistoryAuthorityPayload(),
+      null,
+      roomHistoryAuthorityPayload(2),
+    ]);
+    expect(client.historyAuthority).toEqual(roomHistoryAuthorityPayload(2));
+  });
+
+  it("keeps same-tuple authority through reconnect until the replacement proof arrives", () => {
+    installControlledWebSocket();
+    const authorities: Array<ReturnType<typeof roomHistoryAuthorityPayload> | null> = [];
+    const client = new RoomClient();
+    const options = (roomToken: string) => ({
+      roomId: "room-1",
+      roomToken,
+      participant: roomParticipant,
+      participantSessionId: "participant-session-1",
+      videoFingerprint: "video-1",
+      onEvent: vi.fn(),
+      onStatus: vi.fn(),
+      onHistoryAuthority: (authority: ReturnType<typeof roomHistoryAuthorityPayload> | null) =>
+        authorities.push(authority),
+    });
+
+    client.connect(options("room-token-1"));
+    ControlledWebSocket.instances[0]?.open();
+    ControlledWebSocket.instances[0]?.message(roomSnapshot());
+    ControlledWebSocket.instances[0]?.message(roomHistoryAuthority());
+    expect(client.historyAuthority).toEqual(roomHistoryAuthorityPayload());
+
+    client.connect(options("room-token-2"));
+    ControlledWebSocket.instances[1]?.open();
+    ControlledWebSocket.instances[1]?.message(roomSnapshot());
+
+    expect(client.historyAuthority).toEqual(roomHistoryAuthorityPayload());
+    expect(authorities).toEqual([null, roomHistoryAuthorityPayload()]);
+
+    ControlledWebSocket.instances[1]?.message(roomHistoryAuthority(1, "replacement-proof"));
+    expect(client.historyAuthority).toEqual(roomHistoryAuthorityPayload(1, "replacement-proof"));
+    expect(authorities.at(-1)).toEqual(roomHistoryAuthorityPayload(1, "replacement-proof"));
   });
 
   it("does not publish transport readiness for stale or already-closed sockets", () => {

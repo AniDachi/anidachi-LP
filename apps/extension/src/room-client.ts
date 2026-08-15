@@ -5,6 +5,7 @@ import {
   type ClientEvent,
   type Participant,
   type RoomCapabilities,
+  type RoomHistoryAuthority,
   type ServerEvent,
 } from "@anidachi/protocol";
 import { API_WS_BASE, WEB_HTTP_BASE } from "./constants";
@@ -23,6 +24,7 @@ export interface RoomClientOptions {
   reconnect?: boolean;
   onEvent: (event: ServerEvent) => void;
   onStatus: (status: RoomConnectionStatus) => void;
+  onHistoryAuthority?: (authority: RoomHistoryAuthority | null) => void;
   onTerminalClose?: () => void;
   onTransportReady?: (ready: SignalingTransportReady) => void;
 }
@@ -436,6 +438,17 @@ export async function endRoom(
 
 export class RoomClient {
   private currentSenderConnectionId = createRoomConnectionId();
+  private currentHistoryAuthority: RoomHistoryAuthority | null = null;
+  private currentHistoryBoundary: {
+    roomId: string;
+    participantSessionId: string;
+    roomGeneration: number;
+    sourceGeneration: number;
+  } | null = null;
+  private currentHistoryConnection: {
+    roomId: string;
+    participantSessionId: string;
+  } | null = null;
   private keepaliveInterval: ReturnType<typeof setInterval> | null = null;
   private pendingEvents: ClientEvent[] = [];
   private pongTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -446,8 +459,23 @@ export class RoomClient {
     return this.currentSenderConnectionId;
   }
 
+  get historyAuthority(): RoomHistoryAuthority | null {
+    return this.currentHistoryAuthority;
+  }
+
   connect(options: RoomClientOptions): void {
     this.closeSocket("reconnect", false);
+    const historyConnection = options.participantSessionId
+      ? { roomId: options.roomId, participantSessionId: options.participantSessionId }
+      : null;
+    const sameHistoryConnection = historyConnection !== null &&
+      this.currentHistoryConnection?.roomId === historyConnection.roomId &&
+      this.currentHistoryConnection.participantSessionId === historyConnection.participantSessionId;
+    if (!sameHistoryConnection) {
+      this.currentHistoryAuthority = null;
+      this.currentHistoryBoundary = null;
+    }
+    this.currentHistoryConnection = historyConnection;
     const senderConnectionId = createRoomConnectionId();
     this.currentSenderConnectionId = senderConnectionId;
     this.pendingEvents = [];
@@ -519,6 +547,7 @@ export class RoomClient {
         }
 
         logDebug("room.recv", event.type, roomEventDebugSnapshot(event));
+        this.consumeHistoryAuthorityEvent(event, options);
         options.onEvent(event);
         if (
           event.type === "ROOM_SNAPSHOT" &&
@@ -575,6 +604,45 @@ export class RoomClient {
       this.stopKeepalive();
       publishStatus("error");
     });
+  }
+
+  private consumeHistoryAuthorityEvent(event: ServerEvent, options: RoomClientOptions): void {
+    const participantSessionId = options.participantSessionId;
+    if (!participantSessionId) return;
+
+    if (event.type === "ROOM_SNAPSHOT" || event.type === "SOURCE_CHANGED") {
+      if (event.roomId !== options.roomId) return;
+      const nextBoundary = {
+        roomId: event.roomId,
+        participantSessionId,
+        roomGeneration: event.roomGeneration,
+        sourceGeneration: event.sourceGeneration,
+      };
+      const current = this.currentHistoryBoundary;
+      if (current && isOlderHistoryBoundary(nextBoundary, current)) return;
+      if (current && sameHistoryBoundary(current, nextBoundary)) return;
+      this.currentHistoryBoundary = nextBoundary;
+      this.currentHistoryAuthority = null;
+      options.onHistoryAuthority?.(null);
+      return;
+    }
+
+    if (event.type !== "ROOM_HISTORY_AUTHORITY") return;
+    const boundary = this.currentHistoryBoundary;
+    if (!boundary ||
+      event.roomId !== options.roomId ||
+      event.participantSessionId !== participantSessionId ||
+      !sameHistoryBoundary(boundary, event)) return;
+
+    const authority: RoomHistoryAuthority = {
+      roomId: event.roomId,
+      participantSessionId: event.participantSessionId,
+      roomGeneration: event.roomGeneration,
+      sourceGeneration: event.sourceGeneration,
+      attestation: event.attestation,
+    };
+    this.currentHistoryAuthority = authority;
+    options.onHistoryAuthority?.(authority);
   }
 
   send(event: ClientEvent): RoomSendDisposition {
@@ -679,6 +747,25 @@ export class RoomClient {
       this.send(event);
     }
   }
+}
+
+function sameHistoryBoundary(
+  left: Pick<RoomHistoryAuthority, "roomId" | "participantSessionId" | "roomGeneration" | "sourceGeneration">,
+  right: Pick<RoomHistoryAuthority, "roomId" | "participantSessionId" | "roomGeneration" | "sourceGeneration">,
+): boolean {
+  return left.roomId === right.roomId &&
+    left.participantSessionId === right.participantSessionId &&
+    left.roomGeneration === right.roomGeneration &&
+    left.sourceGeneration === right.sourceGeneration;
+}
+
+function isOlderHistoryBoundary(
+  candidate: Pick<RoomHistoryAuthority, "roomGeneration" | "sourceGeneration">,
+  current: Pick<RoomHistoryAuthority, "roomGeneration" | "sourceGeneration">,
+): boolean {
+  return candidate.roomGeneration < current.roomGeneration ||
+    (candidate.roomGeneration === current.roomGeneration &&
+      candidate.sourceGeneration < current.sourceGeneration);
 }
 
 function createRoomConnectionId(): string {

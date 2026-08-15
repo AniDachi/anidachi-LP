@@ -33,6 +33,163 @@ afterEach(async () => {
 });
 
 describe("RoomDurableObject WebSocket hibernation", () => {
+	it("issues private history authority after durable join and refreshes it after hibernation", async () => {
+		const roomId = `runtime-history-authority-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-history-session", userId: "host-user",
+		});
+		const guest = await connectRoomClient(stub, {
+			roomId, role: "member", sessionId: "guest-history-session", userId: "guest-user",
+		});
+
+		const hostInitial = await host.waitFor(
+			(event) =>
+				event.type === "ROOM_HISTORY_AUTHORITY" &&
+				event.participantSessionId === "host-history-session",
+			"host initial history authority",
+		);
+		const guestInitial = await guest.waitFor(
+			(event) =>
+				event.type === "ROOM_HISTORY_AUTHORITY" &&
+				event.participantSessionId === "guest-history-session",
+			"guest initial history authority",
+		);
+		expect(hostInitial).toMatchObject({
+			type: "ROOM_HISTORY_AUTHORITY",
+			roomId,
+			participantSessionId: "host-history-session",
+			roomGeneration: 1,
+			sourceGeneration: 1,
+		});
+		expect(guestInitial).toMatchObject({
+			type: "ROOM_HISTORY_AUTHORITY",
+			roomId,
+			participantSessionId: "guest-history-session",
+			roomGeneration: 1,
+			sourceGeneration: 1,
+		});
+		expect(host.hasEvent(
+			(event) =>
+				event.type === "ROOM_HISTORY_AUTHORITY" &&
+				event.participantSessionId === "guest-history-session",
+		)).toBe(false);
+
+		await evictDurableObject(stub, { webSockets: "hibernate" });
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState(
+				"crunchyroll|watch/history-authority",
+				"https://www.crunchyroll.com/watch/history-authority",
+			),
+			source: sourceDescriptor(
+				"crunchyroll|watch/history-authority",
+				"History Authority Episode",
+				"https://www.crunchyroll.com/watch/history-authority",
+			),
+		});
+
+		await guest.waitFor(
+			(event) => event.type === "SOURCE_CHANGED" && event.sourceGeneration === 2,
+			"restored source change",
+		);
+		const hostNext = await host.waitFor(
+			(event) =>
+				event.type === "ROOM_HISTORY_AUTHORITY" &&
+				event.participantSessionId === "host-history-session" &&
+				event.sourceGeneration === 2,
+			"host refreshed history authority",
+		);
+		const guestNext = await guest.waitFor(
+			(event) =>
+				event.type === "ROOM_HISTORY_AUTHORITY" &&
+				event.participantSessionId === "guest-history-session" &&
+				event.sourceGeneration === 2,
+			"guest refreshed history authority",
+		);
+		expect(hostNext).toMatchObject({ roomGeneration: 1, sourceGeneration: 2 });
+		expect(guestNext).toMatchObject({ roomGeneration: 1, sourceGeneration: 2 });
+
+		const hostReconnect = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-history-session", userId: "host-user",
+		});
+		await expect(
+			hostReconnect.waitFor(
+				(event) =>
+					event.type === "ROOM_HISTORY_AUTHORITY" &&
+					event.participantSessionId === "host-history-session" &&
+					event.sourceGeneration === 2,
+				"same-session reconnect history authority",
+			),
+		).resolves.toMatchObject({ roomGeneration: 1, sourceGeneration: 2 });
+
+		host.close();
+		hostReconnect.close();
+		guest.close();
+	});
+
+	it("never issues history authority without a participant session id", async () => {
+		const roomId = `runtime-history-no-session-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await openRoomSocket(stub, {
+			roomId, role: "host", userId: "host-user",
+		});
+		host.send({
+			type: "JOIN",
+			roomId,
+			participant: participant("host-user", "host"),
+			videoFingerprint: "runtime-initial",
+		});
+		await host.waitFor((event) => event.type === "ROOM_SNAPSHOT", "sessionless snapshot");
+		await sleep(50);
+		expect(host.hasEvent((event) => event.type === "ROOM_HISTORY_AUTHORITY")).toBe(false);
+		host.close();
+	});
+
+	it("does not issue or refresh history authority after room ending begins", async () => {
+		const roomId = `runtime-history-ending-${crypto.randomUUID()}`;
+		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = roomNamespace.get(roomNamespace.idFromName(roomId));
+		const host = await connectRoomClient(stub, {
+			roomId, role: "host", sessionId: "host-ending-session", userId: "host-user",
+		});
+		await host.waitFor(
+			(event) => event.type === "ROOM_HISTORY_AUTHORITY" && event.sourceGeneration === 1,
+			"initial history authority",
+		);
+
+		await runInDurableObject(stub, async (_instance, state) => {
+			await state.storage.put(ROOM_LIFECYCLE_META_KEY, {
+				schemaVersion: 1,
+				status: "ended",
+				endedAt: 1_000,
+				reason: "host_ended",
+			});
+		});
+
+		host.send({
+			type: "HOST_STATE",
+			roomId,
+			state: playbackState(
+				"crunchyroll|watch/ending-history",
+				"https://www.crunchyroll.com/watch/ending-history",
+			),
+			source: sourceDescriptor(
+				"crunchyroll|watch/ending-history",
+				"Ending History Episode",
+				"https://www.crunchyroll.com/watch/ending-history",
+			),
+		});
+		await sleep(75);
+		expect(host.hasEvent(
+			(event) => event.type === "ROOM_HISTORY_AUTHORITY" && event.sourceGeneration === 2,
+		)).toBe(false);
+		host.close();
+	});
+
 	it("persists one four-hour alarm when the last joined participant leaves, even with a pre-JOIN socket", async () => {
 		const roomId = `runtime-empty-${crypto.randomUUID()}`;
 		const roomNamespace = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;

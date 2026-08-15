@@ -1,4 +1,4 @@
-import { SignJWT } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 import { describe, expect, it } from "vitest";
 import {
   MAX_DISPLAY_NAME_CHARS,
@@ -6,7 +6,11 @@ import {
   MAX_ROOM_ID_CHARS,
   MAX_URL_CHARS,
 } from "@anidachi/protocol";
-import { signRoomTokenForTest, verifyRoomToken } from "../src/auth";
+import {
+  signRoomHistoryAttestation,
+  signRoomTokenForTest,
+  verifyRoomToken,
+} from "../src/auth";
 
 const env = {
   ANIDACHI_JWT_SECRET: "test-secret-test-secret-test-secret",
@@ -163,5 +167,105 @@ describe("worker room auth", () => {
       .sign(testSecret());
 
     await expect(verifyRoomToken(token, "room-1", env)).resolves.toBeNull();
+  });
+
+  it("signs one purpose-bound room history authority without an arbitrary expiry", async () => {
+    const beforeIssuedAt = Math.floor(Date.now() / 1_000);
+    const token = await signRoomHistoryAttestation(
+      {
+        sub: "user-1",
+        roomId: "room-1",
+        participantSessionId: "participant-session-1",
+        roomGeneration: 2,
+        sourceGeneration: 3,
+      },
+      env,
+    );
+    const afterIssuedAt = Math.floor(Date.now() / 1_000);
+
+    const { payload, protectedHeader } = await jwtVerify(token, testSecret(), {
+      algorithms: ["HS256"],
+      issuer: "anidachi-worker",
+      audience: "anidachi-web-history",
+    });
+
+    expect(protectedHeader).toEqual({ alg: "HS256" });
+    expect(Object.keys(payload).sort()).toEqual([
+      "aud",
+      "iat",
+      "iss",
+      "participantSessionId",
+      "roomGeneration",
+      "roomId",
+      "sourceGeneration",
+      "sub",
+      "typ",
+    ]);
+    expect(payload).toMatchObject({
+      aud: "anidachi-web-history",
+      iss: "anidachi-worker",
+      participantSessionId: "participant-session-1",
+      roomGeneration: 2,
+      roomId: "room-1",
+      sourceGeneration: 3,
+      sub: "user-1",
+      typ: "room_history",
+    });
+    expect(payload.exp).toBeUndefined();
+    expect(payload.iat).toBeGreaterThanOrEqual(beforeIssuedAt);
+    expect(payload.iat).toBeLessThanOrEqual(afterIssuedAt);
+  });
+
+  it("keeps room connection tokens and history attestations mutually isolated", async () => {
+    const historyAttestation = await signRoomHistoryAttestation(
+      {
+        sub: "user-1",
+        roomId: "room-1",
+        participantSessionId: "participant-session-1",
+        roomGeneration: 1,
+        sourceGeneration: 1,
+      },
+      env,
+    );
+    const roomToken = await signRoomTokenForTest(
+      { sub: "user-1", roomId: "room-1", role: "host" },
+      env,
+    );
+
+    await expect(verifyRoomToken(historyAttestation, "room-1", env)).resolves.toBeNull();
+    await expect(
+      jwtVerify(roomToken, testSecret(), {
+        algorithms: ["HS256"],
+        issuer: "anidachi-worker",
+        audience: "anidachi-web-history",
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("rejects unbounded or incomplete room history claims before signing", async () => {
+    await expect(
+      signRoomHistoryAttestation(
+        {
+          sub: "user-1",
+          roomId: "room-1",
+          participantSessionId: "",
+          roomGeneration: 1,
+          sourceGeneration: 1,
+        },
+        env,
+      ),
+    ).rejects.toThrow("Invalid room history authority claims");
+    await expect(
+      signRoomHistoryAttestation(
+        {
+          sub: "user-1",
+          roomId: "room-1",
+          participantSessionId: "participant-session-1",
+          roomGeneration: 0,
+          sourceGeneration: 1,
+        },
+        env,
+      ),
+    ).rejects.toThrow("Invalid room history authority claims");
   });
 });
