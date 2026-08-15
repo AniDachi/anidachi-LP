@@ -5,6 +5,7 @@ import {
 } from "../src/watch-history-controller";
 import type { WatchProgressEvent } from "@anidachi/protocol";
 import type { HistoryObservation } from "../src/source-adapters/core/history-policy";
+import type { WatchHistoryCaptureResult } from "../src/watch-history-client";
 
 describe("watch history meaningful-progress controller", () => {
   it("publishes only after a non-seeking playing observation advances", async () => {
@@ -125,16 +126,25 @@ describe("watch history meaningful-progress controller", () => {
   });
 
   it("invalidates delayed preference loading and queued work after disposal", async () => {
-    let resolvePreferences: ((value: { accountGeneration: number; preferences: { youtubeHistoryEnabled: boolean } }) => void) | null = null;
+    let resolvePreferences: ((value: {
+      ownerUserId: string;
+      accountGeneration: number;
+      preferences: { youtubeHistoryEnabled: boolean };
+    }) => void) | null = null;
     const fixture = createFixture({
       loadPreferences: () => new Promise((resolve) => { resolvePreferences = resolve; }),
     });
     const starting = fixture.controller.start();
     const disposing = fixture.controller.dispose();
     (resolvePreferences as unknown as (value: {
+      ownerUserId: string;
       accountGeneration: number;
       preferences: { youtubeHistoryEnabled: boolean };
-    }) => void)({ accountGeneration: 1, preferences: { youtubeHistoryEnabled: false } });
+    }) => void)({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+    });
     await Promise.all([starting, disposing]);
 
     expect(fixture.local).toEqual([]);
@@ -151,6 +161,75 @@ describe("watch history meaningful-progress controller", () => {
 
     expect(fixture.current).toHaveLength(1);
     expect(fixture.current[0]).toMatchObject({ titleKey: "crunchyroll-series:show" });
+  });
+
+  it("makes stale owner cleanup harmless after another account becomes current", async () => {
+    const ownerA = "00000000-0000-4000-8000-000000000001";
+    const ownerB = "00000000-0000-4000-8000-000000000002";
+    let currentOwner = ownerA;
+    let time = 10;
+    const local: WatchProgressEvent[] = [];
+    const enqueued: WatchProgressEvent[] = [];
+    const capture = async (
+      event: WatchProgressEvent,
+      expectedOwnerUserId?: string,
+    ): Promise<WatchHistoryCaptureResult> => {
+      if (expectedOwnerUserId !== undefined && expectedOwnerUserId !== currentOwner) {
+        return { ok: false, status: "rejected" };
+      }
+      local.push(event);
+      return { ok: true };
+    };
+    const controller = createWatchHistoryController({
+      getObservation: () => ({
+        provider: "crunchyroll",
+        providerLabel: "Crunchyroll",
+        titleKey: "crunchyroll-series:show",
+        itemKind: "series",
+        title: "Show",
+        artworkUrl: null,
+        episodeKey: "episode-1",
+        episodeTitle: "Episode 1",
+        seasonKey: null,
+        seasonTitle: null,
+        seasonNumber: null,
+        episodeNumber: null,
+        sourceUrl: "https://www.crunchyroll.com/watch/episode-1",
+        currentTime: time,
+        duration: 20,
+        progress: time / 20,
+      }),
+      getRoomActive: () => false,
+      loadPreferences: async () => ({
+        ownerUserId: ownerA,
+        accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: false },
+      }),
+      observeLocally: capture,
+      enqueue: async (event, expectedOwnerUserId?: string) => {
+        if (expectedOwnerUserId !== undefined && expectedOwnerUserId !== currentOwner) {
+          return { ok: false as const, status: "rejected" as const };
+        }
+        enqueued.push(event);
+        return { ok: true as const };
+      },
+      isPlaying: () => true,
+      isSeeking: () => false,
+      now: () => 1_700_000_000_000,
+      createEventId: () => "11111111-1111-4111-8111-111111111111",
+      createSessionKey: () => "22222222-2222-4222-8222-222222222222",
+    });
+
+    await controller.start();
+    time = 11;
+    await controller.observe("heartbeat");
+    const localBeforeSwitch = local.length;
+    const enqueuedBeforeSwitch = enqueued.length;
+    currentOwner = ownerB;
+    await controller.dispose();
+
+    expect(local).toHaveLength(localBeforeSwitch);
+    expect(enqueued).toHaveLength(enqueuedBeforeSwitch);
   });
 
   it("serializes concurrent forced events and keeps the retained source through cleanup", async () => {
@@ -212,6 +291,7 @@ describe("watch history meaningful-progress controller", () => {
     let paused = true;
     const fixture = createFixture({
       loadPreferences: async () => ({
+        ownerUserId: "00000000-0000-4000-8000-000000000001",
         accountGeneration: 1,
         preferences: { youtubeHistoryEnabled: false },
         capturePaused: true,
@@ -222,6 +302,7 @@ describe("watch history meaningful-progress controller", () => {
       recoverCapture: async () => {
         paused = false;
         return {
+          ownerUserId: "00000000-0000-4000-8000-000000000001",
           accountGeneration: 1,
           preferences: { youtubeHistoryEnabled: false },
           capturePaused: false,
@@ -431,7 +512,11 @@ function createFixture(options: {
   const dependencies: WatchHistoryControllerDependencies = {
     getObservation: observation,
     getRoomActive: () => roomActive,
-    loadPreferences: options.loadPreferences ?? (async () => ({ accountGeneration: 1, preferences: { youtubeHistoryEnabled: false } })),
+    loadPreferences: options.loadPreferences ?? (async () => ({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+    })),
     recoverCapture: options.recoverCapture,
     observeLocally: async (entry) => {
       localAttempts += 1;

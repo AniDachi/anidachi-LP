@@ -10,17 +10,25 @@ export type WatchHistoryControllerDependencies = {
   getObservation: (preferences: WatchHistoryPreferences | null) => HistoryObservation | null;
   getRoomActive: () => boolean;
   loadPreferences: () => Promise<{
+    ownerUserId: string;
     accountGeneration: number;
     preferences: WatchHistoryPreferences;
     capturePaused?: boolean;
   } | null>;
   recoverCapture?: () => Promise<{
+    ownerUserId: string;
     accountGeneration: number;
     preferences: WatchHistoryPreferences;
     capturePaused: boolean;
   } | null>;
-  observeLocally: (event: WatchProgressEvent) => Promise<WatchHistoryCaptureResult | void> | WatchHistoryCaptureResult | void;
-  enqueue: (event: WatchProgressEvent) => Promise<WatchHistoryCaptureResult | void> | WatchHistoryCaptureResult | void;
+  observeLocally: (
+    event: WatchProgressEvent,
+    expectedOwnerUserId: string,
+  ) => Promise<WatchHistoryCaptureResult | void> | WatchHistoryCaptureResult | void;
+  enqueue: (
+    event: WatchProgressEvent,
+    expectedOwnerUserId: string,
+  ) => Promise<WatchHistoryCaptureResult | void> | WatchHistoryCaptureResult | void;
   onObservation?: (observation: HistoryObservation | null) => void;
   now?: () => number;
   createEventId?: () => string;
@@ -45,6 +53,7 @@ export function createWatchHistoryController(
   const createEventId = dependencies.createEventId ?? (() => crypto.randomUUID());
   const createSessionKey = dependencies.createSessionKey ?? (() => crypto.randomUUID());
   let preferences: WatchHistoryPreferences | null = null;
+  let ownerUserId: string | null = null;
   let accountGeneration: number | null = null;
   let retained: HistoryObservation | null = null;
   let retainedIdentity: string | null = null;
@@ -85,6 +94,7 @@ export function createWatchHistoryController(
   async function start(): Promise<void> {
     const token = lifecycle;
     let loaded: {
+      ownerUserId: string;
       accountGeneration: number;
       preferences: WatchHistoryPreferences;
       capturePaused?: boolean;
@@ -96,6 +106,7 @@ export function createWatchHistoryController(
     }
     await serial(async () => {
       if (!isCurrent(token)) return;
+      ownerUserId = loaded?.ownerUserId ?? null;
       preferences = loaded?.preferences ?? null;
       accountGeneration = loaded?.accountGeneration ?? null;
       capturePaused = loaded?.capturePaused === true;
@@ -122,7 +133,7 @@ export function createWatchHistoryController(
     const observation = dependencies.getObservation(preferences);
     if (!isCurrent(token)) return;
     dependencies.onObservation?.(observation);
-    if (!observation || accountGeneration === null || capturePaused) return;
+    if (!observation || ownerUserId === null || accountGeneration === null || capturePaused) return;
 
     const identity = observationIdentity(observation);
     if (retained && retainedIdentity !== identity) {
@@ -187,9 +198,10 @@ export function createWatchHistoryController(
   async function persist(event: WatchProgressEvent, token: number): Promise<boolean> {
     if (!isCurrent(token)) return false;
     try {
-      const result = await dependencies.observeLocally(event);
+      if (ownerUserId === null) return false;
+      const result = await dependencies.observeLocally(event, ownerUserId);
       if (isFailedCapture(result)) {
-        if (result.status === "storage-full") capturePaused = true;
+        handleCaptureFailure(result);
         return false;
       }
       return true;
@@ -201,14 +213,31 @@ export function createWatchHistoryController(
   async function enqueueEvent(event: WatchProgressEvent, token: number): Promise<boolean> {
     if (!isCurrent(token) || capturePaused) return false;
     try {
-      const result = await dependencies.enqueue(event);
+      if (ownerUserId === null) return false;
+      const result = await dependencies.enqueue(event, ownerUserId);
       if (isFailedCapture(result)) {
-        if (result.status === "storage-full") capturePaused = true;
+        handleCaptureFailure(result);
         return false;
       }
       return true;
     } catch {
       return false;
+    }
+  }
+
+  function handleCaptureFailure(result: Extract<WatchHistoryCaptureResult, { ok: false }>): void {
+    if (result.status === "storage-full") {
+      capturePaused = true;
+      return;
+    }
+    if (result.status === "unauthenticated" ||
+      result.status === "rejected" ||
+      result.status === "generation-mismatch" ||
+      result.status === "invalid-response" ||
+      result.status === "upgrade-required") {
+      ownerUserId = null;
+      preferences = null;
+      accountGeneration = null;
     }
   }
 
@@ -286,6 +315,7 @@ export function createWatchHistoryController(
       }
       if (!isCurrent(token) || !recovered || recovered.capturePaused) return;
       preferences = recovered.preferences;
+      ownerUserId = recovered.ownerUserId;
       accountGeneration = recovered.accountGeneration;
       capturePaused = false;
       clientSessionKey = null;
@@ -298,15 +328,16 @@ export function createWatchHistoryController(
     const cleanup = retained;
     const cleanupSessionKey = clientSessionKey;
     const cleanupGeneration = accountGeneration;
+    const cleanupOwnerUserId = ownerUserId;
     const shouldPublish = hasMeaningfulPlayback && !roomActive && !dependencies.getRoomActive();
     disposed = true;
     lifecycle += 1;
     disposePromise = serial(async () => {
-      if (!cleanup || !cleanupSessionKey || cleanupGeneration === null) return;
+      if (!cleanup || !cleanupSessionKey || cleanupGeneration === null || cleanupOwnerUserId === null) return;
       const event = toEvent(cleanup, "source_change", cleanupGeneration, createEventId(), cleanupSessionKey, now());
-      const result = await dependencies.observeLocally(event);
+      const result = await dependencies.observeLocally(event, cleanupOwnerUserId);
       if (isFailedCapture(result)) return;
-      if (shouldPublish) await dependencies.enqueue(event);
+      if (shouldPublish) await dependencies.enqueue(event, cleanupOwnerUserId);
     });
     return disposePromise;
   }

@@ -34,6 +34,7 @@ export type WatchHistoryLocalStatus =
   | "invalid-response"
   | "retryable"
   | "generation-mismatch"
+  | "stale-observation"
   | "deleted-history"
   | "invalid-room-authority"
   | "upgrade-required"
@@ -42,8 +43,18 @@ export type WatchHistoryLocalStatus =
 
 export type WatchHistoryMessage =
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "list"; limit?: number; cursor?: string }
-  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "enqueue-progress"; event: unknown }
-  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "observe-progress"; event: unknown }
+  | {
+      type: typeof WATCH_HISTORY_MESSAGE_TYPE;
+      command: "enqueue-progress";
+      expectedOwnerUserId: string;
+      event: unknown;
+    }
+  | {
+      type: typeof WATCH_HISTORY_MESSAGE_TYPE;
+      command: "observe-progress";
+      expectedOwnerUserId: string;
+      event: unknown;
+    }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "flush" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "get-preferences" }
@@ -72,6 +83,7 @@ export type WatchHistoryMessageResponse =
 export type WatchHistoryStorage = ReturnType<typeof createWatchHistoryStorage>;
 
 export type WatchHistoryBootstrapData = {
+  ownerUserId: string;
   accountGeneration: number;
   preferences: { youtubeHistoryEnabled: boolean };
   capturePaused: boolean;
@@ -86,7 +98,10 @@ const unpersistedCapturePauses = new Set<string>();
 
 export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBootstrapData | null {
   if (!isRecord(value) ||
-    !hasExactKeys(value, ["accountGeneration", "preferences", "capturePaused", "source"]) ||
+    !hasExactKeys(value, ["ownerUserId", "accountGeneration", "preferences", "capturePaused", "source"]) ||
+    typeof value.ownerUserId !== "string" ||
+    value.ownerUserId.length === 0 ||
+    value.ownerUserId.length > 128 ||
     typeof value.accountGeneration !== "number" ||
     !Number.isInteger(value.accountGeneration) ||
     value.accountGeneration < 1 ||
@@ -96,7 +111,8 @@ export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBoot
   }
   const preferences = WatchHistoryPreferencesSchema.safeParse(value.preferences);
   return preferences.success
-    ? {
+      ? {
+        ownerUserId: value.ownerUserId,
         accountGeneration: value.accountGeneration,
         preferences: preferences.data,
         capturePaused: value.capturePaused,
@@ -134,7 +150,11 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
         (value.cursor === undefined || (typeof value.cursor === "string" && value.cursor.length > 0 && value.cursor.length <= 512));
     case "enqueue-progress":
     case "observe-progress":
-      return hasExactKeys(value, ["type", "command", "event"]) && "event" in value;
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "event"]) &&
+        typeof value.expectedOwnerUserId === "string" &&
+        value.expectedOwnerUserId.length > 0 &&
+        value.expectedOwnerUserId.length <= 128 &&
+        "event" in value;
     case "update-preferences":
     case "delete":
       return hasExactKeys(value, ["type", "command", "input"]) && "input" in value;
@@ -187,8 +207,14 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (message.command === "list") return refresh(session, message);
     if (message.command === "bootstrap") return bootstrap(session);
     if (message.command === "recover-storage") return recoverStorage(session);
-    if (message.command === "enqueue-progress") return enqueue(session, message.event);
-    if (message.command === "observe-progress") return observe(session, message.event);
+    if (message.command === "enqueue-progress" || message.command === "observe-progress") {
+      if (message.expectedOwnerUserId !== session.user.id) {
+        return { ok: false, status: "rejected" };
+      }
+      return message.command === "enqueue-progress"
+        ? enqueue(session, message.event)
+        : observe(session, message.event);
+    }
     if (message.command === "flush" || message.command === "content-reconnect") return flush(session);
     if (message.command === "get-preferences") return getPreferences(session);
     if (message.command === "update-preferences") return updatePreferences(session, message.input);
@@ -224,6 +250,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const parsed = WatchProgressEventSchema.safeParse(rawEvent);
     if (!parsed.success) return { ok: false, status: "invalid-request" };
     const event = parsed.data;
+    const captureAuthorityFailure = await validateCaptureAuthority(session, event);
+    if (captureAuthorityFailure) return captureAuthorityFailure;
     const paused = await capturePauseState(session, event.accountGeneration);
     if (paused.capturePaused) {
       return { ok: false, status: "storage-full", capturePausedPersisted: paused.persisted };
@@ -232,12 +260,14 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       ...partition,
       currentObservation: withoutWatchHistoryAttestation(event),
       outbox: enqueueWatchHistoryEvent(partition.outbox, event),
-    }));
+    }), event.provider);
     let saved = await persist();
+    if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     if (!saved.ok) {
       await flush(session).catch(() => undefined);
       saved = await persist();
+      if (saved.authorityRejected) return { ok: false, status: "rejected" };
       if (saved.stale) return { ok: false, status: "generation-mismatch" };
       if (!saved.ok) {
         const capturePausedPersisted = await markCapturePaused(session, event.accountGeneration);
@@ -253,6 +283,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   ): Promise<WatchHistoryMessageResponse> {
     const parsed = WatchProgressEventSchema.safeParse(rawEvent);
     if (!parsed.success || parsed.data.sharedRoom) return { ok: false, status: "invalid-request" };
+    const captureAuthorityFailure = await validateCaptureAuthority(session, parsed.data);
+    if (captureAuthorityFailure) return captureAuthorityFailure;
     const paused = await capturePauseState(session, parsed.data.accountGeneration);
     if (paused.capturePaused) {
       return { ok: false, status: "storage-full", capturePausedPersisted: paused.persisted };
@@ -260,12 +292,14 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const persist = () => updateCurrentPartition(session, parsed.data.accountGeneration, (partition) => ({
       ...partition,
       currentObservation: withoutWatchHistoryAttestation(parsed.data),
-    }));
+    }), parsed.data.provider);
     let saved = await persist();
+    if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     if (!saved.ok) {
       await flush(session).catch(() => undefined);
       saved = await persist();
+      if (saved.authorityRejected) return { ok: false, status: "rejected" };
       if (saved.stale) return { ok: false, status: "generation-mismatch" };
       if (!saved.ok) {
         const capturePausedPersisted = await markCapturePaused(session, parsed.data.accountGeneration);
@@ -290,7 +324,13 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           method: "POST",
           body: JSON.stringify(entry.event),
         });
-        if (!response.ok) return response.error;
+        if (!response.ok) {
+          if (!isPermanentObservationRejection(response.error)) return response.error;
+          const saved = await consumeRejectedEvent(session, generation, entry.event.clientEventId);
+          if (!saved.ok) return saved.error;
+          flushed += 1;
+          continue;
+        }
         const ack = WatchProgressAckSchema.safeParse(response.body);
         if (!ack.success ||
           ack.data.meta.ownerUserId !== session.user.id ||
@@ -308,6 +348,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
             : candidate.currentObservation,
         }));
         if (saved.stale) return { ok: false, status: "generation-mismatch" };
+        if (saved.authorityRejected) return { ok: false, status: "rejected" };
         if (!saved.ok) return saved;
         await clearUnpersistedPauseIfReady(session, generation);
         flushed += 1;
@@ -355,6 +396,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     return {
       ok: true,
       data: {
+        ownerUserId: session.user.id,
         accountGeneration: generation,
         preferences: parsed.data.preferences,
         capturePaused: paused.capturePaused,
@@ -382,6 +424,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     return {
       ok: true,
       data: {
+        ownerUserId: session.user.id,
         accountGeneration: generation,
         preferences: preferences.data,
         capturePaused: (await capturePauseState(session, generation)).capturePaused,
@@ -551,6 +594,59 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     };
   }
 
+  async function validateCaptureAuthority(
+    session: ExtensionAuthTokens,
+    event: { accountGeneration: number; provider: string },
+  ): Promise<WatchHistoryMessageResponse | null> {
+    const current = await dependencies.getCurrentSession();
+    if (!sameSession(session, current)) return { ok: false, status: "rejected" };
+    const root = await storage.readRoot();
+    if (root.activeGenerations?.[session.user.id] !== event.accountGeneration) {
+      return { ok: false, status: "generation-mismatch" };
+    }
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, event.accountGeneration)];
+    if (!partition ||
+      partition.ownerUserId !== session.user.id ||
+      partition.accountGeneration !== event.accountGeneration) {
+      return { ok: false, status: "generation-mismatch" };
+    }
+    if (event.provider !== "youtube") return null;
+    const preferences = WatchHistoryPreferencesSchema.safeParse(partition.preferences);
+    return partition.preferencesConfirmed === true &&
+      preferences.success &&
+      preferences.data.youtubeHistoryEnabled
+      ? null
+      : { ok: false, status: "rejected" };
+  }
+
+  async function consumeRejectedEvent(
+    session: ExtensionAuthTokens,
+    generation: number,
+    clientEventId: string,
+  ): Promise<
+    | { ok: true }
+    | { ok: false; error: WatchHistoryMessageResponse }
+  > {
+    const saved = await updateCurrentPartition(session, generation, (candidate) => ({
+      ...candidate,
+      capturePaused: false,
+      captureMarkersReady: true,
+      outbox: acknowledgeWatchHistoryEvent(candidate.outbox, clientEventId),
+      currentObservation: candidate.currentObservation?.clientEventId === clientEventId
+        ? null
+        : candidate.currentObservation,
+    }));
+    if (saved.stale) {
+      return { ok: false, error: { ok: false, status: "generation-mismatch" } };
+    }
+    if (saved.authorityRejected) {
+      return { ok: false, error: { ok: false, status: "rejected" } };
+    }
+    if (!saved.ok) return { ok: false, error: saved };
+    await clearUnpersistedPauseIfReady(session, generation);
+    return { ok: true };
+  }
+
   async function markCapturePaused(session: ExtensionAuthTokens, generation: number): Promise<boolean> {
     const key = watchHistoryPartitionKey(session.user.id, generation);
     const memoryKey = capturePauseKey(session.user.id, generation);
@@ -608,27 +704,49 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     session: ExtensionAuthTokens,
     generation: number,
     update: (partition: WatchHistoryAccountPartition) => WatchHistoryAccountPartition,
+    captureProvider?: string,
   ): Promise<ReturnType<WatchHistoryStorage["updateRoot"]> extends Promise<infer Result>
-    ? Result & { stale?: boolean }
+    ? Result & { stale?: boolean; authorityRejected?: boolean }
     : never> {
     const current = await dependencies.getCurrentSession();
-    if (!sameSession(session, current)) return { ok: true } as const;
+    if (!sameSession(session, current)) return { ok: true, authorityRejected: true } as const;
     const key = watchHistoryPartitionKey(session.user.id, generation);
     let stale = false;
+    let authorityRejected = false;
     const result = await storage.updateRoot((root) => {
       const active = root.activeGenerations?.[session.user.id];
-      if (active !== undefined && active !== generation) {
+      if (active !== generation) {
         stale = true;
         return root;
       }
-      const partition = root.partitions[key] ?? emptyPartition(session.user.id, generation);
+      const partition = root.partitions[key];
+      if (!partition ||
+        partition.ownerUserId !== session.user.id ||
+        partition.accountGeneration !== generation) {
+        stale = true;
+        return root;
+      }
+      if (captureProvider === "youtube") {
+        const confirmed = WatchHistoryPreferencesSchema.safeParse(partition.preferences);
+        if (partition.preferencesConfirmed !== true ||
+          !confirmed.success ||
+          !confirmed.data.youtubeHistoryEnabled) {
+          authorityRejected = true;
+          return root;
+        }
+      }
       return {
         ...root,
         activeGenerations: { ...root.activeGenerations, [session.user.id]: generation },
         partitions: { ...root.partitions, [key]: update(partition) },
       };
     });
-    return stale ? { ...result, stale: true } : result;
+    const currentAfterWrite = await dependencies.getCurrentSession();
+    if (!sameSession(session, currentAfterWrite)) {
+      return { ...result, authorityRejected: true };
+    }
+    if (stale) return { ...result, stale: true };
+    return authorityRejected ? { ...result, authorityRejected: true } : result;
   }
 
   async function replaceCanonicalPartition(
@@ -722,15 +840,27 @@ function isFailureStatus(
 
 function mapHttpFailure(status: number, body: unknown): WatchHistoryMessageResponse {
   const code = isRecord(body) && typeof body.code === "string" ? body.code : "";
+  if (status === 409 && code === "STALE_OBSERVATION") {
+    return { ok: false, status: "stale-observation" };
+  }
+  if (status === 409 && code === "DELETED_HISTORY") {
+    return { ok: false, status: "deleted-history" };
+  }
   const mapped: Record<string, WatchHistoryLocalStatus> = {
     GENERATION_MISMATCH: "generation-mismatch",
-    DELETED_HISTORY: "deleted-history",
     INVALID_ROOM_AUTHORITY: "invalid-room-authority",
     UPGRADE_REQUIRED: "upgrade-required",
   };
   if (mapped[code]) return { ok: false, status: mapped[code] };
   if (status >= 500 || status === 429) return { ok: false, status: "retryable" };
   return { ok: false, status: "rejected" };
+}
+
+function isPermanentObservationRejection(
+  response: WatchHistoryMessageResponse,
+): response is { ok: false; status: "stale-observation" | "deleted-history" } {
+  return !response.ok &&
+    (response.status === "stale-observation" || response.status === "deleted-history");
 }
 
 function sameSession(expected: ExtensionAuthTokens, current: ExtensionAuthTokens | null): boolean {

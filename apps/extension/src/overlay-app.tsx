@@ -207,6 +207,7 @@ import {
   type WatchHistoryController,
 } from "./watch-history-controller";
 import { bindWatchHistoryPlaybackListeners } from "./watch-history-listeners";
+import { resolveWatchHistoryRuntimeGate } from "./watch-history-runtime-policy";
 
 interface OverlayAppProps {
   adapter: VideoAdapter;
@@ -400,6 +401,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     string | null | undefined
   >(undefined);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [watchHistoryRefreshRevision, setWatchHistoryRefreshRevision] = useState(0);
   const [roomToken, setRoomToken] = useState<string | null>(null);
   const [roomShareableLink, setRoomShareableLink] = useState<string | null>(null);
   const [roomQuota, setRoomQuota] = useState<RoomQuotaSummary | null>(null);
@@ -538,6 +540,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [diagnosticStatus, setDiagnosticStatus] = useState<string | null>(null);
   const [currentResourceEntry, setCurrentResourceEntry] = useState<HistoryObservation | null>(null);
   const watchHistoryControllerRef = useRef<WatchHistoryController | null>(null);
+  const watchHistoryRoomSuppressedRef = useRef(true);
 
   const participantRef = useRef<Participant | null>(null);
   const settingsCategoryScrollRef = useRef<HTMLDivElement | null>(null);
@@ -1775,13 +1778,31 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   }, [roomId]);
 
   useEffect(() => {
-    if (!adapterActive) return;
+    function refreshWatchHistoryOnFocus(): void {
+      setWatchHistoryRefreshRevision((revision) => revision + 1);
+    }
+
+    window.addEventListener("focus", refreshWatchHistoryOnFocus);
+    return () => window.removeEventListener("focus", refreshWatchHistoryOnFocus);
+  }, []);
+
+  const watchHistoryRuntimeGate = resolveWatchHistoryRuntimeGate({
+    identityLoaded,
+    ownerUserId: participant?.id ?? null,
+    roomSessionLoadedForUserId,
+    storedRoomSessionOwnerUserId: storedRoomSession?.ownerUserId ?? null,
+    roomActive: Boolean(roomId),
+  });
+  watchHistoryRoomSuppressedRef.current = watchHistoryRuntimeGate.roomSuppressed;
+
+  useEffect(() => {
+    if (!adapterActive || !watchHistoryRuntimeGate.ready) return;
     const definition = getDefinitionForProvider(adapter.provider);
     if (!definition?.historyPolicy) return;
     const controller = createWatchHistoryController({
       getObservation: (preferences) =>
         definition.historyPolicy?.observe({ adapter, preferences }) ?? null,
-      getRoomActive: () => Boolean(roomIdRef.current),
+      getRoomActive: () => watchHistoryRoomSuppressedRef.current || Boolean(roomIdRef.current),
       loadPreferences: async () => {
         const response = await requestWatchHistory({
           type: "ANIDACHI_WATCH_HISTORY_V2",
@@ -1801,12 +1822,22 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         });
         return bootstrapped.ok ? parseWatchHistoryBootstrapData(bootstrapped.data) : null;
       },
-      observeLocally: async (event) => {
-        const response = await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "observe-progress", event });
+      observeLocally: async (event, expectedOwnerUserId) => {
+        const response = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "observe-progress",
+          expectedOwnerUserId,
+          event,
+        });
         return response.ok ? ({ ok: true } as const) : response as WatchHistoryCaptureResult;
       },
-      enqueue: async (event) => {
-        const response = await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "enqueue-progress", event });
+      enqueue: async (event, expectedOwnerUserId) => {
+        const response = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "enqueue-progress",
+          expectedOwnerUserId,
+          event,
+        });
         return response.ok ? ({ ok: true } as const) : response as WatchHistoryCaptureResult;
       },
       onObservation: setCurrentResourceEntry,
@@ -1821,15 +1852,26 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     });
     return () => {
       removeHistoryListeners();
+      void controller.dispose().catch(() => undefined);
       if (watchHistoryControllerRef.current === controller) {
         watchHistoryControllerRef.current = null;
       }
     };
-  }, [adapter, adapterActive]);
+  }, [
+    adapter,
+    adapterActive,
+    authAccessToken,
+    participant?.id,
+    watchHistoryRefreshRevision,
+    watchHistoryRuntimeGate.ready,
+  ]);
 
   useEffect(() => {
-    void watchHistoryControllerRef.current?.setRoomActive(Boolean(roomId)).catch(() => undefined);
-  }, [roomId]);
+    if (!watchHistoryRuntimeGate.ready) return;
+    void watchHistoryControllerRef.current
+      ?.setRoomActive(watchHistoryRuntimeGate.roomSuppressed)
+      .catch(() => undefined);
+  }, [watchHistoryRuntimeGate.ready, watchHistoryRuntimeGate.roomSuppressed]);
 
   const sendCameraStatus = useCallback((enabled: boolean) => {
     const activeRoomId = roomIdRef.current;

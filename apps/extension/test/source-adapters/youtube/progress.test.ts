@@ -45,8 +45,17 @@ describe("YouTube history policy", () => {
       episodeKey: "youtube:dQw4w9WgXcQ",
       currentTime: 0.1,
       duration: 0.2,
-      sourceUrl: "https://m.youtube.com/watch?v=dQw4w9WgXcQ",
+      sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     });
+  });
+
+  it("keeps bare YouTube watch URLs inside the server-approved canonical host set", () => {
+    mockLocation("https://youtube.com/watch?v=dQw4w9WgXcQ");
+
+    expect(getYouTubeHistoryObservation({
+      adapter: fakeAdapter(),
+      preferences: { youtubeHistoryEnabled: true },
+    })).toMatchObject({ sourceUrl: "https://youtube.com/watch?v=dQw4w9WgXcQ" });
   });
 
   it("rejects invalid media values", () => {

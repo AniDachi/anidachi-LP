@@ -121,7 +121,10 @@ function canonicalYouTubeHistoryUrl(value: string): string | null {
   if (!isSupportedYouTubeHost(url.hostname) || url.pathname !== "/watch") return null;
   const videoId = cleanYouTubeProgressVideoId(url.searchParams.get("v"));
   if (!videoId) return null;
-  return `${url.origin}/watch?v=${encodeURIComponent(videoId)}`;
+  const origin = url.hostname === "m.youtube.com"
+    ? "https://www.youtube.com"
+    : url.origin;
+  return `${origin}/watch?v=${encodeURIComponent(videoId)}`;
 }
 
 function isSupportedYouTubeHost(hostname: string): boolean {

@@ -168,7 +168,7 @@ export function parseWatchProgressEventV2(input: unknown): WatchProgressEvent {
       url.origin === "https://www.crunchyroll.com" &&
       url.pathname.startsWith("/watch/")) ||
     (parsed.data.provider === "youtube" &&
-      url.origin === "https://www.youtube.com" &&
+      (url.origin === "https://youtube.com" || url.origin === "https://www.youtube.com") &&
       url.pathname === "/watch" &&
       url.searchParams.has("v"));
   if (!validOrigin) {
