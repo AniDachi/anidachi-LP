@@ -207,7 +207,10 @@ import {
   type WatchHistoryController,
 } from "./watch-history-controller";
 import { bindWatchHistoryPlaybackListeners } from "./watch-history-listeners";
-import { resolveWatchHistoryRuntimeGate } from "./watch-history-runtime-policy";
+import {
+  resolveWatchHistoryRuntimeGate,
+  shouldRefreshWatchHistoryAuthority,
+} from "./watch-history-runtime-policy";
 
 interface OverlayAppProps {
   adapter: VideoAdapter;
@@ -543,7 +546,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const watchHistoryAuthContextRef = useRef<{
     ownerUserId: string | null;
     accessToken: string | null;
-    controller: WatchHistoryController | null;
   } | null>(null);
 
   const participantRef = useRef<Participant | null>(null);
@@ -1879,15 +1881,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     const next = {
       ownerUserId: participant?.id ?? null,
       accessToken: authAccessToken,
-      controller: watchHistoryControllerRef.current,
     };
     const previous = watchHistoryAuthContextRef.current;
     watchHistoryAuthContextRef.current = next;
-    if (!previous ||
-      !next.ownerUserId ||
-      previous.ownerUserId !== next.ownerUserId ||
-      previous.controller !== next.controller ||
-      previous.accessToken === next.accessToken) {
+    if (!shouldRefreshWatchHistoryAuthority({
+      previous,
+      next,
+      controllerAvailable: watchHistoryControllerRef.current !== null,
+    })) {
       return;
     }
     void watchHistoryControllerRef.current?.refreshAuthority().catch(() => undefined);

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { resolveWatchHistoryRuntimeGate } from "../src/watch-history-runtime-policy";
+import {
+  resolveWatchHistoryRuntimeGate,
+  shouldRefreshWatchHistoryAuthority,
+} from "../src/watch-history-runtime-policy";
 
 describe("watch history runtime hydration gate", () => {
   it("fails closed until the current identity room session is hydrated", () => {
@@ -54,5 +57,47 @@ describe("watch history runtime hydration gate", () => {
       storedRoomSessionOwnerUserId: "owner-a",
       roomActive: false,
     })).toEqual({ ready: true, roomSuppressed: false });
+  });
+});
+
+describe("watch history authority refresh policy", () => {
+  it("refreshes exactly once on the first same-owner token change after hydration installs the controller", () => {
+    const beforeHydration = {
+      ownerUserId: "owner-a",
+      accessToken: "token-1",
+    };
+    const afterRefresh = {
+      ownerUserId: "owner-a",
+      accessToken: "token-2",
+    };
+
+    expect(shouldRefreshWatchHistoryAuthority({
+      previous: null,
+      next: beforeHydration,
+      controllerAvailable: false,
+    })).toBe(false);
+    expect(shouldRefreshWatchHistoryAuthority({
+      previous: beforeHydration,
+      next: afterRefresh,
+      controllerAvailable: true,
+    })).toBe(true);
+    expect(shouldRefreshWatchHistoryAuthority({
+      previous: afterRefresh,
+      next: afterRefresh,
+      controllerAvailable: true,
+    })).toBe(false);
+  });
+
+  it("does not refresh on initial controller install or owner change", () => {
+    expect(shouldRefreshWatchHistoryAuthority({
+      previous: null,
+      next: { ownerUserId: "owner-a", accessToken: "token-1" },
+      controllerAvailable: true,
+    })).toBe(false);
+    expect(shouldRefreshWatchHistoryAuthority({
+      previous: { ownerUserId: "owner-a", accessToken: "token-1" },
+      next: { ownerUserId: "owner-b", accessToken: "token-2" },
+      controllerAvailable: true,
+    })).toBe(false);
   });
 });

@@ -11,6 +11,17 @@ export type WatchHistoryRuntimeGate = {
   roomSuppressed: boolean;
 };
 
+export type WatchHistoryAuthContext = {
+  ownerUserId: string | null;
+  accessToken: string | null;
+};
+
+export type WatchHistoryAuthorityRefreshInput = {
+  previous: WatchHistoryAuthContext | null;
+  next: WatchHistoryAuthContext;
+  controllerAvailable: boolean;
+};
+
 export function resolveWatchHistoryRuntimeGate(
   input: WatchHistoryRuntimeGateInput,
 ): WatchHistoryRuntimeGate {
@@ -23,4 +34,14 @@ export function resolveWatchHistoryRuntimeGate(
     ready,
     roomSuppressed: !ready || input.roomActive || restoredRoomActive,
   };
+}
+
+export function shouldRefreshWatchHistoryAuthority(
+  input: WatchHistoryAuthorityRefreshInput,
+): boolean {
+  return input.controllerAvailable &&
+    input.previous !== null &&
+    input.next.ownerUserId !== null &&
+    input.previous.ownerUserId === input.next.ownerUserId &&
+    input.previous.accessToken !== input.next.accessToken;
 }
