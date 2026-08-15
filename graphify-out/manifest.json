@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1786772481.547563,
-    "ast_hash": "807d4a17cfff3e9542e6a8de97808202",
+    "mtime": 1786778531.0241592,
+    "ast_hash": "cc77fcb419e3249415558663e2b0910d",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -3545,8 +3545,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/youtube/progress.ts": {
-    "mtime": 1786770540.5191894,
-    "ast_hash": "f54ca1bd71084dbc784ea4fdc743cf2e",
+    "mtime": 1786776762.5153224,
+    "ast_hash": "a4e5969a7eb67bd71d8418fed1c28dae",
     "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/youtube/url.ts": {
@@ -4530,13 +4530,13 @@
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-v2.test.ts": {
-    "mtime": 1786728375.4285202,
-    "ast_hash": "d5e46356512c15e5d6a8b7358723d80d",
+    "mtime": 1786776470.0358272,
+    "ast_hash": "b13a83bb2f9e23d1cb913d2289385e3f",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-v2.ts": {
-    "mtime": 1786728375.4287758,
-    "ast_hash": "bb6b881ef3ed4debe14ed8b3999a2aab",
+    "mtime": 1786776762.555236,
+    "ast_hash": "caf3e1a6063c743a097c0398bbe57347",
     "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-library-v1-v2-coexistence.test.ts": {
@@ -4560,13 +4560,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/watch-history-client.ts": {
-    "mtime": 1786773794.1993766,
-    "ast_hash": "4d98c1697a6e9dc1c6c8f5ce5ee77251",
+    "mtime": 1786777864.2139592,
+    "ast_hash": "27a358d0e6a2f4036ddfee59d5692c09",
     "semantic_hash": ""
   },
   "apps/extension/src/watch-history-controller.ts": {
-    "mtime": 1786774943.6140018,
-    "ast_hash": "64ca6b1c4535642f4023b4a13d61c3aa",
+    "mtime": 1786778077.4386418,
+    "ast_hash": "fadd2d25d8367fbfdc22484101a27d7a",
     "semantic_hash": ""
   },
   "apps/extension/src/watch-history-listeners.ts": {
@@ -4585,18 +4585,18 @@
     "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/youtube/progress.test.ts": {
-    "mtime": 1786770496.3155015,
-    "ast_hash": "9eede87db33e3e13ad4352cc96599dbb",
+    "mtime": 1786776469.993801,
+    "ast_hash": "d1311f2b79eb64e18c38322455b3c75f",
     "semantic_hash": ""
   },
   "apps/extension/test/watch-history-client.test.ts": {
-    "mtime": 1786773782.2463772,
-    "ast_hash": "12d7e7e8fb864d8373473ae61c5ebb7c",
+    "mtime": 1786778002.0315375,
+    "ast_hash": "d1206128858d17564c8065a1c8b4334b",
     "semantic_hash": ""
   },
   "apps/extension/test/watch-history-controller.test.ts": {
-    "mtime": 1786774254.4757469,
-    "ast_hash": "15862c43990229e50e58d2ca8116625a",
+    "mtime": 1786778002.067671,
+    "ast_hash": "49c492c6c264aaba18015e9fa097bfa5",
     "semantic_hash": ""
   },
   "apps/extension/test/watch-history-listeners.test.ts": {
@@ -4632,6 +4632,16 @@
   "apps/web/public/opengraph-image.png": {
     "mtime": 1786728374.7028394,
     "ast_hash": "7d039f6dfa8a485a1f5bd440d18ae43d",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/watch-history-runtime-policy.ts": {
+    "mtime": 1786778530.986951,
+    "ast_hash": "c132e229719d23944db85f5be1e8db6b",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/watch-history-runtime-policy.test.ts": {
+    "mtime": 1786778531.0595162,
+    "ast_hash": "c1f2fef3b39f9db25f51b5d651bc44fb",
     "semantic_hash": ""
   }
 }
