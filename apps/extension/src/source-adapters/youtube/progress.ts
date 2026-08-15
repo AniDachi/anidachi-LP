@@ -64,6 +64,7 @@ export function getYouTubeHistoryObservation(input: {
   const key = `youtube:${videoId}`;
   return {
     provider: "youtube",
+    providerLabel: "YouTube",
     titleKey: key,
     itemKind: "movie",
     title,

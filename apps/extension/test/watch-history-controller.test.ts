@@ -69,39 +69,173 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.enqueued).toEqual([]);
     expect(fixture.local).toHaveLength(3);
   });
+
+  it("creates a unique logical playback session while keeping one key stable within that session", async () => {
+    const first = createFixture({ sessionKeys: ["11111111-1111-4111-8111-111111111111"] });
+    await first.controller.start();
+    first.setTime(11);
+    await first.controller.observe("heartbeat");
+    await first.controller.observe("pause");
+    const second = createFixture({ sessionKeys: ["22222222-2222-4222-8222-222222222222"] });
+    await second.controller.start();
+    second.setTime(11);
+    await second.controller.observe("heartbeat");
+
+    expect(first.enqueued.map((event) => event.clientSessionKey)).toEqual([
+      "11111111-1111-4111-8111-111111111111",
+      "11111111-1111-4111-8111-111111111111",
+    ]);
+    expect(second.enqueued[0]?.clientSessionKey).toBe("22222222-2222-4222-8222-222222222222");
+  });
+
+  it("publishes the retained meaningful source before rotating session identity and requiring a new gate", async () => {
+    const fixture = createFixture({
+      sessionKeys: ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"],
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    fixture.setSource({ titleKey: "crunchyroll-series:other", episodeKey: "episode-2", sourceUrl: "https://www.crunchyroll.com/watch/episode-2" });
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued.map((event) => [event.kind, event.titleKey, event.clientSessionKey])).toEqual([
+      ["heartbeat", "crunchyroll-series:show", "11111111-1111-4111-8111-111111111111"],
+      ["source_change", "crunchyroll-series:show", "11111111-1111-4111-8111-111111111111"],
+    ]);
+    expect(fixture.local.at(-1)).toMatchObject({
+      titleKey: "crunchyroll-series:other",
+      clientSessionKey: "22222222-2222-4222-8222-222222222222",
+    });
+  });
+
+  it("does not publish a source change before that source becomes meaningful", async () => {
+    const fixture = createFixture({
+      sessionKeys: ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"],
+    });
+    await fixture.controller.start();
+    fixture.setSource({ titleKey: "crunchyroll-series:other", episodeKey: "episode-2", sourceUrl: "https://www.crunchyroll.com/watch/episode-2" });
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued).toEqual([]);
+  });
+
+  it("invalidates delayed preference loading and queued work after disposal", async () => {
+    let resolvePreferences: ((value: { accountGeneration: number; preferences: { youtubeHistoryEnabled: boolean } }) => void) | null = null;
+    const fixture = createFixture({
+      loadPreferences: () => new Promise((resolve) => { resolvePreferences = resolve; }),
+    });
+    const starting = fixture.controller.start();
+    const disposing = fixture.controller.dispose();
+    (resolvePreferences as unknown as (value: {
+      accountGeneration: number;
+      preferences: { youtubeHistoryEnabled: boolean };
+    }) => void)({ accountGeneration: 1, preferences: { youtubeHistoryEnabled: false } });
+    await Promise.all([starting, disposing]);
+
+    expect(fixture.local).toEqual([]);
+    expect(fixture.enqueued).toEqual([]);
+    expect(fixture.current).toEqual([]);
+  });
+
+  it("does not let a disposed controller overwrite Current Resource with a later route", async () => {
+    const fixture = createFixture();
+    await fixture.controller.start();
+    await fixture.controller.dispose();
+    fixture.setSource({ titleKey: "crunchyroll-series:other", episodeKey: "episode-2", sourceUrl: "https://www.crunchyroll.com/watch/episode-2" });
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.current).toHaveLength(1);
+    expect(fixture.current[0]).toMatchObject({ titleKey: "crunchyroll-series:show" });
+  });
+
+  it("serializes concurrent forced events and keeps the retained source through cleanup", async () => {
+    const fixture = createFixture({ sessionKeys: ["11111111-1111-4111-8111-111111111111"] });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    fixture.setSource({ titleKey: "crunchyroll-series:other", episodeKey: "episode-2", sourceUrl: "https://www.crunchyroll.com/watch/episode-2" });
+    await Promise.all([fixture.controller.observe("pause"), fixture.controller.dispose()]);
+
+    expect(fixture.maxEnqueueConcurrency).toBe(1);
+    expect(fixture.enqueued.at(-1)).toMatchObject({
+      kind: "source_change",
+      titleKey: "crunchyroll-series:show",
+    });
+  });
+
+  it("observes but never publishes shared playback, then requires a fresh solo gate after leave", async () => {
+    const fixture = createFixture();
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.setRoomActive(true);
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.setRoomActive(false);
+    fixture.setTime(13);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(14);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued.map((event) => event.currentTime)).toEqual([11, 14]);
+    expect(fixture.local.some((event) => event.currentTime === 12)).toBe(true);
+  });
 });
 
-function createFixture(options: { roomActive?: boolean } = {}) {
+function createFixture(options: {
+  roomActive?: boolean;
+  sessionKeys?: string[];
+  loadPreferences?: WatchHistoryControllerDependencies["loadPreferences"];
+} = {}) {
   let now = 1_700_000_000_000;
   let time = 10;
+  let roomActive = options.roomActive ?? false;
+  let source = {
+    titleKey: "crunchyroll-series:show",
+    episodeKey: "episode-1",
+    sourceUrl: "https://www.crunchyroll.com/watch/episode-1",
+  };
+  const sessionKeys = [...(options.sessionKeys ?? ["11111111-1111-4111-8111-111111111111"])];
   const local: WatchProgressEvent[] = [];
   const enqueued: WatchProgressEvent[] = [];
+  const current: Array<HistoryObservation | null> = [];
+  let enqueueConcurrency = 0;
+  let maxEnqueueConcurrency = 0;
   const observation = (): HistoryObservation => ({
     provider: "crunchyroll",
-    titleKey: "crunchyroll-series:show",
+    providerLabel: "Crunchyroll",
+    titleKey: source.titleKey,
     itemKind: "series",
     title: "Show",
     artworkUrl: null,
-    episodeKey: "episode-1",
+    episodeKey: source.episodeKey,
     episodeTitle: "Episode 1",
     seasonKey: null,
     seasonTitle: null,
     seasonNumber: null,
     episodeNumber: null,
-    sourceUrl: "https://www.crunchyroll.com/watch/episode-1",
+    sourceUrl: source.sourceUrl,
     currentTime: time,
     duration: 20,
     progress: time / 20,
   });
   const dependencies: WatchHistoryControllerDependencies = {
     getObservation: observation,
-    getRoomActive: () => options.roomActive ?? false,
-    loadPreferences: async () => ({ accountGeneration: 1, preferences: { youtubeHistoryEnabled: false } }),
+    getRoomActive: () => roomActive,
+    loadPreferences: options.loadPreferences ?? (async () => ({ accountGeneration: 1, preferences: { youtubeHistoryEnabled: false } })),
     observeLocally: async (entry) => { local.push(entry); },
-    enqueue: async (event) => { enqueued.push(event); },
+    enqueue: async (event) => {
+      enqueueConcurrency += 1;
+      maxEnqueueConcurrency = Math.max(maxEnqueueConcurrency, enqueueConcurrency);
+      await Promise.resolve();
+      enqueued.push(event);
+      enqueueConcurrency -= 1;
+    },
+    onObservation: (entry) => { current.push(entry); },
     now: () => now,
     createEventId: () => "11111111-1111-4111-8111-111111111111",
-    createSessionKey: () => "solo:episode-1",
+    createSessionKey: () => sessionKeys.shift() ?? "33333333-3333-4333-8333-333333333333",
     isPlaying: () => true,
     isSeeking: () => false,
   };
@@ -109,7 +243,11 @@ function createFixture(options: { roomActive?: boolean } = {}) {
     controller: createWatchHistoryController(dependencies),
     local,
     enqueued,
+    current,
+    get maxEnqueueConcurrency() { return maxEnqueueConcurrency; },
     setTime(value: number) { time = value; },
+    setSource(next: Partial<typeof source>) { source = { ...source, ...next }; },
+    setRoomActive(value: boolean) { roomActive = value; },
     advance(value: number) { now += value; },
   };
 }

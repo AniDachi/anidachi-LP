@@ -51,4 +51,27 @@ describe("source adapter provider boundaries", () => {
     expect(geometryEnd).toBeGreaterThan(geometryStart);
     expect(source.slice(geometryStart, geometryEnd)).not.toMatch(providerIdComparison);
   });
+
+  it("keeps watch-history wiring background-owned and tears down the controller lifecycle", () => {
+    const source = readFileSync(resolve(sourceDirectory, "overlay-app.tsx"), "utf8");
+    const historyStart = source.indexOf("createWatchHistoryController");
+    const historyEnd = source.indexOf("const sendCameraStatus", historyStart);
+
+    expect(historyStart).toBeGreaterThanOrEqual(0);
+    expect(historyEnd).toBeGreaterThan(historyStart);
+    const historyRuntime = source.slice(historyStart, historyEnd);
+    expect(historyRuntime).toContain('command: "observe-progress"');
+    expect(historyRuntime).toContain('command: "enqueue-progress"');
+    expect(historyRuntime).toContain('addEventListener("seeking", seeking)');
+    expect(historyRuntime).toContain('removeEventListener("seeking", seeking)');
+    expect(historyRuntime).toContain("controller.dispose()");
+    expect(historyRuntime).not.toContain("reconcileWatchProgress");
+  });
+
+  it("renders Current Resource from provider-neutral display metadata", () => {
+    const source = readFileSync(resolve(sourceDirectory, "current-resource-panel.tsx"), "utf8");
+
+    expect(source).toContain("entry.providerLabel");
+    expect(source).not.toMatch(/crunchyroll|youtube/i);
+  });
 });

@@ -149,6 +149,29 @@ describe("watch history outbox", () => {
     );
   });
 
+  it("does not coalesce an old terminal event into a new logical playback session", () => {
+    const empty: WatchHistoryOutboxPartition = {
+      ownerUserId,
+      accountGeneration: 1,
+      entries: [],
+    };
+    const oldSession = enqueueWatchHistoryEvent(
+      empty,
+      event("00000000-0000-4000-4000-800000000030", "ended", "2026-08-15T10:00:00.000Z", "session-old"),
+      10,
+    );
+    const bothSessions = enqueueWatchHistoryEvent(
+      oldSession,
+      event("00000000-0000-4000-4000-800000000031", "ended", "2026-08-15T10:01:00.000Z", "session-new"),
+      11,
+    );
+
+    expect(bothSessions.entries.map((entry) => [entry.event.clientSessionKey, entry.event.clientEventId])).toEqual([
+      ["session-old", "00000000-0000-4000-4000-800000000030"],
+      ["session-new", "00000000-0000-4000-4000-800000000031"],
+    ]);
+  });
+
   it("orders equal-time entries by stable event ID without persisted-time precedence", () => {
     const empty: WatchHistoryOutboxPartition = {
       ownerUserId,

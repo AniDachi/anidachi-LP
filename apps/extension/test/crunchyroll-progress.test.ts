@@ -18,10 +18,41 @@ describe("Crunchyroll progress extraction", () => {
       adapter: { id: "crunchyroll", provider: "crunchyroll", video, getTitle: () => "E4 - Bold step" } as never,
     })).toMatchObject({
       provider: "crunchyroll",
+      providerLabel: "Crunchyroll",
       titleKey: "crunchyroll-series:my-hero-academia",
       episodeKey: "G8WUNM123",
       catalogState: "unavailable",
     });
+  });
+
+  it.each([
+    ["canonical base", "https://www.crunchyroll.com/watch/G8WUNM123"],
+    ["validated locale", "https://www.crunchyroll.com/ru/watch/G8WUNM123/e4-bold-step"],
+  ])("accepts %s", (_name, url) => {
+    mockLocation(url);
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 1 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 2 });
+    expect(getCrunchyrollHistoryObservation({
+      adapter: { id: "crunchyroll", provider: "crunchyroll", video, getTitle: () => "Episode" } as never,
+    })).not.toBeNull();
+  });
+
+  it.each([
+    "https://www.crunchyroll.com/foo/watch/G8WUNM123",
+    "https://www.crunchyroll.com/foo/bar/watch/G8WUNM123",
+    "https://www.crunchyroll.com/rus/watch/G8WUNM123",
+    "https://www.crunchyroll.com/watch/G8WUNM123/e4-bold-step/extra",
+    "https://www.crunchyroll.com/watch/G8WUNM123/bad_slug",
+    "https://www.crunchyroll.com/foo?path=/watch/G8WUNM123",
+  ])("rejects non-canonical Crunchyroll history route %s", (url) => {
+    mockLocation(url);
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 1 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 2 });
+    expect(getCrunchyrollHistoryObservation({
+      adapter: { id: "crunchyroll", provider: "crunchyroll", video, getTitle: () => "Episode" } as never,
+    })).toBeNull();
   });
 
   it.each([

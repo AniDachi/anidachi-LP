@@ -1804,7 +1804,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     void controller.start().catch(() => undefined);
     const heartbeat = () => { void controller.observe("heartbeat").catch(() => undefined); };
     const pause = () => { void controller.observe("pause").catch(() => undefined); };
-    const seeking = () => { controller.noteSeeking(); };
+    const seeking = () => { void controller.noteSeeking().catch(() => undefined); };
     const seeked = () => { void controller.observe("seek").catch(() => undefined); };
     const ended = () => { void controller.observe("ended").catch(() => undefined); };
     const pagehide = () => { void controller.observe("pagehide").catch(() => undefined); };
@@ -1823,7 +1823,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       window.removeEventListener("pagehide", pagehide);
       if (watchHistoryControllerRef.current === controller) {
         watchHistoryControllerRef.current = null;
-        void controller.observe("source_change").catch(() => undefined);
+        void controller.dispose().catch(() => undefined);
       }
     };
   }, [adapter, adapterActive]);

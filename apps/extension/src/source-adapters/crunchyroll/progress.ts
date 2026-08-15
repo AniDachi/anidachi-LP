@@ -120,6 +120,7 @@ export function getCrunchyrollHistoryObservation(input: {
   if (!titleKey || !episodeKey || !title || !episodeTitle) return null;
   return {
     provider: "crunchyroll",
+    providerLabel: "Crunchyroll",
     titleKey,
     itemKind: entry.kind === "episode" ? "series" : "movie",
     title,
@@ -146,14 +147,10 @@ function getCanonicalCrunchyrollWatchUrl(value: string): string | null {
     url.hostname !== "crunchyroll.com" &&
     !url.hostname.endsWith(".crunchyroll.com")
   ) return null;
-  const segments = url.pathname.split("/").filter(Boolean);
-  const watchIndex = segments.indexOf("watch");
-  const hasCanonicalWatchShape =
-    watchIndex === segments.length - 2 || watchIndex === segments.length - 3;
-  if (watchIndex < 0 || !segments[watchIndex + 1] || !hasCanonicalWatchShape) {
-    return null;
-  }
-  if (!/^[A-Za-z0-9_-]+$/.test(segments[watchIndex + 1])) return null;
+  const match = url.pathname.match(
+    /^\/(?:(?<locale>[a-z]{2}(?:-[a-z]{2})?)\/)?watch\/(?<id>[A-Za-z0-9_-]+)(?:\/(?<slug>[A-Za-z0-9][A-Za-z0-9-]*))?\/?$/,
+  );
+  if (!match?.groups?.id) return null;
   return `${url.origin}${url.pathname}`;
 }
 

@@ -10,7 +10,6 @@ export function CurrentResourcePanel({ entry }: CurrentResourcePanelProps) {
     return null;
   }
 
-  const label = entry.provider === "crunchyroll" ? "Crunchyroll" : "YouTube";
   const progressText = `${formatProgressClock(entry.currentTime)} / ${formatProgressClock(
     entry.duration,
   )}`;
@@ -21,7 +20,7 @@ export function CurrentResourcePanel({ entry }: CurrentResourcePanelProps) {
       <div className="current-resource-card">
         <div className="current-resource-topline">
           <span className={`resource-provider-dot ${entry.provider}`} />
-          <span>{label}</span>
+          <span>{entry.providerLabel}</span>
           <ChevronRight size={12} />
           <span className="current-resource-time">{progressText}</span>
         </div>

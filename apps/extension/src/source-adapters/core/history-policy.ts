@@ -3,6 +3,7 @@ import type { VideoAdapter } from "./types";
 
 export type HistoryObservation = {
   provider: "crunchyroll" | "youtube";
+  providerLabel: string;
   titleKey: string;
   itemKind: "movie" | "series";
   title: string;

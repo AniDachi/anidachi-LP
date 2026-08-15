@@ -15,7 +15,7 @@ describe("YouTube history policy", () => {
     expect(getYouTubeHistoryObservation({ adapter, preferences: null })).toBeNull();
     expect(getYouTubeHistoryObservation({ adapter, preferences: { youtubeHistoryEnabled: false } })).toBeNull();
     expect(getYouTubeHistoryObservation({ adapter, preferences: { youtubeHistoryEnabled: true } }))
-      .toMatchObject({ provider: "youtube", titleKey: "youtube:dQw4w9WgXcQ" });
+      .toMatchObject({ provider: "youtube", providerLabel: "YouTube", titleKey: "youtube:dQw4w9WgXcQ" });
   });
 
   it.each([
