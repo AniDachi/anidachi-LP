@@ -7,7 +7,6 @@ import type {
   RoomInvitesResponse,
   SocialDirectory,
   SocialSnapshot,
-  WatchLibraryResponse,
 } from "@anidachi/protocol";
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -50,18 +49,6 @@ import {
   getCachedSocialSnapshotForUser,
   setCachedSocialSnapshotForUser,
 } from "../src/social-snapshot-cache";
-import {
-  getCachedWatchLibraryForUser,
-  getWatchLibrarySyncLedger,
-  listWatchLibrary,
-  markWatchLibraryEntriesSynced,
-  setCachedWatchLibraryForUser,
-} from "../src/watch-library-client";
-import {
-  createEmptyWatchProgressStore,
-  loadWatchProgressStoreForUser,
-  saveWatchProgressStoreForUser,
-} from "../src/watch-progress";
 
 vi.mock("../src/auth-client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../src/auth-client")>()),
@@ -99,19 +86,8 @@ vi.mock("../src/social-snapshot-cache", async (importOriginal) => ({
   setCachedSocialSnapshotForUser: vi.fn(),
 }));
 
-vi.mock("../src/watch-progress", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../src/watch-progress")>()),
-  loadWatchProgressStoreForUser: vi.fn(),
-  saveWatchProgressStoreForUser: vi.fn(),
-}));
-
-vi.mock("../src/watch-library-client", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../src/watch-library-client")>()),
-  getCachedWatchLibraryForUser: vi.fn(),
-  getWatchLibrarySyncLedger: vi.fn(),
-  listWatchLibrary: vi.fn(),
-  markWatchLibraryEntriesSynced: vi.fn(),
-  setCachedWatchLibraryForUser: vi.fn(),
+vi.mock("../src/popup-watch-history", () => ({
+  PopupWatchHistoryPanel: () => <div aria-label="Watch History" />,
 }));
 
 const NOW = "2026-08-07T12:00:00.000Z";
@@ -635,13 +611,6 @@ describe("PopupApp social mutations", () => {
     );
     vi.mocked(getCachedSocialSnapshotForUser).mockResolvedValue(null);
     vi.mocked(setCachedSocialSnapshotForUser).mockResolvedValue(undefined);
-    vi.mocked(loadWatchProgressStoreForUser).mockResolvedValue(createEmptyWatchProgressStore());
-    vi.mocked(saveWatchProgressStoreForUser).mockResolvedValue(undefined);
-    vi.mocked(getCachedWatchLibraryForUser).mockResolvedValue(null);
-    vi.mocked(getWatchLibrarySyncLedger).mockResolvedValue({});
-    vi.mocked(listWatchLibrary).mockResolvedValue(emptyWatchLibrary());
-    vi.mocked(markWatchLibraryEntriesSynced).mockResolvedValue({});
-    vi.mocked(setCachedWatchLibraryForUser).mockResolvedValue(undefined);
     vi.mocked(listRoomInvites).mockResolvedValue(roomInvites([]));
     vi.mocked(sendFriendRequest).mockResolvedValue(
       friend(RECENT_USER_ID, "00000000-0000-4000-8000-000000000005", "Recent Person", "pending"),
@@ -1042,21 +1011,6 @@ function inboxFriendRequest(
     createdAt: NOW,
     activityAt: NOW,
     seenAt,
-  };
-}
-
-function emptyWatchLibrary(): WatchLibraryResponse {
-  return {
-    meta: { serverTime: NOW, schemaVersion: 1 },
-    generatedAt: NOW,
-    limits: {
-      planCode: "plus",
-      maxActiveTrackedTitles: 15,
-      activeTrackedTitleCount: 0,
-      historyRetentionDays: 92,
-      retainedSince: "2026-05-07T12:00:00.000Z",
-    },
-    items: [],
   };
 }
 

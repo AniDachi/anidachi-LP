@@ -1,8 +1,8 @@
-import type { WatchProgressEntry } from "../../watch-progress";
 import {
   isValidHistoryMedia,
   normalizeHistoryUrl,
   type HistoryObservation,
+  type ProviderPlaybackMetadata,
   type SourceAdapterHistoryPolicy,
 } from "../core/history-policy";
 import type { VideoAdapter } from "../core/types";
@@ -14,7 +14,7 @@ export interface YouTubeProgressInput {
   watchedWithCount: number;
 }
 
-export function getYouTubeProgressEntry(input: YouTubeProgressInput): WatchProgressEntry | null {
+export function getYouTubeProgressEntry(input: YouTubeProgressInput): ProviderPlaybackMetadata | null {
   if (!location.hostname.endsWith("youtube.com") && location.hostname !== "youtu.be") {
     return null;
   }

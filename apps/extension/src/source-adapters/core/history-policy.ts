@@ -21,6 +21,26 @@ export type HistoryObservation = {
   catalogState?: "unavailable";
 };
 
+export type ProviderPlaybackMetadata = {
+  provider: "crunchyroll" | "youtube";
+  kind: "movie" | "episode";
+  itemId: string;
+  itemTitle: string;
+  contentId?: string;
+  seriesId?: string;
+  seasonId?: string;
+  seasonTitle?: string;
+  seasonNumber?: number;
+  episodeId?: string;
+  episodeTitle?: string;
+  artworkUrl?: string;
+  sourceUrl: string;
+  currentTime: number;
+  duration: number;
+  roomId?: string;
+  watchedWithCount: number;
+};
+
 export type HistoryPolicyInput = {
   adapter: VideoAdapter;
   preferences: WatchHistoryPreferences | null;
