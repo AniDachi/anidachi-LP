@@ -1,5 +1,7 @@
 create extension if not exists pgtap with schema extensions;
 
+-- Linked tests connect through a NOINHERIT role that is a member of postgres.
+set role postgres;
 set search_path = public, extensions;
 select no_plan();
 
@@ -175,7 +177,7 @@ select throws_like(
   '%permission denied%',
   'an authenticated SQL role is denied direct v2 reads'
 );
-reset role;
+set role postgres;
 
 set role service_role;
 select lives_ok(
@@ -193,7 +195,7 @@ select lives_ok(
   $$,
   'service role can apply a solo progress event'
 );
-reset role;
+set role postgres;
 
 select is(
   (
@@ -202,7 +204,7 @@ select is(
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
       and episode.episode_key = 'episode-one'
   ),
-  '600',
+  '600'::text,
   'solo progress persists the canonical current time'
 );
 
@@ -241,7 +243,7 @@ select is(
       null
     ) ->> 'acceptedEventId'
   ),
-  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1'::text,
   'a duplicate event returns its stored canonical acknowledgement'
 );
 
@@ -252,7 +254,7 @@ select is(
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
       and episode.episode_key = 'episode-one'
   ),
-  '600',
+  '600'::text,
   'a duplicate event cannot mutate progress'
 );
 
@@ -279,7 +281,7 @@ select is(
     where episode.user_id = '11111111-1111-4111-8111-111111111111'
       and episode.episode_key = 'episode-one'
   ),
-  '2:900',
+  '2:900'::text,
   'server order advances exactly once for the later event'
 );
 
@@ -341,7 +343,7 @@ select is(
     where settings.user_id = '11111111-1111-4111-8111-111111111111'
     group by settings.next_server_order
   ),
-  '2:0',
+  '2:0'::text,
   'a late failure rolls back server ordering and session creation'
 );
 
@@ -363,7 +365,7 @@ select is(
       )
     ) #>> '{target,scope}'
   ),
-  'episode',
+  'episode'::text,
   'episode deletion returns its canonical target'
 );
 
@@ -429,7 +431,7 @@ select is(
       '{"youtubeHistoryEnabled":true}'::jsonb
     ) #>> '{preferences,youtubeHistoryEnabled}'
   ),
-  'true',
+  'true'::text,
   'preferences RPC persists the YouTube opt-in'
 );
 
@@ -560,7 +562,7 @@ select is(
       )
     ) ->> 'accountGeneration'
   ),
-  '2',
+  '2'::text,
   'full clear atomically advances the account generation'
 );
 
