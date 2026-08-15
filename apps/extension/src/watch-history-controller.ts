@@ -165,26 +165,33 @@ export function createWatchHistoryController(
     await dependencies.enqueue(event);
   }
 
-  async function persist(event: WatchProgressEvent, token: number): Promise<void> {
-    if (!isCurrent(token)) return;
-    await dependencies.observeLocally(event);
+  async function persist(event: WatchProgressEvent, token: number): Promise<boolean> {
+    if (!isCurrent(token)) return false;
+    try {
+      await dependencies.observeLocally(event);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   function setRoomActive(active: boolean): Promise<void> {
     const token = lifecycle;
     return serial(async () => {
       if (!isCurrent(token) || active === roomActive) return;
-      if (retained && clientSessionKey && accountGeneration !== null) {
-        const kind: HistoryEventKind = active ? "source_change" : "room_leave";
-        await persist(
-          toEvent(retained, kind, accountGeneration, createEventId(), clientSessionKey, now()),
-          token,
-        );
-      }
-      if (!isCurrent(token)) return;
+      const previous = retained;
+      const previousSessionKey = clientSessionKey;
+      const previousGeneration = accountGeneration;
       roomActive = active;
       clientSessionKey = null;
       resetMeaningfulState();
+      if (previous && previousSessionKey && previousGeneration !== null) {
+        const kind: HistoryEventKind = active ? "source_change" : "room_leave";
+        await persist(
+          toEvent(previous, kind, previousGeneration, createEventId(), previousSessionKey, now()),
+          token,
+        );
+      }
     });
   }
 

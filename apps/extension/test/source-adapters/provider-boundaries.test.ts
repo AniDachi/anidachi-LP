@@ -62,9 +62,8 @@ describe("source adapter provider boundaries", () => {
     const historyRuntime = source.slice(historyStart, historyEnd);
     expect(historyRuntime).toContain('command: "observe-progress"');
     expect(historyRuntime).toContain('command: "enqueue-progress"');
-    expect(historyRuntime).toContain('addEventListener("seeking", seeking)');
-    expect(historyRuntime).toContain('removeEventListener("seeking", seeking)');
-    expect(historyRuntime).toContain("controller.dispose()");
+    expect(historyRuntime).toContain("bindWatchHistoryPlaybackListeners");
+    expect(historyRuntime).toContain("removeHistoryListeners()");
     expect(historyRuntime).not.toContain("reconcileWatchProgress");
   });
 

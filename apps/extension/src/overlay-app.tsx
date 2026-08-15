@@ -203,6 +203,7 @@ import {
   createWatchHistoryController,
   type WatchHistoryController,
 } from "./watch-history-controller";
+import { bindWatchHistoryPlaybackListeners } from "./watch-history-listeners";
 
 interface OverlayAppProps {
   adapter: VideoAdapter;
@@ -1802,28 +1803,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     });
     watchHistoryControllerRef.current = controller;
     void controller.start().catch(() => undefined);
-    const heartbeat = () => { void controller.observe("heartbeat").catch(() => undefined); };
-    const pause = () => { void controller.observe("pause").catch(() => undefined); };
-    const seeking = () => { void controller.noteSeeking().catch(() => undefined); };
-    const seeked = () => { void controller.observe("seek").catch(() => undefined); };
-    const ended = () => { void controller.observe("ended").catch(() => undefined); };
-    const pagehide = () => { void controller.observe("pagehide").catch(() => undefined); };
-    const interval = window.setInterval(heartbeat, 5_000);
-    adapter.video.addEventListener("pause", pause);
-    adapter.video.addEventListener("seeking", seeking);
-    adapter.video.addEventListener("seeked", seeked);
-    adapter.video.addEventListener("ended", ended);
-    window.addEventListener("pagehide", pagehide);
+    const removeHistoryListeners = bindWatchHistoryPlaybackListeners({
+      video: adapter.video,
+      controller,
+    });
     return () => {
-      window.clearInterval(interval);
-      adapter.video.removeEventListener("pause", pause);
-      adapter.video.removeEventListener("seeking", seeking);
-      adapter.video.removeEventListener("seeked", seeked);
-      adapter.video.removeEventListener("ended", ended);
-      window.removeEventListener("pagehide", pagehide);
+      removeHistoryListeners();
       if (watchHistoryControllerRef.current === controller) {
         watchHistoryControllerRef.current = null;
-        void controller.dispose().catch(() => undefined);
       }
     };
   }, [adapter, adapterActive]);

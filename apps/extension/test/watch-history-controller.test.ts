@@ -90,7 +90,11 @@ describe("watch history meaningful-progress controller", () => {
 
   it("publishes the retained meaningful source before rotating session identity and requiring a new gate", async () => {
     const fixture = createFixture({
-      sessionKeys: ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"],
+      sessionKeys: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+        "33333333-3333-4333-8333-333333333333",
+      ],
     });
     await fixture.controller.start();
     fixture.setTime(11);
@@ -181,12 +185,58 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.enqueued.map((event) => event.currentTime)).toEqual([11, 14]);
     expect(fixture.local.some((event) => event.currentTime === 12)).toBe(true);
   });
+
+  it("suppresses solo publication when room-entry persistence fails and requires a fresh session gate after leave", async () => {
+    const fixture = createFixture({
+      sessionKeys: ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"],
+      rejectLocalKinds: new Set(["source_change"]),
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.setRoomActive(true);
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.observe("pause");
+    await fixture.controller.setRoomActive(false);
+    fixture.setTime(13);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(14);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued.map((event) => [event.currentTime, event.clientSessionKey])).toEqual([
+      [11, "11111111-1111-4111-8111-111111111111"],
+      [14, "33333333-3333-4333-8333-333333333333"],
+    ]);
+    expect(fixture.localFailures).toBe(1);
+  });
+
+  it("does not start a second forced enqueue until the first deferred enqueue resolves", async () => {
+    const fixture = createFixture({ holdEnqueueAt: 2 });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    const first = fixture.controller.observe("pause");
+    await fixture.waitForEnqueues(2);
+    const second = fixture.controller.observe("pagehide");
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fixture.enqueued.map((event) => event.kind)).toEqual(["heartbeat", "pause"]);
+    expect(fixture.maxEnqueueConcurrency).toBe(1);
+    fixture.releaseHeldEnqueue();
+    await Promise.all([first, second]);
+    expect(fixture.enqueued.map((event) => event.kind)).toEqual(["heartbeat", "pause", "pagehide"]);
+    expect(fixture.maxEnqueueConcurrency).toBe(1);
+  });
 });
 
 function createFixture(options: {
   roomActive?: boolean;
   sessionKeys?: string[];
   loadPreferences?: WatchHistoryControllerDependencies["loadPreferences"];
+  rejectLocalKinds?: Set<WatchProgressEvent["kind"]>;
+  holdEnqueueAt?: number;
 } = {}) {
   let now = 1_700_000_000_000;
   let time = 10;
@@ -202,6 +252,9 @@ function createFixture(options: {
   const current: Array<HistoryObservation | null> = [];
   let enqueueConcurrency = 0;
   let maxEnqueueConcurrency = 0;
+  let enqueueCount = 0;
+  let localFailures = 0;
+  let releaseHeldEnqueue: (() => void) | null = null;
   const observation = (): HistoryObservation => ({
     provider: "crunchyroll",
     providerLabel: "Crunchyroll",
@@ -224,12 +277,23 @@ function createFixture(options: {
     getObservation: observation,
     getRoomActive: () => roomActive,
     loadPreferences: options.loadPreferences ?? (async () => ({ accountGeneration: 1, preferences: { youtubeHistoryEnabled: false } })),
-    observeLocally: async (entry) => { local.push(entry); },
+    observeLocally: async (entry) => {
+      if (options.rejectLocalKinds?.has(entry.kind)) {
+        localFailures += 1;
+        throw new Error("storage-full");
+      }
+      local.push(entry);
+    },
     enqueue: async (event) => {
+      enqueueCount += 1;
       enqueueConcurrency += 1;
       maxEnqueueConcurrency = Math.max(maxEnqueueConcurrency, enqueueConcurrency);
-      await Promise.resolve();
       enqueued.push(event);
+      if (enqueueCount === options.holdEnqueueAt) {
+        await new Promise<void>((resolve) => { releaseHeldEnqueue = resolve; });
+      } else {
+        await Promise.resolve();
+      }
       enqueueConcurrency -= 1;
     },
     onObservation: (entry) => { current.push(entry); },
@@ -245,9 +309,17 @@ function createFixture(options: {
     enqueued,
     current,
     get maxEnqueueConcurrency() { return maxEnqueueConcurrency; },
+    get localFailures() { return localFailures; },
     setTime(value: number) { time = value; },
     setSource(next: Partial<typeof source>) { source = { ...source, ...next }; },
     setRoomActive(value: boolean) { roomActive = value; },
     advance(value: number) { now += value; },
+    releaseHeldEnqueue() { releaseHeldEnqueue?.(); },
+    async waitForEnqueues(count: number) {
+      for (let attempt = 0; attempt < 20 && enqueued.length < count; attempt += 1) {
+        await Promise.resolve();
+      }
+      expect(enqueued).toHaveLength(count);
+    },
   };
 }
