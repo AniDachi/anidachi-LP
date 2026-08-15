@@ -1298,6 +1298,9 @@ loaded extension artifacts before any promotion.
   also reapplied successfully. The pgTAP suite passes 38 assertions covering
   RLS/privileges, RPCs, receipts, deletion fences, rollback, shared two-writer
   evidence, and the service-role-only Recent People cutover function.
+- A linked staging `supabase db push --dry-run` succeeded and listed exactly
+  `20260814020000_watch_history_v2_clean_cutover.sql`; the command explicitly
+  did not apply the migration.
 - The logical cutover is isolated on
   `codex/watch-history-v2-wave5-cutover` at `272c8f7` and is not deployed. It
   imports no v1 test data, keeps legacy tables intact for rollback, removes the

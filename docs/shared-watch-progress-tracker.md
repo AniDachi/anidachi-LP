@@ -20,7 +20,9 @@ is `docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.
   loaded two-profile acceptance matrix.
 - The logical clean cutover is prepared separately and is not deployed. Until
   manual staging acceptance passes, v1 routes must not return `426` and the
-  cutover migration must not be applied to staging.
+  cutover migration must not be applied to staging. A linked staging
+  `supabase db push --dry-run` succeeded and listed exactly that one migration
+  without applying it.
 - Nothing in this rollout is approved for `main` or production yet.
 
 ## Product Behavior
