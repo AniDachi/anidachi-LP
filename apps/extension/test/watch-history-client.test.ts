@@ -425,6 +425,32 @@ describe("watch history v2 client", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it("does not drain dormant same-owner work when auth canonical reconciliation fails", async () => {
+    const owner = session.user.id;
+    const event = progressEvent("00000000-0000-4000-8000-000000000070");
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2, activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ownerUserId: owner, accountGeneration: 1, cache: null, preferences: null, currentObservation: null,
+          outbox: { ownerUserId: owner, accountGeneration: 1, entries: [{ event, key: "dormant", slot: "latest", persistedAt: 1 }] },
+        },
+      },
+    };
+    const fetchImpl = vi.fn(async () => new Response("offline", { status: 503 }));
+    const storage = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+      getBytesInUse: async () => 0, quotaBytes: 1_000_000,
+    });
+
+    await expect(handleWatchHistoryAuthSessionChange(session, session, {
+      storage, getCurrentSession: async () => session, fetch: fetchImpl as typeof fetch,
+    })).resolves.toEqual({ ok: false, status: "retryable" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toHaveLength(1);
+    expect(stored.activeGenerations?.[owner]).toBe(1);
+  });
+
   it("rejects a stale canonical response without replacing the newer local partition", async () => {
     const owner = session.user.id;
     let stored: WatchHistoryStorageRoot = {

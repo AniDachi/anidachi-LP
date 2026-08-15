@@ -406,17 +406,24 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     return stale ? { ...result, stale: true } : result;
   }
 
+  async function reconcile(
+    session: ExtensionAuthTokens,
+    message: Extract<WatchHistoryMessage, { command: "list" }> = { type: WATCH_HISTORY_MESSAGE_TYPE, command: "list" },
+  ): Promise<WatchHistoryMessageResponse> {
+    return list(session, message);
+  }
+
   async function refresh(
     session: ExtensionAuthTokens,
     message: Extract<WatchHistoryMessage, { command: "list" }> = { type: WATCH_HISTORY_MESSAGE_TYPE, command: "list" },
   ): Promise<WatchHistoryMessageResponse> {
-    const reconciled = await list(session, message);
+    const reconciled = await reconcile(session, message);
     const drained = await flush(session);
     if (!drained.ok) return drained;
     return reconciled.ok ? { ...reconciled, flushed: drained.flushed } : reconciled;
   }
 
-  return { handle, flush, refresh };
+  return { handle, flush, reconcile, refresh };
 }
 
 function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHistoryAccountPartition {
@@ -460,12 +467,24 @@ export async function handleWatchHistoryAuthSessionChange(
   previous: ExtensionAuthTokens | null,
   next: ExtensionAuthTokens | null,
   dependencies: WatchHistoryBackgroundDependencies = {},
-): Promise<void> {
+): Promise<WatchHistoryMessageResponse> {
   const storage = dependencies.storage ?? createWatchHistoryStorage();
-  if (previous && previous.user.id !== next?.user.id) {
-    await storage.clearRebuildableAccountData(previous.user.id);
+  try {
+    if (previous && previous.user.id !== next?.user.id) {
+      const cleared = await storage.clearRebuildableAccountData(previous.user.id);
+      if (!cleared.ok) return { ok: false, status: "retryable" };
+    }
+    if (!next) return { ok: true };
+    const getCurrentSession = dependencies.getCurrentSession ?? await defaultWatchHistorySession();
+    const current = await getCurrentSession();
+    if (!current || !sameSession(next, current)) return { ok: false, status: "retryable" };
+    const client = createWatchHistoryClient({ ...dependencies, storage, getCurrentSession });
+    const reconciled = await client.reconcile(current);
+    if (!reconciled.ok) return { ok: false, status: "retryable" };
+    return client.flush(current);
+  } catch {
+    return { ok: false, status: "retryable" };
   }
-  if (next) await flushWatchHistoryInBackground({ ...dependencies, storage });
 }
 
 export async function flushWatchHistoryInBackground(
