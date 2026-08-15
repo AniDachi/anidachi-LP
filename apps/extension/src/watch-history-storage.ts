@@ -270,7 +270,8 @@ function normalizePartition(partition: WatchHistoryAccountPartition): WatchHisto
       : partition.currentObservationDisplayMode === "mine" ||
           partition.currentObservationDisplayMode === "together"
         ? partition.currentObservationDisplayMode
-        : partition.currentObservationMeaningfulSolo === true
+        : partition.currentObservationDisplayMode === undefined &&
+            partition.currentObservationMeaningfulSolo === true
           ? "mine"
           : null,
   };

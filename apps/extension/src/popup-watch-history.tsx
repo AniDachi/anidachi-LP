@@ -1047,7 +1047,7 @@ function isNewerThanCanonicalHistory(
       ? item.latestActivity.lastWatchedAt
       : null);
   return canonicalObservedAt === null ||
-    Date.parse(event.observedAt) >= Date.parse(canonicalObservedAt);
+    Date.parse(event.observedAt) > Date.parse(canonicalObservedAt);
 }
 
 function latestPendingByEpisode(events: WatchProgressEvent[]): Map<string, WatchProgressEvent> {

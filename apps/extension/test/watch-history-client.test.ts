@@ -755,6 +755,88 @@ describe("watch history v2 client", () => {
       .toBe(false);
   });
 
+  it("retains an acknowledged active observation until canonical cache catches up", async () => {
+    const owner = session.user.id;
+    const event = { ...progressEvent(), sharedRoom: null };
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async () => new Response(JSON.stringify(progressAck(event.clientEventId)))) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: owner,
+      event,
+      meaningfulSolo: true,
+      displayMode: "mine",
+    })).resolves.toEqual({ ok: true });
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "enqueue-progress",
+      expectedOwnerUserId: owner,
+      event,
+    })).resolves.toEqual({ ok: true, flushed: 1 });
+
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toMatchObject({
+      currentObservation: { clientEventId: event.clientEventId },
+      currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: "mine",
+      outbox: { entries: [] },
+    });
+  });
+
+  it("clears an acknowledged terminal observation after it leaves pending work", async () => {
+    const owner = session.user.id;
+    const event = { ...progressEvent(), kind: "pagehide" as const, sharedRoom: null };
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async () => new Response(JSON.stringify(progressAck(event.clientEventId)))) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: owner,
+      event,
+      meaningfulSolo: true,
+      displayMode: null,
+    })).resolves.toEqual({ ok: true });
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "enqueue-progress",
+      expectedOwnerUserId: owner,
+      event,
+    })).resolves.toEqual({ ok: true, flushed: 1 });
+
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toMatchObject({
+      currentObservation: null,
+      currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: null,
+      outbox: { entries: [] },
+    });
+  });
+
   it("negative-acknowledges a stale older latest after accepting the terminal and continues the drain", async () => {
     const owner = session.user.id;
     const terminal = {

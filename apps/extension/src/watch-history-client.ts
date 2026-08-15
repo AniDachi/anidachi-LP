@@ -8,6 +8,7 @@ import {
   WatchHistoryResponseSchema,
   WatchProgressAckSchema,
   WatchProgressEventSchema,
+  type WatchProgressEvent,
 } from "@anidachi/protocol";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
@@ -316,8 +317,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       currentObservation: withoutWatchHistoryAttestation(event),
       currentObservationMeaningfulSolo: !event.sharedRoom,
       currentObservationDisplayMode: partition.currentObservation?.clientEventId === event.clientEventId
-        ? partition.currentObservationDisplayMode ?? (event.sharedRoom ? "together" : "mine")
-        : event.sharedRoom ? "together" : "mine",
+        ? partition.currentObservationDisplayMode === undefined
+          ? inferredObservationDisplayMode(event)
+          : partition.currentObservationDisplayMode
+        : inferredObservationDisplayMode(event),
       outbox: enqueueWatchHistoryEvent(partition.outbox, event),
     }), event.provider);
     let saved = await persist();
@@ -401,23 +404,31 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           ack.data.acceptedEventId !== entry.event.clientEventId) {
           return { ok: false, status: "invalid-response" };
         }
-        const saved = await updateCurrentPartition(session, generation, (candidate) => ({
-          ...candidate,
-          capturePaused: false,
-          captureMarkersReady: true,
-          outbox: acknowledgeWatchHistoryEvent(candidate.outbox, ack.data.acceptedEventId),
-          currentObservation: candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
-            ? null
-            : candidate.currentObservation,
-          currentObservationMeaningfulSolo:
-            candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
+        const saved = await updateCurrentPartition(session, generation, (candidate) => {
+          const acceptedCurrent = candidate.currentObservation?.clientEventId ===
+            ack.data.acceptedEventId;
+          const acceptedDisplayMode = candidate.currentObservationDisplayMode === undefined
+            ? inferredObservationDisplayMode(entry.event)
+            : candidate.currentObservationDisplayMode;
+          const retainActiveCurrent = acceptedCurrent &&
+            acceptedDisplayMode !== null &&
+            inferredObservationDisplayMode(entry.event) !== null;
+          return {
+            ...candidate,
+            capturePaused: false,
+            captureMarkersReady: true,
+            outbox: acknowledgeWatchHistoryEvent(candidate.outbox, ack.data.acceptedEventId),
+            currentObservation: acceptedCurrent && !retainActiveCurrent
+              ? null
+              : candidate.currentObservation,
+            currentObservationMeaningfulSolo: acceptedCurrent
               ? false
               : candidate.currentObservationMeaningfulSolo === true,
-          currentObservationDisplayMode:
-            candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
-              ? null
+            currentObservationDisplayMode: acceptedCurrent
+              ? retainActiveCurrent ? acceptedDisplayMode : null
               : candidate.currentObservationDisplayMode ?? null,
-        }));
+          };
+        });
         if (saved.stale) return { ok: false, status: "generation-mismatch" };
         if (saved.authorityRejected) return { ok: false, status: "rejected" };
         if (!saved.ok) return saved;
@@ -971,6 +982,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function hasExactKeys(value: Record<string, unknown>, allowed: string[]): boolean {
   return Object.keys(value).every((key) => allowed.includes(key));
+}
+
+function inferredObservationDisplayMode(
+  event: WatchProgressEvent,
+): WatchHistoryObservationDisplayMode | null {
+  if (event.kind === "source_change" ||
+    event.kind === "pagehide" ||
+    event.kind === "room_leave" ||
+    event.kind === "room_end" ||
+    event.kind === "ended") {
+    return null;
+  }
+  return event.sharedRoom ? "together" : "mine";
 }
 
 export async function handleWatchHistoryHttpMessage(

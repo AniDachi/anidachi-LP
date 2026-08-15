@@ -375,6 +375,33 @@ describe("Popup Watch History v2", () => {
     expect(snapshot?.localObservation).toBeNull();
   });
 
+  it("stops overlaying a local observation once canonical history reaches the same timestamp", () => {
+    const history = historyFixture({ currentTime: 840, progress: 0.4 });
+    const observation = pendingEvent({ currentTime: 840, progress: 0.4 });
+    const partitionKey = watchHistoryPartitionKey(OWNER_ID, 1);
+    const root: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [OWNER_ID]: 1 },
+      partitions: {
+        [partitionKey]: {
+          ownerUserId: OWNER_ID,
+          accountGeneration: 1,
+          cache: history,
+          preferences: { youtubeHistoryEnabled: false },
+          preferencesConfirmed: true,
+          currentObservation: observation,
+          currentObservationMeaningfulSolo: false,
+          currentObservationDisplayMode: "mine",
+          capturePaused: false,
+          captureMarkersReady: true,
+          outbox: { ownerUserId: OWNER_ID, accountGeneration: 1, entries: [] },
+        },
+      },
+    };
+
+    expect(selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID)?.localObservation).toBeNull();
+  });
+
   it("treats YouTube as disabled until preferences are confirmed by the current refresh", async () => {
     let resolvePreferences: ((value: WatchHistoryMessageResponse) => void) | undefined;
     const client = clientFixture({
