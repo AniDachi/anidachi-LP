@@ -64,7 +64,7 @@ describe("Popup Watch History v2", () => {
 
     const view = await renderPanel(client);
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
-    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Pending sync");
     expect(view.container.textContent).toContain("14:00");
 
     await act(async () => {
@@ -98,7 +98,7 @@ describe("Popup Watch History v2", () => {
     const view = await renderPanel(client);
 
     await waitFor(() => expect(view.container.textContent).toContain("14:00"));
-    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Pending sync");
     expect(client.loadCached).toHaveBeenCalledTimes(2);
     expect(listRequests).toBe(1);
     await unmount(view.root);
@@ -119,7 +119,7 @@ describe("Popup Watch History v2", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
     expect(view.container.textContent).toContain("Episode 1 - The Journey");
     expect(view.container.textContent).toContain("0:12");
-    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Pending sync");
     expect(view.container.textContent).not.toContain("Progress will appear after meaningful playback.");
     await unmount(view.root);
   });
@@ -143,7 +143,7 @@ describe("Popup Watch History v2", () => {
 
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
     expect(view.container.textContent).toContain("0:03");
-    expect(view.container.textContent).toContain("Watching now");
+    expect(view.container.textContent).not.toContain("Watching now");
     expect(view.container.textContent).not.toContain("Pending sync");
     await unmount(view.root);
   });
@@ -180,7 +180,7 @@ describe("Popup Watch History v2", () => {
 
     await waitFor(() => {
       expect(view.container.textContent).toContain(
-        "Progress will appear after meaningful playback.",
+        "Episodes you watch on supported sites will appear here.",
       );
     });
 
@@ -194,7 +194,7 @@ describe("Popup Watch History v2", () => {
       await Promise.resolve();
     });
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
-    expect(view.container.textContent).toContain("Watching now");
+    expect(view.container.textContent).not.toContain("Watching now");
     expect(view.container.textContent).not.toContain("Pending sync");
     expect(view.container.textContent).toContain("0:12");
 
@@ -213,7 +213,7 @@ describe("Popup Watch History v2", () => {
       ));
       await Promise.resolve();
     });
-    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Pending sync");
     expect(view.container.textContent).not.toContain("Watching now");
     expect(view.container.textContent).toContain("0:12");
 
@@ -222,7 +222,7 @@ describe("Popup Watch History v2", () => {
       await Promise.resolve();
     });
     expect(view.container.textContent).toContain("Cached Frieren");
-    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Pending sync");
 
     await act(async () => {
       publishSnapshot?.(snapshotFixture(canonical));
@@ -275,7 +275,7 @@ describe("Popup Watch History v2", () => {
 
     await waitFor(() => {
       expect(view.container.textContent).toContain(
-        "Progress will appear after meaningful playback.",
+        "Episodes you watch on supported sites will appear here.",
       );
     });
     await act(async () => {
@@ -289,7 +289,7 @@ describe("Popup Watch History v2", () => {
       await Promise.resolve();
     });
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
-    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Pending sync");
     await unmount(view.root);
   });
 
@@ -308,7 +308,7 @@ describe("Popup Watch History v2", () => {
 
     await waitFor(() => expect(view.container.textContent).toContain("Episode 2 - The Promise"));
     expect(view.container.textContent).toContain("0:12");
-    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Pending sync");
     await unmount(view.root);
   });
 
@@ -580,7 +580,9 @@ describe("Popup Watch History v2", () => {
 
     await click(clear);
 
-    await waitFor(() => expect(view.container.textContent).toContain("Progress will appear"));
+    await waitFor(() => expect(view.container.textContent).toContain(
+      "Episodes you watch on supported sites will appear here.",
+    ));
     expect(view.container.textContent).not.toContain("Frieren");
     await unmount(view.root);
   });
@@ -734,7 +736,7 @@ describe("Popup Watch History v2", () => {
     await click(mode);
 
     await waitFor(() => expect(mode.dataset.mode).toBe("together"));
-    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Pending sync");
     expect(view.container.textContent).toContain("14:00");
     await unmount(view.root);
   });

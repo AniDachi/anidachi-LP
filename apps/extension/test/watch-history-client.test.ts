@@ -93,6 +93,43 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it("returns confirmed current-owner cached authority without a network request", async () => {
+    const owner = session.user.id;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false),
+      },
+    };
+    const fetchImpl = vi.fn();
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap-cache",
+      expectedOwnerUserId: owner,
+    } as never)).resolves.toEqual({
+      ok: true,
+      data: {
+        ownerUserId: owner,
+        accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: false },
+        capturePaused: false,
+        source: "cache",
+      },
+    });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("bootstraps from canonical preferences online and same-owner cached preferences only on retryable transport failure", async () => {
     const owner = session.user.id;
     let stored: WatchHistoryStorageRoot = {
@@ -422,6 +459,17 @@ describe("watch history v2 client", () => {
       command: "bootstrap",
       expectedOwnerUserId: session.user.id,
     })).toBe(true);
+    expect(isWatchHistoryMessage({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap-cache",
+      expectedOwnerUserId: session.user.id,
+    })).toBe(true);
+    expect(isWatchHistoryMessage({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap-cache",
+      expectedOwnerUserId: session.user.id,
+      extra: true,
+    })).toBe(false);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "bootstrap", ownerUserId: session.user.id })).toBe(false);
     expect(parseWatchHistoryBootstrapData({
       ownerUserId: session.user.id,

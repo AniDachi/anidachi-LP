@@ -249,15 +249,18 @@ keys.
 
 ## Failure And Account-Switch Behavior
 
-- When offline, Popup shows the last server-confirmed cache plus a clearly pending
-  optimistic overlay. Website keeps its last rendered response and offers retry;
-  neither claims pending data is server-confirmed.
-- Popup presentation is local-first: a valid same-owner/same-generation active
-  observation appears immediately as `Watching now` before the meaningful gate.
-  It is not durable history and disappears on source/page exit when the gate was
-  not reached. After the gate it becomes `Pending sync`; only acknowledgement
-  and canonical refresh make it confirmed history. This UI path does not add a
-  network request or relax server eligibility.
+- When offline, Popup projects the last server-confirmed cache together with the
+  current-owner local observation and outbox. Website keeps its last rendered
+  response and offers retry; neither surface claims pending data is server-confirmed.
+- Popup presentation is seamless and local-first: a valid same-owner/same-generation
+  Crunchyroll observation appears immediately as a normal history card before the
+  meaningful gate or network bootstrap completes. The user is not shown routine
+  `pending`, `syncing`, or acknowledgement terminology. Source/page exit removes
+  non-meaningful transient activity; meaningful outbox work remains projected until
+  canonical history catches up. Only a real storage/save failure gets a visible
+  recovery state. Server eligibility, cadence, and acknowledgement rules remain
+  unchanged. Cached startup authority keeps YouTube disabled until canonical
+  preferences load for the current startup.
 - Flush is event-driven: enqueue, browser `online`, valid auth refresh, service
   worker startup/install, Popup/manual refresh, and content-script reconnect.
   No periodic background alarm is introduced.
@@ -1067,10 +1070,12 @@ uses cursor pages from the same DTO; no surface writes raw progress.
 - [ ] **Step 2: Switch Popup reads**
 
   First paint uses a same-owner/same-generation confirmed cache plus the active
-  local observation, labeled `Watching now`. Background refresh replaces the
-  cache with a parsed canonical response; pending outbox state overlays only
-  matching episode/session values and is labeled `Pending sync`. Local observation
-  visibility never makes it eligible for server persistence. Remove plan title/
+  local observation. A cache-only startup authority makes Crunchyroll presentation
+  available before the canonical preference request, while that request continues
+  in the background and YouTube remains fail-closed. Background refresh replaces
+  the cache with a parsed canonical response; pending outbox state overlays only
+  matching episode/session values without exposing technical sync labels. Local
+  observation visibility never makes it eligible for server persistence. Remove plan title/
   retention labels and all Popup reconcile/backfill/artwork writer calls. Move any
   still-needed presentation helpers to a small v2 model module, then delete the v1
   local progress store/client/auth modules and their tests once imports are zero.

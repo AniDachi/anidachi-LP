@@ -209,10 +209,6 @@ export function PopupWatchHistoryPanel({
     ]),
     [visibleLocalObservation, visiblePendingEvents],
   );
-  const pendingEventIds = useMemo(
-    () => new Set(visiblePendingEvents.map((event) => event.clientEventId)),
-    [visiblePendingEvents],
-  );
   const itemsWithPending = useMemo(
     () => projectPendingWatchHistoryItems(history?.items ?? [], pendingByEpisode),
     [history?.items, pendingByEpisode],
@@ -436,7 +432,7 @@ export function PopupWatchHistoryPanel({
       {loading && !history ? (
         <div className="popup-empty popup-empty-syncing">
           <RefreshCw size={14} />
-          <span>Syncing watch history...</span>
+          <span>Loading watch history...</span>
         </div>
       ) : providerGroups.length ? (
         <div className="popup-resource-list">
@@ -448,7 +444,6 @@ export function PopupWatchHistoryPanel({
               onCreateRoom={createRoom}
               onDelete={deleteTarget}
               pendingByEpisode={pendingByEpisode}
-              pendingEventIds={pendingEventIds}
             />
           ))}
         </div>
@@ -458,10 +453,10 @@ export function PopupWatchHistoryPanel({
         <div className="popup-empty">
           {mode === "together"
             ? "Shared sessions will appear after watching together."
-            : "Solo sessions will appear after meaningful playback."}
+            : "Episodes you watch on supported sites will appear here."}
         </div>
       ) : (
-        <div className="popup-empty">Progress will appear after meaningful playback.</div>
+        <div className="popup-empty">Episodes you watch on supported sites will appear here.</div>
       )}
       {history?.items.length ? (
         <button
@@ -484,14 +479,12 @@ function PopupProviderSection({
   onCreateRoom,
   onDelete,
   pendingByEpisode,
-  pendingEventIds,
 }: {
   busyAction: string | null;
   group: PopupProviderGroup;
   onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void;
   onDelete: (target: WatchHistoryDeleteScope) => void;
   pendingByEpisode: Map<string, WatchProgressEvent>;
-  pendingEventIds: Set<string>;
 }) {
   const [open, setOpen] = useState(true);
 
@@ -525,7 +518,6 @@ function PopupProviderSection({
               onCreateRoom={onCreateRoom}
               onDelete={onDelete}
               pendingByEpisode={pendingByEpisode}
-              pendingEventIds={pendingEventIds}
             />
           ))}
         </div>
@@ -540,14 +532,12 @@ function PopupWatchHistoryItem({
   onCreateRoom,
   onDelete,
   pendingByEpisode,
-  pendingEventIds,
 }: {
   busyAction: string | null;
   item: WatchHistoryItem;
   onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void;
   onDelete: (target: WatchHistoryDeleteScope) => void;
   pendingByEpisode: Map<string, WatchProgressEvent>;
-  pendingEventIds: Set<string>;
 }) {
   const episodeCount = item.seasons.reduce((sum, season) => sum + season.episodes.length, 0);
   const observedCount = episodeCount || (item.itemKind === "movie" ? 1 : 0);
@@ -618,11 +608,6 @@ function PopupWatchHistoryItem({
                       </span>
                       <span>{formatClock(currentTime)}</span>
                     </span>
-                    {pending ? (
-                      <span className="popup-mode-badge">
-                        {pendingEventIds.has(pending.clientEventId) ? "Pending sync" : "Watching now"}
-                      </span>
-                    ) : null}
                     {episode.sessions.slice(0, 4).map((session) => (
                       <button
                         aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
@@ -676,13 +661,6 @@ function PopupWatchHistoryItem({
                 latestActivityPending?.currentTime ?? item.latestActivity.currentTime,
               )}</span>
             </span>
-            {latestActivityPending ? (
-              <span className="popup-mode-badge">
-                {pendingEventIds.has(latestActivityPending.clientEventId)
-                  ? "Pending sync"
-                  : "Watching now"}
-              </span>
-            ) : null}
             {item.sessions.slice(0, 4).map((session) => (
               <button
                 aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}

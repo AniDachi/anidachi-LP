@@ -67,6 +67,11 @@ export type WatchHistoryMessage =
       command: "bootstrap";
       expectedOwnerUserId: string;
     }
+  | {
+      type: typeof WATCH_HISTORY_MESSAGE_TYPE;
+      command: "bootstrap-cache";
+      expectedOwnerUserId: string;
+    }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "recover-storage" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "update-preferences"; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "delete"; input: unknown }
@@ -192,6 +197,7 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
     case "other-owner-pending":
       return hasExactKeys(value, ["type", "command"]);
     case "bootstrap":
+    case "bootstrap-cache":
       return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) &&
         typeof value.expectedOwnerUserId === "string" &&
         value.expectedOwnerUserId.length > 0 &&
@@ -250,11 +256,13 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
     }
     if (message.command === "list") return refresh(session, message);
-    if (message.command === "bootstrap") {
+    if (message.command === "bootstrap" || message.command === "bootstrap-cache") {
       if (message.expectedOwnerUserId !== session.user.id) {
         return { ok: false, status: "rejected" };
       }
-      return bootstrap(session);
+      return message.command === "bootstrap-cache"
+        ? cachedBootstrap(session)
+        : bootstrap(session);
     }
     if (message.command === "recover-storage") return recoverStorage(session);
     if (message.command === "enqueue-progress" || message.command === "observe-progress") {
@@ -1004,6 +1012,7 @@ export async function handleWatchHistoryHttpMessage(
   const { getStoredAuthTokens } = await import("./auth-tokens");
   const localCommand = message.command === "enqueue-progress" ||
     message.command === "observe-progress" ||
+    message.command === "bootstrap-cache" ||
     message.command === "flush" ||
     message.command === "content-reconnect" ||
     message.command === "recover-storage" ||

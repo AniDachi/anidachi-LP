@@ -14,6 +14,12 @@ type HistoryEventKind = WatchProgressEvent["kind"];
 export type WatchHistoryControllerDependencies = {
   getObservation: (preferences: WatchHistoryPreferences | null) => HistoryObservation | null;
   getRoomActive: () => boolean;
+  loadCachedPreferences?: () => Promise<{
+    ownerUserId: string;
+    accountGeneration: number;
+    preferences: WatchHistoryPreferences;
+    capturePaused?: boolean;
+  } | null>;
   loadPreferences: () => Promise<{
     ownerUserId: string;
     accountGeneration: number;
@@ -117,6 +123,34 @@ export function createWatchHistoryController(
 
   async function start(): Promise<void> {
     const token = lifecycle;
+    if (dependencies.loadCachedPreferences) {
+      let cached: Awaited<ReturnType<NonNullable<typeof dependencies.loadCachedPreferences>>>;
+      try {
+        cached = await dependencies.loadCachedPreferences();
+      } catch {
+        cached = null;
+      }
+      if (cached) {
+        const cachedAuthorityToken = ++authorityRevision;
+        await serial(async () => {
+          if (!isCurrent(token) || cachedAuthorityToken !== authorityRevision) return;
+          ownerUserId = cached.ownerUserId;
+          // Cached authority is enough for immediate Crunchyroll presentation,
+          // but YouTube remains fail-closed until this startup's canonical
+          // preference refresh succeeds.
+          preferences = { ...cached.preferences, youtubeHistoryEnabled: false };
+          accountGeneration = cached.accountGeneration;
+          capturePaused = cached.capturePaused === true;
+          authorityReady = true;
+          await capture("heartbeat", token);
+        });
+        if (isCurrent(token)) {
+          void refreshAuthorityFromNetwork(true).catch(() => undefined);
+        }
+        return;
+      }
+    }
+
     const authorityToken = ++authorityRevision;
     authorityReady = false;
     let loaded: {
@@ -354,17 +388,25 @@ export function createWatchHistoryController(
   }
 
   function refreshAuthority(): Promise<void> {
+    return refreshAuthorityFromNetwork(false);
+  }
+
+  function refreshAuthorityFromNetwork(preserveCurrent: boolean): Promise<void> {
     const token = lifecycle;
     const authorityToken = ++authorityRevision;
-    authorityReady = false;
-    return serial(async () => {
-      if (!isCurrent(token) || authorityToken !== authorityRevision) return;
+    if (!preserveCurrent) authorityReady = false;
+    const load = async () => {
       let loaded: Awaited<ReturnType<WatchHistoryControllerDependencies["loadPreferences"]>>;
       try {
         loaded = await dependencies.loadPreferences();
       } catch {
-        return;
+        loaded = null;
       }
+      return loaded;
+    };
+    const apply = (loaded: NonNullable<Awaited<ReturnType<
+      WatchHistoryControllerDependencies["loadPreferences"]
+    >>>): void => {
       if (!isCurrent(token) || authorityToken !== authorityRevision || !loaded) return;
       const authorityUnchanged = ownerUserId === loaded.ownerUserId &&
         accountGeneration === loaded.accountGeneration &&
@@ -379,6 +421,17 @@ export function createWatchHistoryController(
       retainedIdentity = null;
       clientSessionKey = null;
       resetMeaningfulState();
+    };
+    if (preserveCurrent) {
+      return load().then(async (loaded) => {
+        if (!loaded) return;
+        await serial(async () => { apply(loaded); });
+      });
+    }
+    return serial(async () => {
+      if (!isCurrent(token) || authorityToken !== authorityRevision) return;
+      const loaded = await load();
+      if (loaded) apply(loaded);
     });
   }
 
