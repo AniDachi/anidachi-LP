@@ -1,7 +1,10 @@
+import { extensionThemeTokens } from "./extension-theme";
+
 export const popupStyles = `
   :root {
     color-scheme: dark;
     background: transparent;
+${extensionThemeTokens}
   }
 
   * {
@@ -28,10 +31,10 @@ export const popupStyles = `
     z-index: 4;
     margin: 0 0 10px;
     padding: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--ad-border);
     border-radius: 8px;
-    background: rgba(13, 15, 25, 0.96);
-    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.3);
+    background: var(--ad-panel-strong);
+    box-shadow: var(--ad-shadow-panel);
   }
 
   .popup-local-settings-heading {
@@ -1504,19 +1507,15 @@ export const popupStyles = `
     width: 430px;
     min-height: 620px;
     max-height: 680px;
-    background: #070b0f;
-    color: rgba(255, 255, 255, 0.94);
+    background: var(--ad-canvas);
+    color: var(--ad-text);
   }
 
   .popup-shell {
     min-height: 620px;
     max-height: 680px;
     padding: 12px;
-    background:
-      radial-gradient(circle at 7% 0%, rgba(255, 136, 48, 0.2), transparent 28%),
-      radial-gradient(circle at 92% 4%, rgba(88, 166, 255, 0.11), transparent 32%),
-      radial-gradient(circle at 78% 92%, rgba(255, 159, 45, 0.08), transparent 34%),
-      linear-gradient(145deg, #080d12 0%, #0b1117 47%, #080c11 100%);
+    background: linear-gradient(180deg, var(--ad-panel-strong) 0%, var(--ad-canvas) 100%);
   }
 
   .popup-shell::before {
@@ -1575,23 +1574,6 @@ export const popupStyles = `
     border-color: rgba(255, 255, 255, 0.16);
     background: transparent;
     font-size: 17px;
-  }
-
-  .popup-presence-dot {
-    position: absolute;
-    right: -1px;
-    bottom: 3px;
-    width: 13px;
-    height: 13px;
-    border-radius: 999px;
-    border: 2px solid #0b1117;
-    background: #4ade80;
-    box-shadow: 0 0 12px rgba(74, 222, 128, 0.4);
-  }
-
-  .popup-profile-avatar[data-signed-in="false"] .popup-presence-dot {
-    background: rgba(255, 255, 255, 0.28);
-    box-shadow: none;
   }
 
   .popup-profile-copy {
@@ -1733,13 +1715,11 @@ export const popupStyles = `
   .popup-filter-card,
   .popup-invite-composer,
   .popup-people-tray {
-    border: 1px solid rgba(255, 255, 255, 0.11);
+    border: 1px solid var(--ad-border);
     border-radius: 16px;
-    background:
-      linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.022)),
-      rgba(11, 17, 23, 0.86);
+    background: var(--ad-panel-strong);
     box-shadow:
-      0 16px 34px rgba(0, 0, 0, 0.28),
+      var(--ad-shadow-panel),
       inset 0 1px 0 rgba(255, 255, 255, 0.07);
   }
 
@@ -2400,13 +2380,6 @@ export const popupStyles = `
     font-size: 15px;
   }
 
-  .popup-presence-dot {
-    right: -1px;
-    bottom: 2px;
-    width: 11px;
-    height: 11px;
-  }
-
   .popup-brand {
     font-size: 19px;
   }
@@ -2925,7 +2898,7 @@ export const popupStyles = `
     height: 600px;
     min-height: 600px;
     max-height: 600px;
-    background: #070b0f;
+    background: var(--ad-canvas);
   }
 
   .popup-shell {
@@ -2933,14 +2906,79 @@ export const popupStyles = `
     min-height: 600px;
     max-height: 600px;
     padding: 12px 12px 10px;
-    background:
-      radial-gradient(circle at -8% -7%, rgba(255, 122, 26, 0.16), transparent 30%),
-      radial-gradient(circle at 108% 10%, rgba(87, 145, 255, 0.08), transparent 34%),
-      linear-gradient(150deg, #080d12 0%, #0c1218 48%, #070b0f 100%);
+    background: linear-gradient(180deg, var(--ad-panel-strong) 0%, var(--ad-canvas) 100%);
   }
 
   .popup-topbar {
     margin-bottom: 10px;
+  }
+
+  .popup-profile-copy {
+    min-width: 0;
+    display: grid;
+    align-content: center;
+    gap: 2px;
+  }
+
+  .popup-profile-copy .panel-account-title-row {
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  .popup-profile-copy .panel-account-name,
+  .popup-profile-state-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ad-text);
+    font-size: 17px;
+    font-weight: 820;
+    line-height: 1.1;
+  }
+
+  .popup-profile-copy .panel-account-name {
+    flex: 0 1 auto;
+  }
+
+  .popup-profile-copy .plan-badge {
+    flex: 0 0 auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--ad-muted);
+    font-size: 8px;
+    font-weight: 820;
+    line-height: 1.1;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transform: translateY(var(--plan-glyph-offset, -2px));
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.045),
+      0 -1px 0 rgba(0, 0, 0, 0.72);
+  }
+
+  .popup-profile-copy .plan-badge.plus {
+    color: rgba(255, 205, 166, 0.94);
+  }
+
+  .popup-profile-copy .plan-badge.pro {
+    color: rgba(187, 247, 208, 0.94);
+  }
+
+  .popup-profile-helper {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ad-muted);
+    font-size: 10.5px;
+    font-weight: 650;
+    line-height: 1.2;
   }
 
   .popup-tabs {
@@ -3207,11 +3245,11 @@ export const popupStyles = `
   .popup-provider {
     overflow: hidden;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.075);
+    border: 1px solid var(--ad-border);
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.01)),
-      rgba(9, 14, 20, 0.84);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.008)),
+      var(--ad-panel-strong);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
   }
 
   .popup-provider-row {

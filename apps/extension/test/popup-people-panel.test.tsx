@@ -631,6 +631,17 @@ describe("PopupApp social mutations", () => {
     vi.unstubAllGlobals();
   });
 
+  it("shows the active account identity in the compact Popup header", async () => {
+    vi.mocked(listSocialDirectory).mockResolvedValue(directory());
+    const view = await renderPopupApp();
+    root = view.root;
+
+    const profileCopy = view.container.querySelector(".popup-profile-copy");
+    expect(profileCopy?.textContent).toContain("Viewer");
+    expect(profileCopy?.textContent).toContain("Plus");
+    expect(profileCopy?.textContent).not.toContain("AniDachi");
+  });
+
   it("sends one recent-person request and refreshes the canonical social snapshot", async () => {
     vi.mocked(listSocialDirectory).mockResolvedValue(
       directory({ recentPeople: [recent(RECENT_USER_ID, "Recent Person")] }),

@@ -45,6 +45,7 @@ import {
 } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
+import { PanelAccountTitle } from "./panel-account-title";
 import {
   buildPopupInboxModel,
   type PopupInboxFriendRequest,
@@ -761,21 +762,20 @@ export function PopupApp() {
             ) : (
               <LogIn size={18} />
             )}
-            <span className="popup-presence-dot" />
           </span>
           <span className="popup-profile-copy">
-            <span className="popup-brand">AniDachi</span>
-            <span className="popup-subtitle">
-              {accountUser ? (
-                <>
-                  Signed in <span>·</span> <strong>{planLabel(accountUser.plan)}</strong>
-                </>
-              ) : authChecking ? (
-                "Checking account..."
-              ) : (
-                "Sign in to sync progress"
-              )}
-            </span>
+            {accountUser ? (
+              <PanelAccountTitle displayName={accountUser.displayName} plan={accountUser.plan} />
+            ) : (
+              <>
+                <span className="popup-profile-state-title">
+                  {authChecking ? "Checking account" : "Sign in"}
+                </span>
+                <span className="popup-profile-helper">
+                  {authChecking ? "Loading your profile..." : "Sync progress and people"}
+                </span>
+              </>
+            )}
           </span>
         </button>
         <div className="popup-header-actions">
@@ -1333,10 +1333,4 @@ function getInitials(name: string): string {
       .map((part) => part[0]?.toUpperCase())
       .join("") || "A"
   );
-}
-
-function planLabel(plan: string): string {
-  if (plan === "plus") return "Plus";
-  if (plan === "pro") return "Pro";
-  return "Free";
 }
