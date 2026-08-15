@@ -9,11 +9,12 @@ the time but are no longer current.
 
 Current active execution plans:
 
-1. `2026-06-07-production-room-p2p-hardening-roadmap.md`
-2. `2026-06-12-room-flow-p2p-flawless-execution-plan.md`
-3. `2026-06-20-social-rooms-subscriptions-execution-plan.md`
-4. `2026-07-22-source-adapters-architecture.md`
-5. `2026-07-22-provider-player-overlay-geometry.md`
+1. `2026-08-14-watch-history-v2-clean-mvp-implementation.md`
+2. `2026-06-07-production-room-p2p-hardening-roadmap.md`
+3. `2026-06-12-room-flow-p2p-flawless-execution-plan.md`
+4. `2026-06-20-social-rooms-subscriptions-execution-plan.md`
+5. `2026-07-22-source-adapters-architecture.md`
+6. `2026-07-22-provider-player-overlay-geometry.md`
 
 For current development guidance, read:
 

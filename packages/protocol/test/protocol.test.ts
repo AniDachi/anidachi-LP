@@ -5,6 +5,7 @@ import {
   MAX_DISPLAY_NAME_CHARS,
   MAX_ICE_CANDIDATE_BYTES,
   MAX_PARTICIPANT_ID_CHARS,
+  MAX_ROOM_HISTORY_ATTESTATION_CHARS,
   MAX_ROOM_ID_CHARS,
   MAX_SDP_BYTES,
   MAX_SESSION_ID_CHARS,
@@ -593,6 +594,10 @@ describe("room protocol schemas", () => {
 
     expect(source.provider).toBe("crunchyroll");
     expect(source.episodeNumber).toBe(2);
+    expect(WatchSourceDescriptorSchema.parse({ ...source, seasonNumber: 0 }).seasonNumber).toBe(0);
+    expect(() =>
+      WatchSourceDescriptorSchema.parse({ ...source, seasonNumber: 1001 }),
+    ).toThrow();
 
     const event = ServerEventSchema.parse({
       type: "SOURCE_CHANGED",
@@ -627,6 +632,35 @@ describe("room protocol schemas", () => {
     }
     expect(event.sourceGeneration).toBe(2);
     expect(event.previousSource?.episodeNumber).toBe(1);
+  });
+
+  it("accepts one strict private room history authority server event", () => {
+    const authority = {
+      type: "ROOM_HISTORY_AUTHORITY" as const,
+      roomId: "room-1",
+      participantSessionId: "participant-session-1",
+      roomGeneration: 2,
+      sourceGeneration: 3,
+      attestation: "opaque.signed.attestation",
+    };
+
+    expect(ServerEventSchema.parse(authority)).toEqual(authority);
+    expect(() => ClientEventSchema.parse(authority)).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({ ...authority, participantSessionId: undefined }),
+    ).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({ ...authority, purpose: "room" }),
+    ).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({ ...authority, audience: "anidachi-worker" }),
+    ).toThrow();
+    expect(() =>
+      ServerEventSchema.parse({
+        ...authority,
+        attestation: "a".repeat(MAX_ROOM_HISTORY_ATTESTATION_CHARS + 1),
+      }),
+    ).toThrow();
   });
 
   it("accepts explicit playback command server events", () => {

@@ -213,6 +213,14 @@ export function roomEventDebugSnapshot(event: ClientEvent | ServerEvent): Record
             }
           : undefined,
       };
+    case "ROOM_HISTORY_AUTHORITY":
+      return {
+        type: event.type,
+        roomId: event.roomId,
+        participantSessionId: event.participantSessionId,
+        roomGeneration: event.roomGeneration,
+        sourceGeneration: event.sourceGeneration,
+      };
     case "SOURCE_CHANGED":
       return {
         type: event.type,

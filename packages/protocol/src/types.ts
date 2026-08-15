@@ -19,6 +19,20 @@ const VideoFingerprintSchema = z.string().min(1).max(MAX_VIDEO_FINGERPRINT_CHARS
 const UrlSchema = z.string().max(MAX_URL_CHARS).url();
 const textEncoder = new TextEncoder();
 
+export const MAX_ROOM_HISTORY_ATTESTATION_CHARS = 4_096;
+
+export const RoomHistoryAuthoritySchema = z.strictObject({
+  roomId: RoomIdSchema,
+  participantSessionId: SessionIdSchema,
+  roomGeneration: z.number().int().positive(),
+  sourceGeneration: z.number().int().positive(),
+  attestation: z
+    .string()
+    .min(1)
+    .max(MAX_ROOM_HISTORY_ATTESTATION_CHARS)
+    .regex(/^\S+$/, "Room history authority cannot contain whitespace"),
+});
+
 export const VoiceModeSchema = z.enum(["push-to-talk", "open-mic"]);
 
 function boundedUtf8String(maxBytes: number) {
@@ -78,7 +92,7 @@ export const WatchSourceDescriptorSchema = z.object({
   title: z.string().min(1).max(MAX_WATCH_TITLE_CHARS),
   seriesTitle: z.string().min(1).max(MAX_WATCH_TITLE_CHARS).optional(),
   episodeTitle: z.string().min(1).max(MAX_WATCH_TITLE_CHARS).optional(),
-  seasonNumber: z.number().int().positive().optional(),
+  seasonNumber: z.number().int().min(0).max(1000).optional(),
   episodeNumber: z.number().int().nonnegative().optional(),
   duration: z.number().nonnegative().optional(),
   posterUrl: UrlSchema.optional(),
@@ -300,6 +314,9 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
     previousSource: WatchSourceDescriptorSchema.optional(),
     hostState: PlaybackStateSchema,
   }),
+  RoomHistoryAuthoritySchema.extend({
+    type: z.literal("ROOM_HISTORY_AUTHORITY"),
+  }),
   z.object({
     type: z.literal("PARTICIPANT_JOINED"),
     participant: ParticipantSchema,
@@ -348,6 +365,7 @@ export type P2PSessionDescription = z.infer<typeof P2PSessionDescriptionSchema>;
 export type P2PIceCandidate = z.infer<typeof P2PIceCandidateSchema>;
 export type P2PSignal = z.infer<typeof P2PSignalSchema>;
 export type VoiceMode = z.infer<typeof VoiceModeSchema>;
+export type RoomHistoryAuthority = z.infer<typeof RoomHistoryAuthoritySchema>;
 export type ClientEvent = z.infer<typeof ClientEventSchema>;
 export type ServerEvent = z.infer<typeof ServerEventSchema>;
 export type RoomEndReason = z.infer<typeof RoomEndReasonSchema>;
