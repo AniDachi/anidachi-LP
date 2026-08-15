@@ -28,6 +28,7 @@ export type WatchHistoryControllerDependencies = {
   observeLocally: (
     event: WatchProgressEvent,
     expectedOwnerUserId: string,
+    meaningfulSolo: boolean,
   ) => Promise<WatchHistoryCaptureResult | void> | WatchHistoryCaptureResult | void;
   enqueue: (
     event: WatchProgressEvent,
@@ -206,7 +207,10 @@ export function createWatchHistoryController(
       now(),
       sharedRoom,
     );
-    if (!await persist(event, token)) return;
+    const meaningfulSolo = hasMeaningfulPlayback &&
+      !roomActive &&
+      !dependencies.getRoomActive();
+    if (!await persist(event, token, meaningfulSolo)) return;
     if (!isCurrent(token) || !hasMeaningfulPlayback) return;
     if (roomActive || dependencies.getRoomActive()) {
       if (!sharedRoom) return;
@@ -235,21 +239,26 @@ export function createWatchHistoryController(
       now(),
       sharedRoom,
     );
-    if (!await persist(event, token)) return;
-    if (!isCurrent(token)) return;
-
     const playing = dependencies.isPlaying();
     const seeking = dependencies.isSeeking();
+    let nextMeaningfulPlayback = hasMeaningfulPlayback;
+    let nextPreviousPlayingTime = previousPlayingTime;
     if (kind === "ended") {
-      hasMeaningfulPlayback = true;
+      nextMeaningfulPlayback = true;
     } else if (playing && !seeking) {
       if (previousPlayingTime !== null && observation.currentTime > previousPlayingTime) {
-        hasMeaningfulPlayback = true;
+        nextMeaningfulPlayback = true;
       }
-      previousPlayingTime = observation.currentTime;
+      nextPreviousPlayingTime = observation.currentTime;
     } else {
-      previousPlayingTime = null;
+      nextPreviousPlayingTime = null;
     }
+
+    const meaningfulSolo = nextMeaningfulPlayback && !activeRoom;
+    if (!await persist(event, token, meaningfulSolo)) return;
+    if (!isCurrent(token)) return;
+    hasMeaningfulPlayback = nextMeaningfulPlayback;
+    previousPlayingTime = nextPreviousPlayingTime;
 
     if (!hasMeaningfulPlayback || (activeRoom && !sharedRoom)) return;
     if (kind === "heartbeat") {
@@ -260,11 +269,15 @@ export function createWatchHistoryController(
     await enqueueEvent(event, token);
   }
 
-  async function persist(event: WatchProgressEvent, token: number): Promise<boolean> {
+  async function persist(
+    event: WatchProgressEvent,
+    token: number,
+    meaningfulSolo: boolean,
+  ): Promise<boolean> {
     if (!isCurrent(token) || !authorityReady) return false;
     try {
       if (ownerUserId === null) return false;
-      const result = await dependencies.observeLocally(event, ownerUserId);
+      const result = await dependencies.observeLocally(event, ownerUserId, meaningfulSolo);
       if (isFailedCapture(result)) {
         handleCaptureFailure(result);
         return false;
@@ -370,7 +383,7 @@ export function createWatchHistoryController(
         await enqueueEvent(event, token);
         return;
       }
-      await persist(event, token);
+      await persist(event, token, false);
     });
   }
 
@@ -429,7 +442,7 @@ export function createWatchHistoryController(
         now(),
         previousRoomHistoryAuthority,
       );
-      if (!await persist(event, token)) return;
+      if (!await persist(event, token, false)) return;
       if (previousWasMeaningfulShared) await enqueueEvent(event, token);
     });
     roomExitPromise = leaving;
@@ -482,7 +495,7 @@ export function createWatchHistoryController(
         cleanupGeneration === null ||
         cleanupOwnerUserId === null) return;
       const event = toEvent(cleanup, "source_change", cleanupGeneration, createEventId(), cleanupSessionKey, now());
-      const result = await dependencies.observeLocally(event, cleanupOwnerUserId);
+      const result = await dependencies.observeLocally(event, cleanupOwnerUserId, shouldPublish);
       if (isFailedCapture(result)) return;
       if (shouldPublish) await dependencies.enqueue(event, cleanupOwnerUserId);
     });

@@ -54,6 +54,7 @@ export type WatchHistoryMessage =
       command: "observe-progress";
       expectedOwnerUserId: string;
       event: unknown;
+      meaningfulSolo?: boolean;
     }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "flush" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
@@ -164,12 +165,18 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
         (value.limit === undefined || (typeof value.limit === "number" && Number.isInteger(value.limit) && value.limit >= 1 && value.limit <= 100)) &&
         (value.cursor === undefined || (typeof value.cursor === "string" && value.cursor.length > 0 && value.cursor.length <= 512));
     case "enqueue-progress":
-    case "observe-progress":
       return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "event"]) &&
         typeof value.expectedOwnerUserId === "string" &&
         value.expectedOwnerUserId.length > 0 &&
         value.expectedOwnerUserId.length <= 128 &&
         "event" in value;
+    case "observe-progress":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "event", "meaningfulSolo"]) &&
+        typeof value.expectedOwnerUserId === "string" &&
+        value.expectedOwnerUserId.length > 0 &&
+        value.expectedOwnerUserId.length <= 128 &&
+        "event" in value &&
+        (value.meaningfulSolo === undefined || typeof value.meaningfulSolo === "boolean");
     case "update-preferences":
     case "delete":
       return hasExactKeys(value, ["type", "command", "input"]) && "input" in value;
@@ -251,7 +258,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
       return message.command === "enqueue-progress"
         ? enqueue(session, message.event)
-        : observe(session, message.event);
+        : observe(session, message.event, message.meaningfulSolo === true);
     }
     if (message.command === "flush" || message.command === "content-reconnect") return flush(session);
     if (message.command === "get-preferences") return getPreferences(session);
@@ -298,6 +305,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const persist = () => updateCurrentPartition(session, event.accountGeneration, (partition) => ({
       ...partition,
       currentObservation: withoutWatchHistoryAttestation(event),
+      currentObservationMeaningfulSolo: !event.sharedRoom,
       outbox: enqueueWatchHistoryEvent(partition.outbox, event),
     }), event.provider);
     let saved = await persist();
@@ -319,9 +327,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   async function observe(
     session: ExtensionAuthTokens,
     rawEvent: unknown,
+    meaningfulSolo: boolean,
   ): Promise<WatchHistoryMessageResponse> {
     const parsed = WatchProgressEventSchema.safeParse(rawEvent);
-    if (!parsed.success || parsed.data.sharedRoom) return { ok: false, status: "invalid-request" };
+    if (!parsed.success) return { ok: false, status: "invalid-request" };
     const captureAuthorityFailure = await validateCaptureAuthority(session, parsed.data);
     if (captureAuthorityFailure) return captureAuthorityFailure;
     const paused = await capturePauseState(session, parsed.data.accountGeneration);
@@ -331,6 +340,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const persist = () => updateCurrentPartition(session, parsed.data.accountGeneration, (partition) => ({
       ...partition,
       currentObservation: withoutWatchHistoryAttestation(parsed.data),
+      currentObservationMeaningfulSolo: meaningfulSolo && !parsed.data.sharedRoom,
     }), parsed.data.provider);
     let saved = await persist();
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
@@ -385,6 +395,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           currentObservation: candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
             ? null
             : candidate.currentObservation,
+          currentObservationMeaningfulSolo:
+            candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
+              ? false
+              : candidate.currentObservationMeaningfulSolo === true,
         }));
         if (saved.stale) return { ok: false, status: "generation-mismatch" };
         if (saved.authorityRejected) return { ok: false, status: "rejected" };
@@ -577,6 +591,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       ...partition,
       cache: null,
       currentObservation: null,
+      currentObservationMeaningfulSolo: false,
       outbox: removeWatchHistoryEventsForDeletion(partition.outbox, parsed.data.target),
     }));
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
@@ -685,6 +700,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       currentObservation: candidate.currentObservation?.clientEventId === clientEventId
         ? null
         : candidate.currentObservation,
+      currentObservationMeaningfulSolo: candidate.currentObservation?.clientEventId === clientEventId
+        ? false
+        : candidate.currentObservationMeaningfulSolo === true,
     }));
     if (saved.stale) {
       return { ok: false, error: { ok: false, status: "generation-mismatch" } };
@@ -827,6 +845,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
             preferences: null,
             preferencesConfirmed: false,
             currentObservation: null,
+            currentObservationMeaningfulSolo: false,
             outbox: { ...partition.outbox, entries: [] },
           };
           return [];
@@ -875,6 +894,7 @@ function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHi
     preferences: null,
     preferencesConfirmed: false,
     currentObservation: null,
+    currentObservationMeaningfulSolo: false,
     capturePaused: false,
     captureMarkersReady: true,
     outbox,
