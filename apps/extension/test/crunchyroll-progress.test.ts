@@ -1,10 +1,41 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { getCrunchyrollProgressEntry } from "../src/source-adapters/crunchyroll/progress";
+import { getCrunchyrollProgressEntry, getCrunchyrollHistoryObservation } from "../src/source-adapters/crunchyroll/progress";
 
 describe("Crunchyroll progress extraction", () => {
   afterEach(() => {
     document.body.innerHTML = "";
     document.head.innerHTML = "";
+  });
+
+  it("accepts only an active Crunchyroll adapter on canonical watch media with partial observed metadata", () => {
+    mockLocation("https://www.crunchyroll.com/watch/G8WUNM123/e4-bold-step");
+    document.body.innerHTML = `<a href="/series/GYEXAMPLE/my-hero-academia">My Hero Academia</a>`;
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 1 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 2 });
+
+    expect(getCrunchyrollHistoryObservation({
+      adapter: { id: "crunchyroll", provider: "crunchyroll", video, getTitle: () => "E4 - Bold step" } as never,
+    })).toMatchObject({
+      provider: "crunchyroll",
+      titleKey: "crunchyroll-series:my-hero-academia",
+      episodeKey: "G8WUNM123",
+      catalogState: "unavailable",
+    });
+  });
+
+  it.each([
+    ["unsupported route", "https://www.crunchyroll.com/series/G8WUNM123/title"],
+    ["missing stable id", "https://www.crunchyroll.com/watch/"],
+  ])("rejects %s", (_name, url) => {
+    mockLocation(url);
+    const video = document.createElement("video");
+    Object.defineProperty(video, "currentTime", { configurable: true, value: 1 });
+    Object.defineProperty(video, "duration", { configurable: true, value: 2 });
+
+    expect(getCrunchyrollHistoryObservation({
+      adapter: { id: "crunchyroll", provider: "crunchyroll", video, getTitle: () => "Episode" } as never,
+    })).toBeNull();
   });
 
   it("extracts an episode progress entry from a Crunchyroll watch URL", () => {

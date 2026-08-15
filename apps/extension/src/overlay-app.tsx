@@ -1,3 +1,4 @@
+import { WatchHistoryPreferencesResponseSchema } from "@anidachi/protocol";
 import type {
   ClientEvent,
   P2PSignal,
@@ -170,9 +171,9 @@ import {
   normalizePlayerOverlayGeometry,
   type PlayerOverlayGeometry,
 } from "./source-adapters/core/overlay-geometry";
+import type { HistoryObservation } from "./source-adapters/core/history-policy";
 import { ensureSourceForProvider } from "./source-adapters/core/source-navigation";
 import type { SourceProvider, VideoAdapter } from "./source-adapters/core/types";
-import { loadCrunchyrollPosterArtwork } from "./source-adapters/crunchyroll/artwork";
 import { getDefinitionForProvider } from "./source-adapters/registry";
 import { overlayStyles } from "./styles";
 import { useTopBubbleReveal } from "./top-bubble-reveal";
@@ -197,20 +198,11 @@ import {
   type VoiceAudioPreferences,
   voiceAudioPreferencesStorageKeyForUser,
 } from "./voice-audio-preferences";
-import { resolveWatchLibraryReconcileAuth } from "./watch-library-auth";
+import { requestWatchHistory } from "./watch-history-client";
 import {
-  markWatchLibraryEntriesSynced,
-  reconcileWatchProgress,
-  type WatchCheckpointKind,
-} from "./watch-library-client";
-import {
-  createEmptyWatchProgressStore,
-  loadWatchProgressStoreForUser,
-  recordWatchProgressForUser,
-  type WatchProgressEntry,
-  type WatchProgressStore,
-} from "./watch-progress";
-import { getWatchProgressEntryForAdapter } from "./watch-progress-entry";
+  createWatchHistoryController,
+  type WatchHistoryController,
+} from "./watch-history-controller";
 
 interface OverlayAppProps {
   adapter: VideoAdapter;
@@ -272,7 +264,6 @@ const CHAT_HISTORY_MAX_MESSAGES = 80;
 const SETTINGS_RAIL_DRAG_THRESHOLD_PX = 9;
 const SETTINGS_RAIL_HORIZONTAL_INTENT_RATIO = 1.2;
 const MESSAGE_COMPOSER_SHIELD_RELEASE_BUFFER_MS = 180;
-const WATCH_LIBRARY_REMOTE_RECONCILE_INTERVAL_MS = 60_000;
 const SILENT_SIGN_IN_SUPPRESSION_AFTER_SIGN_OUT_MS = 15_000;
 const LIVE_CHAT_NAME_COLORS = [
   "#c4a7ff",
@@ -541,13 +532,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   });
   const [debugEntriesCount, setDebugEntriesCount] = useState(() => getDebugEntries().length);
   const [diagnosticStatus, setDiagnosticStatus] = useState<string | null>(null);
-  const [watchProgressStore, setWatchProgressStore] = useState<WatchProgressStore>(() =>
-    createEmptyWatchProgressStore(),
-  );
-  const [currentResourceEntry, setCurrentResourceEntry] = useState<WatchProgressEntry | null>(null);
-  const crunchyrollPosterRequestsRef = useRef<Record<string, Promise<string | null> | undefined>>(
-    {},
-  );
+  const [currentResourceEntry, setCurrentResourceEntry] = useState<HistoryObservation | null>(null);
+  const watchHistoryControllerRef = useRef<WatchHistoryController | null>(null);
 
   const participantRef = useRef<Participant | null>(null);
   const settingsCategoryScrollRef = useRef<HTMLDivElement | null>(null);
@@ -1184,8 +1170,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       }
 
       authUserIdRef.current = nextAuthUserId;
-      void loadWatchProgressStoreForUser(nextAuthUserId).then(setWatchProgressStore);
-
       if (!wasInitialized || previousAuthUserId === null) {
         return;
       }
@@ -1242,29 +1226,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       return refreshed.accessToken;
     },
     [refreshRoomActionIdentity],
-  );
-
-  const getWatchLibraryReconcileAccessToken = useCallback(
-    async (reason: string, currentUserId: string | null): Promise<string | null> => {
-      const result = await createCurrentParticipant({ fast: true });
-      const decision = resolveWatchLibraryReconcileAuth(currentUserId, result);
-
-      if (decision.reason !== "ok") {
-        logDebug("watch-library.reconcile", "background auth unavailable; keeping room session", {
-          reason,
-          decision: decision.reason,
-          currentUserId: decision.currentUserId,
-          tokenUserId: decision.tokenUserId,
-          activeRoomId: roomIdRef.current,
-        });
-        return null;
-      }
-
-      authAccessTokenRef.current = decision.accessToken;
-      setAuthAccessToken(decision.accessToken);
-      return decision.accessToken;
-    },
-    [],
   );
 
   const setMessageComposerDomGuard = useCallback(
@@ -1621,20 +1582,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   useEffect(() => {
     let cancelled = false;
 
-    void loadWatchProgressStoreForUser(authUserIdRef.current).then((store) => {
-      if (!cancelled) {
-        setWatchProgressStore(store);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
     void storage
       .getItem<unknown>(OVERLAY_LAYOUT_STORAGE_KEY_V2)
       .then((storedPreferences) => {
@@ -1823,175 +1770,67 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     }
   }, [roomId]);
 
-  const loadPosterArtwork = useCallback(
-    (
-      entry: WatchProgressEntry | null,
-      getLatestEntry: () => WatchProgressEntry | null,
-      isDisposed: () => boolean,
-    ) => {
-      if (
-        entry?.provider !== "crunchyroll" ||
-        (!entry.contentId && !entry.seriesId) ||
-        entry.artworkUrl
-      ) {
-        return;
-      }
-
-      const requestId = entry.seriesId ?? entry.contentId;
-      if (!requestId) {
-        return;
-      }
-
-      const existingRequest = crunchyrollPosterRequestsRef.current[requestId];
-      if (existingRequest) {
-        return;
-      }
-
-      const request = loadCrunchyrollPosterArtwork({
-        contentId: entry.contentId,
-        seriesId: entry.seriesId,
-      }).catch((error: unknown) => {
-        logDebug("crunchyroll.artwork", "poster load failed", {
-          contentId: entry.contentId,
-          seriesId: entry.seriesId,
-          error: error instanceof Error ? error.message : String(error),
+  useEffect(() => {
+    if (!adapterActive) return;
+    const definition = getDefinitionForProvider(adapter.provider);
+    if (!definition?.historyPolicy) return;
+    const controller = createWatchHistoryController({
+      getObservation: (preferences) =>
+        definition.historyPolicy?.observe({ adapter, preferences }) ?? null,
+      getRoomActive: () => Boolean(roomIdRef.current),
+      loadPreferences: async () => {
+        const response = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "get-preferences",
         });
-        return null;
-      });
-      crunchyrollPosterRequestsRef.current[requestId] = request;
-
-      void request.then((posterUrl) => {
-        if (!posterUrl) {
-          delete crunchyrollPosterRequestsRef.current[requestId];
-          return;
-        }
-
-        if (isDisposed()) {
-          return;
-        }
-
-        const latestEntry = getLatestEntry();
-        if (!latestEntry || latestEntry.itemId !== entry.itemId) {
-          return;
-        }
-
-        const enrichedEntry = { ...latestEntry, artworkUrl: posterUrl };
-        setCurrentResourceEntry(enrichedEntry);
-        void recordWatchProgressForUser(authUserIdRef.current, enrichedEntry).then(
-          setWatchProgressStore,
-        );
-      });
-    },
-    [],
-  );
+        const parsed = response.ok
+          ? WatchHistoryPreferencesResponseSchema.safeParse(response.data)
+          : null;
+        return parsed?.success
+          ? { accountGeneration: parsed.data.meta.accountGeneration, preferences: parsed.data.preferences }
+          : null;
+      },
+      observeLocally: async (event) => {
+        await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "observe-progress", event });
+      },
+      enqueue: async (event) => {
+        await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "enqueue-progress", event });
+      },
+      onObservation: setCurrentResourceEntry,
+      isPlaying: () => !adapter.video.paused && !adapter.video.ended,
+      isSeeking: () => adapter.video.seeking,
+    });
+    watchHistoryControllerRef.current = controller;
+    void controller.start().catch(() => undefined);
+    const heartbeat = () => { void controller.observe("heartbeat").catch(() => undefined); };
+    const pause = () => { void controller.observe("pause").catch(() => undefined); };
+    const seeking = () => { controller.noteSeeking(); };
+    const seeked = () => { void controller.observe("seek").catch(() => undefined); };
+    const ended = () => { void controller.observe("ended").catch(() => undefined); };
+    const pagehide = () => { void controller.observe("pagehide").catch(() => undefined); };
+    const interval = window.setInterval(heartbeat, 5_000);
+    adapter.video.addEventListener("pause", pause);
+    adapter.video.addEventListener("seeking", seeking);
+    adapter.video.addEventListener("seeked", seeked);
+    adapter.video.addEventListener("ended", ended);
+    window.addEventListener("pagehide", pagehide);
+    return () => {
+      window.clearInterval(interval);
+      adapter.video.removeEventListener("pause", pause);
+      adapter.video.removeEventListener("seeking", seeking);
+      adapter.video.removeEventListener("seeked", seeked);
+      adapter.video.removeEventListener("ended", ended);
+      window.removeEventListener("pagehide", pagehide);
+      if (watchHistoryControllerRef.current === controller) {
+        watchHistoryControllerRef.current = null;
+        void controller.observe("source_change").catch(() => undefined);
+      }
+    };
+  }, [adapter, adapterActive]);
 
   useEffect(() => {
-    if (!adapterActive) {
-      return;
-    }
-
-    let disposed = false;
-    let lastPersistedAt = 0;
-    let lastRemoteReconcileAt = 0;
-    const getEntry = () =>
-      getWatchProgressEntryForAdapter({
-        adapter,
-        roomId: roomId ?? undefined,
-        watchedWithCount: Math.max(1, participantCount),
-      });
-    const reconcileRemote = (
-      entry: WatchProgressEntry,
-      checkpointKind: WatchCheckpointKind,
-      force: boolean,
-    ) => {
-      if (!authAccessTokenRef.current || entry.duration <= 0 || entry.currentTime <= 0) {
-        return;
-      }
-
-      const now = Date.now();
-      if (!force && now - lastRemoteReconcileAt < WATCH_LIBRARY_REMOTE_RECONCILE_INTERVAL_MS) {
-        return;
-      }
-
-      lastRemoteReconcileAt = now;
-      void (async () => {
-        const userId = authUserIdRef.current;
-        const accessToken = await getWatchLibraryReconcileAccessToken(
-          `watch-library:${checkpointKind}`,
-          userId,
-        );
-        if (!accessToken || !userId) {
-          return;
-        }
-
-        const reconcileEntry = {
-          ...entry,
-          checkpointKind,
-          observedAt: now,
-        };
-        await reconcileWatchProgress(accessToken, [reconcileEntry]);
-        await markWatchLibraryEntriesSynced(userId, [reconcileEntry]);
-      })().catch((error: unknown) => {
-        logDebug("watch-library.reconcile", "remote reconcile failed", {
-          checkpointKind,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      });
-    };
-    const update = (
-      persist: boolean,
-      checkpointKind: WatchCheckpointKind = "local",
-      forceRemote = false,
-    ) => {
-      const entry = getEntry();
-      setCurrentResourceEntry(entry);
-      loadPosterArtwork(entry, getEntry, () => disposed);
-
-      if (!persist || !entry || entry.duration <= 0 || entry.currentTime <= 0) {
-        return;
-      }
-
-      const now = Date.now();
-      if (!forceRemote && now - lastPersistedAt < 2500) {
-        return;
-      }
-
-      lastPersistedAt = now;
-      void recordWatchProgressForUser(authUserIdRef.current, entry).then(setWatchProgressStore);
-      reconcileRemote(entry, checkpointKind, forceRemote);
-    };
-    const updateDisplay = () => update(false);
-    const persist = () => update(true, "local", false);
-    const persistPause = () => update(true, "pause", true);
-    const persistSeeked = () => update(true, "seeked", true);
-    const persistEnded = () => update(true, "ended", true);
-    const persistPagehide = () => update(true, "pagehide", true);
-
-    update(true);
-    const displayInterval = window.setInterval(updateDisplay, 1000);
-    const persistInterval = window.setInterval(persist, 5000);
-    adapter.video.addEventListener("pause", persistPause);
-    adapter.video.addEventListener("seeked", persistSeeked);
-    adapter.video.addEventListener("ended", persistEnded);
-    window.addEventListener("pagehide", persistPagehide);
-
-    return () => {
-      disposed = true;
-      window.clearInterval(displayInterval);
-      window.clearInterval(persistInterval);
-      adapter.video.removeEventListener("pause", persistPause);
-      adapter.video.removeEventListener("seeked", persistSeeked);
-      adapter.video.removeEventListener("ended", persistEnded);
-      window.removeEventListener("pagehide", persistPagehide);
-    };
-  }, [
-    adapter,
-    adapterActive,
-    getWatchLibraryReconcileAccessToken,
-    roomId,
-    participantCount,
-    loadPosterArtwork,
-  ]);
+    void watchHistoryControllerRef.current?.setRoomActive(Boolean(roomId)).catch(() => undefined);
+  }, [roomId]);
 
   const sendCameraStatus = useCallback((enabled: boolean) => {
     const activeRoomId = roomIdRef.current;
@@ -4778,7 +4617,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
           {currentResourceEntry ? (
             <div className="panel-sync-card">
-              <CurrentResourcePanel entry={currentResourceEntry} store={watchProgressStore} />
+              <CurrentResourcePanel entry={currentResourceEntry} />
             </div>
           ) : null}
           {playbackSyncNotice ? (

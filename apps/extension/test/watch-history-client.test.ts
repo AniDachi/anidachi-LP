@@ -117,6 +117,30 @@ describe("watch history v2 client", () => {
     ).toBe(false);
   });
 
+  it("persists a solo crash-recovery observation without creating outbox work or making an HTTP request", async () => {
+    const owner = session.user.id;
+    let stored: WatchHistoryStorageRoot = { schemaVersion: 2, partitions: {}, activeGenerations: {} };
+    const fetchImpl = vi.fn();
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+    const event = { ...progressEvent(), sharedRoom: null };
+
+    await expect(client.handle({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "observe-progress", event }))
+      .resolves.toEqual({ ok: true });
+
+    const partition = stored.partitions[watchHistoryPartitionKey(owner, 1)];
+    expect(partition.currentObservation?.clientEventId).toBe(event.clientEventId);
+    expect(partition.outbox.entries).toEqual([]);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("strictly validates internal reconnect commands and list bounds", () => {
     expect(isWatchHistoryMessage(createWatchHistoryContentReconnectMessage())).toBe(true);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "list", limit: 0 })).toBe(false);

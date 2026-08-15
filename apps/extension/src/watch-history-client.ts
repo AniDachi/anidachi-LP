@@ -42,6 +42,7 @@ export type WatchHistoryLocalStatus =
 export type WatchHistoryMessage =
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "list"; limit?: number; cursor?: string }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "enqueue-progress"; event: unknown }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "observe-progress"; event: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "flush" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "get-preferences" }
@@ -95,6 +96,7 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
         (value.limit === undefined || (typeof value.limit === "number" && Number.isInteger(value.limit) && value.limit >= 1 && value.limit <= 100)) &&
         (value.cursor === undefined || (typeof value.cursor === "string" && value.cursor.length > 0 && value.cursor.length <= 512));
     case "enqueue-progress":
+    case "observe-progress":
       return hasExactKeys(value, ["type", "command", "event"]) && "event" in value;
     case "update-preferences":
     case "delete":
@@ -145,6 +147,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     }
     if (message.command === "list") return refresh(session, message);
     if (message.command === "enqueue-progress") return enqueue(session, message.event);
+    if (message.command === "observe-progress") return observe(session, message.event);
     if (message.command === "flush" || message.command === "content-reconnect") return flush(session);
     if (message.command === "get-preferences") return getPreferences(session);
     if (message.command === "update-preferences") return updatePreferences(session, message.input);
@@ -194,6 +197,20 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       if (!saved.ok) return saved;
     }
     return flush(session);
+  }
+
+  async function observe(
+    session: ExtensionAuthTokens,
+    rawEvent: unknown,
+  ): Promise<WatchHistoryMessageResponse> {
+    const parsed = WatchProgressEventSchema.safeParse(rawEvent);
+    if (!parsed.success || parsed.data.sharedRoom) return { ok: false, status: "invalid-request" };
+    const saved = await updateCurrentPartition(session, parsed.data.accountGeneration, (partition) => ({
+      ...partition,
+      currentObservation: withoutWatchHistoryAttestation(parsed.data),
+    }));
+    if (saved.stale) return { ok: false, status: "generation-mismatch" };
+    return saved.ok ? { ok: true } : saved;
   }
 
   async function flush(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
