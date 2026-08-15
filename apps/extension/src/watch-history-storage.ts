@@ -17,6 +17,7 @@ export type WatchHistoryAccountPartition = {
   preferences: WatchHistoryPreferences | null;
   preferencesConfirmed?: boolean;
   currentObservation: WatchProgressEvent | null;
+  currentObservationMeaningfulSolo?: boolean;
   capturePaused?: boolean;
   captureMarkersReady?: boolean;
   outbox: WatchHistoryOutboxPartition;
@@ -126,6 +127,7 @@ export function createWatchHistoryStorage(
             preferences: null,
             preferencesConfirmed: false,
             currentObservation: null,
+            currentObservationMeaningfulSolo: false,
           };
           return cleared.outbox.entries.length === 0 ? [] : [[key, cleared]];
         }),
@@ -248,6 +250,7 @@ function normalizePartition(partition: WatchHistoryAccountPartition): WatchHisto
       preferencesConfirmed: false,
       capturePaused: true,
       captureMarkersReady: false,
+      currentObservationMeaningfulSolo: false,
     };
   }
   return {
@@ -255,6 +258,8 @@ function normalizePartition(partition: WatchHistoryAccountPartition): WatchHisto
     preferencesConfirmed: partition.preferencesConfirmed === true,
     capturePaused: partition.capturePaused === true,
     captureMarkersReady: true,
+    currentObservationMeaningfulSolo: partition.currentObservation !== null &&
+      partition.currentObservationMeaningfulSolo === true,
   };
 }
 

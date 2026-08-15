@@ -21,7 +21,7 @@ describe("watch history storage", () => {
           accountGeneration: 1,
           cache: null,
           preferences: { youtubeHistoryEnabled: false },
-          currentObservation: null,
+          currentObservation: { clientEventId: "legacy-observation" } as never,
           outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [] },
         },
       },
@@ -37,6 +37,7 @@ describe("watch history storage", () => {
       capturePaused: true,
       preferencesConfirmed: false,
       captureMarkersReady: false,
+      currentObservationMeaningfulSolo: false,
     });
   });
 
@@ -61,6 +62,7 @@ describe("watch history storage", () => {
           cache: { generation: 1 },
           preferences: { youtubeHistoryEnabled: true },
           currentObservation: { clientEventId: "event-a" },
+          currentObservationMeaningfulSolo: true,
           outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [{ event: { clientEventId: "event-a" } }] },
         },
         [watchHistoryPartitionKey(ownerB, 2)]: {
@@ -80,6 +82,7 @@ describe("watch history storage", () => {
       cache: null,
       preferences: null,
       currentObservation: null,
+      currentObservationMeaningfulSolo: false,
       outbox: { entries: [{ event: { clientEventId: "event-a" } }] },
     });
     expect(stored.partitions[watchHistoryPartitionKey(ownerB, 2)]).toMatchObject({ cache: { generation: 2 } });

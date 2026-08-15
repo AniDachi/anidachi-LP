@@ -8,6 +8,7 @@ import {
   type WatchHistoryPreferences,
   type WatchHistoryResponse,
   type WatchHistorySession,
+  WatchProgressEventSchema,
   type WatchProgressEvent,
 } from "@anidachi/protocol";
 import { ChevronDown, RefreshCw, Search, X } from "lucide-react";
@@ -19,7 +20,11 @@ import {
   type WatchHistoryMessage,
   type WatchHistoryMessageResponse,
 } from "./watch-history-client";
-import { createWatchHistoryStorage, watchHistoryPartitionKey } from "./watch-history-storage";
+import {
+  createWatchHistoryStorage,
+  watchHistoryPartitionKey,
+  type WatchHistoryStorageRoot,
+} from "./watch-history-storage";
 
 export type PopupWatchHistorySnapshot = {
   history: WatchHistoryResponse;
@@ -122,7 +127,14 @@ export function PopupWatchHistoryPanel({
         const parsed = WatchHistoryResponseSchema.safeParse(historyResponse.data);
         if (parsed.success && parsed.data.meta.ownerUserId === ownerUserId) {
           setHistory(parsed.data);
-          setPendingEvents([]);
+          const refreshedLocal = await client.loadCached(ownerUserId).catch(() => null);
+          if (!current()) return;
+          if (refreshedLocal?.accountGeneration === parsed.data.meta.accountGeneration) {
+            setPendingEvents(refreshedLocal.pendingEvents);
+            setCapturePaused(refreshedLocal.capturePaused);
+          } else {
+            setPendingEvents([]);
+          }
         } else {
           setError("Could not validate watch history.");
         }
@@ -757,6 +769,13 @@ export async function loadConfirmedPopupWatchHistorySnapshot(
   ownerUserId: string,
 ): Promise<PopupWatchHistorySnapshot | null> {
   const root = await createWatchHistoryStorage().readRoot();
+  return selectConfirmedPopupWatchHistorySnapshot(root, ownerUserId);
+}
+
+export function selectConfirmedPopupWatchHistorySnapshot(
+  root: WatchHistoryStorageRoot,
+  ownerUserId: string,
+): PopupWatchHistorySnapshot | null {
   const accountGeneration = root.activeGenerations?.[ownerUserId];
   if (accountGeneration === undefined) return null;
   const partition = root.partitions[watchHistoryPartitionKey(ownerUserId, accountGeneration)];
@@ -772,13 +791,48 @@ export async function loadConfirmedPopupWatchHistorySnapshot(
     history.data.meta.accountGeneration !== accountGeneration) {
     return null;
   }
+  const pendingEvents = new Map<string, WatchProgressEvent>();
+  if (partition.currentObservationMeaningfulSolo === true && partition.currentObservation) {
+    const current = WatchProgressEventSchema.safeParse(partition.currentObservation);
+    if (current.success &&
+      current.data.accountGeneration === accountGeneration &&
+      !current.data.sharedRoom &&
+      isNewerThanCanonicalHistory(history.data, current.data)) {
+      pendingEvents.set(current.data.clientEventId, current.data);
+    }
+  }
+  for (const entry of partition.outbox.entries) {
+    const pending = WatchProgressEventSchema.safeParse(entry.event);
+    if (pending.success && pending.data.accountGeneration === accountGeneration) {
+      pendingEvents.set(pending.data.clientEventId, pending.data);
+    }
+  }
   return {
     history: history.data,
     accountGeneration,
     preferences: partition.preferences ?? { youtubeHistoryEnabled: false },
-    pendingEvents: partition.outbox.entries.map((entry) => entry.event),
+    pendingEvents: [...pendingEvents.values()],
     capturePaused: partition.capturePaused === true,
   };
+}
+
+function isNewerThanCanonicalHistory(
+  history: WatchHistoryResponse,
+  event: WatchProgressEvent,
+): boolean {
+  const item = history.items.find((candidate) =>
+    candidate.provider === event.provider && candidate.titleKey === event.titleKey,
+  );
+  if (!item) return true;
+  const episode = item.seasons
+    .flatMap((season) => season.episodes)
+    .find((candidate) => candidate.episodeKey === event.episodeKey);
+  const canonicalObservedAt = episode?.lastWatchedAt ??
+    (item.latestActivity.episodeKey === event.episodeKey
+      ? item.latestActivity.lastWatchedAt
+      : null);
+  return canonicalObservedAt === null ||
+    Date.parse(event.observedAt) >= Date.parse(canonicalObservedAt);
 }
 
 function latestPendingByEpisode(events: WatchProgressEvent[]): Map<string, WatchProgressEvent> {

@@ -8,9 +8,14 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PopupWatchHistoryPanel,
+  selectConfirmedPopupWatchHistorySnapshot,
   type PopupWatchHistoryClient,
   type PopupWatchHistorySnapshot,
 } from "../src/popup-watch-history";
+import {
+  watchHistoryPartitionKey,
+  type WatchHistoryStorageRoot,
+} from "../src/watch-history-storage";
 import {
   createListWatchHistoryMessage,
   type WatchHistoryMessageResponse,
@@ -49,6 +54,13 @@ describe("Popup Watch History v2", () => {
         return { ok: true };
       }),
     });
+    let cacheReads = 0;
+    client.loadCached = vi.fn(async () => {
+      cacheReads += 1;
+      return cacheReads === 1
+        ? snapshotFixture(cached, [pendingEvent({ currentTime: 840, progress: 0.4 })])
+        : snapshotFixture(refreshed);
+    });
 
     const view = await renderPanel(client);
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
@@ -66,6 +78,92 @@ describe("Popup Watch History v2", () => {
     expect(client.request).toHaveBeenCalledWith(createListWatchHistoryMessage({ limit: 100 }));
 
     await unmount(view.root);
+  });
+
+  it("keeps a newer meaningful local observation over a canonical refresh without another network write", async () => {
+    const canonical = historyFixture({ currentTime: 600, progress: 0.25 });
+    const local = pendingEvent({ currentTime: 840, progress: 0.4 });
+    const snapshot = snapshotFixture(canonical, [local]);
+    const baseRequest = requestForHistory(canonical);
+    let listRequests = 0;
+    const request = vi.fn(async (message) => {
+      if (message.command === "list") listRequests += 1;
+      return baseRequest(message);
+    });
+    const client = clientFixture({ cached: snapshot, request });
+
+    const view = await renderPanel(client);
+
+    await waitFor(() => expect(view.container.textContent).toContain("14:00"));
+    expect(view.container.textContent).toContain("Pending sync");
+    expect(client.loadCached).toHaveBeenCalledTimes(2);
+    expect(listRequests).toBe(1);
+    await unmount(view.root);
+  });
+
+  it("selects only an explicitly meaningful solo current observation for the Popup overlay", () => {
+    const history = historyFixture();
+    const observation = {
+      ...pendingEvent({ currentTime: 840, progress: 0.4 }),
+      observedAt: "2026-08-15T03:00:05.000Z",
+    };
+    const partitionKey = watchHistoryPartitionKey(OWNER_ID, 1);
+    const root: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [OWNER_ID]: 1 },
+      partitions: {
+        [partitionKey]: {
+          ownerUserId: OWNER_ID,
+          accountGeneration: 1,
+          cache: history,
+          preferences: { youtubeHistoryEnabled: false },
+          preferencesConfirmed: true,
+          currentObservation: observation,
+          currentObservationMeaningfulSolo: true,
+          capturePaused: false,
+          captureMarkersReady: true,
+          outbox: { ownerUserId: OWNER_ID, accountGeneration: 1, entries: [] },
+        },
+      },
+    };
+
+    expect(selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID)?.pendingEvents).toEqual([
+      observation,
+    ]);
+    root.partitions[partitionKey] = {
+      ...root.partitions[partitionKey],
+      currentObservationMeaningfulSolo: false,
+    };
+    expect(selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID)?.pendingEvents).toEqual([]);
+  });
+
+  it("does not let a stale local observation override newer canonical progress from another device", () => {
+    const history = historyFixture({ currentTime: 1_200, progress: 0.6 });
+    const staleLocal = {
+      ...pendingEvent({ currentTime: 840, progress: 0.4 }),
+      observedAt: "2026-08-15T02:59:59.000Z",
+    };
+    const partitionKey = watchHistoryPartitionKey(OWNER_ID, 1);
+    const root: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [OWNER_ID]: 1 },
+      partitions: {
+        [partitionKey]: {
+          ownerUserId: OWNER_ID,
+          accountGeneration: 1,
+          cache: history,
+          preferences: { youtubeHistoryEnabled: false },
+          preferencesConfirmed: true,
+          currentObservation: staleLocal,
+          currentObservationMeaningfulSolo: true,
+          capturePaused: false,
+          captureMarkersReady: true,
+          outbox: { ownerUserId: OWNER_ID, accountGeneration: 1, entries: [] },
+        },
+      },
+    };
+
+    expect(selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID)?.pendingEvents).toEqual([]);
   });
 
   it("treats YouTube as disabled until preferences are confirmed by the current refresh", async () => {
@@ -452,12 +550,14 @@ describe("Popup Watch History v2", () => {
 
   it("recovers full storage before refreshing Watch History", async () => {
     let listAttempts = 0;
+    let recovered = false;
     const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
       if (message.command === "list") {
         listAttempts += 1;
         return { ok: true, data: historyFixture() };
       }
       if (message.command === "recover-storage") {
+        recovered = true;
         return { ok: true, data: { capturePaused: false, capturePausedPersisted: false } };
       }
       if (message.command === "get-preferences") return { ok: true, data: preferencesFixture(false) };
@@ -468,12 +568,8 @@ describe("Popup Watch History v2", () => {
     });
     const cached = snapshotFixture(historyFixture());
     cached.capturePaused = true;
-    let cacheReads = 0;
     const client = clientFixture({ cached, request });
-    client.loadCached = vi.fn(async () => {
-      cacheReads += 1;
-      return cacheReads === 1 ? cached : { ...cached, capturePaused: false };
-    });
+    client.loadCached = vi.fn(async () => ({ ...cached, capturePaused: !recovered }));
     const view = await renderPanel(client);
 
     await waitFor(() => expect(view.container.textContent).toContain("browser storage is full"));
@@ -493,6 +589,7 @@ describe("Popup Watch History v2", () => {
 
   it("keeps recovered cached rows but returns to retry when the next drain is still storage-full", async () => {
     let listAttempts = 0;
+    let recovered = false;
     const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
       if (message.command === "list") {
         listAttempts += 1;
@@ -501,6 +598,7 @@ describe("Popup Watch History v2", () => {
           : { ok: false, status: "storage-full" };
       }
       if (message.command === "recover-storage") {
+        recovered = true;
         return { ok: true, data: { capturePaused: false, capturePausedPersisted: false } };
       }
       if (message.command === "get-preferences") return { ok: true, data: preferencesFixture(false) };
@@ -511,12 +609,8 @@ describe("Popup Watch History v2", () => {
     });
     const cached = snapshotFixture(historyFixture({ title: "Cached Frieren" }));
     cached.capturePaused = true;
-    let cacheReads = 0;
     const client = clientFixture({ cached, request });
-    client.loadCached = vi.fn(async () => {
-      cacheReads += 1;
-      return cacheReads === 1 ? cached : { ...cached, capturePaused: false };
-    });
+    client.loadCached = vi.fn(async () => ({ ...cached, capturePaused: !recovered }));
     const view = await renderPanel(client);
     const retry = await findButton(view.container, "Retry watch history");
 

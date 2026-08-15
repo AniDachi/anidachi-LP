@@ -40,6 +40,32 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.local).toHaveLength(5);
   });
 
+  it("keeps meaningful solo progress fresh locally without increasing transport cadence", async () => {
+    const fixture = createFixture();
+    await fixture.controller.start();
+
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    fixture.advance(5_000);
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.localMeaningfulSolo).toEqual([false, true, true]);
+    expect(fixture.enqueued.map((event) => [event.kind, event.currentTime])).toEqual([
+      ["heartbeat", 11],
+    ]);
+  });
+
+  it("never marks active-room observations as meaningful solo progress", async () => {
+    const fixture = createFixture({ roomActive: true });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.observe("ended");
+
+    expect(fixture.localMeaningfulSolo).toEqual([false, false, false]);
+  });
+
   it("does not publish pause, seek, pagehide, source change, room leave, or heartbeat before the gate", async () => {
     const fixture = createFixture();
     await fixture.controller.start();
@@ -782,6 +808,7 @@ function createFixture(options: {
   };
   const sessionKeys = [...(options.sessionKeys ?? ["11111111-1111-4111-8111-111111111111"])];
   const local: WatchProgressEvent[] = [];
+  const localMeaningfulSolo: boolean[] = [];
   const enqueued: WatchProgressEvent[] = [];
   const current: Array<HistoryObservation | null> = [];
   const roomAuthorityStates: Array<"solo" | "waiting" | "ready"> = [];
@@ -822,13 +849,14 @@ function createFixture(options: {
       preferences: { youtubeHistoryEnabled: false },
     })),
     recoverCapture: options.recoverCapture,
-    observeLocally: async (entry) => {
+    observeLocally: async (entry, _expectedOwnerUserId, meaningfulSolo) => {
       localAttempts += 1;
       if (options.rejectLocalKinds?.has(entry.kind)) {
         localFailures += 1;
         throw new Error("storage-full");
       }
       local.push(entry);
+      localMeaningfulSolo.push(meaningfulSolo);
       if (localAttempts === options.holdLocalAt) {
         await new Promise<void>((resolve) => { releaseHeldLocal = resolve; });
       }
@@ -862,6 +890,7 @@ function createFixture(options: {
   return {
     controller: createWatchHistoryController(dependencies),
     local,
+    localMeaningfulSolo,
     enqueued,
     current,
     roomAuthorityStates,

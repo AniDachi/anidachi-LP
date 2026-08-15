@@ -449,7 +449,15 @@ describe("watch history v2 client", () => {
       command: "observe-progress",
       expectedOwnerUserId: session.user.id,
       event: progressEvent(),
+      meaningfulSolo: true,
     })).toBe(true);
+    expect(isWatchHistoryMessage({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: session.user.id,
+      event: progressEvent(),
+      meaningfulSolo: "yes",
+    })).toBe(false);
     expect(isWatchHistoryMessage({
       type: "ANIDACHI_WATCH_HISTORY_V2",
       command: "observe-progress",
@@ -616,6 +624,7 @@ describe("watch history v2 client", () => {
       command: "observe-progress",
       expectedOwnerUserId: owner,
       event,
+      meaningfulSolo: true,
     }))
       .resolves.toEqual({ ok: true });
 
@@ -626,8 +635,75 @@ describe("watch history v2 client", () => {
       captureMarkersReady: true,
     });
     expect(partition.currentObservation?.clientEventId).toBe(event.clientEventId);
+    expect(partition.currentObservationMeaningfulSolo).toBe(true);
     expect(partition.outbox.entries).toEqual([]);
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("stores a shared crash-recovery observation without retaining room authority or exposing it as solo", async () => {
+    const owner = session.user.id;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) },
+    };
+    const fetchImpl = vi.fn();
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: owner,
+      event: progressEvent(),
+      meaningfulSolo: true,
+    })).resolves.toEqual({ ok: true });
+
+    const partition = stored.partitions[watchHistoryPartitionKey(owner, 1)];
+    expect(partition.currentObservation).not.toHaveProperty("sharedRoom");
+    expect(partition.currentObservationMeaningfulSolo).toBe(false);
+    expect(partition.outbox.entries).toEqual([]);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("replaces the local meaningful marker with the exact latest observation", async () => {
+    const owner = session.user.id;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn() as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    for (const meaningfulSolo of [true, false]) {
+      await expect(client.handle({
+        type: "ANIDACHI_WATCH_HISTORY_V2",
+        command: "observe-progress",
+        expectedOwnerUserId: owner,
+        event: { ...progressEvent(crypto.randomUUID()), sharedRoom: null },
+        meaningfulSolo,
+      })).resolves.toEqual({ ok: true });
+    }
+
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toMatchObject({
+      currentObservationMeaningfulSolo: false,
+      outbox: { entries: [] },
+    });
   });
 
   it("strictly validates internal reconnect commands and list bounds", () => {
@@ -664,6 +740,8 @@ describe("watch history v2 client", () => {
     await expect(client.handle(createWatchHistoryContentReconnectMessage())).resolves.toEqual({ ok: true, flushed: 1 });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toEqual([]);
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.currentObservationMeaningfulSolo)
+      .toBe(false);
   });
 
   it("negative-acknowledges a stale older latest after accepting the terminal and continues the drain", async () => {
