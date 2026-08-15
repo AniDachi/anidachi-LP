@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "apps/api/src/auth.ts": {
-    "mtime": 1786689011.2458234,
-    "ast_hash": "c7bca90984dd869848268b021cb0acb6",
+    "mtime": 1786785647.9246557,
+    "ast_hash": "3127cc61efe7d31295b1ff4a56a456f0",
     "semantic_hash": ""
   },
   "apps/api/src/ice-servers.ts": {
@@ -25,8 +25,8 @@
     "semantic_hash": ""
   },
   "apps/api/src/index.ts": {
-    "mtime": 1786689011.2459934,
-    "ast_hash": "63517bc46f220eeaa508b4f61e2502d8",
+    "mtime": 1786785780.4317293,
+    "ast_hash": "b84a960e0d9230af85e69f4df1766ee7",
     "semantic_hash": ""
   },
   "apps/api/src/internal-auth.ts": {
@@ -85,8 +85,8 @@
     "semantic_hash": ""
   },
   "apps/api/test/auth.test.ts": {
-    "mtime": 1786689011.246832,
-    "ast_hash": "f8178bd15b70759dfb90cf5e19b44bfa",
+    "mtime": 1786785623.9760382,
+    "ast_hash": "c39a818f7c63f4772c6d3c0647a2dafe",
     "semantic_hash": ""
   },
   "apps/api/test/ice-servers.test.ts": {
@@ -130,8 +130,8 @@
     "semantic_hash": ""
   },
   "apps/api/test/room-state.test.ts": {
-    "mtime": 1786689011.247337,
-    "ast_hash": "ab3da86acaff01048ca9fc4f800c2ed7",
+    "mtime": 1786786653.8112662,
+    "ast_hash": "d4efc9f3ad0c531367e7e83ded5542a0",
     "semantic_hash": ""
   },
   "apps/api/test/routes.test.ts": {
@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "apps/api/test/runtime/room-hibernation-runtime.ts": {
-    "mtime": 1786689011.2475293,
-    "ast_hash": "cecf266d1376546d1a2eaa7cccea9693",
+    "mtime": 1786785906.4338613,
+    "ast_hash": "174150b3e28f6ee9d53a3d59bad38f96",
     "semantic_hash": ""
   },
   "apps/api/test/telemetry.test.ts": {
@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1786778531.0241592,
-    "ast_hash": "cc77fcb419e3249415558663e2b0910d",
+    "mtime": 1786786503.6070933,
+    "ast_hash": "2fbe4d20faf87f98e7fe868870186263",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -340,8 +340,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/room-client.ts": {
-    "mtime": 1786689011.254571,
-    "ast_hash": "6beaa1d2b7428896aad1067408307267",
+    "mtime": 1786786355.502087,
+    "ast_hash": "10c833b350dc4cdc3bdb523039842f9e",
     "semantic_hash": ""
   },
   "apps/extension/src/room-quota-display.ts": {
@@ -485,8 +485,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/room-client-auth.test.ts": {
-    "mtime": 1786689011.262127,
-    "ast_hash": "9900d6412d2cb587d46697b4472316e2",
+    "mtime": 1786786322.3561273,
+    "ast_hash": "cce36016c433a2dfd4e80e9c5a8b9a6e",
     "semantic_hash": ""
   },
   "apps/extension/test/room-quota-display.test.ts": {
@@ -4565,8 +4565,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/watch-history-controller.ts": {
-    "mtime": 1786778077.4386418,
-    "ast_hash": "fadd2d25d8367fbfdc22484101a27d7a",
+    "mtime": 1786786533.6344154,
+    "ast_hash": "7ada37e8cd41ec0f26a30229a35674ac",
     "semantic_hash": ""
   },
   "apps/extension/src/watch-history-listeners.ts": {
@@ -4595,8 +4595,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/watch-history-controller.test.ts": {
-    "mtime": 1786778002.067671,
-    "ast_hash": "49c492c6c264aaba18015e9fa097bfa5",
+    "mtime": 1786786606.3671649,
+    "ast_hash": "a17b14d11e9b0bf6fc1223c953526827",
     "semantic_hash": ""
   },
   "apps/extension/test/watch-history-listeners.test.ts": {
