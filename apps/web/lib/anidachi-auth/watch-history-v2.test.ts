@@ -139,6 +139,24 @@ test("progress input is strict and accepts only MVP providers on canonical origi
     ).provider,
     "youtube",
   );
+  assert.equal(
+    parseWatchProgressEventV2(
+      progressEvent({
+        provider: "youtube",
+        titleKey: "abcdefghijk",
+        episodeKey: "abcdefghijk",
+        sourceUrl: "https://youtube.com/watch?v=abcdefghijk",
+      }),
+    ).provider,
+    "youtube",
+  );
+  assert.throws(
+    () => parseWatchProgressEventV2(progressEvent({
+      provider: "youtube",
+      sourceUrl: "https://m.youtube.com/watch?v=abcdefghijk",
+    })),
+    hasCode("PROVIDER_DOMAIN_MISMATCH"),
+  );
 
   assert.throws(() => parseWatchProgressEventV2(progressEvent({ userId: USER_ID })), hasCode("INVALID_REQUEST"));
   assert.throws(() => parseWatchProgressEventV2(progressEvent({ provider: "netflix" })), hasCode("UNSUPPORTED_PROVIDER"));

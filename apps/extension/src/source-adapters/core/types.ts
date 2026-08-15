@@ -3,6 +3,7 @@ import type {
   PlayerOverlayGeometry,
   PlayerOverlayGeometryListener,
 } from "./overlay-geometry";
+import type { SourceAdapterHistoryPolicy } from "./history-policy";
 
 export type SourceProvider = WatchSourceDescriptor["provider"];
 
@@ -98,6 +99,7 @@ export interface SourceAdapterDefinition {
   readonly id: string;
   readonly provider: SourceProvider;
   readonly priority: number;
+  readonly historyPolicy?: SourceAdapterHistoryPolicy;
   detect(video: HTMLVideoElement): VideoAdapter | null;
   ensureSource(
     source: WatchSourceDescriptor,

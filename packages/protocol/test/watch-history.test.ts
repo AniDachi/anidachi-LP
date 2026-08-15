@@ -7,6 +7,7 @@ import {
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesSchema,
   WatchHistoryPreferencesUpdateSchema,
+  WatchHistoryRoomRecreationResponseSchema,
   WatchHistoryResponseSchema,
   WatchLibraryResponseSchema,
   WatchProgressAckSchema,
@@ -20,6 +21,23 @@ const HOST_ID = "22222222-2222-4222-8222-222222222222";
 const EVENT_ID = "33333333-3333-4333-8333-333333333333";
 const MUTATION_ID = "44444444-4444-4444-8444-444444444444";
 const SESSION_ID = "55555555-5555-4555-8555-555555555555";
+
+function roomRecreationResponse() {
+  return {
+    roomId: "room-watch-history-1",
+    roomToken: "room-token",
+    shareableLink: "https://www.anidachi.app/room/room-watch-history-1",
+    reused: false,
+    capabilities: {
+      hostPlanCode: "plus",
+      maxParticipants: 8,
+      maxMediaSeats: 4,
+      canNameRoom: true,
+      canSendPushInvites: true,
+    },
+    quota: { remainingSeconds: 3600, resetAt: NOW },
+  };
+}
 
 function accountMeta() {
   return {
@@ -857,5 +875,28 @@ describe("watch history v2 read and mutation contracts", () => {
     expect(WatchLibraryResponseSchema.parse(fixture)).toEqual(fixture);
     expect(() => WatchHistoryResponseSchema.parse(fixture)).toThrow();
     expect(() => WatchLibraryResponseSchema.parse(responseFixture())).toThrow();
+  });
+
+  it("strictly validates room recreation responses", () => {
+    const response = roomRecreationResponse();
+    expect(WatchHistoryRoomRecreationResponseSchema.parse(response)).toEqual(response);
+    expect(() =>
+      WatchHistoryRoomRecreationResponseSchema.parse({ ...response, extra: true }),
+    ).toThrow();
+    expect(() =>
+      WatchHistoryRoomRecreationResponseSchema.parse({ ...response, roomToken: "" }),
+    ).toThrow();
+    expect(() =>
+      WatchHistoryRoomRecreationResponseSchema.parse({
+        ...response,
+        shareableLink: "javascript:alert(1)",
+      }),
+    ).toThrow();
+    expect(() =>
+      WatchHistoryRoomRecreationResponseSchema.parse({
+        ...response,
+        quota: { remainingSeconds: -1, resetAt: "not-a-timestamp" },
+      }),
+    ).toThrow();
   });
 });

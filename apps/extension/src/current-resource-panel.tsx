@@ -1,26 +1,15 @@
 import { ChevronRight } from "lucide-react";
-import type { WatchProgressEntry } from "./watch-progress";
-import {
-  formatProgressClock,
-  getStoredItemForEntry,
-  RESOURCE_PROVIDER_LABELS,
-  type StoredWatchItem,
-  type WatchProgressStore,
-} from "./watch-progress";
+import type { HistoryObservation } from "./source-adapters/core/history-policy";
 
 interface CurrentResourcePanelProps {
-  entry: WatchProgressEntry | null;
-  store: WatchProgressStore;
+  entry: HistoryObservation | null;
 }
 
-export function CurrentResourcePanel({ entry, store }: CurrentResourcePanelProps) {
+export function CurrentResourcePanel({ entry }: CurrentResourcePanelProps) {
   if (!entry) {
     return null;
   }
 
-  const storedItem = getStoredItemForEntry(store, entry);
-  const progress = getEntryProgress(entry, storedItem);
-  const label = RESOURCE_PROVIDER_LABELS[entry.provider];
   const progressText = `${formatProgressClock(entry.currentTime)} / ${formatProgressClock(
     entry.duration,
   )}`;
@@ -31,15 +20,15 @@ export function CurrentResourcePanel({ entry, store }: CurrentResourcePanelProps
       <div className="current-resource-card">
         <div className="current-resource-topline">
           <span className={`resource-provider-dot ${entry.provider}`} />
-          <span>{label}</span>
+          <span>{entry.providerLabel}</span>
           <ChevronRight size={12} />
           <span className="current-resource-time">{progressText}</span>
         </div>
-        <div className="current-resource-title">{entry.itemTitle}</div>
-        {entry.kind === "episode" && entry.episodeTitle ? (
+        <div className="current-resource-title">{entry.title}</div>
+        {entry.itemKind === "series" && entry.episodeTitle ? (
           <div className="current-resource-episode">{entry.episodeTitle}</div>
         ) : null}
-        <ProgressBar progress={progress} />
+        <ProgressBar progress={entry.progress} />
       </div>
     </>
   );
@@ -53,10 +42,9 @@ export function ProgressBar({ progress }: { progress: number }) {
   );
 }
 
-function getEntryProgress(entry: WatchProgressEntry, storedItem: StoredWatchItem | null): number {
-  if (entry.duration > 0) {
-    return Math.max(0, Math.min(1, entry.currentTime / entry.duration));
-  }
-
-  return storedItem?.progress ?? 0;
+function formatProgressClock(value: number): string {
+  const wholeSeconds = Math.max(0, Math.floor(value));
+  const minutes = Math.floor(wholeSeconds / 60);
+  const seconds = wholeSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }

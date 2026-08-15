@@ -450,6 +450,10 @@ describe("extension auth client", () => {
         events.push("read-stored");
         return storedTokens;
       },
+      flushBeforeSignOut: vi.fn(async (tokens) => {
+        expect(tokens).toBe(storedTokens);
+        events.push("flush-history");
+      }),
       revokeRefreshToken: vi.fn(async () => {
         events.push("revoke");
       }),
@@ -462,7 +466,22 @@ describe("extension auth client", () => {
       }),
     });
 
-    expect(events).toEqual(["read-stored", "revoke", "logout-flow", "clear"]);
+    expect(events).toEqual(["read-stored", "flush-history", "revoke", "logout-flow", "clear"]);
+  });
+
+  it("does not let a failed pre-sign-out history flush block token clearing", async () => {
+    const events: string[] = [];
+    await runWebsiteSignOutSequence({
+      getStoredTokens: async () => storedTokens,
+      flushBeforeSignOut: async () => {
+        events.push("flush-history");
+        throw new Error("offline");
+      },
+      revokeRefreshToken: async () => { events.push("revoke"); },
+      attemptWebsiteLogout: async () => { events.push("logout-flow"); },
+      clearTokens: async () => { events.push("clear"); },
+    });
+    expect(events).toEqual(["flush-history", "revoke", "logout-flow", "clear"]);
   });
 
   it("clears extension tokens even when website logout fails", async () => {

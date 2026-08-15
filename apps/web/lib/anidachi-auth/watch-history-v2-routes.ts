@@ -1,6 +1,8 @@
 import {
   WatchHistoryDeletionRequestSchema,
   WatchHistoryPreferencesUpdateSchema,
+  WatchHistoryRoomRecreationResponseSchema,
+  type WatchHistoryRoomRecreationResponse,
   type WatchHistoryDeletionAck,
   type WatchHistoryPreferencesResponse,
   type WatchHistoryResponse,
@@ -44,21 +46,6 @@ const SMALL_BODY_BYTES = 4 * 1_024;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-type RoomRecreationResponse = {
-  roomId: string;
-  roomToken: string;
-  shareableLink: string;
-  reused: boolean;
-  capabilities: {
-    hostPlanCode: "free" | "plus" | "pro";
-    maxParticipants: number;
-    maxMediaSeats: number;
-    canNameRoom: boolean;
-    canSendPushInvites: boolean;
-  };
-  quota: { remainingSeconds: number; resetAt: string } | null;
-};
-
 export type WatchHistoryV2RouteDependencies = {
   getSession(request: NextRequest): Promise<ApiSession | null>;
   listHistory(params: {
@@ -78,7 +65,7 @@ export type WatchHistoryV2RouteDependencies = {
     sessionId: string;
     clientRequestId?: string;
     origin: string;
-  }): Promise<RoomRecreationResponse>;
+  }): Promise<WatchHistoryRoomRecreationResponse>;
 };
 
 const productionDependencies: WatchHistoryV2RouteDependencies = {
@@ -193,12 +180,14 @@ export function createWatchHistoryV2RouteHandlers(
           );
         }
         return NextResponse.json(
-          await dependencies.createRoomFromSession({
+          WatchHistoryRoomRecreationResponseSchema.parse(
+            await dependencies.createRoomFromSession({
             session,
             sessionId: input.sessionId,
             clientRequestId: input.clientRequestId,
             origin: request.nextUrl.origin,
-          }),
+            }),
+          ),
         );
       } catch (error) {
         return watchHistoryErrorResponse(error);
@@ -242,7 +231,7 @@ async function createRoomFromV2Session(params: {
   sessionId: string;
   clientRequestId?: string;
   origin: string;
-}): Promise<RoomRecreationResponse> {
+}): Promise<WatchHistoryRoomRecreationResponse> {
   const source = await supabaseWatchHistoryV2Store.getRoomSource(
     params.session.userId,
     params.sessionId,

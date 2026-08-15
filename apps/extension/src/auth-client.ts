@@ -687,6 +687,7 @@ export async function signInWithWebsiteSilently(): Promise<ExtensionAuthTokens |
 
 interface WebsiteSignOutSequenceActions {
   getStoredTokens: () => Promise<ExtensionAuthTokens | null>;
+  flushBeforeSignOut?: (tokens: ExtensionAuthTokens) => Promise<void>;
   revokeRefreshToken: (refreshToken: string) => Promise<void>;
   attemptWebsiteLogout: () => Promise<void>;
   clearTokens: (expectedRefreshToken: string | null) => Promise<void>;
@@ -694,12 +695,14 @@ interface WebsiteSignOutSequenceActions {
 
 export async function runWebsiteSignOutSequence({
   getStoredTokens,
+  flushBeforeSignOut,
   revokeRefreshToken,
   attemptWebsiteLogout,
   clearTokens,
 }: WebsiteSignOutSequenceActions): Promise<void> {
   const stored = await getStoredTokens();
   if (stored) {
+    await flushBeforeSignOut?.(stored).catch(() => undefined);
     await revokeRefreshToken(stored.refreshToken).catch(() => undefined);
   }
 
@@ -731,6 +734,10 @@ export async function signOutWithWebsite(): Promise<void> {
   try {
     await runWebsiteSignOutSequence({
       getStoredTokens: async () => stored,
+      flushBeforeSignOut: async (tokens) => {
+        const { bestEffortFlushWatchHistoryBeforeSignOut } = await import("./watch-history-client");
+        await bestEffortFlushWatchHistoryBeforeSignOut(tokens);
+      },
       revokeRefreshToken: revokeExtensionRefreshToken,
       attemptWebsiteLogout: attemptWebsiteLogoutFlow,
       clearTokens: async (expectedRefreshToken) => {

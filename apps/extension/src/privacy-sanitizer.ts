@@ -1,4 +1,4 @@
-const SECRET_FIELD_RE = /token|secret|cookie|authorization|password|credential|icepwd/i;
+const SECRET_FIELD_RE = /token|secret|cookie|authorization|password|credential|icepwd|attestation/i;
 
 const HASH_IDENTIFIER_FIELDS = new Set([
   "id",
