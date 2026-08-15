@@ -6584,7 +6584,7 @@
       "label": "CameraBubble()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5103",
+      "source_location": "L5104",
       "_origin": "ast"
     },
     {
@@ -6592,7 +6592,7 @@
       "label": "LiveChatColumn()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5213",
+      "source_location": "L5214",
       "_origin": "ast"
     },
     {
@@ -6600,7 +6600,7 @@
       "label": "ReactionPop()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5281",
+      "source_location": "L5282",
       "_origin": "ast"
     },
     {
@@ -6608,7 +6608,7 @@
       "label": "getLiveChatNameColor()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5337",
+      "source_location": "L5338",
       "_origin": "ast"
     },
     {
@@ -6616,7 +6616,7 @@
       "label": "P2PSignalServerEvent",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5346",
+      "source_location": "L5347",
       "_origin": "ast"
     },
     {
@@ -6624,7 +6624,7 @@
       "label": "createClientSignalId()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5348",
+      "source_location": "L5349",
       "_origin": "ast"
     },
     {
@@ -6632,7 +6632,7 @@
       "label": "getIncomingP2PSignalDedupeKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5352",
+      "source_location": "L5353",
       "_origin": "ast"
     },
     {
@@ -6640,7 +6640,7 @@
       "label": "pruneHandledP2PSignalIds()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5359",
+      "source_location": "L5360",
       "_origin": "ast"
     },
     {
@@ -6648,7 +6648,7 @@
       "label": "toIncomingP2PSignal()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5375",
+      "source_location": "L5376",
       "_origin": "ast"
     },
     {
@@ -6656,7 +6656,7 @@
       "label": "normalizeChatDisplayMode()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5398",
+      "source_location": "L5399",
       "_origin": "ast"
     },
     {
@@ -6664,7 +6664,7 @@
       "label": "normalizeOverlayViewportDimension()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5402",
+      "source_location": "L5403",
       "_origin": "ast"
     },
     {
@@ -6672,7 +6672,7 @@
       "label": "isMessageComposerShortcut()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5406",
+      "source_location": "L5407",
       "_origin": "ast"
     },
     {
@@ -6680,7 +6680,7 @@
       "label": "isEscapeKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5410",
+      "source_location": "L5411",
       "_origin": "ast"
     },
     {
@@ -6688,7 +6688,7 @@
       "label": "isFullscreenActive()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5414",
+      "source_location": "L5415",
       "_origin": "ast"
     },
     {
@@ -6696,7 +6696,7 @@
       "label": "isKeyboardEditableTarget()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5418",
+      "source_location": "L5419",
       "_origin": "ast"
     },
     {
@@ -6704,7 +6704,7 @@
       "label": "isKeyboardEditableElement()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5423",
+      "source_location": "L5424",
       "_origin": "ast"
     },
     {
@@ -6712,7 +6712,7 @@
       "label": "getRoomIdFromHash()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5434",
+      "source_location": "L5435",
       "_origin": "ast"
     },
     {
@@ -6720,7 +6720,7 @@
       "label": "clearRoomHash()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5439",
+      "source_location": "L5440",
       "_origin": "ast"
     },
     {
@@ -6728,7 +6728,7 @@
       "label": "quotaExhaustedMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5450",
+      "source_location": "L5451",
       "_origin": "ast"
     },
     {
@@ -6736,7 +6736,7 @@
       "label": "roomJoinUnavailableMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5465",
+      "source_location": "L5466",
       "_origin": "ast"
     },
     {
@@ -6744,7 +6744,7 @@
       "label": "formatQuotaCountdown()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5473",
+      "source_location": "L5474",
       "_origin": "ast"
     },
     {
@@ -6752,7 +6752,7 @@
       "label": "shouldOpenPanelForInitialRoom()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5480",
+      "source_location": "L5481",
       "_origin": "ast"
     },
     {
@@ -6760,7 +6760,7 @@
       "label": "ensureRoomHash()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5484",
+      "source_location": "L5485",
       "_origin": "ast"
     },
     {
@@ -6768,7 +6768,7 @@
       "label": "setRoomHash()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5490",
+      "source_location": "L5491",
       "_origin": "ast"
     },
     {
@@ -6776,7 +6776,7 @@
       "label": "buildCurrentSourceUrlForInvite()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5496",
+      "source_location": "L5497",
       "_origin": "ast"
     },
     {
@@ -6784,7 +6784,7 @@
       "label": "isStaleAuthoritativeGeneration()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5504",
+      "source_location": "L5505",
       "_origin": "ast"
     },
     {
@@ -6792,7 +6792,7 @@
       "label": "fallbackCopy()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5517",
+      "source_location": "L5518",
       "_origin": "ast"
     },
     {
@@ -6800,7 +6800,7 @@
       "label": "initials()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5531",
+      "source_location": "L5532",
       "_origin": "ast"
     },
     {
@@ -6808,7 +6808,7 @@
       "label": "isPointerInComposerDeadZone()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5540",
+      "source_location": "L5541",
       "_origin": "ast"
     },
     {
@@ -6816,7 +6816,7 @@
       "label": "resetComposerShieldInlineStyles()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5562",
+      "source_location": "L5563",
       "_origin": "ast"
     },
     {
@@ -6824,7 +6824,7 @@
       "label": "wakePlayerAfterComposerShieldRelease()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5571",
+      "source_location": "L5572",
       "_origin": "ast"
     },
     {
@@ -6832,7 +6832,7 @@
       "label": "isUsableRect()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5611",
+      "source_location": "L5612",
       "_origin": "ast"
     },
     {
@@ -6840,7 +6840,7 @@
       "label": "clampNumber()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5617",
+      "source_location": "L5618",
       "_origin": "ast"
     },
     {
@@ -6848,7 +6848,7 @@
       "label": "stopNativeEvent()",
       "file_type": "code",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5625",
+      "source_location": "L5626",
       "_origin": "ast"
     },
     {
@@ -11800,7 +11800,7 @@
       "label": "PopupWatchHistorySnapshot",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L24",
+      "source_location": "L29",
       "_origin": "ast"
     },
     {
@@ -11808,7 +11808,7 @@
       "label": "PopupWatchHistoryClient",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L32",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -11816,7 +11816,7 @@
       "label": "defaultClient",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L39",
+      "source_location": "L44",
       "_origin": "ast"
     },
     {
@@ -11824,7 +11824,7 @@
       "label": "PopupWatchHistoryPanel()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L48",
+      "source_location": "L53",
       "_origin": "ast"
     },
     {
@@ -11832,7 +11832,7 @@
       "label": "PopupProviderSection()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L418",
+      "source_location": "L430",
       "_origin": "ast"
     },
     {
@@ -11840,7 +11840,7 @@
       "label": "PopupWatchHistoryItem()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L471",
+      "source_location": "L483",
       "_origin": "ast"
     },
     {
@@ -11848,7 +11848,7 @@
       "label": "PopupProviderGroup",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L627",
+      "source_location": "L639",
       "_origin": "ast"
     },
     {
@@ -11856,7 +11856,7 @@
       "label": "filterWatchHistoryItems()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L633",
+      "source_location": "L645",
       "_origin": "ast"
     },
     {
@@ -11864,7 +11864,7 @@
       "label": "newestSession()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L692",
+      "source_location": "L704",
       "_origin": "ast"
     },
     {
@@ -11872,7 +11872,7 @@
       "label": "groupWatchHistoryItems()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L700",
+      "source_location": "L712",
       "_origin": "ast"
     },
     {
@@ -11880,7 +11880,7 @@
       "label": "providerLabel()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L717",
+      "source_location": "L729",
       "_origin": "ast"
     },
     {
@@ -11888,7 +11888,7 @@
       "label": "ProviderLogo()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L723",
+      "source_location": "L735",
       "_origin": "ast"
     },
     {
@@ -11896,7 +11896,23 @@
       "label": "loadConfirmedPopupWatchHistorySnapshot()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L756",
+      "source_location": "L768",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_popup_watch_history_selectconfirmedpopupwatchhistorysnapshot",
+      "label": "selectConfirmedPopupWatchHistorySnapshot()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/popup-watch-history.tsx",
+      "source_location": "L775",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_extension_src_popup_watch_history_isnewerthancanonicalhistory",
+      "label": "isNewerThanCanonicalHistory()",
+      "file_type": "code",
+      "source_file": "apps/extension/src/popup-watch-history.tsx",
+      "source_location": "L819",
       "_origin": "ast"
     },
     {
@@ -11904,7 +11920,7 @@
       "label": "latestPendingByEpisode()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L784",
+      "source_location": "L838",
       "_origin": "ast"
     },
     {
@@ -11912,7 +11928,7 @@
       "label": "pendingEpisodeKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L796",
+      "source_location": "L850",
       "_origin": "ast"
     },
     {
@@ -11920,7 +11936,7 @@
       "label": "formatClock()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L800",
+      "source_location": "L854",
       "_origin": "ast"
     },
     {
@@ -11928,7 +11944,7 @@
       "label": "messageForStatus()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L810",
+      "source_location": "L864",
       "_origin": "ast"
     },
     {
@@ -11936,7 +11952,7 @@
       "label": "deleteScopeKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L816",
+      "source_location": "L870",
       "_origin": "ast"
     },
     {
@@ -11944,7 +11960,7 @@
       "label": "removeHistoryTarget()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L822",
+      "source_location": "L876",
       "_origin": "ast"
     },
     {
@@ -11952,7 +11968,7 @@
       "label": "withRoomHash()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L867",
+      "source_location": "L921",
       "_origin": "ast"
     },
     {
@@ -11960,7 +11976,7 @@
       "label": "eventMatchesScope()",
       "file_type": "code",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L879",
+      "source_location": "L933",
       "_origin": "ast"
     },
     {
@@ -17712,7 +17728,7 @@
       "label": "WatchHistoryMessageResponse",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "_origin": "ast"
     },
     {
@@ -17720,7 +17736,7 @@
       "label": "WatchHistoryStorage",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L98",
+      "source_location": "L99",
       "_origin": "ast"
     },
     {
@@ -17728,7 +17744,7 @@
       "label": "WatchHistoryBootstrapData",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L100",
+      "source_location": "L101",
       "_origin": "ast"
     },
     {
@@ -17736,7 +17752,7 @@
       "label": "WatchHistoryCaptureResult",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L108",
+      "source_location": "L109",
       "_origin": "ast"
     },
     {
@@ -17744,7 +17760,7 @@
       "label": "unpersistedCapturePauses",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L112",
+      "source_location": "L113",
       "_origin": "ast"
     },
     {
@@ -17752,7 +17768,7 @@
       "label": "parseWatchHistoryBootstrapData()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L114",
+      "source_location": "L115",
       "_origin": "ast"
     },
     {
@@ -17760,7 +17776,7 @@
       "label": "WatchHistoryClientDependencies",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L139",
+      "source_location": "L140",
       "_origin": "ast"
     },
     {
@@ -17768,7 +17784,7 @@
       "label": "WatchHistoryBackgroundDependencies",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L145",
+      "source_location": "L146",
       "_origin": "ast"
     },
     {
@@ -17776,7 +17792,7 @@
       "label": "createListWatchHistoryMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L147",
+      "source_location": "L148",
       "_origin": "ast"
     },
     {
@@ -17784,7 +17800,7 @@
       "label": "createWatchHistoryMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L154",
+      "source_location": "L155",
       "_origin": "ast"
     },
     {
@@ -17792,7 +17808,7 @@
       "label": "isWatchHistoryMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L158",
+      "source_location": "L159",
       "_origin": "ast"
     },
     {
@@ -17800,7 +17816,7 @@
       "label": "createWatchHistoryClient()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L202",
+      "source_location": "L209",
       "_origin": "ast"
     },
     {
@@ -17808,7 +17824,7 @@
       "label": "emptyPartition()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L869",
+      "source_location": "L888",
       "_origin": "ast"
     },
     {
@@ -17816,7 +17832,7 @@
       "label": "capturePauseKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L884",
+      "source_location": "L904",
       "_origin": "ast"
     },
     {
@@ -17824,7 +17840,7 @@
       "label": "isFailureStatus()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L888",
+      "source_location": "L908",
       "_origin": "ast"
     },
     {
@@ -17832,7 +17848,7 @@
       "label": "mapHttpFailure()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L895",
+      "source_location": "L915",
       "_origin": "ast"
     },
     {
@@ -17840,7 +17856,7 @@
       "label": "isPermanentObservationRejection()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L913",
+      "source_location": "L933",
       "_origin": "ast"
     },
     {
@@ -17848,7 +17864,7 @@
       "label": "sameSession()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L920",
+      "source_location": "L940",
       "_origin": "ast"
     },
     {
@@ -17856,7 +17872,7 @@
       "label": "isRecord()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L924",
+      "source_location": "L944",
       "_origin": "ast"
     },
     {
@@ -17864,7 +17880,7 @@
       "label": "hasExactKeys()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L928",
+      "source_location": "L948",
       "_origin": "ast"
     },
     {
@@ -17872,7 +17888,7 @@
       "label": "handleWatchHistoryHttpMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L932",
+      "source_location": "L952",
       "_origin": "ast"
     },
     {
@@ -17880,7 +17896,7 @@
       "label": "handleWatchHistoryAuthSessionChange()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L951",
+      "source_location": "L971",
       "_origin": "ast"
     },
     {
@@ -17888,7 +17904,7 @@
       "label": "flushWatchHistoryInBackground()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L975",
+      "source_location": "L995",
       "_origin": "ast"
     },
     {
@@ -17896,7 +17912,7 @@
       "label": "bestEffortFlushWatchHistoryBeforeSignOut()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L984",
+      "source_location": "L1004",
       "_origin": "ast"
     },
     {
@@ -17904,7 +17920,7 @@
       "label": "reconcileWatchHistoryThenDrain()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1006",
+      "source_location": "L1026",
       "_origin": "ast"
     },
     {
@@ -17912,7 +17928,7 @@
       "label": "defaultWatchHistorySession()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1014",
+      "source_location": "L1034",
       "_origin": "ast"
     },
     {
@@ -17920,7 +17936,7 @@
       "label": "defaultStoredWatchHistorySession()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1019",
+      "source_location": "L1039",
       "_origin": "ast"
     },
     {
@@ -17928,7 +17944,7 @@
       "label": "createWatchHistoryContentReconnectMessage()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1024",
+      "source_location": "L1044",
       "_origin": "ast"
     },
     {
@@ -17936,7 +17952,7 @@
       "label": "requestWatchHistory()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1028",
+      "source_location": "L1048",
       "_origin": "ast"
     },
     {
@@ -17968,7 +17984,7 @@
       "label": "WatchHistoryController",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L45",
+      "source_location": "L46",
       "_origin": "ast"
     },
     {
@@ -17976,7 +17992,7 @@
       "label": "createWatchHistoryController()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L56",
+      "source_location": "L57",
       "_origin": "ast"
     },
     {
@@ -17984,7 +18000,7 @@
       "label": "isFailedCapture()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L504",
+      "source_location": "L517",
       "_origin": "ast"
     },
     {
@@ -17992,7 +18008,7 @@
       "label": "observationIdentity()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L510",
+      "source_location": "L523",
       "_origin": "ast"
     },
     {
@@ -18000,7 +18016,7 @@
       "label": "sameRoomHistoryBoundary()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L514",
+      "source_location": "L527",
       "_origin": "ast"
     },
     {
@@ -18008,7 +18024,7 @@
       "label": "toEvent()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L524",
+      "source_location": "L537",
       "_origin": "ast"
     },
     {
@@ -18224,7 +18240,7 @@
       "label": "WatchHistoryStorageRoot",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast"
     },
     {
@@ -18232,7 +18248,7 @@
       "label": "WatchHistoryStorageResult",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "_origin": "ast"
     },
     {
@@ -18240,7 +18256,7 @@
       "label": "StorageItemLike",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L33",
+      "source_location": "L34",
       "_origin": "ast"
     },
     {
@@ -18248,7 +18264,7 @@
       "label": "WatchHistoryStorageDependencies",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "_origin": "ast"
     },
     {
@@ -18256,7 +18272,7 @@
       "label": "rootUpdateQueue",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "_origin": "ast"
     },
     {
@@ -18264,7 +18280,7 @@
       "label": "createWatchHistoryStorageRoot()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L49",
+      "source_location": "L50",
       "_origin": "ast"
     },
     {
@@ -18272,7 +18288,7 @@
       "label": "watchHistoryPartitionKey()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L53",
+      "source_location": "L54",
       "_origin": "ast"
     },
     {
@@ -18280,7 +18296,7 @@
       "label": "createWatchHistoryStorage()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L57",
+      "source_location": "L58",
       "_origin": "ast"
     },
     {
@@ -18288,7 +18304,7 @@
       "label": "withoutWatchHistoryAttestation()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L214",
+      "source_location": "L216",
       "_origin": "ast"
     },
     {
@@ -18296,7 +18312,7 @@
       "label": "activeGenerationsFromPartitions()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L219",
+      "source_location": "L221",
       "_origin": "ast"
     },
     {
@@ -18304,7 +18320,7 @@
       "label": "normalizeStorageRoot()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L228",
+      "source_location": "L230",
       "_origin": "ast"
     },
     {
@@ -18312,7 +18328,7 @@
       "label": "normalizePartition()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L241",
+      "source_location": "L243",
       "_origin": "ast"
     },
     {
@@ -18320,7 +18336,7 @@
       "label": "getDefaultStorageItem()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L261",
+      "source_location": "L266",
       "_origin": "ast"
     },
     {
@@ -18328,7 +18344,7 @@
       "label": "defaultGetBytesInUse()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L270",
+      "source_location": "L275",
       "_origin": "ast"
     },
     {
@@ -18336,7 +18352,7 @@
       "label": "defaultHasStoredRoot()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L276",
+      "source_location": "L281",
       "_origin": "ast"
     },
     {
@@ -18344,7 +18360,7 @@
       "label": "defaultQuotaBytes()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L284",
+      "source_location": "L289",
       "_origin": "ast"
     },
     {
@@ -18352,7 +18368,7 @@
       "label": "isStorageRoot()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L288",
+      "source_location": "L293",
       "_origin": "ast"
     },
     {
@@ -20160,7 +20176,7 @@
       "label": "clientFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L567",
+      "source_location": "L661",
       "_origin": "ast"
     },
     {
@@ -20168,7 +20184,7 @@
       "label": "snapshotFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L579",
+      "source_location": "L673",
       "_origin": "ast"
     },
     {
@@ -20176,7 +20192,7 @@
       "label": "historyFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L593",
+      "source_location": "L687",
       "_origin": "ast"
     },
     {
@@ -20184,7 +20200,7 @@
       "label": "twoEpisodeHistoryFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L661",
+      "source_location": "L755",
       "_origin": "ast"
     },
     {
@@ -20192,7 +20208,7 @@
       "label": "mixedSessionHistoryFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L681",
+      "source_location": "L775",
       "_origin": "ast"
     },
     {
@@ -20200,7 +20216,7 @@
       "label": "observedOnlyHistoryFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L702",
+      "source_location": "L796",
       "_origin": "ast"
     },
     {
@@ -20208,7 +20224,7 @@
       "label": "sameEpisodeMixedSessionHistoryFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L717",
+      "source_location": "L811",
       "_origin": "ast"
     },
     {
@@ -20216,7 +20232,7 @@
       "label": "youtubeMovieHistoryFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L737",
+      "source_location": "L831",
       "_origin": "ast"
     },
     {
@@ -20224,7 +20240,7 @@
       "label": "sessionFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L763",
+      "source_location": "L857",
       "_origin": "ast"
     },
     {
@@ -20232,7 +20248,7 @@
       "label": "sharedSessionFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L781",
+      "source_location": "L875",
       "_origin": "ast"
     },
     {
@@ -20240,7 +20256,7 @@
       "label": "requestForHistory()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L792",
+      "source_location": "L886",
       "_origin": "ast"
     },
     {
@@ -20248,7 +20264,7 @@
       "label": "pendingEvent()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L805",
+      "source_location": "L899",
       "_origin": "ast"
     },
     {
@@ -20256,7 +20272,7 @@
       "label": "preferencesFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L842",
+      "source_location": "L936",
       "_origin": "ast"
     },
     {
@@ -20264,7 +20280,7 @@
       "label": "renderPanel()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L854",
+      "source_location": "L948",
       "_origin": "ast"
     },
     {
@@ -20272,7 +20288,7 @@
       "label": "findButton()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L864",
+      "source_location": "L958",
       "_origin": "ast"
     },
     {
@@ -20280,7 +20296,7 @@
       "label": "findInput()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L876",
+      "source_location": "L970",
       "_origin": "ast"
     },
     {
@@ -20288,7 +20304,7 @@
       "label": "setInputValue()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L886",
+      "source_location": "L980",
       "_origin": "ast"
     },
     {
@@ -20296,7 +20312,7 @@
       "label": "click()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L895",
+      "source_location": "L989",
       "_origin": "ast"
     },
     {
@@ -20304,7 +20320,7 @@
       "label": "waitFor()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L899",
+      "source_location": "L993",
       "_origin": "ast"
     },
     {
@@ -20312,7 +20328,7 @@
       "label": "unmount()",
       "file_type": "code",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L916",
+      "source_location": "L1010",
       "_origin": "ast"
     },
     {
@@ -21752,7 +21768,7 @@
       "label": "roomAuthority()",
       "file_type": "code",
       "source_file": "apps/extension/test/watch-history-controller.test.ts",
-      "source_location": "L750",
+      "source_location": "L776",
       "_origin": "ast"
     },
     {
@@ -21760,7 +21776,7 @@
       "label": "createFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/watch-history-controller.test.ts",
-      "source_location": "L760",
+      "source_location": "L786",
       "_origin": "ast"
     },
     {
@@ -88474,7 +88490,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5103",
+      "source_location": "L5104",
       "weight": 1.0
     },
     {
@@ -88483,7 +88499,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5213",
+      "source_location": "L5214",
       "weight": 1.0
     },
     {
@@ -88492,7 +88508,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5281",
+      "source_location": "L5282",
       "weight": 1.0
     },
     {
@@ -88501,7 +88517,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5337",
+      "source_location": "L5338",
       "weight": 1.0
     },
     {
@@ -88510,7 +88526,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5346",
+      "source_location": "L5347",
       "weight": 1.0
     },
     {
@@ -88519,7 +88535,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5348",
+      "source_location": "L5349",
       "weight": 1.0
     },
     {
@@ -88528,7 +88544,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5352",
+      "source_location": "L5353",
       "weight": 1.0
     },
     {
@@ -88537,7 +88553,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5359",
+      "source_location": "L5360",
       "weight": 1.0
     },
     {
@@ -88546,7 +88562,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5375",
+      "source_location": "L5376",
       "weight": 1.0
     },
     {
@@ -88555,7 +88571,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5398",
+      "source_location": "L5399",
       "weight": 1.0
     },
     {
@@ -88564,7 +88580,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5402",
+      "source_location": "L5403",
       "weight": 1.0
     },
     {
@@ -88573,7 +88589,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5406",
+      "source_location": "L5407",
       "weight": 1.0
     },
     {
@@ -88582,7 +88598,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5410",
+      "source_location": "L5411",
       "weight": 1.0
     },
     {
@@ -88591,7 +88607,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5414",
+      "source_location": "L5415",
       "weight": 1.0
     },
     {
@@ -88600,7 +88616,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5418",
+      "source_location": "L5419",
       "weight": 1.0
     },
     {
@@ -88609,7 +88625,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5423",
+      "source_location": "L5424",
       "weight": 1.0
     },
     {
@@ -88618,7 +88634,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5434",
+      "source_location": "L5435",
       "weight": 1.0
     },
     {
@@ -88627,7 +88643,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5439",
+      "source_location": "L5440",
       "weight": 1.0
     },
     {
@@ -88636,7 +88652,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5450",
+      "source_location": "L5451",
       "weight": 1.0
     },
     {
@@ -88645,7 +88661,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5465",
+      "source_location": "L5466",
       "weight": 1.0
     },
     {
@@ -88654,7 +88670,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5473",
+      "source_location": "L5474",
       "weight": 1.0
     },
     {
@@ -88663,7 +88679,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5480",
+      "source_location": "L5481",
       "weight": 1.0
     },
     {
@@ -88672,7 +88688,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5484",
+      "source_location": "L5485",
       "weight": 1.0
     },
     {
@@ -88681,7 +88697,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5490",
+      "source_location": "L5491",
       "weight": 1.0
     },
     {
@@ -88690,7 +88706,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5496",
+      "source_location": "L5497",
       "weight": 1.0
     },
     {
@@ -88699,7 +88715,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5504",
+      "source_location": "L5505",
       "weight": 1.0
     },
     {
@@ -88708,7 +88724,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5517",
+      "source_location": "L5518",
       "weight": 1.0
     },
     {
@@ -88717,7 +88733,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5531",
+      "source_location": "L5532",
       "weight": 1.0
     },
     {
@@ -88726,7 +88742,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5540",
+      "source_location": "L5541",
       "weight": 1.0
     },
     {
@@ -88735,7 +88751,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5562",
+      "source_location": "L5563",
       "weight": 1.0
     },
     {
@@ -88744,7 +88760,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5571",
+      "source_location": "L5572",
       "weight": 1.0
     },
     {
@@ -88753,7 +88769,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5611",
+      "source_location": "L5612",
       "weight": 1.0
     },
     {
@@ -88762,7 +88778,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5617",
+      "source_location": "L5618",
       "weight": 1.0
     },
     {
@@ -88771,7 +88787,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5625",
+      "source_location": "L5626",
       "weight": 1.0
     },
     {
@@ -88861,7 +88877,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1941",
+      "source_location": "L1942",
       "weight": 1.0
     },
     {
@@ -88871,7 +88887,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2313",
+      "source_location": "L2314",
       "weight": 1.0
     },
     {
@@ -88881,7 +88897,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2503",
+      "source_location": "L2504",
       "weight": 1.0
     },
     {
@@ -88891,7 +88907,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2519",
+      "source_location": "L2520",
       "weight": 1.0
     },
     {
@@ -88901,7 +88917,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2521",
+      "source_location": "L2522",
       "weight": 1.0
     },
     {
@@ -88911,7 +88927,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2661",
+      "source_location": "L2662",
       "weight": 1.0
     },
     {
@@ -88921,7 +88937,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2918",
+      "source_location": "L2919",
       "weight": 1.0
     },
     {
@@ -88931,7 +88947,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2930",
+      "source_location": "L2931",
       "weight": 1.0
     },
     {
@@ -88941,7 +88957,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3293",
+      "source_location": "L3294",
       "weight": 1.0
     },
     {
@@ -88951,7 +88967,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3328",
+      "source_location": "L3329",
       "weight": 1.0
     },
     {
@@ -88961,7 +88977,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3418",
+      "source_location": "L3419",
       "weight": 1.0
     },
     {
@@ -88971,7 +88987,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3468",
+      "source_location": "L3469",
       "weight": 1.0
     },
     {
@@ -88981,7 +88997,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3640",
+      "source_location": "L3641",
       "weight": 1.0
     },
     {
@@ -88991,7 +89007,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4183",
+      "source_location": "L4184",
       "weight": 1.0
     },
     {
@@ -89001,7 +89017,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4210",
+      "source_location": "L4211",
       "weight": 1.0
     },
     {
@@ -89011,7 +89027,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4270",
+      "source_location": "L4271",
       "weight": 1.0
     },
     {
@@ -89021,7 +89037,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4277",
+      "source_location": "L4278",
       "weight": 1.0
     },
     {
@@ -89031,7 +89047,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4482",
+      "source_location": "L4483",
       "weight": 1.0
     },
     {
@@ -89041,7 +89057,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4614",
+      "source_location": "L4615",
       "weight": 1.0
     },
     {
@@ -89051,7 +89067,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5267",
+      "source_location": "L5268",
       "weight": 1.0
     },
     {
@@ -89061,7 +89077,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5420",
+      "source_location": "L5421",
       "weight": 1.0
     },
     {
@@ -89071,7 +89087,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5485",
+      "source_location": "L5486",
       "weight": 1.0
     },
     {
@@ -89081,7 +89097,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5486",
+      "source_location": "L5487",
       "weight": 1.0
     },
     {
@@ -89091,7 +89107,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5545",
+      "source_location": "L5546",
       "weight": 1.0
     },
     {
@@ -89101,7 +89117,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5558",
+      "source_location": "L5559",
       "weight": 1.0
     },
     {
@@ -103990,6 +104006,16 @@
     },
     {
       "source": "apps_extension_src_popup_watch_history",
+      "target": "users_vladyslavhulyi_codex_worktrees_1197_anidachi_lp_monorepo_packages_protocol_src_index_watchprogresseventschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-watch-history.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_popup_watch_history",
       "target": "users_vladyslavhulyi_codex_worktrees_1197_anidachi_lp_monorepo_packages_protocol_src_index_watchprogressevent",
       "relation": "imports",
       "context": "import",
@@ -104005,7 +104031,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -104015,7 +104041,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -104025,7 +104051,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -104035,7 +104061,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -104045,7 +104071,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -104055,7 +104081,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -104065,7 +104091,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -104075,7 +104101,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -104085,7 +104111,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -104095,7 +104121,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -104105,7 +104131,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_popup_watch_history",
+      "target": "apps_extension_src_watch_history_storage_watchhistorystorageroot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-watch-history.tsx",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -104114,7 +104150,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L24",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -104123,7 +104159,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L32",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -104132,7 +104168,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L39",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -104141,7 +104177,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L48",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -104150,7 +104186,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L418",
+      "source_location": "L430",
       "weight": 1.0
     },
     {
@@ -104159,7 +104195,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L471",
+      "source_location": "L483",
       "weight": 1.0
     },
     {
@@ -104168,7 +104204,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L627",
+      "source_location": "L639",
       "weight": 1.0
     },
     {
@@ -104177,7 +104213,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L633",
+      "source_location": "L645",
       "weight": 1.0
     },
     {
@@ -104186,7 +104222,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L692",
+      "source_location": "L704",
       "weight": 1.0
     },
     {
@@ -104195,7 +104231,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L700",
+      "source_location": "L712",
       "weight": 1.0
     },
     {
@@ -104204,7 +104240,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L717",
+      "source_location": "L729",
       "weight": 1.0
     },
     {
@@ -104213,7 +104249,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L723",
+      "source_location": "L735",
       "weight": 1.0
     },
     {
@@ -104222,7 +104258,25 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L756",
+      "source_location": "L768",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_popup_watch_history",
+      "target": "apps_extension_src_popup_watch_history_selectconfirmedpopupwatchhistorysnapshot",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-watch-history.tsx",
+      "source_location": "L775",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_popup_watch_history",
+      "target": "apps_extension_src_popup_watch_history_isnewerthancanonicalhistory",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-watch-history.tsx",
+      "source_location": "L819",
       "weight": 1.0
     },
     {
@@ -104231,7 +104285,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L784",
+      "source_location": "L838",
       "weight": 1.0
     },
     {
@@ -104240,7 +104294,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L796",
+      "source_location": "L850",
       "weight": 1.0
     },
     {
@@ -104249,7 +104303,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L800",
+      "source_location": "L854",
       "weight": 1.0
     },
     {
@@ -104258,7 +104312,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L810",
+      "source_location": "L864",
       "weight": 1.0
     },
     {
@@ -104267,7 +104321,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L816",
+      "source_location": "L870",
       "weight": 1.0
     },
     {
@@ -104276,7 +104330,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L822",
+      "source_location": "L876",
       "weight": 1.0
     },
     {
@@ -104285,7 +104339,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L867",
+      "source_location": "L921",
       "weight": 1.0
     },
     {
@@ -104294,7 +104348,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L879",
+      "source_location": "L933",
       "weight": 1.0
     },
     {
@@ -104304,7 +104358,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L130",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
@@ -104314,7 +104368,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L153",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -104324,7 +104378,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L159",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -104334,7 +104388,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L162",
+      "source_location": "L174",
       "weight": 1.0
     },
     {
@@ -104344,7 +104398,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L193",
+      "source_location": "L205",
       "weight": 1.0
     },
     {
@@ -104354,7 +104408,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L214",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -104364,7 +104418,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L216",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -104374,7 +104428,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L241",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -104384,7 +104438,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L503",
+      "source_location": "L515",
       "weight": 1.0
     },
     {
@@ -104394,7 +104448,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L531",
+      "source_location": "L543",
       "weight": 1.0
     },
     {
@@ -104404,7 +104458,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L548",
+      "source_location": "L560",
       "weight": 1.0
     },
     {
@@ -104414,7 +104468,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L649",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -104424,7 +104478,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L656",
+      "source_location": "L668",
       "weight": 1.0
     },
     {
@@ -104434,7 +104488,27 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L710",
+      "source_location": "L722",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_popup_watch_history_loadconfirmedpopupwatchhistorysnapshot",
+      "target": "apps_extension_src_popup_watch_history_selectconfirmedpopupwatchhistorysnapshot",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-watch-history.tsx",
+      "source_location": "L772",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_popup_watch_history_selectconfirmedpopupwatchhistorysnapshot",
+      "target": "apps_extension_src_popup_watch_history_isnewerthancanonicalhistory",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-watch-history.tsx",
+      "source_location": "L800",
       "weight": 1.0
     },
     {
@@ -104444,7 +104518,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L787",
+      "source_location": "L841",
       "weight": 1.0
     },
     {
@@ -104454,7 +104528,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L40",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -119368,7 +119442,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -119377,7 +119451,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L98",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -119386,7 +119460,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L100",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -119395,7 +119469,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L108",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -119404,7 +119478,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L112",
+      "source_location": "L113",
       "weight": 1.0
     },
     {
@@ -119413,7 +119487,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L114",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -119422,7 +119496,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L139",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -119431,7 +119505,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L145",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -119440,7 +119514,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L147",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -119449,7 +119523,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L154",
+      "source_location": "L155",
       "weight": 1.0
     },
     {
@@ -119458,7 +119532,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L158",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -119467,7 +119541,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L202",
+      "source_location": "L209",
       "weight": 1.0
     },
     {
@@ -119476,7 +119550,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L869",
+      "source_location": "L888",
       "weight": 1.0
     },
     {
@@ -119485,7 +119559,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L884",
+      "source_location": "L904",
       "weight": 1.0
     },
     {
@@ -119494,7 +119568,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L888",
+      "source_location": "L908",
       "weight": 1.0
     },
     {
@@ -119503,7 +119577,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L895",
+      "source_location": "L915",
       "weight": 1.0
     },
     {
@@ -119512,7 +119586,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L913",
+      "source_location": "L933",
       "weight": 1.0
     },
     {
@@ -119521,7 +119595,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L920",
+      "source_location": "L940",
       "weight": 1.0
     },
     {
@@ -119530,7 +119604,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L924",
+      "source_location": "L944",
       "weight": 1.0
     },
     {
@@ -119539,7 +119613,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L928",
+      "source_location": "L948",
       "weight": 1.0
     },
     {
@@ -119548,7 +119622,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L932",
+      "source_location": "L952",
       "weight": 1.0
     },
     {
@@ -119557,7 +119631,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L951",
+      "source_location": "L971",
       "weight": 1.0
     },
     {
@@ -119566,7 +119640,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L975",
+      "source_location": "L995",
       "weight": 1.0
     },
     {
@@ -119575,7 +119649,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L984",
+      "source_location": "L1004",
       "weight": 1.0
     },
     {
@@ -119584,7 +119658,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1006",
+      "source_location": "L1026",
       "weight": 1.0
     },
     {
@@ -119593,7 +119667,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1014",
+      "source_location": "L1034",
       "weight": 1.0
     },
     {
@@ -119602,7 +119676,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1019",
+      "source_location": "L1039",
       "weight": 1.0
     },
     {
@@ -119611,7 +119685,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1024",
+      "source_location": "L1044",
       "weight": 1.0
     },
     {
@@ -119620,22 +119694,12 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1028",
+      "source_location": "L1048",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_watch_history_client_parsewatchhistorybootstrapdata",
       "target": "apps_extension_src_watch_history_client_isrecord",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L115",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_watch_history_client_parsewatchhistorybootstrapdata",
-      "target": "apps_extension_src_watch_history_client_hasexactkeys",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -119644,13 +119708,23 @@
       "weight": 1.0
     },
     {
+      "source": "apps_extension_src_watch_history_client_parsewatchhistorybootstrapdata",
+      "target": "apps_extension_src_watch_history_client_hasexactkeys",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/watch-history-client.ts",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
       "source": "apps_extension_src_watch_history_client_iswatchhistorymessage",
       "target": "apps_extension_src_watch_history_client_isrecord",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L159",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -119660,7 +119734,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L163",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -119670,7 +119744,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L896",
+      "source_location": "L916",
       "weight": 1.0
     },
     {
@@ -119681,7 +119755,7 @@
       "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L935",
+      "source_location": "L955",
       "weight": 1.0
     },
     {
@@ -119692,7 +119766,7 @@
       "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L936",
+      "source_location": "L956",
       "weight": 1.0
     },
     {
@@ -119702,7 +119776,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L948",
+      "source_location": "L968",
       "weight": 1.0
     },
     {
@@ -119712,7 +119786,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L963",
+      "source_location": "L983",
       "weight": 1.0
     },
     {
@@ -119722,7 +119796,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L965",
+      "source_location": "L985",
       "weight": 1.0
     },
     {
@@ -119732,7 +119806,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L966",
+      "source_location": "L986",
       "weight": 1.0
     },
     {
@@ -119742,7 +119816,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L978",
+      "source_location": "L998",
       "weight": 1.0
     },
     {
@@ -119752,7 +119826,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L979",
+      "source_location": "L999",
       "weight": 1.0
     },
     {
@@ -119762,7 +119836,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L988",
+      "source_location": "L1008",
       "weight": 1.0
     },
     {
@@ -119772,7 +119846,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L990",
+      "source_location": "L1010",
       "weight": 1.0
     },
     {
@@ -119782,7 +119856,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L991",
+      "source_location": "L1011",
       "weight": 1.0
     },
     {
@@ -119793,7 +119867,7 @@
       "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1015",
+      "source_location": "L1035",
       "weight": 1.0
     },
     {
@@ -119804,7 +119878,7 @@
       "deferred": true,
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L1020",
+      "source_location": "L1040",
       "weight": 1.0
     },
     {
@@ -119911,7 +119985,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L45",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -119920,7 +119994,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L56",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -119929,7 +120003,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L504",
+      "source_location": "L517",
       "weight": 1.0
     },
     {
@@ -119938,7 +120012,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L510",
+      "source_location": "L523",
       "weight": 1.0
     },
     {
@@ -119947,7 +120021,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L514",
+      "source_location": "L527",
       "weight": 1.0
     },
     {
@@ -119956,7 +120030,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L524",
+      "source_location": "L537",
       "weight": 1.0
     },
     {
@@ -120303,7 +120377,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -120312,7 +120386,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -120321,7 +120395,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -120330,7 +120404,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -120339,7 +120413,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -120348,7 +120422,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -120357,7 +120431,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -120366,7 +120440,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L57",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -120375,7 +120449,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L214",
+      "source_location": "L216",
       "weight": 1.0
     },
     {
@@ -120384,7 +120458,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L219",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -120393,7 +120467,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L228",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -120402,7 +120476,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L241",
+      "source_location": "L243",
       "weight": 1.0
     },
     {
@@ -120411,7 +120485,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L261",
+      "source_location": "L266",
       "weight": 1.0
     },
     {
@@ -120420,7 +120494,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L270",
+      "source_location": "L275",
       "weight": 1.0
     },
     {
@@ -120429,7 +120503,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L276",
+      "source_location": "L281",
       "weight": 1.0
     },
     {
@@ -120438,7 +120512,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L284",
+      "source_location": "L289",
       "weight": 1.0
     },
     {
@@ -120447,7 +120521,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L288",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
@@ -120457,7 +120531,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L60",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -120467,7 +120541,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L65",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -120477,22 +120551,12 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L229",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
       "source": "apps_extension_src_watch_history_storage_normalizestorageroot",
       "target": "apps_extension_src_watch_history_storage_normalizepartition",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L234",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_extension_src_watch_history_storage_normalizestorageroot",
-      "target": "apps_extension_src_watch_history_storage_activegenerationsfrompartitions",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -120502,12 +120566,22 @@
     },
     {
       "source": "apps_extension_src_watch_history_storage_normalizestorageroot",
-      "target": "apps_extension_src_watch_history_storage_createwatchhistorystorageroot",
+      "target": "apps_extension_src_watch_history_storage_activegenerationsfrompartitions",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
       "source_location": "L238",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_watch_history_storage_normalizestorageroot",
+      "target": "apps_extension_src_watch_history_storage_createwatchhistorystorageroot",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/watch-history-storage.ts",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -120517,7 +120591,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-storage.ts",
-      "source_location": "L265",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
@@ -126853,6 +126927,16 @@
     },
     {
       "source": "apps_extension_test_popup_watch_history_test",
+      "target": "apps_extension_src_popup_watch_history_selectconfirmedpopupwatchhistorysnapshot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/popup-watch-history.test.tsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_popup_watch_history_test",
       "target": "apps_extension_src_popup_watch_history_popupwatchhistoryclient",
       "relation": "imports",
       "context": "import",
@@ -126873,12 +126957,42 @@
     },
     {
       "source": "apps_extension_test_popup_watch_history_test",
+      "target": "apps_extension_src_watch_history_storage",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/popup-watch-history.test.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_popup_watch_history_test",
+      "target": "apps_extension_src_watch_history_storage_watchhistorypartitionkey",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/popup-watch-history.test.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_popup_watch_history_test",
+      "target": "apps_extension_src_watch_history_storage_watchhistorystorageroot",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/test/popup-watch-history.test.tsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_test_popup_watch_history_test",
       "target": "apps_extension_src_watch_history_client",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L14",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -126888,7 +127002,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L14",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -126898,7 +127012,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L14",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -126907,7 +127021,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L567",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -126916,7 +127030,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L579",
+      "source_location": "L673",
       "weight": 1.0
     },
     {
@@ -126925,7 +127039,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L593",
+      "source_location": "L687",
       "weight": 1.0
     },
     {
@@ -126934,7 +127048,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L661",
+      "source_location": "L755",
       "weight": 1.0
     },
     {
@@ -126943,7 +127057,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L681",
+      "source_location": "L775",
       "weight": 1.0
     },
     {
@@ -126952,7 +127066,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L702",
+      "source_location": "L796",
       "weight": 1.0
     },
     {
@@ -126961,7 +127075,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L717",
+      "source_location": "L811",
       "weight": 1.0
     },
     {
@@ -126970,7 +127084,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L737",
+      "source_location": "L831",
       "weight": 1.0
     },
     {
@@ -126979,7 +127093,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L763",
+      "source_location": "L857",
       "weight": 1.0
     },
     {
@@ -126988,7 +127102,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L781",
+      "source_location": "L875",
       "weight": 1.0
     },
     {
@@ -126997,7 +127111,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L792",
+      "source_location": "L886",
       "weight": 1.0
     },
     {
@@ -127006,7 +127120,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L805",
+      "source_location": "L899",
       "weight": 1.0
     },
     {
@@ -127015,7 +127129,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L842",
+      "source_location": "L936",
       "weight": 1.0
     },
     {
@@ -127024,7 +127138,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L854",
+      "source_location": "L948",
       "weight": 1.0
     },
     {
@@ -127033,7 +127147,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L864",
+      "source_location": "L958",
       "weight": 1.0
     },
     {
@@ -127042,7 +127156,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L876",
+      "source_location": "L970",
       "weight": 1.0
     },
     {
@@ -127051,7 +127165,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L886",
+      "source_location": "L980",
       "weight": 1.0
     },
     {
@@ -127060,7 +127174,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L895",
+      "source_location": "L989",
       "weight": 1.0
     },
     {
@@ -127069,7 +127183,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L899",
+      "source_location": "L993",
       "weight": 1.0
     },
     {
@@ -127078,7 +127192,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L916",
+      "source_location": "L1010",
       "weight": 1.0
     },
     {
@@ -127088,7 +127202,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L613",
+      "source_location": "L707",
       "weight": 1.0
     },
     {
@@ -127098,7 +127212,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L662",
+      "source_location": "L756",
       "weight": 1.0
     },
     {
@@ -127108,7 +127222,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L682",
+      "source_location": "L776",
       "weight": 1.0
     },
     {
@@ -127118,7 +127232,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L688",
+      "source_location": "L782",
       "weight": 1.0
     },
     {
@@ -127128,7 +127242,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L703",
+      "source_location": "L797",
       "weight": 1.0
     },
     {
@@ -127138,7 +127252,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L718",
+      "source_location": "L812",
       "weight": 1.0
     },
     {
@@ -127148,7 +127262,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L723",
+      "source_location": "L817",
       "weight": 1.0
     },
     {
@@ -127158,7 +127272,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L738",
+      "source_location": "L832",
       "weight": 1.0
     },
     {
@@ -127168,7 +127282,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L758",
+      "source_location": "L852",
       "weight": 1.0
     },
     {
@@ -127178,7 +127292,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L783",
+      "source_location": "L877",
       "weight": 1.0
     },
     {
@@ -127188,7 +127302,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L796",
+      "source_location": "L890",
       "weight": 1.0
     },
     {
@@ -127198,7 +127312,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L866",
+      "source_location": "L960",
       "weight": 1.0
     },
     {
@@ -127208,7 +127322,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/popup-watch-history.test.tsx",
-      "source_location": "L878",
+      "source_location": "L972",
       "weight": 1.0
     },
     {
@@ -132080,7 +132194,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/watch-history-controller.test.ts",
-      "source_location": "L750",
+      "source_location": "L776",
       "weight": 1.0
     },
     {
@@ -132089,7 +132203,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/watch-history-controller.test.ts",
-      "source_location": "L760",
+      "source_location": "L786",
       "weight": 1.0
     },
     {
@@ -227439,6 +227553,16 @@
     },
     {
       "source": "apps_extension_src_popup_watch_history",
+      "target": "packages_protocol_src_watch_history_watchprogresseventschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/extension/src/popup-watch-history.tsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_popup_watch_history",
       "target": "packages_protocol_src_watch_history_watchprogressevent",
       "relation": "imports",
       "context": "import",
@@ -231874,7 +231998,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3497",
+      "source_location": "L3498",
       "weight": 1.0
     },
     {
@@ -231884,7 +232008,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3506",
+      "source_location": "L3507",
       "weight": 1.0
     },
     {
@@ -231894,7 +232018,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3512",
+      "source_location": "L3513",
       "weight": 1.0
     },
     {
@@ -231904,7 +232028,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3520",
+      "source_location": "L3521",
       "weight": 1.0
     },
     {
@@ -231914,7 +232038,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3522",
+      "source_location": "L3523",
       "weight": 1.0
     },
     {
@@ -231924,7 +232048,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3546",
+      "source_location": "L3547",
       "weight": 1.0
     },
     {
@@ -231934,7 +232058,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3548",
+      "source_location": "L3549",
       "weight": 1.0
     },
     {
@@ -231944,7 +232068,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3563",
+      "source_location": "L3564",
       "weight": 1.0
     },
     {
@@ -231954,7 +232078,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3582",
+      "source_location": "L3583",
       "weight": 1.0
     },
     {
@@ -231964,7 +232088,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3607",
+      "source_location": "L3608",
       "weight": 1.0
     },
     {
@@ -231974,7 +232098,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3615",
+      "source_location": "L3616",
       "weight": 1.0
     },
     {
@@ -231984,7 +232108,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3627",
+      "source_location": "L3628",
       "weight": 1.0
     },
     {
@@ -231994,7 +232118,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3631",
+      "source_location": "L3632",
       "weight": 1.0
     },
     {
@@ -232004,7 +232128,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3632",
+      "source_location": "L3633",
       "weight": 1.0
     },
     {
@@ -232014,7 +232138,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3799",
+      "source_location": "L3800",
       "weight": 1.0
     },
     {
@@ -232024,7 +232148,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3801",
+      "source_location": "L3802",
       "weight": 1.0
     },
     {
@@ -232034,7 +232158,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3804",
+      "source_location": "L3805",
       "weight": 1.0
     },
     {
@@ -232044,7 +232168,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3809",
+      "source_location": "L3810",
       "weight": 1.0
     },
     {
@@ -232054,7 +232178,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3809",
+      "source_location": "L3810",
       "weight": 1.0
     },
     {
@@ -232064,7 +232188,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3811",
+      "source_location": "L3812",
       "weight": 1.0
     },
     {
@@ -232074,7 +232198,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3845",
+      "source_location": "L3846",
       "weight": 1.0
     },
     {
@@ -232084,7 +232208,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3846",
+      "source_location": "L3847",
       "weight": 1.0
     },
     {
@@ -232094,7 +232218,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3848",
+      "source_location": "L3849",
       "weight": 1.0
     },
     {
@@ -232274,7 +232398,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L169",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -232284,7 +232408,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L196",
+      "source_location": "L208",
       "weight": 1.0
     },
     {
@@ -232294,7 +232418,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L231",
+      "source_location": "L243",
       "weight": 1.0
     },
     {
@@ -232304,7 +232428,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L255",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -232314,7 +232438,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L271",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -232554,7 +232678,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L885",
+      "source_location": "L905",
       "weight": 1.0
     },
     {
@@ -232624,7 +232748,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/watch-history-controller.test.ts",
-      "source_location": "L863",
+      "source_location": "L891",
       "weight": 1.0
     },
     {
@@ -239334,7 +239458,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1876",
+      "source_location": "L1877",
       "weight": 1.0
     },
     {
@@ -239345,7 +239469,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L1900",
+      "source_location": "L1901",
       "weight": 1.0
     },
     {
@@ -239356,7 +239480,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2052",
+      "source_location": "L2053",
       "weight": 1.0
     },
     {
@@ -239367,7 +239491,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2091",
+      "source_location": "L2092",
       "weight": 1.0
     },
     {
@@ -239378,7 +239502,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2099",
+      "source_location": "L2100",
       "weight": 1.0
     },
     {
@@ -239389,7 +239513,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2116",
+      "source_location": "L2117",
       "weight": 1.0
     },
     {
@@ -239400,7 +239524,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2119",
+      "source_location": "L2120",
       "weight": 1.0
     },
     {
@@ -239411,7 +239535,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2126",
+      "source_location": "L2127",
       "weight": 1.0
     },
     {
@@ -239422,7 +239546,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2130",
+      "source_location": "L2131",
       "weight": 1.0
     },
     {
@@ -239433,7 +239557,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2133",
+      "source_location": "L2134",
       "weight": 1.0
     },
     {
@@ -239444,7 +239568,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2151",
+      "source_location": "L2152",
       "weight": 1.0
     },
     {
@@ -239455,7 +239579,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2158",
+      "source_location": "L2159",
       "weight": 1.0
     },
     {
@@ -239466,7 +239590,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2173",
+      "source_location": "L2174",
       "weight": 1.0
     },
     {
@@ -239477,7 +239601,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2192",
+      "source_location": "L2193",
       "weight": 1.0
     },
     {
@@ -239488,7 +239612,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2301",
+      "source_location": "L2302",
       "weight": 1.0
     },
     {
@@ -239499,7 +239623,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2380",
+      "source_location": "L2381",
       "weight": 1.0
     },
     {
@@ -239510,7 +239634,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2629",
+      "source_location": "L2630",
       "weight": 1.0
     },
     {
@@ -239521,7 +239645,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2630",
+      "source_location": "L2631",
       "weight": 1.0
     },
     {
@@ -239532,7 +239656,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2632",
+      "source_location": "L2633",
       "weight": 1.0
     },
     {
@@ -239543,7 +239667,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2651",
+      "source_location": "L2652",
       "weight": 1.0
     },
     {
@@ -239554,7 +239678,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2772",
+      "source_location": "L2773",
       "weight": 1.0
     },
     {
@@ -239565,7 +239689,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2788",
+      "source_location": "L2789",
       "weight": 1.0
     },
     {
@@ -239576,7 +239700,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2804",
+      "source_location": "L2805",
       "weight": 1.0
     },
     {
@@ -239587,7 +239711,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2869",
+      "source_location": "L2870",
       "weight": 1.0
     },
     {
@@ -239598,7 +239722,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2911",
+      "source_location": "L2912",
       "weight": 1.0
     },
     {
@@ -239609,7 +239733,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2922",
+      "source_location": "L2923",
       "weight": 1.0
     },
     {
@@ -239620,7 +239744,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3070",
+      "source_location": "L3071",
       "weight": 1.0
     },
     {
@@ -239631,7 +239755,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3134",
+      "source_location": "L3135",
       "weight": 1.0
     },
     {
@@ -239642,7 +239766,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3151",
+      "source_location": "L3152",
       "weight": 1.0
     },
     {
@@ -239653,7 +239777,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3219",
+      "source_location": "L3220",
       "weight": 1.0
     },
     {
@@ -239664,7 +239788,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3222",
+      "source_location": "L3223",
       "weight": 1.0
     },
     {
@@ -239675,7 +239799,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3292",
+      "source_location": "L3293",
       "weight": 1.0
     },
     {
@@ -239686,7 +239810,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3480",
+      "source_location": "L3481",
       "weight": 1.0
     },
     {
@@ -239697,7 +239821,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3506",
+      "source_location": "L3507",
       "weight": 1.0
     },
     {
@@ -239708,7 +239832,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3582",
+      "source_location": "L3583",
       "weight": 1.0
     },
     {
@@ -239719,7 +239843,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3632",
+      "source_location": "L3633",
       "weight": 1.0
     },
     {
@@ -239730,7 +239854,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3668",
+      "source_location": "L3669",
       "weight": 1.0
     },
     {
@@ -239741,7 +239865,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3669",
+      "source_location": "L3670",
       "weight": 1.0
     },
     {
@@ -239752,7 +239876,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3676",
+      "source_location": "L3677",
       "weight": 1.0
     },
     {
@@ -239763,7 +239887,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3732",
+      "source_location": "L3733",
       "weight": 1.0
     },
     {
@@ -239774,7 +239898,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3742",
+      "source_location": "L3743",
       "weight": 1.0
     },
     {
@@ -239785,7 +239909,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3809",
+      "source_location": "L3810",
       "weight": 1.0
     },
     {
@@ -239796,7 +239920,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3809",
+      "source_location": "L3810",
       "weight": 1.0
     },
     {
@@ -239807,7 +239931,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3811",
+      "source_location": "L3812",
       "weight": 1.0
     },
     {
@@ -239818,7 +239942,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3845",
+      "source_location": "L3846",
       "weight": 1.0
     },
     {
@@ -239829,7 +239953,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3846",
+      "source_location": "L3847",
       "weight": 1.0
     },
     {
@@ -239840,7 +239964,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4004",
+      "source_location": "L4005",
       "weight": 1.0
     },
     {
@@ -239851,7 +239975,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4259",
+      "source_location": "L4260",
       "weight": 1.0
     },
     {
@@ -239862,7 +239986,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4284",
+      "source_location": "L4285",
       "weight": 1.0
     },
     {
@@ -239873,7 +239997,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4305",
+      "source_location": "L4306",
       "weight": 1.0
     },
     {
@@ -239884,7 +240008,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4342",
+      "source_location": "L4343",
       "weight": 1.0
     },
     {
@@ -239895,7 +240019,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4381",
+      "source_location": "L4382",
       "weight": 1.0
     },
     {
@@ -239906,7 +240030,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4394",
+      "source_location": "L4395",
       "weight": 1.0
     },
     {
@@ -239917,7 +240041,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4398",
+      "source_location": "L4399",
       "weight": 1.0
     },
     {
@@ -239928,7 +240052,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4407",
+      "source_location": "L4408",
       "weight": 1.0
     },
     {
@@ -239939,7 +240063,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L4656",
+      "source_location": "L4657",
       "weight": 1.0
     },
     {
@@ -239950,7 +240074,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5028",
+      "source_location": "L5029",
       "weight": 1.0
     },
     {
@@ -239961,7 +240085,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5129",
+      "source_location": "L5130",
       "weight": 1.0
     },
     {
@@ -239972,7 +240096,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5130",
+      "source_location": "L5131",
       "weight": 1.0
     },
     {
@@ -239983,7 +240107,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L5407",
+      "source_location": "L5408",
       "weight": 1.0
     },
     {
@@ -241644,7 +241768,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L109",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -241655,7 +241779,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L110",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -241666,7 +241790,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L214",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -241677,7 +241801,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L216",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -241688,18 +241812,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L759",
+      "source_location": "L771",
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_popup_watch_history_loadconfirmedpopupwatchhistorysnapshot",
+      "source": "apps_extension_src_popup_watch_history_selectconfirmedpopupwatchhistorysnapshot",
       "target": "apps_extension_src_watch_history_storage_watchhistorypartitionkey",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L762",
+      "source_location": "L781",
       "weight": 1.0
     },
     {
@@ -241710,7 +241834,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L790",
+      "source_location": "L844",
       "weight": 1.0
     },
     {
@@ -241721,7 +241845,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L41",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -242865,7 +242989,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L203",
+      "source_location": "L210",
       "weight": 1.0
     },
     {
@@ -242876,7 +243000,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L866",
+      "source_location": "L885",
       "weight": 1.0
     },
     {
@@ -242887,7 +243011,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L866",
+      "source_location": "L885",
       "weight": 1.0
     },
     {
@@ -242898,7 +243022,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L956",
+      "source_location": "L976",
       "weight": 1.0
     },
     {
@@ -242909,7 +243033,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L494",
+      "source_location": "L507",
       "weight": 1.0
     },
     {
@@ -242920,7 +243044,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L500",
+      "source_location": "L513",
       "weight": 1.0
     },
     {
@@ -243019,7 +243143,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/test/watch-history-controller.test.ts",
-      "source_location": "L841",
+      "source_location": "L869",
       "weight": 1.0
     },
     {
@@ -252853,7 +252977,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2220",
+      "source_location": "L2221",
       "weight": 1.0
     },
     {
@@ -252864,7 +252988,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L2666",
+      "source_location": "L2667",
       "weight": 1.0
     },
     {
@@ -252875,7 +252999,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3295",
+      "source_location": "L3296",
       "weight": 1.0
     },
     {
@@ -252886,7 +253010,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/overlay-app.tsx",
-      "source_location": "L3872",
+      "source_location": "L3873",
       "weight": 1.0
     },
     {
@@ -253348,7 +253472,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L122",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -253359,7 +253483,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L135",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -253370,7 +253494,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L209",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -253381,18 +253505,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L239",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
-      "source": "apps_extension_src_popup_watch_history_loadconfirmedpopupwatchhistorysnapshot",
+      "source": "apps_extension_src_popup_watch_history_selectconfirmedpopupwatchhistorysnapshot",
       "target": "packages_protocol_src_watch_history_watchhistoryresponseschema",
       "relation": "references",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/popup-watch-history.tsx",
-      "source_location": "L769",
+      "source_location": "L788",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_extension_src_popup_watch_history_selectconfirmedpopupwatchhistorysnapshot",
+      "target": "packages_protocol_src_watch_history_watchprogresseventschema",
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/extension/src/popup-watch-history.tsx",
+      "source_location": "L796",
       "weight": 1.0
     },
     {
@@ -253733,7 +253868,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/watch-history-client.ts",
-      "source_location": "L127",
+      "source_location": "L128",
       "weight": 1.0
     },
     {
@@ -253744,7 +253879,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L71",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
