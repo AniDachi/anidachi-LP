@@ -18336,7 +18336,7 @@
       "label": "isFailedCapture()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L315",
+      "source_location": "L317",
       "_origin": "ast"
     },
     {
@@ -18344,7 +18344,7 @@
       "label": "observationIdentity()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L321",
+      "source_location": "L323",
       "_origin": "ast"
     },
     {
@@ -18352,7 +18352,7 @@
       "label": "toEvent()",
       "file_type": "code",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L325",
+      "source_location": "L327",
       "_origin": "ast"
     },
     {
@@ -22672,7 +22672,7 @@
       "label": "createFixture()",
       "file_type": "code",
       "source_file": "apps/extension/test/watch-history-controller.test.ts",
-      "source_location": "L331",
+      "source_location": "L382",
       "_origin": "ast"
     },
     {
@@ -122115,7 +122115,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L315",
+      "source_location": "L317",
       "weight": 1.0
     },
     {
@@ -122124,7 +122124,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L321",
+      "source_location": "L323",
       "weight": 1.0
     },
     {
@@ -122133,7 +122133,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L325",
+      "source_location": "L327",
       "weight": 1.0
     },
     {
@@ -135755,7 +135755,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/watch-history-controller.test.ts",
-      "source_location": "L331",
+      "source_location": "L382",
       "weight": 1.0
     },
     {
@@ -236877,7 +236877,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/extension/test/watch-history-controller.test.ts",
-      "source_location": "L422",
+      "source_location": "L473",
       "weight": 1.0
     },
     {
@@ -247286,7 +247286,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L312",
+      "source_location": "L314",
       "weight": 1.0
     },
     {
@@ -247297,7 +247297,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/src/watch-history-controller.ts",
-      "source_location": "L312",
+      "source_location": "L314",
       "weight": 1.0
     },
     {
@@ -247495,7 +247495,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/extension/test/watch-history-controller.test.ts",
-      "source_location": "L401",
+      "source_location": "L452",
       "weight": 1.0
     },
     {

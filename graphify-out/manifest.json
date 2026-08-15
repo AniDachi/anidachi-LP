@@ -4565,8 +4565,8 @@
     "semantic_hash": ""
   },
   "apps/extension/src/watch-history-controller.ts": {
-    "mtime": 1786773656.7611563,
-    "ast_hash": "0c92097279c4f6e888ed8c54c377e526",
+    "mtime": 1786774943.6140018,
+    "ast_hash": "64ca6b1c4535642f4023b4a13d61c3aa",
     "semantic_hash": ""
   },
   "apps/extension/src/watch-history-listeners.ts": {
@@ -4595,8 +4595,8 @@
     "semantic_hash": ""
   },
   "apps/extension/test/watch-history-controller.test.ts": {
-    "mtime": 1786773440.8206792,
-    "ast_hash": "c7971c9027249c47fb361ee6fd0d6b9a",
+    "mtime": 1786774254.4757469,
+    "ast_hash": "15862c43990229e50e58d2ca8116625a",
     "semantic_hash": ""
   },
   "apps/extension/test/watch-history-listeners.test.ts": {
