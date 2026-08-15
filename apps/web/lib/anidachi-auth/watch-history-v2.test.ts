@@ -16,6 +16,11 @@ import {
   WatchHistoryV2ApiError,
   type WatchHistoryV2Store,
 } from "./watch-history-v2";
+import {
+  getWatchHistoryAggregateLabel,
+  mergeWatchHistoryPages,
+  removeWatchHistoryTarget,
+} from "../../app/account/watch-library/watch-library-client";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const EVENT_ID = "22222222-2222-4222-8222-222222222222";
@@ -825,6 +830,101 @@ test("delete parses exact duplicate acknowledgement and never reports optimistic
       }),
     hasCode("DELETED_HISTORY"),
   );
+});
+
+test("website v2 model never invents totals for unavailable catalog data", () => {
+  const history = buildWatchHistoryV2Response({
+    userId: USER_ID,
+    accountGeneration: 1,
+    progressRows: [
+      progressRow(),
+      progressRow({
+        episode_key: "episode-two",
+        episode_title: "Episode Two",
+        episode_number: 2,
+        observed_at: "2026-08-14T12:01:00.000Z",
+        server_order: 2,
+      }),
+    ],
+    sessions: [],
+    limit: 50,
+    generatedAt: new Date(NOW),
+  });
+
+  assert.equal(history.items[0]?.catalogState, "unavailable");
+  assert.equal(getWatchHistoryAggregateLabel(history.items[0]!), "2 observed episodes");
+  assert.equal(history.items[0]?.aggregate.availableEpisodes, null);
+  assert.equal(history.items[0]?.seasons[0]?.nextEpisode, null);
+});
+
+test("website v2 model applies acknowledged episode, title, and all deletion scopes", () => {
+  const history = buildWatchHistoryV2Response({
+    userId: USER_ID,
+    accountGeneration: 1,
+    progressRows: [
+      progressRow(),
+      progressRow({
+        episode_key: "episode-two",
+        episode_title: "Episode Two",
+        episode_number: 2,
+        observed_at: "2026-08-14T12:01:00.000Z",
+        server_order: 2,
+      }),
+      progressRow({
+        provider: "youtube",
+        title_key: "movie-one",
+        episode_key: "video-one",
+        item_kind: "movie",
+        title: "Movie One",
+        episode_title: "Movie One",
+        season_key: null,
+        season_title: null,
+        season_number: null,
+        episode_number: null,
+        source_url: "https://www.youtube.com/watch?v=video-one",
+        observed_at: "2026-08-14T12:02:00.000Z",
+        server_order: 3,
+      }),
+    ],
+    sessions: [],
+    limit: 50,
+    generatedAt: new Date(NOW),
+  });
+
+  const withoutEpisode = removeWatchHistoryTarget(history, {
+    scope: "episode",
+    provider: "crunchyroll",
+    titleKey: "series-one",
+    episodeKey: "episode-one",
+  });
+  assert.deepEqual(
+    withoutEpisode.items.find((item) => item.titleKey === "series-one")?.seasons[0]?.episodes.map((episode) => episode.episodeKey),
+    ["episode-two"],
+  );
+  const withoutTitle = removeWatchHistoryTarget(withoutEpisode, {
+    scope: "title",
+    provider: "youtube",
+    titleKey: "movie-one",
+  });
+  assert.deepEqual(withoutTitle.items.map((item) => item.titleKey), ["series-one"]);
+  assert.deepEqual(removeWatchHistoryTarget(withoutTitle, { scope: "all" }).items, []);
+});
+
+test("website v2 model appends opaque cursor pages without duplicating titles", () => {
+  const first = buildWatchHistoryV2Response({
+    userId: USER_ID,
+    accountGeneration: 1,
+    progressRows: [progressRow()],
+    sessions: [],
+    limit: 50,
+    generatedAt: new Date(NOW),
+  });
+  const duplicate = { ...first, nextCursor: "next-page" };
+  const merged = mergeWatchHistoryPages(first, duplicate);
+
+  assert.equal(merged.items.length, 1);
+  assert.equal(merged.nextCursor, "next-page");
+  assert.equal(merged.totalTitleCount, 1);
 });
 
 function storeStub(overrides: Partial<WatchHistoryV2Store>): WatchHistoryV2Store {

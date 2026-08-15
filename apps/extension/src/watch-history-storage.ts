@@ -163,6 +163,27 @@ export function createWatchHistoryStorage(
     });
   }
 
+  async function discardAllOtherOwnerOutboxes(
+    currentOwnerUserId: string,
+    confirmed: boolean,
+  ): Promise<WatchHistoryStorageResult> {
+    if (!confirmed) throw new Error("Discarding pending watch history requires confirmation");
+    return updateRoot((root) => {
+      let changed = false;
+      const partitions = Object.fromEntries(
+        Object.entries(root.partitions).flatMap(([key, partition]) => {
+          if (partition.ownerUserId === currentOwnerUserId || partition.outbox.entries.length === 0) {
+            return [[key, partition]];
+          }
+          changed = true;
+          const cleared = { ...partition, outbox: { ...partition.outbox, entries: [] } };
+          return cleared.cache || cleared.preferences || cleared.currentObservation ? [[key, cleared]] : [];
+        }),
+      );
+      return changed ? { ...root, partitions } : root;
+    });
+  }
+
   async function otherOwnerPendingSummary(currentOwnerUserId: string): Promise<{
     hasPendingWork: boolean;
     byteUse: number;
@@ -185,6 +206,7 @@ export function createWatchHistoryStorage(
     updateRoot,
     clearRebuildableAccountData,
     discardOtherOwnerOutbox,
+    discardAllOtherOwnerOutboxes,
     otherOwnerPendingSummary,
   };
 }

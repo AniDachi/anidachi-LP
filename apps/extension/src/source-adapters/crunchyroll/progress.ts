@@ -1,8 +1,8 @@
-import type { WatchProgressEntry } from "../../watch-progress";
 import {
   isValidHistoryMedia,
   normalizeHistoryUrl,
   type HistoryObservation,
+  type ProviderPlaybackMetadata,
   type SourceAdapterHistoryPolicy,
 } from "../core/history-policy";
 import type { VideoAdapter } from "../core/types";
@@ -22,7 +22,7 @@ interface CrunchyrollProgressInput {
 
 export function getCrunchyrollProgressEntry(
 	input: CrunchyrollProgressInput,
-): WatchProgressEntry | null {
+): ProviderPlaybackMetadata | null {
 	if (!location.hostname.endsWith("crunchyroll.com")) {
 		return null;
 	}

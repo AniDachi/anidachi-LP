@@ -1,0 +1,552 @@
+import type {
+  WatchHistoryPreferencesResponse,
+  WatchHistoryResponse,
+  WatchProgressEvent,
+} from "@anidachi/protocol";
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  PopupWatchHistoryPanel,
+  type PopupWatchHistoryClient,
+  type PopupWatchHistorySnapshot,
+} from "../src/popup-watch-history";
+import {
+  createListWatchHistoryMessage,
+  type WatchHistoryMessageResponse,
+} from "../src/watch-history-client";
+
+const OWNER_ID = "00000000-0000-4000-8000-000000000001";
+const SESSION_ID = "00000000-0000-4000-8000-000000000002";
+const NOW = "2026-08-15T03:00:00.000Z";
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+describe("Popup Watch History v2", () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    vi.restoreAllMocks();
+  });
+
+  it("paints the confirmed current-owner cache, overlays matching pending progress, then accepts canonical refresh", async () => {
+    let resolveList: ((value: WatchHistoryMessageResponse) => void) | undefined;
+    const cached = historyFixture({ title: "Cached Frieren", currentTime: 420, progress: 0.2 });
+    const refreshed = historyFixture({ title: "Canonical Frieren", currentTime: 1_260, progress: 0.6 });
+    const client = clientFixture({
+      cached: snapshotFixture(cached, [pendingEvent({ currentTime: 840, progress: 0.4 })]),
+      request: vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+        if (message.command === "list") {
+          return new Promise<WatchHistoryMessageResponse>((resolve) => {
+            resolveList = resolve;
+          });
+        }
+        if (message.command === "get-preferences") {
+          return { ok: true, data: preferencesFixture(false) };
+        }
+        if (message.command === "other-owner-pending") {
+          return { ok: true, hasPendingWork: false, byteUse: 0 };
+        }
+        return { ok: true };
+      }),
+    });
+
+    const view = await renderPanel(client);
+    await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
+    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).toContain("14:00");
+
+    await act(async () => {
+      resolveList?.({ ok: true, data: refreshed });
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(view.container.textContent).toContain("Canonical Frieren"));
+    expect(view.container.textContent).toContain("21:00");
+    expect(view.container.textContent).not.toContain("Cached Frieren");
+    expect(client.request).toHaveBeenCalledWith(createListWatchHistoryMessage({ limit: 100 }));
+
+    await unmount(view.root);
+  });
+
+  it("treats YouTube as disabled until preferences are confirmed by the current refresh", async () => {
+    let resolvePreferences: ((value: WatchHistoryMessageResponse) => void) | undefined;
+    const client = clientFixture({
+      cached: snapshotFixture(historyFixture(), [], true),
+      request: vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+        if (message.command === "list") return { ok: true, data: historyFixture() };
+        if (message.command === "get-preferences") {
+          return new Promise<WatchHistoryMessageResponse>((resolve) => {
+            resolvePreferences = resolve;
+          });
+        }
+        if (message.command === "other-owner-pending") {
+          return { ok: true, hasPendingWork: false, byteUse: 0 };
+        }
+        return { ok: true };
+      }),
+    });
+
+    const view = await renderPanel(client);
+    const toggle = await findButton(view.container, "Track YouTube history");
+    expect(toggle.disabled).toBe(true);
+    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+
+    await act(async () => {
+      resolvePreferences?.({ ok: true, data: preferencesFixture(true) });
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(toggle.disabled).toBe(false));
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+
+    await unmount(view.root);
+  });
+
+  it("patches the account YouTube preference and applies only the confirmed acknowledgement", async () => {
+    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+      if (message.command === "list") return { ok: true, data: historyFixture() };
+      if (message.command === "get-preferences") {
+        return { ok: true, data: preferencesFixture(false) };
+      }
+      if (message.command === "update-preferences") {
+        return { ok: true, data: preferencesFixture(true) };
+      }
+      if (message.command === "other-owner-pending") {
+        return { ok: true, hasPendingWork: false, byteUse: 0 };
+      }
+      return { ok: true };
+    });
+    const view = await renderPanel(clientFixture({ cached: null, request }));
+    const toggle = await findButton(view.container, "Track YouTube history");
+    await waitFor(() => expect(toggle.disabled).toBe(false));
+
+    await click(toggle);
+
+    await waitFor(() => expect(toggle.getAttribute("aria-pressed")).toBe("true"));
+    expect(request).toHaveBeenCalledWith(expect.objectContaining({
+      command: "update-preferences",
+      input: { youtubeHistoryEnabled: true },
+    }));
+    await unmount(view.root);
+  });
+
+  it("deletes one episode with the current generation and keeps unrelated canonical history", async () => {
+    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+      if (message.command === "list") return { ok: true, data: twoEpisodeHistoryFixture() };
+      if (message.command === "get-preferences") {
+        return { ok: true, data: preferencesFixture(false) };
+      }
+      if (message.command === "other-owner-pending") {
+        return { ok: true, hasPendingWork: false, byteUse: 0 };
+      }
+      if (message.command === "delete") {
+        const input = message.input as {
+          clientMutationId: string;
+          accountGeneration: number;
+          target: { scope: "episode"; provider: "crunchyroll"; titleKey: string; episodeKey: string };
+        };
+        return {
+          ok: true,
+          data: {
+            meta: {
+              schemaVersion: 2,
+              ownerUserId: OWNER_ID,
+              accountGeneration: 1,
+              serverTime: NOW,
+            },
+            schemaVersion: 2,
+            clientMutationId: input.clientMutationId,
+            accountGeneration: input.accountGeneration,
+            target: input.target,
+            deletedAt: NOW,
+          },
+        };
+      }
+      return { ok: true };
+    });
+    const view = await renderPanel(clientFixture({ cached: null, request }));
+    const deleteFirst = await findButton(view.container, "Delete Episode 1 - The Journey");
+
+    await click(deleteFirst);
+
+    await waitFor(() => expect(view.container.textContent).not.toContain("Episode 1 - The Journey"));
+    expect(view.container.textContent).toContain("Episode 2 - The Promise");
+    const deletion = request.mock.calls.find(([message]) => message.command === "delete")?.[0];
+    expect(deletion).toEqual(expect.objectContaining({
+      command: "delete",
+      input: expect.objectContaining({
+        schemaVersion: 2,
+        accountGeneration: 1,
+        clientMutationId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        target: {
+          scope: "episode",
+          provider: "crunchyroll",
+          titleKey: "crunchyroll:frieren",
+          episodeKey: "crunchyroll:episode-1",
+        },
+      }),
+    }));
+    await unmount(view.root);
+  });
+
+  it("shows only an aggregate old-account warning and discards it only after confirmation", async () => {
+    const confirmDiscard = vi.fn(() => true);
+    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+      if (message.command === "list") return { ok: true, data: historyFixture() };
+      if (message.command === "get-preferences") {
+        return { ok: true, data: preferencesFixture(false) };
+      }
+      if (message.command === "other-owner-pending") {
+        return { ok: true, hasPendingWork: true, byteUse: 1_024 };
+      }
+      return { ok: true };
+    });
+    const client: PopupWatchHistoryClient = {
+      ...clientFixture({ cached: null, request }),
+      confirmDiscard,
+    };
+    const view = await renderPanel(client);
+    const discard = await findButton(view.container, "Discard pending history from another account");
+    expect(view.container.textContent).toContain("Pending history from another account");
+    expect(view.container.textContent).not.toContain("00000000-");
+
+    await click(discard);
+
+    expect(confirmDiscard).toHaveBeenCalledTimes(1);
+    expect(request).toHaveBeenCalledWith(expect.objectContaining({
+      command: "discard-old-owner-work",
+      confirmed: true,
+    }));
+    await unmount(view.root);
+  });
+
+  it("accepts an all-history acknowledgement that advances the account generation", async () => {
+    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+      if (message.command === "list") return { ok: true, data: historyFixture() };
+      if (message.command === "get-preferences") return { ok: true, data: preferencesFixture(false) };
+      if (message.command === "other-owner-pending") return { ok: true, hasPendingWork: false, byteUse: 0 };
+      if (message.command === "delete") {
+        const input = message.input as { clientMutationId: string; target: { scope: "all" } };
+        return {
+          ok: true,
+          data: {
+            meta: { schemaVersion: 2, ownerUserId: OWNER_ID, accountGeneration: 2, serverTime: NOW },
+            schemaVersion: 2,
+            clientMutationId: input.clientMutationId,
+            accountGeneration: 2,
+            target: input.target,
+            deletedAt: NOW,
+          },
+        };
+      }
+      return { ok: true };
+    });
+    const view = await renderPanel(clientFixture({ cached: null, request }));
+    const clear = await findButton(view.container, "Clear all watch history");
+
+    await click(clear);
+
+    await waitFor(() => expect(view.container.textContent).toContain("Progress will appear"));
+    expect(view.container.textContent).not.toContain("Frieren");
+    await unmount(view.root);
+  });
+
+  it("recreates a room from a canonical session and opens the source with its room id", async () => {
+    const openUrl = vi.fn(async () => undefined);
+    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+      if (message.command === "list") return { ok: true, data: historyFixture() };
+      if (message.command === "get-preferences") return { ok: true, data: preferencesFixture(false) };
+      if (message.command === "other-owner-pending") return { ok: true, hasPendingWork: false, byteUse: 0 };
+      if (message.command === "create-room") {
+        return {
+          ok: true,
+          data: {
+            roomId: "room-popup-1",
+            roomToken: "signed-room-token",
+            shareableLink: "https://staging.anidachi.app/room/room-popup-1",
+            reused: false,
+            capabilities: {
+              hostPlanCode: "free",
+              maxParticipants: 4,
+              maxMediaSeats: 2,
+              canNameRoom: false,
+              canSendPushInvites: false,
+            },
+            quota: null,
+          },
+        };
+      }
+      return { ok: true };
+    });
+    const client = { ...clientFixture({ cached: null, request }), openUrl };
+    const view = await renderPanel(client);
+    const createRoom = await findButton(view.container, "Create room from Solo session");
+
+    await click(createRoom);
+
+    await waitFor(() => expect(openUrl).toHaveBeenCalledOnce());
+    expect(request).toHaveBeenCalledWith(expect.objectContaining({ command: "create-room", sessionId: SESSION_ID }));
+    expect(openUrl).toHaveBeenCalledWith("https://www.crunchyroll.com/watch/EPISODE1#anidachiRoom=room-popup-1");
+    await unmount(view.root);
+  });
+
+  it("renders a YouTube movie-like item without inventing a catalog denominator", async () => {
+    const history = youtubeMovieHistoryFixture();
+    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+      if (message.command === "list") return { ok: true, data: history };
+      if (message.command === "get-preferences") return { ok: true, data: preferencesFixture(true) };
+      if (message.command === "other-owner-pending") return { ok: true, hasPendingWork: false, byteUse: 0 };
+      return { ok: true };
+    });
+    const view = await renderPanel(clientFixture({ cached: null, request }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("YouTube Movie"));
+    expect(view.container.textContent).toContain("1 observed episode");
+    expect(view.container.textContent).toContain("5:00");
+    expect(view.container.textContent).not.toContain("0/");
+    await unmount(view.root);
+  });
+});
+
+function clientFixture(overrides: {
+  cached: PopupWatchHistorySnapshot | null;
+  request: PopupWatchHistoryClient["request"];
+}): PopupWatchHistoryClient {
+  return {
+    loadCached: vi.fn(async () => overrides.cached),
+    request: overrides.request,
+    confirmDiscard: vi.fn(() => true),
+    openUrl: vi.fn(async () => undefined),
+  };
+}
+
+function snapshotFixture(
+  history: WatchHistoryResponse,
+  pendingEvents: WatchProgressEvent[] = [],
+  youtubeHistoryEnabled = false,
+): PopupWatchHistorySnapshot {
+  return {
+    history,
+    accountGeneration: 1,
+    preferences: { youtubeHistoryEnabled },
+    pendingEvents,
+    capturePaused: false,
+  };
+}
+
+function historyFixture(overrides: {
+  title?: string;
+  currentTime?: number;
+  progress?: number;
+} = {}): WatchHistoryResponse {
+  const currentTime = overrides.currentTime ?? 600;
+  const progress = overrides.progress ?? 0.5;
+  const episode = {
+    episodeKey: "crunchyroll:episode-1",
+    episodeTitle: "Episode 1 - The Journey",
+    seasonKey: "crunchyroll:season-1",
+    seasonTitle: "Season 1",
+    seasonNumber: 1,
+    episodeNumber: 1,
+    sourceUrl: "https://www.crunchyroll.com/watch/EPISODE1",
+    currentTime,
+    duration: 2_100,
+    progress,
+    completedAt: null,
+    lastWatchedAt: NOW,
+    sessions: [sessionFixture(currentTime, progress)],
+  };
+  return {
+    meta: {
+      schemaVersion: 2,
+      ownerUserId: OWNER_ID,
+      accountGeneration: 1,
+      serverTime: NOW,
+    },
+    generatedAt: NOW,
+    totalTitleCount: 1,
+    nextCursor: null,
+    items: [
+      {
+        provider: "crunchyroll",
+        titleKey: "crunchyroll:frieren",
+        itemKind: "series",
+        title: overrides.title ?? "Frieren",
+        sourceUrl: episode.sourceUrl,
+        artworkUrl: null,
+        catalogState: "unavailable",
+        aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null },
+        seasons: [
+          {
+            seasonKey: "crunchyroll:season-1",
+            seasonTitle: "Season 1",
+            seasonNumber: 1,
+            order: 0,
+            aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null },
+            episodes: [episode],
+            nextEpisode: null,
+          },
+        ],
+        sessions: [sessionFixture(currentTime, progress)],
+        latestActivity: {
+          episodeKey: episode.episodeKey,
+          currentTime,
+          duration: episode.duration,
+          progress,
+          completedAt: null,
+          lastWatchedAt: NOW,
+        },
+        lastWatchedAt: NOW,
+      },
+    ],
+  };
+}
+
+function twoEpisodeHistoryFixture(): WatchHistoryResponse {
+  const history = historyFixture();
+  const first = history.items[0]?.seasons[0]?.episodes[0];
+  if (!first) throw new Error("fixture episode missing");
+  const second = {
+    ...first,
+    episodeKey: "crunchyroll:episode-2",
+    episodeTitle: "Episode 2 - The Promise",
+    episodeNumber: 2,
+    sourceUrl: "https://www.crunchyroll.com/watch/EPISODE2",
+  };
+  return {
+    ...history,
+    items: history.items.map((item) => ({
+      ...item,
+      seasons: item.seasons.map((season) => ({ ...season, episodes: [first, second] })),
+    })),
+  };
+}
+
+function youtubeMovieHistoryFixture(): WatchHistoryResponse {
+  const history = historyFixture();
+  return {
+    ...history,
+    items: [{
+      ...history.items[0]!,
+      provider: "youtube",
+      titleKey: "youtube:movie-one",
+      itemKind: "movie",
+      title: "YouTube Movie",
+      sourceUrl: "https://www.youtube.com/watch?v=movie-one",
+      seasons: [],
+      aggregate: { completedEpisodes: 0, availableEpisodes: null, progress: null },
+      latestActivity: {
+        episodeKey: "youtube:movie-one",
+        currentTime: 300,
+        duration: 600,
+        progress: 0.5,
+        completedAt: null,
+        lastWatchedAt: NOW,
+      },
+      sessions: [sessionFixture(300, 0.5)],
+    }],
+  };
+}
+
+function sessionFixture(currentTime: number, progress: number) {
+  return {
+    id: SESSION_ID,
+    roomId: null,
+    roomGeneration: null,
+    hostUserId: OWNER_ID,
+    kind: "solo" as const,
+    sourceGeneration: null,
+    currentTime,
+    duration: 2_100,
+    progress,
+    startedAt: NOW,
+    endedAt: null,
+    lastWatchedAt: NOW,
+    participants: [],
+  };
+}
+
+function pendingEvent(overrides: { currentTime: number; progress: number }): WatchProgressEvent {
+  return {
+    schemaVersion: 2,
+    clientEventId: "00000000-0000-4000-8000-000000000003",
+    clientSessionKey: "popup-test-session",
+    accountGeneration: 1,
+    provider: "crunchyroll",
+    titleKey: "crunchyroll:frieren",
+    itemKind: "series",
+    title: "Cached Frieren",
+    artworkUrl: null,
+    episodeKey: "crunchyroll:episode-1",
+    episodeTitle: "Episode 1 - The Journey",
+    seasonKey: "crunchyroll:season-1",
+    seasonTitle: "Season 1",
+    seasonNumber: 1,
+    episodeNumber: 1,
+    sourceUrl: "https://www.crunchyroll.com/watch/EPISODE1",
+    currentTime: overrides.currentTime,
+    duration: 2_100,
+    progress: overrides.progress,
+    observedAt: NOW,
+    kind: "pause",
+  };
+}
+
+function preferencesFixture(youtubeHistoryEnabled: boolean): WatchHistoryPreferencesResponse {
+  return {
+    meta: {
+      schemaVersion: 2,
+      ownerUserId: OWNER_ID,
+      accountGeneration: 1,
+      serverTime: NOW,
+    },
+    preferences: { youtubeHistoryEnabled },
+  };
+}
+
+async function renderPanel(client: PopupWatchHistoryClient) {
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  await act(async () => {
+    root.render(<PopupWatchHistoryPanel client={client} ownerUserId={OWNER_ID} />);
+  });
+  return { container, root };
+}
+
+async function findButton(container: HTMLElement, name: string): Promise<HTMLButtonElement> {
+  let button: HTMLButtonElement | null = null;
+  await waitFor(() => {
+    button = [...container.querySelectorAll("button")].find(
+      (candidate) => candidate.getAttribute("aria-label") === name,
+    ) ?? null;
+    expect(button).not.toBeNull();
+  });
+  if (!button) throw new Error(`Button not found: ${name}`);
+  return button;
+}
+
+async function click(button: HTMLButtonElement): Promise<void> {
+  await act(async () => button.click());
+}
+
+async function waitFor(assertion: () => void, timeoutMs = 2_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  let lastError: unknown;
+  while (Date.now() < deadline) {
+    try {
+      assertion();
+      return;
+    } catch (error) {
+      lastError = error;
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
+    }
+  }
+  throw lastError;
+}
+
+async function unmount(root: Root): Promise<void> {
+  await act(async () => root.unmount());
+}

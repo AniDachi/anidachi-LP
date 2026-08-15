@@ -32,10 +32,6 @@ import {
 } from "../src/room-session-storage";
 import { handleSocialHttpMessage, isSocialHttpMessage } from "../src/social-client";
 import {
-  handleWatchLibraryHttpMessage,
-  isWatchLibraryHttpMessage,
-} from "../src/watch-library-client";
-import {
   flushWatchHistoryInBackground,
   handleWatchHistoryAuthSessionChange,
   handleWatchHistoryHttpMessage,
@@ -71,11 +67,6 @@ export default defineBackground(() => {
 
     if (isAccountInboxHttpMessage(message)) {
       void handleAccountInboxHttpMessage(message).then(sendResponse);
-      return true;
-    }
-
-    if (isWatchLibraryHttpMessage(message)) {
-      void handleWatchLibraryHttpMessage(message).then(sendResponse);
       return true;
     }
 

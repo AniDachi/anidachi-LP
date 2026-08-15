@@ -851,6 +851,46 @@ describe("watch history v2 client", () => {
     })).resolves.toEqual({ ok: false, status: "invalid-request" });
   });
 
+  it("validates and handles aggregate old-owner discard without exposing owner identifiers", async () => {
+    const oldOwner = "00000000-0000-4000-8000-000000000099";
+    const currentKey = watchHistoryPartitionKey(session.user.id, 1);
+    const oldKey = watchHistoryPartitionKey(oldOwner, 1);
+    let stored = {
+      schemaVersion: 2 as const,
+      activeGenerations: { [session.user.id]: 1, [oldOwner]: 1 },
+      partitions: {
+        [currentKey]: readyPartition(session.user.id, false),
+        [oldKey]: {
+          ...readyPartition(oldOwner, false),
+          outbox: {
+            ownerUserId: oldOwner,
+            accountGeneration: 1,
+            entries: [{ event: progressEvent(), key: "old", slot: "latest", persistedAt: 1 }],
+          },
+        },
+      },
+    } as WatchHistoryStorageRoot;
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+    const command = {
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "discard-old-owner-work",
+      confirmed: true,
+    } as const;
+
+    expect(isWatchHistoryMessage(command)).toBe(true);
+    expect(isWatchHistoryMessage({ ...command, ownerUserId: oldOwner })).toBe(false);
+    await expect(client.handle(command)).resolves.toEqual({ ok: true });
+    expect(stored.partitions[currentKey]?.outbox.entries).toEqual([]);
+    expect(stored.partitions[oldKey]?.outbox.entries).toEqual([]);
+  });
+
   it("reclaims acknowledged pending work once before rejecting a quota-limited capture", async () => {
     const owner = session.user.id;
     const oldEvent = { ...progressEvent("00000000-0000-4000-8000-000000000020"), kind: "ended" as const };

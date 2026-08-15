@@ -206,6 +206,59 @@ describe("watch history storage", () => {
     expect(stored.partitions).toEqual({});
   });
 
+  it("discards every non-current outbox only after aggregate confirmation", async () => {
+    const ownerC = "00000000-0000-4000-8000-000000000003";
+    const currentKey = watchHistoryPartitionKey(ownerB, 1);
+    const retainedOldKey = watchHistoryPartitionKey(ownerA, 1);
+    const removableOldKey = watchHistoryPartitionKey(ownerC, 1);
+    let stored = {
+      schemaVersion: 2 as const,
+      activeGenerations: { [ownerA]: 1, [ownerB]: 1, [ownerC]: 1 },
+      partitions: {
+        [currentKey]: {
+          ownerUserId: ownerB,
+          accountGeneration: 1,
+          cache: null,
+          preferences: null,
+          currentObservation: null,
+          outbox: { ownerUserId: ownerB, accountGeneration: 1, entries: [{ event: { clientEventId: "current" } }] },
+        },
+        [retainedOldKey]: {
+          ownerUserId: ownerA,
+          accountGeneration: 1,
+          cache: { retained: true },
+          preferences: null,
+          currentObservation: null,
+          outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [{ event: { clientEventId: "old-a" } }] },
+        },
+        [removableOldKey]: {
+          ownerUserId: ownerC,
+          accountGeneration: 1,
+          cache: null,
+          preferences: null,
+          currentObservation: null,
+          outbox: { ownerUserId: ownerC, accountGeneration: 1, entries: [{ event: { clientEventId: "old-c" } }] },
+        },
+      },
+    } as unknown as WatchHistoryStorageRoot;
+    const store = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+      getBytesInUse: async () => 0,
+      quotaBytes: 1_000_000,
+    });
+
+    await expect(store.discardAllOtherOwnerOutboxes(ownerB, false)).rejects.toThrow("confirmation");
+    expect(stored.partitions[retainedOldKey]?.outbox.entries).toHaveLength(1);
+    await expect(store.discardAllOtherOwnerOutboxes(ownerB, true)).resolves.toEqual({ ok: true });
+
+    expect(stored.partitions[currentKey]?.outbox.entries).toHaveLength(1);
+    expect(stored.partitions[retainedOldKey]).toMatchObject({
+      cache: { retained: true },
+      outbox: { entries: [] },
+    });
+    expect(stored.partitions).not.toHaveProperty(removableOldKey);
+  });
+
   it("surfaces a failed write as storage-full and recovers without discarding existing state", async () => {
     let stored = createWatchHistoryStorageRoot();
     let shouldFail = true;

@@ -75,13 +75,24 @@ export type WatchHistoryMessage =
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "other-owner-pending" }
   | {
       type: typeof WATCH_HISTORY_MESSAGE_TYPE;
+      command: "discard-old-owner-work";
+      confirmed: boolean;
+    }
+  | {
+      type: typeof WATCH_HISTORY_MESSAGE_TYPE;
       command: "discard-old-owner";
       ownerUserId: string;
       confirmed: boolean;
     };
 
 export type WatchHistoryMessageResponse =
-  | { ok: true; data?: unknown; flushed?: number; hasPendingWork?: boolean; byteUse?: number }
+  | {
+      ok: true;
+      data?: unknown;
+      flushed?: number;
+      hasPendingWork?: boolean;
+      byteUse?: number;
+    }
   | { ok: false; status: WatchHistoryLocalStatus; capturePausedPersisted?: boolean };
 
 export type WatchHistoryStorage = ReturnType<typeof createWatchHistoryStorage>;
@@ -180,6 +191,9 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
     case "discard-old-owner":
       return hasExactKeys(value, ["type", "command", "ownerUserId", "confirmed"]) &&
         typeof value.ownerUserId === "string" && value.ownerUserId.length > 0 && value.ownerUserId.length <= 128 && typeof value.confirmed === "boolean";
+    case "discard-old-owner-work":
+      return hasExactKeys(value, ["type", "command", "confirmed"]) &&
+        typeof value.confirmed === "boolean";
     default:
       return false;
   }
@@ -205,6 +219,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         const result = await storage.discardOtherOwnerOutbox(
           session.user.id,
           message.ownerUserId,
+          message.confirmed,
+        );
+        return result.ok ? { ok: true } : result;
+      } catch {
+        return { ok: false, status: "invalid-request" };
+      }
+    }
+    if (message.command === "discard-old-owner-work") {
+      try {
+        const result = await storage.discardAllOtherOwnerOutboxes(
+          session.user.id,
           message.confirmed,
         );
         return result.ok ? { ok: true } : result;
@@ -915,7 +940,8 @@ export async function handleWatchHistoryHttpMessage(
     message.command === "content-reconnect" ||
     message.command === "recover-storage" ||
     message.command === "other-owner-pending" ||
-    message.command === "discard-old-owner";
+    message.command === "discard-old-owner" ||
+    message.command === "discard-old-owner-work";
   const getCurrentSession = localCommand
     ? getStoredAuthTokens
     : async () => getCurrentExtensionSession().catch(getStoredAuthTokens);
