@@ -3118,8 +3118,37 @@ ${extensionThemeTokens}
     border-bottom: 1px solid rgba(255, 255, 255, 0.045);
   }
 
-  .popup-watch-controls-spacer {
+  .popup-watch-refresh {
     width: 68px;
+    min-height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    justify-self: end;
+    border: 1px solid rgba(255, 255, 255, 0.065);
+    border-radius: 10px;
+    padding: 0 7px;
+    background: rgba(255, 255, 255, 0.025);
+    color: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    font-size: 9.5px;
+    font-weight: 760;
+  }
+
+  .popup-watch-refresh:hover:not(:disabled) {
+    border-color: rgba(255, 174, 106, 0.2);
+    color: rgba(255, 224, 196, 0.88);
+  }
+
+  .popup-watch-refresh:focus-visible {
+    outline: 2px solid rgba(255, 174, 106, 0.55);
+    outline-offset: 2px;
+  }
+
+  .popup-watch-refresh:disabled {
+    cursor: default;
+    opacity: 0.42;
   }
 
   .popup-watch-preferences {

@@ -67,11 +67,17 @@ export function PopupWatchHistoryPanel({
   const [oldOwnerPending, setOldOwnerPending] = useState(false);
   const [mode, setMode] = useState<"mine" | "together">("mine");
   const [searchQuery, setSearchQuery] = useState("");
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const requestGeneration = useRef(0);
 
   useEffect(() => {
     onTitleCountChange?.(history?.totalTitleCount ?? 0);
   }, [history?.totalTitleCount, onTitleCountChange]);
+
+  useEffect(() => {
+    setMode("mine");
+    setSearchQuery("");
+  }, [ownerUserId]);
 
   useEffect(() => {
     const generation = ++requestGeneration.current;
@@ -84,8 +90,6 @@ export function PopupWatchHistoryPanel({
     setError(null);
     setBusyAction(null);
     setOldOwnerPending(false);
-    setMode("mine");
-    setSearchQuery("");
     if (!ownerUserId) {
       setLoading(false);
       return;
@@ -122,8 +126,9 @@ export function PopupWatchHistoryPanel({
         } else {
           setError("Could not validate watch history.");
         }
-      } else if (!cached) {
+      } else {
         setError(messageForStatus(historyResponse.status));
+        if (historyResponse.status === "storage-full") setCapturePaused(true);
       }
 
       if (preferencesResponse.ok) {
@@ -142,12 +147,17 @@ export function PopupWatchHistoryPanel({
     return () => {
       if (requestGeneration.current === generation) requestGeneration.current += 1;
     };
-  }, [client, ownerUserId]);
+  }, [client, ownerUserId, refreshVersion]);
 
-  const pendingByEpisode = useMemo(() => latestPendingByEpisode(pendingEvents), [pendingEvents]);
+  const pendingByEpisode = useMemo(
+    () => latestPendingByEpisode(pendingEvents.filter((event) =>
+      mode === "together" ? Boolean(event.sharedRoom) : !event.sharedRoom,
+    )),
+    [mode, pendingEvents],
+  );
   const visibleItems = useMemo(
-    () => filterWatchHistoryItems(history?.items ?? [], mode, searchQuery),
-    [history?.items, mode, searchQuery],
+    () => filterWatchHistoryItems(history?.items ?? [], mode, searchQuery, pendingByEpisode),
+    [history?.items, mode, pendingByEpisode, searchQuery],
   );
   const providerGroups = useMemo(() => groupWatchHistoryItems(visibleItems), [visibleItems]);
 
@@ -252,6 +262,28 @@ export function PopupWatchHistoryPanel({
     setBusyAction(null);
   };
 
+  const refreshHistory = async () => {
+    if (loading || busyAction) return;
+    if (capturePaused) {
+      const expectedGeneration = requestGeneration.current;
+      setBusyAction("refresh");
+      setError(null);
+      const response = await client.request(createWatchHistoryMessage({
+        type: "ANIDACHI_WATCH_HISTORY_V2",
+        command: "recover-storage",
+      }));
+      if (requestGeneration.current !== expectedGeneration) return;
+      if (!response.ok) {
+        setError(messageForStatus(response.status));
+        setBusyAction(null);
+        return;
+      }
+      setCapturePaused(false);
+      setBusyAction(null);
+    }
+    setRefreshVersion((current) => current + 1);
+  };
+
   if (!ownerUserId) {
     return <div className="popup-empty">Sign in to sync watch history.</div>;
   }
@@ -277,7 +309,7 @@ export function PopupWatchHistoryPanel({
             </span>
           </span>
         </button>
-        <label className="popup-watch-search">
+        <div className="popup-watch-search">
           <Search aria-hidden="true" size={13} />
           <input
             aria-label="Search watch history"
@@ -295,8 +327,18 @@ export function PopupWatchHistoryPanel({
               <X size={12} />
             </button>
           ) : null}
-        </label>
-        <span aria-hidden="true" className="popup-watch-controls-spacer" />
+        </div>
+        <button
+          aria-label={error || capturePaused ? "Retry watch history" : "Refresh watch history"}
+          className="popup-watch-refresh"
+          disabled={loading || Boolean(busyAction)}
+          title={error || capturePaused ? "Retry watch history" : "Refresh watch history"}
+          type="button"
+          onClick={() => void refreshHistory()}
+        >
+          <RefreshCw aria-hidden="true" size={13} />
+          <span>{error || capturePaused ? "Retry" : "Refresh"}</span>
+        </button>
       </div>
       <div className="popup-watch-preferences">
         <button
@@ -445,7 +487,7 @@ function PopupWatchHistoryItem({
     <article className="popup-watch-item" data-kind={item.itemKind} data-provider={item.provider}>
       <div className="popup-watch-row">
         <span className="popup-watch-artwork" data-has-artwork={Boolean(item.artworkUrl)}>
-          {item.artworkUrl ? <img alt="" src={item.artworkUrl} /> : item.title.slice(0, 1)}
+          {item.artworkUrl ? <img alt="" loading="lazy" src={item.artworkUrl} /> : item.title.slice(0, 1)}
         </span>
         <span className="popup-watch-main">
           <strong className="popup-watch-title">{item.title}</strong>
@@ -552,10 +594,17 @@ function PopupWatchHistoryItem({
             </span>
             <span className="popup-series-progress">
               <span className="popup-progress-track">
-                <span style={{ width: `${Math.round(item.latestActivity.progress * 100)}%` }} />
+                <span style={{ width: `${Math.round((pendingByEpisode.get(
+                  pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
+                )?.progress ?? item.latestActivity.progress) * 100)}%` }} />
               </span>
-              <span>{formatClock(item.latestActivity.currentTime)}</span>
+              <span>{formatClock(pendingByEpisode.get(
+                pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
+              )?.currentTime ?? item.latestActivity.currentTime)}</span>
             </span>
+            {pendingByEpisode.has(
+              pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
+            ) ? <span className="popup-mode-badge">Pending sync</span> : null}
             {item.sessions.slice(0, 4).map((session) => (
               <button
                 aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
@@ -585,6 +634,7 @@ function filterWatchHistoryItems(
   items: WatchHistoryItem[],
   mode: "mine" | "together",
   searchQuery: string,
+  pendingByEpisode: Map<string, WatchProgressEvent>,
 ): WatchHistoryItem[] {
   const sessionKind = mode === "mine" ? "solo" : "shared";
   const query = searchQuery.trim().toLocaleLowerCase();
@@ -593,19 +643,58 @@ function filterWatchHistoryItems(
     const titleMatches = !query || item.title.toLocaleLowerCase().includes(query);
     const sessions = item.sessions.filter((session) => session.kind === sessionKind);
     const seasons = item.seasons.flatMap((season) => {
-      const episodes = season.episodes.filter((episode) =>
-        episode.sessions.some((session) => session.kind === sessionKind) &&
-        (titleMatches || episode.episodeTitle.toLocaleLowerCase().includes(query)),
-      );
+      const episodes = season.episodes.flatMap((episode) => {
+        const episodeSessions = episode.sessions.filter((session) => session.kind === sessionKind);
+        const hasPending = pendingByEpisode.has(
+          pendingEpisodeKey(item.provider, item.titleKey, episode.episodeKey),
+        );
+        const belongsToMode = episodeSessions.length > 0 ||
+          (mode === "mine" && episode.sessions.length === 0) ||
+          hasPending;
+        const matchesSearch = titleMatches || episode.episodeTitle.toLocaleLowerCase().includes(query);
+        if (!belongsToMode || !matchesSearch) return [];
+        const latestSession = newestSession(episodeSessions);
+        return [{
+          ...episode,
+          currentTime: latestSession?.currentTime ?? episode.currentTime,
+          duration: latestSession?.duration ?? episode.duration,
+          progress: latestSession?.progress ?? episode.progress,
+          lastWatchedAt: latestSession?.lastWatchedAt ?? episode.lastWatchedAt,
+          sessions: episodeSessions,
+        }];
+      });
       return episodes.length ? [{ ...season, episodes }] : [];
     });
 
     if (seasons.length) return [{ ...item, seasons, sessions }];
-    if (item.seasons.length === 0 && sessions.length && titleMatches) {
-      return [{ ...item, sessions }];
+    const latestPending = pendingByEpisode.has(
+      pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
+    );
+    if (item.seasons.length === 0 && titleMatches &&
+      (sessions.length > 0 || (mode === "mine" && item.sessions.length === 0) || latestPending)) {
+      const latestSession = newestSession(sessions);
+      return [{
+        ...item,
+        latestActivity: latestSession ? {
+          ...item.latestActivity,
+          currentTime: latestSession.currentTime,
+          duration: latestSession.duration,
+          progress: latestSession.progress,
+          lastWatchedAt: latestSession.lastWatchedAt,
+        } : item.latestActivity,
+        sessions,
+      }];
     }
     return [];
   });
+}
+
+function newestSession(sessions: WatchHistorySession[]): WatchHistorySession | undefined {
+  return sessions.reduce<WatchHistorySession | undefined>((latest, session) =>
+    !latest || Date.parse(session.lastWatchedAt) > Date.parse(latest.lastWatchedAt)
+      ? session
+      : latest,
+  undefined);
 }
 
 function groupWatchHistoryItems(items: WatchHistoryItem[]): PopupProviderGroup[] {
