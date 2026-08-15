@@ -20,6 +20,7 @@ import {
 import {
   createWatchHistoryStorage,
   watchHistoryPartitionKey,
+  withoutWatchHistoryAttestation,
   type WatchHistoryAccountPartition,
 } from "./watch-history-storage";
 
@@ -42,6 +43,7 @@ export type WatchHistoryMessage =
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "list"; limit?: number; cursor?: string }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "enqueue-progress"; event: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "flush" }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "get-preferences" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "update-preferences"; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "delete"; input: unknown }
@@ -87,20 +89,26 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
   if ("accessToken" in value) return false;
   switch (value.command) {
     case "list":
-      return optionalNumber(value.limit) && optionalString(value.cursor);
+      return hasExactKeys(value, ["type", "command", "limit", "cursor"]) &&
+        (value.limit === undefined || (typeof value.limit === "number" && Number.isInteger(value.limit) && value.limit >= 1 && value.limit <= 100)) &&
+        (value.cursor === undefined || (typeof value.cursor === "string" && value.cursor.length > 0 && value.cursor.length <= 512));
     case "enqueue-progress":
-      return "event" in value;
+      return hasExactKeys(value, ["type", "command", "event"]) && "event" in value;
     case "update-preferences":
     case "delete":
-      return "input" in value;
+      return hasExactKeys(value, ["type", "command", "input"]) && "input" in value;
     case "flush":
+    case "content-reconnect":
     case "get-preferences":
     case "other-owner-pending":
-      return true;
+      return hasExactKeys(value, ["type", "command"]);
     case "create-room":
-      return typeof value.sessionId === "string" && optionalString(value.clientRequestId);
+      return hasExactKeys(value, ["type", "command", "sessionId", "clientRequestId"]) &&
+        typeof value.sessionId === "string" && value.sessionId.length > 0 && value.sessionId.length <= 128 &&
+        (value.clientRequestId === undefined || (typeof value.clientRequestId === "string" && value.clientRequestId.length > 0 && value.clientRequestId.length <= 128));
     case "discard-old-owner":
-      return typeof value.ownerUserId === "string" && typeof value.confirmed === "boolean";
+      return hasExactKeys(value, ["type", "command", "ownerUserId", "confirmed"]) &&
+        typeof value.ownerUserId === "string" && value.ownerUserId.length > 0 && value.ownerUserId.length <= 128 && typeof value.confirmed === "boolean";
     default:
       return false;
   }
@@ -122,16 +130,20 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (!session) return { ok: false, status: "unauthenticated" };
 
     if (message.command === "discard-old-owner") {
-      const result = await storage.discardOtherOwnerOutbox(
-        session.user.id,
-        message.ownerUserId,
-        message.confirmed,
-      );
-      return result.ok ? { ok: true } : result;
+      try {
+        const result = await storage.discardOtherOwnerOutbox(
+          session.user.id,
+          message.ownerUserId,
+          message.confirmed,
+        );
+        return result.ok ? { ok: true } : result;
+      } catch {
+        return { ok: false, status: "invalid-request" };
+      }
     }
     if (message.command === "list") return list(session, message);
     if (message.command === "enqueue-progress") return enqueue(session, message.event);
-    if (message.command === "flush") return flush(session);
+    if (message.command === "flush" || message.command === "content-reconnect") return flush(session);
     if (message.command === "get-preferences") return getPreferences(session);
     if (message.command === "update-preferences") return updatePreferences(session, message.input);
     if (message.command === "delete") return deleteHistory(session, message.input);
@@ -151,7 +163,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (!parsed.success || parsed.data.meta.ownerUserId !== session.user.id) {
       return { ok: false, status: "invalid-response" };
     }
-    const saved = await updateCurrentPartition(session, parsed.data.meta.accountGeneration, (partition) => ({
+    const saved = await replaceCanonicalPartition(session, parsed.data.meta.accountGeneration, (partition) => ({
       ...partition,
       cache: parsed.data,
     }));
@@ -167,24 +179,30 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const parsed = WatchProgressEventSchema.safeParse(rawEvent);
     if (!parsed.success) return { ok: false, status: "invalid-request" };
     const event = parsed.data;
-    const saved = await updateCurrentPartition(session, event.accountGeneration, (partition) => ({
+    const persist = () => updateCurrentPartition(session, event.accountGeneration, (partition) => ({
       ...partition,
-      currentObservation: event,
+      currentObservation: withoutWatchHistoryAttestation(event),
       outbox: enqueueWatchHistoryEvent(partition.outbox, event),
     }));
+    let saved = await persist();
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
-    if (!saved.ok) return saved;
+    if (!saved.ok) {
+      await flush(session).catch(() => undefined);
+      saved = await persist();
+      if (saved.stale) return { ok: false, status: "generation-mismatch" };
+      if (!saved.ok) return saved;
+    }
     return flush(session);
   }
 
   async function flush(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
     const root = await storage.readRoot();
-    const partitions = Object.values(root.partitions)
-      .filter((partition) => partition.ownerUserId === session.user.id)
-      .sort((left, right) => left.accountGeneration - right.accountGeneration);
+    const generation = root.activeGenerations?.[session.user.id];
+    if (generation === undefined) return { ok: true, flushed: 0 };
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
+    if (!partition) return { ok: true, flushed: 0 };
     let flushed = 0;
-    for (const partition of partitions) {
-      for (const entry of orderWatchHistoryOutbox(partition.outbox)) {
+    for (const entry of orderWatchHistoryOutbox(partition.outbox)) {
         if (flushed >= FLUSH_LIMIT) return { ok: true, flushed };
         const current = await dependencies.getCurrentSession();
         if (!sameSession(session, current)) return { ok: true, flushed };
@@ -194,17 +212,22 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         });
         if (!response.ok) return response.error;
         const ack = WatchProgressAckSchema.safeParse(response.body);
-        if (!ack.success || ack.data.accountGeneration !== partition.accountGeneration) {
+        if (!ack.success ||
+          ack.data.meta.ownerUserId !== session.user.id ||
+          ack.data.accountGeneration !== generation ||
+          ack.data.acceptedEventId !== entry.event.clientEventId) {
           return { ok: false, status: "invalid-response" };
         }
-        const saved = await updateCurrentPartition(session, partition.accountGeneration, (candidate) => ({
+        const saved = await updateCurrentPartition(session, generation, (candidate) => ({
           ...candidate,
           outbox: acknowledgeWatchHistoryEvent(candidate.outbox, ack.data.acceptedEventId),
+          currentObservation: candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
+            ? null
+            : candidate.currentObservation,
         }));
         if (saved.stale) return { ok: false, status: "generation-mismatch" };
         if (!saved.ok) return saved;
         flushed += 1;
-      }
     }
     return { ok: true, flushed };
   }
@@ -216,7 +239,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (!parsed.success || parsed.data.meta.ownerUserId !== session.user.id) {
       return { ok: false, status: "invalid-response" };
     }
-    const saved = await updateCurrentPartition(session, parsed.data.meta.accountGeneration, (partition) => ({
+    const saved = await replaceCanonicalPartition(session, parsed.data.meta.accountGeneration, (partition) => ({
       ...partition,
       preferences: parsed.data.preferences,
     }));
@@ -239,7 +262,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (!parsed.success || parsed.data.meta.ownerUserId !== session.user.id) {
       return { ok: false, status: "invalid-response" };
     }
-    const saved = await updateCurrentPartition(session, parsed.data.meta.accountGeneration, (partition) => ({
+    const saved = await replaceCanonicalPartition(session, parsed.data.meta.accountGeneration, (partition) => ({
       ...partition,
       preferences: parsed.data.preferences,
     }));
@@ -253,6 +276,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   ): Promise<WatchHistoryMessageResponse> {
     const input = WatchHistoryDeletionRequestSchema.safeParse(rawInput);
     if (!input.success) return { ok: false, status: "invalid-request" };
+    const root = await storage.readRoot();
+    if (root.activeGenerations?.[session.user.id] !== input.data.accountGeneration) {
+      return { ok: false, status: "generation-mismatch" };
+    }
     const response = await authenticatedRequest(session, "/api/watch-history/v2/delete", {
       method: "POST",
       body: JSON.stringify(input.data),
@@ -262,7 +289,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (!parsed.success || parsed.data.meta.ownerUserId !== session.user.id) {
       return { ok: false, status: "invalid-response" };
     }
-    const saved = await updateCurrentPartition(session, parsed.data.accountGeneration, (partition) => ({
+    const saved = await replaceCanonicalPartition(session, parsed.data.accountGeneration, (partition) => ({
       ...partition,
       cache: null,
       currentObservation: null,
@@ -321,23 +348,68 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const key = watchHistoryPartitionKey(session.user.id, generation);
     let stale = false;
     const result = await storage.updateRoot((root) => {
-      const latestGeneration = Math.max(
-        0,
-        ...Object.values(root.partitions)
-          .filter((partition) => partition.ownerUserId === session.user.id)
-          .map((partition) => partition.accountGeneration),
-      );
-      if (latestGeneration > generation) {
+      const active = root.activeGenerations?.[session.user.id];
+      if (active !== undefined && active !== generation) {
         stale = true;
         return root;
       }
       const partition = root.partitions[key] ?? emptyPartition(session.user.id, generation);
-      return { ...root, partitions: { ...root.partitions, [key]: update(partition) } };
+      return {
+        ...root,
+        activeGenerations: { ...root.activeGenerations, [session.user.id]: generation },
+        partitions: { ...root.partitions, [key]: update(partition) },
+      };
     });
     return stale ? { ...result, stale: true } : result;
   }
 
-  return { handle, flush };
+  async function replaceCanonicalPartition(
+    session: ExtensionAuthTokens,
+    generation: number,
+    update: (partition: WatchHistoryAccountPartition) => WatchHistoryAccountPartition,
+  ): Promise<ReturnType<WatchHistoryStorage["updateRoot"]> extends Promise<infer Result>
+    ? Result & { stale?: boolean }
+    : never> {
+    const current = await dependencies.getCurrentSession();
+    if (!sameSession(session, current)) return { ok: true } as const;
+    const key = watchHistoryPartitionKey(session.user.id, generation);
+    let stale = false;
+    const result = await storage.updateRoot((root) => {
+      const active = root.activeGenerations?.[session.user.id];
+      if (active !== undefined && active > generation) {
+        stale = true;
+        return root;
+      }
+      const partitions = Object.fromEntries(
+        Object.entries(root.partitions).flatMap(([partitionKey, partition]) => {
+          if (partition.ownerUserId !== session.user.id || partition.accountGeneration === generation) {
+            return [[partitionKey, partition]];
+          }
+          const cleared = {
+            ...partition,
+            cache: null,
+            preferences: null,
+            currentObservation: null,
+            outbox: { ...partition.outbox, entries: [] },
+          };
+          return [];
+        }),
+      );
+      const partition = partitions[key] ?? emptyPartition(session.user.id, generation);
+      return {
+        ...root,
+        activeGenerations: { ...root.activeGenerations, [session.user.id]: generation },
+        partitions: { ...partitions, [key]: update(partition) },
+      };
+    });
+    return stale ? { ...result, stale: true } : result;
+  }
+
+  async function refresh(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+    return list(session, { type: WATCH_HISTORY_MESSAGE_TYPE, command: "list" });
+  }
+
+  return { handle, flush, refresh };
 }
 
 function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHistoryAccountPartition {
@@ -366,12 +438,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function optionalString(value: unknown): boolean {
-  return value === undefined || typeof value === "string";
-}
-
-function optionalNumber(value: unknown): boolean {
-  return value === undefined || (typeof value === "number" && Number.isInteger(value));
+function hasExactKeys(value: Record<string, unknown>, allowed: string[]): boolean {
+  return Object.keys(value).every((key) => allowed.includes(key));
 }
 
 export async function handleWatchHistoryHttpMessage(
@@ -396,7 +464,11 @@ export async function flushWatchHistoryInBackground(): Promise<void> {
   const { getCurrentExtensionSession } = await import("./auth-client");
   const client = createWatchHistoryClient({ getCurrentSession: getCurrentExtensionSession });
   const session = await getCurrentExtensionSession();
-  if (session) await client.flush(session);
+  if (session) await client.refresh(session);
+}
+
+export function createWatchHistoryContentReconnectMessage(): WatchHistoryMessage {
+  return { type: WATCH_HISTORY_MESSAGE_TYPE, command: "content-reconnect" };
 }
 
 export function requestWatchHistory(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse> {

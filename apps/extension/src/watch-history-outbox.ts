@@ -15,16 +15,20 @@ export type WatchHistoryOutboxPartition = {
   entries: WatchHistoryOutboxEntry[];
 };
 
-const TERMINAL_KINDS = new Set<WatchProgressEvent["kind"]>([
-  "pause",
-  "pagehide",
-  "room_leave",
-  "room_end",
-  "ended",
-]);
+const TERMINAL_KIND: WatchProgressEvent["kind"] = "ended";
 
-export function watchHistoryOutboxKey(event: WatchProgressEvent): string {
-  return `${event.provider}:${event.titleKey}:${event.episodeKey}`;
+export function watchHistoryOutboxKey(
+  partition: Pick<WatchHistoryOutboxPartition, "ownerUserId" | "accountGeneration">,
+  event: WatchProgressEvent,
+): string {
+  return [
+    partition.ownerUserId,
+    String(partition.accountGeneration),
+    event.provider,
+    event.titleKey,
+    event.episodeKey,
+    event.clientSessionKey,
+  ].map(encodeURIComponent).join(":");
 }
 
 export function enqueueWatchHistoryEvent(
@@ -35,8 +39,11 @@ export function enqueueWatchHistoryEvent(
   if (event.accountGeneration !== partition.accountGeneration) {
     throw new Error("Watch history event generation does not match its outbox partition");
   }
-  const key = watchHistoryOutboxKey(event);
-  const slot: WatchHistoryOutboxSlot = TERMINAL_KINDS.has(event.kind) ? "terminal" : "latest";
+  const key = watchHistoryOutboxKey(partition, event);
+  const slot: WatchHistoryOutboxSlot = event.kind === TERMINAL_KIND ? "terminal" : "latest";
+  if (slot === "terminal" && partition.entries.some((candidate) => candidate.key === key && candidate.slot === slot)) {
+    return partition;
+  }
   const entry: WatchHistoryOutboxEntry = { event, key, slot, persistedAt };
   return {
     ...partition,
@@ -68,8 +75,6 @@ export function orderWatchHistoryOutbox(
     if (slot !== 0) return slot;
     const observed = left.event.observedAt.localeCompare(right.event.observedAt);
     if (observed !== 0) return observed;
-    const persisted = left.persistedAt - right.persistedAt;
-    if (persisted !== 0) return persisted;
     return left.event.clientEventId.localeCompare(right.event.clientEventId);
   });
 }

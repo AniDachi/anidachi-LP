@@ -169,4 +169,69 @@ describe("watch history storage", () => {
     await expect(store.replaceRoot(candidate)).resolves.toEqual({ ok: true });
     expect(stored).toEqual(candidate);
   });
+
+  it("serializes concurrent adapters over the one shared WXT root boundary", async () => {
+    let stored = createWatchHistoryStorageRoot();
+    let reads = 0;
+    let releaseReads: (() => void) | undefined;
+    const delayedRead = new Promise<void>((resolve) => {
+      releaseReads = resolve;
+    });
+    setTimeout(() => releaseReads?.(), 0);
+    const item = {
+      getValue: async () => {
+        const snapshot = stored;
+        reads += 1;
+        if (reads <= 2) await delayedRead;
+        return snapshot;
+      },
+      setValue: async (value: WatchHistoryStorageRoot) => {
+        stored = value;
+      },
+    };
+    const first = createWatchHistoryStorage({ item, getBytesInUse: async () => 0, quotaBytes: 1_000_000 });
+    const second = createWatchHistoryStorage({ item, getBytesInUse: async () => 0, quotaBytes: 1_000_000 });
+
+    await Promise.all([
+      first.updateRoot((root) => ({ ...root, partitions: { ...root.partitions, first: {} as never } })),
+      second.updateRoot((root) => ({ ...root, partitions: { ...root.partitions, second: {} as never } })),
+    ]);
+
+    expect(stored.partitions).toHaveProperty("first");
+    expect(stored.partitions).toHaveProperty("second");
+  });
+
+  it("discarding old-owner work retains that partition's rebuildable state", async () => {
+    const partitionKey = watchHistoryPartitionKey(ownerA, 1);
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      partitions: {
+        [partitionKey]: {
+          ownerUserId: ownerA,
+          accountGeneration: 1,
+          cache: { retained: true } as never,
+          preferences: { youtubeHistoryEnabled: true },
+          currentObservation: { clientEventId: "current" } as never,
+          outbox: {
+            ownerUserId: ownerA,
+            accountGeneration: 1,
+            entries: [{ event: {} as never, key: "old", slot: "latest", persistedAt: 1 }],
+          },
+        },
+      },
+    };
+    const store = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+      getBytesInUse: async () => 0,
+      quotaBytes: 1_000_000,
+    });
+
+    await expect(store.discardOtherOwnerOutbox(ownerB, ownerA, true)).resolves.toEqual({ ok: true });
+    expect(stored.partitions[partitionKey]).toMatchObject({
+      cache: { retained: true },
+      preferences: { youtubeHistoryEnabled: true },
+      currentObservation: { clientEventId: "current" },
+      outbox: { entries: [] },
+    });
+  });
 });

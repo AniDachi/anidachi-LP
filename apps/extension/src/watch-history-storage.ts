@@ -22,6 +22,7 @@ export type WatchHistoryAccountPartition = {
 export type WatchHistoryStorageRoot = {
   schemaVersion: typeof WATCH_HISTORY_STORAGE_VERSION;
   partitions: Record<string, WatchHistoryAccountPartition>;
+  activeGenerations?: Record<string, number>;
 };
 
 export type WatchHistoryStorageResult = { ok: true } | { ok: false; status: "storage-full" };
@@ -39,9 +40,10 @@ export type WatchHistoryStorageDependencies = {
 };
 
 let watchHistoryStorageItem: StorageItemLike | null = null;
+let rootUpdateQueue: Promise<void> = Promise.resolve();
 
 export function createWatchHistoryStorageRoot(): WatchHistoryStorageRoot {
-  return { schemaVersion: WATCH_HISTORY_STORAGE_VERSION, partitions: {} };
+  return { schemaVersion: WATCH_HISTORY_STORAGE_VERSION, partitions: {}, activeGenerations: {} };
 }
 
 export function watchHistoryPartitionKey(ownerUserId: string, accountGeneration: number): string {
@@ -55,11 +57,15 @@ export function createWatchHistoryStorage(
   const getBytesInUse = dependencies.getBytesInUse ?? defaultGetBytesInUse;
   const quotaBytes = dependencies.quotaBytes ?? defaultQuotaBytes();
   const serialize = dependencies.serialize ?? JSON.stringify;
-  let updateQueue = Promise.resolve();
 
   async function readRoot(): Promise<WatchHistoryStorageRoot> {
     const stored = await item.getValue();
-    return isStorageRoot(stored) ? stored : createWatchHistoryStorageRoot();
+    return isStorageRoot(stored)
+      ? {
+          ...stored,
+          activeGenerations: stored.activeGenerations ?? activeGenerationsFromPartitions(stored.partitions),
+        }
+      : createWatchHistoryStorageRoot();
   }
 
   async function replaceRoot(candidate: WatchHistoryStorageRoot): Promise<WatchHistoryStorageResult> {
@@ -72,8 +78,10 @@ export function createWatchHistoryStorage(
       // A quota estimate is best effort. The write itself remains authoritative.
     }
     const candidateBytes = new TextEncoder().encode(serialize(candidate)).byteLength;
-    const existingBytes = new TextEncoder().encode(serialize(existing)).byteLength;
-    const projectedBytes = Math.max(0, usedBytes - existingBytes) + candidateBytes;
+    const keyBytes = new TextEncoder().encode(WATCH_HISTORY_STORAGE_KEY).byteLength;
+    const existingBytes = new TextEncoder().encode(serialize(existing)).byteLength + keyBytes;
+    const totalCandidateBytes = candidateBytes + keyBytes;
+    const projectedBytes = Math.max(0, usedBytes - existingBytes) + totalCandidateBytes;
     if (Number.isFinite(quotaBytes) && projectedBytes > quotaBytes) {
       return { ok: false, status: "storage-full" };
     }
@@ -88,12 +96,12 @@ export function createWatchHistoryStorage(
   async function updateRoot(
     update: (root: WatchHistoryStorageRoot) => WatchHistoryStorageRoot,
   ): Promise<WatchHistoryStorageResult> {
-    const operation: Promise<WatchHistoryStorageResult> = updateQueue.then(async () => {
+    const operation: Promise<WatchHistoryStorageResult> = rootUpdateQueue.then(async () => {
       const root = await readRoot();
       const candidate = update(root);
       return candidate === root ? ({ ok: true } as const) : replaceRoot(candidate);
     });
-    updateQueue = operation.then(
+    rootUpdateQueue = operation.then(
       () => undefined,
       () => undefined,
     );
@@ -129,14 +137,17 @@ export function createWatchHistoryStorage(
       throw new Error("The current account outbox cannot be discarded as old-owner work");
     }
     return updateRoot((root) => {
+      let changed = false;
       const remaining = Object.fromEntries(
         Object.entries(root.partitions).flatMap(([key, partition]) => {
           if (partition.ownerUserId !== oldOwnerUserId) return [[key, partition]];
+          if (partition.outbox.entries.length === 0) return [[key, partition]];
+          changed = true;
           const cleared = { ...partition, outbox: { ...partition.outbox, entries: [] } };
           return cleared.cache || cleared.preferences || cleared.currentObservation ? [[key, cleared]] : [];
         }),
       );
-      if (Object.keys(remaining).length === Object.keys(root.partitions).length) return root;
+      if (!changed) return root;
       return { ...root, partitions: remaining };
     });
   }
@@ -165,6 +176,20 @@ export function createWatchHistoryStorage(
     discardOtherOwnerOutbox,
     otherOwnerPendingSummary,
   };
+}
+
+export function withoutWatchHistoryAttestation(event: WatchProgressEvent): WatchProgressEvent {
+  const { sharedRoom: _sharedRoom, ...safeObservation } = event;
+  return safeObservation;
+}
+
+function activeGenerationsFromPartitions(
+  partitions: Record<string, WatchHistoryAccountPartition>,
+): Record<string, number> {
+  return Object.values(partitions).reduce<Record<string, number>>((active, partition) => ({
+    ...active,
+    [partition.ownerUserId]: Math.max(active[partition.ownerUserId] ?? 0, partition.accountGeneration),
+  }), {});
 }
 
 function getDefaultStorageItem(): StorageItemLike {
