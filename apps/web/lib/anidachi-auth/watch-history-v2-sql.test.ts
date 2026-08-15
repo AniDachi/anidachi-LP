@@ -7,6 +7,10 @@ const MIGRATION_URL = new URL(
   "../../supabase/migrations/20260814010000_watch_history_v2_foundation.sql",
   import.meta.url,
 );
+const CUTOVER_MIGRATION_URL = new URL(
+  "../../supabase/migrations/20260814020000_watch_history_v2_clean_cutover.sql",
+  import.meta.url,
+);
 
 function migrationSql() {
   try {
@@ -93,6 +97,27 @@ test("new tables are private to service_role and every foreign-key access path i
   ]) {
     assert.match(sql, new RegExp(`(?:unique )?index ${index} `));
   }
+});
+
+test("clean cutover replaces only the recent-people read and retains dormant v1 tables", () => {
+  let sql = "";
+  try {
+    sql = readFileSync(CUTOVER_MIGRATION_URL, "utf8")
+      .replace(/--.*$/gm, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+
+  assert.match(sql, /drop function if exists public\.list_recent_people_evidence\(uuid\)/);
+  assert.match(sql, /returns table \( other_user_id uuid, last_room_id text, last_watched_at timestamptz \)/);
+  assert.match(sql, /from public\.recent_people_evidence as evidence/);
+  assert.doesNotMatch(sql, /watch_progress_checkpoints|shared_room_count/);
+  assert.doesNotMatch(sql, /drop table|truncate(?: table)?|delete from/);
+  assert.match(sql, /revoke all on function public\.list_recent_people_evidence\(uuid\) from public, anon, authenticated/);
+  assert.match(sql, /grant execute on function public\.list_recent_people_evidence\(uuid\) to service_role/);
 });
 
 test("receipt retention is exactly fourteen days and acknowledgements are bounded objects", () => {

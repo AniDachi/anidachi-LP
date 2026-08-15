@@ -104,7 +104,6 @@ export const FriendGroupsResponseSchema = z.strictObject({
 export const RecentPersonSchema = z.strictObject({
   user: PublicProfileSchema,
   lastWatchedAt: TimestampSchema,
-  sharedRoomCount: z.number().int().positive(),
 });
 
 export const RecentPeopleResponseSchema = z.strictObject({

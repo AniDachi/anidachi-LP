@@ -526,6 +526,84 @@ select is(
   'two accepted shared writers derive both directional evidence rows'
 );
 
+select ok(
+  pg_catalog.has_function_privilege(
+    'service_role',
+    'public.list_recent_people_evidence(uuid)',
+    'execute'
+  )
+  and not pg_catalog.has_function_privilege(
+    'authenticated',
+    'public.list_recent_people_evidence(uuid)',
+    'execute'
+  ),
+  'only the service role can execute the v2 Recent People RPC'
+);
+
+set role service_role;
+select is(
+  (
+    select pg_catalog.concat(evidence.other_user_id, ':', evidence.last_room_id)
+    from public.list_recent_people_evidence(
+      '11111111-1111-4111-8111-111111111111'
+    ) as evidence
+  ),
+  '22222222-2222-4222-8222-222222222222:watch-v2-room'::text,
+  'the cutover RPC returns only v2 two-writer evidence'
+);
+set role postgres;
+
+insert into public.friendships (
+  requester_user_id,
+  addressee_user_id,
+  status,
+  responded_at
+)
+values (
+  '11111111-1111-4111-8111-111111111111',
+  '22222222-2222-4222-8222-222222222222',
+  'accepted',
+  pg_catalog.clock_timestamp()
+);
+
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.list_recent_people_evidence(
+      '11111111-1111-4111-8111-111111111111'
+    )
+  ),
+  0::bigint,
+  'the cutover RPC excludes an existing friendship'
+);
+
+delete from public.friendships
+where least(requester_user_id, addressee_user_id) =
+    '11111111-1111-4111-8111-111111111111'::uuid
+  and greatest(requester_user_id, addressee_user_id) =
+    '22222222-2222-4222-8222-222222222222'::uuid;
+
+insert into public.recent_people_hidden (user_id, hidden_user_id)
+values (
+  '11111111-1111-4111-8111-111111111111',
+  '22222222-2222-4222-8222-222222222222'
+);
+
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.list_recent_people_evidence(
+      '11111111-1111-4111-8111-111111111111'
+    )
+  ),
+  0::bigint,
+  'the cutover RPC excludes a hidden recent person'
+);
+
+delete from public.recent_people_hidden
+where user_id = '11111111-1111-4111-8111-111111111111'
+  and hidden_user_id = '22222222-2222-4222-8222-222222222222';
+
 select throws_like(
   $$
     select public.apply_watch_progress_v2(

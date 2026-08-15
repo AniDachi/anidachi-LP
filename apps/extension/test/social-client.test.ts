@@ -140,7 +140,6 @@ function socialDirectoryResponses() {
             avatarUrl: null,
           },
           lastWatchedAt: NOW,
-          sharedRoomCount: 2,
         },
       ],
     },
@@ -167,7 +166,7 @@ describe("extension social HTTP bridge", () => {
       incomingRequests: [{ direction: "incoming" }],
       outgoingRequests: [{ direction: "outgoing" }],
       groups: [{ id: GROUP_ID }],
-      recentPeople: [{ sharedRoomCount: 2 }],
+      recentPeople: [{ lastWatchedAt: NOW }],
     });
     expect(fetchMock.mock.calls.map(([url]) => new URL(url).pathname)).toEqual([
       "/api/friends",

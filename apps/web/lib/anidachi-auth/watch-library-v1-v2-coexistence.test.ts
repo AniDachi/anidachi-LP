@@ -1,9 +1,15 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import * as watchLibraryRoutes from "./watch-library-routes";
 
 const SOURCE_URL = new URL("./watch-library.ts", import.meta.url);
 const source = readFileSync(SOURCE_URL, "utf8");
+const V1_ROUTE_URLS = [
+  "../../app/api/watch-progress/reconcile/route.ts",
+  "../../app/api/watch-library/route.ts",
+  "../../app/api/watch-library/rooms/route.ts",
+].map((path) => new URL(path, import.meta.url));
 
 function definition(name: string): string {
   const marker = new RegExp(`(?:export\\s+)?async\\s+function\\s+${name}\\b`);
@@ -59,4 +65,21 @@ test("every active v1 tracked-title path carries discriminator one", () => {
   const archive = definition("archiveOldestTrackedTitlesOverLimit");
   assert.equal(archive.match(/\.eq\("schema_version", 1\)/g)?.length, 2);
   assert.match(definition("countActiveTrackedTitles"), /\.eq\("schema_version", 1\)/);
+});
+
+test("every v1 HTTP entrypoint is inert and returns the stable upgrade response", () => {
+  for (const routeUrl of V1_ROUTE_URLS) {
+    const route = readFileSync(routeUrl, "utf8");
+    assert.match(route, /watchLibraryUpgradeRequiredResponse/);
+    assert.doesNotMatch(route, /listWatchLibrary|clearWatchLibrary|reconcileWatchProgressBatch|createRoomFromWatchSession/);
+  }
+});
+
+test("v1 upgrade response is bounded and machine-readable", async () => {
+  const response = watchLibraryRoutes.watchLibraryUpgradeRequiredResponse();
+  assert.equal(response.status, 426);
+  assert.deepEqual(await response.json(), {
+    code: "UPGRADE_REQUIRED",
+    message: "Upgrade to Watch History v2",
+  });
 });

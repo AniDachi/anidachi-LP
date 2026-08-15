@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "crypto";
-import type { RecentPerson } from "@anidachi/protocol";
+import { RecentPersonSchema, type RecentPerson } from "@anidachi/protocol";
 import { db, getUserById, type UserRow } from "./db";
 import { getPlanEntitlements } from "./plan-entitlements";
 
@@ -44,24 +44,38 @@ export type RecentPeopleHiddenRow = {
   hidden_at: string;
 };
 
-export type RecentPeopleCheckpointEvidenceRow = {
-  session_id: string;
-  user_id: string;
-  room_id: string;
-  observed_at: string;
+type RecentPeopleAggregateRow = {
+  other_user_id: string;
+  last_room_id: string;
+  last_watched_at: string;
 };
 
-export type RecentPeopleEvidence = {
+export function mapRecentPeopleEvidenceRows(rows: unknown[]): Array<{
   userId: string;
   lastWatchedAt: string;
-  sharedRoomCount: number;
-};
-
-type RecentPeopleAggregateRow = {
-  user_id: string;
-  last_watched_at: string;
-  shared_room_count: number;
-};
+}> {
+  return rows.map((row) => {
+    if (!row || typeof row !== "object" || Array.isArray(row)) {
+      throw new Error("Invalid recent people evidence");
+    }
+    const record = row as Record<string, unknown>;
+    if (
+      Object.keys(record).some((key) => !["other_user_id", "last_room_id", "last_watched_at"].includes(key)) ||
+      !isUuid(String(record.other_user_id ?? "")) ||
+      typeof record.last_room_id !== "string" ||
+      record.last_room_id.trim().length < 1 ||
+      record.last_room_id.length > 128 ||
+      typeof record.last_watched_at !== "string" ||
+      !RecentPersonSchema.shape.lastWatchedAt.safeParse(record.last_watched_at).success
+    ) {
+      throw new Error("Invalid recent people evidence");
+    }
+    return {
+      userId: record.other_user_id as string,
+      lastWatchedAt: record.last_watched_at,
+    };
+  });
+}
 
 export type FriendGroupRow = {
   id: string;
@@ -226,49 +240,6 @@ export function friendshipPairKey(userA: string, userB: string): [string, string
 
 export function isRecentRelationshipEligible(status: FriendshipStatus | undefined): boolean {
   return status === undefined || status === "declined" || status === "removed";
-}
-
-export function deriveRecentPeopleEvidence(
-  viewerUserId: string,
-  checkpoints: readonly RecentPeopleCheckpointEvidenceRow[],
-): RecentPeopleEvidence[] {
-  const viewerEvidenceBySessionRoom = new Map<string, string>();
-  for (const checkpoint of checkpoints) {
-    if (checkpoint.user_id !== viewerUserId || !checkpoint.room_id) continue;
-    const key = `${checkpoint.session_id}\u0000${checkpoint.room_id}`;
-    const current = viewerEvidenceBySessionRoom.get(key);
-    if (!current || checkpoint.observed_at > current) {
-      viewerEvidenceBySessionRoom.set(key, checkpoint.observed_at);
-    }
-  }
-
-  const aggregate = new Map<string, { lastWatchedAt: string; roomIds: Set<string> }>();
-  for (const checkpoint of checkpoints) {
-    if (checkpoint.user_id === viewerUserId || !checkpoint.room_id) continue;
-    const key = `${checkpoint.session_id}\u0000${checkpoint.room_id}`;
-    const viewerObservedAt = viewerEvidenceBySessionRoom.get(key);
-    if (!viewerObservedAt) continue;
-
-    const sharedObservedAt = checkpoint.observed_at > viewerObservedAt
-      ? checkpoint.observed_at
-      : viewerObservedAt;
-    const current = aggregate.get(checkpoint.user_id);
-    if (!current) {
-      aggregate.set(checkpoint.user_id, {
-        lastWatchedAt: sharedObservedAt,
-        roomIds: new Set([checkpoint.room_id]),
-      });
-      continue;
-    }
-    current.roomIds.add(checkpoint.room_id);
-    if (sharedObservedAt > current.lastWatchedAt) current.lastWatchedAt = sharedObservedAt;
-  }
-
-  return Array.from(aggregate, ([userId, evidence]) => ({
-    userId,
-    lastWatchedAt: evidence.lastWatchedAt,
-    sharedRoomCount: evidence.roomIds.size,
-  })).sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt));
 }
 
 export function isUuid(value: string): boolean {
@@ -1054,12 +1025,9 @@ export async function listRecentPeople(viewerUserId: string): Promise<RecentPers
     relationships.map((relationship) => [otherUserId(viewerUserId, relationship), relationship])
   );
 
-  const evidence = ((evidenceRows as RecentPeopleAggregateRow[] | null) ?? [])
-    .map((row) => ({
-      userId: row.user_id,
-      lastWatchedAt: row.last_watched_at,
-      sharedRoomCount: row.shared_room_count,
-    }))
+  const evidence = mapRecentPeopleEvidenceRows(
+    (evidenceRows as RecentPeopleAggregateRow[] | null) ?? [],
+  )
     .filter((person) => {
       if (hidden.has(person.userId)) return false;
       const relationship = relationshipByUserId.get(person.userId);
@@ -1082,7 +1050,6 @@ export async function listRecentPeople(viewerUserId: string): Promise<RecentPers
           users.get(recent.userId),
         ),
         lastWatchedAt: recent.lastWatchedAt,
-        sharedRoomCount: recent.sharedRoomCount,
       } satisfies RecentPerson;
     })
     .slice(0, 50);

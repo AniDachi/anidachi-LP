@@ -126,13 +126,11 @@ function Avatar({ user }: { user: PublicProfile }) {
 }
 
 function formatRecentMeta(person: RecentPerson) {
-  const roomLabel =
-    person.sharedRoomCount === 1 ? "1 shared room" : `${person.sharedRoomCount} shared rooms`;
   const date = new Date(person.lastWatchedAt);
   const dateLabel = Number.isNaN(date.getTime())
     ? "recently"
     : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  return `${roomLabel} · ${dateLabel}`;
+  return `Watched together · ${dateLabel}`;
 }
 
 function sortGroupMembers(members: FriendGroup["members"]): FriendGroup["members"] {

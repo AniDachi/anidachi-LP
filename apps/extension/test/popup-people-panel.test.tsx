@@ -1059,7 +1059,6 @@ function recent(userId: string, displayName = userId): RecentPerson {
   return {
     user: { userId, handle: null, displayName, avatarUrl: null },
     lastWatchedAt: NOW,
-    sharedRoomCount: 1,
   };
 }
 
