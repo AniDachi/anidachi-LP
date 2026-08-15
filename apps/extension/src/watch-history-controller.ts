@@ -53,6 +53,7 @@ export function createWatchHistoryController(
   let hasMeaningfulPlayback = false;
   let lastHeartbeatAt: number | null = null;
   let roomActive = dependencies.getRoomActive();
+  let roomActiveIntent = roomActive;
   let capturePaused = false;
   let disposed = false;
   let lifecycle = 0;
@@ -214,8 +215,9 @@ export function createWatchHistoryController(
   function setRoomActive(active: boolean): Promise<void> {
     const token = lifecycle;
     if (!isCurrent(token)) return Promise.resolve();
+    roomActiveIntent = active;
     if (!active) return leaveRoom(token);
-    if (roomActive) return Promise.resolve();
+    if (roomActive) return roomExitPromise ?? Promise.resolve();
     const previous = retained;
     const previousSessionKey = clientSessionKey;
     const previousGeneration = accountGeneration;
@@ -245,7 +247,7 @@ export function createWatchHistoryController(
     if (!roomActive) return Promise.resolve();
     if (roomExitPromise) return roomExitPromise;
     const leaving = serial(async () => {
-      if (!isCurrent(token) || !roomActive) return;
+      if (!isCurrent(token) || !roomActive || roomActiveIntent) return;
       const previous = retained;
       const previousSessionKey = clientSessionKey;
       const previousGeneration = accountGeneration;

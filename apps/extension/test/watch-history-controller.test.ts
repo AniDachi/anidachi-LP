@@ -326,6 +326,57 @@ describe("watch history meaningful-progress controller", () => {
       ["heartbeat", 15],
     ]);
   });
+
+  it("keeps rapid room re-entry active while a queued exit waits for shared persistence", async () => {
+    const fixture = createFixture({
+      holdLocalAt: 4,
+      sessionKeys: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+        "33333333-3333-4333-8333-333333333333",
+      ],
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.setRoomActive(true);
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+
+    fixture.setTime(13);
+    const sharedEnded = fixture.controller.observe("ended");
+    await fixture.waitForLocalAttempts(4);
+    const leaving = fixture.controller.setRoomActive(false);
+    const reentering = fixture.controller.setRoomActive(true);
+
+    fixture.releaseHeldLocal();
+    await Promise.all([sharedEnded, leaving, reentering]);
+    fixture.setTime(14);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(15);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued.map((event) => [event.kind, event.currentTime])).toEqual([
+      ["heartbeat", 11],
+      ["source_change", 11],
+    ]);
+
+    await fixture.controller.setRoomActive(false);
+    expect(fixture.local.filter((event) => event.kind === "room_leave")).toEqual([
+      expect.objectContaining({
+        currentTime: 15,
+        clientSessionKey: "22222222-2222-4222-8222-222222222222",
+      }),
+    ]);
+    fixture.setTime(16);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(17);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued.map((event) => [event.kind, event.currentTime, event.clientSessionKey])).toEqual([
+      ["heartbeat", 11, "11111111-1111-4111-8111-111111111111"],
+      ["source_change", 11, "11111111-1111-4111-8111-111111111111"],
+      ["heartbeat", 17, "33333333-3333-4333-8333-333333333333"],
+    ]);
+  });
 });
 
 function createFixture(options: {
