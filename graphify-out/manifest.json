@@ -4605,13 +4605,13 @@
     "semantic_hash": ""
   },
   "apps/extension/src/popup-watch-history.tsx": {
-    "mtime": 1786809203.6034458,
-    "ast_hash": "0bfe3f7456db8114f04e88f258c9b84d",
+    "mtime": 1786810836.2796497,
+    "ast_hash": "18d73fd207e083e1f579774a2ce988ac",
     "semantic_hash": ""
   },
   "apps/extension/test/popup-watch-history.test.tsx": {
-    "mtime": 1786809149.3040733,
-    "ast_hash": "f002c5043ddd411b6422417a4f75661a",
+    "mtime": 1786810836.2424896,
+    "ast_hash": "a68421b19369dc7c0f6b98fe9a77db86",
     "semantic_hash": ""
   },
   "apps/extension/src/extension-theme.ts": {
