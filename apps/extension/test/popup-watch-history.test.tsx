@@ -82,7 +82,10 @@ describe("Popup Watch History v2", () => {
 
   it("keeps a newer meaningful local observation over a canonical refresh without another network write", async () => {
     const canonical = historyFixture({ currentTime: 600, progress: 0.25 });
-    const local = pendingEvent({ currentTime: 840, progress: 0.4 });
+    const local = {
+      ...pendingEvent({ currentTime: 840, progress: 0.4 }),
+      observedAt: "2026-08-15T03:00:05.000Z",
+    };
     const snapshot = snapshotFixture(canonical, [local]);
     const baseRequest = requestForHistory(canonical);
     let listRequests = 0;
@@ -118,6 +121,126 @@ describe("Popup Watch History v2", () => {
     expect(view.container.textContent).toContain("0:12");
     expect(view.container.textContent).toContain("Pending sync");
     expect(view.container.textContent).not.toContain("Progress will appear after meaningful playback.");
+    await unmount(view.root);
+  });
+
+  it("keeps an already-open Popup live from meaningful observation through canonical acknowledgement", async () => {
+    const emptyHistory: WatchHistoryResponse = {
+      ...historyFixture(),
+      totalTitleCount: 0,
+      items: [],
+    };
+    const local = pendingEvent({ currentTime: 12, progress: 12 / 2_100 });
+    const canonical = historyFixture({
+      title: "Canonical Frieren",
+      currentTime: 12,
+      progress: 12 / 2_100,
+    });
+    let publishSnapshot: ((snapshot: PopupWatchHistorySnapshot | null) => void) | null = null;
+    const client = {
+      ...clientFixture({
+        cached: snapshotFixture(emptyHistory),
+        request: requestForHistory(emptyHistory),
+      }),
+      subscribe: (
+        _ownerUserId: string,
+        listener: (snapshot: PopupWatchHistorySnapshot | null) => void,
+      ) => {
+        publishSnapshot = listener;
+        return () => {
+          publishSnapshot = null;
+        };
+      },
+    };
+    const view = await renderPanel(client);
+
+    await waitFor(() => {
+      expect(view.container.textContent).toContain(
+        "Progress will appear after meaningful playback.",
+      );
+    });
+
+    await act(async () => {
+      publishSnapshot?.(snapshotFixture(emptyHistory, [local]));
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
+    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).toContain("0:12");
+
+    await act(async () => {
+      publishSnapshot?.(snapshotFixture(emptyHistory));
+      await Promise.resolve();
+    });
+    expect(view.container.textContent).toContain("Cached Frieren");
+    expect(view.container.textContent).toContain("Pending sync");
+
+    await act(async () => {
+      publishSnapshot?.(snapshotFixture(canonical));
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(view.container.textContent).toContain("Canonical Frieren"));
+    expect(view.container.textContent).not.toContain("Cached Frieren");
+    expect(view.container.textContent).not.toContain("Pending sync");
+    await unmount(view.root);
+  });
+
+  it("does not let an older opening refresh erase newer live progress", async () => {
+    const emptyHistory: WatchHistoryResponse = {
+      ...historyFixture(),
+      totalTitleCount: 0,
+      items: [],
+    };
+    const local = pendingEvent({ currentTime: 12, progress: 12 / 2_100 });
+    let publishSnapshot: ((snapshot: PopupWatchHistorySnapshot | null) => void) | null = null;
+    let resolveList: ((response: WatchHistoryMessageResponse) => void) | null = null;
+    const client = {
+      ...clientFixture({
+        cached: snapshotFixture(emptyHistory),
+        request: vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+          if (message.command === "list") {
+            return new Promise<WatchHistoryMessageResponse>((resolve) => {
+              resolveList = resolve;
+            });
+          }
+          if (message.command === "get-preferences") {
+            return { ok: true, data: preferencesFixture(false) };
+          }
+          if (message.command === "other-owner-pending") {
+            return { ok: true, hasPendingWork: false, byteUse: 0 };
+          }
+          return { ok: true };
+        }),
+      }),
+      subscribe: (
+        _ownerUserId: string,
+        listener: (snapshot: PopupWatchHistorySnapshot | null) => void,
+      ) => {
+        publishSnapshot = listener;
+        return () => {
+          publishSnapshot = null;
+        };
+      },
+    };
+    const view = await renderPanel(client);
+
+    await waitFor(() => {
+      expect(view.container.textContent).toContain(
+        "Progress will appear after meaningful playback.",
+      );
+    });
+    await act(async () => {
+      publishSnapshot?.(snapshotFixture(emptyHistory, [local]));
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
+
+    await act(async () => {
+      resolveList?.({ ok: true, data: emptyHistory });
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
+    expect(view.container.textContent).toContain("Pending sync");
     await unmount(view.root);
   });
 
