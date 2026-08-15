@@ -10,7 +10,7 @@ import {
   type WatchHistorySession,
   type WatchProgressEvent,
 } from "@anidachi/protocol";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createListWatchHistoryMessage,
@@ -65,6 +65,8 @@ export function PopupWatchHistoryPanel({
   const [error, setError] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [oldOwnerPending, setOldOwnerPending] = useState(false);
+  const [mode, setMode] = useState<"mine" | "together">("mine");
+  const [searchQuery, setSearchQuery] = useState("");
   const requestGeneration = useRef(0);
 
   useEffect(() => {
@@ -82,6 +84,8 @@ export function PopupWatchHistoryPanel({
     setError(null);
     setBusyAction(null);
     setOldOwnerPending(false);
+    setMode("mine");
+    setSearchQuery("");
     if (!ownerUserId) {
       setLoading(false);
       return;
@@ -141,6 +145,11 @@ export function PopupWatchHistoryPanel({
   }, [client, ownerUserId]);
 
   const pendingByEpisode = useMemo(() => latestPendingByEpisode(pendingEvents), [pendingEvents]);
+  const visibleItems = useMemo(
+    () => filterWatchHistoryItems(history?.items ?? [], mode, searchQuery),
+    [history?.items, mode, searchQuery],
+  );
+  const providerGroups = useMemo(() => groupWatchHistoryItems(visibleItems), [visibleItems]);
 
   const updateYoutubePreference = async () => {
     if (!ownerUserId || !preferencesConfirmed || busyAction) return;
@@ -249,6 +258,46 @@ export function PopupWatchHistoryPanel({
 
   return (
     <section className="popup-watch-screen" aria-label="Watch History">
+      <div className="popup-watch-controls">
+        <button
+          aria-label={`Watch history mode: ${mode === "mine" ? "Mine" : "Together"}. Switch to ${
+            mode === "mine" ? "Together" : "Mine"
+          }`}
+          aria-pressed={mode === "together"}
+          className="popup-watch-mode-switch"
+          data-mode={mode}
+          type="button"
+          onClick={() => setMode((current) => current === "mine" ? "together" : "mine")}
+        >
+          <span aria-hidden="true" className="popup-watch-mode-track">
+            <span className="popup-watch-mode-thumb" />
+            <span className="popup-watch-mode-segment popup-watch-mode-segment-mine">Mine</span>
+            <span className="popup-watch-mode-segment popup-watch-mode-segment-together">
+              Together
+            </span>
+          </span>
+        </button>
+        <label className="popup-watch-search">
+          <Search aria-hidden="true" size={13} />
+          <input
+            aria-label="Search watch history"
+            placeholder="Search"
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.currentTarget.value)}
+          />
+          {searchQuery ? (
+            <button
+              aria-label="Clear watch history search"
+              type="button"
+              onClick={() => setSearchQuery("")}
+            >
+              <X size={12} />
+            </button>
+          ) : null}
+        </label>
+        <span aria-hidden="true" className="popup-watch-controls-spacer" />
+      </div>
       <div className="popup-watch-preferences">
         <button
           aria-label="Track YouTube history"
@@ -285,18 +334,42 @@ export function PopupWatchHistoryPanel({
           <RefreshCw size={14} />
           <span>Syncing watch history...</span>
         </div>
-      ) : history?.items.length ? (
+      ) : providerGroups.length ? (
         <div className="popup-resource-list">
-          {history.items.map((item) => (
-            <PopupWatchHistoryItem
-              item={item}
-              key={`${item.provider}:${item.titleKey}`}
-              busyAction={busyAction}
-              onCreateRoom={createRoom}
-              onDelete={deleteTarget}
-              pendingByEpisode={pendingByEpisode}
-            />
+          {providerGroups.map((group) => (
+            <section className="popup-provider" data-provider={group.provider} key={group.provider}>
+              <div className="popup-provider-row">
+                <ProviderLogo label={group.label} provider={group.provider} />
+                <span className="popup-provider-main">
+                  <strong className="popup-provider-name">{group.label}</strong>
+                  <span className="popup-provider-meta">
+                    {group.items.length} {group.items.length === 1 ? "title" : "titles"}
+                  </span>
+                </span>
+                <span aria-hidden="true" className="popup-provider-chevron" />
+              </div>
+              <div className="popup-provider-body">
+                {group.items.map((item) => (
+                  <PopupWatchHistoryItem
+                    item={item}
+                    key={`${item.provider}:${item.titleKey}`}
+                    busyAction={busyAction}
+                    onCreateRoom={createRoom}
+                    onDelete={deleteTarget}
+                    pendingByEpisode={pendingByEpisode}
+                  />
+                ))}
+              </div>
+            </section>
           ))}
+        </div>
+      ) : history?.items.length && searchQuery.trim() ? (
+        <div className="popup-empty">No titles match your search.</div>
+      ) : history?.items.length ? (
+        <div className="popup-empty">
+          {mode === "together"
+            ? "Shared sessions will appear after watching together."
+            : "Solo sessions will appear after meaningful playback."}
         </div>
       ) : (
         <div className="popup-empty">Progress will appear after meaningful playback.</div>
@@ -332,16 +405,22 @@ function PopupWatchHistoryItem({
   const episodeCount = item.seasons.reduce((sum, season) => sum + season.episodes.length, 0);
   const observedCount = episodeCount || (item.itemKind === "movie" ? 1 : 0);
   return (
-    <article className="popup-provider-row" data-provider={item.provider}>
-      <div className="popup-series-card">
-        <strong>{item.title}</strong>
-        <span>
-          {item.catalogState === "complete" && item.aggregate.availableEpisodes !== null
-            ? `${item.aggregate.completedEpisodes}/${item.aggregate.availableEpisodes} episodes`
-            : `${observedCount} observed ${observedCount === 1 ? "episode" : "episodes"}`}
+    <article className="popup-watch-item" data-kind={item.itemKind} data-provider={item.provider}>
+      <div className="popup-watch-row">
+        <span className="popup-watch-artwork" data-has-artwork={Boolean(item.artworkUrl)}>
+          {item.artworkUrl ? <img alt="" src={item.artworkUrl} /> : item.title.slice(0, 1)}
+        </span>
+        <span className="popup-watch-main">
+          <strong className="popup-watch-title">{item.title}</strong>
+          <span className="popup-watch-meta">
+            {item.catalogState === "complete" && item.aggregate.availableEpisodes !== null
+              ? `${item.aggregate.completedEpisodes}/${item.aggregate.availableEpisodes} episodes`
+              : `${observedCount} observed ${observedCount === 1 ? "episode" : "episodes"}`}
+          </span>
         </span>
         <button
           aria-label={`Delete ${item.title}`}
+          className="popup-watch-chevron"
           disabled={busyAction === deleteScopeKey({
             scope: "title",
             provider: item.provider,
@@ -354,67 +433,78 @@ function PopupWatchHistoryItem({
             titleKey: item.titleKey,
           })}
         >
-          Delete title
+          <X aria-hidden="true" size={14} />
         </button>
       </div>
       {item.seasons.map((season) => (
         <section className="popup-season-group" key={season.seasonKey}>
-          <strong>{season.seasonTitle}</strong>
-          {season.episodes.map((episode) => {
-            const pending = pendingByEpisode.get(
-              pendingEpisodeKey(item.provider, item.titleKey, episode.episodeKey),
-            );
-            const currentTime = pending?.currentTime ?? episode.currentTime;
-            const progress = pending?.progress ?? episode.progress;
-            return (
-              <div className="popup-episode-row" key={episode.episodeKey}>
-                <span className="popup-episode-main">
-                  <span className="popup-episode-header">
-                    <span className="popup-episode-number">
-                      {episode.episodeNumber === null ? "Episode" : `E${episode.episodeNumber}`}
+          <div className="popup-season-header">
+            <span className="popup-season-main">
+              <strong className="popup-season-title">{season.seasonTitle}</strong>
+              <span className="popup-season-meta">
+                {season.episodes.length} {season.episodes.length === 1 ? "episode" : "episodes"}
+              </span>
+            </span>
+          </div>
+          <div className="popup-season-episode-list">
+            {season.episodes.map((episode) => {
+              const pending = pendingByEpisode.get(
+                pendingEpisodeKey(item.provider, item.titleKey, episode.episodeKey),
+              );
+              const currentTime = pending?.currentTime ?? episode.currentTime;
+              const progress = pending?.progress ?? episode.progress;
+              return (
+                <div className="popup-episode-row" key={episode.episodeKey}>
+                  <span className="popup-episode-main">
+                    <span className="popup-episode-header">
+                      <span className="popup-episode-number">
+                        {episode.episodeNumber === null ? "Episode" : `E${episode.episodeNumber}`}
+                      </span>
+                      <span className="popup-episode-title">{episode.episodeTitle}</span>
                     </span>
-                    <span className="popup-episode-title">{episode.episodeTitle}</span>
-                  </span>
-                  <span className="popup-series-progress">
-                    <span className="popup-progress-track">
-                      <span style={{ width: `${Math.round(progress * 100)}%` }} />
+                    <span className="popup-series-progress">
+                      <span className="popup-progress-track">
+                        <span style={{ width: `${Math.round(progress * 100)}%` }} />
+                      </span>
+                      <span>{formatClock(currentTime)}</span>
                     </span>
-                    <span>{formatClock(currentTime)}</span>
-                  </span>
-                  {pending ? <span className="popup-mode-badge">Pending sync</span> : null}
-                  {episode.sessions.slice(0, 4).map((session) => (
+                    {pending ? <span className="popup-mode-badge">Pending sync</span> : null}
+                    {episode.sessions.slice(0, 4).map((session) => (
+                      <button
+                        aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
+                        className="popup-session-summary-action"
+                        disabled={busyAction === `room:${session.id}`}
+                        key={session.id}
+                        type="button"
+                        onClick={() => onCreateRoom(session, episode.sourceUrl)}
+                      >
+                        {session.kind === "shared" ? "Shared session" : "Solo session"}
+                      </button>
+                    ))}
                     <button
-                      aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
-                      disabled={busyAction === `room:${session.id}`}
-                      key={session.id}
+                      aria-label={`Delete ${episode.episodeTitle}`}
+                      className="popup-quiet-danger"
+                      disabled={busyAction === deleteScopeKey({
+                        scope: "episode",
+                        provider: item.provider,
+                        titleKey: item.titleKey,
+                        episodeKey: episode.episodeKey,
+                      })}
                       type="button"
-                      onClick={() => onCreateRoom(session, episode.sourceUrl)}
+                      onClick={() => onDelete({
+                        scope: "episode",
+                        provider: item.provider,
+                        titleKey: item.titleKey,
+                        episodeKey: episode.episodeKey,
+                      })}
                     >
-                      {session.kind === "shared" ? "Shared session" : "Solo session"}
+                      Delete
                     </button>
-                  ))}
-                  <button
-                    aria-label={`Delete ${episode.episodeTitle}`}
-                    disabled={busyAction === deleteScopeKey({
-                      scope: "episode",
-                      provider: item.provider,
-                      titleKey: item.titleKey,
-                      episodeKey: episode.episodeKey,
-                    })}
-                    type="button"
-                    onClick={() => onDelete({
-                      scope: "episode",
-                      provider: item.provider,
-                      titleKey: item.titleKey,
-                      episodeKey: episode.episodeKey,
-                    })}
-                  >
-                    Delete
-                  </button>
-                </span>
-              </div>
-            );
-          })}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </section>
       ))}
       {item.seasons.length === 0 ? (
@@ -432,6 +522,7 @@ function PopupWatchHistoryItem({
             {item.sessions.slice(0, 4).map((session) => (
               <button
                 aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
+                className="popup-session-summary-action"
                 disabled={busyAction === `room:${session.id}`}
                 key={session.id}
                 type="button"
@@ -444,6 +535,95 @@ function PopupWatchHistoryItem({
         </div>
       ) : null}
     </article>
+  );
+}
+
+type PopupProviderGroup = {
+  provider: WatchHistoryItem["provider"];
+  label: string;
+  items: WatchHistoryItem[];
+};
+
+function filterWatchHistoryItems(
+  items: WatchHistoryItem[],
+  mode: "mine" | "together",
+  searchQuery: string,
+): WatchHistoryItem[] {
+  const sessionKind = mode === "mine" ? "solo" : "shared";
+  const query = searchQuery.trim().toLocaleLowerCase();
+
+  return items.flatMap((item) => {
+    const titleMatches = !query || item.title.toLocaleLowerCase().includes(query);
+    const sessions = item.sessions.filter((session) => session.kind === sessionKind);
+    const seasons = item.seasons.flatMap((season) => {
+      const episodes = season.episodes.filter((episode) =>
+        episode.sessions.some((session) => session.kind === sessionKind) &&
+        (titleMatches || episode.episodeTitle.toLocaleLowerCase().includes(query)),
+      );
+      return episodes.length ? [{ ...season, episodes }] : [];
+    });
+
+    if (seasons.length) return [{ ...item, seasons, sessions }];
+    if (item.seasons.length === 0 && sessions.length && titleMatches) {
+      return [{ ...item, sessions }];
+    }
+    return [];
+  });
+}
+
+function groupWatchHistoryItems(items: WatchHistoryItem[]): PopupProviderGroup[] {
+  const groups = new Map<WatchHistoryItem["provider"], PopupProviderGroup>();
+  for (const item of items) {
+    const current = groups.get(item.provider);
+    if (current) {
+      current.items.push(item);
+      continue;
+    }
+    groups.set(item.provider, {
+      provider: item.provider,
+      label: providerLabel(item.provider),
+      items: [item],
+    });
+  }
+  return [...groups.values()];
+}
+
+function providerLabel(provider: WatchHistoryItem["provider"]): string {
+  if (provider === "crunchyroll") return "Crunchyroll";
+  if (provider === "youtube") return "YouTube";
+  return provider;
+}
+
+function ProviderLogo({ label, provider }: { label: string; provider: string }) {
+  if (provider === "crunchyroll") {
+    return (
+      <span aria-hidden="true" className="resource-provider-logo crunchyroll">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M2.909 13.436C2.914 7.61 7.642 2.893 13.468 2.898c5.576.005 10.137 4.339 10.51 9.819q.021-.351.022-.706C24.007 5.385 18.64.006 12.012 0S.007 5.36 0 11.988 5.36 23.994 11.988 24q.412 0 .815-.027c-5.526-.338-9.9-4.928-9.894-10.538Zm16.284.155a4.1 4.1 0 0 1-4.095-4.103 4.1 4.1 0 0 1 2.712-3.855 8.95 8.95 0 0 0-4.187-1.037 9.007 9.007 0 1 0 8.997 9.016q-.001-.847-.15-1.651a4.1 4.1 0 0 1-3.278 1.63Z"
+            fill="currentColor"
+          />
+        </svg>
+      </span>
+    );
+  }
+  if (provider === "youtube") {
+    return (
+      <span aria-hidden="true" className="resource-provider-logo youtube">
+        <svg viewBox="0 0 32 32">
+          <path
+            d="M28.2 9.1a3.8 3.8 0 0 0-2.7-2.7C23.1 5.8 16 5.8 16 5.8s-7.1 0-9.5.6a3.8 3.8 0 0 0-2.7 2.7C3.2 11.5 3.2 16 3.2 16s0 4.5.6 6.9a3.8 3.8 0 0 0 2.7 2.7c2.4.6 9.5.6 9.5.6s7.1 0 9.5-.6a3.8 3.8 0 0 0 2.7-2.7c.6-2.4.6-6.9.6-6.9s0-4.5-.6-6.9Z"
+            fill="currentColor"
+          />
+          <path d="m13.4 20.4 7-4.4-7-4.4v8.8Z" fill="#fff" />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <span aria-hidden="true" className={`resource-provider-logo ${provider}`}>
+      <span className="resource-provider-fallback">{label.slice(0, 1)}</span>
+    </span>
   );
 }
 

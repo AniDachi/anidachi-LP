@@ -418,29 +418,9 @@ describe("Popup People integration boundaries", () => {
     }
   });
 
-  it("renders Watch, People, and Inbox with only the unseen Inbox count", async () => {
+  it("renders clean Watch, People, and Inbox navigation without counters", async () => {
     const onSelect = vi.fn();
-    const inbox = accountInbox(
-      [
-        inboxFriendRequest(INCOMING_FRIENDSHIP_ID, INCOMING_USER_ID, "Incoming", null),
-        inboxRoomInvite(INBOX_INVITE_ID, "active", null),
-        inboxRoomInvite(MISSED_INVITE_ID, "missed", NOW),
-      ],
-      {
-        actionable: 2,
-        unseen: 2,
-        activeRoomInvites: 1,
-        pendingFriendRequests: 1,
-      },
-    );
-    const view = await renderElement(
-      <PopupNavigation
-        activeTab="resources"
-        inboxCount={popupInboxBadgeCount(buildPopupInboxModel(inbox))}
-        onSelect={onSelect}
-        watchCount={7}
-      />,
-    );
+    const view = await renderElement(<PopupNavigation activeTab="resources" onSelect={onSelect} />);
 
     const tabs = [...view.container.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
     expect(tabs.map((tab) => tab.querySelector(".popup-tab-label")?.textContent)).toEqual([
@@ -448,9 +428,8 @@ describe("Popup People integration boundaries", () => {
       "People",
       "Inbox",
     ]);
-    expect(tabs[0]?.querySelector(".popup-tab-count")?.textContent).toBe("7");
-    expect(tabs[1]?.querySelector(".popup-tab-count")).toBeNull();
-    expect(tabs[2]?.querySelector(".popup-tab-count")?.textContent).toBe("2");
+    expect(view.container.querySelector(".popup-tab-count")).toBeNull();
+    expect(view.container.querySelector(".popup-tabs svg")).toBeNull();
 
     await click(tabs[2]!);
     expect(onSelect).toHaveBeenCalledWith("inbox");
@@ -640,6 +619,10 @@ describe("PopupApp social mutations", () => {
     expect(profileCopy?.textContent).toContain("Viewer");
     expect(profileCopy?.textContent).toContain("Plus");
     expect(profileCopy?.textContent).not.toContain("AniDachi");
+    expect(view.container.querySelectorAll(".popup-header-actions button")).toHaveLength(1);
+    expect(
+      view.container.querySelector(".popup-header-actions button")?.getAttribute("aria-label"),
+    ).toBe("Open settings");
   });
 
   it("sends one recent-person request and refreshes the canonical social snapshot", async () => {
@@ -848,7 +831,7 @@ describe("PopupApp social mutations", () => {
 
     await click(await findButton(view.container, "Inbox"));
     await waitFor(() => expect(markAccountInboxItemsSeen).toHaveBeenCalledTimes(1));
-    await click(await findButton(view.container, "Sync popup data"));
+    await click(await findButton(view.container, "Refresh inbox"));
     await waitFor(() => expect(listAccountInbox).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(view.container.textContent).toContain("Refreshed person"));
     await waitFor(() =>

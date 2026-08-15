@@ -8,11 +8,8 @@ import {
   Check,
   Bell,
   BellOff,
-  Grid2X2,
   Inbox,
   LogIn,
-  Mail,
-  Play,
   RefreshCw,
   Settings,
   Users,
@@ -165,7 +162,6 @@ export function PopupApp() {
   const [busySocialAction, setBusySocialAction] = useState<PopupSocialActionKey | null>(null);
   const [socialNotice, setSocialNotice] = useState<PopupNotice | null>(null);
   const [watchHistoryRefreshVersion, setWatchHistoryRefreshVersion] = useState(0);
-  const [watchHistoryTitleCount, setWatchHistoryTitleCount] = useState(0);
   const accountGateRef = useRef(createAccountRequestGate());
   const popupSyncGateRef = useRef(createAsyncGenerationGate());
   const socialLoadGateRef = useRef(createAsyncGenerationGate());
@@ -190,7 +186,6 @@ export function PopupApp() {
       inboxLoadGateRef.current.begin();
       setBusyInviteId(null);
       setBusySocialAction(null);
-      setWatchHistoryTitleCount(0);
       seenInboxSignatureRef.current = null;
     }
 
@@ -198,7 +193,6 @@ export function PopupApp() {
   }, []);
   const accountUser = authSession.status === "ready" ? authSession.tokens.user : null;
   const inboxModel = useMemo(() => buildPopupInboxModel(inboxState.data), [inboxState.data]);
-  const inboxBadgeCount = popupInboxBadgeCount(inboxModel);
   const peoplePresentationState = mapSocialStateToPeoplePresentation(socialState);
   const peoplePendingActionKey = isPopupPeopleActionKey(busySocialAction) ? busySocialAction : null;
   const peopleActionNotice = isPopupPeopleActionNotice(socialNotice) ? socialNotice : null;
@@ -742,27 +736,29 @@ export function PopupApp() {
     <main className="popup-shell">
       <style>{popupStyles}</style>
       <header className="popup-topbar">
-        <button
-          aria-label={
-            accountUser ? "Open account dashboard" : authChecking ? "Checking account" : "Sign in"
-          }
-          className="popup-profile-button"
-          type="button"
-          disabled={authChecking}
-          onClick={() => void openAccount()}
-        >
-          <span className="popup-profile-avatar" data-signed-in={Boolean(accountUser)}>
-            {accountUser ? (
-              <ProfileAvatar
-                avatarUrl={accountUser.avatarUrl}
-                displayName={accountUser.displayName}
-              />
-            ) : authChecking ? (
-              <RefreshCw size={18} />
-            ) : (
-              <LogIn size={18} />
-            )}
-          </span>
+        <div className="popup-profile">
+          <button
+            aria-label={
+              accountUser ? "Open account dashboard" : authChecking ? "Checking account" : "Sign in"
+            }
+            className="popup-profile-button"
+            type="button"
+            disabled={authChecking}
+            onClick={() => void openAccount()}
+          >
+            <span className="popup-profile-avatar" data-signed-in={Boolean(accountUser)}>
+              {accountUser ? (
+                <ProfileAvatar
+                  avatarUrl={accountUser.avatarUrl}
+                  displayName={accountUser.displayName}
+                />
+              ) : authChecking ? (
+                <RefreshCw size={18} />
+              ) : (
+                <LogIn size={18} />
+              )}
+            </span>
+          </button>
           <span className="popup-profile-copy">
             {accountUser ? (
               <PanelAccountTitle displayName={accountUser.displayName} plan={accountUser.plan} />
@@ -777,29 +773,8 @@ export function PopupApp() {
               </>
             )}
           </span>
-        </button>
+        </div>
         <div className="popup-header-actions">
-          <button
-            aria-label="Open account dashboard"
-            className="popup-command-button"
-            type="button"
-            onClick={() => void openAccount()}
-          >
-            <Grid2X2 size={18} />
-            <span>Dashboard</span>
-          </button>
-          <button
-            aria-label="Sync popup data"
-            className="popup-command-button"
-            type="button"
-            onClick={() => {
-              void syncPopupData();
-              setWatchHistoryRefreshVersion((current) => current + 1);
-            }}
-          >
-            <RefreshCw size={18} />
-            <span>Sync</span>
-          </button>
           <button
             aria-label="Open settings"
             className="popup-command-button"
@@ -807,7 +782,7 @@ export function PopupApp() {
             aria-expanded={settingsOpen}
             onClick={() => void toggleSettings()}
           >
-            <Settings size={18} />
+            <Settings size={21} strokeWidth={1.8} />
             <span>Settings</span>
           </button>
         </div>
@@ -865,18 +840,12 @@ export function PopupApp() {
         </section>
       ) : null}
 
-      <PopupNavigation
-        activeTab={activeTab}
-        inboxCount={inboxBadgeCount}
-        onSelect={setActiveTab}
-        watchCount={watchHistoryTitleCount}
-      />
+      <PopupNavigation activeTab={activeTab} onSelect={setActiveTab} />
 
       {activeTab === "resources" ? (
         <PopupWatchHistoryPanel
           key={`${accountUser?.id ?? "signed-out"}:${watchHistoryRefreshVersion}`}
           ownerUserId={accountUser?.id ?? null}
-          onTitleCountChange={setWatchHistoryTitleCount}
         />
       ) : activeTab === "friends" ? (
         <PopupPeoplePanel
@@ -911,34 +880,25 @@ export function PopupApp() {
 
 export function PopupNavigation({
   activeTab,
-  inboxCount,
   onSelect,
-  watchCount,
 }: {
   activeTab: PopupTab;
-  inboxCount: number;
   onSelect: (tab: PopupTab) => void;
-  watchCount: number;
 }) {
   return (
     <div className="popup-tabs" role="tablist" aria-label="Popup sections">
       <PopupNavigationButton
         active={activeTab === "resources"}
-        count={watchCount}
-        icon={<Play size={15} />}
         label="Watch"
         onClick={() => onSelect("resources")}
       />
       <PopupNavigationButton
         active={activeTab === "friends"}
-        icon={<Users size={15} />}
         label="People"
         onClick={() => onSelect("friends")}
       />
       <PopupNavigationButton
         active={activeTab === "inbox"}
-        count={inboxCount > 0 ? inboxCount : undefined}
-        icon={<Mail size={15} />}
         label="Inbox"
         onClick={() => onSelect("inbox")}
       />
@@ -948,14 +908,10 @@ export function PopupNavigation({
 
 function PopupNavigationButton({
   active,
-  count,
-  icon,
   label,
   onClick,
 }: {
   active: boolean;
-  count?: number;
-  icon: ReactNode;
   label: string;
   onClick: () => void;
 }) {
@@ -968,9 +924,7 @@ function PopupNavigationButton({
       type="button"
       onClick={onClick}
     >
-      {icon}
       <span className="popup-tab-label">{label}</span>
-      {count === undefined ? null : <span className="popup-tab-count">{count}</span>}
     </button>
   );
 }

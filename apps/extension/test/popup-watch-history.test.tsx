@@ -306,6 +306,42 @@ describe("Popup Watch History v2", () => {
     expect(view.container.textContent).not.toContain("0/");
     await unmount(view.root);
   });
+
+  it("searches canonical v2 history by title and episode without mutating the response", async () => {
+    const history = twoEpisodeHistoryFixture();
+    const request = requestForHistory(history);
+    const view = await renderPanel(clientFixture({ cached: null, request }));
+    const search = await findInput(view.container, "Search watch history");
+
+    await setInputValue(search, "Promise");
+    expect(view.container.textContent).not.toContain("Episode 1 - The Journey");
+    expect(view.container.textContent).toContain("Episode 2 - The Promise");
+
+    await setInputValue(search, "missing");
+    expect(view.container.textContent).toContain("No titles match your search.");
+    expect(history.items[0]?.seasons[0]?.episodes).toHaveLength(2);
+    await unmount(view.root);
+  });
+
+  it("switches between Mine and Together while keeping provider identity visible", async () => {
+    const history = mixedSessionHistoryFixture();
+    const view = await renderPanel(
+      clientFixture({ cached: null, request: requestForHistory(history) }),
+    );
+    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+
+    expect(mode.dataset.mode).toBe("mine");
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    expect(view.container.textContent).not.toContain("Episode 2 - The Promise");
+    expect(view.container.querySelector(".resource-provider-logo.crunchyroll svg")).not.toBeNull();
+
+    await click(mode);
+
+    await waitFor(() => expect(mode.dataset.mode).toBe("together"));
+    expect(view.container.textContent).not.toContain("Episode 1 - The Journey");
+    expect(view.container.textContent).toContain("Episode 2 - The Promise");
+    await unmount(view.root);
+  });
 });
 
 function clientFixture(overrides: {
@@ -422,6 +458,27 @@ function twoEpisodeHistoryFixture(): WatchHistoryResponse {
   };
 }
 
+function mixedSessionHistoryFixture(): WatchHistoryResponse {
+  const history = twoEpisodeHistoryFixture();
+  const item = history.items[0];
+  const season = item?.seasons[0];
+  const first = season?.episodes[0];
+  const second = season?.episodes[1];
+  if (!item || !season || !first || !second) throw new Error("mixed history fixture missing");
+  const shared = sharedSessionFixture(second.currentTime, second.progress);
+  return {
+    ...history,
+    items: [{
+      ...item,
+      seasons: [{
+        ...season,
+        episodes: [first, { ...second, sessions: [shared] }],
+      }],
+      sessions: [...item.sessions, shared],
+    }],
+  };
+}
+
 function youtubeMovieHistoryFixture(): WatchHistoryResponse {
   const history = historyFixture();
   return {
@@ -464,6 +521,30 @@ function sessionFixture(currentTime: number, progress: number) {
     lastWatchedAt: NOW,
     participants: [],
   };
+}
+
+function sharedSessionFixture(currentTime: number, progress: number) {
+  return {
+    ...sessionFixture(currentTime, progress),
+    id: "00000000-0000-4000-8000-000000000004",
+    roomId: "room-popup-shared",
+    roomGeneration: 1,
+    kind: "shared" as const,
+    sourceGeneration: 1,
+  };
+}
+
+function requestForHistory(history: WatchHistoryResponse): PopupWatchHistoryClient["request"] {
+  return vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+    if (message.command === "list") return { ok: true, data: history };
+    if (message.command === "get-preferences") {
+      return { ok: true, data: preferencesFixture(false) };
+    }
+    if (message.command === "other-owner-pending") {
+      return { ok: true, hasPendingWork: false, byteUse: 0 };
+    }
+    return { ok: true };
+  });
 }
 
 function pendingEvent(overrides: { currentTime: number; progress: number }): WatchProgressEvent {
@@ -524,6 +605,25 @@ async function findButton(container: HTMLElement, name: string): Promise<HTMLBut
   });
   if (!button) throw new Error(`Button not found: ${name}`);
   return button;
+}
+
+async function findInput(container: HTMLElement, name: string): Promise<HTMLInputElement> {
+  let input: HTMLInputElement | null = null;
+  await waitFor(() => {
+    input = container.querySelector(`input[aria-label="${name}"]`);
+    expect(input).not.toBeNull();
+  });
+  if (!input) throw new Error(`Input not found: ${name}`);
+  return input;
+}
+
+async function setInputValue(input: HTMLInputElement, value: string): Promise<void> {
+  await act(async () => {
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    setter?.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
 }
 
 async function click(button: HTMLButtonElement): Promise<void> {
