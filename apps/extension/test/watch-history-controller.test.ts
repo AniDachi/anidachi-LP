@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createWatchHistoryController,
+  type WatchHistoryController,
   type WatchHistoryControllerDependencies,
 } from "../src/watch-history-controller";
 import type { WatchProgressEvent } from "@anidachi/protocol";
@@ -230,6 +231,127 @@ describe("watch history meaningful-progress controller", () => {
 
     expect(local).toHaveLength(localBeforeSwitch);
     expect(enqueued).toHaveLength(enqueuedBeforeSwitch);
+  });
+
+  it("refreshes unchanged authority in place without rotating the logical session or gate", async () => {
+    const fixture = createFixture({
+      sessionKeys: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ],
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    const refreshAuthority = (fixture.controller as WatchHistoryController & {
+      refreshAuthority?: () => Promise<void>;
+    }).refreshAuthority;
+    expect(refreshAuthority).toBeTypeOf("function");
+    if (!refreshAuthority) return;
+
+    await refreshAuthority.call(fixture.controller);
+    fixture.setTime(12);
+    await fixture.controller.observe("pause");
+
+    expect(fixture.enqueued.map((event) => [event.kind, event.clientSessionKey])).toEqual([
+      ["heartbeat", "11111111-1111-4111-8111-111111111111"],
+      ["pause", "11111111-1111-4111-8111-111111111111"],
+    ]);
+    expect(fixture.enqueued.some((event) => event.kind === "source_change")).toBe(false);
+  });
+
+  it("fails closed during an external YouTube opt-out refresh without a stale upload", async () => {
+    let loadCount = 0;
+    let resolveRefresh: ((value: {
+      ownerUserId: string;
+      accountGeneration: number;
+      preferences: { youtubeHistoryEnabled: boolean };
+    }) => void) | null = null;
+    const fixture = createFixture({
+      loadPreferences: async () => {
+        loadCount += 1;
+        if (loadCount === 1) {
+          return {
+            ownerUserId: "00000000-0000-4000-8000-000000000001",
+            accountGeneration: 1,
+            preferences: { youtubeHistoryEnabled: true },
+          };
+        }
+        return new Promise((resolve) => { resolveRefresh = resolve; });
+      },
+      getObservation: (preferences, observation) => preferences?.youtubeHistoryEnabled
+        ? {
+          ...observation,
+          provider: "youtube",
+          providerLabel: "YouTube",
+          titleKey: "youtube:abcdefghijk",
+          episodeKey: "youtube:abcdefghijk",
+          sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+        }
+        : null,
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    const refreshAuthority = (fixture.controller as WatchHistoryController & {
+      refreshAuthority?: () => Promise<void>;
+    }).refreshAuthority;
+    expect(refreshAuthority).toBeTypeOf("function");
+    if (!refreshAuthority) return;
+
+    const refreshing = refreshAuthority.call(fixture.controller);
+    await Promise.resolve();
+    fixture.setTime(12);
+    const observing = fixture.controller.observe("heartbeat");
+    await Promise.resolve();
+    expect(fixture.local).toHaveLength(2);
+    expect(fixture.enqueued).toHaveLength(1);
+
+    (resolveRefresh as unknown as (value: {
+      ownerUserId: string;
+      accountGeneration: number;
+      preferences: { youtubeHistoryEnabled: boolean };
+    }) => void)({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+    });
+    await Promise.all([refreshing, observing]);
+
+    expect(fixture.local).toHaveLength(2);
+    expect(fixture.enqueued.map((event) => event.kind)).toEqual(["heartbeat"]);
+    expect(fixture.current.at(-1)).toBeNull();
+  });
+
+  it("keeps capture fail-closed when authority refresh cannot bootstrap", async () => {
+    let loadCount = 0;
+    const fixture = createFixture({
+      loadPreferences: async () => {
+        loadCount += 1;
+        return loadCount === 1
+          ? {
+            ownerUserId: "00000000-0000-4000-8000-000000000001",
+            accountGeneration: 1,
+            preferences: { youtubeHistoryEnabled: false },
+          }
+          : null;
+      },
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    const refreshAuthority = (fixture.controller as WatchHistoryController & {
+      refreshAuthority?: () => Promise<void>;
+    }).refreshAuthority;
+    expect(refreshAuthority).toBeTypeOf("function");
+    if (!refreshAuthority) return;
+
+    await refreshAuthority.call(fixture.controller);
+    fixture.setTime(12);
+    await fixture.controller.observe("pause");
+
+    expect(fixture.local).toHaveLength(2);
+    expect(fixture.enqueued).toHaveLength(1);
   });
 
   it("serializes concurrent forced events and keeps the retained source through cleanup", async () => {
@@ -470,6 +592,10 @@ function createFixture(options: {
   rejectEnqueueKinds?: Set<WatchProgressEvent["kind"]>;
   holdEnqueueAt?: number;
   holdLocalAt?: number;
+  getObservation?: (
+    preferences: Parameters<WatchHistoryControllerDependencies["getObservation"]>[0],
+    observation: HistoryObservation,
+  ) => HistoryObservation | null;
 } = {}) {
   let now = 1_700_000_000_000;
   let time = 10;
@@ -510,7 +636,9 @@ function createFixture(options: {
     progress: time / 20,
   });
   const dependencies: WatchHistoryControllerDependencies = {
-    getObservation: observation,
+    getObservation: options.getObservation
+      ? (preferences) => options.getObservation?.(preferences, observation()) ?? null
+      : observation,
     getRoomActive: () => roomActive,
     loadPreferences: options.loadPreferences ?? (async () => ({
       ownerUserId: "00000000-0000-4000-8000-000000000001",

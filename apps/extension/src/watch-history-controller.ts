@@ -42,6 +42,7 @@ export type WatchHistoryController = {
   observe(kind: HistoryEventKind): Promise<void>;
   noteSeeking(): Promise<void>;
   setRoomActive(active: boolean): Promise<void>;
+  refreshAuthority(): Promise<void>;
   recover(): Promise<void>;
   dispose(): Promise<void>;
 };
@@ -64,6 +65,8 @@ export function createWatchHistoryController(
   let roomActive = dependencies.getRoomActive();
   let roomActiveIntent = roomActive;
   let capturePaused = false;
+  let authorityReady = false;
+  let authorityRevision = 0;
   let disposed = false;
   let lifecycle = 0;
   let queue: Promise<void> = Promise.resolve();
@@ -93,6 +96,8 @@ export function createWatchHistoryController(
 
   async function start(): Promise<void> {
     const token = lifecycle;
+    const authorityToken = ++authorityRevision;
+    authorityReady = false;
     let loaded: {
       ownerUserId: string;
       accountGeneration: number;
@@ -105,11 +110,12 @@ export function createWatchHistoryController(
       return;
     }
     await serial(async () => {
-      if (!isCurrent(token)) return;
+      if (!isCurrent(token) || authorityToken !== authorityRevision) return;
       ownerUserId = loaded?.ownerUserId ?? null;
       preferences = loaded?.preferences ?? null;
       accountGeneration = loaded?.accountGeneration ?? null;
       capturePaused = loaded?.capturePaused === true;
+      authorityReady = loaded !== null;
       await capture("heartbeat", token);
     });
   }
@@ -133,7 +139,11 @@ export function createWatchHistoryController(
     const observation = dependencies.getObservation(preferences);
     if (!isCurrent(token)) return;
     dependencies.onObservation?.(observation);
-    if (!observation || ownerUserId === null || accountGeneration === null || capturePaused) return;
+    if (!observation ||
+      !authorityReady ||
+      ownerUserId === null ||
+      accountGeneration === null ||
+      capturePaused) return;
 
     const identity = observationIdentity(observation);
     if (retained && retainedIdentity !== identity) {
@@ -196,7 +206,7 @@ export function createWatchHistoryController(
   }
 
   async function persist(event: WatchProgressEvent, token: number): Promise<boolean> {
-    if (!isCurrent(token)) return false;
+    if (!isCurrent(token) || !authorityReady) return false;
     try {
       if (ownerUserId === null) return false;
       const result = await dependencies.observeLocally(event, ownerUserId);
@@ -211,7 +221,7 @@ export function createWatchHistoryController(
   }
 
   async function enqueueEvent(event: WatchProgressEvent, token: number): Promise<boolean> {
-    if (!isCurrent(token) || capturePaused) return false;
+    if (!isCurrent(token) || !authorityReady || capturePaused) return false;
     try {
       if (ownerUserId === null) return false;
       const result = await dependencies.enqueue(event, ownerUserId);
@@ -238,7 +248,37 @@ export function createWatchHistoryController(
       ownerUserId = null;
       preferences = null;
       accountGeneration = null;
+      authorityReady = false;
     }
+  }
+
+  function refreshAuthority(): Promise<void> {
+    const token = lifecycle;
+    const authorityToken = ++authorityRevision;
+    authorityReady = false;
+    return serial(async () => {
+      if (!isCurrent(token) || authorityToken !== authorityRevision) return;
+      let loaded: Awaited<ReturnType<WatchHistoryControllerDependencies["loadPreferences"]>>;
+      try {
+        loaded = await dependencies.loadPreferences();
+      } catch {
+        return;
+      }
+      if (!isCurrent(token) || authorityToken !== authorityRevision || !loaded) return;
+      const authorityUnchanged = ownerUserId === loaded.ownerUserId &&
+        accountGeneration === loaded.accountGeneration &&
+        preferences?.youtubeHistoryEnabled === loaded.preferences.youtubeHistoryEnabled;
+      ownerUserId = loaded.ownerUserId;
+      accountGeneration = loaded.accountGeneration;
+      preferences = loaded.preferences;
+      capturePaused = loaded.capturePaused === true;
+      authorityReady = true;
+      if (authorityUnchanged) return;
+      retained = null;
+      retainedIdentity = null;
+      clientSessionKey = null;
+      resetMeaningfulState();
+    });
   }
 
   function setRoomActive(active: boolean): Promise<void> {
@@ -250,12 +290,17 @@ export function createWatchHistoryController(
     const previous = retained;
     const previousSessionKey = clientSessionKey;
     const previousGeneration = accountGeneration;
-    const previousWasMeaningfulSolo = hasMeaningfulPlayback && !roomActive;
+    const previousAuthorityReady = authorityReady;
+    const previousWasMeaningfulSolo = previousAuthorityReady && hasMeaningfulPlayback && !roomActive;
     roomActive = true;
     clientSessionKey = null;
     resetMeaningfulState();
     return serial(async () => {
-      if (!isCurrent(token) || !previous || !previousSessionKey || previousGeneration === null) return;
+      if (!isCurrent(token) ||
+        !previousAuthorityReady ||
+        !previous ||
+        !previousSessionKey ||
+        previousGeneration === null) return;
       const event = toEvent(
         previous,
         "source_change",
@@ -318,6 +363,7 @@ export function createWatchHistoryController(
       ownerUserId = recovered.ownerUserId;
       accountGeneration = recovered.accountGeneration;
       capturePaused = false;
+      authorityReady = true;
       clientSessionKey = null;
       resetMeaningfulState();
     });
@@ -329,11 +375,19 @@ export function createWatchHistoryController(
     const cleanupSessionKey = clientSessionKey;
     const cleanupGeneration = accountGeneration;
     const cleanupOwnerUserId = ownerUserId;
-    const shouldPublish = hasMeaningfulPlayback && !roomActive && !dependencies.getRoomActive();
+    const cleanupAuthorityReady = authorityReady;
+    const shouldPublish = cleanupAuthorityReady &&
+      hasMeaningfulPlayback &&
+      !roomActive &&
+      !dependencies.getRoomActive();
     disposed = true;
     lifecycle += 1;
     disposePromise = serial(async () => {
-      if (!cleanup || !cleanupSessionKey || cleanupGeneration === null || cleanupOwnerUserId === null) return;
+      if (!cleanupAuthorityReady ||
+        !cleanup ||
+        !cleanupSessionKey ||
+        cleanupGeneration === null ||
+        cleanupOwnerUserId === null) return;
       const event = toEvent(cleanup, "source_change", cleanupGeneration, createEventId(), cleanupSessionKey, now());
       const result = await dependencies.observeLocally(event, cleanupOwnerUserId);
       if (isFailedCapture(result)) return;
@@ -342,7 +396,7 @@ export function createWatchHistoryController(
     return disposePromise;
   }
 
-  return { start, observe, noteSeeking, setRoomActive, recover, dispose };
+  return { start, observe, noteSeeking, setRoomActive, refreshAuthority, recover, dispose };
 }
 
 function isFailedCapture(

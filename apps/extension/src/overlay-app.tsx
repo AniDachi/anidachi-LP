@@ -401,7 +401,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     string | null | undefined
   >(undefined);
   const [roomId, setRoomId] = useState<string | null>(null);
-  const [watchHistoryRefreshRevision, setWatchHistoryRefreshRevision] = useState(0);
   const [roomToken, setRoomToken] = useState<string | null>(null);
   const [roomShareableLink, setRoomShareableLink] = useState<string | null>(null);
   const [roomQuota, setRoomQuota] = useState<RoomQuotaSummary | null>(null);
@@ -541,6 +540,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   const [currentResourceEntry, setCurrentResourceEntry] = useState<HistoryObservation | null>(null);
   const watchHistoryControllerRef = useRef<WatchHistoryController | null>(null);
   const watchHistoryRoomSuppressedRef = useRef(true);
+  const watchHistoryAuthContextRef = useRef<{
+    ownerUserId: string | null;
+    accessToken: string | null;
+    controller: WatchHistoryController | null;
+  } | null>(null);
 
   const participantRef = useRef<Participant | null>(null);
   const settingsCategoryScrollRef = useRef<HTMLDivElement | null>(null);
@@ -1779,7 +1783,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
   useEffect(() => {
     function refreshWatchHistoryOnFocus(): void {
-      setWatchHistoryRefreshRevision((revision) => revision + 1);
+      void watchHistoryControllerRef.current?.refreshAuthority().catch(() => undefined);
     }
 
     window.addEventListener("focus", refreshWatchHistoryOnFocus);
@@ -1797,6 +1801,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 
   useEffect(() => {
     if (!adapterActive || !watchHistoryRuntimeGate.ready) return;
+    const expectedOwnerUserId = participant?.id;
+    if (!expectedOwnerUserId) return;
     const definition = getDefinitionForProvider(adapter.provider);
     if (!definition?.historyPolicy) return;
     const controller = createWatchHistoryController({
@@ -1807,8 +1813,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         const response = await requestWatchHistory({
           type: "ANIDACHI_WATCH_HISTORY_V2",
           command: "bootstrap",
+          expectedOwnerUserId,
         });
-        return response.ok ? parseWatchHistoryBootstrapData(response.data) : null;
+        if (!response.ok) return null;
+        const loaded = parseWatchHistoryBootstrapData(response.data);
+        return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
       },
       recoverCapture: async () => {
         const recovered = await requestWatchHistory({
@@ -1819,8 +1828,11 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         const bootstrapped = await requestWatchHistory({
           type: "ANIDACHI_WATCH_HISTORY_V2",
           command: "bootstrap",
+          expectedOwnerUserId,
         });
-        return bootstrapped.ok ? parseWatchHistoryBootstrapData(bootstrapped.data) : null;
+        if (!bootstrapped.ok) return null;
+        const loaded = parseWatchHistoryBootstrapData(bootstrapped.data);
+        return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
       },
       observeLocally: async (event, expectedOwnerUserId) => {
         const response = await requestWatchHistory({
@@ -1852,7 +1864,6 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
     });
     return () => {
       removeHistoryListeners();
-      void controller.dispose().catch(() => undefined);
       if (watchHistoryControllerRef.current === controller) {
         watchHistoryControllerRef.current = null;
       }
@@ -1860,11 +1871,27 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
   }, [
     adapter,
     adapterActive,
-    authAccessToken,
     participant?.id,
-    watchHistoryRefreshRevision,
     watchHistoryRuntimeGate.ready,
   ]);
+
+  useEffect(() => {
+    const next = {
+      ownerUserId: participant?.id ?? null,
+      accessToken: authAccessToken,
+      controller: watchHistoryControllerRef.current,
+    };
+    const previous = watchHistoryAuthContextRef.current;
+    watchHistoryAuthContextRef.current = next;
+    if (!previous ||
+      !next.ownerUserId ||
+      previous.ownerUserId !== next.ownerUserId ||
+      previous.controller !== next.controller ||
+      previous.accessToken === next.accessToken) {
+      return;
+    }
+    void watchHistoryControllerRef.current?.refreshAuthority().catch(() => undefined);
+  }, [authAccessToken, participant?.id]);
 
   useEffect(() => {
     if (!watchHistoryRuntimeGate.ready) return;

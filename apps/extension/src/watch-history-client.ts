@@ -58,7 +58,11 @@ export type WatchHistoryMessage =
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "flush" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "get-preferences" }
-  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "bootstrap" }
+  | {
+      type: typeof WATCH_HISTORY_MESSAGE_TYPE;
+      command: "bootstrap";
+      expectedOwnerUserId: string;
+    }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "recover-storage" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "update-preferences"; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "delete"; input: unknown }
@@ -161,10 +165,14 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
     case "flush":
     case "content-reconnect":
     case "get-preferences":
-    case "bootstrap":
     case "recover-storage":
     case "other-owner-pending":
       return hasExactKeys(value, ["type", "command"]);
+    case "bootstrap":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) &&
+        typeof value.expectedOwnerUserId === "string" &&
+        value.expectedOwnerUserId.length > 0 &&
+        value.expectedOwnerUserId.length <= 128;
     case "create-room":
       return hasExactKeys(value, ["type", "command", "sessionId", "clientRequestId"]) &&
         typeof value.sessionId === "string" && value.sessionId.length > 0 && value.sessionId.length <= 128 &&
@@ -205,7 +213,12 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
     }
     if (message.command === "list") return refresh(session, message);
-    if (message.command === "bootstrap") return bootstrap(session);
+    if (message.command === "bootstrap") {
+      if (message.expectedOwnerUserId !== session.user.id) {
+        return { ok: false, status: "rejected" };
+      }
+      return bootstrap(session);
+    }
     if (message.command === "recover-storage") return recoverStorage(session);
     if (message.command === "enqueue-progress" || message.command === "observe-progress") {
       if (message.expectedOwnerUserId !== session.user.id) {
@@ -239,6 +252,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       ...partition,
       cache: parsed.data,
     }));
+    if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
   }
@@ -369,6 +383,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       preferencesConfirmed: true,
       captureMarkersReady: true,
     }));
+    if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
   }
@@ -390,9 +405,13 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       preferencesConfirmed: true,
       captureMarkersReady: true,
     }));
+    if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     if (!saved.ok) return saved;
     const paused = await capturePauseState(session, generation);
+    if (!sameSession(session, await dependencies.getCurrentSession())) {
+      return { ok: false, status: "rejected" };
+    }
     return {
       ok: true,
       data: {
@@ -407,7 +426,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
 
   async function cachedBootstrap(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
     const current = await dependencies.getCurrentSession();
-    if (!sameSession(session, current)) return { ok: false, status: "retryable" };
+    if (!sameSession(session, current)) return { ok: false, status: "rejected" };
     const root = await storage.readRoot();
     const generation = root.activeGenerations?.[session.user.id];
     if (generation === undefined) return { ok: false, status: "retryable" };
@@ -421,13 +440,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       !preferences.success) {
       return { ok: false, status: "retryable" };
     }
+    const paused = await capturePauseState(session, generation);
+    if (!sameSession(session, await dependencies.getCurrentSession())) {
+      return { ok: false, status: "rejected" };
+    }
     return {
       ok: true,
       data: {
         ownerUserId: session.user.id,
         accountGeneration: generation,
         preferences: preferences.data,
-        capturePaused: (await capturePauseState(session, generation)).capturePaused,
+        capturePaused: paused.capturePaused,
         source: "cache",
       } satisfies WatchHistoryBootstrapData,
     };
@@ -501,6 +524,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       preferencesConfirmed: true,
       captureMarkersReady: true,
     }));
+    if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
   }
@@ -530,6 +554,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       currentObservation: null,
       outbox: removeWatchHistoryEventsForDeletion(partition.outbox, parsed.data.target),
     }));
+    if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
   }
@@ -754,10 +779,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     generation: number,
     update: (partition: WatchHistoryAccountPartition) => WatchHistoryAccountPartition,
   ): Promise<ReturnType<WatchHistoryStorage["updateRoot"]> extends Promise<infer Result>
-    ? Result & { stale?: boolean }
+    ? Result & { stale?: boolean; authorityRejected?: boolean }
     : never> {
     const current = await dependencies.getCurrentSession();
-    if (!sameSession(session, current)) return { ok: true } as const;
+    if (!sameSession(session, current)) return { ok: true, authorityRejected: true } as const;
     const key = watchHistoryPartitionKey(session.user.id, generation);
     let stale = false;
     const result = await storage.updateRoot((root) => {
@@ -789,6 +814,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         partitions: { ...partitions, [key]: update(partition) },
       };
     });
+    const currentAfterWrite = await dependencies.getCurrentSession();
+    if (!sameSession(session, currentAfterWrite)) {
+      return { ...result, authorityRejected: true };
+    }
     return stale ? { ...result, stale: true } : result;
   }
 

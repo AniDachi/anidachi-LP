@@ -13,6 +13,14 @@ describe("watch history runtime hydration gate", () => {
 
     expect(resolveWatchHistoryRuntimeGate({
       identityLoaded: true,
+      ownerUserId: null,
+      roomSessionLoadedForUserId: null,
+      storedRoomSessionOwnerUserId: null,
+      roomActive: false,
+    })).toEqual({ ready: false, roomSuppressed: true });
+
+    expect(resolveWatchHistoryRuntimeGate({
+      identityLoaded: true,
       ownerUserId: "owner-a",
       roomSessionLoadedForUserId: undefined,
       storedRoomSessionOwnerUserId: null,

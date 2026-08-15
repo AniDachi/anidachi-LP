@@ -137,6 +137,7 @@ describe("watch history v2 client", () => {
     await expect(client.handle({
       type: "ANIDACHI_WATCH_HISTORY_V2",
       command: "bootstrap",
+      expectedOwnerUserId: owner,
     } as never)).resolves.toEqual({
       ok: true,
       data: {
@@ -152,6 +153,7 @@ describe("watch history v2 client", () => {
     await expect(client.handle({
       type: "ANIDACHI_WATCH_HISTORY_V2",
       command: "bootstrap",
+      expectedOwnerUserId: owner,
     } as never)).resolves.toEqual({
       ok: true,
       data: {
@@ -162,6 +164,134 @@ describe("watch history v2 client", () => {
         source: "cache",
       },
     });
+  });
+
+  it("rejects a deferred A bootstrap after B becomes current", async () => {
+    const ownerA = session.user.id;
+    const ownerB = "00000000-0000-4000-8000-000000000109";
+    const sessionB = {
+      ...session,
+      accessToken: "access-token-b",
+      refreshToken: "refresh-token-b",
+      user: { ...session.user, id: ownerB },
+    };
+    let currentSession: typeof session | typeof sessionB = session;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [ownerA]: 1, [ownerB]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(ownerA, 1)]: readyPartition(ownerA, false),
+        [watchHistoryPartitionKey(ownerB, 1)]: readyPartition(ownerB, false),
+      },
+    };
+    let resolveNetwork: ((response: Response) => void) | null = null;
+    const fetchImpl = vi.fn(() => new Promise<Response>((resolve) => { resolveNetwork = resolve; }));
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => currentSession,
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    const bootstrapping = client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap",
+      expectedOwnerUserId: ownerA,
+    } as never);
+    await vi.waitFor(() => expect(fetchImpl).toHaveBeenCalledOnce());
+    currentSession = sessionB;
+    (resolveNetwork as unknown as (response: Response) => void)(new Response(JSON.stringify({
+      meta: {
+        serverTime: "2026-08-15T10:00:00.000Z",
+        schemaVersion: 2,
+        ownerUserId: ownerA,
+        accountGeneration: 1,
+      },
+      preferences: { youtubeHistoryEnabled: true },
+    })));
+
+    await expect(bootstrapping).resolves.toEqual({ ok: false, status: "rejected" });
+    expect(stored.partitions[watchHistoryPartitionKey(ownerB, 1)]?.preferences)
+      .toEqual({ youtubeHistoryEnabled: false });
+  });
+
+  it("rejects bootstrap when the same owner refresh token changes during canonical storage", async () => {
+    const owner = session.user.id;
+    const refreshedSession = { ...session, refreshToken: "rotated-refresh-token" };
+    let currentSession = session;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => currentSession,
+      fetch: vi.fn(async () => new Response(JSON.stringify({
+        meta: {
+          serverTime: "2026-08-15T10:00:00.000Z",
+          schemaVersion: 2,
+          ownerUserId: owner,
+          accountGeneration: 1,
+        },
+        preferences: { youtubeHistoryEnabled: true },
+      }))) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: {
+          getValue: async () => stored,
+          setValue: async (value) => {
+            stored = value;
+            currentSession = refreshedSession;
+          },
+        },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap",
+      expectedOwnerUserId: owner,
+    } as never)).resolves.toEqual({ ok: false, status: "rejected" });
+  });
+
+  it("rechecks the session immediately before returning cached bootstrap data", async () => {
+    const owner = session.user.id;
+    const sessionB = {
+      ...session,
+      accessToken: "access-token-b",
+      refreshToken: "refresh-token-b",
+      user: { ...session.user, id: "00000000-0000-4000-8000-000000000110" },
+    };
+    let reads = 0;
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => {
+        reads += 1;
+        return reads <= 2 ? session : sessionB;
+      },
+      fetch: vi.fn(async () => { throw new TypeError("offline"); }) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: {
+          getValue: async () => ({
+            schemaVersion: 2,
+            activeGenerations: { [owner]: 1 },
+            partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, true) },
+          }),
+          setValue: async () => undefined,
+        },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap",
+      expectedOwnerUserId: owner,
+    } as never)).resolves.toEqual({ ok: false, status: "rejected" });
   });
 
   it("does not clear a persisted storage pause merely because canonical preferences were written", async () => {
@@ -206,6 +336,7 @@ describe("watch history v2 client", () => {
     await expect(client.handle({
       type: "ANIDACHI_WATCH_HISTORY_V2",
       command: "bootstrap",
+      expectedOwnerUserId: owner,
     } as never)).resolves.toMatchObject({
       ok: true,
       data: { capturePaused: true, preferences: { youtubeHistoryEnabled: true } },
@@ -229,7 +360,11 @@ describe("watch history v2 client", () => {
       capturePaused: false,
       outbox: { ownerUserId: owner, accountGeneration: 1, entries: [] },
     };
-    const bootstrap = { type: "ANIDACHI_WATCH_HISTORY_V2", command: "bootstrap" } as never;
+    const bootstrap = {
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap",
+      expectedOwnerUserId: owner,
+    } as never;
     const makeClient = (
       currentSession: typeof session,
       stored: WatchHistoryStorageRoot,
@@ -249,7 +384,7 @@ describe("watch history v2 client", () => {
       activeGenerations: { [owner]: 1 },
       partitions: { [watchHistoryPartitionKey(owner, 1)]: partition },
     }, vi.fn(async () => { throw new TypeError("offline"); }) as typeof fetch).handle(bootstrap))
-      .resolves.toEqual({ ok: false, status: "retryable" });
+      .resolves.toEqual({ ok: false, status: "rejected" });
 
     await expect(makeClient(session, {
       schemaVersion: 2,
@@ -281,7 +416,12 @@ describe("watch history v2 client", () => {
   });
 
   it("strictly validates bootstrap commands and background results", () => {
-    expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "bootstrap" })).toBe(true);
+    expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "bootstrap" })).toBe(false);
+    expect(isWatchHistoryMessage({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap",
+      expectedOwnerUserId: session.user.id,
+    })).toBe(true);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "bootstrap", ownerUserId: session.user.id })).toBe(false);
     expect(parseWatchHistoryBootstrapData({
       ownerUserId: session.user.id,
@@ -828,6 +968,7 @@ describe("watch history v2 client", () => {
     await expect(recreated.handle({
       type: "ANIDACHI_WATCH_HISTORY_V2",
       command: "bootstrap",
+      expectedOwnerUserId: owner,
     })).resolves.toEqual({
       ok: true,
       data: {

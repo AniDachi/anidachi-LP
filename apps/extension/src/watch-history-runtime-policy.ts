@@ -15,6 +15,7 @@ export function resolveWatchHistoryRuntimeGate(
   input: WatchHistoryRuntimeGateInput,
 ): WatchHistoryRuntimeGate {
   const ready = input.identityLoaded &&
+    input.ownerUserId !== null &&
     input.roomSessionLoadedForUserId === input.ownerUserId;
   const restoredRoomActive = input.ownerUserId !== null &&
     input.storedRoomSessionOwnerUserId === input.ownerUserId;
