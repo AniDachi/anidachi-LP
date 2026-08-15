@@ -10,6 +10,8 @@ export const WATCH_HISTORY_STORAGE_VERSION = 2 as const;
 export const WATCH_HISTORY_STORAGE_KEY = "anidachi.watchHistory.v2";
 export const WATCH_HISTORY_STORAGE_ITEM_KEY = `local:${WATCH_HISTORY_STORAGE_KEY}` as const;
 
+export type WatchHistoryObservationDisplayMode = "mine" | "together";
+
 export type WatchHistoryAccountPartition = {
   ownerUserId: string;
   accountGeneration: number;
@@ -18,6 +20,7 @@ export type WatchHistoryAccountPartition = {
   preferencesConfirmed?: boolean;
   currentObservation: WatchProgressEvent | null;
   currentObservationMeaningfulSolo?: boolean;
+  currentObservationDisplayMode?: WatchHistoryObservationDisplayMode | null;
   capturePaused?: boolean;
   captureMarkersReady?: boolean;
   outbox: WatchHistoryOutboxPartition;
@@ -128,6 +131,7 @@ export function createWatchHistoryStorage(
             preferencesConfirmed: false,
             currentObservation: null,
             currentObservationMeaningfulSolo: false,
+            currentObservationDisplayMode: null,
           };
           return cleared.outbox.entries.length === 0 ? [] : [[key, cleared]];
         }),
@@ -251,6 +255,7 @@ function normalizePartition(partition: WatchHistoryAccountPartition): WatchHisto
       capturePaused: true,
       captureMarkersReady: false,
       currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: null,
     };
   }
   return {
@@ -260,6 +265,15 @@ function normalizePartition(partition: WatchHistoryAccountPartition): WatchHisto
     captureMarkersReady: true,
     currentObservationMeaningfulSolo: partition.currentObservation !== null &&
       partition.currentObservationMeaningfulSolo === true,
+    currentObservationDisplayMode: partition.currentObservation === null
+      ? null
+      : partition.currentObservationDisplayMode === "mine" ||
+          partition.currentObservationDisplayMode === "together"
+        ? partition.currentObservationDisplayMode
+        : partition.currentObservationDisplayMode === undefined &&
+            partition.currentObservationMeaningfulSolo === true
+          ? "mine"
+          : null,
   };
 }
 

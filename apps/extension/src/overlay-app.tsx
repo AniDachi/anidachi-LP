@@ -1811,13 +1811,23 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       getObservation: (preferences) =>
         definition.historyPolicy?.observe({ adapter, preferences }) ?? null,
       getRoomActive: () => watchHistoryRoomSuppressedRef.current || Boolean(roomIdRef.current),
+      loadCachedPreferences: async () => {
+        const response = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "bootstrap-cache",
+          expectedOwnerUserId,
+        });
+        if (!response?.ok) return null;
+        const loaded = parseWatchHistoryBootstrapData(response.data);
+        return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
+      },
       loadPreferences: async () => {
         const response = await requestWatchHistory({
           type: "ANIDACHI_WATCH_HISTORY_V2",
           command: "bootstrap",
           expectedOwnerUserId,
         });
-        if (!response.ok) return null;
+        if (!response?.ok) return null;
         const loaded = parseWatchHistoryBootstrapData(response.data);
         return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
       },
@@ -1836,13 +1846,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         const loaded = parseWatchHistoryBootstrapData(bootstrapped.data);
         return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
       },
-      observeLocally: async (event, expectedOwnerUserId, meaningfulSolo) => {
+      observeLocally: async (event, expectedOwnerUserId, meaningfulSolo, displayMode) => {
         const response = await requestWatchHistory({
           type: "ANIDACHI_WATCH_HISTORY_V2",
           command: "observe-progress",
           expectedOwnerUserId,
           event,
           meaningfulSolo,
+          displayMode,
         });
         return response.ok ? ({ ok: true } as const) : response as WatchHistoryCaptureResult;
       },

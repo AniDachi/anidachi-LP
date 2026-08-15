@@ -8,6 +8,7 @@ import {
   WatchHistoryResponseSchema,
   WatchProgressAckSchema,
   WatchProgressEventSchema,
+  type WatchProgressEvent,
 } from "@anidachi/protocol";
 import type { ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
@@ -22,6 +23,7 @@ import {
   createWatchHistoryStorage,
   watchHistoryPartitionKey,
   withoutWatchHistoryAttestation,
+  type WatchHistoryObservationDisplayMode,
   type WatchHistoryAccountPartition,
 } from "./watch-history-storage";
 
@@ -55,6 +57,7 @@ export type WatchHistoryMessage =
       expectedOwnerUserId: string;
       event: unknown;
       meaningfulSolo?: boolean;
+      displayMode?: WatchHistoryObservationDisplayMode | null;
     }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "flush" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
@@ -62,6 +65,11 @@ export type WatchHistoryMessage =
   | {
       type: typeof WATCH_HISTORY_MESSAGE_TYPE;
       command: "bootstrap";
+      expectedOwnerUserId: string;
+    }
+  | {
+      type: typeof WATCH_HISTORY_MESSAGE_TYPE;
+      command: "bootstrap-cache";
       expectedOwnerUserId: string;
     }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "recover-storage" }
@@ -171,12 +179,14 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
         value.expectedOwnerUserId.length <= 128 &&
         "event" in value;
     case "observe-progress":
-      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "event", "meaningfulSolo"]) &&
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "event", "meaningfulSolo", "displayMode"]) &&
         typeof value.expectedOwnerUserId === "string" &&
         value.expectedOwnerUserId.length > 0 &&
         value.expectedOwnerUserId.length <= 128 &&
         "event" in value &&
-        (value.meaningfulSolo === undefined || typeof value.meaningfulSolo === "boolean");
+        (value.meaningfulSolo === undefined || typeof value.meaningfulSolo === "boolean") &&
+        (value.displayMode === undefined || value.displayMode === null ||
+          value.displayMode === "mine" || value.displayMode === "together");
     case "update-preferences":
     case "delete":
       return hasExactKeys(value, ["type", "command", "input"]) && "input" in value;
@@ -187,6 +197,7 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
     case "other-owner-pending":
       return hasExactKeys(value, ["type", "command"]);
     case "bootstrap":
+    case "bootstrap-cache":
       return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) &&
         typeof value.expectedOwnerUserId === "string" &&
         value.expectedOwnerUserId.length > 0 &&
@@ -245,11 +256,13 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
     }
     if (message.command === "list") return refresh(session, message);
-    if (message.command === "bootstrap") {
+    if (message.command === "bootstrap" || message.command === "bootstrap-cache") {
       if (message.expectedOwnerUserId !== session.user.id) {
         return { ok: false, status: "rejected" };
       }
-      return bootstrap(session);
+      return message.command === "bootstrap-cache"
+        ? cachedBootstrap(session)
+        : bootstrap(session);
     }
     if (message.command === "recover-storage") return recoverStorage(session);
     if (message.command === "enqueue-progress" || message.command === "observe-progress") {
@@ -258,7 +271,12 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
       return message.command === "enqueue-progress"
         ? enqueue(session, message.event)
-        : observe(session, message.event, message.meaningfulSolo === true);
+        : observe(
+            session,
+            message.event,
+            message.meaningfulSolo === true,
+            message.displayMode ?? null,
+          );
     }
     if (message.command === "flush" || message.command === "content-reconnect") return flush(session);
     if (message.command === "get-preferences") return getPreferences(session);
@@ -306,6 +324,11 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       ...partition,
       currentObservation: withoutWatchHistoryAttestation(event),
       currentObservationMeaningfulSolo: !event.sharedRoom,
+      currentObservationDisplayMode: partition.currentObservation?.clientEventId === event.clientEventId
+        ? partition.currentObservationDisplayMode === undefined
+          ? inferredObservationDisplayMode(event)
+          : partition.currentObservationDisplayMode
+        : inferredObservationDisplayMode(event),
       outbox: enqueueWatchHistoryEvent(partition.outbox, event),
     }), event.provider);
     let saved = await persist();
@@ -328,6 +351,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     session: ExtensionAuthTokens,
     rawEvent: unknown,
     meaningfulSolo: boolean,
+    displayMode: WatchHistoryObservationDisplayMode | null,
   ): Promise<WatchHistoryMessageResponse> {
     const parsed = WatchProgressEventSchema.safeParse(rawEvent);
     if (!parsed.success) return { ok: false, status: "invalid-request" };
@@ -341,6 +365,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       ...partition,
       currentObservation: withoutWatchHistoryAttestation(parsed.data),
       currentObservationMeaningfulSolo: meaningfulSolo && !parsed.data.sharedRoom,
+      currentObservationDisplayMode: displayMode,
     }), parsed.data.provider);
     let saved = await persist();
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
@@ -387,19 +412,31 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           ack.data.acceptedEventId !== entry.event.clientEventId) {
           return { ok: false, status: "invalid-response" };
         }
-        const saved = await updateCurrentPartition(session, generation, (candidate) => ({
-          ...candidate,
-          capturePaused: false,
-          captureMarkersReady: true,
-          outbox: acknowledgeWatchHistoryEvent(candidate.outbox, ack.data.acceptedEventId),
-          currentObservation: candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
-            ? null
-            : candidate.currentObservation,
-          currentObservationMeaningfulSolo:
-            candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
+        const saved = await updateCurrentPartition(session, generation, (candidate) => {
+          const acceptedCurrent = candidate.currentObservation?.clientEventId ===
+            ack.data.acceptedEventId;
+          const acceptedDisplayMode = candidate.currentObservationDisplayMode === undefined
+            ? inferredObservationDisplayMode(entry.event)
+            : candidate.currentObservationDisplayMode;
+          const retainActiveCurrent = acceptedCurrent &&
+            acceptedDisplayMode !== null &&
+            inferredObservationDisplayMode(entry.event) !== null;
+          return {
+            ...candidate,
+            capturePaused: false,
+            captureMarkersReady: true,
+            outbox: acknowledgeWatchHistoryEvent(candidate.outbox, ack.data.acceptedEventId),
+            currentObservation: acceptedCurrent && !retainActiveCurrent
+              ? null
+              : candidate.currentObservation,
+            currentObservationMeaningfulSolo: acceptedCurrent
               ? false
               : candidate.currentObservationMeaningfulSolo === true,
-        }));
+            currentObservationDisplayMode: acceptedCurrent
+              ? retainActiveCurrent ? acceptedDisplayMode : null
+              : candidate.currentObservationDisplayMode ?? null,
+          };
+        });
         if (saved.stale) return { ok: false, status: "generation-mismatch" };
         if (saved.authorityRejected) return { ok: false, status: "rejected" };
         if (!saved.ok) return saved;
@@ -592,6 +629,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       cache: null,
       currentObservation: null,
       currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: null,
       outbox: removeWatchHistoryEventsForDeletion(partition.outbox, parsed.data.target),
     }));
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
@@ -703,6 +741,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       currentObservationMeaningfulSolo: candidate.currentObservation?.clientEventId === clientEventId
         ? false
         : candidate.currentObservationMeaningfulSolo === true,
+      currentObservationDisplayMode: candidate.currentObservation?.clientEventId === clientEventId
+        ? null
+        : candidate.currentObservationDisplayMode ?? null,
     }));
     if (saved.stale) {
       return { ok: false, error: { ok: false, status: "generation-mismatch" } };
@@ -846,6 +887,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
             preferencesConfirmed: false,
             currentObservation: null,
             currentObservationMeaningfulSolo: false,
+            currentObservationDisplayMode: null,
             outbox: { ...partition.outbox, entries: [] },
           };
           return [];
@@ -895,6 +937,7 @@ function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHi
     preferencesConfirmed: false,
     currentObservation: null,
     currentObservationMeaningfulSolo: false,
+    currentObservationDisplayMode: null,
     capturePaused: false,
     captureMarkersReady: true,
     outbox,
@@ -949,6 +992,19 @@ function hasExactKeys(value: Record<string, unknown>, allowed: string[]): boolea
   return Object.keys(value).every((key) => allowed.includes(key));
 }
 
+function inferredObservationDisplayMode(
+  event: WatchProgressEvent,
+): WatchHistoryObservationDisplayMode | null {
+  if (event.kind === "source_change" ||
+    event.kind === "pagehide" ||
+    event.kind === "room_leave" ||
+    event.kind === "room_end" ||
+    event.kind === "ended") {
+    return null;
+  }
+  return event.sharedRoom ? "together" : "mine";
+}
+
 export async function handleWatchHistoryHttpMessage(
   message: WatchHistoryMessage,
 ): Promise<WatchHistoryMessageResponse> {
@@ -956,6 +1012,7 @@ export async function handleWatchHistoryHttpMessage(
   const { getStoredAuthTokens } = await import("./auth-tokens");
   const localCommand = message.command === "enqueue-progress" ||
     message.command === "observe-progress" ||
+    message.command === "bootstrap-cache" ||
     message.command === "flush" ||
     message.command === "content-reconnect" ||
     message.command === "recover-storage" ||

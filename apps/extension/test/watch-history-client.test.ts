@@ -93,6 +93,43 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it("returns confirmed current-owner cached authority without a network request", async () => {
+    const owner = session.user.id;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false),
+      },
+    };
+    const fetchImpl = vi.fn();
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap-cache",
+      expectedOwnerUserId: owner,
+    } as never)).resolves.toEqual({
+      ok: true,
+      data: {
+        ownerUserId: owner,
+        accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: false },
+        capturePaused: false,
+        source: "cache",
+      },
+    });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("bootstraps from canonical preferences online and same-owner cached preferences only on retryable transport failure", async () => {
     const owner = session.user.id;
     let stored: WatchHistoryStorageRoot = {
@@ -422,6 +459,17 @@ describe("watch history v2 client", () => {
       command: "bootstrap",
       expectedOwnerUserId: session.user.id,
     })).toBe(true);
+    expect(isWatchHistoryMessage({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap-cache",
+      expectedOwnerUserId: session.user.id,
+    })).toBe(true);
+    expect(isWatchHistoryMessage({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap-cache",
+      expectedOwnerUserId: session.user.id,
+      extra: true,
+    })).toBe(false);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "bootstrap", ownerUserId: session.user.id })).toBe(false);
     expect(parseWatchHistoryBootstrapData({
       ownerUserId: session.user.id,
@@ -625,6 +673,7 @@ describe("watch history v2 client", () => {
       expectedOwnerUserId: owner,
       event,
       meaningfulSolo: true,
+      displayMode: "mine",
     }))
       .resolves.toEqual({ ok: true });
 
@@ -636,6 +685,7 @@ describe("watch history v2 client", () => {
     });
     expect(partition.currentObservation?.clientEventId).toBe(event.clientEventId);
     expect(partition.currentObservationMeaningfulSolo).toBe(true);
+    expect(partition.currentObservationDisplayMode).toBe("mine");
     expect(partition.outbox.entries).toEqual([]);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
@@ -664,11 +714,13 @@ describe("watch history v2 client", () => {
       expectedOwnerUserId: owner,
       event: progressEvent(),
       meaningfulSolo: true,
+      displayMode: "together",
     })).resolves.toEqual({ ok: true });
 
     const partition = stored.partitions[watchHistoryPartitionKey(owner, 1)];
     expect(partition.currentObservation).not.toHaveProperty("sharedRoom");
     expect(partition.currentObservationMeaningfulSolo).toBe(false);
+    expect(partition.currentObservationDisplayMode).toBe("together");
     expect(partition.outbox.entries).toEqual([]);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
@@ -711,6 +763,13 @@ describe("watch history v2 client", () => {
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "list", limit: 0 })).toBe(false);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "list", limit: 101 })).toBe(false);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "flush", extra: true })).toBe(false);
+    expect(isWatchHistoryMessage({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: session.user.id,
+      event: progressEvent(),
+      displayMode: "somewhere",
+    })).toBe(false);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "create-room", sessionId: "x".repeat(129) })).toBe(false);
   });
 
@@ -742,6 +801,88 @@ describe("watch history v2 client", () => {
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toEqual([]);
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.currentObservationMeaningfulSolo)
       .toBe(false);
+  });
+
+  it("retains an acknowledged active observation until canonical cache catches up", async () => {
+    const owner = session.user.id;
+    const event = { ...progressEvent(), sharedRoom: null };
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async () => new Response(JSON.stringify(progressAck(event.clientEventId)))) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: owner,
+      event,
+      meaningfulSolo: true,
+      displayMode: "mine",
+    })).resolves.toEqual({ ok: true });
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "enqueue-progress",
+      expectedOwnerUserId: owner,
+      event,
+    })).resolves.toEqual({ ok: true, flushed: 1 });
+
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toMatchObject({
+      currentObservation: { clientEventId: event.clientEventId },
+      currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: "mine",
+      outbox: { entries: [] },
+    });
+  });
+
+  it("clears an acknowledged terminal observation after it leaves pending work", async () => {
+    const owner = session.user.id;
+    const event = { ...progressEvent(), kind: "pagehide" as const, sharedRoom: null };
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async () => new Response(JSON.stringify(progressAck(event.clientEventId)))) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: owner,
+      event,
+      meaningfulSolo: true,
+      displayMode: null,
+    })).resolves.toEqual({ ok: true });
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "enqueue-progress",
+      expectedOwnerUserId: owner,
+      event,
+    })).resolves.toEqual({ ok: true, flushed: 1 });
+
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toMatchObject({
+      currentObservation: null,
+      currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: null,
+      outbox: { entries: [] },
+    });
   });
 
   it("negative-acknowledges a stale older latest after accepting the terminal and continues the drain", async () => {

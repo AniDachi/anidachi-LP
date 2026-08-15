@@ -25,13 +25,20 @@ import {
   WATCH_HISTORY_STORAGE_KEY,
   watchHistoryPartitionKey,
   type WatchHistoryStorageRoot,
+  type WatchHistoryObservationDisplayMode,
 } from "./watch-history-storage";
+
+export type PopupWatchHistoryLocalObservation = {
+  event: WatchProgressEvent;
+  mode: WatchHistoryObservationDisplayMode;
+};
 
 export type PopupWatchHistorySnapshot = {
   history: WatchHistoryResponse;
   accountGeneration: number;
   preferences: WatchHistoryPreferences;
   pendingEvents: WatchProgressEvent[];
+  localObservation: PopupWatchHistoryLocalObservation | null;
   capturePaused: boolean;
 };
 
@@ -67,6 +74,8 @@ export function PopupWatchHistoryPanel({
 }) {
   const [history, setHistory] = useState<WatchHistoryResponse | null>(null);
   const [pendingEvents, setPendingEvents] = useState<WatchProgressEvent[]>([]);
+  const [localObservation, setLocalObservation] =
+    useState<PopupWatchHistoryLocalObservation | null>(null);
   const [capturePaused, setCapturePaused] = useState(false);
   const [preferences, setPreferences] = useState<WatchHistoryPreferences>({
     youtubeHistoryEnabled: false,
@@ -95,6 +104,7 @@ export function PopupWatchHistoryPanel({
     const current = () => requestGeneration.current === generation;
     setHistory(null);
     setPendingEvents([]);
+    setLocalObservation(null);
     setCapturePaused(false);
     setPreferences({ youtubeHistoryEnabled: false });
     setPreferencesConfirmed(false);
@@ -113,6 +123,7 @@ export function PopupWatchHistoryPanel({
       if (cached) {
         setHistory(cached.history);
         setPendingEvents(cached.pendingEvents);
+        setLocalObservation(cached.localObservation);
         setCapturePaused(cached.capturePaused);
       }
 
@@ -139,9 +150,11 @@ export function PopupWatchHistoryPanel({
             setPendingEvents((currentEvents) =>
               reconcilePopupPendingEvents(currentEvents, refreshedLocal)
             );
+            setLocalObservation(refreshedLocal.localObservation);
             setCapturePaused(refreshedLocal.capturePaused);
           } else {
             setPendingEvents([]);
+            setLocalObservation(null);
           }
         } else {
           setError("Could not validate watch history.");
@@ -175,15 +188,26 @@ export function PopupWatchHistoryPanel({
       if (!snapshot || snapshot.history.meta.ownerUserId !== ownerUserId) return;
       setHistory(snapshot.history);
       setPendingEvents((current) => reconcilePopupPendingEvents(current, snapshot));
+      setLocalObservation(snapshot.localObservation);
       setCapturePaused(snapshot.capturePaused);
     });
   }, [client, ownerUserId]);
 
-  const pendingByEpisode = useMemo(
-    () => latestPendingByEpisode(pendingEvents.filter((event) =>
+  const visiblePendingEvents = useMemo(
+    () => pendingEvents.filter((event) =>
       mode === "together" ? Boolean(event.sharedRoom) : !event.sharedRoom,
-    )),
+    ),
     [mode, pendingEvents],
+  );
+  const visibleLocalObservation = localObservation?.mode === mode
+    ? localObservation.event
+    : null;
+  const pendingByEpisode = useMemo(
+    () => latestPendingByEpisode([
+      ...visiblePendingEvents,
+      ...(visibleLocalObservation ? [visibleLocalObservation] : []),
+    ]),
+    [visibleLocalObservation, visiblePendingEvents],
   );
   const itemsWithPending = useMemo(
     () => projectPendingWatchHistoryItems(history?.items ?? [], pendingByEpisode),
@@ -408,7 +432,7 @@ export function PopupWatchHistoryPanel({
       {loading && !history ? (
         <div className="popup-empty popup-empty-syncing">
           <RefreshCw size={14} />
-          <span>Syncing watch history...</span>
+          <span>Loading watch history...</span>
         </div>
       ) : providerGroups.length ? (
         <div className="popup-resource-list">
@@ -429,10 +453,10 @@ export function PopupWatchHistoryPanel({
         <div className="popup-empty">
           {mode === "together"
             ? "Shared sessions will appear after watching together."
-            : "Solo sessions will appear after meaningful playback."}
+            : "Episodes you watch on supported sites will appear here."}
         </div>
       ) : (
-        <div className="popup-empty">Progress will appear after meaningful playback.</div>
+        <div className="popup-empty">Episodes you watch on supported sites will appear here.</div>
       )}
       {history?.items.length ? (
         <button
@@ -517,6 +541,9 @@ function PopupWatchHistoryItem({
 }) {
   const episodeCount = item.seasons.reduce((sum, season) => sum + season.episodes.length, 0);
   const observedCount = episodeCount || (item.itemKind === "movie" ? 1 : 0);
+  const latestActivityPending = pendingByEpisode.get(
+    pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
+  );
   return (
     <article className="popup-watch-item" data-kind={item.itemKind} data-provider={item.provider}>
       <div className="popup-watch-row">
@@ -581,7 +608,6 @@ function PopupWatchHistoryItem({
                       </span>
                       <span>{formatClock(currentTime)}</span>
                     </span>
-                    {pending ? <span className="popup-mode-badge">Pending sync</span> : null}
                     {episode.sessions.slice(0, 4).map((session) => (
                       <button
                         aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
@@ -628,17 +654,13 @@ function PopupWatchHistoryItem({
             </span>
             <span className="popup-series-progress">
               <span className="popup-progress-track">
-                <span style={{ width: `${Math.round((pendingByEpisode.get(
-                  pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
-                )?.progress ?? item.latestActivity.progress) * 100)}%` }} />
+                <span style={{ width: `${Math.round((latestActivityPending?.progress ??
+                  item.latestActivity.progress) * 100)}%` }} />
               </span>
-              <span>{formatClock(pendingByEpisode.get(
-                pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
-              )?.currentTime ?? item.latestActivity.currentTime)}</span>
+              <span>{formatClock(
+                latestActivityPending?.currentTime ?? item.latestActivity.currentTime,
+              )}</span>
             </span>
-            {pendingByEpisode.has(
-              pendingEpisodeKey(item.provider, item.titleKey, item.latestActivity.episodeKey),
-            ) ? <span className="popup-mode-badge">Pending sync</span> : null}
             {item.sessions.slice(0, 4).map((session) => (
               <button
                 aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
@@ -953,13 +975,22 @@ export function selectConfirmedPopupWatchHistorySnapshot(
     return null;
   }
   const pendingEvents = new Map<string, WatchProgressEvent>();
-  if (partition.currentObservationMeaningfulSolo === true && partition.currentObservation) {
+  let localObservation: PopupWatchHistoryLocalObservation | null = null;
+  if (partition.currentObservation) {
     const current = WatchProgressEventSchema.safeParse(partition.currentObservation);
     if (current.success &&
       current.data.accountGeneration === accountGeneration &&
-      !current.data.sharedRoom &&
       isNewerThanCanonicalHistory(history.data, current.data)) {
-      pendingEvents.set(current.data.clientEventId, current.data);
+      const displayMode = partition.currentObservationDisplayMode === "mine" ||
+          partition.currentObservationDisplayMode === "together"
+        ? partition.currentObservationDisplayMode
+        : partition.currentObservationMeaningfulSolo === true
+          ? "mine"
+          : null;
+      if (displayMode) localObservation = { event: current.data, mode: displayMode };
+      if (partition.currentObservationMeaningfulSolo === true && !current.data.sharedRoom) {
+        pendingEvents.set(current.data.clientEventId, current.data);
+      }
     }
   }
   for (const entry of partition.outbox.entries) {
@@ -973,6 +1004,7 @@ export function selectConfirmedPopupWatchHistorySnapshot(
     accountGeneration,
     preferences: partition.preferences ?? { youtubeHistoryEnabled: false },
     pendingEvents: [...pendingEvents.values()],
+    localObservation,
     capturePaused: partition.capturePaused === true,
   };
 }
@@ -993,7 +1025,7 @@ function isNewerThanCanonicalHistory(
       ? item.latestActivity.lastWatchedAt
       : null);
   return canonicalObservedAt === null ||
-    Date.parse(event.observedAt) >= Date.parse(canonicalObservedAt);
+    Date.parse(event.observedAt) > Date.parse(canonicalObservedAt);
 }
 
 function latestPendingByEpisode(events: WatchProgressEvent[]): Map<string, WatchProgressEvent> {

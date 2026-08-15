@@ -38,6 +38,7 @@ describe("watch history storage", () => {
       preferencesConfirmed: false,
       captureMarkersReady: false,
       currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: null,
     });
   });
 
@@ -83,6 +84,7 @@ describe("watch history storage", () => {
       preferences: null,
       currentObservation: null,
       currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: null,
       outbox: { entries: [{ event: { clientEventId: "event-a" } }] },
     });
     expect(stored.partitions[watchHistoryPartitionKey(ownerB, 2)]).toMatchObject({ cache: { generation: 2 } });
