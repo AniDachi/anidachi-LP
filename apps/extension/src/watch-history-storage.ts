@@ -1,5 +1,4 @@
 import {
-  WatchHistoryPreferencesSchema,
   type WatchHistoryPreferences,
   type WatchHistoryResponse,
   type WatchProgressEvent,
@@ -19,6 +18,7 @@ export type WatchHistoryAccountPartition = {
   preferencesConfirmed?: boolean;
   currentObservation: WatchProgressEvent | null;
   capturePaused?: boolean;
+  captureMarkersReady?: boolean;
   outbox: WatchHistoryOutboxPartition;
 };
 
@@ -209,17 +209,31 @@ function normalizeStorageRoot(value: unknown): WatchHistoryStorageRoot {
         ...value,
         partitions: Object.fromEntries(Object.entries(value.partitions).map(([key, partition]) => [
           key,
-          {
-            ...partition,
-            capturePaused: partition.capturePaused === true,
-            preferencesConfirmed: partition.preferencesConfirmed === undefined
-              ? WatchHistoryPreferencesSchema.safeParse(partition.preferences).success
-              : partition.preferencesConfirmed === true,
-          },
+          normalizePartition(partition),
         ])),
         activeGenerations: value.activeGenerations ?? activeGenerationsFromPartitions(value.partitions),
       }
     : createWatchHistoryStorageRoot();
+}
+
+function normalizePartition(partition: WatchHistoryAccountPartition): WatchHistoryAccountPartition {
+  const captureMarkersReady = partition.captureMarkersReady === true &&
+    typeof partition.capturePaused === "boolean" &&
+    typeof partition.preferencesConfirmed === "boolean";
+  if (!captureMarkersReady) {
+    return {
+      ...partition,
+      preferencesConfirmed: false,
+      capturePaused: true,
+      captureMarkersReady: false,
+    };
+  }
+  return {
+    ...partition,
+    preferencesConfirmed: partition.preferencesConfirmed === true,
+    capturePaused: partition.capturePaused === true,
+    captureMarkersReady: true,
+  };
 }
 
 function getDefaultStorageItem(): StorageItemLike {

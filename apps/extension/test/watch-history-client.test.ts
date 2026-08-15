@@ -90,8 +90,10 @@ describe("watch history v2 client", () => {
           accountGeneration: 1,
           cache: null,
           preferences: { youtubeHistoryEnabled: false },
+          preferencesConfirmed: false,
           currentObservation: null,
           capturePaused: false,
+          captureMarkersReady: true,
           outbox: { ownerUserId: owner, accountGeneration: 1, entries: [] },
         },
       },
@@ -144,6 +146,55 @@ describe("watch history v2 client", () => {
         source: "cache",
       },
     });
+  });
+
+  it("does not clear a persisted storage pause merely because canonical preferences were written", async () => {
+    const owner = "00000000-0000-4000-8000-000000000096";
+    const isolatedSession = { ...session, user: { ...session.user, id: owner } };
+    const partitionKey = watchHistoryPartitionKey(owner, 1);
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [partitionKey]: {
+          ownerUserId: owner,
+          accountGeneration: 1,
+          cache: null,
+          preferences: { youtubeHistoryEnabled: false },
+          preferencesConfirmed: true,
+          currentObservation: null,
+          capturePaused: true,
+          captureMarkersReady: true,
+          outbox: { ownerUserId: owner, accountGeneration: 1, entries: [] },
+        },
+      },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => isolatedSession,
+      fetch: vi.fn(async () => new Response(JSON.stringify({
+        meta: {
+          serverTime: "2026-08-15T10:00:00.000Z",
+          schemaVersion: 2,
+          ownerUserId: owner,
+          accountGeneration: 1,
+        },
+        preferences: { youtubeHistoryEnabled: true },
+      }))) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap",
+    } as never)).resolves.toMatchObject({
+      ok: true,
+      data: { capturePaused: true, preferences: { youtubeHistoryEnabled: true } },
+    });
+    expect(stored.partitions[partitionKey]?.capturePaused).toBe(true);
   });
 
   it("fails closed instead of bootstrapping across owners, stale generations, missing preferences, or invalid canonical responses", async () => {
@@ -295,6 +346,11 @@ describe("watch history v2 client", () => {
       .resolves.toEqual({ ok: true });
 
     const partition = stored.partitions[watchHistoryPartitionKey(owner, 1)];
+    expect(partition).toMatchObject({
+      preferencesConfirmed: false,
+      capturePaused: false,
+      captureMarkersReady: true,
+    });
     expect(partition.currentObservation?.clientEventId).toBe(event.clientEventId);
     expect(partition.outbox.entries).toEqual([]);
     expect(fetchImpl).not.toHaveBeenCalled();
@@ -386,6 +442,7 @@ describe("watch history v2 client", () => {
       partitions: {
         [watchHistoryPartitionKey(owner, 1)]: {
           ownerUserId: owner, accountGeneration: 1, cache: null, preferences: { youtubeHistoryEnabled: false }, currentObservation: null,
+          preferencesConfirmed: false, capturePaused: false, captureMarkersReady: true,
           outbox: { ownerUserId: owner, accountGeneration: 1, entries: [{ event: oldEvent, key: "old", slot: "terminal", persistedAt: 1 }] },
         },
       },
@@ -426,6 +483,7 @@ describe("watch history v2 client", () => {
       partitions: {
         [watchHistoryPartitionKey(owner, 1)]: {
           ownerUserId: owner, accountGeneration: 1, cache: null, preferences: { youtubeHistoryEnabled: false }, currentObservation: null,
+          preferencesConfirmed: true, capturePaused: false, captureMarkersReady: true,
           outbox: { ownerUserId: owner, accountGeneration: 1, entries: [{ event: terminal, key: "terminal", slot: "terminal", persistedAt: 1 }] },
         },
       },
@@ -456,7 +514,7 @@ describe("watch history v2 client", () => {
 
     await expect(client.handle({
       type: "ANIDACHI_WATCH_HISTORY_V2", command: "enqueue-progress", event: progressEvent("00000000-0000-4000-8000-000000000023"),
-    })).resolves.toEqual({ ok: false, status: "storage-full" });
+    })).resolves.toEqual({ ok: false, status: "storage-full", capturePausedPersisted: true });
     expect(writes).toBe(3);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toHaveLength(1);
@@ -467,7 +525,7 @@ describe("watch history v2 client", () => {
     await expect(client.handle({
       type: "ANIDACHI_WATCH_HISTORY_V2", command: "observe-progress",
       event: { ...progressEvent("00000000-0000-4000-8000-000000000024"), sharedRoom: null },
-    })).resolves.toEqual({ ok: false, status: "storage-full" });
+    })).resolves.toEqual({ ok: false, status: "storage-full", capturePausedPersisted: true });
     expect(writes).toBe(writesAfterPause);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
 
@@ -483,7 +541,7 @@ describe("watch history v2 client", () => {
     await expect(recreated.handle({
       type: "ANIDACHI_WATCH_HISTORY_V2", command: "observe-progress",
       event: { ...progressEvent("00000000-0000-4000-8000-000000000025"), sharedRoom: null },
-    })).resolves.toEqual({ ok: false, status: "storage-full" });
+    })).resolves.toEqual({ ok: false, status: "storage-full", capturePausedPersisted: true });
     expect(writes).toBe(writesAfterPause);
     await expect(recreated.handle({
       type: "ANIDACHI_WATCH_HISTORY_V2",
@@ -499,6 +557,160 @@ describe("watch history v2 client", () => {
     });
   });
 
+  it("does not claim a durable pause when a new-root marker write fails and keeps recreated clients fail-closed without repeat work", async () => {
+    const owner = "00000000-0000-4000-8000-000000000090";
+    const isolatedSession = { ...session, user: { ...session.user, id: owner } };
+    const terminal = {
+      ...progressEvent("00000000-0000-4000-8000-000000000091"),
+      kind: "ended" as const,
+    };
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ownerUserId: owner,
+          accountGeneration: 1,
+          cache: null,
+          preferences: { youtubeHistoryEnabled: false },
+          preferencesConfirmed: true,
+          currentObservation: null,
+          capturePaused: false,
+          captureMarkersReady: true,
+          outbox: {
+            ownerUserId: owner,
+            accountGeneration: 1,
+            entries: [{ event: terminal, key: "terminal", slot: "terminal", persistedAt: 1 }],
+          },
+        },
+      },
+    };
+    let writes = 0;
+    const fetchImpl = vi.fn(async () => new Response("offline", { status: 503 }));
+    const storage = createWatchHistoryStorage({
+      item: {
+        getValue: async () => stored,
+        setValue: async () => {
+          writes += 1;
+          throw new Error("total storage I/O failure");
+        },
+      },
+      getBytesInUse: async () => 0,
+      quotaBytes: 1_000_000,
+    });
+    const createClient = () => createWatchHistoryClient({
+      getCurrentSession: async () => isolatedSession,
+      fetch: fetchImpl as typeof fetch,
+      storage,
+    });
+
+    await expect(createClient().handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "enqueue-progress",
+      event: { ...progressEvent("00000000-0000-4000-8000-000000000092"), accountGeneration: 1 },
+    })).resolves.toEqual({
+      ok: false,
+      status: "storage-full",
+      capturePausedPersisted: false,
+    });
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.capturePaused).toBe(false);
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries[0]?.event.clientEventId)
+      .toBe(terminal.clientEventId);
+    const writesAfterFailure = writes;
+    const requestsAfterFailure = fetchImpl.mock.calls.length;
+
+    await expect(createClient().handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      event: {
+        ...progressEvent("00000000-0000-4000-8000-000000000093"),
+        accountGeneration: 1,
+        sharedRoom: null,
+      },
+    })).resolves.toEqual({
+      ok: false,
+      status: "storage-full",
+      capturePausedPersisted: false,
+    });
+    expect(writes).toBe(writesAfterFailure);
+    expect(fetchImpl).toHaveBeenCalledTimes(requestsAfterFailure);
+  });
+
+  it("keeps a legacy root fail-closed across failed migration and recreation until explicit recovery writes normalized markers", async () => {
+    const owner = "00000000-0000-4000-8000-000000000094";
+    const isolatedSession = { ...session, user: { ...session.user, id: owner } };
+    const partitionKey = watchHistoryPartitionKey(owner, 1);
+    let stored = {
+      schemaVersion: 2 as const,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [partitionKey]: {
+          ownerUserId: owner,
+          accountGeneration: 1,
+          cache: null,
+          preferences: { youtubeHistoryEnabled: false },
+          currentObservation: null,
+          outbox: { ownerUserId: owner, accountGeneration: 1, entries: [] },
+        },
+      },
+    } as WatchHistoryStorageRoot;
+    let failWrites = true;
+    let writes = 0;
+    const fetchImpl = vi.fn();
+    const storage = createWatchHistoryStorage({
+      item: {
+        getValue: async () => stored,
+        setValue: async (value) => {
+          writes += 1;
+          if (failWrites) throw new Error("quota");
+          stored = value;
+        },
+      },
+      getBytesInUse: async () => 0,
+      quotaBytes: 1_000_000,
+    });
+    const createClient = () => createWatchHistoryClient({
+      getCurrentSession: async () => isolatedSession,
+      fetch: fetchImpl as typeof fetch,
+      storage,
+    });
+
+    await expect(createClient().handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "recover-storage",
+    })).resolves.toEqual({
+      ok: false,
+      status: "storage-full",
+      capturePausedPersisted: false,
+    });
+    const writesAfterMigrationFailure = writes;
+    await expect(createClient().handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      event: { ...progressEvent(), accountGeneration: 1, sharedRoom: null },
+    })).resolves.toEqual({
+      ok: false,
+      status: "storage-full",
+      capturePausedPersisted: false,
+    });
+    expect(writes).toBe(writesAfterMigrationFailure);
+    expect(fetchImpl).not.toHaveBeenCalled();
+
+    failWrites = false;
+    await expect(createClient().handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "recover-storage",
+    })).resolves.toEqual({
+      ok: true,
+      data: { capturePaused: false, capturePausedPersisted: false },
+    });
+    expect(stored.partitions[partitionKey]).toMatchObject({
+      capturePaused: false,
+      captureMarkersReady: true,
+      preferencesConfirmed: false,
+    });
+  });
+
   it("keeps an offline enqueue durable without pausing capture and clears a pause only through explicit recovery", async () => {
     const owner = session.user.id;
     let stored: WatchHistoryStorageRoot = {
@@ -510,8 +722,10 @@ describe("watch history v2 client", () => {
           accountGeneration: 1,
           cache: null,
           preferences: { youtubeHistoryEnabled: false },
+          preferencesConfirmed: false,
           currentObservation: null,
           capturePaused: false,
+          captureMarkersReady: true,
           outbox: { ownerUserId: owner, accountGeneration: 1, entries: [] },
         },
       },
@@ -546,7 +760,7 @@ describe("watch history v2 client", () => {
       command: "recover-storage",
     } as never)).resolves.toEqual({
       ok: true,
-      data: { capturePaused: false },
+      data: { capturePaused: false, capturePausedPersisted: false },
     });
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.capturePaused).toBe(false);
 

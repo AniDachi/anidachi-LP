@@ -58,6 +58,7 @@ export function createWatchHistoryController(
   let lifecycle = 0;
   let queue: Promise<void> = Promise.resolve();
   let disposePromise: Promise<void> | null = null;
+  let roomExitPromise: Promise<void> | null = null;
 
   function serial(operation: () => Promise<void>): Promise<void> {
     const result = queue.then(operation);
@@ -212,30 +213,63 @@ export function createWatchHistoryController(
 
   function setRoomActive(active: boolean): Promise<void> {
     const token = lifecycle;
-    if (!isCurrent(token) || active === roomActive) return Promise.resolve();
+    if (!isCurrent(token)) return Promise.resolve();
+    if (!active) return leaveRoom(token);
+    if (roomActive) return Promise.resolve();
     const previous = retained;
     const previousSessionKey = clientSessionKey;
     const previousGeneration = accountGeneration;
     const previousWasMeaningfulSolo = hasMeaningfulPlayback && !roomActive;
-    roomActive = active;
+    roomActive = true;
     clientSessionKey = null;
     resetMeaningfulState();
     return serial(async () => {
       if (!isCurrent(token) || !previous || !previousSessionKey || previousGeneration === null) return;
       const event = toEvent(
         previous,
-        active ? "source_change" : "room_leave",
+        "source_change",
         previousGeneration,
         createEventId(),
         previousSessionKey,
         now(),
       );
-      if (active && previousWasMeaningfulSolo) {
+      if (previousWasMeaningfulSolo) {
         await enqueueEvent(event, token);
         return;
       }
       await persist(event, token);
     });
+  }
+
+  function leaveRoom(token: number): Promise<void> {
+    if (!roomActive) return Promise.resolve();
+    if (roomExitPromise) return roomExitPromise;
+    const leaving = serial(async () => {
+      if (!isCurrent(token) || !roomActive) return;
+      const previous = retained;
+      const previousSessionKey = clientSessionKey;
+      const previousGeneration = accountGeneration;
+      roomActive = false;
+      clientSessionKey = null;
+      resetMeaningfulState();
+      if (!previous || !previousSessionKey || previousGeneration === null) return;
+      const event = toEvent(
+        previous,
+        "room_leave",
+        previousGeneration,
+        createEventId(),
+        previousSessionKey,
+        now(),
+      );
+      await persist(event, token);
+    });
+    roomExitPromise = leaving;
+    void leaving.then(() => {
+      if (roomExitPromise === leaving) roomExitPromise = null;
+    }, () => {
+      if (roomExitPromise === leaving) roomExitPromise = null;
+    });
+    return leaving;
   }
 
   function recover(): Promise<void> {

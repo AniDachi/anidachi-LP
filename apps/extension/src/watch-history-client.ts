@@ -67,7 +67,7 @@ export type WatchHistoryMessage =
 
 export type WatchHistoryMessageResponse =
   | { ok: true; data?: unknown; flushed?: number; hasPendingWork?: boolean; byteUse?: number }
-  | { ok: false; status: WatchHistoryLocalStatus };
+  | { ok: false; status: WatchHistoryLocalStatus; capturePausedPersisted?: boolean };
 
 export type WatchHistoryStorage = ReturnType<typeof createWatchHistoryStorage>;
 
@@ -80,7 +80,9 @@ export type WatchHistoryBootstrapData = {
 
 export type WatchHistoryCaptureResult =
   | { ok: true }
-  | { ok: false; status: WatchHistoryLocalStatus };
+  | { ok: false; status: WatchHistoryLocalStatus; capturePausedPersisted?: boolean };
+
+const unpersistedCapturePauses = new Set<string>();
 
 export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBootstrapData | null {
   if (!isRecord(value) ||
@@ -222,8 +224,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const parsed = WatchProgressEventSchema.safeParse(rawEvent);
     if (!parsed.success) return { ok: false, status: "invalid-request" };
     const event = parsed.data;
-    if (await isCapturePaused(session, event.accountGeneration)) {
-      return { ok: false, status: "storage-full" };
+    const paused = await capturePauseState(session, event.accountGeneration);
+    if (paused.capturePaused) {
+      return { ok: false, status: "storage-full", capturePausedPersisted: paused.persisted };
     }
     const persist = () => updateCurrentPartition(session, event.accountGeneration, (partition) => ({
       ...partition,
@@ -237,8 +240,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       saved = await persist();
       if (saved.stale) return { ok: false, status: "generation-mismatch" };
       if (!saved.ok) {
-        await markCapturePaused(session, event.accountGeneration);
-        return saved;
+        const capturePausedPersisted = await markCapturePaused(session, event.accountGeneration);
+        return { ...saved, capturePausedPersisted };
       }
     }
     return flush(session);
@@ -250,8 +253,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   ): Promise<WatchHistoryMessageResponse> {
     const parsed = WatchProgressEventSchema.safeParse(rawEvent);
     if (!parsed.success || parsed.data.sharedRoom) return { ok: false, status: "invalid-request" };
-    if (await isCapturePaused(session, parsed.data.accountGeneration)) {
-      return { ok: false, status: "storage-full" };
+    const paused = await capturePauseState(session, parsed.data.accountGeneration);
+    if (paused.capturePaused) {
+      return { ok: false, status: "storage-full", capturePausedPersisted: paused.persisted };
     }
     const persist = () => updateCurrentPartition(session, parsed.data.accountGeneration, (partition) => ({
       ...partition,
@@ -264,8 +268,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       saved = await persist();
       if (saved.stale) return { ok: false, status: "generation-mismatch" };
       if (!saved.ok) {
-        await markCapturePaused(session, parsed.data.accountGeneration);
-        return saved;
+        const capturePausedPersisted = await markCapturePaused(session, parsed.data.accountGeneration);
+        return { ...saved, capturePausedPersisted };
       }
     }
     return { ok: true };
@@ -297,6 +301,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         const saved = await updateCurrentPartition(session, generation, (candidate) => ({
           ...candidate,
           capturePaused: false,
+          captureMarkersReady: true,
           outbox: acknowledgeWatchHistoryEvent(candidate.outbox, ack.data.acceptedEventId),
           currentObservation: candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
             ? null
@@ -304,6 +309,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         }));
         if (saved.stale) return { ok: false, status: "generation-mismatch" };
         if (!saved.ok) return saved;
+        await clearUnpersistedPauseIfReady(session, generation);
         flushed += 1;
     }
     return { ok: true, flushed };
@@ -320,6 +326,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       ...partition,
       preferences: parsed.data.preferences,
       preferencesConfirmed: true,
+      captureMarkersReady: true,
     }));
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
@@ -340,17 +347,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       ...partition,
       preferences: parsed.data.preferences,
       preferencesConfirmed: true,
+      captureMarkersReady: true,
     }));
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     if (!saved.ok) return saved;
-    const root = await storage.readRoot();
-    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
+    const paused = await capturePauseState(session, generation);
     return {
       ok: true,
       data: {
         accountGeneration: generation,
         preferences: parsed.data.preferences,
-        capturePaused: partition?.capturePaused === true,
+        capturePaused: paused.capturePaused,
         source: "network",
       } satisfies WatchHistoryBootstrapData,
     };
@@ -367,6 +374,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (!partition ||
       partition.ownerUserId !== session.user.id ||
       partition.accountGeneration !== generation ||
+      partition.captureMarkersReady !== true ||
       partition.preferencesConfirmed !== true ||
       !preferences.success) {
       return { ok: false, status: "retryable" };
@@ -376,7 +384,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       data: {
         accountGeneration: generation,
         preferences: preferences.data,
-        capturePaused: partition.capturePaused === true,
+        capturePaused: (await capturePauseState(session, generation)).capturePaused,
         source: "cache",
       } satisfies WatchHistoryBootstrapData,
     };
@@ -387,27 +395,46 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (!sameSession(session, current)) return { ok: false, status: "retryable" };
     const root = await storage.readRoot();
     const generation = root.activeGenerations?.[session.user.id];
-    if (generation === undefined) return { ok: true, data: { capturePaused: false } };
+    if (generation === undefined) {
+      return { ok: true, data: { capturePaused: false, capturePausedPersisted: false } };
+    }
     const key = watchHistoryPartitionKey(session.user.id, generation);
     const partition = root.partitions[key];
     if (!partition || partition.ownerUserId !== session.user.id || partition.accountGeneration !== generation) {
       return { ok: false, status: "generation-mismatch" };
     }
-    if (partition.capturePaused !== true) return { ok: true, data: { capturePaused: false } };
+    const memoryKey = capturePauseKey(session.user.id, generation);
+    if (partition.captureMarkersReady === true && partition.capturePaused !== true && !unpersistedCapturePauses.has(memoryKey)) {
+      return { ok: true, data: { capturePaused: false, capturePausedPersisted: false } };
+    }
+    let matched = false;
     const recovered = await storage.updateRoot((candidate) => {
       if (candidate.activeGenerations?.[session.user.id] !== generation) return candidate;
       const active = candidate.partitions[key];
       if (!active || active.ownerUserId !== session.user.id || active.accountGeneration !== generation) {
         return candidate;
       }
+      matched = true;
       return {
         ...candidate,
-        partitions: { ...candidate.partitions, [key]: { ...active, capturePaused: false } },
+        partitions: {
+          ...candidate.partitions,
+          [key]: {
+            ...active,
+            preferencesConfirmed: active.preferencesConfirmed === true,
+            capturePaused: false,
+            captureMarkersReady: true,
+          },
+        },
       };
     });
-    return recovered.ok
-      ? { ok: true, data: { capturePaused: false } }
-      : recovered;
+    if (!matched) return { ok: false, status: "generation-mismatch" };
+    if (!recovered.ok) {
+      unpersistedCapturePauses.add(memoryKey);
+      return { ...recovered, capturePausedPersisted: false };
+    }
+    unpersistedCapturePauses.delete(memoryKey);
+    return { ok: true, data: { capturePaused: false, capturePausedPersisted: false } };
   }
 
   async function updatePreferences(
@@ -429,6 +456,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       ...partition,
       preferences: parsed.data.preferences,
       preferencesConfirmed: true,
+      captureMarkersReady: true,
     }));
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
@@ -500,28 +528,80 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     return { ok: true, body };
   }
 
-  async function isCapturePaused(session: ExtensionAuthTokens, generation: number): Promise<boolean> {
+  async function capturePauseState(session: ExtensionAuthTokens, generation: number): Promise<{
+    capturePaused: boolean;
+    persisted: boolean;
+  }> {
+    const memoryKey = capturePauseKey(session.user.id, generation);
+    if (unpersistedCapturePauses.has(memoryKey)) {
+      return { capturePaused: true, persisted: false };
+    }
     const root = await storage.readRoot();
-    if (root.activeGenerations?.[session.user.id] !== generation) return false;
+    if (root.activeGenerations?.[session.user.id] !== generation) {
+      return { capturePaused: false, persisted: false };
+    }
     const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
-    return partition?.ownerUserId === session.user.id &&
-      partition.accountGeneration === generation &&
-      partition.capturePaused === true;
+    if (!partition || partition.ownerUserId !== session.user.id || partition.accountGeneration !== generation) {
+      return { capturePaused: false, persisted: false };
+    }
+    const markerReady = partition.captureMarkersReady === true;
+    return {
+      capturePaused: !markerReady || partition.capturePaused === true,
+      persisted: markerReady && partition.capturePaused === true,
+    };
   }
 
-  async function markCapturePaused(session: ExtensionAuthTokens, generation: number): Promise<void> {
+  async function markCapturePaused(session: ExtensionAuthTokens, generation: number): Promise<boolean> {
     const key = watchHistoryPartitionKey(session.user.id, generation);
-    await storage.updateRoot((root) => {
-      if (root.activeGenerations?.[session.user.id] !== generation) return root;
-      const partition = root.partitions[key];
-      if (!partition || partition.ownerUserId !== session.user.id || partition.accountGeneration !== generation || partition.capturePaused) {
-        return root;
+    const memoryKey = capturePauseKey(session.user.id, generation);
+    unpersistedCapturePauses.add(memoryKey);
+    let matched = false;
+    try {
+      const saved = await storage.updateRoot((root) => {
+        if (root.activeGenerations?.[session.user.id] !== generation) return root;
+        const partition = root.partitions[key];
+        if (!partition || partition.ownerUserId !== session.user.id || partition.accountGeneration !== generation) {
+          return root;
+        }
+        matched = true;
+        if (partition.capturePaused && partition.captureMarkersReady) return root;
+        return {
+          ...root,
+          partitions: {
+            ...root.partitions,
+            [key]: { ...partition, capturePaused: true, captureMarkersReady: true },
+          },
+        };
+      });
+      if (!matched || !saved.ok) return false;
+      unpersistedCapturePauses.delete(memoryKey);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function clearUnpersistedPauseIfReady(
+    session: ExtensionAuthTokens,
+    generation: number,
+  ): Promise<void> {
+    const memoryKey = capturePauseKey(session.user.id, generation);
+    if (!unpersistedCapturePauses.has(memoryKey)) return;
+    try {
+      const root = await storage.readRoot();
+      const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
+      if (root.activeGenerations?.[session.user.id] !== generation ||
+        !partition ||
+        partition.ownerUserId !== session.user.id ||
+        partition.accountGeneration !== generation ||
+        partition.captureMarkersReady !== true ||
+        partition.capturePaused === true) {
+        return;
       }
-      return {
-        ...root,
-        partitions: { ...root.partitions, [key]: { ...partition, capturePaused: true } },
-      };
-    });
+      unpersistedCapturePauses.delete(memoryKey);
+    } catch {
+      // A read failure cannot prove that the active owner/generation is ready.
+    }
   }
 
   async function updateCurrentPartition(
@@ -624,8 +704,13 @@ function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHi
     preferencesConfirmed: false,
     currentObservation: null,
     capturePaused: false,
+    captureMarkersReady: true,
     outbox,
   };
+}
+
+function capturePauseKey(ownerUserId: string, accountGeneration: number): string {
+  return `${watchHistoryPartitionKey(ownerUserId, accountGeneration)}\u0000capture-paused`;
 }
 
 function isFailureStatus(

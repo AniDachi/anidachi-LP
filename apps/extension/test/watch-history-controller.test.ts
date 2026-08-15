@@ -286,6 +286,46 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.enqueued.map((event) => event.kind)).toEqual(["heartbeat", "pause", "pagehide"]);
     expect(fixture.maxEnqueueConcurrency).toBe(1);
   });
+
+  it("serializes room exit behind an in-flight shared ended observation before opening a fresh solo gate", async () => {
+    const fixture = createFixture({
+      holdLocalAt: 4,
+      sessionKeys: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+        "33333333-3333-4333-8333-333333333333",
+      ],
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.setRoomActive(true);
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+
+    fixture.setTime(13);
+    const sharedEnded = fixture.controller.observe("ended");
+    await fixture.waitForLocalAttempts(4);
+    const leaving = fixture.controller.setRoomActive(false);
+    let leaveResolved = false;
+    void leaving.then(() => { leaveResolved = true; });
+    fixture.setTime(14);
+    const firstSolo = fixture.controller.observe("heartbeat");
+    await Promise.resolve();
+    expect(leaveResolved).toBe(false);
+
+    fixture.releaseHeldLocal();
+    await Promise.all([sharedEnded, leaving, firstSolo]);
+    expect(leaveResolved).toBe(true);
+    fixture.setTime(15);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.enqueued.map((event) => [event.kind, event.currentTime])).toEqual([
+      ["heartbeat", 11],
+      ["source_change", 11],
+      ["heartbeat", 15],
+    ]);
+  });
 });
 
 function createFixture(options: {
@@ -297,6 +337,7 @@ function createFixture(options: {
   rejectLocalKinds?: Set<WatchProgressEvent["kind"]>;
   rejectEnqueueKinds?: Set<WatchProgressEvent["kind"]>;
   holdEnqueueAt?: number;
+  holdLocalAt?: number;
 } = {}) {
   let now = 1_700_000_000_000;
   let time = 10;
@@ -317,6 +358,7 @@ function createFixture(options: {
   let enqueueFailures = 0;
   let localAttempts = 0;
   let releaseHeldEnqueue: (() => void) | null = null;
+  let releaseHeldLocal: (() => void) | null = null;
   const observation = (): HistoryObservation => ({
     provider: "crunchyroll",
     providerLabel: "Crunchyroll",
@@ -347,6 +389,9 @@ function createFixture(options: {
         throw new Error("storage-full");
       }
       local.push(entry);
+      if (localAttempts === options.holdLocalAt) {
+        await new Promise<void>((resolve) => { releaseHeldLocal = resolve; });
+      }
       return options.observeResult?.() ?? { ok: true as const };
     },
     enqueue: async (event) => {
@@ -387,11 +432,18 @@ function createFixture(options: {
     setRoomActive(value: boolean) { roomActive = value; },
     advance(value: number) { now += value; },
     releaseHeldEnqueue() { releaseHeldEnqueue?.(); },
+    releaseHeldLocal() { releaseHeldLocal?.(); },
     async waitForEnqueues(count: number) {
       for (let attempt = 0; attempt < 20 && enqueued.length < count; attempt += 1) {
         await Promise.resolve();
       }
       expect(enqueued).toHaveLength(count);
+    },
+    async waitForLocalAttempts(count: number) {
+      for (let attempt = 0; attempt < 20 && localAttempts < count; attempt += 1) {
+        await Promise.resolve();
+      }
+      expect(localAttempts).toBe(count);
     },
   };
 }

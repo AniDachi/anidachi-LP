@@ -34,8 +34,9 @@ describe("watch history storage", () => {
 
     const normalized = await store.readRoot();
     expect(normalized.partitions[partitionKey]).toMatchObject({
-      capturePaused: false,
-      preferencesConfirmed: true,
+      capturePaused: true,
+      preferencesConfirmed: false,
+      captureMarkersReady: false,
     });
   });
 
