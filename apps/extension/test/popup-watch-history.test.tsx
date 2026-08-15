@@ -124,7 +124,31 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
-  it("keeps an already-open Popup live from meaningful observation through canonical acknowledgement", async () => {
+  it("renders the current local observation immediately before it is eligible for sync", async () => {
+    const emptyHistory: WatchHistoryResponse = {
+      ...historyFixture(),
+      totalTitleCount: 0,
+      items: [],
+    };
+    const local = pendingEvent({ currentTime: 3, progress: 3 / 2_100 });
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(
+        emptyHistory,
+        [],
+        false,
+        { event: local, mode: "mine" },
+      ),
+      request: requestForHistory(emptyHistory),
+    }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
+    expect(view.container.textContent).toContain("0:03");
+    expect(view.container.textContent).toContain("Watching now");
+    expect(view.container.textContent).not.toContain("Pending sync");
+    await unmount(view.root);
+  });
+
+  it("keeps an already-open Popup live from local observation through sync and canonical acknowledgement", async () => {
     const emptyHistory: WatchHistoryResponse = {
       ...historyFixture(),
       totalTitleCount: 0,
@@ -161,11 +185,36 @@ describe("Popup Watch History v2", () => {
     });
 
     await act(async () => {
-      publishSnapshot?.(snapshotFixture(emptyHistory, [local]));
+      publishSnapshot?.(snapshotFixture(
+        emptyHistory,
+        [],
+        false,
+        { event: local, mode: "mine" },
+      ));
       await Promise.resolve();
     });
     await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
+    expect(view.container.textContent).toContain("Watching now");
+    expect(view.container.textContent).not.toContain("Pending sync");
+    expect(view.container.textContent).toContain("0:12");
+
+    await act(async () => {
+      publishSnapshot?.(snapshotFixture(emptyHistory));
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(view.container.textContent).not.toContain("Cached Frieren"));
+
+    await act(async () => {
+      publishSnapshot?.(snapshotFixture(
+        emptyHistory,
+        [local],
+        false,
+        { event: local, mode: "mine" },
+      ));
+      await Promise.resolve();
+    });
     expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Watching now");
     expect(view.container.textContent).toContain("0:12");
 
     await act(async () => {
@@ -263,7 +312,7 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
-  it("selects only an explicitly meaningful solo current observation for the Popup overlay", () => {
+  it("separates an active local observation from durable pending sync work", () => {
     const history = historyFixture();
     const observation = {
       ...pendingEvent({ currentTime: 840, progress: 0.4 }),
@@ -281,7 +330,8 @@ describe("Popup Watch History v2", () => {
           preferences: { youtubeHistoryEnabled: false },
           preferencesConfirmed: true,
           currentObservation: observation,
-          currentObservationMeaningfulSolo: true,
+          currentObservationMeaningfulSolo: false,
+          currentObservationDisplayMode: "mine",
           capturePaused: false,
           captureMarkersReady: true,
           outbox: { ownerUserId: OWNER_ID, accountGeneration: 1, entries: [] },
@@ -289,14 +339,9 @@ describe("Popup Watch History v2", () => {
       },
     };
 
-    expect(selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID)?.pendingEvents).toEqual([
-      observation,
-    ]);
-    root.partitions[partitionKey] = {
-      ...root.partitions[partitionKey],
-      currentObservationMeaningfulSolo: false,
-    };
-    expect(selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID)?.pendingEvents).toEqual([]);
+    const snapshot = selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID);
+    expect(snapshot?.localObservation).toEqual({ event: observation, mode: "mine" });
+    expect(snapshot?.pendingEvents).toEqual([]);
   });
 
   it("does not let a stale local observation override newer canonical progress from another device", () => {
@@ -325,7 +370,9 @@ describe("Popup Watch History v2", () => {
       },
     };
 
-    expect(selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID)?.pendingEvents).toEqual([]);
+    const snapshot = selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID);
+    expect(snapshot?.pendingEvents).toEqual([]);
+    expect(snapshot?.localObservation).toBeNull();
   });
 
   it("treats YouTube as disabled until preferences are confirmed by the current refresh", async () => {
@@ -836,12 +883,14 @@ function snapshotFixture(
   history: WatchHistoryResponse,
   pendingEvents: WatchProgressEvent[] = [],
   youtubeHistoryEnabled = false,
+  localObservation: PopupWatchHistorySnapshot["localObservation"] = null,
 ): PopupWatchHistorySnapshot {
   return {
     history,
     accountGeneration: 1,
     preferences: { youtubeHistoryEnabled },
     pendingEvents,
+    localObservation,
     capturePaused: false,
   };
 }

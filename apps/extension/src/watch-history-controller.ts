@@ -5,6 +5,7 @@ import type {
 } from "@anidachi/protocol";
 import type { HistoryObservation } from "./source-adapters/core/history-policy";
 import type { WatchHistoryCaptureResult } from "./watch-history-client";
+import type { WatchHistoryObservationDisplayMode } from "./watch-history-storage";
 
 export const WATCH_HISTORY_HEARTBEAT_MS = 60_000;
 
@@ -29,6 +30,7 @@ export type WatchHistoryControllerDependencies = {
     event: WatchProgressEvent,
     expectedOwnerUserId: string,
     meaningfulSolo: boolean,
+    displayMode: WatchHistoryObservationDisplayMode | null,
   ) => Promise<WatchHistoryCaptureResult | void> | WatchHistoryCaptureResult | void;
   enqueue: (
     event: WatchProgressEvent,
@@ -158,8 +160,24 @@ export function createWatchHistoryController(
     const observation = dependencies.getObservation(preferences);
     if (!isCurrent(token)) return;
     dependencies.onObservation?.(observation);
-    if (!observation ||
-      !authorityReady ||
+    if (!observation) {
+      if (!authorityReady || ownerUserId === null || accountGeneration === null ||
+        capturePaused || !retained) return;
+      const previousIdentity = retainedIdentity;
+      await emitRetainedSourceChange(token);
+      if (!isCurrent(token)) return;
+      if (roomActive && roomHistoryAuthority) {
+        awaitingRoomSourceIdentity = previousIdentity;
+        roomHistoryAuthority = null;
+        publishRoomHistoryAuthorityState();
+      }
+      retained = null;
+      retainedIdentity = null;
+      clientSessionKey = null;
+      resetMeaningfulState();
+      return;
+    }
+    if (!authorityReady ||
       ownerUserId === null ||
       accountGeneration === null ||
       capturePaused) return;
@@ -188,6 +206,10 @@ export function createWatchHistoryController(
       retained = observation;
       retainedIdentity = identity;
       ensureSessionKey();
+      if (awaitingRoomSourceIdentity !== null && identity !== awaitingRoomSourceIdentity) {
+        awaitingRoomSourceIdentity = null;
+        publishRoomHistoryAuthorityState();
+      }
     } else {
       retained = observation;
     }
@@ -210,7 +232,7 @@ export function createWatchHistoryController(
     const meaningfulSolo = hasMeaningfulPlayback &&
       !roomActive &&
       !dependencies.getRoomActive();
-    if (!await persist(event, token, meaningfulSolo)) return;
+    if (!await persist(event, token, meaningfulSolo, null)) return;
     if (!isCurrent(token) || !hasMeaningfulPlayback) return;
     if (roomActive || dependencies.getRoomActive()) {
       if (!sharedRoom) return;
@@ -255,7 +277,12 @@ export function createWatchHistoryController(
     }
 
     const meaningfulSolo = nextMeaningfulPlayback && !activeRoom;
-    if (!await persist(event, token, meaningfulSolo)) return;
+    if (!await persist(
+      event,
+      token,
+      meaningfulSolo,
+      isActivePresentationKind(kind) ? activeRoom ? "together" : "mine" : null,
+    )) return;
     if (!isCurrent(token)) return;
     hasMeaningfulPlayback = nextMeaningfulPlayback;
     previousPlayingTime = nextPreviousPlayingTime;
@@ -273,11 +300,17 @@ export function createWatchHistoryController(
     event: WatchProgressEvent,
     token: number,
     meaningfulSolo: boolean,
+    displayMode: WatchHistoryObservationDisplayMode | null,
   ): Promise<boolean> {
     if (!isCurrent(token) || !authorityReady) return false;
     try {
       if (ownerUserId === null) return false;
-      const result = await dependencies.observeLocally(event, ownerUserId, meaningfulSolo);
+      const result = await dependencies.observeLocally(
+        event,
+        ownerUserId,
+        meaningfulSolo,
+        displayMode,
+      );
       if (isFailedCapture(result)) {
         handleCaptureFailure(result);
         return false;
@@ -383,7 +416,7 @@ export function createWatchHistoryController(
         await enqueueEvent(event, token);
         return;
       }
-      await persist(event, token, false);
+      await persist(event, token, false, null);
     });
   }
 
@@ -442,7 +475,7 @@ export function createWatchHistoryController(
         now(),
         previousRoomHistoryAuthority,
       );
-      if (!await persist(event, token, false)) return;
+      if (!await persist(event, token, false, null)) return;
       if (previousWasMeaningfulShared) await enqueueEvent(event, token);
     });
     roomExitPromise = leaving;
@@ -495,7 +528,12 @@ export function createWatchHistoryController(
         cleanupGeneration === null ||
         cleanupOwnerUserId === null) return;
       const event = toEvent(cleanup, "source_change", cleanupGeneration, createEventId(), cleanupSessionKey, now());
-      const result = await dependencies.observeLocally(event, cleanupOwnerUserId, shouldPublish);
+      const result = await dependencies.observeLocally(
+        event,
+        cleanupOwnerUserId,
+        shouldPublish,
+        null,
+      );
       if (isFailedCapture(result)) return;
       if (shouldPublish) await dependencies.enqueue(event, cleanupOwnerUserId);
     });
@@ -512,6 +550,14 @@ export function createWatchHistoryController(
     recover,
     dispose,
   };
+}
+
+function isActivePresentationKind(kind: HistoryEventKind): boolean {
+  return kind !== "source_change" &&
+    kind !== "pagehide" &&
+    kind !== "room_leave" &&
+    kind !== "room_end" &&
+    kind !== "ended";
 }
 
 function isFailedCapture(

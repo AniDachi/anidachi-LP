@@ -22,6 +22,7 @@ import {
   createWatchHistoryStorage,
   watchHistoryPartitionKey,
   withoutWatchHistoryAttestation,
+  type WatchHistoryObservationDisplayMode,
   type WatchHistoryAccountPartition,
 } from "./watch-history-storage";
 
@@ -55,6 +56,7 @@ export type WatchHistoryMessage =
       expectedOwnerUserId: string;
       event: unknown;
       meaningfulSolo?: boolean;
+      displayMode?: WatchHistoryObservationDisplayMode | null;
     }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "flush" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
@@ -171,12 +173,14 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
         value.expectedOwnerUserId.length <= 128 &&
         "event" in value;
     case "observe-progress":
-      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "event", "meaningfulSolo"]) &&
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "event", "meaningfulSolo", "displayMode"]) &&
         typeof value.expectedOwnerUserId === "string" &&
         value.expectedOwnerUserId.length > 0 &&
         value.expectedOwnerUserId.length <= 128 &&
         "event" in value &&
-        (value.meaningfulSolo === undefined || typeof value.meaningfulSolo === "boolean");
+        (value.meaningfulSolo === undefined || typeof value.meaningfulSolo === "boolean") &&
+        (value.displayMode === undefined || value.displayMode === null ||
+          value.displayMode === "mine" || value.displayMode === "together");
     case "update-preferences":
     case "delete":
       return hasExactKeys(value, ["type", "command", "input"]) && "input" in value;
@@ -258,7 +262,12 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
       return message.command === "enqueue-progress"
         ? enqueue(session, message.event)
-        : observe(session, message.event, message.meaningfulSolo === true);
+        : observe(
+            session,
+            message.event,
+            message.meaningfulSolo === true,
+            message.displayMode ?? null,
+          );
     }
     if (message.command === "flush" || message.command === "content-reconnect") return flush(session);
     if (message.command === "get-preferences") return getPreferences(session);
@@ -306,6 +315,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       ...partition,
       currentObservation: withoutWatchHistoryAttestation(event),
       currentObservationMeaningfulSolo: !event.sharedRoom,
+      currentObservationDisplayMode: partition.currentObservation?.clientEventId === event.clientEventId
+        ? partition.currentObservationDisplayMode ?? (event.sharedRoom ? "together" : "mine")
+        : event.sharedRoom ? "together" : "mine",
       outbox: enqueueWatchHistoryEvent(partition.outbox, event),
     }), event.provider);
     let saved = await persist();
@@ -328,6 +340,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     session: ExtensionAuthTokens,
     rawEvent: unknown,
     meaningfulSolo: boolean,
+    displayMode: WatchHistoryObservationDisplayMode | null,
   ): Promise<WatchHistoryMessageResponse> {
     const parsed = WatchProgressEventSchema.safeParse(rawEvent);
     if (!parsed.success) return { ok: false, status: "invalid-request" };
@@ -341,6 +354,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       ...partition,
       currentObservation: withoutWatchHistoryAttestation(parsed.data),
       currentObservationMeaningfulSolo: meaningfulSolo && !parsed.data.sharedRoom,
+      currentObservationDisplayMode: displayMode,
     }), parsed.data.provider);
     let saved = await persist();
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
@@ -399,6 +413,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
             candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
               ? false
               : candidate.currentObservationMeaningfulSolo === true,
+          currentObservationDisplayMode:
+            candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
+              ? null
+              : candidate.currentObservationDisplayMode ?? null,
         }));
         if (saved.stale) return { ok: false, status: "generation-mismatch" };
         if (saved.authorityRejected) return { ok: false, status: "rejected" };
@@ -592,6 +610,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       cache: null,
       currentObservation: null,
       currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: null,
       outbox: removeWatchHistoryEventsForDeletion(partition.outbox, parsed.data.target),
     }));
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
@@ -703,6 +722,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       currentObservationMeaningfulSolo: candidate.currentObservation?.clientEventId === clientEventId
         ? false
         : candidate.currentObservationMeaningfulSolo === true,
+      currentObservationDisplayMode: candidate.currentObservation?.clientEventId === clientEventId
+        ? null
+        : candidate.currentObservationDisplayMode ?? null,
     }));
     if (saved.stale) {
       return { ok: false, error: { ok: false, status: "generation-mismatch" } };
@@ -846,6 +868,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
             preferencesConfirmed: false,
             currentObservation: null,
             currentObservationMeaningfulSolo: false,
+            currentObservationDisplayMode: null,
             outbox: { ...partition.outbox, entries: [] },
           };
           return [];
@@ -895,6 +918,7 @@ function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHi
     preferencesConfirmed: false,
     currentObservation: null,
     currentObservationMeaningfulSolo: false,
+    currentObservationDisplayMode: null,
     capturePaused: false,
     captureMarkersReady: true,
     outbox,

@@ -1836,13 +1836,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         const loaded = parseWatchHistoryBootstrapData(bootstrapped.data);
         return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
       },
-      observeLocally: async (event, expectedOwnerUserId, meaningfulSolo) => {
+      observeLocally: async (event, expectedOwnerUserId, meaningfulSolo, displayMode) => {
         const response = await requestWatchHistory({
           type: "ANIDACHI_WATCH_HISTORY_V2",
           command: "observe-progress",
           expectedOwnerUserId,
           event,
           meaningfulSolo,
+          displayMode,
         });
         return response.ok ? ({ ok: true } as const) : response as WatchHistoryCaptureResult;
       },

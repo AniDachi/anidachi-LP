@@ -9,6 +9,30 @@ import type { HistoryObservation } from "../src/source-adapters/core/history-pol
 import type { WatchHistoryCaptureResult } from "../src/watch-history-client";
 
 describe("watch history meaningful-progress controller", () => {
+  it("publishes active local presentation immediately and clears it on page exit", async () => {
+    const solo = createFixture();
+    await solo.controller.start();
+    await solo.controller.observe("pagehide");
+    expect(solo.localDisplayModes).toEqual(["mine", null]);
+
+    const together = createFixture({ roomActive: true });
+    await together.controller.start();
+    expect(together.localDisplayModes).toEqual(["together"]);
+  });
+
+  it("clears active local presentation when the supported source disappears", async () => {
+    let sourceAvailable = true;
+    const fixture = createFixture({
+      getObservation: (_preferences, observation) => sourceAvailable ? observation : null,
+    });
+    await fixture.controller.start();
+    sourceAvailable = false;
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.local.map((event) => event.kind)).toEqual(["heartbeat", "source_change"]);
+    expect(fixture.localDisplayModes).toEqual(["mine", null]);
+  });
+
   it("publishes only after a non-seeking playing observation advances", async () => {
     const fixture = createFixture();
     await fixture.controller.start();
@@ -809,6 +833,7 @@ function createFixture(options: {
   const sessionKeys = [...(options.sessionKeys ?? ["11111111-1111-4111-8111-111111111111"])];
   const local: WatchProgressEvent[] = [];
   const localMeaningfulSolo: boolean[] = [];
+  const localDisplayModes: Array<"mine" | "together" | null> = [];
   const enqueued: WatchProgressEvent[] = [];
   const current: Array<HistoryObservation | null> = [];
   const roomAuthorityStates: Array<"solo" | "waiting" | "ready"> = [];
@@ -849,7 +874,7 @@ function createFixture(options: {
       preferences: { youtubeHistoryEnabled: false },
     })),
     recoverCapture: options.recoverCapture,
-    observeLocally: async (entry, _expectedOwnerUserId, meaningfulSolo) => {
+    observeLocally: async (entry, _expectedOwnerUserId, meaningfulSolo, displayMode) => {
       localAttempts += 1;
       if (options.rejectLocalKinds?.has(entry.kind)) {
         localFailures += 1;
@@ -857,6 +882,7 @@ function createFixture(options: {
       }
       local.push(entry);
       localMeaningfulSolo.push(meaningfulSolo);
+      localDisplayModes.push(displayMode);
       if (localAttempts === options.holdLocalAt) {
         await new Promise<void>((resolve) => { releaseHeldLocal = resolve; });
       }
@@ -891,6 +917,7 @@ function createFixture(options: {
     controller: createWatchHistoryController(dependencies),
     local,
     localMeaningfulSolo,
+    localDisplayModes,
     enqueued,
     current,
     roomAuthorityStates,

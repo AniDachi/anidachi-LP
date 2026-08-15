@@ -625,6 +625,7 @@ describe("watch history v2 client", () => {
       expectedOwnerUserId: owner,
       event,
       meaningfulSolo: true,
+      displayMode: "mine",
     }))
       .resolves.toEqual({ ok: true });
 
@@ -636,6 +637,7 @@ describe("watch history v2 client", () => {
     });
     expect(partition.currentObservation?.clientEventId).toBe(event.clientEventId);
     expect(partition.currentObservationMeaningfulSolo).toBe(true);
+    expect(partition.currentObservationDisplayMode).toBe("mine");
     expect(partition.outbox.entries).toEqual([]);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
@@ -664,11 +666,13 @@ describe("watch history v2 client", () => {
       expectedOwnerUserId: owner,
       event: progressEvent(),
       meaningfulSolo: true,
+      displayMode: "together",
     })).resolves.toEqual({ ok: true });
 
     const partition = stored.partitions[watchHistoryPartitionKey(owner, 1)];
     expect(partition.currentObservation).not.toHaveProperty("sharedRoom");
     expect(partition.currentObservationMeaningfulSolo).toBe(false);
+    expect(partition.currentObservationDisplayMode).toBe("together");
     expect(partition.outbox.entries).toEqual([]);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
@@ -711,6 +715,13 @@ describe("watch history v2 client", () => {
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "list", limit: 0 })).toBe(false);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "list", limit: 101 })).toBe(false);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "flush", extra: true })).toBe(false);
+    expect(isWatchHistoryMessage({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: session.user.id,
+      event: progressEvent(),
+      displayMode: "somewhere",
+    })).toBe(false);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "create-room", sessionId: "x".repeat(129) })).toBe(false);
   });
 
