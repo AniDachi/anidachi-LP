@@ -101,6 +101,45 @@ describe("Popup Watch History v2", () => {
     await unmount(view.root);
   });
 
+  it("renders a meaningful pending title before the canonical list contains it", async () => {
+    const emptyHistory: WatchHistoryResponse = {
+      ...historyFixture(),
+      totalTitleCount: 0,
+      items: [],
+    };
+    const local = pendingEvent({ currentTime: 12, progress: 12 / 2_100 });
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(emptyHistory, [local]),
+      request: requestForHistory(emptyHistory),
+    }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("Cached Frieren"));
+    expect(view.container.textContent).toContain("Episode 1 - The Journey");
+    expect(view.container.textContent).toContain("0:12");
+    expect(view.container.textContent).toContain("Pending sync");
+    expect(view.container.textContent).not.toContain("Progress will appear after meaningful playback.");
+    await unmount(view.root);
+  });
+
+  it("renders a meaningful pending episode before its canonical title refresh catches up", async () => {
+    const canonical = historyFixture();
+    const local: WatchProgressEvent = {
+      ...pendingEvent({ currentTime: 12, progress: 12 / 2_100 }),
+      clientEventId: "00000000-0000-4000-8000-000000000006",
+      episodeKey: "crunchyroll:episode-2",
+      episodeTitle: "Episode 2 - The Promise",
+    };
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(canonical, [local]),
+      request: requestForHistory(canonical),
+    }));
+
+    await waitFor(() => expect(view.container.textContent).toContain("Episode 2 - The Promise"));
+    expect(view.container.textContent).toContain("0:12");
+    expect(view.container.textContent).toContain("Pending sync");
+    await unmount(view.root);
+  });
+
   it("selects only an explicitly meaningful solo current observation for the Popup overlay", () => {
     const history = historyFixture();
     const observation = {

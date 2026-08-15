@@ -167,9 +167,13 @@ export function PopupWatchHistoryPanel({
     )),
     [mode, pendingEvents],
   );
+  const itemsWithPending = useMemo(
+    () => projectPendingWatchHistoryItems(history?.items ?? [], pendingByEpisode),
+    [history?.items, pendingByEpisode],
+  );
   const visibleItems = useMemo(
-    () => filterWatchHistoryItems(history?.items ?? [], mode, searchQuery, pendingByEpisode),
-    [history?.items, mode, pendingByEpisode, searchQuery],
+    () => filterWatchHistoryItems(itemsWithPending, mode, searchQuery, pendingByEpisode),
+    [itemsWithPending, mode, pendingByEpisode, searchQuery],
   );
   const providerGroups = useMemo(() => groupWatchHistoryItems(visibleItems), [visibleItems]);
 
@@ -699,6 +703,119 @@ function filterWatchHistoryItems(
     }
     return [];
   });
+}
+
+function projectPendingWatchHistoryItems(
+  items: WatchHistoryItem[],
+  pendingByEpisode: Map<string, WatchProgressEvent>,
+): WatchHistoryItem[] {
+  let projected = items;
+  for (const event of pendingByEpisode.values()) {
+    const itemIndex = projected.findIndex((item) =>
+      item.provider === event.provider && item.titleKey === event.titleKey,
+    );
+    if (itemIndex < 0) {
+      projected = [...projected, pendingWatchHistoryItem(event)];
+      continue;
+    }
+    const item = projected[itemIndex];
+    if (!item || item.seasons.some((season) =>
+      season.episodes.some((episode) => episode.episodeKey === event.episodeKey)
+    ) || (item.seasons.length === 0 && item.latestActivity.episodeKey === event.episodeKey)) {
+      continue;
+    }
+    const seasonKey = event.seasonKey ?? event.episodeKey;
+    const seasonIndex = item.seasons.findIndex((season) => season.seasonKey === seasonKey);
+    const pendingEpisode = pendingWatchHistoryEpisode(event);
+    const seasons = seasonIndex < 0
+      ? [...item.seasons, pendingWatchHistorySeason(event, pendingEpisode)]
+      : item.seasons.map((season, index) => index === seasonIndex
+        ? { ...season, episodes: [...season.episodes, pendingEpisode] }
+        : season);
+    const nextItem: WatchHistoryItem = {
+      ...item,
+      seasons,
+      latestActivity: Date.parse(event.observedAt) >= Date.parse(item.latestActivity.lastWatchedAt)
+        ? pendingWatchHistoryLatestActivity(event)
+        : item.latestActivity,
+      lastWatchedAt: Date.parse(event.observedAt) >= Date.parse(item.lastWatchedAt)
+        ? event.observedAt
+        : item.lastWatchedAt,
+    };
+    projected = projected.map((candidate, index) => index === itemIndex ? nextItem : candidate);
+  }
+  return projected;
+}
+
+function pendingWatchHistoryItem(event: WatchProgressEvent): WatchHistoryItem {
+  return {
+    provider: event.provider,
+    titleKey: event.titleKey,
+    itemKind: event.itemKind,
+    title: event.title,
+    sourceUrl: event.sourceUrl,
+    artworkUrl: event.artworkUrl,
+    catalogState: "unavailable",
+    aggregate: unknownWatchHistoryAggregate(),
+    seasons: event.itemKind === "series"
+      ? [pendingWatchHistorySeason(event, pendingWatchHistoryEpisode(event))]
+      : [],
+    sessions: [],
+    latestActivity: pendingWatchHistoryLatestActivity(event),
+    lastWatchedAt: event.observedAt,
+  };
+}
+
+function pendingWatchHistorySeason(
+  event: WatchProgressEvent,
+  episode: WatchHistoryItem["seasons"][number]["episodes"][number],
+): WatchHistoryItem["seasons"][number] {
+  return {
+    seasonKey: event.seasonKey ?? event.episodeKey,
+    seasonTitle: event.seasonTitle ?? "Observed episodes",
+    seasonNumber: event.seasonNumber,
+    order: 0,
+    aggregate: unknownWatchHistoryAggregate(),
+    episodes: [episode],
+    nextEpisode: null,
+  };
+}
+
+function pendingWatchHistoryEpisode(
+  event: WatchProgressEvent,
+): WatchHistoryItem["seasons"][number]["episodes"][number] {
+  return {
+    episodeKey: event.episodeKey,
+    episodeTitle: event.episodeTitle,
+    seasonKey: event.seasonKey,
+    seasonTitle: event.seasonTitle,
+    seasonNumber: event.seasonNumber,
+    episodeNumber: event.episodeNumber,
+    sourceUrl: event.sourceUrl,
+    currentTime: event.currentTime,
+    duration: event.duration,
+    progress: event.progress,
+    completedAt: null,
+    lastWatchedAt: event.observedAt,
+    sessions: [],
+  };
+}
+
+function pendingWatchHistoryLatestActivity(
+  event: WatchProgressEvent,
+): WatchHistoryItem["latestActivity"] {
+  return {
+    episodeKey: event.episodeKey,
+    currentTime: event.currentTime,
+    duration: event.duration,
+    progress: event.progress,
+    completedAt: null,
+    lastWatchedAt: event.observedAt,
+  };
+}
+
+function unknownWatchHistoryAggregate(): WatchHistoryItem["aggregate"] {
+  return { completedEpisodes: 0, availableEpisodes: null, progress: null };
 }
 
 function newestSession(sessions: WatchHistorySession[]): WatchHistorySession | undefined {
