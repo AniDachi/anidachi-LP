@@ -22,6 +22,7 @@ import {
 } from "./watch-history-client";
 import {
   createWatchHistoryStorage,
+  WATCH_HISTORY_STORAGE_KEY,
   watchHistoryPartitionKey,
   type WatchHistoryStorageRoot,
 } from "./watch-history-storage";
@@ -37,6 +38,10 @@ export type PopupWatchHistorySnapshot = {
 export type PopupWatchHistoryClient = {
   loadCached(ownerUserId: string): Promise<PopupWatchHistorySnapshot | null>;
   request(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse>;
+  subscribe?(
+    ownerUserId: string,
+    listener: (snapshot: PopupWatchHistorySnapshot | null) => void,
+  ): () => void;
   confirmDiscard(message: string): boolean;
   openUrl(url: string): Promise<void>;
 };
@@ -44,6 +49,7 @@ export type PopupWatchHistoryClient = {
 const defaultClient: PopupWatchHistoryClient = {
   loadCached: loadConfirmedPopupWatchHistorySnapshot,
   request: requestWatchHistory,
+  subscribe: subscribeToPopupWatchHistorySnapshot,
   confirmDiscard: (message) => window.confirm(message),
   openUrl: async (url) => {
     await chrome.tabs.create({ url });
@@ -130,7 +136,9 @@ export function PopupWatchHistoryPanel({
           const refreshedLocal = await client.loadCached(ownerUserId).catch(() => null);
           if (!current()) return;
           if (refreshedLocal?.accountGeneration === parsed.data.meta.accountGeneration) {
-            setPendingEvents(refreshedLocal.pendingEvents);
+            setPendingEvents((currentEvents) =>
+              reconcilePopupPendingEvents(currentEvents, refreshedLocal)
+            );
             setCapturePaused(refreshedLocal.capturePaused);
           } else {
             setPendingEvents([]);
@@ -160,6 +168,16 @@ export function PopupWatchHistoryPanel({
       if (requestGeneration.current === generation) requestGeneration.current += 1;
     };
   }, [client, ownerUserId, refreshVersion]);
+
+  useEffect(() => {
+    if (!ownerUserId || !client.subscribe) return;
+    return client.subscribe(ownerUserId, (snapshot) => {
+      if (!snapshot || snapshot.history.meta.ownerUserId !== ownerUserId) return;
+      setHistory(snapshot.history);
+      setPendingEvents((current) => reconcilePopupPendingEvents(current, snapshot));
+      setCapturePaused(snapshot.capturePaused);
+    });
+  }, [client, ownerUserId]);
 
   const pendingByEpisode = useMemo(
     () => latestPendingByEpisode(pendingEvents.filter((event) =>
@@ -889,6 +907,32 @@ export async function loadConfirmedPopupWatchHistorySnapshot(
   return selectConfirmedPopupWatchHistorySnapshot(root, ownerUserId);
 }
 
+function subscribeToPopupWatchHistorySnapshot(
+  ownerUserId: string,
+  listener: (snapshot: PopupWatchHistorySnapshot | null) => void,
+): () => void {
+  let disposed = false;
+  let sequence = 0;
+  const handleStorageChange = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    areaName: string,
+  ) => {
+    if (areaName !== "local" || !changes[WATCH_HISTORY_STORAGE_KEY]) return;
+    const currentSequence = ++sequence;
+    void loadConfirmedPopupWatchHistorySnapshot(ownerUserId)
+      .then((snapshot) => {
+        if (!disposed && currentSequence === sequence) listener(snapshot);
+      })
+      .catch(() => undefined);
+  };
+  chrome.storage.onChanged.addListener(handleStorageChange);
+  return () => {
+    disposed = true;
+    sequence += 1;
+    chrome.storage.onChanged.removeListener(handleStorageChange);
+  };
+}
+
 export function selectConfirmedPopupWatchHistorySnapshot(
   root: WatchHistoryStorageRoot,
   ownerUserId: string,
@@ -962,6 +1006,47 @@ function latestPendingByEpisode(events: WatchProgressEvent[]): Map<string, Watch
     }
   }
   return pending;
+}
+
+function reconcilePopupPendingEvents(
+  current: WatchProgressEvent[],
+  snapshot: PopupWatchHistorySnapshot,
+): WatchProgressEvent[] {
+  const pending = new Map<string, WatchProgressEvent>();
+  for (const event of [...current, ...snapshot.pendingEvents]) {
+    if (event.accountGeneration !== snapshot.accountGeneration ||
+      canonicalHistoryIncludesEvent(snapshot.history, event)) {
+      continue;
+    }
+    const key = `${pendingEpisodeKey(event.provider, event.titleKey, event.episodeKey)}\u0000${
+      event.sharedRoom ? "shared" : "solo"
+    }`;
+    const previous = pending.get(key);
+    if (!previous || Date.parse(event.observedAt) > Date.parse(previous.observedAt) ||
+      (event.observedAt === previous.observedAt && event.clientEventId > previous.clientEventId)) {
+      pending.set(key, event);
+    }
+  }
+  return [...pending.values()];
+}
+
+function canonicalHistoryIncludesEvent(
+  history: WatchHistoryResponse,
+  event: WatchProgressEvent,
+): boolean {
+  const item = history.items.find((candidate) =>
+    candidate.provider === event.provider && candidate.titleKey === event.titleKey,
+  );
+  if (!item) return false;
+  const episode = item.seasons
+    .flatMap((season) => season.episodes)
+    .find((candidate) => candidate.episodeKey === event.episodeKey);
+  const canonicalObservedAt = episode?.lastWatchedAt ??
+    (item.latestActivity.episodeKey === event.episodeKey
+      ? item.latestActivity.lastWatchedAt
+      : null);
+  return canonicalObservedAt !== null &&
+    Date.parse(canonicalObservedAt) >= Date.parse(event.observedAt);
 }
 
 function pendingEpisodeKey(provider: string, titleKey: string, episodeKey: string): string {
