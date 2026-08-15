@@ -83,6 +83,7 @@ describe("diagnostic log", () => {
         reason: "join:hash",
         userId: "user-secret-id",
         refreshToken: "refresh-secret",
+        roomHistoryAttestation: "opaque-room-authority",
         url: "https://staging.anidachi.app/room?token=secret",
       },
       "warn",
@@ -107,12 +108,14 @@ describe("diagnostic log", () => {
             reason: "join:hash",
             userId: expect.stringMatching(/^id_[a-z0-9]+$/),
             refreshToken: "<redacted>",
+            roomHistoryAttestation: "<redacted>",
             url: "https://staging.anidachi.app/room?<redacted>",
           },
         }),
       ]);
     });
     expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toContain("session-secret-id");
+    expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toContain("opaque-room-authority");
     expect(JSON.stringify(storage.get(DIAGNOSTIC_STORAGE_KEY))).not.toMatch(
       /stored-user-secret|probe-user-secret|current-user-secret|voice-user-(?:one|two)/,
     );

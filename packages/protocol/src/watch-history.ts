@@ -5,7 +5,7 @@ import {
   WatchItemKindSchema,
   WatchProviderSchema,
 } from "./account";
-import { RoomHistoryAuthoritySchema } from "./types";
+import { RoomCapabilitiesSchema, RoomHistoryAuthoritySchema } from "./types";
 
 export const WATCH_HISTORY_SCHEMA_VERSION = 2 as const;
 export const WATCH_CATALOG_MAX_BYTES = 512 * 1_024;
@@ -469,6 +469,20 @@ export const WatchHistoryPreferencesResponseSchema = z.strictObject({
   preferences: WatchHistoryPreferencesSchema,
 });
 
+export const WatchHistoryRoomRecreationResponseSchema = z.strictObject({
+  roomId: RoomIdSchema,
+  roomToken: z.string().trim().min(1).max(4096),
+  shareableLink: HttpUrlSchema,
+  reused: z.boolean(),
+  capabilities: RoomCapabilitiesSchema,
+  quota: z
+    .strictObject({
+      remainingSeconds: z.number().finite().nonnegative(),
+      resetAt: TimestampSchema,
+    })
+    .nullable(),
+});
+
 export const WatchHistoryDeletionRequestSchema = z.strictObject({
   schemaVersion: z.literal(WATCH_HISTORY_SCHEMA_VERSION),
   clientMutationId: DurableIdSchema,
@@ -535,6 +549,9 @@ export type WatchHistoryPreferencesUpdate = z.infer<
 >;
 export type WatchHistoryPreferencesResponse = z.infer<
   typeof WatchHistoryPreferencesResponseSchema
+>;
+export type WatchHistoryRoomRecreationResponse = z.infer<
+  typeof WatchHistoryRoomRecreationResponseSchema
 >;
 export type WatchHistoryDeletionRequest = z.infer<
   typeof WatchHistoryDeletionRequestSchema

@@ -35,6 +35,12 @@ import {
   handleWatchLibraryHttpMessage,
   isWatchLibraryHttpMessage,
 } from "../src/watch-library-client";
+import {
+  flushWatchHistoryInBackground,
+  handleWatchHistoryAuthSessionChange,
+  handleWatchHistoryHttpMessage,
+  isWatchHistoryMessage,
+} from "../src/watch-history-client";
 
 export default defineBackground(() => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -72,6 +78,11 @@ export default defineBackground(() => {
       return true;
     }
 
+    if (isWatchHistoryMessage(message)) {
+      void handleWatchHistoryHttpMessage(message).then(sendResponse);
+      return true;
+    }
+
     if (isDiagnosticMessage(message)) {
       void handleDiagnosticMessage(message).then(sendResponse);
       return true;
@@ -87,14 +98,20 @@ export default defineBackground(() => {
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local" || !changes[AUTH_TOKENS_STORAGE_KEY]) return;
     const change = changes[AUTH_TOKENS_STORAGE_KEY];
+    const previous = normalizeExtensionAuthTokens(change.oldValue);
+    const next = normalizeExtensionAuthTokens(change.newValue);
+    void handleWatchHistoryAuthSessionChange(previous, next).catch(() => undefined);
     void handleAuthSessionChanged(
-      normalizeExtensionAuthTokens(change.oldValue),
-      normalizeExtensionAuthTokens(change.newValue),
+      previous,
+      next,
     ).catch(() => undefined);
   });
 
   workerScope().addEventListener("push", (event) => {
     event.waitUntil(handleRoomInvitePush(event).catch(() => undefined));
+  });
+  workerScope().addEventListener("online", () => {
+    void flushWatchHistoryInBackground().catch(() => undefined);
   });
 
   chrome.notifications?.onClicked?.addListener((notificationId) => {
@@ -112,7 +129,12 @@ export default defineBackground(() => {
 
   const reconcileStoredWebsiteSession = (notify: boolean) => {
     void reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false })
-      .then(() => reconcileRoomInviteNotifications({ notify }))
+      .then(() =>
+        Promise.all([
+          reconcileRoomInviteNotifications({ notify }),
+          flushWatchHistoryInBackground(),
+        ]),
+      )
       .catch(() => undefined);
   };
   chrome.runtime.onStartup?.addListener(() => reconcileStoredWebsiteSession(true));
@@ -131,9 +153,15 @@ type BackgroundPushEvent = {
 };
 
 function workerScope(): {
-  addEventListener: (type: "push", listener: (event: BackgroundPushEvent) => void) => void;
+  addEventListener: {
+    (type: "push", listener: (event: BackgroundPushEvent) => void): void;
+    (type: "online", listener: () => void): void;
+  };
 } {
   return self as unknown as {
-    addEventListener: (type: "push", listener: (event: BackgroundPushEvent) => void) => void;
+    addEventListener: {
+      (type: "push", listener: (event: BackgroundPushEvent) => void): void;
+      (type: "online", listener: () => void): void;
+    };
   };
 }
