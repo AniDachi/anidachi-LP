@@ -38,6 +38,31 @@ Crunchyroll endpoint paths and payload shapes remain private implementation
 details of the Crunchyroll adapter. They are not shared AniDachi protocol
 contracts and may change without affecting other provider adapters.
 
+## Watch History v2 Observation
+
+Date: 2026-08-15
+
+The active adapter now produces a provider-neutral Watch History observation
+only when all of these boundaries hold:
+
+- the selected adapter is the Crunchyroll adapter;
+- the page is a canonical supported locale/non-locale `/watch/{id}` route;
+- the mounted media has finite `currentTime`, positive finite `duration`, and a
+  current time inside that duration;
+- title and episode identity are non-empty.
+
+The observation keeps active-episode resume independent from catalog
+completeness and reports `catalogState: unavailable`. Same-document route/media
+replacement rotates the logical history session and finalizes the retained
+source without reusing its meaningful-playback gate.
+
+There is no arbitrary Crunchyroll duration or watched-seconds threshold for
+history delivery. Playback becomes meaningful after two advancing, non-seeking
+playing samples or an actual `ended` event. Once meaningful, terminal/lifecycle
+events and a coalesced 60-second playing heartbeat can enter the background-owned
+outbox. Active-room progress remains suppressed until the Worker-provided
+participant/room/source-generation authority is ready.
+
 ## Live CDP Research: Navigation and Player Lifecycle
 
 Date: 2026-05-26 test

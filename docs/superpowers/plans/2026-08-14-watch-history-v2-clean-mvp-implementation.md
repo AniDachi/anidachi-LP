@@ -1278,6 +1278,38 @@ loaded extension artifacts before any promotion.
   artifact promotion, and main merge require a separate user-approved promotion
   after staging acceptance.
 
+### Wave 5 execution evidence — 2026-08-15
+
+- The Popup/website v2 consumer switch was committed at `72a474b`, Graphify was
+  refreshed separately at `5a2562f`, and compatibility-safe PR #178 merged to
+  `staging` as `d4af69b332e61e243ed7044f44dd62ce360c9c56`. That PR deliberately
+  contained no clean-cutover migration and left v1 HTTP paths active.
+- The exact CI staging extension is Actions artifact `9245980993`, build
+  `d4af69b332e61e243ed7044f44dd62ce360c9c56-staging-103`, inner zip SHA-256
+  `27dfefce36106937d6626eed1e737b4c803064a1fc1b7a979a3a161397eda3f3`.
+  Its store-safe manifest was validated and adds no permission or host.
+- Post-merge staging checks passed: CI, Build Extension, migration workflow,
+  staging smoke, E2E Rooms, and E2E P2P Media. Independent local gates passed
+  protocol 71 tests, API 98 unit plus 14 Workers-runtime tests, extension 1100
+  tests, web 202 assertions, room harness 39/39, and real Playwright/WebRTC
+  harness 26/26, plus package/root typechecks and `pnpm dev:check`.
+- PostgreSQL 17.6 replayed the entire migration chain including the prepared
+  clean cutover twice from an empty local Supabase database. The cutover itself
+  also reapplied successfully. The pgTAP suite passes 38 assertions covering
+  RLS/privileges, RPCs, receipts, deletion fences, rollback, shared two-writer
+  evidence, and the service-role-only Recent People cutover function.
+- The logical cutover is isolated on
+  `codex/watch-history-v2-wave5-cutover` at `272c8f7` and is not deployed. It
+  imports no v1 test data, keeps legacy tables intact for rollback, removes the
+  unsupported shared-room count, and makes old v1 HTTP entrypoints return the
+  stable `UPGRADE_REQUIRED` response only after deployment.
+- Remaining blocker: load Actions artifact `9245980993` in the authenticated
+  staging browser profiles and complete the two-profile matrix in Step 4. Until
+  that evidence exists, do not merge/apply the cutover, promote to `main`, call
+  Watch History production ready, delete legacy tables, or claim large-history
+  safety. The current complete-account read before title pagination remains an
+  explicit pre-release test-volume limitation.
+
 ## Deferred Catalog Evidence Gate (Not Part Of Core MVP Execution)
 
 Do not create `watch_catalog_snapshots`, a catalog upload route, collector,

@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-09.
+Last updated: 2026-08-15.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -327,20 +327,26 @@ selected through build environment variables in the build scripts.
 
 ## Last Recorded Staging Store Artifact
 
-The last staging artifact explicitly recorded in this document was generated
-from commit `50c80a0`:
+The latest CI staging artifact was built after Watch History v2 UI PR #178
+merged at `d4af69b332e61e243ed7044f44dd62ce360c9c56`:
 
 ```txt
-<repo>/anidachi-extension-staging.zip
-<repo>/artifacts/anidachi-extension-staging-50c80a0.zip
+GitHub Actions run: 31880856774
+artifact name: anidachi-extension-staging
+artifact id: 9245980993
+inner zip SHA-256: 27dfefce36106937d6626eed1e737b4c803064a1fc1b7a979a3a161397eda3f3
 ```
 
 Manifest checks:
 
 ```txt
 name: Anidachi Staging
-version_name: 50c80a0-staging-20260730171210
+version_name: d4af69b332e61e243ed7044f44dd62ce360c9c56-staging-103
 ```
+
+CI validation, staging smoke, room E2E, and P2P E2E passed. The artifact is the
+required input for loaded two-profile Watch History acceptance; that manual gate
+has not run yet and this is not a production-ready claim.
 
 The staging Chrome Web Store reviewer/tester access code is stored in the Chrome
 Web Store testing instructions, not in git.
@@ -387,6 +393,12 @@ The extension currently supports:
   participants are still excluded, the current user never receives listener
   controls, and remote volume/mute remains local to the listener;
 - sign-in through the web app with Google/Discord;
+- Watch History v2 solo/shared capture for supported Crunchyroll observations
+  and account-opted-in canonical YouTube watch pages. The background owns auth,
+  owner/generation fencing, cache, and compact terminal-plus-latest outbox;
+  Popup and website read the same strict v2 model. The additive consumer layer
+  is deployed to staging while v1 HTTP paths deliberately remain active until
+  the exact loaded artifact passes two-profile acceptance;
 - room creation and invite copying through the website/API/Worker flow;
 - WebSocket room join and playback sync;
 - reactions and live chat input;
@@ -575,9 +587,14 @@ These are intentionally not treated as solved:
   `sourceGeneration` bumps are implemented, but durable Supabase source
   persistence, room-create source descriptor plumbing, and explicit
   source-switch UI/commands are still pending.
-- Watch progress persistence has a backend-backed watch-library foundation and
-  account-scoped Popup snapshots, but staging acceptance across real browser
-  profiles is still required before treating it as finished product behavior.
+- Watch History v2 has PostgreSQL, API, Worker authority, extension outbox, and
+  Popup/website coverage. PR #178 deployed the additive consumer layer and all
+  post-merge CI/E2E/staging-smoke workflows passed. The logical clean cutover is
+  intentionally not deployed: the exact CI artifact still needs the full
+  two-profile solo/shared/offline/deletion/account-switch/YouTube matrix. The
+  current GET also loads the complete account history before title pagination;
+  that is accepted only for pre-release test volumes and needs a bounded server
+  query or explicit measured limit before public release.
 - Custom API domain for hiding the Cloudflare account subdomain is deferred.
 - Stripe production webhook appears wired, but end-to-end subscription testing is
   still a separate follow-up.

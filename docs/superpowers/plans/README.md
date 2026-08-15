@@ -9,7 +9,9 @@ the time but are no longer current.
 
 Current active execution plans:
 
-1. `2026-08-14-watch-history-v2-clean-mvp-implementation.md`
+1. `2026-08-14-watch-history-v2-clean-mvp-implementation.md` — active; v2
+   consumers are on staging, and the logical cutover is waiting for loaded
+   two-profile acceptance.
 2. `2026-06-07-production-room-p2p-hardening-roadmap.md`
 3. `2026-06-12-room-flow-p2p-flawless-execution-plan.md`
 4. `2026-06-20-social-rooms-subscriptions-execution-plan.md`
