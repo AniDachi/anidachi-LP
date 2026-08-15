@@ -34,6 +34,7 @@ type StorageItemLike = {
 
 export type WatchHistoryStorageDependencies = {
   item?: StorageItemLike;
+  hasStoredRoot?: () => Promise<boolean>;
   getBytesInUse?: () => Promise<number>;
   quotaBytes?: number;
   serialize?: (value: WatchHistoryStorageRoot) => string;
@@ -54,23 +55,22 @@ export function createWatchHistoryStorage(
   dependencies: WatchHistoryStorageDependencies = {},
 ) {
   const item = dependencies.item ?? getDefaultStorageItem();
+  const hasStoredRoot = dependencies.hasStoredRoot ?? (dependencies.item
+    ? async () => true
+    : defaultHasStoredRoot);
   const getBytesInUse = dependencies.getBytesInUse ?? defaultGetBytesInUse;
   const quotaBytes = dependencies.quotaBytes ?? defaultQuotaBytes();
   const serialize = dependencies.serialize ?? JSON.stringify;
 
   async function readRoot(): Promise<WatchHistoryStorageRoot> {
     const stored = await item.getValue();
-    return isStorageRoot(stored)
-      ? {
-          ...stored,
-          activeGenerations: stored.activeGenerations ?? activeGenerationsFromPartitions(stored.partitions),
-        }
-      : createWatchHistoryStorageRoot();
+    return normalizeStorageRoot(stored);
   }
 
   async function replaceRoot(candidate: WatchHistoryStorageRoot): Promise<WatchHistoryStorageResult> {
     if (!isStorageRoot(candidate)) throw new Error("Invalid watch history storage root");
-    const existing = await readRoot();
+    const storedValue = await item.getValue();
+    const hasStoredValue = await hasStoredRoot();
     let usedBytes = 0;
     try {
       usedBytes = await getBytesInUse();
@@ -79,7 +79,9 @@ export function createWatchHistoryStorage(
     }
     const candidateBytes = new TextEncoder().encode(serialize(candidate)).byteLength;
     const keyBytes = new TextEncoder().encode(WATCH_HISTORY_STORAGE_KEY).byteLength;
-    const existingBytes = new TextEncoder().encode(serialize(existing)).byteLength + keyBytes;
+    const existingBytes = hasStoredValue && isStorageRoot(storedValue)
+      ? new TextEncoder().encode(serialize(storedValue)).byteLength + keyBytes
+      : 0;
     const totalCandidateBytes = candidateBytes + keyBytes;
     const projectedBytes = Math.max(0, usedBytes - existingBytes) + totalCandidateBytes;
     if (Number.isFinite(quotaBytes) && projectedBytes > quotaBytes) {
@@ -192,6 +194,15 @@ function activeGenerationsFromPartitions(
   }), {});
 }
 
+function normalizeStorageRoot(value: unknown): WatchHistoryStorageRoot {
+  return isStorageRoot(value)
+    ? {
+        ...value,
+        activeGenerations: value.activeGenerations ?? activeGenerationsFromPartitions(value.partitions),
+      }
+    : createWatchHistoryStorageRoot();
+}
+
 function getDefaultStorageItem(): StorageItemLike {
   if (watchHistoryStorageItem) return watchHistoryStorageItem;
   watchHistoryStorageItem = storage.defineItem<WatchHistoryStorageRoot>(
@@ -205,6 +216,14 @@ async function defaultGetBytesInUse(): Promise<number> {
   const storageArea = chrome.storage?.local;
   if (!storageArea?.getBytesInUse) return 0;
   return storageArea.getBytesInUse(null);
+}
+
+async function defaultHasStoredRoot(): Promise<boolean> {
+  if (typeof chrome === "undefined") return false;
+  const storageArea = chrome.storage?.local;
+  if (!storageArea) return false;
+  const values = await storageArea.get(WATCH_HISTORY_STORAGE_KEY);
+  return Object.prototype.hasOwnProperty.call(values, WATCH_HISTORY_STORAGE_KEY);
 }
 
 function defaultQuotaBytes(): number {

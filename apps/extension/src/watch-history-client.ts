@@ -65,13 +65,15 @@ export type WatchHistoryMessageResponse =
   | { ok: true; data?: unknown; flushed?: number; hasPendingWork?: boolean; byteUse?: number }
   | { ok: false; status: WatchHistoryLocalStatus };
 
-type WatchHistoryStorage = ReturnType<typeof createWatchHistoryStorage>;
+export type WatchHistoryStorage = ReturnType<typeof createWatchHistoryStorage>;
 
 export type WatchHistoryClientDependencies = {
   getCurrentSession: () => Promise<ExtensionAuthTokens | null>;
   storage?: WatchHistoryStorage;
   fetch?: typeof fetch;
 };
+
+export type WatchHistoryBackgroundDependencies = Partial<WatchHistoryClientDependencies>;
 
 export function createListWatchHistoryMessage(input: {
   limit?: number;
@@ -141,7 +143,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         return { ok: false, status: "invalid-request" };
       }
     }
-    if (message.command === "list") return list(session, message);
+    if (message.command === "list") return refresh(session, message);
     if (message.command === "enqueue-progress") return enqueue(session, message.event);
     if (message.command === "flush" || message.command === "content-reconnect") return flush(session);
     if (message.command === "get-preferences") return getPreferences(session);
@@ -168,7 +170,6 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       cache: parsed.data,
     }));
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
-    void flush(session).catch(() => undefined);
     return saved.ok ? { ok: true, data: parsed.data } : saved;
   }
 
@@ -405,8 +406,14 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     return stale ? { ...result, stale: true } : result;
   }
 
-  async function refresh(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
-    return list(session, { type: WATCH_HISTORY_MESSAGE_TYPE, command: "list" });
+  async function refresh(
+    session: ExtensionAuthTokens,
+    message: Extract<WatchHistoryMessage, { command: "list" }> = { type: WATCH_HISTORY_MESSAGE_TYPE, command: "list" },
+  ): Promise<WatchHistoryMessageResponse> {
+    const reconciled = await list(session, message);
+    const drained = await flush(session);
+    if (!drained.ok) return drained;
+    return reconciled.ok ? { ...reconciled, flushed: drained.flushed } : reconciled;
   }
 
   return { handle, flush, refresh };
@@ -452,19 +459,35 @@ export async function handleWatchHistoryHttpMessage(
 export async function handleWatchHistoryAuthSessionChange(
   previous: ExtensionAuthTokens | null,
   next: ExtensionAuthTokens | null,
+  dependencies: WatchHistoryBackgroundDependencies = {},
 ): Promise<void> {
-  const storage = createWatchHistoryStorage();
+  const storage = dependencies.storage ?? createWatchHistoryStorage();
   if (previous && previous.user.id !== next?.user.id) {
     await storage.clearRebuildableAccountData(previous.user.id);
   }
-  if (next) await flushWatchHistoryInBackground();
+  if (next) await flushWatchHistoryInBackground({ ...dependencies, storage });
 }
 
-export async function flushWatchHistoryInBackground(): Promise<void> {
-  const { getCurrentExtensionSession } = await import("./auth-client");
-  const client = createWatchHistoryClient({ getCurrentSession: getCurrentExtensionSession });
-  const session = await getCurrentExtensionSession();
+export async function flushWatchHistoryInBackground(
+  dependencies: WatchHistoryBackgroundDependencies = {},
+): Promise<void> {
+  const getCurrentSession = dependencies.getCurrentSession ?? await defaultWatchHistorySession();
+  const client = createWatchHistoryClient({ ...dependencies, getCurrentSession });
+  const session = await getCurrentSession();
   if (session) await client.refresh(session);
+}
+
+export async function reconcileWatchHistoryThenDrain(
+  reconcile: () => Promise<unknown>,
+  drain: () => Promise<unknown>,
+): Promise<void> {
+  await reconcile().catch(() => undefined);
+  await drain();
+}
+
+async function defaultWatchHistorySession(): Promise<WatchHistoryClientDependencies["getCurrentSession"]> {
+  const { getCurrentExtensionSession } = await import("./auth-client");
+  return getCurrentExtensionSession;
 }
 
 export function createWatchHistoryContentReconnectMessage(): WatchHistoryMessage {

@@ -40,6 +40,7 @@ import {
   handleWatchHistoryAuthSessionChange,
   handleWatchHistoryHttpMessage,
   isWatchHistoryMessage,
+  reconcileWatchHistoryThenDrain,
 } from "../src/watch-history-client";
 
 export default defineBackground(() => {
@@ -128,13 +129,13 @@ export default defineBackground(() => {
   });
 
   const reconcileStoredWebsiteSession = (notify: boolean) => {
-    void reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false })
-      .then(() =>
-        Promise.all([
-          reconcileRoomInviteNotifications({ notify }),
-          flushWatchHistoryInBackground(),
-        ]),
-      )
+    void reconcileWatchHistoryThenDrain(
+      async () => {
+        await reconcileExtensionSessionAgainstWebsite({ adoptIfMissing: false });
+        await reconcileRoomInviteNotifications({ notify });
+      },
+      flushWatchHistoryInBackground,
+    )
       .catch(() => undefined);
   };
   chrome.runtime.onStartup?.addListener(() => reconcileStoredWebsiteSession(true));

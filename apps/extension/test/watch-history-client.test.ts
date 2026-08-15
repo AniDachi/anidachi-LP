@@ -8,7 +8,10 @@ import {
   createWatchHistoryContentReconnectMessage,
   createListWatchHistoryMessage,
   createWatchHistoryClient,
+  flushWatchHistoryInBackground,
+  handleWatchHistoryAuthSessionChange,
   isWatchHistoryMessage,
+  reconcileWatchHistoryThenDrain,
 } from "../src/watch-history-client";
 
 const session = {
@@ -232,6 +235,47 @@ describe("watch history v2 client", () => {
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toEqual([]);
   });
 
+  it("keeps an existing terminal when the one quota recovery retry still cannot persist a new capture", async () => {
+    const owner = session.user.id;
+    const terminal = { ...progressEvent("00000000-0000-4000-8000-000000000022"), kind: "ended" as const };
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2, activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ownerUserId: owner, accountGeneration: 1, cache: null, preferences: null, currentObservation: null,
+          outbox: { ownerUserId: owner, accountGeneration: 1, entries: [{ event: terminal, key: "terminal", slot: "terminal", persistedAt: 1 }] },
+        },
+      },
+    };
+    let writes = 0;
+    const fetchImpl = vi.fn(async () => new Response("offline", { status: 503 }));
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: {
+          getValue: async () => stored,
+          setValue: async (value) => {
+            writes += 1;
+            if (Object.values(value.partitions).flatMap((partition) => partition.outbox.entries).length > 1) {
+              throw new Error("quota");
+            }
+            stored = value;
+          },
+        },
+        getBytesInUse: async () => 0, quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2", command: "enqueue-progress", event: progressEvent("00000000-0000-4000-8000-000000000023"),
+    })).resolves.toEqual({ ok: false, status: "storage-full" });
+    expect(writes).toBe(2);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toHaveLength(1);
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries[0]?.event.clientEventId).toBe(terminal.clientEventId);
+  });
+
   it("advances deletion generation without leaving old-generation work to flush", async () => {
     const owner = session.user.id;
     const event = progressEvent("00000000-0000-4000-8000-000000000030");
@@ -268,6 +312,117 @@ describe("watch history v2 client", () => {
     expect(stored.activeGenerations?.[owner]).toBe(2);
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toBeUndefined();
     expect(stored.partitions[watchHistoryPartitionKey(owner, 2)]?.outbox.entries).toEqual([]);
+  });
+
+  it("awaits one bounded drain even when background cache reconciliation fails", async () => {
+    const owner = session.user.id;
+    const event = progressEvent("00000000-0000-4000-8000-000000000040");
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2, activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ownerUserId: owner, accountGeneration: 1, cache: null, preferences: null, currentObservation: event,
+          outbox: { ownerUserId: owner, accountGeneration: 1, entries: [{ event, key: "background", slot: "latest", persistedAt: 1 }] },
+        },
+      },
+    };
+    let resolveDrain: (() => void) | undefined;
+    const drain = new Promise<void>((resolve) => { resolveDrain = resolve; });
+    const fetchImpl = vi.fn(async (url: string) => {
+      if (url.endsWith("/api/watch-history/v2")) return new Response("offline", { status: 503 });
+      await drain;
+      return new Response(JSON.stringify(progressAck(event.clientEventId)));
+    });
+    const trigger = flushWatchHistoryInBackground({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0, quotaBytes: 1_000_000,
+      }),
+    });
+
+    await vi.waitFor(() => expect(fetchImpl).toHaveBeenCalledTimes(2));
+    let settled = false;
+    void trigger.then(() => { settled = true; });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    resolveDrain?.();
+    await expect(trigger).resolves.toBeUndefined();
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toEqual([]);
+  });
+
+  it("runs the startup/install drain once when separate session reconciliation fails", async () => {
+    let drains = 0;
+    await expect(reconcileWatchHistoryThenDrain(
+      async () => { throw new Error("website unavailable"); },
+      async () => { drains += 1; },
+    )).resolves.toBeUndefined();
+    expect(drains).toBe(1);
+  });
+
+  it("clears only rebuildable switched-owner state and leaves its pending work dormant", async () => {
+    const oldOwner = session.user.id;
+    const nextSession = { ...session, refreshToken: "next-refresh", user: { ...session.user, id: "00000000-0000-4000-8000-000000000050" } };
+    const event = progressEvent("00000000-0000-4000-8000-000000000051");
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2, activeGenerations: { [oldOwner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(oldOwner, 1)]: {
+          ownerUserId: oldOwner, accountGeneration: 1, cache: {} as never, preferences: { youtubeHistoryEnabled: true }, currentObservation: event,
+          outbox: { ownerUserId: oldOwner, accountGeneration: 1, entries: [{ event, key: "old-owner", slot: "latest", persistedAt: 1 }] },
+        },
+      },
+    };
+    const fetchImpl = vi.fn(async () => new Response("offline", { status: 503 }));
+    const storage = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+      getBytesInUse: async () => 0, quotaBytes: 1_000_000,
+    });
+
+    await handleWatchHistoryAuthSessionChange(session, nextSession, {
+      getCurrentSession: async () => nextSession,
+      fetch: fetchImpl as typeof fetch,
+      storage,
+    });
+    const oldPartition = stored.partitions[watchHistoryPartitionKey(oldOwner, 1)];
+    expect(oldPartition).toMatchObject({ cache: null, preferences: null, currentObservation: null });
+    expect(oldPartition.outbox.entries).toHaveLength(1);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl).toHaveBeenCalledWith(expect.stringContaining("/api/watch-history/v2"), expect.anything());
+  });
+
+  it("clears rebuildable state on sign-out and reconciles canonical generation before same-owner draining", async () => {
+    const owner = session.user.id;
+    const event = progressEvent("00000000-0000-4000-8000-000000000060");
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2, activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ownerUserId: owner, accountGeneration: 1, cache: {} as never, preferences: { youtubeHistoryEnabled: true }, currentObservation: event,
+          outbox: { ownerUserId: owner, accountGeneration: 1, entries: [{ event, key: "old", slot: "latest", persistedAt: 1 }] },
+        },
+      },
+    };
+    const storage = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+      getBytesInUse: async () => 0, quotaBytes: 1_000_000,
+    });
+    await handleWatchHistoryAuthSessionChange(session, null, { storage, getCurrentSession: async () => null });
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toMatchObject({ cache: null, preferences: null, currentObservation: null });
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toHaveLength(1);
+
+    const canonical = {
+      meta: { serverTime: "2026-08-15T10:01:00.000Z", schemaVersion: 2, ownerUserId: owner, accountGeneration: 2 },
+      generatedAt: "2026-08-15T10:01:00.000Z", totalTitleCount: 0, items: [], nextCursor: null,
+    };
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(canonical)));
+    await handleWatchHistoryAuthSessionChange(session, session, {
+      storage, getCurrentSession: async () => session, fetch: fetchImpl as typeof fetch,
+    });
+    expect(stored.activeGenerations?.[owner]).toBe(2);
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toBeUndefined();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   it("rejects a stale canonical response without replacing the newer local partition", async () => {

@@ -98,6 +98,47 @@ describe("watch history storage", () => {
     expect(stored.partitions).toEqual({});
   });
 
+  it("counts a first root write in addition to unrelated local bytes", async () => {
+    let stored: WatchHistoryStorageRoot | null = null;
+    const candidate = createWatchHistoryStorageRoot();
+    const keyBytes = new TextEncoder().encode("anidachi.watchHistory.v2").byteLength;
+    const store = createWatchHistoryStorage({
+      item: {
+        getValue: async () => stored,
+        setValue: async (value) => { stored = value; },
+      },
+      hasStoredRoot: async () => false,
+      getBytesInUse: async () => 100,
+      quotaBytes: 100 + keyBytes + new TextEncoder().encode(JSON.stringify(candidate)).byteLength - 1,
+    });
+
+    await expect(store.replaceRoot(candidate)).resolves.toEqual({ ok: false, status: "storage-full" });
+    expect(stored).toBeNull();
+  });
+
+  it("subtracts exactly one existing root entry when replacing it", async () => {
+    let stored = createWatchHistoryStorageRoot();
+    const candidate = {
+      ...stored,
+      partitions: { retained: {} as never },
+    };
+    const keyBytes = new TextEncoder().encode("anidachi.watchHistory.v2").byteLength;
+    const existingBytes = keyBytes + new TextEncoder().encode(JSON.stringify(stored)).byteLength;
+    const candidateBytes = keyBytes + new TextEncoder().encode(JSON.stringify(candidate)).byteLength;
+    const store = createWatchHistoryStorage({
+      item: {
+        getValue: async () => stored,
+        setValue: async (value) => { stored = value; },
+      },
+      hasStoredRoot: async () => true,
+      getBytesInUse: async () => 900 + existingBytes,
+      quotaBytes: 900 + candidateBytes,
+    });
+
+    await expect(store.replaceRoot(candidate)).resolves.toEqual({ ok: true });
+    expect(stored).toEqual(candidate);
+  });
+
   it("reports only aggregate old-owner work and requires confirmation for its discard", async () => {
     let stored = {
       schemaVersion: 2 as const,
