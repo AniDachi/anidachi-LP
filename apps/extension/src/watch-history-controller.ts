@@ -1,5 +1,6 @@
 import type { WatchHistoryPreferences, WatchProgressEvent } from "@anidachi/protocol";
 import type { HistoryObservation } from "./source-adapters/core/history-policy";
+import type { WatchHistoryCaptureResult } from "./watch-history-client";
 
 export const WATCH_HISTORY_HEARTBEAT_MS = 60_000;
 
@@ -8,9 +9,18 @@ type HistoryEventKind = WatchProgressEvent["kind"];
 export type WatchHistoryControllerDependencies = {
   getObservation: (preferences: WatchHistoryPreferences | null) => HistoryObservation | null;
   getRoomActive: () => boolean;
-  loadPreferences: () => Promise<{ accountGeneration: number; preferences: WatchHistoryPreferences } | null>;
-  observeLocally: (event: WatchProgressEvent) => Promise<void> | void;
-  enqueue: (event: WatchProgressEvent) => Promise<void> | void;
+  loadPreferences: () => Promise<{
+    accountGeneration: number;
+    preferences: WatchHistoryPreferences;
+    capturePaused?: boolean;
+  } | null>;
+  recoverCapture?: () => Promise<{
+    accountGeneration: number;
+    preferences: WatchHistoryPreferences;
+    capturePaused: boolean;
+  } | null>;
+  observeLocally: (event: WatchProgressEvent) => Promise<WatchHistoryCaptureResult | void> | WatchHistoryCaptureResult | void;
+  enqueue: (event: WatchProgressEvent) => Promise<WatchHistoryCaptureResult | void> | WatchHistoryCaptureResult | void;
   onObservation?: (observation: HistoryObservation | null) => void;
   now?: () => number;
   createEventId?: () => string;
@@ -24,6 +34,7 @@ export type WatchHistoryController = {
   observe(kind: HistoryEventKind): Promise<void>;
   noteSeeking(): Promise<void>;
   setRoomActive(active: boolean): Promise<void>;
+  recover(): Promise<void>;
   dispose(): Promise<void>;
 };
 
@@ -42,6 +53,7 @@ export function createWatchHistoryController(
   let hasMeaningfulPlayback = false;
   let lastHeartbeatAt: number | null = null;
   let roomActive = dependencies.getRoomActive();
+  let capturePaused = false;
   let disposed = false;
   let lifecycle = 0;
   let queue: Promise<void> = Promise.resolve();
@@ -70,7 +82,11 @@ export function createWatchHistoryController(
 
   async function start(): Promise<void> {
     const token = lifecycle;
-    let loaded: { accountGeneration: number; preferences: WatchHistoryPreferences } | null;
+    let loaded: {
+      accountGeneration: number;
+      preferences: WatchHistoryPreferences;
+      capturePaused?: boolean;
+    } | null;
     try {
       loaded = await dependencies.loadPreferences();
     } catch {
@@ -80,6 +96,7 @@ export function createWatchHistoryController(
       if (!isCurrent(token)) return;
       preferences = loaded?.preferences ?? null;
       accountGeneration = loaded?.accountGeneration ?? null;
+      capturePaused = loaded?.capturePaused === true;
       await capture("heartbeat", token);
     });
   }
@@ -103,7 +120,7 @@ export function createWatchHistoryController(
     const observation = dependencies.getObservation(preferences);
     if (!isCurrent(token)) return;
     dependencies.onObservation?.(observation);
-    if (!observation || accountGeneration === null) return;
+    if (!observation || accountGeneration === null || capturePaused) return;
 
     const identity = observationIdentity(observation);
     if (retained && retainedIdentity !== identity) {
@@ -127,9 +144,9 @@ export function createWatchHistoryController(
   async function emitRetainedSourceChange(token: number): Promise<void> {
     if (!retained || !clientSessionKey || accountGeneration === null) return;
     const event = toEvent(retained, "source_change", accountGeneration, createEventId(), clientSessionKey, now());
-    await persist(event, token);
+    if (!await persist(event, token)) return;
     if (!isCurrent(token) || !hasMeaningfulPlayback || roomActive || dependencies.getRoomActive()) return;
-    await dependencies.enqueue(event);
+    await enqueueEvent(event, token);
   }
 
   async function emitCurrent(
@@ -139,7 +156,7 @@ export function createWatchHistoryController(
   ): Promise<void> {
     if (accountGeneration === null) return;
     const event = toEvent(observation, kind, accountGeneration, createEventId(), ensureSessionKey(), now());
-    await persist(event, token);
+    if (!await persist(event, token)) return;
     if (!isCurrent(token)) return;
 
     const activeRoom = roomActive || dependencies.getRoomActive();
@@ -162,13 +179,31 @@ export function createWatchHistoryController(
       lastHeartbeatAt = now();
     }
     if (!isCurrent(token)) return;
-    await dependencies.enqueue(event);
+    await enqueueEvent(event, token);
   }
 
   async function persist(event: WatchProgressEvent, token: number): Promise<boolean> {
     if (!isCurrent(token)) return false;
     try {
-      await dependencies.observeLocally(event);
+      const result = await dependencies.observeLocally(event);
+      if (isFailedCapture(result)) {
+        if (result.status === "storage-full") capturePaused = true;
+        return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function enqueueEvent(event: WatchProgressEvent, token: number): Promise<boolean> {
+    if (!isCurrent(token) || capturePaused) return false;
+    try {
+      const result = await dependencies.enqueue(event);
+      if (isFailedCapture(result)) {
+        if (result.status === "storage-full") capturePaused = true;
+        return false;
+      }
       return true;
     } catch {
       return false;
@@ -177,21 +212,48 @@ export function createWatchHistoryController(
 
   function setRoomActive(active: boolean): Promise<void> {
     const token = lifecycle;
+    if (!isCurrent(token) || active === roomActive) return Promise.resolve();
+    const previous = retained;
+    const previousSessionKey = clientSessionKey;
+    const previousGeneration = accountGeneration;
+    const previousWasMeaningfulSolo = hasMeaningfulPlayback && !roomActive;
+    roomActive = active;
+    clientSessionKey = null;
+    resetMeaningfulState();
     return serial(async () => {
-      if (!isCurrent(token) || active === roomActive) return;
-      const previous = retained;
-      const previousSessionKey = clientSessionKey;
-      const previousGeneration = accountGeneration;
-      roomActive = active;
+      if (!isCurrent(token) || !previous || !previousSessionKey || previousGeneration === null) return;
+      const event = toEvent(
+        previous,
+        active ? "source_change" : "room_leave",
+        previousGeneration,
+        createEventId(),
+        previousSessionKey,
+        now(),
+      );
+      if (active && previousWasMeaningfulSolo) {
+        await enqueueEvent(event, token);
+        return;
+      }
+      await persist(event, token);
+    });
+  }
+
+  function recover(): Promise<void> {
+    const token = lifecycle;
+    return serial(async () => {
+      if (!isCurrent(token) || !capturePaused || !dependencies.recoverCapture) return;
+      let recovered: Awaited<ReturnType<NonNullable<typeof dependencies.recoverCapture>>>;
+      try {
+        recovered = await dependencies.recoverCapture();
+      } catch {
+        return;
+      }
+      if (!isCurrent(token) || !recovered || recovered.capturePaused) return;
+      preferences = recovered.preferences;
+      accountGeneration = recovered.accountGeneration;
+      capturePaused = false;
       clientSessionKey = null;
       resetMeaningfulState();
-      if (previous && previousSessionKey && previousGeneration !== null) {
-        const kind: HistoryEventKind = active ? "source_change" : "room_leave";
-        await persist(
-          toEvent(previous, kind, previousGeneration, createEventId(), previousSessionKey, now()),
-          token,
-        );
-      }
     });
   }
 
@@ -206,13 +268,20 @@ export function createWatchHistoryController(
     disposePromise = serial(async () => {
       if (!cleanup || !cleanupSessionKey || cleanupGeneration === null) return;
       const event = toEvent(cleanup, "source_change", cleanupGeneration, createEventId(), cleanupSessionKey, now());
-      await dependencies.observeLocally(event);
+      const result = await dependencies.observeLocally(event);
+      if (isFailedCapture(result)) return;
       if (shouldPublish) await dependencies.enqueue(event);
     });
     return disposePromise;
   }
 
-  return { start, observe, noteSeeking, setRoomActive, dispose };
+  return { start, observe, noteSeeking, setRoomActive, recover, dispose };
+}
+
+function isFailedCapture(
+  result: WatchHistoryCaptureResult | void,
+): result is Extract<WatchHistoryCaptureResult, { ok: false }> {
+  return result !== undefined && !result.ok;
 }
 
 function observationIdentity(observation: HistoryObservation): string {

@@ -1,6 +1,7 @@
 import {
   WatchHistoryDeletionAckSchema,
   WatchHistoryDeletionRequestSchema,
+  WatchHistoryPreferencesSchema,
   WatchHistoryPreferencesResponseSchema,
   WatchHistoryRoomRecreationResponseSchema,
   WatchHistoryPreferencesUpdateSchema,
@@ -46,6 +47,8 @@ export type WatchHistoryMessage =
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "flush" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "content-reconnect" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "get-preferences" }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "bootstrap" }
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "recover-storage" }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "update-preferences"; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "delete"; input: unknown }
   | {
@@ -67,6 +70,38 @@ export type WatchHistoryMessageResponse =
   | { ok: false; status: WatchHistoryLocalStatus };
 
 export type WatchHistoryStorage = ReturnType<typeof createWatchHistoryStorage>;
+
+export type WatchHistoryBootstrapData = {
+  accountGeneration: number;
+  preferences: { youtubeHistoryEnabled: boolean };
+  capturePaused: boolean;
+  source: "network" | "cache";
+};
+
+export type WatchHistoryCaptureResult =
+  | { ok: true }
+  | { ok: false; status: WatchHistoryLocalStatus };
+
+export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBootstrapData | null {
+  if (!isRecord(value) ||
+    !hasExactKeys(value, ["accountGeneration", "preferences", "capturePaused", "source"]) ||
+    typeof value.accountGeneration !== "number" ||
+    !Number.isInteger(value.accountGeneration) ||
+    value.accountGeneration < 1 ||
+    typeof value.capturePaused !== "boolean" ||
+    (value.source !== "network" && value.source !== "cache")) {
+    return null;
+  }
+  const preferences = WatchHistoryPreferencesSchema.safeParse(value.preferences);
+  return preferences.success
+    ? {
+        accountGeneration: value.accountGeneration,
+        preferences: preferences.data,
+        capturePaused: value.capturePaused,
+        source: value.source,
+      }
+    : null;
+}
 
 export type WatchHistoryClientDependencies = {
   getCurrentSession: () => Promise<ExtensionAuthTokens | null>;
@@ -104,6 +139,8 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
     case "flush":
     case "content-reconnect":
     case "get-preferences":
+    case "bootstrap":
+    case "recover-storage":
     case "other-owner-pending":
       return hasExactKeys(value, ["type", "command"]);
     case "create-room":
@@ -146,6 +183,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
     }
     if (message.command === "list") return refresh(session, message);
+    if (message.command === "bootstrap") return bootstrap(session);
+    if (message.command === "recover-storage") return recoverStorage(session);
     if (message.command === "enqueue-progress") return enqueue(session, message.event);
     if (message.command === "observe-progress") return observe(session, message.event);
     if (message.command === "flush" || message.command === "content-reconnect") return flush(session);
@@ -183,6 +222,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const parsed = WatchProgressEventSchema.safeParse(rawEvent);
     if (!parsed.success) return { ok: false, status: "invalid-request" };
     const event = parsed.data;
+    if (await isCapturePaused(session, event.accountGeneration)) {
+      return { ok: false, status: "storage-full" };
+    }
     const persist = () => updateCurrentPartition(session, event.accountGeneration, (partition) => ({
       ...partition,
       currentObservation: withoutWatchHistoryAttestation(event),
@@ -194,7 +236,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       await flush(session).catch(() => undefined);
       saved = await persist();
       if (saved.stale) return { ok: false, status: "generation-mismatch" };
-      if (!saved.ok) return saved;
+      if (!saved.ok) {
+        await markCapturePaused(session, event.accountGeneration);
+        return saved;
+      }
     }
     return flush(session);
   }
@@ -205,12 +250,25 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   ): Promise<WatchHistoryMessageResponse> {
     const parsed = WatchProgressEventSchema.safeParse(rawEvent);
     if (!parsed.success || parsed.data.sharedRoom) return { ok: false, status: "invalid-request" };
-    const saved = await updateCurrentPartition(session, parsed.data.accountGeneration, (partition) => ({
+    if (await isCapturePaused(session, parsed.data.accountGeneration)) {
+      return { ok: false, status: "storage-full" };
+    }
+    const persist = () => updateCurrentPartition(session, parsed.data.accountGeneration, (partition) => ({
       ...partition,
       currentObservation: withoutWatchHistoryAttestation(parsed.data),
     }));
+    let saved = await persist();
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
-    return saved.ok ? { ok: true } : saved;
+    if (!saved.ok) {
+      await flush(session).catch(() => undefined);
+      saved = await persist();
+      if (saved.stale) return { ok: false, status: "generation-mismatch" };
+      if (!saved.ok) {
+        await markCapturePaused(session, parsed.data.accountGeneration);
+        return saved;
+      }
+    }
+    return { ok: true };
   }
 
   async function flush(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
@@ -238,6 +296,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         }
         const saved = await updateCurrentPartition(session, generation, (candidate) => ({
           ...candidate,
+          capturePaused: false,
           outbox: acknowledgeWatchHistoryEvent(candidate.outbox, ack.data.acceptedEventId),
           currentObservation: candidate.currentObservation?.clientEventId === ack.data.acceptedEventId
             ? null
@@ -260,9 +319,95 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const saved = await replaceCanonicalPartition(session, parsed.data.meta.accountGeneration, (partition) => ({
       ...partition,
       preferences: parsed.data.preferences,
+      preferencesConfirmed: true,
     }));
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
+  }
+
+  async function bootstrap(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+    const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences");
+    if (!response.ok) {
+      if (!isFailureStatus(response.error, "retryable")) return response.error;
+      return cachedBootstrap(session);
+    }
+    const parsed = WatchHistoryPreferencesResponseSchema.safeParse(response.body);
+    if (!parsed.success || parsed.data.meta.ownerUserId !== session.user.id) {
+      return { ok: false, status: "invalid-response" };
+    }
+    const generation = parsed.data.meta.accountGeneration;
+    const saved = await replaceCanonicalPartition(session, generation, (partition) => ({
+      ...partition,
+      preferences: parsed.data.preferences,
+      preferencesConfirmed: true,
+    }));
+    if (saved.stale) return { ok: false, status: "generation-mismatch" };
+    if (!saved.ok) return saved;
+    const root = await storage.readRoot();
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
+    return {
+      ok: true,
+      data: {
+        accountGeneration: generation,
+        preferences: parsed.data.preferences,
+        capturePaused: partition?.capturePaused === true,
+        source: "network",
+      } satisfies WatchHistoryBootstrapData,
+    };
+  }
+
+  async function cachedBootstrap(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+    const current = await dependencies.getCurrentSession();
+    if (!sameSession(session, current)) return { ok: false, status: "retryable" };
+    const root = await storage.readRoot();
+    const generation = root.activeGenerations?.[session.user.id];
+    if (generation === undefined) return { ok: false, status: "retryable" };
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
+    const preferences = WatchHistoryPreferencesSchema.safeParse(partition?.preferences);
+    if (!partition ||
+      partition.ownerUserId !== session.user.id ||
+      partition.accountGeneration !== generation ||
+      partition.preferencesConfirmed !== true ||
+      !preferences.success) {
+      return { ok: false, status: "retryable" };
+    }
+    return {
+      ok: true,
+      data: {
+        accountGeneration: generation,
+        preferences: preferences.data,
+        capturePaused: partition.capturePaused === true,
+        source: "cache",
+      } satisfies WatchHistoryBootstrapData,
+    };
+  }
+
+  async function recoverStorage(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+    const current = await dependencies.getCurrentSession();
+    if (!sameSession(session, current)) return { ok: false, status: "retryable" };
+    const root = await storage.readRoot();
+    const generation = root.activeGenerations?.[session.user.id];
+    if (generation === undefined) return { ok: true, data: { capturePaused: false } };
+    const key = watchHistoryPartitionKey(session.user.id, generation);
+    const partition = root.partitions[key];
+    if (!partition || partition.ownerUserId !== session.user.id || partition.accountGeneration !== generation) {
+      return { ok: false, status: "generation-mismatch" };
+    }
+    if (partition.capturePaused !== true) return { ok: true, data: { capturePaused: false } };
+    const recovered = await storage.updateRoot((candidate) => {
+      if (candidate.activeGenerations?.[session.user.id] !== generation) return candidate;
+      const active = candidate.partitions[key];
+      if (!active || active.ownerUserId !== session.user.id || active.accountGeneration !== generation) {
+        return candidate;
+      }
+      return {
+        ...candidate,
+        partitions: { ...candidate.partitions, [key]: { ...active, capturePaused: false } },
+      };
+    });
+    return recovered.ok
+      ? { ok: true, data: { capturePaused: false } }
+      : recovered;
   }
 
   async function updatePreferences(
@@ -283,6 +428,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const saved = await replaceCanonicalPartition(session, parsed.data.meta.accountGeneration, (partition) => ({
       ...partition,
       preferences: parsed.data.preferences,
+      preferencesConfirmed: true,
     }));
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     return saved.ok ? { ok: true, data: parsed.data } : saved;
@@ -354,6 +500,30 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     return { ok: true, body };
   }
 
+  async function isCapturePaused(session: ExtensionAuthTokens, generation: number): Promise<boolean> {
+    const root = await storage.readRoot();
+    if (root.activeGenerations?.[session.user.id] !== generation) return false;
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
+    return partition?.ownerUserId === session.user.id &&
+      partition.accountGeneration === generation &&
+      partition.capturePaused === true;
+  }
+
+  async function markCapturePaused(session: ExtensionAuthTokens, generation: number): Promise<void> {
+    const key = watchHistoryPartitionKey(session.user.id, generation);
+    await storage.updateRoot((root) => {
+      if (root.activeGenerations?.[session.user.id] !== generation) return root;
+      const partition = root.partitions[key];
+      if (!partition || partition.ownerUserId !== session.user.id || partition.accountGeneration !== generation || partition.capturePaused) {
+        return root;
+      }
+      return {
+        ...root,
+        partitions: { ...root.partitions, [key]: { ...partition, capturePaused: true } },
+      };
+    });
+  }
+
   async function updateCurrentPartition(
     session: ExtensionAuthTokens,
     generation: number,
@@ -407,6 +577,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
             ...partition,
             cache: null,
             preferences: null,
+            preferencesConfirmed: false,
             currentObservation: null,
             outbox: { ...partition.outbox, entries: [] },
           };
@@ -445,7 +616,23 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
 
 function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHistoryAccountPartition {
   const outbox: WatchHistoryOutboxPartition = { ownerUserId, accountGeneration, entries: [] };
-  return { ownerUserId, accountGeneration, cache: null, preferences: null, currentObservation: null, outbox };
+  return {
+    ownerUserId,
+    accountGeneration,
+    cache: null,
+    preferences: null,
+    preferencesConfirmed: false,
+    currentObservation: null,
+    capturePaused: false,
+    outbox,
+  };
+}
+
+function isFailureStatus(
+  response: WatchHistoryMessageResponse,
+  status: WatchHistoryLocalStatus,
+): response is { ok: false; status: WatchHistoryLocalStatus } {
+  return !response.ok && response.status === status;
 }
 
 function mapHttpFailure(status: number, body: unknown): WatchHistoryMessageResponse {
@@ -477,7 +664,18 @@ export async function handleWatchHistoryHttpMessage(
   message: WatchHistoryMessage,
 ): Promise<WatchHistoryMessageResponse> {
   const { getCurrentExtensionSession } = await import("./auth-client");
-  return createWatchHistoryClient({ getCurrentSession: getCurrentExtensionSession }).handle(message);
+  const { getStoredAuthTokens } = await import("./auth-tokens");
+  const localCommand = message.command === "enqueue-progress" ||
+    message.command === "observe-progress" ||
+    message.command === "flush" ||
+    message.command === "content-reconnect" ||
+    message.command === "recover-storage" ||
+    message.command === "other-owner-pending" ||
+    message.command === "discard-old-owner";
+  const getCurrentSession = localCommand
+    ? getStoredAuthTokens
+    : async () => getCurrentExtensionSession().catch(getStoredAuthTokens);
+  return createWatchHistoryClient({ getCurrentSession }).handle(message);
 }
 
 export async function handleWatchHistoryAuthSessionChange(
@@ -513,6 +711,28 @@ export async function flushWatchHistoryInBackground(
   if (session) await client.refresh(session);
 }
 
+export async function bestEffortFlushWatchHistoryBeforeSignOut(
+  expectedSession: ExtensionAuthTokens,
+  dependencies: WatchHistoryBackgroundDependencies & { timeoutMs?: number } = {},
+): Promise<void> {
+  const getCurrentSession = dependencies.getCurrentSession ?? await defaultStoredWatchHistorySession();
+  const current = await getCurrentSession().catch(() => null);
+  if (!sameSession(expectedSession, current)) return;
+  const client = createWatchHistoryClient({ ...dependencies, getCurrentSession });
+  const timeoutMs = dependencies.timeoutMs ?? 1_500;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      client.flush(expectedSession).catch(() => undefined),
+      new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 export async function reconcileWatchHistoryThenDrain(
   reconcile: () => Promise<unknown>,
   drain: () => Promise<unknown>,
@@ -524,6 +744,11 @@ export async function reconcileWatchHistoryThenDrain(
 async function defaultWatchHistorySession(): Promise<WatchHistoryClientDependencies["getCurrentSession"]> {
   const { getCurrentExtensionSession } = await import("./auth-client");
   return getCurrentExtensionSession;
+}
+
+async function defaultStoredWatchHistorySession(): Promise<WatchHistoryClientDependencies["getCurrentSession"]> {
+  const { getStoredAuthTokens } = await import("./auth-tokens");
+  return getStoredAuthTokens;
 }
 
 export function createWatchHistoryContentReconnectMessage(): WatchHistoryMessage {

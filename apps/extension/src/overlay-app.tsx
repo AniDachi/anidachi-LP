@@ -1,4 +1,3 @@
-import { WatchHistoryPreferencesResponseSchema } from "@anidachi/protocol";
 import type {
   ClientEvent,
   P2PSignal,
@@ -198,7 +197,11 @@ import {
   type VoiceAudioPreferences,
   voiceAudioPreferencesStorageKeyForUser,
 } from "./voice-audio-preferences";
-import { requestWatchHistory } from "./watch-history-client";
+import {
+  parseWatchHistoryBootstrapData,
+  requestWatchHistory,
+  type WatchHistoryCaptureResult,
+} from "./watch-history-client";
 import {
   createWatchHistoryController,
   type WatchHistoryController,
@@ -1782,27 +1785,36 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       loadPreferences: async () => {
         const response = await requestWatchHistory({
           type: "ANIDACHI_WATCH_HISTORY_V2",
-          command: "get-preferences",
+          command: "bootstrap",
         });
-        const parsed = response.ok
-          ? WatchHistoryPreferencesResponseSchema.safeParse(response.data)
-          : null;
-        return parsed?.success
-          ? { accountGeneration: parsed.data.meta.accountGeneration, preferences: parsed.data.preferences }
-          : null;
+        return response.ok ? parseWatchHistoryBootstrapData(response.data) : null;
+      },
+      recoverCapture: async () => {
+        const recovered = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "recover-storage",
+        });
+        if (!recovered.ok) return null;
+        const bootstrapped = await requestWatchHistory({
+          type: "ANIDACHI_WATCH_HISTORY_V2",
+          command: "bootstrap",
+        });
+        return bootstrapped.ok ? parseWatchHistoryBootstrapData(bootstrapped.data) : null;
       },
       observeLocally: async (event) => {
-        await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "observe-progress", event });
+        const response = await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "observe-progress", event });
+        return response.ok ? ({ ok: true } as const) : response as WatchHistoryCaptureResult;
       },
       enqueue: async (event) => {
-        await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "enqueue-progress", event });
+        const response = await requestWatchHistory({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "enqueue-progress", event });
+        return response.ok ? ({ ok: true } as const) : response as WatchHistoryCaptureResult;
       },
       onObservation: setCurrentResourceEntry,
       isPlaying: () => !adapter.video.paused && !adapter.video.ended,
       isSeeking: () => adapter.video.seeking,
     });
     watchHistoryControllerRef.current = controller;
-    void controller.start().catch(() => undefined);
+    void controller.start().then(() => controller.recover()).catch(() => undefined);
     const removeHistoryListeners = bindWatchHistoryPlaybackListeners({
       video: adapter.video,
       controller,

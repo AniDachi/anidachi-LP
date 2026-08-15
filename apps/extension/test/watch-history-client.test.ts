@@ -8,9 +8,11 @@ import {
   createWatchHistoryContentReconnectMessage,
   createListWatchHistoryMessage,
   createWatchHistoryClient,
+  bestEffortFlushWatchHistoryBeforeSignOut,
   flushWatchHistoryInBackground,
   handleWatchHistoryAuthSessionChange,
   isWatchHistoryMessage,
+  parseWatchHistoryBootstrapData,
   reconcileWatchHistoryThenDrain,
 } from "../src/watch-history-client";
 
@@ -77,6 +79,163 @@ function progressAck(eventId: string, ownerUserId = session.user.id) {
 }
 
 describe("watch history v2 client", () => {
+  it("bootstraps from canonical preferences online and same-owner cached preferences only on retryable transport failure", async () => {
+    const owner = session.user.id;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ownerUserId: owner,
+          accountGeneration: 1,
+          cache: null,
+          preferences: { youtubeHistoryEnabled: false },
+          currentObservation: null,
+          capturePaused: false,
+          outbox: { ownerUserId: owner, accountGeneration: 1, entries: [] },
+        },
+      },
+    };
+    let online = true;
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async () => {
+        if (!online) throw new TypeError("offline");
+        return new Response(JSON.stringify({
+          meta: {
+            serverTime: "2026-08-15T10:00:00.000Z",
+            schemaVersion: 2,
+            ownerUserId: owner,
+            accountGeneration: 1,
+          },
+          preferences: { youtubeHistoryEnabled: true },
+        }));
+      }) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap",
+    } as never)).resolves.toEqual({
+      ok: true,
+      data: {
+        accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: true },
+        capturePaused: false,
+        source: "network",
+      },
+    });
+
+    online = false;
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap",
+    } as never)).resolves.toEqual({
+      ok: true,
+      data: {
+        accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: true },
+        capturePaused: false,
+        source: "cache",
+      },
+    });
+  });
+
+  it("fails closed instead of bootstrapping across owners, stale generations, missing preferences, or invalid canonical responses", async () => {
+    const owner = session.user.id;
+    const otherSession = {
+      ...session,
+      refreshToken: "other-refresh",
+      user: { ...session.user, id: "00000000-0000-4000-8000-000000000099" },
+    };
+    const partition = {
+      ownerUserId: owner,
+      accountGeneration: 1,
+      cache: null,
+      preferences: { youtubeHistoryEnabled: false },
+      currentObservation: null,
+      capturePaused: false,
+      outbox: { ownerUserId: owner, accountGeneration: 1, entries: [] },
+    };
+    const bootstrap = { type: "ANIDACHI_WATCH_HISTORY_V2", command: "bootstrap" } as never;
+    const makeClient = (
+      currentSession: typeof session,
+      stored: WatchHistoryStorageRoot,
+      fetchImpl: typeof fetch,
+    ) => createWatchHistoryClient({
+      getCurrentSession: async () => currentSession,
+      fetch: fetchImpl,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async () => undefined },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(makeClient(otherSession, {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: partition },
+    }, vi.fn(async () => { throw new TypeError("offline"); }) as typeof fetch).handle(bootstrap))
+      .resolves.toEqual({ ok: false, status: "retryable" });
+
+    await expect(makeClient(session, {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 2 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: partition },
+    }, vi.fn(async () => { throw new TypeError("offline"); }) as typeof fetch).handle(bootstrap))
+      .resolves.toEqual({ ok: false, status: "retryable" });
+
+    await expect(makeClient(session, {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: { ...partition, preferences: null } },
+    }, vi.fn(async () => { throw new TypeError("offline"); }) as typeof fetch).handle(bootstrap))
+      .resolves.toEqual({ ok: false, status: "retryable" });
+
+    await expect(makeClient(session, {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: partition },
+    }, vi.fn(async () => new Response(JSON.stringify({ preferences: { youtubeHistoryEnabled: true } }))) as typeof fetch)
+      .handle(bootstrap)).resolves.toEqual({ ok: false, status: "invalid-response" });
+
+    await expect(makeClient(session, {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: partition },
+    }, vi.fn(async () => new Response(JSON.stringify({ code: "UPGRADE_REQUIRED" }), { status: 426 })) as typeof fetch)
+      .handle(bootstrap)).resolves.toEqual({ ok: false, status: "upgrade-required" });
+  });
+
+  it("strictly validates bootstrap commands and background results", () => {
+    expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "bootstrap" })).toBe(true);
+    expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "bootstrap", ownerUserId: session.user.id })).toBe(false);
+    expect(parseWatchHistoryBootstrapData({
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+      capturePaused: true,
+      source: "cache",
+    })).toEqual({
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+      capturePaused: true,
+      source: "cache",
+    });
+    expect(parseWatchHistoryBootstrapData({
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+      capturePaused: true,
+      source: "cache",
+      accessToken: "caller-token",
+    })).toBeNull();
+  });
+
   it("keeps credentials and account ownership in the background and maps retryable transport failure", async () => {
     let stored = { schemaVersion: 2 as const, partitions: {} };
     const fetchImpl = vi.fn(async () => new Response("offline", { status: 503 }));
@@ -226,7 +385,7 @@ describe("watch history v2 client", () => {
       activeGenerations: { [owner]: 1 },
       partitions: {
         [watchHistoryPartitionKey(owner, 1)]: {
-          ownerUserId: owner, accountGeneration: 1, cache: null, preferences: null, currentObservation: null,
+          ownerUserId: owner, accountGeneration: 1, cache: null, preferences: { youtubeHistoryEnabled: false }, currentObservation: null,
           outbox: { ownerUserId: owner, accountGeneration: 1, entries: [{ event: oldEvent, key: "old", slot: "terminal", persistedAt: 1 }] },
         },
       },
@@ -266,7 +425,7 @@ describe("watch history v2 client", () => {
       schemaVersion: 2, activeGenerations: { [owner]: 1 },
       partitions: {
         [watchHistoryPartitionKey(owner, 1)]: {
-          ownerUserId: owner, accountGeneration: 1, cache: null, preferences: null, currentObservation: null,
+          ownerUserId: owner, accountGeneration: 1, cache: null, preferences: { youtubeHistoryEnabled: false }, currentObservation: null,
           outbox: { ownerUserId: owner, accountGeneration: 1, entries: [{ event: terminal, key: "terminal", slot: "terminal", persistedAt: 1 }] },
         },
       },
@@ -281,7 +440,11 @@ describe("watch history v2 client", () => {
           getValue: async () => stored,
           setValue: async (value) => {
             writes += 1;
+            const active = value.partitions[watchHistoryPartitionKey(owner, 1)];
             if (Object.values(value.partitions).flatMap((partition) => partition.outbox.entries).length > 1) {
+              throw new Error("quota");
+            }
+            if (!active?.capturePaused && active?.currentObservation?.clientEventId === "00000000-0000-4000-8000-000000000023") {
               throw new Error("quota");
             }
             stored = value;
@@ -294,10 +457,199 @@ describe("watch history v2 client", () => {
     await expect(client.handle({
       type: "ANIDACHI_WATCH_HISTORY_V2", command: "enqueue-progress", event: progressEvent("00000000-0000-4000-8000-000000000023"),
     })).resolves.toEqual({ ok: false, status: "storage-full" });
-    expect(writes).toBe(2);
+    expect(writes).toBe(3);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toHaveLength(1);
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries[0]?.event.clientEventId).toBe(terminal.clientEventId);
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.capturePaused).toBe(true);
+
+    const writesAfterPause = writes;
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2", command: "observe-progress",
+      event: { ...progressEvent("00000000-0000-4000-8000-000000000024"), sharedRoom: null },
+    })).resolves.toEqual({ ok: false, status: "storage-full" });
+    expect(writes).toBe(writesAfterPause);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    const recreated = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { writes += 1; stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+    await expect(recreated.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2", command: "observe-progress",
+      event: { ...progressEvent("00000000-0000-4000-8000-000000000025"), sharedRoom: null },
+    })).resolves.toEqual({ ok: false, status: "storage-full" });
+    expect(writes).toBe(writesAfterPause);
+    await expect(recreated.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap",
+    })).resolves.toEqual({
+      ok: true,
+      data: {
+        accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: false },
+        capturePaused: true,
+        source: "cache",
+      },
+    });
+  });
+
+  it("keeps an offline enqueue durable without pausing capture and clears a pause only through explicit recovery", async () => {
+    const owner = session.user.id;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ownerUserId: owner,
+          accountGeneration: 1,
+          cache: null,
+          preferences: { youtubeHistoryEnabled: false },
+          currentObservation: null,
+          capturePaused: false,
+          outbox: { ownerUserId: owner, accountGeneration: 1, entries: [] },
+        },
+      },
+    };
+    let online = false;
+    const fetchImpl = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (!online) throw new TypeError("offline");
+      const sent = JSON.parse(String(init?.body)) as { clientEventId: string };
+      return new Response(JSON.stringify(progressAck(sent.clientEventId)));
+    });
+    const storage = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+      getBytesInUse: async () => 0,
+      quotaBytes: 1_000_000,
+    });
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage,
+    });
+    const event = { ...progressEvent("00000000-0000-4000-8000-000000000080"), sharedRoom: null };
+
+    await expect(client.handle({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "enqueue-progress", event }))
+      .resolves.toEqual({ ok: false, status: "retryable" });
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries)
+      .toHaveLength(1);
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.capturePaused).toBe(false);
+
+    stored.partitions[watchHistoryPartitionKey(owner, 1)]!.capturePaused = true;
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "recover-storage",
+    } as never)).resolves.toEqual({
+      ok: true,
+      data: { capturePaused: false },
+    });
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.capturePaused).toBe(false);
+
+    online = true;
+    const recoveredEvent = {
+      ...progressEvent("00000000-0000-4000-8000-000000000081"),
+      sharedRoom: null,
+    };
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "enqueue-progress",
+      event: recoveredEvent,
+    })).resolves.toEqual({ ok: true, flushed: 1 });
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toEqual([]);
+  });
+
+  it("clears a persisted storage pause when a successful flush removes pending work", async () => {
+    const owner = session.user.id;
+    const event = { ...progressEvent("00000000-0000-4000-8000-000000000082"), sharedRoom: null };
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ownerUserId: owner,
+          accountGeneration: 1,
+          cache: null,
+          preferences: { youtubeHistoryEnabled: false },
+          currentObservation: event,
+          capturePaused: true,
+          outbox: {
+            ownerUserId: owner,
+            accountGeneration: 1,
+            entries: [{ event, key: "paused", slot: "latest", persistedAt: 1 }],
+          },
+        },
+      },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async () => new Response(JSON.stringify(progressAck(event.clientEventId)))) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "flush" }))
+      .resolves.toEqual({ ok: true, flushed: 1 });
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.capturePaused).toBe(false);
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toEqual([]);
+  });
+
+  it("bounds the pre-sign-out flush and refuses old-owner work after the stored session switches", async () => {
+    const owner = session.user.id;
+    const event = { ...progressEvent("00000000-0000-4000-8000-000000000083"), sharedRoom: null };
+    const stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ownerUserId: owner,
+          accountGeneration: 1,
+          cache: null,
+          preferences: { youtubeHistoryEnabled: false },
+          currentObservation: event,
+          capturePaused: false,
+          outbox: {
+            ownerUserId: owner,
+            accountGeneration: 1,
+            entries: [{ event, key: "sign-out", slot: "latest", persistedAt: 1 }],
+          },
+        },
+      },
+    };
+    const switched = {
+      ...session,
+      refreshToken: "new-refresh",
+      user: { ...session.user, id: "00000000-0000-4000-8000-000000000084" },
+    };
+    const fetchImpl = vi.fn(() => new Promise<Response>(() => undefined));
+    const storage = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async () => undefined },
+      getBytesInUse: async () => 0,
+      quotaBytes: 1_000_000,
+    });
+
+    await bestEffortFlushWatchHistoryBeforeSignOut(session, {
+      getCurrentSession: async () => switched,
+      fetch: fetchImpl as typeof fetch,
+      storage,
+      timeoutMs: 0,
+    });
+    expect(fetchImpl).not.toHaveBeenCalled();
+
+    await bestEffortFlushWatchHistoryBeforeSignOut(session, {
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage,
+      timeoutMs: 0,
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   it("advances deletion generation without leaving old-generation work to flush", async () => {

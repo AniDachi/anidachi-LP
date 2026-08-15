@@ -169,27 +169,83 @@ describe("watch history meaningful-progress controller", () => {
   });
 
   it("observes but never publishes shared playback, then requires a fresh solo gate after leave", async () => {
-    const fixture = createFixture();
+    const fixture = createFixture({
+      sessionKeys: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ],
+    });
     await fixture.controller.start();
     fixture.setTime(11);
     await fixture.controller.observe("heartbeat");
-    await fixture.controller.setRoomActive(true);
+    fixture.advance(1_000);
     fixture.setTime(12);
     await fixture.controller.observe("heartbeat");
-    await fixture.controller.setRoomActive(false);
+    await fixture.controller.setRoomActive(true);
+    await fixture.controller.setRoomActive(true);
     fixture.setTime(13);
     await fixture.controller.observe("heartbeat");
+    await fixture.controller.setRoomActive(false);
     fixture.setTime(14);
     await fixture.controller.observe("heartbeat");
+    fixture.setTime(15);
+    await fixture.controller.observe("heartbeat");
 
-    expect(fixture.enqueued.map((event) => event.currentTime)).toEqual([11, 14]);
-    expect(fixture.local.some((event) => event.currentTime === 12)).toBe(true);
+    expect(fixture.enqueued.map((event) => [event.kind, event.currentTime, event.clientSessionKey])).toEqual([
+      ["heartbeat", 11, "11111111-1111-4111-8111-111111111111"],
+      ["source_change", 12, "11111111-1111-4111-8111-111111111111"],
+      ["heartbeat", 15, "33333333-3333-4333-8333-333333333333"],
+    ]);
+    expect(fixture.local.some((event) => event.currentTime === 13)).toBe(true);
   });
 
-  it("suppresses solo publication when room-entry persistence fails and requires a fresh session gate after leave", async () => {
+  it("publishes nothing on room entry before meaningful playback", async () => {
+    const fixture = createFixture();
+    await fixture.controller.start();
+    await fixture.controller.setRoomActive(true);
+    await fixture.controller.setRoomActive(true);
+
+    expect(fixture.enqueued).toEqual([]);
+  });
+
+  it("retains a storage-full pause until event-driven recovery and does not repeat capture writes", async () => {
+    let paused = true;
+    const fixture = createFixture({
+      loadPreferences: async () => ({
+        accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: false },
+        capturePaused: true,
+      }),
+      observeResult: () => paused
+        ? { ok: false as const, status: "storage-full" as const }
+        : { ok: true as const },
+      recoverCapture: async () => {
+        paused = false;
+        return {
+          accountGeneration: 1,
+          preferences: { youtubeHistoryEnabled: false },
+          capturePaused: false,
+        };
+      },
+    });
+    await fixture.controller.start();
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.localAttempts).toBe(0);
+
+    await fixture.controller.recover();
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+
+    expect(fixture.localAttempts).toBe(2);
+    expect(fixture.enqueued).toHaveLength(1);
+  });
+
+  it("suppresses solo publication when the final room-entry enqueue fails and requires a fresh session gate after leave", async () => {
     const fixture = createFixture({
       sessionKeys: ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"],
       rejectLocalKinds: new Set(["source_change"]),
+      rejectEnqueueKinds: new Set(["source_change"]),
     });
     await fixture.controller.start();
     fixture.setTime(11);
@@ -206,9 +262,10 @@ describe("watch history meaningful-progress controller", () => {
 
     expect(fixture.enqueued.map((event) => [event.currentTime, event.clientSessionKey])).toEqual([
       [11, "11111111-1111-4111-8111-111111111111"],
+      [11, "11111111-1111-4111-8111-111111111111"],
       [14, "33333333-3333-4333-8333-333333333333"],
     ]);
-    expect(fixture.localFailures).toBe(1);
+    expect(fixture.enqueueFailures).toBe(1);
   });
 
   it("does not start a second forced enqueue until the first deferred enqueue resolves", async () => {
@@ -235,7 +292,10 @@ function createFixture(options: {
   roomActive?: boolean;
   sessionKeys?: string[];
   loadPreferences?: WatchHistoryControllerDependencies["loadPreferences"];
+  recoverCapture?: WatchHistoryControllerDependencies["recoverCapture"];
+  observeResult?: () => { ok: true } | { ok: false; status: "storage-full" };
   rejectLocalKinds?: Set<WatchProgressEvent["kind"]>;
+  rejectEnqueueKinds?: Set<WatchProgressEvent["kind"]>;
   holdEnqueueAt?: number;
 } = {}) {
   let now = 1_700_000_000_000;
@@ -254,6 +314,8 @@ function createFixture(options: {
   let maxEnqueueConcurrency = 0;
   let enqueueCount = 0;
   let localFailures = 0;
+  let enqueueFailures = 0;
+  let localAttempts = 0;
   let releaseHeldEnqueue: (() => void) | null = null;
   const observation = (): HistoryObservation => ({
     provider: "crunchyroll",
@@ -277,18 +339,26 @@ function createFixture(options: {
     getObservation: observation,
     getRoomActive: () => roomActive,
     loadPreferences: options.loadPreferences ?? (async () => ({ accountGeneration: 1, preferences: { youtubeHistoryEnabled: false } })),
+    recoverCapture: options.recoverCapture,
     observeLocally: async (entry) => {
+      localAttempts += 1;
       if (options.rejectLocalKinds?.has(entry.kind)) {
         localFailures += 1;
         throw new Error("storage-full");
       }
       local.push(entry);
+      return options.observeResult?.() ?? { ok: true as const };
     },
     enqueue: async (event) => {
       enqueueCount += 1;
       enqueueConcurrency += 1;
       maxEnqueueConcurrency = Math.max(maxEnqueueConcurrency, enqueueConcurrency);
       enqueued.push(event);
+      if (options.rejectEnqueueKinds?.has(event.kind)) {
+        enqueueFailures += 1;
+        enqueueConcurrency -= 1;
+        throw new Error("offline");
+      }
       if (enqueueCount === options.holdEnqueueAt) {
         await new Promise<void>((resolve) => { releaseHeldEnqueue = resolve; });
       } else {
@@ -310,6 +380,8 @@ function createFixture(options: {
     current,
     get maxEnqueueConcurrency() { return maxEnqueueConcurrency; },
     get localFailures() { return localFailures; },
+    get enqueueFailures() { return enqueueFailures; },
+    get localAttempts() { return localAttempts; },
     setTime(value: number) { time = value; },
     setSource(next: Partial<typeof source>) { source = { ...source, ...next }; },
     setRoomActive(value: boolean) { roomActive = value; },

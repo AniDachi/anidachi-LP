@@ -10,11 +10,12 @@ describe("watch history playback listener binding", () => {
     );
     const onSeeking = vi.fn<() => Promise<void>>(async () => { throw new Error("offline"); });
     const onDispose = vi.fn<() => Promise<void>>(async () => { throw new Error("offline"); });
+    const onRecover = vi.fn<() => Promise<void>>(async () => { throw new Error("offline"); });
     const clearInterval = vi.fn();
     let heartbeat: () => void = () => { throw new Error("heartbeat was not bound"); };
     const cleanup = bindWatchHistoryPlaybackListeners({
       video,
-      controller: { observe: onObserve, noteSeeking: onSeeking, dispose: onDispose },
+      controller: { observe: onObserve, noteSeeking: onSeeking, recover: onRecover, dispose: onDispose },
       setInterval: (callback) => {
         heartbeat = callback;
         return 1;
@@ -27,11 +28,13 @@ describe("watch history playback listener binding", () => {
     video.dispatchEvent(new Event("seeked"));
     video.dispatchEvent(new Event("ended"));
     window.dispatchEvent(new Event("pagehide"));
+    window.dispatchEvent(new Event("online"));
     heartbeat();
     await Promise.resolve();
 
     expect(onObserve.mock.calls.map(([kind]) => kind)).toEqual(["pause", "seek", "ended", "pagehide", "heartbeat"]);
     expect(onSeeking).toHaveBeenCalledTimes(1);
+    expect(onRecover).toHaveBeenCalledTimes(1);
     cleanup();
     cleanup();
     expect(onDispose).toHaveBeenCalledTimes(1);
@@ -40,8 +43,10 @@ describe("watch history playback listener binding", () => {
 
     video.dispatchEvent(new Event("pause"));
     window.dispatchEvent(new Event("pagehide"));
+    window.dispatchEvent(new Event("online"));
     heartbeat();
     await Promise.resolve();
     expect(onObserve).toHaveBeenCalledTimes(5);
+    expect(onRecover).toHaveBeenCalledTimes(1);
   });
 });

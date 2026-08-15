@@ -10,6 +10,35 @@ const ownerA = "00000000-0000-4000-8000-000000000001";
 const ownerB = "00000000-0000-4000-8000-000000000002";
 
 describe("watch history storage", () => {
+  it("normalizes pre-release roots with fixed capture and confirmed-preference flags", async () => {
+    const partitionKey = watchHistoryPartitionKey(ownerA, 1);
+    const stored = {
+      schemaVersion: 2 as const,
+      activeGenerations: { [ownerA]: 1 },
+      partitions: {
+        [partitionKey]: {
+          ownerUserId: ownerA,
+          accountGeneration: 1,
+          cache: null,
+          preferences: { youtubeHistoryEnabled: false },
+          currentObservation: null,
+          outbox: { ownerUserId: ownerA, accountGeneration: 1, entries: [] },
+        },
+      },
+    } as WatchHistoryStorageRoot;
+    const store = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async () => undefined },
+      getBytesInUse: async () => 0,
+      quotaBytes: 1_000_000,
+    });
+
+    const normalized = await store.readRoot();
+    expect(normalized.partitions[partitionKey]).toMatchObject({
+      capturePaused: false,
+      preferencesConfirmed: true,
+    });
+  });
+
   it("retains unacknowledged old-owner outbox work while deleting rebuildable account data", async () => {
     let stored: WatchHistoryStorageRoot = createWatchHistoryStorageRoot();
     const store = createWatchHistoryStorage({

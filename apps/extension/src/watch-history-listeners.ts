@@ -2,7 +2,7 @@ import type { WatchHistoryController } from "./watch-history-controller";
 
 type WatchHistoryPlaybackController = Pick<
   WatchHistoryController,
-  "dispose" | "noteSeeking" | "observe"
+  "dispose" | "noteSeeking" | "observe" | "recover"
 >;
 
 export type WatchHistoryListenerBindingOptions = {
@@ -45,12 +45,16 @@ export function bindWatchHistoryPlaybackListeners(
   const pagehide = () => {
     if (!disposed) invoke(() => options.controller.observe("pagehide"));
   };
+  const online = () => {
+    if (!disposed) invoke(() => options.controller.recover());
+  };
   const interval = setIntervalFn(heartbeat, 5_000);
   options.video.addEventListener("pause", pause);
   options.video.addEventListener("seeking", seeking);
   options.video.addEventListener("seeked", seeked);
   options.video.addEventListener("ended", ended);
   windowTarget.addEventListener("pagehide", pagehide);
+  windowTarget.addEventListener("online", online);
 
   return () => {
     if (disposed) return;
@@ -61,6 +65,7 @@ export function bindWatchHistoryPlaybackListeners(
     options.video.removeEventListener("seeked", seeked);
     options.video.removeEventListener("ended", ended);
     windowTarget.removeEventListener("pagehide", pagehide);
+    windowTarget.removeEventListener("online", online);
     invoke(() => options.controller.dispose());
   };
 }

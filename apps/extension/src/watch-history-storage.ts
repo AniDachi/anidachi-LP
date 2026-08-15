@@ -1,7 +1,8 @@
-import type {
-  WatchHistoryPreferences,
-  WatchHistoryResponse,
-  WatchProgressEvent,
+import {
+  WatchHistoryPreferencesSchema,
+  type WatchHistoryPreferences,
+  type WatchHistoryResponse,
+  type WatchProgressEvent,
 } from "@anidachi/protocol";
 import { storage } from "wxt/utils/storage";
 import type { WatchHistoryOutboxPartition } from "./watch-history-outbox";
@@ -15,7 +16,9 @@ export type WatchHistoryAccountPartition = {
   accountGeneration: number;
   cache: WatchHistoryResponse | null;
   preferences: WatchHistoryPreferences | null;
+  preferencesConfirmed?: boolean;
   currentObservation: WatchProgressEvent | null;
+  capturePaused?: boolean;
   outbox: WatchHistoryOutboxPartition;
 };
 
@@ -117,7 +120,13 @@ export function createWatchHistoryStorage(
         Object.entries(root.partitions).flatMap(([key, partition]) => {
           if (partition.ownerUserId !== ownerUserId) return [[key, partition]];
           changed = true;
-          const cleared = { ...partition, cache: null, preferences: null, currentObservation: null };
+          const cleared = {
+            ...partition,
+            cache: null,
+            preferences: null,
+            preferencesConfirmed: false,
+            currentObservation: null,
+          };
           return cleared.outbox.entries.length === 0 ? [] : [[key, cleared]];
         }),
       );
@@ -198,6 +207,16 @@ function normalizeStorageRoot(value: unknown): WatchHistoryStorageRoot {
   return isStorageRoot(value)
     ? {
         ...value,
+        partitions: Object.fromEntries(Object.entries(value.partitions).map(([key, partition]) => [
+          key,
+          {
+            ...partition,
+            capturePaused: partition.capturePaused === true,
+            preferencesConfirmed: partition.preferencesConfirmed === undefined
+              ? WatchHistoryPreferencesSchema.safeParse(partition.preferences).success
+              : partition.preferencesConfirmed === true,
+          },
+        ])),
         activeGenerations: value.activeGenerations ?? activeGenerationsFromPartitions(value.partitions),
       }
     : createWatchHistoryStorageRoot();
