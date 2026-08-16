@@ -6,7 +6,6 @@ import {
   cleanDisplayName,
   cleanGroupName,
   cleanInviteMessage,
-  deriveRecentPeopleEvidence,
   friendRequestConflictResolution,
   friendshipPairKey,
   isRecentRelationshipEligible,
@@ -23,7 +22,6 @@ import {
 
 const VIEWER_ID = "00000000-0000-4000-8000-000000000001";
 const OTHER_ID = "00000000-0000-4000-8000-000000000002";
-const LOBBY_ONLY_ID = "00000000-0000-4000-8000-000000000003";
 const FRIENDSHIP_ID = "00000000-0000-4000-8000-000000000004";
 const INVITE_ID = "00000000-0000-4000-8000-000000000005";
 
@@ -78,42 +76,6 @@ test("recent people include only relationships eligible for discovery", () => {
   assert.equal(isRecentRelationshipEligible("pending"), false);
   assert.equal(isRecentRelationshipEligible("accepted"), false);
   assert.equal(isRecentRelationshipEligible("blocked"), false);
-});
-
-test("recent people require matching room-backed checkpoints and exclude lobby-only membership", () => {
-  const evidence = deriveRecentPeopleEvidence(VIEWER_ID, [
-    checkpoint("session-a", VIEWER_ID, "room-a", "2026-08-08T10:00:00.000Z"),
-    checkpoint("session-a", OTHER_ID, "room-a", "2026-08-08T10:02:00.000Z"),
-    checkpoint("session-b", VIEWER_ID, "room-b", "2026-08-08T11:00:00.000Z"),
-    checkpoint("session-b", OTHER_ID, "room-b", "2026-08-08T11:01:00.000Z"),
-    checkpoint("session-c", OTHER_ID, "room-c", "2026-08-08T12:00:00.000Z"),
-    checkpoint("session-lobby", LOBBY_ONLY_ID, "room-lobby", "2026-08-08T13:00:00.000Z"),
-  ]);
-
-  assert.deepEqual(evidence, [
-    {
-      userId: OTHER_ID,
-      lastWatchedAt: "2026-08-08T11:01:00.000Z",
-      sharedRoomCount: 2,
-    },
-  ]);
-});
-
-test("recent people count a shared room once across repeated watch sessions", () => {
-  const evidence = deriveRecentPeopleEvidence(VIEWER_ID, [
-    checkpoint("session-a", VIEWER_ID, "room-a", "2026-08-08T10:00:00.000Z"),
-    checkpoint("session-a", OTHER_ID, "room-a", "2026-08-08T10:01:00.000Z"),
-    checkpoint("session-b", VIEWER_ID, "room-a", "2026-08-08T12:00:00.000Z"),
-    checkpoint("session-b", OTHER_ID, "room-a", "2026-08-08T12:01:00.000Z"),
-  ]);
-
-  assert.deepEqual(evidence, [
-    {
-      userId: OTHER_ID,
-      lastWatchedAt: "2026-08-08T12:01:00.000Z",
-      sharedRoomCount: 1,
-    },
-  ]);
 });
 
 test("watch history v2 recent-person evidence is pair-owned and requires two participant writes", () => {
@@ -262,20 +224,6 @@ test("public profiles never expose email and fall back to user display fields", 
     }
   );
 });
-
-function checkpoint(
-  sessionId: string,
-  userId: string,
-  roomId: string,
-  observedAt: string,
-) {
-  return {
-    session_id: sessionId,
-    user_id: userId,
-    room_id: roomId,
-    observed_at: observedAt,
-  };
-}
 
 function friendship(overrides: Partial<FriendshipRow> = {}): FriendshipRow {
   return {

@@ -56,7 +56,6 @@ const group = {
 const recentPerson = {
   user: userB,
   lastWatchedAt: NOW,
-  sharedRoomCount: 3,
 };
 const invite = {
   id: INVITE_ID,
@@ -146,10 +145,10 @@ function watchLibraryFixture() {
 }
 
 describe("account response contracts", () => {
-  it("accepts a recent person with public profile and positive shared room count", () => {
+  it("accepts recent people without an unsupported shared-room count", () => {
     expect(RecentPersonSchema.parse(recentPerson)).toEqual(recentPerson);
     expect(() =>
-      RecentPersonSchema.parse({ ...recentPerson, sharedRoomCount: 0 }),
+      RecentPersonSchema.parse({ ...recentPerson, sharedRoomCount: 1 }),
     ).toThrow();
   });
 

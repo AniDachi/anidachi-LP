@@ -218,7 +218,7 @@ function FriendsMode({
                 }
                 key={person.user.userId}
                 profile={person.user}
-                subtitle={`${person.sharedRoomCount} shared ${person.sharedRoomCount === 1 ? "room" : "rooms"}`}
+                subtitle={formatRecentSubtitle(person.lastWatchedAt)}
               />
             );
           })}
@@ -226,6 +226,14 @@ function FriendsMode({
       ) : null}
     </div>
   );
+}
+
+function formatRecentSubtitle(lastWatchedAt: string): string {
+  const date = new Date(lastWatchedAt);
+  const dateLabel = Number.isNaN(date.getTime())
+    ? "recently"
+    : date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return `Watched ${dateLabel}`;
 }
 
 function GroupsMode({
