@@ -645,6 +645,21 @@ describe("watch history meaningful-progress controller", () => {
     });
   });
 
+  it("samples the actual player position again before source cleanup", async () => {
+    const fixture = createFixture();
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    fixture.setTime(15);
+
+    await fixture.controller.dispose();
+
+    expect(fixture.enqueued.at(-1)).toMatchObject({
+      kind: "source_change",
+      currentTime: 15,
+    });
+  });
+
   it("observes but never publishes shared playback, then requires a fresh solo gate after leave", async () => {
     const fixture = createFixture({
       sessionKeys: [

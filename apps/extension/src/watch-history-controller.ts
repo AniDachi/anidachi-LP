@@ -563,7 +563,13 @@ export function createWatchHistoryController(
 
   function dispose(): Promise<void> {
     if (disposePromise) return disposePromise;
-    const cleanup = retained;
+    let cleanup = retained;
+    try {
+      const latest = dependencies.getObservation(preferences);
+      if (latest && observationIdentity(latest) === retainedIdentity) cleanup = latest;
+    } catch {
+      // Cleanup keeps the last valid observation when the provider is already gone.
+    }
     const cleanupSessionKey = clientSessionKey;
     const cleanupGeneration = accountGeneration;
     const cleanupOwnerUserId = ownerUserId;

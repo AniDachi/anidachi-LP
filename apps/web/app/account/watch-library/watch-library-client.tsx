@@ -13,7 +13,7 @@ import {
   type WatchHistorySession,
 } from "@anidachi/protocol";
 import { Clock3, Film, Play, RefreshCw, Trash2, Users } from "lucide-react";
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "@/lib/client-api";
 
 type Notice = { tone: "success" | "error"; text: string };
@@ -59,6 +59,8 @@ export function WatchLibraryClient({
       setLoading(false);
     }
   }, [history.meta.ownerUserId]);
+
+  useEffect(() => bindWatchHistoryPageRefresh({ refresh }), [refresh]);
 
   const loadMore = useCallback(async () => {
     if (!history.nextCursor || loadingMore) return;
@@ -187,6 +189,46 @@ export function WatchLibraryClient({
       {history.nextCursor ? <button className="mx-auto inline-flex min-h-11 items-center rounded-lg border border-brand-border px-5 text-sm font-semibold text-foreground disabled:opacity-50" disabled={loadingMore} onClick={() => void loadMore()} type="button">{loadingMore ? "Loading..." : "Load more"}</button> : null}
     </div>
   );
+}
+
+type WatchHistoryRefreshEventTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
+
+export function bindWatchHistoryPageRefresh(options: {
+  refresh: () => void | Promise<void>;
+  windowTarget?: WatchHistoryRefreshEventTarget;
+  documentTarget?: WatchHistoryRefreshEventTarget;
+  getVisibilityState?: () => DocumentVisibilityState;
+  schedule?: (callback: () => void) => () => void;
+}): () => void {
+  const windowTarget = options.windowTarget ?? window;
+  const documentTarget = options.documentTarget ?? document;
+  const getVisibilityState = options.getVisibilityState ?? (() => document.visibilityState);
+  const schedule = options.schedule ?? ((callback) => {
+    const timer = window.setTimeout(callback, 350);
+    return () => window.clearTimeout(timer);
+  });
+  let cancelScheduled: (() => void) | null = null;
+  let disposed = false;
+  const trigger = () => {
+    if (disposed || cancelScheduled) return;
+    cancelScheduled = schedule(() => {
+      cancelScheduled = null;
+      if (!disposed) void options.refresh();
+    });
+  };
+  const onFocus = () => trigger();
+  const onVisibilityChange = () => {
+    if (getVisibilityState() === "visible") trigger();
+  };
+  windowTarget.addEventListener("focus", onFocus);
+  documentTarget.addEventListener("visibilitychange", onVisibilityChange);
+  return () => {
+    disposed = true;
+    cancelScheduled?.();
+    cancelScheduled = null;
+    windowTarget.removeEventListener("focus", onFocus);
+    documentTarget.removeEventListener("visibilitychange", onVisibilityChange);
+  };
 }
 
 function WatchItemCard({ busyAction, item, onCreateRoom, onDelete }: { busyAction: string | null; item: WatchHistoryItem; onCreateRoom: (session: WatchHistorySession, sourceUrl: string) => void; onDelete: (target: WatchHistoryDeleteScope) => void }) {

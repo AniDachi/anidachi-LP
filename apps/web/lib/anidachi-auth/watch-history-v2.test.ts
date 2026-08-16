@@ -17,6 +17,7 @@ import {
   type WatchHistoryV2Store,
 } from "./watch-history-v2";
 import {
+  bindWatchHistoryPageRefresh,
   getWatchHistoryAggregateLabel,
   mergeWatchHistoryPages,
   removeWatchHistoryTarget,
@@ -925,6 +926,39 @@ test("website v2 model appends opaque cursor pages without duplicating titles", 
   assert.equal(merged.items.length, 1);
   assert.equal(merged.nextCursor, "next-page");
   assert.equal(merged.totalTitleCount, 1);
+});
+
+test("website refreshes canonical history when the account page regains focus", async () => {
+  assert.equal(typeof bindWatchHistoryPageRefresh, "function");
+  const windowTarget = new EventTarget();
+  const documentTarget = new EventTarget();
+  let visibilityState: DocumentVisibilityState = "hidden";
+  let refreshes = 0;
+  const unbind = bindWatchHistoryPageRefresh({
+    refresh: () => { refreshes += 1; },
+    windowTarget,
+    documentTarget,
+    getVisibilityState: () => visibilityState,
+    schedule: (callback) => {
+      queueMicrotask(callback);
+      return () => undefined;
+    },
+  });
+
+  documentTarget.dispatchEvent(new Event("visibilitychange"));
+  windowTarget.dispatchEvent(new Event("focus"));
+  await Promise.resolve();
+  assert.equal(refreshes, 1);
+
+  visibilityState = "visible";
+  documentTarget.dispatchEvent(new Event("visibilitychange"));
+  await Promise.resolve();
+  assert.equal(refreshes, 2);
+
+  unbind();
+  windowTarget.dispatchEvent(new Event("focus"));
+  await Promise.resolve();
+  assert.equal(refreshes, 2);
 });
 
 function storeStub(overrides: Partial<WatchHistoryV2Store>): WatchHistoryV2Store {
