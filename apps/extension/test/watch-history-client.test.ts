@@ -844,7 +844,7 @@ describe("watch history v2 client", () => {
     });
   });
 
-  it("clears an acknowledged terminal observation after it leaves pending work", async () => {
+  it("retains an acknowledged final observation until canonical cache catches up", async () => {
     const owner = session.user.id;
     const event = { ...progressEvent(), kind: "pagehide" as const, sharedRoom: null };
     let stored: WatchHistoryStorageRoot = {
@@ -878,11 +878,82 @@ describe("watch history v2 client", () => {
     })).resolves.toEqual({ ok: true, flushed: 1 });
 
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]).toMatchObject({
-      currentObservation: null,
+      currentObservation: {
+        clientEventId: event.clientEventId,
+        currentTime: event.currentTime,
+        kind: "pagehide",
+      },
       currentObservationMeaningfulSolo: false,
-      currentObservationDisplayMode: null,
+      currentObservationDisplayMode: "mine",
       outbox: { entries: [] },
     });
+  });
+
+  it("drains pending progress before returning a refreshed canonical snapshot", async () => {
+    const owner = session.user.id;
+    const event = {
+      ...progressEvent("00000000-0000-4000-8000-000000000098"),
+      kind: "pagehide" as const,
+      sharedRoom: null,
+    };
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ...readyPartition(owner, false),
+          currentObservation: event,
+          currentObservationMeaningfulSolo: true,
+          currentObservationDisplayMode: null,
+          outbox: {
+            ownerUserId: owner,
+            accountGeneration: 1,
+            entries: [{ event, key: "final", slot: "latest", persistedAt: 1 }],
+          },
+        },
+      },
+    };
+    let accepted = false;
+    const requestOrder: string[] = [];
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async (input, init) => {
+        if (String(input).endsWith("/progress")) {
+          requestOrder.push("progress");
+          accepted = true;
+          return new Response(JSON.stringify(progressAck(event.clientEventId)));
+        }
+        requestOrder.push("list");
+        return new Response(JSON.stringify({
+          meta: {
+            serverTime: "2026-08-15T10:01:00.000Z",
+            schemaVersion: 2,
+            ownerUserId: owner,
+            accountGeneration: 1,
+          },
+          generatedAt: accepted
+            ? "2026-08-15T10:01:00.000Z"
+            : "2026-08-15T10:00:00.000Z",
+          totalTitleCount: 0,
+          items: [],
+          nextCursor: null,
+        }), { status: init?.method === "POST" ? 500 : 200 });
+      }) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    const response = await client.handle(createListWatchHistoryMessage());
+
+    expect(response).toMatchObject({
+      ok: true,
+      flushed: 1,
+      data: { generatedAt: "2026-08-15T10:01:00.000Z" },
+    });
+    expect(requestOrder).toEqual(["progress", "list"]);
   });
 
   it("negative-acknowledges a stale older latest after accepting the terminal and continues the drain", async () => {

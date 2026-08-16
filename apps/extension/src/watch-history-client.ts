@@ -415,25 +415,21 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         const saved = await updateCurrentPartition(session, generation, (candidate) => {
           const acceptedCurrent = candidate.currentObservation?.clientEventId ===
             ack.data.acceptedEventId;
-          const acceptedDisplayMode = candidate.currentObservationDisplayMode === undefined
-            ? inferredObservationDisplayMode(entry.event)
-            : candidate.currentObservationDisplayMode;
-          const retainActiveCurrent = acceptedCurrent &&
-            acceptedDisplayMode !== null &&
-            inferredObservationDisplayMode(entry.event) !== null;
+          const acceptedDisplayMode = candidate.currentObservationDisplayMode === "mine" ||
+              candidate.currentObservationDisplayMode === "together"
+            ? candidate.currentObservationDisplayMode
+            : entry.event.sharedRoom ? "together" : "mine";
           return {
             ...candidate,
             capturePaused: false,
             captureMarkersReady: true,
             outbox: acknowledgeWatchHistoryEvent(candidate.outbox, ack.data.acceptedEventId),
-            currentObservation: acceptedCurrent && !retainActiveCurrent
-              ? null
-              : candidate.currentObservation,
+            currentObservation: candidate.currentObservation,
             currentObservationMeaningfulSolo: acceptedCurrent
               ? false
               : candidate.currentObservationMeaningfulSolo === true,
             currentObservationDisplayMode: acceptedCurrent
-              ? retainActiveCurrent ? acceptedDisplayMode : null
+              ? acceptedDisplayMode
               : candidate.currentObservationDisplayMode ?? null,
           };
         });
@@ -918,8 +914,8 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     session: ExtensionAuthTokens,
     message: Extract<WatchHistoryMessage, { command: "list" }> = { type: WATCH_HISTORY_MESSAGE_TYPE, command: "list" },
   ): Promise<WatchHistoryMessageResponse> {
-    const reconciled = await reconcile(session, message);
     const drained = await flush(session);
+    const reconciled = await reconcile(session, message);
     if (!drained.ok) return drained;
     return reconciled.ok ? { ...reconciled, flushed: drained.flushed } : reconciled;
   }
@@ -1055,7 +1051,12 @@ export async function flushWatchHistoryInBackground(
   const getCurrentSession = dependencies.getCurrentSession ?? await defaultWatchHistorySession();
   const client = createWatchHistoryClient({ ...dependencies, getCurrentSession });
   const session = await getCurrentSession();
-  if (session) await client.refresh(session);
+  if (session) {
+    await reconcileWatchHistoryThenDrain(
+      () => client.reconcile(session),
+      () => client.flush(session),
+    );
+  }
 }
 
 export async function bestEffortFlushWatchHistoryBeforeSignOut(

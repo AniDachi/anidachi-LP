@@ -589,8 +589,9 @@ describe("Popup Watch History v2", () => {
 
   it("recreates a room from a canonical session and opens the source with its room id", async () => {
     const openUrl = vi.fn(async () => undefined);
+    const history = sameEpisodeMixedSessionHistoryFixture();
     const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
-      if (message.command === "list") return { ok: true, data: historyFixture() };
+      if (message.command === "list") return { ok: true, data: history };
       if (message.command === "get-preferences") return { ok: true, data: preferencesFixture(false) };
       if (message.command === "other-owner-pending") return { ok: true, hasPendingWork: false, byteUse: 0 };
       if (message.command === "create-room") {
@@ -616,12 +617,17 @@ describe("Popup Watch History v2", () => {
     });
     const client = { ...clientFixture({ cached: null, request }), openUrl };
     const view = await renderPanel(client);
-    const createRoom = await findButton(view.container, "Create room from Solo session");
+    const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
+    await click(mode);
+    const createRoom = await findButton(view.container, "Create room from Shared session");
 
     await click(createRoom);
 
     await waitFor(() => expect(openUrl).toHaveBeenCalledOnce());
-    expect(request).toHaveBeenCalledWith(expect.objectContaining({ command: "create-room", sessionId: SESSION_ID }));
+    expect(request).toHaveBeenCalledWith(expect.objectContaining({
+      command: "create-room",
+      sessionId: "00000000-0000-4000-8000-000000000004",
+    }));
     expect(openUrl).toHaveBeenCalledWith("https://www.crunchyroll.com/watch/EPISODE1#anidachiRoom=room-popup-1");
     await unmount(view.root);
   });
@@ -702,7 +708,7 @@ describe("Popup Watch History v2", () => {
     );
     const mode = await findButton(view.container, "Watch history mode: Mine. Switch to Together");
 
-    expect(view.container.textContent).toContain("Solo session");
+    expect(view.container.textContent).not.toContain("Solo session");
     expect(view.container.textContent).not.toContain("Shared session");
     expect(view.container.textContent).toContain("10:00");
     await click(mode);

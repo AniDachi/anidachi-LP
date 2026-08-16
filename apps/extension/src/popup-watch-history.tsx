@@ -608,7 +608,7 @@ function PopupWatchHistoryItem({
                       </span>
                       <span>{formatClock(currentTime)}</span>
                     </span>
-                    {episode.sessions.slice(0, 4).map((session) => (
+                    {episode.sessions.filter((session) => session.kind === "shared").slice(0, 4).map((session) => (
                       <button
                         aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
                         className="popup-session-summary-action"
@@ -661,7 +661,7 @@ function PopupWatchHistoryItem({
                 latestActivityPending?.currentTime ?? item.latestActivity.currentTime,
               )}</span>
             </span>
-            {item.sessions.slice(0, 4).map((session) => (
+            {item.sessions.filter((session) => session.kind === "shared").slice(0, 4).map((session) => (
               <button
                 aria-label={`Create room from ${session.kind === "shared" ? "Shared" : "Solo"} session`}
                 className="popup-session-summary-action"
