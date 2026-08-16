@@ -158,7 +158,13 @@ describe("PopupPeoplePanel", () => {
     const addButtons = [...view.container.querySelectorAll<HTMLButtonElement>("button")].filter(
       (button) => button.textContent?.trim() === "Add friend",
     );
+    const expectedDate = new Date("2026-08-07T12:00:00.000Z").toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
     expect(addButtons).toHaveLength(2);
+    expect(view.container.textContent).toContain(`Watched ${expectedDate}`);
+    expect(view.container.textContent).not.toContain("shared room");
     await click(addButtons[0]!);
     expect(onAddFriend).toHaveBeenCalledWith("recent-a");
 
@@ -1053,7 +1059,6 @@ function recent(userId: string, displayName = userId): RecentPerson {
   return {
     user: { userId, handle: null, displayName, avatarUrl: null },
     lastWatchedAt: NOW,
-    sharedRoomCount: 1,
   };
 }
 
