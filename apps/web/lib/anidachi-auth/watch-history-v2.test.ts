@@ -12,6 +12,7 @@ import {
   deleteWatchHistoryV2,
   encodeWatchHistoryCursor,
   isMeaningfulWatchHistoryV2SessionIdentity,
+  listWatchHistoryV2,
   parseWatchProgressEventV2,
   WatchHistoryV2ApiError,
   type WatchHistoryV2Store,
@@ -493,6 +494,73 @@ test("canonical read validates and returns an encoded reusable cursor", () => {
   assert.deepEqual(decodeWatchHistoryCursor(response.nextCursor!), {
     lastWatchedAt: NOW,
     stableId: "crunchyroll:series-one",
+  });
+});
+
+test("canonical read delegates the title page boundary to storage", async () => {
+  let requestedPage: unknown;
+  const response = await listWatchHistoryV2({
+    userId: USER_ID,
+    limit: 1,
+    now: new Date(NOW),
+    store: storeStub({
+      loadHistory: async (_userId, page) => {
+        requestedPage = page;
+        return {
+          accountGeneration: 1,
+          progressRows: [progressRow()],
+          sessions: [],
+          totalTitleCount: 2,
+          hasMore: true,
+        };
+      },
+    }),
+  });
+
+  assert.deepEqual(requestedPage, { limit: 1, cursor: null });
+  assert.equal(response.totalTitleCount, 2);
+  assert.deepEqual(response.items.map((item) => item.titleKey), ["series-one"]);
+  assert.deepEqual(decodeWatchHistoryCursor(response.nextCursor!), {
+    lastWatchedAt: NOW,
+    stableId: "crunchyroll:series-one",
+  });
+});
+
+test("server-bounded read preserves database binary title order for its cursor", () => {
+  const response = buildWatchHistoryV2Response({
+    userId: USER_ID,
+    accountGeneration: 1,
+    generatedAt: new Date(NOW),
+    limit: 3,
+    progressRows: [
+      progressRow({
+        title_key: "A",
+        episode_key: "episode-uppercase",
+        title: "Uppercase",
+        latest_session_id: null,
+      }),
+      progressRow({
+        title_key: "a-",
+        episode_key: "episode-hyphen",
+        title: "Hyphen",
+        latest_session_id: null,
+      }),
+      progressRow({
+        title_key: "a_",
+        episode_key: "episode-underscore",
+        title: "Underscore",
+        latest_session_id: null,
+      }),
+    ],
+    sessions: [],
+    totalTitleCount: 4,
+    hasMore: true,
+  });
+
+  assert.deepEqual(response.items.map((item) => item.titleKey), ["A", "a-", "a_"]);
+  assert.deepEqual(decodeWatchHistoryCursor(response.nextCursor!), {
+    lastWatchedAt: NOW,
+    stableId: "crunchyroll:a_",
   });
 });
 

@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-09.
+Last updated: 2026-08-16.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -575,9 +575,66 @@ These are intentionally not treated as solved:
   `sourceGeneration` bumps are implemented, but durable Supabase source
   persistence, room-create source descriptor plumbing, and explicit
   source-switch UI/commands are still pending.
-- Watch progress persistence has a backend-backed watch-library foundation and
-  account-scoped Popup snapshots, but staging acceptance across real browser
-  profiles is still required before treating it as finished product behavior.
+- Watch History v2 is the active staging runtime. Supabase/Postgres is the one
+  durable account-history authority; the extension background owns the
+  account-scoped cache/outbox, while Popup and website consume the same strict
+  v2 response. The v1 HTTP paths return `426 UPGRADE_REQUIRED`, and the legacy
+  tables remain inert for rollback rather than being deleted.
+- The additive foundation and Recent People v2 migrations are applied on
+  staging through `20260814020000`. A user confirmed the repaired solo
+  Crunchyroll -> Popup -> staging website path. Full two-profile/two-network
+  acceptance, the complete Task 10 manual matrix, and production promotion are
+  still pending; this is not a production-readiness claim.
+- The locally verified `20260816090000_watch_history_v2_bounded_read.sql`
+  removes the full-account episode aggregation from title pagination with a
+  transactionally maintained one-row-per-title v2 projection. A second compact
+  projection stores one row per v2 `(user, session)` membership with that
+  user's current generation and title key. Its ordering timestamp is canonical
+  `watch_sessions.last_checkpoint_at`, the same value returned in the session
+  DTO, never participant heartbeat time. Session enrichment reads the latest 20
+  through the requester-leading title/order index, then unions each visible
+  episode's canonical latest session. Roomless shared tombstones with neither
+  `room_id` nor `client_session_key` are excluded and cannot consume a candidate
+  slot. Shared session generation stays
+  host-owned and is never compared to the viewer's generation. It does not
+  truncate observed episode DTO data: a single visible title can still return
+  arbitrarily many episode rows.
+  Keyset selection uses the projection index before `LIMIT`; normal heartbeat
+  writes incrementally advance one summary row, while a delete statement
+  recomputes each distinct affected title once.
+  An explicit migration transaction first takes a write-conflicting lock on
+  settings, then session, participant, and progress sources. This follows both writers'
+  settings-first lock order, lets an in-flight writer drain, blocks later
+  writers through both v2-only initializers, and prevents a concurrent delete
+  from being reinserted by a stale initializer snapshot. A ten-second lock
+  timeout rolls the migration back for a safe workflow retry. Maintenance is
+  installed before both initial fills. The title fill preserves the maximum
+  observation; the locked session fill converges exactly to canonical checkpoint
+  and identity state.
+  Deep cursors add an indexable timestamp upper bound while retaining the strict
+  timestamp/binary-ID predicate. Session enrichment uses the v2 recent-title
+  requester/session projection index through a per-visible-title `LATERAL ...
+  LIMIT 20`. Participant deletion, including full clear, cascades only that
+  user's projection row and leaves another participant's row intact. Session-
+  side checkpoint/identity maintenance updates current v2 member projections;
+  hard room deletion removes derived rows for the resulting internal tombstone.
+  A 501-title/13,200-episode local probe returned 50 titles and 2,376 episode
+  rows plus 20 session IDs in a 1,455,993-byte payload, with about 21 MiB parser
+  RSS growth. This is evidence, not a universal resource bound, so public release remains blocked
+  pending an explicit episode-pagination contract or a separately approved
+  defensible bound.
+- The additive projection/RPC must deploy in a migration-only prerequisite PR
+  before the web consumer PR. Use that order on both staging and production: on
+  production, merge the migration-only promotion to `main`, wait for `Deploy
+  migrations to production` and verify migration history, then merge the
+  runtime promotion. A direct combined staging-to-main promotion is unsafe
+  because database and application deploys trigger independently and can expose
+  runtime before its RPC.
+- The migration-only prerequisite is compatible with the old web runtime, but
+  it is not dormant: projection maintenance runs on v2 progress, session, and
+  participant writes/deletes. If it must be undone, use the reviewed forward
+  cleanup sequence in `docs/release-and-rollback-runbook.md`; never delete or
+  rewrite canonical `watch_episode_progress` rows.
 - Custom API domain for hiding the Cloudflare account subdomain is deferred.
 - Stripe production webhook appears wired, but end-to-end subscription testing is
   still a separate follow-up.

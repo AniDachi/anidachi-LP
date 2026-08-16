@@ -109,10 +109,15 @@ export type WatchHistoryV2Store = {
     event: Record<string, unknown>,
     authority: ValidatedWatchHistoryAuthority | null,
   ): Promise<unknown>;
-  loadHistory(userId: string): Promise<{
+  loadHistory(userId: string, page: {
+    limit: number;
+    cursor: WatchHistoryCursor | null;
+  }): Promise<{
     accountGeneration: number;
     progressRows: unknown[];
     sessions: unknown[];
+    totalTitleCount?: number;
+    hasMore?: boolean;
   }>;
   getPreferences(userId: string): Promise<{
     accountGeneration: number;
@@ -243,14 +248,21 @@ export async function listWatchHistoryV2(params: {
   now?: Date;
 }): Promise<WatchHistoryResponse> {
   try {
-    const snapshot = await (params.store ?? supabaseWatchHistoryV2Store).loadHistory(params.userId);
+    const limit = params.limit ?? 50;
+    const cursor = params.cursor ?? null;
+    const snapshot = await (params.store ?? supabaseWatchHistoryV2Store).loadHistory(
+      params.userId,
+      { limit, cursor },
+    );
     return buildWatchHistoryV2Response({
       userId: params.userId,
       accountGeneration: snapshot.accountGeneration,
       progressRows: snapshot.progressRows,
       sessions: snapshot.sessions,
-      limit: params.limit ?? 50,
-      cursor: params.cursor,
+      limit,
+      cursor,
+      totalTitleCount: snapshot.totalTitleCount,
+      hasMore: snapshot.hasMore,
       generatedAt: params.now ?? new Date(),
     });
   } catch (error) {
@@ -265,6 +277,8 @@ export function buildWatchHistoryV2Response(params: {
   sessions: unknown[];
   limit: number;
   cursor?: WatchHistoryCursor | null;
+  totalTitleCount?: number;
+  hasMore?: boolean;
   generatedAt: Date;
 }): WatchHistoryResponse {
   if (!Number.isInteger(params.limit) || params.limit < 1 || params.limit > 100) {
@@ -399,22 +413,41 @@ export function buildWatchHistoryV2Response(params: {
     };
   });
 
-  summaries.sort(
-    (a, b) =>
-      b.cursor.lastWatchedAt.localeCompare(a.cursor.lastWatchedAt) ||
-      a.cursor.stableId.localeCompare(b.cursor.stableId),
-  );
-  const start = params.cursor
-    ? summaries.findIndex(
-        (summary) =>
-          summary.cursor.lastWatchedAt < params.cursor!.lastWatchedAt ||
-          (summary.cursor.lastWatchedAt === params.cursor!.lastWatchedAt &&
-            summary.cursor.stableId > params.cursor!.stableId),
-      )
-    : 0;
+  const isServerBounded = params.totalTitleCount !== undefined || params.hasMore !== undefined;
+  if (!isServerBounded) {
+    summaries.sort(
+      (a, b) =>
+        b.cursor.lastWatchedAt.localeCompare(a.cursor.lastWatchedAt) ||
+        a.cursor.stableId.localeCompare(b.cursor.stableId),
+    );
+  }
+  if (
+    isServerBounded &&
+    (!isNonnegativeInteger(params.totalTitleCount) ||
+      typeof params.hasMore !== "boolean" ||
+      summaries.length > params.limit ||
+      params.totalTitleCount < summaries.length ||
+      (params.hasMore && summaries.length !== params.limit))
+  ) {
+    throw invalidDatabaseResponse();
+  }
+  const start = isServerBounded
+    ? 0
+    : params.cursor
+      ? summaries.findIndex(
+          (summary) =>
+            summary.cursor.lastWatchedAt < params.cursor!.lastWatchedAt ||
+            (summary.cursor.lastWatchedAt === params.cursor!.lastWatchedAt &&
+              summary.cursor.stableId > params.cursor!.stableId),
+        )
+      : 0;
   const pageStart = start < 0 ? summaries.length : start;
-  const page = summaries.slice(pageStart, pageStart + params.limit);
-  const hasMore = pageStart + page.length < summaries.length;
+  const page = isServerBounded
+    ? summaries
+    : summaries.slice(pageStart, pageStart + params.limit);
+  const hasMore = isServerBounded
+    ? params.hasMore!
+    : pageStart + page.length < summaries.length;
   const response = {
     meta: {
       serverTime: params.generatedAt.toISOString(),
@@ -423,7 +456,7 @@ export function buildWatchHistoryV2Response(params: {
       accountGeneration: params.accountGeneration,
     },
     generatedAt: params.generatedAt.toISOString(),
-    totalTitleCount: summaries.length,
+    totalTitleCount: isServerBounded ? params.totalTitleCount! : summaries.length,
     items: page.map((summary) => summary.item),
     nextCursor:
       hasMore && page.length > 0 ? encodeWatchHistoryCursor(page.at(-1)!.cursor) : null,
@@ -645,32 +678,25 @@ export const supabaseWatchHistoryV2Store: WatchHistoryV2Store = {
     return result.data;
   },
 
-  async loadHistory(userId) {
+  async loadHistory(userId, page) {
     const preferences = await this.getPreferences(userId);
-    const progressRows = await loadAllWatchHistoryProgressRows(async (from, to) => {
-      const progressResult = await db()
-        .from("watch_episode_progress")
-        .select(
-          "user_id,provider,title_key,episode_key,item_kind,title,artwork_url,episode_title,season_key,season_title,season_number,episode_number,source_url,current_time_seconds,duration,progress,completed_at,latest_session_id,observed_at,server_order,history_generation",
-          { count: "exact" },
-        )
-        .eq("user_id", userId)
-        .eq("history_generation", preferences.accountGeneration)
-        .order("observed_at", { ascending: false })
-        .order("server_order", { ascending: false })
-        .range(from, to);
-      if (progressResult.error) throw progressResult.error;
-      return {
-        rows: (progressResult.data as unknown[] | null) ?? [],
-        total: progressResult.count,
-      };
+    const result = await db().rpc("list_watch_history_v2_page", {
+      p_user_id: userId,
+      p_history_generation: preferences.accountGeneration,
+      p_limit: page.limit,
+      p_cursor_watched_at: page.cursor?.lastWatchedAt ?? null,
+      p_cursor_stable_id: page.cursor?.stableId ?? null,
     });
-    progressRows.forEach(parseProgressRow);
-    const sessions = await loadCanonicalSessions(userId);
+    if (result.error) throw result.error;
+    const boundedPage = parseBoundedWatchHistoryPage(result.data);
+    boundedPage.progressRows.forEach(parseProgressRow);
+    const sessions = await loadCanonicalSessions(userId, boundedPage.sessionIds);
     return {
-      accountGeneration: preferences.accountGeneration,
-      progressRows,
+      accountGeneration: boundedPage.accountGeneration,
+      progressRows: boundedPage.progressRows,
       sessions,
+      totalTitleCount: boundedPage.totalTitleCount,
+      hasMore: boundedPage.hasMore,
     };
   },
 
@@ -823,15 +849,40 @@ export async function loadExactWatchHistorySessionEnrichment(params: {
     return { sessions: [], participants: [], users: [], profiles: [] };
   }
 
+  return loadWatchHistorySessionEnrichmentForIds({
+    sessionIds,
+    loadSessions: params.loadSessions,
+    loadParticipants: params.loadParticipants,
+    loadUsers: params.loadUsers,
+    loadProfiles: params.loadProfiles,
+  });
+}
+
+async function loadWatchHistorySessionEnrichmentForIds(params: {
+  sessionIds: string[];
+  loadSessions: (ids: string[], from: number, to: number) => Promise<WatchHistoryRangePage>;
+  loadParticipants: (ids: string[], from: number, to: number) => Promise<WatchHistoryRangePage>;
+  loadUsers: (ids: string[], from: number, to: number) => Promise<WatchHistoryRangePage>;
+  loadProfiles: (ids: string[], from: number, to: number) => Promise<WatchHistoryRangePage>;
+}): Promise<{
+  sessions: unknown[];
+  participants: unknown[];
+  users: unknown[];
+  profiles: unknown[];
+}> {
+  if (params.sessionIds.length === 0) {
+    return { sessions: [], participants: [], users: [], profiles: [] };
+  }
+
   // These bounded transport requests are exact for a quiescent database. During
   // active playback, independent PostgREST pages are intentionally eventually consistent.
   const sessions = await loadWatchHistoryBatches(
-    sessionIds,
+    params.sessionIds,
     params.loadSessions,
     (value) => databaseRowKey(value, "id"),
   );
   const participants = await loadWatchHistoryBatches(
-    sessionIds,
+    params.sessionIds,
     params.loadParticipants,
     (value) => `${databaseRowKey(value, "session_id")}:${databaseRowKey(value, "user_id")}`,
   );
@@ -853,9 +904,12 @@ export async function loadExactWatchHistorySessionEnrichment(params: {
   return { sessions, participants, users, profiles };
 }
 
-async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessionRecord[]> {
-  const enrichment = await loadExactWatchHistorySessionEnrichment({
-    loadOwnerParticipants: async (from, to) => {
+async function loadCanonicalSessions(
+  userId: string,
+  boundedSessionIds?: string[],
+): Promise<WatchHistorySessionRecord[]> {
+  const loaders = {
+    loadOwnerParticipants: async (from: number, to: number) => {
       const result = await db()
         .from("watch_session_participants")
         .select("session_id", { count: "exact" })
@@ -867,7 +921,7 @@ async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessio
       if (result.error) throw result.error;
       return { rows: (result.data as unknown[] | null) ?? [], total: result.count };
     },
-    loadSessions: async (ids, from, to) => {
+    loadSessions: async (ids: string[], from: number, to: number) => {
       const result = await db()
         .from("watch_sessions")
         .select(
@@ -882,7 +936,7 @@ async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessio
       if (result.error) throw result.error;
       return { rows: (result.data as unknown[] | null) ?? [], total: result.count };
     },
-    loadParticipants: async (ids, from, to) => {
+    loadParticipants: async (ids: string[], from: number, to: number) => {
       const result = await db()
         .from("watch_session_participants")
         .select(
@@ -898,7 +952,7 @@ async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessio
       if (result.error) throw result.error;
       return { rows: (result.data as unknown[] | null) ?? [], total: result.count };
     },
-    loadUsers: async (ids, from, to) => {
+    loadUsers: async (ids: string[], from: number, to: number) => {
       const result = await db()
         .from("users")
         .select("id,display_name,avatar_url", { count: "exact" })
@@ -908,7 +962,7 @@ async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessio
       if (result.error) throw result.error;
       return { rows: (result.data as unknown[] | null) ?? [], total: result.count };
     },
-    loadProfiles: async (ids, from, to) => {
+    loadProfiles: async (ids: string[], from: number, to: number) => {
       const result = await db()
         .from("profiles")
         .select("user_id,handle,display_name,avatar_url", { count: "exact" })
@@ -918,7 +972,16 @@ async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessio
       if (result.error) throw result.error;
       return { rows: (result.data as unknown[] | null) ?? [], total: result.count };
     },
-  });
+  };
+  const enrichment = boundedSessionIds
+    ? await loadWatchHistorySessionEnrichmentForIds({
+        sessionIds: boundedSessionIds,
+        loadSessions: loaders.loadSessions,
+        loadParticipants: loaders.loadParticipants,
+        loadUsers: loaders.loadUsers,
+        loadProfiles: loaders.loadProfiles,
+      })
+    : await loadExactWatchHistorySessionEnrichment(loaders);
   const participantRows = enrichment.participants.map(parseParticipantDatabaseRow);
   const sessionRows = enrichment.sessions.map(parseSessionDatabaseRow);
   const users = new Map(
@@ -976,6 +1039,41 @@ async function loadCanonicalSessions(userId: string): Promise<WatchHistorySessio
       episodeKey: row.episode_key,
     };
   });
+}
+
+export function parseBoundedWatchHistoryPage(value: unknown): {
+  accountGeneration: number;
+  totalTitleCount: number;
+  hasMore: boolean;
+  progressRows: unknown[];
+  sessionIds: string[];
+} {
+  if (
+    !isRecord(value) ||
+    !hasOnlyKeys(value, [
+      "accountGeneration",
+      "totalTitleCount",
+      "hasMore",
+      "progressRows",
+      "sessionIds",
+    ]) ||
+    !isPositiveInteger(value.accountGeneration) ||
+    !isNonnegativeInteger(value.totalTitleCount) ||
+    typeof value.hasMore !== "boolean" ||
+    !Array.isArray(value.progressRows) ||
+    !Array.isArray(value.sessionIds) ||
+    value.sessionIds.some((id) => !isUuid(id)) ||
+    new Set(value.sessionIds).size !== value.sessionIds.length
+  ) {
+    throw invalidDatabaseResponse();
+  }
+  return {
+    accountGeneration: value.accountGeneration,
+    totalTitleCount: value.totalTitleCount,
+    hasMore: value.hasMore,
+    progressRows: value.progressRows,
+    sessionIds: value.sessionIds,
+  };
 }
 
 function compareEpisodeRows(a: WatchHistoryProgressRow, b: WatchHistoryProgressRow): number {
