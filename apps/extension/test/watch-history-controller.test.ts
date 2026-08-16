@@ -141,6 +141,25 @@ describe("watch history meaningful-progress controller", () => {
     ]);
   });
 
+  it("durably coalesces every meaningful local sample but requests transport only on cadence and boundaries", async () => {
+    const fixture = createFixture();
+    await fixture.controller.start();
+
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    fixture.advance(5_000);
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+    await fixture.controller.observe("pause");
+
+    expect(fixture.localSyncDecisions).toEqual([
+      [false, false],
+      [true, true],
+      [true, false],
+      [true, true],
+    ]);
+  });
+
   it("never marks active-room observations as meaningful solo progress", async () => {
     const fixture = createFixture({ roomActive: true });
     await fixture.controller.start();
@@ -450,11 +469,16 @@ describe("watch history meaningful-progress controller", () => {
     const capture = async (
       event: WatchProgressEvent,
       expectedOwnerUserId?: string,
+      _meaningfulSolo?: boolean,
+      _displayMode?: "mine" | "together" | null,
+      _queueForSync?: boolean,
+      flushNow?: boolean,
     ): Promise<WatchHistoryCaptureResult> => {
       if (expectedOwnerUserId !== undefined && expectedOwnerUserId !== currentOwner) {
         return { ok: false, status: "rejected" };
       }
       local.push(event);
+      if (flushNow) enqueued.push(event);
       return { ok: true };
     };
     const controller = createWatchHistoryController({
@@ -483,13 +507,6 @@ describe("watch history meaningful-progress controller", () => {
         preferences: { youtubeHistoryEnabled: false },
       }),
       observeLocally: capture,
-      enqueue: async (event, expectedOwnerUserId?: string) => {
-        if (expectedOwnerUserId !== undefined && expectedOwnerUserId !== currentOwner) {
-          return { ok: false as const, status: "rejected" as const };
-        }
-        enqueued.push(event);
-        return { ok: true as const };
-      },
       isPlaying: () => true,
       isSeeking: () => false,
       now: () => 1_700_000_000_000,
@@ -599,7 +616,7 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.current.at(-1)).toBeNull();
   });
 
-  it("keeps capture fail-closed when authority refresh cannot bootstrap", async () => {
+  it("keeps confirmed Crunchyroll capture active when a focus refresh is temporarily unavailable", async () => {
     let loadCount = 0;
     const fixture = createFixture({
       loadPreferences: async () => {
@@ -626,8 +643,12 @@ describe("watch history meaningful-progress controller", () => {
     fixture.setTime(12);
     await fixture.controller.observe("pause");
 
-    expect(fixture.local).toHaveLength(2);
-    expect(fixture.enqueued).toHaveLength(1);
+    expect(fixture.local.map((event) => event.kind)).toEqual([
+      "heartbeat",
+      "heartbeat",
+      "pause",
+    ]);
+    expect(fixture.enqueued.map((event) => event.kind)).toEqual(["heartbeat", "pause"]);
   });
 
   it("serializes concurrent forced events and keeps the retained source through cleanup", async () => {
@@ -738,7 +759,6 @@ describe("watch history meaningful-progress controller", () => {
   it("suppresses solo publication when the final room-entry enqueue fails and requires a fresh session gate after leave", async () => {
     const fixture = createFixture({
       sessionKeys: ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"],
-      rejectLocalKinds: new Set(["source_change"]),
       rejectEnqueueKinds: new Set(["source_change"]),
     });
     await fixture.controller.start();
@@ -783,7 +803,7 @@ describe("watch history meaningful-progress controller", () => {
 
   it("serializes room exit behind an in-flight shared ended observation before opening a fresh solo gate", async () => {
     const fixture = createFixture({
-      holdLocalAt: 4,
+      holdLocalAt: 5,
       sessionKeys: [
         "11111111-1111-4111-8111-111111111111",
         "22222222-2222-4222-8222-222222222222",
@@ -799,7 +819,7 @@ describe("watch history meaningful-progress controller", () => {
 
     fixture.setTime(13);
     const sharedEnded = fixture.controller.observe("ended");
-    await fixture.waitForLocalAttempts(4);
+    await fixture.waitForLocalAttempts(5);
     const leaving = fixture.controller.setRoomActive(false);
     let leaveResolved = false;
     void leaving.then(() => { leaveResolved = true; });
@@ -823,7 +843,7 @@ describe("watch history meaningful-progress controller", () => {
 
   it("keeps rapid room re-entry active while a queued exit waits for shared persistence", async () => {
     const fixture = createFixture({
-      holdLocalAt: 4,
+      holdLocalAt: 5,
       sessionKeys: [
         "11111111-1111-4111-8111-111111111111",
         "22222222-2222-4222-8222-222222222222",
@@ -839,7 +859,7 @@ describe("watch history meaningful-progress controller", () => {
 
     fixture.setTime(13);
     const sharedEnded = fixture.controller.observe("ended");
-    await fixture.waitForLocalAttempts(4);
+    await fixture.waitForLocalAttempts(5);
     const leaving = fixture.controller.setRoomActive(false);
     const reentering = fixture.controller.setRoomActive(true);
 
@@ -911,6 +931,7 @@ function createFixture(options: {
   const local: WatchProgressEvent[] = [];
   const localMeaningfulSolo: boolean[] = [];
   const localDisplayModes: Array<"mine" | "together" | null> = [];
+  const localSyncDecisions: Array<[queueForSync: boolean, flushNow: boolean]> = [];
   const enqueued: WatchProgressEvent[] = [];
   const current: Array<HistoryObservation | null> = [];
   const roomAuthorityStates: Array<"solo" | "waiting" | "ready"> = [];
@@ -922,6 +943,23 @@ function createFixture(options: {
   let localAttempts = 0;
   let releaseHeldEnqueue: (() => void) | null = null;
   let releaseHeldLocal: (() => void) | null = null;
+  const publish = async (event: WatchProgressEvent) => {
+    enqueueCount += 1;
+    enqueueConcurrency += 1;
+    maxEnqueueConcurrency = Math.max(maxEnqueueConcurrency, enqueueConcurrency);
+    enqueued.push(event);
+    if (options.rejectEnqueueKinds?.has(event.kind)) {
+      enqueueFailures += 1;
+      enqueueConcurrency -= 1;
+      throw new Error("offline");
+    }
+    if (enqueueCount === options.holdEnqueueAt) {
+      await new Promise<void>((resolve) => { releaseHeldEnqueue = resolve; });
+    } else {
+      await Promise.resolve();
+    }
+    enqueueConcurrency -= 1;
+  };
   const observation = (): HistoryObservation => ({
     provider: "crunchyroll",
     providerLabel: "Crunchyroll",
@@ -952,7 +990,14 @@ function createFixture(options: {
       preferences: { youtubeHistoryEnabled: false },
     })),
     recoverCapture: options.recoverCapture,
-    observeLocally: async (entry, _expectedOwnerUserId, meaningfulSolo, displayMode) => {
+    observeLocally: async (
+      entry,
+      _expectedOwnerUserId,
+      meaningfulSolo,
+      displayMode,
+      queueForSync = false,
+      flushNow = false,
+    ) => {
       localAttempts += 1;
       if (options.rejectLocalKinds?.has(entry.kind)) {
         localFailures += 1;
@@ -961,27 +1006,14 @@ function createFixture(options: {
       local.push(entry);
       localMeaningfulSolo.push(meaningfulSolo);
       localDisplayModes.push(displayMode);
+      localSyncDecisions.push([queueForSync, flushNow]);
       if (localAttempts === options.holdLocalAt) {
         await new Promise<void>((resolve) => { releaseHeldLocal = resolve; });
       }
-      return options.observeResult?.() ?? { ok: true as const };
-    },
-    enqueue: async (event) => {
-      enqueueCount += 1;
-      enqueueConcurrency += 1;
-      maxEnqueueConcurrency = Math.max(maxEnqueueConcurrency, enqueueConcurrency);
-      enqueued.push(event);
-      if (options.rejectEnqueueKinds?.has(event.kind)) {
-        enqueueFailures += 1;
-        enqueueConcurrency -= 1;
-        throw new Error("offline");
-      }
-      if (enqueueCount === options.holdEnqueueAt) {
-        await new Promise<void>((resolve) => { releaseHeldEnqueue = resolve; });
-      } else {
-        await Promise.resolve();
-      }
-      enqueueConcurrency -= 1;
+      const result = options.observeResult?.() ?? { ok: true as const };
+      if (!result.ok) return result;
+      if (flushNow) await publish(entry);
+      return result;
     },
     onObservation: (entry) => { current.push(entry); },
     onRoomHistoryAuthorityState: (state) => { roomAuthorityStates.push(state); },
@@ -996,6 +1028,7 @@ function createFixture(options: {
     local,
     localMeaningfulSolo,
     localDisplayModes,
+    localSyncDecisions,
     enqueued,
     current,
     roomAuthorityStates,

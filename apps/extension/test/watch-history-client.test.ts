@@ -498,6 +498,8 @@ describe("watch history v2 client", () => {
       expectedOwnerUserId: session.user.id,
       event: progressEvent(),
       meaningfulSolo: true,
+      queueForSync: true,
+      flushNow: false,
     })).toBe(true);
     expect(isWatchHistoryMessage({
       type: "ANIDACHI_WATCH_HISTORY_V2",
@@ -505,6 +507,13 @@ describe("watch history v2 client", () => {
       expectedOwnerUserId: session.user.id,
       event: progressEvent(),
       meaningfulSolo: "yes",
+    })).toBe(false);
+    expect(isWatchHistoryMessage({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: session.user.id,
+      event: progressEvent(),
+      queueForSync: "yes",
     })).toBe(false);
     expect(isWatchHistoryMessage({
       type: "ANIDACHI_WATCH_HISTORY_V2",
@@ -687,6 +696,55 @@ describe("watch history v2 client", () => {
     expect(partition.currentObservationMeaningfulSolo).toBe(true);
     expect(partition.currentObservationDisplayMode).toBe("mine");
     expect(partition.outbox.entries).toEqual([]);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("atomically stores the visible meaningful observation and coalesced outbox without an HTTP request", async () => {
+    const owner = session.user.id;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) },
+    };
+    const writes: WatchHistoryStorageRoot[] = [];
+    const fetchImpl = vi.fn();
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: {
+          getValue: async () => stored,
+          setValue: async (value) => {
+            stored = value;
+            writes.push(value);
+          },
+        },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+    const event = { ...progressEvent(), sharedRoom: null };
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: owner,
+      event,
+      meaningfulSolo: true,
+      displayMode: "mine",
+      queueForSync: true,
+      flushNow: false,
+    })).resolves.toEqual({ ok: true });
+
+    const partition = stored.partitions[watchHistoryPartitionKey(owner, 1)];
+    expect(writes).toHaveLength(1);
+    expect(partition.currentObservation?.clientEventId).toBe(event.clientEventId);
+    expect(partition.outbox.entries).toEqual([
+      expect.objectContaining({
+        event: expect.objectContaining({ clientEventId: event.clientEventId }),
+        slot: "latest",
+      }),
+    ]);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
@@ -1054,7 +1112,7 @@ describe("watch history v2 client", () => {
   });
 
   it.each([
-    [401, { code: "UNAUTHORIZED" }, "rejected"],
+    [401, { code: "UNAUTHORIZED" }, "retryable"],
     [503, { code: "HISTORY_UNAVAILABLE" }, "retryable"],
     [200, { acceptedEventId: "malformed" }, "invalid-response"],
   ] as const)("retains pending work after non-consumable HTTP %s", async (status, body, expectedStatus) => {
@@ -1089,6 +1147,111 @@ describe("watch history v2 client", () => {
       .resolves.toEqual({ ok: false, status: expectedStatus });
     expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries)
       .toHaveLength(1);
+  });
+
+  it("refreshes a stale access token once and acknowledges the same idempotent event", async () => {
+    const owner = session.user.id;
+    const pending = { ...progressEvent(), sharedRoom: null };
+    const refreshedSession = {
+      ...session,
+      accessToken: "fresh-access-token",
+      refreshToken: "rotated-refresh-token",
+    };
+    let currentSession = session;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ...readyPartition(owner, false),
+          currentObservation: pending,
+          currentObservationMeaningfulSolo: true,
+          currentObservationDisplayMode: "mine",
+          outbox: {
+            ownerUserId: owner,
+            accountGeneration: 1,
+            entries: [{ event: pending, key: "pending", slot: "latest", persistedAt: 1 }],
+          },
+        },
+      },
+    };
+    const authorizations: string[] = [];
+    const fetchImpl = vi.fn(async (_input, init) => {
+      const authorization = new Headers(init?.headers).get("Authorization") ?? "";
+      authorizations.push(authorization);
+      return authorization === "Bearer access-token"
+        ? new Response(JSON.stringify({ code: "UNAUTHORIZED" }), { status: 401 })
+        : new Response(JSON.stringify(progressAck(pending.clientEventId)));
+    });
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => currentSession,
+      getRequestSession: async () => {
+        currentSession = refreshedSession;
+        return refreshedSession;
+      },
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "flush" }))
+      .resolves.toEqual({ ok: true, flushed: 1 });
+    expect(authorizations).toEqual(["Bearer access-token", "Bearer fresh-access-token"]);
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toEqual([]);
+  });
+
+  it("consumes a permanent rejection after refreshing a rotated session", async () => {
+    const owner = session.user.id;
+    const pending = { ...progressEvent(), sharedRoom: null };
+    const refreshedSession = {
+      ...session,
+      accessToken: "fresh-access-token",
+      refreshToken: "rotated-refresh-token",
+    };
+    let currentSession = session;
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [watchHistoryPartitionKey(owner, 1)]: {
+          ...readyPartition(owner, false),
+          currentObservation: pending,
+          currentObservationMeaningfulSolo: true,
+          currentObservationDisplayMode: "mine",
+          outbox: {
+            ownerUserId: owner,
+            accountGeneration: 1,
+            entries: [{ event: pending, key: "pending", slot: "latest", persistedAt: 1 }],
+          },
+        },
+      },
+    };
+    const fetchImpl = vi.fn(async (_input, init) => {
+      const authorization = new Headers(init?.headers).get("Authorization") ?? "";
+      return authorization === "Bearer access-token"
+        ? new Response(JSON.stringify({ code: "UNAUTHORIZED" }), { status: 401 })
+        : new Response(JSON.stringify({ code: "STALE_OBSERVATION" }), { status: 409 });
+    });
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => currentSession,
+      getRequestSession: async () => {
+        currentSession = refreshedSession;
+        return refreshedSession;
+      },
+      fetch: fetchImpl as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "flush" }))
+      .resolves.toEqual({ ok: true, flushed: 1 });
+    expect(stored.partitions[watchHistoryPartitionKey(owner, 1)]?.outbox.entries).toEqual([]);
   });
 
   it("keeps shared-room authority only in pending work and binds acknowledgements to its snapshot", async () => {
