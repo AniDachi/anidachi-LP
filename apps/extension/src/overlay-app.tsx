@@ -198,6 +198,7 @@ import {
   voiceAudioPreferencesStorageKeyForUser,
 } from "./voice-audio-preferences";
 import {
+  createWatchHistoryContentReconnectMessage,
   parseWatchHistoryBootstrapData,
   requestWatchHistory,
   type WatchHistoryCaptureResult,
@@ -1846,7 +1847,14 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         const loaded = parseWatchHistoryBootstrapData(bootstrapped.data);
         return loaded?.ownerUserId === expectedOwnerUserId ? loaded : null;
       },
-      observeLocally: async (event, expectedOwnerUserId, meaningfulSolo, displayMode) => {
+      observeLocally: async (
+        event,
+        expectedOwnerUserId,
+        meaningfulSolo,
+        displayMode,
+        queueForSync,
+        flushNow,
+      ) => {
         const response = await requestWatchHistory({
           type: "ANIDACHI_WATCH_HISTORY_V2",
           command: "observe-progress",
@@ -1854,15 +1862,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
           event,
           meaningfulSolo,
           displayMode,
-        });
-        return response.ok ? ({ ok: true } as const) : response as WatchHistoryCaptureResult;
-      },
-      enqueue: async (event, expectedOwnerUserId) => {
-        const response = await requestWatchHistory({
-          type: "ANIDACHI_WATCH_HISTORY_V2",
-          command: "enqueue-progress",
-          expectedOwnerUserId,
-          event,
+          queueForSync,
+          flushNow,
         });
         return response.ok ? ({ ok: true } as const) : response as WatchHistoryCaptureResult;
       },
@@ -1884,6 +1885,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         await controller.setRoomHistoryAuthority(retainedRoomAuthority);
       }
       await controller.recover();
+      await requestWatchHistory(createWatchHistoryContentReconnectMessage());
     }).catch(() => undefined);
     const removeHistoryListeners = bindWatchHistoryPlaybackListeners({
       video: adapter.video,
