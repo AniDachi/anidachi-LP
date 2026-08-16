@@ -24,8 +24,11 @@ WXT 0.20/Chrome Manifest V3 storage, Cloudflare Workers/Durable Objects with
 hibernatable WebSockets, `jose` HS256 JWTs, Vitest, Node test runner, Playwright
 room harness, pnpm 11.2.2, Node 22.23.1.
 
-**Status:** Proposed for approval. Implementation, branch creation, migrations,
-deployments, and remote changes have not started.
+**Status:** Waves 0-4 and the Task 8 local-first Popup/web read-model switch are
+implemented on `staging`. Task 9 is being prepared as a separately deployable
+additive database prerequisite followed by the logical runtime cutover. The
+cutover migration/runtime, Task 10 staging acceptance, production promotion, and
+legacy cleanup have not been applied.
 
 ## Execution Waves And Mandatory Stops
 
@@ -93,7 +96,7 @@ authorize the next one; each stop requires explicit user approval.
 | Shared-room proof | Add generations to the initial room token; reissue the room token; issue a self-contained signed Worker proof; persist a compact room-authority lifecycle ledger | Keep the current room token unchanged. The default minimal choice is a private self-contained `room_history` attestation after verified JOIN and each source change, using the existing signing secret with strict `typ`/issuer/audience separation, but it is authorized only if the Wave 1 lifecycle/threat gate passes. If it fails, stop and amend this plan before adding a compact authority ledger. | The web cannot know Durable Object generations when it creates the connection token. The signed proof establishes participant/session/generations at issuance; persisted room rows can establish only room, durable membership, join/end bounds. A separate key improves trust separation, but pre-release MVP does not add that configuration unless the threat model finds the shared-key boundary unacceptable. | Happy path remains one additive private event and no new service. The gate prevents falsely claiming that current database rows prove session/generation history; a ledger is not added speculatively. |
 | YouTube meaningful progress | Duration/elapsed thresholds; route-only eligibility; actual playback evidence | Require account opt-in, canonical long-form `/watch`, stable video ID, supported surface, valid media values, and either observed non-seeking playback advancement while playing or `ended` | No arbitrary video-length or watched-time threshold is defensible. Actual advancement answers whether playback really happened. | Small provider policy plus a provider-neutral controller; 60 seconds remains only a transport heartbeat interval. |
 | Receipts/outbox | Time/count limits invented in client code; unbounded queue; structurally coalesced queue | Keep receipts exactly 14 days. Keep at most `pendingTerminal + latest` per logical session/episode key, remove acknowledged entries immediately, use actual Chrome byte accounting, and define explicit storage-full behavior. | This matches the saved plan and avoids unsupported limits. Idempotency state is bounded by time; local retry state is bounded by its shape and browser quota. | No cron and no outbox TTL. Overflow triggers flush/coalescing, preserves an existing terminal event, then pauses new capture with a retryable visible error if storage still cannot accept the write. |
-| Migration strategy | Full compatibility/backfill; destructive replacement; clean pre-release cutover | Use an additive foundation followed by a coordinated logical clean cutover: import no v1 test history, stop v1 writers/readers together, retain legacy tables read-only for rollback, and delete them only in a later separately approved cleanup. | The product is pre-release and existing history is test data. Dual reads, union history, backfill, and long-lived adapters add risk without user value; immediate table drops weaken rollback. | Empty v2 history is acceptable. Old extension builds receive `UPGRADE_REQUIRED`; the current staging artifact and website move together. |
+| Migration strategy | Full compatibility/backfill; destructive replacement; clean pre-release cutover | Use an additive foundation and separately deployed v2 Recent People RPC, then a coordinated logical runtime cutover: import no v1 test history, stop v1 writers/readers together, retain the legacy function and tables read-only for rollback, and delete them only in a later separately approved cleanup. | The product is pre-release and existing history is test data. Dual reads, union history, backfill, and long-lived adapters add risk without user value; immediate function/table replacement weakens deploy ordering and rollback. | Empty v2 history is acceptable. The additive RPC can deploy while v1 remains live; after acceptance, old extension builds receive `UPGRADE_REQUIRED` and the current staging artifact and website move together. |
 
 ## Final MVP Boundary
 
@@ -1146,13 +1149,15 @@ independent evidence, and retains old tables solely as inert rollback storage.
   reconcile messages. Classify every result. Only disabled v1 service code,
   migrations, tests, and historical docs may remain.
 
-- [ ] **Step 2: Add the cutover migration**
+- [ ] **Step 2: Add and separately deploy the database prerequisite**
 
-  Replace `list_recent_people_evidence` with a service-role-only read of
-  pair-keyed `recent_people_evidence`; do not union legacy checkpoints and do not
-  backfill test evidence. Return `other_user_id`, `last_room_id`, and server-owned
-  `last_watched_at` only. The migration does not drop/truncate legacy history
-  tables.
+  Add `list_recent_people_evidence_v2` as a service-role-only read of pair-keyed
+  `recent_people_evidence`; do not replace the v1 function, union legacy
+  checkpoints, or backfill test evidence. Return `other_user_id`, `last_room_id`,
+  and server-owned `last_watched_at` only. The migration does not drop/truncate
+  legacy history tables. Merge and verify this migration in a prerequisite PR
+  before the runtime cutover PR so database and web auto-deploy order cannot
+  create an incompatible interval.
 
 - [ ] **Step 3: Remove the unsupported shared-room count atomically**
 
@@ -1176,17 +1181,27 @@ independent evidence, and retains old tables solely as inert rollback storage.
   future drop migration is explicitly outside this plan and requires separate
   approval after staging acceptance. No current test history is imported.
 
-- [ ] **Step 6: Run cutover gates and commit**
+- [ ] **Step 6: Run cutover gates and create separately deployable commits/PRs**
 
   ```bash
   pnpm --filter @anidachi/web test -- watch-history-v2-sql.test.ts \
-    watch-history-v2-routes.test.ts social.test.ts
+    watch-history-v2-routes.test.ts watch-library-routes.test.ts \
+    friends-recent-people.test.ts social.test.ts
   pnpm --filter @anidachi/web check
   rg -n "watch_progress_checkpoints|reconcileWatchProgress" \
     apps/web apps/extension packages/protocol
   git add apps/web/supabase/migrations/20260814020000_watch_history_v2_clean_cutover.sql \
+    apps/web/lib/anidachi-auth/watch-history-v2-sql.test.ts \
+    apps/web/supabase/tests/watch_history_v2.test.sql
+  git commit -m "feat(history): add recent people v2 evidence rpc"
+  # Merge this prerequisite into staging and verify db-staging before continuing.
+  git add \
     apps/web/app/api/watch-progress apps/web/app/api/watch-library \
-    apps/web/lib/anidachi-auth apps/web/app/friends packages/protocol/src/account.ts \
+    apps/web/lib/anidachi-auth/social.ts apps/web/lib/anidachi-auth/social.test.ts \
+    apps/web/lib/anidachi-auth/watch-library-routes.ts \
+    apps/web/lib/anidachi-auth/watch-library-routes.test.ts \
+    apps/web/lib/friends-recent-people.test.ts apps/web/app/friends \
+    packages/protocol/src/account.ts \
     packages/protocol/test/account.test.ts apps/extension/src/popup-people-panel.tsx \
     apps/extension/test
   git commit -m "feat(history): cut over pre-release runtime to v2"
@@ -1232,13 +1247,17 @@ loaded extension artifacts before any promotion.
 
 - [ ] **Step 3: Deploy to staging in compatibility-safe order**
 
-1. Merge/apply additive Supabase foundation and verify migration history.
+1. Merge/apply the additive Supabase foundation and v2 Recent People RPC, then
+   verify migration history. Neither prerequisite changes the active v1 contract.
 2. Deploy web v2 APIs while v1 routes still work.
 3. Deploy Worker protocol/authority; old clients ignore the additive event.
-4. Build and validate the staging extension artifact.
+4. Build and validate the pre-cutover staging extension artifact.
 5. Load that artifact in the authenticated staging browser profiles.
-6. Verify v2 end to end.
-7. Only then apply the logical cutover migration and 426 v1 route change.
+6. Verify v2 end to end while v1 remains available.
+7. Build the cutover artifact, merge the runtime cutover PR, and load that
+   artifact after the website deploy is healthy. This PR performs the 426 route
+   switch and starts using the already-deployed v2 Recent People RPC; it applies
+   no breaking database replacement.
 
   Run applicable commands:
 
