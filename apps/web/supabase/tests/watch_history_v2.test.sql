@@ -526,6 +526,51 @@ select is(
   'two accepted shared writers derive both directional evidence rows'
 );
 
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.list_recent_people_evidence_v2(
+      '11111111-1111-4111-8111-111111111111'
+    ) as evidence
+    inner join public.recent_people_evidence as stored
+      on stored.user_id = '11111111-1111-4111-8111-111111111111'
+      and stored.other_user_id = evidence.other_user_id
+      and stored.last_room_id = evidence.last_room_id
+      and stored.last_watched_at = evidence.last_watched_at
+    where evidence.other_user_id = '22222222-2222-4222-8222-222222222222'
+      and evidence.last_room_id = 'watch-v2-room'
+  ),
+  1::bigint,
+  'Recent People reads the exact pair-owned v2 evidence row'
+);
+
+select ok(
+  pg_catalog.has_function_privilege(
+    'service_role',
+    'public.list_recent_people_evidence_v2(uuid)',
+    'EXECUTE'
+  ),
+  'service_role can execute the v2 Recent People evidence function'
+);
+
+select ok(
+  not pg_catalog.has_function_privilege(
+    'anon',
+    'public.list_recent_people_evidence_v2(uuid)',
+    'EXECUTE'
+  ),
+  'anon cannot execute the v2 Recent People evidence function'
+);
+
+select ok(
+  not pg_catalog.has_function_privilege(
+    'authenticated',
+    'public.list_recent_people_evidence_v2(uuid)',
+    'EXECUTE'
+  ),
+  'authenticated cannot execute the v2 Recent People evidence function'
+);
+
 select throws_like(
   $$
     select public.apply_watch_progress_v2(

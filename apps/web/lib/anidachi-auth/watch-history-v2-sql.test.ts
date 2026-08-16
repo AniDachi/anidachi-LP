@@ -7,6 +7,10 @@ const MIGRATION_URL = new URL(
   "../../supabase/migrations/20260814010000_watch_history_v2_foundation.sql",
   import.meta.url,
 );
+const CUTOVER_MIGRATION_URL = new URL(
+  "../../supabase/migrations/20260814020000_watch_history_v2_clean_cutover.sql",
+  import.meta.url,
+);
 
 function migrationSql() {
   try {
@@ -23,6 +27,19 @@ function normalizedSql() {
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
+}
+
+function normalizedCutoverSql() {
+  try {
+    return readFileSync(CUTOVER_MIGRATION_URL, "utf8")
+      .replace(/--.*$/gm, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return "";
+    throw error;
+  }
 }
 
 function functionDefinition(name: string) {
@@ -551,5 +568,31 @@ test("receipt cleanup index starts with the locked account boundary", () => {
   assert.match(
     normalizedSql(),
     /index idx_watch_history_receipts_expiry on public\.watch_history_receipts \(user_id, expires_at\)/,
+  );
+});
+
+test("clean cutover reads only pair-owned recent-person evidence", () => {
+  const sql = normalizedCutoverSql();
+  assert.match(sql, /create or replace function public\.list_recent_people_evidence_v2\(/);
+  assert.match(
+    sql,
+    /returns table \( other_user_id uuid, last_room_id text, last_watched_at timestamptz \)/,
+  );
+  assert.match(sql, /from public\.recent_people_evidence as evidence/);
+  assert.match(sql, /where evidence\.user_id = p_viewer_user_id/);
+  assert.doesNotMatch(sql, /watch_progress_checkpoints|shared_room_count/);
+});
+
+test("clean cutover keeps legacy history inert and the evidence function service-role-only", () => {
+  const sql = normalizedCutoverSql();
+  assert.doesNotMatch(sql, /\b(?:drop|truncate)\s+(?:table\s+)?public\.(?:watch_sessions|watch_progress_checkpoints|user_tracked_titles)\b/);
+  assert.doesNotMatch(sql, /drop function(?: if exists)? public\.list_recent_people_evidence\(uuid\)/);
+  assert.match(
+    sql,
+    /revoke all on function public\.list_recent_people_evidence_v2\(uuid\) from public, anon, authenticated/,
+  );
+  assert.match(
+    sql,
+    /grant execute on function public\.list_recent_people_evidence_v2\(uuid\) to service_role/,
   );
 });
