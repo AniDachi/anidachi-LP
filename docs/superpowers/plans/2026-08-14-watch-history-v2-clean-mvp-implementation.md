@@ -24,11 +24,15 @@ WXT 0.20/Chrome Manifest V3 storage, Cloudflare Workers/Durable Objects with
 hibernatable WebSockets, `jose` HS256 JWTs, Vitest, Node test runner, Playwright
 room harness, pnpm 11.2.2, Node 22.23.1.
 
-**Status:** Waves 0-4 and the Task 8 local-first Popup/web read-model switch are
-implemented on `staging`. Task 9 is being prepared as a separately deployable
-additive database prerequisite followed by the logical runtime cutover. The
-cutover migration/runtime, Task 10 staging acceptance, production promotion, and
-legacy cleanup have not been applied.
+**Status:** Waves 0-4 and Tasks 8-9 are implemented on `staging` through
+`f82fdf6`; the v1 runtime cutover is active and a user confirmed the repaired
+solo Crunchyroll -> Popup -> staging website path. Task 10 automated gates are
+green locally, but the complete two-profile/two-network manual acceptance matrix
+has not been run. The title-page read fix is locally verified in a standalone
+additive migration followed by a separate web consumer commit; neither has been
+deployed. Because all observed episodes for a visible title remain intentionally
+exact and untruncated, the payload is not absolutely bounded and public release
+remains blocked. Production promotion and legacy cleanup remain stopped.
 
 ## Execution Waves And Mandatory Stops
 
@@ -765,14 +769,24 @@ it does not authorize Worker publication or shared extension writes.
   `VALIDATE CONSTRAINT` so the full scan does not retain the initial
   `ACCESS EXCLUSIVE` DDL lock. Staging still needs its own dry-run and lock/size
   observation before deployment.
-- The current GET remains exact but loads the complete account progress/session
-  snapshot before title pagination. A synthetic in-process probe took about
+- The original GET remained exact but loaded the complete account
+  progress/session snapshot before title pagination. A synthetic in-process probe took about
   123 ms and 209 MiB total RSS for 50,000 rows, and 230 ms and 292 MiB for
   100,000 rows, excluding PostgREST transfer and session enrichment. This is an
-  explicit pre-release, test-volume-only acceptance; before public release the
-  read path must use a server-bounded title-page query or pass a separately
-  approved staging data-volume/memory bound. Do not describe the current path as
-  large-history safe.
+  explicit pre-release, test-volume-only acceptance. Task 10 now removes the
+  full-account episode aggregation with a canonical one-row-per-title projection:
+  `list_watch_history_v2_page` keyset-selects the requested title page before
+  transporting its progress rows. Session enrichment is the latest 20 sessions
+  per title from a compact requester-owned `(user, session)` projection plus
+  each visible episode's latest session. A shared session's host-owned generation
+  is not compared with the viewer's account generation. The additive RPC and
+  66-assertion pgTAP contract are isolated from the runtime consumer so the
+  database prerequisite can deploy first. All episodes for a visible title are
+  still exact and untruncated; a 501-title/13,200-episode local probe returned
+  2,376 episode rows plus 20 session IDs (1,455,993 bytes) for a 50-title page
+  with about 21 MiB parser RSS growth. This does not establish an absolute bound, so public release
+  remains blocked. Do not describe the fix as live until the prerequisite and
+  consumer have passed staging in order.
 - Local PostgreSQL acceptance closes the Wave 2 source/integration gate only.
   Staging migration dry-run and two-account cookie/bearer/shared-room acceptance
   remain mandatory before deployment. Wave 3 still requires a separate approval.
@@ -1309,6 +1323,93 @@ loaded extension artifacts before any promotion.
   permission/secret impact, rollback steps, and evidence. Production migration,
   artifact promotion, and main merge require a separate user-approved promotion
   after staging acceptance.
+
+### Task 10 closeout status — 2026-08-16
+
+- Fresh protocol, API, extension, room, and real-WebRTC gates from the initial
+  closeout pass. After review fixes, web passes 206 tests with two opt-in local
+  contracts skipped in the ordinary suite; both the actual RPC/parser contract
+  and realistic parser benchmark pass separately. A staging extension artifact
+  was previously built and validated with `version_name`
+  `768c219-staging-20260816185317`; the live staging Worker smoke also passes.
+- GitHub evidence for staging commit `f82fdf6` shows the staging migration,
+  extension build, CI, Rooms, P2P Media, and staging smoke workflows succeeded.
+  The bounded-read commits are local only and are not included in that evidence.
+- Staging has the v2 foundation and clean-cutover migrations through
+  `20260814020000`. The new `20260816090000` title projection/bounded-read RPC has
+  only local Supabase proof: full migration reset, 71/71 pgTAP, schema lint,
+  local dry run, and actual RPC output parsed by the production runtime. It must
+  be the first staging PR; the web consumer is a second PR after the database
+  workflow and migration history are verified.
+- Production requires the same split. `.github/workflows/db-production.yml` and
+  the application deployment react independently to a push on `main`, so a
+  combined promotion can expose runtime before its RPC. Merge a migration-only
+  promotion, wait for `Deploy migrations to production` and verify the remote
+  migration history, then merge the runtime promotion.
+- Automated coverage and the user-confirmed solo path are not substitutes for
+  the unexecuted loaded-artifact two-profile/two-device matrix. No production
+  readiness, full staging acceptance, deployment, or legacy deletion is claimed.
+- The title projection eliminates the account-wide episode grouping and the
+  previous 20-times-episode session fanout, but an individual visible title can
+  still have an unbounded exact episode array. The measured realistic fixture is
+  not a universal bound; public release remains blocked until that API boundary
+  is explicitly resolved or separately accepted with defensible evidence.
+- EXPLAIN on the 501-title fixture shows the exact canonical-generation page
+  shape using `idx_watch_history_title_summaries_page` before `LIMIT` (51 rows,
+  0.036 ms, 18 shared hits, zero reads). Exact count separately scans only the
+  501 summary rows (0.041 ms). A real heartbeat updated one summary in 0.306 ms;
+  deleting a 1,200-episode title invoked the statement trigger once and took
+  1.004 ms. These are local measurements, not production latency claims.
+- Review round 2 installs progress maintenance before the idempotent v2-only
+  projection initialization. A rollback-only contract proves a newer write in
+  that interval survives and owns the summary max. On a skewed 10,000-session
+  title, the old window plan scanned/sorted 10,000 sessions in 3.656 ms; the new
+  indexed per-title lateral query visited 20 sessions and 20 owner rows in
+  0.030 ms. A deep cursor that formerly filtered 501 summaries now carries the
+  timestamp range in `idx_watch_history_title_summaries_page`'s index condition,
+  visiting 51 candidates in 0.026 ms. These are rollback-only local EXPLAIN
+  measurements and do not remove the unbounded visible-title episode blocker.
+- Review round 3 adds a v2-only one-row-per-user-session projection maintained
+  from participant membership. Host generation 1/viewer generation 2 coverage
+  returns all three shared sessions, and viewer full clear removes its three
+  derived rows while retaining the host's three. The requester-leading index
+  `(user_id,history_generation,provider,title_key,last_watched_at desc,session_id)`
+  visited exactly 20 rows on a rollback-only fixture containing 10,000 newer
+  non-owned same-title sessions and 20 older owned sessions (0.025 ms, 26 shared
+  hits). The pre-fix measured planner already chose the requester participant
+  index for this skew (20 participant rows plus 20 session PK probes, 0.029 ms,
+  82 hits), so no global-scan claim is inferred from that run.
+- The unapplied migration now opens an explicit transaction, sets a ten-second
+  lock timeout, and takes a write-conflicting settings-first lock before the
+  session, participant, and progress sources. This matches apply/delete writer order,
+  prevents initializer/delete resurrection for both projections, and avoids
+  relying on undocumented per-file runner atomicity. A local three-session
+  concurrency contract proves in-flight settings and session writers drain at
+  their ordered locks, later writers wait and resume after commit, and a forced
+  mid-migration error rolls back earlier DDL/DML. Lock timeout requires rerunning the database
+  workflow after writers drain; never repair history or apply fragments.
+- The prerequisite is old-web-compatible but not dormant because its triggers
+  and participant FK maintain the derived projections. Migration rollback
+  requires a separately reviewed forward cleanup after the consumer is absent:
+  drop the session trigger, participant trigger, and both progress triggers,
+  then the list RPC and maintenance functions,
+  both projection tables and their indexes in dependency order, while leaving
+  canonical v2 progress and all legacy storage untouched. No rollback migration
+  is created by Task 10.
+- Review round 4 makes session checkpoint truth authoritative end to end. The
+  user-session projection now stores `watch_sessions.last_checkpoint_at`, which
+  is the same source as the returned DTO `lastWatchedAt`; delayed/offline
+  participant timestamps cannot reorder or displace latest-20 candidates.
+  Session checkpoint/schema/provider/title/room/client identity changes maintain
+  every current v2 member projection. An invalid shared tombstone with neither
+  room nor client key deletes/creates no projection and cannot consume `LIMIT
+  20`. The valid RED failed 6/71 pgTAP assertions (20 vs 22 candidates, wrong
+  IDs 1..20, stale checkpoint, included tombstone twice, missing session
+  trigger); GREEN passes 71/71. On the rollback-only 10,000-non-owned/25-owned
+  opposed-participant-timestamp fixture, the index-only candidate scan returned
+  canonical sessions 6..25, visited exactly 20 rows in 0.017 ms (45 shared hits,
+  zero reads), and the full RPC took 25.003 ms. The 1,455,993-byte payload still
+  contains 2,376 exact episode rows, so the public-release blocker is unchanged.
 
 ## Deferred Catalog Evidence Gate (Not Part Of Core MVP Execution)
 

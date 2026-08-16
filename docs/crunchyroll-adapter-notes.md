@@ -2,6 +2,23 @@
 
 Date: 2026-05-25
 
+## Watch History v2 Release State
+
+Date: 2026-08-16
+
+Staging now runs the Watch History v2 cutover. The active Crunchyroll adapter
+observes the current episode and meaningful playback locally, the extension
+background is the only extension writer, and Popup plus website read the same
+canonical account history. A user confirmed the repaired solo Crunchyroll ->
+Popup -> staging website path after PR #188. The broader start/pause/backward
+seek/reload/end/resume matrix and two-profile shared cases have not all been
+manually verified and remain release gates.
+
+This does not change the catalog boundary below. The runtime records only
+observed seasons and episodes, reports `catalogState: "unavailable"`, and does
+not fabricate catalog totals or poll Crunchyroll for a complete catalog. No raw
+authenticated provider payload is committed.
+
 ## Catalog Observation
 
 Date: 2026-08-13

@@ -1,205 +1,130 @@
 # Shared Watch Progress Tracker
 
-Date: 2026-05-26
+Last updated: 2026-08-16.
 
-This document records the prototype direction for the Anidachi resources popup and the shared
-watch-progress tracker. The current implementation is intentionally demo-driven, but the UI and data
-shape should become a real product feature later.
+This document records the current Watch History v2 product and runtime boundary.
+The older local/demo tracker has been retired from active runtime.
 
-## Product Goal
+## Product Surface
 
-The resources popup should answer three questions quickly:
+Watch History answers three questions without becoming a second room system:
 
-- What did I watch?
-- Who did I watch it with?
-- Where can we continue together?
+- what the signed-in account watched;
+- where each observed episode can resume;
+- which solo or shared session supplied the meaningful progress.
 
-The feature is not just a personal watch history. It is a social resume surface: a user can see
-where a group stopped, where a pair stopped, and where they watched ahead alone, then restart the
-right room with the right people.
+Popup stays compact and local-first. The website provides the paginated account
+view. Both parse the same strict v2 response and show observed-only provider
+data; neither invents catalog denominators or writes progress.
 
-## Current Prototype
+## Runtime Ownership
 
-Implemented in:
+- Supabase/Postgres is the only durable account-history authority.
+- The room Durable Object remains the live room, source-generation, and playback
+  authority. It issues the signed self-attestation used by each participant to
+  publish only their own shared progress.
+- Provider/content code observes media events. The extension background is the
+  only extension writer and owns an account/generation-scoped cache and outbox.
+- Popup reads the confirmed cache plus a matching active local observation, then
+  asks background to refresh. The website reads the same server contract.
+- There is no Supabase Realtime channel, polling service, provider catalog crawl,
+  backfill, second database, or durable telemetry journal.
 
-- `apps/extension/src/popup-app.tsx`
-- `apps/extension/src/popup-styles.ts`
-- `apps/extension/src/watch-progress.ts`
-- `apps/extension/src/source-adapters/crunchyroll/progress.ts`
-- `apps/extension/src/current-resource-panel.tsx`
+## Durable Model And Convergence
 
-Current behavior:
+One mutable episode row stores canonical resume progress. Meaningful solo/shared
+sessions replace append-only checkpoints. The transactional progress RPC applies
+idempotency, server order, account generation, shared authority, and deletion
+fences together.
 
-- The extension popup opened from the Chrome toolbar shows provider folders.
-- Crunchyroll has real local watch-progress records from `chrome.storage.local`.
-- Netflix, YouTube, and Amazon are placeholder provider folders.
-- Series expand into episode rows.
-- Episode rows have a small play triangle on the left to return to the source URL.
-- Each episode can render demo shared-progress sessions:
-  - group watch progress;
-  - pair/date watch progress;
-  - solo progress.
-- Clicking an avatar marker opens a compact glass popover with participants and an action button.
+The outbox is bounded by shape, not an invented count or expiry: each logical
+session/episode key retains at most terminal plus latest. Acknowledged entries are
+removed. Chrome's actual storage accounting decides quota behavior; an existing
+terminal is preserved if a new capture cannot be stored.
 
-Important: friend/session data in the tracker is fake demo data today. Only Crunchyroll resource and
-episode progress are real.
+Receipts expire exactly 14 days after server acceptance. Episode/title deletion
+fences reject older queued work. Full clear advances the account generation.
+Sign-out and account switch hide prior-owner data while retaining dormant pending
+work until the user explicitly confirms discard.
 
-## Visual Model
+## Read Boundary
 
-The shared tracker is a single layered timeline, not multiple parallel bars.
+The API contract is title-cursor-paginated. The initial implementation paginated
+after loading the full account, which was accepted only for pre-release test
+volume and blocked public release. The locally verified additive
+`20260816090000_watch_history_v2_bounded_read.sql` migration maintains one
+canonical summary row per observed v2 title and keyset-selects the requested
+title page before loading its episodes. Session enrichment is limited to the
+latest 20 title sessions plus each visible episode's canonical latest session.
+A compact v2-only row per `(user, session)` records the user's current account
+generation, title key, and canonical `watch_sessions.last_checkpoint_at`, the
+same value returned as the session DTO's `lastWatchedAt`. Participant heartbeat
+time does not affect candidate order. Its requester/title/order index avoids
+candidate scans across other users, and it does not compare a host-owned shared-
+session generation with the viewer's account generation. Sessions with neither
+`room_id` nor `client_session_key` are internal shared tombstones, are omitted
+from initialization/maintenance, and cannot consume the latest-20 bound.
+The exact title count remains server-computed and no business retention cap was
+invented. Normal heartbeat writes incrementally upsert the title timestamp;
+episode/title/all delete statements recompute each distinct affected title once.
+The migration's explicit transaction locks settings first, then session,
+participant, and progress sources, before installing maintenance and running either v2-only
+initializer. This matches writer order, lets in-flight writers drain, blocks
+later writers, and prevents concurrent deletes from being reinserted from a
+stale initializer snapshot. A ten-second lock timeout rolls the whole migration
+back for workflow retry. Title initialization preserves the newest observation;
+the locked session initialization converges exactly to canonical checkpoint and
+identity state. Deep cursors use an indexable timestamp bound plus the strict binary tie
+predicate. Recent
+session lookup is a requester-leading indexed per-visible-title lateral query
+capped at 20 before the visible episodes' latest-session IDs are unioned.
+Participant/full-clear deletion cascades only the requester's derived rows.
+Session-side checkpoint/identity writes update current member projections, and
+hard-room-delete tombstones remove their derived rows.
 
-Rules:
+All observed episodes for each visible title remain exact and untruncated. A
+local synthetic account with 501 titles and 13,200 episodes returned a 50-title
+page containing 2,376 episode rows and 20 session IDs in 1,455,993 bytes, with
+about 21 MiB parser RSS growth. That realistic measurement is not an absolute per-title bound.
+Public release therefore remains blocked pending explicit episode pagination or
+a separately approved defensible bound.
 
-- The inactive track is one neutral line.
-- Each session is a colored segment starting at 0 and ending at that session's progress.
-- Longer segments sit underneath shorter segments.
-- Shorter segments sit visually on top so overlapping progress is readable.
-- Avatar markers sit above all timeline segments.
-- A group marker uses avatar circles stacked almost directly on top of each other, with only a tiny
-  offset. It should read as "there are several people here" without taking much width.
-- Clicking a marker opens the participant popover.
-- The popover must stay compact, must not be clipped by provider rows, and must have a lightweight
-  close icon without a heavy circular button.
+The migration is not live yet. It must merge/apply and pass migration-history
+verification before the separate web consumer PR on staging. Production requires
+the same migration-only promotion and successful independent production database
+workflow before the runtime promotion.
 
-Color meaning:
+## Providers
 
-- Green: group/shared watch progress with several friends.
-- Rose/red: pair watch progress, for example "continue with girlfriend".
-- Blue/cyan: solo progress where the user watched ahead alone.
+Crunchyroll records the active observed episode after meaningful playback.
+Catalog state stays `unavailable`; observed seasons/episodes are not proof of a
+complete catalog. YouTube is account-wide opt-in and accepts only canonical
+supported long-form playback with actual advancement or an ended event. Shorts,
+embed, preview, and route-only observations remain ineligible.
 
-The tracker should feel like one timeline with different social states layered on it, not like a
-chart or analytics widget.
+## Current Evidence And Remaining Gate
 
-## Interaction Model
+Tasks 0-9 are on staging through `f82fdf6`; v1 HTTP paths now return
+`426 UPGRADE_REQUIRED`, while legacy tables remain inert for rollback. A user
+confirmed the repaired solo Crunchyroll -> Popup -> staging website path after
+PR #188. Task 10 local automation, room/P2P regression, artifact validation, and
+staging Worker smoke pass. The corrected local database contract passes 71
+pgTAP assertions plus migration-order and concurrency/rollback contracts, and
+actual local RPC output passes the production runtime parser.
 
-Episode row:
+The full loaded-artifact acceptance matrix is not complete. Two authenticated
+profiles on two devices/networks must still verify self-only shared writes,
+reconnect/source boundaries, offline terminal replay, deletion fences, account
+switch/discard/late-response behavior, cross-device Popup/web equality, YouTube
+opt-in, and near-quota terminal preservation before production readiness can be
+claimed.
 
-1. User opens the extension popup.
-2. User expands a provider, then a series.
-3. User sees episodes with progress timelines.
-4. User clicks a marker on the timeline.
-5. A compact popover opens near that marker.
-6. The popover shows the session label, progress detail, participants, and one action.
+## Rollback
 
-Popover actions:
-
-- Group marker: create or resume a room with that group.
-- Pair marker: create or resume a room with that one person.
-- Solo marker: continue alone or open the source URL.
-
-Production behavior should eventually:
-
-- Create a room with preselected participants.
-- Copy/share an invite if not all participants are online.
-- Reuse the saved source URL and target time.
-- Seek the local video to the saved session progress after navigation, only after adapter readiness.
-
-## Data Model Needed For Production
-
-Current local storage stores item/episode progress, but not true social sessions. Production needs a
-session-level model.
-
-Suggested model:
-
-```ts
-type WatchSessionKind = "group" | "pair" | "solo";
-
-interface WatchProgressSession {
-  id: string;
-  provider: "crunchyroll" | "netflix" | "youtube" | "amazon";
-  sourceUrl: string;
-  itemId: string;
-  itemTitle: string;
-  episodeId?: string;
-  episodeTitle?: string;
-  kind: WatchSessionKind;
-  participantIds: string[];
-  roomId?: string;
-  currentTime: number;
-  duration: number;
-  progress: number;
-  lastWatchedAt: number;
-  updatedByUserId: string;
-}
-```
-
-Derived UI groups:
-
-- Provider folder: groups all records by source provider.
-- Series/movie item: groups by `itemId`.
-- Episode row: groups by `episodeId` for series, or `itemId` for movies.
-- Timeline session markers: all sessions for that episode/movie, sorted by progress descending for
-  rendering.
-
-Storage strategy:
-
-- Prototype: `chrome.storage.local`.
-- MVP with accounts: Supabase/Postgres for durable social session history.
-- Live room playback state must still stay in Durable Objects; do not persist every host state tick
-  to Postgres.
-- Persist only meaningful checkpoints:
-  - room created;
-  - participant joined/left;
-  - episode/source changed;
-  - pause/end/pagehide;
-  - every 15-30 seconds while watching;
-  - final room closed.
-
-## Real Data Flow
-
-1. Adapter identifies the provider, item, episode, duration, and source URL.
-2. Room client knows current participants and room id.
-3. Progress recorder writes checkpoints for the current room.
-4. Backend merges checkpoints into a `WatchProgressSession`.
-5. Popup reads history from local cache first, then syncs with backend after auth.
-6. User clicks a session marker.
-7. Extension creates a room with selected participants and source metadata.
-8. Extension opens the source URL.
-9. Adapter waits until player is ready.
-10. Extension seeks to `currentTime` and starts in paused or synced state.
-
-For Crunchyroll, step 9 is important because the player can show a `/watch/...` route before the real
-video object is ready.
-
-## Production Rules
-
-Do:
-
-- Keep the popup dense and compact.
-- Keep progress readable at small width.
-- Prefer initials now; later use profile avatars when available.
-- Make group avatar stacks extremely compact.
-- Keep the popover one action deep.
-- Cache recent progress locally so the popup opens instantly.
-- Treat Crunchyroll episode transitions as SPA/media remounts.
-
-Do not:
-
-- Turn this into a full history dashboard inside the popup.
-- Add a large chat or comments surface here.
-- Store raw video, camera streams, or page data.
-- Write live playback state to Postgres every second.
-- Assume all providers expose the same metadata.
-- Let popovers overflow outside the popup viewport or hide behind avatar markers.
-
-## Open Product Questions
-
-- Should group progress and solo progress both show on the same episode if the user watched ahead
-  after the group stopped?
-- If two groups watched the same episode to different points, should we show both markers or merge
-  by most recent group?
-- Should "Create room" notify friends immediately, or only create a copyable invite?
-- Should a pair session have a stronger visual priority than a large group session?
-- Should progress reset or mark complete after all participants finish an episode together?
-
-## Conversion Checklist
-
-- Replace `getDemoSessions()` in `popup-app.tsx` with real session data.
-- Add a durable `WatchProgressSession` schema to shared protocol/db package.
-- Add backend endpoints for history fetch and room-from-session creation.
-- Add local cache invalidation and migration for `anidachi.watchProgress.v1`.
-- Add tests for layered session sorting and popover alignment.
-- Add browser/UI tests for clipping, marker clicks, close button, and source navigation.
-- Add real friend identity/avatar support.
-- Add provider-specific progress extractors beyond Crunchyroll.
-- Add privacy copy explaining that watch history is social-room metadata, not video content.
+Before destructive cleanup, application rollback is a redeploy of the prior web,
+Worker, and extension artifacts. Additive v2 tables/functions and inert v1 tables
+remain available; do not delete legacy storage as part of this release closeout.
+The bounded-read prerequisite is old-runtime-compatible but not dormant because
+its triggers/FK maintain both projections. Use the Watch History forward-cleanup
+sequence in `docs/release-and-rollback-runbook.md` if that migration itself must
+be removed; canonical progress remains untouched.
