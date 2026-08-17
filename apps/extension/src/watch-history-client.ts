@@ -237,7 +237,6 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   const request = dependencies.fetch ?? fetch;
   const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession;
   let preferenceSyncTail: Promise<void> = Promise.resolve();
-  let preferenceRevision = 0;
 
   async function handle(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse> {
     if (message.command === "other-owner-pending") {
@@ -485,14 +484,37 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         data: localPreferencesResponse(session.user.id, pending.accountGeneration, pending.preferences),
       };
     }
-    const startedAtRevision = preferenceRevision;
+    const startedPreference = await readPreferenceRevision(session);
     const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences");
     if (!response.ok) return response.error;
     const parsed = WatchHistoryPreferencesResponseSchema.safeParse(response.body);
     if (!parsed.success || parsed.data.meta.ownerUserId !== response.session.user.id) {
       return { ok: false, status: "invalid-response" };
     }
-    if (preferenceRevision !== startedAtRevision) {
+    let localWon = false;
+    const saved = await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => {
+      const changedWhileReading = startedPreference?.accountGeneration === partition.accountGeneration &&
+        partition.preferencesLocalRevision !== startedPreference.localRevision;
+      if (partition.preferencesSyncPending === true || changedWhileReading) {
+        localWon = true;
+        return partition;
+      }
+      return {
+        ...partition,
+        preferences: parsed.data.preferences,
+        preferencesConfirmed: true,
+        preferencesSyncPending: false,
+        captureMarkersReady: true,
+      };
+    });
+    if (saved.authorityRejected) return { ok: false, status: "rejected" };
+    if (saved.stale) return { ok: false, status: "generation-mismatch" };
+    if (!saved.ok) return saved;
+    if (localWon) {
+      const latest = await readPendingPreferences(response.session);
+      if (latest) {
+        queuePreferenceSync(response.session, latest.accountGeneration, latest.preferences);
+      }
       const local = await readConfirmedPreferences(response.session);
       return local
         ? {
@@ -505,37 +527,6 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           }
         : { ok: false, status: "rejected" };
     }
-    let pendingWon = false;
-    const saved = await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => {
-      if (partition.preferencesSyncPending === true) {
-        pendingWon = true;
-        return partition;
-      }
-      return {
-        ...partition,
-        preferences: parsed.data.preferences,
-        preferencesConfirmed: true,
-        preferencesSyncPending: false,
-        captureMarkersReady: true,
-      };
-    });
-    if (saved.authorityRejected) return { ok: false, status: "rejected" };
-    if (saved.stale) return { ok: false, status: "generation-mismatch" };
-    if (!saved.ok) return saved;
-    if (pendingWon) {
-      const latest = await readPendingPreferences(response.session);
-      if (latest) {
-        queuePreferenceSync(response.session, latest.accountGeneration, latest.preferences);
-        return {
-          ok: true,
-          data: localPreferencesResponse(
-            response.session.user.id,
-            latest.accountGeneration,
-            latest.preferences,
-          ),
-        };
-      }
-    }
     return { ok: true, data: parsed.data };
   }
 
@@ -545,7 +536,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       queuePreferenceSync(session, pending.accountGeneration, pending.preferences);
       return cachedBootstrap(session);
     }
-    const startedAtRevision = preferenceRevision;
+    const startedPreference = await readPreferenceRevision(session);
     const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences");
     if (!response.ok) {
       if (!isFailureStatus(response.error, "retryable")) return response.error;
@@ -555,12 +546,13 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (!parsed.success || parsed.data.meta.ownerUserId !== response.session.user.id) {
       return { ok: false, status: "invalid-response" };
     }
-    if (preferenceRevision !== startedAtRevision) return cachedBootstrap(response.session);
     const generation = parsed.data.meta.accountGeneration;
-    let pendingWon = false;
+    let localWon = false;
     const saved = await replaceCanonicalPartition(response.session, generation, (partition) => {
-      if (partition.preferencesSyncPending === true) {
-        pendingWon = true;
+      const changedWhileReading = startedPreference?.accountGeneration === partition.accountGeneration &&
+        partition.preferencesLocalRevision !== startedPreference.localRevision;
+      if (partition.preferencesSyncPending === true || changedWhileReading) {
+        localWon = true;
         return partition;
       }
       return {
@@ -574,12 +566,12 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     if (!saved.ok) return saved;
-    if (pendingWon) {
+    if (localWon) {
       const latest = await readPendingPreferences(response.session);
       if (latest) {
         queuePreferenceSync(response.session, latest.accountGeneration, latest.preferences);
-        return cachedBootstrap(response.session);
       }
+      return cachedBootstrap(response.session);
     }
     const paused = await capturePauseState(response.session, generation);
     if (!sameSession(response.session, await dependencies.getCurrentSession())) {
@@ -682,7 +674,6 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   ): Promise<WatchHistoryMessageResponse> {
     const input = WatchHistoryPreferencesUpdateSchema.safeParse(rawInput);
     if (!input.success) return { ok: false, status: "invalid-request" };
-    preferenceRevision += 1;
     const root = await storage.readRoot();
     const generation = root.activeGenerations?.[session.user.id];
     if (generation === undefined) return { ok: false, status: "retryable" };
@@ -691,6 +682,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       preferences: input.data,
       preferencesConfirmed: true,
       preferencesSyncPending: true,
+      preferencesLocalRevision: (partition.preferencesLocalRevision ?? 0) + 1,
       captureMarkersReady: true,
     }));
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
@@ -720,6 +712,27 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       return null;
     }
     return { accountGeneration, preferences: preferences.data };
+  }
+
+  async function readPreferenceRevision(session: ExtensionAuthTokens): Promise<{
+    accountGeneration: number;
+    localRevision: number;
+  } | null> {
+    if (!sameSession(session, await dependencies.getCurrentSession())) return null;
+    const root = await storage.readRoot();
+    const accountGeneration = root.activeGenerations?.[session.user.id];
+    if (accountGeneration === undefined) return null;
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, accountGeneration)];
+    if (!partition ||
+      partition.ownerUserId !== session.user.id ||
+      partition.accountGeneration !== accountGeneration ||
+      !sameSession(session, await dependencies.getCurrentSession())) {
+      return null;
+    }
+    return {
+      accountGeneration,
+      localRevision: partition.preferencesLocalRevision ?? 0,
+    };
   }
 
   async function readConfirmedPreferences(session: ExtensionAuthTokens): Promise<{
@@ -1167,6 +1180,7 @@ function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHi
     preferences: null,
     preferencesConfirmed: false,
     preferencesSyncPending: false,
+    preferencesLocalRevision: 0,
     currentObservation: null,
     currentObservationMeaningfulSolo: false,
     currentObservationDisplayMode: null,
