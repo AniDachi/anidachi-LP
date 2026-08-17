@@ -208,6 +208,7 @@ import {
   type WatchHistoryController,
 } from "./watch-history-controller";
 import { bindWatchHistoryPlaybackListeners } from "./watch-history-listeners";
+import { bindWatchHistoryPreferenceListener } from "./watch-history-preference-listener";
 import {
   resolveWatchHistoryRuntimeGate,
   shouldRefreshWatchHistoryAuthority,
@@ -1891,7 +1892,12 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
       video: adapter.video,
       controller,
     });
+    const removeHistoryPreferenceListener = bindWatchHistoryPreferenceListener({
+      ownerUserId: expectedOwnerUserId,
+      controller,
+    });
     return () => {
+      removeHistoryPreferenceListener();
       removeHistoryListeners();
       if (watchHistoryControllerRef.current === controller) {
         watchHistoryControllerRef.current = null;

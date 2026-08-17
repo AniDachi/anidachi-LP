@@ -1306,6 +1306,7 @@ export function usesStoredWatchHistorySession(
 ): boolean {
   return command === "enqueue-progress" ||
     command === "observe-progress" ||
+    command === "bootstrap" ||
     command === "bootstrap-cache" ||
     command === "flush" ||
     command === "content-reconnect" ||

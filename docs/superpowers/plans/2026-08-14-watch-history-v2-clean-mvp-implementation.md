@@ -275,7 +275,9 @@ keys.
   while that browser has no explicit local choice. A failed patch leaves one durable
   `preferencesSyncPending` marker and retries only on the existing event-driven
   bootstrap/get/flush/reconnect paths; it never blocks local capture, adds polling,
-  or exposes transport state in the switch.
+  or exposes transport state in the switch. Active provider controllers subscribe
+  to that owner-scoped local preference revision, refresh from local storage, and
+  sample immediately so enabling YouTube does not require a reload or server round trip.
 - Flush is event-driven: enqueue, browser `online`, valid auth refresh, service
   worker startup/install, Popup/manual refresh, and content-script reconnect.
   No periodic background alarm is introduced.

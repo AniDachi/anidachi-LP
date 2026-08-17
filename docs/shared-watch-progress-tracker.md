@@ -102,7 +102,9 @@ complete catalog. YouTube is an explicit browser-local opt-in, off by default,
 and accepts only canonical supported long-form playback with actual advancement
 or an ended event. The choice is mirrored to the account in the background and
 seeds only browsers without their own explicit choice. Shorts, embed, preview,
-and route-only observations remain ineligible.
+and route-only observations remain ineligible. An active supported page observes
+the local choice directly and resamples immediately; toggling does not require a
+page reload or a server response.
 
 ## Current Evidence And Remaining Gate
 

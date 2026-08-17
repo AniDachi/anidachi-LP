@@ -1144,6 +1144,7 @@ describe("watch history v2 client", () => {
   it("keeps preference reads and writes on the background-owned local session path", () => {
     expect(usesStoredWatchHistorySession("get-preferences")).toBe(true);
     expect(usesStoredWatchHistorySession("update-preferences")).toBe(true);
+    expect(usesStoredWatchHistorySession("bootstrap")).toBe(true);
     expect(usesStoredWatchHistorySession("list")).toBe(false);
     expect(usesStoredWatchHistorySession("delete")).toBe(false);
   });
