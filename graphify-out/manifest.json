@@ -285,8 +285,8 @@
     "semantic_hash": "46aa97bae6145c0f0a59e3c51cbf50c7"
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1786864384.4304633,
-    "ast_hash": "df6faf60da686be5daa83b62d0bc4a24",
+    "mtime": 1786956523.9340317,
+    "ast_hash": "f56859f083bc4014ebd8a6c68c840451",
     "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
@@ -3065,8 +3065,8 @@
     "semantic_hash": ""
   },
   "docs/shared-watch-progress-tracker.md": {
-    "mtime": 1786955366.7648945,
-    "ast_hash": "9f9ea1c32aa693c105999336fe31a03f",
+    "mtime": 1786956658.462553,
+    "ast_hash": "04147aa6094bedb7e62c1125ff0bd925",
     "semantic_hash": ""
   },
   "docs/site-extension-integration-notes.md": {
@@ -4435,8 +4435,8 @@
     "semantic_hash": "19c07fa543f5ae2aa0c6c3add9ea9889"
   },
   "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md": {
-    "mtime": 1786955366.7258322,
-    "ast_hash": "71054c25e8422a7c2a748f04c2766b93",
+    "mtime": 1786956658.425917,
+    "ast_hash": "9ea90e59d82791a801feffd3a1011fc6",
     "semantic_hash": ""
   },
   "docs/superpowers/specs/2026-08-13-watch-history-catalog-progress-design.md": {
@@ -4530,8 +4530,8 @@
     "semantic_hash": "694ee39ea7851dad6c1d70fc496bdc42"
   },
   "apps/extension/src/watch-history-client.ts": {
-    "mtime": 1786955275.7714436,
-    "ast_hash": "ed8a21a0ce71ea2b3750b0dae76f96ba",
+    "mtime": 1786956523.854391,
+    "ast_hash": "5af8e8053a0ca0cec92a94d2c436a3a9",
     "semantic_hash": ""
   },
   "apps/extension/src/watch-history-controller.ts": {
@@ -4560,8 +4560,8 @@
     "semantic_hash": "d1311f2b79eb64e18c38322455b3c75f"
   },
   "apps/extension/test/watch-history-client.test.ts": {
-    "mtime": 1786955219.465799,
-    "ast_hash": "370578e1b60734959baa0cd8a37d4617",
+    "mtime": 1786956445.9151504,
+    "ast_hash": "74e731813cf0e86eda62ff6103a981bf",
     "semantic_hash": ""
   },
   "apps/extension/test/watch-history-controller.test.ts": {
@@ -4682,6 +4682,16 @@
   "apps/web/supabase/migrations/20260816090000_watch_history_v2_bounded_read.sql": {
     "mtime": 1786882533.7855892,
     "ast_hash": "2257224b5a6a1a4637763534322a8826",
+    "semantic_hash": ""
+  },
+  "apps/extension/src/watch-history-preference-listener.ts": {
+    "mtime": 1786956523.895443,
+    "ast_hash": "8cd7aface2143f6ee4cb4972b6213fd6",
+    "semantic_hash": ""
+  },
+  "apps/extension/test/watch-history-preference-listener.test.ts": {
+    "mtime": 1786956620.6448915,
+    "ast_hash": "67878d29cd881f16ac63109d29c3ef62",
     "semantic_hash": ""
   }
 }
