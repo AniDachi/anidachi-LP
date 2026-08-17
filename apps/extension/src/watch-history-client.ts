@@ -484,6 +484,17 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         data: localPreferencesResponse(session.user.id, pending.accountGeneration, pending.preferences),
       };
     }
+    const explicitLocalChoice = await readConfirmedPreferences(session);
+    if (explicitLocalChoice && explicitLocalChoice.localRevision > 0) {
+      return {
+        ok: true,
+        data: localPreferencesResponse(
+          session.user.id,
+          explicitLocalChoice.accountGeneration,
+          explicitLocalChoice.preferences,
+        ),
+      };
+    }
     const startedPreference = await readPreferenceRevision(session);
     const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences");
     if (!response.ok) return response.error;
@@ -534,6 +545,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const pending = await readPendingPreferences(session);
     if (pending) {
       queuePreferenceSync(session, pending.accountGeneration, pending.preferences);
+      return cachedBootstrap(session);
+    }
+    const explicitLocalChoice = await readConfirmedPreferences(session);
+    if (explicitLocalChoice && explicitLocalChoice.localRevision > 0) {
       return cachedBootstrap(session);
     }
     const startedPreference = await readPreferenceRevision(session);
@@ -738,6 +753,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   async function readConfirmedPreferences(session: ExtensionAuthTokens): Promise<{
     accountGeneration: number;
     preferences: WatchHistoryPreferences;
+    localRevision: number;
   } | null> {
     if (!sameSession(session, await dependencies.getCurrentSession())) return null;
     const root = await storage.readRoot();
@@ -753,7 +769,11 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       !sameSession(session, await dependencies.getCurrentSession())) {
       return null;
     }
-    return { accountGeneration, preferences: preferences.data };
+    return {
+      accountGeneration,
+      preferences: preferences.data,
+      localRevision: partition.preferencesLocalRevision ?? 0,
+    };
   }
 
   function queuePreferenceSync(
@@ -1272,22 +1292,29 @@ export async function handleWatchHistoryHttpMessage(
 ): Promise<WatchHistoryMessageResponse> {
   const { getCurrentExtensionSession } = await import("./auth-client");
   const { getStoredAuthTokens } = await import("./auth-tokens");
-  const localCommand = message.command === "enqueue-progress" ||
-    message.command === "observe-progress" ||
-    message.command === "bootstrap-cache" ||
-    message.command === "flush" ||
-    message.command === "content-reconnect" ||
-    message.command === "recover-storage" ||
-    message.command === "other-owner-pending" ||
-    message.command === "discard-old-owner" ||
-    message.command === "discard-old-owner-work";
-  const getCurrentSession = localCommand
+  const getCurrentSession = usesStoredWatchHistorySession(message.command)
     ? getStoredAuthTokens
     : async () => getCurrentExtensionSession().catch(getStoredAuthTokens);
   return createWatchHistoryClient({
     getCurrentSession,
     getRequestSession: getCurrentExtensionSession,
   }).handle(message);
+}
+
+export function usesStoredWatchHistorySession(
+  command: WatchHistoryMessage["command"],
+): boolean {
+  return command === "enqueue-progress" ||
+    command === "observe-progress" ||
+    command === "bootstrap-cache" ||
+    command === "flush" ||
+    command === "content-reconnect" ||
+    command === "recover-storage" ||
+    command === "get-preferences" ||
+    command === "update-preferences" ||
+    command === "other-owner-pending" ||
+    command === "discard-old-owner" ||
+    command === "discard-old-owner-work";
 }
 
 export async function handleWatchHistoryAuthSessionChange(

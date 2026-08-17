@@ -112,7 +112,8 @@ The first releasable v2 slice includes:
 - deterministic retry, idempotency, ordering, account-generation fencing, and
   deletion fencing;
 - episode, title, and full-history deletion;
-- account-wide YouTube preference, off by default;
+- browser-local explicit YouTube preference, off by default, with the account
+  preference used only as a first-use seed and background mirror;
 - identical overlapping values in Popup and website;
 - cursor pagination and independent recent-person evidence;
 - offline cache/outbox recovery with no background polling;
@@ -268,12 +269,13 @@ keys.
   recovery state. Server eligibility, cadence, and acknowledgement rules remain
   unchanged. The YouTube switch is also local-first: Popup always presents only
   `On` or `Off`, and a click atomically updates the current owner/generation's local
-  capture authority before returning. The same account-wide preference is then
-  patched in the background. A failed patch leaves one durable
+  capture authority before returning. That explicit browser choice remains
+  authoritative across Popup reopen and cannot be reversed by a later server read.
+  The account preference is patched in the background and seeds a browser only
+  while that browser has no explicit local choice. A failed patch leaves one durable
   `preferencesSyncPending` marker and retries only on the existing event-driven
   bootstrap/get/flush/reconnect paths; it never blocks local capture, adds polling,
-  or exposes transport state in the switch. A canonical preference read may replace
-  the local value only when no newer local choice is pending.
+  or exposes transport state in the switch.
 - Flush is event-driven: enqueue, browser `online`, valid auth refresh, service
   worker startup/install, Popup/manual refresh, and content-script reconnect.
   No periodic background alarm is introduced.
@@ -1105,12 +1107,13 @@ uses cursor pages from the same DTO; no surface writes raw progress.
   Show storage-full and pending-old-account states without exposing the prior
   account's payload; explicit discard requires destructive confirmation.
 
-- [ ] **Step 3: Add the account YouTube preference**
+- [ ] **Step 3: Add the local-first YouTube preference**
 
-  Add one account-level history setting in the existing appropriate settings
-  surface on Popup and website. Until GET succeeds, treat YouTube as disabled.
-  PATCH acknowledgement updates both caches; late previous-owner responses are
-  ignored.
+  Add one simple Popup switch. A click immediately persists the current browser's
+  owner/generation-scoped choice; no network request may block the control. Mirror
+  it to the account preference in the background so a browser without an explicit
+  choice can inherit the account default. Once this browser has an explicit choice,
+  server reads cannot reverse it. Late previous-owner responses are ignored.
 
 - [ ] **Step 4: Add online-only deletion controls**
 
@@ -1312,7 +1315,8 @@ loaded extension artifacts before any promotion.
 - recent people survives history deletion, uses server confirmation time, has no
   shared-room count, and is not fabricated from one writer;
 - Popup and website values match across a second browser/device;
-- YouTube absent by default, enabled account-wide, canonical long-form recorded,
+- YouTube absent by default, enabled by an explicit local switch, mirrored to the
+  account in the background, canonical long-form recorded,
   Shorts/embed/preview rejected, and no duration/watched-time threshold;
 - near-quota behavior preserves terminal state and unrelated extension storage.
 
