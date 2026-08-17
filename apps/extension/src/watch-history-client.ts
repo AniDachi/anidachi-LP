@@ -8,6 +8,7 @@ import {
   WatchHistoryResponseSchema,
   WatchProgressAckSchema,
   WatchProgressEventSchema,
+  type WatchHistoryPreferences,
   type WatchProgressEvent,
 } from "@anidachi/protocol";
 import type { ExtensionAuthTokens } from "./auth-tokens";
@@ -121,6 +122,7 @@ export type WatchHistoryCaptureResult =
   | { ok: false; status: WatchHistoryLocalStatus; capturePausedPersisted?: boolean };
 
 const unpersistedCapturePauses = new Set<string>();
+let preferenceSyncTail: Promise<void> = Promise.resolve();
 
 export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBootstrapData | null {
   if (!isRecord(value) ||
@@ -413,6 +415,10 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     if (generation === undefined) return { ok: true, flushed: 0 };
     const partition = root.partitions[watchHistoryPartitionKey(session.user.id, generation)];
     if (!partition) return { ok: true, flushed: 0 };
+    const pendingPreferences = WatchHistoryPreferencesSchema.safeParse(partition.preferences);
+    if (partition.preferencesSyncPending === true && pendingPreferences.success) {
+      queuePreferenceSync(session, generation, pendingPreferences.data);
+    }
     let flushed = 0;
     let activeSession = session;
     for (const entry of orderWatchHistoryOutbox(partition.outbox)) {
@@ -470,24 +476,82 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   }
 
   async function getPreferences(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+    const pending = await readPendingPreferences(session);
+    if (pending) {
+      queuePreferenceSync(session, pending.accountGeneration, pending.preferences);
+      return {
+        ok: true,
+        data: localPreferencesResponse(session.user.id, pending.accountGeneration, pending.preferences),
+      };
+    }
+    const explicitLocalChoice = await readConfirmedPreferences(session);
+    if (explicitLocalChoice && explicitLocalChoice.localRevision > 0) {
+      return {
+        ok: true,
+        data: localPreferencesResponse(
+          session.user.id,
+          explicitLocalChoice.accountGeneration,
+          explicitLocalChoice.preferences,
+        ),
+      };
+    }
+    const startedPreference = await readPreferenceRevision(session);
     const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences");
     if (!response.ok) return response.error;
     const parsed = WatchHistoryPreferencesResponseSchema.safeParse(response.body);
     if (!parsed.success || parsed.data.meta.ownerUserId !== response.session.user.id) {
       return { ok: false, status: "invalid-response" };
     }
-    const saved = await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => ({
-      ...partition,
-      preferences: parsed.data.preferences,
-      preferencesConfirmed: true,
-      captureMarkersReady: true,
-    }));
+    let localWon = false;
+    const saved = await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => {
+      const changedWhileReading = startedPreference?.accountGeneration === partition.accountGeneration &&
+        partition.preferencesLocalRevision !== startedPreference.localRevision;
+      if (partition.preferencesSyncPending === true || changedWhileReading) {
+        localWon = true;
+        return partition;
+      }
+      return {
+        ...partition,
+        preferences: parsed.data.preferences,
+        preferencesConfirmed: true,
+        preferencesSyncPending: false,
+        captureMarkersReady: true,
+      };
+    });
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
-    return saved.ok ? { ok: true, data: parsed.data } : saved;
+    if (!saved.ok) return saved;
+    if (localWon) {
+      const latest = await readPendingPreferences(response.session);
+      if (latest) {
+        queuePreferenceSync(response.session, latest.accountGeneration, latest.preferences);
+      }
+      const local = await readConfirmedPreferences(response.session);
+      return local
+        ? {
+            ok: true,
+            data: localPreferencesResponse(
+              response.session.user.id,
+              local.accountGeneration,
+              local.preferences,
+            ),
+          }
+        : { ok: false, status: "rejected" };
+    }
+    return { ok: true, data: parsed.data };
   }
 
   async function bootstrap(session: ExtensionAuthTokens): Promise<WatchHistoryMessageResponse> {
+    const pending = await readPendingPreferences(session);
+    if (pending) {
+      queuePreferenceSync(session, pending.accountGeneration, pending.preferences);
+      return cachedBootstrap(session);
+    }
+    const explicitLocalChoice = await readConfirmedPreferences(session);
+    if (explicitLocalChoice && explicitLocalChoice.localRevision > 0) {
+      return cachedBootstrap(session);
+    }
+    const startedPreference = await readPreferenceRevision(session);
     const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences");
     if (!response.ok) {
       if (!isFailureStatus(response.error, "retryable")) return response.error;
@@ -498,15 +562,32 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       return { ok: false, status: "invalid-response" };
     }
     const generation = parsed.data.meta.accountGeneration;
-    const saved = await replaceCanonicalPartition(response.session, generation, (partition) => ({
-      ...partition,
-      preferences: parsed.data.preferences,
-      preferencesConfirmed: true,
-      captureMarkersReady: true,
-    }));
+    let localWon = false;
+    const saved = await replaceCanonicalPartition(response.session, generation, (partition) => {
+      const changedWhileReading = startedPreference?.accountGeneration === partition.accountGeneration &&
+        partition.preferencesLocalRevision !== startedPreference.localRevision;
+      if (partition.preferencesSyncPending === true || changedWhileReading) {
+        localWon = true;
+        return partition;
+      }
+      return {
+        ...partition,
+        preferences: parsed.data.preferences,
+        preferencesConfirmed: true,
+        preferencesSyncPending: false,
+        captureMarkersReady: true,
+      };
+    });
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     if (!saved.ok) return saved;
+    if (localWon) {
+      const latest = await readPendingPreferences(response.session);
+      if (latest) {
+        queuePreferenceSync(response.session, latest.accountGeneration, latest.preferences);
+      }
+      return cachedBootstrap(response.session);
+    }
     const paused = await capturePauseState(response.session, generation);
     if (!sameSession(response.session, await dependencies.getCurrentSession())) {
       return { ok: false, status: "rejected" };
@@ -608,24 +689,165 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   ): Promise<WatchHistoryMessageResponse> {
     const input = WatchHistoryPreferencesUpdateSchema.safeParse(rawInput);
     if (!input.success) return { ok: false, status: "invalid-request" };
-    const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences", {
-      method: "PATCH",
-      body: JSON.stringify(input.data),
+    const root = await storage.readRoot();
+    const generation = root.activeGenerations?.[session.user.id];
+    if (generation === undefined) return { ok: false, status: "retryable" };
+    let queuedFinalObservation = false;
+    const saved = await updateCurrentPartition(session, generation, (partition) => {
+      const disablingYouTube = partition.preferences?.youtubeHistoryEnabled === true &&
+        !input.data.youtubeHistoryEnabled;
+      const clearingYouTubeObservation = disablingYouTube &&
+        partition.currentObservation?.provider === "youtube";
+      const queueMeaningfulSoloObservation = clearingYouTubeObservation &&
+        partition.currentObservationMeaningfulSolo === true;
+      queuedFinalObservation ||= queueMeaningfulSoloObservation;
+      return {
+        ...partition,
+        preferences: input.data,
+        preferencesConfirmed: true,
+        preferencesSyncPending: true,
+        preferencesLocalRevision: (partition.preferencesLocalRevision ?? 0) + 1,
+        currentObservation: clearingYouTubeObservation ? null : partition.currentObservation,
+        currentObservationMeaningfulSolo: clearingYouTubeObservation
+          ? false
+          : partition.currentObservationMeaningfulSolo === true,
+        currentObservationDisplayMode: clearingYouTubeObservation
+          ? null
+          : partition.currentObservationDisplayMode ?? null,
+        outbox: queueMeaningfulSoloObservation && partition.currentObservation
+          ? enqueueWatchHistoryEvent(partition.outbox, partition.currentObservation)
+          : partition.outbox,
+        captureMarkersReady: true,
+      };
     });
-    if (!response.ok) return response.error;
-    const parsed = WatchHistoryPreferencesResponseSchema.safeParse(response.body);
-    if (!parsed.success || parsed.data.meta.ownerUserId !== response.session.user.id) {
-      return { ok: false, status: "invalid-response" };
-    }
-    const saved = await replaceCanonicalPartition(response.session, parsed.data.meta.accountGeneration, (partition) => ({
-      ...partition,
-      preferences: parsed.data.preferences,
-      preferencesConfirmed: true,
-      captureMarkersReady: true,
-    }));
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
-    return saved.ok ? { ok: true, data: parsed.data } : saved;
+    if (!saved.ok) return saved;
+    queuePreferenceSync(session, generation, input.data);
+    if (queuedFinalObservation) void flush(session).catch(() => undefined);
+    return { ok: true };
+  }
+
+  async function readPendingPreferences(session: ExtensionAuthTokens): Promise<{
+    accountGeneration: number;
+    preferences: WatchHistoryPreferences;
+  } | null> {
+    if (!sameSession(session, await dependencies.getCurrentSession())) return null;
+    const root = await storage.readRoot();
+    const accountGeneration = root.activeGenerations?.[session.user.id];
+    if (accountGeneration === undefined) return null;
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, accountGeneration)];
+    const preferences = WatchHistoryPreferencesSchema.safeParse(partition?.preferences);
+    if (!partition ||
+      partition.ownerUserId !== session.user.id ||
+      partition.accountGeneration !== accountGeneration ||
+      partition.preferencesConfirmed !== true ||
+      partition.preferencesSyncPending !== true ||
+      !preferences.success ||
+      !sameSession(session, await dependencies.getCurrentSession())) {
+      return null;
+    }
+    return { accountGeneration, preferences: preferences.data };
+  }
+
+  async function readPreferenceRevision(session: ExtensionAuthTokens): Promise<{
+    accountGeneration: number;
+    localRevision: number;
+  } | null> {
+    if (!sameSession(session, await dependencies.getCurrentSession())) return null;
+    const root = await storage.readRoot();
+    const accountGeneration = root.activeGenerations?.[session.user.id];
+    if (accountGeneration === undefined) return null;
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, accountGeneration)];
+    if (!partition ||
+      partition.ownerUserId !== session.user.id ||
+      partition.accountGeneration !== accountGeneration ||
+      !sameSession(session, await dependencies.getCurrentSession())) {
+      return null;
+    }
+    return {
+      accountGeneration,
+      localRevision: partition.preferencesLocalRevision ?? 0,
+    };
+  }
+
+  async function readConfirmedPreferences(session: ExtensionAuthTokens): Promise<{
+    accountGeneration: number;
+    preferences: WatchHistoryPreferences;
+    localRevision: number;
+  } | null> {
+    if (!sameSession(session, await dependencies.getCurrentSession())) return null;
+    const root = await storage.readRoot();
+    const accountGeneration = root.activeGenerations?.[session.user.id];
+    if (accountGeneration === undefined) return null;
+    const partition = root.partitions[watchHistoryPartitionKey(session.user.id, accountGeneration)];
+    const preferences = WatchHistoryPreferencesSchema.safeParse(partition?.preferences);
+    if (!partition ||
+      partition.ownerUserId !== session.user.id ||
+      partition.accountGeneration !== accountGeneration ||
+      partition.preferencesConfirmed !== true ||
+      !preferences.success ||
+      !sameSession(session, await dependencies.getCurrentSession())) {
+      return null;
+    }
+    return {
+      accountGeneration,
+      preferences: preferences.data,
+      localRevision: partition.preferencesLocalRevision ?? 0,
+    };
+  }
+
+  function queuePreferenceSync(
+    session: ExtensionAuthTokens,
+    accountGeneration: number,
+    preferences: WatchHistoryPreferences,
+  ): void {
+    const run = () => syncPreferences(session, accountGeneration, preferences);
+    preferenceSyncTail = preferenceSyncTail.then(run, run);
+  }
+
+  async function syncPreferences(
+    session: ExtensionAuthTokens,
+    accountGeneration: number,
+    preferences: WatchHistoryPreferences,
+  ): Promise<void> {
+    try {
+      const pending = await readPendingPreferences(session);
+      if (!pending ||
+        pending.accountGeneration !== accountGeneration ||
+        pending.preferences.youtubeHistoryEnabled !== preferences.youtubeHistoryEnabled) {
+        return;
+      }
+      const response = await authenticatedRequest(session, "/api/watch-history/v2/preferences", {
+        method: "PATCH",
+        body: JSON.stringify(preferences),
+      });
+      if (!response.ok) return;
+      const parsed = WatchHistoryPreferencesResponseSchema.safeParse(response.body);
+      if (!parsed.success ||
+        parsed.data.meta.ownerUserId !== response.session.user.id ||
+        parsed.data.meta.accountGeneration !== accountGeneration ||
+        parsed.data.preferences.youtubeHistoryEnabled !== preferences.youtubeHistoryEnabled) {
+        return;
+      }
+      await updateCurrentPartition(response.session, accountGeneration, (partition) => {
+        const current = WatchHistoryPreferencesSchema.safeParse(partition.preferences);
+        if (partition.preferencesSyncPending !== true ||
+          !current.success ||
+          current.data.youtubeHistoryEnabled !== preferences.youtubeHistoryEnabled) {
+          return partition;
+        }
+        return {
+          ...partition,
+          preferences: parsed.data.preferences,
+          preferencesConfirmed: true,
+          preferencesSyncPending: false,
+          captureMarkersReady: true,
+        };
+      });
+    } catch {
+      // The durable local choice remains pending for the next event-driven retry.
+    }
   }
 
   async function deleteHistory(
@@ -947,6 +1169,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
             cache: null,
             preferences: null,
             preferencesConfirmed: false,
+            preferencesSyncPending: false,
             currentObservation: null,
             currentObservationMeaningfulSolo: false,
             currentObservationDisplayMode: null,
@@ -997,12 +1220,30 @@ function emptyPartition(ownerUserId: string, accountGeneration: number): WatchHi
     cache: null,
     preferences: null,
     preferencesConfirmed: false,
+    preferencesSyncPending: false,
+    preferencesLocalRevision: 0,
     currentObservation: null,
     currentObservationMeaningfulSolo: false,
     currentObservationDisplayMode: null,
     capturePaused: false,
     captureMarkersReady: true,
     outbox,
+  };
+}
+
+function localPreferencesResponse(
+  ownerUserId: string,
+  accountGeneration: number,
+  preferences: WatchHistoryPreferences,
+) {
+  return {
+    meta: {
+      serverTime: new Date().toISOString(),
+      schemaVersion: 2 as const,
+      ownerUserId,
+      accountGeneration,
+    },
+    preferences,
   };
 }
 
@@ -1072,22 +1313,30 @@ export async function handleWatchHistoryHttpMessage(
 ): Promise<WatchHistoryMessageResponse> {
   const { getCurrentExtensionSession } = await import("./auth-client");
   const { getStoredAuthTokens } = await import("./auth-tokens");
-  const localCommand = message.command === "enqueue-progress" ||
-    message.command === "observe-progress" ||
-    message.command === "bootstrap-cache" ||
-    message.command === "flush" ||
-    message.command === "content-reconnect" ||
-    message.command === "recover-storage" ||
-    message.command === "other-owner-pending" ||
-    message.command === "discard-old-owner" ||
-    message.command === "discard-old-owner-work";
-  const getCurrentSession = localCommand
+  const getCurrentSession = usesStoredWatchHistorySession(message.command)
     ? getStoredAuthTokens
     : async () => getCurrentExtensionSession().catch(getStoredAuthTokens);
   return createWatchHistoryClient({
     getCurrentSession,
     getRequestSession: getCurrentExtensionSession,
   }).handle(message);
+}
+
+export function usesStoredWatchHistorySession(
+  command: WatchHistoryMessage["command"],
+): boolean {
+  return command === "enqueue-progress" ||
+    command === "observe-progress" ||
+    command === "bootstrap" ||
+    command === "bootstrap-cache" ||
+    command === "flush" ||
+    command === "content-reconnect" ||
+    command === "recover-storage" ||
+    command === "get-preferences" ||
+    command === "update-preferences" ||
+    command === "other-owner-pending" ||
+    command === "discard-old-owner" ||
+    command === "discard-old-owner-work";
 }
 
 export async function handleWatchHistoryAuthSessionChange(

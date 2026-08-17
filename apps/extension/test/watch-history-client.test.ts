@@ -14,6 +14,7 @@ import {
   isWatchHistoryMessage,
   parseWatchHistoryBootstrapData,
   reconcileWatchHistoryThenDrain,
+  usesStoredWatchHistorySession,
 } from "../src/watch-history-client";
 
 const session = {
@@ -129,6 +130,364 @@ describe("watch history v2 client", () => {
     });
     expect(fetchImpl).not.toHaveBeenCalled();
   });
+
+  it("applies the YouTube switch locally while offline and immediately authorizes local capture", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [key]: readyPartition(owner, false) },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async () => { throw new TypeError("offline"); }) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "update-preferences",
+      input: { youtubeHistoryEnabled: true },
+    })).resolves.toEqual({ ok: true });
+    expect(stored.partitions[key]).toMatchObject({
+      preferences: { youtubeHistoryEnabled: true },
+      preferencesConfirmed: true,
+      preferencesSyncPending: true,
+    });
+
+    const youtubeEvent = {
+      ...progressEvent(),
+      provider: "youtube" as const,
+      titleKey: "youtube:video-a",
+      episodeKey: "youtube:video-a",
+      sourceUrl: "https://www.youtube.com/watch?v=video-a",
+      sharedRoom: null,
+    };
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "observe-progress",
+      expectedOwnerUserId: owner,
+      event: youtubeEvent,
+      meaningfulSolo: true,
+      displayMode: "mine",
+    })).resolves.toEqual({ ok: true });
+    expect(stored.partitions[key]?.currentObservation?.clientEventId)
+      .toBe(youtubeEvent.clientEventId);
+  });
+
+  it("moves the last meaningful YouTube sample to the outbox when local tracking is turned off", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    const youtubeEvent = {
+      ...progressEvent(),
+      provider: "youtube" as const,
+      titleKey: "youtube:video-a",
+      episodeKey: "youtube:video-a",
+      sourceUrl: "https://www.youtube.com/watch?v=video-a",
+      sharedRoom: null,
+    };
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [key]: {
+          ...readyPartition(owner, true),
+          currentObservation: youtubeEvent,
+          currentObservationMeaningfulSolo: true,
+          currentObservationDisplayMode: "mine",
+        },
+      },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async () => { throw new TypeError("offline"); }) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "update-preferences",
+      input: { youtubeHistoryEnabled: false },
+    })).resolves.toEqual({ ok: true });
+
+    expect(stored.partitions[key]).toMatchObject({
+      preferences: { youtubeHistoryEnabled: false },
+      currentObservation: null,
+      currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: null,
+    });
+    expect(stored.partitions[key]?.outbox.entries).toHaveLength(1);
+    expect(stored.partitions[key]?.outbox.entries[0]?.event).toEqual(youtubeEvent);
+  });
+
+  it("retries a locally pending YouTube preference on bootstrap and clears it after server acknowledgement", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [key]: { ...readyPartition(owner, true), preferencesSyncPending: true },
+      },
+    };
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      meta: {
+        serverTime: "2026-08-15T10:00:01.000Z",
+        schemaVersion: 2,
+        ownerUserId: owner,
+        accountGeneration: 1,
+      },
+      preferences: { youtubeHistoryEnabled: true },
+    })));
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap",
+      expectedOwnerUserId: owner,
+    } as never)).resolves.toMatchObject({
+      ok: true,
+      data: {
+        ownerUserId: owner,
+        preferences: { youtubeHistoryEnabled: true },
+        source: "cache",
+      },
+    });
+    await vi.waitFor(() => expect(fetchImpl).toHaveBeenCalledWith(
+      "http://localhost:3003/api/watch-history/v2/preferences",
+      expect.objectContaining({ method: "PATCH" }),
+    ));
+    await vi.waitFor(() => expect(stored.partitions[key]?.preferencesSyncPending).toBe(false));
+  });
+
+  it("does not let an older preference read from another popup session overwrite a newer local switch", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: { [key]: readyPartition(owner, false) },
+    };
+    let resolveOldRead: ((response: Response) => void) | undefined;
+    const preferenceResponse = (youtubeHistoryEnabled: boolean) => new Response(JSON.stringify({
+      meta: {
+        serverTime: "2026-08-15T10:00:01.000Z",
+        schemaVersion: 2,
+        ownerUserId: owner,
+        accountGeneration: 1,
+      },
+      preferences: { youtubeHistoryEnabled },
+    }));
+    const fetchImpl = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method === "PATCH") return preferenceResponse(true);
+      return new Promise<Response>((resolve) => {
+        resolveOldRead = resolve;
+      });
+    });
+    const storage = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+      getBytesInUse: async () => 0,
+      quotaBytes: 1_000_000,
+    });
+    const createClient = () => createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage,
+    });
+    const openingPopup = createClient();
+
+    const oldRead = openingPopup.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "get-preferences",
+    });
+    await vi.waitFor(() => expect(resolveOldRead).toBeTypeOf("function"));
+    const togglingPopup = createClient();
+    await expect(togglingPopup.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "update-preferences",
+      input: { youtubeHistoryEnabled: true },
+    })).resolves.toEqual({ ok: true });
+    await vi.waitFor(() => expect(stored.partitions[key]?.preferencesSyncPending).toBe(false));
+    expect(stored.partitions[key]?.preferences).toEqual({ youtubeHistoryEnabled: true });
+    expect(stored.partitions[key]?.preferencesLocalRevision).toBe(1);
+    expect(fetchImpl.mock.calls.map(([, init]) => init?.method ?? "GET"))
+      .toEqual(["GET", "PATCH"]);
+
+    if (!resolveOldRead) throw new Error("Expected the old preference read to be pending");
+    resolveOldRead(preferenceResponse(false));
+    await expect(oldRead).resolves.toMatchObject({
+      ok: true,
+      data: { preferences: { youtubeHistoryEnabled: true } },
+    });
+    expect(stored.partitions[key]?.preferences).toEqual({ youtubeHistoryEnabled: true });
+
+    const reopenedPopup = createClient();
+    await expect(reopenedPopup.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "bootstrap-cache",
+      expectedOwnerUserId: owner,
+    } as never)).resolves.toMatchObject({
+      ok: true,
+      data: { preferences: { youtubeHistoryEnabled: true } },
+    });
+  });
+
+  it("serializes preference writes from separate popup sessions so the last local choice wins", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [key]: {
+          ...readyPartition(owner, true),
+          preferencesSyncPending: true,
+          preferencesLocalRevision: 1,
+        },
+      },
+    };
+    let serverPreference = true;
+    let releaseOlderWrite: (() => void) | undefined;
+    const writes: boolean[] = [];
+    const preferenceResponse = (youtubeHistoryEnabled: boolean) => new Response(JSON.stringify({
+      meta: {
+        serverTime: "2026-08-15T10:00:01.000Z",
+        schemaVersion: 2,
+        ownerUserId: owner,
+        accountGeneration: 1,
+      },
+      preferences: { youtubeHistoryEnabled },
+    }));
+    const fetchImpl = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method !== "PATCH") return preferenceResponse(serverPreference);
+      const input = JSON.parse(String(init.body)) as { youtubeHistoryEnabled: boolean };
+      writes.push(input.youtubeHistoryEnabled);
+      if (writes.length === 1) {
+        await new Promise<void>((resolve) => {
+          releaseOlderWrite = resolve;
+        });
+      }
+      serverPreference = input.youtubeHistoryEnabled;
+      return preferenceResponse(serverPreference);
+    });
+    const storage = createWatchHistoryStorage({
+      item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+      getBytesInUse: async () => 0,
+      quotaBytes: 1_000_000,
+    });
+    const createClient = () => createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: fetchImpl as typeof fetch,
+      storage,
+    });
+
+    await expect(createClient().handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "flush",
+    })).resolves.toEqual({ ok: true, flushed: 0 });
+    await vi.waitFor(() => expect(releaseOlderWrite).toBeTypeOf("function"));
+
+    await expect(createClient().handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "update-preferences",
+      input: { youtubeHistoryEnabled: false },
+    })).resolves.toEqual({ ok: true });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    if (!releaseOlderWrite) throw new Error("Expected the older preference write to be pending");
+    releaseOlderWrite();
+    await vi.waitFor(() => expect(writes).toEqual([true, false]));
+    await vi.waitFor(() => expect(stored.partitions[key]?.preferencesSyncPending).toBe(false));
+
+    expect(serverPreference).toBe(false);
+    expect(stored.partitions[key]?.preferences).toEqual({ youtubeHistoryEnabled: false });
+    await expect(createClient().handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "get-preferences",
+    })).resolves.toMatchObject({
+      ok: true,
+      data: { preferences: { youtubeHistoryEnabled: false } },
+    });
+  });
+
+  it.each([
+    { localChoice: true, laggingServerChoice: false },
+    { localChoice: false, laggingServerChoice: true },
+  ])(
+    "keeps an explicit local $localChoice choice across popup reopen when the server still says $laggingServerChoice",
+    async ({ localChoice, laggingServerChoice }) => {
+      const owner = session.user.id;
+      const key = watchHistoryPartitionKey(owner, 1);
+      let stored: WatchHistoryStorageRoot = {
+        schemaVersion: 2,
+        activeGenerations: { [owner]: 1 },
+        partitions: {
+          [key]: {
+            ...readyPartition(owner, localChoice),
+            preferencesSyncPending: false,
+            preferencesLocalRevision: 1,
+          },
+        },
+      };
+      const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+        meta: {
+          serverTime: "2026-08-15T10:00:01.000Z",
+          schemaVersion: 2,
+          ownerUserId: owner,
+          accountGeneration: 1,
+        },
+        preferences: { youtubeHistoryEnabled: laggingServerChoice },
+      })));
+      const storage = createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      });
+      const createClient = () => createWatchHistoryClient({
+        getCurrentSession: async () => session,
+        fetch: fetchImpl,
+        storage,
+      });
+
+      await expect(createClient().handle({
+        type: "ANIDACHI_WATCH_HISTORY_V2",
+        command: "get-preferences",
+      })).resolves.toMatchObject({
+        ok: true,
+        data: { preferences: { youtubeHistoryEnabled: localChoice } },
+      });
+      await expect(createClient().handle({
+        type: "ANIDACHI_WATCH_HISTORY_V2",
+        command: "bootstrap",
+        expectedOwnerUserId: owner,
+      })).resolves.toMatchObject({
+        ok: true,
+        data: {
+          preferences: { youtubeHistoryEnabled: localChoice },
+          source: "cache",
+        },
+      });
+      expect(fetchImpl).not.toHaveBeenCalled();
+      expect(stored.partitions[key]?.preferences).toEqual({ youtubeHistoryEnabled: localChoice });
+    },
+  );
 
   it("bootstraps from canonical preferences online and same-owner cached preferences only on retryable transport failure", async () => {
     const owner = session.user.id;
@@ -829,6 +1188,14 @@ describe("watch history v2 client", () => {
       displayMode: "somewhere",
     })).toBe(false);
     expect(isWatchHistoryMessage({ type: "ANIDACHI_WATCH_HISTORY_V2", command: "create-room", sessionId: "x".repeat(129) })).toBe(false);
+  });
+
+  it("keeps preference reads and writes on the background-owned local session path", () => {
+    expect(usesStoredWatchHistorySession("get-preferences")).toBe(true);
+    expect(usesStoredWatchHistorySession("update-preferences")).toBe(true);
+    expect(usesStoredWatchHistorySession("bootstrap")).toBe(true);
+    expect(usesStoredWatchHistorySession("list")).toBe(false);
+    expect(usesStoredWatchHistorySession("delete")).toBe(false);
   });
 
   it("drains one bounded active outbox through the dedicated content reconnect command", async () => {

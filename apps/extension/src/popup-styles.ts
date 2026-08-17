@@ -3153,34 +3153,80 @@ ${extensionThemeTokens}
 
   .popup-watch-preferences {
     display: flex;
-    min-height: 24px;
+    min-height: 30px;
     align-items: center;
     justify-content: flex-end;
-    margin-top: -4px;
+    margin-top: -2px;
   }
 
-  .popup-watch-preferences button {
-    min-height: 24px;
+  .popup-watch-youtube-switch {
+    min-height: 30px;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     border: 0;
-    padding: 0 2px;
+    border-radius: 9px;
+    padding: 0 4px 0 7px;
     background: transparent;
-    color: rgba(255, 255, 255, 0.44);
+    color: rgba(255, 255, 255, 0.58);
     cursor: pointer;
     font-size: 9.5px;
     font-weight: 720;
   }
 
-  .popup-watch-preferences button span:last-child {
-    color: #ffc453;
-    font-weight: 840;
+  .popup-watch-youtube-switch:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.035);
+    color: rgba(255, 255, 255, 0.76);
   }
 
-  .popup-watch-preferences button:disabled {
+  .popup-watch-youtube-switch:focus-visible {
+    outline: 2px solid rgba(255, 174, 106, 0.55);
+    outline-offset: 1px;
+  }
+
+  .popup-watch-youtube-state {
+    min-width: 16px;
+    text-align: right;
+    color: rgba(255, 255, 255, 0.48);
+    font-weight: 820;
+  }
+
+  .popup-watch-youtube-switch[data-enabled="true"] .popup-watch-youtube-state {
+    color: #ffc453;
+  }
+
+  .popup-watch-youtube-switch-track {
+    position: relative;
+    width: 34px;
+    height: 18px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.13);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+  }
+
+  .popup-watch-youtube-switch-track > span {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.72);
+    transition: transform 140ms ease, background-color 140ms ease;
+  }
+
+  .popup-watch-youtube-switch[data-enabled="true"] .popup-watch-youtube-switch-track {
+    background: rgba(255, 122, 26, 0.4);
+  }
+
+  .popup-watch-youtube-switch[data-enabled="true"] .popup-watch-youtube-switch-track > span {
+    transform: translateX(16px);
+    background: #ff9b55;
+  }
+
+  .popup-watch-youtube-switch:disabled {
     cursor: default;
-    opacity: 0.42;
   }
 
   .popup-watch-search {

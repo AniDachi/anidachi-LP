@@ -402,7 +402,7 @@ describe("Popup Watch History v2", () => {
     expect(selectConfirmedPopupWatchHistorySnapshot(root, OWNER_ID)?.localObservation).toBeNull();
   });
 
-  it("treats YouTube as disabled until preferences are confirmed by the current refresh", async () => {
+  it("shows the cached YouTube switch immediately while live confirmation is pending", async () => {
     let resolvePreferences: ((value: WatchHistoryMessageResponse) => void) | undefined;
     const client = clientFixture({
       cached: snapshotFixture(historyFixture(), [], true),
@@ -422,8 +422,13 @@ describe("Popup Watch History v2", () => {
 
     const view = await renderPanel(client);
     const toggle = await findButton(view.container, "Track YouTube history");
-    expect(toggle.disabled).toBe(true);
-    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    expect(toggle.disabled).toBe(false);
+    expect(toggle.getAttribute("role")).toBe("switch");
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    expect(toggle.querySelector(".popup-watch-youtube-switch-track")).not.toBeNull();
+    expect(toggle.textContent).toContain("On");
+    expect(toggle.textContent).not.toContain("Loading");
+    expect(toggle.textContent).not.toContain("Retry");
 
     await act(async () => {
       resolvePreferences?.({ ok: true, data: preferencesFixture(true) });
@@ -431,8 +436,68 @@ describe("Popup Watch History v2", () => {
     });
 
     await waitFor(() => expect(toggle.disabled).toBe(false));
-    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
 
+    await unmount(view.root);
+  });
+
+  it("keeps a simple switch and lets the user update after preference loading fails", async () => {
+    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+      if (message.command === "list") return { ok: true, data: historyFixture() };
+      if (message.command === "get-preferences") {
+        return { ok: false, status: "retryable" };
+      }
+      if (message.command === "update-preferences") {
+        return { ok: true, data: preferencesFixture(true) };
+      }
+      if (message.command === "other-owner-pending") {
+        return { ok: true, hasPendingWork: false, byteUse: 0 };
+      }
+      return { ok: true };
+    });
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(historyFixture()),
+      request,
+    }));
+    const toggle = await findButton(view.container, "Track YouTube history");
+
+    expect(toggle.disabled).toBe(false);
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    expect(toggle.textContent).toContain("Off");
+    expect(toggle.textContent).not.toContain("Loading");
+    expect(toggle.textContent).not.toContain("Retry");
+    await click(toggle);
+
+    await waitFor(() => expect(toggle.getAttribute("aria-checked")).toBe("true"));
+    expect(request).toHaveBeenCalledWith(expect.objectContaining({
+      command: "update-preferences",
+      input: { youtubeHistoryEnabled: true },
+    }));
+    await unmount(view.root);
+  });
+
+  it("does not wait for a hanging history list before applying YouTube preferences", async () => {
+    const request = vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+      if (message.command === "list") {
+        return new Promise<WatchHistoryMessageResponse>(() => undefined);
+      }
+      if (message.command === "get-preferences") {
+        return { ok: true, data: preferencesFixture(true) };
+      }
+      if (message.command === "other-owner-pending") {
+        return { ok: true, hasPendingWork: false, byteUse: 0 };
+      }
+      return { ok: true };
+    });
+    const view = await renderPanel(clientFixture({
+      cached: snapshotFixture(historyFixture()),
+      request,
+    }));
+    const toggle = await findButton(view.container, "Track YouTube history");
+
+    await waitFor(() => expect(toggle.disabled).toBe(false));
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    expect(toggle.textContent).toContain("On");
     await unmount(view.root);
   });
 
@@ -456,11 +521,63 @@ describe("Popup Watch History v2", () => {
 
     await click(toggle);
 
-    await waitFor(() => expect(toggle.getAttribute("aria-pressed")).toBe("true"));
+    await waitFor(() => expect(toggle.getAttribute("aria-checked")).toBe("true"));
     expect(request).toHaveBeenCalledWith(expect.objectContaining({
       command: "update-preferences",
       input: { youtubeHistoryEnabled: true },
     }));
+    await unmount(view.root);
+  });
+
+  it("keeps current content visible during a same-owner background refresh", async () => {
+    let listRequests = 0;
+    const history = historyFixture({ title: "Stable Frieren" });
+    const client = clientFixture({
+      cached: snapshotFixture(history, [], true),
+      request: vi.fn(async (message): Promise<WatchHistoryMessageResponse> => {
+        if (message.command === "list") {
+          listRequests += 1;
+          if (listRequests === 1) return { ok: true, data: history };
+          return new Promise<WatchHistoryMessageResponse>(() => undefined);
+        }
+        if (message.command === "get-preferences") {
+          return { ok: true, data: preferencesFixture(true) };
+        }
+        if (message.command === "other-owner-pending") {
+          return { ok: true, hasPendingWork: false, byteUse: 0 };
+        }
+        return { ok: true };
+      }),
+    });
+    let cacheReads = 0;
+    client.loadCached = vi.fn(async () => {
+      cacheReads += 1;
+      return snapshotFixture(
+        cacheReads <= 2 ? history : historyFixture({ title: "Older cached Frieren" }),
+        [],
+        true,
+      );
+    });
+    const view = await renderPanel(client);
+    await waitFor(() => expect(view.container.textContent).toContain("Stable Frieren"));
+
+    await act(async () => {
+      view.root.render(
+        <PopupWatchHistoryPanel
+          client={client}
+          ownerUserId={OWNER_ID}
+          refreshSignal={1}
+        />,
+      );
+    });
+
+    await waitFor(() => expect(listRequests).toBe(2));
+    expect(view.container.textContent).toContain("Stable Frieren");
+    expect(view.container.textContent).not.toContain("Older cached Frieren");
+    expect(view.container.textContent).not.toContain("Loading watch history");
+    const toggle = await findButton(view.container, "Track YouTube history");
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+
     await unmount(view.root);
   });
 

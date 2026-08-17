@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   createWatchHistoryController,
   type WatchHistoryController,
@@ -67,6 +67,7 @@ describe("watch history meaningful-progress controller", () => {
       ownerUserId: "00000000-0000-4000-8000-000000000001",
       accountGeneration: 1,
       preferences: { youtubeHistoryEnabled: true },
+      capturePaused: false,
     });
   });
 
@@ -616,6 +617,305 @@ describe("watch history meaningful-progress controller", () => {
     expect(fixture.current.at(-1)).toBeNull();
   });
 
+  it("applies a local YouTube opt-in directly and starts capture without a server refresh", async () => {
+    const fixture = createFixture({
+      getObservation: (preferences, observation) => preferences?.youtubeHistoryEnabled
+        ? {
+          ...observation,
+          provider: "youtube",
+          providerLabel: "YouTube",
+          titleKey: "youtube:abcdefghijk",
+          itemKind: "movie",
+          episodeKey: "youtube:abcdefghijk",
+          episodeTitle: "YouTube video",
+          sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+        }
+        : null,
+    });
+    await fixture.controller.start();
+    expect(fixture.local).toHaveLength(0);
+
+    await fixture.controller.applyLocalPreferences({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: true },
+      capturePaused: false,
+    });
+
+    expect(fixture.local).toHaveLength(1);
+    expect(fixture.local[0]).toMatchObject({
+      kind: "heartbeat",
+      provider: "youtube",
+      currentTime: 10,
+    });
+    expect(fixture.enqueued).toHaveLength(0);
+
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued).toHaveLength(1);
+    expect(fixture.enqueued[0]).toMatchObject({ provider: "youtube", currentTime: 11 });
+  });
+
+  it("does not let an in-flight authority refresh delay or overwrite a local YouTube choice", async () => {
+    let loadCount = 0;
+    let resolveRefresh!: (value: {
+      ownerUserId: string;
+      accountGeneration: number;
+      preferences: { youtubeHistoryEnabled: boolean };
+    }) => void;
+    const fixture = createFixture({
+      loadPreferences: async () => {
+        loadCount += 1;
+        if (loadCount === 1) {
+          return {
+            ownerUserId: "00000000-0000-4000-8000-000000000001",
+            accountGeneration: 1,
+            preferences: { youtubeHistoryEnabled: true },
+          };
+        }
+        return new Promise((resolve) => { resolveRefresh = resolve; });
+      },
+      getObservation: (preferences, observation) => preferences?.youtubeHistoryEnabled
+        ? {
+          ...observation,
+          provider: "youtube",
+          providerLabel: "YouTube",
+          titleKey: "youtube:abcdefghijk",
+          itemKind: "movie",
+          episodeKey: "youtube:abcdefghijk",
+          episodeTitle: "YouTube video",
+          sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+        }
+        : null,
+    });
+    await fixture.controller.start();
+    const refreshing = fixture.controller.refreshAuthority();
+    await Promise.resolve();
+
+    let localChoiceApplied = false;
+    const applying = fixture.controller.applyLocalPreferences({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: true },
+      capturePaused: false,
+    }).then(() => { localChoiceApplied = true; });
+    await vi.waitFor(() => expect(localChoiceApplied).toBe(true));
+    resolveRefresh({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+    });
+    await Promise.all([refreshing, applying]);
+
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued.at(-1)).toMatchObject({ provider: "youtube", currentTime: 11 });
+  });
+
+  it("uses a complete local authority when the initial preference load is still pending", async () => {
+    let resolveInitial!: (value: {
+      ownerUserId: string;
+      accountGeneration: number;
+      preferences: { youtubeHistoryEnabled: boolean };
+    }) => void;
+    const fixture = createFixture({
+      loadPreferences: () => new Promise((resolve) => { resolveInitial = resolve; }),
+      getObservation: (preferences, observation) => preferences?.youtubeHistoryEnabled
+        ? {
+          ...observation,
+          provider: "youtube",
+          providerLabel: "YouTube",
+          titleKey: "youtube:abcdefghijk",
+          itemKind: "movie",
+          episodeKey: "youtube:abcdefghijk",
+          episodeTitle: "YouTube video",
+          sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+        }
+        : null,
+    });
+    const starting = fixture.controller.start();
+    await Promise.resolve();
+
+    await fixture.controller.applyLocalPreferences({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: true },
+      capturePaused: false,
+    });
+    expect(fixture.local).toHaveLength(1);
+
+    resolveInitial({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+    });
+    await starting;
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued.at(-1)).toMatchObject({ provider: "youtube", currentTime: 11 });
+  });
+
+  it("does not let a stale cached startup overwrite a local YouTube choice", async () => {
+    let resolveCached!: (value: {
+      ownerUserId: string;
+      accountGeneration: number;
+      preferences: { youtubeHistoryEnabled: boolean };
+      capturePaused: boolean;
+    }) => void;
+    const fixture = createFixture({
+      loadCachedPreferences: () => new Promise((resolve) => { resolveCached = resolve; }),
+      loadPreferences: async () => {
+        throw new Error("stale cached startup must not continue to canonical loading");
+      },
+      getObservation: (preferences, observation) => preferences?.youtubeHistoryEnabled
+        ? {
+          ...observation,
+          provider: "youtube",
+          providerLabel: "YouTube",
+          titleKey: "youtube:abcdefghijk",
+          itemKind: "movie",
+          episodeKey: "youtube:abcdefghijk",
+          episodeTitle: "YouTube video",
+          sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+        }
+        : null,
+    });
+    const starting = fixture.controller.start();
+    await Promise.resolve();
+
+    await fixture.controller.applyLocalPreferences({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: true },
+      capturePaused: false,
+    });
+    expect(fixture.local).toHaveLength(1);
+
+    resolveCached({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+      capturePaused: false,
+    });
+    await starting;
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued.at(-1)).toMatchObject({ provider: "youtube", currentTime: 11 });
+  });
+
+  it("ignores a stale rejected capture when local YouTube authority changes", async () => {
+    let rejectHeldCapture = false;
+    const fixture = createFixture({
+      holdLocalAt: 2,
+      loadPreferences: async () => ({
+        ownerUserId: "00000000-0000-4000-8000-000000000001",
+        accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: true },
+      }),
+      observeResult: () => rejectHeldCapture
+        ? { ok: false, status: "rejected" }
+        : { ok: true },
+      getObservation: (preferences, observation) => preferences?.youtubeHistoryEnabled
+        ? {
+          ...observation,
+          provider: "youtube",
+          providerLabel: "YouTube",
+          titleKey: "youtube:abcdefghijk",
+          itemKind: "movie",
+          episodeKey: "youtube:abcdefghijk",
+          episodeTitle: "YouTube video",
+          sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+        }
+        : null,
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    const observing = fixture.controller.observe("heartbeat");
+    await fixture.waitForLocalAttempts(2);
+    rejectHeldCapture = true;
+    const disabling = fixture.controller.applyLocalPreferences({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+      capturePaused: false,
+    });
+    fixture.releaseHeldLocal();
+    await Promise.all([observing, disabling]);
+    expect(fixture.current.at(-1)).toBeNull();
+
+    rejectHeldCapture = false;
+    await fixture.controller.applyLocalPreferences({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: true },
+      capturePaused: false,
+    });
+    fixture.setTime(12);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued.at(-1)).toMatchObject({ provider: "youtube", currentTime: 12 });
+  });
+
+  it("stops active YouTube observation without capturing after the local choice is turned off", async () => {
+    const fixture = createFixture({
+      loadPreferences: async () => ({
+        ownerUserId: "00000000-0000-4000-8000-000000000001",
+        accountGeneration: 1,
+        preferences: { youtubeHistoryEnabled: true },
+      }),
+      getObservation: (preferences, observation) => preferences?.youtubeHistoryEnabled
+        ? {
+          ...observation,
+          provider: "youtube",
+          providerLabel: "YouTube",
+          titleKey: "youtube:abcdefghijk",
+          itemKind: "movie",
+          episodeKey: "youtube:abcdefghijk",
+          episodeTitle: "YouTube video",
+          sourceUrl: "https://www.youtube.com/watch?v=abcdefghijk",
+        }
+        : null,
+    });
+    await fixture.controller.start();
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+
+    await fixture.controller.applyLocalPreferences({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: false },
+      capturePaused: false,
+    });
+
+    expect(fixture.local.map((event) => event.kind)).toEqual(["heartbeat", "heartbeat"]);
+    expect(fixture.current.at(-1)).toBeNull();
+  });
+
+  it("does not reset an active Crunchyroll session when the YouTube choice changes", async () => {
+    const fixture = createFixture({
+      sessionKeys: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ],
+    });
+    await fixture.controller.start();
+
+    await fixture.controller.applyLocalPreferences({
+      ownerUserId: "00000000-0000-4000-8000-000000000001",
+      accountGeneration: 1,
+      preferences: { youtubeHistoryEnabled: true },
+      capturePaused: false,
+    });
+    expect(fixture.local).toHaveLength(1);
+
+    fixture.setTime(11);
+    await fixture.controller.observe("heartbeat");
+    expect(fixture.enqueued).toHaveLength(1);
+    expect(fixture.enqueued[0]).toMatchObject({
+      provider: "crunchyroll",
+      clientSessionKey: "11111111-1111-4111-8111-111111111111",
+    });
+  });
+
   it("keeps confirmed Crunchyroll capture active when a focus refresh is temporarily unavailable", async () => {
     let loadCount = 0;
     const fixture = createFixture({
@@ -909,7 +1209,7 @@ function createFixture(options: {
   loadCachedPreferences?: WatchHistoryControllerDependencies["loadCachedPreferences"];
   loadPreferences?: WatchHistoryControllerDependencies["loadPreferences"];
   recoverCapture?: WatchHistoryControllerDependencies["recoverCapture"];
-  observeResult?: () => { ok: true } | { ok: false; status: "storage-full" };
+  observeResult?: () => WatchHistoryCaptureResult;
   rejectLocalKinds?: Set<WatchProgressEvent["kind"]>;
   rejectEnqueueKinds?: Set<WatchProgressEvent["kind"]>;
   holdEnqueueAt?: number;
