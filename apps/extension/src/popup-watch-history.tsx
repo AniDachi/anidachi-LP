@@ -63,6 +63,17 @@ const defaultClient: PopupWatchHistoryClient = {
   },
 };
 
+async function requestPopupWatchHistory(
+  client: PopupWatchHistoryClient,
+  message: WatchHistoryMessage,
+): Promise<WatchHistoryMessageResponse> {
+  try {
+    return await client.request(message);
+  } catch {
+    return { ok: false, status: "retryable" };
+  }
+}
+
 export function PopupWatchHistoryPanel({
   ownerUserId,
   client = defaultClient,
@@ -80,7 +91,6 @@ export function PopupWatchHistoryPanel({
   const [preferences, setPreferences] = useState<WatchHistoryPreferences>({
     youtubeHistoryEnabled: false,
   });
-  const [preferencesConfirmed, setPreferencesConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
@@ -89,6 +99,7 @@ export function PopupWatchHistoryPanel({
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshVersion, setRefreshVersion] = useState(0);
   const requestGeneration = useRef(0);
+  const preferenceRevision = useRef(0);
 
   useEffect(() => {
     onTitleCountChange?.(history?.totalTitleCount ?? 0);
@@ -107,7 +118,6 @@ export function PopupWatchHistoryPanel({
     setLocalObservation(null);
     setCapturePaused(false);
     setPreferences({ youtubeHistoryEnabled: false });
-    setPreferencesConfirmed(false);
     setError(null);
     setBusyAction(null);
     setOldOwnerPending(false);
@@ -118,6 +128,7 @@ export function PopupWatchHistoryPanel({
 
     setLoading(true);
     void (async () => {
+      const preferenceRevisionAtLoad = preferenceRevision.current;
       const cached = await client.loadCached(ownerUserId).catch(() => null);
       if (!current()) return;
       if (cached) {
@@ -125,19 +136,45 @@ export function PopupWatchHistoryPanel({
         setPendingEvents(cached.pendingEvents);
         setLocalObservation(cached.localObservation);
         setCapturePaused(cached.capturePaused);
+        if (preferenceRevision.current === preferenceRevisionAtLoad) {
+          setPreferences(cached.preferences);
+        }
       }
 
-      const [historyResponse, preferencesResponse, oldOwnerResponse] = await Promise.all([
-        client.request(createListWatchHistoryMessage({ limit: 100 })),
-        client.request(createWatchHistoryMessage({
+      const historyRequest = requestPopupWatchHistory(
+        client,
+        createListWatchHistoryMessage({ limit: 100 }),
+      );
+      const preferencesRequest = requestPopupWatchHistory(
+        client,
+        createWatchHistoryMessage({
           type: "ANIDACHI_WATCH_HISTORY_V2",
           command: "get-preferences",
-        })),
-        client.request(createWatchHistoryMessage({
+        }),
+      );
+      const oldOwnerRequest = requestPopupWatchHistory(
+        client,
+        createWatchHistoryMessage({
           type: "ANIDACHI_WATCH_HISTORY_V2",
           command: "other-owner-pending",
-        })),
-      ]);
+        }),
+      );
+
+      void preferencesRequest.then((preferencesResponse) => {
+        if (!current() || preferenceRevision.current !== preferenceRevisionAtLoad) return;
+        if (!preferencesResponse.ok) return;
+        const parsed = WatchHistoryPreferencesResponseSchema.safeParse(preferencesResponse.data);
+        if (parsed.success && parsed.data.meta.ownerUserId === ownerUserId) {
+          setPreferences(parsed.data.preferences);
+        }
+      });
+      void oldOwnerRequest.then((oldOwnerResponse) => {
+        if (current() && oldOwnerResponse.ok) {
+          setOldOwnerPending(oldOwnerResponse.hasPendingWork === true);
+        }
+      });
+
+      const historyResponse = await historyRequest;
       if (!current()) return;
 
       if (historyResponse.ok) {
@@ -164,16 +201,6 @@ export function PopupWatchHistoryPanel({
         if (historyResponse.status === "storage-full") setCapturePaused(true);
       }
 
-      if (preferencesResponse.ok) {
-        const parsed = WatchHistoryPreferencesResponseSchema.safeParse(preferencesResponse.data);
-        if (parsed.success && parsed.data.meta.ownerUserId === ownerUserId) {
-          setPreferences(parsed.data.preferences);
-          setPreferencesConfirmed(true);
-        }
-      }
-      if (oldOwnerResponse.ok) {
-        setOldOwnerPending(oldOwnerResponse.hasPendingWork === true);
-      }
       setLoading(false);
     })();
 
@@ -190,6 +217,7 @@ export function PopupWatchHistoryPanel({
       setPendingEvents((current) => reconcilePopupPendingEvents(current, snapshot));
       setLocalObservation(snapshot.localObservation);
       setCapturePaused(snapshot.capturePaused);
+      setPreferences(snapshot.preferences);
     });
   }, [client, ownerUserId]);
 
@@ -220,25 +248,26 @@ export function PopupWatchHistoryPanel({
   const providerGroups = useMemo(() => groupWatchHistoryItems(visibleItems), [visibleItems]);
 
   const updateYoutubePreference = async () => {
-    if (!ownerUserId || !preferencesConfirmed || busyAction) return;
+    if (!ownerUserId || busyAction) return;
     const expectedGeneration = requestGeneration.current;
+    const previousPreferences = preferences;
+    const nextPreferences = {
+      youtubeHistoryEnabled: !preferences.youtubeHistoryEnabled,
+    };
+    const revision = ++preferenceRevision.current;
+    setPreferences(nextPreferences);
     setBusyAction("preferences");
     setError(null);
-    const response = await client.request(createWatchHistoryMessage({
+    const response = await requestPopupWatchHistory(client, createWatchHistoryMessage({
       type: "ANIDACHI_WATCH_HISTORY_V2",
       command: "update-preferences",
-      input: { youtubeHistoryEnabled: !preferences.youtubeHistoryEnabled },
+      input: nextPreferences,
     }));
-    if (requestGeneration.current !== expectedGeneration) return;
-    if (response.ok) {
-      const parsed = WatchHistoryPreferencesResponseSchema.safeParse(response.data);
-      if (parsed.success && parsed.data.meta.ownerUserId === ownerUserId) {
-        setPreferences(parsed.data.preferences);
-        setPreferencesConfirmed(true);
-      } else {
-        setError("Could not validate history preferences.");
-      }
-    } else {
+    if (requestGeneration.current !== expectedGeneration || preferenceRevision.current !== revision) {
+      return;
+    }
+    if (!response.ok) {
+      setPreferences(previousPreferences);
       setError(messageForStatus(response.status));
     }
     setBusyAction(null);
@@ -401,13 +430,14 @@ export function PopupWatchHistoryPanel({
       <div className="popup-watch-preferences">
         <button
           aria-label="Track YouTube history"
-          aria-pressed={preferencesConfirmed && preferences.youtubeHistoryEnabled}
-          disabled={!preferencesConfirmed}
+          aria-pressed={preferences.youtubeHistoryEnabled}
+          disabled={Boolean(busyAction)}
+          title="Track YouTube history"
           type="button"
           onClick={() => void updateYoutubePreference()}
         >
           <span>Track YouTube history</span>
-          <span>{preferencesConfirmed && preferences.youtubeHistoryEnabled ? "On" : "Off"}</span>
+          <span>{preferences.youtubeHistoryEnabled ? "On" : "Off"}</span>
         </button>
       </div>
       {capturePaused ? (

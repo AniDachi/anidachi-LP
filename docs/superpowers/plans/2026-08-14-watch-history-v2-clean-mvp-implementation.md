@@ -266,8 +266,14 @@ keys.
   non-meaningful transient activity; meaningful outbox work remains projected until
   canonical history catches up. Only a real storage/save failure gets a visible
   recovery state. Server eligibility, cadence, and acknowledgement rules remain
-  unchanged. Cached startup authority keeps YouTube disabled until canonical
-  preferences load for the current startup.
+  unchanged. The YouTube switch is also local-first: Popup always presents only
+  `On` or `Off`, and a click atomically updates the current owner/generation's local
+  capture authority before returning. The same account-wide preference is then
+  patched in the background. A failed patch leaves one durable
+  `preferencesSyncPending` marker and retries only on the existing event-driven
+  bootstrap/get/flush/reconnect paths; it never blocks local capture, adds polling,
+  or exposes transport state in the switch. A canonical preference read may replace
+  the local value only when no newer local choice is pending.
 - Flush is event-driven: enqueue, browser `online`, valid auth refresh, service
   worker startup/install, Popup/manual refresh, and content-script reconnect.
   No periodic background alarm is introduced.
