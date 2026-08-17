@@ -122,6 +122,7 @@ export type WatchHistoryCaptureResult =
   | { ok: false; status: WatchHistoryLocalStatus; capturePausedPersisted?: boolean };
 
 const unpersistedCapturePauses = new Set<string>();
+let preferenceSyncTail: Promise<void> = Promise.resolve();
 
 export function parseWatchHistoryBootstrapData(value: unknown): WatchHistoryBootstrapData | null {
   if (!isRecord(value) ||
@@ -236,7 +237,6 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
   const storage = dependencies.storage ?? createWatchHistoryStorage();
   const request = dependencies.fetch ?? fetch;
   const getRequestSession = dependencies.getRequestSession ?? dependencies.getCurrentSession;
-  let preferenceSyncTail: Promise<void> = Promise.resolve();
 
   async function handle(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse> {
     if (message.command === "other-owner-pending") {
