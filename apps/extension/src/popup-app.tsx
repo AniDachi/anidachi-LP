@@ -844,8 +844,9 @@ export function PopupApp() {
 
       {activeTab === "resources" ? (
         <PopupWatchHistoryPanel
-          key={`${accountUser?.id ?? "signed-out"}:${watchHistoryRefreshVersion}`}
+          key={accountUser?.id ?? "signed-out"}
           ownerUserId={accountUser?.id ?? null}
+          refreshSignal={watchHistoryRefreshVersion}
         />
       ) : activeTab === "friends" ? (
         <PopupPeoplePanel

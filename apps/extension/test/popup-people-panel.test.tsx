@@ -87,7 +87,9 @@ vi.mock("../src/social-snapshot-cache", async (importOriginal) => ({
 }));
 
 vi.mock("../src/popup-watch-history", () => ({
-  PopupWatchHistoryPanel: () => <div aria-label="Watch History" />,
+  PopupWatchHistoryPanel: ({ refreshSignal = 0 }: { refreshSignal?: number }) => (
+    <div aria-label="Watch History" data-refresh-signal={refreshSignal} />
+  ),
 }));
 
 const NOW = "2026-08-07T12:00:00.000Z";
@@ -629,6 +631,33 @@ describe("PopupApp social mutations", () => {
     expect(
       view.container.querySelector(".popup-header-actions button")?.getAttribute("aria-label"),
     ).toBe("Open settings");
+  });
+
+  it("refreshes same-owner Watch History without remounting the visible panel", async () => {
+    let resolveDirectory: ((value: SocialDirectory) => void) | null = null;
+    vi.mocked(listSocialDirectory).mockImplementation(() =>
+      new Promise<SocialDirectory>((resolve) => {
+        resolveDirectory = resolve;
+      })
+    );
+    const view = await renderPopupApp();
+    root = view.root;
+    const visiblePanel = view.container.querySelector('[aria-label="Watch History"]');
+    expect(visiblePanel?.getAttribute("data-refresh-signal")).toBe("0");
+
+    await act(async () => {
+      resolveDirectory?.(directory());
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(
+        view.container.querySelector('[aria-label="Watch History"]')?.getAttribute(
+          "data-refresh-signal",
+        ),
+      ).toBe("1");
+    });
+    expect(view.container.querySelector('[aria-label="Watch History"]')).toBe(visiblePanel);
   });
 
   it("sends one recent-person request and refreshes the canonical social snapshot", async () => {
