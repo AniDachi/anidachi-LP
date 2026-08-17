@@ -14,7 +14,7 @@ type StorageChangedEventLike = {
 
 export function bindWatchHistoryPreferenceListener(options: {
   ownerUserId: string;
-  controller: Pick<WatchHistoryController, "observe" | "refreshAuthority">;
+  controller: Pick<WatchHistoryController, "applyLocalPreferences">;
   onChanged?: StorageChangedEventLike;
 }): () => void {
   const onChanged = options.onChanged ?? chrome.storage.onChanged;
@@ -22,18 +22,32 @@ export function bindWatchHistoryPreferenceListener(options: {
     if (areaName !== "local") return;
     const change = changes[WATCH_HISTORY_STORAGE_KEY];
     if (!change) return;
-    const previous = preferenceSignature(change.oldValue, options.ownerUserId);
-    const next = preferenceSignature(change.newValue, options.ownerUserId);
-    if (previous === next) return;
-    void options.controller.refreshAuthority()
-      .then(() => options.controller.observe("heartbeat"))
-      .catch(() => undefined);
+    const previous = localPreferenceAuthority(change.oldValue, options.ownerUserId);
+    const next = localPreferenceAuthority(change.newValue, options.ownerUserId);
+    if (!next || preferenceSignature(previous) === preferenceSignature(next)) return;
+    void options.controller.applyLocalPreferences({
+      ownerUserId: next.ownerUserId,
+      accountGeneration: next.accountGeneration,
+      preferences: next.preferences,
+      capturePaused: next.capturePaused,
+    }).catch(() => undefined);
   };
   onChanged.addListener(listener);
   return () => onChanged.removeListener(listener);
 }
 
-function preferenceSignature(value: unknown, ownerUserId: string): string | null {
+type LocalPreferenceAuthority = {
+  ownerUserId: string;
+  accountGeneration: number;
+  preferences: { youtubeHistoryEnabled: boolean };
+  localRevision: number;
+  capturePaused: boolean;
+};
+
+function localPreferenceAuthority(
+  value: unknown,
+  ownerUserId: string,
+): LocalPreferenceAuthority | null {
   if (!isRecord(value) || value.schemaVersion !== 2 || !isRecord(value.activeGenerations) ||
     !isRecord(value.partitions)) {
     return null;
@@ -45,6 +59,7 @@ function preferenceSignature(value: unknown, ownerUserId: string): string | null
   const partition = value.partitions[watchHistoryPartitionKey(ownerUserId, generation)];
   if (!isRecord(partition) || partition.ownerUserId !== ownerUserId ||
     partition.accountGeneration !== generation || partition.preferencesConfirmed !== true ||
+    partition.captureMarkersReady !== true || typeof partition.capturePaused !== "boolean" ||
     !isRecord(partition.preferences) ||
     typeof partition.preferences.youtubeHistoryEnabled !== "boolean") {
     return null;
@@ -53,7 +68,19 @@ function preferenceSignature(value: unknown, ownerUserId: string): string | null
   const localRevision = typeof revision === "number" && Number.isSafeInteger(revision) && revision >= 0
     ? revision
     : 0;
-  return `${generation}:${localRevision}:${partition.preferences.youtubeHistoryEnabled}`;
+  return {
+    ownerUserId,
+    accountGeneration: generation,
+    preferences: { youtubeHistoryEnabled: partition.preferences.youtubeHistoryEnabled },
+    localRevision,
+    capturePaused: partition.capturePaused,
+  };
+}
+
+function preferenceSignature(authority: LocalPreferenceAuthority | null): string | null {
+  return authority
+    ? `${authority.accountGeneration}:${authority.localRevision}:${authority.preferences.youtubeHistoryEnabled}`
+    : null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

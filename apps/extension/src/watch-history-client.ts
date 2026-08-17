@@ -692,18 +692,39 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const root = await storage.readRoot();
     const generation = root.activeGenerations?.[session.user.id];
     if (generation === undefined) return { ok: false, status: "retryable" };
-    const saved = await updateCurrentPartition(session, generation, (partition) => ({
-      ...partition,
-      preferences: input.data,
-      preferencesConfirmed: true,
-      preferencesSyncPending: true,
-      preferencesLocalRevision: (partition.preferencesLocalRevision ?? 0) + 1,
-      captureMarkersReady: true,
-    }));
+    let queuedFinalObservation = false;
+    const saved = await updateCurrentPartition(session, generation, (partition) => {
+      const disablingYouTube = partition.preferences?.youtubeHistoryEnabled === true &&
+        !input.data.youtubeHistoryEnabled;
+      const clearingYouTubeObservation = disablingYouTube &&
+        partition.currentObservation?.provider === "youtube";
+      const queueMeaningfulSoloObservation = clearingYouTubeObservation &&
+        partition.currentObservationMeaningfulSolo === true;
+      queuedFinalObservation ||= queueMeaningfulSoloObservation;
+      return {
+        ...partition,
+        preferences: input.data,
+        preferencesConfirmed: true,
+        preferencesSyncPending: true,
+        preferencesLocalRevision: (partition.preferencesLocalRevision ?? 0) + 1,
+        currentObservation: clearingYouTubeObservation ? null : partition.currentObservation,
+        currentObservationMeaningfulSolo: clearingYouTubeObservation
+          ? false
+          : partition.currentObservationMeaningfulSolo === true,
+        currentObservationDisplayMode: clearingYouTubeObservation
+          ? null
+          : partition.currentObservationDisplayMode ?? null,
+        outbox: queueMeaningfulSoloObservation && partition.currentObservation
+          ? enqueueWatchHistoryEvent(partition.outbox, partition.currentObservation)
+          : partition.outbox,
+        captureMarkersReady: true,
+      };
+    });
     if (saved.authorityRejected) return { ok: false, status: "rejected" };
     if (saved.stale) return { ok: false, status: "generation-mismatch" };
     if (!saved.ok) return saved;
     queuePreferenceSync(session, generation, input.data);
+    if (queuedFinalObservation) void flush(session).catch(() => undefined);
     return { ok: true };
   }
 

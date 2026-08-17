@@ -104,7 +104,10 @@ or an ended event. The choice is mirrored to the account in the background and
 seeds only browsers without their own explicit choice. Shorts, embed, preview,
 and route-only observations remain ineligible. An active supported page observes
 the local choice directly and resamples immediately; toggling does not require a
-page reload or a server response.
+page reload or a server response. A newer local choice fences an in-flight account
+refresh. Opt-out clears the active YouTube presentation and preserves only the last
+already-observed meaningful solo sample for background delivery; it does not capture
+after consent has been withdrawn.
 
 ## Current Evidence And Remaining Gate
 

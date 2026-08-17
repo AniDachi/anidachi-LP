@@ -53,6 +53,12 @@ export type WatchHistoryController = {
   start(): Promise<void>;
   observe(kind: HistoryEventKind): Promise<void>;
   noteSeeking(): Promise<void>;
+  applyLocalPreferences(input: {
+    ownerUserId: string;
+    accountGeneration: number;
+    preferences: WatchHistoryPreferences;
+    capturePaused: boolean;
+  }): Promise<void>;
   setRoomActive(active: boolean): Promise<void>;
   setRoomHistoryAuthority(authority: RoomHistoryAuthority | null): Promise<void>;
   refreshAuthority(): Promise<void>;
@@ -123,14 +129,15 @@ export function createWatchHistoryController(
   async function start(): Promise<void> {
     const token = lifecycle;
     if (dependencies.loadCachedPreferences) {
+      const cachedAuthorityToken = ++authorityRevision;
       let cached: Awaited<ReturnType<NonNullable<typeof dependencies.loadCachedPreferences>>>;
       try {
         cached = await dependencies.loadCachedPreferences();
       } catch {
         cached = null;
       }
+      if (!isCurrent(token) || cachedAuthorityToken !== authorityRevision) return;
       if (cached) {
-        const cachedAuthorityToken = ++authorityRevision;
         await serial(async () => {
           if (!isCurrent(token) || cachedAuthorityToken !== authorityRevision) return;
           ownerUserId = cached.ownerUserId;
@@ -143,7 +150,7 @@ export function createWatchHistoryController(
           authorityReady = true;
           await capture("heartbeat", token);
         });
-        if (isCurrent(token)) {
+        if (isCurrent(token) && cachedAuthorityToken === authorityRevision) {
           void refreshAuthorityFromNetwork(true).catch(() => undefined);
         }
         return;
@@ -179,6 +186,61 @@ export function createWatchHistoryController(
     return serial(async () => {
       if (!isCurrent(token)) return;
       await capture(kind, token);
+    });
+  }
+
+  function applyLocalPreferences(input: {
+    ownerUserId: string;
+    accountGeneration: number;
+    preferences: WatchHistoryPreferences;
+    capturePaused: boolean;
+  }): Promise<void> {
+    const token = lifecycle;
+    if (ownerUserId !== null && ownerUserId !== input.ownerUserId) return Promise.resolve();
+    const authorityToken = ++authorityRevision;
+    return serial(async () => {
+      if (!isCurrent(token) || authorityToken !== authorityRevision ||
+        ownerUserId !== null && ownerUserId !== input.ownerUserId) {
+        return;
+      }
+      const boundaryChanged = !authorityReady ||
+        ownerUserId !== input.ownerUserId ||
+        accountGeneration !== input.accountGeneration;
+      const previousObservation = authorityReady ? dependencies.getObservation(preferences) : null;
+      const previousEnabled = preferences?.youtubeHistoryEnabled;
+      const changed = previousEnabled !== input.preferences.youtubeHistoryEnabled;
+      if (boundaryChanged) {
+        retained = null;
+        retainedIdentity = null;
+        clientSessionKey = null;
+        resetMeaningfulState();
+        dependencies.onObservation?.(null);
+      }
+      ownerUserId = input.ownerUserId;
+      accountGeneration = input.accountGeneration;
+      preferences = input.preferences;
+      capturePaused = input.capturePaused;
+      authorityReady = true;
+      authorityRefreshPending = false;
+      if (capturePaused || !boundaryChanged && !changed) return;
+      const nextObservation = dependencies.getObservation(preferences);
+      if (boundaryChanged) {
+        if (nextObservation) await capture("heartbeat", token);
+        return;
+      }
+      const affectsYouTube = retained?.provider === "youtube" ||
+        previousObservation?.provider === "youtube" ||
+        nextObservation?.provider === "youtube";
+      if (!affectsYouTube) return;
+      if (previousEnabled === true && !preferences.youtubeHistoryEnabled) {
+        retained = null;
+        retainedIdentity = null;
+        clientSessionKey = null;
+        resetMeaningfulState();
+        dependencies.onObservation?.(null);
+        return;
+      }
+      await capture("heartbeat", token);
     });
   }
 
@@ -339,6 +401,7 @@ export function createWatchHistoryController(
     flushNow = false,
   ): Promise<boolean> {
     if (!isCurrent(token) || !authorityReady) return false;
+    const persistedAuthorityRevision = authorityRevision;
     try {
       if (ownerUserId === null) return false;
       const result = await dependencies.observeLocally(
@@ -350,7 +413,7 @@ export function createWatchHistoryController(
         flushNow,
       );
       if (isFailedCapture(result)) {
-        handleCaptureFailure(result);
+        if (persistedAuthorityRevision === authorityRevision) handleCaptureFailure(result);
         return false;
       }
       return true;
@@ -432,24 +495,25 @@ export function createWatchHistoryController(
         await serial(async () => { apply(loaded); });
       });
     }
-    return serial(async () => {
-      if (!isCurrent(token) || authorityToken !== authorityRevision) return;
-      const loaded = await load();
-      if (loaded) {
-        apply(loaded);
-        return;
-      }
-      authorityRefreshPending = false;
-      if (previousAuthority.ready) {
-        authorityReady = true;
-        if (retained?.provider === "youtube") {
-          retained = null;
-          retainedIdentity = null;
-          clientSessionKey = null;
-          resetMeaningfulState();
-          dependencies.onObservation?.(null);
+    return load().then(async (loaded) => {
+      await serial(async () => {
+        if (!isCurrent(token) || authorityToken !== authorityRevision) return;
+        if (loaded) {
+          apply(loaded);
+          return;
         }
-      }
+        authorityRefreshPending = false;
+        if (previousAuthority.ready) {
+          authorityReady = true;
+          if (retained?.provider === "youtube") {
+            retained = null;
+            retainedIdentity = null;
+            clientSessionKey = null;
+            resetMeaningfulState();
+            dependencies.onObservation?.(null);
+          }
+        }
+      });
     });
   }
 
@@ -631,6 +695,7 @@ export function createWatchHistoryController(
     start,
     observe,
     noteSeeking,
+    applyLocalPreferences,
     setRoomActive,
     setRoomHistoryAuthority,
     refreshAuthority,

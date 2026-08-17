@@ -276,8 +276,12 @@ keys.
   `preferencesSyncPending` marker and retries only on the existing event-driven
   bootstrap/get/flush/reconnect paths; it never blocks local capture, adds polling,
   or exposes transport state in the switch. Active provider controllers subscribe
-  to that owner-scoped local preference revision, refresh from local storage, and
-  sample immediately so enabling YouTube does not require a reload or server round trip.
+  to that owner-scoped local preference revision, apply the exact owner/generation
+  choice directly, and sample immediately so enabling YouTube does not require a
+  reload or server round trip. An in-flight account refresh cannot delay or overwrite
+  the newer local revision. Turning the switch off atomically moves the last meaningful
+  solo sample into the outbox, clears the active YouTube presentation, and performs no
+  new capture after opt-out.
 - Flush is event-driven: enqueue, browser `online`, valid auth refresh, service
   worker startup/install, Popup/manual refresh, and content-script reconnect.
   No periodic background alarm is introduced.

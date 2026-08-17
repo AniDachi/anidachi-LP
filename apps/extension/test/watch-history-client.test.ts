@@ -180,6 +180,55 @@ describe("watch history v2 client", () => {
       .toBe(youtubeEvent.clientEventId);
   });
 
+  it("moves the last meaningful YouTube sample to the outbox when local tracking is turned off", async () => {
+    const owner = session.user.id;
+    const key = watchHistoryPartitionKey(owner, 1);
+    const youtubeEvent = {
+      ...progressEvent(),
+      provider: "youtube" as const,
+      titleKey: "youtube:video-a",
+      episodeKey: "youtube:video-a",
+      sourceUrl: "https://www.youtube.com/watch?v=video-a",
+      sharedRoom: null,
+    };
+    let stored: WatchHistoryStorageRoot = {
+      schemaVersion: 2,
+      activeGenerations: { [owner]: 1 },
+      partitions: {
+        [key]: {
+          ...readyPartition(owner, true),
+          currentObservation: youtubeEvent,
+          currentObservationMeaningfulSolo: true,
+          currentObservationDisplayMode: "mine",
+        },
+      },
+    };
+    const client = createWatchHistoryClient({
+      getCurrentSession: async () => session,
+      fetch: vi.fn(async () => { throw new TypeError("offline"); }) as typeof fetch,
+      storage: createWatchHistoryStorage({
+        item: { getValue: async () => stored, setValue: async (value) => { stored = value; } },
+        getBytesInUse: async () => 0,
+        quotaBytes: 1_000_000,
+      }),
+    });
+
+    await expect(client.handle({
+      type: "ANIDACHI_WATCH_HISTORY_V2",
+      command: "update-preferences",
+      input: { youtubeHistoryEnabled: false },
+    })).resolves.toEqual({ ok: true });
+
+    expect(stored.partitions[key]).toMatchObject({
+      preferences: { youtubeHistoryEnabled: false },
+      currentObservation: null,
+      currentObservationMeaningfulSolo: false,
+      currentObservationDisplayMode: null,
+    });
+    expect(stored.partitions[key]?.outbox.entries).toHaveLength(1);
+    expect(stored.partitions[key]?.outbox.entries[0]?.event).toEqual(youtubeEvent);
+  });
+
   it("retries a locally pending YouTube preference on bootstrap and clears it after server acknowledgement", async () => {
     const owner = session.user.id;
     const key = watchHistoryPartitionKey(owner, 1);
