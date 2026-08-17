@@ -285,9 +285,9 @@
     "semantic_hash": "46aa97bae6145c0f0a59e3c51cbf50c7"
   },
   "apps/extension/src/overlay-app.tsx": {
-    "mtime": 1786815180.0909984,
-    "ast_hash": "f43c6661e890db3ef081af23c3589aac",
-    "semantic_hash": "f43c6661e890db3ef081af23c3589aac"
+    "mtime": 1786864384.4304633,
+    "ast_hash": "df6faf60da686be5daa83b62d0bc4a24",
+    "semantic_hash": ""
   },
   "apps/extension/src/overlay-layout.ts": {
     "mtime": 1786689011.2525907,
@@ -325,14 +325,14 @@
     "semantic_hash": "36308950ab5526f30362d99a6ae2826f"
   },
   "apps/extension/src/popup-app.tsx": {
-    "mtime": 1786799215.5965614,
-    "ast_hash": "67503c7beacaee4ece7433d7dcd01756",
-    "semantic_hash": "67503c7beacaee4ece7433d7dcd01756"
+    "mtime": 1786947154.853708,
+    "ast_hash": "19cde4142b16d1e98f828fff4c925592",
+    "semantic_hash": ""
   },
   "apps/extension/src/popup-styles.ts": {
-    "mtime": 1786805112.0806801,
-    "ast_hash": "079913b7b1f9a72148d815f8bdc93340",
-    "semantic_hash": "079913b7b1f9a72148d815f8bdc93340"
+    "mtime": 1786947211.0390775,
+    "ast_hash": "ba026ccb7d0a2601c2b6444c4371aac8",
+    "semantic_hash": ""
   },
   "apps/extension/src/privacy-sanitizer.ts": {
     "mtime": 1786767150.2474945,
@@ -505,7 +505,7 @@
     "semantic_hash": "4990f2060084364a9ec5f6f98a328f29"
   },
   "apps/extension/test/social-client.test.ts": {
-    "mtime": 1786850126.4194925,
+    "mtime": 1786852497.6657827,
     "ast_hash": "0b927df290b3c160ae87f24ecdd107b7",
     "semantic_hash": "0b927df290b3c160ae87f24ecdd107b7"
   },
@@ -570,9 +570,9 @@
     "semantic_hash": "fc7ed393861d37dfa1934597b098cdab"
   },
   "apps/web/app/account/watch-library/watch-library-client.tsx": {
-    "mtime": 1786789537.5458574,
-    "ast_hash": "18bc3e691d55aede76281e9227abccc7",
-    "semantic_hash": "18bc3e691d55aede76281e9227abccc7"
+    "mtime": 1786857412.535075,
+    "ast_hash": "47244a03eae0b2fdd0c7bd0c8007d2e3",
+    "semantic_hash": ""
   },
   "apps/web/app/anime-watch-party-toolkit/page.tsx": {
     "mtime": 1786728374.6845489,
@@ -950,17 +950,17 @@
     "semantic_hash": "578c8c525213b56c5a3e343243a08aec"
   },
   "apps/web/app/api/watch-library/rooms/route.ts": {
-    "mtime": 1786850215.1808932,
+    "mtime": 1786852497.665894,
     "ast_hash": "03d70ad2149f912e9311cd569201d712",
     "semantic_hash": "03d70ad2149f912e9311cd569201d712"
   },
   "apps/web/app/api/watch-library/route.ts": {
-    "mtime": 1786850215.1451998,
+    "mtime": 1786852497.665983,
     "ast_hash": "d7529521f1be42c2743f502f8a8ee1db",
     "semantic_hash": "d7529521f1be42c2743f502f8a8ee1db"
   },
   "apps/web/app/api/watch-progress/reconcile/route.ts": {
-    "mtime": 1786850215.109999,
+    "mtime": 1786852497.6660566,
     "ast_hash": "03d70ad2149f912e9311cd569201d712",
     "semantic_hash": "03d70ad2149f912e9311cd569201d712"
   },
@@ -1105,7 +1105,7 @@
     "semantic_hash": "51e9e4c7401fccd709ac7a3036e6bf3f"
   },
   "apps/web/app/friends/friends-client.tsx": {
-    "mtime": 1786850215.2174156,
+    "mtime": 1786852497.6662254,
     "ast_hash": "e8b3da527cefba7e6788ef050f5af659",
     "semantic_hash": "e8b3da527cefba7e6788ef050f5af659"
   },
@@ -2055,12 +2055,12 @@
     "semantic_hash": "6a5f22280a954c5c38b1380d33d7cba2"
   },
   "apps/web/lib/anidachi-auth/social.test.ts": {
-    "mtime": 1786850261.9182265,
+    "mtime": 1786852497.666371,
     "ast_hash": "f52d0fda119c44ae83d22918104fd846",
     "semantic_hash": "f52d0fda119c44ae83d22918104fd846"
   },
   "apps/web/lib/anidachi-auth/social.ts": {
-    "mtime": 1786851558.197077,
+    "mtime": 1786852497.666497,
     "ast_hash": "33b5cfa77e3c09c615879bd89f297951",
     "semantic_hash": "33b5cfa77e3c09c615879bd89f297951"
   },
@@ -2105,7 +2105,7 @@
     "semantic_hash": "4046e0974c4fedcf88cbe48be3eefd4c"
   },
   "apps/web/lib/anidachi-auth/watch-library-routes.ts": {
-    "mtime": 1786850725.0383165,
+    "mtime": 1786852497.6666317,
     "ast_hash": "c48065b07f4fe0705e383d756ef4b313",
     "semantic_hash": "c48065b07f4fe0705e383d756ef4b313"
   },
@@ -3000,14 +3000,14 @@
     "semantic_hash": "4f8bc07151786b1e9503090c19b6b892"
   },
   "docs/crunchyroll-adapter-notes.md": {
-    "mtime": 1786798398.24443,
-    "ast_hash": "5e854321c84b73def59c4e39eb271324",
-    "semantic_hash": "5e854321c84b73def59c4e39eb271324"
+    "mtime": 1786883727.3113399,
+    "ast_hash": "7222da43b1fe21764ac60a152d060d29",
+    "semantic_hash": ""
   },
   "docs/current-development-state.md": {
-    "mtime": 1786798398.2445858,
-    "ast_hash": "0bd8f2e3c76443eb7a52383c2b3137ae",
-    "semantic_hash": "0bd8f2e3c76443eb7a52383c2b3137ae"
+    "mtime": 1786883727.31159,
+    "ast_hash": "8aac89ecf1555c3cc0ae12c9875c6381",
+    "semantic_hash": ""
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -3060,14 +3060,14 @@
     "semantic_hash": "9fa86aeb56b42d0b312563930e5dd5bb"
   },
   "docs/release-and-rollback-runbook.md": {
-    "mtime": 1786689011.3589776,
-    "ast_hash": "aefe2b8ea8a78ebd47af4559a309da74",
-    "semantic_hash": "aefe2b8ea8a78ebd47af4559a309da74"
+    "mtime": 1786883727.3118043,
+    "ast_hash": "855d9a28642d086bfe12b9d1e31e6245",
+    "semantic_hash": ""
   },
   "docs/shared-watch-progress-tracker.md": {
-    "mtime": 1786798398.2448766,
-    "ast_hash": "3801817975bdcf5b91d005c84e5e3eda",
-    "semantic_hash": "3801817975bdcf5b91d005c84e5e3eda"
+    "mtime": 1786955366.7648945,
+    "ast_hash": "9f9ea1c32aa693c105999336fe31a03f",
+    "semantic_hash": ""
   },
   "docs/site-extension-integration-notes.md": {
     "mtime": 1786689011.3591473,
@@ -3140,9 +3140,9 @@
     "semantic_hash": "6e650e1cecebb157686b6e1daa58f2a4"
   },
   "docs/superpowers/plans/README.md": {
-    "mtime": 1786798398.2452,
-    "ast_hash": "1ad554e227e780545eacbe8ab266555a",
-    "semantic_hash": "1ad554e227e780545eacbe8ab266555a"
+    "mtime": 1786883727.3127973,
+    "ast_hash": "60c9cd0838603066663a39e68fa354be",
+    "semantic_hash": ""
   },
   "packages/protocol/AGENTS.md": {
     "mtime": 1786689011.3759747,
@@ -3565,9 +3565,9 @@
     "semantic_hash": "8ec8cf253c0e701070a9ba52c7bb2273"
   },
   "apps/extension/test/source-adapters/provider-boundaries.test.ts": {
-    "mtime": 1786771035.505059,
-    "ast_hash": "d2f2311e82ecbc2d6b4f8c7311ab71b1",
-    "semantic_hash": "d2f2311e82ecbc2d6b4f8c7311ab71b1"
+    "mtime": 1786864384.4688795,
+    "ast_hash": "0edadb5b8ff44bbd6e90c95e8a6de13a",
+    "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/registry.test.ts": {
     "mtime": 1786689011.263752,
@@ -4165,12 +4165,12 @@
     "semantic_hash": "ca81d141ed6b3bad970191c5acea02bd"
   },
   "packages/protocol/src/account.ts": {
-    "mtime": 1786850215.0361633,
+    "mtime": 1786852497.6668756,
     "ast_hash": "2f5b0abb2dc5a3017a52f07a469624ba",
     "semantic_hash": "2f5b0abb2dc5a3017a52f07a469624ba"
   },
   "packages/protocol/test/account.test.ts": {
-    "mtime": 1786850126.3483837,
+    "mtime": 1786852497.6670036,
     "ast_hash": "a8fd75ee857d6507ae164d9ec585a772",
     "semantic_hash": "a8fd75ee857d6507ae164d9ec585a772"
   },
@@ -4180,19 +4180,19 @@
     "semantic_hash": "2258f9095d940f6913117b448ec0e310"
   },
   "apps/extension/src/popup-people-panel.tsx": {
-    "mtime": 1786850215.254456,
+    "mtime": 1786852497.6654334,
     "ast_hash": "e6b8d97c3d1d0ba71acf3ece97ccc64c",
     "semantic_hash": "e6b8d97c3d1d0ba71acf3ece97ccc64c"
   },
   "apps/extension/test/popup-people-model.test.ts": {
-    "mtime": 1786850244.1383643,
+    "mtime": 1786852497.665556,
     "ast_hash": "a550facece2e1b0b49624408e437434a",
     "semantic_hash": "a550facece2e1b0b49624408e437434a"
   },
   "apps/extension/test/popup-people-panel.test.tsx": {
-    "mtime": 1786851355.5824804,
-    "ast_hash": "6d042a716982e0273aae045fad6c58d1",
-    "semantic_hash": "6d042a716982e0273aae045fad6c58d1"
+    "mtime": 1786947310.2000403,
+    "ast_hash": "f05674f33bdf31ace3746c5a61a4f802",
+    "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-08-07-popup-people-social-directory.md": {
     "mtime": 1786689011.36463,
@@ -4230,7 +4230,7 @@
     "semantic_hash": "734d90afdf89161fa956d4d75f7919fb"
   },
   "apps/web/lib/friends-client-contracts.test.ts": {
-    "mtime": 1786850126.3840203,
+    "mtime": 1786852497.6667047,
     "ast_hash": "91d1e56eccbbc313212b2c28110f1f9e",
     "semantic_hash": "91d1e56eccbbc313212b2c28110f1f9e"
   },
@@ -4435,9 +4435,9 @@
     "semantic_hash": "19c07fa543f5ae2aa0c6c3add9ea9889"
   },
   "docs/superpowers/plans/2026-08-14-watch-history-v2-clean-mvp-implementation.md": {
-    "mtime": 1786851558.3375916,
-    "ast_hash": "bee55f74c541f1d1bce79cae99f79506",
-    "semantic_hash": "bee55f74c541f1d1bce79cae99f79506"
+    "mtime": 1786955366.7258322,
+    "ast_hash": "71054c25e8422a7c2a748f04c2766b93",
+    "semantic_hash": ""
   },
   "docs/superpowers/specs/2026-08-13-watch-history-catalog-progress-design.md": {
     "mtime": 1786728374.7163763,
@@ -4500,14 +4500,14 @@
     "semantic_hash": "4cb037630edf13fbf7aeda54db9ba9c5"
   },
   "apps/web/lib/anidachi-auth/watch-history-v2.test.ts": {
-    "mtime": 1786789247.9901853,
-    "ast_hash": "c4c3f530c307c6a0ed4aea2b5563c66c",
-    "semantic_hash": "c4c3f530c307c6a0ed4aea2b5563c66c"
+    "mtime": 1786883727.3068242,
+    "ast_hash": "7ed0faaadee1765ee634a94397ac263a",
+    "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-history-v2.ts": {
-    "mtime": 1786776762.555236,
-    "ast_hash": "caf3e1a6063c743a097c0398bbe57347",
-    "semantic_hash": "caf3e1a6063c743a097c0398bbe57347"
+    "mtime": 1786883727.307069,
+    "ast_hash": "b8ac1da8a5cdb5f4b49f750f88e95303",
+    "semantic_hash": ""
   },
   "apps/web/lib/anidachi-auth/watch-library-v1-v2-coexistence.test.ts": {
     "mtime": 1786798398.243698,
@@ -4520,9 +4520,9 @@
     "semantic_hash": "e76d40be7d7d8d9d56dde3107b96756f"
   },
   "apps/web/supabase/tests/watch_history_v2.test.sql": {
-    "mtime": 1786851558.2903576,
-    "ast_hash": "013c8c5d6efc80b745a4e311916ce311",
-    "semantic_hash": "013c8c5d6efc80b745a4e311916ce311"
+    "mtime": 1786882533.7858434,
+    "ast_hash": "7e6a7939ab7f1539d761bb6d2326283a",
+    "semantic_hash": ""
   },
   "apps/extension/src/source-adapters/core/history-policy.ts": {
     "mtime": 1786788840.771177,
@@ -4530,19 +4530,19 @@
     "semantic_hash": "694ee39ea7851dad6c1d70fc496bdc42"
   },
   "apps/extension/src/watch-history-client.ts": {
-    "mtime": 1786815180.0175083,
-    "ast_hash": "779a4cb429cdb1fe312d02bed6d09a13",
-    "semantic_hash": "779a4cb429cdb1fe312d02bed6d09a13"
+    "mtime": 1786955275.7714436,
+    "ast_hash": "ed8a21a0ce71ea2b3750b0dae76f96ba",
+    "semantic_hash": ""
   },
   "apps/extension/src/watch-history-controller.ts": {
-    "mtime": 1786815376.013055,
-    "ast_hash": "b1b29c73c7bcd3efa0e6ec38d1edfb6c",
-    "semantic_hash": "b1b29c73c7bcd3efa0e6ec38d1edfb6c"
+    "mtime": 1786864330.975695,
+    "ast_hash": "3bfe050a7e925d5a1111e26dae2348d4",
+    "semantic_hash": ""
   },
   "apps/extension/src/watch-history-listeners.ts": {
-    "mtime": 1786772481.583532,
-    "ast_hash": "78581a4e5444618f27a7ecd154e4409d",
-    "semantic_hash": "78581a4e5444618f27a7ecd154e4409d"
+    "mtime": 1786857412.4603138,
+    "ast_hash": "870773aab446860bc4e7b73ab64ed258",
+    "semantic_hash": ""
   },
   "apps/extension/src/watch-history-outbox.ts": {
     "mtime": 1786768099.9607213,
@@ -4550,9 +4550,9 @@
     "semantic_hash": "79ae124a2ab001fcc734153bd3db15a9"
   },
   "apps/extension/src/watch-history-storage.ts": {
-    "mtime": 1786814158.4906585,
-    "ast_hash": "aeefadfc6fa41f323194a2eff13eb700",
-    "semantic_hash": "aeefadfc6fa41f323194a2eff13eb700"
+    "mtime": 1786950062.6236863,
+    "ast_hash": "5f46d32c8c4b6562a3283a6c3192bfc0",
+    "semantic_hash": ""
   },
   "apps/extension/test/source-adapters/youtube/progress.test.ts": {
     "mtime": 1786776469.993801,
@@ -4560,19 +4560,19 @@
     "semantic_hash": "d1311f2b79eb64e18c38322455b3c75f"
   },
   "apps/extension/test/watch-history-client.test.ts": {
-    "mtime": 1786815305.3396423,
-    "ast_hash": "bdc994639beecfe5e16d500299725de5",
-    "semantic_hash": "bdc994639beecfe5e16d500299725de5"
+    "mtime": 1786955219.465799,
+    "ast_hash": "370578e1b60734959baa0cd8a37d4617",
+    "semantic_hash": ""
   },
   "apps/extension/test/watch-history-controller.test.ts": {
-    "mtime": 1786815353.5290916,
-    "ast_hash": "e30fb0c0a3d0fb749e2005ff86b90400",
-    "semantic_hash": "e30fb0c0a3d0fb749e2005ff86b90400"
+    "mtime": 1786864336.1603513,
+    "ast_hash": "37d81b7a051a7afea12444a3a716a86c",
+    "semantic_hash": ""
   },
   "apps/extension/test/watch-history-listeners.test.ts": {
-    "mtime": 1786772488.0041194,
-    "ast_hash": "db189ffdfd3889ac3e52b8dc1a23bc23",
-    "semantic_hash": "db189ffdfd3889ac3e52b8dc1a23bc23"
+    "mtime": 1786857306.2948031,
+    "ast_hash": "d236c0a334e63926e9d206fe06584e65",
+    "semantic_hash": ""
   },
   "apps/extension/test/watch-history-outbox.test.ts": {
     "mtime": 1786770521.6811554,
@@ -4605,14 +4605,14 @@
     "semantic_hash": "c1f2fef3b39f9db25f51b5d651bc44fb"
   },
   "apps/extension/src/popup-watch-history.tsx": {
-    "mtime": 1786815180.1272948,
-    "ast_hash": "803ed2eb0171310aeb29215965b93178",
-    "semantic_hash": "803ed2eb0171310aeb29215965b93178"
+    "mtime": 1786947433.7044055,
+    "ast_hash": "b9d75a51e0c2347e1346a42f4a50c47b",
+    "semantic_hash": ""
   },
   "apps/extension/test/popup-watch-history.test.tsx": {
-    "mtime": 1786815211.5677338,
-    "ast_hash": "f55eca7e6ea64a97113c4b5549c57fda",
-    "semantic_hash": "f55eca7e6ea64a97113c4b5549c57fda"
+    "mtime": 1786947406.291027,
+    "ast_hash": "bcd8ddc78e6d87e1109899e0c423323e",
+    "semantic_hash": ""
   },
   "apps/extension/src/extension-theme.ts": {
     "mtime": 1786798491.791604,
@@ -4635,12 +4635,12 @@
     "semantic_hash": "4957f419ed938e4219f62c415f023896"
   },
   "apps/web/lib/anidachi-auth/watch-library-routes.test.ts": {
-    "mtime": 1786851355.6306272,
+    "mtime": 1786852497.6665573,
     "ast_hash": "b175a398654abe0f16850dcb0c5dfa7e",
     "semantic_hash": "b175a398654abe0f16850dcb0c5dfa7e"
   },
   "apps/web/lib/friends-recent-people.test.ts": {
-    "mtime": 1786851355.5358095,
+    "mtime": 1786852497.6667526,
     "ast_hash": "b85ed84ecbce479e6b52c2485902df63",
     "semantic_hash": "b85ed84ecbce479e6b52c2485902df63"
   },
@@ -4648,5 +4648,40 @@
     "mtime": 1786851558.1481483,
     "ast_hash": "c36b64bfcb089c2f1f7b624a9e433478",
     "semantic_hash": "c36b64bfcb089c2f1f7b624a9e433478"
+  },
+  "apps/web/lib/anidachi-auth/watch-history-v2.benchmark.test.ts": {
+    "mtime": 1786883727.3064306,
+    "ast_hash": "02396819d0d88df2c83ad8916b5f4863",
+    "semantic_hash": ""
+  },
+  "apps/web/lib/anidachi-auth/watch-history-v2.local-rpc.test.ts": {
+    "mtime": 1786883727.3066,
+    "ast_hash": "ef3f29e6854745e3cf50a253b24ba0a3",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/contracts/watch_history_v2_migration_concurrency_contract.mjs": {
+    "mtime": 1786882533.7850082,
+    "ast_hash": "8f6a25a24f2757c24816f8b0b6982f4f",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/contracts/watch_history_v2_migration_order_contract.mjs": {
+    "mtime": 1786882533.7851672,
+    "ast_hash": "e32f331a72c94b8b015bed759be1eeca",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/contracts/watch_history_v2_migration_order_contract.sql": {
+    "mtime": 1786882533.7853801,
+    "ast_hash": "eff0355eeeaa30b439d7b69cac933e8b",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/contracts/watch_history_v2_runtime_contract.sql": {
+    "mtime": 1786883727.3072093,
+    "ast_hash": "a7b92cbf076bbaeef79fd9cc310719ed",
+    "semantic_hash": ""
+  },
+  "apps/web/supabase/migrations/20260816090000_watch_history_v2_bounded_read.sql": {
+    "mtime": 1786882533.7855892,
+    "ast_hash": "2257224b5a6a1a4637763534322a8826",
+    "semantic_hash": ""
   }
 }
