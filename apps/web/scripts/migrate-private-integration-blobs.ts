@@ -40,14 +40,21 @@ type PrivatePutOptions = BlobAuth & {
 };
 
 export type PrivateIntegrationBlobMigrationSdk = {
-  list: (options: BlobAuth & { cursor?: string; limit: number }) => Promise<{
+  list: (options: BlobAuth & {
+    cursor?: string;
+    limit: number;
+    prefix?: string;
+  }) => Promise<{
     blobs: BlobListRow[];
     hasMore: boolean;
     cursor?: string;
   }>;
   get: (
     pathname: string,
-    options: ({ access: "public" } | { access: "private" }) & BlobAuth,
+    options: (
+      | { access: "public" }
+      | { access: "private"; useCache?: boolean }
+    ) & BlobAuth,
   ) => Promise<BlobReadResult>;
   put: (
     pathname: string,
@@ -116,6 +123,28 @@ async function listInventoriedSourceObjects(
   );
 }
 
+async function destinationContainsPath(
+  sdk: PrivateIntegrationBlobMigrationSdk,
+  privateAuth: BlobAuth,
+  pathname: string,
+): Promise<boolean> {
+  let cursor: string | undefined;
+  do {
+    const page = await sdk.list({
+      ...privateAuth,
+      prefix: pathname,
+      cursor,
+      limit: 1000,
+    });
+    if (page.blobs.some((row) => row.pathname === pathname)) return true;
+    cursor = page.hasMore ? page.cursor : undefined;
+    if (page.hasMore && !cursor) {
+      throw new Error("Destination Blob listing omitted its continuation cursor");
+    }
+  } while (cursor);
+  return false;
+}
+
 function assertReadableResult(
   result: BlobReadResult,
   pathname: string,
@@ -131,6 +160,12 @@ function assertReadableResult(
   ) {
     throw new Error(`Unable to read ${source} metadata for ${pathname}`);
   }
+}
+
+function normalizedEtag(value: string | undefined): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  return trimmed.replace(/^W\//i, "");
 }
 
 export async function runPrivateIntegrationBlobMigration(input: {
@@ -159,17 +194,32 @@ export async function runPrivateIntegrationBlobMigration(input: {
     log({ pathname: row.pathname, size: row.size, status: "discovered" });
     if (input.mode === "dry-run") continue;
 
+    const destinationExists = await destinationContainsPath(
+      sdk,
+      input.privateAuth,
+      row.pathname,
+    );
     const [source, existingDestination] = await Promise.all([
       sdk.get(row.pathname, { access: "public", ...input.sourceAuth }),
-      sdk.get(row.pathname, { access: "private", ...input.privateAuth }),
+      destinationExists
+        ? sdk.get(row.pathname, {
+            access: "private",
+            useCache: false,
+            ...input.privateAuth,
+          })
+        : Promise.resolve(null),
     ]);
     assertReadableResult(source, row.pathname, "source");
-    if (source.blob.size !== row.size) {
+    const listedEtag = normalizedEtag(row.etag);
+    const fetchedEtag = normalizedEtag(source.blob.etag);
+    if (listedEtag && fetchedEtag && listedEtag !== fetchedEtag) {
       await source.stream.cancel().catch(() => undefined);
-      throw new Error(`Source size changed during migration for ${row.pathname}`);
+      throw new Error(`Source changed during migration for ${row.pathname}`);
     }
 
-    if (existingDestination) {
+    const destinationMissing =
+      !destinationExists || existingDestination?.statusCode === 404;
+    if (!destinationMissing) {
       assertReadableResult(existingDestination, row.pathname, "destination");
       const [sourceDigest, destinationDigest] = await Promise.all([
         digestStream(source.stream),
@@ -208,6 +258,7 @@ export async function runPrivateIntegrationBlobMigration(input: {
 
     const destination = await sdk.get(row.pathname, {
       access: "private",
+      useCache: false,
       ...input.privateAuth,
     });
     assertReadableResult(destination, row.pathname, "destination");
