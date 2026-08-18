@@ -6,7 +6,7 @@
 > and `superpowers:requesting-code-review` at every wave stop. Do not skip the
 > drift gates or continue after a failed stop condition.
 
-Status: Approved for planning; implementation not started
+Status: Reviewed implementation plan; awaiting implementation approval
 
 Date: 2026-08-18
 
@@ -45,6 +45,25 @@ The existing planes remain:
 No generic security gateway, new queue service, polling platform, or second
 history authority is introduced.
 
+### Database implementation contract
+
+- Create every migration at execution time with
+  `supabase --workdir apps/web migration new <descriptive_name>` after checking
+  the installed CLI `--help`; `<generated>` paths below are not invented
+  timestamps.
+- Every new table in an exposed schema has RLS enabled. Internal tables have no
+  client policy and explicitly revoke `public`, `anon`, and `authenticated`.
+- Prefer `security invoker` functions with `search_path = ''` and fully qualified
+  relations. Any unavoidable `security definer` function requires a separate
+  threat-model note, owner check, non-public placement where possible, explicit
+  `EXECUTE` revocation, and a privilege test.
+- Postgres grants function execution to `PUBLIC` by default, so every internal
+  function explicitly revokes `PUBLIC`, `anon`, and `authenticated`, grants only
+  the intended role, and has pgTAP/Data API privilege coverage.
+- Before every schema commit, run the local reset, pgTAP, lint, and the installed
+  CLI's `db advisors`; inspect the generated migration list rather than assuming
+  filename order from this document.
+
 ## Execution Contract: Never Follow This Plan Blindly
 
 At the start of every task:
@@ -76,47 +95,60 @@ preserve a legacy path just because it is mentioned here.
   pre-release and current data is test data, legacy refresh sessions are revoked
   at cutover instead of maintaining a permanent dual verifier.
 - The current signing secret may remain for MVP with strict claim separation.
-- Shared-room delayed history has a documented 24-hour MVP delivery window.
-  Receipts remain 14 days, but room authority is not valid for 14 days.
-- A pending WebSocket must JOIN within 10 seconds. At most two unjoined sockets
-  per authenticated participant are retained; the room-wide pending allowance
-  is derived from its advertised `maxParticipants` rather than a second product
-  tier.
 - Public or media limits must be backed by benchmark evidence recorded in the
   task report before staging.
 - Unsafe uncertainty fails closed: a Blob may temporarily return `404`, a media
   fetch may be rejected, or a user may need to sign in again. The system never
   falls back to a broad credential read or cross-channel token.
 
+## Evidence-gated Initial Candidates
+
+These values are starting hypotheses, not approved constants:
+
+- a 24-hour delayed shared-room delivery window, intended to cover an overnight
+  client/network interruption without equating authority lifetime to 14-day
+  receipt retention;
+- a 10-second pre-JOIN deadline and at most two pending sockets per authenticated
+  participant, intended to cover the supported two-tab/device reconnect model.
+
+Task 0 must validate them against the documented product promise, current room
+reconnect traces, multi-tab behavior, and staging measurements. If the evidence
+does not support a candidate, amend this design/plan before runtime work. Do not
+silently raise it or preserve it merely because it is written here.
+
 ## Findings And Task Ownership
 
-| Security item | Owning task |
-| --- | --- |
-| 1 Chromium callback wildcard | Task 6 |
-| 2 Next.js below fixed version | Task 2 |
-| 3 public Blob proxy reaches private objects | Tasks 3-4 |
-| 4 interest subscription amplification | Task 16 |
-| 5 predictable OAuth state | Task 5 |
-| 6 website accepts extension credentials | Task 7 |
-| 7 room-history replay | Task 9 |
-| 8 Bloü arbitrary server fetch | Task 14 |
-| 9 staging/CRM password guessing | Task 16 |
-| 10 page-origin diagnostics | Task 11 |
-| 11 synthetic privileged extension actions | Task 11 |
-| 12 arbitrary room redirects | Task 15 |
-| 13 Watch History durable exhaustion | Task 13 |
-| 14 checkout ownership | Task 15 |
-| 15 OpenClaw unbounded image decode | Task 14 |
-| 16 refresh replay/sliding lifetime | Task 7 |
-| 17 pre-JOIN socket exhaustion | Task 10 |
-| 18 ICE query token | Task 15 |
-| 19 waitlist enumeration | Task 16 |
-| 20 auth artifact retention | Tasks 7 and 13 |
-| unbounded visible-title episode response | Tasks 12-13 |
+The row order and stable IDs below match `findings.json`; task reports and the
+final re-scan use the ID, never an informal ordinal alone.
+
+| # | Stable finding ID | Severity | Security item | Owning task |
+| --- | --- | --- | --- | --- |
+| 1 | `csf_83aeca0b556971026e425944` | high | public Blob proxy reaches private objects | Tasks 3-4 |
+| 2 | `csf_98f48a4e4262becc1c8a9c44` | high | Chromium callback wildcard | Task 6 |
+| 3 | `csf_8d596b89b735b2b647ec092a` | high | Next.js below fixed version | Task 2 |
+| 4 | `csf_4d81bc523ba749d6d6a7b7fc` | medium | predictable OAuth state | Task 5 |
+| 5 | `csf_4f0fce7bb9df75aa82f8de85` | medium | room-history replay | Task 9 |
+| 6 | `csf_4ba44429432d4a225b1b6dba` | medium | checkout ownership | Task 15 |
+| 7 | `csf_e510e2a7537d8b0621a2f79e` | medium | refresh replay/sliding lifetime | Task 7 |
+| 8 | `csf_e8f5cba805995a4d8cfc3a1a` | medium | website accepts extension credentials | Task 7 |
+| 9 | `csf_d0233a81c50e161bccd01922` | medium | pre-JOIN socket exhaustion | Task 10 |
+| 10 | `csf_5402810ef329b0d7deb11c61` | medium | Watch History durable exhaustion | Task 13 |
+| 11 | `csf_480cb74e6aa98fc952309fb5` | medium | page-origin diagnostics | Task 11 |
+| 12 | `csf_ee96e3b67a5bf6cafb01709a` | medium | synthetic privileged extension actions | Task 11 |
+| 13 | `csf_8a086af2924c376bbd7ff60e` | medium | Bloü arbitrary server fetch | Task 14 |
+| 14 | `csf_ee4edf5bc90e54bcb4772153` | medium | OpenClaw unbounded image decode | Task 14 |
+| 15 | `csf_e456654ba15fbb3388737ac0` | medium | arbitrary room redirects | Task 15 |
+| 16 | `csf_653a1e8f1373a829acc0d816` | medium | staging/CRM password guessing | Task 16 |
+| 17 | `csf_d96bf0ac0d9e37ff4bf7ee80` | medium | interest subscription amplification | Task 16 |
+| 18 | `csf_c4f920ca76eea1b605b51856` | low | auth artifact retention | Tasks 7-8 |
+| 19 | `csf_d7cf410cdf5606dfd4715d8e` | low | waitlist enumeration | Task 16 |
+| 20 | `csf_0b6d766e6d2e63968a9fb8dd` | low | ICE query token | Task 15 |
+| extra | project readiness gap | blocking before public history | unbounded visible-title episode response | Tasks 12-13 |
 
 ## Required Wave Stops
 
-There are six implementation waves. At each stop:
+There is one evidence preflight (Wave 0) followed by six implementation waves.
+At each stop:
 
 1. run the named focused and plane gates;
 2. run `git diff --check` and inspect the exact changed paths;
@@ -124,6 +156,11 @@ There are six implementation waves. At each stop:
 4. record migration/env/secret/rollback impact;
 5. commit only the completed task or coherent review fix;
 6. stop for an explicit go/no-go decision before the next wave.
+
+If CodeRabbit authentication/service is unavailable, record the exact failure,
+run the manual and security-specific review anyway, and mark the automated
+review unproven. Do not describe it as passed; the wave proceeds only after an
+explicit go/no-go decision accepts that temporary external-tool limitation.
 
 Do not combine database prerequisites with runtime consumers in one staging
 deployment when the application can deploy before its migration.
@@ -144,20 +181,30 @@ deployment when the application can deploy before its migration.
 - Create during execution only:
   `.superpowers/sdd/2026-08-18-pre-release-security-reliability-readiness/task-0-report.md`
 
-**Step 1: Start from current staging**
+**Step 1: Preserve the approved plan while starting from current staging**
 
 ```bash
 git fetch origin
 git status --short --branch
 git worktree list --porcelain
-git switch -c codex/pre-release-security-readiness origin/staging
+git switch codex/pre-release-security-readiness-plan
+git merge-base --is-ancestor origin/staging HEAD
+git switch -c codex/pre-release-security-readiness
 fnm exec --using="$(cat .node-version)" node --version
 fnm exec --using="$(cat .node-version)" pnpm --version
+supabase --version
+supabase migration new --help
+supabase db --help
 ```
 
-Expected: the new execution branch starts at current `origin/staging`; no user
-WIP or unrelated generated files are staged. Do not prune worktrees or remove
-backup extension folders.
+Expected: `origin/staging` is an ancestor of the reviewed planning commit, so the
+new execution branch contains both the current staging runtime and the approved
+design/plan. If the ancestry check fails because staging advanced, stop and
+rebase or recreate the planning branch on the new staging head, re-run the plan
+review, and only then create the execution branch. Do not branch directly from
+`origin/staging` and accidentally omit the approved documents. No user WIP or
+unrelated generated files may be staged. Do not prune worktrees or remove backup
+extension folders.
 
 **Step 2: Re-run the security boundary query and direct source checks**
 
@@ -194,9 +241,14 @@ plan without a separate scope decision.
 Read metadata/configuration without retrieving secrets or private object bodies:
 
 - deployed Blob store access mode and object prefix inventory;
+- current valid public-media object types and byte/dimension distribution,
+  without reading private object bodies;
 - explicit staging/public/local extension IDs;
 - Vercel Firewall or other durable edge rate-limit rules;
 - Supabase extensions and scheduling capability;
+- current Supabase changelog entries relevant to Auth, Data API exposure,
+  Postgres, Cron, and CLI behavior; do not pin an extension version clause that
+  the current platform ignores;
 - current staging migration history;
 - Cloudflare Worker compatibility date and Durable Object configuration.
 
@@ -207,10 +259,15 @@ BLOB_SHARED_NAMESPACE_SAFE | BLOB_PRIVATE_MIGRATION_REQUIRED
 EDGE_RATE_LIMITS_PROVEN | APP_RATE_LIMITER_REQUIRED
 SUPABASE_CRON_AVAILABLE | VERCEL_CRON_REQUIRED
 EXTENSION_ID_SET_COMPLETE | EXTENSION_ID_SET_BLOCKED
+ROOM_HISTORY_GRACE_PROVEN | ROOM_HISTORY_GRACE_AMENDMENT_REQUIRED
+ROOM_ADMISSION_LIMITS_PROVEN | ROOM_ADMISSION_LIMITS_AMENDMENT_REQUIRED
 ```
 
 If `EXTENSION_ID_SET_BLOCKED`, stop before Wave 2. Do not retain a wildcard as a
-temporary workaround.
+temporary workaround. If either room limit requires amendment, update the
+design, shared constant names, tests, and this plan before Tasks 9-10. The Task 0
+report must record the product behavior and measurement supporting the selected
+values, not only the resulting numbers.
 
 **Step 5: Commit no runtime**
 
@@ -222,6 +279,13 @@ git diff --check
 ```
 
 Expected: tracked source is unchanged.
+
+### Wave 0 Stop
+
+Required: clean tracked tree, fresh baseline results, source-drift map, all six
+binary platform/product gates recorded, and no runtime or migration change.
+Stop for go/no-go; a blocked extension-ID gate or an unreviewed room-limit
+amendment prevents its dependent task from starting.
 
 ---
 
@@ -348,9 +412,11 @@ Blob getter runs. Add one valid public artwork fixture and conditional GET case.
 **Step 2: Implement one allowlist helper**
 
 `public-media-blob.ts` owns canonical prefix parsing, content-type allowlisting,
-streaming headers, byte ceiling, and `404` mapping. The route accepts only
-application-owned public media identifiers. It does not accept an arbitrary
-Blob pathname or URL.
+streaming headers, byte ceiling, and `404` mapping. Derive the byte/type ceiling
+from the Task 0 public-media inventory plus the documented artwork product
+contract; record the largest valid sample and headroom in the task report. The
+route accepts only application-owned public media identifiers. It does not
+accept an arbitrary Blob pathname or URL.
 
 Credential storage modules export their private namespace constants so tests
 can prove they never intersect the public namespace. They do not expose tokens
@@ -445,7 +511,8 @@ remains reachable or the deployed access mode is unknown.
 
 - Create: `apps/web/lib/anidachi-auth/oauth-transaction.ts`
 - Create: `apps/web/lib/anidachi-auth/oauth-transaction.test.ts`
-- Create: `apps/web/supabase/migrations/20260818010000_oauth_login_transactions.sql`
+- Create with `supabase migration new oauth_login_transactions`:
+  `apps/web/supabase/migrations/<generated>_oauth_login_transactions.sql`
 - Create: `apps/web/supabase/tests/oauth_login_transactions.test.sql`
 - Modify: `apps/web/app/api/auth/google/route.ts`
 - Modify: `apps/web/app/api/auth/discord/route.ts`
@@ -457,24 +524,31 @@ remains reachable or the deployed access mode is unknown.
 
 **Step 1: Write RED tests**
 
-Cover 128-bit random state, state hash at rest, provider binding, sanitized
-return path, S256 PKCE, single consumption, ten-minute expiry, two concurrent
-login tabs, cross-provider swap, callback replay, and callback failure cleanup.
+Cover 128-bit random state, state and browser-correlation hashes at rest,
+provider binding, sanitized return path, S256 PKCE, single consumption,
+ten-minute expiry, two concurrent login tabs, cross-provider swap, callback
+replay, and callback failure cleanup. Ten minutes is the initial interactive
+login abuse window; keep it only if real staging provider consent completes
+comfortably inside it, otherwise amend and document the security/product tradeoff.
 
 **Step 2: Add the service-role-only transaction table/RPCs**
 
-The table stores state hash, provider, return path, created/expiry/consumed
-timestamps, and no raw state or PKCE verifier. Derive the PKCE verifier from the
-random state with an HKDF-separated `oauth-pkce-v1` subkey of the existing
-server-only `ANIDACHI_JWT_SECRET`; the derived verifier is never stored or sent
-to the browser. Enable RLS, create no client policy, revoke `public`, `anon`, and
+The table stores state hash, browser-correlation hash, provider, return path,
+created/expiry/consumed timestamps, and no raw state, correlation secret, or
+PKCE verifier. Derive the PKCE verifier from the random state with an
+HKDF-separated `oauth-pkce-v1` subkey of the existing server-only
+`ANIDACHI_JWT_SECRET`; the derived verifier is never stored or sent to the
+browser. Enable RLS, create no client policy, revoke `public`, `anon`, and
 `authenticated`, and grant only `service_role`.
 
 **Step 3: Replace deterministic state**
 
-Initiation generates 32 random bytes, stores the transaction, sends S256
-challenge to the provider, and sets only an HttpOnly correlation cookie. The
-callback atomically consumes matching provider/state and supplies the verifier.
+Initiation generates 32 random state bytes plus an independent correlation
+secret, stores only their hashes, sends the S256 challenge to the provider, and
+sets a transaction-scoped HttpOnly correlation cookie. Its non-secret cookie
+selector is derived from the state digest so concurrent tabs do not overwrite
+one shared slot. The callback requires and clears the exact cookie, atomically
+consumes matching provider/state/correlation, and supplies the derived verifier.
 
 **Step 4: Verify**
 
@@ -496,7 +570,7 @@ git add apps/web/lib/anidachi-auth/oauth-transaction.ts \
   apps/web/lib/anidachi-auth/handle-oauth-callback.ts \
   apps/web/lib/anidachi-auth/oauth/google.ts \
   apps/web/lib/anidachi-auth/oauth/discord.ts \
-  apps/web/supabase/migrations/20260818010000_oauth_login_transactions.sql \
+  apps/web/supabase/migrations/*_oauth_login_transactions.sql \
   apps/web/supabase/tests/oauth_login_transactions.test.sql
 git commit -m "fix(auth): bind browser OAuth transactions"
 ```
@@ -514,7 +588,8 @@ git commit -m "fix(auth): bind browser OAuth transactions"
 - Modify: `apps/web/app/api/extension/auth/exchange/route.ts`
 - Modify: `apps/web/lib/anidachi-auth/extension-codes.ts`
 - Create: `apps/web/lib/anidachi-auth/extension-codes.test.ts`
-- Create: `apps/web/supabase/migrations/20260818020000_extension_auth_pkce.sql`
+- Create with `supabase migration new extension_auth_pkce`:
+  `apps/web/supabase/migrations/<generated>_extension_auth_pkce.sql`
 - Create: `apps/web/supabase/tests/extension_auth_pkce.test.sql`
 - Modify: `apps/web/.env.example` with ID variable names only
 
@@ -562,7 +637,8 @@ run `git diff --cached --check`.
 
 **Files:**
 
-- Create: `apps/web/supabase/migrations/20260818030000_auth_channel_rotation.sql`
+- Create with `supabase migration new auth_channel_rotation`:
+  `apps/web/supabase/migrations/<generated>_auth_channel_rotation.sql`
 - Create: `apps/web/supabase/tests/auth_channel_rotation.test.sql`
 - Modify: `apps/web/lib/anidachi-auth/jwt.ts`
 - Modify: `apps/web/lib/anidachi-auth/jwt.test.ts`
@@ -583,7 +659,8 @@ run `git diff --cached --check`.
 Cover exact HS256, issuer, audience, type, subject, issued/expiry claims;
 website-rejects-extension and extension-rejects-website; wrong-channel refresh;
 atomic rotation; predecessor replay family revocation; concurrent refresh winner;
-fixed 90-day absolute session expiry; logout family revocation; account deletion.
+the existing 90-day session horizon converted from sliding to absolute expiry;
+logout family revocation; account deletion.
 
 **Step 2: Add refresh family storage**
 
@@ -620,7 +697,8 @@ git commit -m "fix(auth): separate channels and rotate refresh families"
 
 **Files:**
 
-- Create: `apps/web/supabase/migrations/20260818040000_auth_artifact_cleanup.sql`
+- Create with `supabase migration new auth_artifact_cleanup`:
+  `apps/web/supabase/migrations/<generated>_auth_artifact_cleanup.sql`
 - Create: `apps/web/supabase/tests/auth_artifact_cleanup.test.sql`
 - Create conditionally for `VERCEL_CRON_REQUIRED`:
   `apps/web/app/api/internal/cleanup-auth-artifacts/route.ts`
@@ -673,23 +751,26 @@ accepted cross-channel.
 - Modify: `apps/api/test/routes.test.ts`
 - Modify: `apps/web/lib/anidachi-auth/watch-history-authority.ts`
 - Modify: `apps/web/lib/anidachi-auth/watch-history-authority.test.ts`
-- Create: `apps/web/supabase/migrations/20260818050000_room_history_authority_expiry.sql`
+- Create with `supabase migration new room_history_authority_expiry`:
+  `apps/web/supabase/migrations/<generated>_room_history_authority_expiry.sql`
 - Modify: `apps/web/supabase/tests/watch_history_v2.test.sql`
 - Modify: `apps/extension/src/watch-history-client.ts`
 - Modify: `apps/extension/test/watch-history-client.test.ts`
 
 **Step 1: Add RED lifecycle fixtures**
 
-Cover mandatory `exp` and `jti`, 24-hour max token age, wrong type/issuer/audience,
-subject/session/room/source generation mismatch, exact duplicate receipt after
-expiry, new event after expiry, delayed terminal before and after room end, and
-no expired replay refresh of Recent People.
+Cover mandatory `exp` and `jti`, the Task 0-selected maximum token age, wrong
+type/issuer/audience, subject/session/room/source generation mismatch, exact
+duplicate receipt after expiry, new event after expiry, delayed terminal before
+and after room end, and no expired replay refresh of Recent People.
 
 **Step 2: Close the shared contract**
 
-Add one exported `ROOM_HISTORY_OFFLINE_GRACE_SECONDS = 86_400` and the exact
-attestation claims. Worker issuance, web verifier, SQL acceptance, and tests use
-that single constant/configured value. Do not reuse the 14-day receipt lifetime.
+Add one exported `ROOM_HISTORY_OFFLINE_GRACE_SECONDS` and the exact attestation
+claims. Initialize it to 86,400 seconds only if Task 0 records
+`ROOM_HISTORY_GRACE_PROVEN`; otherwise use the reviewed amended value. Worker
+issuance, web verifier, SQL acceptance, and tests use that single
+constant/configured value. Do not reuse the 14-day receipt lifetime.
 
 **Step 3: Replace applied SQL functions additively**
 
@@ -725,17 +806,28 @@ git commit -m "fix(history): expire room authority safely"
 
 **Step 1: Add RED resource tests**
 
-Cover two allowed pending sockets for one subject, third rejected before
-retention, room allowance derived from `maxParticipants`, JOIN at 9.999 seconds,
-timeout at 10 seconds, close/error counter release, participant replacement,
-hibernation rehydration, and aggregate rate budgets across replacement sockets.
+Cover the Task 0-selected per-subject pending limit and JOIN deadline, rejection
+of the next socket before retention, room allowance derived from
+`maxParticipants`, JOIN immediately before and at the exact deadline,
+close/error counter release, participant replacement, hibernation rehydration,
+aggregate rate budgets across replacement sockets, and an attachment-size check
+well below Cloudflare's current 16,384-byte serialized attachment ceiling. Use
+two sockets and ten seconds only after `ROOM_ADMISSION_LIMITS_PROVEN`; otherwise
+test the reviewed amended constants.
 
 **Step 2: Implement hibernation-safe admission state**
 
 Authenticate first, reserve a pending subject/room slot, retain the socket, and
 release or convert the reservation on JOIN/close/error/timeout. Store only the
 minimum identity/deadline fields in the socket attachment. Never rely solely on
-process memory after hibernation.
+process memory after hibernation. Reconstruct reservations from attached sockets
+after a wake rather than using module-global request state.
+
+Use a short timer only during the bounded pre-JOIN phase and persist its absolute
+deadline in the attachment. It may keep the object awake only until the selected
+deadline; do not consume or replace the room's existing single Durable Object
+alarm merely to manage each socket. Every message/JOIN path rechecks the absolute
+deadline, and timeout/close races release a reservation exactly once.
 
 **Step 3: Run GREEN**
 
@@ -830,9 +922,13 @@ claim when more episodes exist.
 **Step 2: Set one measured transport target**
 
 Start the benchmark with 100 episode rows per visible title and a 50-title page.
-If the realistic fixture exceeds 2 MiB serialized response or 32 MiB parser RSS,
-reduce the episode slice until both pass. Record the chosen value as the shared
-constant and rationale. Never increase the bound merely to make a fixture pass.
+The initial 2 MiB serialized-response and 32 MiB parser-RSS ceilings are derived
+from the existing measured worst fixture (1,455,993 bytes and 22,036,480 bytes
+RSS delta), leaving approximately 44% transport and 52% memory headroom while
+removing the unbounded per-title episode fan-out. If the realistic fixture
+exceeds either ceiling, reduce the episode slice until both pass. Record the
+chosen value, fixture, Node/PostgreSQL versions, repetitions, and rationale as a
+shared constant. Never increase a ceiling merely to make a fixture pass.
 
 **Step 3: Close protocol and route request schemas**
 
@@ -854,7 +950,8 @@ git commit -m "feat(protocol): bound watch history episode pages"
 
 **Files:**
 
-- Create: `apps/web/supabase/migrations/20260818060000_watch_history_v2_resource_bounds.sql`
+- Create with `supabase migration new watch_history_v2_resource_bounds`:
+  `apps/web/supabase/migrations/<generated>_watch_history_v2_resource_bounds.sql`
 - Create: `apps/web/supabase/tests/watch_history_v2_resource_bounds.test.sql`
 - Modify: `apps/web/supabase/contracts/watch_history_v2_migration_order_contract.sql`
 - Modify: `apps/web/lib/anidachi-auth/watch-history-v2.ts`
@@ -885,12 +982,13 @@ count, canonical generation, C-collated stable ordering, and explicit JSON keys.
 
 **Step 3: Calculate abuse budgets before enforcing them**
 
-Use current five-second heartbeat behavior, maximum two active devices/tabs per
-subject, session rotation rules, 14-day receipt bytes, and measured row sizes.
-Record normal/day and adversarial/hour storage projections. Limit creation of
-new unique session identities and event receipts, not ordinary updates to an
-existing session. A duplicate remains idempotent and a terminal event is not
-evicted.
+Use current five-second heartbeat behavior, observed and documented concurrent
+Watch History devices/tabs, session rotation rules, 14-day receipt bytes, and
+measured row sizes. Do not reuse the room pending-socket candidate as an account
+device cap. Record normal/day and adversarial/hour storage projections. Limit
+creation of new unique session identities and event receipts, not ordinary
+updates to an existing session. A duplicate remains idempotent and a terminal
+event is not evicted.
 
 If the calculated budget would reject a documented normal flow, stop and amend
 the design instead of raising an unexplained constant.
@@ -973,10 +1071,22 @@ file count, and bounded concurrency.
 
 **Step 2: Implement the shared server-only helper**
 
+Before choosing constants, inventory current valid Bloü/OpenClaw samples and
+the deployed Vercel request, duration, and memory ceilings. Record accepted file
+count, per-file and aggregate bytes, dimensions/pixels, redirect count, timeout,
+and concurrency with their product/platform/benchmark basis. If a safe value
+cannot be established, leave the affected integration disabled or fail closed
+and amend the plan; do not invent a permissive number.
+
 Prefer application-issued Blob IDs. Otherwise parse with `URL`, resolve every
-target, require public IPs, disable automatic redirects and manually revalidate,
-stream with byte and total timeout limits, verify type/magic bytes, inspect image
-metadata before Sharp transforms, and use a bounded processing pool.
+target, require public IPs, and bind the actual connection to the validated
+address set so DNS cannot change between validation and connect. Disable
+automatic redirects and manually revalidate and rebind every hop, stream with
+byte and total timeout limits, verify type/magic bytes, inspect image metadata
+before Sharp transforms, and use a bounded processing pool. If the deployed
+runtime cannot prove DNS-to-connection binding, accept only application Blob IDs
+or an explicit fixed-origin allowlist; do not retain arbitrary remote URLs with
+a best-effort preflight lookup.
 
 Do not return resolved IPs, internal errors, or response bodies to callers.
 
@@ -994,8 +1104,9 @@ git commit -m "fix(web): bound server media intake"
 
 - Modify: `apps/web/app/api/save-discord-credentials/route.ts`
 - Create: `apps/web/lib/checkout-metadata-security-route.test.ts`
-- Create: `apps/web/lib/room-source-url.ts`
-- Create: `apps/web/lib/room-source-url.test.ts`
+- Create: `packages/protocol/src/source-url.ts`
+- Create: `packages/protocol/test/source-url.test.ts`
+- Modify: `packages/protocol/src/index.ts`
 - Modify: `apps/web/app/api/rooms/route.ts`
 - Modify: `apps/web/app/api/rooms/[roomId]/join/route.ts`
 - Modify: `apps/web/app/room/[roomId]/page.tsx`
@@ -1005,6 +1116,8 @@ git commit -m "fix(web): bound server media intake"
 - Modify: `apps/api/test/routes.test.ts`
 - Modify: `apps/extension/src/p2p-ice.ts`
 - Modify: `apps/extension/test/p2p-ice.test.ts`
+- Modify: `apps/extension/src/source-adapters/crunchyroll/navigation.ts`
+- Modify: `apps/extension/src/source-adapters/youtube/navigation.ts`
 
 **Step 1: Add RED ownership and URL tests**
 
@@ -1020,11 +1133,13 @@ Resolve the AniDachi session first, retrieve Stripe checkout server-side, and
 require exact `client_reference_id` or trusted metadata owner plus expected paid
 state before updating customer metadata. Return stable public errors.
 
-**Step 3: Reuse provider URL canonicalization**
+**Step 3: Reuse one cross-plane provider URL canonicalizer**
 
-Move supported provider watch URL validation to one server/protocol helper used
-at room creation and join. Stored room source is canonical. Unsupported external
-destinations are rejected rather than auto-opened.
+Define the strict Crunchyroll/YouTube watch-URL canonicalizer in
+`packages/protocol/src/source-url.ts`, without moving provider observation or DOM
+logic into the protocol package. Web room creation/join and extension source
+navigation consume the same pure helper. Stored room source is canonical.
+Unsupported external destinations are rejected rather than auto-opened.
 
 **Step 4: Remove legacy ICE query bearer after zero-consumer proof**
 
@@ -1056,8 +1171,8 @@ git commit -m "fix(platform): enforce ownership and safe room destinations"
   `apps/web/lib/public-abuse-limit.ts`
 - Create conditionally:
   `apps/web/lib/public-abuse-limit.test.ts`
-- Create conditionally:
-  `apps/web/supabase/migrations/20260818070000_public_abuse_limits.sql`
+- Create conditionally with `supabase migration new public_abuse_limits`:
+  `apps/web/supabase/migrations/<generated>_public_abuse_limits.sql`
 - Create conditionally:
   `apps/web/supabase/tests/public_abuse_limits.test.sql`
 - Modify: `apps/web/app/api/subscribe-interest/route.ts`
@@ -1174,6 +1289,7 @@ do not call it a product pass from assumption alone.
 supabase --workdir apps/web db reset
 supabase --workdir apps/web test db
 supabase --workdir apps/web db lint --level warning
+supabase --workdir apps/web db advisors
 supabase --workdir apps/web db push --dry-run
 ```
 
@@ -1204,7 +1320,8 @@ Required flows:
   seek, pause, close, Popup/web convergence;
 - title with episode continuation and no missing/duplicate page rows;
 - two-profile shared room, reconnect, source change, leave/end, delayed terminal
-  inside the 24-hour test window, and synthetic expired replay rejection;
+  inside the Task 0-selected test window, and synthetic expired replay
+  rejection;
 - pre-JOIN socket cap and normal multi-tab reconnect;
 - hostile-page synthetic sign-out/end-room rejection and trusted user action;
 - bounded Bloü/OpenClaw rejection fixtures in a non-destructive staging mode;

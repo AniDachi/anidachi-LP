@@ -1,6 +1,6 @@
 # Pre-release Security And Reliability Readiness Design
 
-Status: Approved direction; implementation plan pending final review
+Status: Approved design; implementation plan reviewed; implementation not started
 
 Date: 2026-08-18
 
@@ -203,11 +203,13 @@ creation time, and intended client channel are bound to the same transaction.
 The callback consumes the transaction once and clears its cookie/state even on
 failure. Deterministic base64 JSON is not accepted as authorization state.
 
-No new state service is required. The existing server callback flow may use an
-HttpOnly, Secure, SameSite cookie with authenticated encryption or a compact
-server table, selected during implementation after measuring callback and
-multi-tab behavior. The selected form must support single use and concurrent
-login attempts without cross-provider swapping.
+No new state service is required. The implementation uses a compact
+service-role-only transaction table containing only state and browser-correlation
+hashes plus bounded metadata. Each login attempt receives its own HttpOnly,
+Secure, SameSite correlation cookie selected by a non-secret state digest, so
+concurrent tabs do not overwrite one shared cookie slot. The callback consumes
+the exact transaction and cookie once without storing a raw state, correlation
+secret, or PKCE verifier.
 
 ### 5. Room History Capability Lifecycle
 
@@ -227,6 +229,12 @@ one named server configuration used by Worker issuance, web verification, and
 SQL acceptance tests. It is not silently inferred from receipt retention.
 Receipts remain 14 days for idempotency, but a 14-day receipt does not make a
 room capability valid for 14 days.
+
+A 24-hour grace is the initial MVP candidate because it covers an overnight
+client/network interruption without retaining room authority for the receipt
+lifetime. It is not an approved invariant until the execution evidence gate
+confirms the actual product promise and reconnect behavior. Any different value
+requires a reviewed design/plan amendment before implementation.
 
 An exact accepted event remains idempotent after capability expiry. A new event
 using an expired/replayed attestation is rejected and cannot refresh Recent
@@ -296,6 +304,11 @@ the supported number of tabs/devices and current room participant ceiling. Once
 JOIN succeeds, existing participant replacement and room capacity rules remain
 authoritative.
 
+Two pending sockets per authenticated participant and a ten-second JOIN
+deadline are initial candidates for the current two-tab/device reconnect model.
+They become constants only after current reconnect traces and staging behavior
+support them; otherwise the design and plan are amended before code changes.
+
 Rate limiting aggregates by authenticated participant/room rather than giving
 every new socket a fresh independent budget. Hibernation-compatible attachment
 state records the minimum identity/admission fields needed after wake-up.
@@ -314,6 +327,11 @@ maintaining separate incomplete URL checks. The helper enforces:
 - allowed content type plus magic-byte verification;
 - image dimension and total-pixel limits before expensive transforms;
 - bounded file count, aggregate bytes, and processing concurrency.
+
+DNS validation must be bound to the actual connection and repeated for every
+redirect hop. If the deployed runtime cannot prove that binding, arbitrary
+remote URLs are not supported: the feature accepts application-issued Blob
+identifiers or a fixed product origin allowlist only.
 
 Application-issued Blob identifiers are preferred over arbitrary remote URLs.
 Rejected input never returns internal fetch details.
