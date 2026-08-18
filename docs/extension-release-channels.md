@@ -19,6 +19,10 @@ Anidachi uses three extension channels.
 
 The channel is selected with `WXT_EXTENSION_CHANNEL`.
 
+An explicitly configured value outside `local`, `staging`, or `production`
+fails the build. Release scripts force their named channel: caller environment
+cannot turn the staging script into production or the public script into local.
+
 Channel sources:
 
 - `local`: WXT dev or unpacked local build; broad permissions are allowed for

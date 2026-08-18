@@ -162,9 +162,14 @@ repository-controlled unpacked local and staging identities, exact per-channel
 callback binding, S256 PKCE, atomic one-time exchange, and fail-closed
 production. The approved local ID is `nkinhhgigcflmfhilmcakbkongcpkfnl`; the
 approved staging ID is `ndkfphbchhfephdodcpehdcoclojagje`. This source work is
-locally verified but not deployed or accepted on staging. Continue from current
-`staging` and keep the plan's stop gates; do not promote these security changes
-directly to `main`.
+locally verified but not deployed or accepted on staging. Its rollout order is
+additive migration first, application second, then exact unpacked staging
+acceptance. Legacy rows survive with null binding columns, but the new RPCs
+cannot consume them. If the new app must be rolled back after bound issuance,
+stop issuance and drain for more than five minutes (or remove only unconsumed
+bound rows) before restoring the old exchange, which cannot enforce PKCE.
+Continue from current `staging` and keep the plan's stop gates; do not promote
+these security changes directly to `main`.
 
 ## Subscription Plan Codes
 

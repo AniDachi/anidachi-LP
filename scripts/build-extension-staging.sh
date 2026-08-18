@@ -7,7 +7,7 @@ ARTIFACTS_DIR="$ROOT_DIR/artifacts"
 SHORT_SHA="$(git -C "$ROOT_DIR" rev-parse --short HEAD 2>/dev/null || echo local)"
 PACKAGE_EXTENSION_VERSION="$(node -e "console.log(require('$ROOT_DIR/apps/extension/package.json').version)")"
 
-: "${WXT_EXTENSION_CHANNEL:=staging}"
+WXT_EXTENSION_CHANNEL=staging
 : "${WXT_EXTENSION_VERSION:=$PACKAGE_EXTENSION_VERSION}"
 : "${WXT_WEB_HTTP_BASE:=https://staging.anidachi.app}"
 : "${WXT_API_HTTP_BASE:=https://anidachi-api-staging.vladislav-gul7.workers.dev}"

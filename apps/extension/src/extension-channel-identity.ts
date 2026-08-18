@@ -2,6 +2,16 @@ import { createHash } from "node:crypto";
 
 export type ExtensionChannel = "local" | "staging" | "production";
 
+export function resolveExtensionChannel(
+  value: string | undefined,
+): ExtensionChannel {
+  if (value === undefined) return "local";
+  if (value === "local" || value === "staging" || value === "production") {
+    return value;
+  }
+  throw new Error(`Unsupported WXT_EXTENSION_CHANNEL: ${value}`);
+}
+
 export const LOCAL_EXTENSION_MANIFEST_KEY =
   "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArdb3yWhwaq8CTVKGA3X+DpMU4WsXvWqRegTLEtOVmEINxuDNadym/K01l9mlMwkDFux9mwa3K4Vn0jW/IrBbCjVEoocmzLPZOh5sMrqhtFtboj+hHEdfKjqXZaTAzenCJzarIHQT/rOKfV+sRGjCbaxPzb2svOswUlYa7aHOsM1XYybNXfVsj4uw87iWjSwU66Q9/RfL5sGV6qq24ZZy6qlmlibwAea+2ZzUwbvAOOvqhenG4AdhWhLKVnHa1+9PkYWrfJu9ifQW+l+HkpoKQQ82zKEXaU9nn1A1cn5D51eryWg1qA9OGEnj6yISBfyF7LFk5Kl+/qQWV2D0PsclYQIDAQAB";
 export const STAGING_EXTENSION_MANIFEST_KEY =

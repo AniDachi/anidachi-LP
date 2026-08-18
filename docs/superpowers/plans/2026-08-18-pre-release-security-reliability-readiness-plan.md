@@ -718,6 +718,27 @@ the active flow, and sends its exact `chrome.identity.getRedirectURL()` result.
 The server binds code hash, extension ID, redirect URI, challenge, user, expiry,
 and consumption. Exchange is atomic and single-use.
 
+**Migration and staging order:**
+
+1. Apply the additive migration while the old web runtime is still serving.
+   Existing authorization rows survive, and the old runtime may continue
+   inserting its legacy row shape because the new binding columns are nullable.
+   The new RPCs nevertheless write and consume only fully bound S256 rows.
+2. Deploy the Task 6 web and extension application code. New exchange ignores
+   every legacy-null row; users with an in-flight legacy attempt retry through
+   the bound flow.
+3. After old web instances have drained, test the exact staging unpacked ID and
+   `/auth` and `/logout` callbacks, wrong-client/verifier cases, and replay before
+   recording staging acceptance.
+
+Rollback is deliberately asymmetric. Before the app deployment, leaving the
+additive migration in place is safe for the old runtime. After the new app has
+issued bound codes, do not roll back to the old exchange while any such code can
+remain live: the old exchange does not enforce PKCE. Stop issuance and wait more
+than five minutes, or remove only unconsumed fully bound rows, before an app
+rollback. Do not drop the nullable columns/functions while a new app instance
+is active; prefer forward recovery. Scheduled/global cleanup remains Task 8.
+
 **Step 4: Verify**
 
 ```bash

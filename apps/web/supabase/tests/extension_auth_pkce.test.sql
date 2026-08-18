@@ -110,6 +110,91 @@ on conflict (id) do nothing;
 set role service_role;
 select lives_ok(
   $$
+    insert into public.extension_auth_codes (
+      user_id, code_hash, state_hash, redirect_uri, expires_at
+    ) values (
+      '00000000-0000-4000-8000-000000000006',
+      repeat('1', 64), repeat('2', 64),
+      'https://ndkfphbchhfephdodcpehdcoclojagje.chromiumapp.org/auth',
+      pg_catalog.clock_timestamp() + interval '5 minutes'
+    )
+  $$,
+  'migration-first cutover preserves the legacy direct-insert shape'
+);
+select is(
+  public.consume_extension_auth_code_v1(
+    repeat('1', 64), repeat('2', 64),
+    'ndkfphbchhfephdodcpehdcoclojagje',
+    'https://ndkfphbchhfephdodcpehdcoclojagje.chromiumapp.org/auth',
+    repeat('c', 43)
+  ),
+  null::uuid,
+  'the bound RPC cannot consume a preserved legacy row'
+);
+set role postgres;
+
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.extension_auth_codes
+    where code_hash = repeat('1', 64)
+      and extension_id is null
+      and code_challenge is null
+      and code_challenge_method is null
+  ),
+  1::bigint,
+  'the legacy row survives with nullable binding fields'
+);
+
+set role service_role;
+select throws_like(
+  $$
+    insert into public.extension_auth_codes (
+      user_id, code_hash, state_hash, extension_id, redirect_uri,
+      code_challenge, code_challenge_method, created_at, expires_at
+    ) values (
+      '00000000-0000-4000-8000-000000000006',
+      repeat('3', 64), repeat('4', 64),
+      'ndkfphbchhfephdodcpehdcoclojagje',
+      'https://ndkfphbchhfephdodcpehdcoclojagje.chromiumapp.org/auth',
+      repeat('c', 43), 'S256',
+      '2100-01-01 00:00:00+00', '2100-01-01 00:06:00+00'
+    )
+  $$,
+  '%extension_auth_codes_expiry_check%',
+  'a fully bound row cannot exceed the database-owned five-minute lifetime'
+);
+select lives_ok(
+  $$
+    insert into public.extension_auth_codes (
+      user_id, code_hash, state_hash, extension_id, redirect_uri,
+      code_challenge, code_challenge_method, created_at, expires_at
+    ) values (
+      '00000000-0000-4000-8000-000000000006',
+      repeat('5', 64), repeat('6', 64),
+      'ndkfphbchhfephdodcpehdcoclojagje',
+      'https://ndkfphbchhfephdodcpehdcoclojagje.chromiumapp.org/auth',
+      repeat('d', 43), 'S256',
+      '2000-01-01 00:00:00+00', '2000-01-01 00:05:00+00'
+    )
+  $$,
+  'an already-expired bound fixture remains structurally valid'
+);
+select is(
+  public.consume_extension_auth_code_v1(
+    repeat('5', 64), repeat('6', 64),
+    'ndkfphbchhfephdodcpehdcoclojagje',
+    'https://ndkfphbchhfephdodcpehdcoclojagje.chromiumapp.org/auth',
+    repeat('d', 43)
+  ),
+  null::uuid,
+  'an expired fully bound code cannot be consumed'
+);
+set role postgres;
+
+set role service_role;
+select lives_ok(
+  $$
     select public.create_extension_auth_code_v1(
       '00000000-0000-4000-8000-000000000006',
       repeat('a', 64),
@@ -206,6 +291,17 @@ select is(
   'authorization code replay is rejected'
 );
 set role postgres;
+
+select is(
+  (
+    select pg_catalog.count(*)
+    from public.extension_auth_codes
+    where code_hash = repeat('a', 64)
+      and consumed_at is not null
+  ),
+  1::bigint,
+  'paired consume attempts leave exactly one durable consumed row'
+);
 
 select throws_like(
   $$

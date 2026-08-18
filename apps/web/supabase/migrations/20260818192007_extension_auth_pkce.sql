@@ -1,13 +1,25 @@
 begin;
 
--- Pre-release cutover: no legacy code may survive without exact client and PKCE
--- bindings. These rows are short-lived test authorization artifacts only.
-delete from public.extension_auth_codes;
+-- Migration-first compatibility: legacy runtime rows remain structurally valid
+-- with null binding columns. Only the v1 RPCs below create or consume bound rows.
 
 alter table public.extension_auth_codes
-  add column extension_id text not null,
-  add column code_challenge text not null,
-  add column code_challenge_method text not null,
+  add column extension_id text,
+  add column code_challenge text,
+  add column code_challenge_method text,
+  add constraint extension_auth_codes_binding_completeness_check
+    check (
+      (
+        extension_id is null
+        and code_challenge is null
+        and code_challenge_method is null
+      )
+      or (
+        extension_id is not null
+        and code_challenge is not null
+        and code_challenge_method is not null
+      )
+    ),
   add constraint extension_auth_codes_code_hash_check
     check (code_hash ~ '^[0-9a-f]{64}$'),
   add constraint extension_auth_codes_state_hash_check
@@ -23,7 +35,13 @@ alter table public.extension_auth_codes
   add constraint extension_auth_codes_code_challenge_method_check
     check (code_challenge_method = 'S256'),
   add constraint extension_auth_codes_expiry_check
-    check (expires_at > created_at),
+    check (
+      extension_id is null
+      or (
+        expires_at > created_at
+        and expires_at <= created_at + interval '5 minutes'
+      )
+    ),
   add constraint extension_auth_codes_consumed_check
     check (consumed_at is null or consumed_at >= created_at);
 
@@ -51,11 +69,17 @@ as $$
 declare
   v_created_at timestamptz := pg_catalog.clock_timestamp();
 begin
-  if p_code_hash !~ '^[0-9a-f]{64}$'
+  if p_code_hash is null
+    or p_code_hash !~ '^[0-9a-f]{64}$'
+    or p_state_hash is null
     or p_state_hash !~ '^[0-9a-f]{64}$'
+    or p_extension_id is null
     or p_extension_id !~ '^[a-p]{32}$'
+    or p_redirect_uri is null
     or p_redirect_uri <> 'https://' || p_extension_id || '.chromiumapp.org/auth'
+    or p_code_challenge is null
     or p_code_challenge !~ '^[A-Za-z0-9_-]{43}$'
+    or p_code_challenge_method is null
     or p_code_challenge_method <> 'S256'
   then
     raise exception 'Invalid extension authorization code binding';
@@ -102,10 +126,15 @@ declare
   v_consumed_at timestamptz := pg_catalog.clock_timestamp();
   v_user_id uuid;
 begin
-  if p_code_hash !~ '^[0-9a-f]{64}$'
+  if p_code_hash is null
+    or p_code_hash !~ '^[0-9a-f]{64}$'
+    or p_state_hash is null
     or p_state_hash !~ '^[0-9a-f]{64}$'
+    or p_extension_id is null
     or p_extension_id !~ '^[a-p]{32}$'
+    or p_redirect_uri is null
     or p_redirect_uri <> 'https://' || p_extension_id || '.chromiumapp.org/auth'
+    or p_code_challenge is null
     or p_code_challenge !~ '^[A-Za-z0-9_-]{43}$'
   then
     return null;

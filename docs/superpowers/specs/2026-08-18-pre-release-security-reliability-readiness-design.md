@@ -416,6 +416,17 @@ pre-release cutover over indefinite legacy support, but preserve active test
 accounts and staging evidence when compatibility is cheap and bounded.
 
 - Database changes are additive first.
+- Task 6 follows migration-first, then application deployment, then staging
+  acceptance. Its extension-code binding columns remain nullable so existing
+  rows and the old runtime insert shape survive the migration-first window; only
+  the new RPCs create or consume fully bound S256 rows. The database caps every
+  fully bound row at five minutes.
+- Leaving the additive Task 6 migration installed is the safe rollback before
+  app deployment. After bound issuance begins, an old-app rollback requires a
+  greater-than-five-minute issuance drain or targeted removal of unconsumed
+  bound rows because the old exchange cannot enforce PKCE. Do not drop the
+  columns/functions under new app instances; use forward recovery. Global
+  cleanup remains Task 8.
 - Token/channel changes use a short documented compatibility window or force
   reauthentication in test environments; no permanent dual verifier remains.
 - Local and staging use separate repository-controlled public manifest keys and

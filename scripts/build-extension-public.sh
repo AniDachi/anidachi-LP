@@ -6,7 +6,7 @@ PUBLIC_DIR="$ROOT_DIR/anidachi-extension-public"
 EXPERIMENT_DIR="$ROOT_DIR/anidachi-extension-experiment"
 PACKAGE_EXTENSION_VERSION="$(node -e "console.log(require('$ROOT_DIR/apps/extension/package.json').version)")"
 
-: "${WXT_EXTENSION_CHANNEL:=production}"
+WXT_EXTENSION_CHANNEL=production
 : "${WXT_EXTENSION_VERSION:=$PACKAGE_EXTENSION_VERSION}"
 : "${WXT_WEB_HTTP_BASE:=https://www.anidachi.app}"
 : "${WXT_API_HTTP_BASE:=https://anidachi-api-production.vladislav-gul7.workers.dev}"
