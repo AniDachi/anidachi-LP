@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-16.
+Last updated: 2026-08-18.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -128,6 +128,24 @@ pnpm graph:query "Trace room token flow from web to Worker WebSocket join."
 Use it before cross-plane work, especially room/P2P/auth/Worker/CI changes. Do
 not promote Graphify to a required CI check unless the team explicitly accepts
 the runtime and backend requirements.
+
+## Pre-release Security Readiness
+
+Wave 1 of the active pre-release security plan is complete on `staging` at
+merge `07dfaf4a8bd0c192e21fd381f4350ab88cdab322` (PRs `#192`-`#195`). The web
+runtime uses Next.js `15.5.23`, the public media route accepts only exact public
+media identifiers, and sensitive integration/CRM Blob paths now read, write,
+and delete through the private store only. The temporary staging compatibility
+flag has been removed; the retained public legacy objects are not a runtime
+fallback and were not deleted or changed during cutover.
+
+The live staging deployment is `dpl_B6dD3YJdGJrkBfkppQGsXH9PdaBL`. Both staging
+aliases, CI, deployment smoke, noindex/no-store behavior, the bounded private
+snapshot manifest, and the affected TikTok test-account health checks passed.
+An unrelated internal YouTube publishing test credential requires manual
+reconnection later; it does not affect product auth, rooms, Watch History, or
+the extension. Continue with Wave 2 only from current `staging` and keep the
+plan's stop gates; do not promote these security changes directly to `main`.
 
 ## Subscription Plan Codes
 

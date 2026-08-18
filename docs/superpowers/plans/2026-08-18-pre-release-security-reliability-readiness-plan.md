@@ -6,7 +6,7 @@
 > and `superpowers:requesting-code-review` at every wave stop. Do not skip the
 > drift gates or continue after a failed stop condition.
 
-Status: Wave 1 security boundaries implemented; staging validation and phase-B private-only cutover pending
+Status: Wave 1 complete on staging; Wave 2 not started
 
 Date: 2026-08-18
 
@@ -554,6 +554,20 @@ existing Vercel project to OIDC remains a separate dashboard hardening action
 that must not be silently performed without an attended confirmation. Stop if a
 credential namespace remains publicly reachable, phase-B legacy reads remain,
 or the deployed access mode is unknown.
+
+Outcome on 2026-08-18: **PASSED on staging.** PRs `#192` through `#195`
+completed the reviewed source boundaries and private-only cutover. Merge
+`07dfaf4a8bd0c192e21fd381f4350ab88cdab322` is live as Vercel deployment
+`dpl_B6dD3YJdGJrkBfkppQGsXH9PdaBL`; both staging aliases resolve to it, the
+deployment-specific staging smoke passed, and the public gate still returns
+`no-store` plus `noindex,nofollow`. The bounded final manifest verified 412
+allowlisted objects, atomically refreshed three differing private test objects,
+and proved origin-fresh private reads without logging bodies or credentials.
+All four affected TikTok test accounts passed provider health from the current
+private-only runtime. The temporary staging legacy flag is removed and absent
+from a fresh environment pull. One unrelated internal YouTube publishing test
+credential needs later manual reconnection; it does not affect AniDachi auth,
+rooms, Watch History, or the extension and does not reopen Blob compatibility.
 
 ---
 
