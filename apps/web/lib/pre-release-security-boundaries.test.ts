@@ -111,4 +111,18 @@ describe("pre-release security boundaries", () => {
       assert.doesNotMatch(source, /from ["']@vercel\/blob["']/, ownerPath);
     }
   });
+
+  it("does not report credential disconnect success after a Blob delete failure", async () => {
+    for (const ownerPath of [
+      "kreatli-crm/gmail-tokens.ts",
+      "google-ads/tokens.ts",
+    ]) {
+      const source = await readFile(new URL(ownerPath, import.meta.url), "utf8");
+      assert.match(source, /await deletePrivateIntegrationBlob\(BLOB_PATH\);/);
+      assert.doesNotMatch(
+        source,
+        /deletePrivateIntegrationBlob\(BLOB_PATH\)\.catch/,
+      );
+    }
+  });
 });

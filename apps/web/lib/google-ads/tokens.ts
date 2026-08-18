@@ -67,7 +67,7 @@ export async function mergeGoogleAdsTokens(
 
 export async function clearGoogleAdsTokens(): Promise<void> {
   if (hasPrivateIntegrationBlobConfiguration()) {
-    await deletePrivateIntegrationBlob(BLOB_PATH).catch(() => undefined);
+    await deletePrivateIntegrationBlob(BLOB_PATH);
     return;
   }
 

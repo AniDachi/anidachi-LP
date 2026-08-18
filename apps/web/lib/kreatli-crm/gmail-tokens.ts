@@ -65,7 +65,7 @@ export async function mergeGmailTokens(partial: GmailStoredTokens): Promise<Gmai
 
 export async function clearGmailTokens(): Promise<void> {
   if (hasPrivateIntegrationBlobConfiguration()) {
-    await deletePrivateIntegrationBlob(BLOB_PATH).catch(() => undefined);
+    await deletePrivateIntegrationBlob(BLOB_PATH);
     return;
   }
 
