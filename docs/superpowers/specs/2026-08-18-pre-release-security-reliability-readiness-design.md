@@ -414,10 +414,18 @@ accounts and staging evidence when compatibility is cheap and bounded.
 - Watch History response changes are versioned and update web/extension
   consumers in the same wave.
 - Blob credential migration uses a short two-phase cutover only when deployed
-  inventory proves it necessary: phase A writes private and reads private first
-  with an exact-path legacy fallback, the final copy runs after old writers are
-  gone, and phase B removes the fallback. Public source objects are retained
-  until a separately approved recoverable cleanup.
+  inventory proves it necessary. During phase A, the legacy store remains the
+  origin-fresh read authority and writes are mirrored legacy-first to the
+  private store, so old and new staging functions can overlap without choosing
+  a stale private copy. Because Vercel's `useCache: false` guarantee applies to
+  private blobs, a phase-A public read first obtains control-plane metadata,
+  fetches the documented unique ETag-versioned URL, and accepts the body only
+  when the response ETag still matches. Semantic deletes remove private first
+  and legacy second before reporting success; callers must not swallow a failed
+  credential deletion. After old writers are gone, the final copy and an
+  idempotency rerun must show zero conflicts; phase B then becomes private-only.
+  Unrelated public source objects are retained until a separately approved
+  recoverable cleanup.
 - Removed compatibility paths receive a zero-consumer source and staging audit.
 
 ## Failure And Rollback Behavior

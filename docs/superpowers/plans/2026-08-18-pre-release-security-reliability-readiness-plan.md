@@ -356,10 +356,17 @@ pnpm install --frozen-lockfile
 
 Do not accept unrelated major dependency updates in the lockfile.
 
-**Step 3: Add middleware and Server Action regression coverage**
+**Step 3: Prove the patched framework boundary without duplicating internals**
 
-Tests must cover advisory transport variants against the staging gate and
-malformed/oversized Server Action input without duplicating framework internals.
+The official advisories define upgrading as the fix; application unit tests
+cannot faithfully reproduce Next.js route normalization or crafted Server
+Action parsing. Pin both package and lockfile to the exact patched version and
+verify the installed dependency audit contains no Next.js advisory. After the
+staging deployment, send unauthenticated normal, `.rsc`, and segment-prefetch
+transport variants to a protected route and prove the staging gate handles all
+of them. Send only a small malformed Server Action request to prove failure
+containment; do not generate denial-of-service traffic. Record the exact
+requests/statuses in the wave report.
 
 **Step 4: Run GREEN**
 
@@ -367,8 +374,13 @@ malformed/oversized Server Action input without duplicating framework internals.
 pnpm --filter @anidachi/web test
 pnpm --filter @anidachi/web check
 pnpm --filter @anidachi/web build
+pnpm audit --prod --json
 git diff --check
 ```
+
+The repository-wide audit may retain separately scoped advisories. The Wave 1
+gate is that no advisory targets the installed Next.js package; do not hide or
+misclassify findings owned by later waves.
 
 **Step 5: Commit**
 
@@ -476,10 +488,16 @@ credential migration merely for architectural symmetry.
 
 **Step 1: Test read-old/write-new and strict private access**
 
-RED fixtures must prove new writes use the private store, reads prefer the
-private store, old reads are allowed only for inventoried exact paths while the
-staging-only phase-A flag is enabled, and public proxy access is still
-impossible.
+RED fixtures must prove phase-A reads use the origin-fresh legacy authority,
+writes complete legacy-first and then mirror to the private store, semantic
+deletes remove private first and legacy second before reporting success, and
+the compatibility behavior applies only to inventoried exact paths while the
+staging-only flag is enabled. Phase B must read/write/delete private only.
+For the public legacy read, obtain current control-plane metadata, add a unique
+ETag version parameter to the returned public URL, and require the body ETag to
+match before parsing it; `useCache: false` alone is not a public-store freshness
+guarantee. Credential disconnect owners must propagate deletion failures.
+Public proxy access remains impossible in both phases.
 
 **Step 2: Implement a resumable metadata-only migration command**
 
@@ -489,15 +507,18 @@ the source object in the same run.
 
 **Step 3: Remove compatibility after staging copy proof**
 
-Deploy phase A before the final copy so mutable staging writers stop changing
-the public source. The execution inventory contained 412 eligible objects
+Deploy phase A before the final copy so old staging functions can drain while
+new functions preserve the legacy store as the read authority and mirror every
+write. The execution inventory contained 412 eligible objects
 (1,120,524 bytes), including 403 mutable OpenClaw job objects. After the phase-A
-deployment, rerun the metadata/hash migration to zero conflicts and rerun it a
-second time to prove idempotency. Then remove old-store credential reads and the
-staging flag in a separate phase-B commit and deployment. Delete old objects
-only through a separately approved, recoverable operation. If prior exposure
-cannot be excluded, produce a credential-rotation list; do not rotate
-automatically inside this task.
+deployment and drain window, rerun the metadata/hash migration to zero conflicts
+and rerun it a second time to prove idempotency. Then remove legacy reads and
+dual writes plus the staging flag in a separate phase-B commit and deployment.
+Product-initiated disconnect/delete operations remove the exact object from
+both stores during phase A; unrelated bulk deletion of old objects remains a
+separately approved, recoverable operation. If prior exposure cannot be
+excluded, produce a credential-rotation list; do not rotate automatically
+inside this task.
 
 **Step 4: Verify and commit**
 
