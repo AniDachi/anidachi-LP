@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import {
   get as vercelBlobGet,
+  head as vercelBlobHead,
   list as vercelBlobList,
   put as vercelBlobPut,
 } from "@vercel/blob";
@@ -31,6 +32,12 @@ type BlobListRow = {
   url: string;
 };
 
+type BlobHeadResult = {
+  pathname: string;
+  url: string;
+  etag: string;
+} | null;
+
 type PrivatePutOptions = BlobAuth & {
   access: "private";
   addRandomSuffix: false;
@@ -40,6 +47,7 @@ type PrivatePutOptions = BlobAuth & {
 };
 
 export type PrivateIntegrationBlobMigrationSdk = {
+  head: (pathname: string, options: BlobAuth) => Promise<BlobHeadResult>;
   list: (options: BlobAuth & {
     cursor?: string;
     limit: number;
@@ -64,6 +72,7 @@ export type PrivateIntegrationBlobMigrationSdk = {
 };
 
 const DEFAULT_SDK: PrivateIntegrationBlobMigrationSdk = {
+  head: vercelBlobHead as PrivateIntegrationBlobMigrationSdk["head"],
   list: vercelBlobList as PrivateIntegrationBlobMigrationSdk["list"],
   get: vercelBlobGet as PrivateIntegrationBlobMigrationSdk["get"],
   put: vercelBlobPut as PrivateIntegrationBlobMigrationSdk["put"],
@@ -165,7 +174,31 @@ function assertReadableResult(
 function normalizedEtag(value: string | undefined): string | null {
   const trimmed = value?.trim();
   if (!trimmed) return null;
-  return trimmed.replace(/^W\//i, "");
+  return trimmed.replace(/^W\//i, "").replace(/^"|"$/g, "");
+}
+
+function sourceReadTarget(params: {
+  pathname: string;
+  metadata: BlobHeadResult;
+}): { url: string; etag: string } {
+  const { pathname, metadata } = params;
+  if (!metadata) {
+    throw new Error(`Unable to read source metadata for ${pathname}`);
+  }
+  const url = new URL(metadata.url);
+  const etag = normalizedEtag(metadata.etag);
+  if (
+    metadata.pathname !== pathname ||
+    url.protocol !== "https:" ||
+    !url.hostname.endsWith(".public.blob.vercel-storage.com") ||
+    url.pathname.slice(1) !== pathname ||
+    !etag
+  ) {
+    throw new Error(`Source Blob metadata was invalid for ${pathname}`);
+  }
+  url.search = "";
+  url.searchParams.set("v", etag);
+  return { url: url.toString(), etag };
 }
 
 export async function runPrivateIntegrationBlobMigration(input: {
@@ -199,8 +232,12 @@ export async function runPrivateIntegrationBlobMigration(input: {
       input.privateAuth,
       row.pathname,
     );
+    const freshSource = sourceReadTarget({
+      pathname: row.pathname,
+      metadata: await sdk.head(row.pathname, input.sourceAuth),
+    });
     const [source, existingDestination] = await Promise.all([
-      sdk.get(row.pathname, { access: "public", ...input.sourceAuth }),
+      sdk.get(freshSource.url, { access: "public", ...input.sourceAuth }),
       destinationExists
         ? sdk.get(row.pathname, {
             access: "private",
@@ -210,9 +247,8 @@ export async function runPrivateIntegrationBlobMigration(input: {
         : Promise.resolve(null),
     ]);
     assertReadableResult(source, row.pathname, "source");
-    const listedEtag = normalizedEtag(row.etag);
     const fetchedEtag = normalizedEtag(source.blob.etag);
-    if (listedEtag && fetchedEtag && listedEtag !== fetchedEtag) {
+    if (fetchedEtag !== freshSource.etag) {
       await source.stream.cancel().catch(() => undefined);
       throw new Error(`Source changed during migration for ${row.pathname}`);
     }
