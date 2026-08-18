@@ -430,6 +430,14 @@ accounts and staging evidence when compatibility is cheap and bounded.
   object immediately before the staging alias switch. Staging then treats the
   private store as its sole authority and validates or reconnects that test
   integration instead of retaining a cross-environment compatibility path.
+  The ignored execution evidence records one bounded manifest entry per
+  differing object: pathname, source ETag, previous destination ETag or digest,
+  UTC snapshot time, copied source digest, verified private destination digest,
+  and successful origin-fresh private-only read. All entries must pass before
+  the alias switch. A failure keeps phase A live; a post-switch failure may
+  restore phase A only before the first phase-B private write. After a private
+  write, the system stays fail-closed and the staging test integration is
+  reconciled or reconnected rather than reopening legacy authority.
   Unrelated public source objects are retained until a separately approved
   recoverable cleanup.
 - Removed compatibility paths receive a zero-consumer source and staging audit.
