@@ -175,8 +175,8 @@
       "source_file": "apps/api/package.json",
       "source_location": "L13",
       "_origin": "ast",
-      "community": 201,
-      "community_name": "Project Knowledge Map",
+      "community": 139,
+      "community_name": "package.json",
       "norm_label": "dependencies",
       "id": "apps_api_package_dependencies"
     },
@@ -186,8 +186,8 @@
       "source_file": "apps/api/package.json",
       "source_location": "L14",
       "_origin": "ast",
-      "community": 201,
-      "community_name": "Project Knowledge Map",
+      "community": 139,
+      "community_name": "package.json",
       "norm_label": "@anidachi/protocol",
       "id": "apps_api_package_dependencies_anidachi_protocol"
     },
@@ -197,8 +197,8 @@
       "source_file": "apps/api/package.json",
       "source_location": "L15",
       "_origin": "ast",
-      "community": 201,
-      "community_name": "Project Knowledge Map",
+      "community": 139,
+      "community_name": "package.json",
       "norm_label": "hono",
       "id": "apps_api_package_dependencies_hono"
     },
@@ -208,8 +208,8 @@
       "source_file": "apps/api/package.json",
       "source_location": "L16",
       "_origin": "ast",
-      "community": 201,
-      "community_name": "Project Knowledge Map",
+      "community": 139,
+      "community_name": "package.json",
       "norm_label": "jose",
       "id": "apps_api_package_dependencies_jose"
     },
@@ -219,7 +219,7 @@
       "source_file": "apps/api/package.json",
       "source_location": "L18",
       "_origin": "ast",
-      "community": 139,
+      "community": 164,
       "community_name": "package.json",
       "norm_label": "devdependencies",
       "id": "apps_api_package_devdependencies"
@@ -230,7 +230,7 @@
       "source_file": "apps/api/package.json",
       "source_location": "L19",
       "_origin": "ast",
-      "community": 139,
+      "community": 164,
       "community_name": "package.json",
       "norm_label": "@cloudflare/vitest-pool-workers",
       "id": "apps_api_package_devdependencies_cloudflare_vitest_pool_workers"
@@ -241,7 +241,7 @@
       "source_file": "apps/api/package.json",
       "source_location": "L20",
       "_origin": "ast",
-      "community": 139,
+      "community": 164,
       "community_name": "package.json",
       "norm_label": "@cloudflare/workers-types",
       "id": "apps_api_package_devdependencies_cloudflare_workers_types"
@@ -252,7 +252,7 @@
       "source_file": "apps/api/package.json",
       "source_location": "L21",
       "_origin": "ast",
-      "community": 139,
+      "community": 164,
       "community_name": "package.json",
       "norm_label": "typescript",
       "id": "apps_api_package_devdependencies_typescript"
@@ -274,7 +274,7 @@
       "source_file": "apps/api/package.json",
       "source_location": "L23",
       "_origin": "ast",
-      "community": 139,
+      "community": 164,
       "community_name": "package.json",
       "norm_label": "wrangler",
       "id": "apps_api_package_devdependencies_wrangler"
@@ -681,8 +681,8 @@
       "source_file": "apps/api/src/index.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 55,
+      "community_name": "room-lifecycle.ts",
       "norm_label": "index.ts",
       "id": "apps_api_src_index"
     },
@@ -692,8 +692,8 @@
       "source_file": "apps/api/src/index.ts",
       "source_location": "L76",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "env",
       "id": "apps_api_src_index_env"
     },
@@ -868,8 +868,8 @@
       "source_file": "apps/api/src/index.ts",
       "source_location": "L422",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": ".telemetrycontext()",
       "id": "apps_api_src_index_roomdurableobject_telemetrycontext"
     },
@@ -1341,8 +1341,8 @@
       "source_file": "apps/api/src/index.ts",
       "source_location": "L1555",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 55,
+      "community_name": "room-lifecycle.ts",
       "norm_label": "mediaseaterror()",
       "id": "apps_api_src_index_mediaseaterror"
     },
@@ -1352,8 +1352,8 @@
       "source_file": "apps/api/src/index.ts",
       "source_location": "L1583",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 55,
+      "community_name": "room-lifecycle.ts",
       "norm_label": "readbearertoken()",
       "id": "apps_api_src_index_readbearertoken"
     },
@@ -1363,8 +1363,8 @@
       "source_file": "apps/api/src/internal-auth.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 55,
+      "community_name": "room-lifecycle.ts",
       "norm_label": "internal-auth.ts",
       "id": "apps_api_src_internal_auth"
     },
@@ -1374,8 +1374,8 @@
       "source_file": "apps/api/src/internal-auth.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 55,
+      "community_name": "room-lifecycle.ts",
       "norm_label": "hasvalidinternalauthorization()",
       "id": "apps_api_src_internal_auth_hasvalidinternalauthorization"
     },
@@ -1649,8 +1649,8 @@
       "source_file": "apps/api/src/privacy-id.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 55,
+      "community_name": "room-lifecycle.ts",
       "norm_label": "privacy-id.ts",
       "id": "apps_api_src_privacy_id"
     },
@@ -1660,8 +1660,8 @@
       "source_file": "apps/api/src/privacy-id.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 55,
+      "community_name": "room-lifecycle.ts",
       "norm_label": "encoder",
       "id": "apps_api_src_privacy_id_encoder"
     },
@@ -1671,8 +1671,8 @@
       "source_file": "apps/api/src/privacy-id.ts",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 55,
+      "community_name": "room-lifecycle.ts",
       "norm_label": "createprivacysafehmacid()",
       "id": "apps_api_src_privacy_id_createprivacysafehmacid"
     },
@@ -3024,8 +3024,8 @@
       "source_file": "apps/api/src/telemetry.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "telemetry.ts",
       "id": "apps_api_src_telemetry"
     },
@@ -3035,8 +3035,8 @@
       "source_file": "apps/api/src/telemetry.ts",
       "source_location": "L12",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "analyticsenginedataset",
       "id": "apps_api_src_telemetry_analyticsenginedataset"
     },
@@ -3046,8 +3046,8 @@
       "source_file": "apps/api/src/telemetry.ts",
       "source_location": "L13",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": ".writedatapoint()",
       "id": "apps_api_src_telemetry_analyticsenginedataset_writedatapoint"
     },
@@ -3057,8 +3057,8 @@
       "source_file": "apps/api/src/telemetry.ts",
       "source_location": "L20",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "roomtelemetryeventname",
       "id": "apps_api_src_telemetry_roomtelemetryeventname"
     },
@@ -3068,8 +3068,8 @@
       "source_file": "apps/api/src/telemetry.ts",
       "source_location": "L35",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "roomtelemetrycontext",
       "id": "apps_api_src_telemetry_roomtelemetrycontext"
     },
@@ -3079,8 +3079,8 @@
       "source_file": "apps/api/src/telemetry.ts",
       "source_location": "L41",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "roomtelemetryevent",
       "id": "apps_api_src_telemetry_roomtelemetryevent"
     },
@@ -3090,8 +3090,8 @@
       "source_file": "apps/api/src/telemetry.ts",
       "source_location": "L49",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "roomdatapoint",
       "id": "apps_api_src_telemetry_roomdatapoint"
     },
@@ -3101,8 +3101,8 @@
       "source_file": "apps/api/src/telemetry.ts",
       "source_location": "L56",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "shorthash()",
       "id": "apps_api_src_telemetry_shorthash"
     },
@@ -3112,8 +3112,8 @@
       "source_file": "apps/api/src/telemetry.ts",
       "source_location": "L74",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "buildroomdatapoint()",
       "id": "apps_api_src_telemetry_buildroomdatapoint"
     },
@@ -3123,8 +3123,8 @@
       "source_file": "apps/api/src/telemetry.ts",
       "source_location": "L86",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "emitroomtelemetry()",
       "id": "apps_api_src_telemetry_emitroomtelemetry"
     },
@@ -3816,8 +3816,8 @@
       "source_file": "apps/api/test/telemetry.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "telemetry.test.ts",
       "id": "apps_api_test_telemetry_test"
     },
@@ -3827,8 +3827,8 @@
       "source_file": "apps/api/test/telemetry.test.ts",
       "source_location": "L70",
       "_origin": "ast",
-      "community": 38,
-      "community_name": "index.ts",
+      "community": 201,
+      "community_name": "Project Knowledge Map",
       "norm_label": "writedatapoint()",
       "id": "apps_api_test_telemetry_test_writedatapoint"
     },
@@ -5543,8 +5543,8 @@
       "source_file": "apps/extension/package.json",
       "source_location": "L16",
       "_origin": "ast",
-      "community": 201,
-      "community_name": "Project Knowledge Map",
+      "community": 139,
+      "community_name": "package.json",
       "norm_label": "@anidachi/protocol",
       "id": "apps_extension_package_dependencies_anidachi_protocol"
     },
@@ -9712,8 +9712,8 @@
       "source_file": "apps/extension/src/overlay-layout-editor.tsx",
       "source_location": "L44",
       "_origin": "ast",
-      "community": 60,
-      "community_name": "route.ts",
+      "community": 166,
+      "community_name": "Core Contract",
       "norm_label": "overlaylayouteditorprops",
       "id": "apps_extension_src_overlay_layout_editor_overlaylayouteditorprops"
     },
@@ -9954,8 +9954,8 @@
       "source_file": "apps/extension/src/overlay-layout-engine.ts",
       "source_location": "L50",
       "_origin": "ast",
-      "community": 100,
-      "community_name": "Watch History v2 Clean MVP Implementation Plan",
+      "community": 61,
+      "community_name": "pricing.tsx",
       "norm_label": "resolvedvideolayout",
       "id": "apps_extension_src_overlay_layout_engine_resolvedvideolayout"
     },
@@ -9965,8 +9965,8 @@
       "source_file": "apps/extension/src/overlay-layout-engine.ts",
       "source_location": "L59",
       "_origin": "ast",
-      "community": 60,
-      "community_name": "route.ts",
+      "community": 166,
+      "community_name": "Core Contract",
       "norm_label": "overlaylayoutcontext",
       "id": "apps_extension_src_overlay_layout_engine_overlaylayoutcontext"
     },
@@ -9976,8 +9976,8 @@
       "source_file": "apps/extension/src/overlay-layout-engine.ts",
       "source_location": "L65",
       "_origin": "ast",
-      "community": 100,
-      "community_name": "Watch History v2 Clean MVP Implementation Plan",
+      "community": 61,
+      "community_name": "pricing.tsx",
       "norm_label": "resolvedchatlayout",
       "id": "apps_extension_src_overlay_layout_engine_resolvedchatlayout"
     },
@@ -10669,8 +10669,8 @@
       "source_file": "apps/extension/src/overlay-layout-model.ts",
       "source_location": "L13",
       "_origin": "ast",
-      "community": 100,
-      "community_name": "Watch History v2 Clean MVP Implementation Plan",
+      "community": 61,
+      "community_name": "pricing.tsx",
       "norm_label": "overlaylayoutleaderside",
       "id": "apps_extension_src_overlay_layout_model_overlaylayoutleaderside"
     },
@@ -10702,8 +10702,8 @@
       "source_file": "apps/extension/src/overlay-layout-model.ts",
       "source_location": "L16",
       "_origin": "ast",
-      "community": 100,
-      "community_name": "Watch History v2 Clean MVP Implementation Plan",
+      "community": 61,
+      "community_name": "pricing.tsx",
       "norm_label": "overlaylayoutcamerasizestep",
       "id": "apps_extension_src_overlay_layout_model_overlaylayoutcamerasizestep"
     },
@@ -10713,8 +10713,8 @@
       "source_file": "apps/extension/src/overlay-layout-model.ts",
       "source_location": "L18",
       "_origin": "ast",
-      "community": 100,
-      "community_name": "Watch History v2 Clean MVP Implementation Plan",
+      "community": 61,
+      "community_name": "pricing.tsx",
       "norm_label": "overlaylayoutgridpoint",
       "id": "apps_extension_src_overlay_layout_model_overlaylayoutgridpoint"
     },
@@ -10724,8 +10724,8 @@
       "source_file": "apps/extension/src/overlay-layout-model.ts",
       "source_location": "L23",
       "_origin": "ast",
-      "community": 60,
-      "community_name": "route.ts",
+      "community": 166,
+      "community_name": "Core Contract",
       "norm_label": "overlaylayoutdefinition",
       "id": "apps_extension_src_overlay_layout_model_overlaylayoutdefinition"
     },
@@ -33879,8 +33879,8 @@
       "source_file": "apps/web/app/api/waitlist-stats/route.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 9,
-      "community_name": "site-url.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "route.ts",
       "id": "apps_web_app_api_waitlist_stats_route"
     },
@@ -33890,8 +33890,8 @@
       "source_file": "apps/web/app/api/waitlist-stats/route.ts",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 9,
-      "community_name": "site-url.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "get()",
       "id": "apps_web_app_api_waitlist_stats_route_get"
     },
@@ -34077,8 +34077,8 @@
       "source_file": "apps/web/app/best-anime-for-long-distance-relationships/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 37,
+      "community_name": "adapter.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_best_anime_for_long_distance_relationships_page"
     },
@@ -34088,8 +34088,8 @@
       "source_file": "apps/web/app/best-anime-for-long-distance-relationships/page.tsx",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 37,
+      "community_name": "adapter.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_best_anime_for_long_distance_relationships_page_metadata"
     },
@@ -34099,8 +34099,8 @@
       "source_file": "apps/web/app/best-anime-for-long-distance-relationships/page.tsx",
       "source_location": "L27",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 37,
+      "community_name": "adapter.ts",
       "norm_label": "faq",
       "id": "apps_web_app_best_anime_for_long_distance_relationships_page_faq"
     },
@@ -34110,8 +34110,8 @@
       "source_file": "apps/web/app/best-anime-for-long-distance-relationships/page.tsx",
       "source_location": "L55",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 37,
+      "community_name": "adapter.ts",
       "norm_label": "tocheadings",
       "id": "apps_web_app_best_anime_for_long_distance_relationships_page_tocheadings"
     },
@@ -34121,8 +34121,8 @@
       "source_file": "apps/web/app/best-anime-for-long-distance-relationships/page.tsx",
       "source_location": "L63",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 37,
+      "community_name": "adapter.ts",
       "norm_label": "itemlist",
       "id": "apps_web_app_best_anime_for_long_distance_relationships_page_itemlist"
     },
@@ -34132,8 +34132,8 @@
       "source_file": "apps/web/app/best-anime-for-long-distance-relationships/page.tsx",
       "source_location": "L81",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 37,
+      "community_name": "adapter.ts",
       "norm_label": "bestanimeforlongdistancerelationshipspage()",
       "id": "apps_web_app_best_anime_for_long_distance_relationships_page_bestanimeforlongdistancerelationshipspage"
     },
@@ -34627,8 +34627,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-anime-watch-parties-extension/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_compare_anidachi_vs_anime_watch_parties_extension_page"
     },
@@ -34638,8 +34638,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-anime-watch-parties-extension/page.tsx",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_compare_anidachi_vs_anime_watch_parties_extension_page_site_url"
     },
@@ -34649,8 +34649,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-anime-watch-parties-extension/page.tsx",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_compare_anidachi_vs_anime_watch_parties_extension_page_metadata"
     },
@@ -34660,8 +34660,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-anime-watch-parties-extension/page.tsx",
       "source_location": "L31",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "faq",
       "id": "apps_web_app_compare_anidachi_vs_anime_watch_parties_extension_page_faq"
     },
@@ -34671,8 +34671,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-anime-watch-parties-extension/page.tsx",
       "source_location": "L44",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "headings",
       "id": "apps_web_app_compare_anidachi_vs_anime_watch_parties_extension_page_headings"
     },
@@ -34682,8 +34682,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-anime-watch-parties-extension/page.tsx",
       "source_location": "L53",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "anidachivsanimewatchpartiesextensionpage()",
       "id": "apps_web_app_compare_anidachi_vs_anime_watch_parties_extension_page_anidachivsanimewatchpartiesextensionpage"
     },
@@ -35221,8 +35221,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-scener/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_compare_anidachi_vs_scener_page"
     },
@@ -35232,8 +35232,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-scener/page.tsx",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_compare_anidachi_vs_scener_page_site_url"
     },
@@ -35243,8 +35243,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-scener/page.tsx",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_compare_anidachi_vs_scener_page_metadata"
     },
@@ -35254,8 +35254,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-scener/page.tsx",
       "source_location": "L30",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "faq",
       "id": "apps_web_app_compare_anidachi_vs_scener_page_faq"
     },
@@ -35265,8 +35265,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-scener/page.tsx",
       "source_location": "L43",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "headings",
       "id": "apps_web_app_compare_anidachi_vs_scener_page_headings"
     },
@@ -35276,8 +35276,8 @@
       "source_file": "apps/web/app/compare/anidachi-vs-scener/page.tsx",
       "source_location": "L52",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "anidachivsscenerpage()",
       "id": "apps_web_app_compare_anidachi_vs_scener_page_anidachivsscenerpage"
     },
@@ -36420,8 +36420,8 @@
       "source_file": "apps/web/app/glossary/crunchyroll-mega-fan/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_glossary_crunchyroll_mega_fan_page"
     },
@@ -36431,8 +36431,8 @@
       "source_file": "apps/web/app/glossary/crunchyroll-mega-fan/page.tsx",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_glossary_crunchyroll_mega_fan_page_site_url"
     },
@@ -36442,8 +36442,8 @@
       "source_file": "apps/web/app/glossary/crunchyroll-mega-fan/page.tsx",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_glossary_crunchyroll_mega_fan_page_metadata"
     },
@@ -36453,8 +36453,8 @@
       "source_file": "apps/web/app/glossary/crunchyroll-mega-fan/page.tsx",
       "source_location": "L30",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "faq",
       "id": "apps_web_app_glossary_crunchyroll_mega_fan_page_faq"
     },
@@ -36464,8 +36464,8 @@
       "source_file": "apps/web/app/glossary/crunchyroll-mega-fan/page.tsx",
       "source_location": "L43",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "tocheadings",
       "id": "apps_web_app_glossary_crunchyroll_mega_fan_page_tocheadings"
     },
@@ -36475,8 +36475,8 @@
       "source_file": "apps/web/app/glossary/crunchyroll-mega-fan/page.tsx",
       "source_location": "L51",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "crunchyrollmegafanglossarypage()",
       "id": "apps_web_app_glossary_crunchyroll_mega_fan_page_crunchyrollmegafanglossarypage"
     },
@@ -37113,8 +37113,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-as-a-couple/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 258,
-      "community_name": "Operating contract (mandatory)",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_guides_best_anime_to_watch_as_a_couple_page"
     },
@@ -37124,8 +37124,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-as-a-couple/page.tsx",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 258,
-      "community_name": "Operating contract (mandatory)",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_guides_best_anime_to_watch_as_a_couple_page_site_url"
     },
@@ -37135,8 +37135,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-as-a-couple/page.tsx",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 258,
-      "community_name": "Operating contract (mandatory)",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_guides_best_anime_to_watch_as_a_couple_page_metadata"
     },
@@ -37146,8 +37146,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-as-a-couple/page.tsx",
       "source_location": "L30",
       "_origin": "ast",
-      "community": 258,
-      "community_name": "Operating contract (mandatory)",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "faq",
       "id": "apps_web_app_guides_best_anime_to_watch_as_a_couple_page_faq"
     },
@@ -37157,8 +37157,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-as-a-couple/page.tsx",
       "source_location": "L43",
       "_origin": "ast",
-      "community": 258,
-      "community_name": "Operating contract (mandatory)",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "headings",
       "id": "apps_web_app_guides_best_anime_to_watch_as_a_couple_page_headings"
     },
@@ -37168,8 +37168,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-as-a-couple/page.tsx",
       "source_location": "L51",
       "_origin": "ast",
-      "community": 258,
-      "community_name": "Operating contract (mandatory)",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "itemlist",
       "id": "apps_web_app_guides_best_anime_to_watch_as_a_couple_page_itemlist"
     },
@@ -37179,8 +37179,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-as-a-couple/page.tsx",
       "source_location": "L57",
       "_origin": "ast",
-      "community": 258,
-      "community_name": "Operating contract (mandatory)",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "bestanimetowatchasacouplepage()",
       "id": "apps_web_app_guides_best_anime_to_watch_as_a_couple_page_bestanimetowatchasacouplepage"
     },
@@ -37190,8 +37190,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-asynchronously/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_guides_best_anime_to_watch_asynchronously_page"
     },
@@ -37201,8 +37201,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-asynchronously/page.tsx",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_guides_best_anime_to_watch_asynchronously_page_site_url"
     },
@@ -37212,8 +37212,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-asynchronously/page.tsx",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_guides_best_anime_to_watch_asynchronously_page_metadata"
     },
@@ -37223,8 +37223,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-asynchronously/page.tsx",
       "source_location": "L30",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "faq",
       "id": "apps_web_app_guides_best_anime_to_watch_asynchronously_page_faq"
     },
@@ -37234,8 +37234,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-asynchronously/page.tsx",
       "source_location": "L53",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "headings",
       "id": "apps_web_app_guides_best_anime_to_watch_asynchronously_page_headings"
     },
@@ -37245,8 +37245,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-asynchronously/page.tsx",
       "source_location": "L61",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "itemlist",
       "id": "apps_web_app_guides_best_anime_to_watch_asynchronously_page_itemlist"
     },
@@ -37256,8 +37256,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-asynchronously/page.tsx",
       "source_location": "L67",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "bestanimetowatchasynchronouslypage()",
       "id": "apps_web_app_guides_best_anime_to_watch_asynchronously_page_bestanimetowatchasynchronouslypage"
     },
@@ -37267,8 +37267,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-for-beginners/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 37,
-      "community_name": "adapter.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_guides_best_anime_to_watch_for_beginners_page"
     },
@@ -37278,8 +37278,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-for-beginners/page.tsx",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 37,
-      "community_name": "adapter.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_guides_best_anime_to_watch_for_beginners_page_metadata"
     },
@@ -37289,8 +37289,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-for-beginners/page.tsx",
       "source_location": "L35",
       "_origin": "ast",
-      "community": 37,
-      "community_name": "adapter.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "faq",
       "id": "apps_web_app_guides_best_anime_to_watch_for_beginners_page_faq"
     },
@@ -37300,8 +37300,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-for-beginners/page.tsx",
       "source_location": "L53",
       "_origin": "ast",
-      "community": 37,
-      "community_name": "adapter.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "headings",
       "id": "apps_web_app_guides_best_anime_to_watch_for_beginners_page_headings"
     },
@@ -37311,8 +37311,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-for-beginners/page.tsx",
       "source_location": "L62",
       "_origin": "ast",
-      "community": 37,
-      "community_name": "adapter.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "itemlist",
       "id": "apps_web_app_guides_best_anime_to_watch_for_beginners_page_itemlist"
     },
@@ -37322,8 +37322,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-for-beginners/page.tsx",
       "source_location": "L85",
       "_origin": "ast",
-      "community": 37,
-      "community_name": "adapter.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "bestanimeforbeginnerspage()",
       "id": "apps_web_app_guides_best_anime_to_watch_for_beginners_page_bestanimeforbeginnerspage"
     },
@@ -37333,8 +37333,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-in-a-watch-party/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 258,
+      "community_name": "Operating contract (mandatory)",
       "norm_label": "page.tsx",
       "id": "apps_web_app_guides_best_anime_to_watch_in_a_watch_party_page"
     },
@@ -37344,8 +37344,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-in-a-watch-party/page.tsx",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 258,
+      "community_name": "Operating contract (mandatory)",
       "norm_label": "site_url",
       "id": "apps_web_app_guides_best_anime_to_watch_in_a_watch_party_page_site_url"
     },
@@ -37355,8 +37355,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-in-a-watch-party/page.tsx",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 258,
+      "community_name": "Operating contract (mandatory)",
       "norm_label": "metadata",
       "id": "apps_web_app_guides_best_anime_to_watch_in_a_watch_party_page_metadata"
     },
@@ -37366,8 +37366,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-in-a-watch-party/page.tsx",
       "source_location": "L29",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 258,
+      "community_name": "Operating contract (mandatory)",
       "norm_label": "faq",
       "id": "apps_web_app_guides_best_anime_to_watch_in_a_watch_party_page_faq"
     },
@@ -37377,8 +37377,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-in-a-watch-party/page.tsx",
       "source_location": "L47",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 258,
+      "community_name": "Operating contract (mandatory)",
       "norm_label": "headings",
       "id": "apps_web_app_guides_best_anime_to_watch_in_a_watch_party_page_headings"
     },
@@ -37388,8 +37388,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-in-a-watch-party/page.tsx",
       "source_location": "L55",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 258,
+      "community_name": "Operating contract (mandatory)",
       "norm_label": "itemlist",
       "id": "apps_web_app_guides_best_anime_to_watch_in_a_watch_party_page_itemlist"
     },
@@ -37399,8 +37399,8 @@
       "source_file": "apps/web/app/guides/best-anime-to-watch-in-a-watch-party/page.tsx",
       "source_location": "L61",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 258,
+      "community_name": "Operating contract (mandatory)",
       "norm_label": "bestanimetowatchinawatchpartypage()",
       "id": "apps_web_app_guides_best_anime_to_watch_in_a_watch_party_page_bestanimetowatchinawatchpartypage"
     },
@@ -37828,8 +37828,8 @@
       "source_file": "apps/web/app/guides/best-comedy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_guides_best_comedy_anime_to_watch_with_friends_page"
     },
@@ -37839,8 +37839,8 @@
       "source_file": "apps/web/app/guides/best-comedy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_guides_best_comedy_anime_to_watch_with_friends_page_site_url"
     },
@@ -37850,8 +37850,8 @@
       "source_file": "apps/web/app/guides/best-comedy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_guides_best_comedy_anime_to_watch_with_friends_page_metadata"
     },
@@ -37861,8 +37861,8 @@
       "source_file": "apps/web/app/guides/best-comedy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L31",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "faq",
       "id": "apps_web_app_guides_best_comedy_anime_to_watch_with_friends_page_faq"
     },
@@ -37872,8 +37872,8 @@
       "source_file": "apps/web/app/guides/best-comedy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L54",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "headings",
       "id": "apps_web_app_guides_best_comedy_anime_to_watch_with_friends_page_headings"
     },
@@ -37883,8 +37883,8 @@
       "source_file": "apps/web/app/guides/best-comedy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L63",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "itemlist",
       "id": "apps_web_app_guides_best_comedy_anime_to_watch_with_friends_page_itemlist"
     },
@@ -37894,8 +37894,8 @@
       "source_file": "apps/web/app/guides/best-comedy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L69",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "bestcomedyanimetowatchwithfriendspage()",
       "id": "apps_web_app_guides_best_comedy_anime_to_watch_with_friends_page_bestcomedyanimetowatchwithfriendspage"
     },
@@ -37982,8 +37982,8 @@
       "source_file": "apps/web/app/guides/best-fantasy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_guides_best_fantasy_anime_to_watch_with_friends_page"
     },
@@ -37993,8 +37993,8 @@
       "source_file": "apps/web/app/guides/best-fantasy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_guides_best_fantasy_anime_to_watch_with_friends_page_site_url"
     },
@@ -38004,8 +38004,8 @@
       "source_file": "apps/web/app/guides/best-fantasy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_guides_best_fantasy_anime_to_watch_with_friends_page_metadata"
     },
@@ -38015,8 +38015,8 @@
       "source_file": "apps/web/app/guides/best-fantasy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L29",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "faq",
       "id": "apps_web_app_guides_best_fantasy_anime_to_watch_with_friends_page_faq"
     },
@@ -38026,8 +38026,8 @@
       "source_file": "apps/web/app/guides/best-fantasy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L47",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "headings",
       "id": "apps_web_app_guides_best_fantasy_anime_to_watch_with_friends_page_headings"
     },
@@ -38037,8 +38037,8 @@
       "source_file": "apps/web/app/guides/best-fantasy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L55",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "itemlist",
       "id": "apps_web_app_guides_best_fantasy_anime_to_watch_with_friends_page_itemlist"
     },
@@ -38048,8 +38048,8 @@
       "source_file": "apps/web/app/guides/best-fantasy-anime-to-watch-with-friends/page.tsx",
       "source_location": "L61",
       "_origin": "ast",
-      "community": 58,
-      "community_name": "voice-audio-preferences.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "bestfantasyanimetowatchwithfriendspage()",
       "id": "apps_web_app_guides_best_fantasy_anime_to_watch_with_friends_page_bestfantasyanimetowatchwithfriendspage"
     },
@@ -38136,8 +38136,8 @@
       "source_file": "apps/web/app/guides/best-isekai-anime-to-watch-with-friends/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_guides_best_isekai_anime_to_watch_with_friends_page"
     },
@@ -38147,8 +38147,8 @@
       "source_file": "apps/web/app/guides/best-isekai-anime-to-watch-with-friends/page.tsx",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_guides_best_isekai_anime_to_watch_with_friends_page_site_url"
     },
@@ -38158,8 +38158,8 @@
       "source_file": "apps/web/app/guides/best-isekai-anime-to-watch-with-friends/page.tsx",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_guides_best_isekai_anime_to_watch_with_friends_page_metadata"
     },
@@ -38169,8 +38169,8 @@
       "source_file": "apps/web/app/guides/best-isekai-anime-to-watch-with-friends/page.tsx",
       "source_location": "L31",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "faq",
       "id": "apps_web_app_guides_best_isekai_anime_to_watch_with_friends_page_faq"
     },
@@ -38180,8 +38180,8 @@
       "source_file": "apps/web/app/guides/best-isekai-anime-to-watch-with-friends/page.tsx",
       "source_location": "L54",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "headings",
       "id": "apps_web_app_guides_best_isekai_anime_to_watch_with_friends_page_headings"
     },
@@ -38191,8 +38191,8 @@
       "source_file": "apps/web/app/guides/best-isekai-anime-to-watch-with-friends/page.tsx",
       "source_location": "L62",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "itemlist",
       "id": "apps_web_app_guides_best_isekai_anime_to_watch_with_friends_page_itemlist"
     },
@@ -38202,8 +38202,8 @@
       "source_file": "apps/web/app/guides/best-isekai-anime-to-watch-with-friends/page.tsx",
       "source_location": "L68",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "bestisekaianimetowatchwithfriendspage()",
       "id": "apps_web_app_guides_best_isekai_anime_to_watch_with_friends_page_bestisekaianimetowatchwithfriendspage"
     },
@@ -40578,8 +40578,8 @@
       "source_file": "apps/web/app/guides/how-to-sync-youtube-with-friends/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 14,
-      "community_name": "html5-video-adapter.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_guides_how_to_sync_youtube_with_friends_page"
     },
@@ -40589,8 +40589,8 @@
       "source_file": "apps/web/app/guides/how-to-sync-youtube-with-friends/page.tsx",
       "source_location": "L9",
       "_origin": "ast",
-      "community": 14,
-      "community_name": "html5-video-adapter.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_guides_how_to_sync_youtube_with_friends_page_site_url"
     },
@@ -40600,8 +40600,8 @@
       "source_file": "apps/web/app/guides/how-to-sync-youtube-with-friends/page.tsx",
       "source_location": "L13",
       "_origin": "ast",
-      "community": 14,
-      "community_name": "html5-video-adapter.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_guides_how_to_sync_youtube_with_friends_page_metadata"
     },
@@ -40611,8 +40611,8 @@
       "source_file": "apps/web/app/guides/how-to-sync-youtube-with-friends/page.tsx",
       "source_location": "L33",
       "_origin": "ast",
-      "community": 14,
-      "community_name": "html5-video-adapter.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "howtosteps",
       "id": "apps_web_app_guides_how_to_sync_youtube_with_friends_page_howtosteps"
     },
@@ -40622,8 +40622,8 @@
       "source_file": "apps/web/app/guides/how-to-sync-youtube-with-friends/page.tsx",
       "source_location": "L56",
       "_origin": "ast",
-      "community": 14,
-      "community_name": "html5-video-adapter.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "faq",
       "id": "apps_web_app_guides_how_to_sync_youtube_with_friends_page_faq"
     },
@@ -40633,8 +40633,8 @@
       "source_file": "apps/web/app/guides/how-to-sync-youtube-with-friends/page.tsx",
       "source_location": "L78",
       "_origin": "ast",
-      "community": 14,
-      "community_name": "html5-video-adapter.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "tocheadings",
       "id": "apps_web_app_guides_how_to_sync_youtube_with_friends_page_tocheadings"
     },
@@ -40644,8 +40644,8 @@
       "source_file": "apps/web/app/guides/how-to-sync-youtube-with-friends/page.tsx",
       "source_location": "L86",
       "_origin": "ast",
-      "community": 14,
-      "community_name": "html5-video-adapter.ts",
+      "community": 4,
+      "community_name": "social.ts",
       "norm_label": "howtosyncyoutubewithfriendspage()",
       "id": "apps_web_app_guides_how_to_sync_youtube_with_friends_page_howtosyncyoutubewithfriendspage"
     },
@@ -40787,8 +40787,8 @@
       "source_file": "apps/web/app/guides/how-to-watch-anime-together-without-screen-share/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 14,
+      "community_name": "html5-video-adapter.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_guides_how_to_watch_anime_together_without_screen_share_page"
     },
@@ -40798,8 +40798,8 @@
       "source_file": "apps/web/app/guides/how-to-watch-anime-together-without-screen-share/page.tsx",
       "source_location": "L8",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 14,
+      "community_name": "html5-video-adapter.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_guides_how_to_watch_anime_together_without_screen_share_page_site_url"
     },
@@ -40809,8 +40809,8 @@
       "source_file": "apps/web/app/guides/how-to-watch-anime-together-without-screen-share/page.tsx",
       "source_location": "L12",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 14,
+      "community_name": "html5-video-adapter.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_guides_how_to_watch_anime_together_without_screen_share_page_metadata"
     },
@@ -40820,8 +40820,8 @@
       "source_file": "apps/web/app/guides/how-to-watch-anime-together-without-screen-share/page.tsx",
       "source_location": "L35",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 14,
+      "community_name": "html5-video-adapter.ts",
       "norm_label": "howtosteps",
       "id": "apps_web_app_guides_how_to_watch_anime_together_without_screen_share_page_howtosteps"
     },
@@ -40831,8 +40831,8 @@
       "source_file": "apps/web/app/guides/how-to-watch-anime-together-without-screen-share/page.tsx",
       "source_location": "L55",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 14,
+      "community_name": "html5-video-adapter.ts",
       "norm_label": "faq",
       "id": "apps_web_app_guides_how_to_watch_anime_together_without_screen_share_page_faq"
     },
@@ -40842,8 +40842,8 @@
       "source_file": "apps/web/app/guides/how-to-watch-anime-together-without-screen-share/page.tsx",
       "source_location": "L73",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 14,
+      "community_name": "html5-video-adapter.ts",
       "norm_label": "tocheadings",
       "id": "apps_web_app_guides_how_to_watch_anime_together_without_screen_share_page_tocheadings"
     },
@@ -40853,8 +40853,8 @@
       "source_file": "apps/web/app/guides/how-to-watch-anime-together-without-screen-share/page.tsx",
       "source_location": "L82",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 14,
+      "community_name": "html5-video-adapter.ts",
       "norm_label": "howtowatchanimetogetherwithoutscreensharepage()",
       "id": "apps_web_app_guides_how_to_watch_anime_together_without_screen_share_page_howtowatchanimetogetherwithoutscreensharepage"
     },
@@ -43086,8 +43086,8 @@
       "source_file": "apps/web/app/kreatli-email-crm/actions.ts",
       "source_location": "L181",
       "_origin": "ast",
-      "community": 9,
-      "community_name": "site-url.ts",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "previewimportaction()",
       "id": "apps_web_app_kreatli_email_crm_actions_previewimportaction"
     },
@@ -43108,8 +43108,8 @@
       "source_file": "apps/web/app/kreatli-email-crm/actions.ts",
       "source_location": "L238",
       "_origin": "ast",
-      "community": 9,
-      "community_name": "site-url.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "exportcsvdataaction()",
       "id": "apps_web_app_kreatli_email_crm_actions_exportcsvdataaction"
     },
@@ -43328,8 +43328,8 @@
       "source_file": "apps/web/app/kreatli-email-crm/crm-client.tsx",
       "source_location": "L402",
       "_origin": "ast",
-      "community": 86,
-      "community_name": "watch-history-controller.ts",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "crmclient()",
       "id": "apps_web_app_kreatli_email_crm_crm_client_crmclient"
     },
@@ -43361,8 +43361,8 @@
       "source_file": "apps/web/app/kreatli-email-crm/crm-client.tsx",
       "source_location": "L1500",
       "_origin": "ast",
-      "community": 86,
-      "community_name": "watch-history-controller.ts",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "surveyleadstable()",
       "id": "apps_web_app_kreatli_email_crm_crm_client_surveyleadstable"
     },
@@ -43482,8 +43482,8 @@
       "source_file": "apps/web/app/kreatli-email-crm/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 218,
+      "community_name": "dependencies",
       "norm_label": "page.tsx",
       "id": "apps_web_app_kreatli_email_crm_page"
     },
@@ -43493,8 +43493,8 @@
       "source_file": "apps/web/app/kreatli-email-crm/page.tsx",
       "source_location": "L12",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 218,
+      "community_name": "dependencies",
       "norm_label": "kreatlicrmpage()",
       "id": "apps_web_app_kreatli_email_crm_page_kreatlicrmpage"
     },
@@ -45176,8 +45176,8 @@
       "source_file": "apps/web/app/watch-party-starter/page.tsx",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "page.tsx",
       "id": "apps_web_app_watch_party_starter_page"
     },
@@ -45187,8 +45187,8 @@
       "source_file": "apps/web/app/watch-party-starter/page.tsx",
       "source_location": "L6",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "site_url",
       "id": "apps_web_app_watch_party_starter_page_site_url"
     },
@@ -45198,8 +45198,8 @@
       "source_file": "apps/web/app/watch-party-starter/page.tsx",
       "source_location": "L11",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "metadata",
       "id": "apps_web_app_watch_party_starter_page_metadata"
     },
@@ -45209,8 +45209,8 @@
       "source_file": "apps/web/app/watch-party-starter/page.tsx",
       "source_location": "L31",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "faq",
       "id": "apps_web_app_watch_party_starter_page_faq"
     },
@@ -45220,8 +45220,8 @@
       "source_file": "apps/web/app/watch-party-starter/page.tsx",
       "source_location": "L44",
       "_origin": "ast",
-      "community": 4,
-      "community_name": "social.ts",
+      "community": 58,
+      "community_name": "voice-audio-preferences.ts",
       "norm_label": "watchpartystarterpage()",
       "id": "apps_web_app_watch_party_starter_page_watchpartystarterpage"
     },
@@ -57133,8 +57133,8 @@
       "source_file": "apps/web/lib/kreatli-crm/feature-requests.ts",
       "source_location": "L50",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 218,
+      "community_name": "dependencies",
       "norm_label": "parsefeaturerequests()",
       "id": "apps_web_lib_kreatli_crm_feature_requests_parsefeaturerequests"
     },
@@ -57144,8 +57144,8 @@
       "source_file": "apps/web/lib/kreatli-crm/feature-requests.ts",
       "source_location": "L71",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 218,
+      "community_name": "dependencies",
       "norm_label": "listfeaturerequests()",
       "id": "apps_web_lib_kreatli_crm_feature_requests_listfeaturerequests"
     },
@@ -57386,8 +57386,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "import-merge.ts",
       "id": "apps_web_lib_kreatli_crm_import_merge"
     },
@@ -57397,8 +57397,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "importmergemode",
       "id": "apps_web_lib_kreatli_crm_import_merge_importmergemode"
     },
@@ -57408,8 +57408,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L7",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "parsedimportrow",
       "id": "apps_web_lib_kreatli_crm_import_merge_parsedimportrow"
     },
@@ -57419,8 +57419,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L15",
       "_origin": "ast",
-      "community": 9,
-      "community_name": "site-url.ts",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "importpreviewline",
       "id": "apps_web_lib_kreatli_crm_import_merge_importpreviewline"
     },
@@ -57430,8 +57430,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L23",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "parsedelimitedline()",
       "id": "apps_web_lib_kreatli_crm_import_merge_parsedelimitedline"
     },
@@ -57441,8 +57441,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L47",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "detectdelimiter()",
       "id": "apps_web_lib_kreatli_crm_import_merge_detectdelimiter"
     },
@@ -57452,8 +57452,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L53",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "mapheadertofield()",
       "id": "apps_web_lib_kreatli_crm_import_merge_mapheadertofield"
     },
@@ -57463,8 +57463,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L71",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "guessemailcolumn()",
       "id": "apps_web_lib_kreatli_crm_import_merge_guessemailcolumn"
     },
@@ -57474,8 +57474,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L93",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "rowlookslikeheader()",
       "id": "apps_web_lib_kreatli_crm_import_merge_rowlookslikeheader"
     },
@@ -57485,8 +57485,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L101",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "parseimporttext()",
       "id": "apps_web_lib_kreatli_crm_import_merge_parseimporttext"
     },
@@ -57496,8 +57496,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L163",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "mergesegments()",
       "id": "apps_web_lib_kreatli_crm_import_merge_mergesegments"
     },
@@ -57507,8 +57507,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L167",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "buildimportpreview()",
       "id": "apps_web_lib_kreatli_crm_import_merge_buildimportpreview"
     },
@@ -57518,8 +57518,8 @@
       "source_file": "apps/web/lib/kreatli-crm/import-merge.ts",
       "source_location": "L246",
       "_origin": "ast",
-      "community": 9,
-      "community_name": "site-url.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "contactstocsv()",
       "id": "apps_web_lib_kreatli_crm_import_merge_contactstocsv"
     },
@@ -57562,8 +57562,8 @@
       "source_file": "apps/web/lib/kreatli-crm/queue.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "queue.ts",
       "id": "apps_web_lib_kreatli_crm_queue"
     },
@@ -57584,8 +57584,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "store.ts",
       "id": "apps_web_lib_kreatli_crm_store"
     },
@@ -57606,8 +57606,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L24",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "blobreadtext()",
       "id": "apps_web_lib_kreatli_crm_store_blobreadtext"
     },
@@ -57617,8 +57617,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L28",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "blobwritetext()",
       "id": "apps_web_lib_kreatli_crm_store_blobwritetext"
     },
@@ -57628,8 +57628,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L32",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "parsecontacts()",
       "id": "apps_web_lib_kreatli_crm_store_parsecontacts"
     },
@@ -57639,8 +57639,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L47",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "isfilenotfound()",
       "id": "apps_web_lib_kreatli_crm_store_isfilenotfound"
     },
@@ -57650,8 +57650,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L52",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "paths()",
       "id": "apps_web_lib_kreatli_crm_store_paths"
     },
@@ -57661,8 +57661,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L62",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "crmmeta",
       "id": "apps_web_lib_kreatli_crm_store_crmmeta"
     },
@@ -57672,8 +57672,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L67",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "ensuredir()",
       "id": "apps_web_lib_kreatli_crm_store_ensuredir"
     },
@@ -57683,8 +57683,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L71",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "readmeta()",
       "id": "apps_web_lib_kreatli_crm_store_readmeta"
     },
@@ -57694,8 +57694,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L102",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "writemeta()",
       "id": "apps_web_lib_kreatli_crm_store_writemeta"
     },
@@ -57705,8 +57705,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L122",
       "_origin": "ast",
-      "community": 9,
-      "community_name": "site-url.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "readcontacts()",
       "id": "apps_web_lib_kreatli_crm_store_readcontacts"
     },
@@ -57716,8 +57716,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L139",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "writecontacts()",
       "id": "apps_web_lib_kreatli_crm_store_writecontacts"
     },
@@ -57727,8 +57727,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L151",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "readtouches()",
       "id": "apps_web_lib_kreatli_crm_store_readtouches"
     },
@@ -57738,8 +57738,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L175",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "appendtouch()",
       "id": "apps_web_lib_kreatli_crm_store_appendtouch"
     },
@@ -57749,8 +57749,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L188",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "crmdatadir()",
       "id": "apps_web_lib_kreatli_crm_store_crmdatadir"
     },
@@ -57760,8 +57760,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L192",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "contactsfilepath()",
       "id": "apps_web_lib_kreatli_crm_store_contactsfilepath"
     },
@@ -57771,8 +57771,8 @@
       "source_file": "apps/web/lib/kreatli-crm/store.ts",
       "source_location": "L196",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "touchesfilepath()",
       "id": "apps_web_lib_kreatli_crm_store_touchesfilepath"
     },
@@ -57991,8 +57991,8 @@
       "source_file": "apps/web/lib/kreatli-crm/survey-lead-shared.ts",
       "source_location": "L166",
       "_origin": "ast",
-      "community": 86,
-      "community_name": "watch-history-controller.ts",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "parsesurveytags()",
       "id": "apps_web_lib_kreatli_crm_survey_lead_shared_parsesurveytags"
     },
@@ -58002,8 +58002,8 @@
       "source_file": "apps/web/lib/kreatli-crm/survey-lead-shared.ts",
       "source_location": "L177",
       "_origin": "ast",
-      "community": 86,
-      "community_name": "watch-history-controller.ts",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "formatsurveyvalue()",
       "id": "apps_web_lib_kreatli_crm_survey_lead_shared_formatsurveyvalue"
     },
@@ -58013,8 +58013,8 @@
       "source_file": "apps/web/lib/kreatli-crm/survey-lead-shared.ts",
       "source_location": "L206",
       "_origin": "ast",
-      "community": 86,
-      "community_name": "watch-history-controller.ts",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "tagstohomesurveyanswers()",
       "id": "apps_web_lib_kreatli_crm_survey_lead_shared_tagstohomesurveyanswers"
     },
@@ -58024,8 +58024,8 @@
       "source_file": "apps/web/lib/kreatli-crm/survey-lead-shared.ts",
       "source_location": "L221",
       "_origin": "ast",
-      "community": 86,
-      "community_name": "watch-history-controller.ts",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "recommendedplanlabelfortags()",
       "id": "apps_web_lib_kreatli_crm_survey_lead_shared_recommendedplanlabelfortags"
     },
@@ -58035,8 +58035,8 @@
       "source_file": "apps/web/lib/kreatli-crm/survey-lead-shared.ts",
       "source_location": "L226",
       "_origin": "ast",
-      "community": 86,
-      "community_name": "watch-history-controller.ts",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "ishighintenttiming()",
       "id": "apps_web_lib_kreatli_crm_survey_lead_shared_ishighintenttiming"
     },
@@ -58046,8 +58046,8 @@
       "source_file": "apps/web/lib/kreatli-crm/survey-lead-shared.ts",
       "source_location": "L230",
       "_origin": "ast",
-      "community": 86,
-      "community_name": "watch-history-controller.ts",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "escapedelimited()",
       "id": "apps_web_lib_kreatli_crm_survey_lead_shared_escapedelimited"
     },
@@ -58057,8 +58057,8 @@
       "source_file": "apps/web/lib/kreatli-crm/survey-lead-shared.ts",
       "source_location": "L238",
       "_origin": "ast",
-      "community": 86,
-      "community_name": "watch-history-controller.ts",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "surveyleadstodelimited()",
       "id": "apps_web_lib_kreatli_crm_survey_lead_shared_surveyleadstodelimited"
     },
@@ -58189,8 +58189,8 @@
       "source_file": "apps/web/lib/kreatli-crm/template-render.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "template-render.ts",
       "id": "apps_web_lib_kreatli_crm_template_render"
     },
@@ -58200,8 +58200,8 @@
       "source_file": "apps/web/lib/kreatli-crm/template-render.ts",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "rendertemplate()",
       "id": "apps_web_lib_kreatli_crm_template_render_rendertemplate"
     },
@@ -58211,8 +58211,8 @@
       "source_file": "apps/web/lib/kreatli-crm/templates.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 218,
+      "community_name": "dependencies",
       "norm_label": "templates.ts",
       "id": "apps_web_lib_kreatli_crm_templates"
     },
@@ -58222,8 +58222,8 @@
       "source_file": "apps/web/lib/kreatli-crm/templates.ts",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 218,
+      "community_name": "dependencies",
       "norm_label": "listtemplateslugs()",
       "id": "apps_web_lib_kreatli_crm_templates_listtemplateslugs"
     },
@@ -58233,8 +58233,8 @@
       "source_file": "apps/web/lib/kreatli-crm/types.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "types.ts",
       "id": "apps_web_lib_kreatli_crm_types"
     },
@@ -58244,8 +58244,8 @@
       "source_file": "apps/web/lib/kreatli-crm/types.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "contactstatus",
       "id": "apps_web_lib_kreatli_crm_types_contactstatus"
     },
@@ -58255,8 +58255,8 @@
       "source_file": "apps/web/lib/kreatli-crm/types.ts",
       "source_location": "L8",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 9,
+      "community_name": "site-url.ts",
       "norm_label": "contact",
       "id": "apps_web_lib_kreatli_crm_types_contact"
     },
@@ -58277,8 +58277,8 @@
       "source_file": "apps/web/lib/kreatli-crm/validation.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "validation.ts",
       "id": "apps_web_lib_kreatli_crm_validation"
     },
@@ -58288,8 +58288,8 @@
       "source_file": "apps/web/lib/kreatli-crm/validation.ts",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "isvalidemail()",
       "id": "apps_web_lib_kreatli_crm_validation_isvalidemail"
     },
@@ -58299,8 +58299,8 @@
       "source_file": "apps/web/lib/kreatli-crm/validation.ts",
       "source_location": "L9",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "statuses",
       "id": "apps_web_lib_kreatli_crm_validation_statuses"
     },
@@ -58310,8 +58310,8 @@
       "source_file": "apps/web/lib/kreatli-crm/validation.ts",
       "source_location": "L17",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "parsestatus()",
       "id": "apps_web_lib_kreatli_crm_validation_parsestatus"
     },
@@ -58332,8 +58332,8 @@
       "source_file": "apps/web/lib/kreatli-crm/validation.ts",
       "source_location": "L27",
       "_origin": "ast",
-      "community": 59,
-      "community_name": "watch-library-client.tsx",
+      "community": 119,
+      "community_name": "hotkeys.ts",
       "norm_label": "assertvalidcontact()",
       "id": "apps_web_lib_kreatli_crm_validation_assertvalidcontact"
     },
@@ -58343,8 +58343,8 @@
       "source_file": "apps/web/lib/kreatli-crm/waitlist-stats-route.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 9,
-      "community_name": "site-url.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "waitlist-stats-route.test.ts",
       "id": "apps_web_lib_kreatli_crm_waitlist_stats_route_test"
     },
@@ -58354,8 +58354,8 @@
       "source_file": "apps/web/lib/kreatli-crm/waitlist-stats-route.test.ts",
       "source_location": "L9",
       "_origin": "ast",
-      "community": 9,
-      "community_name": "site-url.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "withcrmenvironment()",
       "id": "apps_web_lib_kreatli_crm_waitlist_stats_route_test_withcrmenvironment"
     },
@@ -61533,8 +61533,8 @@
       "source_file": "apps/web/package.json",
       "source_location": "L27",
       "_origin": "ast",
-      "community": 201,
-      "community_name": "Project Knowledge Map",
+      "community": 139,
+      "community_name": "package.json",
       "norm_label": "@anidachi/protocol",
       "id": "apps_web_package_dependencies_anidachi_protocol"
     },
@@ -61621,8 +61621,8 @@
       "source_file": "apps/web/package.json",
       "source_location": "L35",
       "_origin": "ast",
-      "community": 201,
-      "community_name": "Project Knowledge Map",
+      "community": 139,
+      "community_name": "package.json",
       "norm_label": "jose",
       "id": "apps_web_package_dependencies_jose"
     },
@@ -62138,8 +62138,8 @@
       "source_file": "apps/web/scripts/crm/cli.ts",
       "source_location": "L224",
       "_origin": "ast",
-      "community": 9,
-      "community_name": "site-url.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "cmdexportcsv()",
       "id": "apps_web_scripts_crm_cli_cmdexportcsv"
     },
@@ -62160,8 +62160,8 @@
       "source_file": "apps/web/scripts/crm/cli.ts",
       "source_location": "L249",
       "_origin": "ast",
-      "community": 119,
-      "community_name": "hotkeys.ts",
+      "community": 59,
+      "community_name": "watch-library-client.tsx",
       "norm_label": "cmddoctor()",
       "id": "apps_web_scripts_crm_cli_cmddoctor"
     },
@@ -83904,18 +83904,18 @@
       "label": "@anidachi/protocol",
       "source_file": "external:package-or-shared-reference",
       "file_type": "code",
-      "community": 201,
+      "community": 139,
       "norm_label": "@anidachi/protocol",
-      "community_name": "Project Knowledge Map",
+      "community_name": "package.json",
       "id": "anidachi_protocol"
     },
     {
       "label": "jose",
       "source_file": "external:package-or-shared-reference",
       "file_type": "concept",
-      "community": 201,
+      "community": 139,
       "norm_label": "jose",
-      "community_name": "Project Knowledge Map",
+      "community_name": "package.json",
       "id": "jose"
     },
     {
@@ -89287,16 +89287,16 @@
     },
     {
       "file_type": "concept",
-      "community": 38,
+      "community": 55,
       "norm_label": "",
-      "community_name": "index.ts",
+      "community_name": "room-lifecycle.ts",
       "id": "ref_hono"
     },
     {
       "file_type": "concept",
-      "community": 38,
+      "community": 55,
       "norm_label": "",
-      "community_name": "index.ts",
+      "community_name": "room-lifecycle.ts",
       "id": "ref_hono_cors"
     },
     {
@@ -91970,28 +91970,28 @@
       "label": "hono",
       "source_file": "external:package-or-shared-reference",
       "file_type": "concept",
-      "community": 201,
+      "community": 139,
       "norm_label": "hono",
-      "community_name": "Project Knowledge Map",
+      "community_name": "package.json",
       "id": "hono"
     },
     {
       "file_type": "concept",
-      "community": 139,
+      "community": 164,
       "norm_label": "",
       "community_name": "package.json",
       "id": "cloudflare_vitest_pool_workers"
     },
     {
       "file_type": "concept",
-      "community": 139,
+      "community": 164,
       "norm_label": "",
       "community_name": "package.json",
       "id": "cloudflare_workers_types"
     },
     {
       "file_type": "concept",
-      "community": 139,
+      "community": 164,
       "norm_label": "",
       "community_name": "package.json",
       "id": "wrangler"
@@ -94334,28 +94334,6 @@
       "id": "apps_web_lib_private_integration_blob_deleteprivateintegrationblob"
     },
     {
-      "label": "pre-release-security-boundaries.test.ts",
-      "file_type": "code",
-      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 74,
-      "community_name": "overlay-interaction-boundary.ts",
-      "norm_label": "pre-release-security-boundaries.test.ts",
-      "id": "apps_web_lib_pre_release_security_boundaries_test"
-    },
-    {
-      "label": "ModuleLoader",
-      "file_type": "code",
-      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
-      "source_location": "L8",
-      "_origin": "ast",
-      "community": 74,
-      "community_name": "overlay-interaction-boundary.ts",
-      "norm_label": "moduleloader",
-      "id": "apps_web_lib_pre_release_security_boundaries_test_moduleloader"
-    },
-    {
       "label": "route.ts",
       "file_type": "code",
       "source_file": "apps/web/app/api/auth/discord/route.ts",
@@ -94958,10 +94936,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_current_development_state",
       "community": 260,
       "community_name": "V1 Staging Acceptance Matrix (Historical)",
-      "norm_label": "current development state"
+      "norm_label": "current development state",
+      "id": "docs_current_development_state_current_development_state"
     },
     {
       "label": "Operational Source Of Truth",
@@ -94972,10 +94950,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_operational_source_of_truth",
       "community": 260,
       "community_name": "V1 Staging Acceptance Matrix (Historical)",
-      "norm_label": "operational source of truth"
+      "norm_label": "operational source of truth",
+      "id": "docs_current_development_state_operational_source_of_truth"
     },
     {
       "label": "Branch Protection And Promotion Flow",
@@ -94986,10 +94964,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_branch_protection_and_promotion_flow",
       "community": 260,
       "community_name": "V1 Staging Acceptance Matrix (Historical)",
-      "norm_label": "branch protection and promotion flow"
+      "norm_label": "branch protection and promotion flow",
+      "id": "docs_current_development_state_branch_protection_and_promotion_flow"
     },
     {
       "label": "Development Quality System",
@@ -95000,10 +94978,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_development_quality_system",
       "community": 260,
       "community_name": "V1 Staging Acceptance Matrix (Historical)",
-      "norm_label": "development quality system"
+      "norm_label": "development quality system",
+      "id": "docs_current_development_state_development_quality_system"
     },
     {
       "label": "Graphify Project Knowledge Graph",
@@ -95014,10 +94992,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_graphify_project_knowledge_graph",
       "community": 260,
       "community_name": "V1 Staging Acceptance Matrix (Historical)",
-      "norm_label": "graphify project knowledge graph"
+      "norm_label": "graphify project knowledge graph",
+      "id": "docs_current_development_state_graphify_project_knowledge_graph"
     },
     {
       "label": "Pre-release Security Readiness",
@@ -95028,10 +95006,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_pre_release_security_readiness",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "pre-release security readiness"
+      "norm_label": "pre-release security readiness",
+      "id": "docs_current_development_state_pre_release_security_readiness"
     },
     {
       "label": "Wave 1 Complete On Staging",
@@ -95042,10 +95020,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_wave_1_complete_on_staging",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "wave 1 complete on staging"
+      "norm_label": "wave 1 complete on staging",
+      "id": "docs_current_development_state_wave_1_complete_on_staging"
     },
     {
       "label": "Wave 2 Task 5 Deployed On Staging",
@@ -95056,10 +95034,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_wave_2_task_5_deployed_on_staging",
       "community": 289,
       "community_name": "Programmatic anime pages (`/watch/[slug]`)",
-      "norm_label": "wave 2 task 5 deployed on staging"
+      "norm_label": "wave 2 task 5 deployed on staging",
+      "id": "docs_current_development_state_wave_2_task_5_deployed_on_staging"
     },
     {
       "label": "Task 5 Staging Merge d330be47cb23ee58eeba3e0db18ec1f2f2e86e21",
@@ -95070,10 +95048,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_task_5_staging_merge_d330be4",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "task 5 staging merge d330be47cb23ee58eeba3e0db18ec1f2f2e86e21"
+      "norm_label": "task 5 staging merge d330be47cb23ee58eeba3e0db18ec1f2f2e86e21",
+      "id": "docs_current_development_state_task_5_staging_merge_d330be4"
     },
     {
       "label": "OAuth Login Transactions Migration 20260818131602",
@@ -95084,10 +95062,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_oauth_login_transactions_migration",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "oauth login transactions migration 20260818131602"
+      "norm_label": "oauth login transactions migration 20260818131602",
+      "id": "docs_current_development_state_oauth_login_transactions_migration"
     },
     {
       "label": "Random One-time OAuth State",
@@ -95098,10 +95076,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_random_one_time_oauth_state",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "random one-time oauth state"
+      "norm_label": "random one-time oauth state",
+      "id": "docs_current_development_state_random_one_time_oauth_state"
     },
     {
       "label": "Independent Browser-correlation Secret",
@@ -95112,10 +95090,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_independent_browser_correlation_secret",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "independent browser-correlation secret"
+      "norm_label": "independent browser-correlation secret",
+      "id": "docs_current_development_state_independent_browser_correlation_secret"
     },
     {
       "label": "S256 PKCE",
@@ -95126,10 +95104,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_s256_pkce",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "s256 pkce"
+      "norm_label": "s256 pkce",
+      "id": "docs_current_development_state_s256_pkce"
     },
     {
       "label": "Provider-bound Atomic Consumption",
@@ -95140,10 +95118,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_provider_bound_atomic_consumption",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "provider-bound atomic consumption"
+      "norm_label": "provider-bound atomic consumption",
+      "id": "docs_current_development_state_provider_bound_atomic_consumption"
     },
     {
       "label": "Transaction-scoped Cookie Cleanup",
@@ -95154,10 +95132,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_transaction_scoped_cookie_cleanup",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "transaction-scoped cookie cleanup"
+      "norm_label": "transaction-scoped cookie cleanup",
+      "id": "docs_current_development_state_transaction_scoped_cookie_cleanup"
     },
     {
       "label": "Task 5 Automated Staging Gates Passed",
@@ -95168,10 +95146,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_task_5_automated_staging_gates_passed",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "task 5 automated staging gates passed"
+      "norm_label": "task 5 automated staging gates passed",
+      "id": "docs_current_development_state_task_5_automated_staging_gates_passed"
     },
     {
       "label": "Interactive Provider Acceptance Pending",
@@ -95182,10 +95160,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_interactive_provider_acceptance_pending",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "interactive provider acceptance pending"
+      "norm_label": "interactive provider acceptance pending",
+      "id": "docs_current_development_state_interactive_provider_acceptance_pending"
     },
     {
       "label": "Ten-minute OAuth Transaction Window",
@@ -95196,10 +95174,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_ten_minute_oauth_transaction_window",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "ten-minute oauth transaction window"
+      "norm_label": "ten-minute oauth transaction window",
+      "id": "docs_current_development_state_ten_minute_oauth_transaction_window"
     },
     {
       "label": "Task 6 Blocked On Exact Approved Extension ID Set",
@@ -95210,10 +95188,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_task_6_extension_id_set_blocked",
       "community": 271,
       "community_name": "Executor's Feedback or Assistance Requests",
-      "norm_label": "task 6 blocked on exact approved extension id set"
+      "norm_label": "task 6 blocked on exact approved extension id set",
+      "id": "docs_current_development_state_task_6_extension_id_set_blocked"
     },
     {
       "label": "Chromiumapp Wildcard Callback Forbidden",
@@ -95224,10 +95202,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_chromiumapp_wildcard_forbidden",
       "community": 264,
       "community_name": "friend-invite-client.tsx",
-      "norm_label": "chromiumapp wildcard callback forbidden"
+      "norm_label": "chromiumapp wildcard callback forbidden",
+      "id": "docs_current_development_state_chromiumapp_wildcard_forbidden"
     },
     {
       "label": "No Direct Main Promotion",
@@ -95238,10 +95216,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_no_direct_main_promotion",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "no direct main promotion"
+      "norm_label": "no direct main promotion",
+      "id": "docs_current_development_state_no_direct_main_promotion"
     },
     {
       "label": "Runtime Environments",
@@ -95252,10 +95230,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_current_development_state_runtime_environments",
       "community": 260,
       "community_name": "V1 Staging Acceptance Matrix (Historical)",
-      "norm_label": "runtime environments"
+      "norm_label": "runtime environments",
+      "id": "docs_current_development_state_runtime_environments"
     },
     {
       "label": "AniDachi Pre-release Security And Reliability Readiness Plan",
@@ -95266,10 +95244,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_anidachi_pre_release_security_and_reliability_readiness_plan",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "anidachi pre-release security and reliability readiness plan"
+      "norm_label": "anidachi pre-release security and reliability readiness plan",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_anidachi_pre_release_security_and_reliability_readiness_plan"
     },
     {
       "label": "Wave 2 Task 5 Deployed; Interactive Acceptance Pending; Task 6 Blocked",
@@ -95280,10 +95258,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_2_task_5_deployed_status",
       "community": 289,
       "community_name": "Programmatic anime pages (`/watch/[slug]`)",
-      "norm_label": "wave 2 task 5 deployed; interactive acceptance pending; task 6 blocked"
+      "norm_label": "wave 2 task 5 deployed; interactive acceptance pending; task 6 blocked",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_2_task_5_deployed_status"
     },
     {
       "label": "Pre-release Security And Reliability Readiness Design Authority",
@@ -95294,10 +95272,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_readiness_design_authority",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "pre-release security and reliability readiness design authority"
+      "norm_label": "pre-release security and reliability readiness design authority",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_readiness_design_authority"
     },
     {
       "label": "Read-only Security Review 549049a7-5f73-453a-af82-4df10f5b3363",
@@ -95308,10 +95286,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_read_only_security_review",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "read-only security review 549049a7-5f73-453a-af82-4df10f5b3363"
+      "norm_label": "read-only security review 549049a7-5f73-453a-af82-4df10f5b3363",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_read_only_security_review"
     },
     {
       "label": "Database Implementation Contract",
@@ -95322,10 +95300,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_database_implementation_contract",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "database implementation contract"
+      "norm_label": "database implementation contract",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_database_implementation_contract"
     },
     {
       "label": "Execution Drift Gates",
@@ -95336,10 +95314,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_execution_drift_gates",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "execution drift gates"
+      "norm_label": "execution drift gates",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_execution_drift_gates"
     },
     {
       "label": "Evidence-gated Candidate Limits",
@@ -95350,10 +95328,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_evidence_gated_candidate_limits",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "evidence-gated candidate limits"
+      "norm_label": "evidence-gated candidate limits",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_evidence_gated_candidate_limits"
     },
     {
       "label": "Wave 1 Staging Outcome Passed",
@@ -95364,10 +95342,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_1_staging_outcome",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "wave 1 staging outcome passed"
+      "norm_label": "wave 1 staging outcome passed",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_wave_1_staging_outcome"
     },
     {
       "label": "Task 5 One-time Unpredictable Browser OAuth State",
@@ -95378,10 +95356,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_5_one_time_unpredictable_browser_oauth_state",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "task 5 one-time unpredictable browser oauth state"
+      "norm_label": "task 5 one-time unpredictable browser oauth state",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_5_one_time_unpredictable_browser_oauth_state"
     },
     {
       "label": "Task 5 Source Database And Automated Staging Gates Passed",
@@ -95392,10 +95370,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_5_staging_outcome",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "task 5 source database and automated staging gates passed"
+      "norm_label": "task 5 source database and automated staging gates passed",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_5_staging_outcome"
     },
     {
       "label": "OAuth Login Transactions Migration 20260818131602",
@@ -95406,10 +95384,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_oauth_login_transactions_migration",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "oauth login transactions migration 20260818131602"
+      "norm_label": "oauth login transactions migration 20260818131602",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_oauth_login_transactions_migration"
     },
     {
       "label": "Random One-time OAuth State",
@@ -95420,10 +95398,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_random_one_time_oauth_state",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "random one-time oauth state"
+      "norm_label": "random one-time oauth state",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_random_one_time_oauth_state"
     },
     {
       "label": "Independent Browser-correlation Secret",
@@ -95434,10 +95412,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_independent_browser_correlation_secret",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "independent browser-correlation secret"
+      "norm_label": "independent browser-correlation secret",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_independent_browser_correlation_secret"
     },
     {
       "label": "S256 PKCE",
@@ -95448,10 +95426,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_s256_pkce",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "s256 pkce"
+      "norm_label": "s256 pkce",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_s256_pkce"
     },
     {
       "label": "Provider-bound Atomic Consumption",
@@ -95462,10 +95440,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_provider_bound_atomic_consumption",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "provider-bound atomic consumption"
+      "norm_label": "provider-bound atomic consumption",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_provider_bound_atomic_consumption"
     },
     {
       "label": "Exact Cookie Cleanup",
@@ -95476,10 +95454,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_exact_cookie_cleanup",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "exact cookie cleanup"
+      "norm_label": "exact cookie cleanup",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_exact_cookie_cleanup"
     },
     {
       "label": "Generic Public OAuth Failures",
@@ -95490,10 +95468,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_generic_public_oauth_failures",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "generic public oauth failures"
+      "norm_label": "generic public oauth failures",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_generic_public_oauth_failures"
     },
     {
       "label": "Interactive Google And Discord Acceptance Pending",
@@ -95504,10 +95482,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_interactive_google_and_discord_acceptance_pending",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "interactive google and discord acceptance pending"
+      "norm_label": "interactive google and discord acceptance pending",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_interactive_google_and_discord_acceptance_pending"
     },
     {
       "label": "Ten-minute Interaction Window Measurement Gate",
@@ -95518,10 +95496,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_ten_minute_interaction_window_measurement_gate",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "ten-minute interaction window measurement gate"
+      "norm_label": "ten-minute interaction window measurement gate",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_ten_minute_interaction_window_measurement_gate"
     },
     {
       "label": "Task 6 Extension Connection Binding",
@@ -95532,10 +95510,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_6_extension_connection_binding",
       "community": 264,
       "community_name": "friend-invite-client.tsx",
-      "norm_label": "task 6 extension connection binding"
+      "norm_label": "task 6 extension connection binding",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_6_extension_connection_binding"
     },
     {
       "label": "Extension ID Set Blocked",
@@ -95546,10 +95524,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_extension_id_set_blocked",
       "community": 271,
       "community_name": "Executor's Feedback or Assistance Requests",
-      "norm_label": "extension id set blocked"
+      "norm_label": "extension id set blocked",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_extension_id_set_blocked"
     },
     {
       "label": "Exact Staging And Public Extension IDs",
@@ -95560,10 +95538,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_exact_staging_and_public_extension_ids",
       "community": 271,
       "community_name": "Executor's Feedback or Assistance Requests",
-      "norm_label": "exact staging and public extension ids"
+      "norm_label": "exact staging and public extension ids",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_exact_staging_and_public_extension_ids"
     },
     {
       "label": "Chromiumapp Wildcard Must Not Return",
@@ -95574,10 +95552,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_chromiumapp_wildcard_must_not_return",
       "community": 264,
       "community_name": "friend-invite-client.tsx",
-      "norm_label": "chromiumapp wildcard must not return"
+      "norm_label": "chromiumapp wildcard must not return",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_chromiumapp_wildcard_must_not_return"
     },
     {
       "label": "Task 7 Token Channels And Refresh Families",
@@ -95588,10 +95566,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_7_token_channels_and_refresh_families",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "task 7 token channels and refresh families"
+      "norm_label": "task 7 token channels and refresh families",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_7_token_channels_and_refresh_families"
     },
     {
       "label": "Task 8 Bounded Auth Artifact Cleanup",
@@ -95602,10 +95580,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_8_bounded_auth_artifact_cleanup",
       "community": 107,
       "community_name": "Commercial Room, P2P, and Watch Progress Architecture Implementation Plan",
-      "norm_label": "task 8 bounded auth artifact cleanup"
+      "norm_label": "task 8 bounded auth artifact cleanup",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_task_8_bounded_auth_artifact_cleanup"
     },
     {
       "label": "Staging-only No Production Release",
@@ -95616,10 +95594,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_staging_only_no_production_release",
       "community": 187,
       "community_name": "wxt.config.ts",
-      "norm_label": "staging-only no production release"
+      "norm_label": "staging-only no production release",
+      "id": "docs_superpowers_plans_2026_08_18_pre_release_security_reliability_readiness_plan_staging_only_no_production_release"
     },
     {
       "label": "Pre-release Security And Reliability Readiness Design",
@@ -95630,10 +95608,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_pre_release_security_and_reliability_readiness_design",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "pre-release security and reliability readiness design"
+      "norm_label": "pre-release security and reliability readiness design",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_pre_release_security_and_reliability_readiness_design"
     },
     {
       "label": "Wave 2 Task 5 Deployed; Interactive Acceptance Pending; Task 6 Blocked",
@@ -95644,10 +95622,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_wave_2_task_5_deployed_status",
       "community": 289,
       "community_name": "Programmatic anime pages (`/watch/[slug]`)",
-      "norm_label": "wave 2 task 5 deployed; interactive acceptance pending; task 6 blocked"
+      "norm_label": "wave 2 task 5 deployed; interactive acceptance pending; task 6 blocked",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_wave_2_task_5_deployed_status"
     },
     {
       "label": "Focused Hardening Of Existing Trust Boundaries",
@@ -95658,10 +95636,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_focused_hardening_of_existing_trust_boundaries",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "focused hardening of existing trust boundaries"
+      "norm_label": "focused hardening of existing trust boundaries",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_focused_hardening_of_existing_trust_boundaries"
     },
     {
       "label": "Readiness Is Not Release",
@@ -95672,10 +95650,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_readiness_not_release",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "readiness is not release"
+      "norm_label": "readiness is not release",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_readiness_not_release"
     },
     {
       "label": "Protocol-first Cross-plane Changes",
@@ -95686,10 +95664,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_protocol_first_cross_plane_changes",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "protocol-first cross-plane changes"
+      "norm_label": "protocol-first cross-plane changes",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_protocol_first_cross_plane_changes"
     },
     {
       "label": "Local-first Server-authoritative History",
@@ -95700,10 +95678,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_local_first_server_authoritative_history",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "local-first server-authoritative history"
+      "norm_label": "local-first server-authoritative history",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_local_first_server_authoritative_history"
     },
     {
       "label": "Fail-closed Privileged Operations",
@@ -95714,10 +95692,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_fail_closed_privileged_operations",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "fail-closed privileged operations"
+      "norm_label": "fail-closed privileged operations",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_fail_closed_privileged_operations"
     },
     {
       "label": "Evidence-based Resource Limits",
@@ -95728,10 +95706,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_evidence_based_resource_limits",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "evidence-based resource limits"
+      "norm_label": "evidence-based resource limits",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_evidence_based_resource_limits"
     },
     {
       "label": "Public Media And Private Credential Boundary",
@@ -95742,10 +95720,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_public_media_and_private_credential_boundary",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "public media and private credential boundary"
+      "norm_label": "public media and private credential boundary",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_public_media_and_private_credential_boundary"
     },
     {
       "label": "Explicit Website And Extension Auth Channels",
@@ -95756,10 +95734,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_explicit_website_and_extension_auth_channels",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "explicit website and extension auth channels"
+      "norm_label": "explicit website and extension auth channels",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_explicit_website_and_extension_auth_channels"
     },
     {
       "label": "Extension Authorization Code Binding",
@@ -95770,10 +95748,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_extension_authorization_code_binding",
       "community": 264,
       "community_name": "friend-invite-client.tsx",
-      "norm_label": "extension authorization code binding"
+      "norm_label": "extension authorization code binding",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_extension_authorization_code_binding"
     },
     {
       "label": "Browser OAuth Transaction Binding",
@@ -95784,10 +95762,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_browser_oauth_transaction_binding",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "browser oauth transaction binding"
+      "norm_label": "browser oauth transaction binding",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_browser_oauth_transaction_binding"
     },
     {
       "label": "Room History Capability Lifecycle",
@@ -95798,10 +95776,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_room_history_capability_lifecycle",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "room history capability lifecycle"
+      "norm_label": "room history capability lifecycle",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_room_history_capability_lifecycle"
     },
     {
       "label": "Bounded Watch History Without Losing History",
@@ -95812,10 +95790,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_bounded_watch_history_without_losing_history",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "bounded watch history without losing history"
+      "norm_label": "bounded watch history without losing history",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_bounded_watch_history_without_losing_history"
     },
     {
       "label": "Durable History And Credential Artifact Bounds",
@@ -95826,10 +95804,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_durable_history_and_credential_artifact_bounds",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "durable history and credential artifact bounds"
+      "norm_label": "durable history and credential artifact bounds",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_durable_history_and_credential_artifact_bounds"
     },
     {
       "label": "Extension And Page Isolation",
@@ -95840,10 +95818,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_extension_page_isolation",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "extension and page isolation"
+      "norm_label": "extension and page isolation",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_extension_page_isolation"
     },
     {
       "label": "WebSocket Admission Before Allocation",
@@ -95854,10 +95832,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_websocket_admission_before_allocation",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "websocket admission before allocation"
+      "norm_label": "websocket admission before allocation",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_websocket_admission_before_allocation"
     },
     {
       "label": "Server-side Fetch And Decode Boundary",
@@ -95868,10 +95846,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_server_side_fetch_and_decode_boundary",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "server-side fetch and decode boundary"
+      "norm_label": "server-side fetch and decode boundary",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_server_side_fetch_and_decode_boundary"
     },
     {
       "label": "Route Ownership Redirect Enumeration And Abuse Controls",
@@ -95882,10 +95860,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_route_ownership_redirect_enumeration_and_abuse_controls",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "route ownership redirect enumeration and abuse controls"
+      "norm_label": "route ownership redirect enumeration and abuse controls",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_route_ownership_redirect_enumeration_and_abuse_controls"
     },
     {
       "label": "Migration And Compatibility",
@@ -95896,10 +95874,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_migration_and_compatibility",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "migration and compatibility"
+      "norm_label": "migration and compatibility",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_migration_and_compatibility"
     },
     {
       "label": "Verification Strategy",
@@ -95910,10 +95888,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_verification_strategy",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "verification strategy"
+      "norm_label": "verification strategy",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_verification_strategy"
     },
     {
       "label": "Definition Of Ready",
@@ -95924,10 +95902,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_definition_of_ready",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "definition of ready"
+      "norm_label": "definition of ready",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_definition_of_ready"
     },
     {
       "label": "Next.js Advisory GHSA-26hh-7cqf-hhc6",
@@ -95938,10 +95916,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_nextjs_advisory_ghsa_26hh_7cqf_hhc6",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "next.js advisory ghsa-26hh-7cqf-hhc6"
+      "norm_label": "next.js advisory ghsa-26hh-7cqf-hhc6",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_nextjs_advisory_ghsa_26hh_7cqf_hhc6"
     },
     {
       "label": "Next.js Advisory GHSA-m99w-x7hq-7vfj",
@@ -95952,10 +95930,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_nextjs_advisory_ghsa_m99w_x7hq_7vfj",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "next.js advisory ghsa-m99w-x7hq-7vfj"
+      "norm_label": "next.js advisory ghsa-m99w-x7hq-7vfj",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_nextjs_advisory_ghsa_m99w_x7hq_7vfj"
     },
     {
       "label": "Chrome Identity API",
@@ -95966,10 +95944,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_chrome_identity_api",
       "community": 264,
       "community_name": "friend-invite-client.tsx",
-      "norm_label": "chrome identity api"
+      "norm_label": "chrome identity api",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_chrome_identity_api"
     },
     {
       "label": "OAuth 2.0 Security Best Current Practice RFC 9700",
@@ -95980,10 +95958,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_oauth_2_0_security_best_current_practice",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "oauth 2.0 security best current practice rfc 9700"
+      "norm_label": "oauth 2.0 security best current practice rfc 9700",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_oauth_2_0_security_best_current_practice"
     },
     {
       "label": "JOSE jwtVerify Claim Validation",
@@ -95994,10 +95972,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_jose_jwtverify_claim_validation",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "jose jwtverify claim validation"
+      "norm_label": "jose jwtverify claim validation",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_jose_jwtverify_claim_validation"
     },
     {
       "label": "Vercel Private Blob Access",
@@ -96008,10 +95986,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_vercel_private_blob_access",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "vercel private blob access"
+      "norm_label": "vercel private blob access",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_vercel_private_blob_access"
     },
     {
       "label": "Supabase Row Level Security",
@@ -96022,10 +96000,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_supabase_row_level_security",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "supabase row level security"
+      "norm_label": "supabase row level security",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_supabase_row_level_security"
     },
     {
       "label": "Cloudflare Durable Object WebSocket Guidance",
@@ -96036,10 +96014,10 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_cloudflare_durable_object_websockets",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "cloudflare durable object websocket guidance"
+      "norm_label": "cloudflare durable object websocket guidance",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_cloudflare_durable_object_websockets"
     },
     {
       "label": "OWASP SSRF Prevention Cheat Sheet",
@@ -96050,10 +96028,32 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_owasp_ssrf_prevention_cheat_sheet",
       "community": 43,
       "community_name": "watch-history.ts",
-      "norm_label": "owasp ssrf prevention cheat sheet"
+      "norm_label": "owasp ssrf prevention cheat sheet",
+      "id": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_owasp_ssrf_prevention_cheat_sheet"
+    },
+    {
+      "label": "pre-release-security-boundaries.test.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "apps_web_lib_pre_release_security_boundaries_test",
+      "community": 74,
+      "community_name": "overlay-interaction-boundary.ts",
+      "norm_label": "pre-release-security-boundaries.test.ts"
+    },
+    {
+      "label": "ModuleLoader",
+      "file_type": "code",
+      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "apps_web_lib_pre_release_security_boundaries_test_moduleloader",
+      "community": 74,
+      "community_name": "overlay-interaction-boundary.ts",
+      "norm_label": "moduleloader"
     }
   ],
   "links": [
@@ -291062,9 +291062,9 @@
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
       "source_location": "L2",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "apps_web_lib_pre_release_security_boundaries_test",
-      "target": "ref_node_fs_promises"
+      "target": "ref_node_fs_promises",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -291073,9 +291073,9 @@
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
       "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "apps_web_lib_pre_release_security_boundaries_test",
-      "target": "ref_node_path"
+      "target": "ref_node_path",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -291106,9 +291106,9 @@
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
       "source_location": "L1",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "apps_web_lib_pre_release_security_boundaries_test",
-      "target": "ref_node_assert_strict"
+      "target": "ref_node_assert_strict",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -291150,9 +291150,9 @@
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
       "source_location": "L6",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "apps_web_lib_pre_release_security_boundaries_test",
-      "target": "ref_node_test"
+      "target": "ref_node_test",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -291172,9 +291172,9 @@
       "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
       "source_location": "L4",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "apps_web_lib_pre_release_security_boundaries_test",
-      "target": "ref_node_url"
+      "target": "ref_node_url",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -292011,16 +292011,6 @@
       "confidence_score": 1.0,
       "source": "apps_web_lib_private_integration_blob_writeprivateintegrationblobtext",
       "target": "apps_web_lib_private_integration_blob_runtimeclient"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
-      "source_location": "L16",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "apps_web_lib_pre_release_security_boundaries_test",
-      "target": "apps_web_lib_pre_release_security_boundaries_test_moduleloader"
     },
     {
       "relation": "contains",
@@ -294208,6 +294198,16 @@
       "weight": 1,
       "source": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_migration_and_compatibility",
       "target": "docs_superpowers_specs_2026_08_18_pre_release_security_reliability_readiness_design_supabase_row_level_security"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/pre-release-security-boundaries.test.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "apps_web_lib_pre_release_security_boundaries_test",
+      "target": "apps_web_lib_pre_release_security_boundaries_test_moduleloader",
+      "confidence_score": 1.0
     }
   ],
   "hyperedges": [
@@ -294254,5 +294254,5 @@
       "source_file": "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md"
     }
   ],
-  "built_at_commit": "d330be47cb23ee58eeba3e0db18ec1f2f2e86e21"
+  "built_at_commit": "bede898a697eb417d0e07bcad8176daad4000d13"
 }
