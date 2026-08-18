@@ -15,7 +15,8 @@ export type GoogleAdsStoredTokens = {
   email?: string;
 };
 
-const BLOB_PATH = "google-ads/tokens.json";
+export const GOOGLE_ADS_TOKENS_BLOB_PATH = "google-ads/tokens.json";
+const BLOB_PATH = GOOGLE_ADS_TOKENS_BLOB_PATH;
 const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as "public" | "private";
 
 function tokenPath() {

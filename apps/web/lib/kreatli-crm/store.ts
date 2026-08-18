@@ -14,9 +14,12 @@ export function getCrmDataDir(): string {
 // private access on a public store"). Override with BLOB_ACCESS=private only
 // if you migrate to a private store.
 const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "public") as "public" | "private";
-const CONTACTS_BLOB_PATH = "kreatli-crm/contacts.json";
-const TOUCHES_BLOB_PATH = "kreatli-crm/touches.jsonl";
-const META_BLOB_PATH = "kreatli-crm/meta.json";
+export const KREATLI_CRM_CONTACTS_BLOB_PATH = "kreatli-crm/contacts.json";
+export const KREATLI_CRM_TOUCHES_BLOB_PATH = "kreatli-crm/touches.jsonl";
+export const KREATLI_CRM_META_BLOB_PATH = "kreatli-crm/meta.json";
+const CONTACTS_BLOB_PATH = KREATLI_CRM_CONTACTS_BLOB_PATH;
+const TOUCHES_BLOB_PATH = KREATLI_CRM_TOUCHES_BLOB_PATH;
+const META_BLOB_PATH = KREATLI_CRM_META_BLOB_PATH;
 
 function blobToken(): string | null {
   return process.env.BLOB_READ_WRITE_TOKEN ?? null;

@@ -15,7 +15,8 @@ import {
 } from "@vercel/blob";
 
 const CREDENTIALS_FILE = ".data/tiktok-credentials.json";
-const BLOB_PATH = "tiktok/credentials.json";
+export const TIKTOK_CREDENTIALS_BLOB_PATH = "tiktok/credentials.json";
+const BLOB_PATH = TIKTOK_CREDENTIALS_BLOB_PATH;
 
 const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as
   | "public"

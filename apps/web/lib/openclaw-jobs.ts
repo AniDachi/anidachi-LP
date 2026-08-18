@@ -59,7 +59,8 @@ export interface CarouselJob {
 // ---------------------------------------------------------------------------
 
 const JOB_TTL_MS = 30 * 60 * 1000;
-const BLOB_PREFIX = "openclaw/jobs";
+export const OPENCLAW_JOB_BLOB_PREFIX = "openclaw/jobs";
+const BLOB_PREFIX = OPENCLAW_JOB_BLOB_PREFIX;
 const LOCAL_DIR = ".data/openclaw-jobs";
 const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as "public" | "private";
 

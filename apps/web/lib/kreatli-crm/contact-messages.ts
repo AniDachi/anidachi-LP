@@ -26,7 +26,8 @@ export {
   type ContactMessageRecord,
 } from "@/lib/kreatli-crm/contact-message-shared";
 
-const CONTACT_MESSAGES_BLOB_PATH = "kreatli-crm/contact-messages.jsonl";
+export const CONTACT_MESSAGES_BLOB_PATH =
+  "kreatli-crm/contact-messages.jsonl";
 
 function blobToken(): string | null {
   return process.env.BLOB_READ_WRITE_TOKEN ?? null;

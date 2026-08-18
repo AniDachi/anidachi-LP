@@ -11,7 +11,8 @@ export type GmailStoredTokens = {
   email?: string;
 };
 
-const BLOB_PATH = "kreatli-crm/gmail-tokens.json";
+export const GMAIL_TOKENS_BLOB_PATH = "kreatli-crm/gmail-tokens.json";
+const BLOB_PATH = GMAIL_TOKENS_BLOB_PATH;
 const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as "public" | "private";
 
 function tokenPath() {

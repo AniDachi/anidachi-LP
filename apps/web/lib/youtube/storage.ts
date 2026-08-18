@@ -14,7 +14,8 @@ import {
 } from "@vercel/blob";
 
 const CREDENTIALS_FILE = ".data/youtube-credentials.json";
-const BLOB_PATH = "youtube/credentials.json";
+export const YOUTUBE_CREDENTIALS_BLOB_PATH = "youtube/credentials.json";
+const BLOB_PATH = YOUTUBE_CREDENTIALS_BLOB_PATH;
 
 const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as
   | "public"

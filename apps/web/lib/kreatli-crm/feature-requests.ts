@@ -22,7 +22,8 @@ export {
   type FeatureRequestRecord,
 } from "@/lib/kreatli-crm/feature-request-shared";
 
-const FEATURE_REQUESTS_BLOB_PATH = "kreatli-crm/feature-requests.jsonl";
+export const FEATURE_REQUESTS_BLOB_PATH =
+  "kreatli-crm/feature-requests.jsonl";
 
 function blobToken(): string | null {
   return process.env.BLOB_READ_WRITE_TOKEN ?? null;

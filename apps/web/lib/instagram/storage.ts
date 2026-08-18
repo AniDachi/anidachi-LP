@@ -16,7 +16,8 @@ import {
 } from "@vercel/blob";
 
 const CREDENTIALS_FILE = ".data/instagram-credentials.json";
-const BLOB_PATH = "instagram/credentials.json";
+export const INSTAGRAM_CREDENTIALS_BLOB_PATH = "instagram/credentials.json";
+const BLOB_PATH = INSTAGRAM_CREDENTIALS_BLOB_PATH;
 
 const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as
   | "public"
