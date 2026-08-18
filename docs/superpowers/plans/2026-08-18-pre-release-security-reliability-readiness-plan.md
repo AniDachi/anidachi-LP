@@ -1227,6 +1227,12 @@ normalized-email budgets, email work once, cross-instance persistence, uniform
 waitlist response, repeated wrong staging/CRM passwords, independent counters,
 backoff, successful authentication, and safe proxy IP extraction.
 
+Also prove that concurrent accepted contact and feature-request submissions do
+not lose JSONL archive records. The pre-existing append path is currently
+last-writer-wins. Address it after the Wave 1 private-only cutover with a narrow
+private-store `ifMatch` retry (or another bounded durable append selected from
+the evidence); do not add a temporary dual-store CAS protocol to phase A.
+
 **Step 2: Apply the Task 0 edge gate**
 
 - `EDGE_RATE_LIMITS_PROVEN`: keep platform rules as the durable outer bound;
