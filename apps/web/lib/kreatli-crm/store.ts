@@ -71,17 +71,16 @@ async function ensureDir() {
 export async function readMeta(): Promise<CrmMeta> {
   if (hasPrivateIntegrationBlobConfiguration()) {
     const blobText = await blobReadText(META_BLOB_PATH);
-    if (blobText) {
-      try {
-        const data = JSON.parse(blobText) as CrmMeta;
-        return {
-          schema_version:
-            typeof data.schema_version === "number" ? data.schema_version : 1,
-          updated_at: data.updated_at ?? null,
-        };
-      } catch {
-        return { schema_version: 1, updated_at: null };
-      }
+    if (!blobText) return { schema_version: 1, updated_at: null };
+    try {
+      const data = JSON.parse(blobText) as CrmMeta;
+      return {
+        schema_version:
+          typeof data.schema_version === "number" ? data.schema_version : 1,
+        updated_at: data.updated_at ?? null,
+      };
+    } catch {
+      return { schema_version: 1, updated_at: null };
     }
   }
 
@@ -151,13 +150,12 @@ export async function writeContacts(contacts: Contact[]): Promise<void> {
 export async function readTouches(): Promise<Touch[]> {
   if (hasPrivateIntegrationBlobConfiguration()) {
     const blobText = await blobReadText(TOUCHES_BLOB_PATH);
-    if (blobText) {
-      try {
-        const lines = blobText.split("\n").filter((l) => l.trim());
-        return lines.map((line) => JSON.parse(line) as Touch);
-      } catch {
-        return [];
-      }
+    if (!blobText) return [];
+    try {
+      const lines = blobText.split("\n").filter((l) => l.trim());
+      return lines.map((line) => JSON.parse(line) as Touch);
+    } catch {
+      return [];
     }
   }
 

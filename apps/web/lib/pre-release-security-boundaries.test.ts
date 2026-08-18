@@ -91,6 +91,7 @@ describe("pre-release security boundaries", () => {
       "kreatli-crm/store.ts",
       "kreatli-crm/contact-messages.ts",
       "kreatli-crm/feature-requests.ts",
+      "kreatli-crm/private-integration-blob-jsonl.ts",
       "openclaw-jobs.ts",
     ];
 
@@ -100,6 +101,46 @@ describe("pre-release security boundaries", () => {
       assert.doesNotMatch(source, /BLOB_READ_WRITE_TOKEN|BLOB_ACCESS/, ownerPath);
       assert.doesNotMatch(source, /from ["']@vercel\/blob["']/, ownerPath);
     }
+  });
+
+  it("keeps a configured private CRM store authoritative when objects are absent", async () => {
+    const source = await readFile(
+      new URL("kreatli-crm/store.ts", import.meta.url),
+      "utf8",
+    );
+
+    assert.match(
+      source,
+      /readMeta[\s\S]*if \(!blobText\) return \{ schema_version: 1, updated_at: null \};/,
+    );
+    assert.match(
+      source,
+      /readTouches[\s\S]*if \(!blobText\) return \[\];/,
+    );
+  });
+
+  it("records implemented Wave 1 boundaries without claiming staging acceptance", async () => {
+    const expectedStatus =
+      "Status: Wave 1 security boundaries implemented; staging validation and phase-B private-only cutover pending";
+    const [plan, design] = await Promise.all([
+      readFile(
+        new URL(
+          "../../../docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+      readFile(
+        new URL(
+          "../../../docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    ]);
+
+    assert.match(plan, new RegExp(`^${expectedStatus}$`, "m"));
+    assert.match(design, new RegExp(`^${expectedStatus}$`, "m"));
   });
 
   it("does not report credential disconnect success after a Blob delete failure", async () => {
