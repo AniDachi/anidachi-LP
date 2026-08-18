@@ -4695,9 +4695,9 @@
     "semantic_hash": "a759a470b25398670234655ff5217a42"
   },
   "apps/web/lib/pre-release-security-boundaries.test.ts": {
-    "mtime": 1787041482.63457,
-    "ast_hash": "9bb5043a0100a6cef7af59f778142045",
-    "semantic_hash": "9bb5043a0100a6cef7af59f778142045"
+    "mtime": 1787056762.0488584,
+    "ast_hash": "72b84f8357755d12bf6548f4fe63b630",
+    "semantic_hash": "72b84f8357755d12bf6548f4fe63b630"
   },
   "apps/web/lib/private-integration-blob-migration.test.ts": {
     "mtime": 1787045820.1640816,
@@ -4735,8 +4735,8 @@
     "semantic_hash": "55eb2ef0df3a4658986383e64c504b77"
   },
   "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md": {
-    "mtime": 1787053423.634039,
-    "ast_hash": "59ad0013c91e927449918aa09ff275ad",
-    "semantic_hash": "59ad0013c91e927449918aa09ff275ad"
+    "mtime": 1787056762.0482094,
+    "ast_hash": "6244f5e762f85577355a6da8b192e84e",
+    "semantic_hash": "6244f5e762f85577355a6da8b192e84e"
   }
 }
