@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jsonUnauthorizedUnlessKreatliSession } from "@/lib/blou-access";
 import sharp from "sharp";
 import { put } from "@vercel/blob";
+import { requirePublicMediaBlobToken } from "@/lib/public-media-blob";
 import {
   ensureAllCredentials as ensureAllIg,
   createCarouselChildImage,
@@ -36,6 +37,7 @@ const TT_POLL_TIMEOUT_MS = 2 * 60 * 1000;
 
 async function prepareTikTokImages(blobUrls: string[]): Promise<string[]> {
   const result: string[] = [];
+  const publicBlobToken = requirePublicMediaBlobToken();
   for (const url of blobUrls) {
     const res = await fetch(url);
     const buffer = Buffer.from(await res.arrayBuffer());
@@ -53,6 +55,7 @@ async function prepareTikTokImages(blobUrls: string[]): Promise<string[]> {
     const pathname = `blou/tiktok-916/${date}/${crypto.randomUUID()}.jpg`;
     const blob = await put(pathname, jpegBuffer, {
       access: "public",
+      token: publicBlobToken,
       addRandomSuffix: false,
       contentType: "image/jpeg",
     });

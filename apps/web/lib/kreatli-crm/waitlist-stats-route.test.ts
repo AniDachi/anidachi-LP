@@ -10,24 +10,24 @@ async function withCrmEnvironment(
   token: string | null,
   run: () => Promise<void>,
 ): Promise<void> {
-  const previousToken = process.env.BLOB_READ_WRITE_TOKEN;
+  const previousToken = process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN;
   const previousDataDir = process.env.CRM_DATA_DIR;
   const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), "anidachi-crm-test-"));
 
   process.env.CRM_DATA_DIR = dataDir;
   if (token === null) {
-    delete process.env.BLOB_READ_WRITE_TOKEN;
+    delete process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN;
   } else {
-    process.env.BLOB_READ_WRITE_TOKEN = token;
+    process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN = token;
   }
 
   try {
     await run();
   } finally {
     if (previousToken === undefined) {
-      delete process.env.BLOB_READ_WRITE_TOKEN;
+      delete process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN;
     } else {
-      process.env.BLOB_READ_WRITE_TOKEN = previousToken;
+      process.env.PRIVATE_INTEGRATION_BLOB_READ_WRITE_TOKEN = previousToken;
     }
     if (previousDataDir === undefined) {
       delete process.env.CRM_DATA_DIR;
