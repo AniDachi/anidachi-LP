@@ -26,16 +26,6 @@ afterEach(() => {
   }
 });
 
-function compareVersions(left: string, right: string): number {
-  const leftParts = left.split(".").map(Number);
-  const rightParts = right.split(".").map(Number);
-  for (let index = 0; index < 3; index += 1) {
-    const difference = (leftParts[index] ?? 0) - (rightParts[index] ?? 0);
-    if (difference !== 0) return difference;
-  }
-  return 0;
-}
-
 describe("pre-release security boundaries", () => {
   it("rejects private Blob namespaces before the media route calls Blob", async () => {
     const requestedPaths: string[] = [];
@@ -69,14 +59,16 @@ describe("pre-release security boundaries", () => {
   });
 
   it("uses the current fixed Next 15.5 backport on exposed framework surfaces", async () => {
-    const [packageText, middlewareText, actionsText] = await Promise.all([
-      readFile(new URL("../package.json", import.meta.url), "utf8"),
-      readFile(new URL("../middleware.ts", import.meta.url), "utf8"),
-      readFile(
-        new URL("../app/kreatli-email-crm/actions.ts", import.meta.url),
-        "utf8",
-      ),
-    ]);
+    const [packageText, lockText, middlewareText, actionsText] =
+      await Promise.all([
+        readFile(new URL("../package.json", import.meta.url), "utf8"),
+        readFile(new URL("../../../pnpm-lock.yaml", import.meta.url), "utf8"),
+        readFile(new URL("../middleware.ts", import.meta.url), "utf8"),
+        readFile(
+          new URL("../app/kreatli-email-crm/actions.ts", import.meta.url),
+          "utf8",
+        ),
+      ]);
     const packageJson = JSON.parse(packageText) as {
       dependencies?: { next?: string };
     };
@@ -84,11 +76,9 @@ describe("pre-release security boundaries", () => {
 
     assert.match(middlewareText, /export async function middleware/);
     assert.match(actionsText, /^["']use server["'];/m);
-    assert.equal(
-      compareVersions(installedNext, "15.5.23") >= 0,
-      true,
-      `expected Next >= 15.5.23, received ${installedNext}`,
-    );
+    assert.equal(installedNext, "15.5.23");
+    assert.match(lockText, /next:\n\s+specifier: 15\.5\.23\n\s+version: 15\.5\.23/);
+    assert.doesNotMatch(lockText, /next@15\.5\.(?:[0-9]|1[0-9]|20)(?:\(|:)/);
   });
 
   it("routes every inventoried private Blob owner through the private boundary", async () => {
