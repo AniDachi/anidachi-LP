@@ -27,14 +27,6 @@ function textResult(pathname: string, value: string) {
   };
 }
 
-function headResult(pathname: string, etag = '"fixture"') {
-  return {
-    pathname,
-    url: `https://public-fixture.public.blob.vercel-storage.com/${pathname}`,
-    etag,
-  };
-}
-
 describe("private integration Blob boundary", () => {
   it("accepts only the inventoried integration and job paths", () => {
     for (const pathname of [
@@ -64,10 +56,9 @@ describe("private integration Blob boundary", () => {
     }
   });
 
-  it("writes to the legacy authority before private storage during phase A", async () => {
+  it("writes only to private storage even when obsolete phase-A input is present", async () => {
     const calls: Array<{ operation: string; options: unknown }> = [];
     const sdk: PrivateIntegrationBlobSdk = {
-      head: async () => null,
       get: async () => null,
       put: async (_pathname, _body, options) => {
         calls.push({ operation: "put", options });
@@ -79,22 +70,11 @@ describe("private integration Blob boundary", () => {
       privateAuth: { storeId: "store_private", oidcToken: "oidc-fixture" },
       phaseALegacyAuthority: { enabled: true, token: "legacy-public-token" },
       sdk,
-    });
+    } as Parameters<typeof createPrivateIntegrationBlobClient>[0]);
 
     await client.writeText("youtube/credentials.json", '{"token":"secret"}');
 
     assert.deepEqual(calls, [
-      {
-        operation: "put",
-        options: {
-          access: "public",
-          token: "legacy-public-token",
-          addRandomSuffix: false,
-          allowOverwrite: true,
-          cacheControlMaxAge: 60,
-          contentType: "application/json",
-        },
-      },
       {
         operation: "put",
         options: {
@@ -110,81 +90,18 @@ describe("private integration Blob boundary", () => {
     ]);
   });
 
-  it("reads only the origin-fresh legacy authority during phase A", async () => {
+  it("reads only origin-fresh private storage even when obsolete phase-A input is present", async () => {
     const calls: Array<{
-      operation: "head" | "get";
+      operation: "get";
       target: string;
       options: unknown;
     }> = [];
     const sdk: PrivateIntegrationBlobSdk = {
-      head: async (pathname, options) => {
-        calls.push({ operation: "head", target: pathname, options });
-        return headResult(pathname);
-      },
       get: async (target, options) => {
         calls.push({ operation: "get", target, options });
-        const pathname = new URL(target).pathname.slice(1);
-        if ("access" in options && options.access === "public") {
-          return textResult(pathname, "legacy-value");
-        }
-        return textResult(pathname, "stale-private-value");
-      },
-      put: async () => ({ pathname: "unused" }),
-      del: async () => undefined,
-    };
-    const client = createPrivateIntegrationBlobClient({
-      privateAuth: { token: "private-token" },
-      phaseALegacyAuthority: { enabled: true, token: "legacy-public-token" },
-      sdk,
-    });
-
-    assert.equal(
-      await client.readText("kreatli-crm/contacts.json"),
-      "legacy-value",
-    );
-    assert.deepEqual(calls, [
-      {
-        operation: "head",
-        target: "kreatli-crm/contacts.json",
-        options: { token: "legacy-public-token" },
-      },
-      {
-        operation: "get",
-        target:
-          "https://public-fixture.public.blob.vercel-storage.com/kreatli-crm/contacts.json?v=fixture",
-        options: { access: "public", token: "legacy-public-token" },
-      },
-    ]);
-  });
-
-  it("fails closed when the legacy body ETag differs from fresh metadata", async () => {
-    const sdk: PrivateIntegrationBlobSdk = {
-      head: async (pathname) => headResult(pathname, '"fresh"'),
-      get: async (target) => {
-        const pathname = new URL(target).pathname.slice(1);
-        return textResult(pathname, "stale-value");
-      },
-      put: async () => ({ pathname: "unused" }),
-      del: async () => undefined,
-    };
-    const client = createPrivateIntegrationBlobClient({
-      privateAuth: { token: "private-token" },
-      phaseALegacyAuthority: { enabled: true, token: "legacy-public-token" },
-      sdk,
-    });
-
-    await assert.rejects(
-      client.readText("kreatli-crm/contacts.json"),
-      /changed during the phase-A read/,
-    );
-  });
-
-  it("reads only origin-fresh private storage after compatibility is disabled", async () => {
-    const calls: Array<{ pathname: string; options: unknown }> = [];
-    const sdk: PrivateIntegrationBlobSdk = {
-      head: async () => null,
-      get: async (pathname, options) => {
-        calls.push({ pathname, options });
+        const pathname = target.startsWith("https:")
+          ? new URL(target).pathname.slice(1)
+          : target;
         return textResult(pathname, "private-value");
       },
       put: async () => ({ pathname: "unused" }),
@@ -192,17 +109,18 @@ describe("private integration Blob boundary", () => {
     };
     const client = createPrivateIntegrationBlobClient({
       privateAuth: { token: "private-token" },
-      phaseALegacyAuthority: { enabled: false, token: "legacy-public-token" },
+      phaseALegacyAuthority: { enabled: true, token: "legacy-public-token" },
       sdk,
-    });
+    } as Parameters<typeof createPrivateIntegrationBlobClient>[0]);
 
     assert.equal(
-      await client.readText("instagram/credentials.json"),
+      await client.readText("kreatli-crm/contacts.json"),
       "private-value",
     );
     assert.deepEqual(calls, [
       {
-        pathname: "instagram/credentials.json",
+        operation: "get",
+        target: "kreatli-crm/contacts.json",
         options: {
           access: "private",
           token: "private-token",
@@ -212,10 +130,9 @@ describe("private integration Blob boundary", () => {
     ]);
   });
 
-  it("deletes private then legacy storage before reporting phase-A success", async () => {
+  it("deletes only private storage even when obsolete phase-A input is present", async () => {
     const calls: Array<{ pathname: string; options: unknown }> = [];
     const sdk: PrivateIntegrationBlobSdk = {
-      head: async () => null,
       get: async () => null,
       put: async () => ({ pathname: "unused" }),
       del: async (pathname, options) => {
@@ -226,7 +143,7 @@ describe("private integration Blob boundary", () => {
       privateAuth: { token: "private-token" },
       phaseALegacyAuthority: { enabled: true, token: "legacy-public-token" },
       sdk,
-    });
+    } as Parameters<typeof createPrivateIntegrationBlobClient>[0]);
 
     await client.delete("google-ads/tokens.json");
 
@@ -235,54 +152,12 @@ describe("private integration Blob boundary", () => {
         pathname: "google-ads/tokens.json",
         options: { token: "private-token" },
       },
-      {
-        pathname: "google-ads/tokens.json",
-        options: { token: "legacy-public-token" },
-      },
     ]);
-  });
-
-  it("fails closed before any operation when phase A lacks its legacy credential", async () => {
-    let calls = 0;
-    const sdk: PrivateIntegrationBlobSdk = {
-      head: async () => null,
-      get: async () => {
-        calls += 1;
-        return null;
-      },
-      put: async () => {
-        calls += 1;
-        return { pathname: "unused" };
-      },
-      del: async () => {
-        calls += 1;
-      },
-    };
-    const client = createPrivateIntegrationBlobClient({
-      privateAuth: { token: "private-token" },
-      phaseALegacyAuthority: { enabled: true },
-      sdk,
-    });
-
-    await assert.rejects(
-      client.readText("youtube/credentials.json"),
-      /legacy Blob authority is not configured/,
-    );
-    await assert.rejects(
-      client.writeText("youtube/credentials.json", "{}"),
-      /legacy Blob authority is not configured/,
-    );
-    await assert.rejects(
-      client.delete("youtube/credentials.json"),
-      /legacy Blob authority is not configured/,
-    );
-    assert.equal(calls, 0);
   });
 
   it("rejects unknown paths before any Blob operation", async () => {
     let calls = 0;
     const sdk: PrivateIntegrationBlobSdk = {
-      head: async () => null,
       get: async () => {
         calls += 1;
         return null;
@@ -297,7 +172,6 @@ describe("private integration Blob boundary", () => {
     };
     const client = createPrivateIntegrationBlobClient({
       privateAuth: { token: "private-token" },
-      phaseALegacyAuthority: { enabled: true, token: "legacy-public-token" },
       sdk,
     });
 
