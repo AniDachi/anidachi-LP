@@ -4730,13 +4730,13 @@
     "semantic_hash": "1de7f552345e6903b25d0462bd831fec"
   },
   "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md": {
-    "mtime": 1787052009.9704893,
-    "ast_hash": "3142d1c9efbf7bc3aea2ea9fe1ab254e",
-    "semantic_hash": "3142d1c9efbf7bc3aea2ea9fe1ab254e"
+    "mtime": 1787053423.6335306,
+    "ast_hash": "186a96b4209032991c2920b689e5197b",
+    "semantic_hash": "186a96b4209032991c2920b689e5197b"
   },
   "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md": {
-    "mtime": 1787052009.9711587,
-    "ast_hash": "b4c858c2f9255eff61a3c47c81625b1c",
-    "semantic_hash": "b4c858c2f9255eff61a3c47c81625b1c"
+    "mtime": 1787053423.634039,
+    "ast_hash": "59ad0013c91e927449918aa09ff275ad",
+    "semantic_hash": "59ad0013c91e927449918aa09ff275ad"
   }
 }
