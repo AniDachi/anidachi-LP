@@ -1,6 +1,6 @@
 # Pre-release Security And Reliability Readiness Design
 
-Status: Wave 1 security boundaries implemented; staging validation and phase-B private-only cutover pending
+Status: Wave 1 complete on staging; Wave 2 not started
 
 Date: 2026-08-18
 

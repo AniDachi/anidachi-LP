@@ -119,9 +119,8 @@ describe("pre-release security boundaries", () => {
     );
   });
 
-  it("records implemented Wave 1 boundaries without claiming staging acceptance", async () => {
-    const expectedStatus =
-      "Status: Wave 1 security boundaries implemented; staging validation and phase-B private-only cutover pending";
+  it("keeps the plan and design aligned after Wave 1 staging acceptance", async () => {
+    const expectedStatus = "Status: Wave 1 complete on staging; Wave 2 not started";
     const [plan, design] = await Promise.all([
       readFile(
         new URL(
