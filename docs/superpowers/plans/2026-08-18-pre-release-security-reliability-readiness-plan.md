@@ -302,7 +302,7 @@ amendment prevents its dependent task from starting.
 Write tests that prove the current failure modes without live exploitation:
 
 - a media request for a credential/CRM prefix reaches the injected Blob getter;
-- the installed Next.js version is below `15.5.21` and the staging middleware
+- the installed Next.js version is below `15.5.23` and the staging middleware
   and Server Action surfaces exist.
 
 The extension callback high finding receives its own immediate RED in Task 6 so
@@ -341,13 +341,13 @@ Stage only files that actually changed.
 
 **Step 1: Recheck the two official advisories**
 
-Confirm `15.5.21` still closes both advisories and is not superseded by a newer
-15.5 security fix. This task remains on the 15.5 line; it does not perform a
-Next.js 16 migration.
+Recheck the compatible 15.5 line against the official advisories. The execution
+recheck selected exact `15.5.23`, which supersedes the earlier `15.5.21` floor
+and closes the known Next-specific advisories without a Next.js 16 migration.
 
 **Step 2: Pin and install the fixed patch**
 
-Set `next` to exact `15.5.21`, then run:
+Set `next` to exact `15.5.23`, then run:
 
 ```bash
 pnpm install --frozen-lockfile=false
@@ -406,16 +406,17 @@ the project public-ready.
 **Step 1: Add failing namespace and no-fetch tests**
 
 Tests must reject credential, OAuth, Gmail, CRM, traversal, encoded separator,
-unknown-prefix, non-image type, and oversized media cases before the injected
-Blob getter runs. Add one valid public artwork fixture and conditional GET case.
+and unknown-prefix paths before the injected Blob getter runs. Add valid public
+image and video fixtures plus a conditional GET case. For a syntactically valid
+public identifier, test that mismatched type and oversized metadata return
+`404` without exposing the returned body.
 
 **Step 2: Implement one allowlist helper**
 
-`public-media-blob.ts` owns canonical prefix parsing, content-type allowlisting,
-streaming headers, byte ceiling, and `404` mapping. Derive the byte/type ceiling
-from the Task 0 public-media inventory plus the documented artwork product
-contract; record the largest valid sample and headroom in the task report. The
-route accepts only application-owned public media identifiers. It does not
+`public-media-blob.ts` owns canonical prefix parsing, image/video content-type
+allowlisting, streaming headers, the existing 100 MiB product ceiling, and
+`404` mapping. Record the deployed inventory and ceiling in the task report.
+The route accepts only application-owned public media identifiers. It does not
 accept an arbitrary Blob pathname or URL.
 
 Credential storage modules export their private namespace constants so tests
@@ -463,15 +464,22 @@ credential migration merely for architectural symmetry.
 - Modify: `apps/web/lib/instagram/storage.ts`
 - Modify: `apps/web/lib/tiktok/storage.ts`
 - Modify: `apps/web/lib/youtube/storage.ts`
+- Modify: `apps/web/lib/google-ads/tokens.ts`
 - Modify: `apps/web/lib/kreatli-crm/gmail-tokens.ts`
 - Modify: `apps/web/lib/kreatli-crm/store.ts`
+- Modify: `apps/web/lib/kreatli-crm/contact-messages.ts`
+- Modify: `apps/web/lib/kreatli-crm/feature-requests.ts`
+- Create: `apps/web/lib/kreatli-crm/private-integration-blob-jsonl.ts`
+- Modify: `apps/web/lib/openclaw-jobs.ts`
+- Modify: server routes that write private upload/job objects
 - Modify: `apps/web/.env.example` only with secret names, never values
 
 **Step 1: Test read-old/write-new and strict private access**
 
-RED fixtures must prove new writes use the private store, old reads are allowed
-only for inventoried exact paths during migration, and public proxy access is
-still impossible.
+RED fixtures must prove new writes use the private store, reads prefer the
+private store, old reads are allowed only for inventoried exact paths while the
+staging-only phase-A flag is enabled, and public proxy access is still
+impossible.
 
 **Step 2: Implement a resumable metadata-only migration command**
 
@@ -481,10 +489,15 @@ the source object in the same run.
 
 **Step 3: Remove compatibility after staging copy proof**
 
-After destination reads pass, remove old-store credential reads in a separate
-commit. Delete old objects only through a separately approved, recoverable
-operation. If prior exposure cannot be excluded, produce a credential-rotation
-list; do not rotate automatically inside this task.
+Deploy phase A before the final copy so mutable staging writers stop changing
+the public source. The execution inventory contained 412 eligible objects
+(1,120,524 bytes), including 403 mutable OpenClaw job objects. After the phase-A
+deployment, rerun the metadata/hash migration to zero conflicts and rerun it a
+second time to prove idempotency. Then remove old-store credential reads and the
+staging flag in a separate phase-B commit and deployment. Delete old objects
+only through a separately approved, recoverable operation. If prior exposure
+cannot be excluded, produce a credential-rotation list; do not rotate
+automatically inside this task.
 
 **Step 4: Verify and commit**
 
@@ -498,8 +511,12 @@ git commit -m "fix(web): move integration credentials to private Blob storage"
 ### Wave 1 Stop
 
 Required GREEN: complete web tests/check/build, public-route negative fixtures,
-Next `15.5.21`, and a recorded Blob gate outcome. Stop if a credential namespace
-remains reachable or the deployed access mode is unknown.
+Next `15.5.23`, and a recorded two-phase Blob gate outcome. The official private
+store token connection is sufficient for the staging cutover; upgrading the
+existing Vercel project to OIDC remains a separate dashboard hardening action
+that must not be silently performed without an attended confirmation. Stop if a
+credential namespace remains publicly reachable, phase-B legacy reads remain,
+or the deployed access mode is unknown.
 
 ---
 

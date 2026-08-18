@@ -105,7 +105,9 @@ starts:
   `https://github.com/vercel/next.js/security/advisories/GHSA-26hh-7cqf-hhc6`
   and
   `https://github.com/vercel/next.js/security/advisories/GHSA-m99w-x7hq-7vfj`.
-  The current minimum compatible fixed floor is `15.5.21`.
+  The implementation recheck selected the current compatible 15.5 patch,
+  `15.5.23`, which supersedes the earlier `15.5.21` floor without introducing
+  a Next.js major-version migration.
 - Chrome Identity API redirect behavior:
   `https://developer.chrome.com/docs/extensions/reference/api/identity`.
 - OAuth 2.0 Security Best Current Practice:
@@ -127,8 +129,10 @@ starts:
 
 The catch-all media route must never translate an arbitrary caller path into a
 server-token Blob read. Public media is addressed through an explicit media
-namespace or an application-issued media identifier. Credential, integration,
-CRM, and PII namespaces are always rejected before any Blob call.
+namespace or an application-issued media identifier. The current product uses
+known image and video identifiers, so both are allowed only through their exact
+path grammar and content-type contract. Credential, integration, CRM, and PII
+namespaces are always rejected before any Blob call.
 
 The implementation begins with a read-only deployed configuration and object
 prefix inventory. If public media and credentials share one store, the minimum
@@ -144,8 +148,11 @@ safe cutover is:
    excluded.
 
 The media proxy returns `404` for disallowed paths so it does not become a
-credential-prefix oracle. It streams bounded allowed media and sets
-`X-Content-Type-Options: nosniff`. It never exposes the Blob service token.
+credential-prefix oracle. A syntactically valid public identifier performs one
+authenticated metadata/stream lookup; the response is served only after the
+returned pathname, content type, and byte size satisfy the public contract. It
+streams bounded allowed media and sets `X-Content-Type-Options: nosniff`. It
+never exposes the Blob service token.
 
 ### 2. Explicit Website And Extension Auth Channels
 
@@ -406,8 +413,11 @@ accounts and staging evidence when compatibility is cheap and bounded.
 - Extension ID allowlists contain explicit staging and local development IDs.
 - Watch History response changes are versioned and update web/extension
   consumers in the same wave.
-- Blob credential migration uses read-old/write-new only when deployed inventory
-  proves it necessary.
+- Blob credential migration uses a short two-phase cutover only when deployed
+  inventory proves it necessary: phase A writes private and reads private first
+  with an exact-path legacy fallback, the final copy runs after old writers are
+  gone, and phase B removes the fallback. Public source objects are retained
+  until a separately approved recoverable cleanup.
 - Removed compatibility paths receive a zero-consumer source and staging audit.
 
 ## Failure And Rollback Behavior
