@@ -119,8 +119,12 @@ describe("pre-release security boundaries", () => {
     );
   });
 
-  it("keeps the plan and design aligned after Wave 1 staging acceptance", async () => {
-    const expectedStatus = "Status: Wave 1 complete on staging; Wave 2 not started";
+  it("keeps the plan and design aligned after the Task 5 staging gate", async () => {
+    const expectedStatus = [
+      "Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with",
+      "interactive provider acceptance pending; Task 6 blocked on the exact approved",
+      "extension ID set",
+    ].join("\n");
     const [plan, design] = await Promise.all([
       readFile(
         new URL(
@@ -138,8 +142,8 @@ describe("pre-release security boundaries", () => {
       ),
     ]);
 
-    assert.match(plan, new RegExp(`^${expectedStatus}$`, "m"));
-    assert.match(design, new RegExp(`^${expectedStatus}$`, "m"));
+    assert.ok(plan.includes(expectedStatus));
+    assert.ok(design.includes(expectedStatus));
   });
 
   it("does not report credential disconnect success after a Blob delete failure", async () => {

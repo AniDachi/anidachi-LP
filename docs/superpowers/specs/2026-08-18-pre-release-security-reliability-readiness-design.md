@@ -1,6 +1,8 @@
 # Pre-release Security And Reliability Readiness Design
 
-Status: Wave 1 complete on staging; Wave 2 not started
+Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with
+interactive provider acceptance pending; Task 6 blocked on the exact approved
+extension ID set
 
 Date: 2026-08-18
 

@@ -3005,9 +3005,9 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1787055816.0500407,
-    "ast_hash": "f27b6d50d016e8d739824e109e0102ad",
-    "semantic_hash": "f27b6d50d016e8d739824e109e0102ad"
+    "mtime": 1787063444.822292,
+    "ast_hash": "8dbbd5d2d406f018b4e491c34d91c314",
+    "semantic_hash": "8dbbd5d2d406f018b4e491c34d91c314"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -4695,9 +4695,9 @@
     "semantic_hash": "a759a470b25398670234655ff5217a42"
   },
   "apps/web/lib/pre-release-security-boundaries.test.ts": {
-    "mtime": 1787056762.0488584,
-    "ast_hash": "72b84f8357755d12bf6548f4fe63b630",
-    "semantic_hash": "72b84f8357755d12bf6548f4fe63b630"
+    "mtime": 1787064258.0014899,
+    "ast_hash": "45c1d4459e76e0f9fafa57c8453e0906",
+    "semantic_hash": "45c1d4459e76e0f9fafa57c8453e0906"
   },
   "apps/web/lib/private-integration-blob-migration.test.ts": {
     "mtime": 1787045820.1640816,
@@ -4730,14 +4730,14 @@
     "semantic_hash": "1de7f552345e6903b25d0462bd831fec"
   },
   "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md": {
-    "mtime": 1787055816.0495334,
-    "ast_hash": "55eb2ef0df3a4658986383e64c504b77",
-    "semantic_hash": "55eb2ef0df3a4658986383e64c504b77"
+    "mtime": 1787063422.4199774,
+    "ast_hash": "68b082f8ed8d56b10450ba21287dd164",
+    "semantic_hash": "68b082f8ed8d56b10450ba21287dd164"
   },
   "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md": {
-    "mtime": 1787056762.0482094,
-    "ast_hash": "6244f5e762f85577355a6da8b192e84e",
-    "semantic_hash": "6244f5e762f85577355a6da8b192e84e"
+    "mtime": 1787063422.4205217,
+    "ast_hash": "424b2a9a45938dad4ee1533373d7a8a2",
+    "semantic_hash": "424b2a9a45938dad4ee1533373d7a8a2"
   },
   "apps/web/lib/anidachi-auth/oauth-routes.test.ts": {
     "mtime": 1787062211.0195055,
