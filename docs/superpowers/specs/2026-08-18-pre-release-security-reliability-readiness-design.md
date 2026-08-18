@@ -424,6 +424,12 @@ accounts and staging evidence when compatibility is cheap and bounded.
   and legacy second before reporting success; callers must not swallow a failed
   credential deletion. After old writers are gone, the final copy and an
   idempotency rerun must show zero conflicts; phase B then becomes private-only.
+  If the legacy source is demonstrably shared with a non-staging deployment
+  outside the cutover scope, replace the impossible global-quiescence proof with
+  an origin-fresh, ETag-protected final snapshot of each differing mutable test
+  object immediately before the staging alias switch. Staging then treats the
+  private store as its sole authority and validates or reconnects that test
+  integration instead of retaining a cross-environment compatibility path.
   Unrelated public source objects are retained until a separately approved
   recoverable cleanup.
 - Removed compatibility paths receive a zero-consumer source and staging audit.

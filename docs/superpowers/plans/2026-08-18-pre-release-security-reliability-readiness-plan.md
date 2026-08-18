@@ -514,6 +514,13 @@ write. The execution inventory contained 412 eligible objects
 deployment and drain window, rerun the metadata/hash migration to zero conflicts
 and rerun it a second time to prove idempotency. Then remove legacy reads and
 dual writes plus the staging flag in a separate phase-B commit and deployment.
+If live evidence proves the legacy source store is also written by a non-staging
+deployment outside this plan's authority, do not loop full scans or modify that
+deployment. Take one origin-fresh, ETag-protected final snapshot of each differing
+mutable staging object immediately before the phase-B alias switch, make staging
+private-only, and validate or reconnect the affected test integration there. The
+post-switch private store is the staging authority; later writes to the shared
+legacy source do not reopen compatibility.
 Product-initiated disconnect/delete operations remove the exact object from
 both stores during phase A; unrelated bulk deletion of old objects remains a
 separately approved, recoverable operation. If prior exposure cannot be
