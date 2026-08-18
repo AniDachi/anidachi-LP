@@ -3005,9 +3005,9 @@
     "semantic_hash": "7222da43b1fe21764ac60a152d060d29"
   },
   "docs/current-development-state.md": {
-    "mtime": 1787041482.6373446,
-    "ast_hash": "8aac89ecf1555c3cc0ae12c9875c6381",
-    "semantic_hash": "8aac89ecf1555c3cc0ae12c9875c6381"
+    "mtime": 1787055816.0500407,
+    "ast_hash": "f27b6d50d016e8d739824e109e0102ad",
+    "semantic_hash": "f27b6d50d016e8d739824e109e0102ad"
   },
   "docs/development-environments.md": {
     "mtime": 1786689011.3582418,
@@ -4730,9 +4730,9 @@
     "semantic_hash": "1de7f552345e6903b25d0462bd831fec"
   },
   "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md": {
-    "mtime": 1787053423.6335306,
-    "ast_hash": "186a96b4209032991c2920b689e5197b",
-    "semantic_hash": "186a96b4209032991c2920b689e5197b"
+    "mtime": 1787055816.0495334,
+    "ast_hash": "55eb2ef0df3a4658986383e64c504b77",
+    "semantic_hash": "55eb2ef0df3a4658986383e64c504b77"
   },
   "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md": {
     "mtime": 1787053423.634039,
