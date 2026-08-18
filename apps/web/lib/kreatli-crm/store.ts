@@ -1,7 +1,11 @@
-import { get as blobGet, put as blobPut } from "@vercel/blob";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { Contact, Touch } from "./types";
+import {
+  hasPrivateIntegrationBlobConfiguration,
+  readPrivateIntegrationBlobText,
+  writePrivateIntegrationBlobText,
+} from "@/lib/private-integration-blob";
 
 export function getCrmDataDir(): string {
   if (process.env.CRM_DATA_DIR) {
@@ -10,10 +14,6 @@ export function getCrmDataDir(): string {
   return path.join(process.cwd(), "crm-data");
 }
 
-// AniDachi CRM Blob store is public; private access breaks writes ("Cannot use
-// private access on a public store"). Override with BLOB_ACCESS=private only
-// if you migrate to a private store.
-const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "public") as "public" | "private";
 export const KREATLI_CRM_CONTACTS_BLOB_PATH = "kreatli-crm/contacts.json";
 export const KREATLI_CRM_TOUCHES_BLOB_PATH = "kreatli-crm/touches.jsonl";
 export const KREATLI_CRM_META_BLOB_PATH = "kreatli-crm/meta.json";
@@ -21,33 +21,12 @@ const CONTACTS_BLOB_PATH = KREATLI_CRM_CONTACTS_BLOB_PATH;
 const TOUCHES_BLOB_PATH = KREATLI_CRM_TOUCHES_BLOB_PATH;
 const META_BLOB_PATH = KREATLI_CRM_META_BLOB_PATH;
 
-function blobToken(): string | null {
-  return process.env.BLOB_READ_WRITE_TOKEN ?? null;
-}
-
 async function blobReadText(blobPath: string): Promise<string | null> {
-  const token = blobToken();
-  if (!token) return null;
-
-  const result = await blobGet(blobPath, { access: BLOB_ACCESS, token });
-  if (!result) return null;
-  if (result.statusCode !== 200) {
-    throw new Error(
-      `Unexpected Vercel Blob response (${result.statusCode}) for ${blobPath}`,
-    );
-  }
-  return await new Response(result.stream).text();
+  return readPrivateIntegrationBlobText(blobPath);
 }
 
 async function blobWriteText(blobPath: string, text: string): Promise<void> {
-  const token = blobToken();
-  if (!token) throw new Error("Missing BLOB_READ_WRITE_TOKEN");
-  await blobPut(blobPath, text, {
-    access: BLOB_ACCESS,
-    token,
-    addRandomSuffix: false,
-    allowOverwrite: true,
-  });
+  await writePrivateIntegrationBlobText(blobPath, text);
 }
 
 function parseContacts(raw: string, source: string): Contact[] {
@@ -90,16 +69,19 @@ async function ensureDir() {
 }
 
 export async function readMeta(): Promise<CrmMeta> {
-  const blobText = await blobReadText(META_BLOB_PATH);
-  if (blobText) {
-    try {
-      const data = JSON.parse(blobText) as CrmMeta;
-      return {
-        schema_version: typeof data.schema_version === "number" ? data.schema_version : 1,
-        updated_at: data.updated_at ?? null,
-      };
-    } catch {
-      return { schema_version: 1, updated_at: null };
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    const blobText = await blobReadText(META_BLOB_PATH);
+    if (blobText) {
+      try {
+        const data = JSON.parse(blobText) as CrmMeta;
+        return {
+          schema_version:
+            typeof data.schema_version === "number" ? data.schema_version : 1,
+          updated_at: data.updated_at ?? null,
+        };
+      } catch {
+        return { schema_version: 1, updated_at: null };
+      }
     }
   }
 
@@ -118,8 +100,7 @@ export async function readMeta(): Promise<CrmMeta> {
 }
 
 export async function writeMeta(partial: Partial<CrmMeta>): Promise<void> {
-  const token = blobToken();
-  if (token) {
+  if (hasPrivateIntegrationBlobConfiguration()) {
     const cur = await readMeta();
     const next: CrmMeta = {
       schema_version: partial.schema_version ?? cur.schema_version,
@@ -139,7 +120,7 @@ export async function writeMeta(partial: Partial<CrmMeta>): Promise<void> {
 }
 
 export async function readContacts(): Promise<Contact[]> {
-  if (blobToken()) {
+  if (hasPrivateIntegrationBlobConfiguration()) {
     const blobText = await blobReadText(CONTACTS_BLOB_PATH);
     return blobText === null ? [] : parseContacts(blobText, "Vercel Blob");
   }
@@ -156,8 +137,7 @@ export async function readContacts(): Promise<Contact[]> {
 }
 
 export async function writeContacts(contacts: Contact[]): Promise<void> {
-  const token = blobToken();
-  if (token) {
+  if (hasPrivateIntegrationBlobConfiguration()) {
     await blobWriteText(CONTACTS_BLOB_PATH, JSON.stringify(contacts, null, 2));
     await writeMeta({ updated_at: new Date().toISOString() });
     return;
@@ -169,13 +149,15 @@ export async function writeContacts(contacts: Contact[]): Promise<void> {
 }
 
 export async function readTouches(): Promise<Touch[]> {
-  const blobText = await blobReadText(TOUCHES_BLOB_PATH);
-  if (blobText) {
-    try {
-      const lines = blobText.split("\n").filter((l) => l.trim());
-      return lines.map((line) => JSON.parse(line) as Touch);
-    } catch {
-      return [];
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    const blobText = await blobReadText(TOUCHES_BLOB_PATH);
+    if (blobText) {
+      try {
+        const lines = blobText.split("\n").filter((l) => l.trim());
+        return lines.map((line) => JSON.parse(line) as Touch);
+      } catch {
+        return [];
+      }
     }
   }
 
@@ -191,8 +173,7 @@ export async function readTouches(): Promise<Touch[]> {
 }
 
 export async function appendTouch(touch: Touch): Promise<void> {
-  const token = blobToken();
-  if (token) {
+  if (hasPrivateIntegrationBlobConfiguration()) {
     const cur = (await blobReadText(TOUCHES_BLOB_PATH)) ?? "";
     const next = `${cur}${cur && !cur.endsWith("\n") ? "\n" : ""}${JSON.stringify(touch)}\n`;
     await blobWriteText(TOUCHES_BLOB_PATH, next);

@@ -1,5 +1,11 @@
 export const MAX_PUBLIC_MEDIA_BYTES = 100 * 1024 * 1024;
 
+export function requirePublicMediaBlobToken(): string {
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  if (!token) throw new Error("Public media Blob storage is not configured");
+  return token;
+}
+
 const PUBLIC_MEDIA_CACHE_CONTROL = "public, max-age=86400";
 const DATE_SEGMENT = /^\d{4}-\d{2}-\d{2}$/;
 const UUID_FILE = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.([a-z0-9]+)$/i;

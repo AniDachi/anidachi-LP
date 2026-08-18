@@ -2,9 +2,10 @@ import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import {
-  appendPublicBlobJsonlLine,
-  readPublicBlobJsonlText,
-} from "@/lib/kreatli-crm/blob-jsonl";
+  appendPrivateBlobJsonlLine,
+  readPrivateBlobJsonlText,
+} from "@/lib/kreatli-crm/private-integration-blob-jsonl";
+import { hasPrivateIntegrationBlobConfiguration } from "@/lib/private-integration-blob";
 import {
   FEATURE_REQUEST_SEGMENT,
   type FeatureRequestCategory,
@@ -25,10 +26,6 @@ export {
 export const FEATURE_REQUESTS_BLOB_PATH =
   "kreatli-crm/feature-requests.jsonl";
 
-function blobToken(): string | null {
-  return process.env.BLOB_READ_WRITE_TOKEN ?? null;
-}
-
 function localPath(): string {
   return path.join(getCrmDataDir(), "feature-requests.jsonl");
 }
@@ -40,16 +37,8 @@ async function appendLocal(line: string): Promise<void> {
 }
 
 async function readArchiveText(): Promise<string> {
-  const token = blobToken();
-  if (token) {
-    try {
-      return await readPublicBlobJsonlText(FEATURE_REQUESTS_BLOB_PATH, token);
-    } catch (error) {
-      console.error(
-        "[feature-requests] Blob read failed; trying local store",
-        error,
-      );
-    }
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    return readPrivateBlobJsonlText(FEATURE_REQUESTS_BLOB_PATH);
   }
   try {
     return await fs.readFile(localPath(), "utf8");
@@ -153,17 +142,8 @@ export async function appendFeatureRequest(
   };
   const line = JSON.stringify(record);
 
-  const token = blobToken();
-  if (token) {
-    try {
-      await appendPublicBlobJsonlLine(FEATURE_REQUESTS_BLOB_PATH, line, token);
-    } catch (error) {
-      console.error(
-        "[feature-requests] Blob append failed; falling back to local store",
-        error,
-      );
-      await appendLocal(line);
-    }
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    await appendPrivateBlobJsonlLine(FEATURE_REQUESTS_BLOB_PATH, line);
   } else {
     await appendLocal(line);
   }

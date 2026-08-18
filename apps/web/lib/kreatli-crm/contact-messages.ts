@@ -2,9 +2,10 @@ import { randomUUID } from "crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import {
-  appendPublicBlobJsonlLine,
-  readPublicBlobJsonlText,
-} from "@/lib/kreatli-crm/blob-jsonl";
+  appendPrivateBlobJsonlLine,
+  readPrivateBlobJsonlText,
+} from "@/lib/kreatli-crm/private-integration-blob-jsonl";
+import { hasPrivateIntegrationBlobConfiguration } from "@/lib/private-integration-blob";
 import {
   CONTACT_MESSAGE_SEGMENT,
   type ContactCategory,
@@ -29,10 +30,6 @@ export {
 export const CONTACT_MESSAGES_BLOB_PATH =
   "kreatli-crm/contact-messages.jsonl";
 
-function blobToken(): string | null {
-  return process.env.BLOB_READ_WRITE_TOKEN ?? null;
-}
-
 function localPath(): string {
   return path.join(getCrmDataDir(), "contact-messages.jsonl");
 }
@@ -43,13 +40,8 @@ async function appendLocal(line: string): Promise<void> {
 }
 
 async function readArchiveText(): Promise<string> {
-  const token = blobToken();
-  if (token) {
-    try {
-      return await readPublicBlobJsonlText(CONTACT_MESSAGES_BLOB_PATH, token);
-    } catch (error) {
-      console.error("[contact] Blob read failed; trying local store", error);
-    }
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    return readPrivateBlobJsonlText(CONTACT_MESSAGES_BLOB_PATH);
   }
   try {
     return await fs.readFile(localPath(), "utf8");
@@ -148,17 +140,8 @@ export async function appendContactMessage(
   };
   const line = JSON.stringify(record);
 
-  const token = blobToken();
-  if (token) {
-    try {
-      await appendPublicBlobJsonlLine(CONTACT_MESSAGES_BLOB_PATH, line, token);
-    } catch (error) {
-      console.error(
-        "[contact] Blob append failed; falling back to local store",
-        error,
-      );
-      await appendLocal(line);
-    }
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    await appendPrivateBlobJsonlLine(CONTACT_MESSAGES_BLOB_PATH, line);
   } else {
     await appendLocal(line);
   }

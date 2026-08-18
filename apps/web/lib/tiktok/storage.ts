@@ -8,19 +8,15 @@
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import {
-  get as blobGet,
-  put as blobPut,
-  list as blobList,
-  del as blobDel,
-} from "@vercel/blob";
+  deletePrivateIntegrationBlob,
+  hasPrivateIntegrationBlobConfiguration,
+  readPrivateIntegrationBlobText,
+  writePrivateIntegrationBlobText,
+} from "@/lib/private-integration-blob";
 
 const CREDENTIALS_FILE = ".data/tiktok-credentials.json";
 export const TIKTOK_CREDENTIALS_BLOB_PATH = "tiktok/credentials.json";
 const BLOB_PATH = TIKTOK_CREDENTIALS_BLOB_PATH;
-
-const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as
-  | "public"
-  | "private";
 
 export interface TikTokCredentials {
   accessToken: string;
@@ -37,49 +33,27 @@ export interface TikTokCredentials {
 // ---------------------------------------------------------------------------
 
 async function getAllFromBlob(): Promise<TikTokCredentials[]> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) return [];
-
-  try {
-    const result = await blobGet(BLOB_PATH, { access: BLOB_ACCESS, token });
-    if (!result || result.statusCode !== 200) return [];
-
-    const text = await new Response(result.stream).text();
-    const parsed = JSON.parse(text);
-    if (!Array.isArray(parsed)) {
-      if (parsed.accessToken && parsed.openId) return [parsed];
-      return [];
-    }
-    return parsed.filter(
-      (c: TikTokCredentials) => c.accessToken && c.openId,
-    );
-  } catch {
+  const text = await readPrivateIntegrationBlobText(BLOB_PATH);
+  if (!text) return [];
+  const parsed = JSON.parse(text);
+  if (!Array.isArray(parsed)) {
+    if (parsed.accessToken && parsed.openId) return [parsed];
     return [];
   }
+  return parsed.filter(
+    (c: TikTokCredentials) => c.accessToken && c.openId,
+  );
 }
 
 async function saveAllToBlob(accounts: TikTokCredentials[]): Promise<void> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) return;
-
-  await blobPut(BLOB_PATH, JSON.stringify(accounts, null, 2), {
-    access: BLOB_ACCESS,
-    token,
-    addRandomSuffix: false,
-    allowOverwrite: true,
-  });
+  await writePrivateIntegrationBlobText(
+    BLOB_PATH,
+    JSON.stringify(accounts, null, 2),
+  );
 }
 
 async function clearBlob(): Promise<void> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) return;
-
-  const { blobs } = await blobList({ prefix: BLOB_PATH, token });
-  if (!blobs.length) return;
-  await blobDel(
-    blobs.map((b) => b.url),
-    { token },
-  );
+  await deletePrivateIntegrationBlob(BLOB_PATH);
 }
 
 // ---------------------------------------------------------------------------
@@ -118,7 +92,7 @@ async function saveAllToFile(accounts: TikTokCredentials[]): Promise<void> {
 
 /** Get all connected TikTok accounts. Filters out accounts with expired refresh tokens. */
 export async function getAllCredentials(): Promise<TikTokCredentials[]> {
-  const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+  const useBlob = hasPrivateIntegrationBlobConfiguration();
   const accounts = useBlob ? await getAllFromBlob() : await getAllFromFile();
   const now = Date.now();
   return accounts.filter((c) => !c.refreshTokenExpiry || now < c.refreshTokenExpiry);
@@ -150,7 +124,7 @@ export async function setCredentials(
     all.push(creds);
   }
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
+  if (hasPrivateIntegrationBlobConfiguration()) {
     await saveAllToBlob(all);
   } else {
     await saveAllToFile(all);
@@ -160,7 +134,7 @@ export async function setCredentials(
 /** Remove one account's credentials, or all if no openId given. */
 export async function clearCredentials(openId?: string): Promise<void> {
   if (!openId) {
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
+    if (hasPrivateIntegrationBlobConfiguration()) {
       await clearBlob();
     } else {
       try {
@@ -176,7 +150,7 @@ export async function clearCredentials(openId?: string): Promise<void> {
 
   if (filtered.length === 0) {
     await clearCredentials();
-  } else if (process.env.BLOB_READ_WRITE_TOKEN) {
+  } else if (hasPrivateIntegrationBlobConfiguration()) {
     await saveAllToBlob(filtered);
   } else {
     await saveAllToFile(filtered);

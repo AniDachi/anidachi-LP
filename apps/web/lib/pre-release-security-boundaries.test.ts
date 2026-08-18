@@ -90,4 +90,25 @@ describe("pre-release security boundaries", () => {
       `expected Next >= 15.5.23, received ${installedNext}`,
     );
   });
+
+  it("routes every inventoried private Blob owner through the private boundary", async () => {
+    const ownerPaths = [
+      "instagram/storage.ts",
+      "tiktok/storage.ts",
+      "youtube/storage.ts",
+      "google-ads/tokens.ts",
+      "kreatli-crm/gmail-tokens.ts",
+      "kreatli-crm/store.ts",
+      "kreatli-crm/contact-messages.ts",
+      "kreatli-crm/feature-requests.ts",
+      "openclaw-jobs.ts",
+    ];
+
+    for (const ownerPath of ownerPaths) {
+      const source = await readFile(new URL(ownerPath, import.meta.url), "utf8");
+      assert.match(source, /private-integration-blob/, ownerPath);
+      assert.doesNotMatch(source, /BLOB_READ_WRITE_TOKEN|BLOB_ACCESS/, ownerPath);
+      assert.doesNotMatch(source, /from ["']@vercel\/blob["']/, ownerPath);
+    }
+  });
 });

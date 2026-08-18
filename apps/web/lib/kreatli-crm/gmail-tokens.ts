@@ -1,7 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
-import { get as blobGet, put as blobPut, list as blobList, del as blobDel } from "@vercel/blob";
 import { getCrmDataDir } from "./store";
+import {
+  deletePrivateIntegrationBlob,
+  hasPrivateIntegrationBlobConfiguration,
+  readPrivateIntegrationBlobText,
+  writePrivateIntegrationBlobText,
+} from "@/lib/private-integration-blob";
 
 export type GmailStoredTokens = {
   refresh_token?: string;
@@ -13,23 +18,15 @@ export type GmailStoredTokens = {
 
 export const GMAIL_TOKENS_BLOB_PATH = "kreatli-crm/gmail-tokens.json";
 const BLOB_PATH = GMAIL_TOKENS_BLOB_PATH;
-const BLOB_ACCESS = (process.env.BLOB_ACCESS ?? "private") as "public" | "private";
 
 function tokenPath() {
   return path.join(getCrmDataDir(), "gmail-tokens.json");
 }
 
 export async function readGmailTokens(): Promise<GmailStoredTokens | null> {
-  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  if (blobToken) {
-    try {
-      const result = await blobGet(BLOB_PATH, { access: BLOB_ACCESS, token: blobToken });
-      if (!result || result.statusCode !== 200) return null;
-      const text = await new Response(result.stream).text();
-      return JSON.parse(text) as GmailStoredTokens;
-    } catch {
-      return null;
-    }
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    const text = await readPrivateIntegrationBlobText(BLOB_PATH);
+    return text ? (JSON.parse(text) as GmailStoredTokens) : null;
   }
 
   try {
@@ -41,14 +38,11 @@ export async function readGmailTokens(): Promise<GmailStoredTokens | null> {
 }
 
 export async function writeGmailTokens(data: GmailStoredTokens): Promise<void> {
-  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  if (blobToken) {
-    await blobPut(BLOB_PATH, JSON.stringify(data, null, 2), {
-      access: BLOB_ACCESS,
-      token: blobToken,
-      addRandomSuffix: false,
-      allowOverwrite: true,
-    });
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    await writePrivateIntegrationBlobText(
+      BLOB_PATH,
+      JSON.stringify(data, null, 2),
+    );
     return;
   }
 
@@ -70,15 +64,8 @@ export async function mergeGmailTokens(partial: GmailStoredTokens): Promise<Gmai
 }
 
 export async function clearGmailTokens(): Promise<void> {
-  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-  if (blobToken) {
-    try {
-      const { blobs } = await blobList({ prefix: BLOB_PATH, token: blobToken });
-      if (!blobs.length) return;
-      await blobDel(blobs.map((b) => b.url), { token: blobToken });
-    } catch {
-      // ignore
-    }
+  if (hasPrivateIntegrationBlobConfiguration()) {
+    await deletePrivateIntegrationBlob(BLOB_PATH).catch(() => undefined);
     return;
   }
 
