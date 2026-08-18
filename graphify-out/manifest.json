@@ -687,7 +687,7 @@
   "apps/web/app/api/blou/publish/carousel/route.ts": {
     "mtime": 1787028307.5047684,
     "ast_hash": "85db6446d908f4f14bb2d721618a08e6",
-    "semantic_hash": ""
+    "semantic_hash": "85db6446d908f4f14bb2d721618a08e6"
   },
   "apps/web/app/api/blou/publish/reel/route.ts": {
     "mtime": 1786689011.2696242,
@@ -697,7 +697,7 @@
   "apps/web/app/api/blou/upload/route.ts": {
     "mtime": 1787028307.5044367,
     "ast_hash": "9e1777df77b03e145eaa0522d3c7c00b",
-    "semantic_hash": ""
+    "semantic_hash": "9e1777df77b03e145eaa0522d3c7c00b"
   },
   "apps/web/app/api/create-checkout-session/route.ts": {
     "mtime": 1786689011.2698824,
@@ -852,7 +852,7 @@
   "apps/web/app/api/media/[...path]/route.ts": {
     "mtime": 1787026061.801433,
     "ast_hash": "65402036f280ccb94328d2afb0cd612e",
-    "semantic_hash": ""
+    "semantic_hash": "65402036f280ccb94328d2afb0cd612e"
   },
   "apps/web/app/api/openclaw/health/route.ts": {
     "mtime": 1786689011.2733958,
@@ -862,7 +862,7 @@
   "apps/web/app/api/openclaw/post/prepare/route.ts": {
     "mtime": 1787028307.5033953,
     "ast_hash": "b361a7cd04fe154cee42c266ff049a3f",
-    "semantic_hash": ""
+    "semantic_hash": "b361a7cd04fe154cee42c266ff049a3f"
   },
   "apps/web/app/api/openclaw/post/status/route.ts": {
     "mtime": 1786689011.2767026,
@@ -872,7 +872,7 @@
   "apps/web/app/api/openclaw/post/video/prepare/route.ts": {
     "mtime": 1787028307.5039546,
     "ast_hash": "da72890b7612b47e7a7c84d1b6e5b102",
-    "semantic_hash": ""
+    "semantic_hash": "da72890b7612b47e7a7c84d1b6e5b102"
   },
   "apps/web/app/api/openclaw/post/video/status/route.ts": {
     "mtime": 1786689011.277595,
@@ -2125,7 +2125,7 @@
     "semantic_hash": "48502945effa5713ba526e8fa97780aa"
   },
   "apps/web/lib/anime-jikan-cache.json": {
-    "mtime": 1787031762.269564,
+    "mtime": 1787034596.700026,
     "ast_hash": "7cd604342772ee37dc55ec7518a95adc",
     "semantic_hash": "7cd604342772ee37dc55ec7518a95adc"
   },
@@ -2190,9 +2190,9 @@
     "semantic_hash": "353289249a6ef65f80d1b270082500bf"
   },
   "apps/web/lib/google-ads/tokens.ts": {
-    "mtime": 1787027397.3544483,
-    "ast_hash": "af5fa1088a109cc8b5f8414c136655e8",
-    "semantic_hash": ""
+    "mtime": 1787034040.1804628,
+    "ast_hash": "3ba3b41f95ec4a4b84d0ffcea47ff598",
+    "semantic_hash": "3ba3b41f95ec4a4b84d0ffcea47ff598"
   },
   "apps/web/lib/google-marketing/auth.ts": {
     "mtime": 1786689011.3143978,
@@ -2242,7 +2242,7 @@
   "apps/web/lib/instagram/storage.ts": {
     "mtime": 1787027307.3522847,
     "ast_hash": "e3e835ad56c472a78f3cca1ecaeb2327",
-    "semantic_hash": ""
+    "semantic_hash": "e3e835ad56c472a78f3cca1ecaeb2327"
   },
   "apps/web/lib/internal-service-auth.ts": {
     "mtime": 1786689011.32267,
@@ -2275,9 +2275,9 @@
     "semantic_hash": "233bf8bd6521dcf1c0dde2298dd9d143"
   },
   "apps/web/lib/kreatli-crm/gmail-tokens.ts": {
-    "mtime": 1787027397.354003,
-    "ast_hash": "796a3e78682105beb839e0426e24fe6c",
-    "semantic_hash": ""
+    "mtime": 1787034040.180042,
+    "ast_hash": "b97a4de9636eff46b57875827b29b938",
+    "semantic_hash": "b97a4de9636eff46b57875827b29b938"
   },
   "apps/web/lib/kreatli-crm/gmail-ui.ts": {
     "mtime": 1786689011.32412,
@@ -2302,7 +2302,7 @@
   "apps/web/lib/kreatli-crm/store.ts": {
     "mtime": 1787027526.27762,
     "ast_hash": "147917eab8253e8c7c440bad603bb63d",
-    "semantic_hash": ""
+    "semantic_hash": "147917eab8253e8c7c440bad603bb63d"
   },
   "apps/web/lib/kreatli-crm/survey-lead-shared.test.ts": {
     "mtime": 1786689011.3247764,
@@ -2367,7 +2367,7 @@
   "apps/web/lib/openclaw-jobs.ts": {
     "mtime": 1787027397.354859,
     "ast_hash": "cffb11dc2326bd8d4bc611e389411875",
-    "semantic_hash": ""
+    "semantic_hash": "cffb11dc2326bd8d4bc611e389411875"
   },
   "apps/web/lib/pricing-copy.ts": {
     "mtime": 1786689011.3275716,
@@ -2457,7 +2457,7 @@
   "apps/web/lib/tiktok/storage.ts": {
     "mtime": 1787027307.3527827,
     "ast_hash": "24db589d503ae1f8a02fb4e1b3c93a06",
-    "semantic_hash": ""
+    "semantic_hash": "24db589d503ae1f8a02fb4e1b3c93a06"
   },
   "apps/web/lib/use-body-scroll-lock.ts": {
     "mtime": 1786689011.3364408,
@@ -2517,7 +2517,7 @@
   "apps/web/lib/youtube/storage.ts": {
     "mtime": 1787027307.3532326,
     "ast_hash": "770d4ee1fc72b122d4c38edde6705a8a",
-    "semantic_hash": ""
+    "semantic_hash": "770d4ee1fc72b122d4c38edde6705a8a"
   },
   "apps/web/middleware.ts": {
     "mtime": 1786689011.3466015,
@@ -2532,7 +2532,7 @@
   "apps/web/package.json": {
     "mtime": 1787028074.897801,
     "ast_hash": "31c30fc8e681c1a99e6c65bc3d33f113",
-    "semantic_hash": ""
+    "semantic_hash": "31c30fc8e681c1a99e6c65bc3d33f113"
   },
   "apps/web/postcss.config.mjs": {
     "mtime": 1786689011.346787,
@@ -3142,7 +3142,7 @@
   "docs/superpowers/plans/README.md": {
     "mtime": 1786992903.252293,
     "ast_hash": "945072dbc6def632a9fdb6e4a1dc152c",
-    "semantic_hash": ""
+    "semantic_hash": "945072dbc6def632a9fdb6e4a1dc152c"
   },
   "packages/protocol/AGENTS.md": {
     "mtime": 1786689011.3759747,
@@ -3267,7 +3267,7 @@
   "apps/web/lib/kreatli-crm/waitlist-stats-route.test.ts": {
     "mtime": 1787028044.0196714,
     "ast_hash": "75a6376b2d23dd615f6aa10142e94121",
-    "semantic_hash": ""
+    "semantic_hash": "75a6376b2d23dd615f6aa10142e94121"
   },
   "apps/extension/src/overlay-layout-engine.ts": {
     "mtime": 1786689011.252269,
@@ -4402,7 +4402,7 @@
   "apps/web/lib/kreatli-crm/contact-messages.ts": {
     "mtime": 1787027484.6953,
     "ast_hash": "bef988d132f109f00b7863c29546f7fd",
-    "semantic_hash": ""
+    "semantic_hash": "bef988d132f109f00b7863c29546f7fd"
   },
   "apps/web/lib/kreatli-crm/feature-request-shared.ts": {
     "mtime": 1786689011.3237436,
@@ -4412,7 +4412,7 @@
   "apps/web/lib/kreatli-crm/feature-requests.ts": {
     "mtime": 1787027484.6956697,
     "ast_hash": "77f1f9ef0bf69b582c67d2b46e284487",
-    "semantic_hash": ""
+    "semantic_hash": "77f1f9ef0bf69b582c67d2b46e284487"
   },
   "packages/protocol/src/watch-history.ts": {
     "mtime": 1786767227.4978528,
@@ -4692,51 +4692,51 @@
   "apps/web/lib/kreatli-crm/private-integration-blob-jsonl.ts": {
     "mtime": 1787027484.694394,
     "ast_hash": "a759a470b25398670234655ff5217a42",
-    "semantic_hash": ""
+    "semantic_hash": "a759a470b25398670234655ff5217a42"
   },
   "apps/web/lib/pre-release-security-boundaries.test.ts": {
-    "mtime": 1787026988.3471143,
-    "ast_hash": "ef6c100a5bae395b8859426803f9f0be",
-    "semantic_hash": ""
+    "mtime": 1787034018.206819,
+    "ast_hash": "7c5ef3cb0b6f6cb844eb12516100c6d4",
+    "semantic_hash": "7c5ef3cb0b6f6cb844eb12516100c6d4"
   },
   "apps/web/lib/private-integration-blob-migration.test.ts": {
     "mtime": 1787031236.034587,
     "ast_hash": "57e7469ab6a3d7f602f46157a9668961",
-    "semantic_hash": ""
+    "semantic_hash": "57e7469ab6a3d7f602f46157a9668961"
   },
   "apps/web/lib/private-integration-blob.test.ts": {
-    "mtime": 1787026988.3466353,
-    "ast_hash": "6b2e1efd74b206599a83864c04f7f72b",
-    "semantic_hash": ""
+    "mtime": 1787033984.0740783,
+    "ast_hash": "63ee7381a948cdd721a696fdd5c39f5d",
+    "semantic_hash": "63ee7381a948cdd721a696fdd5c39f5d"
   },
   "apps/web/lib/private-integration-blob.ts": {
-    "mtime": 1787027570.6387722,
-    "ast_hash": "a48233b53a89325811ae7d613954e697",
-    "semantic_hash": ""
+    "mtime": 1787033984.0735307,
+    "ast_hash": "8734f3644b7cbe4f34e6fa04b8725a9e",
+    "semantic_hash": "8734f3644b7cbe4f34e6fa04b8725a9e"
   },
   "apps/web/lib/public-media-blob.test.ts": {
     "mtime": 1787026138.5126662,
     "ast_hash": "9fb87e5a4b65eed77bc0deb7a3a7f5fc",
-    "semantic_hash": ""
+    "semantic_hash": "9fb87e5a4b65eed77bc0deb7a3a7f5fc"
   },
   "apps/web/lib/public-media-blob.ts": {
     "mtime": 1787028307.5022795,
     "ast_hash": "d93a5c64940867dd53db86a187536d48",
-    "semantic_hash": ""
+    "semantic_hash": "d93a5c64940867dd53db86a187536d48"
   },
   "apps/web/scripts/migrate-private-integration-blobs.ts": {
     "mtime": 1787031589.5339441,
     "ast_hash": "7d080538c55b544d7d5a31ef3d80a04b",
-    "semantic_hash": ""
+    "semantic_hash": "7d080538c55b544d7d5a31ef3d80a04b"
   },
   "docs/superpowers/plans/2026-08-18-pre-release-security-reliability-readiness-plan.md": {
-    "mtime": 1787020294.5466897,
-    "ast_hash": "370df68daac1f91eb086803cb0c584e8",
-    "semantic_hash": ""
+    "mtime": 1787034160.21103,
+    "ast_hash": "8f2b5bc34f16f1fed0cef0d1d8a59caa",
+    "semantic_hash": "8f2b5bc34f16f1fed0cef0d1d8a59caa"
   },
   "docs/superpowers/specs/2026-08-18-pre-release-security-reliability-readiness-design.md": {
-    "mtime": 1787019585.9805315,
-    "ast_hash": "dd38d41b32693e9883cd16bfff06177e",
-    "semantic_hash": ""
+    "mtime": 1787034160.2104027,
+    "ast_hash": "d556e655dbecb329fdf280c21f8a1f2e",
+    "semantic_hash": "d556e655dbecb329fdf280c21f8a1f2e"
   }
 }
