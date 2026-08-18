@@ -7,8 +7,8 @@
 > drift gates or continue after a failed stop condition.
 
 Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with
-interactive provider acceptance pending; Task 6 blocked on the exact approved
-extension ID set
+interactive provider acceptance pending; Task 6 source implementation complete
+locally, with staging acceptance pending
 
 Date: 2026-08-18
 
@@ -102,6 +102,11 @@ preserve a legacy path just because it is mentioned here.
 - Unsafe uncertainty fails closed: a Blob may temporarily return `404`, a media
   fetch may be rejected, or a user may need to sign in again. The system never
   falls back to a broad credential read or cross-channel token.
+- Task 6 does not depend on Chrome Web Store publication. Local and staging use
+  separate repository-controlled public Chromium manifest keys with exact IDs;
+  no private key is persisted. Each web deployment accepts one exact matching
+  ID, while production has no approved identity and fails closed until a future
+  explicit production cutover.
 
 ## Evidence-gated Initial Candidates
 
@@ -245,7 +250,7 @@ Read metadata/configuration without retrieving secrets or private object bodies:
 - deployed Blob store access mode and object prefix inventory;
 - current valid public-media object types and byte/dimension distribution,
   without reading private object bodies;
-- explicit staging/public/local extension IDs;
+- explicit staging/local extension IDs and production fail-closed state;
 - Vercel Firewall or other durable edge rate-limit rules;
 - Supabase extensions and scheduling capability;
 - current Supabase changelog entries relevant to Auth, Data API exposure,
@@ -270,6 +275,11 @@ temporary workaround. If either room limit requires amendment, update the
 design, shared constant names, tests, and this plan before Tasks 9-10. The Task 0
 report must record the product behavior and measurement supporting the selected
 values, not only the resulting numbers.
+
+Controller amendment for Task 6: `EXTENSION_ID_SET_COMPLETE` is satisfied by the
+stable repository-controlled unpacked local and staging public manifest keys.
+Production intentionally has no approved ID and remains fail-closed; Chrome Web
+Store publication is not a prerequisite or part of this plan.
 
 **Step 5: Commit no runtime**
 
@@ -657,8 +667,9 @@ cookie cleanup, and generic public failures.
 
 Do not yet call the ten-minute interaction window accepted: completing a real
 Google and Discord consent/callback on staging remains an attended manual gate.
-Task 6 remains `EXTENSION_ID_SET_BLOCKED`; a local unpacked extension ID is not
-a substitute for the exact staging/public Chrome Web Store ID set, and the
+Task 6's earlier Chrome Web Store prerequisite is superseded by the approved
+pre-release binding: stable repository-controlled unpacked local/staging
+identities, exact per-environment allowlisting, and fail-closed production. The
 wildcard callback must not be restored.
 
 ## Task 6: Bind Extension Connection To Approved IDs And PKCE
@@ -669,8 +680,11 @@ wildcard callback must not be restored.
 - Modify: `packages/protocol/src/index.ts`
 - Create: `packages/protocol/test/auth.test.ts`
 - Modify: `apps/extension/src/auth-client.ts`
+- Create: `apps/extension/src/extension-channel-identity.ts`
 - Modify: `apps/extension/test/auth-client.test.ts`
+- Modify: `apps/extension/wxt.config.ts`
 - Modify: `apps/web/app/extension/connect/page.tsx`
+- Modify: `apps/web/app/extension/logout/route.ts`
 - Modify: `apps/web/app/api/extension/auth/exchange/route.ts`
 - Modify: `apps/web/lib/anidachi-auth/extension-codes.ts`
 - Create: `apps/web/lib/anidachi-auth/extension-codes.test.ts`
@@ -678,6 +692,8 @@ wildcard callback must not be restored.
   `apps/web/supabase/migrations/<generated>_extension_auth_pkce.sql`
 - Create: `apps/web/supabase/tests/extension_auth_pkce.test.sql`
 - Modify: `apps/web/.env.example` with ID variable names only
+- Modify: `scripts/validate-extension-artifact.mjs`
+- Modify: affected active extension/auth documentation and staging smoke inputs
 
 **Step 1: Close the protocol with RED fixtures**
 
@@ -687,8 +703,13 @@ unknown fields and oversized values.
 
 **Step 2: Add exact environment allowlist parsing**
 
-Accept only the Task 0 `EXTENSION_ID_SET_COMPLETE` IDs and callback paths.
-Reject every other `chromiumapp.org` host before code issuance and exchange.
+Derive the stable local ID `nkinhhgigcflmfhilmcakbkongcpkfnl` and staging ID
+`ndkfphbchhfephdodcpehdcoclojagje` from committed public manifest keys. Accept
+only the single exact `ANIDACHI_EXTENSION_CLIENT_ID` configured for that web
+environment and its `/auth` or `/logout` callback. Reject every other
+`chromiumapp.org` host before code issuance and exchange. Production has no
+manifest key and remains fail-closed without an explicitly configured future
+production ID.
 
 **Step 3: Implement PKCE S256 end to end**
 

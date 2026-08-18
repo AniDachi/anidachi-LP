@@ -1,7 +1,9 @@
 import { defineConfig } from "wxt";
+import {
+  getExtensionManifestKey,
+  type ExtensionChannel,
+} from "./src/extension-channel-identity";
 import extensionPackage from "./package.json";
-
-type ExtensionChannel = "local" | "staging" | "production";
 
 const LOCAL_HOST_PERMISSIONS = [
   "http://127.0.0.1/*",
@@ -51,6 +53,7 @@ function unique(values: Array<string | null>): string[] {
 }
 
 const extensionChannel = getExtensionChannel();
+const extensionManifestKey = getExtensionManifestKey(extensionChannel);
 const extensionName =
   extensionChannel === "production"
     ? "Anidachi"
@@ -113,6 +116,7 @@ export default defineConfig({
     short_name: extensionShortName,
     description: extensionDescription,
     version: extensionVersion,
+    ...(extensionManifestKey ? { key: extensionManifestKey } : {}),
     minimum_chrome_version: "121",
     ...(buildId ? { version_name: buildId } : {}),
     permissions: unique([

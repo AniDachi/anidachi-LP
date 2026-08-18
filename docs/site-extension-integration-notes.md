@@ -193,14 +193,19 @@ Do not try to read website HttpOnly cookies from the content script.
 Preferred Chrome extension login:
 
 1. Extension user clicks `Sign in`.
-2. Extension uses `chrome.identity.launchWebAuthFlow`.
-3. Website opens `/extension/connect`.
+2. Extension generates a one-time state value and PKCE verifier, retains the
+   verifier only for the active flow, and sends the S256 challenge.
+3. Extension uses `chrome.identity.launchWebAuthFlow` to open
+   `/extension/connect` with its exact ID and `/auth` redirect URI.
 4. Website signs user in with Discord/Google if needed.
-5. Website creates a short-lived one-time extension auth code.
-6. Website redirects to `chrome.identity.getRedirectURL(...)`.
+5. Website creates a short-lived one-time code bound to the exact client ID,
+   redirect URI, state, authenticated user, and PKCE challenge.
+6. Website redirects to the approved exact `chrome.identity.getRedirectURL("auth")`.
 7. Extension receives the final redirect URL.
-8. Extension extracts `code` and `state`.
-9. Extension calls `/api/extension/auth/exchange`.
+8. Extension validates the exact callback origin/path and state, then extracts
+   the code.
+9. Extension calls `/api/extension/auth/exchange` with the matching verifier;
+   the server consumes the code atomically once.
 10. Website returns extension-specific access and refresh tokens.
 11. Extension stores tokens in `chrome.storage.local`.
 
@@ -295,8 +300,14 @@ Important:
 - The extension must never contain Supabase service-role credentials.
 - The extension must never contain TURN provider secrets, service-role
   credentials, or server-side signing secrets.
+- Local and staging use separate repository-controlled public manifest keys and
+  exact IDs. Only public key material is committed; production has no approved
+  identity and web connection stays fail-closed until an explicit cutover.
+- Never accept an arbitrary `*.chromiumapp.org` host. Each web environment
+  accepts one exact ID and only its `/auth` and `/logout` callback paths.
 - Room WebSocket joins must verify room membership.
-- Extension auth codes must be one-time and short-lived.
+- Extension auth codes must be one-time, short-lived, hashed at rest, and bound
+  to client, redirect, state, and S256 PKCE challenge.
 - Access tokens should stay short-lived.
 - Refresh tokens should be rotatable and revocable per device.
 - Session refresh should be transparent to the user. Access tokens stay

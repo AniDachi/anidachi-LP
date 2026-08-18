@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 
 function parseArgs(argv) {
   const args = new Map();
@@ -29,6 +30,18 @@ const contentMatches = (manifest.content_scripts ?? []).flatMap(
 const permissions = manifest.permissions ?? [];
 const optionalPermissions = manifest.optional_permissions ?? [];
 
+function deriveChromiumExtensionId(manifestKey) {
+  const digest = createHash("sha256")
+    .update(Buffer.from(manifestKey, "base64"))
+    .digest()
+    .subarray(0, 16);
+  return Array.from(digest, (byte) =>
+    [byte >> 4, byte & 0x0f]
+      .map((nibble) => String.fromCharCode("a".charCodeAt(0) + nibble))
+      .join(""),
+  ).join("");
+}
+
 const broadPatterns = new Set(["http://*/*", "https://*/*", "file:///*", "<all_urls>"]);
 for (const value of [...hostPermissions, ...contentMatches]) {
   if (broadPatterns.has(value)) {
@@ -44,12 +57,14 @@ const expectedByChannel = {
     web: "https://staging.anidachi.app/*",
     api: "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     buildIdPart: "-staging-",
+    extensionId: "ndkfphbchhfephdodcpehdcoclojagje",
   },
   production: {
     name: "Anidachi",
     web: "https://www.anidachi.app/*",
     api: "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
     buildIdPart: "-production-",
+    extensionId: null,
   },
 };
 const expected = expectedByChannel[channel];
@@ -62,6 +77,20 @@ if (!manifest.version_name?.includes(expected.buildIdPart)) {
   throw new Error(
     `Expected version_name to include ${expected.buildIdPart}, got ${manifest.version_name}`,
   );
+}
+
+if (expected.extensionId) {
+  if (!manifest.key) {
+    throw new Error(`${channel} artifact is missing its stable public manifest key`);
+  }
+  const actualExtensionId = deriveChromiumExtensionId(manifest.key);
+  if (actualExtensionId !== expected.extensionId) {
+    throw new Error(
+      `Expected ${channel} extension ID ${expected.extensionId}, got ${actualExtensionId}`,
+    );
+  }
+} else if (manifest.key !== undefined) {
+  throw new Error("Production must remain fail-closed without an approved manifest key");
 }
 
 for (const required of [expected.web, expected.api]) {

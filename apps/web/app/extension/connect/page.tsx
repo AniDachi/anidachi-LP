@@ -1,9 +1,11 @@
+import { ExtensionAuthInitiationQuerySchema } from "@anidachi/protocol";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import {
   createExtensionAuthCode,
   isSafeExtensionRedirectUri,
+  readApprovedExtensionClientId,
 } from "@/lib/anidachi-auth/extension-codes";
 import { getSession } from "@/lib/anidachi-auth/session";
 import { isMobileUserAgent } from "@/lib/mobile-user-agent";
@@ -16,33 +18,47 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-  searchParams: Promise<{
-    redirect_uri?: string;
-    state?: string;
-  }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function ExtensionConnectPage({ searchParams }: Props) {
   const params = await searchParams;
-  const redirectUri = params.redirect_uri ?? "";
-  const state = params.state ?? "";
+  const parsed = ExtensionAuthInitiationQuerySchema.safeParse(params);
 
-  if (!redirectUri || !state || !isSafeExtensionRedirectUri(redirectUri)) {
+  if (!parsed.success) {
+    redirect("/login?error=extension_invalid_redirect");
+  }
+
+  const clientId = parsed.data.client_id;
+  const redirectUri = parsed.data.redirect_uri;
+  const state = parsed.data.state;
+  if (
+    clientId !== readApprovedExtensionClientId() ||
+    !isSafeExtensionRedirectUri(redirectUri, "/auth", clientId)
+  ) {
     redirect("/login?error=extension_invalid_redirect");
   }
 
   const session = await getSession();
   if (!session) {
-    const next = `/extension/connect?redirect_uri=${encodeURIComponent(
-      redirectUri,
-    )}&state=${encodeURIComponent(state)}`;
+    const nextParams = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      state,
+      code_challenge: parsed.data.code_challenge,
+      code_challenge_method: parsed.data.code_challenge_method,
+    });
+    const next = `/extension/connect?${nextParams.toString()}`;
     redirect(`/login?next=${encodeURIComponent(next)}`);
   }
 
   const code = await createExtensionAuthCode({
     userId: session.userId,
+    clientId,
     redirectUri,
     state,
+    codeChallenge: parsed.data.code_challenge,
+    codeChallengeMethod: parsed.data.code_challenge_method,
   });
 
   const callback = new URL(redirectUri);

@@ -71,8 +71,14 @@ async function fetchManual(pathname, init = {}) {
 }
 
 async function main() {
-  const extensionNext =
-    "/extension/connect?redirect_uri=https%3A%2F%2Fsmoke.chromiumapp.org%2Fauth&state=smoke-state";
+  const stagingExtensionId = "ndkfphbchhfephdodcpehdcoclojagje";
+  const extensionNext = `/extension/connect?${new URLSearchParams({
+    client_id: stagingExtensionId,
+    redirect_uri: `https://${stagingExtensionId}.chromiumapp.org/auth`,
+    state: "s".repeat(43),
+    code_challenge: "c".repeat(43),
+    code_challenge_method: "S256",
+  })}`;
 
   const gate = await fetchManual("/");
   assertStatus(gate, 200, "GET / without cookie");

@@ -1,8 +1,8 @@
 # Pre-release Security And Reliability Readiness Design
 
 Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with
-interactive provider acceptance pending; Task 6 blocked on the exact approved
-extension ID set
+interactive provider acceptance pending; Task 6 source implementation complete
+locally, with staging acceptance pending
 
 Date: 2026-08-18
 
@@ -200,9 +200,15 @@ connection request. The server-issued one-time authorization code is bound to:
 - single-use state.
 
 Exchange requires the matching verifier and redirect URI, consumes the code
-atomically, and issues only extension-channel tokens. Production, staging, and
-local unpacked extension IDs are configured explicitly; broad wildcards are
-forbidden.
+atomically, and issues only extension-channel tokens. The repository controls
+stable public manifest keys for the local and staging unpacked channels, which
+derive the exact approved IDs `nkinhhgigcflmfhilmcakbkongcpkfnl` and
+`ndkfphbchhfephdodcpehdcoclojagje`. Only public key material is committed; no
+private key is created as a repository artifact. Each web deployment accepts one
+exact client ID through `ANIDACHI_EXTENSION_CLIENT_ID`, and only `/auth` and
+`/logout` on that client's `chromiumapp.org` origin are accepted. Production
+has no approved identity in this pre-release wave: its manifest has no key and
+its web connection remains fail-closed until a separate explicit cutover.
 
 ### 4. Browser OAuth Transaction Binding
 
@@ -412,7 +418,9 @@ accounts and staging evidence when compatibility is cheap and bounded.
 - Database changes are additive first.
 - Token/channel changes use a short documented compatibility window or force
   reauthentication in test environments; no permanent dual verifier remains.
-- Extension ID allowlists contain explicit staging and local development IDs.
+- Local and staging use separate repository-controlled public manifest keys and
+  exact IDs. Each web environment accepts only its matching ID; production has
+  no approved extension identity and fails closed until an explicit cutover.
 - Watch History response changes are versioned and update web/extension
   consumers in the same wave.
 - Blob credential migration uses a short two-phase cutover only when deployed

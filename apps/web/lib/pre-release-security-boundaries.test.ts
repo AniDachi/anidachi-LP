@@ -119,11 +119,11 @@ describe("pre-release security boundaries", () => {
     );
   });
 
-  it("keeps the plan and design aligned after the Task 5 staging gate", async () => {
+  it("keeps the plan and design aligned after the Task 6 binding amendment", async () => {
     const expectedStatus = [
       "Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with",
-      "interactive provider acceptance pending; Task 6 blocked on the exact approved",
-      "extension ID set",
+      "interactive provider acceptance pending; Task 6 source implementation complete",
+      "locally, with staging acceptance pending",
     ].join("\n");
     const [plan, design] = await Promise.all([
       readFile(

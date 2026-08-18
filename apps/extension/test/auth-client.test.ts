@@ -5,6 +5,8 @@ import {
   buildExtensionLogoutUrl,
   clearExtensionSessionIfCurrent,
   createAuthMessage,
+  createExtensionAuthTransaction,
+  deriveExtensionPkceChallenge,
   ExtensionAuthTemporarilyUnavailableError,
   fetchWebsiteSessionProbe,
   getFastSessionAndRefreshInBackground,
@@ -19,6 +21,14 @@ import {
   shouldClearExtensionSessionForWebsiteCookieChange,
   shouldSyncExtensionSessionForWebsiteCookieChange,
 } from "../src/auth-client";
+import {
+  LOCAL_EXTENSION_ID,
+  LOCAL_EXTENSION_MANIFEST_KEY,
+  STAGING_EXTENSION_ID,
+  STAGING_EXTENSION_MANIFEST_KEY,
+  deriveChromiumExtensionId,
+  getExtensionManifestKey,
+} from "../src/extension-channel-identity";
 import {
   AUTH_TOKENS_KEY,
   AUTH_TOKENS_STORAGE_KEY,
@@ -41,21 +51,69 @@ const storedTokens: ExtensionAuthTokens = {
 
 describe("extension auth client", () => {
   it("builds the website extension connect URL", () => {
-    const url = new URL(buildExtensionConnectUrl("https://abc.chromiumapp.org/auth", "state-1"));
+    const url = new URL(
+      buildExtensionConnectUrl({
+        clientId: STAGING_EXTENSION_ID,
+        redirectUri: `https://${STAGING_EXTENSION_ID}.chromiumapp.org/auth`,
+        state: "s".repeat(43),
+        codeChallenge: "c".repeat(43),
+        codeChallengeMethod: "S256",
+      }),
+    );
 
     expect(url.origin).toBe("http://localhost:3003");
     expect(url.pathname).toBe("/extension/connect");
-    expect(url.searchParams.get("redirect_uri")).toBe("https://abc.chromiumapp.org/auth");
-    expect(url.searchParams.get("state")).toBe("state-1");
+    expect(url.searchParams.get("client_id")).toBe(STAGING_EXTENSION_ID);
+    expect(url.searchParams.get("redirect_uri")).toBe(
+      `https://${STAGING_EXTENSION_ID}.chromiumapp.org/auth`,
+    );
+    expect(url.searchParams.get("state")).toBe("s".repeat(43));
+    expect(url.searchParams.get("code_challenge")).toBe("c".repeat(43));
+    expect(url.searchParams.get("code_challenge_method")).toBe("S256");
+  });
+
+  it("creates independent 256-bit state and S256 PKCE verifier material", async () => {
+    const first = await createExtensionAuthTransaction();
+    const second = await createExtensionAuthTransaction();
+
+    expect(Buffer.from(first.state, "base64url")).toHaveLength(32);
+    expect(Buffer.from(first.codeVerifier, "base64url")).toHaveLength(32);
+    expect(first.state).not.toBe(first.codeVerifier);
+    expect(first.state).not.toBe(second.state);
+    expect(first.codeVerifier).not.toBe(second.codeVerifier);
+    expect(first.codeChallenge).toBe(await deriveExtensionPkceChallenge(first.codeVerifier));
+    expect(first.codeChallengeMethod).toBe("S256");
+  });
+
+  it("derives stable local and staging IDs from committed public keys only", () => {
+    expect(deriveChromiumExtensionId(LOCAL_EXTENSION_MANIFEST_KEY)).toBe(
+      "nkinhhgigcflmfhilmcakbkongcpkfnl",
+    );
+    expect(deriveChromiumExtensionId(STAGING_EXTENSION_MANIFEST_KEY)).toBe(
+      "ndkfphbchhfephdodcpehdcoclojagje",
+    );
+    expect(LOCAL_EXTENSION_ID).not.toBe(STAGING_EXTENSION_ID);
+    expect(getExtensionManifestKey("local")).toBe(LOCAL_EXTENSION_MANIFEST_KEY);
+    expect(getExtensionManifestKey("staging")).toBe(STAGING_EXTENSION_MANIFEST_KEY);
+    expect(getExtensionManifestKey("production")).toBeUndefined();
   });
 
   it("builds the website extension logout URL", () => {
-    const url = new URL(buildExtensionLogoutUrl("https://abc.chromiumapp.org/logout", "state-2"));
+    const url = new URL(
+      buildExtensionLogoutUrl({
+        clientId: STAGING_EXTENSION_ID,
+        redirectUri: `https://${STAGING_EXTENSION_ID}.chromiumapp.org/logout`,
+        state: "s".repeat(43),
+      }),
+    );
 
     expect(url.origin).toBe("http://localhost:3003");
     expect(url.pathname).toBe("/extension/logout");
-    expect(url.searchParams.get("redirect_uri")).toBe("https://abc.chromiumapp.org/logout");
-    expect(url.searchParams.get("state")).toBe("state-2");
+    expect(url.searchParams.get("client_id")).toBe(STAGING_EXTENSION_ID);
+    expect(url.searchParams.get("redirect_uri")).toBe(
+      `https://${STAGING_EXTENSION_ID}.chromiumapp.org/logout`,
+    );
+    expect(url.searchParams.get("state")).toBe("s".repeat(43));
   });
 
   it("parses a valid extension redirect", () => {
@@ -63,6 +121,7 @@ describe("extension auth client", () => {
       parseExtensionAuthRedirect(
         "https://abc.chromiumapp.org/auth?code=code-1&state=state-1",
         "state-1",
+        "https://abc.chromiumapp.org/auth",
       ),
     ).toEqual({ code: "code-1", state: "state-1" });
   });
@@ -72,8 +131,40 @@ describe("extension auth client", () => {
       parseExtensionAuthRedirect(
         "https://abc.chromiumapp.org/auth?code=code-1&state=wrong",
         "state-1",
+        "https://abc.chromiumapp.org/auth",
       ),
     ).toThrow("Invalid extension auth state");
+  });
+
+  it("rejects a callback from the wrong client or path", () => {
+    expect(() =>
+      parseExtensionAuthRedirect(
+        "https://attacker.chromiumapp.org/auth?code=code-1&state=state-1",
+        "state-1",
+        "https://abc.chromiumapp.org/auth",
+      ),
+    ).toThrow("Invalid extension auth redirect");
+    expect(() =>
+      parseExtensionAuthRedirect(
+        "https://abc.chromiumapp.org/logout?code=code-1&state=state-1",
+        "state-1",
+        "https://abc.chromiumapp.org/auth",
+      ),
+    ).toThrow("Invalid extension auth redirect");
+    expect(() =>
+      parseExtensionAuthRedirect(
+        "https://abc.chromiumapp.org:443/auth?code=code-1&state=state-1",
+        "state-1",
+        "https://abc.chromiumapp.org/auth",
+      ),
+    ).toThrow("Invalid extension auth redirect");
+    expect(() =>
+      parseExtensionAuthRedirect(
+        "https://abc.chromiumapp.org/auth?code=code-1&state=state-1#fragment",
+        "state-1",
+        "https://abc.chromiumapp.org/auth",
+      ),
+    ).toThrow("Invalid extension auth redirect");
   });
 
   it("validates extension logout redirects", () => {
@@ -81,12 +172,14 @@ describe("extension auth client", () => {
       assertExtensionLogoutRedirect(
         "https://abc.chromiumapp.org/logout?signed_out=1&state=state-2",
         "state-2",
+        "https://abc.chromiumapp.org/logout",
       ),
     ).not.toThrow();
     expect(() =>
       assertExtensionLogoutRedirect(
         "https://abc.chromiumapp.org/logout?signed_out=1&state=wrong",
         "state-2",
+        "https://abc.chromiumapp.org/logout",
       ),
     ).toThrow("Invalid extension logout state");
   });

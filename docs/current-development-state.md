@@ -157,11 +157,14 @@ E2E, Vercel deployment, and staging smoke passed.
 
 Task 5 still has one attended acceptance gate: complete a real Google and
 Discord consent/callback within the initial ten-minute transaction window. Do
-not adjust that window without the measured result. Task 6 is blocked until the
-exact approved staging/public Chrome Web Store ID set exists; a local unpacked
-ID is insufficient and the broad `*.chromiumapp.org` callback must not return.
-Continue from current `staging` and keep the plan's stop gates; do not promote
-these security changes directly to `main`.
+not adjust that window without the measured result. Task 6 now has stable,
+repository-controlled unpacked local and staging identities, exact per-channel
+callback binding, S256 PKCE, atomic one-time exchange, and fail-closed
+production. The approved local ID is `nkinhhgigcflmfhilmcakbkongcpkfnl`; the
+approved staging ID is `ndkfphbchhfephdodcpehdcoclojagje`. This source work is
+locally verified but not deployed or accepted on staging. Continue from current
+`staging` and keep the plan's stop gates; do not promote these security changes
+directly to `main`.
 
 ## Subscription Plan Codes
 
@@ -325,23 +328,26 @@ branches.
 `local`:
 
 - Extension name: `Anidachi Local MVP`
+- Stable unpacked ID: `nkinhhgigcflmfhilmcakbkongcpkfnl`
 - Built for local development and broad site experiments
 - May use broad permissions locally
 
 `staging`:
 
 - Extension name: `Anidachi Staging`
-- Built for the Chrome Web Store tester item
+- Stable unpacked ID: `ndkfphbchhfephdodcpehdcoclojagje`
+- Built as a repository-controlled tester artifact; no store item is required
 - Uses staging web/API endpoints
-- Uses narrow store permissions for YouTube, Crunchyroll, Anidachi web, and
+- Uses narrow release permissions for YouTube, Crunchyroll, Anidachi web, and
   staging Worker hosts
 
 `production`:
 
 - Extension name: `Anidachi`
-- Built for the public Chrome Web Store item
+- Has no approved identity or manifest key in the current pre-release phase
+- Web connection therefore fails closed until an explicit production cutover
 - Uses production web/API endpoints
-- Uses narrow store permissions for YouTube, Crunchyroll, Anidachi web, and
+- Uses narrow release permissions for YouTube, Crunchyroll, Anidachi web, and
   production Worker hosts
 
 Build commands:
@@ -354,12 +360,12 @@ pnpm validate:extension:staging
 pnpm validate:extension:production
 ```
 
-The default staging build is store-safe and uses narrow permissions. The broad
+The default staging build is release-safe and uses narrow permissions. The broad
 staging build is an explicit local-only command for development experiments. The
-same source code produces both store builds. The channel-specific behavior is
+same source code produces every channel build. The channel-specific behavior is
 selected through build environment variables in the build scripts.
 
-## Last Recorded Staging Store Artifact
+## Last Recorded Legacy Staging Artifact
 
 The last staging artifact explicitly recorded in this document was generated
 from commit `50c80a0`:
@@ -375,9 +381,6 @@ Manifest checks:
 name: Anidachi Staging
 version_name: 50c80a0-staging-20260730171210
 ```
-
-The staging Chrome Web Store reviewer/tester access code is stored in the Chrome
-Web Store testing instructions, not in git.
 
 For new testing, prefer the latest `Build Extension` artifact from the
 `staging` branch unless a PR records a more specific artifact.
