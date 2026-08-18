@@ -63,7 +63,7 @@ function sourceList() {
         size: Buffer.byteLength(SECRET_BODY),
         contentType: "application/json",
         etag: '"source"',
-        url: `https://public.invalid/${PATHNAME}`,
+        url: `https://source.public.blob.vercel-storage.com/${PATHNAME}`,
       },
       {
         pathname: "openclaw/video/2026-08-18/public.mp4",
@@ -75,6 +75,14 @@ function sourceList() {
     ],
     hasMore: false,
     cursor: undefined,
+  };
+}
+
+function sourceHead() {
+  return {
+    pathname: PATHNAME,
+    url: `https://source.public.blob.vercel-storage.com/${PATHNAME}`,
+    etag: '"source"',
   };
 }
 
@@ -99,6 +107,7 @@ describe("private integration Blob migration", () => {
     let bodyCalls = 0;
     const logs: string[] = [];
     const sdk: PrivateIntegrationBlobMigrationSdk = {
+      head: async () => sourceHead(),
       list: async (options) =>
         "token" in options && options.token === "source-token"
           ? sourceList()
@@ -137,6 +146,7 @@ describe("private integration Blob migration", () => {
     let destinationBody: string | null = null;
     const calls: Array<{ operation: string; options: unknown }> = [];
     const sdk: PrivateIntegrationBlobMigrationSdk = {
+      head: async () => sourceHead(),
       list: async (options) =>
         "token" in options && options.token === "source-token"
           ? sourceList()
@@ -144,7 +154,7 @@ describe("private integration Blob migration", () => {
       get: async (pathname, options) => {
         calls.push({ operation: "get", options });
         if ("access" in options && options.access === "public") {
-          return streamingReadResult(pathname, SECRET_BODY);
+          return streamingReadResult(PATHNAME, SECRET_BODY);
         }
         return destinationBody === null
           ? missingResult(pathname)
@@ -210,6 +220,7 @@ describe("private integration Blob migration", () => {
     let destinationMissWasRead = false;
     let destinationListCalls = 0;
     const sdk: PrivateIntegrationBlobMigrationSdk = {
+      head: async () => sourceHead(),
       list: async (options) => {
         if ("token" in options && options.token === "source-token") {
           return sourceList();
@@ -219,7 +230,7 @@ describe("private integration Blob migration", () => {
       },
       get: async (pathname, options) => {
         if ("access" in options && options.access === "public") {
-          return readResult(pathname, SECRET_BODY);
+          return readResult(PATHNAME, SECRET_BODY);
         }
         if (destinationBody === null) {
           destinationMissWasRead = true;
@@ -256,13 +267,14 @@ describe("private integration Blob migration", () => {
   it("recovers when destination listing is stale after an exact deletion", async () => {
     let destinationBody: string | null = null;
     const sdk: PrivateIntegrationBlobMigrationSdk = {
+      head: async () => sourceHead(),
       list: async (options) =>
         "token" in options && options.token === "source-token"
           ? sourceList()
           : destinationList(SECRET_BODY),
       get: async (pathname, options) => {
         if ("access" in options && options.access === "public") {
-          return readResult(pathname, SECRET_BODY);
+          return readResult(PATHNAME, SECRET_BODY);
         }
         return destinationBody === null
           ? missingResult(pathname)
@@ -294,13 +306,14 @@ describe("private integration Blob migration", () => {
   it("stops before writing when the source ETag changed after listing", async () => {
     let puts = 0;
     const sdk: PrivateIntegrationBlobMigrationSdk = {
+      head: async () => sourceHead(),
       list: async (options) =>
         "token" in options && options.token === "source-token"
           ? sourceList()
           : { blobs: [], hasMore: false, cursor: undefined },
       get: async (pathname, options) => {
         if ("access" in options && options.access === "public") {
-          const result = readResult(pathname, SECRET_BODY);
+          const result = readResult(PATHNAME, SECRET_BODY);
           return { ...result, blob: { ...result.blob, etag: '"changed"' } };
         }
         return missingResult(pathname);
@@ -328,13 +341,14 @@ describe("private integration Blob migration", () => {
     for (const destination of [SECRET_BODY, '{"newer":"destination"}']) {
       let puts = 0;
       const sdk: PrivateIntegrationBlobMigrationSdk = {
+        head: async () => sourceHead(),
         list: async (options) =>
           "token" in options && options.token === "source-token"
             ? sourceList()
             : destinationList(destination),
         get: async (pathname, options) =>
           "access" in options && options.access === "public"
-            ? readResult(pathname, SECRET_BODY)
+            ? readResult(PATHNAME, SECRET_BODY)
             : readResult(pathname, destination),
         put: async () => {
           puts += 1;
@@ -354,5 +368,46 @@ describe("private integration Blob migration", () => {
       assert.equal(result.verified, destination === SECRET_BODY ? 1 : 0);
       assert.equal(result.conflicts, destination === SECRET_BODY ? 0 : 1);
     }
+  });
+
+  it("reads the source through a control-plane ETag-versioned public URL", async () => {
+    let sourceTarget: string | null = null;
+    const sdk: PrivateIntegrationBlobMigrationSdk = {
+      head: async () => sourceHead(),
+      list: async (options) =>
+        "token" in options && options.token === "source-token"
+          ? sourceList()
+          : destinationList(SECRET_BODY),
+      get: async (pathname, options) => {
+        if ("access" in options && options.access === "public") {
+          sourceTarget = pathname;
+          return readResult(PATHNAME, SECRET_BODY);
+        }
+        return readResult(pathname, SECRET_BODY);
+      },
+      put: async () => {
+        throw new Error("matching destination must not be rewritten");
+      },
+    };
+
+    const result = await runPrivateIntegrationBlobMigration({
+      mode: "apply",
+      sourceAuth: { token: "source-token" },
+      privateAuth: { token: "private-token" },
+      sdk,
+      log: () => undefined,
+    });
+
+    assert.deepEqual(result, {
+      discovered: 1,
+      copied: 0,
+      verified: 1,
+      conflicts: 0,
+    });
+    if (!sourceTarget) assert.fail("source read target was not captured");
+    const sourceUrl = new URL(sourceTarget);
+    assert.equal(sourceUrl.hostname, "source.public.blob.vercel-storage.com");
+    assert.equal(sourceUrl.pathname, `/${PATHNAME}`);
+    assert.equal(sourceUrl.searchParams.get("v"), "source");
   });
 });
