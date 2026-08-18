@@ -337,6 +337,46 @@ describe("private integration Blob migration", () => {
     assert.equal(puts, 0);
   });
 
+  it("rechecks one transient phase-A dual-write mismatch before reporting conflict", async () => {
+    let privateReads = 0;
+    const sdk: PrivateIntegrationBlobMigrationSdk = {
+      head: async () => sourceHead(),
+      list: async (options) =>
+        "token" in options && options.token === "source-token"
+          ? sourceList()
+          : destinationList('{"older":true}'),
+      get: async (pathname, options) => {
+        if ("access" in options && options.access === "public") {
+          return readResult(PATHNAME, SECRET_BODY);
+        }
+        privateReads += 1;
+        return readResult(
+          pathname,
+          privateReads === 1 ? '{"older":true}' : SECRET_BODY,
+        );
+      },
+      put: async () => {
+        throw new Error("an existing destination must not be rewritten");
+      },
+    };
+
+    const result = await runPrivateIntegrationBlobMigration({
+      mode: "apply",
+      sourceAuth: { token: "source-token" },
+      privateAuth: { token: "private-token" },
+      sdk,
+      log: () => undefined,
+    });
+
+    assert.equal(privateReads, 2);
+    assert.deepEqual(result, {
+      discovered: 1,
+      copied: 0,
+      verified: 1,
+      conflicts: 0,
+    });
+  });
+
   it("is resumable and refuses to overwrite a different destination", async () => {
     for (const destination of [SECRET_BODY, '{"newer":"destination"}']) {
       let puts = 0;

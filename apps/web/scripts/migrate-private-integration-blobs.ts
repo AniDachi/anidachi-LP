@@ -85,6 +85,7 @@ type MigrationLogEntry = {
 };
 
 type Digest = { bytes: number; sha256: string };
+const EXISTING_DESTINATION_READ_ATTEMPTS = 2;
 
 async function digestStream(
   stream: ReadableStream<Uint8Array>,
@@ -201,6 +202,69 @@ function sourceReadTarget(params: {
   return { url: url.toString(), etag };
 }
 
+async function readFreshSource(
+  sdk: PrivateIntegrationBlobMigrationSdk,
+  sourceAuth: BlobAuth,
+  pathname: string,
+): Promise<NonNullable<BlobReadResult> & {
+  stream: ReadableStream<Uint8Array>;
+}> {
+  const freshSource = sourceReadTarget({
+    pathname,
+    metadata: await sdk.head(pathname, sourceAuth),
+  });
+  const source = await sdk.get(freshSource.url, {
+    access: "public",
+    ...sourceAuth,
+  });
+  assertReadableResult(source, pathname, "source");
+  if (normalizedEtag(source.blob.etag) !== freshSource.etag) {
+    await source.stream.cancel().catch(() => undefined);
+    throw new Error(`Source changed during migration for ${pathname}`);
+  }
+  return source;
+}
+
+async function destinationMatchesFreshSource(params: {
+  sdk: PrivateIntegrationBlobMigrationSdk;
+  sourceAuth: BlobAuth;
+  privateAuth: BlobAuth;
+  pathname: string;
+  initialDestination: BlobReadResult;
+}): Promise<boolean> {
+  let destination = params.initialDestination;
+  for (
+    let attempt = 0;
+    attempt < EXISTING_DESTINATION_READ_ATTEMPTS;
+    attempt += 1
+  ) {
+    const source = await readFreshSource(
+      params.sdk,
+      params.sourceAuth,
+      params.pathname,
+    );
+    assertReadableResult(destination, params.pathname, "destination");
+    const [sourceDigest, destinationDigest] = await Promise.all([
+      digestStream(source.stream),
+      digestStream(destination.stream),
+    ]);
+    if (
+      sourceDigest.bytes === destinationDigest.bytes &&
+      sourceDigest.sha256 === destinationDigest.sha256
+    ) {
+      return true;
+    }
+    if (attempt + 1 < EXISTING_DESTINATION_READ_ATTEMPTS) {
+      destination = await params.sdk.get(params.pathname, {
+        access: "private",
+        useCache: false,
+        ...params.privateAuth,
+      });
+    }
+  }
+  return false;
+}
+
 export async function runPrivateIntegrationBlobMigration(input: {
   mode: "dry-run" | "apply";
   sourceAuth: BlobAuth;
@@ -232,38 +296,25 @@ export async function runPrivateIntegrationBlobMigration(input: {
       input.privateAuth,
       row.pathname,
     );
-    const freshSource = sourceReadTarget({
-      pathname: row.pathname,
-      metadata: await sdk.head(row.pathname, input.sourceAuth),
-    });
-    const [source, existingDestination] = await Promise.all([
-      sdk.get(freshSource.url, { access: "public", ...input.sourceAuth }),
-      destinationExists
-        ? sdk.get(row.pathname, {
-            access: "private",
-            useCache: false,
-            ...input.privateAuth,
-          })
-        : Promise.resolve(null),
-    ]);
-    assertReadableResult(source, row.pathname, "source");
-    const fetchedEtag = normalizedEtag(source.blob.etag);
-    if (fetchedEtag !== freshSource.etag) {
-      await source.stream.cancel().catch(() => undefined);
-      throw new Error(`Source changed during migration for ${row.pathname}`);
-    }
+    const existingDestination = destinationExists
+      ? await sdk.get(row.pathname, {
+          access: "private",
+          useCache: false,
+          ...input.privateAuth,
+        })
+      : null;
 
     const destinationMissing =
       !destinationExists || existingDestination?.statusCode === 404;
     if (!destinationMissing) {
-      assertReadableResult(existingDestination, row.pathname, "destination");
-      const [sourceDigest, destinationDigest] = await Promise.all([
-        digestStream(source.stream),
-        digestStream(existingDestination.stream),
-      ]);
       if (
-        sourceDigest.bytes === destinationDigest.bytes &&
-        sourceDigest.sha256 === destinationDigest.sha256
+        await destinationMatchesFreshSource({
+          sdk,
+          sourceAuth: input.sourceAuth,
+          privateAuth: input.privateAuth,
+          pathname: row.pathname,
+          initialDestination: existingDestination,
+        })
       ) {
         result.verified += 1;
         log({ pathname: row.pathname, size: row.size, status: "verified" });
@@ -274,6 +325,7 @@ export async function runPrivateIntegrationBlobMigration(input: {
       continue;
     }
 
+    const source = await readFreshSource(sdk, input.sourceAuth, row.pathname);
     const [uploadStream, digestInput] = source.stream.tee();
     const [sourceDigest, written] = await Promise.all([
       digestStream(digestInput),
