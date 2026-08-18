@@ -6,7 +6,7 @@
 > and `superpowers:requesting-code-review` at every wave stop. Do not skip the
 > drift gates or continue after a failed stop condition.
 
-Status: Reviewed implementation plan; awaiting implementation approval
+Status: Wave 1 security boundaries implemented; staging validation and phase-B private-only cutover pending
 
 Date: 2026-08-18
 

@@ -1,6 +1,6 @@
 # Pre-release Security And Reliability Readiness Design
 
-Status: Approved design; implementation plan reviewed; implementation not started
+Status: Wave 1 security boundaries implemented; staging validation and phase-B private-only cutover pending
 
 Date: 2026-08-18
 
