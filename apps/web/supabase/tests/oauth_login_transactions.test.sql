@@ -76,8 +76,15 @@ select ok(
     from pg_catalog.pg_proc as procedure
     where procedure.oid =
       'public.consume_oauth_login_transaction_v1(text,text,text)'::regprocedure
+  )
+  and (
+    select not procedure.prosecdef
+      and procedure.proconfig @> array['search_path=""']::text[]
+    from pg_catalog.pg_proc as procedure
+    where procedure.oid =
+      'public.create_oauth_login_transaction_v1(text,text,text,text)'::regprocedure
   ),
-  'the atomic consume RPC is security invoker with an empty search_path'
+  'both OAuth transaction RPCs are security invoker with an empty search_path'
 );
 
 select is(

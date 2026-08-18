@@ -17,6 +17,7 @@ import {
 } from "./oauth-transaction";
 
 const originalFetch = globalThis.fetch;
+const originalConsoleError = console.error;
 const originalEnv = {
   ANIDACHI_GOOGLE_CLIENT_ID: process.env.ANIDACHI_GOOGLE_CLIENT_ID,
   ANIDACHI_GOOGLE_CLIENT_SECRET: process.env.ANIDACHI_GOOGLE_CLIENT_SECRET,
@@ -26,6 +27,7 @@ const originalEnv = {
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  console.error = originalConsoleError;
   for (const [key, value] of Object.entries(originalEnv)) {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
@@ -81,6 +83,24 @@ describe("browser OAuth routes", () => {
     assert.match(googleSetCookie, /Max-Age=600/i);
   });
 
+  it("keeps OAuth start failures generic for unauthenticated callers", async () => {
+    console.error = () => {};
+    const response = await handleGoogleOAuthStart(
+      new NextRequest("https://staging.anidachi.app/api/auth/google"),
+      {
+        createTransaction: async () => {
+          throw new Error("internal postgres detail");
+        },
+      },
+    );
+
+    assert.equal(
+      response.headers.get("location"),
+      "https://staging.anidachi.app/login?error=oauth_failed",
+    );
+    assert.ok(!(await response.text()).includes("internal postgres detail"));
+  });
+
   it("consumes the exact transaction before exchange and clears only its cookie", async () => {
     const state = secret(7);
     const correlationSecret = secret(8);
@@ -133,7 +153,13 @@ describe("browser OAuth routes", () => {
     let exchanges = 0;
     const exchangeFn = async () => {
       exchanges += 1;
-      return profile("never");
+      return profile("google-user");
+    };
+    let used = false;
+    const consumeTransaction = async (input: { provider: "discord" | "google" }) => {
+      if (used || input.provider !== "google") return null;
+      used = true;
+      return { returnTo: "/account", codeVerifier: "V".repeat(43) };
     };
 
     const swapped = await handleOAuthCallback({
@@ -141,19 +167,33 @@ describe("browser OAuth routes", () => {
       request: callbackRequest("discord", state, correlationSecret, "code-2"),
       exchangeFn,
       dependencies: {
-        consumeTransaction: async () => null,
+        consumeTransaction,
       },
     });
-    const replayed = await handleOAuthCallback({
+    await handleOAuthCallback({
       provider: "google",
       request: callbackRequest("google", state, correlationSecret, "code-3"),
       exchangeFn,
       dependencies: {
-        consumeTransaction: async () => null,
+        consumeTransaction,
+        upsertUser: async () => ({ id: "user-1" }) as never,
+        issueTokenPair: async () => ({
+          accessToken: "access",
+          refreshToken: "refresh",
+        }),
+        setAuthCookies: () => {},
+      },
+    });
+    const replayed = await handleOAuthCallback({
+      provider: "google",
+      request: callbackRequest("google", state, correlationSecret, "code-4"),
+      exchangeFn,
+      dependencies: {
+        consumeTransaction,
       },
     });
 
-    assert.equal(exchanges, 0);
+    assert.equal(exchanges, 1);
     assert.equal(
       swapped.headers.get("location"),
       "https://staging.anidachi.app/login?error=invalid_state",

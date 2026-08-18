@@ -45,6 +45,10 @@ describe("browser OAuth login transactions", () => {
     assert.notEqual(first.state, second.state);
     assert.notEqual(first.correlationSecret, second.correlationSecret);
     assert.notEqual(first.correlationCookieName, second.correlationCookieName);
+    assert.notEqual(
+      deriveOAuthPkceVerifier(first.state),
+      deriveOAuthPkceVerifier(second.state),
+    );
     assert.equal(first.codeChallengeMethod, "S256");
     assert.equal(OAUTH_LOGIN_TRANSACTION_TTL_SECONDS, 10 * 60);
   });
@@ -186,6 +190,16 @@ describe("browser OAuth login transactions", () => {
       null,
     );
     assert.equal(consumeCalls, 0);
+  });
+
+  it("fails closed when the server-only PKCE derivation secret is absent", () => {
+    delete process.env.ANIDACHI_JWT_SECRET;
+    const state = Buffer.alloc(32, 15).toString("base64url");
+
+    assert.throws(
+      () => deriveOAuthPkceVerifier(state),
+      /ANIDACHI_JWT_SECRET is not set/,
+    );
   });
 
   it("uses a transaction-scoped non-secret cookie selector and provider path", async () => {

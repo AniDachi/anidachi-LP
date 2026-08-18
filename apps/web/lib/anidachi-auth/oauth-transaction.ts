@@ -42,7 +42,12 @@ const defaultRepository: OAuthLoginTransactionRepository = {
       p_return_to: input.returnTo,
     });
     if (error) {
-      throw new Error(`Failed to create OAuth login transaction: ${error.message}`);
+      console.error("[anidachi/auth] OAuth transaction create failed", {
+        provider: input.provider,
+        code: error.code,
+        message: error.message,
+      });
+      throw new Error("Failed to create OAuth login transaction");
     }
   },
   async consume(input) {
@@ -52,7 +57,12 @@ const defaultRepository: OAuthLoginTransactionRepository = {
       p_provider: input.provider,
     });
     if (error) {
-      throw new Error(`Failed to consume OAuth login transaction: ${error.message}`);
+      console.error("[anidachi/auth] OAuth transaction consume failed", {
+        provider: input.provider,
+        code: error.code,
+        message: error.message,
+      });
+      throw new Error("Failed to consume OAuth login transaction");
     }
     return typeof data === "string" ? { returnTo: data } : null;
   },
@@ -106,6 +116,7 @@ export async function consumeOAuthLoginTransaction(params: {
   if (!consumed) return null;
 
   return {
+    // Revalidate the durable boundary even when a custom repository is injected.
     returnTo: sanitizeAuthReturnTo(consumed.returnTo),
     codeVerifier: deriveOAuthPkceVerifier(params.state),
   };

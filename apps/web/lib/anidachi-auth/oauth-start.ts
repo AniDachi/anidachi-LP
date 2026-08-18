@@ -61,9 +61,12 @@ async function handleOAuthStart(
     );
     return response;
   } catch (error) {
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 },
+    console.error("[anidachi/auth] OAuth start failed", {
+      provider,
+      error,
+    });
+    return NextResponse.redirect(
+      `${request.nextUrl.origin}/login?error=oauth_failed`,
     );
   }
 }
