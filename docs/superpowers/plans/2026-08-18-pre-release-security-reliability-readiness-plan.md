@@ -6,7 +6,9 @@
 > and `superpowers:requesting-code-review` at every wave stop. Do not skip the
 > drift gates or continue after a failed stop condition.
 
-Status: Wave 1 complete on staging; Wave 2 not started
+Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with
+interactive provider acceptance pending; Task 6 blocked on the exact approved
+extension ID set
 
 Date: 2026-08-18
 
@@ -642,6 +644,22 @@ git add apps/web/lib/anidachi-auth/oauth-transaction.ts \
   apps/web/supabase/tests/oauth_login_transactions.test.sql
 git commit -m "fix(auth): bind browser OAuth transactions"
 ```
+
+Outcome on 2026-08-18: **SOURCE, DATABASE, AND AUTOMATED STAGING GATES PASSED;
+INTERACTIVE PROVIDER ACCEPTANCE PENDING.** PR `#197` merged to `staging` as
+`d330be47cb23ee58eeba3e0db18ec1f2f2e86e21`. Migration
+`20260818131602_oauth_login_transactions.sql` is applied and the linked dry run
+is empty. Local web tests, pgTAP, typecheck, independent review, CodeRabbit,
+GitHub CI, migration deployment, rooms/P2P E2E, Vercel deployment, and staging
+smoke are green. The deployed flow uses random one-time state, independent
+browser correlation, S256 PKCE, provider binding, atomic consumption, exact
+cookie cleanup, and generic public failures.
+
+Do not yet call the ten-minute interaction window accepted: completing a real
+Google and Discord consent/callback on staging remains an attended manual gate.
+Task 6 remains `EXTENSION_ID_SET_BLOCKED`; a local unpacked extension ID is not
+a substitute for the exact staging/public Chrome Web Store ID set, and the
+wildcard callback must not be restored.
 
 ## Task 6: Bind Extension Connection To Approved IDs And PKCE
 

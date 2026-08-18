@@ -144,8 +144,24 @@ aliases, CI, deployment smoke, noindex/no-store behavior, the bounded private
 snapshot manifest, and the affected TikTok test-account health checks passed.
 An unrelated internal YouTube publishing test credential requires manual
 reconnection later; it does not affect product auth, rooms, Watch History, or
-the extension. Continue with Wave 2 only from current `staging` and keep the
-plan's stop gates; do not promote these security changes directly to `main`.
+the extension.
+
+Wave 2 Task 5 is deployed on `staging` at merge
+`d330be47cb23ee58eeba3e0db18ec1f2f2e86e21` (PR `#197`). Browser Google and
+Discord login now use random one-time state, an independent browser-correlation
+secret, S256 PKCE, provider-bound atomic consumption, and transaction-scoped
+cookie cleanup. Migration `20260818131602_oauth_login_transactions.sql` is
+applied; the linked migration dry run is empty. Local web/pgTAP gates,
+independent and CodeRabbit review, GitHub CI, migration deployment, rooms/P2P
+E2E, Vercel deployment, and staging smoke passed.
+
+Task 5 still has one attended acceptance gate: complete a real Google and
+Discord consent/callback within the initial ten-minute transaction window. Do
+not adjust that window without the measured result. Task 6 is blocked until the
+exact approved staging/public Chrome Web Store ID set exists; a local unpacked
+ID is insufficient and the broad `*.chromiumapp.org` callback must not return.
+Continue from current `staging` and keep the plan's stop gates; do not promote
+these security changes directly to `main`.
 
 ## Subscription Plan Codes
 
