@@ -7,6 +7,11 @@ import {
   isSafeExtensionRedirectUri,
   readApprovedExtensionClientId,
 } from "@/lib/anidachi-auth/extension-codes";
+import {
+  createExtensionAuthLoginRedirect,
+  extensionAuthLoginRedirectForEnvelope,
+  openExtensionAuthHandoff,
+} from "@/lib/anidachi-auth/extension-auth-handoff";
 import { getSession } from "@/lib/anidachi-auth/session";
 import { isMobileUserAgent } from "@/lib/mobile-user-agent";
 import { ExtensionConnectMobileConfirm } from "./extension-connect-mobile-confirm";
@@ -23,15 +28,26 @@ type Props = {
 
 export default async function ExtensionConnectPage({ searchParams }: Props) {
   const params = await searchParams;
-  const parsed = ExtensionAuthInitiationQuerySchema.safeParse(params);
+  const direct = ExtensionAuthInitiationQuerySchema.safeParse(params);
+  const handoffEnvelope =
+    !direct.success &&
+    Object.keys(params).length === 1 &&
+    typeof params.handoff === "string"
+      ? params.handoff
+      : null;
+  const request = direct.success
+    ? direct.data
+    : handoffEnvelope
+      ? await openExtensionAuthHandoff(handoffEnvelope)
+      : null;
 
-  if (!parsed.success) {
+  if (!request) {
     redirect("/login?error=extension_invalid_redirect");
   }
 
-  const clientId = parsed.data.client_id;
-  const redirectUri = parsed.data.redirect_uri;
-  const state = parsed.data.state;
+  const clientId = request.client_id;
+  const redirectUri = request.redirect_uri;
+  const state = request.state;
   if (
     clientId !== readApprovedExtensionClientId() ||
     !isSafeExtensionRedirectUri(redirectUri, "/auth", clientId)
@@ -41,15 +57,15 @@ export default async function ExtensionConnectPage({ searchParams }: Props) {
 
   const session = await getSession();
   if (!session) {
-    const nextParams = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      state,
-      code_challenge: parsed.data.code_challenge,
-      code_challenge_method: parsed.data.code_challenge_method,
-    });
-    const next = `/extension/connect?${nextParams.toString()}`;
-    redirect(`/login?next=${encodeURIComponent(next)}`);
+    let loginRedirect: string;
+    try {
+      loginRedirect = handoffEnvelope
+        ? extensionAuthLoginRedirectForEnvelope(handoffEnvelope)
+        : await createExtensionAuthLoginRedirect(request);
+    } catch {
+      redirect("/login?error=extension_invalid_redirect");
+    }
+    redirect(loginRedirect);
   }
 
   const code = await createExtensionAuthCode({
@@ -57,8 +73,8 @@ export default async function ExtensionConnectPage({ searchParams }: Props) {
     clientId,
     redirectUri,
     state,
-    codeChallenge: parsed.data.code_challenge,
-    codeChallengeMethod: parsed.data.code_challenge_method,
+    codeChallenge: request.code_challenge,
+    codeChallengeMethod: request.code_challenge_method,
   });
 
   const callback = new URL(redirectUri);

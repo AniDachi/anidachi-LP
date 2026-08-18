@@ -684,6 +684,8 @@ wildcard callback must not be restored.
 - Modify: `apps/extension/test/auth-client.test.ts`
 - Modify: `apps/extension/wxt.config.ts`
 - Modify: `apps/web/app/extension/connect/page.tsx`
+- Create: `apps/web/lib/anidachi-auth/extension-auth-handoff.ts`
+- Create: `apps/web/lib/anidachi-auth/extension-auth-handoff.test.ts`
 - Modify: `apps/web/app/extension/logout/route.ts`
 - Modify: `apps/web/app/api/extension/auth/exchange/route.ts`
 - Modify: `apps/web/lib/anidachi-auth/extension-codes.ts`
@@ -711,12 +713,25 @@ environment and its `/auth` or `/logout` callback. Reject every other
 manifest key and remains fail-closed without an explicitly configured future
 production ID.
 
+The staging and public release scripts force their canonical channel,
+web/API/WS endpoints, and narrow permission profile. Broad staging is available
+only through the explicit local testing command. Artifact validation compares
+the exact host-permission and content-script match sets and rejects extras.
+
 **Step 3: Implement PKCE S256 end to end**
 
 The extension generates/verifies state locally, retains the verifier only for
 the active flow, and sends its exact `chrome.identity.getRedirectURL()` result.
 The server binds code hash, extension ID, redirect URI, challenge, user, expiry,
 and consumption. Exchange is atomic and single-use.
+
+If the validated connection request reaches the website without an authenticated
+session, the server encrypts it into a ten-minute browser-held JWE derived from
+`ANIDACHI_JWT_SECRET`, with fixed type, issuer, audience, purpose, issue time,
+not-before time, and expiry. Login and the durable browser OAuth transaction see
+only `/extension/connect?handoff=<opaque>`, never raw extension state, redirect,
+or challenge. Decryption and strict request validation run again after login;
+tampering, expiry, or claim confusion fails closed.
 
 **Migration and staging order:**
 

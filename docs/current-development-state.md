@@ -1,6 +1,6 @@
 # Current Development State
 
-Last updated: 2026-08-18.
+Last updated: 2026-08-19.
 
 This is the short operational source of truth for the current Anidachi setup.
 Historical plans in `docs/superpowers/plans/` are useful context, but they can
@@ -160,7 +160,11 @@ Discord consent/callback within the initial ten-minute transaction window. Do
 not adjust that window without the measured result. Task 6 now has stable,
 repository-controlled unpacked local and staging identities, exact per-channel
 callback binding, S256 PKCE, atomic one-time exchange, and fail-closed
-production. The approved local ID is `nkinhhgigcflmfhilmcakbkongcpkfnl`; the
+production. When extension connection needs website login, the validated
+request crosses browser OAuth only inside a ten-minute authenticated-encryption
+envelope derived from the existing server JWT secret; the durable OAuth row and
+browser-visible login return path contain only that opaque envelope. The
+approved local ID is `nkinhhgigcflmfhilmcakbkongcpkfnl`; the
 approved staging ID is `ndkfphbchhfephdodcpehdcoclojagje`. This source work is
 locally verified but not deployed or accepted on staging. Its rollout order is
 additive migration first, application second, then exact unpacked staging
@@ -168,6 +172,10 @@ acceptance. Legacy rows survive with null binding columns, but the new RPCs
 cannot consume them. If the new app must be rolled back after bound issuance,
 stop issuance and drain for more than five minutes (or remove only unconsumed
 bound rows) before restoring the old exchange, which cannot enforce PKCE.
+Staging/public release scripts force their canonical web/API/WS endpoints and
+narrow mode, and artifact validation rejects any extra host permission or
+content-script match. Broad staging remains a separate explicit local testing
+command.
 Continue from current `staging` and keep the plan's stop gates; do not promote
 these security changes directly to `main`.
 

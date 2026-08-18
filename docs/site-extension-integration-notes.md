@@ -197,17 +197,21 @@ Preferred Chrome extension login:
    verifier only for the active flow, and sends the S256 challenge.
 3. Extension uses `chrome.identity.launchWebAuthFlow` to open
    `/extension/connect` with its exact ID and `/auth` redirect URI.
-4. Website signs user in with Discord/Google if needed.
-5. Website creates a short-lived one-time code bound to the exact client ID,
+4. If website sign-in is needed, the server replaces the validated raw extension
+   request with a ten-minute authenticated-encryption envelope derived from the
+   existing server JWT secret. Browser OAuth persists and returns only the
+   opaque envelope; tampered, expired, or wrong-purpose envelopes fail closed.
+5. Website signs user in with Discord/Google if needed.
+6. Website creates a short-lived one-time code bound to the exact client ID,
    redirect URI, state, authenticated user, and PKCE challenge.
-6. Website redirects to the approved exact `chrome.identity.getRedirectURL("auth")`.
-7. Extension receives the final redirect URL.
-8. Extension validates the exact callback origin/path and state, then extracts
+7. Website redirects to the approved exact `chrome.identity.getRedirectURL("auth")`.
+8. Extension receives the final redirect URL.
+9. Extension validates the exact callback origin/path and state, then extracts
    the code.
-9. Extension calls `/api/extension/auth/exchange` with the matching verifier;
+10. Extension calls `/api/extension/auth/exchange` with the matching verifier;
    the server consumes the code atomically once.
-10. Website returns extension-specific access and refresh tokens.
-11. Extension stores tokens in `chrome.storage.local`.
+11. Website returns extension-specific access and refresh tokens.
+12. Extension stores tokens in `chrome.storage.local`.
 
 Required website additions:
 

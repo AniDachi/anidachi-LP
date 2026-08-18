@@ -30,6 +30,16 @@ const contentMatches = (manifest.content_scripts ?? []).flatMap(
 const permissions = manifest.permissions ?? [];
 const optionalPermissions = manifest.optional_permissions ?? [];
 
+const videoHosts = [
+  "https://youtube.com/*",
+  "https://*.youtube.com/*",
+  "https://youtu.be/*",
+  "https://*.youtu.be/*",
+  "https://*.youtube-nocookie.com/*",
+  "https://crunchyroll.com/*",
+  "https://*.crunchyroll.com/*",
+];
+
 function deriveChromiumExtensionId(manifestKey) {
   const digest = createHash("sha256")
     .update(Buffer.from(manifestKey, "base64"))
@@ -56,6 +66,12 @@ const expectedByChannel = {
     name: "Anidachi Staging",
     web: "https://staging.anidachi.app/*",
     api: "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
+    hostPermissions: [
+      ...videoHosts,
+      "https://staging.anidachi.app/*",
+      "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
+    ],
+    contentMatches: videoHosts,
     buildIdPart: "-staging-",
     extensionId: "ndkfphbchhfephdodcpehdcoclojagje",
   },
@@ -63,11 +79,28 @@ const expectedByChannel = {
     name: "Anidachi",
     web: "https://www.anidachi.app/*",
     api: "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
+    hostPermissions: [
+      ...videoHosts,
+      "https://www.anidachi.app/*",
+      "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
+    ],
+    contentMatches: videoHosts,
     buildIdPart: "-production-",
     extensionId: null,
   },
 };
 const expected = expectedByChannel[channel];
+
+assertExactAllowlist(
+  "host permission",
+  hostPermissions,
+  expected.hostPermissions,
+);
+assertExactAllowlist(
+  "content-script match",
+  contentMatches,
+  expected.contentMatches,
+);
 
 if (manifest.name !== expected.name) {
   throw new Error(`Expected manifest.name ${expected.name}, got ${manifest.name}`);
@@ -96,6 +129,21 @@ if (expected.extensionId) {
 for (const required of [expected.web, expected.api]) {
   if (!hostPermissions.includes(required)) {
     throw new Error(`Missing host permission: ${required}`);
+  }
+}
+
+function assertExactAllowlist(label, actualValues, expectedValues) {
+  const actual = new Set(actualValues);
+  const expectedSet = new Set(expectedValues);
+  for (const value of actual) {
+    if (!expectedSet.has(value)) {
+      throw new Error(`Unexpected ${label}: ${value}`);
+    }
+  }
+  for (const value of expectedSet) {
+    if (!actual.has(value)) {
+      throw new Error(`Missing ${label}: ${value}`);
+    }
   }
 }
 

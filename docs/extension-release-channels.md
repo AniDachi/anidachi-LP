@@ -22,6 +22,9 @@ The channel is selected with `WXT_EXTENSION_CHANNEL`.
 An explicitly configured value outside `local`, `staging`, or `production`
 fails the build. Release scripts force their named channel: caller environment
 cannot turn the staging script into production or the public script into local.
+Those scripts also force the channel's canonical web, API, and WebSocket
+endpoints and narrow-permission mode; inherited endpoint or broad-permission
+variables cannot alter a release artifact.
 
 Channel sources:
 
@@ -70,6 +73,11 @@ watch surfaces and Anidachi infrastructure:
 Do not ship `http://*/*`, `https://*/*`, or `file:///*` in release builds unless
 the product decision is explicit.
 
+`pnpm validate:extension:staging` and
+`pnpm validate:extension:production` compare the complete host-permission and
+content-script match sets without depending on order. Missing and extra values
+both fail validation.
+
 ## Build Commands
 
 Generate the stable staging unpacked artifact:
@@ -78,6 +86,15 @@ Generate the stable staging unpacked artifact:
 pnpm build:extension:staging
 pnpm validate:extension:staging
 ```
+
+For an explicit local testing artifact with broad page access, use only:
+
+```bash
+pnpm build:extension:staging:broad
+```
+
+That command passes the script's dedicated `--broad` mode. It is not a narrow
+staging release artifact and must not be promoted or uploaded.
 
 Outputs:
 

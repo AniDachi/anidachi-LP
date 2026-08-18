@@ -210,6 +210,22 @@ exact client ID through `ANIDACHI_EXTENSION_CLIENT_ID`, and only `/auth` and
 has no approved identity in this pre-release wave: its manifest has no key and
 its web connection remains fail-closed until a separate explicit cutover.
 
+An unauthenticated connection request is never copied raw into the browser OAuth
+return path. After exact client/redirect validation, the web server seals the
+request in a ten-minute AES-GCM JWE whose key is derived from the existing
+server-only JWT secret and whose type, issuer, audience, purpose, issue time,
+not-before time, and expiry are verified on resume. The OAuth transaction stores
+only the opaque `/extension/connect?handoff=...` path. Tampered, expired, or
+claim-confused envelopes are rejected, while authenticated direct connection
+and the post-auth mobile confirmation remain unchanged.
+
+Staging and public release scripts own their full runtime profile: channel,
+canonical web/API/WS endpoints, and narrow mode cannot be inherited from the
+caller. The existing broad staging test build is an explicit script argument,
+not an environment override. Narrow artifact validation requires the exact,
+order-independent host-permission and content-script match sets and rejects
+every extra value.
+
 ### 4. Browser OAuth Transaction Binding
 
 Google and Discord login initiation generates at least 128 random bits for a

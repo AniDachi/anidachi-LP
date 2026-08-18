@@ -7,13 +7,21 @@ ARTIFACTS_DIR="$ROOT_DIR/artifacts"
 SHORT_SHA="$(git -C "$ROOT_DIR" rev-parse --short HEAD 2>/dev/null || echo local)"
 PACKAGE_EXTENSION_VERSION="$(node -e "console.log(require('$ROOT_DIR/apps/extension/package.json').version)")"
 
+if [[ $# -gt 1 || ( $# -eq 1 && "$1" != "--broad" ) ]]; then
+  echo "Usage: $0 [--broad]" >&2
+  exit 2
+fi
+
 WXT_EXTENSION_CHANNEL=staging
 : "${WXT_EXTENSION_VERSION:=$PACKAGE_EXTENSION_VERSION}"
-: "${WXT_WEB_HTTP_BASE:=https://staging.anidachi.app}"
-: "${WXT_API_HTTP_BASE:=https://anidachi-api-staging.vladislav-gul7.workers.dev}"
-: "${WXT_API_WS_BASE:=wss://anidachi-api-staging.vladislav-gul7.workers.dev}"
+WXT_WEB_HTTP_BASE=https://staging.anidachi.app
+WXT_API_HTTP_BASE=https://anidachi-api-staging.vladislav-gul7.workers.dev
+WXT_API_WS_BASE=wss://anidachi-api-staging.vladislav-gul7.workers.dev
 : "${WXT_BUILD_ID:=${SHORT_SHA}-staging-$(date +%Y%m%d%H%M%S)}"
-: "${WXT_BROAD_HOST_PERMISSIONS:=false}"
+WXT_BROAD_HOST_PERMISSIONS=false
+if [[ "${1:-}" == "--broad" ]]; then
+  WXT_BROAD_HOST_PERMISSIONS=true
+fi
 
 export WXT_EXTENSION_CHANNEL
 export WXT_EXTENSION_VERSION

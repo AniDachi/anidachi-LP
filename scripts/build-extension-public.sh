@@ -8,9 +8,10 @@ PACKAGE_EXTENSION_VERSION="$(node -e "console.log(require('$ROOT_DIR/apps/extens
 
 WXT_EXTENSION_CHANNEL=production
 : "${WXT_EXTENSION_VERSION:=$PACKAGE_EXTENSION_VERSION}"
-: "${WXT_WEB_HTTP_BASE:=https://www.anidachi.app}"
-: "${WXT_API_HTTP_BASE:=https://anidachi-api-production.vladislav-gul7.workers.dev}"
-: "${WXT_API_WS_BASE:=wss://anidachi-api-production.vladislav-gul7.workers.dev}"
+WXT_WEB_HTTP_BASE=https://www.anidachi.app
+WXT_API_HTTP_BASE=https://anidachi-api-production.vladislav-gul7.workers.dev
+WXT_API_WS_BASE=wss://anidachi-api-production.vladislav-gul7.workers.dev
+WXT_BROAD_HOST_PERMISSIONS=false
 : "${WXT_BUILD_ID:=$(git rev-parse --short HEAD 2>/dev/null || echo local)-production-$(date +%Y%m%d%H%M%S)}"
 
 if [[ -z "${WXT_VAPID_PUBLIC_KEY:-}" ]]; then
@@ -23,6 +24,7 @@ export WXT_EXTENSION_VERSION
 export WXT_WEB_HTTP_BASE
 export WXT_API_HTTP_BASE
 export WXT_API_WS_BASE
+export WXT_BROAD_HOST_PERMISSIONS
 export WXT_BUILD_ID
 export WXT_VAPID_PUBLIC_KEY
 
