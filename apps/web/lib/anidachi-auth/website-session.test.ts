@@ -12,8 +12,9 @@ const user = {
 
 test("website session resolves from a valid refresh token without rotating it", async () => {
   const result = await resolveWebsiteSession("website-refresh", {
-    validateRefreshToken: async (token) => {
+    resolveRefreshToken: async (token, channel) => {
       assert.equal(token, "website-refresh");
+      assert.equal(channel, "website");
       return "user-1";
     },
     getUserProfile: async (userId) => {
@@ -27,8 +28,13 @@ test("website session resolves from a valid refresh token without rotating it", 
 
 test("website session rejects missing, expired, and orphaned refresh tokens", async () => {
   const dependencies = {
-    validateRefreshToken: async (token: string) =>
-      token === "expired" ? null : "missing-user",
+    resolveRefreshToken: async (
+      token: string,
+      channel: "website" | "extension",
+    ) => {
+      assert.equal(channel, "website");
+      return token === "expired" ? null : "missing-user";
+    },
     getUserProfile: async () => null,
   };
 

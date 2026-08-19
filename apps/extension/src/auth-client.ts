@@ -10,6 +10,7 @@ import {
   clearStoredAuthTokens,
   type ExtensionAuthTokens,
   getStoredAuthTokens,
+  isSameExtensionAuthSession,
   normalizeAuthenticatedUser,
   normalizeExtensionAuthTokens,
   setStoredAuthTokens,
@@ -82,6 +83,7 @@ export interface ExtensionSessionDependencies {
   resolveUser: (accessToken: string) => Promise<AuthenticatedUser | null>;
   setStored: (tokens: ExtensionAuthTokens) => Promise<void>;
   refresh: () => Promise<ExtensionAuthTokens | null>;
+  adoptSilently?: () => Promise<ExtensionAuthTokens | null>;
 }
 
 export interface WebsiteSessionReconciliationDependencies {
@@ -363,7 +365,7 @@ async function performExtensionSessionRefresh(
 
   const result = await dependencies.requestRefresh(stored.refreshToken);
   const current = await dependencies.getStored();
-  if (!current || current.refreshToken !== stored.refreshToken) {
+  if (!current || !isSameExtensionAuthSession(stored, current)) {
     recordDiagnosticEvent("auth.refresh", "discarded after stored session changed", {
       previousUserId: stored.user.id,
       currentUserId: current?.user.id,
@@ -403,7 +405,7 @@ async function performExtensionSessionRefresh(
     tokens.user = freshUser;
   }
   const latest = await dependencies.getStored();
-  if (!latest || latest.refreshToken !== stored.refreshToken) {
+  if (!latest || !isSameExtensionAuthSession(stored, latest)) {
     recordDiagnosticEvent("auth.refresh", "discarded after user resolution changed session", {
       previousUserId: stored.user.id,
       currentUserId: latest?.user.id,
@@ -635,6 +637,7 @@ const defaultSessionDependencies: ExtensionSessionDependencies = {
   resolveUser: fetchAuthenticatedUser,
   setStored: setStoredAuthTokens,
   refresh: refreshExtensionSession,
+  adoptSilently: signInWithWebsiteSilently,
 };
 
 export async function getCurrentExtensionSession(
@@ -646,7 +649,7 @@ export async function getCurrentExtensionSession(
   const user = await dependencies.resolveUser(stored.accessToken);
   if (user) {
     const current = await dependencies.getStored();
-    if (!current || current.refreshToken !== stored.refreshToken) {
+    if (!current || !isSameExtensionAuthSession(stored, current)) {
       return current;
     }
 
@@ -655,7 +658,9 @@ export async function getCurrentExtensionSession(
     return tokens;
   }
 
-  return dependencies.refresh();
+  const refreshed = await dependencies.refresh();
+  if (refreshed) return refreshed;
+  return dependencies.adoptSilently?.() ?? null;
 }
 
 const defaultWebsiteReconciliationDependencies: WebsiteSessionReconciliationDependencies = {

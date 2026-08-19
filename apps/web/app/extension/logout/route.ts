@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
   const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
   if (refreshToken) {
-    await revokeRefreshToken(refreshToken);
+    await revokeRefreshToken(refreshToken, "website");
   }
 
   const callback = new URL(redirectUri);

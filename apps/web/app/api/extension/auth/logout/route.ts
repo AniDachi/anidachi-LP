@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   } | null;
 
   if (body?.refreshToken) {
-    await revokeRefreshToken(body.refreshToken);
+    await revokeRefreshToken(body.refreshToken, "extension");
   }
 
   return NextResponse.json({ ok: true });

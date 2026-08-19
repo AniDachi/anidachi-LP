@@ -19,6 +19,17 @@ export interface ExtensionAuthTokens {
   user: AuthenticatedUser;
 }
 
+export function isSameExtensionAuthSession(
+  expected: ExtensionAuthTokens,
+  current: ExtensionAuthTokens | null,
+): boolean {
+  return Boolean(
+    current &&
+      current.refreshToken === expected.refreshToken &&
+      current.user.id === expected.user.id,
+  );
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }

@@ -17,6 +17,8 @@ import {
   reconcileExtensionSessionAgainstWebsite,
   refreshExtensionSession,
   runWebsiteSignOutSequence,
+  signInWithWebsite,
+  signInWithWebsiteSilently,
   shouldClearExtensionSessionForWebsiteProbe,
   shouldClearExtensionSessionForWebsiteCookieChange,
   shouldSyncExtensionSessionForWebsiteCookieChange,
@@ -33,6 +35,7 @@ import {
   AUTH_TOKENS_KEY,
   AUTH_TOKENS_STORAGE_KEY,
   type ExtensionAuthTokens,
+  isSameExtensionAuthSession,
   normalizeAuthenticatedUser,
   normalizeExtensionAuthTokens,
 } from "../src/auth-tokens";
@@ -384,6 +387,34 @@ describe("extension auth client", () => {
     expect(setStored).not.toHaveBeenCalled();
   });
 
+  it("uses both predecessor token and account for refresh compare-and-set", async () => {
+    const replacement = {
+      ...storedTokens,
+      user: { ...storedTokens.user, id: "user-2" },
+    };
+    let storedReadCount = 0;
+    const clearStored = vi.fn(async () => undefined);
+    const setStored = vi.fn(async () => undefined);
+
+    await expect(
+      refreshExtensionSession({
+        getStored: async () => {
+          storedReadCount += 1;
+          return storedReadCount === 1 ? storedTokens : replacement;
+        },
+        requestRefresh: async () => ({ kind: "invalid" }),
+        resolveUser: async () => storedTokens.user,
+        setStored,
+        clearStored,
+      }),
+    ).resolves.toBe(replacement);
+
+    expect(clearStored).not.toHaveBeenCalled();
+    expect(setStored).not.toHaveBeenCalled();
+    expect(isSameExtensionAuthSession(storedTokens, replacement)).toBe(false);
+    expect(isSameExtensionAuthSession(storedTokens, { ...storedTokens })).toBe(true);
+  });
+
   it("does not restore a session that was cleared during user validation", async () => {
     let storedReadCount = 0;
     const setStored = vi.fn(async () => undefined);
@@ -401,6 +432,96 @@ describe("extension auth client", () => {
     ).resolves.toBeNull();
 
     expect(setStored).not.toHaveBeenCalled();
+  });
+
+  it("tries one refresh and then silent website adoption for an invalid family", async () => {
+    const resolveUser = vi.fn(async () => null);
+    const refresh = vi.fn(async () => null);
+    const adoptSilently = vi.fn(async () => ({
+      ...storedTokens,
+      accessToken: "adopted-access",
+      refreshToken: "adopted-refresh",
+    }));
+
+    await expect(
+      getCurrentExtensionSession({
+        getStored: async () => storedTokens,
+        resolveUser,
+        setStored: vi.fn(async () => undefined),
+        refresh,
+        adoptSilently,
+      }),
+    ).resolves.toEqual({
+      ...storedTokens,
+      accessToken: "adopted-access",
+      refreshToken: "adopted-refresh",
+    });
+
+    expect(resolveUser).toHaveBeenCalledTimes(1);
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(adoptSilently).toHaveBeenCalledTimes(1);
+  });
+
+  it("performs one refresh and one session-resolution retry without a loop", async () => {
+    const resolveUser = vi
+      .fn<(accessToken: string) => Promise<typeof storedTokens.user | null>>()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(storedTokens.user);
+    const requestRefresh = vi.fn(async () => ({
+      kind: "success" as const,
+      accessToken: "access-2",
+      refreshToken: "refresh-2",
+    }));
+    const setStored = vi.fn(async () => undefined);
+
+    const result = await getCurrentExtensionSession({
+      getStored: async () => storedTokens,
+      resolveUser,
+      setStored,
+      refresh: () =>
+        refreshExtensionSession({
+          getStored: async () => storedTokens,
+          requestRefresh,
+          resolveUser,
+          setStored,
+          clearStored: vi.fn(async () => undefined),
+        }),
+      adoptSilently: vi.fn(async () => null),
+    });
+
+    expect(result).toEqual({
+      ...storedTokens,
+      accessToken: "access-2",
+      refreshToken: "refresh-2",
+    });
+    expect(resolveUser).toHaveBeenCalledTimes(2);
+    expect(requestRefresh).toHaveBeenCalledTimes(1);
+    expect(setStored).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps interactive browser auth exclusive to explicit sign-in", async () => {
+    const launchWebAuthFlow = vi.fn(async ({ interactive }: { interactive: boolean }) => {
+      expect(typeof interactive).toBe("boolean");
+      return undefined;
+    });
+    vi.stubGlobal("chrome", {
+      identity: {
+        getRedirectURL: () => `https://${STAGING_EXTENSION_ID}.chromiumapp.org/auth`,
+        launchWebAuthFlow,
+      },
+      runtime: { id: STAGING_EXTENSION_ID },
+    });
+
+    try {
+      await expect(signInWithWebsiteSilently()).resolves.toBeNull();
+      await expect(signInWithWebsite()).rejects.toThrow("cancelled");
+      expect(launchWebAuthFlow.mock.calls.map(([input]) => input.interactive)).toEqual([
+        false,
+        true,
+      ]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("does not clear a replacement session after an older request finishes", async () => {
