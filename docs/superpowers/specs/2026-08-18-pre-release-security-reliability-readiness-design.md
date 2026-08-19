@@ -1,8 +1,9 @@
 # Pre-release Security And Reliability Readiness Design
 
 Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with
-interactive provider acceptance pending; Task 6 source implementation complete
-locally, with staging acceptance pending
+interactive provider acceptance pending; Task 6 source and additive staging
+database prerequisite complete in PR `#199`, with web runtime and browser
+acceptance pending
 
 Date: 2026-08-18
 
