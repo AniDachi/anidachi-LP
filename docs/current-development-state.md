@@ -193,11 +193,10 @@ canonical web/API/WS endpoints and narrow mode, and artifact validation rejects
 any extra host permission or content-script match. Broad staging remains a
 separate explicit local testing command and output path.
 
-Task 7 is source-complete on feature branch
-`codex/security-wave2-task7-token-rotation` and has not reached staging. The
-additive migration `20260819133849_auth_channel_rotation.sql` creates
-service-role-only website/extension refresh families and hash-only consumed-token
-lineage; raw or encrypted refresh tokens are not stored. Access tokens require
+Task 7 reached staging through PR #201 and merge commit `13a30fa`. The additive
+migration `20260819133849_auth_channel_rotation.sql` is applied to staging and
+creates service-role-only website/extension refresh families and hash-only
+consumed-token lineage; raw or encrypted refresh tokens are not stored. Access tokens require
 exact scalar issuer/audience/type channel claims. Refresh rotation is atomic,
 uses a ten-second concurrency-reuse interval, expires after 90 consecutive days
 without refresh and after an immutable 365-day maximum, and revokes the active
@@ -205,10 +204,13 @@ family on any other known replay. The extension serializes sign-in, refresh
 persistence, and invalid-session clearing so an old response cannot overwrite a
 new account. Local database reset, 180 pgTAP assertions, web/extension suites and
 checks, staging artifact build/validation, independent task review, scoped fix
-re-reviews, and the final CodeRabbit review with zero findings passed. Staging
-migration, application deployment, and the required attended sign-out and
-reauthentication of both staging profiles remain pending; do not describe Task
-7 as deployed or accepted.
+re-reviews, and the final CodeRabbit review with zero findings passed. The
+migration-first staging deployment, post-merge CI, Rooms/P2P, extension build,
+Vercel status, and staging smoke passed. Both established test profiles completed
+the forced reauthentication; the user confirmed correct website/Popup accounts,
+single-profile extension logout isolation, and successful reconnect. Task 7 is
+staging-accepted. Task 8 bounded auth-artifact cleanup remains separate and is
+not implemented; Wave 2 is therefore not complete.
 
 Continue from current `staging` and keep the plan's stop gates; do not promote
 these security changes directly to `main`.
