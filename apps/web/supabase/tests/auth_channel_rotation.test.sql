@@ -266,6 +266,24 @@ select ok(
   'refresh-family RPCs are security invoker with an empty search_path'
 );
 
+select ok(
+  (
+    select procedure.provolatile = 's'
+      and pg_catalog.strpos(
+        pg_catalog.lower(pg_catalog.pg_get_functiondef(procedure.oid)),
+        'pg_catalog.now()'
+      ) > 0
+      and pg_catalog.strpos(
+        pg_catalog.lower(pg_catalog.pg_get_functiondef(procedure.oid)),
+        'clock_timestamp'
+      ) = 0
+    from pg_catalog.pg_proc as procedure
+    where procedure.oid =
+      'public.resolve_refresh_token_family_v1(text,text,timestamptz)'::regprocedure
+  ),
+  'stable family resolution uses a transaction-stable fallback clock'
+);
+
 select is(
   (
     select pg_catalog.string_agg(column_name, ',' order by ordinal_position)
@@ -286,6 +304,23 @@ select is(
   ),
   'token_hash,family_id,successor_token_hash,used_at',
   'lineage stores only used and successor hashes with family ownership'
+);
+
+select ok(
+  pg_catalog.to_regclass(
+    'public.refresh_token_lineage_successor_hash_idx'
+  ) is not null
+  and pg_catalog.strpos(
+    pg_catalog.lower(
+      pg_catalog.pg_get_indexdef(
+        pg_catalog.to_regclass(
+          'public.refresh_token_lineage_successor_hash_idx'
+        )
+      )
+    ),
+    'using btree (successor_token_hash)'
+  ) > 0,
+  'successor collision checks have a standalone btree index'
 );
 
 select is(

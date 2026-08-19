@@ -64,6 +64,9 @@ create index refresh_token_families_revoked_cleanup_idx
 create index refresh_token_lineage_family_idx
   on public.refresh_token_lineage (family_id, used_at, token_hash);
 
+create index refresh_token_lineage_successor_hash_idx
+  on public.refresh_token_lineage (successor_token_hash);
+
 alter table public.refresh_token_families enable row level security;
 alter table public.refresh_token_lineage enable row level security;
 
@@ -167,9 +170,9 @@ as $$
   where family.current_token_hash = p_token_hash
     and family.channel = p_channel
     and family.revoked_at is null
-    and coalesce(p_now, pg_catalog.clock_timestamp())
+    and coalesce(p_now, pg_catalog.now())
       < family.last_used_at + interval '90 days'
-    and coalesce(p_now, pg_catalog.clock_timestamp())
+    and coalesce(p_now, pg_catalog.now())
       < family.absolute_expires_at
   limit 1
 $$;

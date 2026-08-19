@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseRefreshTokenRotationResult } from "./db";
+import {
+  parseRefreshTokenResolutionResult,
+  parseRefreshTokenRotationResult,
+} from "./db";
 import { deriveRefreshTokenSuccessor } from "./tokens";
 
 async function withJwtSecret<T>(fn: () => Promise<T>): Promise<T> {
@@ -38,6 +41,28 @@ test("the same predecessor and channel always derive the same opaque successor",
   });
 });
 
+test("refresh resolution accepts only null or one canonical UUID", () => {
+  const userId = "70000000-0000-4000-8000-000000000002";
+
+  assert.equal(parseRefreshTokenResolutionResult(null), null);
+  assert.equal(parseRefreshTokenResolutionResult(userId), userId);
+
+  for (const result of [
+    undefined,
+    "",
+    "not-a-uuid",
+    [],
+    [userId],
+    {},
+    { user_id: userId },
+  ]) {
+    assert.throws(
+      () => parseRefreshTokenResolutionResult(result),
+      /Malformed refresh token resolution response/,
+    );
+  }
+});
+
 test("refresh rotation accepts exactly one coherent typed RPC row", () => {
   const familyId = "70000000-0000-4000-8000-000000000001";
   const userId = "70000000-0000-4000-8000-000000000002";
@@ -59,6 +84,12 @@ test("refresh rotation accepts exactly one coherent typed RPC row", () => {
       { rotation_outcome: "invalid", user_id: null, family_id: null },
     ]),
     { rotation_outcome: "invalid", user_id: null, family_id: null },
+  );
+  assert.deepEqual(
+    parseRefreshTokenRotationResult([
+      { rotation_outcome: "invalid", user_id: null, family_id: familyId },
+    ]),
+    { rotation_outcome: "invalid", user_id: null, family_id: familyId },
   );
   assert.deepEqual(
     parseRefreshTokenRotationResult([

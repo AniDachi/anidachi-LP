@@ -221,8 +221,24 @@ export type RefreshRotationRow = {
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 
+function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value);
+}
+
 function isNullableUuid(value: unknown): value is string | null {
-  return value === null || (typeof value === "string" && UUID_PATTERN.test(value));
+  return value === null || isUuid(value);
+}
+
+function isRefreshRotationOutcome(value: unknown): value is RefreshRotationOutcome {
+  return value === "rotated" || value === "reused" || value === "replayed" || value === "invalid";
+}
+
+export function parseRefreshTokenResolutionResult(value: unknown): string | null {
+  if (value === null) return null;
+  if (!isUuid(value)) {
+    throw new Error("Malformed refresh token resolution response");
+  }
+  return value;
 }
 
 export function parseRefreshTokenRotationResult(value: unknown): RefreshRotationRow {
@@ -244,7 +260,11 @@ export function parseRefreshTokenRotationResult(value: unknown): RefreshRotation
     string,
     unknown
   >;
-  if (!isNullableUuid(userId) || !isNullableUuid(familyId)) {
+  if (
+    !isRefreshRotationOutcome(outcome) ||
+    !isNullableUuid(userId) ||
+    !isNullableUuid(familyId)
+  ) {
     throw new Error("Malformed refresh token rotation response");
   }
 
@@ -286,7 +306,11 @@ export async function resolveRefreshTokenFamily(
     p_token_hash: hashToken(token),
     p_channel: channel,
   });
-  return databaseResultOrThrow("resolve refresh token family", result) as string | null;
+  const resolved = databaseResultOrThrow(
+    "resolve refresh token family",
+    result as { data: unknown; error: { message: string } | null },
+  );
+  return parseRefreshTokenResolutionResult(resolved);
 }
 
 export async function rotateRefreshTokenFamily(
