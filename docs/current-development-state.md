@@ -168,8 +168,19 @@ approved local ID is `nkinhhgigcflmfhilmcakbkongcpkfnl`; the
 approved staging ID is `ndkfphbchhfephdodcpehdcoclojagje`. This source work is
 locally verified in PR `#199`. Its additive migration is already applied on
 staging, the linked dry run is empty, and Vercel Preview branch `staging` has
-the exact staging client ID; the new web runtime and real browser flow are not
-yet merged or accepted. The rollout order remains additive migration first,
+the exact staging client ID. Task 6 is merged to `staging`; the exact merged
+narrow artifact has now been loaded in both established staging test profiles,
+and both profiles successfully authorized and loaded it. The remaining live
+PKCE/replay gate then ran once through the exact staging MV3 worker: wrong
+verifier -> 401 `invalid_grant`; the same still-usable code with its correct
+verifier -> 200; consumed-code replay -> 401 `invalid_grant`. The issued test
+refresh token was revoked through the supported extension logout endpoint (200),
+and an immediate refresh attempt was rejected (401 `Invalid refresh token`).
+All code/state/verifier/access/refresh values stayed in process memory and were
+cleared without being printed or persisted. This closes the Task 6 staging
+connection, verifier, replay, and issued-session-revocation evidence. The
+separate browser `/extension/logout` redirect callback was not resampled in that
+flow. The rollout order remains additive migration first,
 application second, then exact unpacked staging acceptance. Legacy rows survive
 with null binding columns, but the new RPCs cannot consume them. If the new app
 must be rolled back after bound issuance, stop issuance and drain for more than

@@ -758,12 +758,20 @@ Record browser evidence from that exact artifact after old web instances have
 drained:
 
 - successful `/extension/connect` authorization, `/auth` callback, and
-  `/api/extension/auth/exchange` completion for the approved staging ID;
-- successful `/extension/logout` flow and exact `/logout` callback;
+  `/api/extension/auth/exchange` completion for the approved staging ID
+  (**recorded on 2026-08-19 in both established staging test profiles; each
+  loaded the exact merged narrow artifact successfully**);
+- supported extension refresh-token logout/revocation (recorded on 2026-08-19:
+  logout -> 200 and immediate refresh -> 401 `Invalid refresh token`); the
+  browser `/extension/logout` redirect callback was not resampled in this flow;
 - rejection of a wrong client ID before issuance;
-- rejection of a wrong PKCE verifier at exchange;
+- rejection of a wrong PKCE verifier at exchange (recorded on 2026-08-19 from
+  the exact staging MV3 worker: 401 `invalid_grant`; the following correct
+  exchange succeeded, proving the wrong-verifier attempt did not consume the
+  bound code);
 - rejection of a tampered or expired authenticated handoff; and
-- rejection of authorization-code replay after one successful exchange.
+- rejection of authorization-code replay after one successful exchange
+  (recorded on 2026-08-19: 401 `invalid_grant`).
 
 This evidence is required before any future promotion to `main`. Task 6 itself
 still stops at reviewed `staging` acceptance and performs no production release.
