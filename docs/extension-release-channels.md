@@ -15,7 +15,7 @@ Anidachi uses three extension channels.
 | --- | --- | --- | --- | --- |
 | `local` | `Anidachi Local MVP` | Local development and broad site experiments | `http://localhost:3003` by default | `http://127.0.0.1:8787` / `ws://127.0.0.1:8787` by default |
 | `staging` | `Anidachi Staging` | Stable unpacked artifact for founders/testers | `https://staging.anidachi.app` | `https://anidachi-api-staging.vladislav-gul7.workers.dev` / `wss://anidachi-api-staging.vladislav-gul7.workers.dev` |
-| `production` | `Anidachi` | Future public user build; auth disabled | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
+| `production` | `Anidachi` | Future public user build; extension auth fail-closed | `https://www.anidachi.app` | `https://anidachi-api-production.vladislav-gul7.workers.dev` / `wss://anidachi-api-production.vladislav-gul7.workers.dev` |
 
 The channel is selected with `WXT_EXTENSION_CHANNEL`.
 
@@ -90,17 +90,24 @@ pnpm validate:extension:staging
 For an explicit local testing artifact with broad page access, use only:
 
 ```bash
-pnpm build:extension:staging:broad
+pnpm build:extension:staging:local-broad
 ```
 
 That command passes the script's dedicated `--broad` mode. It is not a narrow
-staging release artifact and must not be promoted or uploaded.
+staging release artifact, writes only to the separate local-broad paths below,
+and must not be promoted or uploaded.
 
 Outputs:
 
 - `anidachi-extension-staging/`
 - `anidachi-extension-staging.zip`
 - `artifacts/anidachi-extension-staging-<git-sha>.zip`
+
+Local-broad outputs:
+
+- `anidachi-extension-staging-local-broad/`
+- `anidachi-extension-staging-local-broad.zip`
+- `artifacts/anidachi-extension-staging-local-broad-<git-sha>.zip`
 
 Generate the production extension artifact:
 
@@ -142,7 +149,7 @@ pnpm check:extension:icons
 Use broad staging permissions only for local development experiments:
 
 ```bash
-pnpm build:extension:staging:broad
+pnpm build:extension:staging:local-broad
 ```
 
 Do not distribute the broad staging build as a tester or release artifact.

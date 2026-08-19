@@ -7,8 +7,9 @@
 > drift gates or continue after a failed stop condition.
 
 Status: Wave 1 complete on staging; Wave 2 Task 5 deployed to staging, with
-interactive provider acceptance pending; Task 6 source implementation complete
-locally, with staging acceptance pending
+interactive provider acceptance pending; Task 6 source and additive staging
+database prerequisite complete in PR `#199`, with web runtime and browser
+acceptance pending
 
 Date: 2026-08-18
 
@@ -745,6 +746,27 @@ tampering, expiry, or claim confusion fails closed.
 3. After old web instances have drained, test the exact staging unpacked ID and
    `/auth` and `/logout` callbacks, wrong-client/verifier cases, and replay before
    recording staging acceptance.
+
+Build and validate the exact narrow artifact used for that acceptance:
+
+```bash
+pnpm build:extension:staging
+pnpm validate:extension:staging
+```
+
+Record browser evidence from that exact artifact after old web instances have
+drained:
+
+- successful `/extension/connect` authorization, `/auth` callback, and
+  `/api/extension/auth/exchange` completion for the approved staging ID;
+- successful `/extension/logout` flow and exact `/logout` callback;
+- rejection of a wrong client ID before issuance;
+- rejection of a wrong PKCE verifier at exchange;
+- rejection of a tampered or expired authenticated handoff; and
+- rejection of authorization-code replay after one successful exchange.
+
+This evidence is required before any future promotion to `main`. Task 6 itself
+still stops at reviewed `staging` acceptance and performs no production release.
 
 Rollback is deliberately asymmetric. Before the app deployment, leaving the
 additive migration in place is safe for the old runtime. After the new app has

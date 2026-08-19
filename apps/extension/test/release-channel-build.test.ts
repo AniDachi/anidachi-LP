@@ -216,24 +216,48 @@ describe.sequential("extension release channel builds", () => {
   it("keeps broad staging available only through the explicit broad command", {
     timeout: BUILD_TEST_TIMEOUT_MS,
   }, () => {
-    const result = run("pnpm", ["build:extension:staging:broad"], {
+    const narrowManifestBefore = readFileSync(
+      `${repoRoot}/anidachi-extension-staging/manifest.json`,
+      "utf8",
+    );
+    const result = run("pnpm", ["build:extension:staging:local-broad"], {
       ...hostileEnvironment,
       WXT_BROAD_HOST_PERMISSIONS: "false",
     });
     expectSuccessfulBuild(result);
 
-    const manifest = manifestAt("anidachi-extension-staging/manifest.json");
+    expect(
+      readFileSync(
+        `${repoRoot}/anidachi-extension-staging/manifest.json`,
+        "utf8",
+      ),
+    ).toBe(narrowManifestBefore);
+
+    const manifest = manifestAt(
+      "anidachi-extension-staging-local-broad/manifest.json",
+    );
     expect(manifest.name).toBe("Anidachi Staging");
     expectExact(manifest.host_permissions, localHostPermissions);
     expectExact(contentMatches(manifest), [
       ...localHostPermissions,
       "https://*.crunchyroll.com/*",
     ]);
-    expectCanonicalRuntime("anidachi-extension-staging", {
+    expectCanonicalRuntime("anidachi-extension-staging-local-broad", {
       web: "https://staging.anidachi.app",
       api: "https://anidachi-api-staging.vladislav-gul7.workers.dev",
       ws: "wss://anidachi-api-staging.vladislav-gul7.workers.dev",
     });
+
+    const ignoreCheck = run(
+      "git",
+      [
+        "check-ignore",
+        "--quiet",
+        "anidachi-extension-staging-local-broad/manifest.json",
+      ],
+      {},
+    );
+    expect(ignoreCheck.status, ignoreCheck.stderr).toBe(0);
   });
 
   it("rejects an otherwise valid production artifact with an extra host", () => {

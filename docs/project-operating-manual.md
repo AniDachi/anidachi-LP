@@ -350,15 +350,15 @@ The same source code builds three extension channels.
 `staging`:
 
 - name: `Anidachi Staging`;
-- separate Chrome Web Store listing for founders/testers;
+- stable repository-controlled unpacked build for founders/testers;
 - points at staging web and staging Worker endpoints;
 - should use narrow host permissions;
-- testers get updates from the staging Chrome Web Store item after review.
+- testers reload the reviewed staging artifact when a tested build changes.
 
 `production`:
 
 - name: `Anidachi`;
-- public Chrome Web Store listing;
+- future public build; publication is a separate release decision;
 - points at production web and production Worker endpoints;
 - should use narrow host permissions.
 
@@ -367,19 +367,20 @@ Build commands:
 ```bash
 pnpm build:extension:staging
 pnpm validate:extension:staging
-pnpm build:extension:staging:broad
-pnpm build:extension:public
+pnpm build:extension:staging:local-broad
+WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
 
 Staging does not become production by changing users in place. The code is
-promoted. The extension listings stay separate. A tested commit from `staging` is
-merged/promoted to `main`, then the production extension is built and uploaded to
-the production Chrome Web Store listing.
+promoted. A tested commit from `staging` is merged/promoted to `main` only in a
+separate production-release workflow, after which the production extension may
+be built and distributed through the separately approved publication channel.
 
 `pnpm build:extension:staging` is the store-safe tester build and must use narrow
-permissions. `pnpm build:extension:staging:broad` is local-only for development
-experiments and must not be uploaded to Chrome Web Store.
+permissions. `pnpm build:extension:staging:local-broad` is local-only for
+development experiments, writes to a separate local-broad path, and must not be
+distributed as the staging candidate.
 
 ## Development Flow
 
@@ -438,9 +439,9 @@ For example, a website improvement starts from `staging`, moves into a feature
 branch, gets checked and reviewed through a PR, then lands in `staging` for
 testing. Only after it is accepted does the same code move to `main`.
 
-An extension feature follows the same path, but testers receive it through the
-separate `Anidachi Staging` Chrome Web Store listing before it is promoted to the
-public `Anidachi` listing.
+An extension feature follows the same path, but testers load the separate,
+reviewed `Anidachi Staging` unpacked artifact before any future production
+publication decision.
 
 ## Everyday Development Loop
 

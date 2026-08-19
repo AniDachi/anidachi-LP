@@ -166,16 +166,18 @@ envelope derived from the existing server JWT secret; the durable OAuth row and
 browser-visible login return path contain only that opaque envelope. The
 approved local ID is `nkinhhgigcflmfhilmcakbkongcpkfnl`; the
 approved staging ID is `ndkfphbchhfephdodcpehdcoclojagje`. This source work is
-locally verified but not deployed or accepted on staging. Its rollout order is
-additive migration first, application second, then exact unpacked staging
-acceptance. Legacy rows survive with null binding columns, but the new RPCs
-cannot consume them. If the new app must be rolled back after bound issuance,
-stop issuance and drain for more than five minutes (or remove only unconsumed
-bound rows) before restoring the old exchange, which cannot enforce PKCE.
-Staging/public release scripts force their canonical web/API/WS endpoints and
-narrow mode, and artifact validation rejects any extra host permission or
-content-script match. Broad staging remains a separate explicit local testing
-command.
+locally verified in PR `#199`. Its additive migration is already applied on
+staging, the linked dry run is empty, and Vercel Preview branch `staging` has
+the exact staging client ID; the new web runtime and real browser flow are not
+yet merged or accepted. The rollout order remains additive migration first,
+application second, then exact unpacked staging acceptance. Legacy rows survive
+with null binding columns, but the new RPCs cannot consume them. If the new app
+must be rolled back after bound issuance, stop issuance and drain for more than
+five minutes (or remove only unconsumed bound rows) before restoring the old
+exchange, which cannot enforce PKCE. Staging/public release scripts force their
+canonical web/API/WS endpoints and narrow mode, and artifact validation rejects
+any extra host permission or content-script match. Broad staging remains a
+separate explicit local testing command and output path.
 Continue from current `staging` and keep the plan's stop gates; do not promote
 these security changes directly to `main`.
 
@@ -367,16 +369,18 @@ Build commands:
 
 ```bash
 pnpm build:extension:staging
-pnpm build:extension:staging:broad
-pnpm build:extension:public
 pnpm validate:extension:staging
+pnpm build:extension:staging:local-broad
+WXT_VAPID_PUBLIC_KEY="<production-public-key>" pnpm build:extension:public
 pnpm validate:extension:production
 ```
 
 The default staging build is release-safe and uses narrow permissions. The broad
-staging build is an explicit local-only command for development experiments. The
-same source code produces every channel build. The channel-specific behavior is
-selected through build environment variables in the build scripts.
+staging build is an explicit local-only command for development experiments and
+writes to `anidachi-extension-staging-local-broad`, never to the narrow staging
+candidate. The same source code produces every channel build. The
+channel-specific behavior is selected through build environment variables in
+the build scripts.
 
 ## Last Recorded Legacy Staging Artifact
 
