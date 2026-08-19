@@ -203,11 +203,12 @@ uses a ten-second concurrency-reuse interval, expires after 90 consecutive days
 without refresh and after an immutable 365-day maximum, and revokes the active
 family on any other known replay. The extension serializes sign-in, refresh
 persistence, and invalid-session clearing so an old response cannot overwrite a
-new account. Local database reset, 178 pgTAP assertions, web/extension suites and
-checks, staging artifact build/validation, independent task review, and two
-scoped fix re-reviews passed. Staging migration, application deployment, and the
-required attended sign-out/re-authentication of both staging profiles remain
-pending; do not describe Task 7 as deployed or accepted.
+new account. Local database reset, 180 pgTAP assertions, web/extension suites and
+checks, staging artifact build/validation, independent task review, scoped fix
+re-reviews, and the final CodeRabbit review with zero findings passed. Staging
+migration, application deployment, and the required attended sign-out and
+reauthentication of both staging profiles remain pending; do not describe Task
+7 as deployed or accepted.
 
 Continue from current `staging` and keep the plan's stop gates; do not promote
 these security changes directly to `main`.

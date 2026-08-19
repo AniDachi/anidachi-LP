@@ -835,10 +835,11 @@ run `git diff --cached --check`.
 
 **Local source status (2026-08-19): complete; staging cutover pending.** The
 additive database prerequisite is commit `2b38727`; runtime is `7ae4ff8`, with
-review fixes `2dd3efd` and test-only proof `45efde1`. The migration has not been
-applied to staging, the new runtime has not been deployed, and the two staging
-profiles have not been signed out or reauthenticated. Stop before that attended
-cutover.
+review fixes `2dd3efd`, test-only proof `45efde1`, and final authority hardening
+`0029653`. Local verification includes 180 pgTAP assertions and a final
+CodeRabbit review with zero findings. The migration has not been applied to
+staging, the new runtime has not been deployed, and the two staging profiles
+have not been signed out or reauthenticated. Stop before that attended cutover.
 
 **Files:**
 
