@@ -857,6 +857,13 @@ single-flight background refresh, one refresh attempt after failed access-token
 validation, silent website-session adoption, and no interactive auth flow
 without an explicit user action.
 
+For ordinary browser concurrency, use one named 10-second refresh-token reuse
+interval, matching the current Supabase Auth default and recommendation. A
+predecessor reused inside that interval returns the already-issued current
+successor without rotating again or revoking the family. Reuse at or after the
+boundary revokes the family. The interval never changes the family's idle or
+absolute lifetime.
+
 **Step 2: Add refresh family storage**
 
 Add channel, family ID, device ID when present, token hash, parent/current token
@@ -871,6 +878,14 @@ Keep RLS enabled and service-role-only access.
 Mark every legacy refresh row revoked during migration. Do not add a legacy
 fallback verifier. Existing staging users and extensions sign in once again.
 Access tokens without the new exact channel claims are rejected.
+
+Keep the migration compatible with the still-running old application during
+the migration-first deployment window: add the new authority and revoke the
+rows that exist at migration time without dropping or tightening the legacy
+table. The new application must never read that legacy table. Any legacy row
+briefly issued by an old instance after the migration is ignored by the new
+runtime and is left for bounded Task 8 cleanup. Rollback is forward recovery;
+do not restore the legacy verifier after new refresh families are issued.
 
 **Step 4: Make extension rotation race-safe**
 

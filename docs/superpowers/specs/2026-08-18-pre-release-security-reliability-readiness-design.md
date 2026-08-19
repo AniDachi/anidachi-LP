@@ -181,12 +181,22 @@ explicit.
 Refresh-token rows gain a client channel, token family, idle and absolute
 session expiry, current token hash, rotation/revocation state, and device
 identity where already available. Refresh rotates atomically. Reuse of a
-predecessor revokes the family. Each family expires after 90 consecutive days
-without a successful refresh and after an absolute maximum of 365 days from
-family creation. A successful rotation moves the last-used and idle-expiry
-timestamps but never moves family creation or absolute expiry. Existing sessions
-use a bounded pre-release compatibility transition rather than an unbounded
-dual-mode path.
+predecessor inside one named 10-second concurrency interval returns the already
+issued current successor without rotating again or revoking the family; reuse
+at or after that boundary revokes the family. Each family expires after 90
+consecutive days without a successful refresh and after an absolute maximum of
+365 days from family creation. A successful rotation moves `last_used_at`; the
+idle boundary is derived from it and is not stored redundantly. Family creation
+and absolute expiry never move. Existing sessions use a bounded pre-release
+compatibility transition rather than an unbounded dual-mode path.
+
+The database migration is additive for the still-running old application: it
+creates the new authority and revokes the legacy rows present at migration time
+without dropping or tightening the legacy table. The new application reads
+only the channel-bound authority. A legacy row briefly issued by an old
+instance after migration is ignored and later removed by bounded cleanup;
+rollback after new-family issuance is forward recovery, never restoration of
+the legacy verifier.
 
 The extension follows the browser-native seamless-session pattern without
 delegating AniDachi credentials to Chrome's Google-token cache. Cached identity
