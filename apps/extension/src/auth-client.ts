@@ -1,3 +1,9 @@
+import {
+  ExtensionAuthExchangeRequestSchema,
+  ExtensionAuthInitiationSchema,
+  type ExtensionAuthExchangeRequest,
+  type ExtensionAuthInitiation,
+} from "@anidachi/protocol";
 import { clearCachedAccountInboxForUser } from "./account-inbox-cache";
 import {
   type AuthenticatedUser,
@@ -100,10 +106,44 @@ export interface ExtensionAuthRedirect {
   state: string;
 }
 
-function cryptoRandomState(): string {
-  const bytes = new Uint8Array(16);
+function randomBase64Url(bytesCount = 32): string {
+  const bytes = new Uint8Array(bytesCount);
   crypto.getRandomValues(bytes);
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/u, "");
+}
+
+function digestToBase64Url(value: ArrayBuffer): string {
+  const binary = Array.from(new Uint8Array(value), (byte) =>
+    String.fromCharCode(byte),
+  ).join("");
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/u, "");
+}
+
+export async function deriveExtensionPkceChallenge(
+  codeVerifier: string,
+): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(codeVerifier),
+  );
+  return digestToBase64Url(digest);
+}
+
+export async function createExtensionAuthTransaction(): Promise<{
+  state: string;
+  codeVerifier: string;
+  codeChallenge: string;
+  codeChallengeMethod: "S256";
+}> {
+  const state = randomBase64Url();
+  const codeVerifier = randomBase64Url();
+  return {
+    state,
+    codeVerifier,
+    codeChallenge: await deriveExtensionPkceChallenge(codeVerifier),
+    codeChallengeMethod: "S256",
+  };
 }
 
 function buildWebUrl(path: string): string {
@@ -160,25 +200,47 @@ export function shouldSyncExtensionSessionForWebsiteCookieChange(
   return isConfiguredWebsiteCookie(changeInfo.cookie) && !changeInfo.removed;
 }
 
-export function buildExtensionConnectUrl(redirectUri: string, state: string): string {
+export function buildExtensionConnectUrl(input: ExtensionAuthInitiation): string {
+  const parsed = ExtensionAuthInitiationSchema.parse(input);
   const url = new URL("/extension/connect", WEB_HTTP_BASE);
-  url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("state", state);
+  url.searchParams.set("client_id", parsed.clientId);
+  url.searchParams.set("redirect_uri", parsed.redirectUri);
+  url.searchParams.set("state", parsed.state);
+  url.searchParams.set("code_challenge", parsed.codeChallenge);
+  url.searchParams.set("code_challenge_method", parsed.codeChallengeMethod);
   return url.toString();
 }
 
-export function buildExtensionLogoutUrl(redirectUri: string, state: string): string {
+export function buildExtensionLogoutUrl(input: {
+  clientId: string;
+  redirectUri: string;
+  state: string;
+}): string {
   const url = new URL("/extension/logout", WEB_HTTP_BASE);
-  url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("state", state);
+  url.searchParams.set("client_id", input.clientId);
+  url.searchParams.set("redirect_uri", input.redirectUri);
+  url.searchParams.set("state", input.state);
   return url.toString();
 }
 
 export function parseExtensionAuthRedirect(
   redirectUrl: string,
   expectedState: string,
+  expectedRedirectUri: string,
 ): ExtensionAuthRedirect {
   const url = new URL(redirectUrl);
+  const expected = new URL(expectedRedirectUri);
+  if (
+    url.hash ||
+    !redirectUrl.startsWith(`${expectedRedirectUri}?`) ||
+    `${url.origin}${url.pathname}` !== expected.toString()
+  ) {
+    throw new Error("Invalid extension auth redirect");
+  }
+  const keys = [...url.searchParams.keys()];
+  if (keys.length !== 2 || !keys.includes("code") || !keys.includes("state")) {
+    throw new Error("Invalid extension auth redirect");
+  }
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   if (!code) throw new Error("Missing extension auth code");
@@ -186,8 +248,24 @@ export function parseExtensionAuthRedirect(
   return { code, state };
 }
 
-export function assertExtensionLogoutRedirect(redirectUrl: string, expectedState: string): void {
+export function assertExtensionLogoutRedirect(
+  redirectUrl: string,
+  expectedState: string,
+  expectedRedirectUri: string,
+): void {
   const url = new URL(redirectUrl);
+  const expected = new URL(expectedRedirectUri);
+  if (
+    url.hash ||
+    !redirectUrl.startsWith(`${expectedRedirectUri}?`) ||
+    `${url.origin}${url.pathname}` !== expected.toString()
+  ) {
+    throw new Error("Invalid extension logout redirect");
+  }
+  const keys = [...url.searchParams.keys()];
+  if (keys.length !== 2 || !keys.includes("signed_out") || !keys.includes("state")) {
+    throw new Error("Invalid extension logout redirect");
+  }
   const signedOut = url.searchParams.get("signed_out");
   const state = url.searchParams.get("state");
   if (signedOut !== "1") throw new Error("Missing extension logout confirmation");
@@ -210,12 +288,13 @@ export function normalizeExtensionRefreshResponse(
 }
 
 export async function exchangeExtensionAuthCode(
-  redirect: ExtensionAuthRedirect,
+  request: ExtensionAuthExchangeRequest,
 ): Promise<ExtensionAuthTokens> {
+  const parsed = ExtensionAuthExchangeRequestSchema.parse(request);
   const response = await fetch(buildWebUrl("/api/extension/auth/exchange"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(redirect),
+    body: JSON.stringify(parsed),
   });
 
   if (!response.ok) {
@@ -641,8 +720,15 @@ async function runWebsiteAuthFlow(interactive: boolean): Promise<ExtensionAuthTo
   }
 
   const redirectUri = chrome.identity.getRedirectURL(AUTH_CALLBACK_PATH);
-  const state = cryptoRandomState();
-  const url = buildExtensionConnectUrl(redirectUri, state);
+  const clientId = chrome.runtime.id;
+  const transaction = await createExtensionAuthTransaction();
+  const url = buildExtensionConnectUrl({
+    clientId,
+    redirectUri,
+    state: transaction.state,
+    codeChallenge: transaction.codeChallenge,
+    codeChallengeMethod: transaction.codeChallengeMethod,
+  });
   const redirectUrl = await chrome.identity.launchWebAuthFlow({
     url,
     interactive,
@@ -652,7 +738,18 @@ async function runWebsiteAuthFlow(interactive: boolean): Promise<ExtensionAuthTo
     return null;
   }
 
-  return exchangeExtensionAuthCode(parseExtensionAuthRedirect(redirectUrl, state));
+  const redirect = parseExtensionAuthRedirect(
+    redirectUrl,
+    transaction.state,
+    redirectUri,
+  );
+  return exchangeExtensionAuthCode({
+    clientId,
+    redirectUri,
+    code: redirect.code,
+    state: redirect.state,
+    codeVerifier: transaction.codeVerifier,
+  });
 }
 
 export async function signInWithWebsite(): Promise<ExtensionAuthTokens> {
@@ -719,13 +816,17 @@ async function attemptWebsiteLogoutFlow(): Promise<void> {
   }
 
   const redirectUri = chrome.identity.getRedirectURL(LOGOUT_CALLBACK_PATH);
-  const state = cryptoRandomState();
-  const url = buildExtensionLogoutUrl(redirectUri, state);
+  const state = randomBase64Url();
+  const url = buildExtensionLogoutUrl({
+    clientId: chrome.runtime.id,
+    redirectUri,
+    state,
+  });
   const redirectUrl = await chrome.identity
     .launchWebAuthFlow({ url, interactive: false })
     .catch(() => null);
   if (redirectUrl) {
-    assertExtensionLogoutRedirect(redirectUrl, state);
+    assertExtensionLogoutRedirect(redirectUrl, state, redirectUri);
   }
 }
 

@@ -2,18 +2,33 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-STAGING_DIR="$ROOT_DIR/anidachi-extension-staging"
 ARTIFACTS_DIR="$ROOT_DIR/artifacts"
 SHORT_SHA="$(git -C "$ROOT_DIR" rev-parse --short HEAD 2>/dev/null || echo local)"
 PACKAGE_EXTENSION_VERSION="$(node -e "console.log(require('$ROOT_DIR/apps/extension/package.json').version)")"
 
-: "${WXT_EXTENSION_CHANNEL:=staging}"
+if [[ $# -gt 1 || ( $# -eq 1 && "$1" != "--broad" ) ]]; then
+  echo "Usage: $0 [--broad]" >&2
+  exit 2
+fi
+
+OUTPUT_NAME=anidachi-extension-staging
+if [[ "${1:-}" == "--broad" ]]; then
+  OUTPUT_NAME=anidachi-extension-staging-local-broad
+fi
+OUTPUT_DIR="$ROOT_DIR/$OUTPUT_NAME"
+OUTPUT_ZIP="$ROOT_DIR/$OUTPUT_NAME.zip"
+ARTIFACT_ZIP="$ARTIFACTS_DIR/${OUTPUT_NAME}-${SHORT_SHA}.zip"
+
+WXT_EXTENSION_CHANNEL=staging
 : "${WXT_EXTENSION_VERSION:=$PACKAGE_EXTENSION_VERSION}"
-: "${WXT_WEB_HTTP_BASE:=https://staging.anidachi.app}"
-: "${WXT_API_HTTP_BASE:=https://anidachi-api-staging.vladislav-gul7.workers.dev}"
-: "${WXT_API_WS_BASE:=wss://anidachi-api-staging.vladislav-gul7.workers.dev}"
+WXT_WEB_HTTP_BASE=https://staging.anidachi.app
+WXT_API_HTTP_BASE=https://anidachi-api-staging.vladislav-gul7.workers.dev
+WXT_API_WS_BASE=wss://anidachi-api-staging.vladislav-gul7.workers.dev
 : "${WXT_BUILD_ID:=${SHORT_SHA}-staging-$(date +%Y%m%d%H%M%S)}"
-: "${WXT_BROAD_HOST_PERMISSIONS:=false}"
+WXT_BROAD_HOST_PERMISSIONS=false
+if [[ "${1:-}" == "--broad" ]]; then
+  WXT_BROAD_HOST_PERMISSIONS=true
+fi
 
 export WXT_EXTENSION_CHANNEL
 export WXT_EXTENSION_VERSION
@@ -28,19 +43,19 @@ cd "$ROOT_DIR"
 pnpm check:extension:icons
 pnpm --filter @anidachi/extension build
 
-rm -rf "$STAGING_DIR"
-mkdir -p "$STAGING_DIR" "$ARTIFACTS_DIR"
-rsync -a --delete "$ROOT_DIR/apps/extension/.output/chrome-mv3/" "$STAGING_DIR/"
+rm -rf "$OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR" "$ARTIFACTS_DIR"
+rsync -a --delete "$ROOT_DIR/apps/extension/.output/chrome-mv3/" "$OUTPUT_DIR/"
 
-rm -f "$ROOT_DIR/anidachi-extension-staging.zip"
+rm -f "$OUTPUT_ZIP"
 (
-  cd "$STAGING_DIR"
-  zip -qr "$ROOT_DIR/anidachi-extension-staging.zip" .
+  cd "$OUTPUT_DIR"
+  zip -qr "$OUTPUT_ZIP" .
 )
 
-rm -f "$ARTIFACTS_DIR/anidachi-extension-staging-${SHORT_SHA}.zip"
-cp "$ROOT_DIR/anidachi-extension-staging.zip" "$ARTIFACTS_DIR/anidachi-extension-staging-${SHORT_SHA}.zip"
+rm -f "$ARTIFACT_ZIP"
+cp "$OUTPUT_ZIP" "$ARTIFACT_ZIP"
 
-echo "Updated $STAGING_DIR"
-echo "Updated $ROOT_DIR/anidachi-extension-staging.zip"
-echo "Updated $ARTIFACTS_DIR/anidachi-extension-staging-${SHORT_SHA}.zip"
+echo "Updated $OUTPUT_DIR"
+echo "Updated $OUTPUT_ZIP"
+echo "Updated $ARTIFACT_ZIP"

@@ -44,10 +44,12 @@ For Cloudflare Worker regressions:
 
 For extension regressions:
 
-1. Identify affected channel: staging tester item or public item.
+1. Identify affected channel and exact artifact: unpacked staging tester build
+   or a future published production build.
 2. Locate previous known-good artifact and `version_name`.
-3. Re-upload the previous artifact to the matching Chrome Web Store listing if
-   the store release must be rolled back.
+3. Reload the previous unpacked artifact for current staging testers. If a
+   future production store release exists, use that channel's approved rollback
+   mechanism separately.
 4. Verify manifest channel:
    - staging name: `Anidachi Staging`;
    - production name: `Anidachi`;

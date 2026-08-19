@@ -1,5 +1,6 @@
 import { createHash, hkdfSync, randomBytes } from "node:crypto";
 import { db } from "./db";
+import { sanitizeOAuthExtensionReturnTo } from "./extension-auth-handoff";
 import { sanitizeAuthReturnTo } from "./return-to";
 
 export const OAUTH_LOGIN_TRANSACTION_TTL_SECONDS = 10 * 60;
@@ -77,12 +78,13 @@ export async function createOAuthLoginTransaction(params: {
   const correlationSecret = randomBytes(32).toString("base64url");
   const codeVerifier = deriveOAuthPkceVerifier(state);
   const repository = params.repository ?? defaultRepository;
+  const returnTo = await sanitizeOAuthTransactionReturnTo(params.returnTo);
 
   await repository.create({
     stateHash: hashOAuthSecret(state),
     browserCorrelationHash: hashOAuthSecret(correlationSecret),
     provider: params.provider,
-    returnTo: sanitizeAuthReturnTo(params.returnTo),
+    returnTo,
   });
 
   return {
@@ -92,6 +94,24 @@ export async function createOAuthLoginTransaction(params: {
     codeChallenge: deriveOAuthPkceChallenge(codeVerifier),
     codeChallengeMethod: "S256",
   };
+}
+
+async function sanitizeOAuthTransactionReturnTo(
+  value: string | null | undefined,
+): Promise<string> {
+  const safe = sanitizeAuthReturnTo(value);
+  if (!safe) return "";
+
+  try {
+    const url = new URL(safe, "https://anidachi.invalid");
+    if (url.pathname !== "/extension/connect") {
+      return url.pathname.startsWith("/extension/connect/") ? "" : safe;
+    }
+  } catch {
+    return "";
+  }
+
+  return (await sanitizeOAuthExtensionReturnTo(safe)) ?? "";
 }
 
 export async function consumeOAuthLoginTransaction(params: {

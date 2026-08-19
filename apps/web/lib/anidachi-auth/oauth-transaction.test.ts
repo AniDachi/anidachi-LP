@@ -84,6 +84,49 @@ describe("browser OAuth login transactions", () => {
     );
   });
 
+  it("refuses to persist raw extension authorization parameters", async () => {
+    process.env.ANIDACHI_JWT_SECRET = "oauth-transaction-test-secret";
+    const stored: Array<Record<string, string>> = [];
+    const rawState = "S".repeat(43);
+    const rawChallenge = "C".repeat(43);
+    const rawReturnTo =
+      "/extension/connect?client_id=ndkfphbchhfephdodcpehdcoclojagje" +
+      "&redirect_uri=https%3A%2F%2Fndkfphbchhfephdodcpehdcoclojagje.chromiumapp.org%2Fauth" +
+      `&state=${rawState}&code_challenge=${rawChallenge}` +
+      "&code_challenge_method=S256";
+
+    await createOAuthLoginTransaction({
+      provider: "google",
+      returnTo: rawReturnTo,
+      repository: captureOnlyRepository(stored),
+    });
+    await createOAuthLoginTransaction({
+      provider: "discord",
+      returnTo: rawReturnTo.replace("/extension/connect?", "/extension/connect/?"),
+      repository: captureOnlyRepository(stored),
+    });
+
+    assert.deepEqual(
+      stored.map((value) => value.returnTo),
+      ["", ""],
+    );
+    assert.ok(
+      !stored.some((value) =>
+        Object.values(value).some((field) => field.includes(rawState)),
+      ),
+    );
+    assert.ok(
+      !stored.some((value) =>
+        Object.values(value).some((field) => field.includes(rawChallenge)),
+      ),
+    );
+    assert.ok(
+      !stored.some((value) =>
+        Object.values(value).some((field) => field.includes("chromiumapp.org")),
+      ),
+    );
+  });
+
   it("derives an RFC 7636 S256 challenge from a server-only verifier", async () => {
     process.env.ANIDACHI_JWT_SECRET = "oauth-transaction-test-secret";
     const stored: Array<Record<string, string>> = [];

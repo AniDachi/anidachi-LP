@@ -12,7 +12,7 @@
     "build:extension:icons": "node scripts/generate-extension-icons.mjs",
     "build:extension:public": "bash scripts/build-extension-public.sh",
     "build:extension:staging": "bash scripts/build-extension-staging.sh",
-    "build:extension:staging:broad": "WXT_BROAD_HOST_PERMISSIONS=true bash scripts/build-extension-staging.sh",
+    "build:extension:staging:local-broad": "bash scripts/build-extension-staging.sh --broad",
     "check:extension:icons": "node scripts/generate-extension-icons.mjs --check",
     "check": "turbo check",
     "dev:api": "pnpm --filter @anidachi/api dev",
